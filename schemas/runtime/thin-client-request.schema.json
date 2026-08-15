@@ -1,0 +1,360 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/thin-client-request.schema.json",
+  "title": "AgentMage Thin Client Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "surface",
+    "status",
+    "command",
+    "authority",
+    "policy_sha256",
+    "cancellation_id",
+    "max_event_bytes",
+    "max_output_bytes",
+    "resume",
+    "kernel_request_sha256",
+    "request_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "request_id": { "$ref": "#/$defs/identifier" },
+    "surface": {
+      "enum": ["native_chat", "interactive_cli", "json", "sdk", "acp"]
+    },
+    "status": { "$ref": "#/$defs/status" },
+    "command": { "$ref": "#/$defs/command" },
+    "authority": { "$ref": "#/$defs/authority" },
+    "policy_sha256": { "$ref": "#/$defs/sha256" },
+    "cancellation_id": { "$ref": "#/$defs/identifier" },
+    "max_event_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1048576
+    },
+    "max_output_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4194304
+    },
+    "resume": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/resume" }]
+    },
+    "kernel_request_sha256": { "$ref": "#/$defs/sha256" },
+    "request_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "boundedText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 65536,
+      "pattern": "^.*\\S.*$"
+    },
+    "query": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^.*\\S.*$"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "operation": {
+      "enum": [
+        "workspace_read",
+        "workspace_write",
+        "workspace_delete",
+        "command_execute",
+        "network_access",
+        "git_clone",
+        "git_fetch",
+        "git_worktree_create",
+        "git_worktree_remove",
+        "git_branch_fast_forward",
+        "git_commit",
+        "git_push",
+        "publish",
+        "send",
+        "upload",
+        "deploy",
+        "database_read",
+        "database_write",
+        "credential_access",
+        "model_inference",
+        "draft_create",
+        "administration"
+      ]
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspace_id",
+        "model_profile_id",
+        "permission_profile_id",
+        "conversation_id",
+        "plan_step_id",
+        "writable_roots",
+        "offline",
+        "status_sha256"
+      ],
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/identifier" },
+        "model_profile_id": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+        },
+        "permission_profile_id": { "$ref": "#/$defs/identifier" },
+        "conversation_id": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+        },
+        "plan_step_id": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+        },
+        "writable_roots": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/query" }
+        },
+        "offline": { "type": "boolean" },
+        "status_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "conversationAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "from", "to"],
+          "properties": {
+            "action": { "const": "list" },
+            "from": {
+              "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/date" }]
+            },
+            "to": {
+              "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/date" }]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "query"],
+          "properties": {
+            "action": { "const": "search" },
+            "query": { "$ref": "#/$defs/query" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "conversation_id"],
+          "properties": {
+            "action": { "enum": ["show", "open", "resume"] },
+            "conversation_id": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "conversation_id", "turn_id"],
+          "properties": {
+            "action": { "const": "branch" },
+            "conversation_id": { "$ref": "#/$defs/identifier" },
+            "turn_id": { "$ref": "#/$defs/identifier" }
+          }
+        }
+      ]
+    },
+    "vaultAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "query"],
+          "properties": {
+            "action": { "const": "search" },
+            "query": { "$ref": "#/$defs/query" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "note_id"],
+          "properties": {
+            "action": { "enum": ["note_show", "links", "backlinks"] },
+            "note_id": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action"],
+          "properties": { "action": { "const": "tasks" } }
+        }
+      ]
+    },
+    "operationalAction": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action"],
+          "properties": {
+            "action": {
+              "enum": ["checkpoint", "handoff", "audit", "diagnostics"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "memory_id"],
+          "properties": {
+            "action": { "const": "memory_inspect" },
+            "memory_id": {
+              "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "memory_id", "replacement"],
+          "properties": {
+            "action": { "const": "memory_correct" },
+            "memory_id": { "$ref": "#/$defs/identifier" },
+            "replacement": { "$ref": "#/$defs/boundedText" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "profile"],
+          "properties": {
+            "action": { "const": "export" },
+            "profile": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "manifest_sha256"],
+          "properties": {
+            "action": { "const": "import" },
+            "manifest_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        }
+      ]
+    },
+    "command": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command", "message"],
+          "properties": {
+            "command": { "const": "chat" },
+            "message": { "$ref": "#/$defs/boundedText" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command", "action"],
+          "properties": {
+            "command": { "const": "conversations" },
+            "action": { "$ref": "#/$defs/conversationAction" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command", "action"],
+          "properties": {
+            "command": { "const": "vault" },
+            "action": { "$ref": "#/$defs/vaultAction" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command", "action"],
+          "properties": {
+            "command": { "const": "operations" },
+            "action": { "$ref": "#/$defs/operationalAction" }
+          }
+        }
+      ]
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grant_id",
+        "operation",
+        "policy_sha256",
+        "arguments_sha256",
+        "nonce_sha256",
+        "issued_at_epoch_ms",
+        "expires_at_epoch_ms",
+        "single_use"
+      ],
+      "properties": {
+        "grant_id": { "$ref": "#/$defs/identifier" },
+        "operation": { "$ref": "#/$defs/operation" },
+        "policy_sha256": { "$ref": "#/$defs/sha256" },
+        "arguments_sha256": { "$ref": "#/$defs/sha256" },
+        "nonce_sha256": { "$ref": "#/$defs/sha256" },
+        "issued_at_epoch_ms": { "type": "integer", "minimum": 0 },
+        "expires_at_epoch_ms": { "type": "integer", "minimum": 1 },
+        "single_use": { "const": true }
+      }
+    },
+    "authority": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "approval_channel_sha256"],
+          "properties": {
+            "kind": { "const": "interactive" },
+            "approval_channel_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "grant"],
+          "properties": {
+            "kind": { "const": "predeclared" },
+            "grant": { "$ref": "#/$defs/grant" }
+          }
+        }
+      ]
+    },
+    "resume": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stream_id", "after_sequence", "last_event_sha256"],
+      "properties": {
+        "stream_id": { "$ref": "#/$defs/identifier" },
+        "after_sequence": { "type": "integer", "minimum": 0 },
+        "last_event_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

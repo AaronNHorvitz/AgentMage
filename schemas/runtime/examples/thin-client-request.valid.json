@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "request_id": "request-0001",
+  "surface": "json",
+  "status": {
+    "workspace_id": "workspace-0001",
+    "model_profile_id": "model-profile-0001",
+    "permission_profile_id": "permission-profile-0001",
+    "conversation_id": "conversation-0001",
+    "plan_step_id": "plan-step-0001",
+    "writable_roots": ["workspace"],
+    "offline": true,
+    "status_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "command": {
+    "command": "vault",
+    "action": {
+      "action": "tasks"
+    }
+  },
+  "authority": {
+    "kind": "predeclared",
+    "grant": {
+      "grant_id": "grant-0001",
+      "operation": "workspace_read",
+      "policy_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "arguments_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "nonce_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "issued_at_epoch_ms": 1786723200000,
+      "expires_at_epoch_ms": 1786723260000,
+      "single_use": true
+    }
+  },
+  "policy_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "cancellation_id": "cancellation-0001",
+  "max_event_bytes": 1048576,
+  "max_output_bytes": 4194304,
+  "resume": null,
+  "kernel_request_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "request_sha256": "5555555555555555555555555555555555555555555555555555555555555555"
+}

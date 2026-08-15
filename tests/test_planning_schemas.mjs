@@ -375,6 +375,8 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "worktree-ownership",
     "change-intent-record",
     "reproduction-record",
+    "thin-client-request",
+    "thin-client-event",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -860,6 +862,138 @@ test("runtime schemas reject missing and unknown fields", () => {
     unknown.model_instruction = "broaden authority";
     assert.equal(
       validateRuntimeRecord(recordType, unknown, runtimeValidators).valid,
+      false,
+    );
+  }
+});
+
+test("thin client requests reject hidden authority and binding drift", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/thin-client-request.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.authority = {
+        kind: "interactive",
+        approval_channel_sha256: "7".repeat(64),
+      };
+    },
+    (record) => {
+      record.authority.grant.operation = "database_write";
+    },
+    (record) => {
+      record.authority.grant.policy_sha256 = "8".repeat(64);
+    },
+    (record) => {
+      record.authority.grant.arguments_sha256 = "8".repeat(64);
+    },
+    (record) => {
+      record.authority.grant.single_use = false;
+    },
+    (record) => {
+      record.authority.grant.expires_at_epoch_ms =
+        record.authority.grant.issued_at_epoch_ms;
+    },
+    (record) => {
+      record.max_output_bytes = record.max_event_bytes - 1;
+    },
+    (record) => {
+      record.direct_storage = true;
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord("thin-client-request", changed, runtimeValidators)
+        .valid,
+      false,
+    );
+  }
+});
+
+test("thin client request commands remain closed and semantically bounded", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/thin-client-request.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const reversed = structuredClone(source);
+  reversed.command = {
+    command: "conversations",
+    action: { action: "list", from: "2026-12-31", to: "2026-01-01" },
+  };
+  reversed.authority.grant.operation = "database_read";
+  assert.equal(
+    validateRuntimeRecord("thin-client-request", reversed, runtimeValidators)
+      .valid,
+    false,
+  );
+
+  const ambient = structuredClone(source);
+  ambient.command = {
+    command: "vault",
+    action: { action: "tasks", repository_path: "/ambient" },
+  };
+  assert.equal(
+    validateRuntimeRecord("thin-client-request", ambient, runtimeValidators)
+      .valid,
+    false,
+  );
+});
+
+test("thin client events reject malformed payloads and output drift", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/thin-client-event.valid.json"),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.schema_version = 2;
+    },
+    (record) => {
+      record.previous_event_sha256 = "7".repeat(64);
+    },
+    (record) => {
+      record.cumulative_output_bytes = 4194305;
+    },
+    (record) => {
+      record.kind = {
+        event: "content",
+        channel: "content",
+        text: "visible text",
+        text_sha256: "7".repeat(64),
+      };
+    },
+    (record) => {
+      record.kind = {
+        event: "completed",
+        final_state_sha256: "7".repeat(64),
+        authority: true,
+      };
+    },
+    (record) => {
+      record.host_socket = "/run/agentmage.sock";
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord("thin-client-event", changed, runtimeValidators)
+        .valid,
       false,
     );
   }

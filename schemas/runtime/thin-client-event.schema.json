@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/thin-client-event.schema.json",
+  "title": "AgentMage Thin Client Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "request_id",
+    "stream_id",
+    "sequence",
+    "kernel_request_sha256",
+    "policy_sha256",
+    "cumulative_output_bytes",
+    "kind",
+    "previous_event_sha256",
+    "event_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "request_id": { "$ref": "#/$defs/identifier" },
+    "stream_id": { "$ref": "#/$defs/identifier" },
+    "sequence": { "type": "integer", "minimum": 0, "maximum": 4095 },
+    "kernel_request_sha256": { "$ref": "#/$defs/sha256" },
+    "policy_sha256": { "$ref": "#/$defs/sha256" },
+    "cumulative_output_bytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4194304
+    },
+    "kind": { "$ref": "#/$defs/eventKind" },
+    "previous_event_sha256": { "$ref": "#/$defs/sha256" },
+    "event_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "operation": {
+      "enum": [
+        "workspace_read",
+        "workspace_write",
+        "workspace_delete",
+        "command_execute",
+        "network_access",
+        "git_clone",
+        "git_fetch",
+        "git_worktree_create",
+        "git_worktree_remove",
+        "git_branch_fast_forward",
+        "git_commit",
+        "git_push",
+        "publish",
+        "send",
+        "upload",
+        "deploy",
+        "database_read",
+        "database_write",
+        "credential_access",
+        "model_inference",
+        "draft_create",
+        "administration"
+      ]
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspace_id",
+        "model_profile_id",
+        "permission_profile_id",
+        "conversation_id",
+        "plan_step_id",
+        "writable_roots",
+        "offline",
+        "status_sha256"
+      ],
+      "properties": {
+        "workspace_id": { "$ref": "#/$defs/identifier" },
+        "model_profile_id": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+        },
+        "permission_profile_id": { "$ref": "#/$defs/identifier" },
+        "conversation_id": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+        },
+        "plan_step_id": {
+          "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+        },
+        "writable_roots": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^.*\\S.*$"
+          }
+        },
+        "offline": { "type": "boolean" },
+        "status_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "eventKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event"],
+          "properties": { "event": { "const": "started" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "status"],
+          "properties": {
+            "event": { "const": "status" },
+            "status": { "$ref": "#/$defs/status" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "channel", "text", "text_sha256"],
+          "properties": {
+            "event": { "const": "content" },
+            "channel": {
+              "enum": [
+                "content",
+                "progress",
+                "preview",
+                "diff",
+                "citation",
+                "error"
+              ]
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536,
+              "pattern": "^.*\\S.*$"
+            },
+            "text_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "event",
+            "operation",
+            "preview_sha256",
+            "expires_at_epoch_ms"
+          ],
+          "properties": {
+            "event": { "const": "approval_required" },
+            "operation": { "$ref": "#/$defs/operation" },
+            "preview_sha256": { "$ref": "#/$defs/sha256" },
+            "expires_at_epoch_ms": { "type": "integer", "minimum": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "receipt_id", "receipt_sha256", "outcome"],
+          "properties": {
+            "event": { "const": "receipt" },
+            "receipt_id": { "$ref": "#/$defs/identifier" },
+            "receipt_sha256": { "$ref": "#/$defs/sha256" },
+            "outcome": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "final_state_sha256"],
+          "properties": {
+            "event": { "const": "completed" },
+            "final_state_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "code"],
+          "properties": {
+            "event": { "enum": ["denied", "cancelled"] },
+            "code": { "$ref": "#/$defs/code" }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -72,6 +72,8 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "worktree-ownership",
   "change-intent-record",
   "reproduction-record",
+  "thin-client-request",
+  "thin-client-event",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -783,6 +785,77 @@ function runtimeSemanticErrors(recordType, data) {
       errors.push(
         "successful local commit must record a distinct post-effect manifest",
       );
+    }
+  } else if (recordType === "thin-client-request") {
+    const action = data.command?.action?.action;
+    const command = data.command?.command;
+    let requiredOperation;
+    if (command === "chat") {
+      requiredOperation = "model_inference";
+    } else if (command === "conversations") {
+      requiredOperation =
+        action === "branch" ? "workspace_write" : "database_read";
+      if (
+        action === "list" &&
+        data.command.action.from !== null &&
+        data.command.action.to !== null &&
+        data.command.action.from > data.command.action.to
+      ) {
+        errors.push("conversation date range must be ordered");
+      }
+    } else if (command === "vault") {
+      requiredOperation = "workspace_read";
+    } else if (command === "operations") {
+      requiredOperation = [
+        "checkpoint",
+        "memory_correct",
+        "export",
+        "import",
+      ].includes(action)
+        ? "workspace_write"
+        : action === "handoff"
+          ? "draft_create"
+          : "database_read";
+    }
+    if (data.max_output_bytes < data.max_event_bytes) {
+      errors.push("max_output_bytes must be at least max_event_bytes");
+    }
+    if (
+      data.authority?.kind === "interactive" &&
+      !["native_chat", "interactive_cli"].includes(data.surface)
+    ) {
+      errors.push("headless clients cannot present interactive authority");
+    }
+    if (data.authority?.kind === "predeclared") {
+      const grant = data.authority.grant ?? {};
+      if (grant.operation !== requiredOperation) {
+        errors.push("predeclared grant operation must match the exact command");
+      }
+      if (grant.policy_sha256 !== data.policy_sha256) {
+        errors.push("predeclared grant policy must match the request policy");
+      }
+      if (grant.arguments_sha256 !== data.kernel_request_sha256) {
+        errors.push(
+          "predeclared grant arguments must match the kernel request",
+        );
+      }
+      if (grant.issued_at_epoch_ms >= grant.expires_at_epoch_ms) {
+        errors.push("predeclared grant must have a positive lifetime");
+      }
+    }
+  } else if (recordType === "thin-client-event") {
+    if (
+      data.sequence === 0 &&
+      data.previous_event_sha256 !==
+        "0000000000000000000000000000000000000000000000000000000000000000"
+    ) {
+      errors.push("sequence zero must use the zero previous-event digest");
+    }
+    if (
+      data.kind?.event === "content" &&
+      sha256String(data.kind.text ?? "") !== data.kind.text_sha256
+    ) {
+      errors.push("content digest must match the exact text");
     }
   }
   return errors;
