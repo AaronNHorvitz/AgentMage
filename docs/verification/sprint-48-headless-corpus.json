@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_48_headless_security_corpus",
+  "cases": [
+    {
+      "id": "request-unknown-version",
+      "boundary": "request",
+      "mutation": "change_schema_version",
+      "expected": "denied"
+    },
+    {
+      "id": "request-unknown-field",
+      "boundary": "request",
+      "mutation": "add_unknown_field",
+      "expected": "denied"
+    },
+    {
+      "id": "request-direct-storage",
+      "boundary": "request",
+      "mutation": "add_direct_storage",
+      "expected": "denied"
+    },
+    {
+      "id": "request-direct-tool",
+      "boundary": "request",
+      "mutation": "add_direct_tool_dispatch",
+      "expected": "denied"
+    },
+    {
+      "id": "request-direct-model",
+      "boundary": "request",
+      "mutation": "add_direct_model_access",
+      "expected": "denied"
+    },
+    {
+      "id": "request-direct-secret",
+      "boundary": "request",
+      "mutation": "add_direct_secret_access",
+      "expected": "denied"
+    },
+    {
+      "id": "request-output-bound",
+      "boundary": "request",
+      "mutation": "exceed_output_bound",
+      "expected": "denied"
+    },
+    {
+      "id": "request-event-bound",
+      "boundary": "request",
+      "mutation": "exceed_event_bound",
+      "expected": "denied"
+    },
+    {
+      "id": "authority-missing",
+      "boundary": "authority",
+      "mutation": "remove_grant",
+      "expected": "denied"
+    },
+    {
+      "id": "authority-interactive-headless",
+      "boundary": "authority",
+      "mutation": "present_interactive_channel",
+      "expected": "denied"
+    },
+    {
+      "id": "authority-wrong-operation",
+      "boundary": "authority",
+      "mutation": "change_operation",
+      "expected": "denied"
+    },
+    {
+      "id": "authority-wrong-policy",
+      "boundary": "authority",
+      "mutation": "change_policy",
+      "expected": "denied"
+    },
+    {
+      "id": "authority-wrong-arguments",
+      "boundary": "authority",
+      "mutation": "change_arguments_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "authority-expired",
+      "boundary": "authority",
+      "mutation": "expire_grant",
+      "expected": "denied"
+    },
+    {
+      "id": "authority-future-issued",
+      "boundary": "authority",
+      "mutation": "move_issue_time_forward",
+      "expected": "denied"
+    },
+    {
+      "id": "authority-multi-use",
+      "boundary": "authority",
+      "mutation": "disable_single_use",
+      "expected": "denied"
+    },
+    {
+      "id": "authority-replayed",
+      "boundary": "authority",
+      "mutation": "reuse_consumed_grant",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-empty",
+      "boundary": "event_stream",
+      "mutation": "remove_all_events",
+      "expected": "uncertain"
+    },
+    {
+      "id": "stream-wrong-first",
+      "boundary": "event_stream",
+      "mutation": "replace_started_event",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-sequence-gap",
+      "boundary": "event_stream",
+      "mutation": "skip_sequence",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-duplicate-sequence",
+      "boundary": "event_stream",
+      "mutation": "duplicate_sequence",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-reordered",
+      "boundary": "event_stream",
+      "mutation": "reorder_events",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-previous-hash",
+      "boundary": "event_stream",
+      "mutation": "change_previous_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-policy-drift",
+      "boundary": "event_stream",
+      "mutation": "change_policy_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-request-drift",
+      "boundary": "event_stream",
+      "mutation": "change_request_identity",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-partial",
+      "boundary": "event_stream",
+      "mutation": "remove_terminal_event",
+      "expected": "uncertain"
+    },
+    {
+      "id": "stream-no-receipt",
+      "boundary": "event_stream",
+      "mutation": "complete_without_receipt",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-event-after-terminal",
+      "boundary": "event_stream",
+      "mutation": "append_after_terminal",
+      "expected": "denied"
+    },
+    {
+      "id": "stream-hidden-approval",
+      "boundary": "event_stream",
+      "mutation": "emit_headless_approval",
+      "expected": "denied"
+    },
+    {
+      "id": "transport-broken-pipe",
+      "boundary": "transport",
+      "mutation": "close_during_event",
+      "expected": "uncertain"
+    },
+    {
+      "id": "transport-client-termination",
+      "boundary": "transport",
+      "mutation": "terminate_before_terminal",
+      "expected": "uncertain"
+    },
+    {
+      "id": "transport-resume-rollback",
+      "boundary": "transport",
+      "mutation": "resume_before_verified_cursor",
+      "expected": "denied"
+    },
+    {
+      "id": "transport-resume-hash",
+      "boundary": "transport",
+      "mutation": "change_resume_digest",
+      "expected": "denied"
+    },
+    {
+      "id": "cancellation-before-start",
+      "boundary": "cancellation",
+      "mutation": "cancel_before_dispatch",
+      "expected": "uncertain"
+    },
+    {
+      "id": "cancellation-during-stream",
+      "boundary": "cancellation",
+      "mutation": "cancel_before_terminal",
+      "expected": "uncertain"
+    },
+    {
+      "id": "cancellation-after-terminal",
+      "boundary": "cancellation",
+      "mutation": "cancel_completed_operation",
+      "expected": "denied"
+    },
+    {
+      "id": "launch-browser",
+      "boundary": "native_effect",
+      "mutation": "launch_browser",
+      "expected": "denied"
+    },
+    {
+      "id": "launch-obsidian",
+      "boundary": "native_effect",
+      "mutation": "launch_obsidian",
+      "expected": "denied"
+    },
+    {
+      "id": "launch-cloud-login",
+      "boundary": "native_effect",
+      "mutation": "launch_cloud_login",
+      "expected": "denied"
+    },
+    {
+      "id": "launch-unrelated-app",
+      "boundary": "native_effect",
+      "mutation": "launch_external_application",
+      "expected": "denied"
+    }
+  ]
+}
