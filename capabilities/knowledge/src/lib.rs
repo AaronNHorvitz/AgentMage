@@ -8,6 +8,7 @@ mod document_control_skills;
 mod domain;
 mod executive_skills;
 mod index;
+mod json_data;
 mod knowledge_write;
 mod lifecycle;
 mod markdown_artifact_skills;
@@ -61,6 +62,12 @@ pub use domain::{
 };
 pub use executive_skills::{ExecutiveSkill, built_in_executive_skill_pack};
 pub use index::{KnowledgeIndex, KnowledgeIndexError, KnowledgeIndexHit, KnowledgeIndexReport};
+pub use json_data::{
+    StructuredJsonComparison, StructuredJsonDifference, StructuredJsonDifferenceReason,
+    StructuredJsonDocument, StructuredJsonError, StructuredJsonIssue, StructuredJsonProfile,
+    StructuredJsonRedaction, StructuredJsonRedactionPolicy, StructuredJsonSchema,
+    compare_structured_json, parse_structured_json, redact_structured_json,
+};
 pub use knowledge_write::{
     CanonicalKnowledgeMutation, CanonicalMarkdownWriteOutcome, KnowledgeFrontmatterProperty,
     KnowledgeIndexPublication, KnowledgeIndexPublicationState, KnowledgeMemoryPromotionApproval,
