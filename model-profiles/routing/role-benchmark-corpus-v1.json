@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "record_type": "agentmage_routing_role_benchmark_corpus",
+  "corpus_id": "routing-role-corpus-v1",
+  "minimum_repeated_trials": 30,
+  "minimum_primary_improvement_bps": 250,
+  "minimum_verification_improvement_bps": 150,
+  "manual_selection_baseline_required": true,
+  "exact_tuple_comparability_required": true,
+  "model_confidence_is_routing_evidence": false,
+  "roles": [
+    {
+      "role": "dialogue",
+      "suite_ids": [
+        "dialogue_quality",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "tool_selection",
+      "suite_ids": [
+        "tool_validity",
+        "unsupported_action",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "summarization",
+      "suite_ids": [
+        "summary_fidelity",
+        "omission",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "repository_map",
+      "suite_ids": [
+        "repository_map_interpretation",
+        "citation",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "embedding",
+      "suite_ids": [
+        "retrieval_recall",
+        "contamination",
+        "invalidation",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "reranking",
+      "suite_ids": [
+        "ranking_quality",
+        "provenance",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "patch_generation",
+      "suite_ids": [
+        "patch_validity",
+        "scope",
+        "tests",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "citation_verification",
+      "suite_ids": [
+        "citation_resolution",
+        "staleness",
+        "claim_support",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "planning",
+      "suite_ids": [
+        "plan_validity",
+        "dependency_order",
+        "scope",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "coding",
+      "suite_ids": [
+        "coding_quality",
+        "tests",
+        "security",
+        "false_completion",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "retrieval",
+      "suite_ids": [
+        "retrieval_quality",
+        "citation",
+        "provenance",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    },
+    {
+      "role": "document",
+      "suite_ids": [
+        "document_fidelity",
+        "classification",
+        "citation",
+        "grounding",
+        "reliability",
+        "failure",
+        "latency",
+        "memory",
+        "energy_optional"
+      ]
+    }
+  ],
+  "required_exact_tuple_fields": [
+    "profile_id",
+    "publisher_id",
+    "lineage_sha256",
+    "license_sha256",
+    "origin_disposition",
+    "artifact_sha256",
+    "tokenizer_sha256",
+    "template_sha256",
+    "codec_sha256",
+    "runtime_sha256",
+    "context_sha256",
+    "decoding_sha256",
+    "resource_sha256",
+    "platform_evidence_sha256",
+    "policy_sha256",
+    "benchmark_generation_sha256",
+    "corpus_sha256",
+    "grader_sha256",
+    "benchmark_sha256"
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "record_type": "agentmage_measured_routing_decision_table",
+  "router": "deterministic_typed_facts_only",
+  "authority_source": "kernel_exact_grants_only",
+  "frontier_transfer": false,
+  "invisible_fallback": false,
+  "provider_marketplace": false,
+  "automatic_install": false,
+  "model_self_selection": false,
+  "model_confidence_used": false,
+  "rules": [
+    {
+      "condition": "manual_profile_exact_and_eligible",
+      "decision": "manual_selected",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "manual_profile_missing_or_ineligible",
+      "decision": "blocked",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "automatic_profile_exact_measured_current_and_fit",
+      "decision": "highest_supported_improvement_then_profile_id",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "equal_supported_score",
+      "decision": "lowest_profile_id_and_visible_disagreement",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "role_unmeasured",
+      "decision": "blocked",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "evidence_stale_or_generation_changed",
+      "decision": "blocked",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "policy_changed",
+      "decision": "blocked",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "origin_prohibited_or_unresolved",
+      "decision": "blocked",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "platform_unmeasured",
+      "decision": "blocked",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "resource_observation_stale_or_unfit",
+      "decision": "blocked",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "context_or_tool_budget_exceeded",
+      "decision": "blocked",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "classifier_or_task_class_unavailable",
+      "decision": "blocked_before_router",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "no_eligible_profile",
+      "decision": "blocked",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "verify_budget_high_risk_and_second_profile_measured_benefit",
+      "decision": "primary_plus_advisory_verifier",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "second_profile_unmeasured_or_no_supported_benefit",
+      "decision": "primary_only_with_required_review",
+      "fallback": false,
+      "visible": true
+    },
+    {
+      "condition": "profile_or_runtime_failure_after_selection",
+      "decision": "blocked_or_uncertain",
+      "fallback": false,
+      "visible": true
+    }
+  ],
+  "visible_budgets": [
+    {
+      "budget": "fast",
+      "max_context_tokens": 8192,
+      "max_tool_proposals": 2,
+      "review": "standard",
+      "local_only": true
+    },
+    {
+      "budget": "standard",
+      "max_context_tokens": 16384,
+      "max_tool_proposals": 4,
+      "review": "standard",
+      "local_only": true
+    },
+    {
+      "budget": "deep",
+      "max_context_tokens": 32768,
+      "max_tool_proposals": 8,
+      "review": "enhanced",
+      "local_only": true
+    },
+    {
+      "budget": "verify",
+      "max_context_tokens": 32768,
+      "max_tool_proposals": 8,
+      "review": "independent",
+      "local_only": true
+    }
+  ]
+}
