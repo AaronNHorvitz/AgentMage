@@ -10,6 +10,7 @@ mod executive_skills;
 mod index;
 mod knowledge_write;
 mod lifecycle;
+mod markdown_artifact_skills;
 mod markdown_artifacts;
 mod markdown_write;
 mod meeting_skills;
@@ -59,6 +60,7 @@ pub use lifecycle::{
     KnowledgeRestoreAction, KnowledgeRestoreActionKind, KnowledgeRestorePlan, build_backup,
     preview_migration, preview_restore, verify_backup,
 };
+pub use markdown_artifact_skills::{MarkdownArtifactSkill, built_in_markdown_artifact_skill_pack};
 pub use markdown_artifacts::{
     GeneratedMarkdownArtifact, MarkdownArtifactCitation, MarkdownArtifactError,
     MarkdownArtifactKind, MarkdownArtifactRequest, MarkdownArtifactSection,
