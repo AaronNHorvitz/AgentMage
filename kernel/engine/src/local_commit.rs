@@ -576,6 +576,7 @@ pub fn plan_local_commit(
     commit_transaction_id: &str,
     packet: &LocalReviewPacket,
     group_id: &str,
+    candidate_plan: &CandidateTreePlan,
     candidate: &CandidateTreeReceipt,
     author: CommitIdentity,
     committer: CommitIdentity,
@@ -584,7 +585,9 @@ pub fn plan_local_commit(
     signer: PinnedCommitSigner,
     task_branch: &str,
 ) -> Result<LocalCommitPlan, LocalCommitError> {
-    if !verify_review_packet(packet) || verify_candidate_tree_receipt(candidate).is_err() {
+    if !verify_review_packet(packet)
+        || verify_candidate_tree_receipt(candidate_plan, candidate).is_err()
+    {
         return Err(LocalCommitError::ReviewMismatch);
     }
     signer.verify()?;
@@ -599,7 +602,10 @@ pub fn plan_local_commit(
         .iter()
         .map(|blob| blob.operation_id.as_str())
         .collect::<Vec<_>>();
-    if candidate.repository_sha256 != packet.repository_sha256
+    if candidate_plan.review_packet_sha256 != packet.packet_sha256
+        || candidate_plan.change_set_sha256 != packet.change_set.change_set_sha256()
+        || candidate_plan.commit_group_sha256 != group.group_sha256
+        || candidate.repository_sha256 != packet.repository_sha256
         || candidate.parent_object != packet.base_object
         || blob_operations
             != group
@@ -1216,14 +1222,23 @@ where
     }
 }
 
-fn verify_candidate_tree_receipt(receipt: &CandidateTreeReceipt) -> Result<(), LocalCommitError> {
+/// Verifies a candidate receipt against the exact authority-free construction plan.
+pub fn verify_candidate_tree_receipt(
+    plan: &CandidateTreePlan,
+    receipt: &CandidateTreeReceipt,
+) -> Result<(), LocalCommitError> {
+    verify_candidate_tree_plan(plan)?;
     let mut canonical = receipt.clone();
     canonical.receipt_sha256 = ZERO_SHA256.to_owned();
     if receipt.schema_version != SCHEMA_VERSION
         || !valid_identifier(&receipt.candidate_build_id)
+        || receipt.candidate_build_id != plan.candidate_build_id
         || !is_sha256(&receipt.candidate_plan_sha256)
+        || receipt.candidate_plan_sha256 != plan.plan_sha256
         || !is_sha256(&receipt.repository_sha256)
+        || receipt.repository_sha256 != plan.repository_sha256
         || !valid_object_id(&receipt.parent_object)
+        || receipt.parent_object != plan.parent_object
         || !valid_object_id(&receipt.candidate_tree)
         || receipt.blobs.is_empty()
         || receipt.blobs.len() > MAX_COMMIT_FILES
@@ -1236,6 +1251,7 @@ fn verify_candidate_tree_receipt(receipt: &CandidateTreeReceipt) -> Result<(), L
         || !is_sha256(&receipt.before_manifest_sha256)
         || !is_sha256(&receipt.after_manifest_sha256)
         || !is_sha256(&receipt.user_index_sha256)
+        || receipt.user_index_sha256 != plan.user_index_sha256
         || receipt.ref_update_authority
         || !valid_platform_code(&receipt.platform_code)
         || canonical_sha256(&canonical)? != receipt.receipt_sha256
@@ -1530,7 +1546,7 @@ mod tests {
         let plan = candidate_plan(&before);
         assert!(verify_candidate_tree_plan(&plan).is_ok());
         let receipt = candidate_receipt(&before, &after);
-        assert!(verify_candidate_tree_receipt(&receipt).is_ok());
+        assert!(verify_candidate_tree_receipt(&plan, &receipt).is_ok());
         assert!(!receipt.ref_update_authority);
 
         for mutation in ["index", "hook", "filter", "config", "network", "ref"] {
