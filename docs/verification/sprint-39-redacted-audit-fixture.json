@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "transaction_id": "transaction-audit-fixture",
+  "action_id": "action-audit-fixture",
+  "checkpoint_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "operations": [
+    {
+      "file": "src/example.rs",
+      "operation": "replace",
+      "preimage_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "postimage_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "validation": "verified",
+      "failure_code": null,
+      "rollback_status": "not_required"
+    },
+    {
+      "file": "[REDACTED]",
+      "operation": "create",
+      "preimage_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "postimage_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "validation": "verified",
+      "failure_code": null,
+      "rollback_status": "not_required"
+    }
+  ],
+  "redacted_fields": 1,
+  "overall_status": "verified_complete",
+  "report": "State-change audit\nTransaction: transaction-audit-fixture\nAction: action-audit-fixture\nStatus: verified_complete\nFile: src/example.rs | Operation: replace | Validation: Verified | Failure: none | Rollback: not_required\nFile: [REDACTED] | Operation: create | Validation: Verified | Failure: none | Rollback: not_required\n",
+  "audit_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+}

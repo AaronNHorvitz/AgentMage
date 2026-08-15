@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_39_recovery_corpus",
+  "privacy": "public-synthetic-only",
+  "cases": [
+    {
+      "id": "cancel-before-consume",
+      "class": "cancellation",
+      "expected_instruction": "build_fresh_proposal",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "timeout-after-consume",
+      "class": "uncertain",
+      "expected_instruction": "block_uncertain_state",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "crash-after-consume",
+      "class": "uncertain",
+      "expected_instruction": "block_uncertain_state",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "stale-consumed-grant",
+      "class": "uncertain",
+      "expected_instruction": "block_uncertain_state",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "rollback-failure",
+      "class": "uncertain",
+      "expected_instruction": "block_uncertain_state",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "disk-full-after-canonical",
+      "class": "receipt-recovery",
+      "expected_instruction": "persist_terminal_receipt",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "permission-change",
+      "class": "workspace-drift",
+      "expected_instruction": "restore_workspace_identity",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "moved-root",
+      "class": "workspace-drift",
+      "expected_instruction": "restore_workspace_identity",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "concurrent-user-edit",
+      "class": "conflict",
+      "expected_instruction": "preserve_conflict_for_review",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "concurrent-session-edit",
+      "class": "conflict",
+      "expected_instruction": "preserve_conflict_for_review",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "lost-secret-store",
+      "class": "protected-storage",
+      "expected_instruction": "restore_secret_store",
+      "repeat_completed_write": false
+    },
+    {
+      "id": "expired-attributable-staging",
+      "class": "cleanup",
+      "expected_instruction": "propose_staging_cleanup",
+      "repeat_completed_write": false
+    }
+  ]
+}
