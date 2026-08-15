@@ -3092,27 +3092,27 @@ therefore remain open.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 41.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 41.1.1.1** (legacy `S-034-I01`): Implement `CommandSpec` with executable, literal arguments, working directory, environment allowlist, risk, grant requirement, cancellation, and bounds.
-  - [ ] **Sub-task 41.1.1.2** (legacy `S-034-I02`): Execute direct programs without a shell whenever possible.
-  - [ ] **Sub-task 41.1.1.3** (legacy `S-034-I03`): Implement exact executable, path, argument, working-directory, environment, and capability validation.
-  - [ ] **Sub-task 41.1.1.4** (legacy `S-034-I04`): Filter inherited environment and credentials and reject interactive processes without a dedicated adapter.
-  - [ ] **Sub-task 41.1.1.5** (legacy `S-034-I05`): Capture bounded standard output, standard error, exit code, cancellation, timeout, resource use, and child cleanup.
-  - [ ] **Sub-task 41.1.1.6** (legacy `S-034-I06`): Render exact command previews and issue command receipts after every attempt.
-  - [ ] **Sub-task 41.1.1.7** (legacy `S-034-I07`): Start with trusted deterministic read-only commands and promote repository commands only through separate fixtures.
-  - [ ] **Sub-task 41.1.1.8** (legacy `S-034-I08`): Keep unrestricted shells, shell expansion, arbitrary repository setup, and hidden hook execution prohibited.
+  - [x] **Sub-task 41.1.1.1** (legacy `S-034-I01`): Implement `CommandSpec` with executable, literal arguments, working directory, environment allowlist, risk, grant requirement, cancellation, and bounds.
+  - [x] **Sub-task 41.1.1.2** (legacy `S-034-I02`): Execute direct programs without a shell whenever possible.
+  - [x] **Sub-task 41.1.1.3** (legacy `S-034-I03`): Implement exact executable, path, argument, working-directory, environment, and capability validation.
+  - [x] **Sub-task 41.1.1.4** (legacy `S-034-I04`): Filter inherited environment and credentials and reject interactive processes without a dedicated adapter.
+  - [ ] **Sub-task 41.1.1.5** (legacy `S-034-I05`): Capture bounded standard output, standard error, exit code, cancellation, timeout, resource use, and child cleanup. Partial Fedora evidence covers bounded streams, full-stream hashes, exit classification, cancellation, timeout, process-unit termination, and transient-unit cleanup; observed peak CPU/memory/task accounting and a hostile descendant/crash campaign remain absent.
+  - [x] **Sub-task 41.1.1.6** (legacy `S-034-I06`): Render exact command previews and issue command receipts after every attempt.
+  - [x] **Sub-task 41.1.1.7** (legacy `S-034-I07`): Start with trusted deterministic read-only commands and promote repository commands only through separate fixtures. The current registry contains only explicit read-only test fixtures; repository commands remain unregistered pending Sprint 42.
+  - [x] **Sub-task 41.1.1.8** (legacy `S-034-I08`): Keep unrestricted shells, shell expansion, arbitrary repository setup, and hidden hook execution prohibited.
 
-- [ ] **Task 41.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 41.1.2.1:** Command runner and command registry.
-  - [ ] **Sub-task 41.1.2.2:** Command preview and receipt schemas.
-  - [ ] **Sub-task 41.1.2.3:** Environment and child-process isolation report.
-  - [ ] **Sub-task 41.1.2.4:** Command injection and cancellation corpus.
+- [x] **Task 41.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 41.1.2.1:** Command runner and command registry.
+  - [x] **Sub-task 41.1.2.2:** Command preview and receipt schemas.
+  - [x] **Sub-task 41.1.2.3:** Environment and child-process isolation report.
+  - [x] **Sub-task 41.1.2.4:** Command injection and cancellation corpus.
 
 - [ ] **Task 41.1.3 - Verify and close the story**
-  - [ ] **Sub-task 41.1.3.1:** `S-034-UT01` validates allowlisted executable identity, literal argument vectors, working directory, environment, limits, expected outputs, and grant binding; assert unknown commands/flags/paths are rejected before spawn.
-  - [ ] **Sub-task 41.1.3.2:** `S-034-ST01` attempts shell metacharacters, substitution, globbing, response files, config discovery, aliases, pagers, hooks, loaders, inherited descriptors, proxy/credential environment, and PATH substitution; assert no interpretation or ambient authority.
-  - [ ] **Sub-task 41.1.3.3:** `S-034-RT01` cancels, times out, kills, and crashes parent/child/grandchild process trees; assert complete descendant termination, descriptor closure, scratch cleanup, and one truthful terminal receipt.
-  - [ ] **Sub-task 41.1.3.4:** `S-034-IT01` runs every approved template at minimum/maximum limits on each platform sandbox; assert exact command identity, output truncation, resource accounting, filesystem/network effects, and exit classification.
-  - [ ] **Sub-task 41.1.3.5 - Product security evidence:** Map `SR-ACC-001` through `SR-ACC-007`, `SR-PLT-003`, `SR-AI-005`/`SR-AI-009`, `SR-TST-004`/`SR-TST-006`; retain template registry, argv/env traces, injection corpus, process-tree cleanup, resource results, and independent runner review.
+  - [x] **Sub-task 41.1.3.1:** `S-034-UT01` validates allowlisted executable identity, literal argument vectors, working directory, environment, limits, expected outputs, and grant binding; assert unknown commands/flags/paths are rejected before spawn.
+  - [ ] **Sub-task 41.1.3.2:** `S-034-ST01` attempts shell metacharacters, substitution, globbing, response files, config discovery, aliases, pagers, hooks, loaders, inherited descriptors, proxy/credential environment, and PATH substitution; assert no interpretation or ambient authority. Partial evidence covers 18 fixed metacharacter, substitution, glob, response-file, config, alias, evaluator, plugin, pager/editor, loader, environment, and interpreter cases plus a cleared live environment; a complete inherited-descriptor and hostile configuration campaign remains absent.
+  - [ ] **Sub-task 41.1.3.3:** `S-034-RT01` cancels, times out, kills, and crashes parent/child/grandchild process trees; assert complete descendant termination, descriptor closure, scratch cleanup, and one truthful terminal receipt. Partial Fedora evidence covers live timeout/cancellation, process-unit kill, inactive-state verification, and one typed receipt; child/grandchild, parent-crash, descriptor-leak, and scratch-forensics cases remain absent.
+  - [ ] **Sub-task 41.1.3.4:** `S-034-IT01` runs every approved template at minimum/maximum limits on each platform sandbox; assert exact command identity, output truncation, resource accounting, filesystem/network effects, and exit classification. Partial Fedora evidence covers exact identity, literal output, timeout/cancellation, network denial, and bounded output semantics; native Ubuntu/macOS/Windows runs, limit-boundary campaigns, and observed resource accounting remain absent.
+  - [ ] **Sub-task 41.1.3.5 - Product security evidence:** Map `SR-ACC-001` through `SR-ACC-007`, `SR-PLT-003`, `SR-AI-005`/`SR-AI-009`, `SR-TST-004`/`SR-TST-006`; retain template registry, argv/env traces, injection corpus, process-tree cleanup, resource results, and independent runner review. The exact requirement map and local artifacts are retained; trusted-package execution, independent review, cross-platform results, peak resource evidence, and deferred manual fuzzing remain absent.
 
 ##### Story Acceptance Criteria
 
@@ -3121,11 +3121,22 @@ therefore remain open.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 41.AC1:** Literal approved commands run with exact expected arguments and working directory.
-- [ ] **Sprint AC 41.AC2:** Shell metacharacters, argument-prefix tricks, path substitution, environment leakage, and unapproved executables fail closed.
+- [x] **Sprint AC 41.AC1:** Literal approved commands run with exact expected arguments and working directory.
+- [x] **Sprint AC 41.AC2:** Shell metacharacters, argument-prefix tricks, path substitution, environment leakage, and unapproved executables fail closed.
 - [ ] **Sprint AC 41.AC3:** Cancellation and limits terminate all descendants and report actual status.
 - [ ] **Sprint AC 41.AC4:** Commands cannot escape sandbox, workspace, grant, network, or credential scope.
-- [ ] **Sprint AC 41.AC5:** No model narration is accepted as evidence that a command ran.
+- [x] **Sprint AC 41.AC5:** No model narration is accepted as evidence that a command ran.
+
+Retained local evidence: source revision `b9bd59f021d7c96e96e89dc005d19f537bd60e2b` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-41/local-evidence-report.json), SHA-256
+`631c2ddbdeb03746c0f80a2c28185404113325578cb992edb7699b19a47956d6`. All 11 recorded commands
+exit zero, all five focused suites report zero blocking skips, and the Fedora live fixtures exercise
+literal execution plus timeout/cancellation cleanup without shell or network authority. Sprint 41
+remains **BLOCKED** because Sprint 40 and `G-V0.3` are blocked; no production command profile is
+registered; peak resource accounting, the complete hostile descendant/crash campaign, native
+cross-platform acceptance, trusted-package-launcher execution, independent review, and deferred
+manual fuzzing remain absent. The open tasks/sub-tasks, both story criteria, Sprint AC 41.AC3/AC4,
+the story, and the sprint therefore remain open.
 
 **Gate decision:** Sprint 41 is PASS only when Story 41.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 42 - Git Worktrees and Remote Repository Safety

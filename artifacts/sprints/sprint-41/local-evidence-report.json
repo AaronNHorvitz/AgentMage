@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_41_local_evidence",
+  "source_revision": "b9bd59f021d7c96e96e89dc005d19f537bd60e2b",
+  "source_sha256": {
+    "kernel/engine/src/command_runner.rs": "c13f20df153fb8bfe8ec6c95bfe9d05b497811caed8033ca180ef697fffb238e",
+    "platforms/linux/src/command_runner.rs": "56c85176cd27b1e44294de5d38e94ef6be38f1952f0289727153e07614e38c3d",
+    "kernel/engine/tests/command_injection_corpus.rs": "e6dba1d2f39db8b33d1339a2f27f197e872936349c727a4e8fe8c883a443f21c",
+    "schemas/runtime/command-preview.schema.json": "14ee9b02bf78b9f420141af86704bd14d63b0b1c1b63c7b923d845a79e03741e",
+    "schemas/runtime/command-receipt.schema.json": "2baca45226ea010d5c56fc45503cec2e0d0f4da6727e50df70b64a7e16393f85",
+    "schemas/runtime/examples/command-preview.valid.json": "8fee0a5d4fa1c9589ce74c1086975fe228425c305fa4dca95e9ce38b5772bfcd",
+    "schemas/runtime/examples/command-receipt.valid.json": "55a46ffb9ad671a389bf9d377c3917ceb240e0d260eec626af7bd5ad46272cf3",
+    "docs/architecture/bounded-command-runner.md": "b8a2231c5464d58df30160d14c604f26fe3598dea290fc994f1b02ae0e0326e9",
+    "docs/verification/sprint-41-command-injection-corpus.json": "6fbc53a2802a528cc65a501b7cfabffef84cde19ed38b83cd287294c8220b6b5",
+    "docs/verification/sprint-41-local-results.md": "702f403c837efdf9e287ae766f7facec66f1c5c2e936aac009807d9e85e3b8a1",
+    "scripts/sprint_41_evidence.py": "4c38b4955b07ed0647bba42d689606f86041eba8eb2959e158105711b359a4ae",
+    "tests/test_sprint_41_evidence.py": "7e365df0392ab3541d7e79c100bd199cccde42137348ba89dafbeacb4108f375"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "systemd": "systemd 259 (259.8-1.fc44)",
+    "bubblewrap": "bubblewrap 0.11.0"
+  },
+  "commands": [
+    {
+      "id": "kernel-command-contract",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "command_runner",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "19581a85b7f52e7f7ee8450779448613247d6a31507fa7e39fe84fddb74ad479",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "command-injection-corpus",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--test",
+        "command_injection_corpus",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "eceb14cf3ee3a338551018ada41f0c6fa10c9f7bab50ed58ccb7c5bef87d6bb1",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-command-manifest",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "manifest_",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e5f137fc610766d27ed28a9e82c7fc50d7eec5cb10cd31fba8e41ae1fbb0bddd",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-literal-command",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_exact_command_runs_offline_with_literal_output",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a04c198d10b18d11e7d26e2e15cac596a3e8f88ca6fafdeba53d6052c6b4f7eb",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-termination",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_timeout_and_cancellation_terminate_the_process_unit",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "641f6a3f4be57ac0f03d86e4aab846c0fb012c213804686627f1a143135da917",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "schema-contract",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "8ccd763ad24d442d142d9edd2d95c7fadd7f0b92c102fbe45b1ac06719406ae8",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "1af53c49d732250ee7e044891371808b4f21b0f7fd268fca3935cc69fa5ac290",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "-p",
+        "agentmage-platform-linux",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "20d513ac4a7a72035579d36ee01902135b5f7537aacfe05e63b58fdeedba7e6b",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_41_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "372ee57a30b8a8b17bb056a0814266786a922da7dcf4139f4f9a2457745d6424",
+      "blocking_skip_count": null
+    }
+  ],
+  "native_fixture_artifacts": [
+    {
+      "id": "systemd-run",
+      "name": "systemd-run",
+      "size": 103128,
+      "sha256": "19ec11bf309a5df0a38328f03947f024937f2b22d09bcff0bfe7512eded37b02",
+      "root_owned": true,
+      "group_or_world_writable": false
+    },
+    {
+      "id": "systemctl",
+      "name": "systemctl",
+      "size": 326512,
+      "sha256": "1829004af3ea13fff8146b8accef95156f9c81902b60c42a51f5a9c8d143a8b6",
+      "root_owned": true,
+      "group_or_world_writable": false
+    },
+    {
+      "id": "bubblewrap",
+      "name": "bwrap",
+      "size": 86552,
+      "sha256": "139bf12775025adf5c8523d119c5ad2950281335573708fd839c60181a3886dc",
+      "root_owned": true,
+      "group_or_world_writable": false
+    },
+    {
+      "id": "printf-fixture",
+      "name": "printf",
+      "size": 61312,
+      "sha256": "1a0b3cac45e9a00e3af45b5c352dadbcbf69ff7f7a91db4c145826cccf41313e",
+      "root_owned": true,
+      "group_or_world_writable": false
+    },
+    {
+      "id": "sleep-fixture",
+      "name": "sleep",
+      "size": 36608,
+      "sha256": "651468d5d1adbd00e0cf39813d90dc2c0deeb57c99ef06227f13d4407797e14b",
+      "root_owned": true,
+      "group_or_world_writable": false
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-PLT-003",
+    "SR-AI-005",
+    "SR-AI-009",
+    "SR-TST-004",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "exact_command_spec_and_registry": true,
+    "direct_process_without_shell": true,
+    "exact_executable_argument_working_directory_environment_validation": true,
+    "cleared_environment_and_noninteractive_execution": true,
+    "bounded_streams_timeout_cancellation_and_cleanup": true,
+    "exact_previews_and_terminal_receipts": true,
+    "trusted_deterministic_read_only_fixtures": true,
+    "unrestricted_shell_and_hidden_expansion_absent": true,
+    "fedora_live_literal_timeout_and_cancellation_exercised": true,
+    "production_command_profile_registered": false,
+    "peak_cpu_memory_and_task_accounting_retained": false,
+    "hostile_descendant_tree_campaign_complete": false,
+    "native_cross_platform_command_acceptance": false,
+    "independent_command_boundary_review": false,
+    "manual_fuzzing_complete": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "fedora_live_literal_execution": true,
+    "fedora_live_timeout_and_cancellation_cleanup": true,
+    "production_command_profile_registration": false,
+    "peak_resource_accounting": false,
+    "hostile_descendant_crash_campaign": false,
+    "native_cross_platform_command_acceptance": false,
+    "trusted_package_launcher_environment": false,
+    "independent_command_boundary_review": false,
+    "manual_fuzzing": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-G-V0.3-BLOCKED",
+      "owner": "41.1"
+    },
+    {
+      "code": "COMMAND-PROFILE-NOT-PRODUCT-REGISTERED",
+      "owner": "41.1.1"
+    },
+    {
+      "code": "PEAK-RESOURCE-ACCOUNTING-ABSENT",
+      "owner": "41.1.1.5"
+    },
+    {
+      "code": "HOSTILE-DESCENDANT-CRASH-CAMPAIGN-ABSENT",
+      "owner": "41.1.3.3"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-COMMAND-ACCEPTANCE-ABSENT",
+      "owner": "41.1.3.4"
+    },
+    {
+      "code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT",
+      "owner": "41.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-COMMAND-BOUNDARY-REVIEW-ABSENT",
+      "owner": "41.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_41_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_g_v0_3_closed": false,
+    "command_profile_active": false,
+    "generic_shell_present": false,
+    "network_access_enabled": false,
+    "cross_platform_acceptance_passed": false,
+    "peak_resource_accounting_complete": false,
+    "hostile_descendant_campaign_complete": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
