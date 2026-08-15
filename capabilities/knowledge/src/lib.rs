@@ -20,6 +20,7 @@ mod memory_working;
 mod obsidian;
 mod obsidian_index;
 mod operations;
+mod pdf_diagram;
 mod pdf_extraction;
 mod pdf_generation;
 mod pdf_inspection;
@@ -118,6 +119,10 @@ pub use operations::{
     KnowledgeDashboard, KnowledgeDuplicate, KnowledgeDuplicateReason, KnowledgeExport,
     KnowledgeImportReport, KnowledgeRelationship, build_dashboard, build_json_lines_export,
     validate_import,
+};
+pub use pdf_diagram::{
+    PdfOfflineDiagramAdmission, PdfOfflineDiagramError, PdfOfflineDiagramObservation,
+    PdfOfflineDiagramProjection, validate_pdf_offline_diagram,
 };
 pub use pdf_extraction::{
     PdfExtractionError, PdfExtractionLimitation, PdfExtractionMethod, PdfExtractionProfile,
