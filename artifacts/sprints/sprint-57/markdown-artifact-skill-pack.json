@@ -1,0 +1,377 @@
+{
+  "acronym_expansion": false,
+  "authority": {
+    "approvals": false,
+    "code_execution": false,
+    "connectors": false,
+    "filesystem": false,
+    "grant_creation": false,
+    "memory_promotion": false,
+    "network": false,
+    "secrets": false,
+    "shell": false,
+    "tool_registration": false,
+    "workspace_expansion": false,
+    "writes": false
+  },
+  "citation_invention": false,
+  "execution_access": false,
+  "filesystem_access": false,
+  "manifests": [
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1171,
+          "content_sha256": "54bb03f14d398b979014f880714be48980ac68670c6688b24ac45d0c0ce7dd21",
+          "kind": "prompt",
+          "path": "prompts/markdown-meeting-cleanup.prompt.md",
+          "semantic_key": "markdown-meeting-cleanup-prompt"
+        },
+        {
+          "bytes": 140,
+          "content_sha256": "e7a707a08c60f0eec77d106add1e2f7dd2d368d85191f3a9cec6ac6ff1004e5a",
+          "kind": "template",
+          "path": "templates/markdown-meeting-cleanup.template.md",
+          "semantic_key": "markdown-meeting-cleanup-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "fd85d088ad9befe2153a9dca19be5a4dd993fd107575f933467a41af5ec8eee8",
+      "package_sha256": "09c7b2e348262694270ad43878116f4a79c85e65d9cab602d4e8c6bdfcd13dd5",
+      "precedence": 100,
+      "purpose": "Project approved meeting source into readable Markdown without changing attribution or unresolved text",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "markdown-meeting-cleanup"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-markdown-meeting-cleanup",
+      "source_id": "agentmage-built-in-markdown-artifact-skills",
+      "source_sha256": "380be1f70e507e0417b3860c1db50878edce12e6e958e70b0479ff7ee07e25ba",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1169,
+          "content_sha256": "1555a48694f9b5dc2ce8a50f7ad37f5daea7ed15db1e3d32bb3f3fa19f9a75cc",
+          "kind": "prompt",
+          "path": "prompts/markdown-status-report.prompt.md",
+          "semantic_key": "markdown-status-report-prompt"
+        },
+        {
+          "bytes": 121,
+          "content_sha256": "c5a7afac97c48958c0912c28ed3b32ab712da43b5ee0ce3a9e33fcaf1db39441",
+          "kind": "template",
+          "path": "templates/markdown-status-report.template.md",
+          "semantic_key": "markdown-status-report-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "e5b7bd688b6d54ce466ad2e09ce119766c36ae46c4e046aa2d3644c1ee275ddc",
+      "package_sha256": "2cf2cf97ebb5e75d6875adbaeb1c07cbc24b822eb9868f9a30c753401fb18034",
+      "precedence": 100,
+      "purpose": "Project cited current state, progress, blockers, and next steps into a local status report",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "markdown-status-report"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-markdown-status-report",
+      "source_id": "agentmage-built-in-markdown-artifact-skills",
+      "source_sha256": "380be1f70e507e0417b3860c1db50878edce12e6e958e70b0479ff7ee07e25ba",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1170,
+          "content_sha256": "ae963330b77e85088a1038e5fa29cf91d881eee0f8c2cdf5cc79b798c833a638",
+          "kind": "prompt",
+          "path": "prompts/markdown-standup-script.prompt.md",
+          "semantic_key": "markdown-standup-script-prompt"
+        },
+        {
+          "bytes": 77,
+          "content_sha256": "e8e8b05d4d8d8ad1097b483896ff959e278c7e49f14c460959b9f359f3154422",
+          "kind": "template",
+          "path": "templates/markdown-standup-script.template.md",
+          "semantic_key": "markdown-standup-script-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "cb8d390e884d3ccabb428f31db6525b4f7e903d6432e397af5da690fd7d4b84c",
+      "package_sha256": "9aa276353d91ede7d00eda96f1bee271b97a0721650c954dba3b0e2de9c100b6",
+      "precedence": 100,
+      "purpose": "Project cited completed, current, next, and blocked work into a local standup script",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "markdown-standup-script"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-markdown-standup-script",
+      "source_id": "agentmage-built-in-markdown-artifact-skills",
+      "source_sha256": "380be1f70e507e0417b3860c1db50878edce12e6e958e70b0479ff7ee07e25ba",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1169,
+          "content_sha256": "3ec1bf1218e1ef4aa0dff0e4c9f48755a938d0867df3c9b0564815ac2fb8e84f",
+          "kind": "prompt",
+          "path": "prompts/markdown-task-document.prompt.md",
+          "semantic_key": "markdown-task-document-prompt"
+        },
+        {
+          "bytes": 100,
+          "content_sha256": "a5cd0c3aa6013e10c7768f58209d344e80b1b51de327fa4096bdd0cbff642c37",
+          "kind": "template",
+          "path": "templates/markdown-task-document.template.md",
+          "semantic_key": "markdown-task-document-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "3aab248a9baf17a7501086d6c15485be84facb3d2b7831b847b60f42dfc0e15a",
+      "package_sha256": "c5cc84fcd47b48ad2d236fd1e38e77cad2b04cef01477e3df1562b156fc7e72f",
+      "precedence": 100,
+      "purpose": "Project cited tasks, dependencies, completion state, and acceptance checks into local Markdown",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "markdown-task-document"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-markdown-task-document",
+      "source_id": "agentmage-built-in-markdown-artifact-skills",
+      "source_sha256": "380be1f70e507e0417b3860c1db50878edce12e6e958e70b0479ff7ee07e25ba",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1163,
+          "content_sha256": "e3c93b357a678d3ce983d485151cb23f36a49888c08e88c312ace56f9b2d1dc3",
+          "kind": "prompt",
+          "path": "prompts/markdown-handoff.prompt.md",
+          "semantic_key": "markdown-handoff-prompt"
+        },
+        {
+          "bytes": 155,
+          "content_sha256": "5b348578b5614407c6d9540b8b0718a837ba18845871f8b120b5bc074b44ed3d",
+          "kind": "template",
+          "path": "templates/markdown-handoff.template.md",
+          "semantic_key": "markdown-handoff-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "b130e313f4f54ca33a88a479a23280117a2066ef3122be8c668f03024e7a5ec2",
+      "package_sha256": "45346e27fdae73500b608b79c7e8e1d35ccb039e02a18d7f4d38e922d37ea872",
+      "precedence": 100,
+      "purpose": "Project cited current state, decisions, blockers, verification, and resume steps into a local handoff",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "markdown-handoff"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-markdown-handoff",
+      "source_id": "agentmage-built-in-markdown-artifact-skills",
+      "source_sha256": "380be1f70e507e0417b3860c1db50878edce12e6e958e70b0479ff7ee07e25ba",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1171,
+          "content_sha256": "ad93a79fe30b11eba4a4b9b0c1569046579252c9c5302d84cb8f5c1f1e7cb491",
+          "kind": "prompt",
+          "path": "prompts/markdown-decision-record.prompt.md",
+          "semantic_key": "markdown-decision-record-prompt"
+        },
+        {
+          "bytes": 109,
+          "content_sha256": "e5031a4ae6100a73e3c57a782c8f4973f700ed39ede03d25841db3c0a722bc2a",
+          "kind": "template",
+          "path": "templates/markdown-decision-record.template.md",
+          "semantic_key": "markdown-decision-record-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "4ce29e2ead072c82e4da50466f36dda6346dbdde898bfef208dbe4c43c210a8c",
+      "package_sha256": "af8d1da84e39217529aa4f0146d21392d6b536b4c625e775cc3bebab2a4e26b2",
+      "precedence": 100,
+      "purpose": "Project cited context, options, decision state, consequences, and unresolved questions into a local record",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "markdown-decision-record"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-markdown-decision-record",
+      "source_id": "agentmage-built-in-markdown-artifact-skills",
+      "source_sha256": "380be1f70e507e0417b3860c1db50878edce12e6e958e70b0479ff7ee07e25ba",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.6.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1171,
+          "content_sha256": "dc6a77c8230fc6a59e457269370fbb7d54a6ff407042c5dd6c1e31ce9b8ea824",
+          "kind": "prompt",
+          "path": "prompts/markdown-evidence-report.prompt.md",
+          "semantic_key": "markdown-evidence-report-prompt"
+        },
+        {
+          "bytes": 105,
+          "content_sha256": "11546b9c744a21ab7c01f2ab5d6f0e7ea4ff9ca97472fc8861dbbe843064894b",
+          "kind": "template",
+          "path": "templates/markdown-evidence-report.template.md",
+          "semantic_key": "markdown-evidence-report-template"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "c8d692d10d0f7d37f95c2e0e35d0bb5cff62f42d7aa98b8340c91b812fc856a6",
+      "package_sha256": "22cb369c30da58d18f1ef34c7e36704346b94da8d1983b922baed3af55279dc6",
+      "precedence": 100,
+      "purpose": "Project cited claims, checks, results, limitations, and blockers into a local evidence report",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "decision",
+          "document",
+          "meeting",
+          "project",
+          "task"
+        ],
+        "max_context_bytes": 196608,
+        "workflow_ids": [
+          "markdown-evidence-report"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-markdown-evidence-report",
+      "source_id": "agentmage-built-in-markdown-artifact-skills",
+      "source_sha256": "380be1f70e507e0417b3860c1db50878edce12e6e958e70b0479ff7ee07e25ba",
+      "trust_state": "admitted",
+      "version": "0.6.0"
+    }
+  ],
+  "network_access": false,
+  "product_registration": false,
+  "prompt_count": 7,
+  "record_type": "agentmage-markdown-artifact-skill-pack",
+  "remote_asset_fetch": false,
+  "renderer_access": false,
+  "schema_version": 1,
+  "skills": [
+    "meeting_cleanup",
+    "status_report",
+    "standup_script",
+    "task_document",
+    "handoff",
+    "decision_record",
+    "evidence_report"
+  ],
+  "source_mutation": false,
+  "template_count": 7,
+  "version": "0.6.0"
+}
