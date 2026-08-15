@@ -4599,15 +4599,15 @@ incomplete. No story, sprint, product, platform, or release gate is closed.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 63.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 63.1.1.1** (legacy `S-052-I05`): Implement JSON parsing, schema validation, stable key ordering, size limits, and redaction.
-  - [ ] **Sub-task 63.1.1.2** (legacy `S-052-I06`): Implement deterministic comparisons with source hashes and match reasons.
-  - [ ] **Sub-task 63.1.1.3** (legacy `S-052-I07`): Generate reconciliation workbooks with escaped text, formulas, styles, tables, charts, validation, and formula-error scanning.
+  - [x] **Sub-task 63.1.1.1** (legacy `S-052-I05`): Implement JSON parsing, schema validation, stable key ordering, size limits, and redaction.
+  - [x] **Sub-task 63.1.1.2** (legacy `S-052-I06`): Implement deterministic comparisons with source hashes and match reasons.
+  - [x] **Sub-task 63.1.1.3** (legacy `S-052-I07`): Generate reconciliation workbooks with escaped text, formulas, styles, tables, charts, validation, and formula-error scanning.
   - [ ] **Sub-task 63.1.1.4** (legacy `S-052-I08`): Recalculate and visually verify generated workbooks while preserving originals.
 
 - [ ] **Task 63.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 63.1.2.1:** Spreadsheet, CSV, and JSON adapters.
-  - [ ] **Sub-task 63.1.2.2:** Normalization and reconciliation method registry.
-  - [ ] **Sub-task 63.1.2.3:** Formula-injection and malformed-data corpus.
+  - [x] **Sub-task 63.1.2.1:** Spreadsheet, CSV, and JSON adapters.
+  - [x] **Sub-task 63.1.2.2:** Normalization and reconciliation method registry.
+  - [x] **Sub-task 63.1.2.3:** Formula-injection and malformed-data corpus.
   - [ ] **Sub-task 63.1.2.4:** Structural, recalculation, and visual verification reports.
 
 - [ ] **Task 63.1.3 - Verify and close the story**
@@ -4620,17 +4620,29 @@ incomplete. No story, sprint, product, platform, or release gate is closed.
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 63.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every transformation/reconciliation records source hashes, schema/type decisions, formula policy, join keys, tolerances, unmatched/conflicting rows, totals, and reproducible method version.
-- [ ] **Story AC 63.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then produced cells/CSV fields cannot execute when opened under the approved threat model; risky content is escaped, removed, or blocked and reported.
+- [x] **Story AC 63.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then produced cells/CSV fields cannot execute when opened under the approved threat model; risky content is escaped, removed, or blocked and reported.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 63.AC1:** Source workbooks and CSV files remain unchanged during inspection and comparison.
-- [ ] **Sprint AC 63.AC2:** Every match and discrepancy includes deterministic reason codes and source identities.
-- [ ] **Sprint AC 63.AC3:** Generated CSV values cannot execute as formulas when opened in common spreadsheet software.
+- [x] **Sprint AC 63.AC1:** Source workbooks and CSV files remain unchanged during inspection and comparison.
+- [x] **Sprint AC 63.AC2:** Every match and discrepancy includes deterministic reason codes and source identities.
+- [x] **Sprint AC 63.AC3:** Generated CSV values cannot execute as formulas when opened in common spreadsheet software.
 - [ ] **Sprint AC 63.AC4:** Generated workbooks contain no formula errors and pass rendered visual checks.
 - [ ] **Sprint AC 63.AC5:** Malformed, oversized, encrypted, unsupported, and ambiguous input fails explicitly.
 
 **Gate decision:** Sprint 63 is PASS only when Story 63.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current status:** **BLOCKED.** The locally implementable strict JSON parse/schema/redaction,
+structural comparison, content-minimized reconciliation workbook, direct reopen, formula-error
+scan, synthetic verifier-semantics, runtime-schema, method-registry, and review-record subset passed
+11 retained commands with zero focused skips at revision
+`85557185be60c6746dd18b87d8e7a5dced47cc33`; see
+`artifacts/sprints/sprint-63/local-evidence-report.json` and
+`docs/verification/sprint-63-local-results.md`. Numeric tolerance, financial rounding,
+many-to-many allocation, stale-data and arbitrary-precision methods, native recalculation,
+Fedora/Ubuntu/Windows 11 and retained macOS visual evidence, installed accessibility,
+independent review, and deferred manual fuzzing remain incomplete. No story, sprint, product,
+platform, or release gate is closed.
 ### [ ] Sprint 64 - Presentation Workflows
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

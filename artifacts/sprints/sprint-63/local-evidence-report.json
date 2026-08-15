@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_63_local_evidence",
+  "source_revision": "85557185be60c6746dd18b87d8e7a5dced47cc33",
+  "source_sha256": {
+    "Cargo.toml": "86a6057ca1cec714e92beb0165c57573d3f7e1caa8e5a50365b8af55f18491a8",
+    "Cargo.lock": "7faba679d341b448db12771297b6955b485713c7f609ecb91cce4ea66841d3e9",
+    "capabilities/knowledge/Cargo.toml": "b7f36b6898ddcce5c3a8a03a148366a819bfa0d67d7af5fb7480c5a94207a76b",
+    "capabilities/knowledge/src/json_data.rs": "ca417a4b54bc0e5f8a34a4566330b3c1f575c7c12c20f0b586e4c1037adf8afa",
+    "capabilities/knowledge/src/reconciliation_workbook.rs": "a3fba14ccaa7d4131af80db61d97419ec89d8e2b605a16cf69a955a92746770e",
+    "capabilities/knowledge/src/spreadsheet_ooxml.rs": "72504df24a94725c2a60699f54b8c5b85dd620bbf56ebc68410769d5b3124999",
+    "capabilities/knowledge/src/tabular.rs": "7ec4a9df9e8a6ca4f00913c07b54dba32b715274e9c09160b08f632db1f45a50",
+    "capabilities/knowledge/src/lib.rs": "3f7015d8e77c29f110886542d595c84693ff42d70276a901ee2cbaf651dd3419",
+    "schemas/runtime/structured-json-document.schema.json": "0aa871b0b90a04acfb9802b0013c1a98081ce1a0c5c8c2313a0330b9e3332a52",
+    "schemas/runtime/structured-json-redaction.schema.json": "e402af4d9d1be0049ec0491eca08aa13c9b2d1e8cd57aae605a91cbcfc58da4b",
+    "schemas/runtime/structured-json-comparison.schema.json": "eed432e89b4999254685b723d4110157aee1f76c6db569c48537c5d549b2c453",
+    "schemas/runtime/generated-reconciliation-workbook.schema.json": "e8051a644d230a7f6df8e719311b7f2f5178ab9bb582042119614cea959d8c3a",
+    "schemas/runtime/spreadsheet-verification-report.schema.json": "10799eb23d5787afdc7c9f927f7025c283aed72b7301a9da8a96c2eda52ad77b",
+    "scripts/validate_planning_schemas.mjs": "4a53222fec878bfd9cc9e64afedb70e14bb93897cd5352d24d5aa267667339d5",
+    "tests/test_planning_schemas.mjs": "af6a6e98c5e8686f14965b0e8c01137e6e91db7d234c4fdf463d9eea8c972284",
+    "supply-chain/dependency-hashes.sha256": "e712b2f596105617f8dbf56a700fee0750a9fbb9107726ab94939efbeed2fa12",
+    "supply-chain/dependency-provenance.json": "399f39a17df03bbbef1d9e99fa77bd2abe65ac70133b27cc816ed35699b9811b",
+    "supply-chain/sbom.cdx.json": "41380541b9d1b0fe90d0991b3931c0a34d30b0ffd488f8d2343f5d7a26e94c15",
+    "docs/architecture/structured-data-method-registry.md": "033b186db8aea798ba0592ebb5349e5865a0e35f42620392cc0eb505525d4166",
+    "docs/architecture/json-reconciliation-and-workbook-output.md": "68fe21e818c1f33e5c924453cb86096a84f3088eb4ff6dff6bb8174065e67eb2",
+    "docs/guides/json-and-reconciliation-review.md": "a66edbfe674f1dc6bc2c62d8b6dff60eebca2f7956ae32831e2791ab43559093",
+    "docs/verification/sprint-63-reconciliation-corpus.json": "6528e7840dffacfbf1f662825c1c2431878cb9644e271ab05df20ee27f47f05b",
+    "docs/verification/sprint-63-reconciliation-dependency-manifest.json": "8afe90377ebed9c7c02d9cb5c7a7fa5ec9e318a0c1f9d1770beac487de62f11e",
+    "docs/verification/sprint-63-local-results.md": "dd07c9a63f1aca306780287a89858bf756f350e8e389324a5894f067586eadbb",
+    "scripts/reconciliation_contract.py": "dd826857702b731a75ac835278011e0767bb53b1e5968d18f6586988491cac55",
+    "tests/test_reconciliation_contract.py": "402539dd24a7763c471cf848cd0a515d5257043c06043f0864252d676931b4cc",
+    "scripts/sprint_evidence_recorder.py": "b4da214d981239054ae1c0ffac98f72dd258a3de195c9904e0998bad4f8fbc94",
+    "scripts/sprint_63_evidence.py": "c09ff244b2dac6049ffea3a8d7e33552e39343e69d9ac4650ceff2dc9b037388",
+    "tests/test_sprint_63_evidence.py": "69d8da68e36a60e3f306b4ad93369c1b260d17f815bcc478926d4f559ae3d182"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "json-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "json_data::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7ff0b47b1cf5dc653a8350b957d2825251f255463a32fb422e50d833df47eab4",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "reconciliation-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "reconciliation_workbook::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f25c127c5246a7f6c4f8508171ed8f813cfe8e26da5c18c9f0c220d5e5d87577",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "spreadsheet-reopen-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "spreadsheet_ooxml::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2f655e443678f34896b51c7fb679c0feceb44b451299e33d7963ef075ca8957b",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "reconciliation-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fbfc9f65fc544c50ff4fa76dbf5daaf789f361024c0a09c33bd9d78a1a9b2ceb",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "reconciliation-review-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_reconciliation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "feabb4add9e2ca3374e538560634d1ec97dc4f4ce89aab12f3d726e36ea9b2f6",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "reconciliation-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "reconciliation-format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "8058fbd7dfc259759af75d41c3ae71b24fd4d77d869e191f9ac09328bc5b1c75",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_63_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5d8a174d448d59185fd227bcbab9c964e39b10a9c2e28965972cfb0c833dd854",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-SUP-008",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-TST-006",
+    "SR-CIV-008"
+  ],
+  "implemented_contracts": {
+    "runtime_schema_count": 5,
+    "json_rust_fixture_count": 5,
+    "workbook_rust_fixture_count": 4,
+    "review_corpus_case_count": 109,
+    "implemented_method_count": 6,
+    "strict_duplicate_key_json_parsing": true,
+    "closed_json_schema_validation": true,
+    "canonical_json_redaction": true,
+    "hash_only_json_comparison": true,
+    "deterministic_reconciliation_xlsx": true,
+    "generated_xlsx_direct_reopen": true,
+    "closed_formula_policy": true,
+    "formula_error_scan": true,
+    "synthetic_native_verifier_semantics": true,
+    "network_access_capability": false,
+    "filesystem_mutation_capability": false,
+    "formula_execution_capability": false,
+    "native_office_runtime_admitted": false,
+    "numeric_tolerance_method": false,
+    "financial_rounding_method": false,
+    "many_to_many_allocation_method": false,
+    "stale_data_policy": false,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "review_corpus_case_count": 109,
+    "accepted_network_effect_count": 0,
+    "accepted_execution_effect_count": 0,
+    "accepted_filesystem_effect_count": 0,
+    "canonical_json_verified": true,
+    "json_redaction_and_comparison_verified": true,
+    "deterministic_xlsx_generation_verified": true,
+    "direct_reopen_verified": true,
+    "synthetic_verifier_semantics_verified": true,
+    "native_office_runtime_admitted": false,
+    "native_office_platform_count": 0,
+    "advanced_reconciliation_methods_complete": false,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-62-BLOCKED",
+      "owner": "63.1"
+    },
+    {
+      "code": "NUMERIC-TOLERANCE-METHOD-UNIMPLEMENTED",
+      "owner": "63.1.3.2"
+    },
+    {
+      "code": "FINANCIAL-ROUNDING-METHOD-UNIMPLEMENTED",
+      "owner": "63.1.3.2"
+    },
+    {
+      "code": "MANY-TO-MANY-ALLOCATION-UNIMPLEMENTED",
+      "owner": "63.1.3.2"
+    },
+    {
+      "code": "STALE-DATA-POLICY-UNIMPLEMENTED",
+      "owner": "63.1.3.2"
+    },
+    {
+      "code": "ARBITRARY-PRECISION-DECIMAL-METHOD-UNIMPLEMENTED",
+      "owner": "63.1.3.2"
+    },
+    {
+      "code": "NATIVE-OFFICE-RECALCULATION-ABSENT",
+      "owner": "63.1.1.4"
+    },
+    {
+      "code": "FEDORA-NATIVE-VISUAL-EVIDENCE-ABSENT",
+      "owner": "63.1.3.4"
+    },
+    {
+      "code": "UBUNTU-NATIVE-VISUAL-EVIDENCE-ABSENT",
+      "owner": "63.1.3.4"
+    },
+    {
+      "code": "WINDOWS-NATIVE-VISUAL-EVIDENCE-ABSENT",
+      "owner": "63.1.3.4"
+    },
+    {
+      "code": "MACOS-NATIVE-VISUAL-EVIDENCE-ABSENT",
+      "owner": "63.1.3.4"
+    },
+    {
+      "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
+      "owner": "63.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-BOUNDARY-REVIEW-ABSENT",
+      "owner": "63.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_63_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_62_closed": false,
+    "advanced_reconciliation_methods_complete": false,
+    "native_recalculation_complete": false,
+    "native_visual_complete": false,
+    "cross_platform_acceptance_passed": false,
+    "accessibility_acceptance_passed": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
