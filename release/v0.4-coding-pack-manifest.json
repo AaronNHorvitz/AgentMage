@@ -1,0 +1,125 @@
+{
+  "authenticated_cli_transport": false,
+  "automatic_publication": false,
+  "blockers": [
+    "upstream-sprints-41-through-49-blocked",
+    "coding-product-coordinator-absent",
+    "authenticated-chat-cli-workflow-absent",
+    "native-cross-interface-parity-absent",
+    "write-command-and-commit-profiles-unregistered",
+    "admitted-live-model-profile-absent",
+    "native-cross-platform-acceptance-absent",
+    "lifecycle-accessibility-recovery-campaign-absent",
+    "signed-v0.4-packages-absent",
+    "independent-release-decision-absent",
+    "manual-fuzzing-deferred"
+  ],
+  "coding_coordinator_integrated": false,
+  "coding_skills": [
+    "repository_cartographer",
+    "feature_trace",
+    "change_impact",
+    "debugging",
+    "test_and_verification",
+    "repository_documentation",
+    "bug_reproduction",
+    "git_history_analysis",
+    "bounded_review"
+  ],
+  "excluded_capabilities": [
+    "arbitrary-shell",
+    "automatic-commit",
+    "automatic-dependency-upgrade",
+    "automatic-deploy",
+    "automatic-merge",
+    "automatic-migration",
+    "automatic-pr-publication",
+    "automatic-push",
+    "automatic-refactor",
+    "automatic-release",
+    "frontier-handoff",
+    "network-publication",
+    "unattended-write"
+  ],
+  "gate_closed": false,
+  "gate_id": "G-V0.4",
+  "network_access": false,
+  "package_artifacts_published": false,
+  "product_registration": false,
+  "record_type": "agentmage-v0.4-coding-pack-manifest",
+  "release_claim": "none",
+  "schema_version": 1,
+  "signed_release": false,
+  "source_files": [
+    {
+      "path": "artifacts/sprints/sprint-50/coding-skill-pack.json",
+      "sha256": "a955298c904b478c3f798b87dcc727f81ff4fa83135edf32f59fa27a73ccd96b"
+    },
+    {
+      "path": "capabilities/knowledge/examples/coding_skill_pack.rs",
+      "sha256": "62e2149d360965b17de364891a7ae150faa99521e99d061c8bec573bd74f7be4"
+    },
+    {
+      "path": "capabilities/knowledge/src/coding_skills.rs",
+      "sha256": "c79f19862fd17b0a7a7a4ffbf384d3d616a165a9e98148f72bee6d05fab7e529"
+    },
+    {
+      "path": "capabilities/knowledge/tests/sprint_50_coding_corpus.rs",
+      "sha256": "9231c4ec237d147fcc1273621b99581650646fe62c8d1f4701974ddff7410d8e"
+    },
+    {
+      "path": "docs/architecture/coding-skills-and-release-boundary.md",
+      "sha256": "d686634976669765beb407c7e5093200874d12c514c4826caffb765f7e2ae8a0"
+    },
+    {
+      "path": "docs/guides/bounded-coding-workflows.md",
+      "sha256": "d050f03024565992171f570a63d7f851f09182f33dbfe9ac6235f956b1fa7002"
+    },
+    {
+      "path": "docs/verification/sprint-45-coding-corpus.json",
+      "sha256": "2854d0c7ab203de3314a79991d2b6c456235cb52a344f2352a2af7d4521342c8"
+    },
+    {
+      "path": "docs/verification/sprint-50-coding-corpus.json",
+      "sha256": "baa15b135fffa252a5addaf52dddbb3a42853b6fb8bac38ba4feea6b81e669af"
+    },
+    {
+      "path": "kernel/engine/src/filesystem_control.rs",
+      "sha256": "0c500c4e807f7d5a885f06bbd183f0315d5292fa05366b1fa7ce1c58043fcce2"
+    },
+    {
+      "path": "kernel/engine/src/instruction_provenance.rs",
+      "sha256": "7117d1acf7a00e7187a81a1fa34af3df043b8f734c34692e123705b80f1de107"
+    },
+    {
+      "path": "kernel/engine/src/local_commit.rs",
+      "sha256": "7d39cf16b543ead8e7bbd09e1219c01d15efd49fe3b7e34f7e90818bc1d5c1c6"
+    },
+    {
+      "path": "kernel/engine/src/repository_safety.rs",
+      "sha256": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f"
+    },
+    {
+      "path": "kernel/engine/src/review_packet.rs",
+      "sha256": "e6987a3ca3533150f4bb296ce9b91b8ad06a1842760f9fa05da9ea95587bce00"
+    },
+    {
+      "path": "kernel/engine/src/validation_result.rs",
+      "sha256": "cd70a18a2ca8d35f52c531206347047307ee79bf86c306324c84f5e248739f33"
+    },
+    {
+      "path": "kernel/engine/src/write_transaction.rs",
+      "sha256": "964aa6bac3019b3d2da75ad38a2709de3ec1764149222170904187750818fe48"
+    },
+    {
+      "path": "shells/host/src/cli.rs",
+      "sha256": "a84f38d66b83625eaa53fb347fa22e5b4ba464068598b4225a0db452245cd95a"
+    },
+    {
+      "path": "shells/host/src/headless.rs",
+      "sha256": "f825d64c9ffe4d634899029ecf7891b1909bd5679559922770bb8129983c3e71"
+    }
+  ],
+  "status": "blocked-local-candidate",
+  "version": "0.4.0"
+}

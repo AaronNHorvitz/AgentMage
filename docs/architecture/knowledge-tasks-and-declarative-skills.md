@@ -61,6 +61,11 @@ record and citation identities. Lexical and approved optional local-semantic pat
 same source/task evidence shape. Plain-folder and Obsidian stewardship share identical canonical
 record semantics.
 
+The later v0.4 source candidate reuses the same permanent authority ceiling for nine coding-skill
+packages. Those packages are defined separately in the
+[coding-skill architecture](./coding-skills-and-release-boundary.md); their presence does not
+broaden the v0.2 knowledge workflow or release boundary.
+
 ## Open Release Boundary
 
 Local capability tests do not establish native Chat integration, a public CLI, supported-platform

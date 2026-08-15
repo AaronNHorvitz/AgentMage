@@ -91,6 +91,15 @@ marketplace, or frontier-transfer path. Product routing remains disabled and no
 profile is enabled; see the
 [measured routing architecture](./docs/architecture/measured-local-model-routing.md).
 
+Sprint 50 now has a source-level pack of nine bounded declarative coding skills
+and a deterministic evaluator for identity, language and tool closure,
+validation, completion evidence, scope, authority denial, and prohibited
+automatic operations. The skills remain data-only and product-unregistered.
+The complete coding transaction, authenticated native Chat/CLI transport,
+cross-interface parity, and `G-V0.4` release evidence remain blocked; see the
+[coding-skill architecture](./docs/architecture/coding-skills-and-release-boundary.md)
+and [bounded coding guide](./docs/guides/bounded-coding-workflows.md).
+
 Accepted Decision 0019 separates immutable historical evidence from current
 applicability, composes platform lanes independently, records exact review
 provenance, retains real fuzzing as a separately approved manual security task,
