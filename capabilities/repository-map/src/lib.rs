@@ -14,6 +14,7 @@ mod inventory;
 mod parser;
 mod renderer;
 mod resolution;
+mod structured_edit;
 
 pub use cache::{RepositoryMapCache, RepositoryMapCacheError, RepositoryMapCacheKey};
 pub use change_intent::{
@@ -73,6 +74,12 @@ pub use renderer::{
 pub use resolution::{
     RepositoryGitIdentity, StructuralSourceResolution, resolve_structural_records,
     verify_structural_source_resolution,
+};
+pub use structured_edit::{
+    StructuredArtifactClass, StructuredChangedRange, StructuredEdit, StructuredEditError,
+    StructuredEditMethod, StructuredFileChangePlan, StructuredFileChangeRequest,
+    StructuredFileChangeSummary, StructuredLanguage, StructuredReviewHook, StructuredUnchangedSpan,
+    build_structured_file_change, verify_structured_file_change,
 };
 
 /// Stable component identity used by diagnostics and build verification.
