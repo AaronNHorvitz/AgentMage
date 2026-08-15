@@ -17,6 +17,7 @@ mod parser;
 mod renderer;
 mod resolution;
 mod structured_edit;
+mod test_generation;
 
 pub use cache::{RepositoryMapCache, RepositoryMapCacheError, RepositoryMapCacheKey};
 pub use change_intent::{
@@ -94,6 +95,12 @@ pub use structured_edit::{
     StructuredEditMethod, StructuredFileChangePlan, StructuredFileChangeRequest,
     StructuredFileChangeSummary, StructuredLanguage, StructuredReviewHook, StructuredUnchangedSpan,
     build_structured_file_change, verify_structured_file_change,
+};
+pub use test_generation::{
+    GeneratedTestCase, GeneratedTestChangeBinding, GeneratedTestExpectation,
+    RepositoryTestFramework, RepositoryTestStyle, TestConcern, TestConcernApplicability,
+    TestGenerationError, TestGenerationPlan, TestGenerationRequest, build_test_generation_plan,
+    verify_test_generation_plan,
 };
 
 /// Stable component identity used by diagnostics and build verification.
