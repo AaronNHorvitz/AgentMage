@@ -1667,8 +1667,19 @@ mod tests {
             ExecutiveEvidenceState::Confirmed,
             ExecutiveSourceStore::PlainFolder,
         );
-        let previous = build_portfolio_snapshot("snapshot-1".to_owned(), vec![original], vec![])
-            .expect("previous");
+        let earlier_decision = record(
+            "decision-old",
+            ExecutiveRecordKind::Decision,
+            ExecutiveRecordStatus::Active,
+            ExecutiveEvidenceState::Confirmed,
+            ExecutiveSourceStore::PlainFolder,
+        );
+        let previous = build_portfolio_snapshot(
+            "snapshot-1".to_owned(),
+            vec![original, earlier_decision],
+            vec![],
+        )
+        .expect("previous");
         let mut corrected = record(
             "task-a",
             ExecutiveRecordKind::Task,
@@ -1678,13 +1689,34 @@ mod tests {
         );
         corrected.summary = "Corrected and completed".to_owned();
         corrected.sources[0].observed_revision = Some("revision-2".to_owned());
-        let next = reconcile_portfolio(&previous, vec![corrected], "snapshot-2".to_owned())
-            .expect("reconciled");
-        assert_eq!(
-            next.current_records[0].status,
-            ExecutiveRecordStatus::Completed
+        let mut disputed = record(
+            "decision-new",
+            ExecutiveRecordKind::Decision,
+            ExecutiveRecordStatus::Proposed,
+            ExecutiveEvidenceState::Disputed,
+            ExecutiveSourceStore::PlainFolder,
         );
-        assert_eq!(next.history.len(), 1);
+        disputed.supersedes_record_id = Some("decision-old".to_owned());
+        let next = reconcile_portfolio(
+            &previous,
+            vec![corrected, disputed],
+            "snapshot-2".to_owned(),
+        )
+        .expect("reconciled");
+        assert_eq!(next.current_records.len(), 2);
+        assert_eq!(next.history.len(), 2);
+        assert!(next.current_records.iter().any(|record| {
+            record.record_id == "task-a" && record.status == ExecutiveRecordStatus::Completed
+        }));
+        assert!(next.current_records.iter().any(|record| {
+            record.record_id == "decision-new"
+                && record.evidence_state == ExecutiveEvidenceState::Disputed
+        }));
+        assert!(
+            next.history
+                .iter()
+                .any(|record| record.record_id == "decision-old")
+        );
         let changed = build_executive_view(
             &next,
             ExecutiveViewRequest {
@@ -1695,7 +1727,11 @@ mod tests {
             },
         )
         .expect("changed");
-        assert_eq!(changed.items.len(), 1);
+        assert_eq!(changed.items.len(), 2);
+        assert!(changed.items.iter().any(|item| {
+            item.record_id == "decision-new"
+                && item.warnings.contains(&"evidence.disputed".to_owned())
+        }));
     }
 
     #[test]
