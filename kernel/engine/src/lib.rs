@@ -85,6 +85,8 @@ pub mod tooling;
 pub mod work_packet;
 /// Exact-preimage shadow changes, review previews, and bounded write grants.
 pub mod write_approval;
+/// Content-free write checkpoints, privacy gates, recovery decisions, and audit receipts.
+pub mod write_recovery;
 /// Grant-consuming atomic write coordination, receipts, restoration, and rollback proposals.
 pub mod write_transaction;
 

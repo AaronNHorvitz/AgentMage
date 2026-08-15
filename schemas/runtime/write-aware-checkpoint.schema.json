@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/write-aware-checkpoint.schema.json",
+  "title": "AgentMage Write-Aware Checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "checkpoint_id",
+    "transaction_id",
+    "action_id",
+    "sequence",
+    "phase",
+    "consumed_grant_id",
+    "file_receipt_head_sha256",
+    "file_receipt_count",
+    "evidence_set_sha256",
+    "index_update_sha256",
+    "next_session_checkpoint_sha256",
+    "secret_scan_receipt_sha256",
+    "staging_inventory_sha256",
+    "staging_item_count",
+    "retention_expires_at_epoch_ms",
+    "canonical_postimages_verified",
+    "receipt_chain_verified",
+    "index_verified",
+    "rollback_verified",
+    "cleanup_state",
+    "failure_code",
+    "occurred_at_epoch_ms",
+    "previous_checkpoint_sha256",
+    "checkpoint_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "checkpoint_id": { "$ref": "#/$defs/identifier" },
+    "transaction_id": { "$ref": "#/$defs/identifier" },
+    "action_id": { "$ref": "#/$defs/identifier" },
+    "sequence": { "$ref": "#/$defs/u32" },
+    "phase": {
+      "enum": [
+        "before_transaction",
+        "grant_consumed",
+        "staging",
+        "applying",
+        "canonical_verified",
+        "index_updating",
+        "index_verified",
+        "receipt_persisting",
+        "receipt_persisted",
+        "rollback_pending",
+        "failed_no_change",
+        "restored",
+        "uncertain",
+        "cleanup_pending",
+        "complete"
+      ]
+    },
+    "consumed_grant_id": { "$ref": "#/$defs/nullableIdentifier" },
+    "file_receipt_head_sha256": { "$ref": "#/$defs/nullableSha256" },
+    "file_receipt_count": { "$ref": "#/$defs/u32" },
+    "evidence_set_sha256": { "$ref": "#/$defs/sha256" },
+    "index_update_sha256": { "$ref": "#/$defs/nullableSha256" },
+    "next_session_checkpoint_sha256": { "$ref": "#/$defs/sha256" },
+    "secret_scan_receipt_sha256": { "$ref": "#/$defs/sha256" },
+    "staging_inventory_sha256": { "$ref": "#/$defs/sha256" },
+    "staging_item_count": { "$ref": "#/$defs/u32" },
+    "retention_expires_at_epoch_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "canonical_postimages_verified": { "type": "boolean" },
+    "receipt_chain_verified": { "type": "boolean" },
+    "index_verified": { "type": "boolean" },
+    "rollback_verified": { "type": "boolean" },
+    "cleanup_state": {
+      "enum": ["not_required", "pending", "clean", "blocked"]
+    },
+    "failure_code": { "$ref": "#/$defs/nullableIdentifier" },
+    "occurred_at_epoch_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "previous_checkpoint_sha256": { "$ref": "#/$defs/sha256" },
+    "checkpoint_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "sequence": { "const": 0 } }, "required": ["sequence"] },
+      "then": {
+        "properties": {
+          "phase": { "const": "before_transaction" },
+          "previous_checkpoint_sha256": { "$ref": "#/$defs/zeroSha256" }
+        }
+      },
+      "else": {
+        "properties": {
+          "phase": { "not": { "const": "before_transaction" } },
+          "previous_checkpoint_sha256": {
+            "allOf": [
+              { "$ref": "#/$defs/sha256" },
+              { "not": { "$ref": "#/$defs/zeroSha256" } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "phase": { "const": "before_transaction" } },
+        "required": ["phase"]
+      },
+      "then": { "properties": { "consumed_grant_id": { "type": "null" } } },
+      "else": { "properties": { "consumed_grant_id": { "$ref": "#/$defs/identifier" } } }
+    },
+    {
+      "if": { "properties": { "file_receipt_count": { "const": 0 } }, "required": ["file_receipt_count"] },
+      "then": { "properties": { "file_receipt_head_sha256": { "type": "null" } } },
+      "else": { "properties": { "file_receipt_head_sha256": { "$ref": "#/$defs/sha256" } } }
+    },
+    {
+      "if": { "properties": { "staging_item_count": { "const": 0 } }, "required": ["staging_item_count"] },
+      "then": { "properties": { "retention_expires_at_epoch_ms": { "const": 0 } } },
+      "else": { "properties": { "retention_expires_at_epoch_ms": { "type": "integer", "minimum": 1 } } }
+    },
+    {
+      "if": { "properties": { "index_verified": { "const": true } }, "required": ["index_verified"] },
+      "then": { "properties": { "index_update_sha256": { "$ref": "#/$defs/sha256" } } }
+    },
+    {
+      "if": { "properties": { "rollback_verified": { "const": true } }, "required": ["rollback_verified"] },
+      "then": { "properties": { "phase": { "const": "restored" } } }
+    },
+    {
+      "if": { "properties": { "phase": { "const": "complete" } }, "required": ["phase"] },
+      "then": {
+        "properties": {
+          "canonical_postimages_verified": { "const": true },
+          "receipt_chain_verified": { "const": true },
+          "cleanup_state": { "enum": ["not_required", "clean"] }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "phase": { "const": "cleanup_pending" } }, "required": ["phase"] },
+      "then": {
+        "properties": {
+          "canonical_postimages_verified": { "const": true },
+          "receipt_chain_verified": { "const": true },
+          "staging_item_count": { "type": "integer", "minimum": 1 },
+          "cleanup_state": { "const": "pending" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "nullableIdentifier": {
+      "oneOf": [{ "$ref": "#/$defs/identifier" }, { "type": "null" }]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "zeroSha256": {
+      "const": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "nullableSha256": {
+      "oneOf": [{ "$ref": "#/$defs/sha256" }, { "type": "null" }]
+    },
+    "u32": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  }
+}

@@ -350,10 +350,32 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "single-agent-state-machine",
     "agent-progress-event",
     "session-environment-capture",
+    "write-aware-checkpoint",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
-    [true, true, true],
+    [true, true, true, true],
+  );
+});
+
+test("write-aware checkpoint schema rejects ambiguous completion", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/write-aware-checkpoint.valid.json"),
+      "utf8",
+    ),
+  );
+  const incomplete = structuredClone(source);
+  incomplete.receipt_chain_verified = false;
+  assert.equal(
+    validateRuntimeRecord("write-aware-checkpoint", incomplete, runtimeValidators).valid,
+    false,
+  );
+  const replayable = structuredClone(source);
+  replayable.consumed_grant_id = null;
+  assert.equal(
+    validateRuntimeRecord("write-aware-checkpoint", replayable, runtimeValidators).valid,
+    false,
   );
 });
 
