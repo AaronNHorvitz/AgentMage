@@ -4,6 +4,7 @@
 
 mod cache;
 mod change_intent;
+mod change_plan;
 mod deep_analysis;
 mod deep_views;
 mod grammar;
@@ -21,6 +22,15 @@ pub use change_intent::{
     ChangeSurfaceExclusion, ChangeUnknownDimension, MinimalChangeImpactReport,
     build_minimal_change_impact, normalize_change_intent, verify_change_intent,
     verify_minimal_change_impact,
+};
+pub use change_plan::{
+    ChangeAlternativeDimension, ChangeAlternativeOption, ChangeAlternativeSet, ChangeHypothesis,
+    ChangePlanError, ChangePlanInput, ChangePlanRecord, ChangePlanStatus, ChangeReviewKind,
+    ChangeWorkKind, HypothesisCheck, HypothesisCheckResult, HypothesisRecord, HypothesisStatus,
+    PlannedValidation, PlannedValidationKind, RegressionTestDisposition, RegressionTestPlan,
+    ReproductionExecutionStatus, ReproductionInput, ReproductionOutcome, ReproductionRecord,
+    ReproductionStep, ReproductionStepKind, build_change_plan, seal_hypotheses,
+    seal_regression_test_plan, seal_reproduction, verify_change_plan, verify_reproduction,
 };
 pub use deep_analysis::{
     DeepRepositoryIndex, RepositoryAdapterCapability, RepositoryAdapterFactInput,
