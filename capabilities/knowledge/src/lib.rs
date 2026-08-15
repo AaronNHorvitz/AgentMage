@@ -28,6 +28,7 @@ mod pdf_inspection;
 mod pdf_redaction;
 mod pdf_visual;
 mod plain_folder;
+mod presentation_generation;
 mod presentation_ooxml;
 mod reconciliation_workbook;
 mod retrieval;
@@ -164,6 +165,14 @@ pub use plain_folder::{
     KnowledgeFilenameTemplate, KnowledgeKindPathTemplate, PlainFolderEntryKind,
     PlainFolderKnowledgeStore, PlainFolderLayout, PlainFolderNoteInput, parse_canonical_markdown,
     render_canonical_markdown,
+};
+pub use presentation_generation::{
+    EditedPresentation, GeneratedPresentation, PresentationBlock, PresentationChartSpec,
+    PresentationDeckSpec, PresentationDiagramEdge, PresentationDiagramNode,
+    PresentationDiagramSpec, PresentationEditRequest, PresentationGenerationError,
+    PresentationObjectPreview, PresentationSlideChange, PresentationSlidePreview,
+    PresentationSlideReplacement, PresentationSlideSpec, PresentationTableSpec,
+    edit_generated_presentation, generate_presentation,
 };
 pub use presentation_ooxml::{
     PresentationError, PresentationFinding, PresentationFindingKind, PresentationImageReference,
