@@ -11,6 +11,7 @@ mod grammar;
 #[cfg(test)]
 mod invariance_tests;
 mod inventory;
+mod language_service;
 mod parser;
 mod renderer;
 mod resolution;
@@ -59,6 +60,13 @@ pub use inventory::{
     GitTrackedState, RepositoryCoverage, RepositoryEntryDisposition, RepositoryFileInput,
     RepositoryFileRecord, RepositoryMap, RepositoryMapError, RepositoryMapInput,
     build_repository_map, verify_repository_file_record, verify_repository_map,
+};
+pub use language_service::{
+    LanguageServiceCapability, LanguageServiceDescriptor, LanguageServiceError,
+    LanguageServiceItem, LanguageServiceItemKind, LanguageServiceObservation,
+    LanguageServiceObservationStatus, LanguageServiceRequest, LanguageServiceRequestKind,
+    LanguageServiceVisibleFile, seal_language_service_descriptor,
+    seal_language_service_observation, verify_language_service_observation,
 };
 pub use parser::{
     ParseDisposition, RepositoryParseError, SourceRange, StructuralItem, StructuralItemKind,
