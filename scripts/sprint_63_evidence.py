@@ -6,7 +6,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
-from scripts.sprint_evidence_recorder import SprintEvidenceDefinition, main
+try:
+    from scripts.sprint_evidence_recorder import SprintEvidenceDefinition, main
+except ModuleNotFoundError:
+    from sprint_evidence_recorder import SprintEvidenceDefinition, main
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
