@@ -3,6 +3,7 @@
 //! Deterministic bounded structural repository mapping without ambient authority.
 
 mod cache;
+mod deep_analysis;
 mod grammar;
 #[cfg(test)]
 mod invariance_tests;
@@ -12,6 +13,13 @@ mod renderer;
 mod resolution;
 
 pub use cache::{RepositoryMapCache, RepositoryMapCacheError, RepositoryMapCacheKey};
+pub use deep_analysis::{
+    DeepRepositoryIndex, RepositoryAdapterCapability, RepositoryAdapterFactInput,
+    RepositoryAdapterKind, RepositoryAnalysisAdapter, RepositoryAnalysisFact, RepositoryBlindSpot,
+    RepositoryBlindSpotCode, RepositoryDeepAnalysisError, RepositoryDeepCoverage,
+    RepositoryFactCitation, RepositoryFactKind, RepositoryFactState, build_deep_repository_index,
+    verify_deep_repository_index, verify_fact_citation,
+};
 pub use grammar::{
     GrammarDescriptor, RepositoryLanguage, grammar_descriptor, grammar_set_sha256,
     language_for_path, supported_grammars, verify_grammar_descriptor,
