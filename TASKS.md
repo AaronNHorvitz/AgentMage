@@ -3901,27 +3901,35 @@ Story 51.1, and the sprint therefore remain open.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 52.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 52.1.1.1** (legacy `S-045-I01`): Define a return manifest containing decision or artifact, rationale, remaining steps, tier, inputs, acceptance checks, and approval requirements.
-  - [ ] **Sub-task 52.1.1.2** (legacy `S-045-I02`): Parse and validate imported packets without executing embedded instructions, code, tools, links, or commands.
-  - [ ] **Sub-task 52.1.1.3** (legacy `S-045-I03`): Treat all returned claims and files as untrusted and classify them before storage or context use.
-  - [ ] **Sub-task 52.1.1.4** (legacy `S-045-I04`): Re-resolve citations and re-check local source preimages, workspace state, model state, policy, and permissions.
+  - [x] **Sub-task 52.1.1.1** (legacy `S-045-I01`): Define a return manifest containing decision or artifact, rationale, remaining steps, tier, inputs, acceptance checks, and approval requirements. Evidence: [`frontier_import.rs`](kernel/contracts/src/frontier_import.rs) defines the closed manifest with every named field plus exact request/base-state hashes, artifact and citation declarations, proposal-only steps, fixed untrusted/no-authority/no-completion/no-network markers, and a canonical digest.
+  - [x] **Sub-task 52.1.1.2** (legacy `S-045-I02`): Parse and validate imported packets without executing embedded instructions, code, tools, links, or commands. Evidence: the engine applies a 256 KiB closed JSON boundary, exact request and manifest hashes, canonical identity/order rules, operation-taxonomy validation, and non-executing artifact inspection; instructions, dangerous command text, links, and binary payloads remain quarantined.
+  - [x] **Sub-task 52.1.1.3** (legacy `S-045-I03`): Treat all returned claims and files as untrusted and classify them before storage or context use. Evidence: every artifact outcome fixes `untrusted` true and execution/write false; claims can enter only `Inferred` or `UnknownBlocked` state, and every report fixes imported content untrusted with zero state change or completion credit.
+  - [x] **Sub-task 52.1.1.4** (legacy `S-045-I04`): Re-resolve citations and re-check local source preimages, workspace state, model state, policy, and permissions. Evidence: revalidation requires independently supplied current request, workspace, model, policy, permission, and citation-resolution facts; state drift quarantines steps and source/object/fragment/hash mismatch creates an unresolved disagreement.
   - [ ] **Sub-task 52.1.1.5** (legacy `S-045-I05`): Re-run each returned step through local task classification, grant, tool, write, validation, and evidence contracts.
-  - [ ] **Sub-task 52.1.1.6** (legacy `S-045-I06`): Fail loudly on mislabeled, unsupported, stale, unsafe, or unverified returned steps.
-  - [ ] **Sub-task 52.1.1.7** (legacy `S-045-I07`): Preserve frontier and local disagreements and resolve through evidence or user direction.
-  - [ ] **Sub-task 52.1.1.8** (legacy `S-045-I08`): Record outcome, local decisions, validation, re-escalation reason, and capability-matrix feedback.
+  - [x] **Sub-task 52.1.1.6** (legacy `S-045-I06`): Fail loudly on mislabeled, unsupported, stale, unsafe, or unverified returned steps. Evidence: closed manifest errors reject structural and authority failures, content outcomes distinguish rejection/quarantine/proposal eligibility with stable reason codes, and stale or unverified local evidence cannot become eligible completion evidence.
+  - [x] **Sub-task 52.1.1.7** (legacy `S-045-I07`): Preserve frontier and local disagreements and resolve through evidence or user direction. Evidence: content-free disagreement records retain imported and optional local evidence hashes, exact reason, and unresolved status; no imported assertion overwrites current evidence.
+  - [x] **Sub-task 52.1.1.8** (legacy `S-045-I08`): Record outcome, local decisions, validation, re-escalation reason, and capability-matrix feedback. Evidence: the deterministic report and round-trip receipt bind current-state evidence, artifact and step outcomes, disagreements, optional stable re-escalation reason, sorted capability feedback, zero effects, zero duplicates, and no networking.
 
-- [ ] **Task 52.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 52.1.2.1:** Return-manifest schema and untrusted importer.
-  - [ ] **Sub-task 52.1.2.2:** Local revalidation pipeline.
-  - [ ] **Sub-task 52.1.2.3:** Malicious, stale, overbroad, and malformed import corpus.
-  - [ ] **Sub-task 52.1.2.4:** Round-trip outcome receipts.
+  Local source status: each returned step receives exact requirements for the normal local flows, but
+  no product coordinator invokes those task, grant, tool, write, validation, and evidence contracts.
+  Sub-task 52.1.1.5 and Task 52.1.1 therefore remain open.
+
+- [x] **Task 52.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 52.1.2.1:** Return-manifest schema and untrusted importer. Evidence: the typed Rust contract, closed JSON Schema, canonical example, semantic validator, bounded parser, and artifact classifier all fail closed without executing imported content.
+  - [x] **Sub-task 52.1.2.2:** Local revalidation pipeline. Evidence: the pure local pipeline binds current state, resolves citations, classifies artifacts and steps, assigns claim ceilings and local-flow requirements, preserves disagreements, and produces a content-addressed zero-effect report.
+  - [x] **Sub-task 52.1.2.3:** Malicious, stale, overbroad, and malformed import corpus. Evidence: [`sprint-52-frontier-import-corpus.json`](docs/verification/sprint-52-frontier-import-corpus.json) freezes 14 manifest failures, 12 artifact attacks, 8 state changes, 7 proposal-flow classes, and 9 receipt mutations under a closed contract.
+  - [x] **Sub-task 52.1.2.4:** Round-trip outcome receipts. Evidence: the typed receipt, JSON Schema, canonical example, engine verifier, and hostile schema tests bind exact request, manifest, revalidation, outcomes, disagreements, feedback, and fixed zero-effect fields.
 
 - [ ] **Task 52.1.3 - Verify and close the story**
-  - [ ] **Sub-task 52.1.3.1:** `S-045-UT01` validates return manifests with missing/extra/malformed/oversized/version-mismatched fields, wrong request hash, stale base, and unsupported artifacts; assert quarantine or explicit rejection.
-  - [ ] **Sub-task 52.1.3.2:** `S-045-ST01` imports prompt injection, malicious code, path escapes, hidden binaries, secrets, fabricated tests/citations, overbroad changes, and authority requests; assert all content remains untrusted and non-executing.
+  - [x] **Sub-task 52.1.3.1:** `S-045-UT01` validates return manifests with missing/extra/malformed/oversized/version-mismatched fields, wrong request hash, stale base, and unsupported artifacts; assert quarantine or explicit rejection. Evidence: eight focused Rust tests, 63 schema tests, and the 14-case manifest matrix cover every named boundary with exact rejection or quarantine outcomes and zero ignored focused tests.
+  - [x] **Sub-task 52.1.3.2:** `S-045-ST01` imports prompt injection, malicious code, path escapes, hidden binaries, secrets, fabricated tests/citations, overbroad changes, and authority requests; assert all content remains untrusted and non-executing. Evidence: the 12-case artifact matrix and focused engine tests exercise all named classes; no artifact is executed or written, secret/path/hash failures reject, and uncertain active content quarantines.
   - [ ] **Sub-task 52.1.3.3:** `S-045-IT01` converts accepted proposals into normal local intent/write/test/review flows; assert fresh grants, preimages, sandboxes, trusted validation, citations, and user approvals are required.
   - [ ] **Sub-task 52.1.3.4:** `S-045-RT01` interrupts import/quarantine/validation/application and changes repository/model/policy state mid-round-trip; assert no partial trust, duplicate effect, or stale acceptance.
   - [ ] **Sub-task 52.1.3.5 - Product security evidence:** Map `SR-ACC-002`/`SR-ACC-007`/`SR-ACC-008`, `SR-AI-003` through `SR-AI-005`, `SR-AI-010`/`SR-AI-011`, `SR-TST-002`/`SR-TST-004`; retain import corpus, quarantine report, local-validation traces, state-change tests, and outcome ledger.
+
+  Local verification status: pure-function repeat and state-drift tests prove deterministic zero-effect
+  behavior, but they do not establish durable interruption recovery or application through a native
+  product transaction. Sub-tasks 52.1.3.3 through 52.1.3.5 and Task 52.1.3 remain open.
 
 ##### Story Acceptance Criteria
 
@@ -3930,11 +3938,21 @@ Story 51.1, and the sprint therefore remain open.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 52.AC1:** Imported content cannot alter canonical state, issue grants, call tools, or write files directly.
-- [ ] **Sprint AC 52.AC2:** Every accepted returned claim has local evidence or remains explicitly Inferred or Unknown/Blocked.
-- [ ] **Sprint AC 52.AC3:** Every state-changing returned step requires the same fresh local preview and grant as native work.
-- [ ] **Sprint AC 52.AC4:** Repeated escalation becomes benchmark evidence rather than automatic recursion.
-- [ ] **Sprint AC 52.AC5:** Import works without granting AgentMage any outbound network capability.
+- [x] **Sprint AC 52.AC1:** Imported content cannot alter canonical state, issue grants, call tools, or write files directly. Evidence: report and receipt schemas fix all authority and effect counters to zero, engine verification rejects any mutation, and no effect-bearing adapter is imported by the module.
+- [x] **Sprint AC 52.AC2:** Every accepted returned claim has local evidence or remains explicitly Inferred or Unknown/Blocked. Evidence: a claim is `Inferred` only when exact citations resolve under current base state; every missing, stale, conflicting, denied, unsupported, or mismatched source becomes `UnknownBlocked` with a visible disagreement.
+- [x] **Sprint AC 52.AC3:** Every state-changing returned step requires the same fresh local preview and grant as native work. Evidence: file, command, and tool proposals retain fresh classification, grant, validation, user-approval, and exact-write or registered-tool requirements; import never satisfies or bypasses them. End-to-end product invocation remains open.
+- [x] **Sprint AC 52.AC4:** Repeated escalation becomes benchmark evidence rather than automatic recursion. Evidence: receipts retain only a stable optional reason and sorted capability feedback; no recommendation, packet, delivery, endpoint, or recursive invocation operation exists.
+- [x] **Sprint AC 52.AC5:** Import works without granting AgentMage any outbound network capability. Evidence: the manifest, report, receipt, corpus, and verifier fix outbound networking false, while import accepts only caller-supplied local bytes and facts.
+
+Retained local evidence: source revision `53b5f9350dffb7f7fc93abbca874634b6773e7c0` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-52/local-evidence-report.json), SHA-256
+`520110972320d47e47c985281b95588e9db5513852b4d3fe4a85c20926cd4788`. All nine recorded
+commands exit zero and all four focused suites report zero blocking skips. The 50-case expanded
+corpus passes with zero imported authority, accepted effects, or outbound network attempts. Sprint
+52 remains **BLOCKED** because Sprint 51 is blocked and the native import coordinator, normal local
+flow integration, durable interruption recovery, supported-platform acceptance, trusted installed
+package execution, independent review, and deferred manual fuzzing remain absent. Task 52.1.1,
+Task 52.1.3, both story criteria, Story 52.1, and the sprint therefore remain open.
 
 **Gate decision:** Sprint 52 is PASS only when Story 52.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 53 - v0.5 Frontier Release Gate
