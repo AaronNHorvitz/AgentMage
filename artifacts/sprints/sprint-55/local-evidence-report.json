@@ -1,0 +1,292 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_55_local_evidence",
+  "source_revision": "f960daa4d742258af20fd09aa1f342ac73e35e52",
+  "source_sha256": {
+    "kernel/contracts/src/meeting.rs": "09edb5b413d0f0547945cd1dbf876ac1fe13950a81fe87a085947b3708f60214",
+    "kernel/contracts/src/lib.rs": "4b017b4c29a8ca2e2bec033598499d74532633b92535da439e32941ddaa6dbe8",
+    "kernel/engine/src/meeting_continuity.rs": "dd3bb2e545d6023f3ef42dec20e230059e436ec709508254e76af84370c9adcb",
+    "kernel/engine/src/lib.rs": "80f34f158db0c0c427aef160b9909a4d1572cdce11f7ebe9d4bfea9ff2d52a90",
+    "capabilities/knowledge/src/meeting_skills.rs": "fa3ad0fce72a0d96bc274342f59958abd70ea0915e68f5154342ffbce47f7076",
+    "capabilities/knowledge/src/lib.rs": "dfd12352c927c488ea8fa5247a944b46e20bcaf435401eda912435b38a8044e4",
+    "capabilities/knowledge/examples/meeting_skill_pack.rs": "d69a7dc7c86fcbec61a04fb8e2e5447f8429d656608734136eece42334d2e49b",
+    "schemas/runtime/meeting-plan-draft.schema.json": "fdae426f780480755ef83edb92f54535b7a45d717f17f8852bc06712d9094165",
+    "schemas/runtime/examples/meeting-plan-draft.valid.json": "6a3d42bd6ed86d0867e6fc999acc29909373080c3e930ea016b1785c264e1892",
+    "schemas/runtime/meeting-transcript-cleanup.schema.json": "3f111c7e92b1d60180811ab0e1b3c76e022e8042675d00f82c2081cf4c45da53",
+    "schemas/runtime/examples/meeting-transcript-cleanup.valid.json": "0a11948d3d3a6850b99e4bbccd8147e50586a460cb93e631d0bfe354bca52d5f",
+    "schemas/runtime/meeting-minutes.schema.json": "563cfe828afd9cf3e694f5f2e9ca948e59f0c4da8f3f294da3226bfda2fb470c",
+    "schemas/runtime/examples/meeting-minutes.valid.json": "c73a540d63e5f429aef8b9898102d3d187ccb70b3b63ae9bfd7ecb2d2a3bb9ad",
+    "schemas/runtime/meeting-continuity-record.schema.json": "6588fd6dd43f3d7cda92147274fe6d16809394ee2ae224f5042dbc3c90647946",
+    "schemas/runtime/examples/meeting-continuity-record.valid.json": "5116e20aa0bb911b81c7673df5b710fef107099e0abc27b0d8fe41b8b3423780",
+    "scripts/validate_planning_schemas.mjs": "e3c75f848e3661f5c12ac09f61f67ff5adbd838b2afc1475396f4e315ae4405a",
+    "tests/test_planning_schemas.mjs": "b0a173b040bbc160f9c30bf02e7f0906733d5516ffe82fea56d94addf69d87da",
+    "docs/verification/sprint-55-meeting-corpus.json": "ad5123081a0f9f966c9bac77e4dde4978c42b0c346c1bde7e53b8f58590a1c73",
+    "scripts/meeting_continuity_contract.py": "440f0adb5dd21691c495d5f3cb756910aa716f098a0e497474672e1a623757b5",
+    "tests/test_meeting_continuity_contract.py": "a2f9367e4561dd30269ce34901855f75348a97572b87a628715c9e6b6d6651b4",
+    "scripts/meeting_skill_contract.py": "c2af798b94048676abbce8c87ad6e3576b7beadb7b275f5092f806d5b88e34d1",
+    "tests/test_meeting_skill_contract.py": "99ba7f62d95a21bef1359b99735135499d62d4666fd17a4e3b87b44a46f746c5",
+    "artifacts/sprints/sprint-55/meeting-skill-pack.json": "726d1eafb4cddb83b5218cb5945e5d7e8ed5c1d88d4135411d48a11f38cb88a4",
+    "docs/architecture/meeting-records-and-continuity.md": "b7ec6e402018397edcb0be22a9fa5d9a6c80c24704faee3fc485b7e969a725ed",
+    "docs/guides/meeting-records-local-workflows.md": "27acd0030d3dc84115e4acb8ef886abde1589f347ed32b2f08643875e680afaf",
+    "docs/verification/sprint-55-local-results.md": "c8b53317618b35f540b5790e412b043b25f21262abf15cf128fbd074077460e1",
+    "scripts/sprint_55_evidence.py": "bf1f5fb4aafeaba74f9914ce17f60f45659523b8e3e54e753541196b6f7be85d",
+    "tests/test_sprint_55_evidence.py": "384f3aa7cf469939601794adbcf02e17d9e1e81215a405f8bf0c8466c0308ebb"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "meeting-kernel-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "meeting_continuity::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "148e5f4c9c1e55baa521fe38477fecff5b36ba7b7822cef896a328450c360fad",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "meeting-skill-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "meeting_skills::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "66c48ac91f8bdabde8e2f126ef1e31c08f9c1de89d2af9294d899f038aa84834",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "meeting-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "67b13374b628694010c0b22bb8a86c1f556d66b88f3fe01ac931e26b69813f8b",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "meeting-acceptance-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_meeting_continuity_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6f283ee6225d2cef4c0127d95456a6f954c45141c92b97dd89016cb1c630e8f4",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "meeting-skill-contract",
+      "argv": [
+        "python3",
+        "scripts/meeting_skill_contract.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "98eb5a1fc1ad1d8a67eae04fd4dabbdf3ce0834c33fae5933e162668ec321fa9",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "meeting-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-contracts",
+        "-p",
+        "agentmage-kernel-engine",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "8eafc36b67ffe93ba70af47fc451c9b7bc712363ed12dbf66adb6135d3e2f80e",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b5fe86d7b688d839d18dee73eefb0d570a0a2b32a26ea53649eb278a3d13edcf",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_55_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5d8a174d448d59185fd227bcbab9c964e39b10a9c2e28965972cfb0c833dd854",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-CIV-003",
+    "SR-CIV-004",
+    "SR-CIV-005",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "meeting_draft_kind_count": 2,
+    "invitation_state_count": 6,
+    "attendance_state_count": 5,
+    "runtime_schema_count": 4,
+    "declarative_skill_count": 6,
+    "acceptance_corpus_case_count": 80,
+    "source_bound_preparation_drafts": true,
+    "independent_attendee_states": true,
+    "verbatim_preserving_cleanup": true,
+    "explicit_attribution_and_unclear_markers": true,
+    "confirmed_proposed_minutes_separation": true,
+    "unknown_owner_and_date_refusal": true,
+    "immutable_recurring_continuity": true,
+    "local_follow_up_draft": true,
+    "invite_effect_capability": false,
+    "assignment_effect_capability": false,
+    "notification_effect_capability": false,
+    "send_effect_capability": false,
+    "schedule_effect_capability": false,
+    "inbox_access_capability": false,
+    "network_access_capability": false,
+    "calendar_mutation_capability": false,
+    "source_mutation_capability": false,
+    "product_coordinator": false,
+    "native_interface_integration": false,
+    "accessibility_acceptance": false,
+    "installed_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_records_review": false,
+    "filing_control_complete": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "acceptance_corpus_case_count": 80,
+    "accepted_external_effect_count": 0,
+    "inferred_attendee_state_count": 0,
+    "invented_owner_or_date_count": 0,
+    "verbatim_source_mutation_count": 0,
+    "product_coordinator": false,
+    "native_interface_integration": false,
+    "accessibility_acceptance": false,
+    "installed_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_records_review": false,
+    "filing_control_complete": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-54-BLOCKED",
+      "owner": "55.1"
+    },
+    {
+      "code": "MEETING-PRODUCT-COORDINATOR-ABSENT",
+      "owner": "55.1.3.2"
+    },
+    {
+      "code": "NATIVE-INTERFACE-INTEGRATION-ABSENT",
+      "owner": "55.1.3.2"
+    },
+    {
+      "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
+      "owner": "55.1.3.4"
+    },
+    {
+      "code": "SPRINT-56-FILING-CONTROL-PENDING",
+      "owner": "55.1.3.4"
+    },
+    {
+      "code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "55.1.3.4"
+    },
+    {
+      "code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "55.1.3.4"
+    },
+    {
+      "code": "INDEPENDENT-RECORDS-REVIEW-ABSENT",
+      "owner": "55.1.3.4"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-006"
+    }
+  ],
+  "summary": {
+    "local_sprint_55_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_54_closed": false,
+    "meeting_workflow_integrated": false,
+    "external_effects_enabled": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
