@@ -1,0 +1,956 @@
+{
+  "assessments": [
+    {
+      "admission": "admitted",
+      "authority_granted": false,
+      "definition_sha256": "3b6bdbf6e0c7481e28d1c703f2878dede0f8b399b7d7d0f6c23e19ec836eea20",
+      "findings": [],
+      "skill": "repository_cartographer"
+    },
+    {
+      "admission": "admitted",
+      "authority_granted": false,
+      "definition_sha256": "3c62bfc92137b07c43e18a01c7ede08e54bf7a5a3dea2b4861bf6a1f8421fd73",
+      "findings": [],
+      "skill": "feature_trace"
+    },
+    {
+      "admission": "admitted",
+      "authority_granted": false,
+      "definition_sha256": "1c0b0128fa29e1c669a49912dcf1a670b75d99ac196717a2cf6c13f88d6f3548",
+      "findings": [],
+      "skill": "change_impact"
+    },
+    {
+      "admission": "admitted",
+      "authority_granted": false,
+      "definition_sha256": "b6bddaa8f985ec7b8853ce65ced7f4b091c5f8bd84885cf134ec2edbc4b11d48",
+      "findings": [],
+      "skill": "debugging"
+    },
+    {
+      "admission": "admitted",
+      "authority_granted": false,
+      "definition_sha256": "8b27419f2211dbff7069ae91c1d753dd363484e819f9faee76e8b2e534eb192d",
+      "findings": [],
+      "skill": "test_and_verification"
+    },
+    {
+      "admission": "admitted",
+      "authority_granted": false,
+      "definition_sha256": "24eb488b1ae8f53b3f5accc24341165634bfd18162d720ea5274de9d439000d5",
+      "findings": [],
+      "skill": "repository_documentation"
+    },
+    {
+      "admission": "admitted",
+      "authority_granted": false,
+      "definition_sha256": "d9f67ba892d4f16b20e361c5a371eef1e06e4a857cc1f00214c6c6b98c47199f",
+      "findings": [],
+      "skill": "bug_reproduction"
+    },
+    {
+      "admission": "admitted",
+      "authority_granted": false,
+      "definition_sha256": "353fc05fcd2a8a4ab6f514f6bdd4cba80083624c34b8cb6e88d56bde75b29c2e",
+      "findings": [],
+      "skill": "git_history_analysis"
+    },
+    {
+      "admission": "admitted",
+      "authority_granted": false,
+      "definition_sha256": "ffa9e2d07cf7c5bd1c12a1da1f07abeddc984c9b8ff21df1964f9d6ce90dd11d",
+      "findings": [],
+      "skill": "bounded_review"
+    }
+  ],
+  "authority_enabled": false,
+  "automatic_publication": false,
+  "definitions": [
+    {
+      "advisory_tools": [
+        "exact-text-search",
+        "repository-map"
+      ],
+      "authority": {
+        "approvals": false,
+        "code_execution": false,
+        "connectors": false,
+        "filesystem": false,
+        "grant_creation": false,
+        "memory_promotion": false,
+        "network": false,
+        "secrets": false,
+        "shell": false,
+        "tool_registration": false,
+        "workspace_expansion": false,
+        "writes": false
+      },
+      "completion_criteria": [
+        "Evidence: every structural claim cites an exact repository-map range or is marked unknown",
+        "Evidence: entry points, dependencies, tests, permissions, and coverage limitations are present"
+      ],
+      "maximum_paths": 256,
+      "prohibited_operations": [
+        "arbitrary-shell",
+        "automatic-commit",
+        "automatic-dependency-upgrade",
+        "automatic-deploy",
+        "automatic-merge",
+        "automatic-migration",
+        "automatic-pr-publication",
+        "automatic-push",
+        "automatic-refactor",
+        "automatic-release",
+        "frontier-handoff",
+        "network-publication",
+        "unattended-write"
+      ],
+      "purpose": "Map repository structure, entry points, dependencies, data flow, permissions, tests, and coverage gaps from exact sources",
+      "required_validation": [
+        "completion-evidence",
+        "no-unrelated-change",
+        "scope-check",
+        "source-citations"
+      ],
+      "skill": "repository_cartographer",
+      "supported_languages": [
+        "go",
+        "javascript",
+        "mixed",
+        "python",
+        "shell",
+        "sql",
+        "typescript",
+        "unsupported-lexical-only"
+      ],
+      "workflow_id": "repository-cartographer"
+    },
+    {
+      "advisory_tools": [
+        "exact-text-search",
+        "repository-map"
+      ],
+      "authority": {
+        "approvals": false,
+        "code_execution": false,
+        "connectors": false,
+        "filesystem": false,
+        "grant_creation": false,
+        "memory_promotion": false,
+        "network": false,
+        "secrets": false,
+        "shell": false,
+        "tool_registration": false,
+        "workspace_expansion": false,
+        "writes": false
+      },
+      "completion_criteria": [
+        "Evidence: every trace hop cites an exact source range and direction",
+        "Evidence: missing hops and unsupported relationships remain visibly unknown"
+      ],
+      "maximum_paths": 128,
+      "prohibited_operations": [
+        "arbitrary-shell",
+        "automatic-commit",
+        "automatic-dependency-upgrade",
+        "automatic-deploy",
+        "automatic-merge",
+        "automatic-migration",
+        "automatic-pr-publication",
+        "automatic-push",
+        "automatic-refactor",
+        "automatic-release",
+        "frontier-handoff",
+        "network-publication",
+        "unattended-write"
+      ],
+      "purpose": "Trace one bounded feature through interfaces, services, storage, background work, responses, and tests",
+      "required_validation": [
+        "completion-evidence",
+        "no-unrelated-change",
+        "scope-check",
+        "source-citations"
+      ],
+      "skill": "feature_trace",
+      "supported_languages": [
+        "go",
+        "javascript",
+        "mixed",
+        "python",
+        "shell",
+        "sql",
+        "typescript",
+        "unsupported-lexical-only"
+      ],
+      "workflow_id": "feature-trace"
+    },
+    {
+      "advisory_tools": [
+        "exact-text-search",
+        "repository-map"
+      ],
+      "authority": {
+        "approvals": false,
+        "code_execution": false,
+        "connectors": false,
+        "filesystem": false,
+        "grant_creation": false,
+        "memory_promotion": false,
+        "network": false,
+        "secrets": false,
+        "shell": false,
+        "tool_registration": false,
+        "workspace_expansion": false,
+        "writes": false
+      },
+      "completion_criteria": [
+        "Evidence: affected paths, symbols, data, permissions, tests, documentation, risk, and rollback are enumerated",
+        "Evidence: impact claims distinguish direct evidence from bounded inference"
+      ],
+      "maximum_paths": 128,
+      "prohibited_operations": [
+        "arbitrary-shell",
+        "automatic-commit",
+        "automatic-dependency-upgrade",
+        "automatic-deploy",
+        "automatic-merge",
+        "automatic-migration",
+        "automatic-pr-publication",
+        "automatic-push",
+        "automatic-refactor",
+        "automatic-release",
+        "frontier-handoff",
+        "network-publication",
+        "unattended-write"
+      ],
+      "purpose": "Identify affected symbols, callers, data, permissions, tests, documentation, deployment concerns, risk, and rollback",
+      "required_validation": [
+        "completion-evidence",
+        "no-unrelated-change",
+        "scope-check",
+        "source-citations"
+      ],
+      "skill": "change_impact",
+      "supported_languages": [
+        "go",
+        "javascript",
+        "mixed",
+        "python",
+        "shell",
+        "sql",
+        "typescript",
+        "unsupported-lexical-only"
+      ],
+      "workflow_id": "change-impact"
+    },
+    {
+      "advisory_tools": [
+        "exact-text-search",
+        "repository-map",
+        "trusted-validation-results"
+      ],
+      "authority": {
+        "approvals": false,
+        "code_execution": false,
+        "connectors": false,
+        "filesystem": false,
+        "grant_creation": false,
+        "memory_promotion": false,
+        "network": false,
+        "secrets": false,
+        "shell": false,
+        "tool_registration": false,
+        "workspace_expansion": false,
+        "writes": false
+      },
+      "completion_criteria": [
+        "Evidence: the failure is reproduced or explicitly marked not reproduced",
+        "Evidence: competing hypotheses, checks, root cause, and regression coverage are recorded"
+      ],
+      "maximum_paths": 64,
+      "prohibited_operations": [
+        "arbitrary-shell",
+        "automatic-commit",
+        "automatic-dependency-upgrade",
+        "automatic-deploy",
+        "automatic-merge",
+        "automatic-migration",
+        "automatic-pr-publication",
+        "automatic-push",
+        "automatic-refactor",
+        "automatic-release",
+        "frontier-handoff",
+        "network-publication",
+        "unattended-write"
+      ],
+      "purpose": "Diagnose one reproducible failure through explicit hypotheses, checks, root-cause evidence, and regression coverage",
+      "required_validation": [
+        "completion-evidence",
+        "no-unrelated-change",
+        "scope-check",
+        "source-citations"
+      ],
+      "skill": "debugging",
+      "supported_languages": [
+        "go",
+        "javascript",
+        "mixed",
+        "python",
+        "shell",
+        "sql",
+        "typescript",
+        "unsupported-lexical-only"
+      ],
+      "workflow_id": "debugging"
+    },
+    {
+      "advisory_tools": [
+        "repository-map",
+        "structured-change-preview",
+        "trusted-validation-results"
+      ],
+      "authority": {
+        "approvals": false,
+        "code_execution": false,
+        "connectors": false,
+        "filesystem": false,
+        "grant_creation": false,
+        "memory_promotion": false,
+        "network": false,
+        "secrets": false,
+        "shell": false,
+        "tool_registration": false,
+        "workspace_expansion": false,
+        "writes": false
+      },
+      "completion_criteria": [
+        "Evidence: proposed tests cover stated boundaries, failures, permissions, data changes, and rollback",
+        "Evidence: every validation claim is bound to a trusted current receipt"
+      ],
+      "maximum_paths": 64,
+      "prohibited_operations": [
+        "arbitrary-shell",
+        "automatic-commit",
+        "automatic-dependency-upgrade",
+        "automatic-deploy",
+        "automatic-merge",
+        "automatic-migration",
+        "automatic-pr-publication",
+        "automatic-push",
+        "automatic-refactor",
+        "automatic-release",
+        "frontier-handoff",
+        "network-publication",
+        "unattended-write"
+      ],
+      "purpose": "Propose repository-style tests and assess trusted validation receipts against explicit expected outcomes",
+      "required_validation": [
+        "completion-evidence",
+        "no-unrelated-change",
+        "scope-check",
+        "source-citations"
+      ],
+      "skill": "test_and_verification",
+      "supported_languages": [
+        "go",
+        "javascript",
+        "mixed",
+        "python",
+        "shell",
+        "sql",
+        "typescript",
+        "unsupported-lexical-only"
+      ],
+      "workflow_id": "test-and-verification"
+    },
+    {
+      "advisory_tools": [
+        "exact-text-search",
+        "repository-map"
+      ],
+      "authority": {
+        "approvals": false,
+        "code_execution": false,
+        "connectors": false,
+        "filesystem": false,
+        "grant_creation": false,
+        "memory_promotion": false,
+        "network": false,
+        "secrets": false,
+        "shell": false,
+        "tool_registration": false,
+        "workspace_expansion": false,
+        "writes": false
+      },
+      "completion_criteria": [
+        "Evidence: every behavior statement cites current repository sources",
+        "Evidence: commands, limitations, and verification steps are explicit and reviewable"
+      ],
+      "maximum_paths": 64,
+      "prohibited_operations": [
+        "arbitrary-shell",
+        "automatic-commit",
+        "automatic-dependency-upgrade",
+        "automatic-deploy",
+        "automatic-merge",
+        "automatic-migration",
+        "automatic-pr-publication",
+        "automatic-push",
+        "automatic-refactor",
+        "automatic-release",
+        "frontier-handoff",
+        "network-publication",
+        "unattended-write"
+      ],
+      "purpose": "Draft source-grounded repository documentation with citations, limitations, and verification instructions",
+      "required_validation": [
+        "completion-evidence",
+        "no-unrelated-change",
+        "scope-check",
+        "source-citations"
+      ],
+      "skill": "repository_documentation",
+      "supported_languages": [
+        "go",
+        "javascript",
+        "mixed",
+        "python",
+        "shell",
+        "sql",
+        "typescript",
+        "unsupported-lexical-only"
+      ],
+      "workflow_id": "repository-documentation"
+    },
+    {
+      "advisory_tools": [
+        "exact-text-search",
+        "repository-map",
+        "trusted-validation-results"
+      ],
+      "authority": {
+        "approvals": false,
+        "code_execution": false,
+        "connectors": false,
+        "filesystem": false,
+        "grant_creation": false,
+        "memory_promotion": false,
+        "network": false,
+        "secrets": false,
+        "shell": false,
+        "tool_registration": false,
+        "workspace_expansion": false,
+        "writes": false
+      },
+      "completion_criteria": [
+        "Evidence: the minimal reproduction records exact inputs, environment, steps, and observed result",
+        "Evidence: the original repository remains unchanged and cleanup is deterministic"
+      ],
+      "maximum_paths": 32,
+      "prohibited_operations": [
+        "arbitrary-shell",
+        "automatic-commit",
+        "automatic-dependency-upgrade",
+        "automatic-deploy",
+        "automatic-merge",
+        "automatic-migration",
+        "automatic-pr-publication",
+        "automatic-push",
+        "automatic-refactor",
+        "automatic-release",
+        "frontier-handoff",
+        "network-publication",
+        "unattended-write"
+      ],
+      "purpose": "Define a minimal deterministic reproduction and preserve the original repository while gathering evidence",
+      "required_validation": [
+        "completion-evidence",
+        "no-unrelated-change",
+        "scope-check",
+        "source-citations"
+      ],
+      "skill": "bug_reproduction",
+      "supported_languages": [
+        "go",
+        "javascript",
+        "mixed",
+        "python",
+        "shell",
+        "sql",
+        "typescript",
+        "unsupported-lexical-only"
+      ],
+      "workflow_id": "bug-reproduction"
+    },
+    {
+      "advisory_tools": [
+        "exact-text-search",
+        "read-only-git-history",
+        "repository-map"
+      ],
+      "authority": {
+        "approvals": false,
+        "code_execution": false,
+        "connectors": false,
+        "filesystem": false,
+        "grant_creation": false,
+        "memory_promotion": false,
+        "network": false,
+        "secrets": false,
+        "shell": false,
+        "tool_registration": false,
+        "workspace_expansion": false,
+        "writes": false
+      },
+      "completion_criteria": [
+        "Evidence: every historical claim names exact local object identities",
+        "Evidence: missing or shallow history is reported without fetching or invention"
+      ],
+      "maximum_paths": 32,
+      "prohibited_operations": [
+        "arbitrary-shell",
+        "automatic-commit",
+        "automatic-dependency-upgrade",
+        "automatic-deploy",
+        "automatic-merge",
+        "automatic-migration",
+        "automatic-pr-publication",
+        "automatic-push",
+        "automatic-refactor",
+        "automatic-release",
+        "frontier-handoff",
+        "network-publication",
+        "unattended-write"
+      ],
+      "purpose": "Explain local change intent from bounded read-only Git history and exact object evidence",
+      "required_validation": [
+        "completion-evidence",
+        "no-unrelated-change",
+        "scope-check",
+        "source-citations"
+      ],
+      "skill": "git_history_analysis",
+      "supported_languages": [
+        "go",
+        "javascript",
+        "mixed",
+        "python",
+        "shell",
+        "sql",
+        "typescript",
+        "unsupported-lexical-only"
+      ],
+      "workflow_id": "git-history-analysis"
+    },
+    {
+      "advisory_tools": [
+        "repository-map",
+        "structured-change-preview",
+        "trusted-validation-results"
+      ],
+      "authority": {
+        "approvals": false,
+        "code_execution": false,
+        "connectors": false,
+        "filesystem": false,
+        "grant_creation": false,
+        "memory_promotion": false,
+        "network": false,
+        "secrets": false,
+        "shell": false,
+        "tool_registration": false,
+        "workspace_expansion": false,
+        "writes": false
+      },
+      "completion_criteria": [
+        "Evidence: findings cite exact changed ranges, severity, consequence, and verification",
+        "Evidence: unrelated changes, rollback, tests, and unresolved uncertainty are explicitly assessed"
+      ],
+      "maximum_paths": 64,
+      "prohibited_operations": [
+        "arbitrary-shell",
+        "automatic-commit",
+        "automatic-dependency-upgrade",
+        "automatic-deploy",
+        "automatic-merge",
+        "automatic-migration",
+        "automatic-pr-publication",
+        "automatic-push",
+        "automatic-refactor",
+        "automatic-release",
+        "frontier-handoff",
+        "network-publication",
+        "unattended-write"
+      ],
+      "purpose": "Review an exact change packet for correctness, security, compatibility, tests, rollback, and unrelated changes",
+      "required_validation": [
+        "completion-evidence",
+        "no-unrelated-change",
+        "scope-check",
+        "source-citations"
+      ],
+      "skill": "bounded_review",
+      "supported_languages": [
+        "go",
+        "javascript",
+        "mixed",
+        "python",
+        "shell",
+        "sql",
+        "typescript",
+        "unsupported-lexical-only"
+      ],
+      "workflow_id": "bounded-review"
+    }
+  ],
+  "manifests": [
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.4.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1056,
+          "content_sha256": "cc3975670724f7c4f03f0f622b939b23de7a286109c7692260590cdbd957fb84",
+          "kind": "prompt",
+          "path": "prompts/repository-cartographer.prompt.md",
+          "semantic_key": "repository-cartographer"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "ba74b2dd9a4198cb9c01ae6154d8c78a03f9987fd838d47860653acf99b5a0b6",
+      "package_sha256": "d9c3dac5b09fa39964440ea1768fa8335ab0b2166c15f6288ad5dff99324fe3e",
+      "precedence": 100,
+      "purpose": "Map repository structure, entry points, dependencies, data flow, permissions, tests, and coverage gaps from exact sources",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "document",
+          "project"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "repository-cartographer"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-repository-cartographer",
+      "source_id": "agentmage-built-in-coding-skills",
+      "source_sha256": "041051b7ca839e00a4621dd9e85fcd9d67ceb2d29e72a32fcb9ec6ff3b193ad0",
+      "trust_state": "admitted",
+      "version": "0.4.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.4.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 996,
+          "content_sha256": "a805e0ce638d2f88a45dd37cd64c17c993e8fc9427c3d25a8dbd659e790b6ebd",
+          "kind": "prompt",
+          "path": "prompts/feature-trace.prompt.md",
+          "semantic_key": "feature-trace"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "dab2270226bf9359ca974c337b3378dae680390c7e6ec7e1e2a645bef136767f",
+      "package_sha256": "a72f70d18c105fe3379a40a606b9b9fcec70d689497039f56f33263ec961b622",
+      "precedence": 100,
+      "purpose": "Trace one bounded feature through interfaces, services, storage, background work, responses, and tests",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "document",
+          "project"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "feature-trace"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-feature-trace",
+      "source_id": "agentmage-built-in-coding-skills",
+      "source_sha256": "041051b7ca839e00a4621dd9e85fcd9d67ceb2d29e72a32fcb9ec6ff3b193ad0",
+      "trust_state": "admitted",
+      "version": "0.4.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.4.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1051,
+          "content_sha256": "7cc3c5cb6595e3e29292986fa1e70fea0cb125a0093576022d8960d580093a1e",
+          "kind": "prompt",
+          "path": "prompts/change-impact.prompt.md",
+          "semantic_key": "change-impact"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "71142f7057d128a723bf72bef2da806734ea650c302ed4349298d9ad217b6e33",
+      "package_sha256": "3da35564edb2cda5773363c935c555e0012163859552b754a5ffceb05db0c3e9",
+      "precedence": 100,
+      "purpose": "Identify affected symbols, callers, data, permissions, tests, documentation, deployment concerns, risk, and rollback",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "document",
+          "project"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "change-impact"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-change-impact",
+      "source_id": "agentmage-built-in-coding-skills",
+      "source_sha256": "041051b7ca839e00a4621dd9e85fcd9d67ceb2d29e72a32fcb9ec6ff3b193ad0",
+      "trust_state": "admitted",
+      "version": "0.4.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.4.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1053,
+          "content_sha256": "5e6d6fd5f98c20b2881bafd21ff3ff5731700030504bd3a86cea7fb93d4330c2",
+          "kind": "prompt",
+          "path": "prompts/debugging.prompt.md",
+          "semantic_key": "debugging"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "2ccefd516f5f02bb30cda044a009d2acc76fbb3c30441693e636b87be487bb7e",
+      "package_sha256": "60e57e7fc71f6ce4ca0db86d5e90e95f4cdb34a79455b57bd5c707526a7cd0e0",
+      "precedence": 100,
+      "purpose": "Diagnose one reproducible failure through explicit hypotheses, checks, root-cause evidence, and regression coverage",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "document",
+          "project"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "debugging"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-debugging",
+      "source_id": "agentmage-built-in-coding-skills",
+      "source_sha256": "041051b7ca839e00a4621dd9e85fcd9d67ceb2d29e72a32fcb9ec6ff3b193ad0",
+      "trust_state": "admitted",
+      "version": "0.4.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.4.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1060,
+          "content_sha256": "01f862bf42d00d80994721febefa19eee37d949bf4c8740393d51eb6f38637f3",
+          "kind": "prompt",
+          "path": "prompts/test-and-verification.prompt.md",
+          "semantic_key": "test-and-verification"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "2e30833b6600c21ec46fa5807dd8ee1006834b1cb0f48bc998aeb576746fafc4",
+      "package_sha256": "2f90b907633bfcfba6ea5b2c5f6d178bf37c4871e3221d9c5fe2a70ae6545fb1",
+      "precedence": 100,
+      "purpose": "Propose repository-style tests and assess trusted validation receipts against explicit expected outcomes",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "document",
+          "project"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "test-and-verification"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-test-and-verification",
+      "source_id": "agentmage-built-in-coding-skills",
+      "source_sha256": "041051b7ca839e00a4621dd9e85fcd9d67ceb2d29e72a32fcb9ec6ff3b193ad0",
+      "trust_state": "admitted",
+      "version": "0.4.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.4.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1006,
+          "content_sha256": "69134217b79ee34f8f11207a5cadee210e6358d0f62305497dd2a529883b3c53",
+          "kind": "prompt",
+          "path": "prompts/repository-documentation.prompt.md",
+          "semantic_key": "repository-documentation"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "693be98a601785de9cd1a3e16f7e9b282f86b9e8cd22306b3b059cbf75f93b1b",
+      "package_sha256": "0b1394ebdec5593cb0939b1894afe5ee39065c956da9d859218fe7d706a67526",
+      "precedence": 100,
+      "purpose": "Draft source-grounded repository documentation with citations, limitations, and verification instructions",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "document",
+          "project"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "repository-documentation"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-repository-documentation",
+      "source_id": "agentmage-built-in-coding-skills",
+      "source_sha256": "041051b7ca839e00a4621dd9e85fcd9d67ceb2d29e72a32fcb9ec6ff3b193ad0",
+      "trust_state": "admitted",
+      "version": "0.4.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.4.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1060,
+          "content_sha256": "10903972feb9c0f21ddc9e284a73f0e6116dabfe766fbe300ae077a717d7840d",
+          "kind": "prompt",
+          "path": "prompts/bug-reproduction.prompt.md",
+          "semantic_key": "bug-reproduction"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "365c50feba96eefe4eae81d21ba7fb14227d24ee6dab2c055a31fee54f4cbc3b",
+      "package_sha256": "7764e82b87cef0fe96acb56606445438b535bc87c503fab1dc5f5b8f04c4a699",
+      "precedence": 100,
+      "purpose": "Define a minimal deterministic reproduction and preserve the original repository while gathering evidence",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "document",
+          "project"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "bug-reproduction"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-bug-reproduction",
+      "source_id": "agentmage-built-in-coding-skills",
+      "source_sha256": "041051b7ca839e00a4621dd9e85fcd9d67ceb2d29e72a32fcb9ec6ff3b193ad0",
+      "trust_state": "admitted",
+      "version": "0.4.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.4.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1008,
+          "content_sha256": "afbe57135a70981dc3df5ecab0214ab1bacab90de5b1b4522ba322ebf50d25c1",
+          "kind": "prompt",
+          "path": "prompts/git-history-analysis.prompt.md",
+          "semantic_key": "git-history-analysis"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "6fb7ed97ccd3aa632ea1c5fa1c4d5ed44f8a885ce07d660450ff4bccf5348c05",
+      "package_sha256": "c478b26f85ad6cd6f16a90b40c2ae281ee8356f38c059653240cf296120510ab",
+      "precedence": 100,
+      "purpose": "Explain local change intent from bounded read-only Git history and exact object evidence",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "document",
+          "project"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "git-history-analysis"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-git-history-analysis",
+      "source_id": "agentmage-built-in-coding-skills",
+      "source_sha256": "041051b7ca839e00a4621dd9e85fcd9d67ceb2d29e72a32fcb9ec6ff3b193ad0",
+      "trust_state": "admitted",
+      "version": "0.4.0"
+    },
+    {
+      "compatibility": {
+        "maximum_knowledge_schema": 1,
+        "minimum_agentmage_version": "0.4.0",
+        "minimum_knowledge_schema": 1
+      },
+      "files": [
+        {
+          "bytes": 1078,
+          "content_sha256": "5f494f979697cbe73c1bb83ec745e4a3f8ae84d75f0fae11e3c19fb9b0c199e7",
+          "kind": "prompt",
+          "path": "prompts/bounded-review.prompt.md",
+          "semantic_key": "bounded-review"
+        }
+      ],
+      "license": "Apache-2.0",
+      "manifest_sha256": "a490021b5fdba8fdc380b55517bb818c7d51a51674123408e9686861a8de2555",
+      "package_sha256": "fb0afa73dc9268e257ad76583298e801b72b8daeac862afa8b60d63226bf8b8a",
+      "precedence": 100,
+      "purpose": "Review an exact change packet for correctness, security, compatibility, tests, rollback, and unrelated changes",
+      "requested_scope": {
+        "knowledge_record_kinds": [
+          "document",
+          "project"
+        ],
+        "max_context_bytes": 131072,
+        "workflow_ids": [
+          "bounded-review"
+        ]
+      },
+      "schema_version": 1,
+      "signer_or_provenance": "AgentMage source repository",
+      "skill_id": "skill-bounded-review",
+      "source_id": "agentmage-built-in-coding-skills",
+      "source_sha256": "041051b7ca839e00a4621dd9e85fcd9d67ceb2d29e72a32fcb9ec6ff3b193ad0",
+      "trust_state": "admitted",
+      "version": "0.4.0"
+    }
+  ],
+  "network_access": false,
+  "product_registration": false,
+  "record_type": "agentmage-coding-skill-pack",
+  "schema_version": 1,
+  "version": "0.4.0"
+}

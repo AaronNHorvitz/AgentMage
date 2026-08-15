@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-50-coding-skill-and-workflow-v1",
+  "skill_ids": [
+    "repository_cartographer",
+    "feature_trace",
+    "change_impact",
+    "debugging",
+    "test_and_verification",
+    "repository_documentation",
+    "bug_reproduction",
+    "git_history_analysis",
+    "bounded_review"
+  ],
+  "definition_mutations": [
+    {
+      "mutation_id": "vague-completion",
+      "expected_finding": "vague_completion"
+    },
+    {
+      "mutation_id": "hidden-authority",
+      "expected_finding": "hidden_authority"
+    },
+    {
+      "mutation_id": "unsupported-tool",
+      "expected_finding": "unsupported_tool"
+    },
+    {
+      "mutation_id": "unsupported-language",
+      "expected_finding": "unsupported_language"
+    },
+    {
+      "mutation_id": "missing-validation",
+      "expected_finding": "missing_validation"
+    },
+    {
+      "mutation_id": "overbroad-scope",
+      "expected_finding": "overbroad_scope"
+    }
+  ],
+  "prohibited_operation_attempts": [
+    "arbitrary-shell",
+    "automatic-commit",
+    "automatic-dependency-upgrade",
+    "automatic-deploy",
+    "automatic-merge",
+    "automatic-migration",
+    "automatic-pr-publication",
+    "automatic-push",
+    "automatic-refactor",
+    "automatic-release",
+    "frontier-handoff",
+    "network-publication",
+    "unattended-write"
+  ],
+  "fictional_workflow_dimensions": {
+    "languages": [
+      "python",
+      "typescript",
+      "javascript",
+      "go",
+      "shell",
+      "sql",
+      "mixed"
+    ],
+    "workflows": [
+      "learning",
+      "diagnosis",
+      "bug-fixing",
+      "feature-work",
+      "tests",
+      "review",
+      "rollback",
+      "recovery"
+    ],
+    "source_corpus": "docs/verification/sprint-45-coding-corpus.json",
+    "integrated_chat_status": "blocked-product-coordinator-absent",
+    "integrated_cli_status": "blocked-product-coordinator-absent"
+  },
+  "repository_failure_scenarios": [
+    {
+      "scenario_id": "worktree-collision",
+      "expected_outcome": "deny-without-mutation",
+      "local_contract_test": "repository_safety::tests::worktree_registry_requires_stable_ownership_and_safe_cleanup"
+    },
+    {
+      "scenario_id": "stale-preimage",
+      "expected_outcome": "deny-without-mutation",
+      "local_contract_test": "write_transaction::tests::changed_preimage_invalidates_before_driver_apply"
+    },
+    {
+      "scenario_id": "command-injection",
+      "expected_outcome": "inert-without-authority",
+      "local_contract_test": "instruction_provenance::tests::two_hundred_injections_never_create_guidance_or_authority_without_user_decision"
+    },
+    {
+      "scenario_id": "malicious-project-configuration",
+      "expected_outcome": "deny-without-execution",
+      "local_contract_test": "command_runner::tests::request_arguments_and_ambient_environment_cannot_mutate_registered_commands"
+    },
+    {
+      "scenario_id": "failed-validation",
+      "expected_outcome": "block-change-and-commit",
+      "local_contract_test": "validation_result::tests::failed_required_validation_blocks_completion"
+    },
+    {
+      "scenario_id": "unrelated-change",
+      "expected_outcome": "preserve-and-exclude",
+      "local_contract_test": "review_packet::tests::logical_commit_plan_accounts_for_every_approved_file_and_excludes_unrelated_work"
+    }
+  ],
+  "expanded_case_counts": {
+    "definition_mutations": 54,
+    "prohibited_operation_attempts": 117,
+    "fictional_workflow_combinations": 56,
+    "repository_failure_scenarios": 6,
+    "total": 233
+  }
+}
