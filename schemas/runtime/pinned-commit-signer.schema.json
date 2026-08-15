@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/pinned-commit-signer.schema.json",
+  "title": "AgentMage Pinned External Commit Signer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "signer_id",
+    "kind",
+    "source",
+    "signer_path_sha256",
+    "signer_executable_sha256",
+    "key_fingerprint",
+    "public_key_sha256",
+    "inspection_evidence_sha256",
+    "repository_configuration_used",
+    "unsigned_fallback",
+    "signer_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "signer_id": { "$ref": "#/$defs/identifier" },
+    "kind": { "enum": ["hardware_backed", "open_pgp"] },
+    "source": { "enum": ["platform_broker", "external_keyring"] },
+    "signer_path_sha256": { "$ref": "#/$defs/sha256" },
+    "signer_executable_sha256": { "$ref": "#/$defs/sha256" },
+    "key_fingerprint": { "$ref": "#/$defs/fingerprint" },
+    "public_key_sha256": { "$ref": "#/$defs/sha256" },
+    "inspection_evidence_sha256": { "$ref": "#/$defs/sha256" },
+    "repository_configuration_used": { "const": false },
+    "unsigned_fallback": { "const": false },
+    "signer_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/candidate-tree-receipt.schema.json",
+  "title": "AgentMage Candidate Tree Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "candidate_build_id",
+    "candidate_plan_sha256",
+    "repository_sha256",
+    "parent_object",
+    "candidate_tree",
+    "blobs",
+    "before_manifest_sha256",
+    "after_manifest_sha256",
+    "user_index_sha256",
+    "ref_update_authority",
+    "platform_code",
+    "receipt_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "candidate_build_id": { "$ref": "#/$defs/identifier" },
+    "candidate_plan_sha256": { "$ref": "#/$defs/sha256" },
+    "repository_sha256": { "$ref": "#/$defs/sha256" },
+    "parent_object": { "$ref": "#/$defs/object" },
+    "candidate_tree": { "$ref": "#/$defs/object" },
+    "blobs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": { "$ref": "#/$defs/blob" }
+    },
+    "before_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "after_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "user_index_sha256": { "$ref": "#/$defs/sha256" },
+    "ref_update_authority": { "const": false },
+    "platform_code": { "$ref": "#/$defs/identifier" },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "object": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "blob": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_id", "postimage_sha256", "blob_object"],
+      "properties": {
+        "operation_id": { "$ref": "#/$defs/identifier" },
+        "postimage_sha256": { "$ref": "#/$defs/sha256" },
+        "blob_object": { "$ref": "#/$defs/object" }
+      }
+    }
+  }
+}

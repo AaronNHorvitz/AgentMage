@@ -363,6 +363,12 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "validation-receipt",
     "logical-commit-plan",
     "local-review-packet",
+    "pinned-commit-signer",
+    "candidate-tree-plan",
+    "candidate-tree-receipt",
+    "local-commit-plan",
+    "manual-commit-approval-receipt",
+    "local-commit-receipt",
     "repository-preservation-manifest",
     "repository-operation-plan",
     "repository-operation-receipt",
@@ -491,6 +497,99 @@ test("local review packets reject false review, validation, and change accountin
       validateRuntimeRecord("local-review-packet", changed, runtimeValidators)
         .valid,
       false,
+    );
+  }
+});
+
+test("local commit records reject signer, approval, index, publication, and signature drift", () => {
+  const load = (recordType) =>
+    JSON.parse(
+      fs.readFileSync(
+        path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+        "utf8",
+      ),
+    );
+  const cases = [
+    [
+      "pinned-commit-signer",
+      (record) => {
+        record.repository_configuration_used = true;
+      },
+    ],
+    [
+      "pinned-commit-signer",
+      (record) => {
+        record.unsigned_fallback = true;
+      },
+    ],
+    [
+      "candidate-tree-plan",
+      (record) => {
+        record.network_authority = true;
+      },
+    ],
+    [
+      "candidate-tree-plan",
+      (record) => {
+        record.files.push(structuredClone(record.files[0]));
+      },
+    ],
+    [
+      "candidate-tree-receipt",
+      (record) => {
+        record.ref_update_authority = true;
+      },
+    ],
+    [
+      "local-commit-plan",
+      (record) => {
+        record.push_authority = true;
+      },
+    ],
+    [
+      "local-commit-plan",
+      (record) => {
+        record.message += "\nforged";
+      },
+    ],
+    [
+      "manual-commit-approval-receipt",
+      (record) => {
+        record.model_confirmed = true;
+      },
+    ],
+    [
+      "manual-commit-approval-receipt",
+      (record) => {
+        record.expires_at_epoch_ms += 600001;
+      },
+    ],
+    [
+      "local-commit-receipt",
+      (record) => {
+        record.signature_verified = false;
+      },
+    ],
+    [
+      "local-commit-receipt",
+      (record) => {
+        record.user_index_unchanged = false;
+      },
+    ],
+    [
+      "local-commit-receipt",
+      (record) => {
+        record.network_used = true;
+      },
+    ],
+  ];
+  for (const [recordType, mutate] of cases) {
+    const changed = load(recordType);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord(recordType, changed, runtimeValidators).valid,
+      false,
+      recordType,
     );
   }
 });

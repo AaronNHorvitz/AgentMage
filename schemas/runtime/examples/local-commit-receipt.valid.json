@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "commit_transaction_id": "commit-transaction-0001",
+  "authority_transaction_id": "authority-transaction-0001",
+  "operation_attempt_id": "operation-attempt-0001",
+  "commit_plan_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+  "approval_receipt_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "parent_object": "3333333333333333333333333333333333333333",
+  "candidate_tree": "4444444444444444444444444444444444444444",
+  "commit_object": "5555555555555555555555555555555555555555",
+  "task_branch": "refs/heads/agentmage/tasks/fixture",
+  "signer_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+  "signature_verified": true,
+  "user_index_unchanged": true,
+  "remotes_unchanged": true,
+  "repository_execution_surfaces_disabled": true,
+  "network_used": false,
+  "outcome": "succeeded",
+  "before_manifest_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+  "after_manifest_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+  "platform_code": "linux.git.commit.succeeded",
+  "receipt_sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+}

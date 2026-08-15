@@ -60,6 +60,12 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "validation-receipt",
   "logical-commit-plan",
   "local-review-packet",
+  "pinned-commit-signer",
+  "candidate-tree-plan",
+  "candidate-tree-receipt",
+  "local-commit-plan",
+  "manual-commit-approval-receipt",
+  "local-commit-receipt",
   "repository-preservation-manifest",
   "repository-operation-plan",
   "repository-operation-receipt",
@@ -91,6 +97,10 @@ function sha256File(relativePath) {
     .createHash("sha256")
     .update(fs.readFileSync(path.join(ROOT, relativePath)))
     .digest("hex");
+}
+
+function sha256String(value) {
+  return crypto.createHash("sha256").update(value, "utf8").digest("hex");
 }
 
 export function createPlanningValidators() {
@@ -728,6 +738,52 @@ function runtimeSemanticErrors(recordType, data) {
   } else if (recordType === "local-review-packet") {
     errors.push(...logicalCommitPlanSemanticErrors(data.commit_plan ?? {}));
     errors.push(...localReviewPacketSemanticErrors(data));
+  } else if (recordType === "pinned-commit-signer") {
+    if (
+      (data.kind === "open_pgp" && data.source !== "external_keyring") ||
+      (data.kind === "hardware_backed" && data.source !== "platform_broker")
+    ) {
+      errors.push("signer kind and external inspection source disagree");
+    }
+  } else if (recordType === "candidate-tree-plan") {
+    if (!isStrictlySortedBy(data.files ?? [], (file) => file.path)) {
+      errors.push("candidate files must be strictly path ordered");
+    }
+    const operationIds = (data.files ?? []).map((file) => file.operation_id);
+    if (new Set(operationIds).size !== operationIds.length) {
+      errors.push("candidate operation identities must be unique");
+    }
+  } else if (recordType === "candidate-tree-receipt") {
+    if (!isStrictlySortedBy(data.blobs ?? [], (blob) => blob.operation_id)) {
+      errors.push("candidate blobs must be strictly operation ordered");
+    }
+    if (data.before_manifest_sha256 === data.after_manifest_sha256) {
+      errors.push(
+        "candidate object construction must record a distinct post-effect manifest",
+      );
+    }
+  } else if (recordType === "local-commit-plan") {
+    if (sha256String(data.message ?? "") !== data.message_sha256) {
+      errors.push("commit message digest must match the exact message");
+    }
+    if ((data.task_branch ?? "").includes("..")) {
+      errors.push("task branch cannot contain a ref traversal sequence");
+    }
+  } else if (recordType === "manual-commit-approval-receipt") {
+    if (
+      data.expires_at_epoch_ms <= data.approved_at_epoch_ms ||
+      data.expires_at_epoch_ms - data.approved_at_epoch_ms > 600000
+    ) {
+      errors.push(
+        "manual commit approval must have a positive bounded lifetime",
+      );
+    }
+  } else if (recordType === "local-commit-receipt") {
+    if (data.before_manifest_sha256 === data.after_manifest_sha256) {
+      errors.push(
+        "successful local commit must record a distinct post-effect manifest",
+      );
+    }
   }
   return errors;
 }

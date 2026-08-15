@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/local-commit-plan.schema.json",
+  "title": "AgentMage Exact Signed Local Commit Plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "commit_transaction_id",
+    "repository_sha256",
+    "review_packet_sha256",
+    "candidate_tree_receipt_sha256",
+    "commit_group_sha256",
+    "parent_object",
+    "candidate_tree",
+    "message",
+    "message_sha256",
+    "author",
+    "committer",
+    "identity_sha256",
+    "timestamp_epoch_seconds",
+    "timezone_offset_minutes",
+    "signer",
+    "task_branch",
+    "preservation_manifest_sha256",
+    "user_index_sha256",
+    "automatic_commit",
+    "push_authority",
+    "merge_authority",
+    "release_authority",
+    "history_rewrite_authority",
+    "reset_authority",
+    "discard_authority",
+    "force_authority",
+    "network_authority",
+    "plan_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "commit_transaction_id": { "$ref": "#/$defs/identifier" },
+    "repository_sha256": { "$ref": "#/$defs/sha256" },
+    "review_packet_sha256": { "$ref": "#/$defs/sha256" },
+    "candidate_tree_receipt_sha256": { "$ref": "#/$defs/sha256" },
+    "commit_group_sha256": { "$ref": "#/$defs/sha256" },
+    "parent_object": { "$ref": "#/$defs/object" },
+    "candidate_tree": { "$ref": "#/$defs/object" },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16384,
+      "not": { "pattern": "\\u0000" }
+    },
+    "message_sha256": { "$ref": "#/$defs/sha256" },
+    "author": { "$ref": "#/$defs/identity" },
+    "committer": { "$ref": "#/$defs/identity" },
+    "identity_sha256": { "$ref": "#/$defs/sha256" },
+    "timestamp_epoch_seconds": {
+      "type": "integer",
+      "minimum": -62135596800,
+      "maximum": 253402300799
+    },
+    "timezone_offset_minutes": {
+      "type": "integer",
+      "minimum": -720,
+      "maximum": 840
+    },
+    "signer": {
+      "$ref": "https://agentmage.dev/schemas/runtime/pinned-commit-signer.schema.json"
+    },
+    "task_branch": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^refs/heads/agentmage/tasks/[A-Za-z0-9][A-Za-z0-9._/-]*[A-Za-z0-9_-]$"
+    },
+    "preservation_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "user_index_sha256": { "$ref": "#/$defs/sha256" },
+    "automatic_commit": { "const": false },
+    "push_authority": { "const": false },
+    "merge_authority": { "const": false },
+    "release_authority": { "const": false },
+    "history_rewrite_authority": { "const": false },
+    "reset_authority": { "const": false },
+    "discard_authority": { "const": false },
+    "force_authority": { "const": false },
+    "network_authority": { "const": false },
+    "plan_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "object": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "email"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+        },
+        "email": { "type": "string", "format": "email", "maxLength": 320 }
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/manual-commit-approval-receipt.schema.json",
+  "title": "AgentMage Exact Manual Commit Approval Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "approval_id",
+    "commit_plan_sha256",
+    "candidate_tree",
+    "parent_object",
+    "message_sha256",
+    "identity_sha256",
+    "signer_sha256",
+    "task_branch",
+    "preservation_manifest_sha256",
+    "approval_channel_sha256",
+    "approved_at_epoch_ms",
+    "expires_at_epoch_ms",
+    "human_confirmed",
+    "model_confirmed",
+    "execution_authority",
+    "receipt_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "approval_id": { "$ref": "#/$defs/identifier" },
+    "commit_plan_sha256": { "$ref": "#/$defs/sha256" },
+    "candidate_tree": { "$ref": "#/$defs/object" },
+    "parent_object": { "$ref": "#/$defs/object" },
+    "message_sha256": { "$ref": "#/$defs/sha256" },
+    "identity_sha256": { "$ref": "#/$defs/sha256" },
+    "signer_sha256": { "$ref": "#/$defs/sha256" },
+    "task_branch": {
+      "type": "string",
+      "maxLength": 512,
+      "pattern": "^refs/heads/agentmage/tasks/[A-Za-z0-9][A-Za-z0-9._/-]*[A-Za-z0-9_-]$"
+    },
+    "preservation_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "approval_channel_sha256": { "$ref": "#/$defs/sha256" },
+    "approved_at_epoch_ms": { "$ref": "#/$defs/time" },
+    "expires_at_epoch_ms": { "$ref": "#/$defs/time" },
+    "human_confirmed": { "const": true },
+    "model_confirmed": { "const": false },
+    "execution_authority": { "const": false },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "object": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "time": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 }
+  }
+}
