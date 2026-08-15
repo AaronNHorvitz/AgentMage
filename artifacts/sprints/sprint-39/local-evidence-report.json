@@ -1,0 +1,281 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-38-BLOCKED",
+      "owner": "39.1"
+    },
+    {
+      "code": "SPRINT-39-NATIVE-END-TO-END-RECOVERY-ABSENT",
+      "owner": "39.1.3.3"
+    },
+    {
+      "code": "SPRINT-39-NATIVE-CRASH-CONCURRENCY-MATRIX-INCOMPLETE",
+      "owner": "39.1.3.3"
+    },
+    {
+      "code": "SPRINT-39-ALL-RUNTIME-ROOT-SCAN-ABSENT",
+      "owner": "39.1.3.4"
+    },
+    {
+      "code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT",
+      "owner": "39.1.3.5"
+    },
+    {
+      "code": "SPRINT-39-NON-FEDORA-EVIDENCE-ABSENT",
+      "owner": "39.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-SPRINT-39-REVIEW-ABSENT",
+      "owner": "39.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-005"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "write_recovery",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "write-recovery-unit-tests",
+      "output_sha256": "646e49f60824e3a1aa812ff9c1ce75ebd751c59e101af2ab06a0538d4f68a5ea"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--test",
+        "write_recovery_matrix",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "write-recovery-integration-tests",
+      "output_sha256": "c5e8630c4ab1f22b40cb6de2ce2e95d1b9fccd772da4bb9d376a5c7b08d61387"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--locked"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "kernel-tests",
+      "output_sha256": "3216f876f6550de14277ec55bcab40f3f0ffb9f00020446ccd32909304bc1967"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "kernel-clippy",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "runtime-schema-tests",
+      "output_sha256": "656ae6fb79c4126291df7d34dbf9c0033f6f7e6c45e987bbd217f3f48761a1f0"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "9429883b84fff375554a1f00270c78c44c0640cac6b5b0509a77cf427fa9c114"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_rules.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "dependency-rules",
+      "output_sha256": "6021208711f9a27e6c6a78f6462fc1753158528ff7c0c5fce598c090ebff65a0"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/effect_boundary.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "effect-boundary",
+      "output_sha256": "0a618397c689cb97bdec0479f65fef49c91478cb5de8eff4eadb583a7d00281b"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/build_contract.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "build-contract",
+      "output_sha256": "b193dff1915a0f7b8728aee150623631d53c0f65f9fb648f0d1c263ea45fb86e"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/dependency_classes.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "dependency-classes",
+      "output_sha256": "4eacf822d38f647f497a08deb5132c77d1d51650d23c9048e8543d9fd5807d31"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/strict_local_source_audit.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "strict-local-source",
+      "output_sha256": "a1a54220da6aa2d5336a857ede637190494610b06ba17a33c104040ad7b7c710"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_39_evidence"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "27c4a39d34ece4cbc66cc59cb0870c7abe4cc0a5f009205bdd0ea06a93f8b3ac"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "all_runtime_roots_scanned": false,
+    "authority_free_recovery_coordinator": true,
+    "complete_native_crash_concurrency_matrix": false,
+    "completed_write_replay_allowed": false,
+    "concurrent_change_auto_merge": false,
+    "content_free_staging_diagnostics": true,
+    "deterministic_recovery_precedence": true,
+    "eleven_boundary_privacy_gate": true,
+    "fifteen_phase_checkpoint_contract": true,
+    "formal_runtime_checkpoint_schema": true,
+    "hash_chained_checkpoint_validation": true,
+    "independent_review": false,
+    "manual_fuzzing_complete": false,
+    "native_end_to_end_recovery_wiring": false,
+    "non_fedora_native_evidence": false,
+    "redacted_human_audit": true,
+    "removed_content_not_retained": true,
+    "separately_receipted_cleanup": true
+  },
+  "record_type": "sprint_39_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-DAT-004",
+    "SR-DAT-010",
+    "SR-DAT-011",
+    "SR-DAT-012",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-OPS-003",
+    "SR-OPS-004",
+    "SR-OPS-005",
+    "SR-OPS-006",
+    "SR-OPS-007",
+    "SR-TST-005"
+  ],
+  "source_revision": "7b69900d765d8a58bb6f9976740b427931a9b06d",
+  "source_sha256": {
+    "docs/architecture/write-privacy-recovery-audit.md": "2b59a5c25d786d548dfc354f3dd8d98a514ec467d95a6d9a492ab28e983efb33",
+    "docs/verification/sprint-39-local-results.md": "4d937002a458021c4ded99e8a43b6a587a601273f1087b062ac9e264e901df07",
+    "docs/verification/sprint-39-recovery-corpus.json": "b2e16c1eff2b62113c6ec5061d7e9cd84c060e721dca76c9945b9d6f095b39fb",
+    "docs/verification/sprint-39-redacted-audit-fixture.json": "763067076838702c82457d531dcd3ddb6800396c0aa97536a1c1218311b2ecb3",
+    "kernel/engine/src/lib.rs": "e60cfc40dbfa6786d216d876eba6b0432f5faab3989739cb05b54cfa1b8d947f",
+    "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
+    "kernel/engine/tests/write_recovery_matrix.rs": "5e1a223441698dfeab1775da6173f0c01728af40be67072635fe3448c9d2db6b",
+    "schemas/runtime/examples/write-aware-checkpoint.valid.json": "abff8bbfb8d8d49b63d410170a8bc83713087e13b9d34b0a35241816caead5dd",
+    "schemas/runtime/write-aware-checkpoint.schema.json": "26498af552caf936a8308a346ee4526a3409f1854878a9c9fc231b54c7551426",
+    "scripts/sprint_39_evidence.py": "64f701b79b3d6b89b303b9bdfabec2869e4ee5f8ec82dd75ec0a5dc421597204",
+    "scripts/validate_planning_schemas.mjs": "013d9268904c9de31794ceef10fc2e088970b05f0f5dc76fa9b6bb4d9f51e1b3",
+    "tests/test_planning_schemas.mjs": "fdc7c337e60b2bae1b772eda31d767bbfcec7187cf74430b9062256e42e0791a",
+    "tests/test_sprint_39_evidence.py": "c4bfdfd604abb8199bbd5a99f10867c65d403bde3fcdcce085d9f150be15f52a"
+  },
+  "summary": {
+    "all_runtime_roots_scanned": false,
+    "cross_platform_evidence_passed": false,
+    "independent_review_passed": false,
+    "local_write_recovery_contract_passed": true,
+    "manual_fuzzing_complete": false,
+    "native_crash_concurrency_passed": false,
+    "native_end_to_end_passed": false,
+    "network_access_enabled": false,
+    "release_approval": false,
+    "sprint_status": "BLOCKED",
+    "trusted_launcher_environment_passed": false,
+    "upstream_dependency_passed": false
+  },
+  "verification_evidence": {
+    "all_runtime_roots_scanned": false,
+    "complete_native_crash_concurrency_matrix": false,
+    "focused_blocking_skip_count": 0,
+    "focused_contracts": true,
+    "independent_review": false,
+    "manual_fuzzing": false,
+    "native_end_to_end_recovery": false,
+    "non_fedora_native_evidence": false,
+    "trusted_package_launcher_environment": false,
+    "upstream_sprint_38_gate": false
+  }
+}

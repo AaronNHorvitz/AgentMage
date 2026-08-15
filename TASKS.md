@@ -2951,39 +2951,54 @@ absent. Task 38.1.3, its two open sub-tasks, the story, and the sprint therefore
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 39.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 39.1.1.1** (legacy `S-032-I01`): Add write-aware checkpoints before and after each state-changing transaction.
-  - [ ] **Sub-task 39.1.1.2** (legacy `S-032-I02`): Bind canonical action state, consumed grant, file receipts, evidence, index updates, and next checkpoint atomically where their stores permit.
-  - [ ] **Sub-task 39.1.1.3** (legacy `S-032-I03`): Add secret scanning and classification before previews, staging, receipts, model context, and persistence.
-  - [ ] **Sub-task 39.1.1.4** (legacy `S-032-I04`): Redact sensitive values without storing removed content.
-  - [ ] **Sub-task 39.1.1.5** (legacy `S-032-I05`): Implement crash recovery for staging, application, index update, receipt persistence, and rollback boundaries.
-  - [ ] **Sub-task 39.1.1.6** (legacy `S-032-I06`): Implement concurrent-user-edit, concurrent-session, disk-full, permission-change, moved-root, and lost-secret-store fixtures.
-  - [ ] **Sub-task 39.1.1.7** (legacy `S-032-I07`): Generate a human-readable state-change audit summary with exact files, operations, validation, failures, and rollback status.
+  - [ ] **Sub-task 39.1.1.1** (legacy `S-032-I01`): Add write-aware checkpoints before and after each state-changing transaction. Partial local evidence: the platform-neutral 15-phase metadata contract, closed transition matrix, self-digest, and ordered chain pass; no native host path yet publishes these checkpoints around every real file/index transaction.
+  - [ ] **Sub-task 39.1.1.2** (legacy `S-032-I02`): Bind canonical action state, consumed grant, file receipts, evidence, index updates, and next checkpoint atomically where their stores permit. Partial local evidence: the checkpoint binds all named identities and digests, while the existing operational store atomically publishes authority, grant consumption, terminal authority receipt, and the next `SessionCheckpoint`; end-to-end native cross-store composition remains absent, and no false cross-filesystem atomicity claim is made.
+  - [ ] **Sub-task 39.1.1.3** (legacy `S-032-I03`): Add secret scanning and classification before previews, staging, receipts, model context, and persistence. Partial local evidence: one mandatory API covers all 11 named write-adjacent boundary classes with the existing deterministic persistence detector; native invocation at every actual producer remains open.
+  - [x] **Sub-task 39.1.1.4** (legacy `S-032-I04`): Redact sensitive values without storing removed content. Evidence: declared private, declared credential, detected secret, and non-UTF-8 values become one fixed marker; receipts retain only counts, stable finding classes, and the sanitized-output digest, and all focused serialized-output canary checks pass.
+  - [ ] **Sub-task 39.1.1.5** (legacy `S-032-I05`): Implement crash recovery for staging, application, index update, receipt persistence, and rollback boundaries. Partial local evidence: the deterministic recovery precedence covers each boundary and forbids replay after grant consumption; native process, filesystem, disk, index, and rollback fault injection remains open.
+  - [x] **Sub-task 39.1.1.6** (legacy `S-032-I06`): Implement concurrent-user-edit, concurrent-session, disk-full, permission-change, moved-root, and lost-secret-store fixtures. Evidence: the public integration matrix exercises every named condition plus cancellation, timeout, stale grant, crash uncertainty, rollback failure, retention, and orphan ownership through the exported API.
+  - [x] **Sub-task 39.1.1.7** (legacy `S-032-I07`): Generate a human-readable state-change audit summary with exact files, operations, validation, failures, and rollback status. Evidence: safe relative paths remain exact, secret-like fields are redacted before serialization, and preimage/postimage hashes, validation, failure, rollback, checkpoint, transaction, and action identities are bound into one self-hashed report.
 
-- [ ] **Task 39.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 39.1.2.1:** Write-aware checkpoint schema.
-  - [ ] **Sub-task 39.1.2.2:** Recovery and concurrency test suite.
-  - [ ] **Sub-task 39.1.2.3:** Redacted state-change audit report.
-  - [ ] **Sub-task 39.1.2.4:** Orphan staging and cleanup diagnostics.
+- [x] **Task 39.1.2 - Produce reviewable artifacts**
+  - [x] **Sub-task 39.1.2.1:** Write-aware checkpoint schema.
+  - [x] **Sub-task 39.1.2.2:** Recovery and concurrency test suite.
+  - [x] **Sub-task 39.1.2.3:** Redacted state-change audit report.
+  - [x] **Sub-task 39.1.2.4:** Orphan staging and cleanup diagnostics.
+
+Artifact evidence: implementation commits `c54eab3` and `d7ed9c0`, architecture/artifact commit
+`1f6bc19`, and evidence-contract commit `7b69900` add the authority-free coordinator, runtime JSON
+Schema and fixture, public recovery matrix, privacy canaries, architecture, 12-case recovery corpus,
+redacted audit fixture, local-results boundary, source-bound recorder, and evidence mutation suite.
 
 - [ ] **Task 39.1.3 - Verify and close the story**
-  - [ ] **Sub-task 39.1.3.1:** `S-032-UT01` validates write-aware checkpoint, receipt, rollback, retention, and cleanup schemas for every terminal/intermediate state; assert correlation and no ambiguous completion.
-  - [ ] **Sub-task 39.1.3.2:** `S-032-ST01` injects secrets/private excerpts into targets, diffs, previews, errors, staging, logs, checkpoints, backups, diagnostics, and exports; assert typed redaction and policy-bounded storage.
-  - [ ] **Sub-task 39.1.3.3:** `S-032-RT01` combines concurrent edits, cancellation, timeout, disk full, crash, stale grant, uncertain result, rollback failure, and restart; assert no repeated write and a deterministic recovery instruction.
-  - [ ] **Sub-task 39.1.3.4:** `S-032-IT01` scans all durable/temporary roots after every outcome and retention transition; assert no orphan staging, expired content, undeclared copy, or inaccessible rollback material.
-  - [ ] **Sub-task 39.1.3.5 - Product security evidence:** Map `SR-DAT-002` through `SR-DAT-004`, `SR-DAT-010` through `SR-DAT-012`, `SR-OPS-001` through `SR-OPS-007`, `SR-TST-005`; retain canary scans, checkpoint/recovery matrix, cleanup inventory, retention results, and audit-chain verification.
+  - [x] **Sub-task 39.1.3.1:** `S-032-UT01` validates write-aware checkpoint, receipt, rollback, retention, and cleanup schemas for every terminal/intermediate state; assert correlation and no ambiguous completion. Evidence: all 15 phases, structural relationships, legal transitions, self-digests, prior-digest links, duplicate identities, terminal extension, cleanup replay, and schema completion mutations pass with no focused skips.
+  - [x] **Sub-task 39.1.3.2:** `S-032-ST01` injects secrets/private excerpts into targets, diffs, previews, errors, staging, logs, checkpoints, backups, diagnostics, and exports; assert typed redaction and policy-bounded storage. Evidence: all 11 boundary classes receive declared-private, declared-credential, and six detector-class canaries; serialized sanitized fields and receipts contain no removed value, while repository validation rejects literal credential fixtures in source.
+  - [ ] **Sub-task 39.1.3.3:** `S-032-RT01` combines concurrent edits, cancellation, timeout, disk full, crash, stale grant, uncertain result, rollback failure, and restart; assert no repeated write and a deterministic recovery instruction. Partial local evidence: every named condition maps deterministically and every decision forbids completed-write replay; complete native execution and crash/concurrency scheduling remain open.
+  - [ ] **Sub-task 39.1.3.4:** `S-032-IT01` scans all durable/temporary roots after every outcome and retention transition; assert no orphan staging, expired content, undeclared copy, or inaccessible rollback material. Partial local evidence: synthetic inventory classifies live, attributable orphan, expired, unknown-owner, cleaned, and quarantined records and separately receipts cleanup; no complete live-root scan exists.
+  - [ ] **Sub-task 39.1.3.5 - Product security evidence:** Map `SR-DAT-002` through `SR-DAT-004`, `SR-DAT-010` through `SR-DAT-012`, `SR-OPS-001` through `SR-OPS-007`, `SR-TST-005`; retain canary scans, checkpoint/recovery matrix, cleanup inventory, retention results, and audit-chain verification. Partial local evidence: all 14 identifiers map to passing bounded contracts in the retained local-results report; upstream, native end-to-end, complete crash/concurrency, live-root, trusted-launcher, non-Fedora, independent-review, and manual-fuzzing evidence remains open.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 39.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every write can be attributed, reconstructed, verified, and where promised restored without logging or exporting unapproved file content.
-- [ ] **Story AC 39.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then recovery and cleanup are idempotent, bounded, separately receipted, and never broaden authority or silently discard a user conflict.
+- [x] **Story AC 39.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then recovery and cleanup are idempotent, bounded, separately receipted, and never broaden authority or silently discard a user conflict.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 39.AC1:** Crash injection never causes an unreceipted write or repeated completed write.
-- [ ] **Sprint AC 39.AC2:** Concurrent changes stop for review and are never silently overwritten or merged.
-- [ ] **Sprint AC 39.AC3:** Secret canaries do not enter previews, logs, exports, or unauthorized model context.
-- [ ] **Sprint AC 39.AC4:** Orphan staging is detectable, attributable, and safely removable.
-- [ ] **Sprint AC 39.AC5:** Completion is reported only after postimage and receipt verification.
+- [x] **Sprint AC 39.AC2:** Concurrent changes stop for review and are never silently overwritten or merged.
+- [x] **Sprint AC 39.AC3:** Secret canaries do not enter previews, logs, exports, or unauthorized model context.
+- [x] **Sprint AC 39.AC4:** Orphan staging is detectable, attributable, and safely removable.
+- [x] **Sprint AC 39.AC5:** Completion is reported only after postimage and receipt verification.
+
+Retained local evidence: source revision `7b69900d765d8a58bb6f9976740b427931a9b06d` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-39/local-evidence-report.json), SHA-256
+`7f2af02b73ffc928f51f0056af15c5b6e8a9a04cb644570b714570f0057b37de`. All 13 recorded commands
+exit zero, both focused suites report zero blocking skips, and no network or release claim is made.
+Sprint 39 remains **BLOCKED** because Sprint 38 is blocked; native end-to-end wiring, the complete
+native crash/concurrency matrix, a full live-root scan, trusted-package-launcher execution,
+non-Fedora evidence, independent review, and deferred manual fuzzing are absent. Task 39.1.1,
+Task 39.1.3, their open sub-tasks, Story AC 39.1.AC1, Sprint AC 39.AC1, the story, and the sprint
+therefore remain open.
 
 **Gate decision:** Sprint 39 is PASS only when Story 39.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 40 - v0.3 Write Release Gate
