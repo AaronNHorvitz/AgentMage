@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_43_local_evidence",
+  "source_revision": "eaf78d1dbf453dd22e5e3c4b2763c0c048ae82e4",
+  "source_sha256": {
+    "capabilities/repository-map/src/deep_analysis.rs": "ff1220e12306f2cf1559971bc58c2662a0cdac1e50f7ae88ef4fe8a6946f8f04",
+    "capabilities/repository-map/src/deep_views.rs": "07e3c4ae7313f8e2190f4c8de778061345f490e58d470747210f1aedfb575558",
+    "capabilities/repository-map/src/lib.rs": "24ddc236e1e3fd91b33b6ad07af364f5dd35ffc0e1c411ad47e5fb3c22af03e4",
+    "capabilities/repository-map/tests/deep_repository_matrix.rs": "e515c585ee9cd3ae1ed68da47de504231de8693d55a4da3e397e1127cc069e57",
+    "capabilities/repository-map/README.md": "21d61e6da68036d729b840e32ec798ca3222b3756109d0cb9d5e6d563e54307a",
+    "docs/architecture/deep-repository-comprehension.md": "10d86dce49fbffdccba532ab4705b9c4ed336f5a4e9c90ee3f5b810822729abd",
+    "docs/guides/repository-learning-exports.md": "03848f1b645c6db464224d548899744cb816086999da0772861eb1521d23411c",
+    "docs/verification/sprint-43-hostile-repository-corpus.json": "ae1793eeffa284434594014a2710360f1ede1a0c31e2e747ce3b214a30946500",
+    "docs/verification/sprint-43-local-results.md": "3845b5a8a225ab7b9e72de3782565bbda65398d1dae32c904e6e0e4276ea7e67",
+    "scripts/sprint_43_evidence.py": "8ea32a2cead876d63eedb2a1fcd583552b52ee2866f1a4e3d8a21eed50334950",
+    "tests/test_sprint_43_evidence.py": "579c9105c9b87261124667490e6ebf62e843533976a2ad188ba81643d6d9b4a8"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "git": "git version 2.55.0"
+  },
+  "commands": [
+    {
+      "id": "deep-repository-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "deep_",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b7edb8751dae45f1a8c440575174317ba431766322821ea023beb2864d8ecea7",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "hostile-repository-matrix",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--test",
+        "deep_repository_matrix",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5ccf085be383b6cd27597b12d653243fd60b612aca1f2684b8b3f68cccf8f273",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "read-only-git-invariance",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "invariance_tests::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c94b9453a79c32987c2f9e9a92bc4d8d842f5ac764e13d0170b5f044a68ea390",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "complete-repository-map-capability",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--all-targets",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9dca7281f0dc9845d02b26b7822aa312ca11d3be1875c9c74be8ae7ef984f1fe",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-repository-map",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3c6930d118ffdc40eac317d0413cd3f01f44f2dc9208676473a55f76d3bf63f7",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_43_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e73c3805f810fdcf3d0167ced7085c48306c9482a952ffb710551d230cdb3e51",
+      "blocking_skip_count": null
+    }
+  ],
+  "native_fixture_artifacts": [
+    {
+      "id": "git",
+      "name": "git",
+      "size": 4945312,
+      "sha256": "86c21d0ccccfb45c107c213b693d1132413959f71c6b0a4165f07c5072d47b34",
+      "root_owned": true,
+      "group_or_world_writable": false
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-008",
+    "SR-AI-003",
+    "SR-AI-007",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-DAT-003",
+    "SR-TST-004",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "deterministic_repository_profiles": true,
+    "closed_confined_adapter_contracts": true,
+    "source_resolvable_evidence_states": true,
+    "typed_repository_trace_set": true,
+    "branch_aware_history_contract": true,
+    "documentation_drift_and_glossary_contracts": true,
+    "separated_cross_repository_portfolio": true,
+    "bounded_large_repository_slices": true,
+    "quantified_coverage_and_blind_spots": true,
+    "structured_learning_export_suite": true,
+    "whole_repository_overclaim_prohibited": true,
+    "hostile_prose_and_secret_canary_matrix": true,
+    "production_repository_projection": false,
+    "live_language_native_or_server_adapter": false,
+    "persistent_production_index": false,
+    "complete_history_and_cross_repository_evidence": false,
+    "complete_semantic_relationship_coverage": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "parser_process_crash_and_cancellation_campaign": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "hostile_repository_case_count": 12,
+    "deep_index_mutation_count": 10000,
+    "unauthorized_mutation_acceptance_count": 0,
+    "secret_canary_export_count": 0,
+    "whole_repository_claim_permitted": false,
+    "production_repository_projection": false,
+    "live_language_native_or_server_adapter": false,
+    "complete_semantic_relationship_coverage": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-42-BLOCKED",
+      "owner": "43.1"
+    },
+    {
+      "code": "PRODUCTION-REPOSITORY-PROJECTION-ABSENT",
+      "owner": "43.1.1.1"
+    },
+    {
+      "code": "LIVE-SEMANTIC-ADAPTERS-ABSENT",
+      "owner": "43.1.1.2"
+    },
+    {
+      "code": "PERSISTENT-PRODUCTION-INDEX-ABSENT",
+      "owner": "43.1.2.1"
+    },
+    {
+      "code": "COMPLETE-HISTORY-CROSS-REPOSITORY-EVIDENCE-ABSENT",
+      "owner": "43.1.1.5"
+    },
+    {
+      "code": "COMPLETE-SEMANTIC-COVERAGE-ABSENT",
+      "owner": "43.1.3.1"
+    },
+    {
+      "code": "PARSER-PROCESS-CRASH-CANCELLATION-CAMPAIGN-ABSENT",
+      "owner": "43.1.3.2"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "43.1.3.4"
+    },
+    {
+      "code": "TRUSTED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "43.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-DEEP-REPOSITORY-REVIEW-ABSENT",
+      "owner": "43.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_43_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_42_closed": false,
+    "production_repository_projection_active": false,
+    "live_semantic_adapters_active": false,
+    "complete_repository_comprehension_claim": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}

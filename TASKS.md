@@ -3231,27 +3231,27 @@ therefore remain open.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 43.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 43.1.1.1** (legacy `S-036-I01`): Build repository profiles for languages, frameworks, package managers, entry points, tests, builds, linters, types, and instructions.
-  - [ ] **Sub-task 43.1.1.2** (legacy `S-036-I02`): Add separately confined parser, language-native, and language-server read adapters for definitions, references, calls, types, diagnostics, and symbols.
-  - [ ] **Sub-task 43.1.1.3** (legacy `S-036-I03`): Build package, application, service, library, entry-point, configuration, script, test, generated-code, and external-dependency maps.
-  - [ ] **Sub-task 43.1.1.4** (legacy `S-036-I04`): Build cited architecture, feature, data-flow, authentication, authorization, schema, migration, interface, test, continuous-integration, and dependency traces.
-  - [ ] **Sub-task 43.1.1.5** (legacy `S-036-I05`): Add Git-history, documentation-drift, glossary, branch-aware, cross-repository, and stale-index views.
-  - [ ] **Sub-task 43.1.1.6** (legacy `S-036-I06`): Build large-repository slicing by package, entry point, dependency neighborhood, history, and user-selected scope.
-  - [ ] **Sub-task 43.1.1.7** (legacy `S-036-I07`): Produce exact coverage and blind-spot reports and prohibit whole-repository claims without complete agreed coverage.
-  - [ ] **Sub-task 43.1.1.8** (legacy `S-036-I08`): Export onboarding, architecture, dependency, feature, test, build, operations, and open-question guides.
+  - [x] **Sub-task 43.1.1.1** (legacy `S-036-I01`): Build repository profiles for languages, frameworks, package managers, entry points, tests, builds, linters, types, and instructions.
+  - [ ] **Sub-task 43.1.1.2** (legacy `S-036-I02`): Add separately confined parser, language-native, and language-server read adapters for definitions, references, calls, types, diagnostics, and symbols. Closed hash-bound adapter/capability/fact contracts and pinned in-process parsers exist; no production confined language-native or language-server process adapter is active.
+  - [x] **Sub-task 43.1.1.3** (legacy `S-036-I03`): Build package, application, service, library, entry-point, configuration, script, test, generated-code, and external-dependency maps.
+  - [x] **Sub-task 43.1.1.4** (legacy `S-036-I04`): Build cited architecture, feature, data-flow, authentication, authorization, schema, migration, interface, test, continuous-integration, and dependency traces. Unsupported semantic traces remain explicitly `unknown_blocked`, and feature-name traces remain `inferred`.
+  - [x] **Sub-task 43.1.1.5** (legacy `S-036-I05`): Add Git-history, documentation-drift, glossary, branch-aware, cross-repository, and stale-index views.
+  - [x] **Sub-task 43.1.1.6** (legacy `S-036-I06`): Build large-repository slicing by package, entry point, dependency neighborhood, history, and user-selected scope.
+  - [x] **Sub-task 43.1.1.7** (legacy `S-036-I07`): Produce exact coverage and blind-spot reports and prohibit whole-repository claims without complete agreed coverage.
+  - [x] **Sub-task 43.1.1.8** (legacy `S-036-I08`): Export onboarding, architecture, dependency, feature, test, build, operations, and open-question guides.
 
 - [ ] **Task 43.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 43.1.2.1:** Deep repository index and analysis adapters.
-  - [ ] **Sub-task 43.1.2.2:** Cited map and trace formats.
-  - [ ] **Sub-task 43.1.2.3:** Large-repository coverage strategy.
-  - [ ] **Sub-task 43.1.2.4:** Repository-learning export suite.
+  - [ ] **Sub-task 43.1.2.1:** Deep repository index and analysis adapters. The deep index and closed adapter contracts are reviewable; production process adapters and persistent host orchestration remain absent.
+  - [x] **Sub-task 43.1.2.2:** Cited map and trace formats.
+  - [x] **Sub-task 43.1.2.3:** Large-repository coverage strategy.
+  - [x] **Sub-task 43.1.2.4:** Repository-learning export suite.
 
 - [ ] **Task 43.1.3 - Verify and close the story**
-  - [ ] **Sub-task 43.1.3.1:** `S-036-UT01` derives architecture, feature, data flow, permission, schema, test, history, ownership, and dependency facts from labeled repositories; assert expected nodes/edges and exact source/revision citations.
-  - [ ] **Sub-task 43.1.3.2:** `S-036-UT02` varies parser support, generated/vendor boundaries, history depth, repository size, stale revision, and missing dependencies; assert bounded degradation and quantified coverage.
-  - [ ] **Sub-task 43.1.3.3:** `S-036-ST01` injects misleading docs/comments/names, contradictory implementations, secret canaries, malicious metadata, parser failures, and fabricated model explanations; assert deterministic evidence outranks prose/model claims.
-  - [ ] **Sub-task 43.1.3.4:** `S-036-IT01` exports repository-learning maps and independently resolves/recomputes a sampled set; assert no private content beyond approved excerpts and no write/network side effects.
-  - [ ] **Sub-task 43.1.3.5 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`, `SR-AI-007`/`SR-AI-010`/`SR-AI-011`, `SR-DAT-003`, `SR-TST-004`/`SR-TST-006`; retain labeled corpus results, coverage metrics, citation sampling, canary scan, and export manifest.
+  - [ ] **Sub-task 43.1.3.1:** `S-036-UT01` derives architecture, feature, data flow, permission, schema, test, history, ownership, and dependency facts from labeled repositories; assert expected nodes/edges and exact source/revision citations. Platform-neutral profile, trace, history, portfolio, and citation fixtures pass; complete data-flow, authentication, authorization, ownership, and semantic-adapter fixtures remain absent.
+  - [ ] **Sub-task 43.1.3.2:** `S-036-UT02` varies parser support, generated/vendor boundaries, history depth, repository size, stale revision, and missing dependencies; assert bounded degradation and quantified coverage. Existing map and deep-view tests cover parser support, generated/vendor states, stale revisions, limits, omissions, and missing capabilities; complete production history-depth, host projection, and process-adapter campaigns remain absent.
+  - [ ] **Sub-task 43.1.3.3:** `S-036-ST01` injects misleading docs/comments/names, contradictory implementations, secret canaries, malicious metadata, parser failures, and fabricated model explanations; assert deterministic evidence outranks prose/model claims. Twelve fixed hostile cases and 10,000 deterministic index mutations pass with zero canary leakage or unauthorized acceptance; packaged parser-process crash/cancellation and complete contradictory-implementation campaigns remain absent.
+  - [x] **Sub-task 43.1.3.4:** `S-036-IT01` exports repository-learning maps and independently resolves/recomputes a sampled set; assert no private content beyond approved excerpts and no write/network side effects.
+  - [ ] **Sub-task 43.1.3.5 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`, `SR-AI-007`/`SR-AI-010`/`SR-AI-011`, `SR-DAT-003`, `SR-TST-004`/`SR-TST-006`; retain labeled corpus results, coverage metrics, citation sampling, canary scan, and export manifest. The exact map and local artifacts are retained; native cross-platform, trusted-package, complete process-adapter, independent-review, and deferred manual-fuzz evidence remain absent.
 
 ##### Story Acceptance Criteria
 
@@ -3261,10 +3261,22 @@ therefore remain open.
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 43.AC1:** Every structural claim resolves to exact file, range, symbol, parser or method, branch, and commit evidence.
-- [ ] **Sprint AC 43.AC2:** Branches, worktrees, generated outputs, and commits are never combined silently.
-- [ ] **Sprint AC 43.AC3:** Unsupported relationships remain Inferred or Unknown/Blocked.
+- [x] **Sprint AC 43.AC2:** Branches, worktrees, generated outputs, and commits are never combined silently.
+- [x] **Sprint AC 43.AC3:** Unsupported relationships remain Inferred or Unknown/Blocked.
 - [ ] **Sprint AC 43.AC4:** Index invalidation detects file, branch, submodule, lockfile, generated-code, and instruction changes.
-- [ ] **Sprint AC 43.AC5:** Coverage language accurately distinguishes discovered, read, indexed, skipped, and unknown material.
+- [x] **Sprint AC 43.AC5:** Coverage language accurately distinguishes discovered, read, indexed, skipped, and unknown material.
+
+Retained local evidence: source revision `eaf78d1dbf453dd22e5e3c4b2763c0c048ae82e4` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-43/local-evidence-report.json), SHA-256
+`42f0bd64660d8ec6d5e568370dfbf85df484499825d6fb7fe08ca8ee9a3514dc`. All nine recorded commands
+exit zero, all three focused suites report zero blocking skips, 12 hostile repository cases leak no
+source canary into the index/traces/exports, and 10,000 deterministic deep-index mutations have zero
+verified acceptance. Sprint 43 remains **BLOCKED** because Sprint 42 is blocked; production
+repository projection and persistence, live confined semantic adapters, complete history,
+cross-repository and semantic coverage, parser-process crash/cancellation campaigns, native
+cross-platform acceptance, trusted-package execution, independent review, and deferred manual
+fuzzing remain absent. The open tasks/sub-tasks, both story criteria, Sprint AC 43.AC1/AC4, the
+story, and the sprint therefore remain open.
 
 **Gate decision:** Sprint 43 is PASS only when Story 43.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 44 - Coding Intent, Reproduction, and Change Planning
