@@ -3,6 +3,7 @@
 //! Canonical user-owned Markdown knowledge-domain contracts without ambient authority.
 
 mod authority;
+mod coding_skills;
 mod domain;
 mod index;
 mod knowledge_write;
@@ -27,6 +28,11 @@ mod workflows;
 pub use authority::{
     KnowledgeDataOwner, KnowledgeFieldPolicy, KnowledgeStorageRule, knowledge_data_dictionary,
     verify_data_dictionary,
+};
+pub use coding_skills::{
+    CodingSkill, CodingSkillAdmission, CodingSkillAssessment, CodingSkillDefinition,
+    CodingSkillFinding, assess_coding_skill_definition, built_in_coding_skill_definitions,
+    built_in_coding_skill_pack,
 };
 pub use domain::{
     KnowledgeError, KnowledgeField, KnowledgeLink, KnowledgeLinkKind, KnowledgePrivacy,
