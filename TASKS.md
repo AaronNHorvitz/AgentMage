@@ -3020,24 +3020,30 @@ therefore remain open.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 40.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 40.1.1.1** (legacy `S-033-I01`): Run the complete write, path, grant, sandbox, privacy, crash, concurrency, stale-preimage, rollback, and evidence suites on all reference platforms.
-  - [ ] **Sub-task 40.1.1.2** (legacy `S-033-I02`): Verify that v0.1 and v0.2 read-only behavior is unchanged when the write pack is disabled.
-  - [ ] **Sub-task 40.1.1.3** (legacy `S-033-I03`): Publish write preview, approval, staging, rollback, recovery, protected-file, and limitation guides.
-  - [ ] **Sub-task 40.1.1.4** (legacy `S-033-I04`): Publish the exact capability delta and prove generic shell, Git publication, connectors, schedules, and unattended writes remain disabled.
-  - [ ] **Sub-task 40.1.1.5** (legacy `S-033-I05`): Perform clean upgrade, downgrade, backup, restore, and uninstall checks.
+  - [ ] **Sub-task 40.1.1.1** (legacy `S-033-I01`): Run the complete write, path, grant, sandbox, privacy, crash, concurrency, stale-preimage, rollback, and evidence suites on all reference platforms. Partial local evidence: eight focused approval, transaction, filesystem, recovery, Linux, Markdown/knowledge, host, and read-only suites pass with zero blocking skips; complete native reference-platform execution remains absent.
+  - [x] **Sub-task 40.1.1.2** (legacy `S-033-I02`): Verify that v0.1 and v0.2 read-only behavior is unchanged when the write pack is disabled. Evidence: the complete read-only capability suite and knowledge suite pass while the write profile remains future-disabled, unregistered, effectively read-only, process-disabled, tool-empty, and network-denied.
+  - [x] **Sub-task 40.1.1.3** (legacy `S-033-I03`): Publish write preview, approval, staging, rollback, recovery, protected-file, and limitation guides. Evidence: the controlled-write operator guide and v0.3 acceptance/recovery bundle document the exact flow, protected boundaries, staging, conflict preservation, rollback, lifecycle, and current limits.
+  - [x] **Sub-task 40.1.1.4** (legacy `S-033-I04`): Publish the exact capability delta and prove generic shell, Git publication, connectors, schedules, and unattended writes remain disabled. Evidence: the hash-bound write-pack manifest declares one planned controlled-write addition, no effective addition, eight exact exclusions, and a mutation-tested gate that rejects activation, publication, signing, or release overclaims.
+  - [ ] **Sub-task 40.1.1.5** (legacy `S-033-I05`): Perform clean upgrade, downgrade, backup, restore, and uninstall checks. The procedures and required evidence are published, but no complete clean lifecycle campaign exists.
 
 - [ ] **Task 40.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 40.1.2.1:** v0.3 packages and write-pack manifest.
-  - [ ] **Sub-task 40.1.2.2:** Cross-platform write acceptance bundle.
-  - [ ] **Sub-task 40.1.2.3:** Upgrade, downgrade, and recovery report.
-  - [ ] **Sub-task 40.1.2.4:** v0.3 release notes and capability matrix.
+  - [ ] **Sub-task 40.1.2.1:** v0.3 packages and write-pack manifest. Partial local evidence: the manifest is hash-bound and fresh unsigned `0.3.0` DEB, RPM, and VSIX candidates build with retained names, sizes, and hashes; candidate bytes are not retained or published, the profile remains inactive, and no signed packages exist.
+  - [ ] **Sub-task 40.1.2.2:** Cross-platform write acceptance bundle. The acceptance procedure exists, but native reference-platform results do not.
+  - [ ] **Sub-task 40.1.2.3:** Upgrade, downgrade, and recovery report. The required campaign and recovery sequence are defined, but no complete lifecycle results exist.
+  - [x] **Sub-task 40.1.2.4:** v0.3 release notes and capability matrix.
+
+Artifact evidence: release-contract commit `b767f8d` and evidence-contract commits `7f951d1`,
+`dfe2d02`, and `7af24b6` add the blocked write-pack manifest, mutation-tested release gate,
+controlled-write guide, capability matrix, acceptance/recovery bundle, draft release notes,
+source-bound recorder, trusted-launcher boundary, explicit read-only invariance, local-results report,
+and evidence mutation suite.
 
 - [ ] **Task 40.1.3 - Verify and close the story**
-  - [ ] **Sub-task 40.1.3.1:** `S-033-IT01` executes create/patch/copy/move/delete and Markdown/knowledge updates through every supported interface and platform; assert shared grants, previews, receipts, atomicity, and exact diffs.
-  - [ ] **Sub-task 40.1.3.2:** `S-033-ST01` attempts generic shell, Git commit/push, network publication, unattended write, wildcard approval, bulk reorganization, and extension/model bypass; assert all remain absent or denied.
-  - [ ] **Sub-task 40.1.3.3:** `S-033-RT01` upgrades v0.2 state, exercises writes, rolls back/downgrades, restores backups, and resumes interrupted operations; assert canonical files and evidence remain valid.
-  - [ ] **Sub-task 40.1.3.4:** `S-033-AT01` forces each write-security, privacy, collision, recovery, and clean-platform threshold to fail; assert package signing and `G-V0.3` closure are blocked.
-  - [ ] **Sub-task 40.1.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-DAT-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain cross-platform write bundle, prohibited-capability results, migration/rollback evidence, release manifest, and independent gate decision.
+  - [ ] **Sub-task 40.1.3.1:** `S-033-IT01` executes create/patch/copy/move/delete and Markdown/knowledge updates through every supported interface and platform; assert shared grants, previews, receipts, atomicity, and exact diffs. Partial local evidence: each operation family executes in focused contract or Fedora-local tests with shared grant/preview/receipt semantics; complete interface and platform coverage is absent.
+  - [ ] **Sub-task 40.1.3.2:** `S-033-ST01` attempts generic shell, Git commit/push, network publication, unattended write, wildcard approval, bulk reorganization, and extension/model bypass; assert all remain absent or denied. Partial local evidence: the closed manifest/gate and existing configuration/tool boundaries reject every named capability class; complete installed-candidate adversarial execution is absent.
+  - [ ] **Sub-task 40.1.3.3:** `S-033-RT01` upgrades v0.2 state, exercises writes, rolls back/downgrades, restores backups, and resumes interrupted operations; assert canonical files and evidence remain valid. No clean lifecycle campaign exists.
+  - [ ] **Sub-task 40.1.3.4:** `S-033-AT01` forces each write-security, privacy, collision, recovery, and clean-platform threshold to fail; assert package signing and `G-V0.3` closure are blocked. Partial local evidence: release-gate and evidence mutations reject every activation, profile, source hash, exclusion, blocker, package, platform, lifecycle, signing, review, fuzz, and gate-closure overclaim; complete native threshold injection is absent.
+  - [ ] **Sub-task 40.1.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-DAT-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain cross-platform write bundle, prohibited-capability results, migration/rollback evidence, release manifest, and independent gate decision. Partial local evidence: 29 named requirements map to local contracts in the retained report; cross-platform, lifecycle, signed-package, independent-decision, and deferred manual-fuzzing evidence remains open.
 
 ##### Story Acceptance Criteria
 
@@ -3047,10 +3053,21 @@ therefore remain open.
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 40.AC1:** Every controlled-write transaction stage is covered by reproducible success and failure tests.
-- [ ] **Sprint AC 40.AC2:** Disabled write capability restores a provably read-only product.
-- [ ] **Sprint AC 40.AC3:** No generic shell, commit, push, publish, connector, schedule, or unattended write path is present.
-- [ ] **Sprint AC 40.AC4:** Documentation clean-runs complete without undocumented authority or recovery steps.
+- [x] **Sprint AC 40.AC2:** Disabled write capability restores a provably read-only product.
+- [x] **Sprint AC 40.AC3:** No generic shell, commit, push, publish, connector, schedule, or unattended write path is present.
+- [x] **Sprint AC 40.AC4:** Documentation clean-runs complete without undocumented authority or recovery steps.
 - [ ] **Sprint AC 40.AC5:** `G-V0.3` closes only after every write safety threshold passes.
+
+Retained local evidence: source revision `7af24b6c7203e3a84b534545216f9c3d3da677a9` is bound by
+[`local-evidence-report.json`](artifacts/sprints/sprint-40/local-evidence-report.json), SHA-256
+`a74c04884b5059c7bd43604d02e1c372add02ad952d87ca95e292d76b787236b`. All 16 recorded commands
+exit zero, all eight focused suites report zero blocking skips, and unsigned candidate records make
+no activation, signing, publication, or release claim. Sprint 40 remains **BLOCKED** because
+Sprints 35 through 39 are blocked; the write profile is unregistered; complete native
+cross-platform write acceptance, clean lifecycle evidence, trusted-package-launcher execution,
+signed packages, independent release review, and deferred manual fuzzing are absent. The open
+tasks/sub-tasks, both story criteria, Sprint AC 40.AC1/AC5, the story, the sprint, and `G-V0.3`
+therefore remain open.
 
 **Gate decision:** Sprint 40 is PASS only when Story 40.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 

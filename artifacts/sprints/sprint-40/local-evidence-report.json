@@ -1,0 +1,380 @@
+{
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINTS-35-THROUGH-39-BLOCKED",
+      "owner": "40.1"
+    },
+    {
+      "code": "WRITE-PROFILE-NOT-PRODUCT-REGISTERED",
+      "owner": "40.1.1"
+    },
+    {
+      "code": "SPRINT-40-NATIVE-CROSS-PLATFORM-WRITE-ACCEPTANCE-ABSENT",
+      "owner": "40.1.3.1"
+    },
+    {
+      "code": "SPRINT-40-COMPLETE-LIFECYCLE-CAMPAIGN-ABSENT",
+      "owner": "40.1.3.3"
+    },
+    {
+      "code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT",
+      "owner": "40.1.3.5"
+    },
+    {
+      "code": "SIGNED-V0.3-PACKAGES-ABSENT",
+      "owner": "40.1.2.1"
+    },
+    {
+      "code": "INDEPENDENT-V0.3-RELEASE-DECISION-ABSENT",
+      "owner": "40.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "build",
+        "--release",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-platform-linux-inference",
+        "--bins",
+        "--locked"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "release-rust-build",
+      "output_sha256": "222a02ed477d249a21359df8cae975864a62d848f4739cadc5b00b6190a963c6"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "build",
+        "--workspace",
+        "@agentmage/vscode-shell"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "release-vscode-build",
+      "output_sha256": "1ea8516eedc6f4f8c0796096bff9abd640232cfd15dc8c129b015d545a9e6d46"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/package_candidate.py",
+        "--output",
+        "target/sprint-40-v0.3-candidate",
+        "--version",
+        "0.3.0"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "unsigned-v0.3-candidate",
+      "output_sha256": "675d5e28b217a3f266410c351561341734f78ad0b58af7db197b018b3efa836b"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "write_approval",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "write-approval-tests",
+      "output_sha256": "da120f608cb430c0405dcd62f7bc288fba8e439db0203f6da62669218471cf51"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "write_transaction",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "write-transaction-tests",
+      "output_sha256": "b7d59acca3ee79c261cf0a477cfdb29105e8b3197abf1788b7eeaff37cfad6e1"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "filesystem_control",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "filesystem-contract-tests",
+      "output_sha256": "ece975b25e0b12d85ba7122d1080daa51eb674d1ec3ffa4c8c8eb2c21f22114f"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "write_recovery",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "write-recovery-tests",
+      "output_sha256": "a23a88b46e85de4994e9a5d7b1ba337f57c0d27337d5af5f8cd22f068d3c3a0a"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "filesystem_control",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "linux-filesystem-tests",
+      "output_sha256": "a1b65781aae3fc942ab2e00d96e5a443963551c212d3e410c3fd0fb6dc9c5110"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "knowledge-write-tests",
+      "output_sha256": "8c49bb81012a524229509ffb197a61ed334eb5dc403e2a81f4746ece463a236b"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-read-only",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "read-only-capability-tests",
+      "output_sha256": "dae92ffe9f66bdf94ccab173197cfe141ee874b2a9c63aedfdb7065117876dc3"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "knowledge_write",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "host-knowledge-tests",
+      "output_sha256": "cca299bc8e4c4b210c8de1b65a922efb5c580a2d30397d798f87e4264febf91b"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "product-ci-contract",
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/v0_3_write_release_gate.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "v0.3-release-gate",
+      "output_sha256": "e7f74d08c1b6f36dc41ea0b579e3ed4aded004ae89b1ef205b85dc7558da4b29"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "documentation-gate",
+      "output_sha256": "8881c6122aafa514232701030bd4502983171d6e3ff597f4d86bea1a4d4d3c94"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "supply-chain",
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a"
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_40_evidence"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "evidence-tests",
+      "output_sha256": "5279d1fc9a1ced44f9c96da1414ef59e4676f963fbad52e7a1a2903538819b0d"
+    }
+  ],
+  "environment": {
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "machine": "x86_64",
+    "node": "v24.15.0",
+    "npm": "11.12.1",
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "rpmbuild": "RPM version 6.0.2",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "system": "Linux"
+  },
+  "implemented_contracts": {
+    "complete_cross_platform_write_acceptance": false,
+    "complete_lifecycle_acceptance": false,
+    "exact_v0_3_capability_delta": true,
+    "g_v0_3_closed": false,
+    "hash_bound_blocked_write_pack_manifest": true,
+    "independent_release_review": false,
+    "manual_fuzzing_complete": false,
+    "prohibited_capability_closure": true,
+    "published_v0_3_packages": false,
+    "read_only_effective_profile_preserved": true,
+    "signed_v0_3_packages": false,
+    "unsigned_linux_deb_candidate_exercised": true,
+    "unsigned_linux_rpm_candidate_exercised": true,
+    "unsigned_vscode_candidate_exercised": true,
+    "v0_3_draft_release_documents": true,
+    "write_operator_and_recovery_guides": true,
+    "write_profile_product_registered": false
+  },
+  "record_type": "sprint_40_local_evidence",
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-DAT-004",
+    "SR-DAT-010",
+    "SR-DAT-011",
+    "SR-DAT-012",
+    "SR-OPS-001",
+    "SR-OPS-002",
+    "SR-OPS-003",
+    "SR-OPS-004",
+    "SR-OPS-005",
+    "SR-OPS-006",
+    "SR-OPS-007",
+    "SR-TST-004",
+    "SR-TST-005",
+    "SR-TST-007",
+    "SR-TST-011",
+    "SR-TST-012",
+    "SR-CIV-003",
+    "SR-CIV-004"
+  ],
+  "source_revision": "7af24b6c7203e3a84b534545216f9c3d3da677a9",
+  "source_sha256": {
+    "docs/guides/controlled-writes.md": "201d788faa40171f6aad3cfce66109ae2e822300bbd530ad07ba1e58c22c8dbd",
+    "docs/release/release-notes-v0.3.0-draft.md": "94f2c17d59fca420ca9d316e30068412d1c2632831a3f22cc3c0247640eb099e",
+    "docs/release/v0.3-acceptance-and-recovery-bundle.md": "71c46d7cf539879cf305f90b7f2172cb201d352c97a0900fbb40fbf2ade07c78",
+    "docs/release/v0.3-capability-matrix.md": "437e71e5390909076d19648d3fec2cb929d5eafb33c7a7ef4b29aba2003d95a8",
+    "docs/verification/sprint-40-local-results.md": "0d42643a358862b71a2d5a2380fe12b29487bd364b57b1c89b477ce2ed91b7fa",
+    "release/v0.3-write-pack-manifest.json": "285c84cc1ce3b0327a3348974d964f5052511969c85d226c9ecefe8a8977fa22",
+    "scripts/sprint_40_evidence.py": "9a88702a69f08ce65890a1ff573f669f3319a7154b02ed0b8e4ed53a7b6d73be",
+    "scripts/v0_3_write_release_gate.py": "d1b8e59907e8faf6395a1266c6c49089cf5668a743fe19c209704232df7d1d6b",
+    "tests/test_sprint_40_evidence.py": "959ab7b4d8a80b9034fd8b80b8fe1fc13a0ad0f5e5192a38cece6cea0e969be4",
+    "tests/test_v0_3_write_release_gate.py": "b1a0bcc421ecf8908f886db2253e880e29669dc256e12e40fdadac0217a841ec"
+  },
+  "summary": {
+    "cross_platform_acceptance_passed": false,
+    "g_v0_3_closed": false,
+    "independent_release_decision_present": false,
+    "lifecycle_acceptance_passed": false,
+    "local_v0_3_candidate_contract_passed": true,
+    "manual_fuzzing_complete": false,
+    "network_access_enabled": false,
+    "release_approval": false,
+    "signed_packages_present": false,
+    "sprint_status": "BLOCKED",
+    "upstream_dependencies_passed": false,
+    "write_profile_active": false
+  },
+  "unsigned_candidate_artifacts": [
+    {
+      "kind": "deb",
+      "name": "agentmage_0.3.0_amd64.deb",
+      "published": false,
+      "retained_in_repository": false,
+      "sha256": "4af43d76f2b26f0895054e9b79010d1f4689ca75dbeb7c2271e2968c7c5d88ca",
+      "signed": false,
+      "size": 1530330,
+      "status": "unsigned-local-candidate"
+    },
+    {
+      "kind": "rpm",
+      "name": "agentmage-0.3.0-1.fc44.x86_64.rpm",
+      "published": false,
+      "retained_in_repository": false,
+      "sha256": "3393286d02e6afd145400189d0ecb940fcac32e41e09e46ba061633fd4cb5411",
+      "signed": false,
+      "size": 713606,
+      "status": "unsigned-local-candidate"
+    },
+    {
+      "kind": "vsix",
+      "name": "agentmage-vscode-0.3.0.vsix",
+      "published": false,
+      "retained_in_repository": false,
+      "sha256": "d975bd7f3867305fb1d5e07a274ac4a4995236b6061005acc2ec3986ff79a278",
+      "signed": false,
+      "size": 25504,
+      "status": "unsigned-local-candidate"
+    }
+  ],
+  "verification_evidence": {
+    "complete_lifecycle_acceptance": false,
+    "focused_blocking_skip_count": 0,
+    "focused_local_contracts": true,
+    "independent_release_decision": false,
+    "manual_fuzzing": false,
+    "native_cross_platform_write_acceptance": false,
+    "signed_packages": false,
+    "trusted_package_launcher_environment": false,
+    "upstream_sprints_35_through_39": false,
+    "write_profile_product_registration": false
+  }
+}
