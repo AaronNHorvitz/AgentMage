@@ -958,6 +958,10 @@ mod tests {
     fn generates_deterministic_deck_with_text_notes_table_chart_diagram_and_previews() {
         let first = generate_presentation(&spec()).expect("generate");
         let second = generate_presentation(&spec()).expect("generate");
+        assert_eq!(
+            first.pptx_sha256,
+            "e548f8f90a7d84c7a98902dba9b6f76a116a3be2e9905095bfc6dfa6cfc94891"
+        );
         assert_eq!(first.pptx, second.pptx);
         assert_eq!(first.inspection.slides.len(), 2);
         assert_eq!(first.previews.len(), 2);

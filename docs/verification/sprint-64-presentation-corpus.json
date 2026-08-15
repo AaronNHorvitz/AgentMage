@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "corpus_id": "sprint-64-presentation-contract-v1",
+  "positive_cases": [
+    "ordered-slide-text-and-object-provenance",
+    "speaker-notes-retained-inertly",
+    "hyperlink-target-hash-and-owner-retained",
+    "package-image-hash-size-and-owner-retained",
+    "caption-alt-text-and-layout-hash-retained",
+    "deterministic-text-and-bullets",
+    "deterministic-comparison-table",
+    "deterministic-integer-chart",
+    "deterministic-node-edge-diagram",
+    "fixed-document-metadata",
+    "generated-package-direct-reopen",
+    "full-regeneration-selected-slide-edit",
+    "untouched-slide-preview-identity"
+  ],
+  "prohibited_cases": [
+    "macro-content-quarantined",
+    "ole-and-embedded-package-quarantined",
+    "external-media-quarantined",
+    "active-action-quarantined",
+    "link-follow-prohibited",
+    "embedded-content-execution-prohibited",
+    "network-access-prohibited",
+    "implicit-filesystem-write-prohibited"
+  ],
+  "invalid_cases": [
+    "malformed-zip",
+    "encrypted-entry",
+    "zip-path-traversal",
+    "relationship-path-escape",
+    "missing-required-presentation-part",
+    "duplicate-object-identity",
+    "invalid-output-extension",
+    "invalid-fixed-timestamp",
+    "duplicate-slide-identity",
+    "stale-edit-source-hash",
+    "zero-edit-slide-number",
+    "mismatched-replacement-slide-identity",
+    "unsorted-or-duplicate-replacements",
+    "table-source-hash-drift",
+    "chart-source-hash-drift",
+    "diagram-source-hash-drift",
+    "diagram-edge-to-unknown-node"
+  ],
+  "boundary_cases": [
+    "compressed-source-byte-limit",
+    "zip-entry-count-limit",
+    "single-entry-expansion-limit",
+    "total-expansion-limit",
+    "slide-count-limit",
+    "object-count-limit",
+    "text-byte-limit",
+    "blocks-per-slide-limit",
+    "bullet-item-limit",
+    "speaker-note-count-limit",
+    "table-row-and-column-limit",
+    "chart-point-limit",
+    "diagram-node-and-edge-limit"
+  ],
+  "evidence_limits": [
+    "structural-preview-is-not-native-render",
+    "no-pixel-golden-admitted",
+    "no-accessibility-acceptance-admitted",
+    "no-cross-platform-office-acceptance-admitted",
+    "manual-fuzzing-deferred"
+  ]
+}

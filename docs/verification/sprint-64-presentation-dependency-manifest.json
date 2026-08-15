@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "manifest_id": "sprint-64-presentation-dependencies-v1",
+  "direct_open_xml_dependencies": [
+    { "name": "quick-xml", "authority": "bounded-xml-parse", "executes-content": false },
+    { "name": "zip", "authority": "bounded-open-xml-container", "executes-content": false },
+    { "name": "serde", "authority": "closed-record-serialization", "executes-content": false },
+    { "name": "serde_json", "authority": "canonical-hash-input", "executes-content": false }
+  ],
+  "native_renderers": [],
+  "network_providers": [],
+  "external_media_resolution": false,
+  "office_automation": false,
+  "macro_execution": false,
+  "native_visual_evidence_admitted": false,
+  "native_accessibility_evidence_admitted": false
+}
