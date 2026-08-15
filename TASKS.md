@@ -4419,35 +4419,47 @@ review, and deferred manual fuzzing.
 
 - [ ] **Task 60.1.1 - Implement the bounded story**
   - [ ] **Sub-task 60.1.1.1** (legacy `S-051-I01`): Select and approve cross-platform extraction, metadata, rendering, generation, and optional optical-character-recognition dependencies.
-  - [ ] **Sub-task 60.1.1.2** (legacy `S-051-I02`): Implement bounded text extraction with page identities and exact-page citations.
-  - [ ] **Sub-task 60.1.1.3** (legacy `S-051-I03`): Detect scanned, encrypted, malformed, truncated, or extraction-limited pages.
+  - [x] **Sub-task 60.1.1.2** (legacy `S-051-I02`): Implement bounded text extraction with page identities and exact-page citations.
+  - [x] **Sub-task 60.1.1.3** (legacy `S-051-I03`): Detect scanned, encrypted, malformed, truncated, or extraction-limited pages.
   - [ ] **Sub-task 60.1.1.4** (legacy `S-051-I04`): Run optical character recognition only through an approved local package and preserve uncertainty and source-page identity.
 
 - [ ] **Task 60.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 60.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 60.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+  - [x] **Sub-task 60.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
+  - [x] **Sub-task 60.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
 - [ ] **Task 60.1.3 - Verify and close the story**
   - [ ] **Sub-task 60.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 60.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 60.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 60.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
+  - [x] **Sub-task 60.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 60.1.3.4 - Product security evidence:** Map `SR-DAT-002`/`SR-DAT-003`, `SR-SUP-008`/`SR-SUP-009`, `SR-TST-002`/`SR-TST-004`, `SR-CIV-006` through `SR-CIV-009`; retain PDF manifests, extraction goldens, redaction residue scans, render diffs, accessibility and independent review results.
 
 ##### Story Acceptance Criteria
 
 - [ ] **Story AC 60.1.AC1:** Given the approved dependencies and source requirements for `S-051-I01`, `S-051-I02`, `S-051-I03`, and `S-051-I04`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
 - [ ] **Story AC 60.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-051-I01`, `S-051-I02`, `S-051-I03`, and `S-051-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 60.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 60.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 60.AC1:** Every numbered implementation sub-task in Story 60.1 is complete and linked to its legacy requirement or issue identity.
 - [ ] **Sprint AC 60.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
-- [ ] **Sprint AC 60.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
-- [ ] **Sprint AC 60.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
+- [x] **Sprint AC 60.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
+- [x] **Sprint AC 60.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 60.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 60 is PASS only when Story 60.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Local evidence note:** The retained report at `artifacts/sprints/sprint-60/local-evidence-report.json`
+binds 9 passing commands and the 82-case review corpus to source revision
+`07b171bc12abdfe7564327d13c18b49d30ce3a6c` (report SHA-256
+`9e46a36e67c7208d5346294f352d5767a4836e4d8f497ed4923b67ad148aa2fd`). Exact parser
+admission, bounded strict in-memory extraction, deterministic page/object identity, exact-page
+citations, scan/encryption/malformed/truncated/limit detection, OCR observation admission,
+two closed runtime schemas, and zero-effect checks are complete. Story 60.1 and Sprint 60 remain
+**BLOCKED** by Sprint 59, unadmitted PDF generation, rendering, and OCR components, absent native
+OCR failure/cancellation and redaction-residue campaigns, missing native Fedora/Ubuntu/Windows and
+retained macOS evidence, installed accessibility and independent native-boundary review, and
+deferred manual fuzzing.
 ### [ ] Sprint 61 - PDF Generation, Redaction, and Visual Verification
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

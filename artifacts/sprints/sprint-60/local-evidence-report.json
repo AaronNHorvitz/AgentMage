@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_60_local_evidence",
+  "source_revision": "07b171bc12abdfe7564327d13c18b49d30ce3a6c",
+  "source_sha256": {
+    "Cargo.toml": "86a6057ca1cec714e92beb0165c57573d3f7e1caa8e5a50365b8af55f18491a8",
+    "Cargo.lock": "7faba679d341b448db12771297b6955b485713c7f609ecb91cce4ea66841d3e9",
+    "capabilities/knowledge/Cargo.toml": "b7f36b6898ddcce5c3a8a03a148366a819bfa0d67d7af5fb7480c5a94207a76b",
+    "capabilities/knowledge/src/pdf_extraction.rs": "02f4c899195cada99ef6f815ef5d291479ebf521298324cdf1d8352e73296333",
+    "capabilities/knowledge/src/lib.rs": "bbe1d0887aec195d0c29392c946cb5c6d752eb71c8c37e693c29d62580c71248",
+    "schemas/runtime/pdf-extraction-result.schema.json": "6d9c02a31d0b99de067a56b29295647ac2b2740436cfb6fd950d0120d29c6095",
+    "schemas/runtime/examples/pdf-extraction-result.valid.json": "e8dc2bfb4c8eb435fec715319fe8563280a85662ce49a137bd37d46af57c486a",
+    "schemas/runtime/pdf-ocr-projection.schema.json": "c9b68c611639c9422b4f633c1df160edf3eef479b4034d8541f9611b24740018",
+    "schemas/runtime/examples/pdf-ocr-projection.valid.json": "6bdd863dee045a7a17765c04def74262fd9af8cae1a180b64b50ffc0eed7506c",
+    "scripts/validate_planning_schemas.mjs": "8d213dce26d124433d699df684e101649f76c99a56ab8d9a165620cea5553d03",
+    "tests/test_planning_schemas.mjs": "d05df144feb8217bb9794dc19f3cc5270c9b724db3040d4f1dbd46ae126e2c0f",
+    "supply-chain/cargo-external-catalog.json": "ab970e6f624d82e0ef979e23f33a6eb7bd7ca84aa5f484580b93ea5082fbe2db",
+    "supply-chain/dependency-hashes.sha256": "b26ddbb9833e6308f60fe00ab2a5fa7f0b933ac9fe6243f591c61a1a4ade96f2",
+    "supply-chain/dependency-provenance.json": "4023e8fc7a0025e7279acf9a4904d345a12f18fa3cb7e8277ec05a46610e8e93",
+    "supply-chain/sbom.cdx.json": "986062dfe065585fd33fd1308a06f838c4572d3d9572101d90879a56575ee1b7",
+    "docs/verification/sprint-60-pdf-extraction-corpus.json": "a7a3a741ceabaaf1f8dbb6e42ceb73be04fd27ac61026b38afd90278bb7f635f",
+    "docs/verification/sprint-60-pdf-dependency-manifest.json": "3bf1d3693ba8b709f43bfdf45d626765bc588b22c50d56509844c279d4f3fea0",
+    "scripts/pdf_extraction_contract.py": "cb414fb06de51e136390402fac3a11635396e275de7610f7c5ecb774aa59aa03",
+    "tests/test_pdf_extraction_contract.py": "3a2161af20a2a6f7fd2fc8624e23e402519110acb6ca4accca4339766b2a1f1e",
+    "docs/architecture/pdf-extraction-and-page-citations.md": "1d6e304ba596dfc9b2eff0e6f7a89771ecfadd2ea0bdcf78a1d12abb7a1931e7",
+    "docs/guides/pdf-extraction-review.md": "8c0558ef311ee54239d6e7646800e27ec4930a4cc4d8a660a83465e6b42dab4b",
+    "docs/verification/sprint-60-local-results.md": "f20a5eb536d971346b902aa3530ec3c722647c617ee8e10d8b9145804953b91c",
+    "scripts/sprint_60_evidence.py": "41a1c23c588f02220dc58c713408a072f58594e808c63ba14c6ce208ebb12ba3",
+    "tests/test_sprint_60_evidence.py": "b62a10a8731dd2a17fa9c949243ae133409c742f848879c0c1e1ec7e794c037e"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "pdf-extraction-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-capability-knowledge",
+        "pdf_extraction::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "9451cd0f3521b7c6e112f5e325b7464b32705e2c71f316a5e5e10770f646cfa8",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pdf-runtime-schemas",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "bff144cc5feb73b1987b85654074cfb0afee9a2ec7148bc386c0e14c9a3192f5",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pdf-review-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_pdf_extraction_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6f283ee6225d2cef4c0127d95456a6f954c45141c92b97dd89016cb1c630e8f4",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "pdf-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-capability-knowledge",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "pdf-format",
+      "argv": [
+        "cargo",
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c3b3a4811d7c4eeb77be71ae6f997ad880eae1af4b5dff87556f9da26351f63d",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_60_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "5d8a174d448d59185fd227bcbab9c964e39b10a9c2e28965972cfb0c833dd854",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-SUP-008",
+    "SR-SUP-009",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-CIV-006",
+    "SR-CIV-007",
+    "SR-CIV-008",
+    "SR-CIV-009"
+  ],
+  "implemented_contracts": {
+    "admitted_pdf_parser_count": 1,
+    "pdf_runtime_schema_count": 2,
+    "executable_rust_fixture_count": 6,
+    "review_corpus_case_count": 82,
+    "bounded_strict_in_memory_extraction": true,
+    "deterministic_page_object_identity": true,
+    "exact_page_citations": true,
+    "scanned_empty_encrypted_malformed_limit_detection": true,
+    "ocr_observation_admission_boundary": true,
+    "ocr_uncertainty_preserved": true,
+    "network_access_capability": false,
+    "execution_capability": false,
+    "filesystem_mutation_capability": false,
+    "ocr_package_admitted": false,
+    "renderer_admitted": false,
+    "generator_admitted": false,
+    "redaction_verification": false,
+    "product_integration": false,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_native_boundary_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "review_corpus_case_count": 82,
+    "accepted_network_effect_count": 0,
+    "accepted_execution_effect_count": 0,
+    "accepted_filesystem_effect_count": 0,
+    "ocr_package_admitted": false,
+    "native_ocr_platform_count": 0,
+    "renderer_admitted": false,
+    "native_render_platform_count": 0,
+    "generator_admitted": false,
+    "redaction_verification": false,
+    "product_integration": false,
+    "cross_platform_acceptance": false,
+    "accessibility_acceptance": false,
+    "independent_native_boundary_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-59-BLOCKED",
+      "owner": "60.1"
+    },
+    {
+      "code": "PDF-OCR-PACKAGE-MODEL-NOT-ADMITTED",
+      "owner": "60.1.1.4"
+    },
+    {
+      "code": "PDF-OCR-FAILURE-CANCELLATION-CAMPAIGN-ABSENT",
+      "owner": "60.1.3.1"
+    },
+    {
+      "code": "PDF-GENERATOR-NOT-ADMITTED",
+      "owner": "60.1.1.1"
+    },
+    {
+      "code": "PDF-RENDERER-NOT-ADMITTED",
+      "owner": "60.1.1.1"
+    },
+    {
+      "code": "PDF-REDACTION-RESIDUE-EVIDENCE-ABSENT",
+      "owner": "60.1.3.4"
+    },
+    {
+      "code": "FEDORA-NATIVE-PDF-EVIDENCE-ABSENT",
+      "owner": "60.1.3.4"
+    },
+    {
+      "code": "UBUNTU-NATIVE-PDF-EVIDENCE-ABSENT",
+      "owner": "60.1.3.4"
+    },
+    {
+      "code": "WINDOWS-NATIVE-PDF-EVIDENCE-ABSENT",
+      "owner": "60.1.3.4"
+    },
+    {
+      "code": "MACOS-RETAINED-PDF-EVIDENCE-ABSENT",
+      "owner": "60.1.3.4"
+    },
+    {
+      "code": "ACCESSIBILITY-ACCEPTANCE-ABSENT",
+      "owner": "60.1.3.4"
+    },
+    {
+      "code": "INDEPENDENT-NATIVE-BOUNDARY-REVIEW-ABSENT",
+      "owner": "60.1.3.4"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-004"
+    }
+  ],
+  "summary": {
+    "local_sprint_60_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_59_closed": false,
+    "pdf_extraction_product_integrated": false,
+    "external_effects_enabled": false,
+    "cross_platform_acceptance_passed": false,
+    "native_ocr_complete": false,
+    "native_render_complete": false,
+    "redaction_verification_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}

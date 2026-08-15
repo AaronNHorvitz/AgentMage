@@ -38,5 +38,6 @@ approved OCR package and model, OCR dependency failure and cancellation tests, n
 Ubuntu, Windows 11, and retained macOS evidence, installed accessibility, independent review, and
 manual fuzzing are absent. Sprint 60 therefore remains **BLOCKED**.
 
-The retained report revision and digest are populated only after the recorder runs against a clean
-committed source tree.
+The retained report binds 9 passing commands and zero focused skips to source revision
+`07b171bc12abdfe7564327d13c18b49d30ce3a6c`. Its SHA-256 is
+`9e46a36e67c7208d5346294f352d5767a4836e4d8f497ed4923b67ad148aa2fd`.
