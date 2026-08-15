@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "record_type": "sprint_51_local_evidence",
+  "source_revision": "27d5bf30d3376e6dacb1aec461fef1ecaf77b3c6",
+  "source_sha256": {
+    "kernel/contracts/src/frontier.rs": "323fe72b93799e56ccb768e7d65022f7e72cb0a90b89dc1782023a1a0adbb060",
+    "kernel/contracts/src/handoff.rs": "ef1cb45bd60fd2a3ac42dc42386ef133d8b28e0ead6fb0ac285abcebd2c1a8a0",
+    "kernel/contracts/src/lib.rs": "324f7ca74c87e43e33eedd75b1d38bfd7c6ba9ab8aaf08dcf987c751f8b9584a",
+    "kernel/engine/src/frontier_recommendation.rs": "6aa93fe83d7039ae19f075314765674527d7d439dedd2a973a3c1f5c8047e65c",
+    "kernel/engine/src/handoff.rs": "db5981624591b04b7d5771031b3ec69b88d19ffc5f913d87915116e0903ed324",
+    "kernel/engine/src/lib.rs": "4007f88d8b2df1ca770fd93a52bd807e96ed6a501aaaeb6313820baff137b828",
+    "shells/vscode/src/handoff.ts": "f784df9ac32b6c3a67eed04a404b78503722edad9372aa4bba89547fdccd4da3",
+    "shells/vscode/test/handoff.test.ts": "0e3c9a9ae9ce75d46618a89037c081ac608ae632b01620271dc752ff6b4728d8",
+    "schemas/runtime/frontier-tier-decision.schema.json": "7ea0fd64b24448d505f7add9b7f4649983365eaf93327e5b36c99150170d0002",
+    "schemas/runtime/examples/frontier-tier-decision.valid.json": "eb56be60edd93618dce296ce935062d0c69db290b09bd1bfa762ba29548f8a61",
+    "schemas/runtime/frontier-recommendation-receipt.schema.json": "6744e3f1c5242542a6346fe6f832f89be838f098fe19dd8f5265441cd46a560f",
+    "schemas/runtime/examples/frontier-recommendation-receipt.valid.json": "f6c80a6d2c2eff04639af30436ba06f3db12c15c01cff456fd11904ccbaea925",
+    "docs/verification/sprint-51-frontier-corpus.json": "b031aea0204c44d2b777c4608eca3b97b3118da89847b7d2eae851db6bd1db8f",
+    "scripts/frontier_recommendation_contract.py": "6f5ce8c09f32eb8e379cd25726b1c27755dc3270770f4fc4ff71cba253ff6bf8",
+    "tests/test_frontier_recommendation_contract.py": "8271714f43561f05dcd52c1670a91fe51a1408d57c87cd1035ec128eb23b7899",
+    "docs/architecture/manual-frontier-recommendation.md": "56862570b2f4632a665f5b670dfdd06af95aaae29bc5d034024f04694942e7ae",
+    "docs/guides/manual-frontier-consultation.md": "584361271946d4eabd1309fa73a590670e3adacb8c39bfb2011ba5c4e6cb9a90",
+    "docs/verification/sprint-51-local-results.md": "ac6c0270850ddfb05768fd5f050839d43c06b3c4c9323bbf4b15d6163766bb2e",
+    "README.md": "f75558e75370231c4e42f58be519ed3bd04a5e9541815996f7423711ea21641d",
+    "scripts/sprint_51_evidence.py": "3ab8c9b735f6d6844633d9e3a8bb55f9ea2e98eacce24d6f18ac498d36a5f500",
+    "tests/test_sprint_51_evidence.py": "6033a0a1b55b543b29539a76dc88d2b61c403e84b2b9d2b89c74963a75124539"
+  },
+  "environment": {
+    "system": "Linux",
+    "release": "7.1.6-201.fc44.x86_64",
+    "machine": "x86_64",
+    "python": "3.14.6",
+    "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
+    "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "commands": [
+    {
+      "id": "frontier-recommendation-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "frontier_recommendation::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "6d27e9f6559dbcf635272ca28f60430617c3a9d179c194a2132c7546da20857a",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "local-handoff-unit",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "handoff::tests",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b4f8e0e4e9c155c9ceb0fa2c6dc010a3ad13a48b56f69862353f774024644404",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-schema-contract",
+      "argv": [
+        "node",
+        "--test",
+        "tests/test_planning_schemas.mjs"
+      ],
+      "exit_code": 0,
+      "output_sha256": "7bc0cd5156b16bff2f7c6ad4524e8789c06a6e502166ffeeb39f54db7efaec26",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-hostile-corpus",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_frontier_recommendation_contract"
+      ],
+      "exit_code": 0,
+      "output_sha256": "921b60a7fd52e978fbb551cacd29df2d6708879400278e1fcc70fceeb0c6f8e0",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "vscode-local-handoff",
+      "argv": [
+        "npm",
+        "run",
+        "test",
+        "--workspace",
+        "@agentmage/vscode-shell"
+      ],
+      "exit_code": 0,
+      "output_sha256": "46e1fc042796127b01c02409fe1afcaa4864121bc529ada7a50645df0f2e3051",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-strict-clippy",
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-contracts",
+        "-p",
+        "agentmage-kernel-engine",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e5d64d914a9a7afdbabc08470765af5f6f0844eb53da7059dff8ed1cc1fffb24",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "documentation-gate",
+      "argv": [
+        "npm",
+        "run",
+        "docs:check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "b9a1f6b3c4d8e086b23225b07b8c088973c67832d818908d56b8ce85fabfa930",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "product-ci-contract",
+      "argv": [
+        "python3",
+        "scripts/product_ci.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "output_sha256": "a10d89b478d43be49e481b9e42dcc1bd25f00de2032fec651bc7628d1564889c",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "supply-chain",
+      "argv": [
+        "python3",
+        "scripts/supply_chain.py"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f048749756cb1ee1aacda9fa779f6e794db7ed24f0da58963d3c7335f976711a",
+      "blocking_skip_count": null
+    },
+    {
+      "id": "evidence-tests",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_sprint_51_evidence"
+      ],
+      "exit_code": 0,
+      "output_sha256": "80144f3bf12d071a1497821467ab02765712cb11da3f547a5e2b5cf79f938e9a",
+      "blocking_skip_count": null
+    }
+  ],
+  "security_requirement_ids": [
+    "SR-ACC-007",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-AI-004",
+    "SR-AI-008",
+    "SR-AI-010",
+    "SR-OPS-001",
+    "SR-OPS-003",
+    "SR-TST-006"
+  ],
+  "implemented_contracts": {
+    "deterministic_tier_count": 4,
+    "approved_recommendation_trigger_count": 6,
+    "hostile_corpus_case_count": 45,
+    "prohibited_delivery_action_count": 14,
+    "deterministic_packet_preview": true,
+    "exact_disclosure_inventory": true,
+    "stable_packet_and_preview_hashes": true,
+    "secret_scope_and_injection_rejection": true,
+    "destination_recording_user_owned": true,
+    "external_delivery_capability": false,
+    "product_frontier_coordinator": false,
+    "live_model_failure_campaign": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false
+  },
+  "verification_evidence": {
+    "focused_local_contracts": true,
+    "focused_blocking_skip_count": 0,
+    "tier_case_count": 13,
+    "disclosure_case_count": 10,
+    "prohibited_delivery_attempt_count": 14,
+    "review_mutation_count": 8,
+    "accepted_delivery_attempt_count": 0,
+    "product_coordinator_integration": false,
+    "live_model_failure_campaign": false,
+    "native_cross_platform_acceptance": false,
+    "trusted_package_execution": false,
+    "independent_review": false,
+    "manual_fuzzing": false,
+    "sprint_gate_closed": false
+  },
+  "blockers": [
+    {
+      "code": "UPSTREAM-SPRINT-50-BLOCKED",
+      "owner": "51.1"
+    },
+    {
+      "code": "FRONTIER-PRODUCT-COORDINATOR-ABSENT",
+      "owner": "51.1.1.1"
+    },
+    {
+      "code": "LIVE-LOCAL-MODEL-FAILURE-CAMPAIGN-ABSENT",
+      "owner": "51.1.3.1"
+    },
+    {
+      "code": "NATIVE-END-TO-END-REVIEW-WORKFLOW-ABSENT",
+      "owner": "51.1.3.4"
+    },
+    {
+      "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
+      "owner": "51.1.3.5"
+    },
+    {
+      "code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT",
+      "owner": "51.1.3.5"
+    },
+    {
+      "code": "INDEPENDENT-FRONTIER-BOUNDARY-REVIEW-ABSENT",
+      "owner": "51.1.3.5"
+    },
+    {
+      "code": "MANUAL-FUZZING-DEFERRED",
+      "owner": "SR-TST-006"
+    }
+  ],
+  "summary": {
+    "local_sprint_51_contract_passed": true,
+    "sprint_status": "BLOCKED",
+    "upstream_sprint_50_closed": false,
+    "frontier_product_coordinator_integrated": false,
+    "automatic_frontier_delivery_enabled": false,
+    "cross_platform_acceptance_passed": false,
+    "trusted_package_execution_complete": false,
+    "independent_review_present": false,
+    "manual_fuzzing_complete": false,
+    "release_approval": false
+  }
+}
