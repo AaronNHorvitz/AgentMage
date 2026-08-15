@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "draft_id": "draft-1",
+  "meeting_id": "meeting-1",
+  "kind": "agenda",
+  "purpose": "Review exact evidence and decide the next bounded step.",
+  "participants": [
+    {
+      "participant_id": "person-1",
+      "display_name": "Person One",
+      "invitation_state": "accepted",
+      "invitation_evidence_state": "confirmed",
+      "attendance_state": "unknown",
+      "attendance_evidence_state": "unknown",
+      "source_ids": ["source-1"]
+    }
+  ],
+  "topics": [{ "item_id": "topic-1", "text": "Review current evidence.", "source_ids": ["source-1"] }],
+  "decision_needs": [{ "item_id": "decision-1", "text": "Choose the next local test.", "source_ids": ["source-1"] }],
+  "preparation_items": [],
+  "expected_outputs": [],
+  "sources": [
+    {
+      "source_id": "source-1",
+      "object_id": "object-1",
+      "fragment": "Meeting",
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observed_revision": "revision-1",
+      "store": "plain_folder"
+    }
+  ],
+  "draft_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "proposal_only": true,
+  "external_effects_performed": false,
+  "calendar_effect_performed": false
+}

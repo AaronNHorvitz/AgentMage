@@ -81,6 +81,10 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "executive-priority-ranking",
   "executive-view",
   "executive-correspondence-review",
+  "meeting-plan-draft",
+  "meeting-transcript-cleanup",
+  "meeting-minutes",
+  "meeting-continuity-record",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -1142,6 +1146,96 @@ function runtimeSemanticErrors(recordType, data) {
     }
     if (data.locally_complete !== ((data.issues ?? []).length === 0)) {
       errors.push("executive correspondence completion disagrees with findings");
+    }
+  } else if (recordType === "meeting-plan-draft") {
+    if (!isStrictlySortedBy(data.participants ?? [], (item) => item.participant_id)) {
+      errors.push("meeting participants are not canonically ordered");
+    }
+    const planItems = [
+      ...(data.topics ?? []),
+      ...(data.decision_needs ?? []),
+      ...(data.preparation_items ?? []),
+      ...(data.expected_outputs ?? []),
+    ];
+    if (new Set(planItems.map((item) => item.item_id)).size !== planItems.length) {
+      errors.push("meeting plan item identities are not unique");
+    }
+    for (const attendee of data.participants ?? []) {
+      const invitationObserved = !["not_observed", "unknown"].includes(attendee.invitation_state);
+      const attendanceObserved = !["not_observed", "unknown"].includes(attendee.attendance_state);
+      if (
+        invitationObserved !== (attendee.invitation_evidence_state === "confirmed") ||
+        attendanceObserved !== (attendee.attendance_evidence_state === "confirmed") ||
+        !isStrictlySorted(attendee.source_ids ?? [])
+      ) {
+        errors.push(`meeting attendee state is not source-confirmed: ${attendee.participant_id}`);
+      }
+    }
+    for (const item of planItems) {
+      if (!isStrictlySorted(item.source_ids ?? [])) {
+        errors.push(`meeting plan item evidence is not canonical: ${item.item_id}`);
+      }
+    }
+  } else if (recordType === "meeting-transcript-cleanup") {
+    const segments = data.segments ?? [];
+    if (new Set(segments.map((item) => item.segment_id)).size !== segments.length) {
+      errors.push("meeting transcript segment identities are not unique");
+    }
+    for (const segment of segments) {
+      const speakerAbsent = segment.speaker_label === null;
+      if (
+        speakerAbsent !== (segment.attribution_evidence_state === "unknown") ||
+        (speakerAbsent && segment.attribution_confidence_bps !== 0) ||
+        !isStrictlySorted(segment.source_ids ?? [])
+      ) {
+        errors.push(`meeting transcript attribution is inconsistent: ${segment.segment_id}`);
+      }
+      let lastEnd = 0;
+      const bytes = Buffer.from(segment.verbatim_text ?? "", "utf8");
+      for (const marker of segment.unclear_markers ?? []) {
+        if (
+          marker.start_byte < lastEnd ||
+          marker.start_byte >= marker.end_byte ||
+          marker.end_byte > bytes.length ||
+          bytes.subarray(marker.start_byte, marker.end_byte).toString("utf8") !== marker.verbatim_fragment
+        ) {
+          errors.push(`meeting transcript unclear marker changed source text: ${marker.marker_id}`);
+        }
+        lastEnd = marker.end_byte;
+      }
+    }
+  } else if (recordType === "meeting-minutes") {
+    if (!isStrictlySortedBy(data.participants ?? [], (item) => item.participant_id)) {
+      errors.push("meeting minutes participants are not canonically ordered");
+    }
+    const items = data.items ?? [];
+    if (new Set(items.map((item) => item.item_id)).size !== items.length) {
+      errors.push("meeting minutes item identities are not unique");
+    }
+    for (const item of items) {
+      if (
+        (item.owner === null) !== (item.owner_state === "unknown") ||
+        (item.due_date === null) !== (item.due_date_state === "unknown") ||
+        (item.kind === "confirmed_decision" && item.evidence_state !== "confirmed") ||
+        (item.kind === "proposed_decision" && item.evidence_state === "confirmed") ||
+        !isStrictlySorted(item.source_ids ?? [])
+      ) {
+        errors.push(`meeting minutes item truth state is inconsistent: ${item.item_id}`);
+      }
+    }
+  } else if (recordType === "meeting-continuity-record") {
+    if (!isStrictlySortedBy(data.items ?? [], (item) => item.continuity_item_id)) {
+      errors.push("meeting continuity items are not canonically ordered");
+    }
+    for (const item of data.items ?? []) {
+      if (
+        (item.owner === null) !== (item.owner_state === "unknown") ||
+        (item.due_date === null) !== (item.due_date_state === "unknown") ||
+        !isStrictlySorted(item.history_item_ids ?? []) ||
+        !isStrictlySorted(item.source_ids ?? [])
+      ) {
+        errors.push(`meeting continuity item is not canonical: ${item.continuity_item_id}`);
+      }
     }
   }
   return errors;

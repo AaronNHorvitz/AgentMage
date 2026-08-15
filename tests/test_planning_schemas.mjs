@@ -384,6 +384,10 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "executive-priority-ranking",
     "executive-view",
     "executive-correspondence-review",
+    "meeting-plan-draft",
+    "meeting-transcript-cleanup",
+    "meeting-minutes",
+    "meeting-continuity-record",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1168,6 +1172,47 @@ test("executive correspondence reviews reject send completion and issue drift", 
         runtimeValidators,
       ).valid,
       false,
+    );
+  }
+});
+
+test("meeting runtime records reject inferred states guessed fields and hidden effects", () => {
+  const fixtures = Object.fromEntries(
+    [
+      "meeting-plan-draft",
+      "meeting-transcript-cleanup",
+      "meeting-minutes",
+      "meeting-continuity-record",
+    ].map((recordType) => [
+      recordType,
+      JSON.parse(
+        fs.readFileSync(
+          path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+          "utf8",
+        ),
+      ),
+    ]),
+  );
+  const mutations = [
+    ["meeting-plan-draft", (record) => { record.external_effects_performed = true; }],
+    ["meeting-plan-draft", (record) => { record.participants[0].attendance_state = "attended"; }],
+    ["meeting-plan-draft", (record) => { record.topics[0].item_id = "decision-1"; }],
+    ["meeting-transcript-cleanup", (record) => { record.source_mutation_performed = true; }],
+    ["meeting-transcript-cleanup", (record) => { record.segments[0].unclear_markers[0].verbatim_fragment = "later"; }],
+    ["meeting-transcript-cleanup", (record) => { record.segments[0].speaker_label = "Guessed Speaker"; }],
+    ["meeting-minutes", (record) => { record.commitment_effect_performed = true; }],
+    ["meeting-minutes", (record) => { record.items[0].owner = "Guessed Owner"; }],
+    ["meeting-minutes", (record) => { record.items[1].evidence_state = "confirmed"; }],
+    ["meeting-continuity-record", (record) => { record.communication_effect_performed = true; }],
+    ["meeting-continuity-record", (record) => { record.items[0].history_item_ids = ["z", "a"]; }],
+  ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord(recordType, changed, runtimeValidators).valid,
+      false,
+      recordType,
     );
   }
 });

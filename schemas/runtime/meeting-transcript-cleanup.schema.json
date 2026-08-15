@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/meeting-transcript-cleanup.schema.json",
+  "title": "AgentMage Meeting Transcript Cleanup",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "cleanup_id", "meeting_id", "segments", "sources", "cleanup_sha256", "proposal_only", "source_mutation_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "cleanup_id": { "$ref": "#/$defs/identifier" },
+    "meeting_id": { "$ref": "#/$defs/identifier" },
+    "segments": { "type": "array", "minItems": 1, "maxItems": 2048, "items": { "$ref": "#/$defs/segment" } },
+    "sources": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/source" } },
+    "cleanup_sha256": { "$ref": "#/$defs/sha256" },
+    "proposal_only": { "const": true },
+    "source_mutation_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 131072 },
+    "source_ids": { "type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+    "marker": {
+      "type": "object", "additionalProperties": false,
+      "required": ["marker_id", "start_byte", "end_byte", "verbatim_fragment", "reason"],
+      "properties": {
+        "marker_id": { "$ref": "#/$defs/identifier" },
+        "start_byte": { "type": "integer", "minimum": 0 },
+        "end_byte": { "type": "integer", "minimum": 1 },
+        "verbatim_fragment": { "$ref": "#/$defs/text" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 512 }
+      }
+    },
+    "segment": {
+      "type": "object", "additionalProperties": false,
+      "required": ["segment_id", "source_kind", "verbatim_text", "cleaned_text", "started_at", "ended_at", "speaker_label", "attribution_confidence_bps", "attribution_evidence_state", "unclear_markers", "source_ids"],
+      "properties": {
+        "segment_id": { "$ref": "#/$defs/identifier" },
+        "source_kind": { "enum": ["live_note", "transcript"] },
+        "verbatim_text": { "$ref": "#/$defs/text" },
+        "cleaned_text": { "$ref": "#/$defs/text" },
+        "started_at": { "type": ["string", "null"], "format": "date-time" },
+        "ended_at": { "type": ["string", "null"], "format": "date-time" },
+        "speaker_label": { "type": ["string", "null"], "maxLength": 512 },
+        "attribution_confidence_bps": { "type": "integer", "minimum": 0, "maximum": 10000 },
+        "attribution_evidence_state": { "enum": ["confirmed", "inferred", "historical", "disputed", "unknown"] },
+        "unclear_markers": { "type": "array", "maxItems": 2048, "items": { "$ref": "#/$defs/marker" } },
+        "source_ids": { "$ref": "#/$defs/source_ids" }
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "object_id", "fragment", "content_sha256", "observed_revision", "store"],
+      "properties": {
+        "source_id": { "$ref": "#/$defs/identifier" },
+        "object_id": { "$ref": "#/$defs/identifier" },
+        "fragment": { "type": ["string", "null"], "maxLength": 512 },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "observed_revision": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }] },
+        "store": { "enum": ["plain_folder", "obsidian", "local_message_export", "local_schedule_export"] }
+      }
+    }
+  }
+}

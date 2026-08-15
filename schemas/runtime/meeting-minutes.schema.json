@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/meeting-minutes.schema.json",
+  "title": "AgentMage Meeting Minutes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "minutes_id", "meeting_id", "participants", "items", "sources", "privacy_class", "minutes_sha256", "proposal_only", "commitment_effect_performed", "communication_effect_performed", "calendar_effect_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "minutes_id": { "$ref": "#/$defs/identifier" },
+    "meeting_id": { "$ref": "#/$defs/identifier" },
+    "participants": { "type": "array", "maxItems": 2048, "items": { "$ref": "#/$defs/attendee" } },
+    "items": { "type": "array", "minItems": 1, "maxItems": 2048, "items": { "$ref": "#/$defs/item" } },
+    "sources": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/source" } },
+    "privacy_class": { "enum": ["ordinary", "private", "confidential", "highly_restricted"] },
+    "minutes_sha256": { "$ref": "#/$defs/sha256" },
+    "proposal_only": { "const": true },
+    "commitment_effect_performed": { "const": false },
+    "communication_effect_performed": { "const": false },
+    "calendar_effect_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 131072 },
+    "evidence": { "enum": ["confirmed", "inferred", "historical", "disputed", "unknown"] },
+    "field_state": { "enum": ["confirmed", "proposed", "unknown"] },
+    "source_ids": { "type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+    "attendee": {
+      "type": "object", "additionalProperties": false,
+      "required": ["participant_id", "display_name", "invitation_state", "invitation_evidence_state", "attendance_state", "attendance_evidence_state", "source_ids"],
+      "properties": {
+        "participant_id": { "$ref": "#/$defs/identifier" },
+        "display_name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "invitation_state": { "enum": ["not_observed", "invited", "accepted", "declined", "tentative", "unknown"] },
+        "invitation_evidence_state": { "$ref": "#/$defs/evidence" },
+        "attendance_state": { "enum": ["not_observed", "attended", "partially_attended", "absent", "unknown"] },
+        "attendance_evidence_state": { "$ref": "#/$defs/evidence" },
+        "source_ids": { "$ref": "#/$defs/source_ids" }
+      }
+    },
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["item_id", "kind", "text", "evidence_state", "owner", "owner_state", "due_date", "due_date_state", "carried_from_item_id", "source_ids"],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["confirmed_decision", "proposed_decision", "action", "question", "risk", "next_meeting"] },
+        "text": { "$ref": "#/$defs/text" },
+        "evidence_state": { "$ref": "#/$defs/evidence" },
+        "owner": { "type": ["string", "null"], "maxLength": 512 },
+        "owner_state": { "$ref": "#/$defs/field_state" },
+        "due_date": { "type": ["string", "null"], "format": "date" },
+        "due_date_state": { "$ref": "#/$defs/field_state" },
+        "carried_from_item_id": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }] },
+        "source_ids": { "$ref": "#/$defs/source_ids" }
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "object_id", "fragment", "content_sha256", "observed_revision", "store"],
+      "properties": {
+        "source_id": { "$ref": "#/$defs/identifier" },
+        "object_id": { "$ref": "#/$defs/identifier" },
+        "fragment": { "type": ["string", "null"], "maxLength": 512 },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "observed_revision": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }] },
+        "store": { "enum": ["plain_folder", "obsidian", "local_message_export", "local_schedule_export"] }
+      }
+    }
+  }
+}

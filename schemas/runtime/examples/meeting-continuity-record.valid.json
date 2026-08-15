@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "continuity_record_id": "continuity-record-1",
+  "series_id": "series-1",
+  "meeting_id": "meeting-1",
+  "prior_record_id": null,
+  "items": [
+    {
+      "continuity_item_id": "continuity:action-1",
+      "originating_meeting_id": "meeting-1",
+      "source_item_id": "action-1",
+      "state": "open",
+      "text": "Investigate the open question.",
+      "owner": null,
+      "owner_state": "unknown",
+      "due_date": null,
+      "due_date_state": "unknown",
+      "history_item_ids": ["action-1"],
+      "source_ids": ["source-1"]
+    }
+  ],
+  "follow_up_draft": "Review the meeting record and edit this local follow-up draft.",
+  "continuity_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "proposal_only": true,
+  "communication_effect_performed": false,
+  "source_mutation_performed": false
+}

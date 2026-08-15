@@ -1,0 +1,58 @@
+{
+  "schema_version": 2,
+  "minutes_id": "minutes-1",
+  "meeting_id": "meeting-1",
+  "participants": [
+    {
+      "participant_id": "person-1",
+      "display_name": "Person One",
+      "invitation_state": "accepted",
+      "invitation_evidence_state": "confirmed",
+      "attendance_state": "attended",
+      "attendance_evidence_state": "confirmed",
+      "source_ids": ["source-1"]
+    }
+  ],
+  "items": [
+    {
+      "item_id": "action-1",
+      "kind": "action",
+      "text": "Investigate the open question.",
+      "evidence_state": "confirmed",
+      "owner": null,
+      "owner_state": "unknown",
+      "due_date": null,
+      "due_date_state": "unknown",
+      "carried_from_item_id": null,
+      "source_ids": ["source-1"]
+    },
+    {
+      "item_id": "decision-1",
+      "kind": "proposed_decision",
+      "text": "Consider the proposed option.",
+      "evidence_state": "inferred",
+      "owner": null,
+      "owner_state": "unknown",
+      "due_date": null,
+      "due_date_state": "unknown",
+      "carried_from_item_id": null,
+      "source_ids": ["source-1"]
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "source-1",
+      "object_id": "object-1",
+      "fragment": "Minutes",
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observed_revision": "revision-1",
+      "store": "plain_folder"
+    }
+  ],
+  "privacy_class": "private",
+  "minutes_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "proposal_only": true,
+  "commitment_effect_performed": false,
+  "communication_effect_performed": false,
+  "calendar_effect_performed": false
+}

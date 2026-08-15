@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/meeting-plan-draft.schema.json",
+  "title": "AgentMage Meeting Plan Draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "draft_id", "meeting_id", "kind", "purpose", "participants", "topics",
+    "decision_needs", "preparation_items", "expected_outputs", "sources", "draft_sha256",
+    "proposal_only", "external_effects_performed", "calendar_effect_performed"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "draft_id": { "$ref": "#/$defs/identifier" },
+    "meeting_id": { "$ref": "#/$defs/identifier" },
+    "kind": { "enum": ["agenda", "meeting_request"] },
+    "purpose": { "$ref": "#/$defs/text" },
+    "participants": { "type": "array", "maxItems": 2048, "items": { "$ref": "#/$defs/attendee" } },
+    "topics": { "type": "array", "minItems": 1, "maxItems": 2048, "items": { "$ref": "#/$defs/item" } },
+    "decision_needs": { "type": "array", "maxItems": 2048, "items": { "$ref": "#/$defs/item" } },
+    "preparation_items": { "type": "array", "maxItems": 2048, "items": { "$ref": "#/$defs/item" } },
+    "expected_outputs": { "type": "array", "maxItems": 2048, "items": { "$ref": "#/$defs/item" } },
+    "sources": { "type": "array", "minItems": 1, "maxItems": 128, "items": { "$ref": "#/$defs/source" } },
+    "draft_sha256": { "$ref": "#/$defs/sha256" },
+    "proposal_only": { "const": true },
+    "external_effects_performed": { "const": false },
+    "calendar_effect_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 131072 },
+    "evidence": { "enum": ["confirmed", "inferred", "historical", "disputed", "unknown"] },
+    "source_ids": {
+      "type": "array", "minItems": 1, "maxItems": 128, "uniqueItems": true,
+      "items": { "$ref": "#/$defs/identifier" }
+    },
+    "attendee": {
+      "type": "object", "additionalProperties": false,
+      "required": ["participant_id", "display_name", "invitation_state", "invitation_evidence_state", "attendance_state", "attendance_evidence_state", "source_ids"],
+      "properties": {
+        "participant_id": { "$ref": "#/$defs/identifier" },
+        "display_name": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "invitation_state": { "enum": ["not_observed", "invited", "accepted", "declined", "tentative", "unknown"] },
+        "invitation_evidence_state": { "$ref": "#/$defs/evidence" },
+        "attendance_state": { "enum": ["not_observed", "attended", "partially_attended", "absent", "unknown"] },
+        "attendance_evidence_state": { "$ref": "#/$defs/evidence" },
+        "source_ids": { "$ref": "#/$defs/source_ids" }
+      }
+    },
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["item_id", "text", "source_ids"],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/identifier" },
+        "text": { "$ref": "#/$defs/text" },
+        "source_ids": { "$ref": "#/$defs/source_ids" }
+      }
+    },
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "object_id", "fragment", "content_sha256", "observed_revision", "store"],
+      "properties": {
+        "source_id": { "$ref": "#/$defs/identifier" },
+        "object_id": { "$ref": "#/$defs/identifier" },
+        "fragment": { "type": ["string", "null"], "maxLength": 512 },
+        "content_sha256": { "$ref": "#/$defs/sha256" },
+        "observed_revision": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }] },
+        "store": { "enum": ["plain_folder", "obsidian", "local_message_export", "local_schedule_export"] }
+      }
+    }
+  }
+}

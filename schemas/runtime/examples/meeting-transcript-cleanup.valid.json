@@ -1,0 +1,33 @@
+{
+  "schema_version": 2,
+  "cleanup_id": "cleanup-1",
+  "meeting_id": "meeting-1",
+  "segments": [
+    {
+      "segment_id": "segment-1",
+      "source_kind": "transcript",
+      "verbatim_text": "Decision maybe later",
+      "cleaned_text": "Decision: [unclear] later.",
+      "started_at": "2026-08-15T12:00:00Z",
+      "ended_at": "2026-08-15T12:00:10Z",
+      "speaker_label": null,
+      "attribution_confidence_bps": 0,
+      "attribution_evidence_state": "unknown",
+      "unclear_markers": [{ "marker_id": "marker-1", "start_byte": 9, "end_byte": 14, "verbatim_fragment": "maybe", "reason": "Intent is unclear." }],
+      "source_ids": ["source-1"]
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "source-1",
+      "object_id": "object-1",
+      "fragment": "Transcript",
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observed_revision": "revision-1",
+      "store": "plain_folder"
+    }
+  ],
+  "cleanup_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "proposal_only": true,
+  "source_mutation_performed": false
+}
