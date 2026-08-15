@@ -105,6 +105,10 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "pdf-redaction-receipt",
   "pdf-visual-comparison-report",
   "pdf-offline-diagram-projection",
+  "tabular-document",
+  "tabular-comparison",
+  "safe-csv-proposal",
+  "spreadsheet-inspection",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -283,6 +287,30 @@ function isStrictlySortedBy(values, key) {
   return values.every(
     (value, index) => index === 0 || key(values[index - 1]) < key(value),
   );
+}
+
+function normalizedTabularId(value) {
+  return value
+    .normalize("NFKC")
+    .trim()
+    .replace(/\s+/gu, " ")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, "-")
+    .replace(/^-+|-+$/gu, "");
+}
+
+function spreadsheetAddress(row, column) {
+  if (!Number.isInteger(row) || row < 1 || !Number.isInteger(column) || column < 1) {
+    return null;
+  }
+  let value = column;
+  let letters = "";
+  while (value > 0) {
+    value -= 1;
+    letters = String.fromCharCode(65 + (value % 26)) + letters;
+    value = Math.floor(value / 26);
+  }
+  return `${letters}${row}`;
 }
 
 const VALIDATION_KIND_ORDER = Object.freeze([
@@ -1602,6 +1630,103 @@ function runtimeSemanticErrors(recordType, data) {
       data.safe_for_local_embedding !== true
     ) {
       errors.push("PDF offline diagram validation state drifted");
+    }
+  } else if (recordType === "tabular-document") {
+    const headers = data.headers ?? [];
+    const normalized = headers.map(normalizedTabularId);
+    if (
+      JSON.stringify(normalized) !== JSON.stringify(data.normalized_headers ?? []) ||
+      new Set(normalized).size !== normalized.length ||
+      normalized.some((item) => item.length === 0) ||
+      (data.rows ?? []).some((row) => row.length !== headers.length)
+    ) {
+      errors.push("tabular header normalization or row shape drifted");
+    }
+  } else if (recordType === "tabular-comparison") {
+    const matches = data.matches ?? [];
+    let overlap = 0;
+    const keys = new Set();
+    for (const match of matches) {
+      const left = match.left_rows ?? [];
+      const right = match.right_rows ?? [];
+      const differing = match.differing_fields ?? [];
+      if (
+        keys.has(match.key_sha256) ||
+        !isStrictlySorted(left) ||
+        !isStrictlySorted(right) ||
+        !isStrictlySorted(differing)
+      ) {
+        errors.push(`tabular comparison entry is not canonical: ${match.key_sha256}`);
+      }
+      keys.add(match.key_sha256);
+      overlap += Number(left.length > 0 && right.length > 0);
+      const expectedReason = left.length > 1
+        ? "duplicate_left"
+        : right.length > 1
+          ? "duplicate_right"
+          : right.length === 0 && left.length === 1
+            ? "missing_right"
+            : left.length === 0 && right.length === 1
+              ? "missing_left"
+              : left.length === 1 && right.length === 1 && differing.length === 0
+                ? "exact_row"
+                : left.length === 1 && right.length === 1 && differing.length > 0
+                  ? "differing_fields"
+                  : null;
+      if (match.reason !== expectedReason) {
+        errors.push(`tabular comparison reason drifted: ${match.key_sha256}`);
+      }
+    }
+    if (overlap !== data.overlap_key_count) {
+      errors.push("tabular comparison overlap count drifted");
+    }
+  } else if (recordType === "safe-csv-proposal") {
+    if (sha256Bytes(data.csv ?? []) !== data.csv_sha256) {
+      errors.push("safe CSV byte digest drifted");
+    }
+  } else if (recordType === "spreadsheet-inspection") {
+    const worksheets = data.worksheets ?? [];
+    const sheetIds = new Set();
+    const sheetNames = new Set();
+    for (const sheet of worksheets) {
+      if (sheetIds.has(sheet.sheet_id) || sheetNames.has(sheet.name)) {
+        errors.push("spreadsheet worksheet identity is duplicated");
+      }
+      sheetIds.add(sheet.sheet_id);
+      sheetNames.add(sheet.name);
+      if (
+        !isStrictlySortedBy(sheet.cells ?? [], (cell) =>
+          `${String(cell.row).padStart(7, "0")}:${String(cell.column).padStart(5, "0")}`) ||
+        !isStrictlySorted(sheet.hidden_rows ?? []) ||
+        !isStrictlySorted(sheet.hidden_columns ?? []) ||
+        !isStrictlySorted(sheet.merged_ranges ?? []) ||
+        !isStrictlySortedBy(sheet.hyperlinks ?? [], (link) => link.reference)
+      ) {
+        errors.push(`spreadsheet worksheet ledger is not canonical: ${sheet.name}`);
+      }
+      for (const cell of sheet.cells ?? []) {
+        if (cell.address !== spreadsheetAddress(cell.row, cell.column)) {
+          errors.push(`spreadsheet cell address drifted: ${cell.address}`);
+        }
+        if (
+          cell.hyperlink !== null &&
+          sha256String(cell.hyperlink.target) !== cell.hyperlink.target_sha256
+        ) {
+          errors.push(`spreadsheet cell hyperlink digest drifted: ${cell.address}`);
+        }
+      }
+      for (const link of sheet.hyperlinks ?? []) {
+        if (sha256String(link.target) !== link.target_sha256) {
+          errors.push(`spreadsheet hyperlink digest drifted: ${link.reference}`);
+        }
+      }
+    }
+    const findings = data.findings ?? [];
+    if (!isStrictlySortedBy(findings, (item) => item.finding_id)) {
+      errors.push("spreadsheet findings are not canonically ordered");
+    }
+    if (data.safe_for_analysis !== !findings.some((item) => item.blocks_safe_analysis)) {
+      errors.push("spreadsheet safe-analysis state disagrees with findings");
     }
   } else if (recordType === "word-inspection-report") {
     const parts = data.parts ?? [];

@@ -1,0 +1,13 @@
+{
+  "schema_version": 2,
+  "left_source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "right_source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "key_columns": ["id"],
+  "matches": [
+    { "key_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "reason": "exact_row", "left_rows": [1], "right_rows": [1], "differing_fields": [] }
+  ],
+  "overlap_key_count": 1,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

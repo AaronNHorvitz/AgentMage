@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "csv": [73, 68, 13, 10, 39, 61, 49],
+  "csv_sha256": "99a74cd61455997c8c82f1e3ef0417457e3cb60865c836878ed172ea23ec51d9",
+  "formula_sanitized_cell_count": 1,
+  "formula_injection_prevented": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

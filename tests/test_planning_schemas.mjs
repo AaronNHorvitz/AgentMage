@@ -408,6 +408,10 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "pdf-redaction-receipt",
     "pdf-visual-comparison-report",
     "pdf-offline-diagram-projection",
+    "tabular-document",
+    "tabular-comparison",
+    "safe-csv-proposal",
+    "spreadsheet-inspection",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -1379,6 +1383,40 @@ test("PDF records reject page citation OCR and effect drift", () => {
     ["pdf-visual-comparison-report", (record) => { record.human_review_required = false; }],
     ["pdf-offline-diagram-projection", (record) => { record.network_access_performed = true; }],
   ];
+  for (const [recordType, mutate] of mutations) {
+    const changed = structuredClone(fixtures[recordType]);
+    mutate(changed);
+    assert.equal(validateRuntimeRecord(recordType, changed, runtimeValidators).valid, false);
+  }
+});
+
+test("tabular and spreadsheet records reject semantic and effect drift", () => {
+  const load = (recordType) => JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, `schemas/runtime/examples/${recordType}.valid.json`),
+      "utf8",
+    ),
+  );
+  const fixtures = {
+    "tabular-document": load("tabular-document"),
+    "tabular-comparison": load("tabular-comparison"),
+    "safe-csv-proposal": load("safe-csv-proposal"),
+    "spreadsheet-inspection": load("spreadsheet-inspection"),
+  };
+  const mutations = [
+    ["tabular-document", (record) => { record.normalized_headers[1] = "other"; }],
+    ["tabular-document", (record) => { record.rows[0].pop(); }],
+    ["tabular-document", (record) => { record.execution_performed = true; }],
+    ["tabular-comparison", (record) => { record.matches[0].reason = "missing_left"; }],
+    ["tabular-comparison", (record) => { record.overlap_key_count = 0; }],
+    ["tabular-comparison", (record) => { record.matches[0].left_rows = [2, 1]; }],
+    ["safe-csv-proposal", (record) => { record.csv[0] = 0; }],
+    ["safe-csv-proposal", (record) => { record.formula_injection_prevented = false; }],
+    ["spreadsheet-inspection", (record) => { record.worksheets[0].cells[0].address = "B1"; }],
+    ["spreadsheet-inspection", (record) => { record.safe_for_analysis = false; }],
+    ["spreadsheet-inspection", (record) => { record.network_access_performed = true; }],
+  ];
+  const runtimeValidators = createRuntimeValidators();
   for (const [recordType, mutate] of mutations) {
     const changed = structuredClone(fixtures[recordType]);
     mutate(changed);

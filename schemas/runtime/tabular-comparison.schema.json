@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/tabular-comparison.schema.json",
+  "title": "AgentMage Tabular Comparison",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "left_source_sha256", "right_source_sha256", "key_columns", "matches", "overlap_key_count", "filesystem_effect_performed", "network_access_performed", "execution_performed"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "left_source_sha256": { "$ref": "#/$defs/sha256" },
+    "right_source_sha256": { "$ref": "#/$defs/sha256" },
+    "key_columns": { "type": "array", "minItems": 1, "maxItems": 4096, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } },
+    "matches": { "type": "array", "maxItems": 1000000, "items": { "$ref": "#/$defs/match" } },
+    "overlap_key_count": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+    "filesystem_effect_performed": { "const": false },
+    "network_access_performed": { "const": false },
+    "execution_performed": { "const": false }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "rows": { "type": "array", "maxItems": 1000000, "uniqueItems": true, "items": { "type": "integer", "minimum": 1, "maximum": 4294967295 } },
+    "match": { "type": "object", "additionalProperties": false, "required": ["key_sha256", "reason", "left_rows", "right_rows", "differing_fields"], "properties": { "key_sha256": { "$ref": "#/$defs/sha256" }, "reason": { "enum": ["exact_row", "differing_fields", "missing_right", "missing_left", "duplicate_left", "duplicate_right"] }, "left_rows": { "$ref": "#/$defs/rows" }, "right_rows": { "$ref": "#/$defs/rows" }, "differing_fields": { "type": "array", "maxItems": 4096, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } } } }
+  }
+}

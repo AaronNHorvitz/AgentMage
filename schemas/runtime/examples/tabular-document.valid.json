@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "source_path": { "workspace_id": "workspace-1", "components": ["data", "people.csv"] },
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "profile": { "profile_id": "tabular-strict-v1", "maximum_source_bytes": 67108864, "maximum_rows": 250000, "maximum_columns": 4096, "maximum_field_bytes": 4194304 },
+  "dialect": "comma",
+  "headers": ["ID", "Display Name"],
+  "normalized_headers": ["id", "display-name"],
+  "rows": [["1", "Alice"], ["2", "Bob"]],
+  "original_preserved": true,
+  "filesystem_effect_performed": false,
+  "network_access_performed": false,
+  "execution_performed": false
+}

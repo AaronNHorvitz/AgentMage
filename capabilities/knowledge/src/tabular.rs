@@ -216,6 +216,8 @@ pub struct TabularMatch {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TabularComparison {
+    /// Kernel contract schema version.
+    pub schema_version: u16,
     /// Exact left source digest.
     pub left_source_sha256: String,
     /// Exact right source digest.
@@ -238,6 +240,8 @@ pub struct TabularComparison {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SafeCsvProposal {
+    /// Kernel contract schema version.
+    pub schema_version: u16,
     /// Exact source digest.
     pub source_sha256: String,
     /// Exact output bytes.
@@ -689,6 +693,7 @@ pub fn compare_tabular(
         });
     }
     Ok(TabularComparison {
+        schema_version: CONTRACT_SCHEMA_VERSION,
         left_source_sha256: left.source_sha256.clone(),
         right_source_sha256: right.source_sha256.clone(),
         key_columns,
@@ -757,6 +762,7 @@ pub fn build_safe_csv(document: &TabularDocument) -> Result<SafeCsvProposal, Tab
         }
     }
     Ok(SafeCsvProposal {
+        schema_version: CONTRACT_SCHEMA_VERSION,
         source_sha256: document.source_sha256.clone(),
         csv_sha256: word_sha256(&output),
         csv: output,
