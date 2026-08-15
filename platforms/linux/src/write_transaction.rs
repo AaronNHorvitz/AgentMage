@@ -595,8 +595,9 @@ mod tests {
     };
     use agentmage_kernel_engine::write_approval::{
         ShadowChangeSet, ShadowChangeSetRequest, ShadowWriteDraft, WriteApprovalDecision,
-        WriteApprovalReceipt, WriteGrantRequest, WriteLineEndings, WriteReviewNarrative,
-        WriteSyntax, build_shadow_change_set, issue_write_grant, render_write_preview,
+        WriteApprovalReceipt, WriteArtifactClass, WriteChangeScope, WriteGrantRequest,
+        WriteLineEndings, WriteReviewNarrative, WriteSyntax, build_shadow_change_set,
+        issue_write_grant, render_write_preview,
     };
     use agentmage_kernel_engine::write_transaction::{
         AtomicWriteDriver, WriteTransactionError, WriteTransactionOutcome, WriteTransactionRequest,
@@ -773,6 +774,7 @@ mod tests {
                 observed_bytes: before.clone(),
                 proposed_bytes: after.clone(),
                 expected_postimage_sha256: hex_sha256(after),
+                artifact_class: WriteArtifactClass::Configuration,
                 syntax: WriteSyntax::Json,
                 line_endings: WriteLineEndings::Lf,
                 generated_file: false,
@@ -784,6 +786,11 @@ mod tests {
             ShadowChangeSetRequest {
                 change_set_id: "change-set-linux-write".to_owned(),
                 observed_at_epoch_ms: 2_000,
+                intent_sha256: "1".repeat(64),
+                plan_sha256: "2".repeat(64),
+                scope: WriteChangeScope::Minimal,
+                expanded_scope_approval_sha256: None,
+                review_hooks: Vec::new(),
                 operations: drafts,
                 review: review(),
                 permitted_verification: vec!["cargo-test-linux-write".to_owned()],

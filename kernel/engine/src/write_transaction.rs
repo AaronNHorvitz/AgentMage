@@ -13,7 +13,8 @@ use crate::{
     policy::{PolicyEngine, PolicyEvaluationContext},
     write_approval::{
         CurrentWriteTarget, ShadowChangeSet, ShadowChangeSetRequest, ShadowWriteDraft,
-        WriteApprovalError, WriteApprovalReceipt, WriteReviewNarrative, revalidate_before_apply,
+        WriteApprovalError, WriteApprovalReceipt, WriteChangeScope, WriteReviewNarrative,
+        revalidate_before_apply,
     },
 };
 
@@ -523,6 +524,10 @@ pub struct RollbackProposalRequest {
     pub change_set_id: String,
     /// Fresh observation time.
     pub observed_at_epoch_ms: u64,
+    /// Exact rollback change-intent identity.
+    pub intent_sha256: String,
+    /// Exact rollback change-plan identity.
+    pub plan_sha256: String,
     /// Complete new rollback review narrative.
     pub review: WriteReviewNarrative,
     /// Exact separately authorized verification labels for the rollback.
@@ -551,6 +556,7 @@ pub fn propose_fresh_rollback(
             observed_bytes: observation.bytes.clone(),
             proposed_bytes: operation.preimage_bytes().to_vec(),
             expected_postimage_sha256: operation.preimage_sha256().to_owned(),
+            artifact_class: operation.artifact_class(),
             syntax: operation.syntax(),
             line_endings: operation.line_endings(),
             generated_file: operation.generated_file(),
@@ -560,6 +566,11 @@ pub fn propose_fresh_rollback(
     Ok(ShadowChangeSetRequest {
         change_set_id: request.change_set_id,
         observed_at_epoch_ms: request.observed_at_epoch_ms,
+        intent_sha256: request.intent_sha256,
+        plan_sha256: request.plan_sha256,
+        scope: WriteChangeScope::Minimal,
+        expanded_scope_approval_sha256: None,
+        review_hooks: original.review_hooks().to_vec(),
         operations,
         review: request.review,
         permitted_verification: request.permitted_verification,
@@ -933,8 +944,9 @@ mod tests {
         policy::{PolicyDocument, ScopeRules, ToolPolicyBinding},
         test_target::scope,
         write_approval::{
-            ShadowWriteDraft, WriteApprovalDecision, WriteGrantRequest, WriteLineEndings,
-            WriteSyntax, build_shadow_change_set, issue_write_grant, render_write_preview,
+            ShadowWriteDraft, WriteApprovalDecision, WriteArtifactClass, WriteChangeScope,
+            WriteGrantRequest, WriteLineEndings, WriteSyntax, build_shadow_change_set,
+            issue_write_grant, render_write_preview,
         },
     };
     use agentmage_kernel_contracts::{
@@ -1052,6 +1064,7 @@ mod tests {
                     target,
                     observed_bytes,
                     expected_postimage_sha256: hex_sha256(&proposed_bytes),
+                    artifact_class: WriteArtifactClass::Configuration,
                     proposed_bytes,
                     syntax: WriteSyntax::Json,
                     line_endings: WriteLineEndings::Lf,
@@ -1065,6 +1078,11 @@ mod tests {
             ShadowChangeSetRequest {
                 change_set_id: "change-set-transaction".to_owned(),
                 observed_at_epoch_ms: 2_000,
+                intent_sha256: "1".repeat(64),
+                plan_sha256: "2".repeat(64),
+                scope: WriteChangeScope::Minimal,
+                expanded_scope_approval_sha256: None,
+                review_hooks: Vec::new(),
                 operations,
                 review: review("write"),
                 permitted_verification: vec!["cargo-test-write-transaction".to_owned()],
@@ -1420,6 +1438,8 @@ mod tests {
             RollbackProposalRequest {
                 change_set_id: "change-set-rollback".to_owned(),
                 observed_at_epoch_ms: 5_000,
+                intent_sha256: "3".repeat(64),
+                plan_sha256: "4".repeat(64),
                 review: review("rollback"),
                 permitted_verification: vec!["cargo-test-rollback".to_owned()],
             },
@@ -1442,6 +1462,8 @@ mod tests {
                 RollbackProposalRequest {
                     change_set_id: "change-set-rollback-stale".to_owned(),
                     observed_at_epoch_ms: 6_000,
+                    intent_sha256: "3".repeat(64),
+                    plan_sha256: "4".repeat(64),
                     review: review("rollback"),
                     permitted_verification: Vec::new(),
                 },

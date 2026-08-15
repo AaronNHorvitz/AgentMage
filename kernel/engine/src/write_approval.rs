@@ -104,6 +104,58 @@ pub enum WriteLineEndings {
     CrLf,
 }
 
+/// Closed artifact classification for one proposed postimage.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WriteArtifactClass {
+    /// Application or library source code.
+    Code,
+    /// Repository or product configuration.
+    Configuration,
+    /// Test source, fixture, or golden.
+    Test,
+    /// Documentation or example prose.
+    Documentation,
+    /// Data, schema, or compatibility migration.
+    Migration,
+    /// Explicitly authorized generated output.
+    GeneratedOutput,
+}
+
+/// Closed breadth of one shadow change set.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WriteChangeScope {
+    /// Smallest evidence-supported change.
+    Minimal,
+    /// Explicitly reviewed structural refactor.
+    Refactor,
+    /// Explicitly reviewed dependency upgrade.
+    DependencyUpgrade,
+    /// Explicitly reviewed migration.
+    Migration,
+}
+
+/// Closed review hooks selected before write approval.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum WriteReviewHook {
+    /// Public or internal interface compatibility.
+    Interface,
+    /// Dependency purpose, provenance, license, and removal.
+    Dependency,
+    /// Forward, rollback, and partial-failure migration behavior.
+    Migration,
+    /// Security boundary and attack-surface review.
+    Security,
+    /// Measured performance review.
+    Performance,
+    /// Accessibility review.
+    Accessibility,
+    /// Caller, format, and platform compatibility review.
+    Compatibility,
+}
+
 /// Complete human-review narrative bound into one shadow change set.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -135,6 +187,8 @@ pub struct ShadowWriteDraft {
     pub proposed_bytes: Vec<u8>,
     /// Caller-declared digest expected for the complete postimage.
     pub expected_postimage_sha256: String,
+    /// Explicit artifact classification.
+    pub artifact_class: WriteArtifactClass,
     /// Closed syntax validation to apply.
     pub syntax: WriteSyntax,
     /// Exact line endings expected in the postimage.
@@ -152,6 +206,16 @@ pub struct ShadowChangeSetRequest {
     pub change_set_id: String,
     /// Kernel-clock observation time used to reject an expired read parent.
     pub observed_at_epoch_ms: u64,
+    /// Exact normalized change-intent identity.
+    pub intent_sha256: String,
+    /// Exact review-ready change-plan identity.
+    pub plan_sha256: String,
+    /// Explicit breadth of the proposed work.
+    pub scope: WriteChangeScope,
+    /// Separate approval identity required for nonminimal scope.
+    pub expanded_scope_approval_sha256: Option<String>,
+    /// Stable typed review hooks selected before approval.
+    pub review_hooks: Vec<WriteReviewHook>,
     /// Ordered exact replacement drafts.
     pub operations: Vec<ShadowWriteDraft>,
     /// Complete human-review narrative.
@@ -171,6 +235,7 @@ pub struct ShadowWriteOperation {
     preimage_byte_len: u64,
     expected_postimage_sha256: String,
     expected_postimage_byte_len: u64,
+    artifact_class: WriteArtifactClass,
     syntax: WriteSyntax,
     line_endings: WriteLineEndings,
     generated_file: bool,
@@ -230,6 +295,12 @@ impl ShadowWriteOperation {
         &self.expected_postimage_sha256
     }
 
+    /// Returns the explicit artifact classification.
+    #[must_use]
+    pub const fn artifact_class(&self) -> WriteArtifactClass {
+        self.artifact_class
+    }
+
     /// Returns the exact reviewed preimage bytes retained for possible restoration.
     #[must_use]
     pub fn preimage_bytes(&self) -> &[u8] {
@@ -282,6 +353,11 @@ pub struct ShadowChangeSet {
     parent_grant_id: GrantId,
     parent_grant_sha256: String,
     observed_at_epoch_ms: u64,
+    intent_sha256: String,
+    plan_sha256: String,
+    scope: WriteChangeScope,
+    expanded_scope_approval_sha256: Option<String>,
+    review_hooks: Vec<WriteReviewHook>,
     operations: Vec<ShadowWriteOperation>,
     review: WriteReviewNarrative,
     permitted_verification: Vec<String>,
@@ -305,6 +381,36 @@ impl ShadowChangeSet {
     #[must_use]
     pub fn operations(&self) -> &[ShadowWriteOperation] {
         &self.operations
+    }
+
+    /// Returns the exact normalized change-intent identity.
+    #[must_use]
+    pub fn intent_sha256(&self) -> &str {
+        &self.intent_sha256
+    }
+
+    /// Returns the exact review-ready change-plan identity.
+    #[must_use]
+    pub fn plan_sha256(&self) -> &str {
+        &self.plan_sha256
+    }
+
+    /// Returns the explicit change breadth.
+    #[must_use]
+    pub const fn scope(&self) -> WriteChangeScope {
+        self.scope
+    }
+
+    /// Returns the separately approved expanded-scope identity, when required.
+    #[must_use]
+    pub fn expanded_scope_approval_sha256(&self) -> Option<&str> {
+        self.expanded_scope_approval_sha256.as_deref()
+    }
+
+    /// Returns the stable typed review hooks.
+    #[must_use]
+    pub fn review_hooks(&self) -> &[WriteReviewHook] {
+        &self.review_hooks
     }
 
     /// Returns the complete review narrative.
@@ -336,6 +442,18 @@ pub struct WriteApprovalPreview {
     pub change_set_sha256: String,
     /// Exact workspace identity.
     pub workspace_id: String,
+    /// Exact normalized change-intent identity.
+    pub intent_sha256: String,
+    /// Exact review-ready change-plan identity.
+    pub plan_sha256: String,
+    /// Explicit proposed change breadth.
+    pub scope: WriteChangeScope,
+    /// Separate expanded-scope approval identity, when required.
+    pub expanded_scope_approval_sha256: Option<String>,
+    /// Typed required review hooks.
+    pub review_hooks: Vec<WriteReviewHook>,
+    /// Artifact classification aligned with every affected path.
+    pub artifact_classes: Vec<WriteArtifactClass>,
     /// Ordered affected paths.
     pub files: Vec<String>,
     /// Ordered stable operation identities.
@@ -437,6 +555,14 @@ pub fn build_shadow_change_set(
     validate_identifier(&request.change_set_id)?;
     validate_review(&request.review)?;
     validate_verification(&request.permitted_verification)?;
+    validate_scope(
+        request.scope,
+        request.expanded_scope_approval_sha256.as_deref(),
+        &request.review_hooks,
+    )?;
+    if !valid_sha256(&request.intent_sha256) || !valid_sha256(&request.plan_sha256) {
+        return Err(WriteApprovalError::InvalidInput);
+    }
     if parent.grant_class != GrantClass::SessionRead
         || parent.status != GrantStatus::Issued
         || request.observed_at_epoch_ms < parent.issued_at_epoch_ms
@@ -494,6 +620,12 @@ pub fn build_shadow_change_set(
         if draft.generated_file && !draft.allow_generated_file {
             return Err(WriteApprovalError::GeneratedFileDenied);
         }
+        if (draft.artifact_class == WriteArtifactClass::GeneratedOutput) != draft.generated_file
+            || (draft.artifact_class == WriteArtifactClass::Migration
+                && request.scope != WriteChangeScope::Migration)
+        {
+            return Err(WriteApprovalError::InvalidInput);
+        }
         let before = std::str::from_utf8(&draft.observed_bytes)
             .map_err(|_| WriteApprovalError::InvalidEncoding)?;
         let after = std::str::from_utf8(&draft.proposed_bytes)
@@ -528,6 +660,7 @@ pub fn build_shadow_change_set(
             expected_postimage_sha256: postimage_sha256,
             expected_postimage_byte_len: u64::try_from(draft.proposed_bytes.len())
                 .map_err(|_| WriteApprovalError::InvalidInput)?,
+            artifact_class: draft.artifact_class,
             syntax: draft.syntax,
             line_endings: draft.line_endings,
             generated_file: draft.generated_file,
@@ -546,6 +679,11 @@ pub fn build_shadow_change_set(
         parent_grant_id: parent.grant_id.clone(),
         parent_grant_sha256,
         observed_at_epoch_ms: request.observed_at_epoch_ms,
+        intent_sha256: request.intent_sha256,
+        plan_sha256: request.plan_sha256,
+        scope: request.scope,
+        expanded_scope_approval_sha256: request.expanded_scope_approval_sha256,
+        review_hooks: request.review_hooks,
         operations,
         review: request.review,
         permitted_verification: request.permitted_verification,
@@ -564,6 +702,16 @@ pub fn render_write_preview(
         change_set_id: change_set.change_set_id.clone(),
         change_set_sha256: change_set.change_set_sha256.clone(),
         workspace_id: change_set.workspace_id.clone(),
+        intent_sha256: change_set.intent_sha256.clone(),
+        plan_sha256: change_set.plan_sha256.clone(),
+        scope: change_set.scope,
+        expanded_scope_approval_sha256: change_set.expanded_scope_approval_sha256.clone(),
+        review_hooks: change_set.review_hooks.clone(),
+        artifact_classes: change_set
+            .operations
+            .iter()
+            .map(|operation| operation.artifact_class)
+            .collect(),
         files: change_set
             .operations
             .iter()
@@ -645,6 +793,11 @@ pub fn issue_write_grant(
                 item.operation_sha256.as_str(),
                 item.expected_postimage_sha256.as_str(),
                 verification_sha256.as_str(),
+                change_set.intent_sha256.as_str(),
+                change_set.plan_sha256.as_str(),
+                change_set.scope,
+                change_set.expanded_scope_approval_sha256.as_deref(),
+                change_set.review_hooks.as_slice(),
             ))?;
             Ok(GrantSideEffect {
                 operation,
@@ -843,6 +996,44 @@ fn validate_verification(items: &[String]) -> Result<(), WriteApprovalError> {
     Ok(())
 }
 
+fn validate_scope(
+    scope: WriteChangeScope,
+    expanded_scope_approval_sha256: Option<&str>,
+    review_hooks: &[WriteReviewHook],
+) -> Result<(), WriteApprovalError> {
+    if review_hooks.len() > MAX_REVIEW_ITEMS
+        || review_hooks.windows(2).any(|pair| pair[0] >= pair[1])
+        || match scope {
+            WriteChangeScope::Minimal => expanded_scope_approval_sha256.is_some(),
+            WriteChangeScope::Refactor => {
+                expanded_scope_approval_sha256.is_none_or(|value| !valid_sha256(value))
+                    || review_hooks
+                        .binary_search(&WriteReviewHook::Compatibility)
+                        .is_err()
+            }
+            WriteChangeScope::DependencyUpgrade => {
+                expanded_scope_approval_sha256.is_none_or(|value| !valid_sha256(value))
+                    || [
+                        WriteReviewHook::Dependency,
+                        WriteReviewHook::Security,
+                        WriteReviewHook::Compatibility,
+                    ]
+                    .iter()
+                    .any(|hook| review_hooks.binary_search(hook).is_err())
+            }
+            WriteChangeScope::Migration => {
+                expanded_scope_approval_sha256.is_none_or(|value| !valid_sha256(value))
+                    || [WriteReviewHook::Migration, WriteReviewHook::Compatibility]
+                        .iter()
+                        .any(|hook| review_hooks.binary_search(hook).is_err())
+            }
+        }
+    {
+        return Err(WriteApprovalError::InvalidInput);
+    }
+    Ok(())
+}
+
 fn validate_identifier(value: &str) -> Result<(), WriteApprovalError> {
     if value.is_empty()
         || value.len() > 128
@@ -1023,12 +1214,18 @@ mod tests {
         ShadowChangeSetRequest {
             change_set_id: "change-set-0001".to_owned(),
             observed_at_epoch_ms: 2_000,
+            intent_sha256: "1".repeat(64),
+            plan_sha256: "2".repeat(64),
+            scope: WriteChangeScope::Minimal,
+            expanded_scope_approval_sha256: None,
+            review_hooks: Vec::new(),
             operations: vec![ShadowWriteDraft {
                 operation_id: "operation-0001".to_owned(),
                 target: target(&["src", "fixture.json"], &before),
                 observed_bytes: before,
                 proposed_bytes: after.clone(),
                 expected_postimage_sha256: hex_sha256(&after),
+                artifact_class: WriteArtifactClass::Configuration,
                 syntax: WriteSyntax::Json,
                 line_endings: WriteLineEndings::Lf,
                 generated_file: false,
@@ -1088,6 +1285,15 @@ mod tests {
             change_set.change_set_sha256()
         );
         assert_eq!(receipt.grant.preview_sha256, preview.preview_sha256);
+        assert_eq!(preview.intent_sha256, "1".repeat(64));
+        assert_eq!(preview.plan_sha256, "2".repeat(64));
+        assert_eq!(preview.scope, WriteChangeScope::Minimal);
+        assert_eq!(
+            preview.artifact_classes,
+            [WriteArtifactClass::Configuration]
+        );
+        assert!(preview.review_hooks.is_empty());
+        assert!(preview.expanded_scope_approval_sha256.is_none());
         assert!(
             change_set.operations()[0]
                 .complete_diff()
@@ -1112,6 +1318,55 @@ mod tests {
                 replay,
             ),
             Err(WriteApprovalError::ApprovalMismatch)
+        );
+    }
+
+    #[test]
+    fn classifications_and_expanded_scope_require_exact_separate_review() {
+        let (_, parent) = parent();
+
+        let mut refactor = request();
+        refactor.scope = WriteChangeScope::Refactor;
+        assert_eq!(
+            build_shadow_change_set(&parent, refactor.clone()),
+            Err(WriteApprovalError::InvalidInput)
+        );
+        refactor.expanded_scope_approval_sha256 = Some("3".repeat(64));
+        assert_eq!(
+            build_shadow_change_set(&parent, refactor.clone()),
+            Err(WriteApprovalError::InvalidInput)
+        );
+        refactor.review_hooks = vec![WriteReviewHook::Compatibility];
+        let admitted = build_shadow_change_set(&parent, refactor).expect("reviewed refactor");
+        assert_eq!(admitted.scope(), WriteChangeScope::Refactor);
+        assert_eq!(
+            admitted.expanded_scope_approval_sha256(),
+            Some("3".repeat(64).as_str())
+        );
+
+        let mut dependency = request();
+        dependency.scope = WriteChangeScope::DependencyUpgrade;
+        dependency.expanded_scope_approval_sha256 = Some("4".repeat(64));
+        dependency.review_hooks = vec![
+            WriteReviewHook::Dependency,
+            WriteReviewHook::Security,
+            WriteReviewHook::Compatibility,
+        ];
+        assert!(build_shadow_change_set(&parent, dependency).is_ok());
+
+        let mut migration = request();
+        migration.scope = WriteChangeScope::Migration;
+        migration.expanded_scope_approval_sha256 = Some("5".repeat(64));
+        migration.review_hooks = vec![WriteReviewHook::Migration, WriteReviewHook::Compatibility];
+        migration.operations[0].artifact_class = WriteArtifactClass::Migration;
+        assert!(build_shadow_change_set(&parent, migration).is_ok());
+
+        let mut unclassified_generated = request();
+        unclassified_generated.operations[0].generated_file = true;
+        unclassified_generated.operations[0].allow_generated_file = true;
+        assert_eq!(
+            build_shadow_change_set(&parent, unclassified_generated),
+            Err(WriteApprovalError::InvalidInput)
         );
     }
 
