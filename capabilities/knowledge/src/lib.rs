@@ -32,6 +32,7 @@ mod schema;
 mod semantic;
 mod semantic_benchmark;
 mod skills;
+mod spreadsheet_ooxml;
 mod store;
 mod tabular;
 mod tasks;
@@ -185,6 +186,12 @@ pub use skills::{
     DeclarativeSkillRegistry, DeclarativeSkillScope, DeclarativeSkillTrustState,
     SkillAuthorityCeiling, SkillContext, SkillContextEntry, SkillInfluenceReceipt,
     SkillInstructionConflict, compose_skill_context, seal_declarative_skill_manifest,
+};
+pub use spreadsheet_ooxml::{
+    SpreadsheetCell, SpreadsheetCellKind, SpreadsheetDateSystem, SpreadsheetError,
+    SpreadsheetFinding, SpreadsheetFindingKind, SpreadsheetHyperlink, SpreadsheetInspection,
+    SpreadsheetProfile, SpreadsheetSheetState, SpreadsheetWorksheet, excel_serial_date,
+    inspect_xlsx,
 };
 pub use store::{
     KnowledgeRecordSummary, KnowledgeStore, KnowledgeWriteKind, KnowledgeWritePreview,
