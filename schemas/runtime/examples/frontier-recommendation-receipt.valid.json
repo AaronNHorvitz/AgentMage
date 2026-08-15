@@ -1,0 +1,12 @@
+{
+  "schema_version": 2,
+  "receipt_id": "frontier-receipt-0001",
+  "decision_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "reason_code": "frontier.recommend.measured-capability-failure",
+  "packet_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "disclosure_result_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "user_recorded_destination": null,
+  "destination_recording_requested": false,
+  "external_delivery_attempted": false,
+  "receipt_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+}

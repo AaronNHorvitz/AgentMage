@@ -74,6 +74,8 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "reproduction-record",
   "thin-client-request",
   "thin-client-event",
+  "frontier-tier-decision",
+  "frontier-recommendation-receipt",
 ]);
 const CONFIGURATION_REPORT_PATH =
   "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json";
@@ -856,6 +858,44 @@ function runtimeSemanticErrors(recordType, data) {
       sha256String(data.kind.text ?? "") !== data.kind.text_sha256
     ) {
       errors.push("content digest must match the exact text");
+    }
+  } else if (recordType === "frontier-tier-decision") {
+    const ordered = [...(data.evidence_sha256 ?? [])].sort();
+    if (
+      (data.evidence_sha256 ?? []).some(
+        (value, index) => value !== ordered[index],
+      )
+    ) {
+      errors.push("frontier evidence hashes must be strictly ordered");
+    }
+    const reasons = {
+      measured_capability_failure:
+        "frontier.recommend.measured-capability-failure",
+      repeated_validation_failure:
+        "frontier.recommend.repeated-validation-failure",
+      contradiction: "frontier.recommend.material-contradiction",
+      rejected_verification: "frontier.recommend.rejected-verification",
+      exhausted_budget: "frontier.recommend.exhausted-budget",
+      material_clarification_need: "frontier.recommend.external-clarification",
+    };
+    if (
+      data.tier === "frontier_recommended" &&
+      reasons[data.trigger] !== data.reason_code
+    ) {
+      errors.push(
+        "frontier recommendation reason must match its exact trigger",
+      );
+    }
+  } else if (recordType === "frontier-recommendation-receipt") {
+    const destination = data.user_recorded_destination?.toLowerCase() ?? "";
+    if (
+      destination.includes("password=") ||
+      destination.includes("api_key=") ||
+      destination.includes("token=") ||
+      destination.includes("secret=") ||
+      destination.includes("authorization: bearer ")
+    ) {
+      errors.push("frontier destination label cannot contain secret-like data");
     }
   }
   return errors;

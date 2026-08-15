@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/frontier-recommendation-receipt.schema.json",
+  "title": "AgentMage Frontier Recommendation Receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_id",
+    "decision_sha256",
+    "reason_code",
+    "packet_sha256",
+    "disclosure_result_sha256",
+    "user_recorded_destination",
+    "destination_recording_requested",
+    "external_delivery_attempted",
+    "receipt_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "receipt_id": { "$ref": "#/$defs/identifier" },
+    "decision_sha256": { "$ref": "#/$defs/sha256" },
+    "reason_code": { "$ref": "#/$defs/code" },
+    "packet_sha256": { "$ref": "#/$defs/sha256" },
+    "disclosure_result_sha256": { "$ref": "#/$defs/sha256" },
+    "user_recorded_destination": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^.*\\S.*$"
+        }
+      ]
+    },
+    "destination_recording_requested": { "type": "boolean" },
+    "external_delivery_attempted": { "const": false },
+    "receipt_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "destination_recording_requested": { "const": true } },
+        "required": ["destination_recording_requested"]
+      },
+      "then": {
+        "properties": {
+          "user_recorded_destination": { "type": "string" }
+        }
+      },
+      "else": {
+        "properties": {
+          "user_recorded_destination": { "type": "null" }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

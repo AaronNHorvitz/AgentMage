@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/frontier-tier-decision.schema.json",
+  "title": "AgentMage Frontier Tier Decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision_id",
+    "tier",
+    "trigger",
+    "local_acceptance_check_id",
+    "evidence_sha256",
+    "reason_code",
+    "user_clarification_required",
+    "recommendation_only",
+    "external_effect_allowed",
+    "decision_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "decision_id": { "$ref": "#/$defs/identifier" },
+    "tier": {
+      "enum": [
+        "deterministic_script",
+        "local_model",
+        "ask_user",
+        "frontier_recommended"
+      ]
+    },
+    "trigger": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "enum": [
+            "measured_capability_failure",
+            "repeated_validation_failure",
+            "contradiction",
+            "rejected_verification",
+            "exhausted_budget",
+            "material_clarification_need"
+          ]
+        }
+      ]
+    },
+    "local_acceptance_check_id": { "$ref": "#/$defs/code" },
+    "evidence_sha256": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/sha256" }
+    },
+    "reason_code": { "$ref": "#/$defs/code" },
+    "user_clarification_required": { "type": "boolean" },
+    "recommendation_only": { "type": "boolean" },
+    "external_effect_allowed": { "const": false },
+    "decision_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "tier": { "const": "frontier_recommended" } },
+        "required": ["tier"]
+      },
+      "then": {
+        "properties": {
+          "trigger": { "not": { "type": "null" } },
+          "user_clarification_required": { "const": false },
+          "recommendation_only": { "const": true }
+        }
+      },
+      "else": {
+        "properties": {
+          "trigger": { "type": "null" },
+          "recommendation_only": { "const": false }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "tier": { "const": "ask_user" } },
+        "required": ["tier"]
+      },
+      "then": {
+        "properties": { "user_clarification_required": { "const": true } }
+      },
+      "else": {
+        "properties": { "user_clarification_required": { "const": false } }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

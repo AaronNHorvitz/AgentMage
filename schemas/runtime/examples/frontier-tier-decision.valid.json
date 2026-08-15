@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "decision_id": "frontier-decision-0001",
+  "tier": "frontier_recommended",
+  "trigger": "measured_capability_failure",
+  "local_acceptance_check_id": "check.local-result",
+  "evidence_sha256": [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  ],
+  "reason_code": "frontier.recommend.measured-capability-failure",
+  "user_clarification_required": false,
+  "recommendation_only": true,
+  "external_effect_allowed": false,
+  "decision_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+}

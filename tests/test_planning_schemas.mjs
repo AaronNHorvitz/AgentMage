@@ -377,6 +377,8 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "reproduction-record",
     "thin-client-request",
     "thin-client-event",
+    "frontier-tier-decision",
+    "frontier-recommendation-receipt",
   ]);
   assert.deepEqual(
     results.map((result) => result.valid),
@@ -994,6 +996,89 @@ test("thin client events reject malformed payloads and output drift", () => {
     assert.equal(
       validateRuntimeRecord("thin-client-event", changed, runtimeValidators)
         .valid,
+      false,
+    );
+  }
+});
+
+test("frontier decisions reject trigger, authority, clarification, and evidence drift", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/frontier-tier-decision.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.trigger = null;
+    },
+    (record) => {
+      record.reason_code = "frontier.recommend.exhausted-budget";
+    },
+    (record) => {
+      record.external_effect_allowed = true;
+    },
+    (record) => {
+      record.user_clarification_required = true;
+    },
+    (record) => {
+      record.recommendation_only = false;
+    },
+    (record) => {
+      record.evidence_sha256.reverse();
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord(
+        "frontier-tier-decision",
+        changed,
+        runtimeValidators,
+      ).valid,
+      false,
+    );
+  }
+});
+
+test("frontier receipts reject delivery and implicit or sensitive destinations", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        ROOT,
+        "schemas/runtime/examples/frontier-recommendation-receipt.valid.json",
+      ),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.external_delivery_attempted = true;
+    },
+    (record) => {
+      record.user_recorded_destination = "Unapproved endpoint";
+    },
+    (record) => {
+      record.destination_recording_requested = true;
+    },
+    (record) => {
+      record.destination_recording_requested = true;
+      record.user_recorded_destination = "token=private-value";
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord(
+        "frontier-recommendation-receipt",
+        changed,
+        runtimeValidators,
+      ).valid,
       false,
     );
   }
