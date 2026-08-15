@@ -431,12 +431,11 @@ pub fn reconcile_preservation(
             normalized.object_database_sha256 = before.object_database_sha256.clone();
         }
         RepositoryOwnedDelta::WorktreeCreate | RepositoryOwnedDelta::WorktreeRemove => {
-            normalized.local_branches_sha256 = before.local_branches_sha256.clone();
+            normalized.agentmage_refs_sha256 = before.agentmage_refs_sha256.clone();
             normalized.worktrees_sha256 = before.worktrees_sha256.clone();
         }
         RepositoryOwnedDelta::BranchFastForward => {
-            normalized.local_branches_sha256 = before.local_branches_sha256.clone();
-            normalized.head_object = before.head_object.clone();
+            normalized.agentmage_refs_sha256 = before.agentmage_refs_sha256.clone();
         }
         RepositoryOwnedDelta::None => {}
     }
@@ -841,7 +840,8 @@ pub fn plan_branch_fast_forward(
     validate_branch_ref(branch_ref)?;
     require_sha(repository_path_sha256)?;
     manifest.verify()?;
-    if !valid_object_id(expected_old_object)
+    if !branch_ref.starts_with("refs/heads/agentmage/tasks/")
+        || !valid_object_id(expected_old_object)
         || !valid_object_id(expected_new_object)
         || expected_old_object == expected_new_object
         || !descendant_proven
@@ -1962,7 +1962,7 @@ mod tests {
         let clone = plan_clone(
             "transaction-1",
             remote.clone(),
-            "refs/heads/main",
+            "refs/heads/agentmage/tasks/review",
             &hash("destination"),
             &hash("empty"),
         )
@@ -2164,11 +2164,15 @@ mod tests {
             ]
         );
         let update = &plan.invocations[1].arguments;
-        assert!(update.ends_with(&["refs/heads/main".to_owned(), object('b'), object('a'),]));
+        assert!(update.ends_with(&[
+            "refs/heads/agentmage/tasks/review".to_owned(),
+            object('b'),
+            object('a'),
+        ]));
         assert_eq!(
             plan_branch_fast_forward(
                 "transaction-ff",
-                "refs/heads/main",
+                "refs/heads/agentmage/tasks/review",
                 &object('a'),
                 &object('b'),
                 false,

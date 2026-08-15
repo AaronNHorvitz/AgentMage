@@ -9,6 +9,7 @@ mod inventory;
 mod ipc;
 mod lifecycle;
 mod platform;
+mod repository_safety;
 mod sandbox;
 mod secret_service;
 mod security_controls;
@@ -54,6 +55,10 @@ pub use platform::{
 #[cfg(feature = "test-support")]
 pub use platform::{
     open_test_linux_authority, resolve_test_linux_workspace_object, select_test_linux_workspace,
+};
+pub use repository_safety::{
+    LinuxGitArtifact, LinuxRepositoryCollector, LinuxRepositoryError, LinuxRepositoryErrorKind,
+    LinuxRepositoryExecutor, LinuxRepositoryScope, linux_repository_path_sha256,
 };
 pub use sandbox::{
     LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxEffectDriver,
