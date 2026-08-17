@@ -6,11 +6,15 @@ The thin-client protocol and local command parser are source-level pre-alpha
 contracts. They are executable and tested, but they are not an integrated
 product workflow. The repository now contains the reusable runtime coordinator,
 ordered event and journal components, content-addressed runtime artifact
-components, a source-level native coding composition, and an authenticated
-native Chat runtime transport adapter. The adapter is tested with deterministic
-runtime fixtures, but it is not yet connected to a production runtime factory,
-admitted-model client workflow, canonical conversation or knowledge
-coordinator, or installed-package activation path.
+components, a source-level native coding composition, an authenticated native
+Chat runtime transport adapter, and a verified interactive CLI driver over that
+same runtime port. The CLI driver independently checks request binding, ordered
+events, complete artifact references, protected decisions, cancellation,
+terminal outcomes, and release. These source-level clients are tested with
+deterministic runtime fixtures, but they are not yet connected to a production
+runtime factory, admitted-model client workflow, canonical conversation or
+knowledge coordinator, CLI stdin/history transport, or installed-package
+activation path.
 
 Operational invocations therefore fail closed with exit code `5` and
 `client.transport.failed`. Help, version, completion, parsing, rendering, schema
@@ -66,13 +70,14 @@ channel. A later workflow or agent node can submit a bounded work packet through
 the same port with an authority intersection narrower than an interactive
 session. The runtime contract has no terminal, editor, or workflow-UI type.
 
-The native Chat implementation remains presentation-only. It forwards the
-exact host-framed request unchanged, verifies run/session/task/policy bindings,
-contiguous sequence, previous-event digest, correlation, timestamps,
-causation, protected approval identity, cancellation identity, and terminal
-outcome relationships, and renders only verified event labels and
-digest-checked output. It cannot select a fallback, dispatch a tool, mint a
-grant, alter policy, or certify success.
+The native Chat and interactive CLI implementations remain presentation-only.
+They forward the exact host-framed request unchanged, verify
+run/session/task/policy bindings, contiguous sequence, previous-event digest,
+correlation, timestamps, causation, complete artifact references, protected
+approval identity, cancellation identity, and terminal outcome relationships,
+and render only verified event labels and digest-checked output. Neither can
+select a fallback, dispatch a tool, mint a grant, alter policy, or certify
+success independently.
 
 The visible execution dispositions preserve existing grant semantics:
 

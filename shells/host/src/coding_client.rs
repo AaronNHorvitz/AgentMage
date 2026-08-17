@@ -155,7 +155,7 @@ where
         match step {
             RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
                 let disposition = approvals.decide(&challenge)?;
-                response = Some(approval_response(&challenge, disposition));
+                response = Some(runtime_approval_response(&challenge, disposition));
             }
             RuntimeCoordinatorStep::Complete { outcome } => {
                 if !sequence.is_terminal() {
@@ -195,7 +195,9 @@ where
     Ok(())
 }
 
-fn approval_response(
+/// Builds one exact protected response from the challenge displayed by a first-party client.
+#[must_use]
+pub fn runtime_approval_response(
     challenge: &RuntimeApprovalChallenge,
     disposition: RuntimeApprovalDisposition,
 ) -> RuntimeApprovalResponse {

@@ -3965,6 +3965,11 @@ count remains zero. Both implementation and artifact tasks, the verification tas
 
 - [ ] **Task 50.2.1 - Harden the shared runtime under production-like load and failure**
   - [ ] **Sub-task 50.2.1.1:** Run native Chat and interactive CLI through the same `RuntimeRunRequest`, coordinator, model, context, tool dispatcher, policy, journal, artifact, checkpoint, and `RuntimeOutcome` path with no interface-specific execution branch.
+    Source-level progress: [`cli_runtime.rs`](shells/host/src/cli_runtime.rs) now drives the exact
+    host-framed native Chat runtime port, independently verifies request, ordered events, complete
+    artifacts, protected approval or cancellation, terminal outcome, and release, and owns no
+    execution branch or authority. The item remains open pending the complete native Chat/CLI/future
+    caller parity campaign and authenticated installed-interface evidence.
   - [ ] **Sub-task 50.2.1.2:** Define and enforce run, turn, model, context, tool, process, event-queue, artifact, output, memory, disk, elapsed-time, retry, denial, parser-failure, and no-progress ceilings with one visible exhaustion result.
   - [ ] **Sub-task 50.2.1.3:** Implement bounded event coalescing, batching, slow-client handling, disconnect/reconnect, artifact preview paging, terminal flush, and shutdown without dropping correctness records or blocking model/tool cancellation indefinitely.
   - [ ] **Sub-task 50.2.1.4:** Reconcile crash and restart across model, context, approval, write, command, validation, event, artifact, checkpoint, and terminal states; preserve one safe next action and never replay a consumed grant or uncertain effect.

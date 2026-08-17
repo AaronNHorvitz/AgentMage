@@ -54,9 +54,10 @@ npm run docs:check
 - No exact local model profile is currently admitted for product coding. The
   public executable therefore fails closed instead of substituting a fake,
   historical, unmeasured, or arbitrary endpoint.
-- `agentmage code` selects the public command, but its installed stdin/history
-  loop and authenticated host transport are not composed. Native Chat also does
-  not yet consume the shared runtime protocol.
+- `agentmage code` selects the public command and a source-level verified CLI
+  driver now consumes the same host-framed runtime port as native Chat. Its
+  installed stdin/history loop, authenticated client transport, production
+  runtime factory, and package activation are not composed.
 - The terminal presentation lacks the complete target/argument/preimage/limits
   approval view, every-boundary cancellation handling, and the full objective,
   diff, checks, risks, rollback, receipts, and evidence summary.

@@ -8,11 +8,13 @@ source-level pre-alpha evidence. AgentMage does not yet expose an authenticated,
 coding workflow through native Chat or the local CLI. The sequence below defines the intended review
 path and stop conditions; it is not a supported-product claim.
 
-The source-level interactive harness is a thin client of the reusable kernel runtime coordinator;
-the installed product transport remains unavailable. The client does not own a model loop, tool
-router, approval system, journal, session store, or artifact store. Built-in local coding tools
-register directly through the common tool dispatcher; MCP remains an optional adapter for reviewed
-external tools and is absent from the MVP profile.
+The source-level interactive harness and verified CLI runtime driver are thin clients of the
+reusable kernel runtime coordinator; the installed product transport remains unavailable. The CLI
+driver uses the same host-framed request and runtime port as native Chat, independently verifies
+events, artifacts, decisions, cancellation, and the terminal outcome, and releases terminal runs.
+The clients do not own a model loop, tool router, approval system, journal, session store, or
+artifact store. Built-in local coding tools register directly through the common tool dispatcher;
+MCP remains an optional adapter for reviewed external tools and is absent from the MVP profile.
 
 The earliest useful `M-HARNESS-MVP` path includes one admitted local model, one approved repository
 and owned worktree, exploration/read/search, patch and controlled creation, bounded commands,
@@ -79,6 +81,7 @@ reconcile before another attempt. Never hide cleanup through reset, discard, for
 or deletion of an unowned worktree.
 
 The public [`agentmage code` CLI](./local-command-line-interface.md) currently returns
-`client.transport.failed` for operational commands because authenticated product transport is not
-composed. Treat that as an unavailable dependency, not as a coding failure and not as permission to
-use a hidden fallback.
+`client.transport.failed` for operational commands because authenticated product transport,
+production runtime-factory installation, and stdin/history composition are not available. The
+source-level verified driver does not change that package status. Treat the result as an unavailable
+dependency, not as a coding failure and not as permission to use a hidden fallback.

@@ -51,6 +51,8 @@ pub mod headless;
 
 /// Strict terminal argument parsing and bounded human or JSON rendering.
 pub mod cli;
+/// Verified interactive CLI driver over the shared native runtime transport.
+pub mod cli_runtime;
 
 #[cfg(target_os = "linux")]
 /// Linux owned-worktree binding for native coding operations.

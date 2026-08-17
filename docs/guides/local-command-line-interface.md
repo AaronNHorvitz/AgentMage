@@ -4,13 +4,21 @@
 
 The `agent` binary is a pre-alpha command and protocol scaffold. It provides
 deterministic help, version, shell completion, strict argument parsing, stable
-exit codes, and human or JSON event rendering. It does not yet have an
-authenticated product transport. Operational commands fail closed with
-`client.transport.failed` until that transport is composed.
+exit codes, and human or JSON event rendering. The source tree also contains a
+verified interactive runtime driver that prepares and starts the same
+host-framed `RuntimeRunRequest` used by native Chat, independently checks the
+event chain, artifacts, approval or cancellation boundary, and terminal
+outcome, and releases the terminal run. It owns no execution authority.
+
+The binary does not yet have an authenticated product transport, production
+runtime factory, or stdin/history composition. Operational commands therefore
+still fail closed with `client.transport.failed` until those dependencies are
+composed and accepted.
 
 The planned public interactive coding entry point is `agentmage code` or a
-subsequently approved equivalent. That interface will be a thin client of the
-same reusable runtime coordinator as native Chat. The current `agent` name is a
+subsequently approved equivalent. Its source-level driver is a thin client of
+the same reusable runtime coordinator port as native Chat; this is not an
+installed-product availability claim. The current `agent` name is a
 source-level detail and is not a public command compatibility promise.
 
 ## Build And Inspect
@@ -89,10 +97,12 @@ error equivalent to:
 There is no hidden prompt, browser launch, cloud login, fallback transport, or
 application launch.
 
-## Planned Interactive Coding Session
+## Interactive Coding Session Boundary
 
 The first useful coding-harness milestone composes existing AgentMage contracts
-in one local terminal session:
+in one local terminal session. The source-level driver proves the shared
+request, ordered stream, exact decision, cancellation, artifact, outcome, and
+release boundary; the remaining product composition is:
 
 1. Authenticate the client, select one admitted local model, and bind one
    approved repository plus an AgentMage-owned worktree.
