@@ -89,6 +89,8 @@ pub mod propagation;
 pub mod reasoning;
 /// Continuous content reclassification before successive trust boundaries.
 pub mod reclassification;
+/// Typed, read-only Git inspection plans and nonforgeable execution permits.
+pub mod repository_inspection;
 /// Content-minimized repository state, exact Git plans, and owned-worktree lifecycle.
 pub mod repository_safety;
 /// Integrity-protected review packets and authority-free logical commit plans.

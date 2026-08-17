@@ -3,7 +3,10 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
-use agentmage_capability_read_only::{ReadOnlyOutcome, ReadOnlyResult};
+use agentmage_capability_read_only::{
+    GitCommandPlan, GitInspectionOperation, GitInspectionOutcome, GitInspectionRequest,
+    GitInspectionResult, ReadOnlyOutcome, ReadOnlyResult, parse_git_inspection,
+};
 use agentmage_kernel_contracts::{
     ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId, AuthorizedWorkspaceHandle,
     ContractPayload, DataSensitivity, EvidenceId, EvidenceKind, EvidenceReference, GrantId,
@@ -21,6 +24,12 @@ use agentmage_kernel_engine::{
     grants::SessionReadGrantRequest,
     policy::PolicyEvaluationContext,
     propagation::CancellationToken,
+    repository_inspection::{
+        BoundedRepositoryInspectionExecutor, PreparedRepositoryInspection,
+        RepositoryInspectionEffectDriver, RepositoryInspectionOperation,
+        RepositoryInspectionPlatformResult, RepositoryInspectionRequest,
+        RepositoryInspectionTermination, prepare_repository_inspection,
+    },
     runtime_coordinator::{verify_runtime_approval_response, verify_runtime_run_request},
     runtime_loop::{
         RuntimePermissionEvaluation, RuntimePortFailure, RuntimeToolBoundary, RuntimeToolExecution,
@@ -106,10 +115,11 @@ struct IssuedCodingOperation<'workspace> {
 }
 
 /// Explicit verified dependencies required to construct one Linux coding boundary.
-pub struct LinuxCodingRuntimeBoundaryInput<'workspace, 'session, 'platform, I, E>
+pub struct LinuxCodingRuntimeBoundaryInput<'workspace, 'session, 'platform, I, E, G>
 where
     I: CodingIdentitySource,
     E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
     /// Descriptor-bound owned worktree and immutable coding profile.
     pub workspace: &'workspace LinuxCodingWorkspace<'session, 'platform>,
@@ -119,6 +129,8 @@ where
     pub sandbox: LinuxSandboxRunner,
     /// Verified bounded command executor for the profile's exact command inventory.
     pub command_executor: E,
+    /// Verified offline Git inspection executor for the held owned worktree.
+    pub git_executor: G,
     /// Run-stable deny-by-default policy bound into the runtime request.
     pub policy: CodingRuntimePolicy,
     /// Exact authenticated local actor.
@@ -132,15 +144,17 @@ where
 }
 
 /// Production Linux implementation of the reusable runtime's native coding boundary.
-pub struct LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E>
+pub struct LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
 where
     I: CodingIdentitySource,
     E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
     workspace: &'workspace LinuxCodingWorkspace<'session, 'platform>,
     authority: LinuxAuthorityRuntime,
     sandbox: Option<LinuxSandboxRunner>,
     command_executor: Option<E>,
+    git_executor: Option<G>,
     policy: CodingRuntimePolicy,
     actor_id: ActorId,
     session_id: SessionId,
@@ -150,21 +164,23 @@ where
     issued: BTreeMap<String, IssuedCodingOperation<'workspace>>,
 }
 
-impl<'workspace, 'session, 'platform, I, E>
-    LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E>
+impl<'workspace, 'session, 'platform, I, E, G>
+    LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
 where
     I: CodingIdentitySource,
     E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
     /// Composes already verified workspace, authority, sandbox, and policy objects.
     pub fn new(
-        input: LinuxCodingRuntimeBoundaryInput<'workspace, 'session, 'platform, I, E>,
+        input: LinuxCodingRuntimeBoundaryInput<'workspace, 'session, 'platform, I, E, G>,
     ) -> Result<Self, LinuxCodingRuntimeError> {
         let LinuxCodingRuntimeBoundaryInput {
             workspace,
             authority,
             sandbox,
             command_executor,
+            git_executor,
             policy,
             actor_id,
             session_id,
@@ -201,6 +217,7 @@ where
             authority,
             sandbox: Some(sandbox),
             command_executor: Some(command_executor),
+            git_executor: Some(git_executor),
             policy,
             actor_id,
             session_id,
@@ -455,6 +472,9 @@ where
             PreparedNativeCodingCall::ReadOnly { .. } => {
                 self.execute_prepared_read(request, definition, call, issued)
             }
+            PreparedNativeCodingCall::GitInspection { .. } => {
+                self.execute_prepared_git(request, definition, call, issued)
+            }
             PreparedNativeCodingCall::Command { .. } => {
                 self.execute_prepared_command(request, definition, call, issued)
             }
@@ -662,6 +682,153 @@ where
             return Err(RuntimePortFailure::Uncertain);
         }
         self.command_execution(request, definition, call, receipt, command_receipt, output)
+    }
+
+    fn execute_prepared_git(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        issued: IssuedCodingOperation<'workspace>,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let transaction = self.authority_transaction(call, &issued)?;
+        let operation_plan_sha256 = issued.prepared.operation().plan_sha256().to_owned();
+        let (operation, binding, write_draft, workspace) = issued.prepared.into_parts();
+        let (git_request, capability_plan) = match operation.prepared() {
+            PreparedNativeCodingCall::GitInspection { request, plan } => {
+                (request.clone(), plan.clone())
+            }
+            _ => return Err(RuntimePortFailure::Invalid),
+        };
+        if !matches!(binding, LinuxCodingTargetBinding::OwnedWorktreeRoot { .. })
+            || operation.expected_state_change() != StateChange::NotChanged
+            || write_draft.is_some()
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let prepared = prepare_kernel_git_inspection(
+            &git_request,
+            &capability_plan,
+            &call.arguments.sha256,
+            &operation_plan_sha256,
+        )?;
+        let cancellation = CancellationToken::root(
+            agentmage_kernel_contracts::BoundaryKind::Tool,
+            request.task.task_id.clone(),
+            call.correlation_id.clone(),
+        );
+        let executor = self
+            .git_executor
+            .take()
+            .ok_or(RuntimePortFailure::Unavailable)?;
+        let mut driver =
+            RepositoryInspectionEffectDriver::new(executor, workspace, prepared, cancellation);
+        let receipt_result = self.authority.authority_mut().execute_effect(
+            self.workspace.profile().registry(),
+            &issued.approved.policy,
+            transaction,
+            &mut driver,
+        );
+        let platform = driver.take_result();
+        self.git_executor = Some(driver.into_executor());
+        let receipt = receipt_result.map_err(|_| RuntimePortFailure::Uncertain)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let platform = platform.ok_or(RuntimePortFailure::Uncertain)?;
+        let outcome = repository_inspection_outcome(&platform);
+        if !matches!(
+            platform.termination,
+            RepositoryInspectionTermination::Exited
+        ) {
+            return Ok(RuntimeToolExecution {
+                receipt_id: receipt.receipt_id,
+                receipt_sha256: receipt.receipt_sha256,
+                result: ToolResult {
+                    schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                    tool_call_id: call.tool_call_id.clone(),
+                    correlation_id: call.correlation_id.clone(),
+                    outcome,
+                    output: None,
+                    validation_issues: Vec::new(),
+                    evidence: Vec::new(),
+                    error: None,
+                    elapsed_ms: platform.elapsed_ms,
+                    state_change: if platform.descendants_terminated {
+                        StateChange::NotChanged
+                    } else {
+                        StateChange::Uncertain
+                    },
+                },
+            });
+        }
+        let git_result = parse_git_inspection(
+            &git_request,
+            self.workspace.profile().repository_snapshot_sha256(),
+            &self.workspace.profile().worktree().record_sha256,
+            &operation_plan_sha256,
+            outcome == OperationOutcome::Succeeded,
+            &platform.stdout,
+        )
+        .map_err(|_| RuntimePortFailure::Uncertain)?;
+        if !git_result.verify() {
+            return Err(RuntimePortFailure::Uncertain);
+        }
+        self.git_execution(
+            request,
+            definition,
+            call,
+            receipt,
+            git_result,
+            platform.elapsed_ms,
+        )
+    }
+
+    fn git_execution(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        receipt: agentmage_kernel_contracts::Receipt,
+        git_result: GitInspectionResult,
+        elapsed_ms: u64,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let output_bytes =
+            serde_json::to_vec(&git_result).map_err(|_| RuntimePortFailure::Invalid)?;
+        if output_bytes.len() as u64 > request.limits.max_output_bytes {
+            return Err(RuntimePortFailure::ResourceExhausted);
+        }
+        let evidence = vec![EvidenceReference {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            evidence_id: EvidenceId::from_raw(self.next_id("evidence")?),
+            kind: EvidenceKind::Observation,
+            source_id: format!("native:{}@{}", call.tool_id.as_str(), call.tool_version),
+            object_id: call.tool_call_id.as_str().to_owned(),
+            fragment: None,
+            content_sha256: git_result.result_sha256.clone(),
+            observed_revision: Some(request.repository_snapshot_id.as_str().to_owned()),
+        }];
+        Ok(RuntimeToolExecution {
+            receipt_id: receipt.receipt_id,
+            receipt_sha256: receipt.receipt_sha256,
+            result: ToolResult {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                tool_call_id: call.tool_call_id.clone(),
+                correlation_id: call.correlation_id.clone(),
+                outcome: git_outcome(git_result.outcome),
+                output: Some(ContractPayload {
+                    schema: definition.output_schema.clone(),
+                    media_type: "application/json".to_owned(),
+                    sha256: sha256(&output_bytes),
+                    bytes: output_bytes,
+                }),
+                validation_issues: Vec::new(),
+                evidence,
+                error: None,
+                elapsed_ms,
+                state_change: StateChange::NotChanged,
+            },
+        })
     }
 
     fn execute_prepared_validation(
@@ -947,11 +1114,12 @@ where
     }
 }
 
-impl<'workspace, 'session, 'platform, I, E> RuntimeToolBoundary
-    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E>
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeToolBoundary
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
 where
     I: CodingIdentitySource,
     E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
     fn evaluate(
         &mut self,
@@ -1077,6 +1245,81 @@ fn captured_output_matches(output: &CommandCapturedOutput, receipt: &CommandRece
         && sha256(output.stderr()) == receipt.stderr_sha256
 }
 
+fn prepare_kernel_git_inspection(
+    request: &GitInspectionRequest,
+    capability_plan: &GitCommandPlan,
+    call_argument_sha256: &str,
+    operation_plan_sha256: &str,
+) -> Result<PreparedRepositoryInspection, RuntimePortFailure> {
+    let prepared = prepare_repository_inspection(
+        RepositoryInspectionRequest {
+            schema_version: request.schema_version,
+            operation: kernel_git_operation(request.operation),
+            revision: request.revision.clone(),
+            object_id: request.object_id.clone(),
+            pathspecs: request.pathspecs.clone(),
+            max_records: request.max_records,
+            max_output_bytes: request.max_output_bytes,
+        },
+        call_argument_sha256,
+        operation_plan_sha256,
+    )
+    .map_err(|_| RuntimePortFailure::Invalid)?;
+    if capability_plan.argv.first().map(String::as_str) != Some("git")
+        || capability_plan.argv[1..] != *prepared.arguments()
+        || capability_plan.environment != *prepared.environment()
+        || capability_plan.stdin != prepared.stdin()
+    {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    Ok(prepared)
+}
+
+const fn kernel_git_operation(operation: GitInspectionOperation) -> RepositoryInspectionOperation {
+    match operation {
+        GitInspectionOperation::Status => RepositoryInspectionOperation::Status,
+        GitInspectionOperation::CurrentBranch => RepositoryInspectionOperation::CurrentBranch,
+        GitInspectionOperation::Upstream => RepositoryInspectionOperation::Upstream,
+        GitInspectionOperation::BranchList => RepositoryInspectionOperation::BranchList,
+        GitInspectionOperation::Log => RepositoryInspectionOperation::Log,
+        GitInspectionOperation::Diff => RepositoryInspectionOperation::Diff,
+        GitInspectionOperation::StagedDiff => RepositoryInspectionOperation::StagedDiff,
+        GitInspectionOperation::Show => RepositoryInspectionOperation::Show,
+        GitInspectionOperation::WorktreeList => RepositoryInspectionOperation::WorktreeList,
+        GitInspectionOperation::Object => RepositoryInspectionOperation::Object,
+        GitInspectionOperation::Ref => RepositoryInspectionOperation::Ref,
+        GitInspectionOperation::DirtyTree => RepositoryInspectionOperation::DirtyTree,
+        GitInspectionOperation::UntrackedFiles => RepositoryInspectionOperation::UntrackedFiles,
+    }
+}
+
+const fn repository_inspection_outcome(
+    platform: &RepositoryInspectionPlatformResult,
+) -> OperationOutcome {
+    if !platform.descendants_terminated {
+        return OperationOutcome::Uncertain;
+    }
+    match platform.termination {
+        RepositoryInspectionTermination::Exited if matches!(platform.exit_code, Some(0)) => {
+            OperationOutcome::Succeeded
+        }
+        RepositoryInspectionTermination::Exited
+        | RepositoryInspectionTermination::OutputLimit
+        | RepositoryInspectionTermination::LaunchFailed => OperationOutcome::Failed,
+        RepositoryInspectionTermination::Cancelled => OperationOutcome::Cancelled,
+        RepositoryInspectionTermination::TimedOut => OperationOutcome::TimedOut,
+    }
+}
+
+const fn git_outcome(outcome: GitInspectionOutcome) -> OperationOutcome {
+    match outcome {
+        GitInspectionOutcome::Succeeded
+        | GitInspectionOutcome::NoResult
+        | GitInspectionOutcome::Truncated => OperationOutcome::Succeeded,
+        GitInspectionOutcome::Failed => OperationOutcome::Failed,
+    }
+}
+
 const fn validation_outcome(status: ValidationStatus) -> OperationOutcome {
     match status {
         ValidationStatus::Passed => OperationOutcome::Succeeded,
@@ -1120,7 +1363,9 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_capability_read_only::{
-        ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
+        GIT_INSPECTION_TOOL_ID, GIT_INSPECTION_TOOL_VERSION, GitInspectionOperation,
+        GitInspectionRequest, ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
+        plan_git_inspection,
     };
     use agentmage_capability_repository_map::{
         GitTrackedState, RepositoryFileInput, RepositoryMapInput, build_repository_map,
@@ -1138,6 +1383,10 @@ mod tests {
             CommandLaunchPermit, CommandPlatformResult, CommandRequest, CommandTermination,
         },
         operational_store::{OperationalStoreKeyError, OperationalStoreKeyProvider},
+        repository_inspection::{
+            BoundedRepositoryInspectionExecutor, RepositoryInspectionLaunchPermit,
+            RepositoryInspectionPlatformResult, RepositoryInspectionTermination,
+        },
         runtime_coordinator::{seal_runtime_approval_challenge, seal_runtime_run_request},
         runtime_loop::{RuntimePermissionEvaluation, RuntimeToolBoundary, runtime_action_id},
     };
@@ -1225,6 +1474,40 @@ mod tests {
         }
     }
 
+    #[derive(Default)]
+    struct FakeGitExecutor {
+        launches: usize,
+    }
+
+    impl BoundedRepositoryInspectionExecutor for FakeGitExecutor {
+        type WorkingDirectory = LinuxAuthorizedWorkspace;
+
+        fn execute(
+            &mut self,
+            permit: RepositoryInspectionLaunchPermit<'_>,
+            working_directory: &Self::WorkingDirectory,
+            cancellation: &CancellationToken,
+        ) -> RepositoryInspectionPlatformResult {
+            self.launches += 1;
+            assert!(working_directory.revalidate().is_ok());
+            assert!(!cancellation.is_cancelled());
+            assert_eq!(permit.prepared().arguments()[9], "status");
+            let stdout = b"# branch.head main\0? src/new.rs\0".to_vec();
+            RepositoryInspectionPlatformResult {
+                termination: RepositoryInspectionTermination::Exited,
+                exit_code: Some(0),
+                stdout_sha256: sha256(&stdout),
+                stdout_bytes: stdout.len() as u64,
+                stdout,
+                stderr_sha256: sha256(&[]),
+                stderr_bytes: 0,
+                elapsed_ms: 3,
+                descendants_terminated: true,
+                platform_code: "fixture.git.exited".to_owned(),
+            }
+        }
+    }
+
     struct Fixture {
         root: PathBuf,
         request: RuntimeRunRequest,
@@ -1237,6 +1520,7 @@ mod tests {
             'static,
             TestIdentities,
             FakeCommandExecutor,
+            FakeGitExecutor,
         >,
     }
 
@@ -1347,6 +1631,7 @@ mod tests {
             authority,
             sandbox,
             command_executor: FakeCommandExecutor::default(),
+            git_executor: FakeGitExecutor::default(),
             policy,
             actor_id,
             session_id,
@@ -1741,6 +2026,146 @@ mod tests {
             1
         );
         assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
+    }
+
+    #[test]
+    fn story_48_2_linux_runtime_executes_one_kernel_checked_git_inspection() {
+        let mut fixture = fixture();
+        let definition = fixture
+            .profile_for_test()
+            .registry()
+            .get_tool(
+                &ToolId::from_raw(GIT_INSPECTION_TOOL_ID),
+                GIT_INSPECTION_TOOL_VERSION,
+            )
+            .expect("Git inspection tool")
+            .clone();
+        let arguments = serde_json::to_vec(&GitInspectionRequest {
+            schema_version: 1,
+            operation: GitInspectionOperation::Status,
+            revision: None,
+            object_id: None,
+            pathspecs: Vec::new(),
+            max_records: 32,
+            max_output_bytes: 4_096,
+        })
+        .expect("Git inspection request");
+        fixture.call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-git-runtime"),
+            correlation_id: CorrelationId::from_raw("correlation-coding-runtime"),
+            action_id: runtime_action_id(&fixture.request.run_id, 1),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&arguments),
+                bytes: arguments,
+            },
+        };
+        fixture.definition = definition;
+        let evaluation = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                4_100,
+            )
+            .expect("Git approval preview");
+        let challenge = challenge(&fixture, &evaluation);
+        let allowed = fixture
+            .boundary
+            .resolve(
+                &fixture.request,
+                &challenge,
+                &response(&challenge, RuntimeApprovalDisposition::Allow),
+                &fixture.definition,
+                &fixture.call,
+                4_101,
+            )
+            .expect("Git allow");
+        let execution = fixture
+            .boundary
+            .execute(
+                &fixture.request,
+                &allowed,
+                &fixture.definition,
+                &fixture.call,
+                None,
+            )
+            .expect("Git inspection execution");
+
+        assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        let result: GitInspectionResult =
+            serde_json::from_slice(&execution.result.output.expect("Git output").bytes)
+                .expect("Git result payload");
+        assert!(result.verify());
+        assert_eq!(result.operation, GitInspectionOperation::Status);
+        assert_eq!(result.records.len(), 2);
+        assert_eq!(execution.result.evidence[0].kind, EvidenceKind::Observation);
+        assert_eq!(
+            fixture
+                .boundary
+                .git_executor
+                .as_ref()
+                .expect("returned Git executor")
+                .launches,
+            1
+        );
+        assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
+    }
+
+    #[test]
+    fn story_48_2_kernel_and_capability_git_planners_match_every_operation() {
+        for operation in GitInspectionOperation::ALL {
+            let request = GitInspectionRequest {
+                schema_version: 1,
+                operation,
+                revision: matches!(
+                    operation,
+                    GitInspectionOperation::Show | GitInspectionOperation::Ref
+                )
+                .then(|| "HEAD".to_owned()),
+                object_id: (operation == GitInspectionOperation::Object).then(|| "a".repeat(40)),
+                pathspecs: matches!(
+                    operation,
+                    GitInspectionOperation::Diff
+                        | GitInspectionOperation::StagedDiff
+                        | GitInspectionOperation::Show
+                )
+                .then(|| vec![vec!["src".to_owned(), "lib.rs".to_owned()]])
+                .unwrap_or_default(),
+                max_records: 32,
+                max_output_bytes: 4_096,
+            };
+            let plan = plan_git_inspection(&request).expect("capability Git plan");
+            let prepared =
+                prepare_kernel_git_inspection(&request, &plan, &"a".repeat(64), &"b".repeat(64))
+                    .expect("matching kernel Git plan");
+            assert_eq!(plan.argv[1..], prepared.arguments()[..]);
+        }
+
+        let request = GitInspectionRequest {
+            schema_version: 1,
+            operation: GitInspectionOperation::Status,
+            revision: None,
+            object_id: None,
+            pathspecs: Vec::new(),
+            max_records: 32,
+            max_output_bytes: 4_096,
+        };
+        let mut changed = plan_git_inspection(&request).expect("capability Git plan");
+        changed
+            .environment
+            .insert("HOME".to_owned(), "/tmp".to_owned());
+        assert_eq!(
+            prepare_kernel_git_inspection(&request, &changed, &"a".repeat(64), &"b".repeat(64),)
+                .expect_err("planner drift must fail"),
+            RuntimePortFailure::Invalid
+        );
     }
 
     #[test]
