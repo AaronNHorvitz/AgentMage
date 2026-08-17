@@ -324,6 +324,7 @@ pub struct ConversationCompactionReceipt {
 }
 
 /// Verifies one immutable conversation turn without reading or changing storage.
+#[cfg(feature = "runtime-projections")]
 pub(crate) fn verify_conversation_turn(
     turn: &ConversationTurn,
 ) -> Result<(), ConversationLibraryError> {

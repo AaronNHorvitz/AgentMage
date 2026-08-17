@@ -2261,11 +2261,13 @@ mod tests {
         GitTrackedState, RepositoryFileInput, RepositoryMapInput, StructuredArtifactClass,
         StructuredEdit, StructuredLanguage, build_repository_map,
     };
+    #[cfg(feature = "workflow-caller")]
+    use agentmage_kernel_contracts::GrantOperation;
     use agentmage_kernel_contracts::{
         ActionId, AgentStateKind, AuthorityClass, BoundaryKind, BudgetLimit, BudgetResource,
         CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason, CancellationSignal,
-        ClosedModelProposal, CorrelationId, DataSensitivity, ExactModelProfile, GrantOperation,
-        GrantStatus, GrantTarget, ModelCancellationProbe, ModelContextPacket, ModelMessageRole,
+        ClosedModelProposal, CorrelationId, DataSensitivity, ExactModelProfile, GrantStatus,
+        GrantTarget, ModelCancellationProbe, ModelContextPacket, ModelMessageRole,
         ModelProposalKind, ModelResourceReport, ModelRunRequest, ModelRunResult,
         ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate, PathResolutionIntent, PlanId,
         ProposalId, RollbackPlan, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
@@ -2273,6 +2275,10 @@ mod tests {
         RuntimeSessionMode, RuntimeTurnId, SessionId, StopCondition, StopConditionKind, Task,
         TaskId, TaskStatus, ToolCall, ToolCallId, ToolId, WorkPacket, WorkPacketId,
         WorkPacketState, WorkspaceAuthorizationId, WorkspacePath,
+    };
+    #[cfg(feature = "workflow-caller")]
+    use agentmage_kernel_engine::workflow_authority::{
+        WorkflowAuthorityLayer, WorkflowAuthorityLayerKind, intersect_workflow_authority,
     };
     use agentmage_kernel_engine::{
         command_runner::{
@@ -2292,9 +2298,6 @@ mod tests {
             RuntimeClock, RuntimeCoordinatorStep, RuntimeModelPort, RuntimePermissionEvaluation,
             RuntimeToolBoundary, runtime_action_id,
         },
-        workflow_authority::{
-            WorkflowAuthorityLayer, WorkflowAuthorityLayerKind, intersect_workflow_authority,
-        },
     };
     use agentmage_platform_linux::{
         LinuxBoundedRepositoryInspectionExecutor, LinuxGitArtifact, LinuxSandboxLimits,
@@ -2303,11 +2306,12 @@ mod tests {
     };
 
     use super::*;
+    #[cfg(feature = "interactive-cli")]
+    use crate::cli::{
+        render_runtime_event_human, render_runtime_event_json, render_runtime_outcome_human,
+        render_runtime_outcome_json,
+    };
     use crate::{
-        cli::{
-            render_runtime_event_human, render_runtime_event_json, render_runtime_outcome_human,
-            render_runtime_outcome_json,
-        },
         coding_authority::{CodingRuntimePolicyRequest, build_coding_runtime_policy},
         coding_changes::{
             CONTROLLED_CHANGE_TOOL_VERSION, CONTROLLED_CREATE_TOOL_ID,
@@ -2328,6 +2332,9 @@ mod tests {
             CodingCompletionCandidate, CodingTerminalClaim, coding_completion_payload,
         },
         linux_coding::LinuxCodingWorkspace,
+    };
+    #[cfg(feature = "workflow-caller")]
+    use crate::{
         workflow_assignment::{
             ChildReviewDisposition, ChildRuntimeAssignment, ChildRuntimeCaller,
             seal_child_runtime_assignment,
@@ -2923,6 +2930,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "workflow-caller")]
     fn workflow_submission(request: &RuntimeRunRequest) -> WorkflowRuntimeSubmission {
         let requested_tool_ids = request
             .visible_tools
@@ -3433,6 +3441,7 @@ mod tests {
         let Fixture {
             request, boundary, ..
         } = fixture;
+        #[cfg(feature = "interactive-cli")]
         let render_request = request.clone();
         let mut coordinator = compose_ephemeral_coding_coordinator(
             profile,
@@ -3453,16 +3462,20 @@ mod tests {
         assert_eq!(outcome.state, AgentStateKind::NoOp, "{outcome:#?}");
         assert_eq!(client_result.presented_events as usize, sink.0.len());
         assert_eq!(sink.0, coordinator.events());
-        for event in &sink.0 {
-            render_runtime_event_human(event).expect("human runtime event");
-            render_runtime_event_json(event).expect("JSON runtime event");
+        #[cfg(feature = "interactive-cli")]
+        {
+            for event in &sink.0 {
+                render_runtime_event_human(event).expect("human runtime event");
+                render_runtime_event_json(event).expect("JSON runtime event");
+            }
+            render_runtime_outcome_human(&render_request, &outcome).expect("human runtime outcome");
+            render_runtime_outcome_json(&render_request, &outcome).expect("JSON runtime outcome");
         }
-        render_runtime_outcome_human(&render_request, &outcome).expect("human runtime outcome");
-        render_runtime_outcome_json(&render_request, &outcome).expect("JSON runtime outcome");
         assert_eq!(outcome.tool_call_count, 1);
         assert!(outcome.unresolved_codes.is_empty());
     }
 
+    #[cfg(feature = "workflow-caller")]
     #[test]
     fn story_50_2_and_sprint_95_child_caller_use_the_real_no_op_runtime_path() {
         let mut fixture = fixture_with_git(FakeGitExecutor::clean());
@@ -3560,6 +3573,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "workflow-caller")]
     #[test]
     fn story_50_2_workflow_caller_waits_for_user_and_denial_starts_no_effect() {
         let mut fixture = fixture();

@@ -1,4 +1,4 @@
-//! Verified interactive CLI driver over the shared native runtime transport.
+//! Verified interactive CLI driver over the shared caller-neutral runtime transport.
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -19,8 +19,9 @@ use agentmage_kernel_engine::{
 use crate::coding_client::{
     CodingApprovalPort, CodingClientError, CodingEventSink, runtime_approval_response,
 };
-use crate::native_chat_runtime::{
-    NativeChatPrepareInput, NativeChatRuntimeError, NativeChatRuntimePort, NativeChatRuntimeStep,
+use crate::runtime_transport::{
+    RuntimePrepareInput as NativeChatPrepareInput, RuntimeTransportError as NativeChatRuntimeError,
+    RuntimeTransportPort as NativeChatRuntimePort, RuntimeTransportStep as NativeChatRuntimeStep,
 };
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";

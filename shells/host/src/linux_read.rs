@@ -44,13 +44,13 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use crate::diagnostic_export::{DiagnosticExportError, DiagnosticExportWorkflow};
-use crate::native_chat_runtime::{
-    NativeChatPrepareInput, NativeChatRuntimeError, NativeChatRuntimePort, NativeChatRuntimeStep,
-};
 use crate::protocol::{
     HOST_PROTOCOL_VERSION, HostProjectionKind, HostProjectionPath, HostRequest, HostResponse,
     MAX_HOST_REQUEST_BYTES, MAX_HOST_RESPONSE_BYTES, ReceiptSummary, encode_response,
     parse_request,
+};
+use crate::runtime_transport::{
+    RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
 };
 
 #[cfg(test)]
@@ -93,8 +93,8 @@ pub enum LinuxReadError {
     HandoffUnavailable,
     /// Handoff construction, review, revalidation, or rendering failed closed.
     HandoffInvalid,
-    /// The optional shared-runtime native Chat dependency failed closed.
-    NativeChatRuntime(NativeChatRuntimeError),
+    /// The optional shared-runtime transport dependency failed closed.
+    RuntimeTransport(RuntimeTransportError),
 }
 
 /// Stable content-free failure while serving an authenticated host frame.
@@ -134,7 +134,7 @@ impl LinuxReadError {
             Self::ModelDiscoveryInvalid => "host.model-discovery.invalid",
             Self::HandoffUnavailable => "host.handoff.unavailable",
             Self::HandoffInvalid => "host.handoff.invalid",
-            Self::NativeChatRuntime(error) => error.code(),
+            Self::RuntimeTransport(error) => error.code(),
         }
     }
 }
@@ -265,7 +265,7 @@ where
     model_picker: Option<ModelPickerSnapshot>,
     handoff_draft: Option<HandoffDraft>,
     pending_handoffs: BTreeMap<String, HandoffReview>,
-    native_chat_runtime: Option<Box<dyn NativeChatRuntimePort>>,
+    runtime_transport: Option<Box<dyn RuntimeTransportPort>>,
 }
 
 impl<'platform, I, C> LinuxReadWorkflow<'platform, I, C>
@@ -301,7 +301,7 @@ where
             model_picker: None,
             handoff_draft: None,
             pending_handoffs: BTreeMap::new(),
-            native_chat_runtime: None,
+            runtime_transport: None,
         })
     }
 
@@ -350,16 +350,16 @@ where
             model_picker: None,
             handoff_draft: None,
             pending_handoffs: BTreeMap::new(),
-            native_chat_runtime: None,
+            runtime_transport: None,
         })
     }
 
-    /// Installs the explicitly composed shared-runtime dependency for native Chat.
+    /// Installs one explicitly composed caller-neutral shared-runtime transport.
     ///
     /// Model discovery alone never installs or selects this dependency. Until a trusted
     /// composition supplies it, every runtime request fails closed as unavailable.
-    pub fn install_native_chat_runtime(&mut self, runtime: Box<dyn NativeChatRuntimePort>) {
-        self.native_chat_runtime = Some(runtime);
+    pub fn install_runtime_transport(&mut self, runtime: Box<dyn RuntimeTransportPort>) {
+        self.runtime_transport = Some(runtime);
     }
 
     /// Replaces the transport snapshot after trusted activation refreshes it.
@@ -476,7 +476,7 @@ where
                 ..
             } => self.prepare_runtime(
                 &request_id,
-                NativeChatPrepareInput {
+                RuntimePrepareInput {
                     profile_id,
                     expected_entry_sha256,
                     workspace_id,
@@ -544,16 +544,16 @@ where
     fn prepare_runtime(
         &mut self,
         request_id: &str,
-        input: NativeChatPrepareInput,
+        input: RuntimePrepareInput,
     ) -> Result<HostResponse, LinuxReadError> {
         let request = self
-            .native_chat_runtime
+            .runtime_transport
             .as_mut()
-            .ok_or(LinuxReadError::NativeChatRuntime(
-                NativeChatRuntimeError::RunUnavailable,
+            .ok_or(LinuxReadError::RuntimeTransport(
+                RuntimeTransportError::RunUnavailable,
             ))?
             .prepare(input)
-            .map_err(LinuxReadError::NativeChatRuntime)?;
+            .map_err(LinuxReadError::RuntimeTransport)?;
         Ok(HostResponse::RuntimePrepared {
             schema_version: HOST_PROTOCOL_VERSION,
             request_id: request_id.to_owned(),
@@ -567,13 +567,13 @@ where
         request: agentmage_kernel_contracts::RuntimeRunRequest,
     ) -> Result<HostResponse, LinuxReadError> {
         let step = self
-            .native_chat_runtime
+            .runtime_transport
             .as_mut()
-            .ok_or(LinuxReadError::NativeChatRuntime(
-                NativeChatRuntimeError::RunUnavailable,
+            .ok_or(LinuxReadError::RuntimeTransport(
+                RuntimeTransportError::RunUnavailable,
             ))?
             .start(request)
-            .map_err(LinuxReadError::NativeChatRuntime)?;
+            .map_err(LinuxReadError::RuntimeTransport)?;
         Ok(runtime_response(request_id, step))
     }
 
@@ -586,13 +586,13 @@ where
         response: Option<&agentmage_kernel_contracts::RuntimeApprovalResponse>,
     ) -> Result<HostResponse, LinuxReadError> {
         let step = self
-            .native_chat_runtime
+            .runtime_transport
             .as_mut()
-            .ok_or(LinuxReadError::NativeChatRuntime(
-                NativeChatRuntimeError::RunUnavailable,
+            .ok_or(LinuxReadError::RuntimeTransport(
+                RuntimeTransportError::RunUnavailable,
             ))?
             .advance(run_id, request_sha256, after_event_cursor, response)
-            .map_err(LinuxReadError::NativeChatRuntime)?;
+            .map_err(LinuxReadError::RuntimeTransport)?;
         Ok(runtime_response(request_id, step))
     }
 
@@ -605,13 +605,13 @@ where
         after_event_cursor: Option<&agentmage_kernel_contracts::RuntimeEventCursor>,
     ) -> Result<HostResponse, LinuxReadError> {
         let step = self
-            .native_chat_runtime
+            .runtime_transport
             .as_mut()
-            .ok_or(LinuxReadError::NativeChatRuntime(
-                NativeChatRuntimeError::RunUnavailable,
+            .ok_or(LinuxReadError::RuntimeTransport(
+                RuntimeTransportError::RunUnavailable,
             ))?
             .cancel(run_id, request_sha256, cancellation_id, after_event_cursor)
-            .map_err(LinuxReadError::NativeChatRuntime)?;
+            .map_err(LinuxReadError::RuntimeTransport)?;
         Ok(runtime_response(request_id, step))
     }
 
@@ -621,13 +621,13 @@ where
         run_id: &agentmage_kernel_contracts::RuntimeRunId,
         request_sha256: &str,
     ) -> Result<HostResponse, LinuxReadError> {
-        self.native_chat_runtime
+        self.runtime_transport
             .as_mut()
-            .ok_or(LinuxReadError::NativeChatRuntime(
-                NativeChatRuntimeError::RunUnavailable,
+            .ok_or(LinuxReadError::RuntimeTransport(
+                RuntimeTransportError::RunUnavailable,
             ))?
             .release(run_id, request_sha256)
-            .map_err(LinuxReadError::NativeChatRuntime)?;
+            .map_err(LinuxReadError::RuntimeTransport)?;
         Ok(HostResponse::Cancelled {
             schema_version: HOST_PROTOCOL_VERSION,
             request_id: request_id.to_owned(),
@@ -1815,7 +1815,7 @@ fn receipt_summary(receipt: &Receipt) -> ReceiptSummary {
     }
 }
 
-fn runtime_response(request_id: &str, step: NativeChatRuntimeStep) -> HostResponse {
+fn runtime_response(request_id: &str, step: RuntimeTransportStep) -> HostResponse {
     HostResponse::RuntimeStep {
         schema_version: HOST_PROTOCOL_VERSION,
         request_id: request_id.to_owned(),
@@ -1949,9 +1949,8 @@ mod tests {
         LinuxReadError, LinuxReadWorkflow, ReadClock, ReadIdentitySource, ReadInstant, format_utc,
         preview_suffix, read_only_registry,
     };
-    use crate::native_chat_runtime::{
-        NativeChatPrepareInput, NativeChatRuntimeError, NativeChatRuntimePort,
-        NativeChatRuntimeStep,
+    use crate::runtime_transport::{
+        RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -1978,25 +1977,25 @@ mod tests {
 
     struct TestClock(VecDeque<ReadInstant>);
 
-    struct RecordingNativeChatRuntime {
+    struct RecordingRuntimeTransport {
         request: RuntimeRunRequest,
-        step: NativeChatRuntimeStep,
+        step: RuntimeTransportStep,
     }
 
-    impl NativeChatRuntimePort for RecordingNativeChatRuntime {
+    impl RuntimeTransportPort for RecordingRuntimeTransport {
         fn prepare(
             &mut self,
-            _input: NativeChatPrepareInput,
-        ) -> Result<RuntimeRunRequest, NativeChatRuntimeError> {
+            _input: RuntimePrepareInput,
+        ) -> Result<RuntimeRunRequest, RuntimeTransportError> {
             Ok(self.request.clone())
         }
 
         fn start(
             &mut self,
             request: RuntimeRunRequest,
-        ) -> Result<NativeChatRuntimeStep, NativeChatRuntimeError> {
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
             if request != self.request {
-                return Err(NativeChatRuntimeError::RequestDenied);
+                return Err(RuntimeTransportError::RequestDenied);
             }
             Ok(self.step.clone())
         }
@@ -2007,7 +2006,7 @@ mod tests {
             _request_sha256: &str,
             _after_event_cursor: Option<&RuntimeEventCursor>,
             _response: Option<&RuntimeApprovalResponse>,
-        ) -> Result<NativeChatRuntimeStep, NativeChatRuntimeError> {
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
             Ok(self.step.clone())
         }
 
@@ -2017,7 +2016,7 @@ mod tests {
             _request_sha256: &str,
             _cancellation_id: agentmage_kernel_contracts::CancellationId,
             _after_event_cursor: Option<&RuntimeEventCursor>,
-        ) -> Result<NativeChatRuntimeStep, NativeChatRuntimeError> {
+        ) -> Result<RuntimeTransportStep, RuntimeTransportError> {
             Ok(self.step.clone())
         }
 
@@ -2025,7 +2024,7 @@ mod tests {
             &mut self,
             _run_id: &RuntimeRunId,
             _request_sha256: &str,
-        ) -> Result<(), NativeChatRuntimeError> {
+        ) -> Result<(), RuntimeTransportError> {
             Ok(())
         }
     }
@@ -2312,7 +2311,7 @@ mod tests {
     }
 
     #[test]
-    fn native_chat_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed() {
+    fn shared_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed() {
         let state = temp_root("native-chat-runtime");
         fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
         let mut workflow = workflow(&state, &[]);
@@ -2332,9 +2331,9 @@ mod tests {
 
         let (request, events, outcome, _) =
             crate::runtime_read_tests::completed_native_read_fixture();
-        workflow.install_native_chat_runtime(Box::new(RecordingNativeChatRuntime {
+        workflow.install_runtime_transport(Box::new(RecordingRuntimeTransport {
             request: request.clone(),
-            step: NativeChatRuntimeStep {
+            step: RuntimeTransportStep {
                 run_id: request.run_id.clone(),
                 request_sha256: request.request_sha256.clone(),
                 events: events.clone(),

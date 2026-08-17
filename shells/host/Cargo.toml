@@ -11,10 +11,18 @@ publish.workspace = true
 [[bin]]
 name = "agent"
 path = "src/bin/agent.rs"
+required-features = ["interactive-cli"]
 
 [[bin]]
 name = "agentmage"
 path = "src/bin/agentmage.rs"
+required-features = ["interactive-cli"]
+
+[features]
+default = ["interactive-cli", "native-chat", "workflow-caller"]
+interactive-cli = []
+native-chat = []
+workflow-caller = []
 
 [dependencies]
 agentmage-capability-knowledge.workspace = true

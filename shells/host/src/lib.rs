@@ -34,24 +34,32 @@ pub mod diagnostic_export;
 /// Authority-free knowledge-preview composition into kernel filesystem drafts.
 pub mod knowledge_write;
 
-/// Transport-neutral native Chat adapter for the shared runtime coordinator.
+#[cfg(feature = "native-chat")]
+/// Native Chat registry and adapter over the caller-neutral runtime transport.
 pub mod native_chat_runtime;
+
+/// Caller-neutral transport contract shared by authenticated local clients.
+pub mod runtime_transport;
 
 pub mod protocol;
 
 /// Native capability registration for the shared runtime tool dispatcher.
 pub mod runtime_tools;
+#[cfg(feature = "workflow-caller")]
 /// Narrow child-assignment adapter over the shared workflow caller runtime.
 pub mod workflow_assignment;
+#[cfg(feature = "workflow-caller")]
 /// Caller-neutral, narrowing-only workflow attachment to the shared coding runtime.
 pub mod workflow_caller;
 
 /// Versioned thin-client contracts shared by terminal and headless interfaces.
 pub mod headless;
 
+#[cfg(feature = "interactive-cli")]
 /// Strict terminal argument parsing and bounded human or JSON rendering.
 pub mod cli;
-/// Verified interactive CLI driver over the shared native runtime transport.
+#[cfg(feature = "interactive-cli")]
+/// Verified interactive CLI driver over the shared caller-neutral runtime transport.
 pub mod cli_runtime;
 
 #[cfg(target_os = "linux")]
@@ -70,5 +78,10 @@ pub const COMPONENT_ID: &str = "shell-host";
 
 #[cfg(test)]
 mod runtime_read_tests;
-#[cfg(test)]
+#[cfg(all(
+    test,
+    feature = "interactive-cli",
+    feature = "native-chat",
+    feature = "workflow-caller"
+))]
 mod runtime_parity_tests;
