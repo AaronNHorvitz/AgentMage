@@ -13,6 +13,9 @@ pub mod knowledge_write;
 
 pub mod protocol;
 
+/// Native capability registration for the shared runtime tool dispatcher.
+pub mod runtime_tools;
+
 /// Versioned thin-client contracts shared by terminal and headless interfaces.
 pub mod headless;
 
@@ -24,3 +27,6 @@ pub mod linux_read;
 
 /// Stable component identity used by diagnostics and build verification.
 pub const COMPONENT_ID: &str = "shell-host";
+
+#[cfg(test)]
+mod runtime_read_tests;
