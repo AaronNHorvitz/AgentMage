@@ -25,6 +25,8 @@ TASK_PATTERN = re.compile(
 )
 
 EVIDENCE_PATHS = (
+    "artifacts/sprints/sprint-21/story-21.2/crash-matrix.json",
+    "artifacts/sprints/sprint-21/story-21.2/crash-matrix.log",
     "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
     "docs/architecture/runtime-event-journal.md",
     "docs/verification/story-21-2-local-results.md",
@@ -40,9 +42,11 @@ EVIDENCE_PATHS = (
     "schemas/runtime/examples/runtime-event.valid.json",
     "schemas/runtime/runtime-event.schema.json",
     "scripts/runtime_hardening_load.py",
+    "scripts/story_21_2_crash_evidence.py",
     "scripts/story_21_2_evidence_index.py",
     "shells/host/src/cli_runtime.rs",
     "shells/host/src/linux_coding_runtime.rs",
+    "tests/test_story_21_2_crash_evidence.py",
     "tests/test_story_21_2_evidence_index.py",
 )
 
@@ -178,16 +182,20 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
     },
     {
         "task_id": "21.2.3.2",
-        "status": "partial",
+        "status": "complete",
         "code": [
             "kernel/engine/src/runtime_journal.rs",
-            "kernel/engine/src/operational_store.rs",
+            "scripts/story_21_2_crash_evidence.py",
         ],
         "tests": [
-            "story_21_2_dedicated_writer_poison_is_sticky_without_false_history",
-            "ephemeral_events_and_failed_batches_leave_no_false_history",
+            "story_21_2_process_stop_matrix_preserves_one_truthful_replay",
+            "test_current_report_and_raw_trace_are_hash_bound",
         ],
-        "evidence": ["docs/verification/story-21-2-local-results.md"],
+        "evidence": [
+            "artifacts/sprints/sprint-21/story-21.2/crash-matrix.json",
+            "artifacts/sprints/sprint-21/story-21.2/crash-matrix.log",
+            "docs/verification/story-21-2-local-results.md",
+        ],
     },
     {
         "task_id": "21.2.3.3",
@@ -239,8 +247,8 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
 )
 
 LIMITATIONS = (
-    "Complete process-stop recovery-to-terminal-event reconciliation remains open.",
-    "The complete crash-boundary and real-filesystem latency matrices remain open.",
+    "Integrated physical-effect recovery-to-terminal-event reconciliation remains open.",
+    "Real-filesystem latency, power-loss, and storage-failure campaigns remain open.",
     "Only one retained Fedora source-host benchmark profile exists.",
     "Installed-client, supported-platform, and independent-review evidence remains open.",
     "Product security mapping and deferred manual fuzzing remain open.",

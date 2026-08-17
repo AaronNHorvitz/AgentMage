@@ -8,8 +8,8 @@ publisher, dedicated bounded journal worker, encrypted SQLite projection,
 terminal flush, restart verification, authority-owned correctness-event
 transactions, and story-local projection canary coverage exist in source. The
 complete story remains open for persisted transcript and diagnostics lifecycle
-completion, crash injection at every boundary, recovery-event reconciliation,
-real-disk cancellation evidence, installed-client evidence, and independent
+completion, integrated physical-effect recovery-event reconciliation, real-disk
+latency and cancellation evidence, installed-client evidence, and independent
 review.
 
 No statement in this document enables a model, platform, release, transcript,
@@ -144,10 +144,10 @@ requires a verified reopen.
 
 The focused rollback tests inject SQLite event failures and prove that no grant,
 checkpoint, binding, generation, or false terminal event survives its failed
-transaction. A process stop after an actual worker launch can still require
-authority recovery while the event stream ends at `tool_started`; completing
-and testing that recovery-to-terminal-event reconciliation remains owned by
-Sub-task 21.2.3.2 and is not claimed here.
+transaction. A process stop after an actual physical effect can still require
+authority recovery while the event stream ends at `tool_started`; that
+cross-subsystem recovery-to-terminal-event reconciliation remains a declared
+limitation and is not claimed by the journal-only stop matrix.
 
 ## Projection Matrix
 
@@ -274,13 +274,28 @@ boundaries. Reopen loads rows in sequence order and verifies canonical bytes,
 indexed projections, hash chain, bindings, transitions, and terminal cursor
 before use. A failed batch creates no false durable history.
 
+The retained Story 21.2 process-stop matrix executes one deterministic abrupt
+child exit immediately before and after queue admission, batch flush,
+correctness transaction, and subscriber publication. It covers all eight
+boundary-position pairs. Only accepted deferred progress may be absent after a
+stop: recovery appends that exact event once, commits one terminal event, and
+verifies the same three-event chain after a second encrypted reopen. A
+subscriber-delivery marker appears only after successful publication and does
+not alter durable history. The hash-bound report and repository-root-redacted
+command trace are retained as
+[`crash-matrix.json`](../../artifacts/sprints/sprint-21/story-21.2/crash-matrix.json)
+and `crash-matrix.log`. The child uses deterministic process exit; kernel
+`SIGKILL`, host power loss, torn sectors, controller failure, filesystem
+corruption, and integrated physical-effect recovery are not claimed.
+
 The fixed Fedora source-load profile requires at least 250 journal events per
 second for an 8,196-event worker-backed run, no more than 30 seconds of journal
 time, no more than 1,024 queued events or 4 MiB of queued canonical bytes, and
 16 verified reopens within 60 seconds. These are source-profile thresholds,
 not installed-platform guarantees. Real filesystem fault injection, integrated
 model-stream and cancellation latency under disk stall, and installed-host
-shutdown evidence remain open under Sub-tasks 21.2.3.2, 21.2.3.3, and 21.2.3.5.
+shutdown evidence remain open under Sub-tasks 21.2.3.3 and 21.2.3.5 and later
+installed-platform gates.
 
 ## Reason Codes
 
@@ -315,12 +330,13 @@ shutdown evidence remain open under Sub-tasks 21.2.3.2, 21.2.3.3, and 21.2.3.5.
 | Legal ordering and binding rejection | `runtime_event` unit tests | Implemented locally; exhaustive family matrix retained here |
 | Bounded nonblocking subscribers | `runtime_event` unit tests | Implemented locally |
 | Atomic batches, queue bounds, terminal flush, restart tamper detection | `runtime_journal` unit tests | Implemented locally |
-| Grant, effect, receipt, and checkpoint event co-publication | `operational_store`, `authority_transaction`, `runtime_loop`, and Linux host tests | Implemented locally; full process-stop recovery matrix remains open |
+| Grant, effect, receipt, and checkpoint event co-publication | `operational_store`, `authority_transaction`, `runtime_loop`, and Linux host tests | Implemented locally; integrated physical-effect recovery remains separate |
 | Coordinator event emission and client verification | `runtime_loop`, `coding_client` tests | Implemented at source level |
 | Transcript and diagnostics lifecycle | Story 21.2 and later conversation work | Open |
 | Dedicated bounded worker, saturation, sticky failure, shutdown, and slow-store client isolation | `runtime_journal` worker tests and Story 50.2 load campaign | Implemented at source level |
 | Projection canary exclusion, artifact-read isolation, and external-telemetry dependency closure | `runtime_projection` and `runtime_artifact` Story 21.2 tests | Implemented at source level; broader strict-local policy snapshot reconciliation remains separate |
 | Requirement-to-code-to-test traceability and file-integrity index | Story 21.2 evidence-index generator, mutation tests, and retained JSON index | Implemented with complete, partial, and open states preserved |
 | Real-disk model-stream and cancellation isolation | Story 21.2 / Story 50.2 | Open |
-| Full crash, pressure, and benchmark campaign | Story 21.2.3 | Open |
+| Journal queue, batch, correctness-transaction, and subscriber process-stop matrix | Story 21.2 crash runner, raw trace, and mutation tests | Implemented locally |
+| Real-disk pressure, integrated physical-effect recovery, and multi-profile benchmark campaign | Story 21.2.3 | Open |
 | Installed native-client and independent-review evidence | Sprint 23 and release gates | Open |

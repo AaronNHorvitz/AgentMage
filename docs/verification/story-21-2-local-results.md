@@ -49,6 +49,14 @@
   subsequence `permission_requested`, `permission_decided`, `tool_started`,
   `tool_completed`, and `checkpoint_committed`; the terminal timestamp is
   sampled only after normalized tool execution returns.
+- The retained process-stop matrix covers queue admission, batch flush,
+  correctness transaction, and subscriber publication before and after each
+  boundary. Its eight abrupt child exits preserve no false terminal event,
+  permit loss only for two declared deferred-progress cases, replay an exact
+  missing event once, and verify one identical terminal history after a second
+  encrypted reopen. The report binds the repository-root-redacted command
+  trace, command identity, source revision, and source files and passes four
+  closed-shape and mutation tests.
 - The immutable Fedora worker campaign binds nine command logs and 42 focused
   tests to source commit `f8d521c4dc4bb9b2053447a61aaac04028b4906b`;
   its 8,196-event workload, bounded saturation recovery, memory, disk,
@@ -64,7 +72,7 @@
   runtime event, journal, projection, artifact, and CLI-client implementation.
 - A deterministic hashed index maps every Story 21.2 sub-task to its exact
   statement, implementation files, executable tests, and retained evidence.
-  It preserves 12 complete, three partial, and one open sub-task and rejects
+  It preserves 13 complete, two partial, and one open sub-task and rejects
   omission, reorder, status, statement, file, test, digest, and completion
   mutations.
 - The JSON schema and canonical Rust example pass the repository schema gate.
@@ -84,6 +92,8 @@ cargo clippy -p agentmage-kernel-engine --all-targets --locked -- -D warnings
 cargo clippy -p agentmage-host --all-targets --locked -- -D warnings
 python3 scripts/story_21_2_evidence_index.py --check
 python3 -m unittest tests.test_story_21_2_evidence_index
+python3 scripts/story_21_2_crash_evidence.py
+python3 -m unittest tests.test_story_21_2_crash_evidence
 npm run schemas:check
 npx markdownlint-cli2 README.md docs/architecture/runtime-event-journal.md docs/verification/story-21-2-local-results.md
 python3 scripts/check_mermaid.py
@@ -92,9 +102,9 @@ python3 scripts/runtime_hardening_load.py --output <fresh-evidence-path>
 
 ## Open Evidence
 
-- Complete process-stop reconciliation between a physically launched effect,
-  recovered authority/receipt state, and the still-open `tool_started` journal
-  transition remains under the crash-boundary matrix. The current source does
+- Cross-subsystem reconciliation between a physically launched effect,
+  recovered authority/receipt state, and a still-open `tool_started` journal
+  transition remains outside the journal-only matrix. The current source does
   not fabricate a terminal event during authority-only recovery.
 - The slow-store source test holds the sole connection lock deterministically;
   real filesystem or device fault injection and integrated model-stream and
@@ -102,8 +112,9 @@ python3 scripts/runtime_hardening_load.py --output <fresh-evidence-path>
 - Persisted user transcript and local diagnostics lifecycle implementations
   remain open. Their bounded in-memory projections do not establish durable
   retention, export, deletion, or installed-client behavior.
-- Crash injection before and after every queue, transaction, subscriber,
-  checkpoint, and terminal boundary remains open.
+- Kernel `SIGKILL`, host power loss, torn-sector, controller-failure, and
+  filesystem-corruption campaigns remain open; the retained matrix uses
+  deterministic process exit without unwinding.
 - The retained campaign covers event count, producer saturation, one slow
   consumer, bounded memory/disk, isolated slow-store admission, cancellation
   fixtures, and restart. Exhaustive byte edges, real disk latency, and
