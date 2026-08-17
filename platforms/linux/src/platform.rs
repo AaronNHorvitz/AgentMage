@@ -9,20 +9,27 @@ use std::path::Path;
 use agentmage_kernel_contracts::{
     AdapterInstanceId, PathResolutionIntent, PlatformAdapter, PlatformArchitecture,
     PlatformCapability, PlatformCapabilityObservation, PlatformCapabilityStatus, PlatformFamily,
-    PlatformPathAdapter, PlatformRuntimeIdentity, PlatformStartupError, WorkspaceAuthorizationId,
-    WorkspaceId, WorkspacePath,
+    PlatformPathAdapter, PlatformRuntimeIdentity, PlatformStartupError, RuntimeArtifactManifest,
+    RuntimeArtifactRef, RuntimeResumeBinding, SessionCheckpoint, SessionId, TaskId,
+    WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
 };
 use agentmage_kernel_engine::operational_store::{
     DurableAuthorityError, DurableAuthorityRuntime, OperationalStoreKeyProvider,
 };
 use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
+use agentmage_kernel_engine::runtime_artifact::{
+    RuntimeArtifactPayloadError, RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadStore,
+    RuntimeArtifactPublication, RuntimeArtifactReadRequest, RuntimeArtifactReconciliation,
+    RuntimeArtifactState, RuntimeArtifactStoreError,
+};
 use sha2::{Digest, Sha256};
 
 use crate::security_controls::{LinuxSecurityControl, LinuxSecurityControls};
 use crate::{
     DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxHostIpcEndpoint,
-    LinuxIpcError, LinuxOperationalStoreKeyProvider, LinuxPathAdapter, LinuxStrictLocalRoot,
-    LinuxStrictLocalRootInspector, authorize_workspace_root,
+    LinuxIpcError, LinuxOperationalStoreKeyProvider, LinuxPathAdapter,
+    LinuxRuntimeArtifactPayloadStore, LinuxStrictLocalRoot, LinuxStrictLocalRootInspector,
+    authorize_workspace_root,
 };
 
 const MAX_IDENTITY_FILE_BYTES: u64 = 256 * 1024 * 1024;
@@ -258,6 +265,7 @@ pub fn resolve_test_linux_workspace_object(
 pub struct LinuxAuthorityRuntime {
     root: LinuxStrictLocalRoot,
     runtime: DurableAuthorityRuntime,
+    artifact_store: LinuxRuntimeArtifactPayloadStore,
 }
 
 impl fmt::Debug for LinuxAuthorityRuntime {
@@ -266,6 +274,7 @@ impl fmt::Debug for LinuxAuthorityRuntime {
             .debug_struct("LinuxAuthorityRuntime")
             .field("root", &self.root)
             .field("runtime", &self.runtime)
+            .field("artifact_store", &self.artifact_store)
             .finish_non_exhaustive()
     }
 }
@@ -286,6 +295,102 @@ impl LinuxAuthorityRuntime {
     /// Revalidates the private root around an explicit lifecycle checkpoint.
     pub fn revalidate_root(&self) -> Result<(), crate::LinuxStrictLocalRootError> {
         self.root.revalidate()
+    }
+
+    /// Publishes one bounded artifact through the held private Linux payload namespace.
+    pub fn publish_runtime_artifact(
+        &mut self,
+        manifest: RuntimeArtifactManifest,
+        source: &mut dyn Read,
+    ) -> Result<RuntimeArtifactPublication, DurableAuthorityError> {
+        self.ensure_artifact_root()?;
+        let result =
+            self.runtime
+                .publish_runtime_artifact(&mut self.artifact_store, manifest, source);
+        self.ensure_artifact_root()?;
+        result
+    }
+
+    /// Reads one exact verified artifact without exposing its native payload path.
+    pub fn read_runtime_artifact(
+        &self,
+        request: &RuntimeArtifactReadRequest,
+    ) -> Result<Vec<u8>, DurableAuthorityError> {
+        self.ensure_artifact_root()?;
+        let result = self
+            .runtime
+            .read_runtime_artifact(&self.artifact_store, request);
+        self.ensure_artifact_root()?;
+        result
+    }
+
+    /// Returns the current content-free metadata state for one exact artifact reference.
+    pub fn runtime_artifact_state(
+        &self,
+        reference: &RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, DurableAuthorityError> {
+        self.ensure_artifact_root()?;
+        self.runtime.runtime_artifact_state(reference)
+    }
+
+    /// Releases one owned artifact reference while retaining shared payloads until collection.
+    pub fn release_runtime_artifact(
+        &mut self,
+        session_id: &SessionId,
+        task_id: &TaskId,
+        policy_sha256: &str,
+        reference: &RuntimeArtifactRef,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<RuntimeArtifactState, DurableAuthorityError> {
+        self.ensure_artifact_root()?;
+        let result = self.runtime.release_runtime_artifact(
+            session_id,
+            task_id,
+            policy_sha256,
+            reference,
+            occurred_at_epoch_ms,
+        );
+        self.ensure_artifact_root()?;
+        result
+    }
+
+    /// Reconciles canonical artifact metadata with every private Linux payload object.
+    pub fn reconcile_runtime_artifacts(
+        &mut self,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimeArtifactReconciliation, DurableAuthorityError> {
+        self.ensure_artifact_root()?;
+        let result = self
+            .runtime
+            .reconcile_runtime_artifacts(&mut self.artifact_store, now_epoch_ms);
+        self.ensure_artifact_root()?;
+        result
+    }
+
+    /// Atomically checkpoints a runtime only after every bound payload verifies in native storage.
+    pub fn checkpoint_runtime_session(
+        &mut self,
+        checkpoint: &SessionCheckpoint,
+        binding: &RuntimeResumeBinding,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_artifact_root()?;
+        for reference in &binding.artifacts {
+            self.artifact_store
+                .verify(&RuntimeArtifactPayloadObservation {
+                    payload_sha256: reference.payload_sha256.clone(),
+                    byte_size: reference.byte_size,
+                })
+                .map_err(artifact_payload_error)?;
+        }
+        let result = self.runtime.checkpoint_runtime_session(checkpoint, binding);
+        self.ensure_artifact_root()?;
+        result
+    }
+
+    fn ensure_artifact_root(&self) -> Result<(), DurableAuthorityError> {
+        self.root
+            .revalidate()
+            .map_err(|_| artifact_payload_error(RuntimeArtifactPayloadError::UnsafeRoot))
     }
 }
 
@@ -311,11 +416,20 @@ fn open_linux_authority_in_root<P: OperationalStoreKeyProvider>(
 ) -> Result<LinuxAuthorityRuntime, LinuxAuthorityOpenError> {
     let database = root.authority_database_path();
     root.revalidate().map_err(LinuxAuthorityOpenError::Root)?;
-    let runtime =
+    let mut artifact_store = LinuxRuntimeArtifactPayloadStore::open(&root)
+        .map_err(LinuxAuthorityOpenError::ArtifactPayload)?;
+    let mut runtime =
         DurableAuthorityRuntime::open(&database, root.observation(), provider, recovery_epoch_ms)
             .map_err(LinuxAuthorityOpenError::Authority)?;
+    runtime
+        .reconcile_runtime_artifacts(&mut artifact_store, recovery_epoch_ms)
+        .map_err(LinuxAuthorityOpenError::Authority)?;
     root.revalidate().map_err(LinuxAuthorityOpenError::Root)?;
-    Ok(LinuxAuthorityRuntime { root, runtime })
+    Ok(LinuxAuthorityRuntime {
+        root,
+        runtime,
+        artifact_store,
+    })
 }
 
 /// Opens a private Linux authority root for isolated test harnesses only.
@@ -340,6 +454,8 @@ pub enum LinuxAuthorityOpenError {
     Root(crate::LinuxStrictLocalRootError),
     /// Encrypted authority startup or recovery failed.
     Authority(DurableAuthorityError),
+    /// The fixed private payload namespace could not be opened safely.
+    ArtifactPayload(RuntimeArtifactPayloadError),
     /// The admitted release and aggregate adapter did not agree.
     Platform,
 }
@@ -349,12 +465,17 @@ impl fmt::Display for LinuxAuthorityOpenError {
         formatter.write_str(match self {
             Self::Root(_) => "linux.authority.root",
             Self::Authority(_) => "linux.authority.store",
+            Self::ArtifactPayload(_) => "linux.authority.artifact_payload",
             Self::Platform => "linux.authority.platform",
         })
     }
 }
 
 impl std::error::Error for LinuxAuthorityOpenError {}
+
+fn artifact_payload_error(error: RuntimeArtifactPayloadError) -> DurableAuthorityError {
+    DurableAuthorityError::RuntimeArtifact(RuntimeArtifactStoreError::Payload(error))
+}
 
 #[derive(Clone, Copy)]
 struct BinaryObservation {

@@ -11,6 +11,7 @@ mod lifecycle;
 mod local_commit;
 mod platform;
 mod repository_safety;
+mod runtime_artifact_store;
 mod sandbox;
 mod secret_service;
 mod security_controls;
@@ -64,6 +65,9 @@ pub use repository_safety::{
     LinuxBoundedRepositoryInspectionExecutor, LinuxGitArtifact, LinuxRepositoryCollector,
     LinuxRepositoryError, LinuxRepositoryErrorKind, LinuxRepositoryExecutor, LinuxRepositoryScope,
     linux_repository_path_sha256,
+};
+pub use runtime_artifact_store::{
+    LinuxRuntimeArtifactPayloadStore, LinuxRuntimeArtifactStaged,
 };
 pub use sandbox::{
     LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxEffectDriver,
