@@ -3,8 +3,8 @@
 use std::fmt::Write;
 
 use agentmage_capability_read_only::{
-    GIT_INSPECTION_INPUT_SCHEMA_ID, GIT_INSPECTION_INPUT_SCHEMA_JSON,
-    READ_ONLY_INPUT_SCHEMA_ID, READ_ONLY_INPUT_SCHEMA_JSON,
+    GIT_INSPECTION_INPUT_SCHEMA_ID, GIT_INSPECTION_INPUT_SCHEMA_JSON, READ_ONLY_INPUT_SCHEMA_ID,
+    READ_ONLY_INPUT_SCHEMA_JSON,
 };
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, GrantOperation, OperationBinding, RequiredGrantTemplate, SchemaId,
@@ -20,8 +20,8 @@ use sha2::{Digest, Sha256};
 
 use crate::{
     coding_changes::{
-        CONTROLLED_CREATE_INPUT_SCHEMA_ID, CONTROLLED_CREATE_INPUT_SCHEMA_JSON,
-        CodingWriteScope, STRUCTURED_PATCH_INPUT_SCHEMA_ID, STRUCTURED_PATCH_INPUT_SCHEMA_JSON,
+        CONTROLLED_CREATE_INPUT_SCHEMA_ID, CONTROLLED_CREATE_INPUT_SCHEMA_JSON, CodingWriteScope,
+        STRUCTURED_PATCH_INPUT_SCHEMA_ID, STRUCTURED_PATCH_INPUT_SCHEMA_JSON,
         register_controlled_change_runtime_tools,
     },
     runtime_tools::read_only_runtime_registry,

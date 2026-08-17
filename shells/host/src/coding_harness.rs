@@ -7,8 +7,7 @@ use agentmage_kernel_engine::runtime_loop::{
 };
 
 use crate::{
-    coding_session::CodingSessionProfile,
-    coding_tools::native_coding_runtime_registry,
+    coding_session::CodingSessionProfile, coding_tools::native_coding_runtime_registry,
     coding_verifier::CodingCompletionVerifier,
 };
 

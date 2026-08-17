@@ -13,17 +13,14 @@ use agentmage_kernel_contracts::{
     VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
 };
 use agentmage_kernel_engine::{
-    runtime_loop::{
-        RuntimePortFailure, RuntimeVerificationInput, RuntimeVerifierPort,
-    },
+    runtime_loop::{RuntimePortFailure, RuntimeVerificationInput, RuntimeVerifierPort},
     validation_result::ValidationReceipt,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::{
-    coding_changes::CONTROLLED_CHANGE_OUTPUT_SCHEMA_ID,
-    coding_session::CodingSessionProfile,
+    coding_changes::CONTROLLED_CHANGE_OUTPUT_SCHEMA_ID, coding_session::CodingSessionProfile,
     coding_tools::TARGETED_VALIDATION_OUTPUT_SCHEMA_ID,
 };
 
@@ -176,7 +173,10 @@ impl CodingCompletionVerifier {
                 return None;
             }
             Some(VerifierDisposition::Success)
-        } else if git_results.iter().any(|(_, result)| clean_git_state(result)) {
+        } else if git_results
+            .iter()
+            .any(|(_, result)| clean_git_state(result))
+        {
             Some(VerifierDisposition::NoOp)
         } else {
             None
@@ -196,10 +196,9 @@ impl CodingCompletionVerifier {
             receipt.is_full_pass()
                 && !receipt.execution_authority
                 && receipt.execution_scope_sha256 == self.workspace_snapshot_sha256
-                && self.validation_templates.contains(&(
-                    receipt.validation_id,
-                    receipt.validation_template_sha256,
-                ))
+                && self
+                    .validation_templates
+                    .contains(&(receipt.validation_id, receipt.validation_template_sha256))
         })
     }
 
@@ -237,10 +236,9 @@ impl RuntimeVerifierPort for CodingCompletionVerifier {
         &mut self,
         input: RuntimeVerificationInput<'_>,
     ) -> Result<VerifierCandidate, RuntimePortFailure> {
-        let disposition = self
-            .evaluate(&input)
-            .unwrap_or(VerifierDisposition::Failed);
-        let selected_evidence = select_evidence(input.evidence, &input.request.work_packet.required_evidence);
+        let disposition = self.evaluate(&input).unwrap_or(VerifierDisposition::Failed);
+        let selected_evidence =
+            select_evidence(input.evidence, &input.request.work_packet.required_evidence);
         let passed = disposition != VerifierDisposition::Failed && !selected_evidence.is_empty();
         Ok(VerifierCandidate {
             schema_version: CONTRACT_SCHEMA_VERSION,
@@ -347,9 +345,9 @@ fn clean_git_state(result: &GitInspectionResult) -> bool {
 
 fn bounded_texts(values: &[String]) -> bool {
     values.len() <= 128
-        && values
-            .iter()
-            .all(|value| !value.is_empty() && value.len() <= 512 && !value.chars().any(char::is_control))
+        && values.iter().all(|value| {
+            !value.is_empty() && value.len() <= 512 && !value.chars().any(char::is_control)
+        })
 }
 
 /// Returns the exact completion payload schema reference shown to model codecs.
@@ -387,9 +385,7 @@ fn sha256(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use agentmage_capability_read_only::{
-        GitInspectionRequest, parse_git_inspection,
-    };
+    use agentmage_capability_read_only::{GitInspectionRequest, parse_git_inspection};
     use agentmage_kernel_contracts::{
         CorrelationId, EvidenceId, ModelCodecId, ModelProfileId, ModelRunId, PostconditionId,
         ProposalId, ReceiptId, SchemaId, SchemaReference, ToolCallId, ToolResult,
@@ -410,11 +406,7 @@ mod tests {
         ];
         let evidence = vec![
             evidence(&request, "write-evidence", EvidenceKind::Receipt),
-            evidence(
-                &request,
-                "validation-evidence",
-                EvidenceKind::Validation,
-            ),
+            evidence(&request, "validation-evidence", EvidenceKind::Validation),
             evidence(&request, "git-evidence", EvidenceKind::Observation),
         ];
         let postconditions = vec![PostconditionId::from_raw("postcondition-fixture")];
@@ -460,11 +452,7 @@ mod tests {
             git_result(&request, "git-call", false),
         ];
         let evidence = vec![
-            evidence(
-                &request,
-                "validation-evidence",
-                EvidenceKind::Validation,
-            ),
+            evidence(&request, "validation-evidence", EvidenceKind::Validation),
             evidence(&request, "git-evidence", EvidenceKind::Observation),
         ];
         let postconditions = vec![PostconditionId::from_raw("postcondition-fixture")];
@@ -509,11 +497,7 @@ mod tests {
         ];
         let mut evidence = vec![
             evidence(&request, "write-evidence", EvidenceKind::Receipt),
-            evidence(
-                &request,
-                "validation-evidence",
-                EvidenceKind::Validation,
-            ),
+            evidence(&request, "validation-evidence", EvidenceKind::Validation),
             evidence(&request, "git-evidence", EvidenceKind::Observation),
         ];
         evidence[0].observed_revision = Some("stale-snapshot".to_owned());
