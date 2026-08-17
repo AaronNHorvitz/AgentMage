@@ -202,7 +202,8 @@ pub use reasoning::{
 };
 pub use runtime_artifact::{
     RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactLifecycleState,
-    RuntimeArtifactManifest, RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeResumeBinding,
+    RuntimeArtifactManifest, RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeContinuationState,
+    RuntimeResumeBinding,
 };
 pub use runtime_event::{
     RuntimeEvent, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,

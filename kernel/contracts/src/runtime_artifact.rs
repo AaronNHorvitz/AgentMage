@@ -1,9 +1,9 @@
 //! Path-free runtime artifact and resumable-checkpoint contracts.
 
 use crate::{
-    ContextSensitivity, PolicyId, ReceiptId, RuntimeArtifactId, RuntimeEventCursor,
-    RuntimeEventRetention, RuntimeOperationId, RuntimeRunId, RuntimeTurnId, SessionCheckpointId,
-    SessionId, TaskId,
+    AgentStateKind, AgentStateTransition, ContextSensitivity, EvidenceReference, PolicyId,
+    ReceiptId, RuntimeArtifactId, RuntimeEventCursor, RuntimeEventRetention, RuntimeOperationId,
+    RuntimeRunId, RuntimeTurnId, SessionCheckpointId, SessionId, TaskId, ToolResult,
 };
 
 /// Closed semantic family for one runtime-generated payload.
@@ -160,4 +160,48 @@ pub struct RuntimeResumeBinding {
     pub artifacts: Vec<RuntimeArtifactRef>,
     /// Digest of this binding with this field set to all zeroes.
     pub binding_sha256: String,
+}
+
+/// Canonical interface-neutral coordinator state retained only at a safe continuation boundary.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeContinuationState {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Exact admitted runtime request digest.
+    pub request_sha256: String,
+    /// Runtime run being continued.
+    pub run_id: RuntimeRunId,
+    /// Owning local session.
+    pub session_id: SessionId,
+    /// Exact active task.
+    pub task_id: TaskId,
+    /// Last event represented by the continuation payload before its own publication event.
+    pub event_cursor: RuntimeEventCursor,
+    /// Exact nonterminal agent state at the safe boundary.
+    pub agent_state: AgentStateKind,
+    /// Current monotonic agent-state revision.
+    pub agent_state_revision: u64,
+    /// Complete ordered state-transition history used for deterministic reconstruction.
+    pub state_transitions: Vec<AgentStateTransition>,
+    /// Number of turns that have begun.
+    pub turn_count: u32,
+    /// Number of admitted model calls.
+    pub model_call_count: u32,
+    /// Number of admitted tool calls.
+    pub tool_call_count: u32,
+    /// Number of context recompositions.
+    pub context_refresh_count: u32,
+    /// Consecutive safe-boundary turns that produced no new evidence.
+    pub no_progress_turns: u32,
+    /// Ordered tool results required to reconstruct the next bounded context.
+    pub tool_results: Vec<ToolResult>,
+    /// Current grounded evidence in stable identity order.
+    pub evidence: Vec<EvidenceReference>,
+    /// Canonical effect receipt identities in stable order.
+    pub receipt_ids: Vec<ReceiptId>,
+    /// Exact prior runtime artifacts in stable artifact-identity order.
+    pub artifacts: Vec<RuntimeArtifactRef>,
+    /// Digest of this canonical record with this field set to all zeroes.
+    pub continuation_sha256: String,
 }

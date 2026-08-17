@@ -4,10 +4,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, ContextSensitivity, RuntimeArtifactId, RuntimeArtifactIntegrityState,
-    RuntimeArtifactKind, RuntimeArtifactLifecycleState, RuntimeArtifactManifest,
-    RuntimeArtifactRef, RuntimeEventRetentionKind, RuntimePayloadReference, RuntimeResumeBinding,
-    SessionCheckpoint, SessionId, TaskId, from_json, to_canonical_json,
+    AgentStateKind, CONTRACT_SCHEMA_VERSION, ContextSensitivity, RuntimeArtifactId,
+    RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactLifecycleState,
+    RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeContinuationState,
+    RuntimeEventRetentionKind, RuntimePayloadReference, RuntimeResumeBinding, SessionCheckpoint,
+    SessionId, TaskId, from_json, to_canonical_json,
 };
 use rusqlite::{OptionalExtension, Transaction, TransactionBehavior, params};
 use sha2::{Digest, Sha256};
@@ -21,6 +22,11 @@ pub const MAX_RUNTIME_ARTIFACT_BYTES: u64 = 64 * 1024 * 1024;
 pub const MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES: usize = 4 * 1024;
 /// Maximum exact artifact references bound to one resumable checkpoint.
 pub const MAX_RUNTIME_ARTIFACTS_PER_CHECKPOINT: usize = 1_024;
+/// Exact media type used only for sealed runtime continuation-state artifacts.
+pub const RUNTIME_CONTINUATION_MEDIA_TYPE: &str =
+    "application/vnd.agentmage.runtime-continuation+json";
+const MAX_RUNTIME_CONTINUATION_RESULTS: usize = 1_024;
+const MAX_RUNTIME_CONTINUATION_TRANSITIONS: usize = 4_096;
 
 /// Stable fail-closed artifact-contract result.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -31,6 +37,8 @@ pub enum RuntimeArtifactError {
     ReferenceMismatch,
     /// A resumable checkpoint binding is malformed, unordered, duplicated, or inconsistent.
     InvalidResumeBinding,
+    /// A persisted coordinator continuation is malformed, unsafe, or internally inconsistent.
+    InvalidContinuation,
     /// Canonical contract serialization failed.
     Serialization,
     /// A canonical manifest or resume-binding digest does not match.
@@ -281,6 +289,7 @@ impl RuntimeArtifactError {
             Self::InvalidManifest => "runtime.artifact.manifest_invalid",
             Self::ReferenceMismatch => "runtime.artifact.reference_mismatch",
             Self::InvalidResumeBinding => "runtime.artifact.resume_binding_invalid",
+            Self::InvalidContinuation => "runtime.artifact.continuation_invalid",
             Self::Serialization => "runtime.artifact.serialization_failed",
             Self::DigestMismatch => "runtime.artifact.digest_mismatch",
         }
@@ -372,6 +381,36 @@ pub fn verify_runtime_resume_binding(
     validate_resume_binding_fields(binding)?;
     let expected = resume_binding_digest(binding)?;
     if binding.binding_sha256 != expected {
+        return Err(RuntimeArtifactError::DigestMismatch);
+    }
+    Ok(())
+}
+
+/// Seals one safe-boundary coordinator continuation after canonical collection ordering.
+pub fn seal_runtime_continuation_state(
+    mut continuation: RuntimeContinuationState,
+) -> Result<RuntimeContinuationState, RuntimeArtifactError> {
+    continuation
+        .evidence
+        .sort_by(|left, right| left.evidence_id.as_str().cmp(right.evidence_id.as_str()));
+    continuation
+        .receipt_ids
+        .sort_by(|left, right| left.as_str().cmp(right.as_str()));
+    continuation
+        .artifacts
+        .sort_by(|left, right| left.artifact_id.as_str().cmp(right.artifact_id.as_str()));
+    continuation.continuation_sha256 = ZERO_SHA256.to_owned();
+    validate_runtime_continuation_state(&continuation)?;
+    continuation.continuation_sha256 = continuation_digest(&continuation)?;
+    Ok(continuation)
+}
+
+/// Verifies one exact safe-boundary coordinator continuation and its canonical digest.
+pub fn verify_runtime_continuation_state(
+    continuation: &RuntimeContinuationState,
+) -> Result<(), RuntimeArtifactError> {
+    validate_runtime_continuation_state(continuation)?;
+    if continuation.continuation_sha256 != continuation_digest(continuation)? {
         return Err(RuntimeArtifactError::DigestMismatch);
     }
     Ok(())
@@ -1959,6 +1998,134 @@ fn digest_fields(fields: &[&str]) -> String {
         .collect()
 }
 
+fn continuation_digest(
+    continuation: &RuntimeContinuationState,
+) -> Result<String, RuntimeArtifactError> {
+    let mut candidate = continuation.clone();
+    candidate.continuation_sha256 = ZERO_SHA256.to_owned();
+    to_canonical_json(&candidate)
+        .map(|bytes| sha256(&bytes))
+        .map_err(|_| RuntimeArtifactError::Serialization)
+}
+
+fn validate_runtime_continuation_state(
+    continuation: &RuntimeContinuationState,
+) -> Result<(), RuntimeArtifactError> {
+    if continuation.schema_version != CONTRACT_SCHEMA_VERSION
+        || !valid_sha256(&continuation.request_sha256)
+        || !valid_identifier(continuation.run_id.as_str())
+        || !valid_identifier(continuation.session_id.as_str())
+        || !valid_identifier(continuation.task_id.as_str())
+        || continuation.event_cursor.run_id != continuation.run_id
+        || !valid_identifier(continuation.event_cursor.event_id.as_str())
+        || !valid_sha256(&continuation.event_cursor.event_sha256)
+        || continuation.agent_state != AgentStateKind::Observation
+        || continuation.agent_state_revision == 0
+        || continuation.state_transitions.len() > MAX_RUNTIME_CONTINUATION_TRANSITIONS
+        || continuation.agent_state_revision != continuation.state_transitions.len() as u64 + 1
+        || !valid_continuation_transitions(continuation)
+        || continuation.turn_count == 0
+        || continuation.model_call_count != continuation.turn_count
+        || continuation.context_refresh_count != continuation.turn_count
+        || continuation.tool_call_count as usize != continuation.tool_results.len()
+        || continuation.tool_results.len() > MAX_RUNTIME_CONTINUATION_RESULTS
+        || continuation.receipt_ids.len() != continuation.tool_results.len()
+        || continuation.no_progress_turns > continuation.turn_count
+        || !valid_continuation_tool_results(&continuation.tool_results)
+        || !valid_sorted_evidence(&continuation.evidence)
+        || !valid_sorted_receipts(&continuation.receipt_ids)
+        || !valid_sorted_artifacts(&continuation.artifacts)
+        || !valid_sha256(&continuation.continuation_sha256)
+    {
+        return Err(RuntimeArtifactError::InvalidContinuation);
+    }
+    Ok(())
+}
+
+fn valid_continuation_transitions(continuation: &RuntimeContinuationState) -> bool {
+    let mut current = AgentStateKind::Observation;
+    for (index, transition) in continuation.state_transitions.iter().enumerate() {
+        let Some(revision) = u64::try_from(index)
+            .ok()
+            .and_then(|value| value.checked_add(2))
+        else {
+            return false;
+        };
+        if transition.schema_version != CONTRACT_SCHEMA_VERSION
+            || transition.revision != revision
+            || transition.from != current
+            || transition.to.is_terminal()
+            || !crate::agent_state::legal_transition(transition.from, transition.to)
+        {
+            return false;
+        }
+        current = transition.to;
+    }
+    current == continuation.agent_state
+}
+
+fn valid_continuation_tool_results(results: &[agentmage_kernel_contracts::ToolResult]) -> bool {
+    let mut call_ids = BTreeSet::new();
+    results.iter().all(|result| {
+        result.schema_version == CONTRACT_SCHEMA_VERSION
+            && valid_identifier(result.tool_call_id.as_str())
+            && valid_identifier(result.correlation_id.as_str())
+            && result.outcome == agentmage_kernel_contracts::OperationOutcome::Succeeded
+            && result.validation_issues.is_empty()
+            && result.error.is_none()
+            && result.state_change != agentmage_kernel_contracts::StateChange::Uncertain
+            && result.output.as_ref().is_none_or(|payload| {
+                payload.schema.schema_version > 0
+                    && valid_identifier(payload.schema.schema_id.as_str())
+                    && valid_sha256(&payload.schema.schema_sha256)
+                    && valid_media_type(&payload.media_type)
+                    && !payload.bytes.is_empty()
+                    && payload.bytes.len() as u64 <= MAX_RUNTIME_ARTIFACT_BYTES
+                    && payload.sha256 == sha256(&payload.bytes)
+            })
+            && valid_sorted_evidence(&result.evidence)
+            && call_ids.insert(result.tool_call_id.as_str())
+    })
+}
+
+fn valid_sorted_evidence(evidence: &[agentmage_kernel_contracts::EvidenceReference]) -> bool {
+    evidence
+        .windows(2)
+        .all(|pair| pair[0].evidence_id.as_str() < pair[1].evidence_id.as_str())
+        && evidence.iter().all(|item| {
+            item.schema_version == CONTRACT_SCHEMA_VERSION
+                && valid_identifier(item.evidence_id.as_str())
+                && !item.source_id.is_empty()
+                && !item.object_id.is_empty()
+                && valid_sha256(&item.content_sha256)
+        })
+}
+
+fn valid_sorted_receipts(receipts: &[agentmage_kernel_contracts::ReceiptId]) -> bool {
+    receipts
+        .windows(2)
+        .all(|pair| pair[0].as_str() < pair[1].as_str())
+        && receipts
+            .iter()
+            .all(|receipt| valid_identifier(receipt.as_str()))
+}
+
+fn valid_sorted_artifacts(artifacts: &[RuntimeArtifactRef]) -> bool {
+    artifacts.len() <= MAX_RUNTIME_ARTIFACTS_PER_CHECKPOINT
+        && artifacts
+            .windows(2)
+            .all(|pair| pair[0].artifact_id.as_str() < pair[1].artifact_id.as_str())
+        && artifacts.iter().all(|reference| {
+            reference.schema_version == CONTRACT_SCHEMA_VERSION
+                && valid_identifier(reference.artifact_id.as_str())
+                && valid_sha256(&reference.manifest_sha256)
+                && valid_sha256(&reference.payload_sha256)
+                && reference.byte_size > 0
+                && reference.byte_size <= MAX_RUNTIME_ARTIFACT_BYTES
+                && valid_media_type(&reference.media_type)
+        })
+}
+
 fn validate_manifest_fields(
     manifest: &RuntimeArtifactManifest,
 ) -> Result<(), RuntimeArtifactError> {
@@ -2125,15 +2292,15 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
-        CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity, ContextSensitivity, CorrelationId,
-        EvidenceId, ModelProfileId, PlanId, PlanStepId, PolicyId, RepositorySnapshotId,
-        RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
-        RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeArtifactPreview,
-        RuntimeEvent, RuntimeEventCursor, RuntimeEventId, RuntimeEventKind,
-        RuntimeEventPersistenceClass, RuntimeEventRetention, RuntimeEventRetentionKind,
-        RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId, RuntimeTurnId, SessionCheckpoint,
-        SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
-        TaskId, WorkspaceId,
+        AgentStateKind, AgentStateTransition, CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity,
+        ContextSensitivity, CorrelationId, EvidenceId, ModelProfileId, PlanId, PlanStepId,
+        PolicyId, RepositorySnapshotId, RuntimeArtifactId, RuntimeArtifactIntegrityState,
+        RuntimeArtifactKind, RuntimeArtifactLifecycleState, RuntimeArtifactManifest,
+        RuntimeArtifactPreview, RuntimeContinuationState, RuntimeEvent, RuntimeEventCursor,
+        RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
+        RuntimeEventRetentionKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId,
+        RuntimeTurnId, SessionCheckpoint, SessionCheckpointId, SessionId, StorageFilesystemClass,
+        StrictLocalStorageObservation, TaskId, WorkspaceId, from_json, to_canonical_json,
     };
 
     use super::{
@@ -2141,9 +2308,9 @@ mod tests {
         RuntimeArtifactPayloadInventoryEntry, RuntimeArtifactPayloadObservation,
         RuntimeArtifactPayloadPlacement, RuntimeArtifactPayloadStore, RuntimeArtifactReadRequest,
         RuntimeArtifactStoreError, runtime_artifact_ref, runtime_payload_reference,
-        seal_runtime_artifact_manifest, seal_runtime_resume_binding,
-        verify_runtime_artifact_manifest, verify_runtime_artifact_ref,
-        verify_runtime_resume_binding,
+        seal_runtime_artifact_manifest, seal_runtime_continuation_state,
+        seal_runtime_resume_binding, verify_runtime_artifact_manifest, verify_runtime_artifact_ref,
+        verify_runtime_continuation_state, verify_runtime_resume_binding,
     };
     use crate::context_management::finalize_checkpoint;
     use crate::operational_store::{
@@ -2448,6 +2615,55 @@ mod tests {
         .expect("checkpoint")
     }
 
+    fn continuation() -> RuntimeContinuationState {
+        let states = [
+            AgentStateKind::Proposal,
+            AgentStateKind::Validation,
+            AgentStateKind::Approval,
+            AgentStateKind::Execution,
+            AgentStateKind::Verification,
+            AgentStateKind::Checkpoint,
+            AgentStateKind::Observation,
+        ];
+        let mut prior = AgentStateKind::Observation;
+        let transitions = states
+            .into_iter()
+            .enumerate()
+            .map(|(index, next)| {
+                let transition = AgentStateTransition::new(index as u64 + 2, prior, next);
+                prior = next;
+                transition
+            })
+            .collect::<Vec<_>>();
+        seal_runtime_continuation_state(RuntimeContinuationState {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            request_sha256: digest('a'),
+            run_id: RuntimeRunId::from_raw("run-1"),
+            session_id: SessionId::from_raw("session-1"),
+            task_id: TaskId::from_raw("task-1"),
+            event_cursor: RuntimeEventCursor {
+                run_id: RuntimeRunId::from_raw("run-1"),
+                event_id: RuntimeEventId::from_raw("event-turn-completed-1"),
+                sequence: 8,
+                event_sha256: digest('b'),
+            },
+            agent_state: AgentStateKind::Observation,
+            agent_state_revision: transitions.len() as u64 + 1,
+            state_transitions: transitions,
+            turn_count: 1,
+            model_call_count: 1,
+            tool_call_count: 0,
+            context_refresh_count: 1,
+            no_progress_turns: 0,
+            tool_results: Vec::new(),
+            evidence: Vec::new(),
+            receipt_ids: Vec::new(),
+            artifacts: Vec::new(),
+            continuation_sha256: digest('0'),
+        })
+        .expect("continuation seals")
+    }
+
     #[test]
     fn manifest_reference_and_event_projection_reconcile_exactly() {
         let manifest = manifest();
@@ -2558,6 +2774,60 @@ mod tests {
         assert_eq!(
             seal_runtime_resume_binding(base),
             Err(RuntimeArtifactError::InvalidResumeBinding)
+        );
+    }
+
+    #[test]
+    fn continuation_round_trips_one_exact_safe_boundary() {
+        let continuation = continuation();
+        verify_runtime_continuation_state(&continuation).expect("continuation verifies");
+
+        let encoded = to_canonical_json(&continuation).expect("continuation serializes");
+        let decoded = from_json::<RuntimeContinuationState>(&encoded)
+            .expect("continuation deserializes under the versioned contract");
+        assert_eq!(decoded, continuation);
+        assert_eq!(decoded.agent_state, AgentStateKind::Observation);
+        assert_eq!(decoded.agent_state_revision, 8);
+    }
+
+    #[test]
+    fn continuation_rejects_unsafe_or_inconsistent_state() {
+        let mut unsafe_state = continuation();
+        unsafe_state.agent_state = AgentStateKind::Checkpoint;
+        assert_eq!(
+            seal_runtime_continuation_state(unsafe_state),
+            Err(RuntimeArtifactError::InvalidContinuation)
+        );
+
+        let mut broken_history = continuation();
+        broken_history.state_transitions[3].from = AgentStateKind::Validation;
+        assert_eq!(
+            seal_runtime_continuation_state(broken_history),
+            Err(RuntimeArtifactError::InvalidContinuation)
+        );
+
+        let mut broken_counts = continuation();
+        broken_counts.model_call_count += 1;
+        assert_eq!(
+            seal_runtime_continuation_state(broken_counts),
+            Err(RuntimeArtifactError::InvalidContinuation)
+        );
+    }
+
+    #[test]
+    fn continuation_digest_binds_cursor_and_collected_state() {
+        let mut changed = continuation();
+        changed.event_cursor.sequence += 1;
+        assert_eq!(
+            verify_runtime_continuation_state(&changed),
+            Err(RuntimeArtifactError::DigestMismatch)
+        );
+
+        let mut changed = continuation();
+        changed.no_progress_turns = 1;
+        assert_eq!(
+            verify_runtime_continuation_state(&changed),
+            Err(RuntimeArtifactError::DigestMismatch)
         );
     }
 
