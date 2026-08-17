@@ -14,6 +14,11 @@ use agentmage_kernel_engine::{
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use crate::{
+    coding_changes::{CodingWriteScope, register_controlled_change_runtime_tools},
+    runtime_tools::read_only_runtime_registry,
+};
+
 /// Stable native identity for exact registered command execution.
 pub const BOUNDED_COMMAND_TOOL_ID: &str = "agentmage.command.run-template";
 
@@ -252,6 +257,24 @@ pub fn register_targeted_validation_runtime_tool(
         .map_err(|_| CodingToolCatalogError::RegistrationDenied)
 }
 
+/// Builds the exact native tool catalog for one bounded coding session.
+///
+/// The catalog composes existing first-party contracts directly through the kernel registry.
+/// It contains no MCP translation, network operation, remote Git action, or publication tool.
+pub fn native_coding_runtime_registry(
+    write_scope: CodingWriteScope,
+    commands: CommandRegistry,
+    validations: ValidationTemplateRegistry,
+) -> Result<ToolRegistry, CodingToolCatalogError> {
+    let mut registry =
+        read_only_runtime_registry().map_err(|_| CodingToolCatalogError::RegistrationDenied)?;
+    register_controlled_change_runtime_tools(&mut registry, write_scope)
+        .map_err(|_| CodingToolCatalogError::RegistrationDenied)?;
+    register_bounded_command_runtime_tool(&mut registry, commands.clone())?;
+    register_targeted_validation_runtime_tool(&mut registry, commands, validations)?;
+    Ok(registry)
+}
+
 fn serde_command_error(
     _: agentmage_kernel_engine::command_runner::CommandError,
 ) -> serde_json::Error {
@@ -281,6 +304,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 mod tests {
     use std::collections::BTreeMap;
 
+    use agentmage_capability_read_only::{GIT_INSPECTION_TOOL_ID, ReadOnlyToolKind};
     use agentmage_kernel_contracts::{
         ActionId, ContractPayload, CorrelationId, GrantOperation, ToolCall, ToolCallId, ToolId,
         ToolRiskLevel, WorkspaceId, WorkspacePath,
@@ -294,6 +318,9 @@ mod tests {
     };
 
     use super::*;
+    use crate::coding_changes::{
+        CONTROLLED_CREATE_TOOL_ID, CodingWriteScope, STRUCTURED_PATCH_TOOL_ID,
+    };
 
     fn command() -> CommandSpec {
         CommandSpec::seal(
@@ -355,6 +382,14 @@ mod tests {
         })
         .expect("validation template");
         ValidationTemplateRegistry::build(vec![template]).expect("validation registry")
+    }
+
+    fn write_scope() -> CodingWriteScope {
+        CodingWriteScope::new(
+            WorkspaceId::from_raw("workspace-coding"),
+            vec![vec!["src".to_owned()], vec!["tests".to_owned()]],
+        )
+        .expect("write scope")
     }
 
     #[test]
@@ -495,5 +530,54 @@ mod tests {
                 )
                 .is_none()
         );
+    }
+
+    #[test]
+    fn story_48_2_native_catalog_is_exact_local_and_mcp_independent() {
+        let command = command();
+        let commands = CommandRegistry::build(vec![command.clone()]).expect("command registry");
+        let registry =
+            native_coding_runtime_registry(write_scope(), commands, validations(command))
+                .expect("native coding registry");
+        let definitions = registry.list_tools();
+        assert_eq!(definitions.len(), ReadOnlyToolKind::ALL.len() + 5);
+
+        let ids = definitions
+            .iter()
+            .map(|definition| definition.tool_id.as_str())
+            .collect::<std::collections::BTreeSet<_>>();
+        for required in [
+            GIT_INSPECTION_TOOL_ID,
+            STRUCTURED_PATCH_TOOL_ID,
+            CONTROLLED_CREATE_TOOL_ID,
+            BOUNDED_COMMAND_TOOL_ID,
+            TARGETED_VALIDATION_TOOL_ID,
+        ] {
+            assert!(ids.contains(required), "missing {required}");
+        }
+        for kind in ReadOnlyToolKind::ALL {
+            assert!(ids.contains(kind.id()), "missing {}", kind.id());
+        }
+        assert!(ids.iter().all(|id| !id.contains("mcp")));
+        assert!(definitions.iter().all(|definition| {
+            matches!(
+                definition.declared_effects[0].operation(),
+                GrantOperation::WorkspaceRead
+                    | GrantOperation::WorkspaceWrite
+                    | GrantOperation::CommandExecute
+            )
+        }));
+        assert!(definitions.iter().all(|definition| {
+            !matches!(
+                definition.declared_effects[0].operation(),
+                GrantOperation::NetworkAccess
+                    | GrantOperation::GitClone
+                    | GrantOperation::GitFetch
+                    | GrantOperation::GitCommit
+                    | GrantOperation::GitPush
+                    | GrantOperation::Publish
+                    | GrantOperation::Deploy
+            )
+        }));
     }
 }
