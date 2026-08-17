@@ -5,8 +5,8 @@ use std::collections::BTreeSet;
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, ContractPayload, EvidenceReference, MAX_CONTRACT_JSON_BYTES,
     ModelRuntimeKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeOutcome, RuntimeOutput, RuntimeRunRequest, RuntimeSessionMode,
-    RuntimeToolReference, TaskStatus, WorkPacketState,
+    RuntimeApprovalResponse, RuntimeOutcome, RuntimeOutput, RuntimeRunLimits, RuntimeRunRequest,
+    RuntimeSessionMode, RuntimeToolReference, TaskStatus, WorkPacketState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -291,7 +291,13 @@ fn validate_profile_and_context(
 }
 
 fn validate_limits(request: &RuntimeRunRequest) -> Result<(), RuntimeCoordinatorError> {
-    let limits = &request.limits;
+    validate_runtime_run_limits(&request.limits)
+}
+
+/// Validates reusable-runtime ceilings independently before a complete run is framed.
+pub fn validate_runtime_run_limits(
+    limits: &RuntimeRunLimits,
+) -> Result<(), RuntimeCoordinatorError> {
     let model_call_ceiling = limits
         .max_turns
         .checked_mul(4)

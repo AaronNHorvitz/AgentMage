@@ -157,6 +157,18 @@ impl CodingWriteScope {
         })
     }
 
+    /// Returns the exact approved workspace identity.
+    #[must_use]
+    pub const fn workspace_id(&self) -> &WorkspaceId {
+        &self.workspace_id
+    }
+
+    /// Returns stable nonoverlapping writable roots as canonical component lists.
+    #[must_use]
+    pub fn writable_roots(&self) -> &[Vec<String>] {
+        &self.writable_roots
+    }
+
     fn resolve(&self, components: &[String]) -> Result<WorkspacePath, CodingChangeError> {
         let path = WorkspacePath::new(self.workspace_id.clone(), components.iter().cloned())
             .map_err(|_| CodingChangeError::PathDenied)?;
