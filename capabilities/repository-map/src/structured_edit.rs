@@ -487,6 +487,80 @@ pub fn verify_structured_file_change(plan: &StructuredFileChangePlan) -> bool {
             .is_ok_and(|expected| expected == *plan)
 }
 
+/// Validates the source-independent shape of one ordered structured-edit proposal.
+///
+/// This check carries no file bytes, workspace handle, or mutation authority. A caller must
+/// still bind the proposal to an exact held preimage through [`build_structured_file_change`].
+pub fn validate_structured_edit_proposal(
+    language: StructuredLanguage,
+    edits: &[StructuredEdit],
+    additional_review_hooks: &[StructuredReviewHook],
+) -> Result<(), StructuredEditError> {
+    if edits.is_empty()
+        || edits.len() > MAX_EDITS
+        || edits.windows(2).any(|pair| pair[0].id() >= pair[1].id())
+        || edits.iter().any(|edit| !valid_identifier(edit.id()))
+        || additional_review_hooks.len() > MAX_EDITS
+        || additional_review_hooks
+            .windows(2)
+            .any(|pair| pair[0] >= pair[1])
+    {
+        return Err(StructuredEditError::InvalidInput);
+    }
+    let syntax_aware = language.repository_language().is_some();
+    for edit in edits {
+        let valid = match edit {
+            StructuredEdit::RenameIdentifier {
+                old, replacement, ..
+            } => {
+                syntax_aware
+                    && valid_identifier(old)
+                    && valid_identifier(replacement)
+                    && old != replacement
+            }
+            StructuredEdit::ReplaceSyntaxNode {
+                start_byte,
+                end_byte,
+                expected_node_sha256,
+                replacement,
+                ..
+            } => {
+                syntax_aware
+                    && start_byte < end_byte
+                    && is_sha256(expected_node_sha256)
+                    && !replacement.is_empty()
+                    && replacement.len() <= MAX_TEXT_BYTES
+            }
+            StructuredEdit::InsertImport { statement, .. } => {
+                syntax_aware
+                    && !statement.is_empty()
+                    && statement.len() <= MAX_TEXT_BYTES
+                    && statement.ends_with('\n')
+                    && !statement.contains('\r')
+            }
+            StructuredEdit::ReplaceExactText {
+                expected,
+                replacement,
+                ..
+            } => {
+                !syntax_aware
+                    && !expected.is_empty()
+                    && !replacement.is_empty()
+                    && expected.len() <= MAX_TEXT_BYTES
+                    && replacement.len() <= MAX_TEXT_BYTES
+                    && expected != replacement
+                    && !expected.contains('\r')
+                    && !replacement.contains('\r')
+            }
+            StructuredEdit::NormalizeTerminalNewline { .. } => true,
+        };
+        if !valid {
+            return Err(StructuredEditError::EditTargetInvalid);
+        }
+    }
+    Ok(())
+}
+
 fn validate_request(request: &StructuredFileChangeRequest) -> Result<(), StructuredEditError> {
     if !valid_identifier(&request.change_id)
         || !is_sha256(&request.intent_sha256)
@@ -494,25 +568,14 @@ fn validate_request(request: &StructuredFileChangeRequest) -> Result<(), Structu
         || request.preimage.is_empty()
         || request.preimage.len() > MAX_SOURCE_BYTES
         || request.expected_preimage_sha256 != sha256_hex(&request.preimage)
-        || request.edits.is_empty()
-        || request.edits.len() > MAX_EDITS
-        || request
-            .edits
-            .windows(2)
-            .any(|pair| pair[0].id() >= pair[1].id())
-        || request
-            .edits
-            .iter()
-            .any(|edit| !valid_identifier(edit.id()))
-        || request.additional_review_hooks.len() > MAX_EDITS
-        || request
-            .additional_review_hooks
-            .windows(2)
-            .any(|pair| pair[0] >= pair[1])
     {
         return Err(StructuredEditError::InvalidInput);
     }
-    Ok(())
+    validate_structured_edit_proposal(
+        request.language,
+        &request.edits,
+        &request.additional_review_hooks,
+    )
 }
 
 fn resolve_edit(

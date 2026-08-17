@@ -94,7 +94,7 @@ pub use structured_edit::{
     StructuredArtifactClass, StructuredChangedRange, StructuredEdit, StructuredEditError,
     StructuredEditMethod, StructuredFileChangePlan, StructuredFileChangeRequest,
     StructuredFileChangeSummary, StructuredLanguage, StructuredReviewHook, StructuredUnchangedSpan,
-    build_structured_file_change, verify_structured_file_change,
+    build_structured_file_change, validate_structured_edit_proposal, verify_structured_file_change,
 };
 pub use test_generation::{
     GeneratedTestCase, GeneratedTestChangeBinding, GeneratedTestExpectation,
