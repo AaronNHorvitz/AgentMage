@@ -118,6 +118,8 @@ pub enum CommandRisk {
 pub enum CommandWorkingDirectory {
     /// A fresh empty in-memory directory owned by this one attempt.
     EmptyScratch,
+    /// The exact descriptor-held AgentMage-owned worktree, mounted read-only for this attempt.
+    OwnedWorktree,
 }
 
 /// Exact process and output ceilings for one command template.
@@ -608,10 +610,14 @@ impl fmt::Debug for CommandLaunchPermit<'_> {
 
 /// Trusted platform executor whose launch requires a kernel-created permit.
 pub trait BoundedCommandExecutor {
+    /// Platform-owned held directory type accepted by this executor.
+    type WorkingDirectory: HeldWorkspaceObject;
+
     /// Executes one exact non-interactive command inside the platform sandbox.
     fn execute(
         &mut self,
         permit: CommandLaunchPermit<'_>,
+        working_directory: &Self::WorkingDirectory,
         cancellation: &CancellationToken,
     ) -> CommandPlatformResult;
 }
@@ -675,7 +681,7 @@ impl<E, H> fmt::Debug for CommandEffectDriver<E, H> {
 
 impl<E, H> EffectDriver for CommandEffectDriver<E, H>
 where
-    E: BoundedCommandExecutor,
+    E: BoundedCommandExecutor<WorkingDirectory = H>,
     H: HeldWorkspaceObject,
 {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
@@ -685,6 +691,10 @@ where
             || call.arguments.sha256 != self.prepared.request_sha256
             || call.arguments.bytes != self.prepared.request_bytes
             || sha256_hex(&call.arguments.bytes) != call.arguments.sha256
+            || !working_directory_matches(
+                self.prepared.command.working_directory,
+                &self.held_working_directory,
+            )
         {
             self.error = Some(CommandError::AuthorityMismatch);
             return EffectLaunch::failed();
@@ -710,6 +720,7 @@ where
                 CommandLaunchPermit {
                     command: &self.prepared.command,
                 },
+                &self.held_working_directory,
                 &self.cancellation,
             )
         };
@@ -730,6 +741,16 @@ where
             }
         }
     }
+}
+
+fn working_directory_matches(
+    working_directory: CommandWorkingDirectory,
+    held: &impl HeldWorkspaceObject,
+) -> bool {
+    working_directory == CommandWorkingDirectory::EmptyScratch
+        || (held.intent() == agentmage_kernel_contracts::PathResolutionIntent::ReadDirectory
+            && held.object_kind() == agentmage_kernel_contracts::WorkspaceObjectKind::Directory
+            && held.preimage().is_none())
 }
 
 fn seal_receipt(
@@ -1030,6 +1051,19 @@ mod tests {
     }
 
     #[test]
+    fn owned_worktree_mode_requires_one_exact_held_directory() {
+        let fixture = authority_fixture();
+        assert!(super::working_directory_matches(
+            CommandWorkingDirectory::EmptyScratch,
+            &fixture.held
+        ));
+        assert!(!super::working_directory_matches(
+            CommandWorkingDirectory::OwnedWorktree,
+            &fixture.held
+        ));
+    }
+
+    #[test]
     fn registry_rejects_digest_drift_duplicates_and_unknown_versions() {
         let spec = spec(vec!["safe".to_owned()]).expect("baseline");
         assert!(matches!(
@@ -1098,12 +1132,19 @@ mod tests {
     }
 
     impl BoundedCommandExecutor for FakeExecutor {
+        type WorkingDirectory = SyntheticHeldObject;
+
         fn execute(
             &mut self,
             permit: CommandLaunchPermit<'_>,
+            working_directory: &Self::WorkingDirectory,
             _cancellation: &CancellationToken,
         ) -> CommandPlatformResult {
             assert_eq!(permit.command().template_id, "fixture.printf");
+            assert_eq!(
+                working_directory.path.components()[0].as_str(),
+                "fixture.txt"
+            );
             self.launches += 1;
             self.result.take().expect("one fake result")
         }

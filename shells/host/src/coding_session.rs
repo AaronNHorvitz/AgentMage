@@ -8,7 +8,7 @@ use agentmage_kernel_contracts::{
     RuntimeToolReference, ToolCatalogId,
 };
 use agentmage_kernel_engine::{
-    command_runner::{CommandRegistry, CommandRequest, prepare_command},
+    command_runner::{CommandRegistry, CommandRequest, CommandWorkingDirectory, prepare_command},
     model_runtime::{AdmittedModelProfile, ModelUsePurpose},
     repository_safety::{OwnedWorktreeRecord, WorktreeDisposition},
     runtime_coordinator::{runtime_tool_catalog_sha256, validate_runtime_run_limits},
@@ -361,6 +361,14 @@ fn validate_static_input(
     {
         return Err(CodingSessionProfileError::ModelDenied);
     }
+    if input
+        .commands
+        .commands()
+        .iter()
+        .any(|command| command.working_directory != CommandWorkingDirectory::OwnedWorktree)
+    {
+        return Err(CodingSessionProfileError::InvalidInput);
+    }
     if input.offline_proof.disposition() != AcquisitionExitDisposition::Completed
         || input.offline_proof.session_boundary_sha256() != &input.session_boundary_sha256
     {
@@ -496,14 +504,14 @@ mod tests {
         .expect("worktree")
     }
 
-    fn command() -> CommandSpec {
+    fn command_with_directory(working_directory: CommandWorkingDirectory) -> CommandSpec {
         CommandSpec::seal(
             "fixture.cargo-test",
             "1.0.0",
             "/usr/bin/cargo",
             "5".repeat(64),
             vec!["test".to_owned(), "fixture".to_owned()],
-            CommandWorkingDirectory::EmptyScratch,
+            working_directory,
             BTreeMap::from([
                 ("LANG".to_owned(), "C".to_owned()),
                 ("NO_COLOR".to_owned(), "1".to_owned()),
@@ -513,6 +521,10 @@ mod tests {
             CommandBounds::new(30_000, 65_536, 65_536, 256 * 1024 * 1024, 32, 200).expect("bounds"),
         )
         .expect("command")
+    }
+
+    fn command() -> CommandSpec {
+        command_with_directory(CommandWorkingDirectory::OwnedWorktree)
     }
 
     fn validations(
@@ -760,6 +772,19 @@ mod tests {
         assert_eq!(
             CodingSessionProfile::build(wrong_model).expect_err("missing tool capability"),
             CodingSessionProfileError::ModelDenied
+        );
+
+        let mut scratch_command = input();
+        let scratch_template = command_with_directory(CommandWorkingDirectory::EmptyScratch);
+        scratch_command.validations = validations(
+            scratch_template.clone(),
+            scratch_command.worktree.record_sha256.clone(),
+        );
+        scratch_command.commands =
+            CommandRegistry::build(vec![scratch_template]).expect("scratch command registry");
+        assert_eq!(
+            CodingSessionProfile::build(scratch_command).expect_err("scratch command"),
+            CodingSessionProfileError::InvalidInput
         );
 
         let mut stale_validation = input();

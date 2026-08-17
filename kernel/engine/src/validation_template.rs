@@ -362,7 +362,10 @@ pub fn seal_validation_template(
         || !is_sha256(&input.execution_scope_sha256)
         || !valid_version(&input.parser_version)
         || !is_sha256(&input.parser_sha256)
-        || input.command.working_directory != CommandWorkingDirectory::EmptyScratch
+        || !matches!(
+            input.command.working_directory,
+            CommandWorkingDirectory::EmptyScratch | CommandWorkingDirectory::OwnedWorktree
+        )
         || input.command.network
         || !input.command.grant_required
         || input.command.interactive

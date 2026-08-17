@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 use std::fmt;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::os::fd::AsRawFd;
 use std::os::unix::fs::MetadataExt as _;
 use std::os::unix::process::ExitStatusExt as _;
@@ -12,19 +12,23 @@ use std::process::{Child, Command, ExitStatus, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use agentmage_kernel_contracts::{HeldWorkspaceObject, PathResolutionIntent, WorkspaceObjectKind};
 use agentmage_kernel_engine::command_runner::{
     BoundedCommandExecutor, CommandLaunchPermit, CommandPlatformResult, CommandRegistry,
     CommandSpec, CommandTermination, CommandWorkingDirectory,
 };
 use agentmage_kernel_engine::propagation::CancellationToken;
 use rustix::fd::OwnedFd;
-use rustix::fs::{FileType, Mode, OFlags, fstat, open};
-use rustix::io::pread;
+use rustix::fs::{
+    FileType, MemfdFlags, Mode, OFlags, SealFlags, SeekFrom, fcntl_add_seals, fstat, memfd_create,
+    open, seek,
+};
+use rustix::io::{pread, write};
 use rustix::process::getuid;
 use rustix::rand::{GetRandomFlags, getrandom};
 use sha2::{Digest, Sha256};
 
-use crate::sandbox::compile_seccomp_policy;
+use crate::{LinuxHeldObject, sandbox::compile_seccomp_policy};
 
 const MAX_ARTIFACT_BYTES: u64 = 256 * 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
@@ -157,7 +161,7 @@ impl fmt::Debug for LinuxCommandManifest {
 #[derive(Debug)]
 pub struct LinuxBoundedCommandExecutor {
     manifest: LinuxCommandManifest,
-    seccomp_bpf: Vec<u8>,
+    seccomp_descriptor: OwnedFd,
 }
 
 impl LinuxBoundedCommandExecutor {
@@ -165,15 +169,17 @@ impl LinuxBoundedCommandExecutor {
     pub fn new(manifest: LinuxCommandManifest) -> Result<Self, LinuxCommandRunnerError> {
         let seccomp_bpf = compile_seccomp_policy()
             .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
+        let seccomp_descriptor = sealed_seccomp_descriptor(&seccomp_bpf)?;
         Ok(Self {
             manifest,
-            seccomp_bpf,
+            seccomp_descriptor,
         })
     }
 
     fn run(
         &self,
         command: &CommandSpec,
+        held_working_directory: &LinuxHeldObject,
         cancellation: &CancellationToken,
     ) -> CommandPlatformResult {
         let Some(artifact) = self.manifest.commands.get(&(
@@ -191,13 +197,26 @@ impl LinuxBoundedCommandExecutor {
         {
             return failed("linux.command.artifact.changed");
         }
+        if command.working_directory == CommandWorkingDirectory::OwnedWorktree
+            && (held_working_directory.intent() != PathResolutionIntent::ReadDirectory
+                || held_working_directory.object_kind() != WorkspaceObjectKind::Directory
+                || held_working_directory.preimage().is_some()
+                || held_working_directory.revalidate().is_err())
+        {
+            return failed("linux.command.worktree.changed");
+        }
 
-        let Ok(unit) = random_unit_name() else {
+        let Ok(unit_stem) = random_unit_name() else {
             return failed("linux.command.unit.identity");
         };
+        let unit = format!("{unit_stem}.service");
         let parent_pid = std::process::id();
         let command_descriptor =
             format!("/proc/{parent_pid}/fd/{}", artifact.descriptor.as_raw_fd());
+        let seccomp_descriptor = format!(
+            "/proc/{parent_pid}/fd/{}",
+            self.seccomp_descriptor.as_raw_fd()
+        );
         let runtime_directory = format!("/run/user/{}", getuid().as_raw());
         let session_bus = format!("unix:path={runtime_directory}/bus");
         let timeout_seconds = command.bounds.timeout_ms.div_ceil(1_000).max(1);
@@ -207,7 +226,14 @@ impl LinuxBoundedCommandExecutor {
             .env_clear()
             .env("XDG_RUNTIME_DIR", &runtime_directory)
             .env("DBUS_SESSION_BUS_ADDRESS", &session_bus)
-            .args(["--user", "--wait", "--quiet", "--pipe", "--collect"])
+            .args([
+                "--user",
+                "--wait",
+                "--quiet",
+                "--pipe",
+                "--collect",
+                "--expand-environment=no",
+            ])
             .arg(format!("--unit={unit}"))
             .arg("--property=NoNewPrivileges=yes")
             .arg("--property=RestrictSUIDSGID=yes")
@@ -230,15 +256,17 @@ impl LinuxBoundedCommandExecutor {
             .arg(format!(
                 "--property=OpenFile={command_descriptor}:command:read-only"
             ))
-            .arg(&self.manifest.bubblewrap.launch_path)
-            .args([
-                "--unshare-all",
-                "--unshare-user",
-                "--disable-userns",
-                "--new-session",
-                "--die-with-parent",
-                "--clearenv",
-            ]);
+            .arg(format!(
+                "--property=OpenFile={seccomp_descriptor}:seccomp:read-only"
+            ));
+        process.arg(&self.manifest.bubblewrap.launch_path).args([
+            "--unshare-all",
+            "--unshare-user",
+            "--disable-userns",
+            "--new-session",
+            "--die-with-parent",
+            "--clearenv",
+        ]);
         for (name, value) in &command.environment {
             process.arg("--setenv").arg(name).arg(value);
         }
@@ -253,48 +281,47 @@ impl LinuxBoundedCommandExecutor {
             "/tmp",
             "--dir",
             "/app",
-            "--tmpfs",
-            "/work",
-            "--dir",
-            "/usr",
         ]);
+        match command.working_directory {
+            CommandWorkingDirectory::EmptyScratch => {
+                process.args(["--tmpfs", "/work"]);
+            }
+            CommandWorkingDirectory::OwnedWorktree => {
+                process.args(["--dir", "/work"]);
+            }
+        }
+        process.args(["--dir", "/usr"]);
         add_runtime_mounts(&mut process);
+        process.args(["--ro-bind-fd", "3", GUEST_EXECUTABLE]);
+        if command.working_directory == CommandWorkingDirectory::OwnedWorktree {
+            process.args(["--ro-bind-fd", "0", "/work"]);
+        }
         process
-            .args(["--ro-bind-fd", "3", GUEST_EXECUTABLE])
-            .args(["--chdir", working_directory(command.working_directory)])
-            .args(["--seccomp", "0", "--", GUEST_EXECUTABLE])
+            .args([
+                "--chdir",
+                guest_working_directory(command.working_directory),
+            ])
+            .args(["--seccomp", "4", "--", GUEST_EXECUTABLE])
             .args(&command.arguments)
-            .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
+        if command.working_directory == CommandWorkingDirectory::OwnedWorktree {
+            let descriptor_path = format!(
+                "/proc/self/fd/{}",
+                held_working_directory.object_descriptor.as_raw_fd()
+            );
+            let Ok(worktree_descriptor) = fs::File::open(descriptor_path) else {
+                return failed("linux.command.worktree.descriptor");
+            };
+            process.stdin(Stdio::from(worktree_descriptor));
+        } else {
+            process.stdin(Stdio::null());
+        }
 
         let started = Instant::now();
         let Ok(mut child) = process.spawn() else {
             return failed("linux.command.isolation.start");
         };
-        let Some(mut stdin) = child.stdin.take() else {
-            terminate_unit(
-                &self.manifest,
-                &unit,
-                &runtime_directory,
-                &session_bus,
-                &mut child,
-            );
-            return failed("linux.command.seccomp.pipe");
-        };
-        if stdin.write_all(&self.seccomp_bpf).is_err() {
-            drop(stdin);
-            terminate_unit(
-                &self.manifest,
-                &unit,
-                &runtime_directory,
-                &session_bus,
-                &mut child,
-            );
-            return failed("linux.command.seccomp.write");
-        }
-        drop(stdin);
-
         let Some(stdout) = child.stdout.take() else {
             terminate_unit(
                 &self.manifest,
@@ -412,12 +439,15 @@ impl LinuxBoundedCommandExecutor {
 }
 
 impl BoundedCommandExecutor for LinuxBoundedCommandExecutor {
+    type WorkingDirectory = LinuxHeldObject;
+
     fn execute(
         &mut self,
         permit: CommandLaunchPermit<'_>,
+        working_directory: &Self::WorkingDirectory,
         cancellation: &CancellationToken,
     ) -> CommandPlatformResult {
-        self.run(permit.command(), cancellation)
+        self.run(permit.command(), working_directory, cancellation)
     }
 }
 
@@ -550,6 +580,34 @@ fn systemctl<const N: usize>(
         .is_ok_and(|status| status.success())
 }
 
+fn sealed_seccomp_descriptor(bytes: &[u8]) -> Result<OwnedFd, LinuxCommandRunnerError> {
+    if bytes.is_empty() {
+        return Err(error(LinuxCommandRunnerErrorKind::SeccompUnavailable));
+    }
+    let descriptor = memfd_create(
+        "agentmage-command-seccomp",
+        MemfdFlags::CLOEXEC | MemfdFlags::ALLOW_SEALING,
+    )
+    .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
+    let mut remaining = bytes;
+    while !remaining.is_empty() {
+        let count = write(&descriptor, remaining)
+            .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
+        if count == 0 {
+            return Err(error(LinuxCommandRunnerErrorKind::SeccompUnavailable));
+        }
+        remaining = &remaining[count..];
+    }
+    seek(&descriptor, SeekFrom::Start(0))
+        .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
+    fcntl_add_seals(
+        &descriptor,
+        SealFlags::SEAL | SealFlags::SHRINK | SealFlags::GROW | SealFlags::WRITE,
+    )
+    .map_err(|_| error(LinuxCommandRunnerErrorKind::SeccompUnavailable))?;
+    Ok(descriptor)
+}
+
 fn add_runtime_mounts(command: &mut Command) {
     for path in ["/usr/lib", "/usr/lib64", "/lib", "/lib64"] {
         if Path::new(path).exists() {
@@ -561,9 +619,9 @@ fn add_runtime_mounts(command: &mut Command) {
     }
 }
 
-const fn working_directory(directory: CommandWorkingDirectory) -> &'static str {
+const fn guest_working_directory(directory: CommandWorkingDirectory) -> &'static str {
     match directory {
-        CommandWorkingDirectory::EmptyScratch => "/work",
+        CommandWorkingDirectory::EmptyScratch | CommandWorkingDirectory::OwnedWorktree => "/work",
     }
 }
 
@@ -685,12 +743,15 @@ fn hex(bytes: &[u8]) -> String {
 mod tests {
     use std::collections::BTreeMap;
     use std::fs;
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::thread;
     use std::time::Duration;
 
     use agentmage_kernel_contracts::{
-        BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
-        CancellationSignal, CorrelationId, TaskId,
+        AdapterInstanceId, BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId,
+        CancellationReason, CancellationSignal, CorrelationId, PathResolutionIntent,
+        PlatformPathAdapter, TaskId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
     };
     use agentmage_kernel_engine::command_runner::{
         CommandBounds, CommandRegistry, CommandRisk, CommandSpec, CommandTermination,
@@ -701,6 +762,56 @@ mod tests {
     use sha2::Digest as _;
 
     use super::{LinuxBoundedCommandExecutor, LinuxCommandManifest};
+    use crate::{DEFAULT_MAX_PREIMAGE_BYTES, LinuxHeldObject, LinuxPathAdapter};
+
+    static TEMP_ID: AtomicU64 = AtomicU64::new(1);
+
+    struct TestDirectory(PathBuf);
+
+    impl TestDirectory {
+        fn new() -> Self {
+            let id = TEMP_ID.fetch_add(1, Ordering::SeqCst);
+            let path = std::env::temp_dir().join(format!(
+                "agentmage-linux-command-{}-{id}",
+                std::process::id()
+            ));
+            fs::create_dir(&path).expect("temporary directory creates");
+            Self(path)
+        }
+    }
+
+    impl Drop for TestDirectory {
+        fn drop(&mut self) {
+            fs::remove_dir_all(&self.0).expect("temporary directory removes");
+        }
+    }
+
+    fn held_worktree() -> (TestDirectory, LinuxHeldObject) {
+        let temporary = TestDirectory::new();
+        fs::create_dir(temporary.0.join("owned-worktree")).expect("worktree creates");
+        fs::write(temporary.0.join("owned-worktree/marker.txt"), b"agentmage")
+            .expect("marker writes");
+        let adapter_id = AdapterInstanceId::from_raw("adapter-linux-command-0001");
+        let workspace = crate::authorize_workspace_root(
+            &temporary.0,
+            WorkspaceId::from_raw("workspace-linux-command-0001"),
+            WorkspaceAuthorizationId::from_raw("authorization-linux-command-0001"),
+            adapter_id.clone(),
+        )
+        .expect("workspace authorizes");
+        let held = LinuxPathAdapter::new(adapter_id, DEFAULT_MAX_PREIMAGE_BYTES)
+            .resolve(
+                &workspace,
+                &WorkspacePath::new(
+                    WorkspaceId::from_raw("workspace-linux-command-0001"),
+                    ["owned-worktree"],
+                )
+                .expect("worktree path"),
+                PathResolutionIntent::ReadDirectory,
+            )
+            .expect("worktree resolves");
+        (temporary, held)
+    }
 
     #[test]
     fn manifest_binds_every_registered_executable_digest() {
@@ -789,9 +900,10 @@ mod tests {
             TaskId::from_raw("task-linux-command-0001"),
             CorrelationId::from_raw("correlation-linux-command-0001"),
         );
-        let result = executor.run(&command, &cancellation);
+        let (_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &cancellation);
         assert_eq!(result.termination, CommandTermination::Exited);
-        assert_eq!(result.exit_code, Some(0));
+        assert_eq!(result.exit_code, Some(0), "{result:?}");
         assert_eq!(result.stdout, b"agentmage-live-ok");
         assert_eq!(result.stdout_total_bytes, 17);
         assert!(result.stderr_total_bytes <= command.bounds.stderr_bytes);
@@ -835,7 +947,8 @@ mod tests {
             TaskId::from_raw("task-linux-timeout-0001"),
             CorrelationId::from_raw("correlation-linux-timeout-0001"),
         );
-        let timed_result = timed_executor.run(&timed, &timed_token);
+        let (_timed_temporary, timed_held) = held_worktree();
+        let timed_result = timed_executor.run(&timed, &timed_held, &timed_token);
         assert_eq!(timed_result.termination, CommandTermination::TimedOut);
         assert!(timed_result.descendants_terminated);
 
@@ -869,10 +982,98 @@ mod tests {
                 })
                 .expect("cancellation")
         });
-        let cancelled_result = cancelled_executor.run(&cancelled, &cancelled_token);
+        let (_cancelled_temporary, cancelled_held) = held_worktree();
+        let cancelled_result =
+            cancelled_executor.run(&cancelled, &cancelled_held, &cancelled_token);
         signaler.join().expect("signaler");
         assert_eq!(cancelled_result.termination, CommandTermination::Cancelled);
         assert!(cancelled_result.descendants_terminated);
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_owned_worktree_is_descriptor_bound_at_the_guest_working_directory() {
+        let executable = "/usr/bin/test";
+        let command = CommandSpec::seal(
+            "fixture.worktree-marker",
+            "1.0.0",
+            executable,
+            hash_file_for_test(executable),
+            vec![
+                "-f".to_owned(),
+                "marker.txt".to_owned(),
+                "-a".to_owned(),
+                "!".to_owned(),
+                "-d".to_owned(),
+                "/proc/self/fd/0".to_owned(),
+            ],
+            CommandWorkingDirectory::OwnedWorktree,
+            BTreeMap::from([
+                ("LANG".to_owned(), "C".to_owned()),
+                ("TZ".to_owned(), "UTC".to_owned()),
+            ]),
+            CommandRisk::Low,
+            CommandBounds::new(5_000, 1_024, 4_096, 64 * 1024 * 1024, 8, 100).expect("limits"),
+        )
+        .expect("command");
+        let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
+        let manifest = LinuxCommandManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            &registry,
+        )
+        .expect("manifest");
+        let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Tool,
+            TaskId::from_raw("task-linux-worktree-command-0001"),
+            CorrelationId::from_raw("correlation-linux-worktree-command-0001"),
+        );
+        let (_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &cancellation);
+        assert_eq!(result.termination, CommandTermination::Exited);
+        assert_eq!(result.exit_code, Some(0), "{result:?}");
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_owned_worktree_command_cannot_mutate_the_held_directory() {
+        let executable = "/usr/bin/touch";
+        let command = CommandSpec::seal(
+            "fixture.worktree-write-denied",
+            "1.0.0",
+            executable,
+            hash_file_for_test(executable),
+            vec!["forbidden.txt".to_owned()],
+            CommandWorkingDirectory::OwnedWorktree,
+            BTreeMap::from([
+                ("LANG".to_owned(), "C".to_owned()),
+                ("TZ".to_owned(), "UTC".to_owned()),
+            ]),
+            CommandRisk::Moderate,
+            CommandBounds::new(5_000, 1_024, 4_096, 64 * 1024 * 1024, 8, 100).expect("limits"),
+        )
+        .expect("command");
+        let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
+        let manifest = LinuxCommandManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            &registry,
+        )
+        .expect("manifest");
+        let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Tool,
+            TaskId::from_raw("task-linux-worktree-denial-0001"),
+            CorrelationId::from_raw("correlation-linux-worktree-denial-0001"),
+        );
+        let (temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &cancellation);
+        assert_eq!(result.termination, CommandTermination::Exited);
+        assert_ne!(result.exit_code, Some(0), "{result:?}");
+        assert!(!temporary.0.join("owned-worktree/forbidden.txt").exists());
     }
 
     fn hash_file_for_test(path: &str) -> String {

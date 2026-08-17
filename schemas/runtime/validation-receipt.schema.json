@@ -94,7 +94,9 @@
       "maxItems": 128,
       "items": { "type": "string", "minLength": 1, "maxLength": 4096 }
     },
-    "working_directory": { "const": "empty_scratch" },
+    "working_directory": {
+      "enum": ["empty_scratch", "owned_worktree"]
+    },
     "environment_names": {
       "type": "array",
       "maxItems": 4,

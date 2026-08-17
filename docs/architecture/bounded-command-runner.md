@@ -51,7 +51,8 @@ boundary.
 - schema, template identity, and immutable semantic version;
 - absolute executable path and exact executable-content digest;
 - a complete literal argument vector;
-- the initial `empty_scratch` working-directory mode;
+- either the initial private `empty_scratch` directory or the exact descriptor-held,
+  read-only `owned_worktree` directory;
 - a complete replacement environment;
 - low or moderate review risk;
 - mandatory exact-grant use and explicit noninteractive, offline, no-inheritance state; and
@@ -71,9 +72,11 @@ The current admission contract rejects:
 - every environment variable except `LANG`, `LC_ALL`, `NO_COLOR`, and `TZ`; and
 - interactive mode, network mode, inherited environment, or execution without a grant.
 
-Repository commands are not in a production registry. Later repository work must use separately
-reviewed templates and the repository-preservation controls in Sprint 42. It must not weaken this
-contract or introduce a generic pull, shell, arbitrary setup command, hook, filter, pager, editor,
+Repository commands are not in a production registry. A later coding profile may admit a separately
+reviewed template only with the exact `owned_worktree` directory named by its current grant. That
+directory remains read-only to the command sandbox; source mutation continues through the distinct
+controlled-write transaction. Repository work must also use the preservation controls in Sprint 42.
+It must not introduce a generic pull, shell, arbitrary setup command, hook, filter, pager, editor,
 or credential-helper route.
 
 ## Linux Process Boundary
@@ -89,11 +92,14 @@ The executor starts one random transient user unit with:
   final `SIGKILL`;
 - exact memory, task-count, CPU, stop-time, and runtime ceilings;
 - a fresh Bubblewrap user, PID, IPC, UTS, cgroup, and network namespace;
-- dropped capabilities, a fixed seccomp policy, private `/proc`, `/dev`, `/tmp`, and `/work`;
+- dropped capabilities, a sealed fixed seccomp policy, private `/proc`, `/dev`, and `/tmp`, plus
+  either private scratch or the exact read-only held worktree at `/work`;
 - only read-only runtime-library mounts, with no `/usr/bin`, home, workspace, credential, browser,
   SSH, cloud, or unrelated repository mount;
-- the exact executable passed through a systemd `OpenFile` descriptor and mounted as
-  `/app/command`; and
+- the exact executable and sealed seccomp program passed through systemd `OpenFile` descriptors,
+  with the executable mounted as `/app/command`;
+- an optional held worktree reopened only through AgentMage's own descriptor table, transferred as
+  the service's noninteractive standard input descriptor, and mounted read-only at `/work`; and
 - an empty inherited environment followed by only the four safe fixed variables in the template.
 
 The target is launched directly as `/app/command`. No shell parser, command string, `PATH` lookup,

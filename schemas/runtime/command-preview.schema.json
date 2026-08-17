@@ -47,7 +47,9 @@
         "pattern": "^[^@$`;|&<>*?\\[\\]\\u0000-\\u001f]+$"
       }
     },
-    "working_directory": { "const": "empty_scratch" },
+    "working_directory": {
+      "enum": ["empty_scratch", "owned_worktree"]
+    },
     "environment": {
       "type": "object",
       "maxProperties": 8,
