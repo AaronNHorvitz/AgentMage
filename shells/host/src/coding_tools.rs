@@ -2,6 +2,10 @@
 
 use std::fmt::Write;
 
+use agentmage_capability_read_only::{
+    GIT_INSPECTION_INPUT_SCHEMA_ID, GIT_INSPECTION_INPUT_SCHEMA_JSON,
+    READ_ONLY_INPUT_SCHEMA_ID, READ_ONLY_INPUT_SCHEMA_JSON,
+};
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, GrantOperation, OperationBinding, RequiredGrantTemplate, SchemaId,
     SchemaReference, ToolDefinition, ToolId, ToolRiskLevel, ValidationIssue, ValidationSeverity,
@@ -15,7 +19,11 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::{
-    coding_changes::{CodingWriteScope, register_controlled_change_runtime_tools},
+    coding_changes::{
+        CONTROLLED_CREATE_INPUT_SCHEMA_ID, CONTROLLED_CREATE_INPUT_SCHEMA_JSON,
+        CodingWriteScope, STRUCTURED_PATCH_INPUT_SCHEMA_ID, STRUCTURED_PATCH_INPUT_SCHEMA_JSON,
+        register_controlled_change_runtime_tools,
+    },
     runtime_tools::read_only_runtime_registry,
 };
 
@@ -76,6 +84,8 @@ pub struct TargetedValidationRequest {
 pub enum CodingToolCatalogError {
     /// One exact definition could not enter the common registry.
     RegistrationDenied,
+    /// A model-visible schema was absent or did not match the registered schema digest.
+    SchemaDenied,
 }
 
 impl CodingToolCatalogError {
@@ -84,8 +94,19 @@ impl CodingToolCatalogError {
     pub const fn code(self) -> &'static str {
         match self {
             Self::RegistrationDenied => "runtime.coding-tool.registration-denied",
+            Self::SchemaDenied => "runtime.coding-tool.schema-denied",
         }
     }
+}
+
+/// Inert model-visible projection of one exact native tool and its validated input schema.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CodingModelToolContract {
+    /// Exact declarative definition used by the common registry and dispatcher.
+    pub definition: ToolDefinition,
+    /// Parsed JSON Schema whose bytes match the definition's input-schema digest.
+    pub input_schema: serde_json::Value,
 }
 
 struct RegisteredCommandTool {
@@ -273,6 +294,43 @@ pub fn native_coding_runtime_registry(
     register_bounded_command_runtime_tool(&mut registry, commands.clone())?;
     register_targeted_validation_runtime_tool(&mut registry, commands, validations)?;
     Ok(registry)
+}
+
+/// Projects the registered native catalog into inert model-visible definitions.
+///
+/// This projection contains no implementation, dispatcher, grant, path handle, or effect API.
+pub fn model_visible_coding_tools(
+    registry: &ToolRegistry,
+) -> Result<Vec<CodingModelToolContract>, CodingToolCatalogError> {
+    registry
+        .list_tools()
+        .into_iter()
+        .map(|definition| {
+            let schema_json = coding_input_schema_json(definition.input_schema.schema_id.as_str())
+                .ok_or(CodingToolCatalogError::SchemaDenied)?;
+            if definition.input_schema.schema_sha256 != sha256_hex(schema_json.as_bytes()) {
+                return Err(CodingToolCatalogError::SchemaDenied);
+            }
+            let input_schema = serde_json::from_str(schema_json)
+                .map_err(|_| CodingToolCatalogError::SchemaDenied)?;
+            Ok(CodingModelToolContract {
+                definition: definition.clone(),
+                input_schema,
+            })
+        })
+        .collect()
+}
+
+fn coding_input_schema_json(schema_id: &str) -> Option<&'static str> {
+    match schema_id {
+        READ_ONLY_INPUT_SCHEMA_ID => Some(READ_ONLY_INPUT_SCHEMA_JSON),
+        GIT_INSPECTION_INPUT_SCHEMA_ID => Some(GIT_INSPECTION_INPUT_SCHEMA_JSON),
+        STRUCTURED_PATCH_INPUT_SCHEMA_ID => Some(STRUCTURED_PATCH_INPUT_SCHEMA_JSON),
+        CONTROLLED_CREATE_INPUT_SCHEMA_ID => Some(CONTROLLED_CREATE_INPUT_SCHEMA_JSON),
+        BOUNDED_COMMAND_INPUT_SCHEMA_ID => Some(BOUNDED_COMMAND_INPUT_SCHEMA_JSON),
+        TARGETED_VALIDATION_INPUT_SCHEMA_ID => Some(TARGETED_VALIDATION_INPUT_SCHEMA_JSON),
+        _ => None,
+    }
 }
 
 fn serde_command_error(
@@ -578,6 +636,15 @@ mod tests {
                     | GrantOperation::Publish
                     | GrantOperation::Deploy
             )
+        }));
+
+        let model_tools = model_visible_coding_tools(&registry).expect("model-visible projection");
+        assert_eq!(model_tools.len(), definitions.len());
+        assert!(model_tools.iter().all(|tool| {
+            tool.input_schema["$id"].as_str()
+                == Some(tool.definition.input_schema.schema_id.as_str())
+                && tool.input_schema["type"] == "object"
+                && tool.input_schema["additionalProperties"] == false
         }));
     }
 }

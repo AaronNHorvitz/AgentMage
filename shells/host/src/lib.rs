@@ -4,6 +4,8 @@
 
 /// Authority-free composition of structured edits into kernel shadow changes.
 pub mod code_change;
+/// Bounded model-context composition for shared coding sessions.
+pub mod coding_context;
 /// Exact non-authoritative approval composition for native coding operations.
 pub mod coding_authority;
 pub mod coding_changes;

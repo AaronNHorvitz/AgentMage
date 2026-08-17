@@ -656,9 +656,9 @@ pub(crate) mod tests {
             quantization: "none".to_owned(),
             modalities: vec![ModelModality::Text],
             context: ContextBudget {
-                max_context_tokens: 128,
-                max_input_bytes: 1_024,
-                max_messages: 4,
+                max_context_tokens: 65_536,
+                max_input_bytes: 256 * 1024,
+                max_messages: 64,
                 token_counter: "fixture-counter-v1".to_owned(),
                 token_counter_sha256: SHA.to_owned(),
             },
