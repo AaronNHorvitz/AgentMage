@@ -201,6 +201,7 @@ struct FakeToolBoundary {
     script: PermissionScript,
     executions: Arc<AtomicUsize>,
     emit_evidence: bool,
+    state_change: StateChange,
 }
 
 impl FakeToolBoundary {
@@ -312,7 +313,7 @@ impl RuntimeToolBoundary for FakeToolBoundary {
             evidence,
             error: None,
             elapsed_ms: 1,
-            state_change: StateChange::NotChanged,
+            state_change: self.state_change,
         };
         let receipt_id = ReceiptId::from_raw(format!("receipt-{execution}"));
         let receipt_sha256 = sha256(
@@ -386,7 +387,7 @@ impl Tool for FixtureTool {
     }
 }
 
-fn registry() -> ToolRegistry {
+fn registry_for_operation(operation: GrantOperation) -> ToolRegistry {
     let mut registry = ToolRegistry::new();
     registry
         .register_tool(Box::new(FixtureTool {
@@ -399,9 +400,9 @@ fn registry() -> ToolRegistry {
                 input_schema: schema("fixture.input"),
                 output_schema: schema("fixture.output"),
                 risk_level: ToolRiskLevel::Low,
-                declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
+                declared_effects: vec![OperationBinding::new(operation)],
                 required_grant: RequiredGrantTemplate {
-                    operation: OperationBinding::new(GrantOperation::WorkspaceRead),
+                    operation: OperationBinding::new(operation),
                     target_scope: "fixture.txt".to_owned(),
                     single_use: true,
                 },
@@ -435,8 +436,24 @@ fn coordinator_for_mode(
     permission: PermissionScript,
     emit_tool_evidence: bool,
 ) -> Result<(FixtureCoordinator, Arc<AtomicUsize>), RuntimeLoopError> {
+    coordinator_for_mode_and_operation(
+        mode,
+        GrantOperation::WorkspaceRead,
+        scripts,
+        permission,
+        emit_tool_evidence,
+    )
+}
+
+fn coordinator_for_mode_and_operation(
+    mode: RuntimeSessionMode,
+    operation: GrantOperation,
+    scripts: impl IntoIterator<Item = ModelScript>,
+    permission: PermissionScript,
+    emit_tool_evidence: bool,
+) -> Result<(FixtureCoordinator, Arc<AtomicUsize>), RuntimeLoopError> {
     let profile = profile("runtime-loop");
-    let registry = registry();
+    let registry = registry_for_operation(operation);
     let mut request = request(profile.clone(), &registry);
     request.mode = mode;
     request.request_sha256 = "0".repeat(64);
@@ -451,6 +468,11 @@ fn coordinator_for_mode(
             script: permission,
             executions: Arc::clone(&executions),
             emit_evidence: emit_tool_evidence,
+            state_change: if operation == GrantOperation::WorkspaceWrite {
+                StateChange::Changed
+            } else {
+                StateChange::NotChanged
+            },
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-0001"),
@@ -710,6 +732,64 @@ fn story_48_2_controlled_write_mode_uses_the_same_ephemeral_coordinator_boundary
     assert_eq!(outcome.state, AgentStateKind::Success);
     assert_eq!(executions.load(Ordering::SeqCst), 0);
     assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn story_48_2_controlled_write_accepts_only_truthful_changed_tool_results() {
+    let (mut coordinator, executions) = coordinator_for_mode_and_operation(
+        RuntimeSessionMode::ControlledWrite,
+        GrantOperation::WorkspaceWrite,
+        [ModelScript::Tool, ModelScript::Completion],
+        PermissionScript::Allow,
+        true,
+    )
+    .expect("controlled-write tool catalog builds");
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("changed result returns to observation and verification")
+    else {
+        panic!("pre-authorized fixture does not pause");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(outcome.tool_call_count, 1);
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_valid_terminal_stream(&coordinator);
+
+    let (mut false_no_change, false_executions) = coordinator_for_mode_and_operation(
+        RuntimeSessionMode::ControlledWrite,
+        GrantOperation::WorkspaceWrite,
+        [ModelScript::Tool],
+        PermissionScript::Allow,
+        true,
+    )
+    .expect("controlled-write tool catalog builds");
+    false_no_change.tool_boundary.state_change = StateChange::NotChanged;
+    assert_eq!(
+        false_no_change.run_until_boundary(None, None),
+        Err(RuntimeLoopError::InvalidBoundaryResult)
+    );
+    assert_eq!(false_executions.load(Ordering::SeqCst), 1);
+}
+
+#[test]
+fn story_23_4_read_only_mode_rejects_stateful_or_command_catalogs() {
+    for operation in [
+        GrantOperation::WorkspaceWrite,
+        GrantOperation::CommandExecute,
+        GrantOperation::NetworkAccess,
+    ] {
+        assert!(matches!(
+            coordinator_for_mode_and_operation(
+                RuntimeSessionMode::EphemeralReadOnly,
+                operation,
+                [ModelScript::Completion],
+                PermissionScript::Allow,
+                true,
+            ),
+            Err(RuntimeLoopError::ToolCatalogBinding)
+        ));
+    }
 }
 
 #[test]

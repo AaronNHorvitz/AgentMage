@@ -5,14 +5,14 @@ use std::collections::BTreeSet;
 use agentmage_kernel_contracts::{
     ActionId, AgentProposal, AgentStateKind, ApprovalId, CONTRACT_SCHEMA_VERSION,
     CancellationSignal, ClosedModelProposal, ContextPacketId, CorrelationId, EvidenceReference,
-    ExactModelProfile, GrantId, LocalModelRuntime, ModelCancellationProbe, ModelContextPacket,
-    ModelFamilyCodec, ModelProposalKind, ModelRunId, ModelRunRequest, ModelRunResult,
-    ModelRunTerminalState, OperationOutcome, PostconditionId, ReceiptId, RuntimeApprovalChallenge,
-    RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeEvent, RuntimeEventId,
-    RuntimeEventKind, RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeOperationId,
-    RuntimeOutcome, RuntimeOutput, RuntimePermissionDisposition, RuntimeRunRequest,
-    RuntimeSessionMode, RuntimeToolReference, RuntimeTurnId, StateChange, ToolCall, ToolDefinition,
-    ToolResult, VerifierCandidate, VerifierId, to_canonical_json,
+    ExactModelProfile, GrantId, GrantOperation, LocalModelRuntime, ModelCancellationProbe,
+    ModelContextPacket, ModelFamilyCodec, ModelProposalKind, ModelRunId, ModelRunRequest,
+    ModelRunResult, ModelRunTerminalState, OperationOutcome, PostconditionId, ReceiptId,
+    RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeEvent,
+    RuntimeEventId, RuntimeEventKind, RuntimeEventRetention, RuntimeEventRetentionKind,
+    RuntimeOperationId, RuntimeOutcome, RuntimeOutput, RuntimePermissionDisposition,
+    RuntimeRunRequest, RuntimeSessionMode, RuntimeToolReference, RuntimeTurnId, StateChange,
+    ToolCall, ToolDefinition, ToolResult, VerifierCandidate, VerifierId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -356,6 +356,7 @@ where
         if registry_tools != request.visible_tools
             || runtime_tool_catalog_sha256(&request.tool_catalog_id, &registry_tools)?
                 != request.tool_catalog_sha256
+            || !catalog_allowed_for_mode(request.mode, &registry)
         {
             return Err(RuntimeLoopError::ToolCatalogBinding);
         }
@@ -1007,7 +1008,7 @@ where
                     .tool_boundary
                     .execute(&self.request, &evaluation, &definition, &call, cancellation)
                     .map_err(RuntimeLoopError::Dependency)?;
-                self.complete_tool(execution, call, turn_id, operation_id)
+                self.complete_tool(execution, definition, call, turn_id, operation_id)
             }
         }
     }
@@ -1076,11 +1077,12 @@ where
     fn complete_tool(
         &mut self,
         execution: RuntimeToolExecution,
+        definition: ToolDefinition,
         call: ToolCall,
         turn_id: RuntimeTurnId,
         operation_id: RuntimeOperationId,
     ) -> Result<(), RuntimeLoopError> {
-        if !valid_tool_execution(&execution, &call, &self.request) {
+        if !valid_tool_execution(&execution, &definition, &call, &self.request) {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
         let prior_evidence = self.evidence.len();
@@ -1621,6 +1623,7 @@ fn valid_permission_evaluation(
 
 fn valid_tool_execution(
     execution: &RuntimeToolExecution,
+    definition: &ToolDefinition,
     call: &ToolCall,
     request: &RuntimeRunRequest,
 ) -> bool {
@@ -1631,7 +1634,12 @@ fn valid_tool_execution(
         && result.schema_version == CONTRACT_SCHEMA_VERSION
         && result.tool_call_id == call.tool_call_id
         && result.correlation_id == call.correlation_id
-        && result.state_change == StateChange::NotChanged
+        && valid_runtime_state_change(
+            request.mode,
+            definition.required_grant.operation.operation(),
+            result.outcome,
+            result.state_change,
+        )
         && result
             .output
             .as_ref()
@@ -1644,6 +1652,53 @@ fn valid_tool_execution(
                 && evidence.observed_revision.as_deref()
                     == Some(request.repository_snapshot_id.as_str())
         })
+}
+
+fn catalog_allowed_for_mode(mode: RuntimeSessionMode, registry: &ToolRegistry) -> bool {
+    registry.list_tools().iter().all(|definition| {
+        let operation = definition.required_grant.operation.operation();
+        match mode {
+            RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::DurableReadOnly => {
+                operation == GrantOperation::WorkspaceRead
+            }
+            RuntimeSessionMode::ControlledWrite => matches!(
+                operation,
+                GrantOperation::WorkspaceRead
+                    | GrantOperation::WorkspaceWrite
+                    | GrantOperation::CommandExecute
+            ),
+        }
+    })
+}
+
+fn valid_runtime_state_change(
+    mode: RuntimeSessionMode,
+    operation: GrantOperation,
+    outcome: OperationOutcome,
+    state_change: StateChange,
+) -> bool {
+    match (mode, operation, outcome, state_change) {
+        (
+            RuntimeSessionMode::ControlledWrite,
+            GrantOperation::WorkspaceWrite,
+            OperationOutcome::Succeeded,
+            StateChange::Changed,
+        )
+        | (
+            RuntimeSessionMode::ControlledWrite,
+            _,
+            OperationOutcome::Uncertain,
+            StateChange::Uncertain,
+        ) => true,
+        (_, _, OperationOutcome::Succeeded, StateChange::NotChanged) => {
+            operation != GrantOperation::WorkspaceWrite
+        }
+        (_, _, OperationOutcome::Denied, StateChange::NotChanged)
+        | (_, _, OperationOutcome::Failed, StateChange::NotChanged)
+        | (_, _, OperationOutcome::Cancelled, StateChange::NotChanged)
+        | (_, _, OperationOutcome::TimedOut, StateChange::NotChanged) => true,
+        _ => false,
+    }
 }
 
 fn valid_output_payload(
