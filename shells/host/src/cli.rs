@@ -2,6 +2,15 @@
 
 use serde::{Deserialize, Serialize};
 
+use agentmage_kernel_contracts::{
+    RuntimeApprovalChallenge, RuntimeEvent, RuntimeEventKind, RuntimeOutcome, RuntimeOutput,
+    RuntimeRunRequest,
+};
+use agentmage_kernel_engine::{
+    runtime_coordinator::{verify_runtime_approval_challenge, verify_runtime_outcome},
+    runtime_event::verify_runtime_event,
+};
+
 use crate::headless::{
     ClientCommand, ClientContentChannel, ClientExitCode, ClientSurface, ConversationClientCommand,
     OperationalClientCommand, ThinClientError, ThinClientEvent, ThinClientEventKind,
@@ -44,6 +53,11 @@ pub enum CliInvocation {
     Version,
     /// Render deterministic shell completion.
     Completion(CompletionShell),
+    /// Start the public interactive coding client through the shared runtime.
+    Code {
+        /// Exact output format.
+        output: CliOutputFormat,
+    },
     /// Submit one exact command through a selected thin-client surface.
     Execute {
         /// Exact thin-client surface.
@@ -115,6 +129,12 @@ pub fn parse_cli_arguments(arguments: &[String]) -> Result<CliInvocation, ThinCl
     }
     if surface != ClientSurface::InteractiveCli && output != CliOutputFormat::Json {
         return Err(ThinClientError::InvalidValue);
+    }
+    if matches!(&arguments[cursor..], [command] if command == "code") {
+        if surface != ClientSurface::InteractiveCli {
+            return Err(ThinClientError::InvalidValue);
+        }
+        return Ok(CliInvocation::Code { output });
     }
     let command = parse_command(&arguments[cursor..])?;
     command.verify()?;
@@ -314,6 +334,137 @@ pub fn render_json_event(event: &ThinClientEvent) -> Result<String, ThinClientEr
     Ok(rendered)
 }
 
+/// Renders one verified shared-runtime event as bounded human-readable terminal text.
+pub fn render_runtime_event_human(event: &RuntimeEvent) -> Result<String, ThinClientError> {
+    verify_runtime_event(event).map_err(|_| ThinClientError::Malformed)?;
+    let detail = match &event.kind {
+        RuntimeEventKind::PermissionRequested {
+            operation,
+            preview_sha256,
+            expires_at_epoch_ms,
+            ..
+        } => format!(
+            "permission_requested operation={operation:?} preview={preview_sha256} expires={expires_at_epoch_ms}"
+        ),
+        RuntimeEventKind::PermissionDecided { disposition, .. } => {
+            format!("permission_decided disposition={disposition:?}")
+        }
+        RuntimeEventKind::ArtifactCreated {
+            artifact_id,
+            manifest_sha256,
+        } => format!(
+            "artifact_created id={} manifest={manifest_sha256}",
+            artifact_id.as_str()
+        ),
+        RuntimeEventKind::Progress { code } => format!("progress code={code}"),
+        RuntimeEventKind::RunTerminal { state, .. } => {
+            format!("run_terminal state={state:?}")
+        }
+        _ => runtime_event_label(&event.kind).to_owned(),
+    };
+    bounded_render(format!("event={} {detail}", event.sequence))
+}
+
+/// Renders one verified shared-runtime event as a closed JSON line.
+pub fn render_runtime_event_json(event: &RuntimeEvent) -> Result<String, ThinClientError> {
+    verify_runtime_event(event).map_err(|_| ThinClientError::Malformed)?;
+    bounded_render(serde_json::to_string(event).map_err(|_| ThinClientError::Malformed)?)
+}
+
+/// Renders the complete content-minimized protected approval challenge.
+pub fn render_runtime_approval_human(
+    challenge: &RuntimeApprovalChallenge,
+) -> Result<String, ThinClientError> {
+    verify_runtime_approval_challenge(challenge).map_err(|_| ThinClientError::Malformed)?;
+    bounded_render(format!(
+        "approval={} operation={:?} tool_call={} preview={} expires={} confirmation={}",
+        challenge.approval_id.as_str(),
+        challenge.operation,
+        challenge.tool_call_id.as_str(),
+        challenge.preview_sha256,
+        challenge.expires_at_epoch_ms,
+        challenge.challenge_sha256,
+    ))
+}
+
+/// Renders one verified terminal runtime outcome with artifact-backed output references intact.
+pub fn render_runtime_outcome_human(
+    request: &RuntimeRunRequest,
+    outcome: &RuntimeOutcome,
+) -> Result<String, ThinClientError> {
+    verify_runtime_outcome(outcome, request).map_err(|_| ThinClientError::Malformed)?;
+    let output = match &outcome.output {
+        None => "none".to_owned(),
+        Some(RuntimeOutput::Inline { payload }) => format!(
+            "inline media={} bytes={} sha256={}",
+            payload.media_type,
+            payload.bytes.len(),
+            payload.sha256
+        ),
+        Some(RuntimeOutput::Artifact { reference }) => format!(
+            "artifact id={} media={} bytes={} sha256={}",
+            reference.artifact_id.as_str(),
+            reference.media_type,
+            reference.byte_size,
+            reference.sha256
+        ),
+    };
+    bounded_render(format!(
+        "state={:?} turns={} model_calls={} tool_calls={} evidence={} receipts={} unresolved={} output={output} outcome={}",
+        outcome.state,
+        outcome.turn_count,
+        outcome.model_call_count,
+        outcome.tool_call_count,
+        outcome.evidence.len(),
+        outcome.receipt_ids.len(),
+        outcome.unresolved_codes.join(","),
+        outcome.outcome_sha256,
+    ))
+}
+
+/// Renders one verified terminal runtime outcome as closed JSON.
+pub fn render_runtime_outcome_json(
+    request: &RuntimeRunRequest,
+    outcome: &RuntimeOutcome,
+) -> Result<String, ThinClientError> {
+    verify_runtime_outcome(outcome, request).map_err(|_| ThinClientError::Malformed)?;
+    bounded_render(serde_json::to_string(outcome).map_err(|_| ThinClientError::Malformed)?)
+}
+
+const fn runtime_event_label(kind: &RuntimeEventKind) -> &'static str {
+    match kind {
+        RuntimeEventKind::RunStarted { .. } => "run_started",
+        RuntimeEventKind::TurnStarted => "turn_started",
+        RuntimeEventKind::TurnCompleted { .. } => "turn_completed",
+        RuntimeEventKind::ModelRequested { .. } => "model_requested",
+        RuntimeEventKind::ModelCompleted { .. } => "model_completed",
+        RuntimeEventKind::ModelFailed { .. } => "model_failed",
+        RuntimeEventKind::ToolRequested { .. } => "tool_requested",
+        RuntimeEventKind::ToolStarted { .. } => "tool_started",
+        RuntimeEventKind::ToolCompleted { .. } => "tool_completed",
+        RuntimeEventKind::ToolFailed { .. } => "tool_failed",
+        RuntimeEventKind::PermissionRequested { .. } => "permission_requested",
+        RuntimeEventKind::PermissionDecided { .. } => "permission_decided",
+        RuntimeEventKind::FileObserved { .. } => "file_observed",
+        RuntimeEventKind::FileModified { .. } => "file_modified",
+        RuntimeEventKind::ArtifactCreated { .. } => "artifact_created",
+        RuntimeEventKind::CheckpointCommitted { .. } => "checkpoint_committed",
+        RuntimeEventKind::CancellationRequested { .. } => "cancellation_requested",
+        RuntimeEventKind::CancellationObserved { .. } => "cancellation_observed",
+        RuntimeEventKind::Progress { .. } => "progress",
+        RuntimeEventKind::Metric { .. } => "metric",
+        RuntimeEventKind::RunTerminal { .. } => "run_terminal",
+    }
+}
+
+fn bounded_render(rendered: String) -> Result<String, ThinClientError> {
+    if rendered.len() > MAX_ARGUMENT_BYTES {
+        Err(ThinClientError::SizeExceeded)
+    } else {
+        Ok(rendered)
+    }
+}
+
 const fn channel_label(channel: ClientContentChannel) -> &'static str {
     match channel {
         ClientContentChannel::Content => "content",
@@ -329,9 +480,10 @@ const fn channel_label(channel: ClientContentChannel) -> &'static str {
 #[must_use]
 pub const fn command_help() -> &'static str {
     "AgentMage local CLI\n\
-Usage: agent [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
+Usage: agentmage [--json] [--surface interactive-cli|json|sdk|acp] COMMAND\n\
 \n\
 Commands:\n\
+  code\n\
   chat MESSAGE\n\
   conversations list [--from YYYY-MM-DD] [--to YYYY-MM-DD]\n\
   conversations search QUERY\n\
@@ -356,13 +508,13 @@ Headless surfaces require an exact predeclared, bounded, unexpired grant.\n"
 pub const fn shell_completion(shell: CompletionShell) -> &'static str {
     match shell {
         CompletionShell::Bash => {
-            "complete -W 'chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion' agent\n"
+            "complete -W 'code chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion' agentmage\n"
         }
         CompletionShell::Zsh => {
-            "compdef '_arguments 1:command:(chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion)' agent\n"
+            "compdef '_arguments 1:command:(code chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion)' agentmage\n"
         }
         CompletionShell::Fish => {
-            "complete -c agent -f -a 'chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion'\n"
+            "complete -c agentmage -f -a 'code chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion'\n"
         }
     }
 }
@@ -452,6 +604,18 @@ mod tests {
             parse_cli_arguments(&strings(&["completion", "bash"])),
             Ok(CliInvocation::Completion(CompletionShell::Bash))
         );
+        assert_eq!(
+            parse_cli_arguments(&strings(&["code"])),
+            Ok(CliInvocation::Code {
+                output: CliOutputFormat::Human,
+            })
+        );
+        assert_eq!(
+            parse_cli_arguments(&strings(&["--json", "code"])),
+            Ok(CliInvocation::Code {
+                output: CliOutputFormat::Json,
+            })
+        );
         let parsed =
             parse_cli_arguments(&strings(&["--json", "--surface", "acp", "vault", "tasks"]));
         assert!(matches!(
@@ -464,6 +628,7 @@ mod tests {
         ));
         assert!(!command_help().contains("http"));
         assert!(!shell_completion(CompletionShell::Fish).contains("exec"));
+        assert!(parse_cli_arguments(&strings(&["--surface", "json", "code"])).is_err());
     }
 
     #[test]

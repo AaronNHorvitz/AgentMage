@@ -7,6 +7,8 @@ pub mod code_change;
 /// Exact non-authoritative approval composition for native coding operations.
 pub mod coding_authority;
 pub mod coding_changes;
+/// Thin presentation and approval clients for the shared coding runtime.
+pub mod coding_client;
 /// Bounded model-context composition for shared coding sessions.
 pub mod coding_context;
 pub mod coding_dispatch;

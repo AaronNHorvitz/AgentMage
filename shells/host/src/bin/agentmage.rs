@@ -23,7 +23,7 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         CliInvocation::Version => {
-            println!("agent {CLI_VERSION}");
+            println!("agentmage {CLI_VERSION}");
             ExitCode::SUCCESS
         }
         CliInvocation::Completion(shell) => {

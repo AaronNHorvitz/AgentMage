@@ -2301,11 +2301,19 @@ mod tests {
 
     use super::*;
     use crate::{
+        cli::{
+            render_runtime_event_human, render_runtime_event_json, render_runtime_outcome_human,
+            render_runtime_outcome_json,
+        },
         coding_authority::{CodingRuntimePolicyRequest, build_coding_runtime_policy},
         coding_changes::{
             CONTROLLED_CHANGE_TOOL_VERSION, CONTROLLED_CREATE_TOOL_ID,
             ControlledFileClassification, ControlledFileCreationProposal, STRUCTURED_PATCH_TOOL_ID,
             StructuredPatchProposal, controlled_create_parent_observation_sha256,
+        },
+        coding_client::{
+            CodingApprovalPort, CodingClientError, CodingEventSink, DenyHeadlessApproval,
+            drive_coding_client,
         },
         coding_context::{CodingContextPort, CodingTokenCounter},
         coding_harness::{
@@ -2454,6 +2462,27 @@ mod tests {
         fn now_epoch_ms(&mut self) -> Result<u64, RuntimePortFailure> {
             self.0 += 1;
             Ok(self.0)
+        }
+    }
+
+    struct AllowApproval;
+
+    impl CodingApprovalPort for AllowApproval {
+        fn decide(
+            &mut self,
+            _challenge: &RuntimeApprovalChallenge,
+        ) -> Result<RuntimeApprovalDisposition, CodingClientError> {
+            Ok(RuntimeApprovalDisposition::Allow)
+        }
+    }
+
+    #[derive(Default)]
+    struct CollectingEventSink(Vec<RuntimeEvent>);
+
+    impl CodingEventSink for CollectingEventSink {
+        fn present(&mut self, event: &RuntimeEvent) -> Result<(), CodingClientError> {
+            self.0.push(event.clone());
+            Ok(())
         }
     }
 
@@ -3321,6 +3350,7 @@ mod tests {
         let Fixture {
             request, boundary, ..
         } = fixture;
+        let render_request = request.clone();
         let mut coordinator = compose_ephemeral_coding_coordinator(
             profile,
             request,
@@ -3331,20 +3361,21 @@ mod tests {
         )
         .expect("ephemeral coding coordinator");
 
-        let mut next_response = None;
-        let outcome = loop {
-            match coordinator
-                .run_until_boundary(next_response.as_ref(), None)
-                .expect("coding coordinator boundary")
-            {
-                RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
-                    next_response = Some(response(&challenge, RuntimeApprovalDisposition::Allow));
-                }
-                RuntimeCoordinatorStep::Complete { outcome } => break outcome,
-            }
-        };
+        let mut approvals = AllowApproval;
+        let mut sink = CollectingEventSink::default();
+        let client_result = drive_coding_client(&mut coordinator, &mut approvals, &mut sink, None)
+            .expect("interactive coding client");
+        let outcome = client_result.outcome;
 
         assert_eq!(outcome.state, AgentStateKind::NoOp, "{outcome:#?}");
+        assert_eq!(client_result.presented_events as usize, sink.0.len());
+        assert_eq!(sink.0, coordinator.events());
+        for event in &sink.0 {
+            render_runtime_event_human(event).expect("human runtime event");
+            render_runtime_event_json(event).expect("JSON runtime event");
+        }
+        render_runtime_outcome_human(&render_request, &outcome).expect("human runtime outcome");
+        render_runtime_outcome_json(&render_request, &outcome).expect("JSON runtime outcome");
         assert_eq!(outcome.tool_call_count, 1);
         assert!(outcome.unresolved_codes.is_empty());
     }
@@ -3457,42 +3488,40 @@ mod tests {
                 FixtureClock(50_000),
             )
             .expect("ephemeral coding coordinator");
-            let RuntimeCoordinatorStep::AwaitingApproval { challenge } = coordinator
-                .run_until_boundary(None, None)
-                .expect("approval boundary")
-            else {
-                panic!("patch must require approval");
-            };
-
-            let disposition = if cancel {
-                RuntimeApprovalDisposition::Allow
+            let outcome = if cancel {
+                let RuntimeCoordinatorStep::AwaitingApproval { challenge } = coordinator
+                    .run_until_boundary(None, None)
+                    .expect("approval boundary")
+                else {
+                    panic!("patch must require approval");
+                };
+                let approval_response = response(&challenge, RuntimeApprovalDisposition::Allow);
+                let cancellation = CancellationSignal {
+                    schema_version: CONTRACT_SCHEMA_VERSION,
+                    cancellation_id: CancellationId::from_raw("cancellation-coding-e2e"),
+                    correlation_id: coordinator
+                        .events()
+                        .first()
+                        .expect("run-start event")
+                        .correlation_id
+                        .clone(),
+                    task_id: challenge.task_id.clone(),
+                    reason: CancellationReason::UserRequested,
+                    requested_by: BoundaryKind::Shell,
+                };
+                let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+                    .run_until_boundary(Some(&approval_response), Some(&cancellation))
+                    .expect("terminal boundary")
+                else {
+                    panic!("cancellation must be terminal");
+                };
+                outcome
             } else {
-                RuntimeApprovalDisposition::Deny
-            };
-            let approval_response = response(&challenge, disposition);
-            let cancellation = cancel.then(|| CancellationSignal {
-                schema_version: CONTRACT_SCHEMA_VERSION,
-                cancellation_id: CancellationId::from_raw("cancellation-coding-e2e"),
-                correlation_id: coordinator
-                    .events()
-                    .first()
-                    .expect("run-start event")
-                    .correlation_id
-                    .clone(),
-                task_id: challenge.task_id.clone(),
-                reason: CancellationReason::UserRequested,
-                requested_by: BoundaryKind::Shell,
-            });
-            let RuntimeCoordinatorStep::Complete { outcome } = coordinator
-                .run_until_boundary(
-                    Some(&approval_response),
-                    cancellation
-                        .as_ref()
-                        .map(|signal| signal as &dyn ModelCancellationProbe),
-                )
-                .expect("terminal boundary")
-            else {
-                panic!("denial or cancellation must be terminal");
+                let mut approvals = DenyHeadlessApproval;
+                let mut sink = CollectingEventSink::default();
+                drive_coding_client(&mut coordinator, &mut approvals, &mut sink, None)
+                    .expect("headless denial")
+                    .outcome
             };
             assert_eq!(
                 outcome.state,

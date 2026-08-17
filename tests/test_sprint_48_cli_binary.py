@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BINARY = ROOT / "target/debug/agent"
+PUBLIC_BINARY = ROOT / "target/debug/agentmage"
 
 
 class Sprint48CliBinaryTests(unittest.TestCase):
@@ -19,14 +20,23 @@ class Sprint48CliBinaryTests(unittest.TestCase):
                 "build",
                 "-p",
                 "agentmage-host",
-                "--bin",
-                "agent",
+                "--bins",
                 "--locked",
             ],
             cwd=ROOT,
             check=True,
             capture_output=True,
             timeout=300,
+        )
+
+    def run_agentmage(self, *arguments: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [str(PUBLIC_BINARY), *arguments],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
 
     def run_agent(self, *arguments: str) -> subprocess.CompletedProcess[str]:
@@ -67,6 +77,17 @@ class Sprint48CliBinaryTests(unittest.TestCase):
                 "schema_version": 1,
             },
         )
+
+    def test_public_coding_entry_is_selected_and_fails_closed_without_a_profile(self) -> None:
+        help_result = self.run_agentmage("--help")
+        self.assertEqual(help_result.returncode, 0)
+        self.assertIn("Usage: agentmage", help_result.stdout)
+        self.assertIn("\ncode\n", help_result.stdout)
+
+        code_result = self.run_agentmage("code")
+        self.assertEqual(code_result.returncode, 5)
+        self.assertEqual(code_result.stdout, "")
+        self.assertEqual(code_result.stderr, "client.transport.failed\n")
 
     def test_headless_human_output_and_invalid_input_fail_without_fallback(self) -> None:
         headless_human = self.run_agent("--surface", "json", "diagnostics")
