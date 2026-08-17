@@ -37,6 +37,8 @@ pub struct ContextCompositionBudget {
     pub max_bytes: u64,
     /// Maximum disclosed tokens.
     pub max_tokens: u32,
+    /// Maximum admitted context items or model messages.
+    pub max_items: u32,
     /// Exact pinned token-counter identity.
     pub token_counter_id: String,
 }
@@ -96,7 +98,8 @@ pub fn compose_context(
         let next_bytes = used_bytes.checked_add(bytes);
         let next_tokens = used_tokens.checked_add(candidate.token_count);
         let fits = next_bytes.is_some_and(|value| value <= budget.max_bytes)
-            && next_tokens.is_some_and(|value| value <= budget.max_tokens);
+            && next_tokens.is_some_and(|value| value <= budget.max_tokens)
+            && items.len() < budget.max_items as usize;
         if !fits {
             if candidate.essential {
                 return Err(ContextCompositionError::EssentialItemExceedsBudget);
@@ -155,6 +158,8 @@ fn validate_composition_input(
     if !valid_id(packet_id.as_str())
         || budget.max_bytes == 0
         || budget.max_tokens == 0
+        || budget.max_items == 0
+        || budget.max_items as usize > MAX_CONTEXT_ITEMS
         || !bounded_text(&budget.token_counter_id)
         || candidates.len() > MAX_CONTEXT_ITEMS
     {
@@ -548,10 +553,10 @@ mod tests {
     use agentmage_kernel_contracts::{
         ActionId, ActionState, CONTRACT_SCHEMA_VERSION, CheckedContextSummary, CheckedSummaryState,
         CheckpointFileIdentity, ContextAdmission, ContextItemCandidate, ContextItemKind,
-        ContextPacketId, ContextSensitivity, ContextSummaryId, EvidenceId, GrantId, ModelProfileId,
-        PlanId, PlanStepId, PolicyId, ReceiptId, RepositorySnapshotId, ResumeDriftDecision,
-        ResumeDriftDimension, SessionCheckpoint, SessionCheckpointId, SessionId, TaskId,
-        WorkspaceId,
+        ContextOmissionReason, ContextPacketId, ContextSensitivity, ContextSummaryId, EvidenceId,
+        GrantId, ModelProfileId, PlanId, PlanStepId, PolicyId, ReceiptId, RepositorySnapshotId,
+        ResumeDriftDecision, ResumeDriftDimension, SessionCheckpoint, SessionCheckpointId,
+        SessionId, TaskId, WorkspaceId,
     };
 
     use super::{
@@ -591,6 +596,7 @@ mod tests {
         ContextCompositionBudget {
             max_bytes: bytes,
             max_tokens: tokens,
+            max_items: 32,
             token_counter_id: "counter-v1".to_owned(),
         }
     }
@@ -707,6 +713,47 @@ mod tests {
                 vec![duplicate.clone(), duplicate]
             ),
             Err(ContextCompositionError::ConflictingIdentity)
+        );
+    }
+
+    #[test]
+    fn s020_ut01_item_ceiling_omits_optional_content_and_rejects_essential_overflow() {
+        let mut bounded = budget(1_024, 128);
+        bounded.max_items = 1;
+        let mut optional = item("supporting", ContextItemKind::Supporting, "optional", 1);
+        optional.essential = false;
+        let packet = compose_context(
+            ContextPacketId::from_raw("context-item-limit"),
+            &bounded,
+            vec![
+                item("request", ContextItemKind::NewestRequest, "required", 1),
+                optional,
+            ],
+        )
+        .expect("optional item is omitted");
+        assert_eq!(packet.items.len(), 1);
+        assert!(packet.accounting.iter().any(|entry| {
+            entry.item_id == "supporting"
+                && entry.omission == Some(ContextOmissionReason::Budget)
+        }));
+
+        let mut second_required = item(
+            "second-required",
+            ContextItemKind::ExpectedOutput,
+            "required too",
+            1,
+        );
+        second_required.essential = true;
+        assert_eq!(
+            compose_context(
+                ContextPacketId::from_raw("context-essential-item-limit"),
+                &bounded,
+                vec![
+                    item("request", ContextItemKind::NewestRequest, "required", 1),
+                    second_required,
+                ],
+            ),
+            Err(ContextCompositionError::EssentialItemExceedsBudget)
         );
     }
 
