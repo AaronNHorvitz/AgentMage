@@ -14,10 +14,12 @@
   hashed, and bound to one run, session, task, correlation, and policy.
 - All 21 event families have one canonical correctness, progress, or metric
   persistence class.
-- The incremental sequence verifier accepts a complete legal run and rejects
-  malformed digests, gaps, reorder, replay, unknown causation, illegal tool
-  transitions, changed run/session/task/correlation/policy bindings, and
-  post-terminal events.
+- The incremental sequence verifier accepts one exhaustive terminal history
+  covering all 21 event families and both allow/deny and success/failure
+  branches. It rejects unknown decoding, malformed digests, gaps, reorder,
+  replay, unknown causation, orphan or duplicate permission transitions,
+  changed run/session/task/correlation/policy bindings, and post-terminal
+  events without partially mutating verifier state.
 - The in-process publisher preserves canonical order, bounds subscriber count
   and queue capacity, never blocks on a subscriber, and removes lagging or
   disconnected subscribers without changing runtime authority.
