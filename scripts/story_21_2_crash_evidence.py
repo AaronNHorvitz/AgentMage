@@ -177,7 +177,7 @@ def run_matrix() -> tuple[str, int]:
             "LC_ALL": "C",
         },
     )
-    output = result.stdout + result.stderr
+    output = (result.stdout + result.stderr).replace(str(ROOT), "<repository-root>")
     if result.returncode or "1 passed; 0 failed" not in output:
         raise CrashEvidenceError("runtime.crash.command_failed")
     parse_metrics(output)
@@ -206,6 +206,7 @@ def build_report(revision: str, output: str, elapsed_ms: int) -> dict[str, Any]:
             "path": str(LOG_PATH.relative_to(ROOT)),
             "bytes": len(raw),
             "sha256": sha256_bytes(raw),
+            "redactions": ["repository-root"],
         },
         "sources": source_records(revision),
         "external_network_used": False,
@@ -215,6 +216,7 @@ def build_report(revision: str, output: str, elapsed_ms: int) -> dict[str, Any]:
             "This matrix covers the journal queue, batch flush, correctness transaction, and subscriber publication boundaries; integrated physical-effect recovery remains separate.",
             "The result is current-host Linux source evidence, not installed-platform or release evidence.",
             "Manual fuzzing remains deferred and was not executed by this campaign.",
+            "The retained command trace replaces the absolute checkout root with the literal <repository-root>; event metrics and test results are unchanged.",
         ],
     }
 
@@ -248,8 +250,10 @@ def validate_report(report: Any) -> list[str]:
     ):
         failures.append("runtime.crash.report_result")
     raw_trace = report.get("raw_trace")
-    if not isinstance(raw_trace, dict) or raw_trace.get("path") != str(
-        LOG_PATH.relative_to(ROOT)
+    if (
+        not isinstance(raw_trace, dict)
+        or raw_trace.get("path") != str(LOG_PATH.relative_to(ROOT))
+        or raw_trace.get("redactions") != ["repository-root"]
     ):
         failures.append("runtime.crash.report_trace")
     elif not LOG_PATH.is_file():
@@ -286,7 +290,7 @@ def validate_report(report: Any) -> list[str]:
     ) != ["21.2.3.2", "RV-18"]:
         failures.append("runtime.crash.report_disposition")
     limitations = report.get("limitations")
-    if not isinstance(limitations, list) or len(limitations) != 4:
+    if not isinstance(limitations, list) or len(limitations) != 5:
         failures.append("runtime.crash.report_limitations")
     return failures
 
