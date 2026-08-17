@@ -3,10 +3,10 @@
 use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
-    ActionKind, ActorId, ApprovalId, ApprovalRequest, CapabilityGrant, GrantClass, GrantId,
-    GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
-    OperationBinding, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, TaskId, ToolCall, to_canonical_json,
+    ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorizedWorkspaceHandle, CapabilityGrant,
+    GrantClass, GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
+    GrantTarget, OperationBinding, PolicyId, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
+    RuntimeApprovalResponse, RuntimeRunId, TaskId, ToolCall, WorkspaceScopePath, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     approval::{render_approval_request, verify_approval_request},
@@ -14,6 +14,7 @@ use agentmage_kernel_engine::{
     operational_store::DurableAuthorityRuntime,
     policy::{PolicyDocument, PolicyEngine, ScopeRules, ToolPolicyBinding},
     runtime_coordinator::verify_runtime_approval_response,
+    runtime_loop::runtime_action_id,
     tooling::ToolRegistry,
 };
 use sha2::{Digest, Sha256};
@@ -84,6 +85,8 @@ pub struct ApprovedCodingGrantRequest<'request> {
     pub authority: &'request mut DurableAuthorityRuntime,
     /// Exact immutable native tool registry used to render the preview.
     pub registry: &'request ToolRegistry,
+    /// Exact run-stable policy already bound into the parent and runtime request.
+    pub policy: &'request PolicyEngine,
     /// Exact protected display object retained by the trusted boundary.
     pub approval: &'request ApprovalRequest,
     /// Exact coordinator challenge derived from that display.
@@ -107,6 +110,62 @@ pub struct ApprovedCodingGrant {
     pub decision_sha256: String,
     /// Digest of the exact issued operation-grant revision.
     pub authority_sha256: String,
+}
+
+/// Inputs for one run-stable, deny-by-default coding policy envelope.
+pub struct CodingRuntimePolicyRequest<'request, Workspace>
+where
+    Workspace: AuthorizedWorkspaceHandle,
+{
+    /// Exact authenticated local actor.
+    pub actor_id: &'request ActorId,
+    /// Exact task admitted for this run.
+    pub task_id: &'request TaskId,
+    /// Exact runtime run whose bounded action identities are precomputed.
+    pub run_id: &'request RuntimeRunId,
+    /// Continuously held authorized workspace root.
+    pub workspace: &'request Workspace,
+    /// Exact immutable native tool registry.
+    pub registry: &'request ToolRegistry,
+    /// Inclusive maximum number of coordinator tool calls.
+    pub maximum_tool_calls: u32,
+    /// Canonical authorization-bound subtrees denied throughout the run.
+    pub excluded_scopes: Vec<WorkspaceScopePath>,
+}
+
+/// One immutable run policy and the parent-grant scope it protects.
+#[derive(Debug)]
+pub struct CodingRuntimePolicy {
+    policy_id: PolicyId,
+    engine: PolicyEngine,
+    parent_targets: Vec<GrantTarget>,
+    excluded_targets: Vec<GrantTarget>,
+}
+
+impl CodingRuntimePolicy {
+    /// Returns the stable policy identity exposed in the runtime request.
+    #[must_use]
+    pub const fn policy_id(&self) -> &PolicyId {
+        &self.policy_id
+    }
+
+    /// Returns the immutable policy engine used for every operation in this run.
+    #[must_use]
+    pub const fn engine(&self) -> &PolicyEngine {
+        &self.engine
+    }
+
+    /// Returns the exact authorization-bound parent scopes.
+    #[must_use]
+    pub fn parent_targets(&self) -> &[GrantTarget] {
+        &self.parent_targets
+    }
+
+    /// Returns canonical excluded scopes inherited by every child grant.
+    #[must_use]
+    pub fn excluded_targets(&self) -> &[GrantTarget] {
+        &self.excluded_targets
+    }
 }
 
 /// Renders one exact coding operation through the existing protected approval contract.
@@ -248,6 +307,103 @@ pub fn exact_coding_policy(
     .map_err(|_| CodingApprovalError::PolicyDenied)
 }
 
+/// Builds one stable policy envelope for every bounded action and native tool in a coding run.
+pub fn build_coding_runtime_policy<Workspace>(
+    request: CodingRuntimePolicyRequest<'_, Workspace>,
+) -> Result<CodingRuntimePolicy, CodingApprovalError>
+where
+    Workspace: AuthorizedWorkspaceHandle,
+{
+    if request.maximum_tool_calls == 0 || request.registry.list_tools().is_empty() {
+        return Err(CodingApprovalError::PolicyDenied);
+    }
+    let parent_scope = WorkspaceScopePath::new(
+        request.workspace.workspace_id().clone(),
+        std::iter::empty::<&str>(),
+    )
+    .map_err(|_| CodingApprovalError::PolicyDenied)?;
+    let parent_target = GrantTarget::workspace_scope(request.workspace, parent_scope)
+        .map_err(|_| CodingApprovalError::PolicyDenied)?;
+    let mut excluded_targets = request
+        .excluded_scopes
+        .into_iter()
+        .map(|scope| {
+            GrantTarget::workspace_scope(request.workspace, scope)
+                .map_err(|_| CodingApprovalError::PolicyDenied)
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    excluded_targets.sort();
+    if excluded_targets.windows(2).any(|pair| pair[0] == pair[1]) {
+        return Err(CodingApprovalError::PolicyDenied);
+    }
+
+    let definitions = request.registry.list_tools();
+    let tools = definitions
+        .iter()
+        .map(|definition| ToolPolicyBinding {
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+        })
+        .collect::<BTreeSet<_>>();
+    let operations = definitions
+        .iter()
+        .map(|definition| definition.required_grant.operation)
+        .collect::<BTreeSet<_>>();
+    if tools.len() != definitions.len()
+        || operations.iter().any(|operation| {
+            !matches!(
+                operation.operation(),
+                GrantOperation::WorkspaceRead
+                    | GrantOperation::WorkspaceWrite
+                    | GrantOperation::CommandExecute
+            )
+        })
+    {
+        return Err(CodingApprovalError::PolicyDenied);
+    }
+    let actions = (1..=request.maximum_tool_calls)
+        .map(|sequence| runtime_action_id(request.run_id, sequence))
+        .collect::<BTreeSet<_>>();
+    if actions.len() != request.maximum_tool_calls as usize {
+        return Err(CodingApprovalError::PolicyDenied);
+    }
+    let engine = PolicyEngine::new(PolicyDocument {
+        schema_version: 1,
+        revision: 1,
+        actors: exact_rules(request.actor_id.clone()),
+        tasks: exact_rules(request.task_id.clone()),
+        actions: ScopeRules {
+            allowed: actions,
+            denied: BTreeSet::new(),
+        },
+        tools: ScopeRules {
+            allowed: tools,
+            denied: BTreeSet::new(),
+        },
+        operations: ScopeRules {
+            allowed: operations,
+            denied: BTreeSet::new(),
+        },
+        targets: ScopeRules {
+            allowed: BTreeSet::from([parent_target.clone()]),
+            denied: excluded_targets.iter().cloned().collect(),
+        },
+        denied_argument_sha256s: BTreeSet::new(),
+        denied_preimage_sha256s: BTreeSet::new(),
+        network_scopes: ScopeRules::deny_all(),
+        credential_scopes: ScopeRules::deny_all(),
+        publication_scopes: ScopeRules::deny_all(),
+    })
+    .map_err(|_| CodingApprovalError::PolicyDenied)?;
+    let policy_id = PolicyId::from_raw(format!("policy:coding:{}", &engine.policy_sha256()[..32]));
+    Ok(CodingRuntimePolicy {
+        policy_id,
+        engine,
+        parent_targets: vec![parent_target],
+        excluded_targets,
+    })
+}
+
 /// Verifies one protected allow decision and durably derives its exact operation grant.
 pub fn derive_approved_coding_grant(
     request: ApprovedCodingGrantRequest<'_>,
@@ -260,14 +416,7 @@ pub fn derive_approved_coding_grant(
         request.response,
         request.now_epoch_ms,
     )?;
-    let policy = exact_coding_policy(
-        &request.approval.actor_id,
-        &request.approval.task_id,
-        &request.approval.tool_call,
-        request.approval.operation,
-        &request.approval.targets,
-    )?;
-    if policy.policy_sha256() != request.approval.policy_sha256 {
+    if request.policy.policy_sha256() != request.approval.policy_sha256 {
         return Err(CodingApprovalError::PolicyDenied);
     }
     let current_parent = request
@@ -307,7 +456,7 @@ pub fn derive_approved_coding_grant(
         canonical_contract_sha256(&grant).map_err(|_| CodingApprovalError::AuthorityDenied)?;
     Ok(ApprovedCodingGrant {
         grant,
-        policy,
+        policy: request.policy.clone(),
         decision_sha256,
         authority_sha256,
     })
@@ -862,5 +1011,149 @@ mod tests {
         let mut broadened = context;
         broadened.targets.clear();
         assert!(!policy.evaluate(&issuer, &child, &broadened).allowed);
+    }
+
+    #[test]
+    fn story_48_2_runtime_policy_is_stable_across_bounded_actions_and_denies_expansion() {
+        use agentmage_kernel_contracts::AuthorizedWorkspaceHandle as _;
+
+        let registry = read_only_runtime_registry().expect("registry");
+        let run_id = RuntimeRunId::from_raw("run-coding-envelope");
+        let actor_id = ActorId::from_raw("actor-coding-envelope");
+        let task_id = TaskId::from_raw("task-coding-envelope");
+        let runtime_policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
+            actor_id: &actor_id,
+            task_id: &task_id,
+            run_id: &run_id,
+            workspace: &Workspace,
+            registry: &registry,
+            maximum_tool_calls: 3,
+            excluded_scopes: vec![
+                WorkspaceScopePath::new(Workspace.workspace_id().clone(), ["private"])
+                    .expect("excluded scope"),
+            ],
+        })
+        .expect("runtime policy");
+        assert!(
+            runtime_policy
+                .policy_id()
+                .as_str()
+                .starts_with("policy:coding:")
+        );
+        assert_eq!(runtime_policy.parent_targets().len(), 1);
+        assert_eq!(runtime_policy.excluded_targets().len(), 1);
+
+        let definition = registry
+            .get_tool(
+                &agentmage_kernel_contracts::ToolId::from_raw(ReadOnlyToolKind::ReadText.id()),
+                "1.0.0",
+            )
+            .expect("definition");
+        let bytes = br#"{"schema_version":1,"paths":[["src","lib.rs"]],"query":null,"byte_offset":0,"byte_count":1,"encoding":"utf8","limits":{"files":64,"depth":16,"total_bytes":8388608,"file_bytes":4194304,"matches":10000},"call_depth":0}"#.to_vec();
+        let call = ToolCall {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-coding-envelope"),
+            correlation_id: CorrelationId::from_raw("correlation-coding-envelope"),
+            action_id: runtime_action_id(&run_id, 2),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&bytes),
+                bytes,
+            },
+        };
+        let target = GrantTarget::held_object(&Held {
+            path: WorkspacePath::new(Workspace.workspace_id().clone(), ["src", "lib.rs"])
+                .expect("held path"),
+            preimage: FilePreimage::new(1, [7; 32]),
+            identity: WorkspaceObjectIdentity::new(
+                PathPlatform::DeterministicFake,
+                [1; 32],
+                [2; 32],
+            ),
+        })
+        .expect("target");
+        let operation = OperationBinding::new(GrantOperation::WorkspaceRead);
+        let mut issuer = GrantIssuer::new();
+        let parent = issuer
+            .issue_session_read(SessionReadGrantRequest {
+                grant_id: GrantId::from_raw("grant-coding-envelope-parent"),
+                actor_id: actor_id.clone(),
+                session_id: SessionId::from_raw("session-coding-envelope"),
+                task_id: task_id.clone(),
+                targets: runtime_policy.parent_targets().to_vec(),
+                excluded_targets: runtime_policy.excluded_targets().to_vec(),
+                sensitivity: DataSensitivity::Restricted,
+                issued_at_epoch_ms: 1_000,
+                expires_at_epoch_ms: 20_000,
+                nonce: GrantNonce::from_raw("nonce-coding-envelope-parent"),
+                maximum_derived_operations: 2,
+                preview_sha256: "a".repeat(64),
+                policy_sha256: runtime_policy.engine().policy_sha256().to_owned(),
+            })
+            .expect("parent");
+        let preimage = GrantPreimage::for_target(0, &target).expect("preimage");
+        let child = issuer
+            .derive_operation(
+                &parent.grant_id,
+                DerivedOperationGrantRequest {
+                    grant_id: GrantId::from_raw("grant-coding-envelope-child"),
+                    approval_id: ApprovalId::from_raw("approval-coding-envelope"),
+                    action_id: call.action_id.clone(),
+                    action_kind: ActionKind::DeterministicTool,
+                    operation,
+                    tool_id: call.tool_id.clone(),
+                    tool_version: call.tool_version.clone(),
+                    targets: vec![target],
+                    argument_sha256: call.arguments.sha256.clone(),
+                    preimages: vec![preimage],
+                    expected_side_effects: vec![GrantSideEffect {
+                        operation,
+                        target_indexes: vec![0],
+                        details_sha256: "b".repeat(64),
+                    }],
+                    rollback_description: "No state change is permitted".to_owned(),
+                    issued_at_epoch_ms: 2_000,
+                    expires_at_epoch_ms: 10_000,
+                    nonce: GrantNonce::from_raw("nonce-coding-envelope-child"),
+                    preview_sha256: "c".repeat(64),
+                    policy_sha256: runtime_policy.engine().policy_sha256().to_owned(),
+                },
+            )
+            .expect("child");
+        let context = PolicyEvaluationContext {
+            actor_id,
+            session_id: child.session_id.clone(),
+            task_id,
+            action_id: child.action_id.clone().expect("action"),
+            action_kind: ActionKind::DeterministicTool,
+            tool_id: child.tool_id.clone().expect("tool"),
+            tool_version: child.tool_version.clone().expect("tool version"),
+            targets: child.targets.clone(),
+            argument_sha256: child.argument_sha256.clone(),
+            preimages: child.preimages.clone(),
+            expected_side_effects: child.expected_side_effects.clone(),
+            preview_sha256: child.preview_sha256.clone(),
+            now_epoch_ms: 3_000,
+            network_scope: None,
+            credential_scope: None,
+            publication_scope: None,
+        };
+        assert!(
+            runtime_policy
+                .engine()
+                .evaluate(&issuer, &child, &context)
+                .allowed
+        );
+        let mut outside_budget = context;
+        outside_budget.action_id = runtime_action_id(&run_id, 4);
+        assert!(
+            !runtime_policy
+                .engine()
+                .evaluate(&issuer, &child, &outside_budget)
+                .allowed
+        );
     }
 }
