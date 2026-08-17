@@ -9,6 +9,10 @@ use agentmage_kernel_contracts::{
 };
 use agentmage_kernel_engine::{
     command_runner::{CommandRegistry, CommandRequest, CommandWorkingDirectory, prepare_command},
+    instruction_provenance::{
+        EffectiveGuidance, InstructionEvidenceLedger, effective_guidance,
+        verify_instruction_ledger,
+    },
     model_runtime::{AdmittedModelProfile, ModelUsePurpose},
     repository_safety::{OwnedWorktreeRecord, WorktreeDisposition},
     runtime_coordinator::{runtime_tool_catalog_sha256, validate_runtime_run_limits},
@@ -63,6 +67,8 @@ pub struct CodingSessionProfileInput {
     pub session_boundary_sha256: [u8; 32],
     /// Exact writable path roots in the owned worktree.
     pub write_scope: CodingWriteScope,
+    /// Verified provenance for every discovered or reviewed repository instruction source.
+    pub instruction_ledger: InstructionEvidenceLedger,
     /// Frozen bounded command templates.
     pub commands: CommandRegistry,
     /// Frozen targeted validation templates.
@@ -86,6 +92,8 @@ pub enum CodingSessionProfileError {
     ValidationDenied,
     /// The exact native tool catalog could not be composed.
     CatalogDenied,
+    /// Repository instruction provenance is stale, conflicting, or bound to another workspace.
+    InstructionDenied,
 }
 
 impl CodingSessionProfileError {
@@ -99,6 +107,7 @@ impl CodingSessionProfileError {
             Self::OfflineProofDenied => "coding-session.offline-proof.denied",
             Self::ValidationDenied => "coding-session.validation.denied",
             Self::CatalogDenied => "coding-session.catalog.denied",
+            Self::InstructionDenied => "coding-session.instruction.denied",
         }
     }
 }
@@ -122,6 +131,8 @@ pub struct CodingSessionProfile {
     model: AdmittedModelProfile,
     offline_proof: OfflineProofReceipt,
     write_scope: CodingWriteScope,
+    instruction_ledger: InstructionEvidenceLedger,
+    effective_guidance: EffectiveGuidance,
     commands: CommandRegistry,
     validations: ValidationTemplateRegistry,
     limits: RuntimeRunLimits,
@@ -148,6 +159,8 @@ impl CodingSessionProfile {
     /// Validates and freezes one native coding-session composition.
     pub fn build(input: CodingSessionProfileInput) -> Result<Self, CodingSessionProfileError> {
         validate_static_input(&input)?;
+        let effective_guidance = effective_guidance(&input.instruction_ledger)
+            .map_err(|_| CodingSessionProfileError::InstructionDenied)?;
         let registry = native_coding_runtime_registry(
             input.write_scope.clone(),
             input.commands.clone(),
@@ -172,6 +185,8 @@ impl CodingSessionProfile {
             offline_proof_sha256: hex_bytes(input.offline_proof.proof_sha256()),
             session_boundary_sha256: hex_bytes(input.offline_proof.session_boundary_sha256()),
             writable_roots: input.write_scope.writable_roots(),
+            instruction_ledger_sha256: &input.instruction_ledger.ledger_sha256,
+            effective_guidance_sha256: &effective_guidance.guidance_sha256,
             commands: input.commands.commands(),
             validations: &input.validations,
             limits: &input.limits,
@@ -189,6 +204,8 @@ impl CodingSessionProfile {
             model: input.model,
             offline_proof: input.offline_proof,
             write_scope: input.write_scope,
+            instruction_ledger: input.instruction_ledger,
+            effective_guidance,
             commands: input.commands,
             validations: input.validations,
             limits: input.limits,
@@ -263,6 +280,18 @@ impl CodingSessionProfile {
         &self.write_scope
     }
 
+    /// Returns the verified instruction-provenance ledger bound to this profile.
+    #[must_use]
+    pub const fn instruction_ledger(&self) -> &InstructionEvidenceLedger {
+        &self.instruction_ledger
+    }
+
+    /// Returns only typed authority-reducing guidance derived from the current ledger.
+    #[must_use]
+    pub const fn effective_guidance(&self) -> &EffectiveGuidance {
+        &self.effective_guidance
+    }
+
     /// Returns the exact frozen command registry.
     #[must_use]
     pub const fn commands(&self) -> &CommandRegistry {
@@ -315,6 +344,8 @@ struct ProfileMaterial<'a> {
     offline_proof_sha256: String,
     session_boundary_sha256: String,
     writable_roots: &'a [Vec<String>],
+    instruction_ledger_sha256: &'a str,
+    effective_guidance_sha256: &'a str,
     commands: Vec<&'a agentmage_kernel_engine::command_runner::CommandSpec>,
     validations: &'a ValidationTemplateRegistry,
     limits: &'a RuntimeRunLimits,
@@ -344,6 +375,12 @@ fn validate_static_input(
         || input.worktree.resource_budget_sha256 != sha256_json(&input.limits)?
     {
         return Err(CodingSessionProfileError::WorktreeDenied);
+    }
+    if !verify_instruction_ledger(&input.instruction_ledger)
+        || input.instruction_ledger.workspace_manifest_sha256 != input.worktree.record_sha256
+        || effective_guidance(&input.instruction_ledger).is_err()
+    {
+        return Err(CodingSessionProfileError::InstructionDenied);
     }
     if input.model.exact_profile().automatic_fallback
         || ![ModelRole::CodingPlanner, ModelRole::ToolSelection]
@@ -452,6 +489,7 @@ pub(crate) mod tests {
     };
     use agentmage_kernel_engine::{
         command_runner::{CommandBounds, CommandRisk, CommandSpec, CommandWorkingDirectory},
+        instruction_provenance::build_instruction_ledger,
         model_runtime::ModelAdmissionCatalog,
         strict_local::{
             AcquisitionExitDisposition, NetworkAttemptLedger, OfflinePreflightObservation,
@@ -716,6 +754,14 @@ pub(crate) mod tests {
         worktree.record_sha256 = "0".repeat(64);
         let worktree = OwnedWorktreeRecord::seal(worktree).expect("worktree path revision");
         let command = command();
+        let instruction_ledger = build_instruction_ledger(
+            worktree.record_sha256.clone(),
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            &BTreeMap::new(),
+        )
+        .expect("empty current instruction ledger");
         CodingSessionProfileInput {
             profile_id: "coding-profile-0001".to_owned(),
             tool_catalog_id: ToolCatalogId::from_raw("coding-tools-0001"),
@@ -733,6 +779,7 @@ pub(crate) mod tests {
                 vec![vec!["src".to_owned()], vec!["tests".to_owned()]],
             )
             .expect("write scope"),
+            instruction_ledger,
             limits,
         }
     }
@@ -749,6 +796,15 @@ pub(crate) mod tests {
         );
         assert_eq!(profile.profile_sha256().len(), 64);
         assert_eq!(profile.tool_catalog_sha256().len(), 64);
+        assert_eq!(
+            profile.instruction_ledger().workspace_manifest_sha256,
+            profile.worktree().record_sha256
+        );
+        assert!(profile.effective_guidance().constraints.is_empty());
+        assert!(!profile.effective_guidance().changes_policy);
+        assert!(!profile.effective_guidance().grants_authority);
+        assert!(!profile.effective_guidance().adds_tools);
+        assert!(!profile.effective_guidance().declares_completion);
         assert!(
             profile
                 .visible_tools()
@@ -802,6 +858,16 @@ pub(crate) mod tests {
         assert_eq!(
             CodingSessionProfile::build(stale_validation).expect_err("stale validation"),
             CodingSessionProfileError::ValidationDenied
+        );
+
+        let mut wrong_instruction_workspace = input();
+        wrong_instruction_workspace
+            .instruction_ledger
+            .workspace_manifest_sha256 = "e".repeat(64);
+        assert_eq!(
+            CodingSessionProfile::build(wrong_instruction_workspace)
+                .expect_err("instruction workspace mismatch"),
+            CodingSessionProfileError::InstructionDenied
         );
     }
 }
