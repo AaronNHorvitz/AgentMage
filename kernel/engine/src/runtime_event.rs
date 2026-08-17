@@ -371,9 +371,18 @@ impl RuntimeEventSequence {
                 self.require_started_operation(event)
             }
             RuntimeEventKind::ArtifactCreated { .. } => {
-                self.require_active_turn(event)?;
-                if event.operation_id.is_some() {
-                    self.require_started_operation(event)?;
+                if event.turn_id.is_some() {
+                    self.require_active_turn(event)?;
+                    if event.operation_id.is_some() {
+                        self.require_started_operation(event)?;
+                    }
+                } else if event.operation_id.is_some()
+                    || self.active_turn_id.is_some()
+                    || self.active_model_run_id.is_some()
+                    || !self.tools.is_empty()
+                    || !self.permissions.is_empty()
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
                 }
                 Ok(())
             }
@@ -826,8 +835,8 @@ mod tests {
         AgentStateKind, ApprovalId, CONTRACT_SCHEMA_VERSION, ContextSensitivity, CorrelationId,
         GrantId, GrantOperation, ModelRunId, PolicyId, ReceiptId, RuntimeEvent, RuntimeEventId,
         RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
-        RuntimeEventRetentionKind, RuntimeOperationId, RuntimeRunId, RuntimeTurnId, SessionId,
-        TaskId, ToolCallId,
+        RuntimeEventRetentionKind, RuntimeOperationId, RuntimePayloadReference, RuntimeRunId,
+        RuntimeTurnId, SessionId, TaskId, ToolCallId,
     };
 
     struct FixtureStream {
@@ -866,6 +875,17 @@ mod tests {
                 _ => RuntimeEventPersistenceClass::Correctness,
             };
             let event_id = RuntimeEventId::from_raw(format!("event-{}", self.next_sequence));
+            let payload_reference = match &kind {
+                RuntimeEventKind::ArtifactCreated { artifact_id, .. } => {
+                    Some(RuntimePayloadReference {
+                        artifact_id: artifact_id.clone(),
+                        sha256: hash('d'),
+                        byte_size: 16,
+                        media_type: "application/json".to_owned(),
+                    })
+                }
+                _ => None,
+            };
             let event = seal_runtime_event(RuntimeEvent {
                 schema_version: CONTRACT_SCHEMA_VERSION,
                 event_id: event_id.clone(),
@@ -885,7 +905,7 @@ mod tests {
                 },
                 persistence,
                 policy_id: PolicyId::from_raw("policy-0001"),
-                payload_reference: None,
+                payload_reference,
                 kind,
                 previous_event_sha256: self.previous_sha256.clone(),
                 event_sha256: ZERO_SHA256.to_owned(),
@@ -1122,6 +1142,56 @@ mod tests {
         sequence.push(&turn).expect("turn");
         assert_eq!(
             sequence.push(&started),
+            Err(RuntimeEventError::IllegalTransition)
+        );
+    }
+
+    #[test]
+    fn safe_boundary_artifact_is_legal_only_between_quiescent_turns() {
+        let mut fixtures = FixtureStream::new();
+        let events = [
+            fixtures.event(
+                RuntimeEventKind::RunStarted {
+                    request_sha256: hash('1'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(RuntimeEventKind::TurnStarted, Some("turn-0001"), None),
+            fixtures.event(
+                RuntimeEventKind::TurnCompleted {
+                    outcome_sha256: hash('2'),
+                },
+                Some("turn-0001"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::ArtifactCreated {
+                    artifact_id: agentmage_kernel_contracts::RuntimeArtifactId::from_raw(
+                        "artifact-continuation-0001",
+                    ),
+                    manifest_sha256: hash('3'),
+                },
+                None,
+                None,
+            ),
+        ];
+        let mut sequence = RuntimeEventSequence::new();
+        for event in &events {
+            sequence.push(event).expect("safe-boundary event is legal");
+        }
+
+        let mut active = RuntimeEventSequence::new();
+        active.push(&events[0]).expect("run starts");
+        active.push(&events[1]).expect("turn starts");
+        let mut artifact_during_turn = events[3].clone();
+        artifact_during_turn.sequence = 2;
+        artifact_during_turn.causation_event_id = Some(events[1].event_id.clone());
+        artifact_during_turn.previous_event_sha256 = events[1].event_sha256.clone();
+        artifact_during_turn.event_sha256 = ZERO_SHA256.to_owned();
+        artifact_during_turn = seal_runtime_event(artifact_during_turn).expect("artifact reseals");
+        assert_eq!(
+            active.push(&artifact_during_turn),
             Err(RuntimeEventError::IllegalTransition)
         );
     }
