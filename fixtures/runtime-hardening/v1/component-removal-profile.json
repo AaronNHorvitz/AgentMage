@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "campaign_id": "story-50.2-component-removal-v1",
+  "disposition_on_success": "LOCAL-SOURCE-PASS",
+  "scenarios": [
+    {
+      "id": "cli-removed",
+      "component": "interactive CLI",
+      "package": "agentmage-host",
+      "crate_root": "shells/host/src/lib.rs",
+      "features": [
+        "native-chat",
+        "workflow-caller"
+      ],
+      "removed_sources": [
+        "shells/host/src/cli.rs",
+        "shells/host/src/cli_runtime.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/native_chat_runtime.rs",
+        "shells/host/src/runtime_transport.rs",
+        "shells/host/src/workflow_caller.rs"
+      ],
+      "minimum_passed_tests": 110,
+      "expected_ignored_tests": 3,
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "native-chat,workflow-caller"
+      ],
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "native-chat,workflow-caller",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "id": "native-chat-removed",
+      "component": "native Chat adapter",
+      "package": "agentmage-host",
+      "crate_root": "shells/host/src/lib.rs",
+      "features": [
+        "interactive-cli",
+        "workflow-caller"
+      ],
+      "removed_sources": [
+        "shells/host/src/native_chat_runtime.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/cli_runtime.rs",
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/runtime_transport.rs",
+        "shells/host/src/workflow_caller.rs"
+      ],
+      "minimum_passed_tests": 116,
+      "expected_ignored_tests": 3,
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,workflow-caller"
+      ],
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,workflow-caller",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "id": "workflow-caller-removed",
+      "component": "future workflow caller test adapter",
+      "package": "agentmage-host",
+      "crate_root": "shells/host/src/lib.rs",
+      "features": [
+        "interactive-cli",
+        "native-chat"
+      ],
+      "removed_sources": [
+        "shells/host/src/workflow_assignment.rs",
+        "shells/host/src/workflow_caller.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/cli_runtime.rs",
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/native_chat_runtime.rs",
+        "shells/host/src/runtime_transport.rs"
+      ],
+      "minimum_passed_tests": 113,
+      "expected_ignored_tests": 3,
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat"
+      ],
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "id": "runtime-projections-removed",
+      "component": "optional local metrics and transcript projections",
+      "package": "agentmage-kernel-engine",
+      "crate_root": "kernel/engine/src/lib.rs",
+      "features": [],
+      "removed_sources": [
+        "kernel/engine/src/runtime_projection.rs"
+      ],
+      "required_sources": [
+        "kernel/engine/src/runtime_artifact.rs",
+        "kernel/engine/src/runtime_coordinator.rs",
+        "kernel/engine/src/runtime_event.rs",
+        "kernel/engine/src/runtime_journal.rs",
+        "kernel/engine/src/runtime_lifecycle.rs",
+        "kernel/engine/src/runtime_loop.rs",
+        "kernel/engine/src/runtime_recovery.rs"
+      ],
+      "minimum_passed_tests": 584,
+      "expected_ignored_tests": 2,
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features"
+      ],
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    }
+  ],
+  "source_paths": [
+    "fixtures/runtime-hardening/v1/component-removal-profile.json",
+    "kernel/engine/Cargo.toml",
+    "kernel/engine/src/conversation_library.rs",
+    "kernel/engine/src/lib.rs",
+    "kernel/engine/src/runtime_artifact.rs",
+    "kernel/engine/src/runtime_coordinator.rs",
+    "kernel/engine/src/runtime_event.rs",
+    "kernel/engine/src/runtime_journal.rs",
+    "kernel/engine/src/runtime_lifecycle.rs",
+    "kernel/engine/src/runtime_loop.rs",
+    "kernel/engine/src/runtime_projection.rs",
+    "kernel/engine/src/runtime_recovery.rs",
+    "scripts/runtime_component_removal.py",
+    "shells/host/Cargo.toml",
+    "shells/host/src/cli.rs",
+    "shells/host/src/cli_runtime.rs",
+    "shells/host/src/coding_harness.rs",
+    "shells/host/src/lib.rs",
+    "shells/host/src/linux_coding_runtime.rs",
+    "shells/host/src/linux_read.rs",
+    "shells/host/src/native_chat_runtime.rs",
+    "shells/host/src/runtime_transport.rs",
+    "shells/host/src/workflow_assignment.rs",
+    "shells/host/src/workflow_caller.rs"
+  ],
+  "declared_limitations": [
+    "This campaign proves local source feature removal, surviving Rust unit behavior, strict linting, and compiled-source absence on one recorded host.",
+    "It does not prove installed package, process, socket, persistent-data, credential, platform, accessibility, or external-review removal.",
+    "The three Linux system-session and worker-manifest tests and the explicit reference-load test remain ignored exactly as reported; no ignore is counted as a pass.",
+    "Manual fuzzing remains deferred and is not executed or claimed by this campaign."
+  ]
+}
