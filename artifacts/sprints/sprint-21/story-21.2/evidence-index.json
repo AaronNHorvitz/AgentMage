@@ -11,19 +11,29 @@
       "sha256": "b9909498224f3ba4a44fba33302e298ad68d758ec735931bbddbb3283ea830d6"
     },
     {
+      "bytes": 3287,
+      "path": "artifacts/sprints/sprint-21/story-21.2/pressure-report.json",
+      "sha256": "18d839f8199de094e136645aeac87773fb6cfb18e44b4f4a70f637e6efebac33"
+    },
+    {
+      "bytes": 1122,
+      "path": "artifacts/sprints/sprint-21/story-21.2/pressure-report.log",
+      "sha256": "1b9ed6adff2a7345a86ec62f3a9cad05e56c68607d8357176df47dbad7b5e263"
+    },
+    {
       "bytes": 9977,
       "path": "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
       "sha256": "d42c2bfc3e59824786333b3e6ef30e1aa08ebf84740f8739a40b0dd78e50ed95"
     },
     {
-      "bytes": 22785,
+      "bytes": 23486,
       "path": "docs/architecture/runtime-event-journal.md",
-      "sha256": "6d3b3db84750298a08cfe222ccc6dc3821700a97f03a4ac63869ac68b7c7cadd"
+      "sha256": "ab8790cffac431f1c0b6fe76019c4008123921d4b9a8dea1d6f5d10de48cf9d2"
     },
     {
-      "bytes": 8152,
+      "bytes": 8915,
       "path": "docs/verification/story-21-2-local-results.md",
-      "sha256": "8aae9a2044048f84a5fdd587bf45c1b8d07aec80157b97624658b3e4b1c00ea4"
+      "sha256": "459eb554a020d53785903fb6ce170e9e9a158548e56690bef5be9e1b307291c5"
     },
     {
       "bytes": 5290,
@@ -56,14 +66,19 @@
       "sha256": "cc3095ea122644047a47c3fecd5c7a100676cf8eca0bd3a22d0445d533f0ed32"
     },
     {
-      "bytes": 91598,
+      "bytes": 96409,
       "path": "kernel/engine/src/runtime_journal.rs",
-      "sha256": "a685aadc3a445b5b6726cc872f18c568462b155fccae9edfe55613e85f6e5df3"
+      "sha256": "6d961665fc0163026e57ef38ad312c28a720347af178833f8d79679f7d81409e"
     },
     {
-      "bytes": 135934,
+      "bytes": 136080,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "12a85331561788faa764b2a559de792acb221004e19952dcc32b3caee88aa151"
+      "sha256": "a62532d85d54052acc4e8ae7f9ab1547fc9d0d73470c743d40198a29e9e39728"
+    },
+    {
+      "bytes": 90067,
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "c8f24c701a6ad5afe895749c9353b20be4795f2f7c98725582f60a84be729d92"
     },
     {
       "bytes": 59587,
@@ -91,9 +106,14 @@
       "sha256": "1d9bcced209497b00856025deaa7613295c908e27ebfb20f246b3141b2902c08"
     },
     {
-      "bytes": 16281,
+      "bytes": 17193,
       "path": "scripts/story_21_2_evidence_index.py",
-      "sha256": "6d0d10a05968afe78a8ee05caf42525639f5eea502e4f1089b318104a306cc48"
+      "sha256": "de031fc8e0fa79a126322ab8489943505ca33d6ca065f107ab12923b72489096"
+    },
+    {
+      "bytes": 13894,
+      "path": "scripts/story_21_2_pressure_evidence.py",
+      "sha256": "d20e4bc4cbbb14ed7fdc5c4a002384f245b6e4ecaa9e7a75c6ed3b05b4b96395"
     },
     {
       "bytes": 43101,
@@ -114,13 +134,18 @@
       "bytes": 3397,
       "path": "tests/test_story_21_2_evidence_index.py",
       "sha256": "23fa846f50385842cbe5d5fd0f5be594bb7cecfb5afc495830ae6a7fb00aa118"
+    },
+    {
+      "bytes": 2622,
+      "path": "tests/test_story_21_2_pressure_evidence.py",
+      "sha256": "a43fbbd33a35e6e7444fe81bc1018b58ffc2d5e85e0ad7058706a8bb222f3621"
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "cb9b94ce746b4635bbe7dac817dd1c0d257c13dc0c858ebdf1fdf0ad58a06005",
+  "index_sha256": "75a4963e53fc9a07c29a17311021e26dbd95b73446dfb12624a0326691e73e98",
   "limitations": [
     "Integrated physical-effect recovery-to-terminal-event reconciliation remains open.",
-    "Real-filesystem latency, power-loss, and storage-failure campaigns remain open.",
+    "Physical filesystem/device latency, power-loss, and storage-failure campaigns remain open.",
     "Only one retained Fedora source-host benchmark profile exists.",
     "Installed-client, supported-platform, and independent-review evidence remains open.",
     "Product security mapping and deferred manual fuzzing remain open."
@@ -337,18 +362,27 @@
     {
       "checked": false,
       "code": [
-        "kernel/engine/src/runtime_journal.rs"
+        "kernel/engine/src/runtime_journal.rs",
+        "kernel/engine/src/runtime_loop.rs",
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "scripts/story_21_2_pressure_evidence.py"
       ],
       "evidence": [
+        "artifacts/sprints/sprint-21/story-21.2/pressure-report.json",
+        "artifacts/sprints/sprint-21/story-21.2/pressure-report.log",
         "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
+        "docs/verification/story-21-2-local-results.md",
         "fixtures/runtime-hardening/v1/linux-reference-load-profile.json"
       ],
-      "statement_sha256": "66ee3d66935cecc75d2e90a9063b685f53d54e528b14b17982d29186eff8dbe3",
+      "statement_sha256": "01b7af9d24d7d788e0b7e7ecd1e0f3a181a754cf2ffdd774c992a98330fcd523",
       "status": "partial",
       "task_id": "21.2.3.3",
       "tests": [
         "queue_pressure_flushes_in_declared_batches_without_growth",
-        "story_50_2_dedicated_writer_saturation_is_bounded_and_recoverable"
+        "story_21_2_worker_enforces_the_exact_canonical_byte_boundary",
+        "story_21_2_durable_model_progress_and_cancellation_survive_delayed_sqlcipher",
+        "story_50_2_dedicated_writer_saturation_is_bounded_and_recoverable",
+        "test_current_report_and_raw_trace_are_hash_bound"
       ]
     },
     {
@@ -400,7 +434,7 @@
   ],
   "record_type": "story_21_2_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "bbb07ff0b7a0ffaa195a57bfab14d6e93fb44244",
+  "source_revision": "62147b9bb2bd23af34caed839739eb28100e1a3e",
   "story_id": "21.2",
   "summary": {
     "complete_count": 13,
