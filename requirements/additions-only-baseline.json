@@ -474,6 +474,17 @@
       "statement": "Use Gemma 4 26B or another locally approved, benchmarked reasoning model for architecture, diagnosis, ambiguous requirements, difficult coding, and high-consequence review."
     },
     {
+      "id": "CL-08C22D022730C90F819C",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2C. Local Agent Studio and Agent Direction",
+        "line": 416,
+        "semantic_sha256": "08c22d022730c90f819c838d328976536b9de8289eb96270f612ae8d9e889497"
+      },
+      "statement": "every catalog profile against identity substitution, role confusion, undeclared tools or effects, broadened authority, hidden provider access, stale evidence, false completion, and disabled-profile execution."
+    },
+    {
       "id": "CL-08D113C4521275E3E2F8",
       "label": "BUILD",
       "source": {
@@ -549,6 +560,17 @@
         "semantic_sha256": "099b090cf07623ee638ba8955aaa0a3c0d0e3492086c0e34c81bffef762f3160"
       },
       "statement": "a skill record containing stable identity, source, content hash, signer when available, license, version, compatibility, purpose, included files, requested scope, and trust state."
+    },
+    {
+      "id": "CL-09ABD21F2B0D5B1E9069",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "27A. Local Command-Line Interface",
+        "line": 1479,
+        "semantic_sha256": "09abd21f2b0d5b1e906953079397d5a1ed3a7dab22be36bd0373c83592021419"
+      },
+      "statement": "compose repository exploration, file read/search, code search, patch application, controlled file creation, bounded command execution, targeted tests, and Git status/diff/log/show through the shared runtime and native tool registry."
     },
     {
       "id": "CL-09BBCA1BB688B518FAE3",
@@ -1090,6 +1112,17 @@
       "statement": "provenance, source hash, match reason, confidence, uncertainty, and reviewer-decision fields."
     },
     {
+      "id": "CL-11AC9D8CF11BD9430075",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "27A. Local Command-Line Interface",
+        "line": 1481,
+        "semantic_sha256": "11ac9d8cf11bd943007519339183cb7ee9ceb89daf351d5042f935ac8e9d498a"
+      },
+      "statement": "render large patches, command streams, and test output from verified runtime artifact references with bounded previews and explicit truncation rather than embedding unbounded payloads in events."
+    },
+    {
       "id": "CL-11BA47A64A4B6F0F6841",
       "label": "CAPABILITY GATE",
       "source": {
@@ -1198,6 +1231,17 @@
         "semantic_sha256": "13e71586f93789a009ecbabb47964bd8533af7d93f1b81a226523527aba93b9f"
       },
       "statement": "an `ObsidianNote` class with path, title, frontmatter, headings, tasks, links, backlinks, timestamps, and content hash."
+    },
+    {
+      "id": "CL-13F8B66470FBFDBC3D3E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "28. Specialized Workflow Skills",
+        "line": 1553,
+        "semantic_sha256": "13f8b66470fbfdbc3d3eba51acf2187f09a53b559535f502d3bbd843de4c22b8"
+      },
+      "statement": "CI/CD and Operations skill pack \u2014 CI investigation and remediation, build and packaging, supply chain, release, deployment planning and verification, incident and rollback, vulnerability response, postmortem, observability, capacity, license, and provenance review."
     },
     {
       "id": "CL-1426E1C403CA5B5A0482",
@@ -1849,6 +1893,17 @@
       "statement": "Hypertext Markup Language (`.html`) and Extensible Markup Language (`.xml`) parsing for saved web pages, exports, and structured data."
     },
     {
+      "id": "CL-20F36581641DF79ABF9E",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2C. Local Agent Studio and Agent Direction",
+        "line": 413,
+        "semantic_sha256": "20f36581641df79abf9edc398b08f79b492c030f3e032bd57efb68c7d75f8359"
+      },
+      "statement": "Route every standardized profile through the shared caller-neutral runtime; prohibit profile-specific model loops, tool routers, permission engines, journals, artifact stores, session stores, credential paths, provider clients, and completion authorities."
+    },
+    {
       "id": "CL-20FB3A13DFEABA6B74C0",
       "label": "BUILD",
       "source": {
@@ -1858,6 +1913,17 @@
         "semantic_sha256": "20fb3a13dfeaba6b74c06e2e79b11217c35fbaf8d5115b358c31f60cb8fdc5bb"
       },
       "statement": "configuration validation before server start."
+    },
+    {
+      "id": "CL-213FF41D18CECDF54467",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "10. Operational State, Memory, Handoffs, and Resume",
+        "line": 732,
+        "semantic_sha256": "213ff41d18cecdf54467dd91a362db18516a9a04d761a9146fe3b146eac96479"
+      },
+      "statement": "a runtime artifact reference and manifest containing digest, byte size, media type, sensitivity, retention, producer operation, created time, integrity state, and associated receipt without carrying path authority."
     },
     {
       "id": "CL-21683ACA9EEC7D632A07",
@@ -2025,6 +2091,17 @@
       "statement": "Separate deterministic policy decisions, exact effect mediation, verified outcomes, audit reproducibility, and narrow token repeatability in configuration, diagnostics, tests, receipts, and user-facing claims."
     },
     {
+      "id": "CL-24157E5C1CC9DBA1FE16",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1949,
+        "semantic_sha256": "24157e5c1cc9dba1fe1655f1dcfdc1c22cf0682658a12c5120d1b2801b5ee9ee"
+      },
+      "statement": "provider-backed Decision 0041 workflows for issue authoring, bug handling, independent pull-request review, CI remediation, backlog curation, dependency and sprint planning, task-list reconciliation, and approved field-level updates after the shared runtime and agent-isolation gates pass."
+    },
+    {
       "id": "CL-2493805C858517A42B5E",
       "label": "BUILD",
       "source": {
@@ -2177,6 +2254,28 @@
         "semantic_sha256": "287f2c3aa99e362b687cb9a8146cf0700820d4d5df5b0bc0755d1671dc64bedf"
       },
       "statement": "failure recovery for expired credentials, missing single sign-on, revoked app installation, renamed or transferred repository, deleted branch, changed permissions, moved line positions, base-branch movement, and partial publication."
+    },
+    {
+      "id": "CL-28A2D8CBE10A49AEDF9D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "23. Logging, Audit, and Observability",
+        "line": 1312,
+        "semantic_sha256": "28a2d8cbe10a49aedf9d0fe3aed7f4bff5c20b20c16830147e35f5a68570cfde"
+      },
+      "statement": "queue saturation, batching, flush, shutdown, restart, duplicate, out-of-order, sink-failure, and backpressure behavior that preserves truthful terminal state and does not block model throughput indefinitely."
+    },
+    {
+      "id": "CL-28C783142365DD3E589F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "10. Operational State, Memory, Handoffs, and Resume",
+        "line": 733,
+        "semantic_sha256": "28c783142365dd3e589fd12e4ad8ef599ff0ab05bcce2c7448de7173e5fc35c7"
+      },
+      "statement": "a local content-addressed runtime artifact store under the approved data root for large patches, standard output/error, test logs, generated files, reports, and large model output; keep SQLite authoritative for metadata, references, and lifecycle state."
     },
     {
       "id": "CL-29638299D5B5B7A7F354",
@@ -3521,6 +3620,17 @@
       "statement": "exact-point resume after process termination, model change, moved workspace, stale file, corrupt index, interrupted write, and simultaneous interface access."
     },
     {
+      "id": "CL-411BAE91F12612092A0D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "28. Specialized Workflow Skills",
+        "line": 1550,
+        "semantic_sha256": "411bae91f12612092a0dfa9e76e026f2071453f3fe31dd9e1ecd38ed572279fe"
+      },
+      "statement": "Issue Authoring and Agile Planning skill pack \u2014 product discovery, issue drafts, epic and story decomposition, Given/When/Then criteria, backlog hygiene, dependency graphs, sprint proposals, risks, and progress reconciliation."
+    },
+    {
       "id": "CL-4144244F570B2E89ABC8",
       "label": "BUILD",
       "source": {
@@ -3607,6 +3717,17 @@
         "semantic_sha256": "4234d59a23d7e6a8a022ab9c8f26d84fdd997e3a4cebd970cdde0c1a4177eab7"
       },
       "statement": "timeout termination and child-process cleanup."
+    },
+    {
+      "id": "CL-42516EDD5E609B773E3D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2C. Local Agent Studio and Agent Direction",
+        "line": 415,
+        "semantic_sha256": "42516edd5e609b773e3d04b1dbd3c408225af6c104274b243fc2b0e28e9e3bdf"
+      },
+      "statement": "independent review-profile execution that starts from an immutable review packet, preserves each finding and dissent, and cannot inherit the implementation role's conclusions or approval state."
     },
     {
       "id": "CL-425ED5F451AED88F1181",
@@ -4258,6 +4379,17 @@
       "statement": "`sqlite3` for local memory and indexes."
     },
     {
+      "id": "CL-4CC097DC33F01CC0E014",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "23. Logging, Audit, and Observability",
+        "line": 1314,
+        "semantic_sha256": "4cc097dc33f01cc0e0149bc6c591aebd35fc9a8bb52949c7408f06fc5c58d480"
+      },
+      "statement": "runtime journal ordering, deterministic replay, redaction, canary exclusion, queue pressure, sink recovery, event-to-receipt reconciliation, and measured throughput against declared ceilings."
+    },
+    {
       "id": "CL-4CCC0A33F910FDB15283",
       "label": "BUILD",
       "source": {
@@ -4377,6 +4509,17 @@
         "semantic_sha256": "4e492dfc0d74d1d0ab469eb84fe460fe7577dd39ff7eb6720232b4240fba92cf"
       },
       "statement": "an executive-assistant guide covering briefings, priorities, commitments, decisions, approvals, waiting items, reminders, privacy, and user authority."
+    },
+    {
+      "id": "CL-4E9024C24965D4243BC1",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "10. Operational State, Memory, Handoffs, and Resume",
+        "line": 735,
+        "semantic_sha256": "4e9024c24965d4243bc1a52ff6184cfc539e9af77e8cf93a5752ce05aad37f9f"
+      },
+      "statement": "artifact deduplication, reference-aware retention and collection, interrupted-write cleanup, corruption quarantine, cryptographic deletion where eligible, and startup integrity reconciliation."
     },
     {
       "id": "CL-4E9D504D19F26BCB5267",
@@ -4676,6 +4819,17 @@
       "statement": "Keep raw credentials out of model context, prompts, chat, arguments, shell history, ordinary environment, logs, receipts, diagnostics, exports, crash data, and continuity snapshots."
     },
     {
+      "id": "CL-53AB0749CBFCBA67A469",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "27A. Local Command-Line Interface",
+        "line": 1478,
+        "semantic_sha256": "53ab0749cbfcba67a469c779a24e1dc6de664c0cbb3a19cb58805a6ad2899955"
+      },
+      "statement": "an interactive read-evaluate-render loop with bounded multiline input, streaming runtime events, status updates, protected approval prompts, cancellation, and a final evidence-backed change summary."
+    },
+    {
       "id": "CL-53EE1F38E17520883C1D",
       "label": "BUILD",
       "source": {
@@ -4751,6 +4905,17 @@
         "semantic_sha256": "55531d26ab9a18b44375fa731f7279cdd240c4673f7abb0e348f94e0b915f79b"
       },
       "statement": "Omit transfers, payments, bill pay, trades, orders, withdrawals, deposits, credit, loans, tax filing, beneficiaries, financial-account administration, and credential recovery from every first-GA schema, manifest, policy, tool, adapter, shell, workflow, and autonomy level."
+    },
+    {
+      "id": "CL-555739769D3205B59AE7",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "10. Operational State, Memory, Handoffs, and Resume",
+        "line": 736,
+        "semantic_sha256": "555739769d3205b59ae7e60e0371fec02eee588aa933c2c7bf73ab91aec50964"
+      },
+      "statement": "Bind checkpoints to the last committed runtime-event cursor and exact artifact references so resume reconstructs one run without replaying an effect or copying large payloads into the transcript."
     },
     {
       "id": "CL-557BEED57EAC53CE1C57",
@@ -4905,6 +5070,17 @@
         "semantic_sha256": "56ff0b8965e30fc1b374fe62d9c376cbd4aaa69bceecce5a9cc48d6ab6723903"
       },
       "statement": "reconciliation workbook functions `escapeSpreadsheetText()`, `createReconciliationWorkbook()`, and `scanWorkbookFormulaErrors()`."
+    },
+    {
+      "id": "CL-57093F125C63F50F3BB0",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "10. Operational State, Memory, Handoffs, and Resume",
+        "line": 734,
+        "semantic_sha256": "57093f125c63f50f3bb0f9c6fc158e0bde2ff562667691f51c17b163281eb236"
+      },
+      "statement": "Publish runtime artifacts through bounded staging, digest and size verification, atomic placement, and one transactional SQLite reference; reject missing, partial, mismatched, oversized, expired, or unauthorized objects."
     },
     {
       "id": "CL-571E32DF085FFE7022B8",
@@ -5699,6 +5875,17 @@
       "statement": "local JSON Lines export generated from canonical records using a non-executable versioned schema, hashes, and encryption; exclude file contents and secrets unless the user explicitly includes them."
     },
     {
+      "id": "CL-62CE0E1BEE8D6D920F35",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "27A. Local Command-Line Interface",
+        "line": 1484,
+        "semantic_sha256": "62ce0e1bee8d6d920f35371669f03aa9cd9f6c66350004136829a8108dfca8d5"
+      },
+      "statement": "expose a future workflow-node runtime port that accepts the same bounded work packet and emits the same events and outcome with a narrower authority intersection and no CLI presentation dependency."
+    },
+    {
       "id": "CL-62D524575507ADAE2CAA",
       "label": "BUILD",
       "source": {
@@ -5730,6 +5917,17 @@
         "semantic_sha256": "635bebe8e25842d566133eabe09dd781cb8148ae1eefceb773d9cb34a6b4c646"
       },
       "statement": "CSV, OFX, and QFX profile detection, parsing, source hashing, account identity, encoding, duplicate protection, pending-to-posted matching, transfer matching, and error reporting."
+    },
+    {
+      "id": "CL-63A76675C52254E37273",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "28. Specialized Workflow Skills",
+        "line": 1552,
+        "semantic_sha256": "63a76675c52254e37273c190448bad7e80721842cc3d3fc344c46359b590a829"
+      },
+      "statement": "Bug Lifecycle skill pack \u2014 triage, duplicate search, minimal reproduction, ranked root-cause hypotheses, bounded fix, regression evidence, closure verification, and pull-request draft."
     },
     {
       "id": "CL-63D828EE773633D0120A",
@@ -5831,6 +6029,17 @@
       "statement": "a decision brief containing the question, background, options, evidence, assumptions, tradeoffs, risks, recommendation, dissent, and decision deadline."
     },
     {
+      "id": "CL-658E7AD1D55B55FE2768",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2C. Local Agent Studio and Agent Direction",
+        "line": 412,
+        "semantic_sha256": "658e7ad1d55b55fe2768cccd417efa03dac49e1944690015bf619dde3ec2efa0"
+      },
+      "statement": "the Decision 0041 `AG-01` through `AG-49` standardized profile catalog for coordination, engineering, planning, issue and bug lifecycles, independent review, CI/CD, release, operations, maintenance, and evidence using the exact identities and ceilings in [`planning-review-and-delivery-agent-profiles.md`](./docs/architecture/planning-review-and-delivery-agent-profiles.md)."
+    },
+    {
       "id": "CL-65B5229DF08F939FC607",
       "label": "BUILD",
       "source": {
@@ -5862,6 +6071,17 @@
         "semantic_sha256": "661ac72d81a5203db001a5aaa6b17fe0c64275f47e95aafd370f48f6aba507ad"
       },
       "statement": "an approved macOS-, Fedora-, and Ubuntu-compatible Word-to-text utility for deterministic sidecar conversion."
+    },
+    {
+      "id": "CL-664A77865EB24016ACE2",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2C. Local Agent Studio and Agent Direction",
+        "line": 414,
+        "semantic_sha256": "664a77865eb24016ace23ccd841fc6cc708cf939f3b91bea703ead4989ff0c9c"
+      },
+      "statement": "Keep policy and approval, credential brokerage, signing and key custody, evidence and provenance, artifact verification, merge and deployment actuation, and postcondition reconciliation as deterministic services rather than agent roles."
     },
     {
       "id": "CL-66C5778A969F163964A3",
@@ -6238,6 +6458,17 @@
       "statement": "a memory-candidate pipeline that extracts a possible memory, checks its source, detects secrets, assigns confidence and expiry, and accepts it only under the configured policy."
     },
     {
+      "id": "CL-6DBBAB2350F2557451DA",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "23. Logging, Audit, and Observability",
+        "line": 1310,
+        "semantic_sha256": "6dbbab2350f2557451dab7fca2a9b7ec2c8586514d6e4662263e8a459c439797"
+      },
+      "statement": "Separate the durable execution journal, optional persisted user transcript, and optional content-free local diagnostics or metrics into independently classified and retained projections."
+    },
+    {
       "id": "CL-6E20CA73690115AC277C",
       "label": "CAPABILITY GATE",
       "source": {
@@ -6568,6 +6799,17 @@
       "statement": "a director view showing the agent tree, active assignment, model, elapsed time, budget use, latest action, waiting approval, failure, and result."
     },
     {
+      "id": "CL-72A41C36069306151459",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "11. Task and Plan Management",
+        "line": 857,
+        "semantic_sha256": "72a41c360693061514591035d9cf19ff30df00eacf70142f3c22a4b427620959"
+      },
+      "statement": "issue and Agile planning outputs containing exact source links, scope, dependencies, acceptance criteria, test obligations, risks, assumptions, evidence needs, unresolved questions, and provider-field drafts without claiming approval or completion."
+    },
+    {
       "id": "CL-72E2E8DBB56C99940EB0",
       "label": "BUILD",
       "source": {
@@ -6832,6 +7074,17 @@
       "statement": "branch-protection, repository-ruleset, required-review, required-check, signed-commit, linear-history, merge-method, and deletion-policy inspection."
     },
     {
+      "id": "CL-772E33BD8E73429AE710",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 324,
+        "semantic_sha256": "772e33bd8e73429ae7107ffcb8c77a7efc4276f57a652c28494f17ec335c348f"
+      },
+      "statement": "Keep runtime coordination descriptive and authority-free; every effect still reaches the existing grant issuer and tool dispatcher with the exact current policy, task, workspace, arguments, preimages, and one consumable grant."
+    },
+    {
       "id": "CL-77B04EA90D8CAB30A1FD",
       "label": "BUILD",
       "source": {
@@ -6907,6 +7160,17 @@
         "semantic_sha256": "7892c98cd0a4500dc9f4fc37e4486e1bb2ec6b8cdd8444d835abf25a0a7e7e12"
       },
       "statement": "a scope guard that rejects actions outside the active workspace or user-approved task."
+    },
+    {
+      "id": "CL-78A8A3301FBC30B24FC0",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "11. Task and Plan Management",
+        "line": 856,
+        "semantic_sha256": "78a8a3301fbc30b24fc0d1f50014c42507a71c347e9b292cc9aeb2c6e7c2d050"
+      },
+      "statement": "Product Discovery, Issue Author, Epic Decomposer, Acceptance-Criteria Author, Backlog Curator, Dependency Planner, Sprint Planner, Risk and Assumption Analyst, Roadmap Consistency Auditor, and Progress Reconciler workflows over one immutable planning snapshot."
     },
     {
       "id": "CL-78B5D6DADAC51A2171FF",
@@ -7866,6 +8130,17 @@
       "statement": "a command-line interface reference with examples for chat, vault search, conversation history, checkpoint resume, audit, and diagnostics."
     },
     {
+      "id": "CL-885671B4373A9824E3C5",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 322,
+        "semantic_sha256": "885671b4373a9824e3c5829cadd1eb917be221b914b6382ab469610a8a1c2863"
+      },
+      "statement": "an interface-independent runtime coordinator that composes the persisted agent state machine, selected model controller, context manager, tool registry and dispatcher, policy and grants, canonical store, event sink, artifact references, cancellation, and terminal outcome for one bounded run."
+    },
+    {
       "id": "CL-88FE18CEC42B8A500DBF",
       "label": "CAPABILITY GATE",
       "source": {
@@ -8029,6 +8304,17 @@
         "semantic_sha256": "8b62fbabcf1c8adf8c00af70d72ae9d674e7256c67592e2d1867b80e9d456f10"
       },
       "statement": "`git_log()` with bounded commit count."
+    },
+    {
+      "id": "CL-8BF176B5CFF7FA3F5C21",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 326,
+        "semantic_sha256": "8bf176b5cff7fa3f5c21908376b2f20dd8c329bb39fb7e1fb0b4606a4fcac108"
+      },
+      "statement": "a narrow in-process runtime event publisher and bounded subscriber contract for client streaming, canonical journaling, checkpoints, and local projections without creating a general plugin event bus."
     },
     {
       "id": "CL-8C13B5CDC7F2D0A7171D",
@@ -8856,6 +9142,17 @@
       "statement": "`jq` for bounded JSON inspection."
     },
     {
+      "id": "CL-97FF8C644310D69C277E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 325,
+        "semantic_sha256": "97ff8c644310d69c277e9db8000df8d6f121b8e81297f9414d3f7a5843768310"
+      },
+      "statement": "map user-visible `ALLOW`, `ASK`, and `DENY` dispositions onto existing policy and grant states so `ASK` pauses without effect, `ALLOW` dispatches only after exact grant consumption, and `DENY` records one no-effect outcome."
+    },
+    {
       "id": "CL-9804D5D3CE469A0CF87D",
       "label": "BUILD",
       "source": {
@@ -9030,6 +9327,17 @@
         "semantic_sha256": "9b52e875c3368536f71bc99a72065f58c75c38205245c7c280dbe7fdff74053a"
       },
       "statement": "Keep generated, vendored, ignored, untracked, binary, linked, archived, Large File Storage, submodule, worktree, inaccessible, oversized, malformed, and changing content visible even when semantic analysis excludes it."
+    },
+    {
+      "id": "CL-9B7210DF6FE81CBDFB6D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "4. Tool Protocol and Registry",
+        "line": 469,
+        "semantic_sha256": "9b7210df6fe81cbdfb6d61f6b082098879df616753a1123cd5a55c608416dae3"
+      },
+      "statement": "one provider-neutral registration adapter so a later reviewed MCP gateway can expose external tools through the same argument validation, classification, grant, budget, cancellation, receipt, and evidence path as native tools."
     },
     {
       "id": "CL-9B88CD6448DE3131BE82",
@@ -9228,6 +9536,17 @@
         "semantic_sha256": "a0303dcb9f7f4b927316789e4062cdf7bd8696581daee143c16f06e6ba43af57"
       },
       "statement": "local Markdown rendering, wiki-link navigation, task views, backlinks, file previews, and clickable file-and-line links using local assets only."
+    },
+    {
+      "id": "CL-A048F6D09CEF46C9DAA4",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "23. Logging, Audit, and Observability",
+        "line": 1311,
+        "semantic_sha256": "a048f6d09cef46c9daa4fc7d7d50c1bb689a56482fb15daa0bcfc680c5a8105c"
+      },
+      "statement": "Commit correctness-bearing grant, effect, receipt, and checkpoint events with their canonical transaction while routing progress and content-free metrics through bounded asynchronous queues and batches."
     },
     {
       "id": "CL-A063A9AB52AA6ECD4FD3",
@@ -9558,6 +9877,17 @@
         "semantic_sha256": "a64371cd092936d7d348f6ed2fde0db1cb6a1880397b5bcb53dfd7e09f0022ed"
       },
       "statement": "coding workflows on fictional repositories for Python, TypeScript, JavaScript, Go, shell, Structured Query Language, and mixed-language projects before enabling edits in a real repository."
+    },
+    {
+      "id": "CL-A6691D247231E451950D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "23. Logging, Audit, and Observability",
+        "line": 1308,
+        "semantic_sha256": "a6691d247231e451950da627015fca3b8d17d665ac3983e938e88bb5883ac331"
+      },
+      "statement": "a closed runtime-event envelope with run, session, task, turn, operation, correlation, causation, sequence, timestamp, sensitivity, retention, payload-reference, policy, and schema identities."
     },
     {
       "id": "CL-A689070036994387D7E7",
@@ -10187,6 +10517,17 @@
       "statement": "concurrent user and provider changes, branch movement, object rename or deletion, moved line positions, policy change, environment drift, and artifact replacement."
     },
     {
+      "id": "CL-B091C37FBB0C72A43A5A",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 247,
+        "semantic_sha256": "b091c37fbb0c72a43a5a3e7b9cc549efca283c66ee6a982f4d8948f34634a1ed"
+      },
+      "statement": "expose model capability metadata for structured proposals, tool calling, streaming, context and output limits, vision, reasoning controls, token counting, cancellation, resource reporting, and known limitations through `LocalModelRuntime` rather than family-specific harness branches."
+    },
+    {
       "id": "CL-B09B359B6626E09E61BC",
       "label": "BUILD",
       "source": {
@@ -10352,6 +10693,17 @@
       "statement": "a plain-language review pass based on configurable language rules."
     },
     {
+      "id": "CL-B45D45EB5C19B01C1C3B",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "23. Logging, Audit, and Observability",
+        "line": 1309,
+        "semantic_sha256": "b45d45eb5c19b01c1c3b879d590d395a04c06c6333dd6159df71ee92f2e19a61"
+      },
+      "statement": "runtime events for run, turn, model, tool, permission, file, artifact, checkpoint, cancellation, and terminal-outcome transitions with one deterministic ordering and replay rule."
+    },
+    {
       "id": "CL-B4955F938BCA7D50689A",
       "label": "BUILD",
       "source": {
@@ -10438,6 +10790,17 @@
         "semantic_sha256": "b5af844f268e6d9de3f3bf5dc2de6e8d38472f0d3feb1327755afa2f6a005014"
       },
       "statement": "status responses that report actual progress without ending the active task."
+    },
+    {
+      "id": "CL-B5BAD906B9C8E4018458",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "10. Operational State, Memory, Handoffs, and Resume",
+        "line": 737,
+        "semantic_sha256": "b5bad906b9c8e40184582e239c0ac79ec580dde713242f52cd5d6a3989c6b88b"
+      },
+      "statement": "keep runtime artifacts under the private data root distinct from checked-in sprint and release evidence under the repository `artifacts/` directory."
     },
     {
       "id": "CL-B5C8B94D6461D8D55950",
@@ -10924,6 +11287,17 @@
       "statement": "approved image metadata and conversion utilities on macOS, Fedora, and Ubuntu without making Homebrew a v0.1 prerequisite."
     },
     {
+      "id": "CL-BE5822064007E2802996",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "27A. Local Command-Line Interface",
+        "line": 1477,
+        "semantic_sha256": "be5822064007e28029967c675977dc204bda1e2b2d82f61734a4a79f243a5a15"
+      },
+      "statement": "Expose the first complete interactive coding harness as `agentmage code` or the approved final command name while retaining the current `agent` binary as a pre-alpha source detail until migration is reviewed."
+    },
+    {
       "id": "CL-BE5A0A5CED034D7EFDC9",
       "label": "BUILD",
       "source": {
@@ -10988,6 +11362,17 @@
         "semantic_sha256": "bed3197ae604500002a19215b0f1c17da8fe9c1777f596ace689b7f5b1509c13"
       },
       "statement": "standup-note and speaking-script generation."
+    },
+    {
+      "id": "CL-BED435B97DD2E3BCF742",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "27A. Local Command-Line Interface",
+        "line": 1482,
+        "semantic_sha256": "bed435b97dd2e3bcf742667c9fc9be6a283cdd32a26e08b3e84e32510b1f3982"
+      },
+      "statement": "the coding harness with fake and admitted local model profiles, denied/asked/allowed tools, stale preimages, path attacks, command timeout, malformed model output, repeated calls, cancellation, restart, artifact corruption, and Git-preservation fixtures."
     },
     {
       "id": "CL-BF53C1500AF65197BF0F",
@@ -11397,6 +11782,17 @@
       "statement": "installer and `agentmage doctor` conformance tests across every supported platform, hardware-fit result, recovery state, manifest mismatch, sandbox state, encrypted-store state, repository-map state, offline state, and redaction rule."
     },
     {
+      "id": "CL-C6BF5B0DD51768C332BE",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "2. Agent Orchestrator",
+        "line": 323,
+        "semantic_sha256": "c6bf5b0dd51768c332be8b5dcae764dff7bc0de41de5454a48b49311bffb355b"
+      },
+      "statement": "versioned `RuntimeRunRequest`, `RuntimeEvent`, and `RuntimeOutcome` contracts shared by native Chat, interactive CLI, JSON, software-development-kit, Agent Client Protocol, and later workflow-node callers."
+    },
+    {
       "id": "CL-C6D6E65D00180D1CB495",
       "label": "ROADMAP",
       "source": {
@@ -11483,6 +11879,17 @@
         "semantic_sha256": "c7ff38a727b4441a1cf19f3f1a242a821fa9b36937962960dd8b8ab5e6e341a5"
       },
       "statement": "every proposed edit first as a shadow change set outside the target files, with stable operation identifiers and exact base hashes."
+    },
+    {
+      "id": "CL-C80AF1BB811239F8E29D",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1951,
+        "semantic_sha256": "c80af1bb811239f8e29dafa47de5b70c290ea385510078450cef6b5e0310ebc0"
+      },
+      "statement": "every enabled `AG-01` through `AG-49` profile in at least one complete promoted lifecycle, with exact profile-to-input-to-capability-to-evidence traceability, independent-review isolation, deterministic-service ownership, attack and recovery evidence, compatible replacement and removal, and zero self-approved, hidden, duplicate, destructive, unsupported, or falsely completed effect."
     },
     {
       "id": "CL-C85474A01DDF59D8F834",
@@ -11714,6 +12121,17 @@
         "semantic_sha256": "cc11d845057baaed69793c7955e365cd8d594d6ad1bbe74fa60f51d30a0708cb"
       },
       "statement": "CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, and SARIF normalization preserving tool version, rule, location, severity, confidence, reachability, suppression, and original identity."
+    },
+    {
+      "id": "CL-CCBC17E364DDD7269928",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "4. Tool Protocol and Registry",
+        "line": 468,
+        "semantic_sha256": "ccbc17e364ddd72699289f56ed9ff19816a323da1058beb427cd8d1766fd1688"
+      },
+      "statement": "Register built-in filesystem, repository search, patch, controlled write, command, validation, and Git providers directly through the common `ToolRegistry` and `ToolDispatcher`; do not require MCP for native local tools."
     },
     {
       "id": "CL-CCBD3131B170C9A15AAF",
@@ -12222,6 +12640,17 @@
       "statement": "an executive-assistant audit view showing which sources produced each briefing, recommendation, reminder, or draft."
     },
     {
+      "id": "CL-D62D3AD10605046B7AA7",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "11. Task and Plan Management",
+        "line": 858,
+        "semantic_sha256": "d62d3ad10605046b7aa7fd19db92958a7168d92cfe0a45e4db280bd339137d8b"
+      },
+      "statement": "deterministic reconciliation between local plans, task lists, repository state, commits, pull requests, checks, and provider work items; preserve conflict and stale-state findings instead of silently updating either source."
+    },
+    {
       "id": "CL-D636C869A98C68F028FE",
       "label": "BUILD",
       "source": {
@@ -12618,6 +13047,17 @@
       "statement": "Obsidian Vault Steward skill \u2014 daily notes, projects, contacts, meetings, tasks, links, handoffs, and change previews through direct Markdown access."
     },
     {
+      "id": "CL-DFBAC573F27DC5E16546",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "11. Task and Plan Management",
+        "line": 859,
+        "semantic_sha256": "dfbac573f27dc5e16546c82248c57c1931dd3e82ab4682b3c5638041efcda4b9"
+      },
+      "statement": "Treat status, priority, assignment, iteration, milestone, project-field, closure, and reopening changes as separate field-level provider effects after a fresh preview and exact approval."
+    },
+    {
       "id": "CL-DFCB6316637206C52FE7",
       "label": "CAPABILITY GATE",
       "source": {
@@ -12695,6 +13135,17 @@
       "statement": "a plan-update history so the user can see which steps were added, completed, or changed and why."
     },
     {
+      "id": "CL-E06F76B4DB32DC0A0940",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "27A. Local Command-Line Interface",
+        "line": 1483,
+        "semantic_sha256": "e06f76b4db32dc0a09400a1f38e52e85ff4507b348d8a25db8037ae648a195b9"
+      },
+      "statement": "Define the first usable harness milestone as one ephemeral local interactive session with an admitted local model, native read/search/edit/command/test/Git tools, approvals, streamed events, bounded output, current receipts, and a final summary; keep persistent resume, complete journal/artifact lifecycle, remote Git, commit, push, advanced indexing, routing, MCP, complete conversation-library behavior, workflow design, and multiple agents outside that milestone."
+    },
+    {
       "id": "CL-E0858D6483BF2BCCB8CD",
       "label": "DEFER",
       "source": {
@@ -12726,6 +13177,17 @@
         "semantic_sha256": "e08fb1fd2d64e32b156fb22d997c61e8358747a7f806c11e3dbdc6859a99fce5"
       },
       "statement": "Prohibit automatic discovery, download, installation, enabling, or execution of public plugins, hooks, skills, agents, or capability packages; every package begins disabled and requires an exact local review and approval."
+    },
+    {
+      "id": "CL-E0920E05B9977CA3EBAB",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "27A. Local Command-Line Interface",
+        "line": 1480,
+        "semantic_sha256": "e0920e05b9977ca3ebab41493cd153c1c199528edf42d23ce2f1227a9a940433"
+      },
+      "statement": "Run mutating coding sessions only in an exact AgentMage-owned worktree with separately granted writes and commands; preserve the user's checkout, index, untracked files, notes, and unrelated Git state."
     },
     {
       "id": "CL-E0B59997601E4466A895",
@@ -13157,6 +13619,17 @@
       "statement": "template-based letters, memoranda, agendas, minutes, briefing notes, action logs, decision logs, and routing slips with exact preview before saving."
     },
     {
+      "id": "CL-E945B7947F6A2C5F13A1",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Source, Work, and CI",
+        "line": 1950,
+        "semantic_sha256": "e945b7947f6a2c5f13a102ec35c22f00cbc9f917eecf4ad2dbf39e73f9425855"
+      },
+      "statement": "Keep role selection, workflow sequencing, review consensus, issue text, pull-request content, CI output, and provider events non-authoritative; each remote write, execution, merge, release, deployment, rollback, notification, and administrative effect retains its own exact grant and deterministic actuator."
+    },
+    {
       "id": "CL-E959F24D8B1546F4D99E",
       "label": "BUILD",
       "source": {
@@ -13287,6 +13760,17 @@
         "semantic_sha256": "ebc6bbcf283b3ecb115476a2c92de759b62bddf6763b171344cad417fa1c50dc"
       },
       "statement": "Linux Secret Service, macOS Keychain, and Windows Credential Manager or DPAPI credential-reference adapters with exact identity, scope, lifecycle, and conformance fixtures."
+    },
+    {
+      "id": "CL-EBEF732CB351E947384D",
+      "label": "ROADMAP",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "1. Local Model and Runtime",
+        "line": 248,
+        "semantic_sha256": "ebef732cb351e947384daeb149bc1b4192dc1663d507076d52cc24a4ecf98f44"
+      },
+      "statement": "admit later Ollama, vLLM, and OpenAI-compatible local endpoint adapters only as exact manifest-bound `LocalModelRuntime` profiles with endpoint identity, process/network boundary, codec, provenance, zero-egress, capability, parity, and removal evidence; do not expose a generic arbitrary endpoint in the coding-harness MVP."
     },
     {
       "id": "CL-EC1037281C1A3989F1C1",
@@ -13606,6 +14090,17 @@
         "semantic_sha256": "f256f96b731cf25b0add997c7107eb3030d52a6e780b6eaf584b8fadf832d93b"
       },
       "statement": "memory decay and retention rules that retain decisions and evidence while expiring temporary status, duplicated summaries, and obsolete working context."
+    },
+    {
+      "id": "CL-F33A3BB960C727EE4F78",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "28. Specialized Workflow Skills",
+        "line": 1551,
+        "semantic_sha256": "f33a3bb960c727ee4f78525e1293418cd9078883f64e05dc9d3d30b3b17b8857"
+      },
+      "statement": "Independent Pull-Request Review skill pack \u2014 correctness, architecture, test adequacy, security, API compatibility, reliability, accessibility, evidence-preserving synthesis, and unresolved dissent."
     },
     {
       "id": "CL-F3453E448C484F42499D",
@@ -14224,6 +14719,17 @@
       "statement": "approval-gated review submission, review-thread replies, thread resolution, approval, change request, and review dismissal with the exact hosted effect shown first."
     },
     {
+      "id": "CL-FF38826793DAFAAACA8A",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "23. Logging, Audit, and Observability",
+        "line": 1313,
+        "semantic_sha256": "ff38826793dafaaaca8a78dcc57908cdbf54c27cc6315272b3aca1034000b7ce"
+      },
+      "statement": "Treat streamed model tokens as bounded presentation data rather than one synchronous durable database write per token."
+    },
+    {
       "id": "CL-FF8C3A1710903B1B44D7",
       "label": "CAPABILITY GATE",
       "source": {
@@ -14269,7 +14775,7 @@
     }
   ],
   "counts": {
-    "checklist": 1297,
+    "checklist": 1343,
     "requirements": 241
   },
   "policy": {

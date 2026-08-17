@@ -229,6 +229,12 @@ Platform adapters implement local inference, workspace authorization, secure pat
 
 Capability packs supply bounded tools and workflows through kernel contracts. The planned sequence is Core Read-Only; Knowledge, Obsidian, and Memory; Controlled Writes; Coding and Complete Local CLI; Manual Frontier Consultation; Administrative and Document Work; Read-Only GitHub and Connectors; delivery, productivity, finance, and Cloud Observer; then the first-GA Public Research, Continuity, Credential Broker, Approved Model Management, and Whole-Codebase Audit capabilities. Native filesystem, search, Git, patch, command, and validation providers register directly through the kernel tool abstraction. Source-level read-only MCP contracts now provide reviewed manifests, exact identity binding, optional common-registry adaptation, bounded request/response mediation, cancellation/disconnect cleanup assertions, and content-minimized receipts; MCP is not the transport for built-in local tools. Production MCP process and network transports, full grant/event/evidence parity, desktop, packages, richer browser, hosted-action, scheduling, multi-agent coordination, and experimental-model capabilities remain separately gated according to their recorded releases.
 
+Future planning and delivery roles use the standardized `AG-01` through
+`AG-49` declarative profile catalog. Each profile is a bounded caller of the
+same runtime, policy, tool, journal, artifact, and evidence path. Deterministic
+services retain credentials, approvals, signing, provider-effect execution, and
+postcondition truth.
+
 Only Core Read-Only is enabled in v0.1.
 
 ### 5.3 Shells
@@ -711,6 +717,9 @@ The first-GA delivery contract is defined in [`DELIVERY-SYSTEM.md`](./DELIVERY-S
 - Full GitHub.com and user-approved GitHub Enterprise Server behavior within the shipped matrix, including local signed commits and separately approved pushes, issues, pull requests, reviews, workflows, checks, releases, and hosted mutations.
 - The canonical repository-safety boundary: pre/post preservation manifests; exact namespaced fetch; owned worktrees and temporary indexes; pinned signer; one separately approved ordinary fast-forward task-branch push; short-lived host/account/repository-bound authentication; uncertain-effect reconciliation; and structural absence of generic pull, destructive or implicit Git, force, bypass, hook/filter execution, and arbitrary ref updates.
 - Reference adapters for Jira, Azure DevOps, GitLab, Jenkins, artifact registries, Kubernetes and GitOps, infrastructure as code, OpenTelemetry and vendor observability, incidents, security findings, service catalogs, feature flags, migrations, and releases.
+- Standardized planning, issue, bug, pull-request review, CI/CD, release,
+  operations, and maintenance profiles that compose those adapters through the
+  shared runtime without owning provider credentials or effect authority.
 - Separate `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, and `admin` authority classes, with no capability class inheriting another.
 - Exact previews, fresh remote preconditions, single-use grants, idempotency or deterministic reconciliation, verified postconditions, receipts, rollback or compensation, cancellation, and crash recovery.
 - A strict-local core that remains complete and testable after all connected packs, credentials, caches, event registrations, schedules, and network scopes are removed.
@@ -978,3 +987,37 @@ Implementation is distributed across existing Sprints 157, 159, 161, 163, and 16
 identities remain intact. Sprint 166 independently reruns `RV-44` through `RV-49` and closes `G-GA`
 only when `AM-GAD-004`, `AT-GA-004`, and every earlier release requirement pass from current raw
 evidence.
+
+## 36. Standardized Planning, Review, and Delivery Agent Profiles
+
+Decision 0041 defines the 49-profile catalog in
+[`planning-review-and-delivery-agent-profiles.md`](./docs/architecture/planning-review-and-delivery-agent-profiles.md).
+The catalog covers coordination, issue intake and authoring, requirements,
+Agile decomposition, backlog and dependency planning, coding, testing,
+independent review, bug reproduction and closure, CI investigation and
+remediation, PR preparation, build, supply chain, release, deployment
+verification, incidents, maintenance, documentation, observability, cost, and
+license review.
+
+These are declarative caller profiles rather than separate execution systems.
+Every profile must use the shared runtime and must declare its purpose,
+prohibitions, model needs, tools, maximum capability classes, inputs, outputs,
+budgets, evidence, completion, and stop conditions. Runtime authority remains
+the complete narrowing intersection; profile text cannot mint, transfer,
+aggregate, or inherit authority from another role or result.
+
+Workflow graphs deterministically control ordering, dependencies, leases,
+retries, cancellation, idempotency, gates, and side-effect state. Policy and
+approval, credential brokerage, signing and key custody, evidence and
+provenance, artifact verification, merge and deployment actuation, and
+postcondition reconciliation are deterministic services, not model roles.
+
+Role definitions and synthetic enablement belong to Sprints 92-93. Child
+isolation and local coordination belong to Sprints 94-95. Provider-backed issue,
+bug, pull-request, Agile, and task-list workflows belong to Story 107.2 after
+GitHub and work-management conformance. Sprints 108-124 supply the remaining
+source, CI, artifact, supply-chain, deployment, observability, incident, catalog,
+release, and platform dependencies. Story 125.2 then proves all 49 enabled
+profiles in complete lifecycle, attack, recovery, replacement, and truthful-
+completion campaigns. No role profile changes the earlier `M-HARNESS-MVP`
+dependency or creates a current implementation or support claim.

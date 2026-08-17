@@ -20,6 +20,12 @@ release trust and the Phase 8 Linux platform, configuration, state, key, IPC,
 and process lifecycle candidate.
 Accepted Decision 0018 defines the Phase 9 exact Linux read-and-receipt source
 candidate and preserves the unavailable signed-package boundary for Phase 11.
+Accepted [Decision 0041](decisions/0041-standardized-planning-review-and-delivery-agent-profiles.md)
+defines 49 declarative planning, engineering, review, delivery, operations, and
+maintenance profiles over one shared runtime. The related
+[profile architecture](architecture/planning-review-and-delivery-agent-profiles.md)
+keeps policy, credentials, signing, evidence, external-effect actuation, and
+postcondition reconciliation deterministic.
 
 Current implementation references include the
 [structured-code change architecture](architecture/structured-code-changes.md), its

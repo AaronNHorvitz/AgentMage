@@ -16,7 +16,7 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 | Model runtime target | Native `llama.cpp`; gated Docker Model Runner compatibility adapter; neither is integrated into an end-user workflow |
 | v1.0 GA platforms | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon macOS retained as a post-GA lane |
 | Delivery boundary | Full GitHub.com/GitHub Enterprise support within a published matrix, plus versioned provider adapters for planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, releases, communications, productivity, finance, read-only cloud observation, public research, and encrypted continuity |
-| Execution plan | 17 epics and 169 numbered dependency gates; completed work is preserved and all expansions or refinements are appended under Decisions 0008, 0009, 0010, 0011, 0026, and 0027 |
+| Execution plan | 17 epics and 169 numbered dependency gates; completed work is preserved and all expansions or refinements are appended under Decisions 0008, 0009, 0010, 0011, 0026, 0027, and 0041 |
 | License | [Apache License 2.0](./LICENSE) |
 
 ## Current Implementation Truth
@@ -49,6 +49,10 @@ reconciles future model construction around one candidate-neutral runtime,
 closed family codecs, Muse-first evaluation, role-aware first-party Gemma
 coverage, deterministic effect gating, and verifier-only completion. It enables
 no model and preserves every prior artifact and requirement.
+[Decision 0041](./docs/decisions/0041-standardized-planning-review-and-delivery-agent-profiles.md)
+standardizes 49 future planning, issue, bug, review, CI/CD, release,
+operations, and maintenance profiles over the shared runtime. It enables no
+agent or provider effect and preserves the coding-harness dependency order.
 
 Accepted Decisions 0013 through 0016 define the current authority transaction,
 opaque effect permit, canonical held targets, exact-object Linux worker,
@@ -193,6 +197,12 @@ AgentMage v1.0 GA builds the delivery system on the internal milestones. Its sup
 - Full GitHub.com and user-approved GitHub Enterprise Server behavior within a versioned matrix covering repositories, branches, commits, issues, pull requests, reviews, checks, workflows, releases, local commits, signed pushes, and separately approved hosted mutations.
 - Kernel-mediated repository mutation with pre/post preservation manifests, exact namespaced fetches, AgentMage-owned worktrees and temporary indexes, pinned signers, separately approved ordinary fast-forward pushes, short-lived host-bound credentials, and structural absence of generic pull, force, reset, clean, discard, implicit ref updates, and hook or filter execution.
 - Provider-neutral adapters for Jira, Azure DevOps, GitLab, Jenkins, artifacts, Kubernetes/GitOps, infrastructure, OpenTelemetry and observability, incidents, security findings, catalogs, feature flags, migrations, and release operations.
+- A standardized 49-profile planning and delivery catalog covering idea intake,
+  issue authoring, Agile decomposition, dependency and sprint planning, bug
+  reproduction and closure, independent pull-request review, CI remediation,
+  build, release, deployment verification, incidents, maintenance, and evidence.
+  Every profile reuses the shared runtime; deterministic services retain policy,
+  credentials, signing, provenance, merge, deployment, and postcondition truth.
 - Removable communications and productivity packs for Outlook and Exchange Online, Teams, Gmail, Slack, Proton Mail Bridge, a confirmed-UI Proton Calendar adapter, generic mail protocols, Linux mail-client interoperability, calendars, contacts, tasks, document repositories, a unified activity inbox, and a confirmed cross-provider work graph.
 - Direct-invitation and email-first confirmation-to-calendar workflows through structured Google and Microsoft adapters or the narrower Proton Calendar UI exception, with exact recipient, proposal, response, event, approval, and postcondition evidence.
 - A kernel-enforced Autonomy Center with Disabled, Read only, Draft only, Confirm each write, Scoped autonomy, and Autonomous within policy levels, narrowed independently by pack, connector, account, operation, destination, recipient, channel, and schedule.
@@ -484,6 +494,7 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Security Policy](./SECURITY.md) - private reporting, supported versions, remediation, signed manual patch delivery, emergency disablement, and end of support.
 - [Runtime Boundaries](./RUNTIME-BOUNDARIES.md) - trust boundaries, classified data flows, privileges, processes, sockets, lifecycle, and runtime parity.
 - [Delivery System Architecture](./DELIVERY-SYSTEM.md) - provider-neutral delivery graph, adapter contract, capability classes, operation lifecycle, conformance levels, and extreme tests.
+- [Planning, Review, and Delivery Agent Profiles](./docs/architecture/planning-review-and-delivery-agent-profiles.md) - standardized role catalog, shared-runtime boundary, deterministic services, and canonical issue, bug, pull-request, and roadmap workflows.
 - [Productivity System Architecture](./PRODUCTIVITY-SYSTEM.md) - autonomy, communications, personal-information, document, finance, workflow, and read-only cloud-observer contracts.
 - [Trusted Operations Architecture](./TRUSTED-OPERATIONS.md) - command authority, public research, credential brokering, encrypted continuity, approved-model management, and experimental-model isolation.
 - [Whole-Codebase Audit Architecture](./CODEBASE-AUDIT.md) - exhaustive repository census, deterministic structure, bounded semantic review, reconciliation, read-only verification, checkpoints, findings, and coverage truth.

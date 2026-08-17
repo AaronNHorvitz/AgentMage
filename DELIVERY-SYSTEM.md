@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Normative first-GA architecture under Decision 0008 |
+| Status | Normative first-GA architecture under Decisions 0008 and 0041 |
 | Effective date | 2026-08-11 |
 | Product authority | [`PRD.md`](./PRD.md) |
 | Requirement authority | [`Agent-Scaffolding-Inventory.md`](./Agent-Scaffolding-Inventory.md) |
@@ -31,6 +31,9 @@ AgentMage v1.0 GA requires:
 - Security-result ingestion and policy gates for SARIF, CodeQL, Semgrep, SonarQube, Snyk, Trivy, Grype, SPDX, CycloneDX, Sigstore/Cosign, SLSA provenance, and OPA/Conftest.
 - A Backstage reference catalog adapter and a versioned extension path for Port, Cortex, and Atlassian Compass.
 - Release manifests, semantic-version and changelog support, environment promotion, health verification, rollback, feature-flag adapters, progressive delivery, and database-migration gates.
+- Standardized planning, issue, bug, review, CI/CD, release, operations, and
+  maintenance role profiles using the shared runtime and the same provider
+  effect lifecycle.
 
 Later adapters may include additional providers such as Bitbucket, Gerrit, Buildkite, CircleCI, Pulumi, New Relic, Dynatrace, ServiceNow, LaunchDarkly, Unleash, Flyway, and Liquibase. Their names in the roadmap do not make them supported until their individual conformance gates pass and the release matrix promotes them.
 
@@ -296,3 +299,53 @@ secret operation, or administrative effect. Audit workers have no hosted-write o
 credential authority. If the user later chooses remediation, AgentMage creates a new delivery plan
 from current evidence under the ordinary preview, grant, execution, reconciliation, and receipt
 contract.
+
+## 18. Standardized Agent-Profile Relationship
+
+Decision 0041 and the
+[`planning, review, and delivery profile architecture`](./docs/architecture/planning-review-and-delivery-agent-profiles.md)
+define 49 declarative roles over this delivery system. The roles do not become
+provider adapters and do not own credentials, policy, approval, signing,
+evidence truth, or effect execution.
+
+```mermaid
+flowchart LR
+    ROLE["Versioned role profile"] --> PACKET["Bounded work packet"]
+    PACKET --> RUNTIME["Shared runtime"]
+    RUNTIME --> PLAN["Local evidence or effect proposal"]
+    PLAN --> POLICY["Deterministic policy and approval"]
+    POLICY --> ADAPTER["Operation-scoped provider adapter"]
+    ADAPTER --> VERIFY["Reconciliation and postcondition"]
+    VERIFY --> RECEIPT["Attributable evidence"]
+```
+
+Planning and review profiles normally use `observe` and `draft`. Coding roles
+may request `local-write` or approved local `execute` operations inside owned
+worktrees. PR, issue, CI, merge, release, deployment, rollback, communication,
+and administrative actions retain separate capability classes and exact grants.
+The profile that prepared an operation cannot approve it merely by changing
+roles or invoking a coordinator.
+
+The canonical delivery workflows are:
+
+- idea to reviewed issue and dependency-ordered plan;
+- bug intake to reproduction, diagnosis, fix, regression evidence, closure
+  verification, and PR draft;
+- immutable PR packet to independent correctness, architecture, test, security,
+  compatibility, reliability, and accessibility findings;
+- CI failure to investigation, bounded remediation, rerun proposal, and current
+  check evidence;
+- approved change to build, provenance, release, deployment verification,
+  incident response, rollback proposal, and postmortem; and
+- backlog and roadmap snapshot to duplicate detection, progress reconciliation,
+  dependency analysis, sprint proposal, risk review, and field-level provider
+  updates.
+
+Review coordinators preserve each finding and disagreement. Merge, release, and
+deployment eligibility is computed from current provider state and deterministic
+gates rather than a review-role consensus or model confidence. Provider-backed
+planning, issue, bug, and GitHub review execution remains deferred to Story
+107.2 and its dependencies. The remaining source, CI, artifact, supply-chain,
+release, deployment, observability, incident, and maintenance profile paths
+remain deferred through Sprints 108-124, followed by all-profile lifecycle
+conformance in Story 125.2. The catalog itself creates no current support claim.

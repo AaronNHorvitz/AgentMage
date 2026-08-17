@@ -6318,7 +6318,7 @@ platform, or release gate is closed.
 
 **Sprint goal:** Deliver agent definitions and registry as a bounded part of the legacy goal: Let users define, test, version, and inspect bounded specialist agents before any child execution is enabled.
 
-**Source coverage:** inventory Section 2C definition and studio requirements; Local Agent Builder skill in Section 28; `CR-P2-MAG` foundation.
+**Source coverage:** inventory Section 2C definition and studio requirements; Local Agent Builder skill in Section 28; `CR-P2-MAG` foundation; Decision 0041 and the standardized profile architecture.
 
 **Dependencies:** Sprint 91; legacy dependency record: Sprint 34 (legacy S-028), Sprint 49 (legacy S-042), Sprint 79 (legacy S-064), Sprint 90 (legacy S-069).
 
@@ -6350,15 +6350,46 @@ platform, or release gate is closed.
 - [ ] **Story AC 92.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-071-I01`, `S-071-I02`, `S-071-I03`, and `S-071-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
 - [ ] **Story AC 92.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
+#### [ ] Story 92.2 - Standardized Planning, Review, and Delivery Profile Catalog
+
+**User-facing value:** As a user or maintainer, I need one inspectable catalog of specialist roles so that planning, issue, bug, review, delivery, operations, and maintenance work can be composed without creating separate agent engines or hidden authority.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 92.2.1 - Define the canonical role-profile contracts**
+  - [ ] **Sub-task 92.2.1.1:** Register exactly `AG-01` through `AG-49` with their canonical names, family, bounded responsibility, prohibited work, and default authority ceiling from Decision 0041.
+  - [ ] **Sub-task 92.2.1.2:** Require every profile to declare version, owner, source hash, signature, lifecycle, compatible model and codec profiles, requested tools and roots, provider-object classes, inputs, outputs, evidence, citations, budgets, approvals, completion, cancellation, and stop conditions.
+  - [ ] **Sub-task 92.2.1.3:** Implement each role as a declarative specialization of the shared caller-neutral runtime contract, with no private model loop, tool router, permission engine, journal, artifact store, session store, credential path, provider client, or completion authority.
+  - [ ] **Sub-task 92.2.1.4:** Encode policy and approval, credential brokerage, signing and key custody, evidence and provenance retention, artifact verification, merge and deployment actuation, and postcondition reconciliation as prohibited role substitutions owned by deterministic services.
+  - [ ] **Sub-task 92.2.1.5:** Declare independent-review requirements for `AG-10`, `AG-11`, and `AG-35` through `AG-41`, including immutable reviewed-source identity, isolated conclusions, attributable findings, dissent preservation, and no implementer-authored approval.
+- [ ] **Task 92.2.2 - Produce catalog and compatibility artifacts**
+  - [ ] **Sub-task 92.2.2.1:** Produce a machine-readable catalog, generated human-readable reference, profile-family index, and stable profile-name-to-identity map.
+  - [ ] **Sub-task 92.2.2.2:** Produce a profile-to-capability, profile-to-tool, profile-to-provider-object, profile-to-model-need, and profile-to-evidence matrix that records maximum requested authority rather than granting it.
+  - [ ] **Sub-task 92.2.2.3:** Produce template work packets and synthetic fixtures for every profile, including valid, incomplete, contradictory, stale, hostile, unsupported, and overbroad definitions.
+  - [ ] **Sub-task 92.2.2.4:** Produce lifecycle and compatibility records for addition, deprecation, replacement, disablement, package removal, and source-hash or signature change.
+- [ ] **Task 92.2.3 - Verify and close the profile catalog**
+  - [ ] **Sub-task 92.2.3.1:** `S-092-UT01` verifies exact cardinality, identity order, name uniqueness, family membership, required fields, schema versioning, deterministic serialization, and generated-reference parity for all 49 profiles.
+  - [ ] **Sub-task 92.2.3.2:** `S-092-UT02` mutates every authority, model, tool, root, provider, budget, completion, evidence, retention, and lifecycle field; assert invalid or broadened definitions fail closed and remain disabled.
+  - [ ] **Sub-task 92.2.3.3:** `S-092-ST01` attempts role substitution, self-approval, policy reinterpretation, credential selection, key access, forged evidence, hidden provider effects, automatic merge or deployment, and model-declared completion; assert no profile can impersonate a deterministic service.
+  - [ ] **Sub-task 92.2.3.4:** `S-092-IT01` loads every profile through the existing registry and shared runtime request validator against synthetic grants; assert exact authority narrowing, zero activation by registration, and no parallel execution engine.
+  - [ ] **Sub-task 92.2.3.5:** Retain the catalog, generated reference, compatibility matrix, mutation corpus, registry snapshot, source hashes, signatures, negative-effect proof, and requirement-to-story-to-test evidence index.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 92.2.AC1:** Given the canonical profile source, when the catalog and reference are generated, then exactly `AG-01` through `AG-49` appear once with matching names, responsibilities, ceilings, contracts, and source hashes.
+- [ ] **Story AC 92.2.AC2:** Given any valid profile, when it is registered or selected, then it requests only declared capabilities through the shared runtime and gains no authority, tool, credential, model, provider connection, or execution merely from its definition.
+- [ ] **Story AC 92.2.AC3:** Given an overbroad, contradictory, stale, unsigned, incompatible, service-impersonating, or self-approving profile, when validation runs, then the profile remains disabled and the exact reason is attributable and reviewable.
+- [ ] **Story AC 92.2.AC4:** Given an independent-review profile, when its contract is inspected, then source identity, isolation, evidence, dissent, and prohibited self-review behavior are explicit and machine-testable.
+
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 92.AC1:** Every numbered implementation sub-task in Story 92.1 is complete and linked to its legacy requirement or issue identity.
+- [ ] **Sprint AC 92.AC1:** Every numbered implementation sub-task in Stories 92.1 and 92.2 is complete and linked to its legacy requirement, issue identity, or Decision 0041 profile identity.
 - [ ] **Sprint AC 92.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
 - [ ] **Sprint AC 92.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [ ] **Sprint AC 92.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 92.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
-**Gate decision:** Sprint 92 is PASS only when Story 92.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 92 is PASS only when Stories 92.1 and 92.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 93 - Agent Validation, Dry Runs, and Enablement
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -6418,7 +6449,7 @@ platform, or release gate is closed.
 
 **Sprint goal:** Deliver child authority and isolation as a bounded part of the legacy goal: Execute and direct a limited set of specialist agents with explicit child grants, isolated state, attributable evidence, and deterministic conflict handling.
 
-**Source coverage:** inventory Section 2C execution requirements; Local Agent Director skill; `CR-P2-MAG`.
+**Source coverage:** inventory Section 2C execution requirements; Local Agent Director skill; `CR-P2-MAG`; Decision 0041 and the standardized profile architecture.
 
 **Dependencies:** Sprint 93; legacy dependency record: Sprint 42 (legacy S-035), Sprint 79 (legacy S-064), Sprint 90 (legacy S-069), Sprint 93 (legacy S-071).
 
@@ -6505,6 +6536,37 @@ platform, or release gate is closed.
 - [ ] **Story AC 95.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no child exceeds the full authority intersection or shares uncontrolled state; writable children have exclusive paths/worktrees and conflicts never auto-resolve destructively.
 - [ ] **Story AC 95.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every child action/result is attributable and untrusted until parent review; cancellation, expiry, budgets, and evidence requirements propagate through the complete descendant graph.
 
+#### [ ] Story 95.2 - Deterministic Local Profile Workflows
+
+**User-facing value:** As a user, I need specialist roles to cooperate through bounded, inspectable workflows so that I can turn an idea, bug, pull request, or roadmap discrepancy into evidence-backed proposals without granting a model unsupervised control.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 95.2.1 - Compose canonical local workflow graphs**
+  - [ ] **Sub-task 95.2.1.1:** Implement the `AG-01` coordinator as a deterministic graph caller that assigns declared work packets, dependencies, leases, retry eligibility, cancellation, and return contracts without receiving direct file, command, credential, or provider-effect authority.
+  - [ ] **Sub-task 95.2.1.2:** Compose an idea-to-work proposal through `AG-25`, `AG-26`, `AG-28`, `AG-05`, `AG-27`, and `AG-30`, preserving source facts, assumptions, ambiguity, dependencies, and user decisions at every handoff.
+  - [ ] **Sub-task 95.2.1.3:** Compose a bug-to-verified-change proposal through `AG-03`, `AG-06`, `AG-42`, `AG-07`, `AG-08`, `AG-09`, `AG-43`, and `AG-14`, with isolated writable ownership and no closure from prose alone.
+  - [ ] **Sub-task 95.2.1.4:** Compose an independent pull-request review fan-out through `AG-35`, `AG-36` through `AG-41`, and `AG-11`, using one immutable review packet while isolating conclusions and preserving duplicate, conflicting, and unresolved findings.
+  - [ ] **Sub-task 95.2.1.5:** Compose roadmap and sprint reconciliation through `AG-29` through `AG-34`, with the canonical plan, current code, tests, commits, receipts, and evidence compared as separate attributable inputs.
+  - [ ] **Sub-task 95.2.1.6:** Enforce sequential ownership for writable roles, bounded parallelism for read-only roles, explicit parent review, deterministic no-op and blocker states, and zero provider effects in these local workflow graphs.
+- [ ] **Task 95.2.2 - Produce workflow and review artifacts**
+  - [ ] **Sub-task 95.2.2.1:** Produce versioned workflow definitions, node-to-profile bindings, authority intersections, dependency graphs, input/output schemas, retry rules, cancellation paths, and completion predicates.
+  - [ ] **Sub-task 95.2.2.2:** Produce immutable work-packet, finding, dissent, decision, change-proposal, validation, blocker, and parent-review artifact formats.
+  - [ ] **Sub-task 95.2.2.3:** Produce a synthetic corpus covering idea refinement, incomplete issues, ambiguous criteria, duplicate bugs, irreproducible failures, conflicting reviews, stale plans, failed validation, cancellation, and resource exhaustion.
+- [ ] **Task 95.2.3 - Verify and close local profile coordination**
+  - [ ] **Sub-task 95.2.3.1:** `S-095-UT01` exercises every workflow state transition, dependency, lease, retry, no-op, blocker, cancellation, and completion predicate; assert deterministic order and no model-authored control-flow transition.
+  - [ ] **Sub-task 95.2.3.2:** `S-095-ST01` attempts coordinator authority aggregation, sibling-state access, implementer self-review, reviewer conclusion sharing, destructive conflict resolution, hidden commands, hidden writes, hidden network, and result-as-authority; assert denial and preserved evidence.
+  - [ ] **Sub-task 95.2.3.3:** `S-095-IT01` runs all four canonical workflows through the shared runtime with fake models, tools, repositories, commands, and providers; assert attributable outputs, isolated ownership, parent review, and zero real external effects.
+  - [ ] **Sub-task 95.2.3.4:** `S-095-RT01` cancels, pauses, expires, crashes, and resumes each graph at every node class; assert descendants stop, leases release, accepted outputs remain immutable, incomplete work stays incomplete, and no effect replays.
+  - [ ] **Sub-task 95.2.3.5:** Retain workflow definitions, synthetic fixtures, event traces, authority calculations, isolated review outputs, conflict packets, cancellation and resume evidence, real-system no-effect snapshots, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 95.2.AC1:** Given an enabled canonical workflow and exact local grants, when specialist roles run, then every node uses the shared runtime, receives only the intersected authority for its packet, and returns an attributable proposal rather than an authorization.
+- [ ] **Story AC 95.2.AC2:** Given independent review roles with conflicting findings, when the coordinator synthesizes their results, then each conclusion, severity, evidence link, dissent, and unresolved question remains visible and no implementer or coordinator can mark the review approved.
+- [ ] **Story AC 95.2.AC3:** Given a cancellation, crash, stale input, failed validation, exhausted budget, or unavailable dependency, when workflow state is recomputed, then descendants stop or remain blocked, accepted evidence is preserved, and no write, command, network call, or provider effect occurs outside its exact grant.
+- [ ] **Story AC 95.2.AC4:** Given idea, bug, pull-request, and roadmap fixtures, when the canonical graphs complete, then their outputs satisfy the declared schemas and deterministic completion predicates without a second runtime implementation.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 95.AC1:** No child action exceeds the complete authority intersection.
@@ -6513,8 +6575,9 @@ platform, or release gate is closed.
 - [ ] **Sprint AC 95.AC4:** Cancellation and expiry terminate all descendants and prove cleanup.
 - [ ] **Sprint AC 95.AC5:** Recursive spawning, shared uncontrolled writes, unsupervised swarms, and self-expansion remain impossible.
 - [ ] **Sprint AC 95.AC6:** Workflow and child-agent execution reuses the shared runtime coordinator with narrower authority and introduces no parallel coding-agent implementation.
+- [ ] **Sprint AC 95.AC7:** The idea, bug, pull-request review, and roadmap workflows pass with isolated roles, preserved dissent, deterministic control flow, and zero undeclared local or external effect.
 
-**Gate decision:** Sprint 95 is PASS only when Story 95.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 95 is PASS only when Stories 95.1 and 95.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 96 - Signed Updates and Supply-Chain Maintenance
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -7073,9 +7136,9 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Sprint goal:** Deliver truthful, identity-safe work-item planning and approved updates across GitHub Issues, Jira Cloud/Data Center, and Azure Boards.
 
-**Source coverage:** `AM-WRK-001`, `AT-WRK-001`; `DELIVERY-SYSTEM.md`; `SR-DEL-001` through `SR-DEL-013`, `RV-23` through `RV-27`.
+**Source coverage:** `AM-WRK-001`, `AT-WRK-001`; `DELIVERY-SYSTEM.md`; Decision 0041 and the standardized profile architecture; `SR-DEL-001` through `SR-DEL-013`, `RV-23` through `RV-27`.
 
-**Dependencies:** Sprint 106.
+**Dependencies:** Sprint 106 and the local profile workflows from Sprint 95.
 
 #### [ ] Story 107.1 - Cross-Provider Work Planning
 
@@ -7104,6 +7167,42 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Story AC 107.1.AC2:** Given provider-specific workflows and custom fields, when AgentMage previews an update, then it preserves exact semantics and exposes unsupported or unknown behavior rather than guessing.
 - [ ] **Story AC 107.1.AC3:** Given a changed schema, transition, permission, attachment, or object revision, when submission begins, then stale approval is invalidated and no external effect occurs.
 
+#### [ ] Story 107.2 - Provider-Backed Planning, Bug, and Review Workflows
+
+**User-facing value:** As a delivery lead or developer, I need planning, issue, bug, pull-request, Agile, and task-list roles to work from exact provider state so that they can prepare useful updates while I retain control over every external effect.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 107.2.1 - Build provider-backed immutable work packets**
+  - [ ] **Sub-task 107.2.1.1:** Snapshot exact repository, ref, commit, pull request, review thread, issue, project, board, iteration, workflow, field schema, permission, and object-revision identities required by each workflow before model execution.
+  - [ ] **Sub-task 107.2.1.2:** Normalize only common facts while retaining GitHub, Jira Cloud, Jira Data Center, and Azure Boards fields, transitions, hierarchy, links, comments, attachments, recipients, and visibility as attributable provider extensions.
+  - [ ] **Sub-task 107.2.1.3:** Treat issue text, comments, pull-request content, diffs, attachments, provider metadata, and linked web content as untrusted evidence rather than instructions or authority.
+  - [ ] **Sub-task 107.2.1.4:** Bind every profile invocation to the immutable input snapshot, selected provider identity, allowed object set, source hashes, support tuple, and maximum read, draft, or effect class.
+- [ ] **Task 107.2.2 - Compose planning and delivery-work workflows**
+  - [ ] **Sub-task 107.2.2.1:** Compose product discovery, issue authoring, epic decomposition, acceptance-criteria authoring, backlog curation, dependency planning, sprint planning, risk analysis, roadmap auditing, and progress reconciliation over provider reads and canonical local plans.
+  - [ ] **Sub-task 107.2.2.2:** Compose issue intake, triage, reproduction evidence, root-cause analysis, implementation linkage, regression evidence, bug closure verification, and pull-request stewardship without allowing an issue state or checkbox to establish completion.
+  - [ ] **Sub-task 107.2.2.3:** Compose independent GitHub pull-request review from one immutable base/head packet, preserve reviewer isolation and dissent, refresh moved lines and provider state, and draft exact review, thread, or metadata operations.
+  - [ ] **Sub-task 107.2.2.4:** Convert accepted proposals into field-level provider effect plans with exact recipients, visibility, comments, attachments, labels, assignees, links, transitions, iteration changes, review state, and expected postconditions.
+  - [ ] **Sub-task 107.2.2.5:** Require separate approval for every remote create, update, comment, transition, review submission, close, reopen, or metadata effect; keep merge, release, deployment, secret, permission, and administrative effects outside this story.
+  - [ ] **Sub-task 107.2.2.6:** Re-read provider schema, permission, object identity, revision, recipients, visibility, and base/head state immediately before execution, invalidate stale grants, reconcile uncertain outcomes, and prevent duplicate effects.
+- [ ] **Task 107.2.3 - Produce provider workflow artifacts**
+  - [ ] **Sub-task 107.2.3.1:** Produce canonical provider-backed workflow definitions, support matrices, object and field mappings, immutable packet schemas, effect-plan schemas, and deterministic completion predicates.
+  - [ ] **Sub-task 107.2.3.2:** Produce fixtures for GitHub Issues and pull requests, Jira Cloud and Data Center projects, and Azure Boards projects across custom fields, iterations, transitions, permissions, attachments, pagination, and version skew.
+  - [ ] **Sub-task 107.2.3.3:** Produce user-review surfaces that distinguish observed facts, provider extensions, inference, drafts, requested effects, approvals, receipts, unknown outcomes, blockers, and unsupported operations.
+- [ ] **Task 107.2.4 - Verify and close provider-backed workflows**
+  - [ ] **Sub-task 107.2.4.1:** `S-107-IT02` runs idea-to-plan, bug-to-pull-request, independent review, and backlog-to-sprint workflows against every promoted provider fixture and verifies exact identity, field, link, iteration, recipient, visibility, and revision preservation.
+  - [ ] **Sub-task 107.2.4.2:** `S-107-ST02` injects malicious issue text, comments, diffs, attachments, cross-tenant object numbers, hidden watchers, moved lines, stale refs, schema drift, role substitution, reviewer collusion, and forged completion; assert no authority or hidden effect.
+  - [ ] **Sub-task 107.2.4.3:** `S-107-RT02` injects rate limits, permission loss, object movement, transition removal, timeout, duplicate response, partial response, cancellation, crash, and restart around every effect boundary; assert safe reconciliation and no duplicate update.
+  - [ ] **Sub-task 107.2.4.4:** `S-107-AT02` approves one exact synthetic operation of each supported effect class, rejects or changes the rest, and verifies provider postconditions, receipts, stale-approval invalidation, and unchanged non-target fields.
+  - [ ] **Sub-task 107.2.4.5:** Retain provider snapshots, profile event traces, review outputs, proposed and approved effect plans, pre/post states, uncertain-result reconciliations, negative-effect evidence, support matrices, and independent review.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 107.2.AC1:** Given exact supported provider snapshots, when planning, bug, or review roles run, then every fact and proposal remains bound to immutable provider identities and provider-only semantics remain attributable rather than guessed or discarded.
+- [ ] **Story AC 107.2.AC2:** Given a proposed issue, planning, or review update, when the user approves one exact effect, then only the declared provider, object, fields, recipients, visibility, and revision change and verified postconditions match the receipt.
+- [ ] **Story AC 107.2.AC3:** Given injected instructions, identity ambiguity, stale state, permission change, provider failure, cancellation, or uncertain completion, when the workflow evaluates or resumes, then it fails closed or reconciles without credential crossover, hidden effects, duplicate writes, lost dissent, or false completion.
+- [ ] **Story AC 107.2.AC4:** Given canonical and provider-specific planning structures, when backlog and progress reconciliation runs, then issues, stories, tasks, dependencies, sprint goals, acceptance criteria, status claims, code, tests, and evidence remain separately traceable and only evidence-backed changes are proposed.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 107.AC1:** Every promoted work provider passes its exact object/operation/version matrix.
@@ -7111,8 +7210,9 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 107.AC3:** Hidden recipients, cross-project moves, and cascading effects are absent or separately previewed.
 - [ ] **Sprint AC 107.AC4:** Duplicate and uncertain results reconcile without duplicate work items or comments.
 - [ ] **Sprint AC 107.AC5:** `AT-WRK-001` passes with independent evidence.
+- [ ] **Sprint AC 107.AC6:** Provider-backed planning, bug, pull-request review, Agile, and task-list workflows pass with exact identity, independent review, field-level approval, verified postconditions, and no undeclared effect.
 
-**Gate decision:** Sprint 107 is PASS only when Story 107.1, all criteria, `AT-WRK-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 107 is PASS only when Stories 107.1 and 107.2, all criteria, `AT-WRK-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
 
 ### [ ] Sprint 108 - Azure Repos and GitLab Source Adapters
 
@@ -7944,7 +8044,7 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Sprint goal:** Prove complete work-to-release and incident-to-rollback workflows across the promoted provider matrix on Fedora, Ubuntu, and Windows before final GA assembly.
 
-**Source coverage:** `AM-XTE-001`, `AM-WIN-001`, `AT-XTE-001`, `AT-WIN-001`; integrated behavior from all prior Section 36 owners; `SR-DEL-*`, `SR-GIT-*`, `SR-PLT-013` through `SR-PLT-017`, `RV-01` through `RV-30`, and `RV-49`.
+**Source coverage:** `AM-XTE-001`, `AM-WIN-001`, `AT-XTE-001`, `AT-WIN-001`; integrated behavior from all prior Section 36 owners; Decision 0041 and the standardized profile architecture; `SR-DEL-*`, `SR-GIT-*`, `SR-PLT-013` through `SR-PLT-017`, `RV-01` through `RV-30`, and `RV-49`.
 
 **Dependencies:** Sprint 124; all prior first-GA adapter and platform gates.
 
@@ -7977,6 +8077,38 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Story AC 125.1.AC2:** Given attack, drift, failure, uncertainty, or resource pressure at any cross-system handoff, when recovery runs, then no authority crosses classes/domains, no completed effect repeats, and no false completion is reported.
 - [ ] **Story AC 125.1.AC3:** Given the same supported workflow on Fedora, Ubuntu, and Windows, when release-candidate packages run, then shared contracts match and platform-specific evidence remains independent.
 
+#### [ ] Story 125.2 - Standardized Profile Lifecycle Conformance
+
+**User-facing value:** As a user and reviewer, I need every enabled specialist role proven inside complete delivery lifecycles so that named agents improve productivity without bypassing provider controls, deterministic gates, independent review, or truthful completion.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 125.2.1 - Exercise every standardized profile in context**
+  - [ ] **Sub-task 125.2.1.1:** Build a conformance matrix mapping each of `AG-01` through `AG-49` to at least one promoted workflow, exact inputs, requested capabilities, authority ceiling, model profile, tools, outputs, evidence, completion predicate, negative case, and owning deterministic services.
+  - [ ] **Sub-task 125.2.1.2:** Run idea-to-roadmap-to-issue-to-sprint, bug-to-reproduction-to-change-to-pull-request, and independent pull-request review workflows across their promoted provider paths.
+  - [ ] **Sub-task 125.2.1.3:** Run CI-failure-to-remediation, dependency-update-to-provenance, vulnerability-to-response, build-to-release-to-deployment, and observability-to-incident-to-rollback-to-postmortem workflows across their promoted provider paths.
+  - [ ] **Sub-task 125.2.1.4:** Run documentation drift, technical-debt, progress, roadmap consistency, cost and capacity, UX and accessibility, license and provenance, and knowledge-maintenance profiles against release-candidate evidence.
+  - [ ] **Sub-task 125.2.1.5:** Verify each profile can be disabled, replaced with a compatible profile version, or removed without changing shared runtime semantics, retaining hidden authority, or corrupting active and resumable workflows.
+- [ ] **Task 125.2.2 - Prove role and service boundaries end to end**
+  - [ ] **Sub-task 125.2.2.1:** Prove the coordinator advances only declared graphs and cannot mint grants, combine child authority, approve findings, select credentials, execute provider effects, or declare gates passed.
+  - [ ] **Sub-task 125.2.2.2:** Prove implementation, remediation, documentation, dependency, and reproduction profiles write only through isolated controlled-write paths with exact preimages, ownership, validation, and user-approved publication boundaries.
+  - [ ] **Sub-task 125.2.2.3:** Prove review and verification profiles use immutable attributable inputs, remain isolated from implementer conclusions, preserve dissent and unresolved findings, and cannot approve their own or sibling work.
+  - [ ] **Sub-task 125.2.2.4:** Prove policy, credentials, signing, evidence and provenance, artifact verification, merge and deployment actuation, and postcondition reconciliation remain deterministic services whose receipts control subsequent state.
+  - [ ] **Sub-task 125.2.2.5:** Prove external writes, CI runs, merge, release, deployment, rollback, notifications, and administrative actions each require their existing exact effect plans and gates regardless of profile recommendation.
+- [ ] **Task 125.2.3 - Run all-profile attack, recovery, and truth campaigns**
+  - [ ] **Sub-task 125.2.3.1:** `S-125-AT03` executes the profile conformance matrix and asserts every enabled profile produces schema-valid, attributable, evidence-linked outputs within its exact authority and resource ceilings.
+  - [ ] **Sub-task 125.2.3.2:** `S-125-ST02` attempts role substitution, self-approval, reviewer collusion, prompt injection, credential crossover, signature forgery, evidence tampering, hidden recipients, hidden effects, grant aggregation, destructive Git behavior, unsupported provider actions, and false completion at every applicable profile.
+  - [ ] **Sub-task 125.2.3.3:** `S-125-RT02` injects stale inputs, duplicate events, model and tool failure, provider drift, uncertain effects, resource exhaustion, cancellation, crash, restart, profile disablement, and compatible profile replacement at every workflow phase.
+  - [ ] **Sub-task 125.2.3.4:** Recompute workflow, profile, provider-effect, and gate summaries from raw journals, artifacts, provider pre/post states, signatures, and receipts; assert no model conclusion can override contradictory deterministic evidence.
+  - [ ] **Sub-task 125.2.3.5:** Retain the signed profile conformance matrix, workflow graphs, event and authority traces, isolated review packets, dissent records, effect ledger, service receipts, failure and recovery corpus, platform manifests, limitations, and independent decisions.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 125.2.AC1:** Given the release-candidate profile catalog and promoted provider matrix, when complete planning, engineering, review, delivery, operations, and maintenance workflows run, then every enabled profile is exercised within its declared responsibility and ceiling with attributable evidence.
+- [ ] **Story AC 125.2.AC2:** Given any attempt by a role to impersonate policy, credentials, signing, evidence, verification, merge, deployment, reconciliation, or approval services, when the workflow runs, then the attempt is denied and no downstream state treats the proposal as deterministic truth.
+- [ ] **Story AC 125.2.AC3:** Given independent reviewers, implementers, coordinators, and provider effects in one lifecycle, when conclusions conflict or state changes, then dissent and staleness remain visible, exact grants are invalidated as required, and no self-approved, hidden, duplicate, destructive, or unsupported effect occurs.
+- [ ] **Story AC 125.2.AC4:** Given cancellation, crash, restart, resource pressure, profile replacement, or provider uncertainty, when recovery completes, then accepted evidence remains immutable, incomplete work remains incomplete, completed effects do not replay, and support claims match reproducible postconditions.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 125.AC1:** Every promoted work-to-release and incident-to-rollback provider path passes.
@@ -7984,8 +8116,9 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 125.AC3:** Fedora, Ubuntu, and Windows release-candidate workflows pass independently.
 - [ ] **Sprint AC 125.AC4:** Connected-pack removal restores strict-local behavior after complete lifecycle execution.
 - [ ] **Sprint AC 125.AC5:** `G-DELIVERY` and `G-WINDOWS` close only with current signed independent evidence.
+- [ ] **Sprint AC 125.AC6:** All 49 standardized profiles pass their lifecycle, authority, isolation, independent-review, attack, recovery, and truthful-completion conformance matrix.
 
-**Gate decision:** Sprint 125 is PASS only when Story 125.1, all criteria, `AT-XTE-001`, `AT-WIN-001`, `G-DELIVERY`, `G-WINDOWS`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 125 is PASS only when Stories 125.1 and 125.2, all criteria, `AT-XTE-001`, `AT-WIN-001`, `G-DELIVERY`, `G-WINDOWS`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
 
 ## [ ] Epic 11 - Delivery and Windows GA Closure Checkpoint
 

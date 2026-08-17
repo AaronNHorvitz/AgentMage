@@ -300,6 +300,21 @@ content-addressed runtime artifacts under the approved local data root. SQLite o
 classification, references, retention, and checkpoint linkage. These runtime objects are distinct
 from checked-in release and sprint evidence under `artifacts/`.
 
+### 4.12 Standardized Planning, Review, and Delivery Roles
+
+Decision 0041 defines `AG-01` through `AG-49` as declarative profiles over the
+shared runtime. The profiles cover planning, issue and bug lifecycles,
+engineering, independent review, CI/CD, release, operations, maintenance, and
+evidence. They do not add another model loop, provider client, permission
+engine, journal, artifact store, or completion mechanism.
+
+Deterministic workflow graphs sequence profile calls and own dependencies,
+leases, idempotency, cancellation, and gates. Kernel and platform services keep
+policy, approval, credentials, signing, evidence, artifact verification, merge,
+deployment, and postcondition reconciliation outside model judgment. The
+complete catalog and canonical workflows are defined in
+[`planning-review-and-delivery-agent-profiles.md`](./docs/architecture/planning-review-and-delivery-agent-profiles.md).
+
 ## 5. Cross-Cutting Workstreams
 
 These workstreams continue across multiple epics even though their first deliverables occur in a specific sprint range.
@@ -592,8 +607,12 @@ runtime port, but the workflow engine itself remains later scope.
 4. Add OCI and repository artifact adapters, SBOM/provenance/signature policy, Kubernetes/Helm/Kustomize, Argo CD/Flux, and Terraform/OpenTofu.
 5. Add release, feature-flag, progressive-delivery, database-migration, health, drift, rollback, and promotion contracts.
 6. Add OpenTelemetry correlation and reference observability, incident, security-result, and Backstage catalog adapters.
-7. Implement the Windows package, process, path, IPC, key, model, tool-worker, network-worker, Visual Studio Code, accessibility, clean-install, update, rollback, and uninstall boundaries.
-8. Run provider version-skew, cross-tenant, hostile-content, event-replay, rate-limit, partition, partial-effect, crash, cancellation, resource, removal, and cross-provider lifecycle suites.
+7. Compose the standardized planning, issue, bug, pull-request review, CI/CD,
+   release, operations, and maintenance profiles over the shared runtime and
+   provider adapters, retaining deterministic effect gates and independent
+   review evidence.
+8. Implement the Windows package, process, path, IPC, key, model, tool-worker, network-worker, Visual Studio Code, accessibility, clean-install, update, rollback, and uninstall boundaries.
+9. Run provider version-skew, cross-tenant, hostile-content, event-replay, rate-limit, partition, partial-effect, crash, cancellation, resource, removal, and cross-provider lifecycle suites.
 
 **Boundary:** Provider adapters never carry kernel authority. Each operation belongs to exactly one of `observe`, `draft`, `local-write`, `remote-write`, `execute`, `deploy`, `secrets`, or `admin`. Support claims are bounded to a versioned matrix. Connected packs are independently removable.
 
@@ -884,6 +903,11 @@ Changes to the implementation sequence follow these rules:
 14. Decision 0026 appends `AM-PCAL-001`, `AT-PCAL-001`, and Story 139.2 inside the existing productivity family; it preserves dependency order, requires structured provider paths where available, and admits no Proton Calendar implementation or support claim before its confirmed-UI gate passes.
 15. Decision 0027 appends `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-VSC-003`, and their acceptance tests; preserves every completed item and stable identifier; supersedes only unimplemented E4B prerequisite and hard-coded picker assumptions; and reconciles future work within Sprints 12-15, 23, 49, 163-165, and 166 without adding or renumbering a sprint.
 16. The interactive coding harness is an additive client and composition path for existing requirements. Its appended stories preserve completed work and sprint identities, use one shared runtime coordinator, keep native tools outside MCP, and define `M-HARNESS-MVP` as an internal story-level milestone that does not supersede any sprint or release gate.
+17. Decision 0041 adds the `AG-01` through `AG-49` declarative role catalog and
+    Stories 92.2, 95.2, 107.2, and 125.2 as a decomposition of existing agent,
+    delivery, GitHub, work-management, CI, release, incident, and security
+    requirements. It adds no requirement or sprint identity, grants no current
+    authority, and leaves `M-HARNESS-MVP` earlier in dependency order.
 
 ### 12.1 Interactive Coding Runtime Execution Order
 
@@ -903,6 +927,36 @@ The dependency-preserving implementation order for the interactive coding runtim
 This sequence is an execution dependency, not permission to close a sprint early. Every deferred
 manual fuzz, native-platform, external-service, independent-review, signing, notarization, and
 paid-infrastructure result remains visibly open until its own evidence exists.
+
+### 12.2 Planning and Delivery Profile Execution Order
+
+The standardized profile family is implemented in this dependency order:
+
+1. Complete `M-HARNESS-MVP` and Story 50.2 shared-runtime hardening.
+2. Define all 49 closed declarative profiles and their compatibility manifests
+   in Story 92.2 without enabling execution.
+3. Apply Sprint 93 definition lint, hostile-profile tests, synthetic dry runs,
+   capability reports, and user-reviewed enablement to every profile.
+4. Complete Sprint 94 child authority, isolation, ownership, and limits.
+5. Implement Story 95.2 deterministic local issue, bug, PR-review, and roadmap
+   workflow graphs using synthetic providers and authority-free proposals.
+6. Complete Sprints 103-106 identity, credential, external-effect, event,
+   repository-safety, and GitHub conformance dependencies.
+7. Complete Story 107.1 work-management provider semantics.
+8. Implement Story 107.2 provider-backed issue authoring, bug lifecycle, PR
+   review, Agile planning, backlog curation, task-list reconciliation, and
+   field-level approved updates.
+9. Complete Sprints 108-124 for the remaining source, CI, artifact,
+   supply-chain, deployment, observability, incident, catalog, release, and
+   platform dependencies used by the standardized profiles.
+10. Execute Story 125.2 across all 49 profiles and every promoted lifecycle,
+    including role substitution, authority narrowing, review independence,
+    disagreement preservation, stale evidence, provider confusion, cancellation,
+    uncertain effects, deterministic gates, replacement, and complete removal.
+
+Role templates may be documented before these dependencies pass. No role may
+execute out of order, and no external provider workflow may use a synthetic or
+local-only result as conformance evidence.
 
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 

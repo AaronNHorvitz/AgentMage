@@ -409,6 +409,11 @@ This section lets the user create and direct specialist agents without tying the
 - [ ] `BUILD` an `AgentDefinition` schema and local registry with stable identifiers, versions, owners, compatibility, status, and source hashes.
 - [ ] `BUILD` an agent-creation wizard that asks what the agent should do, what it must never do, what evidence it must return, and when it must stop.
 - [ ] `BUILD` versioned agent templates for research, planning, executive briefing, meeting support, document work, repository learning, coding, testing, review, and verification.
+- [ ] `BUILD` the Decision 0041 `AG-01` through `AG-49` standardized profile catalog for coordination, engineering, planning, issue and bug lifecycles, independent review, CI/CD, release, operations, maintenance, and evidence using the exact identities and ceilings in [`planning-review-and-delivery-agent-profiles.md`](./docs/architecture/planning-review-and-delivery-agent-profiles.md).
+- [ ] `CAPABILITY GATE` Route every standardized profile through the shared caller-neutral runtime; prohibit profile-specific model loops, tool routers, permission engines, journals, artifact stores, session stores, credential paths, provider clients, and completion authorities.
+- [ ] `CAPABILITY GATE` Keep policy and approval, credential brokerage, signing and key custody, evidence and provenance, artifact verification, merge and deployment actuation, and postcondition reconciliation as deterministic services rather than agent roles.
+- [ ] `BUILD` independent review-profile execution that starts from an immutable review packet, preserves each finding and dissent, and cannot inherit the implementation role's conclusions or approval state.
+- [ ] `VERIFY` every catalog profile against identity substitution, role confusion, undeclared tools or effects, broadened authority, hidden provider access, stale evidence, false completion, and disabled-profile execution.
 - [ ] `BUILD` a prompt and instruction checker that detects contradictions, missing boundaries, vague completion rules, hidden network needs, excessive permissions, and unsupported tool assumptions before an agent is enabled.
 - [ ] `BUILD` a dry-run mode using synthetic files and fake tools so a new agent can be evaluated without reading or changing real work.
 - [ ] `BUILD` an agent capability report showing which requested tools, file types, models, and permissions are available, degraded, untested, or denied.
@@ -848,6 +853,10 @@ Task management connects requests to owners, dependencies, evidence, priorities,
 - [ ] `BUILD` a deferred-work section that does not clutter the active list.
 - [ ] `BUILD` Daily Setup, Daily Briefing, and Issue Intake skill specifications.
 - [ ] `BUILD` file-based task workflows with stable identifiers, status transitions, and evidence links.
+- [ ] `BUILD` Product Discovery, Issue Author, Epic Decomposer, Acceptance-Criteria Author, Backlog Curator, Dependency Planner, Sprint Planner, Risk and Assumption Analyst, Roadmap Consistency Auditor, and Progress Reconciler workflows over one immutable planning snapshot.
+- [ ] `BUILD` issue and Agile planning outputs containing exact source links, scope, dependencies, acceptance criteria, test obligations, risks, assumptions, evidence needs, unresolved questions, and provider-field drafts without claiming approval or completion.
+- [ ] `BUILD` deterministic reconciliation between local plans, task lists, repository state, commits, pull requests, checks, and provider work items; preserve conflict and stale-state findings instead of silently updating either source.
+- [ ] `CAPABILITY GATE` Treat status, priority, assignment, iteration, milestone, project-field, closure, and reopening changes as separate field-level provider effects after a fresh preview and exact approval.
 
 ## 11A. Executive Assistant and Chief-of-Staff Functions
 
@@ -1538,6 +1547,10 @@ These entries define small, focused skills for repeatable meetings, issues, repo
 - [ ] `BUILD` Debugging skill — reproduction, hypotheses, checks, logs, root cause, regression test, and fix evidence.
 - [ ] `BUILD` Test and Verification skill — focused checks, full checks, failure classification, unrun checks, and evidence receipt.
 - [ ] `BUILD` Repository Documentation skill — onboarding, architecture, build, test, operations, troubleshooting, and change-history guides.
+- [ ] `BUILD` Issue Authoring and Agile Planning skill pack — product discovery, issue drafts, epic and story decomposition, Given/When/Then criteria, backlog hygiene, dependency graphs, sprint proposals, risks, and progress reconciliation.
+- [ ] `BUILD` Independent Pull-Request Review skill pack — correctness, architecture, test adequacy, security, API compatibility, reliability, accessibility, evidence-preserving synthesis, and unresolved dissent.
+- [ ] `BUILD` Bug Lifecycle skill pack — triage, duplicate search, minimal reproduction, ranked root-cause hypotheses, bounded fix, regression evidence, closure verification, and pull-request draft.
+- [ ] `BUILD` CI/CD and Operations skill pack — CI investigation and remediation, build and packaging, supply chain, release, deployment planning and verification, incident and rollback, vulnerability response, postmortem, observability, capacity, license, and provenance review.
 - [ ] `DEFER` large agent swarms and automatic parallel delegation.
 
 ## 29. Local Command-Line Dependencies
@@ -1933,6 +1946,9 @@ Decision 0008 preserves the entire earlier inventory as internal milestone work 
 - [ ] `CAPABILITY GATE` Keep generic pull, destructive/implicit Git, hooks/filters/helpers, force and force-with-lease push, implicit/multi-ref/tag/deletion/mirror push, bypass use, secret changes, repository administration, organization administration, and ruleset administration absent unless a future taxonomy decision and separately promoted L5 contract admit them.
 - [ ] `VERIFY` `RV-49` across at least 10,000 composed repository/provider mutations with zero user-work loss, credential crossover, unsafe retry, or unauthorized local/remote effect.
 - [ ] `BUILD` Jira Cloud, Jira Data Center, GitHub Issues, and Azure Boards field, transition, comment, attachment, link, hierarchy, iteration, and project semantics without flattening provider-only behavior incorrectly.
+- [ ] `BUILD` provider-backed Decision 0041 workflows for issue authoring, bug handling, independent pull-request review, CI remediation, backlog curation, dependency and sprint planning, task-list reconciliation, and approved field-level updates after the shared runtime and agent-isolation gates pass.
+- [ ] `CAPABILITY GATE` Keep role selection, workflow sequencing, review consensus, issue text, pull-request content, CI output, and provider events non-authoritative; each remote write, execution, merge, release, deployment, rollback, notification, and administrative effect retains its own exact grant and deterministic actuator.
+- [ ] `VERIFY` every enabled `AG-01` through `AG-49` profile in at least one complete promoted lifecycle, with exact profile-to-input-to-capability-to-evidence traceability, independent-review isolation, deterministic-service ownership, attack and recovery evidence, compatible replacement and removal, and zero self-approved, hidden, duplicate, destructive, unsupported, or falsely completed effect.
 - [ ] `BUILD` Azure Repos and GitLab repository, branch, commit, merge-request or pull-request, policy, and signed-push adapters.
 - [ ] `BUILD` GitHub Actions, Azure Pipelines, GitLab CI, and Jenkins definition, run, job, step, annotation, log, artifact, rerun, cancel, approval, and dispatch adapters.
 - [ ] `CAPABILITY GATE` Bind every CI execution to exact workflow or pipeline identity, immutable source revision, inputs, environment, permissions, runner constraints, budget, cancellation, and expected artifacts.
