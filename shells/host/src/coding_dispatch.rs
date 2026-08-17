@@ -107,12 +107,32 @@ impl<'profile> NativeCodingCallPreparer<'profile> {
         &self,
         call: &ToolCall,
     ) -> Result<PreparedNativeCodingCall, NativeCodingDispatchError> {
-        prepare_from_parts(
+        let prepared = prepare_from_parts(
             self.profile.registry(),
             self.profile.commands(),
             self.profile.validations(),
             call,
-        )
+        )?;
+        let admitted = match &prepared {
+            PreparedNativeCodingCall::StructuredPatch { proposal } => self
+                .profile
+                .change_plan()
+                .matches_write_proposal(&proposal.intent_sha256, &proposal.change_plan_sha256),
+            PreparedNativeCodingCall::ControlledCreate { proposal } => self
+                .profile
+                .change_plan()
+                .matches_write_proposal(&proposal.intent_sha256, &proposal.change_plan_sha256),
+            PreparedNativeCodingCall::Validation { request, .. } => self
+                .profile
+                .change_plan()
+                .admits_validation(&request.validation_id),
+            PreparedNativeCodingCall::ReadOnly { .. }
+            | PreparedNativeCodingCall::GitInspection { .. }
+            | PreparedNativeCodingCall::Command { .. } => true,
+        };
+        admitted
+            .then_some(prepared)
+            .ok_or(NativeCodingDispatchError::ProviderDenied)
     }
 }
 
@@ -214,6 +234,7 @@ mod tests {
             CodingWriteScope, ControlledFileClassification, controlled_create_tool_definition,
             structured_patch_tool_definition,
         },
+        coding_session::{CodingSessionProfile, tests::input},
         coding_tools::{
             bounded_command_tool_definition, native_coding_runtime_registry,
             targeted_validation_tool_definition,
@@ -517,5 +538,51 @@ mod tests {
             write!(&mut output, "{byte:02x}").expect("writing to String cannot fail");
         }
         output
+    }
+
+    #[test]
+    fn story_48_2_profile_dispatch_rejects_forged_change_plan_identity() {
+        let profile = CodingSessionProfile::build(input()).expect("coding profile");
+        let proposal = StructuredPatchProposal {
+            schema_version: 1,
+            change_id: "change-plan-bound".to_owned(),
+            path: vec!["src".to_owned(), "lib.rs".to_owned()],
+            expected_preimage_sha256: sha256_hex(b"pub fn runtime_fixture() {}\n"),
+            intent_sha256: profile.change_plan().intent_sha256().to_owned(),
+            change_plan_sha256: profile.change_plan().plan_sha256().to_owned(),
+            language: StructuredLanguage::Rust,
+            artifact_class: StructuredArtifactClass::Code,
+            edits: vec![StructuredEdit::RenameIdentifier {
+                edit_id: "edit-plan-bound".to_owned(),
+                old: "runtime_fixture".to_owned(),
+                replacement: "runtime_updated".to_owned(),
+            }],
+            additional_review_hooks: Vec::new(),
+            generated: false,
+            allow_generated: false,
+        };
+        let exact = call(
+            profile.registry(),
+            STRUCTURED_PATCH_TOOL_ID,
+            CONTROLLED_CHANGE_TOOL_VERSION,
+            serde_json::to_vec(&proposal).expect("exact proposal"),
+        );
+        assert!(matches!(
+            NativeCodingCallPreparer::new(&profile).prepare(&exact),
+            Ok(PreparedNativeCodingCall::StructuredPatch { .. })
+        ));
+
+        let mut forged = proposal;
+        forged.change_plan_sha256 = "f".repeat(64);
+        let forged = call(
+            profile.registry(),
+            STRUCTURED_PATCH_TOOL_ID,
+            CONTROLLED_CHANGE_TOOL_VERSION,
+            serde_json::to_vec(&forged).expect("forged proposal"),
+        );
+        assert!(matches!(
+            NativeCodingCallPreparer::new(&profile).prepare(&forged),
+            Err(NativeCodingDispatchError::ProviderDenied)
+        ));
     }
 }

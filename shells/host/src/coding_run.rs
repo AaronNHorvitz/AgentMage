@@ -1,7 +1,7 @@
 //! Exact runtime-request framing for one bounded coding session.
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, PolicyId, RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode,
+    CONTRACT_SCHEMA_VERSION, PlanId, PolicyId, RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode,
     SessionId, Task, TaskId, TaskStatus, WorkPacket,
 };
 use agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request;
@@ -59,6 +59,8 @@ pub fn build_ephemeral_coding_run_request(
         || input.work_packet.task_id != task_id
         || input.work_packet.objective != input.objective
         || input.work_packet.acceptance_checks != input.acceptance_criteria
+        || input.work_packet.plan_id
+            != Some(PlanId::from_raw(profile.change_plan().plan_id().to_owned()))
         || input.policy_sha256.len() != 64
         || !input
             .policy_sha256
@@ -142,6 +144,16 @@ pub(crate) mod tests {
             build_ephemeral_coding_run_request(
                 &profile,
                 input_for(wrong_task, "Inspect and repair one bounded fixture")
+            ),
+            Err(CodingRunRequestError::BindingDenied)
+        );
+
+        let mut wrong_plan = fixture_work_packet(&profile);
+        wrong_plan.plan_id = Some(PlanId::from_raw("another-plan"));
+        assert_eq!(
+            build_ephemeral_coding_run_request(
+                &profile,
+                input_for(wrong_plan, "Inspect and repair one bounded fixture")
             ),
             Err(CodingRunRequestError::BindingDenied)
         );

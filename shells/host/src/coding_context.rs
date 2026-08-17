@@ -165,6 +165,7 @@ where
             completion_schema: coding_completion_schema(),
             completion_schema_json: serde_json::from_str(CODING_COMPLETION_INPUT_SCHEMA_JSON)
                 .map_err(|_| CodingContextError::InvalidSource)?,
+            change_plan: profile.change_plan(),
             effective_guidance: profile.effective_guidance(),
             prohibited_capabilities: &MVP_PROHIBITED_CAPABILITIES,
             invariants: &[
@@ -222,7 +223,9 @@ where
         &mut self,
         source: &CodingContextSource,
     ) -> Result<ContextItemCandidate, RuntimePortFailure> {
-        let tokens = self.counter.count_tokens(source.bounded_excerpt.as_bytes())?;
+        let tokens = self
+            .counter
+            .count_tokens(source.bounded_excerpt.as_bytes())?;
         if tokens == 0 {
             return Err(RuntimePortFailure::Invalid);
         }
@@ -294,7 +297,10 @@ where
             let source = internal_source(
                 format!("coding-tool-result-{index}"),
                 ContextItemKind::Supporting,
-                &format!("{TOOL_RESULT_SOURCE_PREFIX}{}", result.tool_call_id.as_str()),
+                &format!(
+                    "{TOOL_RESULT_SOURCE_PREFIX}{}",
+                    result.tool_call_id.as_str()
+                ),
                 &digest,
                 content,
                 index + 1 == tool_results.len(),
@@ -380,6 +386,7 @@ struct CodingSystemContract<'a> {
     validations: &'a agentmage_kernel_engine::validation_template::ValidationTemplateRegistry,
     completion_schema: agentmage_kernel_contracts::SchemaReference,
     completion_schema_json: serde_json::Value,
+    change_plan: &'a crate::coding_plan::CodingPlanBinding,
     effective_guidance: &'a agentmage_kernel_engine::instruction_provenance::EffectiveGuidance,
     prohibited_capabilities: &'a [&'static str],
     invariants: &'a [&'static str],
@@ -609,9 +616,11 @@ mod tests {
                 .iter()
                 .any(|message| message.role == ModelMessageRole::Tool)
         );
-        assert!(!packet.messages.iter().any(|message| {
-            String::from_utf8_lossy(&message.content.bytes).contains(canary)
-        }));
+        assert!(
+            !packet.messages.iter().any(|message| {
+                String::from_utf8_lossy(&message.content.bytes).contains(canary)
+            })
+        );
     }
 
     #[test]

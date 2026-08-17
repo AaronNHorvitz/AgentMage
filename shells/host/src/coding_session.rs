@@ -10,8 +10,7 @@ use agentmage_kernel_contracts::{
 use agentmage_kernel_engine::{
     command_runner::{CommandRegistry, CommandRequest, CommandWorkingDirectory, prepare_command},
     instruction_provenance::{
-        EffectiveGuidance, InstructionEvidenceLedger, effective_guidance,
-        verify_instruction_ledger,
+        EffectiveGuidance, InstructionEvidenceLedger, effective_guidance, verify_instruction_ledger,
     },
     model_runtime::{AdmittedModelProfile, ModelUsePurpose},
     repository_safety::{OwnedWorktreeRecord, WorktreeDisposition},
@@ -26,6 +25,7 @@ use sha2::{Digest, Sha256};
 
 use crate::{
     coding_changes::CodingWriteScope,
+    coding_plan::CodingPlanBinding,
     coding_tools::{CodingToolCatalogError, native_coding_runtime_registry},
 };
 
@@ -67,6 +67,8 @@ pub struct CodingSessionProfileInput {
     pub session_boundary_sha256: [u8; 32],
     /// Exact writable path roots in the owned worktree.
     pub write_scope: CodingWriteScope,
+    /// Verified authority-free evidence-backed plan for this coding session.
+    pub change_plan: CodingPlanBinding,
     /// Verified provenance for every discovered or reviewed repository instruction source.
     pub instruction_ledger: InstructionEvidenceLedger,
     /// Frozen bounded command templates.
@@ -131,6 +133,7 @@ pub struct CodingSessionProfile {
     model: AdmittedModelProfile,
     offline_proof: OfflineProofReceipt,
     write_scope: CodingWriteScope,
+    change_plan: CodingPlanBinding,
     instruction_ledger: InstructionEvidenceLedger,
     effective_guidance: EffectiveGuidance,
     commands: CommandRegistry,
@@ -185,6 +188,7 @@ impl CodingSessionProfile {
             offline_proof_sha256: hex_bytes(input.offline_proof.proof_sha256()),
             session_boundary_sha256: hex_bytes(input.offline_proof.session_boundary_sha256()),
             writable_roots: input.write_scope.writable_roots(),
+            change_plan: &input.change_plan,
             instruction_ledger_sha256: &input.instruction_ledger.ledger_sha256,
             effective_guidance_sha256: &effective_guidance.guidance_sha256,
             commands: input.commands.commands(),
@@ -204,6 +208,7 @@ impl CodingSessionProfile {
             model: input.model,
             offline_proof: input.offline_proof,
             write_scope: input.write_scope,
+            change_plan: input.change_plan,
             instruction_ledger: input.instruction_ledger,
             effective_guidance,
             commands: input.commands,
@@ -280,6 +285,12 @@ impl CodingSessionProfile {
         &self.write_scope
     }
 
+    /// Returns the verified authority-free change-plan binding.
+    #[must_use]
+    pub const fn change_plan(&self) -> &CodingPlanBinding {
+        &self.change_plan
+    }
+
     /// Returns the verified instruction-provenance ledger bound to this profile.
     #[must_use]
     pub const fn instruction_ledger(&self) -> &InstructionEvidenceLedger {
@@ -344,6 +355,7 @@ struct ProfileMaterial<'a> {
     offline_proof_sha256: String,
     session_boundary_sha256: String,
     writable_roots: &'a [Vec<String>],
+    change_plan: &'a CodingPlanBinding,
     instruction_ledger_sha256: &'a str,
     effective_guidance_sha256: &'a str,
     commands: Vec<&'a agentmage_kernel_engine::command_runner::CommandSpec>,
@@ -361,6 +373,9 @@ fn validate_static_input(
         || !is_sha256(&input.repository_snapshot_sha256)
         || !valid_object_id(&input.immutable_base_commit)
         || input.write_scope.workspace_id().as_str().is_empty()
+        || !input.change_plan.verify()
+        || input.change_plan.repository_map_sha256() != input.repository_snapshot_sha256
+        || input.change_plan.workspace_id() != input.write_scope.workspace_id()
         || validate_runtime_run_limits(&input.limits).is_err()
     {
         return Err(CodingSessionProfileError::InvalidInput);
@@ -371,6 +386,8 @@ fn validate_static_input(
         .map_err(|_| CodingSessionProfileError::WorktreeDenied)?;
     if input.worktree.disposition != WorktreeDisposition::Active
         || input.worktree.source_object != input.immutable_base_commit
+        || input.change_plan.repository_commit_id() != input.immutable_base_commit
+        || input.change_plan.worktree_sha256() != input.worktree.worktree_path_sha256
         || input.worktree.live_process_count != 0
         || input.worktree.resource_budget_sha256 != sha256_json(&input.limits)?
     {
@@ -479,6 +496,9 @@ fn hex_bytes(bytes: &[u8]) -> String {
 pub(crate) mod tests {
     use std::collections::BTreeMap;
 
+    use agentmage_capability_repository_map::{
+        GitTrackedState, RepositoryFileInput, RepositoryMapInput, build_repository_map,
+    };
     use agentmage_kernel_contracts::{
         CONTRACT_SCHEMA_VERSION, ContextBudget, DecodingProfile, FamilyCodecIdentity,
         HardwareEnvelope, LocalEndpointIdentity, LocalTransport, ModelAdapterId, ModelArtifact,
@@ -502,6 +522,7 @@ pub(crate) mod tests {
     };
 
     use super::*;
+    use crate::coding_plan::fixture_coding_plan_binding;
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -762,11 +783,38 @@ pub(crate) mod tests {
             &BTreeMap::new(),
         )
         .expect("empty current instruction ledger");
+        let write_scope = CodingWriteScope::new(
+            WorkspaceId::from_raw("workspace-coding"),
+            vec![vec!["src".to_owned()], vec!["tests".to_owned()]],
+        )
+        .expect("write scope");
+        let content = b"pub fn runtime_fixture() {}\n";
+        let repository_map = build_repository_map(RepositoryMapInput {
+            workspace_id: write_scope.workspace_id().clone(),
+            repository_sha256: "a".repeat(64),
+            worktree_sha256: worktree.worktree_path_sha256.clone(),
+            branch: Some(worktree.branch_ref.clone()),
+            commit_id: worktree.source_object.clone(),
+            policy_sha256: "d".repeat(64),
+            freshness_sha256: "e".repeat(64),
+            files: vec![RepositoryFileInput {
+                path: vec!["src".to_owned(), "lib.rs".to_owned()],
+                size_bytes: content.len() as u64,
+                content_sha256: sha256_hex(content),
+                content: Some(content.to_vec()),
+                git_state: GitTrackedState::TrackedClean,
+                policy_excluded: false,
+                generated: false,
+                vendored: false,
+            }],
+        })
+        .expect("repository map");
+        let change_plan = fixture_coding_plan_binding(&repository_map);
         CodingSessionProfileInput {
             profile_id: "coding-profile-0001".to_owned(),
             tool_catalog_id: ToolCatalogId::from_raw("coding-tools-0001"),
             repository_snapshot_id: RepositorySnapshotId::from_raw("repository-snapshot-0001"),
-            repository_snapshot_sha256: "a".repeat(64),
+            repository_snapshot_sha256: repository_map.map_sha256,
             immutable_base_commit: worktree.source_object.clone(),
             validations: validations(command.clone(), worktree.record_sha256.clone()),
             commands: CommandRegistry::build(vec![command]).expect("command registry"),
@@ -774,11 +822,8 @@ pub(crate) mod tests {
             model: admitted_model(true),
             offline_proof: offline_proof(),
             session_boundary_sha256: [21; 32],
-            write_scope: CodingWriteScope::new(
-                WorkspaceId::from_raw("workspace-coding"),
-                vec![vec!["src".to_owned()], vec!["tests".to_owned()]],
-            )
-            .expect("write scope"),
+            write_scope,
+            change_plan,
             instruction_ledger,
             limits,
         }

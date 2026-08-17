@@ -1955,23 +1955,22 @@ mod tests {
         ExactModelProfile, GrantStatus, GrantTarget, ModelCancellationProbe, ModelContextPacket,
         ModelMessageRole, ModelProposalKind, ModelResourceReport, ModelRunRequest, ModelRunResult,
         ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate, PathResolutionIntent, PlanId,
-        ProposalId, RollbackPlan,
-        RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
-        RuntimeOperationId, RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId,
-        SessionId, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall,
-        ToolCallId, ToolId, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceAuthorizationId,
-        WorkspacePath,
+        ProposalId, RollbackPlan, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
+        RuntimeApprovalResponse, RuntimeOperationId, RuntimeRunId, RuntimeRunRequest,
+        RuntimeSessionMode, RuntimeTurnId, SessionId, StopCondition, StopConditionKind, Task,
+        TaskId, TaskStatus, ToolCall, ToolCallId, ToolId, WorkPacket, WorkPacketId,
+        WorkPacketState, WorkspaceAuthorizationId, WorkspacePath,
     };
     use agentmage_kernel_engine::{
         command_runner::{
             CommandLaunchPermit, CommandPlatformResult, CommandRequest, CommandTermination,
         },
+        model_codec::proposal_digest,
         operational_store::{OperationalStoreKeyError, OperationalStoreKeyProvider},
         repository_inspection::{
             BoundedRepositoryInspectionExecutor, RepositoryInspectionLaunchPermit,
             RepositoryInspectionPlatformResult, RepositoryInspectionTermination,
         },
-        model_codec::proposal_digest,
         runtime_coordinator::{
             seal_runtime_approval_challenge, seal_runtime_run_request, verify_runtime_outcome,
         },
@@ -1990,15 +1989,15 @@ mod tests {
     use super::*;
     use crate::{
         coding_authority::{CodingRuntimePolicyRequest, build_coding_runtime_policy},
-        coding_context::{CodingContextPort, CodingTokenCounter},
         coding_changes::{
             CONTROLLED_CHANGE_TOOL_VERSION, CONTROLLED_CREATE_TOOL_ID,
             ControlledFileClassification, ControlledFileCreationProposal, STRUCTURED_PATCH_TOOL_ID,
             StructuredPatchProposal, controlled_create_parent_observation_sha256,
         },
+        coding_context::{CodingContextPort, CodingTokenCounter},
+        coding_harness::compose_ephemeral_coding_coordinator,
         coding_session::{CodingSessionProfile, tests::input_with_worktree_path_sha256},
         coding_tools::TargetedValidationRequest,
-        coding_harness::compose_ephemeral_coding_coordinator,
         coding_verifier::{
             CodingCompletionCandidate, CodingTerminalClaim, coding_completion_payload,
         },
@@ -2065,10 +2064,12 @@ mod tests {
             context: &ModelContextPacket,
             _cancellation: Option<&dyn ModelCancellationProbe>,
         ) -> Result<ModelRunResult, RuntimePortFailure> {
-            assert!(context
-                .messages
-                .iter()
-                .any(|message| message.role == ModelMessageRole::System));
+            assert!(
+                context
+                    .messages
+                    .iter()
+                    .any(|message| message.role == ModelMessageRole::System)
+            );
             let step = self
                 .steps
                 .pop_front()
@@ -2076,18 +2077,13 @@ mod tests {
             self.calls += 1;
             let (kind, payload, tool_call) = match step {
                 ScriptedCodingStep::Tool(call) => (ModelProposalKind::ToolCall, None, Some(call)),
-                ScriptedCodingStep::Complete(payload) => (
-                    ModelProposalKind::CompletionCandidate,
-                    Some(payload),
-                    None,
-                ),
+                ScriptedCodingStep::Complete(payload) => {
+                    (ModelProposalKind::CompletionCandidate, Some(payload), None)
+                }
             };
             let mut proposal = ClosedModelProposal {
                 schema_version: CONTRACT_SCHEMA_VERSION,
-                proposal_id: ProposalId::from_raw(format!(
-                    "coding-e2e-proposal-{}",
-                    self.calls
-                )),
+                proposal_id: ProposalId::from_raw(format!("coding-e2e-proposal-{}", self.calls)),
                 model_run_id: request.model_run_id.clone(),
                 context_packet_id: request.context_packet_id.clone(),
                 profile_id: request.profile_id.clone(),
@@ -2289,6 +2285,8 @@ mod tests {
         })
         .expect("repository map");
         profile_input.repository_snapshot_sha256 = repository_map.map_sha256.clone();
+        profile_input.change_plan =
+            crate::coding_plan::fixture_coding_plan_binding(&repository_map);
         let profile = Box::leak(Box::new(
             CodingSessionProfile::build(profile_input).expect("coding profile"),
         ));
@@ -2603,6 +2601,16 @@ mod tests {
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
         let source = fs::read(fixture.root.join("worktree/src/lib.rs")).expect("source preimage");
+        let intent_sha256 = fixture
+            .profile_for_test()
+            .change_plan()
+            .intent_sha256()
+            .to_owned();
+        let change_plan_sha256 = fixture
+            .profile_for_test()
+            .change_plan()
+            .plan_sha256()
+            .to_owned();
         configure_runtime_call(
             fixture,
             STRUCTURED_PATCH_TOOL_ID,
@@ -2612,8 +2620,8 @@ mod tests {
                 change_id: "change-patch-runtime".to_owned(),
                 path: vec!["src".to_owned(), "lib.rs".to_owned()],
                 expected_preimage_sha256: sha256(&source),
-                intent_sha256: "1".repeat(64),
-                change_plan_sha256: "2".repeat(64),
+                intent_sha256,
+                change_plan_sha256,
                 language: StructuredLanguage::Rust,
                 artifact_class: StructuredArtifactClass::Code,
                 edits: vec![StructuredEdit::RenameIdentifier {
@@ -2632,6 +2640,16 @@ mod tests {
     where
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
+        let intent_sha256 = fixture
+            .profile_for_test()
+            .change_plan()
+            .intent_sha256()
+            .to_owned();
+        let change_plan_sha256 = fixture
+            .profile_for_test()
+            .change_plan()
+            .plan_sha256()
+            .to_owned();
         let workspace = fixture.boundary.workspace.workspace();
         let parent_path = WorkspacePath::new(workspace.workspace_id().clone(), ["src"])
             .expect("source parent path");
@@ -2660,8 +2678,8 @@ mod tests {
                 content: "pub fn newly_created() {}\n".to_owned(),
                 mode: 0o644,
                 classification: ControlledFileClassification::SourceCode,
-                intent_sha256: "3".repeat(64),
-                change_plan_sha256: "4".repeat(64),
+                intent_sha256,
+                change_plan_sha256,
                 expected_parent_sha256,
             },
         );
@@ -2715,18 +2733,18 @@ mod tests {
             .as_mut()
             .expect("test command executor")
             .stdout = serde_json::to_vec(&serde_json::json!({
-                "schema_version": 1,
-                "status": "passed",
-                "passed": 1,
-                "failed": 0,
-                "skipped": 0,
-                "duration_ms": 1,
-                "failed_names": [],
-                "artifact_ids": [],
-                "retry_count": 0,
-                "initial_failure_sha256": null
-            }))
-            .expect("validation output");
+            "schema_version": 1,
+            "status": "passed",
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
+            "duration_ms": 1,
+            "failed_names": [],
+            "artifact_ids": [],
+            "retry_count": 0,
+            "initial_failure_sha256": null
+        }))
+        .expect("validation output");
     }
 
     fn scripted_call(call: &ToolCall) -> ModelToolCallCandidate {
@@ -2836,10 +2854,7 @@ mod tests {
                 .expect("coding coordinator boundary")
             {
                 RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
-                    next_response = Some(response(
-                        &challenge,
-                        RuntimeApprovalDisposition::Allow,
-                    ));
+                    next_response = Some(response(&challenge, RuntimeApprovalDisposition::Allow));
                 }
                 RuntimeCoordinatorStep::Complete { outcome } => break outcome,
             }

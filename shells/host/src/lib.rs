@@ -4,16 +4,18 @@
 
 /// Authority-free composition of structured edits into kernel shadow changes.
 pub mod code_change;
-/// Bounded model-context composition for shared coding sessions.
-pub mod coding_context;
-/// Interface-neutral composition for the shared local coding runtime.
-pub mod coding_harness;
 /// Exact non-authoritative approval composition for native coding operations.
 pub mod coding_authority;
 pub mod coding_changes;
+/// Bounded model-context composition for shared coding sessions.
+pub mod coding_context;
 pub mod coding_dispatch;
+/// Interface-neutral composition for the shared local coding runtime.
+pub mod coding_harness;
 /// Profile-bound authority planning for native coding calls.
 pub mod coding_operation;
+/// Verified descriptive planning identity for bounded coding sessions.
+pub mod coding_plan;
 pub mod coding_projection;
 /// Exact interface-neutral runtime request framing for coding sessions.
 pub mod coding_run;
