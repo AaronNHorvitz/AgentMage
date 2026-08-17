@@ -25,6 +25,7 @@ mod grant;
 mod handoff;
 mod ids;
 mod meeting;
+mod mcp;
 mod model;
 mod model_discovery;
 mod network;
@@ -152,6 +153,12 @@ pub use meeting::{
     MeetingMinutesItemKind, MeetingPlanDraft, MeetingPlanItem, MeetingProjectionPrecondition,
     MeetingTextSourceKind, MeetingTranscriptCleanup, MeetingTranscriptSegment,
     MeetingUnclearMarker,
+};
+pub use mcp::{
+    McpCancellation, McpConnection, McpDisconnect, McpDiscovery, McpError, McpLimits,
+    McpManifest, McpPromptManifest, McpReceipt, McpReceiptKind, McpRequest, McpRequestKind,
+    McpResourceManifest, McpResponse, McpResponseClass, McpTerminalState, McpToolManifest,
+    McpTransport, McpTransportKind,
 };
 pub use model::{
     ClosedModelProposal, ContextBudget, DecodingProfile, EncodedModelContext, ExactModelProfile,
