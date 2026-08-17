@@ -2264,8 +2264,8 @@ mod tests {
     use agentmage_kernel_contracts::{
         ActionId, AgentStateKind, AuthorityClass, BoundaryKind, BudgetLimit, BudgetResource,
         CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason, CancellationSignal,
-        ClosedModelProposal, CorrelationId, DataSensitivity, ExactModelProfile, GrantStatus,
-        GrantTarget, ModelCancellationProbe, ModelContextPacket, ModelMessageRole,
+        ClosedModelProposal, CorrelationId, DataSensitivity, ExactModelProfile, GrantOperation,
+        GrantStatus, GrantTarget, ModelCancellationProbe, ModelContextPacket, ModelMessageRole,
         ModelProposalKind, ModelResourceReport, ModelRunRequest, ModelRunResult,
         ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate, PathResolutionIntent, PlanId,
         ProposalId, RollbackPlan, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
@@ -2291,6 +2291,9 @@ mod tests {
         runtime_loop::{
             RuntimeClock, RuntimeCoordinatorStep, RuntimeModelPort, RuntimePermissionEvaluation,
             RuntimeToolBoundary, runtime_action_id,
+        },
+        workflow_authority::{
+            WorkflowAuthorityLayer, WorkflowAuthorityLayerKind, intersect_workflow_authority,
         },
     };
     use agentmage_platform_linux::{
@@ -2325,6 +2328,10 @@ mod tests {
             CodingCompletionCandidate, CodingTerminalClaim, coding_completion_payload,
         },
         linux_coding::LinuxCodingWorkspace,
+        workflow_caller::{
+            InMemoryWorkflowCaller, WorkflowCallerIdentity, WorkflowCallerState,
+            WorkflowRuntimeSubmission, seal_workflow_runtime_submission,
+        },
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -2884,6 +2891,50 @@ mod tests {
         }
     }
 
+    fn workflow_submission(request: &RuntimeRunRequest) -> WorkflowRuntimeSubmission {
+        let requested_tool_ids = request
+            .visible_tools
+            .iter()
+            .map(|tool| tool.tool_id.clone())
+            .collect::<Vec<_>>();
+        assert!(
+            requested_tool_ids.windows(2).all(|pair| pair[0] < pair[1]),
+            "runtime visible tools must remain canonical"
+        );
+        let mut targets = vec![
+            request.workspace_snapshot_sha256.clone(),
+            request.repository_snapshot_sha256.clone(),
+        ];
+        targets.sort();
+        targets.dedup();
+        let layers = WorkflowAuthorityLayerKind::ALL
+            .into_iter()
+            .enumerate()
+            .map(|(index, kind)| WorkflowAuthorityLayer {
+                kind,
+                operations: GrantOperation::ALL.to_vec(),
+                tool_ids: requested_tool_ids.clone(),
+                target_scope_sha256s: targets.clone(),
+                source_sha256: format!("{}", index + 1).repeat(64),
+            })
+            .collect();
+        seal_workflow_runtime_submission(WorkflowRuntimeSubmission {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            caller: WorkflowCallerIdentity {
+                caller_id: "fixture-workflow-adapter".to_owned(),
+                workflow_id: "fixture-workflow".to_owned(),
+                node_id: "fixture-node".to_owned(),
+                parent_invocation_id: "fixture-parent".to_owned(),
+            },
+            runtime_request: request.clone(),
+            work_packet: request.work_packet.clone(),
+            requested_tool_ids,
+            authority: intersect_workflow_authority(layers).expect("workflow authority"),
+            submission_sha256: "0".repeat(64),
+        })
+        .expect("workflow submission")
+    }
+
     fn configure_git_status<G>(fixture: &mut Fixture<G>)
     where
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
@@ -3378,6 +3429,149 @@ mod tests {
         render_runtime_outcome_json(&render_request, &outcome).expect("JSON runtime outcome");
         assert_eq!(outcome.tool_call_count, 1);
         assert!(outcome.unresolved_codes.is_empty());
+    }
+
+    #[test]
+    fn story_50_2_workflow_caller_uses_the_real_no_op_runtime_path() {
+        let mut fixture = fixture_with_git(FakeGitExecutor::clean());
+        configure_git_status(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-git-workflow-e2e");
+        let clean_git = scripted_call(&fixture.call);
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Observation];
+        fixture.request =
+            seal_runtime_run_request(fixture.request.clone()).expect("observation requirement");
+
+        let profile = fixture.profile_for_test();
+        let completion = coding_completion_payload(&CodingCompletionCandidate {
+            schema_version: 1,
+            objective_sha256: sha256(fixture.request.task.objective.as_bytes()),
+            terminal_claim: CodingTerminalClaim::NoOp,
+            summary: "Inspected the requested source; no change was required.".to_owned(),
+            checks_not_run: vec!["No mutation-dependent validation was needed.".to_owned()],
+            residual_risks: Vec::new(),
+        })
+        .expect("completion payload");
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [
+                ScriptedCodingStep::Tool(clean_git),
+                ScriptedCodingStep::Complete(completion),
+            ]
+            .into_iter()
+            .collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("coding context");
+        let Fixture {
+            request, boundary, ..
+        } = fixture;
+        let submission = workflow_submission(&request);
+        let coordinator = compose_ephemeral_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(41_000),
+        )
+        .expect("ephemeral coding coordinator");
+        let mut caller =
+            InMemoryWorkflowCaller::submit(coordinator, submission).expect("workflow caller");
+
+        let waiting = caller.advance(None).expect("workflow approval boundary");
+        assert_eq!(waiting.state, WorkflowCallerState::WaitingForUser);
+        let challenge = waiting.approval.expect("protected challenge");
+        let step = caller
+            .resume_after_user_decision(
+                &response(&challenge, RuntimeApprovalDisposition::Allow),
+                None,
+            )
+            .expect("workflow terminal boundary");
+        assert_eq!(step.state, WorkflowCallerState::Terminal);
+        assert_eq!(
+            step.outcome.expect("terminal outcome").state,
+            AgentStateKind::NoOp
+        );
+        assert!(!step.events.is_empty());
+        assert!(!step.evidence.is_empty());
+        assert_eq!(
+            caller.history(),
+            [
+                WorkflowCallerState::Submitted,
+                WorkflowCallerState::Acknowledged,
+                WorkflowCallerState::Streaming,
+                WorkflowCallerState::WaitingForUser,
+                WorkflowCallerState::Resumed,
+                WorkflowCallerState::Streaming,
+                WorkflowCallerState::Terminal,
+            ]
+        );
+    }
+
+    #[test]
+    fn story_50_2_workflow_caller_waits_for_user_and_denial_starts_no_effect() {
+        let mut fixture = fixture();
+        configure_structured_patch(&mut fixture);
+        let patch = scripted_call(&fixture.call);
+        let original = fs::read(fixture.root.join("worktree/src/lib.rs")).expect("source");
+        let profile = fixture.profile_for_test();
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [ScriptedCodingStep::Tool(patch)].into_iter().collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("coding context");
+        let Fixture {
+            root,
+            request,
+            boundary,
+            ..
+        } = fixture;
+        let submission = workflow_submission(&request);
+        let coordinator = compose_ephemeral_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(42_000),
+        )
+        .expect("ephemeral coding coordinator");
+        let mut caller =
+            InMemoryWorkflowCaller::submit(coordinator, submission).expect("workflow caller");
+
+        let waiting = caller.advance(None).expect("approval boundary");
+        assert_eq!(waiting.state, WorkflowCallerState::WaitingForUser);
+        let challenge = waiting.approval.expect("protected challenge");
+        let denied = caller
+            .resume_after_user_decision(
+                &response(&challenge, RuntimeApprovalDisposition::Deny),
+                None,
+            )
+            .expect("denial terminal boundary");
+        assert_eq!(denied.state, WorkflowCallerState::Terminal);
+        assert_eq!(
+            denied.outcome.expect("terminal outcome").state,
+            AgentStateKind::Declined
+        );
+        assert_eq!(
+            fs::read(root.join("worktree/src/lib.rs")).expect("preserved source"),
+            original
+        );
+        assert_eq!(
+            caller.history(),
+            [
+                WorkflowCallerState::Submitted,
+                WorkflowCallerState::Acknowledged,
+                WorkflowCallerState::Streaming,
+                WorkflowCallerState::WaitingForUser,
+                WorkflowCallerState::Resumed,
+                WorkflowCallerState::Streaming,
+                WorkflowCallerState::Terminal,
+            ]
+        );
     }
 
     #[test]
