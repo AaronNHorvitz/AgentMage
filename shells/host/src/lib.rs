@@ -6,6 +6,8 @@
 pub mod code_change;
 pub mod coding_changes;
 pub mod coding_dispatch;
+/// Profile-bound authority planning for native coding calls.
+pub mod coding_operation;
 pub mod coding_projection;
 pub mod coding_session;
 pub mod coding_tools;

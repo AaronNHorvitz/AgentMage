@@ -172,7 +172,10 @@ impl CodingWriteScope {
         &self.writable_roots
     }
 
-    fn resolve(&self, components: &[String]) -> Result<WorkspacePath, CodingChangeError> {
+    pub(crate) fn resolve(
+        &self,
+        components: &[String],
+    ) -> Result<WorkspacePath, CodingChangeError> {
         let path = WorkspacePath::new(self.workspace_id.clone(), components.iter().cloned())
             .map_err(|_| CodingChangeError::PathDenied)?;
         self.writable_roots
