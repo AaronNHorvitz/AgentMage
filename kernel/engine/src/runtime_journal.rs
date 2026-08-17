@@ -1911,28 +1911,42 @@ mod tests {
 
         let directory = temporary_directory();
         let path = directory.join("authority.db");
-        let mut store =
-            OperationalStore::open(&path, &observation(), &mut TestKey).expect("encrypted store");
-        let mut writer = RuntimeJournalWriter::default();
+        let store = Arc::new(Mutex::new(
+            OperationalStore::open(&path, &observation(), &mut TestKey).expect("encrypted store"),
+        ));
+        let worker = RuntimeJournalWorker::new(Arc::clone(&store)).expect("journal worker");
         let journal_started = Instant::now();
         let mut maximum_queued_events = 0_usize;
         let mut maximum_queued_bytes = 0_usize;
+        let mut queue_saturations = 0_usize;
         for event in &events {
-            let append = writer
-                .append(&mut store, event.clone())
-                .expect("load event journals");
+            let mut retried_after_saturation = false;
+            let append = loop {
+                match worker.append(event.clone()) {
+                    Ok(append) => break append,
+                    Err(RuntimeJournalError::QueueSaturated) if !retried_after_saturation => {
+                        retried_after_saturation = true;
+                        queue_saturations += 1;
+                        worker.flush_all().expect("saturated queue flushes exactly");
+                    }
+                    Err(error) => panic!("load event journals: {error:?}"),
+                }
+            };
             maximum_queued_events = maximum_queued_events.max(append.queued_events);
             maximum_queued_bytes = maximum_queued_bytes.max(append.queued_bytes);
         }
-        assert_eq!(writer.flush_all(&mut store), Ok(0));
+        assert_eq!(worker.flush_all(), Ok(0));
         let journal_elapsed_ms = elapsed_ms(journal_started.elapsed());
         assert_eq!(
-            load_run_events(&store, &events[0].run_id).expect("load history verifies"),
+            worker
+                .load(&events[0].run_id)
+                .expect("load history verifies"),
             events
         );
-        assert!(maximum_queued_events < RuntimeJournalLimits::default().queue_event_capacity);
-        assert!(maximum_queued_bytes < RuntimeJournalLimits::default().queue_byte_capacity);
+        assert!(maximum_queued_events <= RuntimeJournalLimits::default().queue_event_capacity);
+        assert!(maximum_queued_bytes <= RuntimeJournalLimits::default().queue_byte_capacity);
         let retained_disk_bytes = directory_bytes(&directory);
+        drop(worker);
         drop(store);
 
         let restart_started = Instant::now();
@@ -1968,6 +1982,7 @@ mod tests {
                 "publish_events_per_second": (events.len() as u64)
                     .saturating_mul(1_000)
                     / publish_elapsed_ms.max(1),
+                "queue_saturations": queue_saturations,
                 "resident_memory_kib": resident_memory_kib,
                 "restart_cycles": RESTART_CYCLES,
                 "restart_elapsed_ms": restart_elapsed_ms,

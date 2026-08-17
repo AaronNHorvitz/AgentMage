@@ -114,7 +114,7 @@ def validate_profile(profile: dict[str, Any]) -> None:
         "runtime.load.profile.thresholds",
     )
     commands = profile["commands"]
-    if not isinstance(commands, list) or len(commands) != 8:
+    if not isinstance(commands, list) or len(commands) != 9:
         raise CampaignError("runtime.load.profile.commands")
     identities: set[str] = set()
     metric_commands = 0

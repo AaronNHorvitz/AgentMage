@@ -3,6 +3,7 @@
   "profile_id": "story-50.2-linux-reference-load-v1",
   "source_files": [
     "fixtures/runtime-hardening/v1/linux-reference-load-profile.json",
+    "kernel/engine/src/operational_store.rs",
     "kernel/engine/src/runtime_artifact.rs",
     "kernel/engine/src/runtime_event.rs",
     "kernel/engine/src/runtime_hardening.rs",
@@ -11,6 +12,7 @@
     "kernel/engine/src/runtime_recovery.rs",
     "scripts/runtime_hardening_load.py",
     "shells/host/src/cli_runtime.rs",
+    "shells/host/src/linux_coding_runtime.rs",
     "tests/test_runtime_hardening_load.py"
   ],
   "workload": {
@@ -76,6 +78,21 @@
         "runtime_event::tests::story_50_2_"
       ],
       "minimum_passed": 5,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 2097152,
+      "requires_load_metrics": false
+    },
+    {
+      "id": "writer-isolation",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "dedicated_writer"
+      ],
+      "minimum_passed": 3,
       "maximum_elapsed_ms": 120000,
       "maximum_rss_kib": 2097152,
       "requires_load_metrics": false
@@ -158,8 +175,8 @@
   ],
   "declared_limitations": [
     "The campaign measures one recorded Fedora Linux host and is not portable platform evidence.",
-    "The current journal writer defers progress in bounded batches but still performs SQLite flushes on the coordinator thread.",
-    "No injected slow-disk worker-isolation result exists, so model-stream continuity under a blocked filesystem remains unproved.",
+    "The dedicated-writer test holds the sole SQLCipher connection lock as a deterministic slow-store surrogate; it is not an injected filesystem, device, or power-loss campaign.",
+    "The source-level worker-isolation group proves bounded producer and client-stream responsiveness while persistence is blocked, but it does not prove installed model-stream or cancellation latency under a real disk stall.",
     "The maximum-output group verifies artifact-backed output above the inline limit and exact configured resource ceilings; it is not a model-quality benchmark.",
     "Installed native Chat and authenticated CLI transport evidence remains outside this source-level campaign."
   ]
