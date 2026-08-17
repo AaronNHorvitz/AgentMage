@@ -4,10 +4,12 @@
 
 The thin-client protocol and local command parser are source-level pre-alpha
 contracts. They are executable and tested, but they are not an integrated
-product workflow. The repository does not yet compose an authenticated product
-transport, reusable runtime coordinator, canonical conversation coordinator,
-canonical knowledge coordinator, runtime event journal, runtime artifact store,
-or installed-package activation path for these clients.
+product workflow. The repository now contains the reusable runtime coordinator,
+ordered event and journal components, content-addressed runtime artifact
+components, and a source-level native coding composition. These components are
+not yet connected to an authenticated product transport, canonical conversation
+or knowledge coordinator, admitted-model client workflow, or installed-package
+activation path.
 
 Operational invocations therefore fail closed with exit code `5` and
 `client.transport.failed`. Help, version, completion, parsing, rendering, schema

@@ -100,13 +100,16 @@ cross-interface parity, and `G-V0.4` release evidence remain blocked; see the
 [coding-skill architecture](./docs/architecture/coding-skills-and-release-boundary.md)
 and [bounded coding guide](./docs/guides/bounded-coding-workflows.md).
 
-The planned interactive coding harness is now reconciled as the first complete
-client of a reusable AgentMage runtime coordinator. The plan reuses the current
-agent state, model, context, tool, grant, storage, receipt, write, command,
-worktree, validation, and thin-client contracts; it adds ordered runtime events,
-content-addressed large-output artifacts, product composition, and an
-interactive `agentmage code` path. This is planning only and changes no current
-implementation or support status.
+The interactive coding harness is reconciled as the first complete client of a
+reusable AgentMage runtime coordinator. Current source includes versioned run,
+event, and outcome contracts; an interface-independent coordinator; directly
+registered native coding tools; a controlled Linux coding vertical slice; the
+four named MVP fixture groups; durable journal and content-addressed artifact
+mechanics; and kernel checkpoint and continuation recovery. These remain
+source-level pre-alpha components. An authenticated `agentmage code` transport,
+a real admitted-model workflow, complete durable host resume, and a supported
+packaged workflow remain absent, so every owning story and release gate stays
+open.
 
 Sprint 51 now has source-level measured frontier-tier decisions and a
 deterministic local disclosure composer layered over the manual handoff

@@ -65,12 +65,13 @@ as success by a later stage. Local commit authority does not imply remote public
 Native Chat, interactive CLI, JSON, software-development-kit, and Agent Client Protocol surfaces
 are thin clients to one kernel decision. They cannot mint grants, retain private canonical state,
 invoke models directly, register tools, execute commands, or bypass offline policy. The source tree
-contains a command parser and interface-neutral schemas, but no authenticated product transport or
-coding coordinator currently composes the complete transaction. Consequently, no full Chat/CLI
-workflow or parity claim exists.
+contains a command parser, interface-neutral schemas, the reusable coordinator, a native coding
+catalog, and a controlled Linux coding vertical slice. It still lacks the authenticated product
+transport, real admitted-model client path, and complete durable host composition needed for a full
+Chat/CLI workflow or parity claim.
 
-The planned coordinator is shared kernel composition, not a second agent implementation. It binds
-one runtime request to the persisted agent state, selected exact local model, bounded context,
+The coordinator is shared kernel composition, not a second agent implementation. It binds one
+runtime request to bounded agent state, an exact selected local model profile, bounded context, the
 native tool registry and dispatcher, policy disposition, journal cursor, runtime artifacts,
 cancellation, and terminal outcome. `ALLOW`, `ASK`, and `DENY` remain projections of the existing
 grant transaction: only a current consumed grant reaches an effect, an approval request pauses
