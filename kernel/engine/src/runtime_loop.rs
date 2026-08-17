@@ -1,4 +1,4 @@
-//! Interface-independent ephemeral read-only runtime coordinator.
+//! Interface-independent reusable runtime coordinator.
 
 use std::collections::BTreeSet;
 
@@ -214,6 +214,25 @@ pub trait RuntimeToolBoundary {
     ) -> Result<RuntimeToolExecution, RuntimePortFailure>;
 }
 
+/// Optional durable journal boundary implemented by a trusted runtime host.
+///
+/// The model, client, and native tool definitions never receive this port. Implementations must
+/// retain the canonical event envelope only, leaving transcript and artifact bytes in their
+/// separately classified stores.
+pub trait RuntimeJournalPort {
+    /// Accepts one already sealed event under bounded queue and durability rules.
+    fn append_runtime_event(&mut self, event: &RuntimeEvent) -> Result<(), RuntimePortFailure>;
+
+    /// Flushes every previously accepted deferred progress event.
+    fn flush_runtime_events(&mut self) -> Result<(), RuntimePortFailure>;
+
+    /// Returns one complete verified durable history for cursor and resume reconciliation.
+    fn load_runtime_events(
+        &mut self,
+        run_id: &agentmage_kernel_contracts::RuntimeRunId,
+    ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure>;
+}
+
 /// Exact deterministic completion input exposed to a verifier implementation.
 pub struct RuntimeVerificationInput<'a> {
     /// Owning runtime request.
@@ -300,7 +319,17 @@ struct PendingApproval {
     operation_id: RuntimeOperationId,
 }
 
-/// One reusable, interface-neutral ephemeral runtime coordinator.
+#[derive(Clone, Copy)]
+struct RuntimeJournalHooks<T> {
+    append: fn(&mut T, &RuntimeEvent) -> Result<(), RuntimePortFailure>,
+    flush: fn(&mut T) -> Result<(), RuntimePortFailure>,
+    load: fn(
+        &mut T,
+        &agentmage_kernel_contracts::RuntimeRunId,
+    ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure>,
+}
+
+/// One reusable, interface-neutral runtime coordinator.
 pub struct ReusableRuntimeCoordinator<M, X, T, V, C>
 where
     M: RuntimeModelPort,
@@ -317,6 +346,7 @@ where
     verifier: V,
     clock: C,
     publisher: RuntimeEventPublisher,
+    journal: Option<RuntimeJournalHooks<T>>,
     state: AgentStateController,
     attempt_guard: ToolAttemptGuard,
     events: Vec<RuntimeEvent>,
@@ -353,8 +383,84 @@ where
         verifier: V,
         clock: C,
     ) -> Result<Self, RuntimeLoopError> {
+        Self::compose(
+            request,
+            model,
+            context,
+            registry,
+            tool_boundary,
+            verifier,
+            clock,
+            None,
+        )
+    }
+
+    /// Composes one durable request with the same trusted host boundary used for native effects.
+    pub fn new_with_journal(
+        request: RuntimeRunRequest,
+        model: M,
+        context: X,
+        registry: ToolRegistry,
+        tool_boundary: T,
+        verifier: V,
+        clock: C,
+    ) -> Result<Self, RuntimeLoopError>
+    where
+        T: RuntimeJournalPort,
+    {
+        Self::compose(
+            request,
+            model,
+            context,
+            registry,
+            tool_boundary,
+            verifier,
+            clock,
+            Some(RuntimeJournalHooks {
+                append: append_runtime_event::<T>,
+                flush: flush_runtime_events::<T>,
+                load: load_runtime_events::<T>,
+            }),
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn compose(
+        request: RuntimeRunRequest,
+        model: M,
+        context: X,
+        registry: ToolRegistry,
+        mut tool_boundary: T,
+        verifier: V,
+        clock: C,
+        journal: Option<RuntimeJournalHooks<T>>,
+    ) -> Result<Self, RuntimeLoopError> {
         verify_runtime_run_request(&request)?;
-        if request.mode == RuntimeSessionMode::DurableReadOnly || request.event_cursor.is_some() {
+        if (request.mode == RuntimeSessionMode::DurableReadOnly || request.event_cursor.is_some())
+            && journal.is_none()
+        {
+            return Err(RuntimeLoopError::UnsupportedMode);
+        }
+        if request.mode == RuntimeSessionMode::EphemeralReadOnly && journal.is_some() {
+            return Err(RuntimeLoopError::UnsupportedMode);
+        }
+        if let Some(cursor) = &request.event_cursor {
+            let events = (journal.expect("cursor requires journal").load)(
+                &mut tool_boundary,
+                &request.run_id,
+            )
+            .map_err(RuntimeLoopError::Dependency)?;
+            let Some(last) = events.last() else {
+                return Err(RuntimeLoopError::UnsupportedMode);
+            };
+            if last.event_id != cursor.event_id
+                || last.sequence != cursor.sequence
+                || last.event_sha256 != cursor.event_sha256
+            {
+                return Err(RuntimeLoopError::UnsupportedMode);
+            }
+            // Full state reconstruction is admitted only through the checkpoint/artifact resume
+            // contract. A cursor alone is evidence, not enough authority to continue execution.
             return Err(RuntimeLoopError::UnsupportedMode);
         }
         if model.exact_profile() != &request.model_profile {
@@ -390,6 +496,7 @@ where
             verifier,
             clock,
             publisher: RuntimeEventPublisher::new(),
+            journal,
             state: AgentStateController::new(),
             attempt_guard,
             events: Vec::new(),
@@ -1354,6 +1461,9 @@ where
             None,
             None,
         )?;
+        if let Some(journal) = self.journal.as_ref() {
+            (journal.flush)(&mut self.tool_boundary).map_err(RuntimeLoopError::Dependency)?;
+        }
         self.outcome = Some(outcome);
         Ok(())
     }
@@ -1406,7 +1516,11 @@ where
             occurred_at_epoch_ms,
             sensitivity: runtime_sensitivity(&self.request),
             retention: RuntimeEventRetention {
-                kind: RuntimeEventRetentionKind::Ephemeral,
+                kind: if self.journal.is_some() {
+                    RuntimeEventRetentionKind::Session
+                } else {
+                    RuntimeEventRetentionKind::Ephemeral
+                },
                 expires_at_epoch_ms: None,
             },
             persistence: runtime_event_persistence(&kind),
@@ -1419,6 +1533,10 @@ where
             ),
             event_sha256: ZERO_SHA256.to_owned(),
         })?;
+        if let Some(journal) = self.journal.as_ref() {
+            (journal.append)(&mut self.tool_boundary, &event)
+                .map_err(RuntimeLoopError::Dependency)?;
+        }
         let delivery = self.publisher.publish(event.clone())?;
         self.events.push(event);
         Ok(delivery)
@@ -1441,6 +1559,24 @@ where
             .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
         Ok(now.saturating_sub(started) >= self.request.limits.max_elapsed_ms)
     }
+}
+
+fn append_runtime_event<T: RuntimeJournalPort>(
+    port: &mut T,
+    event: &RuntimeEvent,
+) -> Result<(), RuntimePortFailure> {
+    port.append_runtime_event(event)
+}
+
+fn flush_runtime_events<T: RuntimeJournalPort>(port: &mut T) -> Result<(), RuntimePortFailure> {
+    port.flush_runtime_events()
+}
+
+fn load_runtime_events<T: RuntimeJournalPort>(
+    port: &mut T,
+    run_id: &agentmage_kernel_contracts::RuntimeRunId,
+) -> Result<Vec<RuntimeEvent>, RuntimePortFailure> {
+    port.load_runtime_events(run_id)
 }
 
 /// Computes exact stable tool references for one frozen registry.

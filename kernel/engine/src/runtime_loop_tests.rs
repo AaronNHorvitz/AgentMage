@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 use agentmage_kernel_contracts::{
     AgentStateKind, ApprovalId, AuthorityClass, BoundaryKind, BudgetLimit, BudgetResource,
@@ -11,20 +11,20 @@ use agentmage_kernel_contracts::{
     ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate,
     OperationBinding, OperationOutcome, PlanId, PolicyId, PostconditionResult, ReceiptId,
     RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeEventKind, RuntimeOperationId, RuntimeRunId, RuntimeRunLimits,
-    RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference, SessionId, StateChange,
-    StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCatalogId,
-    ToolDefinition, ToolId, ToolResult, ToolRiskLevel, VerifierCandidate, VerifierDisposition,
-    VerifierId, VerifierRecordId, VerifierSource, WorkPacket, WorkPacketId, WorkPacketState,
-    WorkspaceId, to_canonical_json,
+    RuntimeApprovalResponse, RuntimeEvent, RuntimeEventKind, RuntimeEventRetentionKind,
+    RuntimeOperationId, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode,
+    SchemaId, SchemaReference, SessionId, StateChange, StopCondition, StopConditionKind, Task,
+    TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
+    VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
+    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
 use super::{
     ReusableRuntimeCoordinator, RuntimeClock, RuntimeContextPort, RuntimeCoordinatorStep,
-    RuntimeLoopError, RuntimeModelPort, RuntimePermissionEvaluation, RuntimePortFailure,
-    RuntimeToolBoundary, RuntimeToolExecution, RuntimeVerificationInput, RuntimeVerifierPort,
-    derived_id, runtime_action_id, runtime_tool_references,
+    RuntimeJournalPort, RuntimeLoopError, RuntimeModelPort, RuntimePermissionEvaluation,
+    RuntimePortFailure, RuntimeToolBoundary, RuntimeToolExecution, RuntimeVerificationInput,
+    RuntimeVerifierPort, derived_id, runtime_action_id, runtime_tool_references,
 };
 use crate::model_codec::{proposal_digest, tests_support::profile};
 use crate::runtime_coordinator::{
@@ -216,6 +216,8 @@ struct FakeToolBoundary {
     executions: Arc<AtomicUsize>,
     emit_evidence: bool,
     state_change: StateChange,
+    journal: Arc<Mutex<Vec<RuntimeEvent>>>,
+    journal_flushes: Arc<AtomicUsize>,
 }
 
 impl FakeToolBoundary {
@@ -346,6 +348,47 @@ impl RuntimeToolBoundary for FakeToolBoundary {
             receipt_sha256,
             result,
         })
+    }
+}
+
+impl RuntimeJournalPort for FakeToolBoundary {
+    fn append_runtime_event(&mut self, event: &RuntimeEvent) -> Result<(), RuntimePortFailure> {
+        let mut events = self
+            .journal
+            .lock()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let mut sequence = RuntimeEventSequence::new();
+        for retained in events.iter() {
+            sequence
+                .push(retained)
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+        }
+        sequence
+            .push(event)
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        events.push(event.clone());
+        Ok(())
+    }
+
+    fn flush_runtime_events(&mut self) -> Result<(), RuntimePortFailure> {
+        self.journal_flushes.fetch_add(1, Ordering::SeqCst);
+        Ok(())
+    }
+
+    fn load_runtime_events(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure> {
+        self.journal
+            .lock()
+            .map_err(|_| RuntimePortFailure::Uncertain)
+            .map(|events| {
+                events
+                    .iter()
+                    .filter(|event| &event.run_id == run_id)
+                    .cloned()
+                    .collect()
+            })
     }
 }
 
@@ -489,6 +532,8 @@ fn coordinator_for_mode_and_operation(
             } else {
                 StateChange::NotChanged
             },
+            journal: Arc::new(Mutex::new(Vec::new())),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-0001"),
@@ -819,6 +864,90 @@ fn durable_mode_remains_unavailable_without_journal_and_resume_ports() {
         ),
         Err(RuntimeLoopError::UnsupportedMode)
     ));
+}
+
+#[test]
+fn durable_mode_persists_ordered_session_events_before_terminal_return() {
+    let profile = profile("runtime-loop-durable");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let mut request = request(profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("durable request seals");
+    let journal = Arc::new(Mutex::new(Vec::new()));
+    let flushes = Arc::new(AtomicUsize::new(0));
+    let mut coordinator = ReusableRuntimeCoordinator::new_with_journal(
+        request,
+        FakeModel::new(profile, [ModelScript::Completion]),
+        FakeContext,
+        registry,
+        FakeToolBoundary {
+            script: PermissionScript::Allow,
+            executions: Arc::new(AtomicUsize::new(0)),
+            emit_evidence: true,
+            state_change: StateChange::NotChanged,
+            journal: Arc::clone(&journal),
+            journal_flushes: Arc::clone(&flushes),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-durable-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 2_000 },
+    )
+    .expect("journal-backed coordinator builds");
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("durable completion")
+    else {
+        panic!("direct completion cannot pause");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(flushes.load(Ordering::SeqCst), 1);
+    assert!(coordinator.events().iter().all(|event| {
+        event.retention.kind == RuntimeEventRetentionKind::Session
+            && event.retention.expires_at_epoch_ms.is_none()
+    }));
+    assert_eq!(
+        *journal.lock().expect("journal remains available"),
+        coordinator.events()
+    );
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn ephemeral_mode_cannot_accidentally_attach_a_durable_journal() {
+    let profile = profile("runtime-loop-ephemeral-journal");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let request = request(profile.clone(), &registry);
+    let journal = Arc::new(Mutex::new(Vec::new()));
+    let result = ReusableRuntimeCoordinator::new_with_journal(
+        request,
+        FakeModel::new(profile, [ModelScript::Completion]),
+        FakeContext,
+        registry,
+        FakeToolBoundary {
+            script: PermissionScript::Allow,
+            executions: Arc::new(AtomicUsize::new(0)),
+            emit_evidence: true,
+            state_change: StateChange::NotChanged,
+            journal: Arc::clone(&journal),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-ephemeral-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 3_000 },
+    );
+    assert!(matches!(result, Err(RuntimeLoopError::UnsupportedMode)));
+    assert!(
+        journal
+            .lock()
+            .expect("journal remains available")
+            .is_empty()
+    );
 }
 
 #[test]

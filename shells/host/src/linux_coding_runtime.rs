@@ -12,8 +12,8 @@ use agentmage_kernel_contracts::{
     AuthorizedWorkspaceHandle, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind,
     EvidenceReference, GrantId, GrantNonce, GrantOperation, OperationAttemptId, OperationOutcome,
     ReceiptId, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
-    RuntimeOperationId, RuntimeRunRequest, RuntimeSessionMode, SessionId, StateChange, ToolCall,
-    ToolDefinition, ToolResult, to_canonical_json,
+    RuntimeEvent, RuntimeOperationId, RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode,
+    SessionId, StateChange, ToolCall, ToolDefinition, ToolResult, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     authority_transaction::AuthorityTransactionRequest,
@@ -28,6 +28,7 @@ use agentmage_kernel_engine::{
         render_filesystem_preview, verify_filesystem_receipts,
     },
     grants::SessionReadGrantRequest,
+    operational_store::DurableAuthorityError,
     policy::PolicyEvaluationContext,
     propagation::CancellationToken,
     repository_inspection::{
@@ -38,7 +39,8 @@ use agentmage_kernel_engine::{
     },
     runtime_coordinator::{verify_runtime_approval_response, verify_runtime_run_request},
     runtime_loop::{
-        RuntimePermissionEvaluation, RuntimePortFailure, RuntimeToolBoundary, RuntimeToolExecution,
+        RuntimeJournalPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeToolBoundary,
+        RuntimeToolExecution,
     },
     validation_result::{
         ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationStatus,
@@ -1650,6 +1652,76 @@ where
         cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
         self.execute_call(request, evaluation, definition, call, cancellation)
+    }
+}
+
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeJournalPort
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    fn append_runtime_event(&mut self, event: &RuntimeEvent) -> Result<(), RuntimePortFailure> {
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        self.authority
+            .authority_mut()
+            .record_runtime_event(event.clone())
+            .map_err(map_journal_failure)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)
+    }
+
+    fn flush_runtime_events(&mut self) -> Result<(), RuntimePortFailure> {
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        self.authority
+            .authority_mut()
+            .flush_runtime_events()
+            .map_err(map_journal_failure)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)
+    }
+
+    fn load_runtime_events(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure> {
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let events = self
+            .authority
+            .authority()
+            .runtime_events(run_id)
+            .map_err(map_journal_failure)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        Ok(events)
+    }
+}
+
+fn map_journal_failure(error: DurableAuthorityError) -> RuntimePortFailure {
+    match error {
+        DurableAuthorityError::RuntimeJournal(error) if !error.poisons_writer() => {
+            RuntimePortFailure::Invalid
+        }
+        DurableAuthorityError::RuntimeJournal(_)
+        | DurableAuthorityError::Store(_)
+        | DurableAuthorityError::Poisoned => RuntimePortFailure::Uncertain,
+        DurableAuthorityError::Grant(_)
+        | DurableAuthorityError::Transaction(_)
+        | DurableAuthorityError::Checkpoint(_)
+        | DurableAuthorityError::WriteApproval(_)
+        | DurableAuthorityError::FilesystemApproval(_)
+        | DurableAuthorityError::WriteTransaction(_)
+        | DurableAuthorityError::FilesystemTransaction(_) => RuntimePortFailure::Invalid,
     }
 }
 
