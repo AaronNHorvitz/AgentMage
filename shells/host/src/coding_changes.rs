@@ -10,9 +10,12 @@ use agentmage_capability_repository_map::{
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, GrantOperation, OperationBinding, RequiredGrantTemplate, SchemaId,
     SchemaReference, ToolDefinition, ToolId, ToolRiskLevel, ValidationIssue, ValidationSeverity,
-    WorkspaceId, WorkspacePath,
+    WorkspaceId, WorkspaceObjectKind, WorkspacePath,
 };
-use agentmage_kernel_engine::tooling::{Tool, ToolRegistry};
+use agentmage_kernel_engine::{
+    filesystem_control::{FileClassification, FilesystemOperationDraft, NewDestinationDraft},
+    tooling::{Tool, ToolRegistry},
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -189,6 +192,8 @@ pub enum CodingChangeError {
     InvalidRequest,
     /// The requested path is noncanonical or outside every writable root.
     PathDenied,
+    /// A held parent directory or its sibling projection differs from the proposal observation.
+    ParentObservationMismatch,
     /// The existing structured-edit planner rejected the proposal and exact preimage.
     StructuredEdit(StructuredEditError),
     /// One native definition could not enter the common registry.
@@ -203,6 +208,7 @@ impl CodingChangeError {
             Self::InvalidScope => "coding-change.scope.invalid",
             Self::InvalidRequest => "coding-change.request.invalid",
             Self::PathDenied => "coding-change.path.denied",
+            Self::ParentObservationMismatch => "coding-change.parent-observation.mismatch",
             Self::StructuredEdit(error) => error.code(),
             Self::RegistrationDenied => "coding-change.registration.denied",
         }
@@ -268,6 +274,81 @@ pub fn bind_structured_patch_proposal(
         allow_generated: proposal.allow_generated,
     })
     .map_err(Into::into)
+}
+
+/// Computes the canonical identity of one held parent and sorted sibling-name projection.
+pub fn controlled_create_parent_observation_sha256(
+    parent: &agentmage_kernel_contracts::GrantTarget,
+    observed_sibling_names: &[String],
+) -> Result<String, CodingChangeError> {
+    if parent.object_kind() != Some(WorkspaceObjectKind::Directory)
+        || parent.preimage().is_some()
+        || parent.workspace_path().is_none()
+        || observed_sibling_names
+            .windows(2)
+            .any(|pair| pair[0] >= pair[1])
+        || observed_sibling_names
+            .iter()
+            .any(|name| WorkspacePath::new(parent.workspace_id().clone(), [name.as_str()]).is_err())
+    {
+        return Err(CodingChangeError::ParentObservationMismatch);
+    }
+    serde_json::to_vec(&ControlledCreateParentObservation {
+        schema_version: 1,
+        parent,
+        observed_sibling_names,
+    })
+    .map(|bytes| sha256_hex(&bytes))
+    .map_err(|_| CodingChangeError::ParentObservationMismatch)
+}
+
+/// Binds one controlled-create proposal to a trusted exact parent observation.
+pub fn prepare_controlled_file_creation(
+    scope: &CodingWriteScope,
+    proposal: ControlledFileCreationProposal,
+    parent: agentmage_kernel_contracts::GrantTarget,
+    observed_sibling_names: Vec<String>,
+) -> Result<FilesystemOperationDraft, CodingChangeError> {
+    validate_create(scope, &proposal)?;
+    let path = scope.resolve(&proposal.path)?;
+    let parent_path = parent
+        .workspace_path()
+        .ok_or(CodingChangeError::ParentObservationMismatch)?;
+    if parent_path.workspace_id() != path.workspace_id()
+        || parent_path.components() != &path.components()[..path.components().len() - 1]
+        || controlled_create_parent_observation_sha256(&parent, &observed_sibling_names)?
+            != proposal.expected_parent_sha256
+    {
+        return Err(CodingChangeError::ParentObservationMismatch);
+    }
+    Ok(FilesystemOperationDraft::Create {
+        operation_id: proposal.creation_id,
+        destination: NewDestinationDraft {
+            parent,
+            path,
+            observed_sibling_names,
+        },
+        content: proposal.content.into_bytes(),
+        mode: proposal.mode,
+        classification: map_file_classification(proposal.classification),
+    })
+}
+
+#[derive(Serialize)]
+struct ControlledCreateParentObservation<'observation> {
+    schema_version: u16,
+    parent: &'observation agentmage_kernel_contracts::GrantTarget,
+    observed_sibling_names: &'observation [String],
+}
+
+const fn map_file_classification(value: ControlledFileClassification) -> FileClassification {
+    match value {
+        ControlledFileClassification::SourceCode => FileClassification::SourceCode,
+        ControlledFileClassification::Documentation => FileClassification::Documentation,
+        ControlledFileClassification::Configuration => FileClassification::Configuration,
+        ControlledFileClassification::Data => FileClassification::Data,
+        ControlledFileClassification::Generated => FileClassification::Generated,
+    }
 }
 
 /// Returns the exact structured-patch tool definition.
@@ -367,6 +448,13 @@ fn validate_create_bytes(scope: &CodingWriteScope, bytes: &[u8]) -> Result<(), C
     }
     let proposal: ControlledFileCreationProposal =
         serde_json::from_slice(bytes).map_err(|_| CodingChangeError::InvalidRequest)?;
+    validate_create(scope, &proposal)
+}
+
+fn validate_create(
+    scope: &CodingWriteScope,
+    proposal: &ControlledFileCreationProposal,
+) -> Result<(), CodingChangeError> {
     scope.resolve(&proposal.path)?;
     if proposal.schema_version != 1
         || !valid_identifier(&proposal.creation_id)
@@ -460,9 +548,10 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
-        ActionId, ContractPayload, CorrelationId, ToolCall, ToolCallId,
+        ActionId, ContractPayload, CorrelationId, GrantTarget, ToolCall, ToolCallId,
     };
     use agentmage_kernel_engine::tooling::ToolRegistry;
+    use serde_json::json;
 
     use super::*;
 
@@ -507,6 +596,25 @@ mod tests {
             change_plan_sha256: "b".repeat(64),
             expected_parent_sha256: "c".repeat(64),
         }
+    }
+
+    fn parent(path: &[&str]) -> GrantTarget {
+        let identity: [u8; 32] = Sha256::digest(path.join("/").as_bytes()).into();
+        serde_json::from_value(json!({
+            "target_kind": "held_object",
+            "path": {"workspace_id": "workspace-coding", "components": path},
+            "authorization_id": "authorization-coding",
+            "adapter_instance_id": "adapter-coding",
+            "platform": "deterministic_fake",
+            "object_kind": "directory",
+            "object_identity": {
+                "platform": "deterministic_fake",
+                "mount_identity_sha256": vec![1_u8; 32],
+                "object_identity_sha256": identity
+            },
+            "preimage": null
+        }))
+        .expect("held parent")
     }
 
     fn call(definition: &ToolDefinition, bytes: Vec<u8>) -> ToolCall {
@@ -594,6 +702,47 @@ mod tests {
                 ))
                 .is_err()
         );
+    }
+
+    #[test]
+    fn story_48_2_create_proposal_binds_to_exact_parent_and_sibling_projection() {
+        let scope = scope();
+        let parent = parent(&["tests"]);
+        let siblings = vec!["existing.rs".to_owned(), "fixture.rs".to_owned()];
+        let mut proposal = create();
+        proposal.expected_parent_sha256 =
+            controlled_create_parent_observation_sha256(&parent, &siblings)
+                .expect("parent observation");
+
+        let draft = prepare_controlled_file_creation(
+            &scope,
+            proposal.clone(),
+            parent.clone(),
+            siblings.clone(),
+        )
+        .expect("creation draft");
+        let FilesystemOperationDraft::Create {
+            operation_id,
+            destination,
+            content,
+            mode,
+            classification,
+        } = draft
+        else {
+            panic!("wrong filesystem draft");
+        };
+        assert_eq!(operation_id, proposal.creation_id);
+        assert_eq!(destination.parent, parent);
+        assert_eq!(destination.observed_sibling_names, siblings);
+        assert_eq!(content, proposal.content.as_bytes());
+        assert_eq!(mode, proposal.mode);
+        assert_eq!(classification, FileClassification::SourceCode);
+
+        let stale_siblings = vec!["added.rs".to_owned(), "existing.rs".to_owned()];
+        assert!(matches!(
+            prepare_controlled_file_creation(&scope, proposal, parent, stale_siblings),
+            Err(CodingChangeError::ParentObservationMismatch)
+        ));
     }
 
     #[test]
