@@ -1,0 +1,179 @@
+{
+  "artifact_id": "story-21.2-runtime-journal-boundary-review",
+  "checks": [
+    {
+      "check_id": "closed-event-schema",
+      "detail": "Schema rejects unknown fields and requires canonical bindings.",
+      "passed": true
+    },
+    {
+      "check_id": "closed-event-families",
+      "detail": "All 21 declared families exist in contract and verifier source.",
+      "passed": true
+    },
+    {
+      "check_id": "persistence-partition",
+      "detail": "Correctness, progress, and metric classes remain explicit and tested.",
+      "passed": true
+    },
+    {
+      "check_id": "bounded-journal-queue",
+      "detail": "Count, byte, batch, saturation, and exact byte-edge boundaries are present.",
+      "passed": true
+    },
+    {
+      "check_id": "cancellation-terminal-truth",
+      "detail": "Model cancellation emits the required ordered cancellation events.",
+      "passed": true
+    },
+    {
+      "check_id": "network-free-source-closure",
+      "detail": "Security-authoritative journal closure contains no prohibited network client token.",
+      "passed": true
+    },
+    {
+      "check_id": "crash-report-integrity",
+      "detail": "Eight stop cases, no false terminal, and raw trace digest reconcile.",
+      "passed": true
+    },
+    {
+      "check_id": "pressure-report-integrity",
+      "detail": "Byte, progress, cancellation, durability, limitation, and trace records reconcile.",
+      "passed": true
+    },
+    {
+      "check_id": "load-report-integrity",
+      "detail": "Partial Fedora load campaign retains exact event and restart counts.",
+      "passed": true
+    },
+    {
+      "check_id": "canary-source-closure",
+      "detail": "Projection, artifact, and telemetry canary tests remain present.",
+      "passed": true
+    },
+    {
+      "check_id": "evidence-index-truth",
+      "detail": "Hashed index denies story, sprint, and release completion.",
+      "passed": true
+    },
+    {
+      "check_id": "limitation-truth",
+      "detail": "Physical, independent-review, and manual-fuzz limitations remain visible.",
+      "passed": true
+    }
+  ],
+  "external_network_used": false,
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is an independent automated source-boundary review, not an independent human review.",
+    "Physical filesystem/device faults, host power loss, and integrated physical-effect recovery are not exercised.",
+    "Installed clients, supported-platform packages, and additional model/runtime profiles are not reviewed.",
+    "Manual fuzzing remains deferred and was not executed.",
+    "No release approval, model enablement, platform support, or deployment authority follows from this review."
+  ],
+  "manual_fuzzing_executed": false,
+  "private_user_data_used": false,
+  "release_approved": false,
+  "report_sha256": "1f9163dd7b9d108860056acde170984de52aadd713bcb3fa8386d850c708c3a0",
+  "review_type": "independent-automated-boundary-review",
+  "schema_version": 1,
+  "source_revision": "134eeae24597a64838cf6e98ca59613f5f8c76ff",
+  "sources": [
+    {
+      "bytes": 12447,
+      "path": "schemas/runtime/runtime-event.schema.json",
+      "sha256": "4f548abe890a9f13b01f385e447be10ab6b3ea9dc69105b1bbc4c8726819d973"
+    },
+    {
+      "bytes": 11161,
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "63a01ee7674916b9710cff5a326a75a3b95746bf0e45b704ded02d5cd9b3fd1e"
+    },
+    {
+      "bytes": 97875,
+      "path": "kernel/engine/src/runtime_event.rs",
+      "sha256": "cc3095ea122644047a47c3fecd5c7a100676cf8eca0bd3a22d0445d533f0ed32"
+    },
+    {
+      "bytes": 96409,
+      "path": "kernel/engine/src/runtime_journal.rs",
+      "sha256": "6d961665fc0163026e57ef38ad312c28a720347af178833f8d79679f7d81409e"
+    },
+    {
+      "bytes": 136080,
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "a62532d85d54052acc4e8ae7f9ab1547fc9d0d73470c743d40198a29e9e39728"
+    },
+    {
+      "bytes": 90067,
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "c8f24c701a6ad5afe895749c9353b20be4795f2f7c98725582f60a84be729d92"
+    },
+    {
+      "bytes": 59587,
+      "path": "kernel/engine/src/runtime_projection.rs",
+      "sha256": "fc8d15ead9d1535637e193ad54301ac7d4157f2dd46b667595cfc450486aca7f"
+    },
+    {
+      "bytes": 143808,
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "09f720988bb3b78f90293a6063a26a6b3777cf1aa5beab7b615d1accf6d7e8f5"
+    },
+    {
+      "bytes": 23486,
+      "path": "docs/architecture/runtime-event-journal.md",
+      "sha256": "ab8790cffac431f1c0b6fe76019c4008123921d4b9a8dea1d6f5d10de48cf9d2"
+    },
+    {
+      "bytes": 8915,
+      "path": "docs/verification/story-21-2-local-results.md",
+      "sha256": "459eb554a020d53785903fb6ce170e9e9a158548e56690bef5be9e1b307291c5"
+    },
+    {
+      "bytes": 1476582,
+      "path": "TASKS.md",
+      "sha256": "03c007a7eef856053874d32142ce3571b1b9a7780e25b67170351b724125a534"
+    },
+    {
+      "bytes": 15289,
+      "path": "scripts/runtime_journal_boundary_review.py",
+      "sha256": "96dcb06bc487cfa7af691357303af770d717a654d612ecc0310bac66838433ab"
+    },
+    {
+      "bytes": 2433,
+      "path": "tests/test_runtime_journal_boundary_review.py",
+      "sha256": "4948b0d433d33641bbaf117dbf7faf39fdc8b12de13bb0be3f823e1f262bfafe"
+    },
+    {
+      "bytes": 5225,
+      "path": "artifacts/sprints/sprint-21/story-21.2/crash-matrix.json",
+      "sha256": "697a52539aa642a040d31e8180d75ce1d303ad598e3a9862a66dd0445ef5c6c8"
+    },
+    {
+      "bytes": 2605,
+      "path": "artifacts/sprints/sprint-21/story-21.2/crash-matrix.log",
+      "sha256": "b9909498224f3ba4a44fba33302e298ad68d758ec735931bbddbb3283ea830d6"
+    },
+    {
+      "bytes": 3287,
+      "path": "artifacts/sprints/sprint-21/story-21.2/pressure-report.json",
+      "sha256": "18d839f8199de094e136645aeac87773fb6cfb18e44b4f4a70f637e6efebac33"
+    },
+    {
+      "bytes": 1122,
+      "path": "artifacts/sprints/sprint-21/story-21.2/pressure-report.log",
+      "sha256": "1b9ed6adff2a7345a86ec62f3a9cad05e56c68607d8357176df47dbad7b5e263"
+    },
+    {
+      "bytes": 15902,
+      "path": "artifacts/sprints/sprint-21/story-21.2/evidence-index.json",
+      "sha256": "3508bd700aeb710a00c57a86071f55ce001f6d1e9b3bc55ec64a8dabc2c97425"
+    },
+    {
+      "bytes": 9977,
+      "path": "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
+      "sha256": "d42c2bfc3e59824786333b3e6ef30e1aa08ebf84740f8739a40b0dd78e50ed95"
+    }
+  ],
+  "status": "pass-independent-automated-source-boundary-review"
+}
