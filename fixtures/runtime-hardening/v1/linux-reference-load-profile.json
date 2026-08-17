@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "profile_id": "story-50.2-linux-reference-load-v1",
+  "source_files": [
+    "fixtures/runtime-hardening/v1/linux-reference-load-profile.json",
+    "kernel/engine/src/runtime_artifact.rs",
+    "kernel/engine/src/runtime_event.rs",
+    "kernel/engine/src/runtime_hardening.rs",
+    "kernel/engine/src/runtime_journal.rs",
+    "kernel/engine/src/runtime_loop_tests.rs",
+    "kernel/engine/src/runtime_recovery.rs",
+    "scripts/runtime_hardening_load.py",
+    "shells/host/src/cli_runtime.rs",
+    "tests/test_runtime_hardening_load.py"
+  ],
+  "workload": {
+    "progress_events": 8192,
+    "total_events": 8196,
+    "restart_cycles": 16,
+    "slow_subscriber_capacity": 1
+  },
+  "metric_thresholds": {
+    "maximum_journal_elapsed_ms": 30000,
+    "minimum_journal_events_per_second": 250,
+    "maximum_publish_elapsed_ms": 10000,
+    "minimum_publish_events_per_second": 1000,
+    "maximum_restart_elapsed_ms": 60000,
+    "maximum_resident_memory_kib": 1048576,
+    "maximum_retained_disk_bytes": 134217728,
+    "maximum_queued_events": 1024,
+    "maximum_queued_bytes": 4194304,
+    "expected_lagged_subscribers": 1
+  },
+  "commands": [
+    {
+      "id": "reference-load",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "story_50_2_reference_hardware_load_is_bounded_recoverable_and_nonblocking",
+        "--",
+        "--ignored",
+        "--nocapture"
+      ],
+      "minimum_passed": 1,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 2097152,
+      "requires_load_metrics": true
+    },
+    {
+      "id": "resource-ceilings",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "runtime_loop_tests::story_50_2_"
+      ],
+      "minimum_passed": 6,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 2097152,
+      "requires_load_metrics": false
+    },
+    {
+      "id": "event-pressure",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "runtime_event::tests::story_50_2_"
+      ],
+      "minimum_passed": 5,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 2097152,
+      "requires_load_metrics": false
+    },
+    {
+      "id": "maximum-output",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "durable_large_"
+      ],
+      "minimum_passed": 2,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 2097152,
+      "requires_load_metrics": false
+    },
+    {
+      "id": "artifact-pressure",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "runtime_artifact::tests"
+      ],
+      "minimum_passed": 15,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 2097152,
+      "requires_load_metrics": false
+    },
+    {
+      "id": "cancellation",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "story_23_4_cancellation_wins_over_a_pending_allow_response"
+      ],
+      "minimum_passed": 1,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 2097152,
+      "requires_load_metrics": false
+    },
+    {
+      "id": "client-cancellation",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "protected_denial_and_cancellation_return_through_exact_runtime_cursor"
+      ],
+      "minimum_passed": 1,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 2097152,
+      "requires_load_metrics": false
+    },
+    {
+      "id": "restart-recovery",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "runtime_recovery::tests"
+      ],
+      "minimum_passed": 8,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 2097152,
+      "requires_load_metrics": false
+    }
+  ],
+  "declared_limitations": [
+    "The campaign measures one recorded Fedora Linux host and is not portable platform evidence.",
+    "The current journal writer defers progress in bounded batches but still performs SQLite flushes on the coordinator thread.",
+    "No injected slow-disk worker-isolation result exists, so model-stream continuity under a blocked filesystem remains unproved.",
+    "The maximum-output group verifies artifact-backed output above the inline limit and exact configured resource ceilings; it is not a model-quality benchmark.",
+    "Installed native Chat and authenticated CLI transport evidence remains outside this source-level campaign."
+  ]
+}

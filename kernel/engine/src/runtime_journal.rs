@@ -734,6 +734,7 @@ const fn retention_code(value: RuntimeEventRetentionKind) -> &'static str {
 mod tests {
     use std::fs;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::{Duration, Instant};
 
     use agentmage_kernel_contracts::{
         AgentStateKind, CONTRACT_SCHEMA_VERSION, ContextSensitivity, CorrelationId, PolicyId,
@@ -749,7 +750,9 @@ mod tests {
     use crate::operational_store::{
         OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
     };
-    use crate::runtime_event::{runtime_event_persistence, seal_runtime_event};
+    use crate::runtime_event::{
+        RuntimeEventError, RuntimeEventPublisher, runtime_event_persistence, seal_runtime_event,
+    };
 
     const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -865,6 +868,36 @@ mod tests {
         ));
         fs::create_dir(&path).expect("temporary directory");
         path
+    }
+
+    fn elapsed_ms(elapsed: Duration) -> u64 {
+        u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX)
+    }
+
+    fn directory_bytes(path: &std::path::Path) -> u64 {
+        fs::read_dir(path)
+            .expect("load directory remains readable")
+            .map(|entry| {
+                entry
+                    .expect("load directory entry remains readable")
+                    .metadata()
+                    .expect("load directory metadata remains readable")
+                    .len()
+            })
+            .sum()
+    }
+
+    fn resident_memory_kib() -> Option<u64> {
+        fs::read_to_string("/proc/self/status")
+            .ok()?
+            .lines()
+            .find_map(|line| {
+                line.strip_prefix("VmRSS:")?
+                    .split_ascii_whitespace()
+                    .next()?
+                    .parse::<u64>()
+                    .ok()
+            })
     }
 
     #[test]
@@ -1070,5 +1103,136 @@ mod tests {
         );
         drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    #[ignore = "explicit reference-hardware campaign; run through runtime_hardening_load.py"]
+    fn story_50_2_reference_hardware_load_is_bounded_recoverable_and_nonblocking() {
+        const PROGRESS_EVENTS: usize = 8_192;
+        const RESTART_CYCLES: usize = 16;
+
+        let mut fixture = EventFixture::new();
+        let mut events = Vec::with_capacity(PROGRESS_EVENTS + 4);
+        events.push(fixture.event(
+            RuntimeEventKind::RunStarted {
+                request_sha256: "a".repeat(64),
+            },
+            None,
+        ));
+        events.push(fixture.event(RuntimeEventKind::TurnStarted, Some("journal-turn-1")));
+        for _ in 0..PROGRESS_EVENTS {
+            events.push(fixture.event(
+                RuntimeEventKind::Progress {
+                    code: "runtime.progress.reference_load".to_owned(),
+                },
+                Some("journal-turn-1"),
+            ));
+        }
+        events.push(fixture.event(
+            RuntimeEventKind::TurnCompleted {
+                outcome_sha256: "b".repeat(64),
+            },
+            Some("journal-turn-1"),
+        ));
+        events.push(fixture.event(
+            RuntimeEventKind::RunTerminal {
+                state: AgentStateKind::Success,
+                outcome_sha256: "c".repeat(64),
+            },
+            None,
+        ));
+
+        let publisher = RuntimeEventPublisher::new();
+        let slow = publisher.subscribe(1).expect("slow subscriber");
+        let fast = publisher.subscribe(1).expect("fast subscriber");
+        let publish_started = Instant::now();
+        let mut fast_deliveries = 0_usize;
+        let mut lagged_subscribers = 0_usize;
+        for event in &events {
+            let delivery = publisher
+                .publish(event.clone())
+                .expect("load event publishes");
+            lagged_subscribers += delivery.lagged;
+            assert_eq!(
+                fast.try_next().expect("fast subscriber remains live"),
+                Some(event.clone())
+            );
+            fast_deliveries += 1;
+        }
+        let publish_elapsed_ms = elapsed_ms(publish_started.elapsed());
+        assert_eq!(publisher.event_count(), Ok(events.len() as u64));
+        assert_eq!(fast_deliveries, events.len());
+        assert_eq!(lagged_subscribers, 1);
+        assert_eq!(slow.try_next(), Ok(Some(events[0].clone())));
+        assert_eq!(
+            slow.try_next(),
+            Err(RuntimeEventError::SubscriberDisconnected)
+        );
+
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store =
+            OperationalStore::open(&path, &observation(), &mut TestKey).expect("encrypted store");
+        let mut writer = RuntimeJournalWriter::default();
+        let journal_started = Instant::now();
+        let mut maximum_queued_events = 0_usize;
+        let mut maximum_queued_bytes = 0_usize;
+        for event in &events {
+            let append = writer
+                .append(&mut store, event.clone())
+                .expect("load event journals");
+            maximum_queued_events = maximum_queued_events.max(append.queued_events);
+            maximum_queued_bytes = maximum_queued_bytes.max(append.queued_bytes);
+        }
+        assert_eq!(writer.flush_all(&mut store), Ok(0));
+        let journal_elapsed_ms = elapsed_ms(journal_started.elapsed());
+        assert_eq!(
+            load_run_events(&store, &events[0].run_id).expect("load history verifies"),
+            events
+        );
+        assert!(maximum_queued_events < RuntimeJournalLimits::default().queue_event_capacity);
+        assert!(maximum_queued_bytes < RuntimeJournalLimits::default().queue_byte_capacity);
+        let retained_disk_bytes = directory_bytes(&directory);
+        drop(store);
+
+        let restart_started = Instant::now();
+        for _ in 0..RESTART_CYCLES {
+            let reopened = OperationalStore::open(&path, &observation(), &mut TestKey)
+                .expect("load store reopens with verified history");
+            assert_eq!(
+                load_run_events(&reopened, &events[0].run_id)
+                    .expect("reopened history verifies")
+                    .len(),
+                events.len()
+            );
+        }
+        let restart_elapsed_ms = elapsed_ms(restart_started.elapsed());
+        let resident_memory_kib = resident_memory_kib();
+        fs::remove_dir_all(&directory).expect("load campaign cleanup");
+        assert!(!directory.exists());
+
+        println!(
+            "AGENTMAGE_RUNTIME_LOAD_METRICS={}",
+            serde_json::json!({
+                "cleanup_verified": true,
+                "event_count": events.len(),
+                "fast_deliveries": fast_deliveries,
+                "journal_elapsed_ms": journal_elapsed_ms,
+                "journal_events_per_second": (events.len() as u64)
+                    .saturating_mul(1_000)
+                    / journal_elapsed_ms.max(1),
+                "lagged_subscribers": lagged_subscribers,
+                "maximum_queued_bytes": maximum_queued_bytes,
+                "maximum_queued_events": maximum_queued_events,
+                "publish_elapsed_ms": publish_elapsed_ms,
+                "publish_events_per_second": (events.len() as u64)
+                    .saturating_mul(1_000)
+                    / publish_elapsed_ms.max(1),
+                "resident_memory_kib": resident_memory_kib,
+                "restart_cycles": RESTART_CYCLES,
+                "restart_elapsed_ms": restart_elapsed_ms,
+                "retained_disk_bytes": retained_disk_bytes,
+            })
+        );
     }
 }
