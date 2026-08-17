@@ -145,6 +145,8 @@ pub enum RuntimePermissionEvaluation {
     Ask {
         /// Stable approval identity.
         approval_id: ApprovalId,
+        /// Exact operation-grant identity proposed by the trusted boundary.
+        grant_id: GrantId,
         /// Digest of the complete protected preview.
         preview_sha256: String,
         /// Exclusive decision expiration.
@@ -154,6 +156,8 @@ pub enum RuntimePermissionEvaluation {
     Deny {
         /// Exact approval or policy-decision identity.
         approval_id: ApprovalId,
+        /// Exact proposed grant identity retained even though no grant is issued.
+        grant_id: GrantId,
         /// Digest of the complete protected preview.
         preview_sha256: String,
         /// Exclusive decision expiration.
@@ -1462,24 +1466,27 @@ fn permission_challenge(
     call: &ToolCall,
     evaluation: &RuntimePermissionEvaluation,
 ) -> Result<RuntimeApprovalChallenge, RuntimeLoopError> {
-    let (approval_id, preview_sha256, expires_at_epoch_ms) = match evaluation {
+    let (approval_id, proposed_grant_id, preview_sha256, expires_at_epoch_ms) = match evaluation {
         RuntimePermissionEvaluation::Allow {
             approval_id,
+            grant_id,
             preview_sha256,
             expires_at_epoch_ms,
             ..
         }
         | RuntimePermissionEvaluation::Ask {
             approval_id,
+            grant_id,
             preview_sha256,
             expires_at_epoch_ms,
         }
         | RuntimePermissionEvaluation::Deny {
             approval_id,
+            grant_id,
             preview_sha256,
             expires_at_epoch_ms,
             ..
-        } => (approval_id, preview_sha256, *expires_at_epoch_ms),
+        } => (approval_id, grant_id, preview_sha256, *expires_at_epoch_ms),
     };
     Ok(seal_runtime_approval_challenge(RuntimeApprovalChallenge {
         schema_version: CONTRACT_SCHEMA_VERSION,
@@ -1489,6 +1496,7 @@ fn permission_challenge(
         operation_id: operation_id.clone(),
         tool_call_id: call.tool_call_id.clone(),
         approval_id: approval_id.clone(),
+        proposed_grant_id: proposed_grant_id.clone(),
         operation: definition.required_grant.operation.operation(),
         preview_sha256: preview_sha256.clone(),
         expires_at_epoch_ms,
@@ -1600,17 +1608,27 @@ fn valid_permission_evaluation(
         }
         RuntimePermissionEvaluation::Ask {
             approval_id,
+            grant_id,
             preview_sha256,
             expires_at_epoch_ms,
-        } => (approval_id, preview_sha256, expires_at_epoch_ms),
+        } => {
+            if !valid_identifier(grant_id.as_str()) {
+                return false;
+            }
+            (approval_id, preview_sha256, expires_at_epoch_ms)
+        }
         RuntimePermissionEvaluation::Deny {
             approval_id,
+            grant_id,
             preview_sha256,
             expires_at_epoch_ms,
             decision_sha256,
             reason_code,
         } => {
-            if !valid_sha256(decision_sha256) || !valid_code(reason_code) {
+            if !valid_identifier(grant_id.as_str())
+                || !valid_sha256(decision_sha256)
+                || !valid_code(reason_code)
+            {
                 return false;
             }
             (approval_id, preview_sha256, expires_at_epoch_ms)

@@ -107,10 +107,9 @@ pub fn verify_runtime_approval_response(
         || now_epoch_ms >= challenge.expires_at_epoch_ms
         || !valid_sha256(&response.challenge_sha256)
         || match response.disposition {
-            RuntimeApprovalDisposition::Allow => response
-                .grant_id
-                .as_ref()
-                .is_none_or(|grant_id| !valid_identifier(grant_id.as_str())),
+            RuntimeApprovalDisposition::Allow => {
+                response.grant_id.as_ref() != Some(&challenge.proposed_grant_id)
+            }
             RuntimeApprovalDisposition::Deny => response.grant_id.is_some(),
         }
     {
@@ -254,6 +253,7 @@ fn validate_approval_challenge_shape(
         || !valid_identifier(challenge.operation_id.as_str())
         || !valid_identifier(challenge.tool_call_id.as_str())
         || !valid_identifier(challenge.approval_id.as_str())
+        || !valid_identifier(challenge.proposed_grant_id.as_str())
         || !valid_sha256(&challenge.preview_sha256)
         || challenge.expires_at_epoch_ms == 0
         || !valid_sha256(&challenge.challenge_sha256)
@@ -515,17 +515,20 @@ fn sha256(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        RuntimeCoordinatorError, runtime_tool_catalog_sha256, seal_runtime_outcome,
-        seal_runtime_run_request, sha256, verify_runtime_outcome, verify_runtime_run_request,
+        RuntimeCoordinatorError, runtime_tool_catalog_sha256, seal_runtime_approval_challenge,
+        seal_runtime_outcome, seal_runtime_run_request, sha256, verify_runtime_approval_response,
+        verify_runtime_outcome, verify_runtime_run_request,
     };
     use agentmage_kernel_contracts::{
-        AgentStateKind, AuthorityClass, BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION,
-        ContractPayload, DataSensitivity, EvidenceId, EvidenceKind, EvidenceReference, PlanId,
-        ReceiptId, RepositorySnapshotId, RollbackPlan, RuntimeEventCursor, RuntimeEventId,
+        AgentStateKind, ApprovalId, AuthorityClass, BudgetLimit, BudgetResource,
+        CONTRACT_SCHEMA_VERSION, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind,
+        EvidenceReference, GrantId, GrantOperation, PlanId, ReceiptId, RepositorySnapshotId,
+        RollbackPlan, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
+        RuntimeApprovalResponse, RuntimeEventCursor, RuntimeEventId, RuntimeOperationId,
         RuntimeOutcome, RuntimeOutput, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest,
-        RuntimeSessionMode, SchemaId, SchemaReference, SessionId, StopCondition, StopConditionKind,
-        Task, TaskId, TaskStatus, ToolCatalogId, WorkPacket, WorkPacketId, WorkPacketState,
-        WorkspaceId, from_json, to_canonical_json,
+        RuntimeSessionMode, RuntimeTurnId, SchemaId, SchemaReference, SessionId, StopCondition,
+        StopConditionKind, Task, TaskId, TaskStatus, ToolCallId, ToolCatalogId, WorkPacket,
+        WorkPacketId, WorkPacketState, WorkspaceId, from_json, to_canonical_json,
     };
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -706,6 +709,42 @@ mod tests {
         verify_runtime_outcome(&outcome, &request).expect("outcome verifies");
         let bytes = to_canonical_json(&outcome).expect("outcome serializes");
         assert_eq!(from_json::<RuntimeOutcome>(&bytes), Ok(outcome));
+    }
+
+    #[test]
+    fn story_23_4_approval_response_must_echo_the_challenged_grant_identity() {
+        let challenge = seal_runtime_approval_challenge(RuntimeApprovalChallenge {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            run_id: RuntimeRunId::from_raw("runtime-run-approval"),
+            task_id: TaskId::from_raw("task-approval"),
+            turn_id: RuntimeTurnId::from_raw("turn-approval"),
+            operation_id: RuntimeOperationId::from_raw("operation-approval"),
+            tool_call_id: ToolCallId::from_raw("tool-call-approval"),
+            approval_id: ApprovalId::from_raw("approval-runtime"),
+            proposed_grant_id: GrantId::from_raw("grant-runtime"),
+            operation: GrantOperation::WorkspaceRead,
+            preview_sha256: "d".repeat(64),
+            expires_at_epoch_ms: 10_000,
+            challenge_sha256: "0".repeat(64),
+        })
+        .expect("challenge seals");
+        let response = RuntimeApprovalResponse {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            run_id: challenge.run_id.clone(),
+            approval_id: challenge.approval_id.clone(),
+            disposition: RuntimeApprovalDisposition::Allow,
+            challenge_sha256: challenge.challenge_sha256.clone(),
+            grant_id: Some(challenge.proposed_grant_id.clone()),
+        };
+        verify_runtime_approval_response(&challenge, &response, 1_000)
+            .expect("exact grant response verifies");
+
+        let mut substituted = response;
+        substituted.grant_id = Some(GrantId::from_raw("grant-substituted"));
+        assert_eq!(
+            verify_runtime_approval_response(&challenge, &substituted, 1_000),
+            Err(RuntimeCoordinatorError::ApprovalDenied)
+        );
     }
 
     #[test]

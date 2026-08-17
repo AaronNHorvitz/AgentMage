@@ -99,6 +99,8 @@ pub struct RuntimeApprovalChallenge {
     pub tool_call_id: ToolCallId,
     /// Stable protected approval identity.
     pub approval_id: ApprovalId,
+    /// Exact separately controlled operation-grant identity proposed by the trusted boundary.
+    pub proposed_grant_id: GrantId,
     /// Closed canonical operation awaiting approval.
     pub operation: GrantOperation,
     /// Digest of the complete user-visible preview.

@@ -234,6 +234,7 @@ impl FakeToolBoundary {
         if challenge.is_none() && matches!(self.script, PermissionScript::Ask) {
             return RuntimePermissionEvaluation::Ask {
                 approval_id,
+                grant_id: GrantId::from_raw("grant-0001"),
                 preview_sha256,
                 expires_at_epoch_ms,
             };
@@ -242,6 +243,7 @@ impl FakeToolBoundary {
         if disposition == Some(RuntimeApprovalDisposition::Deny) {
             RuntimePermissionEvaluation::Deny {
                 approval_id,
+                grant_id: GrantId::from_raw("grant-0001"),
                 preview_sha256,
                 expires_at_epoch_ms,
                 decision_sha256: sha256(b"deny decision"),
