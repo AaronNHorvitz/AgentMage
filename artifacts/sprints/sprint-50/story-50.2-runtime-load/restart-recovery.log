@@ -1,0 +1,15 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-976e5806ff55a5c7)
+
+running 8 tests
+test runtime_recovery::tests::story_50_2_consumed_or_uncertain_effect_is_never_replayed ... ok
+test runtime_recovery::tests::story_50_2_restart_failures_never_fall_through_to_resume ... ok
+test runtime_recovery::tests::story_50_2_incoherent_observations_fail_closed_before_recovery ... ok
+test runtime_recovery::tests::story_50_2_every_boundary_selects_one_closed_safe_action ... ok
+test runtime_recovery::tests::story_50_2_restart_result_mapping_is_exhaustive ... ok
+test runtime_recovery::tests::story_50_2_missing_stale_or_invalid_durable_evidence_enters_safe_mode ... ok
+test runtime_recovery::tests::story_50_2_write_recovery_plan_is_composed_without_gaining_authority ... ok
+test runtime_recovery::tests::story_50_2_terminal_result_requires_exact_proof_and_no_pending_authority ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 583 filtered out; finished in 0.00s
+

@@ -30,6 +30,7 @@ npm run docs:check
 | Three-client parity | `shells/host/src/runtime_parity_tests.rs` | Identical read-only and controlled-write requests across native Chat, interactive CLI, and workflow caller; exact event, artifact, receipt, checkpoint, evidence, and outcome equality |
 | Authority attack matrix | `shells/host/src/runtime_parity_tests.rs` | Eight narrower-node broadening attempts rejected before one instrumented coordinator advance |
 | Confusion and privacy matrix | Runtime event, journal, projection, artifact, recovery, and CLI verifier modules | Eight required confusion classes reject deterministically without false completion, cross-session disclosure, replay, or unverified presentation |
+| Reference load campaign | `artifacts/sprints/sprint-50/story-50.2-runtime-load` | 8,196-event journal/publisher run, 16 verified reopens, and 39 focused pressure, output, artifact, cancellation, and recovery tests pass on one recorded Fedora host; disposition remains `PARTIAL-PASS` |
 | Real runtime attachment | `shells/host/src/linux_coding_runtime.rs` | Deterministic Linux fake-model no-op and denial paths through the production coordinator composition |
 | Child attachment | `shells/host/src/workflow_assignment.rs` | Bound ancestry/dependencies/depth and authority-free pending-review result |
 | MCP contracts | `kernel/contracts/src/mcp.rs` | Closed transport, manifest, request, response, cancellation, disconnect, error, and receipt schemas |
@@ -58,6 +59,7 @@ built worker manifests. Those ignores are not converted into passes.
 
 Authenticated CLI stdin/history and installed transport, a production runtime
 factory, live MCP transport, installed real-runtime client parity,
-reference-hardware campaigns, Sprints 89-94, complete Sprint 95
+dedicated slow-disk writer isolation, installed reference-hardware campaigns,
+Sprints 89-94, complete Sprint 95
 coordination, supported-platform evidence, independent review, and deferred
 manual fuzzing remain open. No sprint or release gate is closed by this report.

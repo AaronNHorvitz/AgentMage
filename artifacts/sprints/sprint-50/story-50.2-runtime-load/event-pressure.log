@@ -1,0 +1,12 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-976e5806ff55a5c7)
+
+running 5 tests
+test runtime_event::tests::story_50_2_status_coalescing_never_removes_canonical_events ... ok
+test runtime_event::tests::story_50_2_live_batch_stashes_the_first_event_beyond_its_byte_ceiling ... ok
+test runtime_event::tests::story_50_2_replay_rejects_cursor_drift_and_undersized_pages ... ok
+test runtime_event::tests::story_50_2_slow_client_drains_then_reconnects_without_event_loss ... ok
+test runtime_event::tests::story_50_2_replay_pages_reconstruct_the_exact_terminal_chain ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 586 filtered out; finished in 0.00s
+
