@@ -9,27 +9,32 @@ use agentmage_kernel_contracts::{
     EvidenceReference, ExactModelProfile, GrantId, GrantOperation, ModelContextPacket,
     ModelMessage, ModelMessageId, ModelMessageRole, ModelProposalKind, ModelResourceReport,
     ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate,
-    OperationBinding, OperationOutcome, PlanId, PolicyId, PostconditionResult, ReceiptId,
-    RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent,
-    RuntimeEventKind, RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutput, RuntimeRunId,
-    RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference, SessionId,
-    StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall,
-    ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel, VerifierCandidate,
-    VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource, WorkPacket, WorkPacketId,
-    WorkPacketState, WorkspaceId, to_canonical_json,
+    OperationBinding, OperationOutcome, PlanId, PlanStepId, PolicyId, PostconditionResult,
+    ReceiptId, RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan,
+    RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeArtifactManifest,
+    RuntimeArtifactRef, RuntimeEvent, RuntimeEventKind, RuntimeEventRetentionKind,
+    RuntimeOperationId, RuntimeOutput, RuntimeResumeBinding, RuntimeRunId, RuntimeRunLimits,
+    RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference, SessionCheckpoint,
+    SessionCheckpointId, SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId,
+    TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
+    VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
+    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
 use super::{
-    MAX_RUNTIME_INLINE_OUTPUT_BYTES, ReusableRuntimeCoordinator, RuntimeArtifactPort, RuntimeClock,
+    MAX_RUNTIME_INLINE_OUTPUT_BYTES, ReusableRuntimeCoordinator, RuntimeArtifactPort,
+    RuntimeCheckpointCommit, RuntimeCheckpointPort, RuntimeCheckpointPublication, RuntimeClock,
     RuntimeContextPort, RuntimeCoordinatorStep, RuntimeJournalPort, RuntimeLoopError,
-    RuntimeModelPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeToolBoundary,
-    RuntimeToolExecution, RuntimeVerificationInput, RuntimeVerifierPort, derived_id,
-    runtime_action_id, runtime_tool_references,
+    RuntimeModelPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeResumeSnapshot,
+    RuntimeToolBoundary, RuntimeToolExecution, RuntimeVerificationInput, RuntimeVerifierPort,
+    derived_id, runtime_action_id, runtime_event_cursor, runtime_tool_references,
 };
+use crate::context_management::finalize_checkpoint;
 use crate::model_codec::{proposal_digest, tests_support::profile};
-use crate::runtime_artifact::{runtime_artifact_ref, verify_runtime_artifact_manifest};
+use crate::runtime_artifact::{
+    runtime_artifact_ref, seal_runtime_resume_binding, verify_runtime_artifact_manifest,
+};
 use crate::runtime_coordinator::{
     runtime_tool_catalog_sha256, seal_runtime_run_request, verify_runtime_outcome,
 };
@@ -224,6 +229,7 @@ enum PermissionScript {
 }
 
 type PublishedArtifacts = Arc<Mutex<Vec<(RuntimeArtifactManifest, Vec<u8>)>>>;
+type PublishedCheckpoint = Arc<Mutex<Option<RuntimeResumeSnapshot>>>;
 
 struct FakeToolBoundary {
     script: PermissionScript,
@@ -234,6 +240,7 @@ struct FakeToolBoundary {
     journal: Arc<Mutex<Vec<RuntimeEvent>>>,
     journal_flushes: Arc<AtomicUsize>,
     artifacts: PublishedArtifacts,
+    checkpoint: PublishedCheckpoint,
 }
 
 impl FakeToolBoundary {
@@ -433,6 +440,106 @@ impl RuntimeArtifactPort for FakeToolBoundary {
     }
 }
 
+impl RuntimeCheckpointPort for FakeToolBoundary {
+    fn commit_runtime_checkpoint(
+        &mut self,
+        input: RuntimeCheckpointCommit<'_>,
+    ) -> Result<RuntimeCheckpointPublication, RuntimePortFailure> {
+        let mut evidence_ids = input
+            .continuation
+            .evidence
+            .iter()
+            .map(|evidence| evidence.evidence_id.clone())
+            .collect::<Vec<_>>();
+        evidence_ids.sort_by(|left, right| left.as_str().cmp(right.as_str()));
+        let plan_id = input
+            .request
+            .work_packet
+            .plan_id
+            .clone()
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let checkpoint = finalize_checkpoint(SessionCheckpoint {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: SessionCheckpointId::from_raw(format!(
+                "checkpoint-{}",
+                input.continuation.turn_count
+            )),
+            session_id: input.request.session_id.clone(),
+            task_id: input.request.task.task_id.clone(),
+            objective_sha256: sha256(input.request.task.objective.as_bytes()),
+            plan_id,
+            plan_revision: input.request.work_packet.revision,
+            plan_step_id: PlanStepId::from_raw(format!(
+                "runtime-step-{}",
+                input.continuation.turn_count
+            )),
+            next_action_sha256: sha256(b"continue from safe runtime boundary"),
+            workspace_id: input.request.workspace_id.clone(),
+            workspace_state_sha256: input.request.workspace_snapshot_sha256.clone(),
+            repository_snapshot_id: input.request.repository_snapshot_id.clone(),
+            repository_branch: "fixture/main".to_owned(),
+            repository_map_sha256: input.request.repository_snapshot_sha256.clone(),
+            files: Vec::new(),
+            instruction_sha256: sha256(b"fixture instructions"),
+            permission_profile_id: input.request.policy_id.as_str().to_owned(),
+            permission_profile_sha256: input.request.policy_sha256.clone(),
+            policy_id: input.request.policy_id.clone(),
+            policy_sha256: input.request.policy_sha256.clone(),
+            model_profile_id: input.request.model_profile.profile_id.clone(),
+            model_manifest_sha256: input.request.model_profile.manifest_sha256.clone(),
+            model_runtime_sha256: input.request.model_profile.runtime.runtime_sha256.clone(),
+            evidence_ids,
+            citation_set_sha256: sha256(b"fixture citation set"),
+            blockers: Vec::new(),
+            context_packet_sha256: input.continuation.continuation_sha256.clone(),
+            action_id: None,
+            action_state: None,
+            consumed_grant_id: None,
+            receipt_id: None,
+            receipt_sha256: None,
+            ephemeral: false,
+            checkpoint_sha256: "0".repeat(64),
+        })
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        let binding = seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: input.request.session_id.clone(),
+            task_id: input.request.task.task_id.clone(),
+            run_id: input.request.run_id.clone(),
+            event_cursor: input.event_cursor.clone(),
+            artifacts: input.artifacts.to_vec(),
+            binding_sha256: "0".repeat(64),
+        })
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        let snapshot = RuntimeResumeSnapshot {
+            checkpoint: checkpoint.clone(),
+            binding: binding.clone(),
+            continuation: input.continuation.clone(),
+            continuation_artifact: input.continuation_artifact.clone(),
+        };
+        *self
+            .checkpoint
+            .lock()
+            .map_err(|_| RuntimePortFailure::Uncertain)? = Some(snapshot);
+        Ok(RuntimeCheckpointPublication {
+            checkpoint,
+            binding,
+        })
+    }
+
+    fn load_runtime_checkpoint(
+        &mut self,
+        _request: &RuntimeRunRequest,
+    ) -> Result<Option<RuntimeResumeSnapshot>, RuntimePortFailure> {
+        self.checkpoint
+            .lock()
+            .map_err(|_| RuntimePortFailure::Uncertain)
+            .map(|snapshot| snapshot.clone())
+    }
+}
+
 struct FakeVerifier {
     verifier_id: VerifierId,
     source: VerifierSource,
@@ -577,6 +684,7 @@ fn coordinator_for_mode_and_operation(
             journal: Arc::new(Mutex::new(Vec::new())),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts: Arc::new(Mutex::new(Vec::new())),
+            checkpoint: Arc::new(Mutex::new(None)),
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-0001"),
@@ -933,6 +1041,7 @@ fn durable_mode_persists_ordered_session_events_before_terminal_return() {
             journal: Arc::clone(&journal),
             journal_flushes: Arc::clone(&flushes),
             artifacts: Arc::new(Mutex::new(Vec::new())),
+            checkpoint: Arc::new(Mutex::new(None)),
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-durable-0001"),
@@ -986,6 +1095,7 @@ fn durable_large_model_output_is_artifact_backed_and_event_referenced() {
             journal: Arc::clone(&journal),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts: Arc::clone(&artifacts),
+            checkpoint: Arc::new(Mutex::new(None)),
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-artifact-0001"),
@@ -1057,6 +1167,7 @@ fn durable_large_tool_output_is_receipt_bound_before_completion() {
             journal: Arc::clone(&journal),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts: Arc::clone(&artifacts),
+            checkpoint: Arc::new(Mutex::new(None)),
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-tool-artifact-0001"),
@@ -1107,6 +1218,118 @@ fn durable_large_tool_output_is_receipt_bound_before_completion() {
 }
 
 #[test]
+fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
+    let profile = profile("runtime-loop-resume");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let mut request = request(profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("durable request seals");
+    let journal = Arc::new(Mutex::new(Vec::new()));
+    let artifacts = Arc::new(Mutex::new(Vec::new()));
+    let checkpoint = Arc::new(Mutex::new(None));
+    let executions = Arc::new(AtomicUsize::new(0));
+    let mut first = ReusableRuntimeCoordinator::new_with_durable_state(
+        request.clone(),
+        FakeModel::new(profile.clone(), [ModelScript::Tool]),
+        FakeContext,
+        registry_for_operation(GrantOperation::WorkspaceRead),
+        FakeToolBoundary {
+            script: PermissionScript::Allow,
+            executions: Arc::clone(&executions),
+            emit_evidence: true,
+            state_change: StateChange::NotChanged,
+            tool_output_bytes: 0,
+            journal: Arc::clone(&journal),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::clone(&artifacts),
+            checkpoint: Arc::clone(&checkpoint),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-resume-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 6_000 },
+    )
+    .expect("durable coordinator builds");
+    first.start().expect("run starts");
+    first.run_turn(None).expect("first tool turn checkpoints");
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_eq!(first.state.current(), AgentStateKind::Observation);
+    assert!(matches!(
+        first.events().last().map(|event| &event.kind),
+        Some(RuntimeEventKind::CheckpointCommitted { .. })
+    ));
+    let checkpoint_artifact = artifacts
+        .lock()
+        .expect("artifacts remain available")
+        .last()
+        .expect("continuation artifact exists")
+        .0
+        .clone();
+    assert_eq!(
+        checkpoint_artifact.media_type,
+        crate::runtime_artifact::RUNTIME_CONTINUATION_MEDIA_TYPE
+    );
+
+    let cursor = runtime_event_cursor(
+        journal
+            .lock()
+            .expect("journal remains available")
+            .last()
+            .expect("checkpoint marker exists"),
+    );
+    drop(first);
+    let mut resumed_request = request;
+    resumed_request.event_cursor = Some(cursor);
+    resumed_request.request_sha256 = "0".repeat(64);
+    let resumed_request = seal_runtime_run_request(resumed_request).expect("resume request seals");
+    let mut resumed = ReusableRuntimeCoordinator::new_with_durable_state(
+        resumed_request,
+        FakeModel::new(profile, [ModelScript::Completion]),
+        FakeContext,
+        registry_for_operation(GrantOperation::WorkspaceRead),
+        FakeToolBoundary {
+            script: PermissionScript::Allow,
+            executions: Arc::clone(&executions),
+            emit_evidence: true,
+            state_change: StateChange::NotChanged,
+            tool_output_bytes: 0,
+            journal: Arc::clone(&journal),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts,
+            checkpoint,
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-resume-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 6_100 },
+    )
+    .expect("checkpoint reconstructs a fresh coordinator");
+    let RuntimeCoordinatorStep::Complete { outcome } = resumed
+        .run_until_boundary(None, None)
+        .expect("resumed run completes")
+    else {
+        panic!("completion cannot pause");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(outcome.turn_count, 2);
+    assert_eq!(outcome.model_call_count, 2);
+    assert_eq!(outcome.tool_call_count, 1);
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        resumed
+            .events()
+            .iter()
+            .filter(|event| matches!(event.kind, RuntimeEventKind::RunStarted { .. }))
+            .count(),
+        1
+    );
+    assert_valid_terminal_stream(&resumed);
+}
+
+#[test]
 fn ephemeral_mode_cannot_accidentally_attach_a_durable_journal() {
     let profile = profile("runtime-loop-ephemeral-journal");
     let registry = registry_for_operation(GrantOperation::WorkspaceRead);
@@ -1126,6 +1349,7 @@ fn ephemeral_mode_cannot_accidentally_attach_a_durable_journal() {
             journal: Arc::clone(&journal),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts: Arc::new(Mutex::new(Vec::new())),
+            checkpoint: Arc::new(Mutex::new(None)),
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-ephemeral-0001"),

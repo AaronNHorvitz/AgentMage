@@ -10,25 +10,30 @@ use agentmage_kernel_contracts::{
     ModelRunResult, ModelRunTerminalState, OperationOutcome, PostconditionId, ReceiptId,
     RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
     RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactManifest,
-    RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeEvent, RuntimeEventId, RuntimeEventKind,
-    RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutcome,
-    RuntimeOutput, RuntimePayloadReference, RuntimePermissionDisposition, RuntimeRunRequest,
-    RuntimeSessionMode, RuntimeToolReference, RuntimeTurnId, StateChange, ToolCall, ToolDefinition,
-    ToolResult, VerifierCandidate, VerifierId, to_canonical_json,
+    RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeContinuationState, RuntimeEvent,
+    RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventRetention,
+    RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutcome, RuntimeOutput,
+    RuntimePayloadReference, RuntimePermissionDisposition, RuntimeResumeBinding, RuntimeRunRequest,
+    RuntimeSessionMode, RuntimeToolAttemptState, RuntimeToolReference, RuntimeTurnId,
+    SessionCheckpoint, StateChange, ToolCall, ToolDefinition, ToolResult, VerifierCandidate,
+    VerifierId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
 use crate::agent_proposal::{ExpectedProposalContext, ProposalAdmissionRegistry};
 use crate::agent_state::AgentStateController;
 use crate::agent_verifier::{VerifierContext, VerifierRegistry};
+use crate::context_management::verify_checkpoint;
 use crate::model_runtime::{LocalModelController, ModelRuntimeGateError};
 use crate::runtime_artifact::{
-    MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, runtime_artifact_ref, runtime_payload_reference,
-    seal_runtime_artifact_manifest, verify_runtime_artifact_ref,
+    MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, runtime_artifact_ref,
+    runtime_payload_reference, seal_runtime_artifact_manifest, seal_runtime_continuation_state,
+    verify_runtime_artifact_ref, verify_runtime_continuation_state, verify_runtime_resume_binding,
 };
 use crate::runtime_coordinator::{
     RuntimeCoordinatorError, runtime_tool_catalog_sha256, seal_runtime_approval_challenge,
-    seal_runtime_outcome, verify_runtime_approval_response, verify_runtime_run_request,
+    seal_runtime_outcome, seal_runtime_run_request, verify_runtime_approval_response,
+    verify_runtime_run_request,
 };
 use crate::runtime_event::{
     RuntimeEventDelivery, RuntimeEventError, RuntimeEventPublisher, RuntimeEventSubscription,
@@ -254,6 +259,57 @@ pub trait RuntimeArtifactPort {
     ) -> Result<RuntimeArtifactRef, RuntimePortFailure>;
 }
 
+/// Immutable safe-boundary material supplied to the trusted checkpoint host.
+pub struct RuntimeCheckpointCommit<'a> {
+    /// Exact current runtime request.
+    pub request: &'a RuntimeRunRequest,
+    /// Sealed coordinator state represented by the continuation artifact.
+    pub continuation: &'a RuntimeContinuationState,
+    /// Exact continuation artifact reference.
+    pub continuation_artifact: &'a RuntimeArtifactRef,
+    /// Last journal event committed before checkpoint publication.
+    pub event_cursor: &'a RuntimeEventCursor,
+    /// Complete sorted artifact set required by this checkpoint.
+    pub artifacts: &'a [RuntimeArtifactRef],
+}
+
+/// Trusted result of one atomic checkpoint and resume-binding publication.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeCheckpointPublication {
+    /// Canonical metadata-only session checkpoint.
+    pub checkpoint: SessionCheckpoint,
+    /// Exact cursor and artifact set atomically bound to that checkpoint.
+    pub binding: RuntimeResumeBinding,
+}
+
+/// Complete verified material loaded by the trusted host for one restart.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeResumeSnapshot {
+    /// Current metadata-only session checkpoint.
+    pub checkpoint: SessionCheckpoint,
+    /// Exact persisted cursor and artifact set.
+    pub binding: RuntimeResumeBinding,
+    /// Safe-boundary coordinator continuation decoded from private artifact storage.
+    pub continuation: RuntimeContinuationState,
+    /// Exact artifact from which `continuation` was decoded.
+    pub continuation_artifact: RuntimeArtifactRef,
+}
+
+/// Optional atomic checkpoint and private resume boundary implemented by a trusted host.
+pub trait RuntimeCheckpointPort {
+    /// Commits one verified safe boundary after its continuation artifact event is durable.
+    fn commit_runtime_checkpoint(
+        &mut self,
+        input: RuntimeCheckpointCommit<'_>,
+    ) -> Result<RuntimeCheckpointPublication, RuntimePortFailure>;
+
+    /// Loads the one current checkpoint and decoded continuation for an exact resume request.
+    fn load_runtime_checkpoint(
+        &mut self,
+        request: &RuntimeRunRequest,
+    ) -> Result<Option<RuntimeResumeSnapshot>, RuntimePortFailure>;
+}
+
 /// Exact deterministic completion input exposed to a verifier implementation.
 pub struct RuntimeVerificationInput<'a> {
     /// Owning runtime request.
@@ -359,6 +415,16 @@ struct RuntimeArtifactHooks<T> {
     ) -> Result<RuntimeArtifactRef, RuntimePortFailure>,
 }
 
+#[derive(Clone, Copy)]
+struct RuntimeCheckpointHooks<T> {
+    commit: for<'a> fn(
+        &mut T,
+        RuntimeCheckpointCommit<'a>,
+    ) -> Result<RuntimeCheckpointPublication, RuntimePortFailure>,
+    load:
+        fn(&mut T, &RuntimeRunRequest) -> Result<Option<RuntimeResumeSnapshot>, RuntimePortFailure>,
+}
+
 /// One reusable, interface-neutral runtime coordinator.
 pub struct ReusableRuntimeCoordinator<M, X, T, V, C>
 where
@@ -378,6 +444,7 @@ where
     publisher: RuntimeEventPublisher,
     journal: Option<RuntimeJournalHooks<T>>,
     artifact: Option<RuntimeArtifactHooks<T>>,
+    checkpoint: Option<RuntimeCheckpointHooks<T>>,
     state: AgentStateController,
     attempt_guard: ToolAttemptGuard,
     events: Vec<RuntimeEvent>,
@@ -385,6 +452,7 @@ where
     evidence: Vec<EvidenceReference>,
     receipt_ids: Vec<ReceiptId>,
     artifact_references: Vec<RuntimeArtifactRef>,
+    tool_attempts: Vec<RuntimeToolAttemptState>,
     pending: Option<PendingApproval>,
     outcome: Option<RuntimeOutcome>,
     active_turn: Option<RuntimeTurnId>,
@@ -425,6 +493,7 @@ where
             clock,
             None,
             None,
+            None,
         )
     }
 
@@ -454,6 +523,7 @@ where
                 flush: flush_runtime_events::<T>,
                 load: load_runtime_events::<T>,
             }),
+            None,
             None,
         )
     }
@@ -487,6 +557,43 @@ where
             Some(RuntimeArtifactHooks {
                 publish: publish_runtime_artifact::<T>,
             }),
+            None,
+        )
+    }
+
+    /// Composes one fully durable request with journal, artifact, checkpoint, and resume ports.
+    pub fn new_with_durable_state(
+        request: RuntimeRunRequest,
+        model: M,
+        context: X,
+        registry: ToolRegistry,
+        tool_boundary: T,
+        verifier: V,
+        clock: C,
+    ) -> Result<Self, RuntimeLoopError>
+    where
+        T: RuntimeJournalPort + RuntimeArtifactPort + RuntimeCheckpointPort,
+    {
+        Self::compose(
+            request,
+            model,
+            context,
+            registry,
+            tool_boundary,
+            verifier,
+            clock,
+            Some(RuntimeJournalHooks {
+                append: append_runtime_event::<T>,
+                flush: flush_runtime_events::<T>,
+                load: load_runtime_events::<T>,
+            }),
+            Some(RuntimeArtifactHooks {
+                publish: publish_runtime_artifact::<T>,
+            }),
+            Some(RuntimeCheckpointHooks {
+                commit: commit_runtime_checkpoint::<T>,
+                load: load_runtime_checkpoint::<T>,
+            }),
         )
     }
 
@@ -496,16 +603,15 @@ where
         model: M,
         context: X,
         registry: ToolRegistry,
-        mut tool_boundary: T,
+        tool_boundary: T,
         verifier: V,
         clock: C,
         journal: Option<RuntimeJournalHooks<T>>,
         artifact: Option<RuntimeArtifactHooks<T>>,
+        checkpoint: Option<RuntimeCheckpointHooks<T>>,
     ) -> Result<Self, RuntimeLoopError> {
         verify_runtime_run_request(&request)?;
-        if (request.mode == RuntimeSessionMode::DurableReadOnly || request.event_cursor.is_some())
-            && journal.is_none()
-        {
+        if request.mode == RuntimeSessionMode::DurableReadOnly && journal.is_none() {
             return Err(RuntimeLoopError::UnsupportedMode);
         }
         if request.mode == RuntimeSessionMode::EphemeralReadOnly && journal.is_some() {
@@ -516,23 +622,10 @@ where
         {
             return Err(RuntimeLoopError::UnsupportedMode);
         }
-        if let Some(cursor) = &request.event_cursor {
-            let events = (journal.expect("cursor requires journal").load)(
-                &mut tool_boundary,
-                &request.run_id,
-            )
-            .map_err(RuntimeLoopError::Dependency)?;
-            let Some(last) = events.last() else {
-                return Err(RuntimeLoopError::UnsupportedMode);
-            };
-            if last.event_id != cursor.event_id
-                || last.sequence != cursor.sequence
-                || last.event_sha256 != cursor.event_sha256
-            {
-                return Err(RuntimeLoopError::UnsupportedMode);
-            }
-            // Full state reconstruction is admitted only through the checkpoint/artifact resume
-            // contract. A cursor alone is evidence, not enough authority to continue execution.
+        if checkpoint.is_some() && (journal.is_none() || artifact.is_none()) {
+            return Err(RuntimeLoopError::UnsupportedMode);
+        }
+        if request.event_cursor.is_some() && checkpoint.is_none() {
             return Err(RuntimeLoopError::UnsupportedMode);
         }
         if model.exact_profile() != &request.model_profile {
@@ -559,7 +652,7 @@ where
         let correlation_id =
             CorrelationId::from_raw(derived_id("correlation", request.run_id.as_str(), 0));
         let evidence = request.work_packet.authoritative_evidence.clone();
-        Ok(Self {
+        let mut coordinator = Self {
             request,
             model,
             context,
@@ -570,6 +663,7 @@ where
             publisher: RuntimeEventPublisher::new(),
             journal,
             artifact,
+            checkpoint,
             state: AgentStateController::new(),
             attempt_guard,
             events: Vec::new(),
@@ -577,6 +671,7 @@ where
             evidence,
             receipt_ids: Vec::new(),
             artifact_references: Vec::new(),
+            tool_attempts: Vec::new(),
             pending: None,
             outcome: None,
             active_turn: None,
@@ -587,7 +682,11 @@ where
             tool_call_count: 0,
             context_refresh_count: 0,
             no_progress_turns: 0,
-        })
+        };
+        if coordinator.request.event_cursor.is_some() {
+            coordinator.restore_runtime_checkpoint()?;
+        }
+        Ok(coordinator)
     }
 
     /// Registers one bounded ordered event subscriber before or during execution.
@@ -1045,7 +1144,9 @@ where
         proposal: ClosedModelProposal,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
-        if self.tool_call_count >= self.request.limits.max_tool_calls || self.remaining_events() < 7
+        let required_events = if self.checkpoint.is_some() { 9 } else { 7 };
+        if self.tool_call_count >= self.request.limits.max_tool_calls
+            || self.remaining_events() < required_events
         {
             self.state
                 .transition(AgentStateKind::Exhausted)
@@ -1079,9 +1180,18 @@ where
         if receipt.disposition != PreGrantDispatchDisposition::GrantRequired {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
-        self.attempt_guard
+        let attempt = self
+            .attempt_guard
             .record_attempt(&call, 0)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        self.tool_attempts.push(RuntimeToolAttemptState {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            sequence: attempt.sequence,
+            tool_call_id: call.tool_call_id.clone(),
+            semantic_sha256: attempt.semantic_sha256,
+            occurrence: attempt.occurrence,
+            call_depth: attempt.call_depth,
+        });
         let operation_id = RuntimeOperationId::from_raw(derived_id(
             "operation",
             self.request.run_id.as_str(),
@@ -1363,7 +1473,7 @@ where
                     self.state
                         .transition(AgentStateKind::Observation)
                         .map_err(|_| RuntimeLoopError::State)?;
-                    Ok(())
+                    self.persist_safe_boundary()
                 }
             }
             OperationOutcome::Denied => self.finish_tool_non_success(
@@ -1407,6 +1517,151 @@ where
                 "runtime.tool.uncertain",
             ),
         }
+    }
+
+    fn persist_safe_boundary(&mut self) -> Result<(), RuntimeLoopError> {
+        let Some(commit) = self.checkpoint.as_ref().map(|hooks| hooks.commit) else {
+            return Ok(());
+        };
+        if self.state.current() != AgentStateKind::Observation
+            || self.active_turn.is_some()
+            || self.pending.is_some()
+            || self.outcome.is_some()
+            || self.remaining_events() < 2
+        {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
+        let continuation_cursor = runtime_event_cursor(
+            self.events
+                .last()
+                .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+        );
+        let continuation = seal_runtime_continuation_state(RuntimeContinuationState {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            request_sha256: runtime_base_request_sha256(&self.request)?,
+            run_id: self.request.run_id.clone(),
+            session_id: self.request.session_id.clone(),
+            task_id: self.request.task.task_id.clone(),
+            event_cursor: continuation_cursor,
+            agent_state: self.state.current(),
+            agent_state_revision: self.state.revision(),
+            state_transitions: self.state.transitions().to_vec(),
+            turn_count: self.turn_count,
+            model_call_count: self.model_call_count,
+            tool_call_count: self.tool_call_count,
+            context_refresh_count: self.context_refresh_count,
+            no_progress_turns: self.no_progress_turns,
+            tool_attempts: self.tool_attempts.clone(),
+            tool_results: self.tool_results.clone(),
+            evidence: self.evidence.clone(),
+            receipt_ids: self.receipt_ids.clone(),
+            artifacts: self.artifact_references.clone(),
+            continuation_sha256: ZERO_SHA256.to_owned(),
+        })
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let payload = to_canonical_json(&continuation)
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let continuation_artifact = self.publish_artifact_bytes(
+            &payload,
+            RUNTIME_CONTINUATION_MEDIA_TYPE,
+            RuntimeArtifactKind::Report,
+            None,
+            None,
+            None,
+            false,
+        )?;
+        let event_cursor = runtime_event_cursor(
+            self.events
+                .last()
+                .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+        );
+        let mut artifacts = self.artifact_references.clone();
+        artifacts.sort_by(|left, right| left.artifact_id.as_str().cmp(right.artifact_id.as_str()));
+        let publication = commit(
+            &mut self.tool_boundary,
+            RuntimeCheckpointCommit {
+                request: &self.request,
+                continuation: &continuation,
+                continuation_artifact: &continuation_artifact,
+                event_cursor: &event_cursor,
+                artifacts: &artifacts,
+            },
+        )
+        .map_err(RuntimeLoopError::Dependency)?;
+        validate_runtime_checkpoint_publication(
+            &self.request,
+            &continuation,
+            &continuation_artifact,
+            &event_cursor,
+            &artifacts,
+            &publication,
+        )?;
+        self.emit(
+            RuntimeEventKind::CheckpointCommitted {
+                checkpoint_id: publication.checkpoint.checkpoint_id,
+                checkpoint_sha256: publication.checkpoint.checkpoint_sha256,
+            },
+            None,
+            None,
+        )?;
+        Ok(())
+    }
+
+    fn restore_runtime_checkpoint(&mut self) -> Result<(), RuntimeLoopError> {
+        let requested_cursor = self
+            .request
+            .event_cursor
+            .clone()
+            .ok_or(RuntimeLoopError::UnsupportedMode)?;
+        let journal = self
+            .journal
+            .as_ref()
+            .ok_or(RuntimeLoopError::UnsupportedMode)?;
+        let checkpoint = self
+            .checkpoint
+            .as_ref()
+            .ok_or(RuntimeLoopError::UnsupportedMode)?;
+        let events = (journal.load)(&mut self.tool_boundary, &self.request.run_id)
+            .map_err(RuntimeLoopError::Dependency)?;
+        let snapshot = (checkpoint.load)(&mut self.tool_boundary, &self.request)
+            .map_err(RuntimeLoopError::Dependency)?
+            .ok_or(RuntimeLoopError::UnsupportedMode)?;
+        validate_runtime_resume_snapshot(&self.request, &requested_cursor, &events, &snapshot)?;
+
+        let mut restored_state = AgentStateController::new();
+        for expected in &snapshot.continuation.state_transitions {
+            let admitted = restored_state
+                .transition(expected.to)
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+            if admitted != expected {
+                return Err(RuntimeLoopError::InvalidBoundaryResult);
+            }
+        }
+        let restored_guard = ToolAttemptGuard::restore(
+            self.request.limits.max_repeated_tool_calls,
+            self.request.limits.max_tool_call_depth,
+            &snapshot.continuation.tool_attempts,
+        )
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        for event in &events {
+            self.publisher.publish(event.clone())?;
+        }
+
+        self.started_at_epoch_ms = events.first().map(|event| event.occurred_at_epoch_ms);
+        self.events = events;
+        self.state = restored_state;
+        self.attempt_guard = restored_guard;
+        self.tool_results = snapshot.continuation.tool_results;
+        self.evidence = snapshot.continuation.evidence;
+        self.receipt_ids = snapshot.continuation.receipt_ids;
+        self.artifact_references = snapshot.binding.artifacts;
+        self.tool_attempts = snapshot.continuation.tool_attempts;
+        self.turn_count = snapshot.continuation.turn_count;
+        self.model_call_count = snapshot.continuation.model_call_count;
+        self.tool_call_count = snapshot.continuation.tool_call_count;
+        self.context_refresh_count = snapshot.continuation.context_refresh_count;
+        self.no_progress_turns = snapshot.continuation.no_progress_turns;
+        Ok(())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1678,6 +1933,32 @@ where
         if payload.bytes.len() <= MAX_RUNTIME_INLINE_OUTPUT_BYTES || self.artifact.is_none() {
             return Ok(RuntimeOutput::Inline { payload });
         }
+        let payload_reference =
+            runtime_payload_reference_from_artifact(&self.publish_artifact_bytes(
+                &payload.bytes,
+                &payload.media_type,
+                kind,
+                Some(turn_id),
+                operation_id,
+                receipt_id,
+                true,
+            )?)?;
+        Ok(RuntimeOutput::Artifact {
+            reference: payload_reference,
+        })
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn publish_artifact_bytes(
+        &mut self,
+        bytes: &[u8],
+        media_type: &str,
+        kind: RuntimeArtifactKind,
+        turn_id: Option<&RuntimeTurnId>,
+        operation_id: Option<&RuntimeOperationId>,
+        receipt_id: Option<&ReceiptId>,
+        retain_preview: bool,
+    ) -> Result<RuntimeArtifactRef, RuntimeLoopError> {
         let publish = self
             .artifact
             .as_ref()
@@ -1696,9 +1977,9 @@ where
             schema_version: CONTRACT_SCHEMA_VERSION,
             artifact_id: artifact_id.clone(),
             kind,
-            payload_sha256: payload.sha256.clone(),
-            byte_size: payload.bytes.len() as u64,
-            media_type: payload.media_type.clone(),
+            payload_sha256: sha256(bytes),
+            byte_size: bytes.len() as u64,
+            media_type: media_type.to_owned(),
             sensitivity: runtime_sensitivity(&self.request),
             retention: RuntimeEventRetention {
                 kind: RuntimeEventRetentionKind::Session,
@@ -1707,20 +1988,22 @@ where
             session_id: self.request.session_id.clone(),
             task_id: self.request.task.task_id.clone(),
             producer_run_id: self.request.run_id.clone(),
-            producer_turn_id: Some(turn_id.clone()),
+            producer_turn_id: turn_id.cloned(),
             producer_operation_id: operation_id.cloned(),
             receipt_id: receipt_id.cloned(),
             policy_id: self.request.policy_id.clone(),
             policy_sha256: self.request.policy_sha256.clone(),
             created_at_epoch_ms,
             integrity: RuntimeArtifactIntegrityState::Verified,
-            preview: runtime_artifact_preview(&payload.bytes),
+            preview: retain_preview
+                .then(|| runtime_artifact_preview(bytes))
+                .flatten(),
             manifest_sha256: ZERO_SHA256.to_owned(),
         })
         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         let expected =
             runtime_artifact_ref(&manifest).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
-        let reference = publish(&mut self.tool_boundary, manifest.clone(), &payload.bytes)
+        let reference = publish(&mut self.tool_boundary, manifest.clone(), bytes)
             .map_err(RuntimeLoopError::Dependency)?;
         verify_runtime_artifact_ref(&reference, &manifest)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
@@ -1735,14 +2018,12 @@ where
                 artifact_id,
                 manifest_sha256: manifest.manifest_sha256,
             },
-            Some(turn_id),
+            turn_id,
             operation_id,
             Some(payload_reference.clone()),
         )?;
-        self.artifact_references.push(reference);
-        Ok(RuntimeOutput::Artifact {
-            reference: payload_reference,
-        })
+        self.artifact_references.push(reference.clone());
+        Ok(reference)
     }
 
     fn remaining_events(&self) -> u32 {
@@ -1788,6 +2069,211 @@ fn publish_runtime_artifact<T: RuntimeArtifactPort>(
     payload: &[u8],
 ) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
     port.publish_runtime_artifact(manifest, payload)
+}
+
+fn commit_runtime_checkpoint<T: RuntimeCheckpointPort>(
+    port: &mut T,
+    input: RuntimeCheckpointCommit<'_>,
+) -> Result<RuntimeCheckpointPublication, RuntimePortFailure> {
+    port.commit_runtime_checkpoint(input)
+}
+
+fn load_runtime_checkpoint<T: RuntimeCheckpointPort>(
+    port: &mut T,
+    request: &RuntimeRunRequest,
+) -> Result<Option<RuntimeResumeSnapshot>, RuntimePortFailure> {
+    port.load_runtime_checkpoint(request)
+}
+
+fn runtime_payload_reference_from_artifact(
+    reference: &RuntimeArtifactRef,
+) -> Result<RuntimePayloadReference, RuntimeLoopError> {
+    if reference.byte_size == 0
+        || !valid_identifier(reference.artifact_id.as_str())
+        || !valid_sha256(&reference.payload_sha256)
+        || !valid_media_type(&reference.media_type)
+    {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    }
+    Ok(RuntimePayloadReference {
+        artifact_id: reference.artifact_id.clone(),
+        sha256: reference.payload_sha256.clone(),
+        byte_size: reference.byte_size,
+        media_type: reference.media_type.clone(),
+    })
+}
+
+fn runtime_base_request_sha256(request: &RuntimeRunRequest) -> Result<String, RuntimeLoopError> {
+    let mut base = request.clone();
+    base.event_cursor = None;
+    base.request_sha256 = ZERO_SHA256.to_owned();
+    seal_runtime_run_request(base)
+        .map(|sealed| sealed.request_sha256)
+        .map_err(RuntimeLoopError::Contract)
+}
+
+fn runtime_event_cursor(event: &RuntimeEvent) -> RuntimeEventCursor {
+    RuntimeEventCursor {
+        run_id: event.run_id.clone(),
+        event_id: event.event_id.clone(),
+        sequence: event.sequence,
+        event_sha256: event.event_sha256.clone(),
+    }
+}
+
+fn validate_runtime_checkpoint_publication(
+    request: &RuntimeRunRequest,
+    continuation: &RuntimeContinuationState,
+    continuation_artifact: &RuntimeArtifactRef,
+    event_cursor: &RuntimeEventCursor,
+    artifacts: &[RuntimeArtifactRef],
+    publication: &RuntimeCheckpointPublication,
+) -> Result<(), RuntimeLoopError> {
+    verify_checkpoint(&publication.checkpoint)
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+    verify_runtime_continuation_state(continuation)
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+    verify_runtime_resume_binding(&publication.binding)
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+    let checkpoint = &publication.checkpoint;
+    let binding = &publication.binding;
+    let mut expected_artifacts = continuation.artifacts.clone();
+    expected_artifacts.push(continuation_artifact.clone());
+    expected_artifacts
+        .sort_by(|left, right| left.artifact_id.as_str().cmp(right.artifact_id.as_str()));
+    let mut evidence_ids = continuation
+        .evidence
+        .iter()
+        .map(|evidence| evidence.evidence_id.clone())
+        .collect::<Vec<_>>();
+    evidence_ids.sort_by(|left, right| left.as_str().cmp(right.as_str()));
+    if continuation.request_sha256 != runtime_base_request_sha256(request)?
+        || continuation_artifact.media_type != RUNTIME_CONTINUATION_MEDIA_TYPE
+        || expected_artifacts != artifacts
+        || binding.artifacts != artifacts
+        || checkpoint.ephemeral
+        || checkpoint.session_id != request.session_id
+        || checkpoint.task_id != request.task.task_id
+        || checkpoint.objective_sha256 != sha256(request.task.objective.as_bytes())
+        || request.work_packet.plan_id.as_ref() != Some(&checkpoint.plan_id)
+        || checkpoint.plan_revision != request.work_packet.revision
+        || checkpoint.workspace_id != request.workspace_id
+        || checkpoint.workspace_state_sha256 != request.workspace_snapshot_sha256
+        || checkpoint.repository_snapshot_id != request.repository_snapshot_id
+        || checkpoint.repository_map_sha256 != request.repository_snapshot_sha256
+        || checkpoint.permission_profile_id != request.policy_id.as_str()
+        || checkpoint.permission_profile_sha256 != request.policy_sha256
+        || checkpoint.policy_id != request.policy_id
+        || checkpoint.policy_sha256 != request.policy_sha256
+        || checkpoint.model_profile_id != request.model_profile.profile_id
+        || checkpoint.model_manifest_sha256 != request.model_profile.manifest_sha256
+        || checkpoint.model_runtime_sha256 != request.model_profile.runtime.runtime_sha256
+        || checkpoint.evidence_ids != evidence_ids
+        || checkpoint.context_packet_sha256 != continuation.continuation_sha256
+        || checkpoint.action_id.is_some()
+        || checkpoint.action_state.is_some()
+        || checkpoint.consumed_grant_id.is_some()
+        || checkpoint.receipt_id.is_some()
+        || checkpoint.receipt_sha256.is_some()
+        || binding.checkpoint_id != checkpoint.checkpoint_id
+        || binding.checkpoint_sha256 != checkpoint.checkpoint_sha256
+        || binding.session_id != request.session_id
+        || binding.task_id != request.task.task_id
+        || binding.run_id != request.run_id
+        || &binding.event_cursor != event_cursor
+    {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    }
+    Ok(())
+}
+
+fn validate_runtime_resume_snapshot(
+    request: &RuntimeRunRequest,
+    requested_cursor: &RuntimeEventCursor,
+    events: &[RuntimeEvent],
+    snapshot: &RuntimeResumeSnapshot,
+) -> Result<(), RuntimeLoopError> {
+    if events.is_empty() || events.len() > request.limits.max_events as usize {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    }
+    let last = events
+        .last()
+        .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
+    if &runtime_event_cursor(last) != requested_cursor {
+        return Err(RuntimeLoopError::UnsupportedMode);
+    }
+    validate_runtime_checkpoint_publication(
+        request,
+        &snapshot.continuation,
+        &snapshot.continuation_artifact,
+        &snapshot.binding.event_cursor,
+        &snapshot.binding.artifacts,
+        &RuntimeCheckpointPublication {
+            checkpoint: snapshot.checkpoint.clone(),
+            binding: snapshot.binding.clone(),
+        },
+    )?;
+    let RuntimeEventKind::RunStarted { request_sha256 } = &events[0].kind else {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    };
+    if request_sha256 != &snapshot.continuation.request_sha256 {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    }
+    let continuation_index = usize::try_from(snapshot.continuation.event_cursor.sequence)
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+    let binding_index = usize::try_from(snapshot.binding.event_cursor.sequence)
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+    let expected_binding_index = continuation_index
+        .checked_add(1)
+        .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
+    if binding_index != expected_binding_index
+        || continuation_index >= events.len()
+        || binding_index >= events.len()
+        || runtime_event_cursor(&events[continuation_index]) != snapshot.continuation.event_cursor
+        || runtime_event_cursor(&events[binding_index]) != snapshot.binding.event_cursor
+        || !matches!(
+            events[continuation_index].kind,
+            RuntimeEventKind::TurnCompleted { .. }
+        )
+    {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    }
+    let RuntimeEventKind::ArtifactCreated {
+        artifact_id,
+        manifest_sha256,
+    } = &events[binding_index].kind
+    else {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    };
+    let expected_payload =
+        runtime_payload_reference_from_artifact(&snapshot.continuation_artifact)?;
+    if artifact_id != &snapshot.continuation_artifact.artifact_id
+        || manifest_sha256 != &snapshot.continuation_artifact.manifest_sha256
+        || events[binding_index].turn_id.is_some()
+        || events[binding_index].operation_id.is_some()
+        || events[binding_index].payload_reference.as_ref() != Some(&expected_payload)
+    {
+        return Err(RuntimeLoopError::InvalidBoundaryResult);
+    }
+    match events.len().saturating_sub(binding_index) {
+        1 => {}
+        2 => {
+            let RuntimeEventKind::CheckpointCommitted {
+                checkpoint_id,
+                checkpoint_sha256,
+            } = &events[binding_index + 1].kind
+            else {
+                return Err(RuntimeLoopError::InvalidBoundaryResult);
+            };
+            if checkpoint_id != &snapshot.checkpoint.checkpoint_id
+                || checkpoint_sha256 != &snapshot.checkpoint.checkpoint_sha256
+            {
+                return Err(RuntimeLoopError::InvalidBoundaryResult);
+            }
+        }
+        _ => return Err(RuntimeLoopError::InvalidBoundaryResult),
+    }
+    Ok(())
 }
 
 fn tool_artifact_kind(definition: &ToolDefinition, media_type: &str) -> RuntimeArtifactKind {
