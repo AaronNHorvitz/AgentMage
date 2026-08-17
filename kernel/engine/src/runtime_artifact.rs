@@ -2911,6 +2911,89 @@ mod tests {
     }
 
     #[test]
+    fn story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read() {
+        let canaries = [
+            "SYNTHETIC_SECRET_CANARY_21_2",
+            "SYNTHETIC_RESTRICTED_CONTENT_21_2",
+            "SYNTHETIC_PROMPT_CANARY_21_2",
+            "SYNTHETIC_TOKEN_FRAGMENT_21_2",
+            "/synthetic/private/path/canary-21-2",
+            "SYNTHETIC_ENV_CANARY_21_2=value",
+            "syntheticcredentialcanarydeadbeef",
+        ];
+        let payload_bytes = canaries.join(" ").into_bytes();
+        let maximum_bytes = payload_bytes
+            .len()
+            .try_into()
+            .expect("bounded canary fixture size fits u64");
+        let mut candidate = manifest_with_id("runtime-artifact-canary-21-2");
+        candidate.payload_sha256 = super::sha256(&payload_bytes);
+        candidate.byte_size = maximum_bytes;
+        candidate.preview = None;
+        let candidate = seal_runtime_artifact_manifest(candidate).expect("canary manifest seals");
+
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+        let publication = runtime
+            .publish_runtime_artifact(&mut payloads, candidate, &mut Cursor::new(&payload_bytes))
+            .expect("canary artifact publishes under explicit metadata");
+        let payload_reference =
+            runtime_payload_reference(&publication.manifest).expect("event reference projects");
+
+        let metadata_bytes = serde_json::to_vec(&(
+            &publication.manifest,
+            &publication.reference,
+            &payload_reference,
+        ))
+        .expect("artifact metadata projections serialize");
+        for canary in &canaries {
+            assert!(
+                !metadata_bytes
+                    .windows(canary.len())
+                    .any(|window| window == canary.as_bytes()),
+                "path-free artifact metadata retained payload content"
+            );
+        }
+
+        let read = runtime
+            .read_runtime_artifact(
+                &payloads,
+                &RuntimeArtifactReadRequest {
+                    session_id: SessionId::from_raw("session-1"),
+                    task_id: TaskId::from_raw("task-1"),
+                    policy_sha256: digest('b'),
+                    reference: publication.reference.clone(),
+                    now_epoch_ms: 2,
+                    maximum_bytes,
+                },
+            )
+            .expect("exact owner-bound artifact read succeeds");
+        assert_eq!(read, payload_bytes);
+
+        assert_eq!(
+            runtime.read_runtime_artifact(
+                &payloads,
+                &RuntimeArtifactReadRequest {
+                    session_id: SessionId::from_raw("session-other"),
+                    task_id: TaskId::from_raw("task-1"),
+                    policy_sha256: digest('b'),
+                    reference: publication.reference,
+                    now_epoch_ms: 2,
+                    maximum_bytes,
+                },
+            ),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotAuthorized
+            ))
+        );
+
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
     fn manifest_digest_or_reference_drift_fails_closed() {
         let manifest = manifest();
         let mut changed = manifest.clone();

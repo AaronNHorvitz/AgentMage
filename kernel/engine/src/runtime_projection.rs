@@ -1267,7 +1267,7 @@ mod tests {
     }
 
     #[test]
-    fn story_21_2_sensitive_canaries_require_exclusion_or_explicit_text_retention() {
+    fn story_21_2_sensitive_canaries_are_excluded_or_restricted_in_every_projection() {
         let canaries = [
             "SYNTHETIC_SECRET_CANARY_21_2",
             "SYNTHETIC_RESTRICTED_CONTENT_21_2",
@@ -1310,7 +1310,7 @@ mod tests {
         assert!(projection.user_turn.text.is_none());
         assert!(projection.assistant_turn.text.is_none());
         let projection_bytes = serde_json::to_vec(&projection).expect("projection serializes");
-        for canary in canaries {
+        for canary in &canaries {
             assert!(
                 !projection_bytes
                     .windows(canary.len())
@@ -1371,6 +1371,124 @@ mod tests {
         };
         progress_canary.event_sha256 = ZERO_SHA256.to_owned();
         assert!(seal_runtime_event(progress_canary).is_err());
+
+        let diagnostic_event = event(
+            &request,
+            5,
+            ContextSensitivity::Private,
+            RuntimeEventKind::ModelFailed {
+                model_run_id: agentmage_kernel_contracts::ModelRunId::from_raw("model-canary-safe"),
+                failure_code: "runtime.model.timed_out".to_owned(),
+            },
+        );
+        let metric_event = event(
+            &request,
+            6,
+            ContextSensitivity::Internal,
+            RuntimeEventKind::Metric {
+                name: "runtime.queue.depth".to_owned(),
+                value: 1,
+            },
+        );
+        let mut collector =
+            RuntimeProjectionCollector::new(projection_policy, &request).expect("canary collector");
+        assert_eq!(
+            collector
+                .collect_event(&diagnostic_event)
+                .expect("diagnostic projects")
+                .diagnostics_added,
+            1
+        );
+        assert_eq!(
+            collector
+                .collect_event(&metric_event)
+                .expect("metric projects")
+                .metrics_added,
+            1
+        );
+
+        let content_free_projections = serde_json::to_vec(&(
+            [&diagnostic_event, &metric_event],
+            collector.diagnostics(),
+            collector.metrics(),
+        ))
+        .expect("canonical journal, client, diagnostic, and metric projections serialize");
+        for canary in &canaries {
+            assert!(
+                !content_free_projections
+                    .windows(canary.len())
+                    .any(|window| window == canary.as_bytes()),
+                "a content-free runtime projection retained a synthetic canary"
+            );
+        }
+    }
+
+    #[test]
+    fn story_21_2_projection_runtime_has_no_external_telemetry_dependency() {
+        const ENGINE_MANIFEST: &str = include_str!("../Cargo.toml");
+        const PROJECTION_SOURCES: [(&str, &str); 5] = [
+            ("runtime_event", include_str!("runtime_event.rs")),
+            ("runtime_journal", include_str!("runtime_journal.rs")),
+            ("runtime_projection", include_str!("runtime_projection.rs")),
+            ("runtime_artifact", include_str!("runtime_artifact.rs")),
+            (
+                "cli_runtime",
+                include_str!("../../../shells/host/src/cli_runtime.rs"),
+            ),
+        ];
+        const FORBIDDEN_NETWORK_APIS: [&str; 11] = [
+            "std::net",
+            "TcpStream",
+            "UdpSocket",
+            "reqwest",
+            "hyper::",
+            "ureq",
+            "opentelemetry",
+            "sentry::",
+            "datadog",
+            "curl::",
+            "WebSocket",
+        ];
+
+        let dependencies = ENGINE_MANIFEST
+            .split_once("[dependencies]")
+            .expect("kernel engine dependency section exists")
+            .1
+            .split("\n[")
+            .next()
+            .expect("kernel engine dependency section terminates");
+        let observed = dependencies
+            .lines()
+            .filter_map(|line| {
+                let line = line.trim();
+                (!line.is_empty() && !line.starts_with('#'))
+                    .then(|| line.split_once('=').map(|(name, _)| name.trim()))
+                    .flatten()
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            observed,
+            [
+                "agentmage-kernel-contracts.workspace",
+                "ed25519-dalek.workspace",
+                "serde.workspace",
+                "serde_json.workspace",
+                "sha2.workspace",
+                "rusqlite.workspace",
+                "zeroize.workspace",
+            ],
+            "the security-authoritative runtime dependency surface changed"
+        );
+
+        for (component, source) in PROJECTION_SOURCES {
+            let production = source.split("#[cfg(test)]").next().unwrap_or(source);
+            for forbidden in FORBIDDEN_NETWORK_APIS {
+                assert!(
+                    !production.contains(forbidden),
+                    "{component} gained an external network or telemetry API"
+                );
+            }
+        }
     }
 
     #[test]
