@@ -13,7 +13,8 @@ use std::time::Duration;
 use agentmage_kernel_contracts::{
     ActionState, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
     CapabilityGrant, GrantId, GrantNonce, GrantStatus, OperationOutcome, Receipt,
-    SessionCheckpoint, StrictLocalStorageObservation, from_json, to_canonical_json,
+    RuntimeResumeBinding, SessionCheckpoint, StrictLocalStorageObservation, from_json,
+    to_canonical_json,
 };
 use rusqlite::{
     Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior, params,
@@ -37,6 +38,13 @@ use crate::grants::{
     DerivedOperationGrantRequest, GrantIssueError, GrantIssuer, SessionReadGrantRequest,
 };
 use crate::policy::PolicyEngine;
+use crate::runtime_artifact::{
+    RuntimeArtifactPayloadStore, RuntimeArtifactPublication, RuntimeArtifactReadRequest,
+    RuntimeArtifactReconciliation, RuntimeArtifactState, RuntimeArtifactStoreError,
+    current_runtime_resume_binding, persist_runtime_resume_binding, publish_runtime_artifact,
+    read_runtime_artifact, reconcile_runtime_artifacts, release_runtime_artifact,
+    runtime_artifact_state, verify_all as verify_runtime_artifacts, verify_runtime_resume_binding,
+};
 use crate::runtime_journal::{
     RuntimeJournalAppend, RuntimeJournalError, RuntimeJournalLimits, RuntimeJournalWriter,
     current_cursor, load_run_events, verify_all as verify_runtime_journal,
@@ -52,7 +60,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 6;
+const SCHEMA_VERSION: i64 = 7;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -129,6 +137,8 @@ const MIGRATION_5_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0005-conversation-library.sql");
 const MIGRATION_6_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0006-runtime-journal.sql");
+const MIGRATION_7_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0007-runtime-artifacts.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -959,6 +969,7 @@ impl OperationalStore {
     ) -> Result<(GrantIssuer, AuthorityTransactionCoordinator), OperationalStoreError> {
         verify_integrity(&self.connection)?;
         verify_runtime_journal(self).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        verify_runtime_artifacts(self).map_err(|_| OperationalStoreError::IntegrityFailure)?;
         let generation: i64 = self
             .connection
             .query_row(
@@ -1059,7 +1070,7 @@ impl OperationalStore {
             &state_sha256,
             issuer,
             coordinator,
-            None,
+            SnapshotContinuity::default(),
         );
         match result {
             Ok(()) => {
@@ -1095,7 +1106,52 @@ impl OperationalStore {
             &state_sha256,
             issuer,
             coordinator,
-            Some(checkpoint),
+            SnapshotContinuity {
+                session_checkpoint: Some(checkpoint),
+                runtime_resume_binding: None,
+            },
+        );
+        match result {
+            Ok(()) => {
+                self.generation = next_generation;
+                Ok(())
+            }
+            Err(error) => {
+                self.poisoned = true;
+                Err(error)
+            }
+        }
+    }
+
+    fn persist_authority_with_runtime_checkpoint(
+        &mut self,
+        issuer: &GrantIssuer,
+        coordinator: &AuthorityTransactionCoordinator,
+        checkpoint: &SessionCheckpoint,
+        binding: &RuntimeResumeBinding,
+    ) -> Result<(), OperationalStoreError> {
+        if self.poisoned {
+            return Err(OperationalStoreError::Poisoned);
+        }
+        validate_checkpoint_authority_binding(issuer, coordinator, checkpoint)?;
+        verify_runtime_resume_binding(binding)
+            .map_err(|_| OperationalStoreError::CheckpointRejected)?;
+        let next_generation = self
+            .generation
+            .checked_add(1)
+            .ok_or(OperationalStoreError::PersistenceFailure)?;
+        let state_sha256 = authority_state_sha256(issuer, coordinator)?;
+        let result = persist_snapshot(
+            &mut self.connection,
+            self.generation,
+            next_generation,
+            &state_sha256,
+            issuer,
+            coordinator,
+            SnapshotContinuity {
+                session_checkpoint: Some(checkpoint),
+                runtime_resume_binding: Some(binding),
+            },
         );
         match result {
             Ok(()) => {
@@ -1152,6 +1208,8 @@ pub enum DurableAuthorityError {
     FilesystemTransaction(FilesystemTransactionError),
     /// The durable runtime-event journal rejected or could not commit an event.
     RuntimeJournal(RuntimeJournalError),
+    /// Runtime artifact metadata, payload storage, ownership, or integrity failed.
+    RuntimeArtifact(RuntimeArtifactStoreError),
 }
 
 impl DurableAuthorityRuntime {
@@ -1212,6 +1270,14 @@ impl DurableAuthorityRuntime {
         self.store
             .current_session_checkpoint()
             .map_err(DurableAuthorityError::Store)
+    }
+
+    /// Returns the current verified runtime cursor and artifact binding, when enabled.
+    pub fn current_runtime_resume_binding(
+        &self,
+    ) -> Result<Option<RuntimeResumeBinding>, DurableAuthorityError> {
+        self.ensure_usable()?;
+        current_runtime_resume_binding(&self.store).map_err(DurableAuthorityError::RuntimeArtifact)
     }
 
     /// Replaces the empty runtime-journal queue with explicitly bounded writer limits.
@@ -1299,6 +1365,92 @@ impl DurableAuthorityRuntime {
         current_cursor(&self.store, run_id).map_err(DurableAuthorityError::RuntimeJournal)
     }
 
+    /// Publishes one bounded payload through private staging and canonical metadata.
+    pub fn publish_runtime_artifact<S: RuntimeArtifactPayloadStore>(
+        &mut self,
+        payloads: &mut S,
+        manifest: agentmage_kernel_contracts::RuntimeArtifactManifest,
+        source: &mut dyn std::io::Read,
+    ) -> Result<RuntimeArtifactPublication, DurableAuthorityError> {
+        self.ensure_usable()?;
+        match publish_runtime_artifact(&mut self.store, payloads, manifest, source) {
+            Ok(publication) => Ok(publication),
+            Err(error) => {
+                if error.poisons_runtime() {
+                    self.poisoned = true;
+                }
+                Err(DurableAuthorityError::RuntimeArtifact(error))
+            }
+        }
+    }
+
+    /// Returns content-free current state for one exact path-free artifact reference.
+    pub fn runtime_artifact_state(
+        &self,
+        reference: &agentmage_kernel_contracts::RuntimeArtifactRef,
+    ) -> Result<RuntimeArtifactState, DurableAuthorityError> {
+        self.ensure_usable()?;
+        runtime_artifact_state(&self.store, reference)
+            .map_err(DurableAuthorityError::RuntimeArtifact)
+    }
+
+    /// Reads complete verified bytes only for their exact session, task, policy, and ceiling.
+    pub fn read_runtime_artifact<S: RuntimeArtifactPayloadStore>(
+        &self,
+        payloads: &S,
+        request: &RuntimeArtifactReadRequest,
+    ) -> Result<Vec<u8>, DurableAuthorityError> {
+        self.ensure_usable()?;
+        read_runtime_artifact(&self.store, payloads, request)
+            .map_err(DurableAuthorityError::RuntimeArtifact)
+    }
+
+    /// Releases one exact owned artifact reference without deleting shared payload bytes early.
+    pub fn release_runtime_artifact(
+        &mut self,
+        session_id: &agentmage_kernel_contracts::SessionId,
+        task_id: &agentmage_kernel_contracts::TaskId,
+        policy_sha256: &str,
+        reference: &agentmage_kernel_contracts::RuntimeArtifactRef,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<RuntimeArtifactState, DurableAuthorityError> {
+        self.ensure_usable()?;
+        match release_runtime_artifact(
+            &mut self.store,
+            session_id,
+            task_id,
+            policy_sha256,
+            reference,
+            occurred_at_epoch_ms,
+        ) {
+            Ok(state) => Ok(state),
+            Err(error) => {
+                if error.poisons_runtime() {
+                    self.poisoned = true;
+                }
+                Err(DurableAuthorityError::RuntimeArtifact(error))
+            }
+        }
+    }
+
+    /// Reconciles private payload objects with canonical metadata during trusted startup.
+    pub fn reconcile_runtime_artifacts<S: RuntimeArtifactPayloadStore>(
+        &mut self,
+        payloads: &mut S,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimeArtifactReconciliation, DurableAuthorityError> {
+        self.ensure_usable()?;
+        match reconcile_runtime_artifacts(&mut self.store, payloads, now_epoch_ms) {
+            Ok(report) => Ok(report),
+            Err(error) => {
+                if error.poisons_runtime() {
+                    self.poisoned = true;
+                }
+                Err(DurableAuthorityError::RuntimeArtifact(error))
+            }
+        }
+    }
+
     /// Publishes a safe-boundary checkpoint with the unchanged canonical authority state.
     pub fn checkpoint_session(
         &mut self,
@@ -1307,6 +1459,36 @@ impl DurableAuthorityRuntime {
         self.ensure_usable()?;
         self.store
             .persist_authority_with_session_checkpoint(&self.issuer, &self.coordinator, checkpoint)
+            .map_err(|error| self.poison(error))
+    }
+
+    /// Atomically publishes one safe checkpoint with its committed cursor and artifact set.
+    pub fn checkpoint_runtime_session(
+        &mut self,
+        checkpoint: &SessionCheckpoint,
+        binding: &RuntimeResumeBinding,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        verify_runtime_resume_binding(binding)
+            .map_err(|error| DurableAuthorityError::RuntimeArtifact(error.into()))?;
+        self.flush_runtime_events()?;
+        let cursor = current_cursor(&self.store, &binding.run_id)
+            .map_err(DurableAuthorityError::RuntimeJournal)?
+            .ok_or(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotFound,
+            ))?;
+        if cursor != binding.event_cursor {
+            return Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotAuthorized,
+            ));
+        }
+        self.store
+            .persist_authority_with_runtime_checkpoint(
+                &self.issuer,
+                &self.coordinator,
+                checkpoint,
+                binding,
+            )
             .map_err(|error| self.poison(error))
     }
 
@@ -1920,6 +2102,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 6_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 6;
+    }
+    if version == 6 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_7_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (7, ?1)",
+                [sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -1946,11 +2149,18 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (4, sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())),
             (5, sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())),
             (6, sha256_hex(MIGRATION_6_SCHEMA_SQL.as_bytes())),
+            (7, sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
     }
     Ok(())
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+struct SnapshotContinuity<'a> {
+    session_checkpoint: Option<&'a SessionCheckpoint>,
+    runtime_resume_binding: Option<&'a RuntimeResumeBinding>,
 }
 
 fn persist_snapshot(
@@ -1960,7 +2170,7 @@ fn persist_snapshot(
     state_sha256: &str,
     issuer: &GrantIssuer,
     coordinator: &AuthorityTransactionCoordinator,
-    session_checkpoint: Option<&SessionCheckpoint>,
+    continuity: SnapshotContinuity<'_>,
 ) -> Result<(), OperationalStoreError> {
     let expected_generation = i64::try_from(expected_generation)
         .map_err(|_| OperationalStoreError::PersistenceFailure)?;
@@ -1982,7 +2192,7 @@ fn persist_snapshot(
     }
     persist_grants(&transaction, issuer)?;
     persist_transactions(&transaction, coordinator)?;
-    let session_checkpoint_sha256 = session_checkpoint.map_or_else(
+    let session_checkpoint_sha256 = continuity.session_checkpoint.map_or_else(
         || retained_session_checkpoint.clone(),
         |checkpoint| checkpoint.checkpoint_sha256.clone(),
     );
@@ -2010,7 +2220,7 @@ fn persist_snapshot(
             params![next_generation, state_sha256, &session_checkpoint_sha256],
         )
         .map_err(|_| OperationalStoreError::PersistenceFailure)?;
-    if let Some(checkpoint) = session_checkpoint {
+    if let Some(checkpoint) = continuity.session_checkpoint {
         let record_json =
             to_canonical_json(checkpoint).map_err(|_| OperationalStoreError::CheckpointRejected)?;
         transaction
@@ -2026,6 +2236,24 @@ fn persist_snapshot(
                 ],
             )
             .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+        if let Some(binding) = continuity.runtime_resume_binding {
+            persist_runtime_resume_binding(&transaction, checkpoint, binding).map_err(|error| {
+                match error {
+                    RuntimeArtifactStoreError::Storage => OperationalStoreError::PersistenceFailure,
+                    RuntimeArtifactStoreError::Contract(_)
+                    | RuntimeArtifactStoreError::NotAuthorized
+                    | RuntimeArtifactStoreError::NotFound => {
+                        OperationalStoreError::CheckpointRejected
+                    }
+                    RuntimeArtifactStoreError::Payload(_)
+                    | RuntimeArtifactStoreError::Integrity => {
+                        OperationalStoreError::IntegrityFailure
+                    }
+                }
+            })?;
+        }
+    } else if continuity.runtime_resume_binding.is_some() {
+        return Err(OperationalStoreError::CheckpointRejected);
     }
     transaction
         .commit()
@@ -3143,6 +3371,22 @@ const DERIVED_EXPORT_QUERIES: &[DerivedExportQuery] = &[
         sql: "SELECT retention_id, revision, event_sha256 FROM retention_events",
     },
     DerivedExportQuery {
+        family: "runtime_artifact_events",
+        sql: "SELECT artifact_id, revision, event_sha256 FROM runtime_artifact_events",
+    },
+    DerivedExportQuery {
+        family: "runtime_artifacts",
+        sql: "SELECT artifact_id, 0, manifest_sha256 FROM runtime_artifacts",
+    },
+    DerivedExportQuery {
+        family: "runtime_events",
+        sql: "SELECT event_id, sequence, event_sha256 FROM runtime_events",
+    },
+    DerivedExportQuery {
+        family: "runtime_resume_bindings",
+        sql: "SELECT checkpoint_id, 0, binding_sha256 FROM runtime_resume_bindings",
+    },
+    DerivedExportQuery {
         family: "sessions",
         sql: "SELECT session_id, 0, record_sha256 FROM sessions",
     },
@@ -3464,12 +3708,13 @@ mod tests {
 
     use super::{
         MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL,
-        MIGRATION_4_SCHEMA_SQL, MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, OperationalStore,
-        OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyLifecycle,
-        OperationalStoreKeyProvider, RetentionAssignment, RetentionDisposition, RetentionHoldKind,
-        RetentionRecordFamily, RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256,
-        is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_file,
-        sha256_hex, sqlite_artifact_paths, verify_runtime_configuration,
+        MIGRATION_4_SCHEMA_SQL, MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL,
+        MIGRATION_7_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
+        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
+        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
+        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
+        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::context_management::finalize_checkpoint;
@@ -3892,7 +4137,7 @@ mod tests {
         let backup_receipt = store
             .backup(&backup, &observation(), &mut TestKey([9; 32]))
             .expect("encrypted backup");
-        assert_eq!(backup_receipt.schema_version, 6);
+        assert_eq!(backup_receipt.schema_version, 7);
         assert_eq!(backup_receipt.generation, 0);
         assert_eq!(backup_receipt.encrypted_file_sha256.len(), 64);
         assert_eq!(
@@ -4326,7 +4571,7 @@ mod tests {
     }
 
     #[test]
-    fn version_six_schema_is_normalized_closed_and_relational() {
+    fn version_seven_schema_is_normalized_closed_and_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
@@ -4370,7 +4615,13 @@ mod tests {
                 "receipts",
                 "retention",
                 "retention_events",
+                "runtime_artifact_events",
+                "runtime_artifact_states",
+                "runtime_artifacts",
                 "runtime_events",
+                "runtime_payloads",
+                "runtime_resume_artifacts",
+                "runtime_resume_bindings",
                 "runtime_runs",
                 "schema_history",
                 "session_checkpoints",
@@ -4698,7 +4949,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_six_with_exact_history() {
+    fn version_one_upgrades_through_seven_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -4727,6 +4978,7 @@ mod tests {
                 (4, sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())),
                 (5, sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())),
                 (6, sha256_hex(MIGRATION_6_SCHEMA_SQL.as_bytes())),
+                (7, sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -5394,7 +5646,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 6));
+                assert_eq!((version, history), (SCHEMA_VERSION, 7));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))

@@ -1715,13 +1715,17 @@ fn map_journal_failure(error: DurableAuthorityError) -> RuntimePortFailure {
         DurableAuthorityError::RuntimeJournal(_)
         | DurableAuthorityError::Store(_)
         | DurableAuthorityError::Poisoned => RuntimePortFailure::Uncertain,
+        DurableAuthorityError::RuntimeArtifact(error) if error.poisons_runtime() => {
+            RuntimePortFailure::Uncertain
+        }
         DurableAuthorityError::Grant(_)
         | DurableAuthorityError::Transaction(_)
         | DurableAuthorityError::Checkpoint(_)
         | DurableAuthorityError::WriteApproval(_)
         | DurableAuthorityError::FilesystemApproval(_)
         | DurableAuthorityError::WriteTransaction(_)
-        | DurableAuthorityError::FilesystemTransaction(_) => RuntimePortFailure::Invalid,
+        | DurableAuthorityError::FilesystemTransaction(_)
+        | DurableAuthorityError::RuntimeArtifact(_) => RuntimePortFailure::Invalid,
     }
 }
 

@@ -1,13 +1,18 @@
 //! Closed runtime artifact manifests, references, and resume bindings.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
+use std::io::Read;
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
-    RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEventRetentionKind,
-    RuntimePayloadReference, RuntimeResumeBinding, to_canonical_json,
+    CONTRACT_SCHEMA_VERSION, ContextSensitivity, RuntimeArtifactId, RuntimeArtifactIntegrityState,
+    RuntimeArtifactKind, RuntimeArtifactLifecycleState, RuntimeArtifactManifest,
+    RuntimeArtifactRef, RuntimeEventRetentionKind, RuntimePayloadReference, RuntimeResumeBinding,
+    SessionCheckpoint, SessionId, TaskId, from_json, to_canonical_json,
 };
+use rusqlite::{OptionalExtension, Transaction, TransactionBehavior, params};
 use sha2::{Digest, Sha256};
+
+use crate::operational_store::OperationalStore;
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 /// Maximum bytes admitted for one runtime payload in the initial store profile.
@@ -30,6 +35,242 @@ pub enum RuntimeArtifactError {
     Serialization,
     /// A canonical manifest or resume-binding digest does not match.
     DigestMismatch,
+}
+
+/// Closed platform-payload failure visible to the kernel without paths or raw content.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuntimeArtifactPayloadError {
+    /// The staging request or returned observation was malformed.
+    Invalid,
+    /// The payload exceeded a declared byte, object, or allocation ceiling.
+    ResourceLimit,
+    /// The exact content-addressed object does not exist.
+    Missing,
+    /// Retained bytes do not match their immutable digest or size.
+    Corrupt,
+    /// An existing staging or object identity conflicts with the request.
+    Conflict,
+    /// A write, synchronization, placement, quarantine, or deletion failed.
+    Durability,
+    /// The continuously held private data root failed revalidation.
+    UnsafeRoot,
+}
+
+impl RuntimeArtifactPayloadError {
+    /// Returns one stable content-free diagnostic code.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::Invalid => "runtime.artifact.payload_invalid",
+            Self::ResourceLimit => "runtime.artifact.payload_limit",
+            Self::Missing => "runtime.artifact.payload_missing",
+            Self::Corrupt => "runtime.artifact.payload_corrupt",
+            Self::Conflict => "runtime.artifact.payload_conflict",
+            Self::Durability => "runtime.artifact.payload_durability",
+            Self::UnsafeRoot => "runtime.artifact.payload_root_unsafe",
+        }
+    }
+}
+
+/// Content-free digest and size observed for staged or retained payload bytes.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeArtifactPayloadObservation {
+    /// Lowercase SHA-256 digest of the complete payload.
+    pub payload_sha256: String,
+    /// Exact complete payload size.
+    pub byte_size: u64,
+}
+
+/// Result of atomic placement into the private content-addressed object namespace.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeArtifactPayloadPlacement {
+    /// Verified immutable object identity after placement.
+    pub observation: RuntimeArtifactPayloadObservation,
+    /// Whether an equal existing object was reused instead of replaced.
+    pub deduplicated: bool,
+}
+
+/// One path-free object returned by a private payload-store inventory.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeArtifactPayloadInventoryEntry {
+    /// Lowercase SHA-256 object identity.
+    pub payload_sha256: String,
+    /// Exact observed byte size.
+    pub byte_size: u64,
+}
+
+/// Platform-owned private payload effects consumed only by the trusted runtime boundary.
+pub trait RuntimeArtifactPayloadStore {
+    /// Opaque one-use staged object retained only by the platform adapter.
+    type Staged;
+
+    /// Streams one bounded payload into private staging and returns its complete observation.
+    fn stage(
+        &mut self,
+        artifact_id: &RuntimeArtifactId,
+        source: &mut dyn Read,
+        maximum_bytes: u64,
+    ) -> Result<(Self::Staged, RuntimeArtifactPayloadObservation), RuntimeArtifactPayloadError>;
+
+    /// Removes one staged object after validation refuses publication.
+    fn discard_staged(&mut self, staged: Self::Staged) -> Result<(), RuntimeArtifactPayloadError>;
+
+    /// Atomically places a staged object without replacing an unequal retained object.
+    fn place(
+        &mut self,
+        staged: Self::Staged,
+        expected: &RuntimeArtifactPayloadObservation,
+    ) -> Result<RuntimeArtifactPayloadPlacement, RuntimeArtifactPayloadError>;
+
+    /// Re-reads and verifies one complete immutable object.
+    fn verify(
+        &self,
+        expected: &RuntimeArtifactPayloadObservation,
+    ) -> Result<(), RuntimeArtifactPayloadError>;
+
+    /// Reads one complete object only when it fits the caller's declared ceiling.
+    fn read_complete(
+        &self,
+        expected: &RuntimeArtifactPayloadObservation,
+        maximum_bytes: u64,
+    ) -> Result<Vec<u8>, RuntimeArtifactPayloadError>;
+
+    /// Isolates a corrupt or uncertain retained object from the active namespace.
+    fn quarantine(
+        &mut self,
+        expected: &RuntimeArtifactPayloadObservation,
+    ) -> Result<(), RuntimeArtifactPayloadError>;
+
+    /// Removes one exact retained object without accepting a path from the caller.
+    fn delete(
+        &mut self,
+        expected: &RuntimeArtifactPayloadObservation,
+    ) -> Result<(), RuntimeArtifactPayloadError>;
+
+    /// Returns a sorted complete inventory of active content-addressed objects.
+    fn inventory(
+        &self,
+    ) -> Result<Vec<RuntimeArtifactPayloadInventoryEntry>, RuntimeArtifactPayloadError>;
+
+    /// Removes every interrupted staging object not represented by canonical metadata.
+    fn cleanup_staging(&mut self) -> Result<u64, RuntimeArtifactPayloadError>;
+}
+
+/// Stable artifact-store failure spanning contract, payload, metadata, and authority checks.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuntimeArtifactStoreError {
+    /// The path-free manifest, reference, or resume binding failed its closed contract.
+    Contract(RuntimeArtifactError),
+    /// The platform payload store failed without exposing a native path.
+    Payload(RuntimeArtifactPayloadError),
+    /// Encrypted canonical metadata could not be committed safely.
+    Storage,
+    /// Retained metadata, hash chains, or payload observations are inconsistent.
+    Integrity,
+    /// The requested artifact does not exist in canonical metadata.
+    NotFound,
+    /// Session, task, policy, retention, or lifecycle state denies access.
+    NotAuthorized,
+}
+
+impl RuntimeArtifactStoreError {
+    /// Returns one stable content-free diagnostic code.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::Contract(error) => error.code(),
+            Self::Payload(error) => error.code(),
+            Self::Storage => "runtime.artifact.metadata_storage",
+            Self::Integrity => "runtime.artifact.metadata_integrity",
+            Self::NotFound => "runtime.artifact.not_found",
+            Self::NotAuthorized => "runtime.artifact.not_authorized",
+        }
+    }
+
+    /// Returns whether the current in-process authority must reopen before another effect.
+    #[must_use]
+    pub const fn poisons_runtime(self) -> bool {
+        matches!(self, Self::Storage | Self::Integrity)
+            || matches!(
+                self,
+                Self::Payload(
+                    RuntimeArtifactPayloadError::Corrupt
+                        | RuntimeArtifactPayloadError::Conflict
+                        | RuntimeArtifactPayloadError::Durability
+                        | RuntimeArtifactPayloadError::UnsafeRoot
+                )
+            )
+    }
+}
+
+impl From<RuntimeArtifactError> for RuntimeArtifactStoreError {
+    fn from(error: RuntimeArtifactError) -> Self {
+        Self::Contract(error)
+    }
+}
+
+impl From<RuntimeArtifactPayloadError> for RuntimeArtifactStoreError {
+    fn from(error: RuntimeArtifactPayloadError) -> Self {
+        Self::Payload(error)
+    }
+}
+
+/// Verified publication result returned without payload bytes or path authority.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeArtifactPublication {
+    /// Immutable manifest committed to encrypted metadata.
+    pub manifest: RuntimeArtifactManifest,
+    /// Path-free reference suitable for events and checkpoints.
+    pub reference: RuntimeArtifactRef,
+    /// Whether equal payload bytes already occupied the content address.
+    pub payload_deduplicated: bool,
+}
+
+/// Privacy-safe current metadata projection for one artifact.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeArtifactState {
+    /// Path-free immutable artifact reference.
+    pub reference: RuntimeArtifactRef,
+    /// Current metadata lifecycle state.
+    pub lifecycle: RuntimeArtifactLifecycleState,
+    /// Current payload integrity state.
+    pub integrity: RuntimeArtifactIntegrityState,
+    /// Monotonic lifecycle revision.
+    pub revision: u64,
+    /// Stable content-free reason code for the current state.
+    pub reason_code: String,
+    /// Last trusted lifecycle-transition time.
+    pub updated_at_epoch_ms: u64,
+}
+
+/// Exact owner, policy, time, and resource bindings for one complete artifact read.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeArtifactReadRequest {
+    /// Owning session that must match immutable artifact metadata.
+    pub session_id: SessionId,
+    /// Owning task that must match immutable artifact metadata.
+    pub task_id: TaskId,
+    /// Exact current policy revision digest.
+    pub policy_sha256: String,
+    /// Complete path-free artifact reference.
+    pub reference: RuntimeArtifactRef,
+    /// Trusted read time used for expiration enforcement.
+    pub now_epoch_ms: u64,
+    /// Maximum complete payload bytes the caller is prepared to accept.
+    pub maximum_bytes: u64,
+}
+
+/// Content-free startup reconciliation counts.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RuntimeArtifactReconciliation {
+    /// Active payloads verified exactly.
+    pub verified_payloads: u64,
+    /// Missing or corrupt payload identities moved to blocked metadata state.
+    pub quarantined_payloads: u64,
+    /// Unreferenced or already-deleted objects removed from active storage.
+    pub deleted_orphans: u64,
+    /// Interrupted private staging objects removed.
+    pub cleaned_staging: u64,
 }
 
 impl RuntimeArtifactError {
@@ -134,6 +375,1588 @@ pub fn verify_runtime_resume_binding(
         return Err(RuntimeArtifactError::DigestMismatch);
     }
     Ok(())
+}
+
+/// Publishes one verified payload and immutable manifest through the canonical ordering.
+pub(crate) fn publish_runtime_artifact<S: RuntimeArtifactPayloadStore>(
+    store: &mut OperationalStore,
+    payloads: &mut S,
+    manifest: RuntimeArtifactManifest,
+    source: &mut dyn Read,
+) -> Result<RuntimeArtifactPublication, RuntimeArtifactStoreError> {
+    verify_runtime_artifact_manifest(&manifest)?;
+    let expected = payload_observation(&manifest);
+    let (staged, observed) =
+        payloads.stage(&manifest.artifact_id, source, MAX_RUNTIME_ARTIFACT_BYTES)?;
+    if observed != expected {
+        payloads.discard_staged(staged)?;
+        return Err(RuntimeArtifactStoreError::Payload(
+            RuntimeArtifactPayloadError::Invalid,
+        ));
+    }
+    let placement = payloads.place(staged, &expected)?;
+    if placement.observation != expected {
+        return Err(RuntimeArtifactStoreError::Payload(
+            RuntimeArtifactPayloadError::Conflict,
+        ));
+    }
+    let reference = runtime_artifact_ref(&manifest)?;
+    persist_artifact_manifest(store, &manifest)?;
+    payloads.verify(&expected)?;
+    Ok(RuntimeArtifactPublication {
+        manifest,
+        reference,
+        payload_deduplicated: placement.deduplicated,
+    })
+}
+
+/// Persists one exact checkpoint cursor and artifact set inside its checkpoint transaction.
+pub(crate) fn persist_runtime_resume_binding(
+    transaction: &Transaction<'_>,
+    checkpoint: &SessionCheckpoint,
+    binding: &RuntimeResumeBinding,
+) -> Result<(), RuntimeArtifactStoreError> {
+    verify_runtime_resume_binding(binding)?;
+    if binding.checkpoint_id != checkpoint.checkpoint_id
+        || binding.checkpoint_sha256 != checkpoint.checkpoint_sha256
+        || binding.session_id != checkpoint.session_id
+        || binding.task_id != checkpoint.task_id
+        || binding.event_cursor.run_id != binding.run_id
+    {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    let run = transaction
+        .query_row(
+            "SELECT session_id, task_id, policy_id, last_sequence, last_event_id, last_event_sha256
+             FROM runtime_runs WHERE run_id = ?1",
+            [binding.run_id.as_str()],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, String>(5)?,
+                ))
+            },
+        )
+        .optional()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?
+        .ok_or(RuntimeArtifactStoreError::NotFound)?;
+    if run.0 != binding.session_id.as_str()
+        || run.1 != binding.task_id.as_str()
+        || run.2 != checkpoint.policy_id.as_str()
+        || u64::try_from(run.3).ok() != Some(binding.event_cursor.sequence)
+        || run.4 != binding.event_cursor.event_id.as_str()
+        || run.5 != binding.event_cursor.event_sha256
+    {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    for reference in &binding.artifacts {
+        verify_resume_artifact_reference(transaction, checkpoint, binding, reference)?;
+    }
+    let record_json = to_canonical_json(binding)
+        .map_err(|_| RuntimeArtifactStoreError::Contract(RuntimeArtifactError::Serialization))?;
+    transaction
+        .execute(
+            "INSERT INTO runtime_resume_bindings(
+                 checkpoint_sha256, checkpoint_id, session_id, task_id, run_id,
+                 event_sequence, event_id, event_sha256, binding_sha256, record_json
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            params![
+                &binding.checkpoint_sha256,
+                binding.checkpoint_id.as_str(),
+                binding.session_id.as_str(),
+                binding.task_id.as_str(),
+                binding.run_id.as_str(),
+                sql_u64(binding.event_cursor.sequence)?,
+                binding.event_cursor.event_id.as_str(),
+                &binding.event_cursor.event_sha256,
+                &binding.binding_sha256,
+                record_json,
+            ],
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    for (ordinal, reference) in binding.artifacts.iter().enumerate() {
+        transaction
+            .execute(
+                "INSERT INTO runtime_resume_artifacts(
+                     checkpoint_sha256, ordinal, artifact_id, manifest_sha256,
+                     payload_sha256, byte_size, media_type
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    &binding.checkpoint_sha256,
+                    i64::try_from(ordinal).map_err(|_| RuntimeArtifactStoreError::Storage)?,
+                    reference.artifact_id.as_str(),
+                    &reference.manifest_sha256,
+                    &reference.payload_sha256,
+                    sql_u64(reference.byte_size)?,
+                    &reference.media_type,
+                ],
+            )
+            .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    }
+    Ok(())
+}
+
+/// Loads the current checkpoint binding and requires every referenced artifact to remain usable.
+pub(crate) fn current_runtime_resume_binding(
+    store: &OperationalStore,
+) -> Result<Option<RuntimeResumeBinding>, RuntimeArtifactStoreError> {
+    let checkpoint_sha256: String = store
+        .connection
+        .query_row(
+            "SELECT session_checkpoint_sha256 FROM store_metadata WHERE singleton = 1",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    if checkpoint_sha256 == ZERO_SHA256 {
+        return Ok(None);
+    }
+    let exists = store
+        .connection
+        .query_row(
+            "SELECT 1 FROM runtime_resume_bindings WHERE checkpoint_sha256 = ?1",
+            [&checkpoint_sha256],
+            |_| Ok(()),
+        )
+        .optional()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    if exists.is_none() {
+        return Ok(None);
+    }
+    let binding = load_runtime_resume_binding(store, &checkpoint_sha256)?;
+    for reference in &binding.artifacts {
+        let state = runtime_artifact_state(store, reference)?;
+        if state.lifecycle != RuntimeArtifactLifecycleState::Active
+            || state.integrity != RuntimeArtifactIntegrityState::Verified
+        {
+            return Err(RuntimeArtifactStoreError::NotAuthorized);
+        }
+    }
+    Ok(Some(binding))
+}
+
+fn verify_resume_artifact_reference(
+    transaction: &Transaction<'_>,
+    checkpoint: &SessionCheckpoint,
+    binding: &RuntimeResumeBinding,
+    reference: &RuntimeArtifactRef,
+) -> Result<(), RuntimeArtifactStoreError> {
+    let retained = transaction
+        .query_row(
+            "SELECT a.manifest_sha256, a.payload_sha256, a.byte_size, a.media_type,
+                    a.session_id, a.task_id, a.producer_run_id, a.policy_sha256,
+                    s.lifecycle_state, s.integrity_state
+             FROM runtime_artifacts a
+             JOIN runtime_artifact_states s ON s.artifact_id = a.artifact_id
+             WHERE a.artifact_id = ?1",
+            [reference.artifact_id.as_str()],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, i64>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, String>(5)?,
+                    row.get::<_, String>(6)?,
+                    row.get::<_, String>(7)?,
+                    row.get::<_, String>(8)?,
+                    row.get::<_, String>(9)?,
+                ))
+            },
+        )
+        .optional()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?
+        .ok_or(RuntimeArtifactStoreError::NotFound)?;
+    if retained.0 != reference.manifest_sha256
+        || retained.1 != reference.payload_sha256
+        || u64::try_from(retained.2).ok() != Some(reference.byte_size)
+        || retained.3 != reference.media_type
+        || retained.4 != binding.session_id.as_str()
+        || retained.5 != binding.task_id.as_str()
+        || retained.6 != binding.run_id.as_str()
+        || retained.7 != checkpoint.policy_sha256
+        || retained.8 != "active"
+        || retained.9 != "verified"
+    {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    Ok(())
+}
+
+/// Returns a privacy-safe state projection after exact reference reconciliation.
+pub(crate) fn runtime_artifact_state(
+    store: &OperationalStore,
+    reference: &RuntimeArtifactRef,
+) -> Result<RuntimeArtifactState, RuntimeArtifactStoreError> {
+    let manifest = load_artifact_manifest(store, &reference.artifact_id)?;
+    verify_runtime_artifact_ref(reference, &manifest)?;
+    load_artifact_state(store, reference)
+}
+
+/// Opens complete verified bytes only for the exact owning session, task, and policy revision.
+pub(crate) fn read_runtime_artifact<S: RuntimeArtifactPayloadStore>(
+    store: &OperationalStore,
+    payloads: &S,
+    request: &RuntimeArtifactReadRequest,
+) -> Result<Vec<u8>, RuntimeArtifactStoreError> {
+    let manifest = load_artifact_manifest(store, &request.reference.artifact_id)?;
+    verify_runtime_artifact_ref(&request.reference, &manifest)?;
+    let state = load_artifact_state(store, &request.reference)?;
+    if manifest.session_id != request.session_id
+        || manifest.task_id != request.task_id
+        || manifest.policy_sha256 != request.policy_sha256
+        || state.lifecycle != RuntimeArtifactLifecycleState::Active
+        || state.integrity != RuntimeArtifactIntegrityState::Verified
+        || manifest
+            .retention
+            .expires_at_epoch_ms
+            .is_some_and(|expires| expires <= request.now_epoch_ms)
+    {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    if request.maximum_bytes == 0 || request.maximum_bytes < manifest.byte_size {
+        return Err(RuntimeArtifactStoreError::Payload(
+            RuntimeArtifactPayloadError::ResourceLimit,
+        ));
+    }
+    let expected = payload_observation(&manifest);
+    payloads.verify(&expected)?;
+    let bytes = payloads.read_complete(&expected, request.maximum_bytes)?;
+    if bytes.len() as u64 != expected.byte_size || sha256(&bytes) != expected.payload_sha256 {
+        return Err(RuntimeArtifactStoreError::Payload(
+            RuntimeArtifactPayloadError::Corrupt,
+        ));
+    }
+    Ok(bytes)
+}
+
+/// Releases one active reference under its exact owner and current policy revision.
+pub(crate) fn release_runtime_artifact(
+    store: &mut OperationalStore,
+    session_id: &SessionId,
+    task_id: &TaskId,
+    policy_sha256: &str,
+    reference: &RuntimeArtifactRef,
+    occurred_at_epoch_ms: u64,
+) -> Result<RuntimeArtifactState, RuntimeArtifactStoreError> {
+    let manifest = load_artifact_manifest(store, &reference.artifact_id)?;
+    verify_runtime_artifact_ref(reference, &manifest)?;
+    if &manifest.session_id != session_id
+        || &manifest.task_id != task_id
+        || manifest.policy_sha256 != policy_sha256
+    {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    transition_artifact(
+        store,
+        &manifest,
+        RuntimeArtifactLifecycleState::Released,
+        RuntimeArtifactIntegrityState::Verified,
+        "artifact.reference_released",
+        occurred_at_epoch_ms,
+    )?;
+    load_artifact_state(store, reference)
+}
+
+/// Reconciles staging, retained objects, metadata state, expiry, and unreferenced payloads.
+pub(crate) fn reconcile_runtime_artifacts<S: RuntimeArtifactPayloadStore>(
+    store: &mut OperationalStore,
+    payloads: &mut S,
+    now_epoch_ms: u64,
+) -> Result<RuntimeArtifactReconciliation, RuntimeArtifactStoreError> {
+    verify_all(store)?;
+    let mut report = RuntimeArtifactReconciliation {
+        cleaned_staging: payloads.cleanup_staging()?,
+        ..RuntimeArtifactReconciliation::default()
+    };
+    let now = sql_u64(now_epoch_ms)?;
+    let expired = store
+        .connection
+        .prepare(
+            "SELECT a.artifact_id
+             FROM runtime_artifacts a
+             JOIN runtime_artifact_states s ON s.artifact_id = a.artifact_id
+             WHERE s.lifecycle_state = 'active'
+               AND a.retention_kind = 'until_expiration'
+               AND a.retention_expires_at_epoch_ms <= ?1
+             ORDER BY a.artifact_id",
+        )
+        .and_then(|mut statement| {
+            statement
+                .query_map([now], |row| row.get(0))?
+                .collect::<Result<Vec<String>, _>>()
+        })
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    for artifact_id in expired {
+        let artifact_id = RuntimeArtifactId::from_raw(artifact_id);
+        let manifest = load_artifact_manifest(store, &artifact_id)?;
+        transition_artifact(
+            store,
+            &manifest,
+            RuntimeArtifactLifecycleState::Released,
+            RuntimeArtifactIntegrityState::Verified,
+            "artifact.retention_expired",
+            now_epoch_ms,
+        )?;
+    }
+
+    let inventory = payloads.inventory()?;
+    validate_payload_inventory(&inventory)?;
+    let inventory_by_digest = inventory
+        .iter()
+        .map(|entry| (entry.payload_sha256.as_str(), entry))
+        .collect::<BTreeMap<_, _>>();
+    let retained_payloads = load_payload_rows(store)?;
+    for retained in &retained_payloads {
+        let expected = RuntimeArtifactPayloadObservation {
+            payload_sha256: retained.payload_sha256.clone(),
+            byte_size: retained.byte_size,
+        };
+        match retained.lifecycle_state.as_str() {
+            "active" if retained.active_reference_count > 0 => match payloads.verify(&expected) {
+                Ok(()) => report.verified_payloads += 1,
+                Err(RuntimeArtifactPayloadError::Missing) => {
+                    quarantine_payload_metadata(
+                        store,
+                        &retained.payload_sha256,
+                        RuntimeArtifactIntegrityState::Missing,
+                        "artifact.payload_missing",
+                        now_epoch_ms,
+                    )?;
+                    report.quarantined_payloads += 1;
+                }
+                Err(RuntimeArtifactPayloadError::Corrupt) => {
+                    payloads.quarantine(&expected)?;
+                    quarantine_payload_metadata(
+                        store,
+                        &retained.payload_sha256,
+                        RuntimeArtifactIntegrityState::Corrupt,
+                        "artifact.payload_corrupt",
+                        now_epoch_ms,
+                    )?;
+                    report.quarantined_payloads += 1;
+                }
+                Err(error) => return Err(error.into()),
+            },
+            "active" => {
+                delete_payload_metadata(store, &retained.payload_sha256, now_epoch_ms)?;
+                match payloads.delete(&expected) {
+                    Ok(()) | Err(RuntimeArtifactPayloadError::Missing) => {}
+                    Err(error) => return Err(error.into()),
+                }
+                report.deleted_orphans += 1;
+            }
+            "quarantined" => {
+                if inventory_by_digest.contains_key(retained.payload_sha256.as_str()) {
+                    payloads.quarantine(&expected)?;
+                }
+            }
+            "deleted" => {
+                if inventory_by_digest.contains_key(retained.payload_sha256.as_str()) {
+                    payloads.delete(&expected)?;
+                    report.deleted_orphans += 1;
+                }
+            }
+            _ => return Err(RuntimeArtifactStoreError::Integrity),
+        }
+    }
+    let retained_identities = retained_payloads
+        .iter()
+        .map(|row| row.payload_sha256.as_str())
+        .collect::<BTreeSet<_>>();
+    for orphan in inventory {
+        if !retained_identities.contains(orphan.payload_sha256.as_str()) {
+            payloads.delete(&RuntimeArtifactPayloadObservation {
+                payload_sha256: orphan.payload_sha256,
+                byte_size: orphan.byte_size,
+            })?;
+            report.deleted_orphans += 1;
+        }
+    }
+    verify_all(store)?;
+    Ok(report)
+}
+
+/// Verifies every immutable manifest, lifecycle chain, payload count, and resume projection.
+pub(crate) fn verify_all(store: &OperationalStore) -> Result<(), RuntimeArtifactStoreError> {
+    let artifact_ids = store
+        .connection
+        .prepare("SELECT artifact_id FROM runtime_artifacts ORDER BY artifact_id")
+        .and_then(|mut statement| {
+            statement
+                .query_map([], |row| row.get::<_, String>(0))?
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    let mut active_counts = BTreeMap::<String, u64>::new();
+    for artifact_id in &artifact_ids {
+        let artifact_id = RuntimeArtifactId::from_raw(artifact_id.clone());
+        let manifest = load_artifact_manifest(store, &artifact_id)
+            .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        let reference =
+            runtime_artifact_ref(&manifest).map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        let state = load_artifact_state(store, &reference)
+            .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        if !valid_lifecycle_pair(state.lifecycle, state.integrity) {
+            return Err(RuntimeArtifactStoreError::Integrity);
+        }
+        if state.lifecycle == RuntimeArtifactLifecycleState::Active {
+            *active_counts
+                .entry(manifest.payload_sha256.clone())
+                .or_default() += 1;
+        }
+    }
+    verify_artifact_event_chains(store, &artifact_ids)?;
+    let payload_rows = load_payload_rows(store)?;
+    let payload_ids = payload_rows
+        .iter()
+        .map(|row| row.payload_sha256.as_str())
+        .collect::<BTreeSet<_>>();
+    for row in &payload_rows {
+        let expected = active_counts.get(&row.payload_sha256).copied().unwrap_or(0);
+        if row.active_reference_count != expected
+            || !matches!(
+                row.lifecycle_state.as_str(),
+                "active" | "quarantined" | "deleted"
+            )
+            || row.lifecycle_state != "active" && expected != 0
+        {
+            return Err(RuntimeArtifactStoreError::Integrity);
+        }
+    }
+    if active_counts
+        .keys()
+        .any(|payload_sha256| !payload_ids.contains(payload_sha256.as_str()))
+    {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    verify_resume_bindings(store)?;
+    Ok(())
+}
+
+fn quarantine_payload_metadata(
+    store: &mut OperationalStore,
+    payload_sha256: &str,
+    integrity: RuntimeArtifactIntegrityState,
+    reason_code: &str,
+    occurred_at_epoch_ms: u64,
+) -> Result<(), RuntimeArtifactStoreError> {
+    let manifests = load_payload_manifests(store, payload_sha256)?;
+    let transaction = store
+        .connection
+        .transaction_with_behavior(TransactionBehavior::Immediate)
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    for manifest in &manifests {
+        let current: String = transaction
+            .query_row(
+                "SELECT lifecycle_state FROM runtime_artifact_states WHERE artifact_id = ?1",
+                [manifest.artifact_id.as_str()],
+                |row| row.get(0),
+            )
+            .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        if current == "active" {
+            transition_artifact_in_transaction(
+                &transaction,
+                manifest,
+                RuntimeArtifactLifecycleState::Quarantined,
+                integrity,
+                reason_code,
+                occurred_at_epoch_ms,
+            )?;
+        }
+    }
+    let changed = transaction
+        .execute(
+            "UPDATE runtime_payloads
+             SET lifecycle_state = 'quarantined', active_reference_count = 0,
+                 updated_at_epoch_ms = MAX(updated_at_epoch_ms, ?1)
+             WHERE payload_sha256 = ?2 AND lifecycle_state = 'active'",
+            params![sql_u64(occurred_at_epoch_ms)?, payload_sha256],
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    if changed != 1 {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    transaction
+        .commit()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)
+}
+
+fn delete_payload_metadata(
+    store: &mut OperationalStore,
+    payload_sha256: &str,
+    occurred_at_epoch_ms: u64,
+) -> Result<(), RuntimeArtifactStoreError> {
+    let manifests = load_payload_manifests(store, payload_sha256)?;
+    let transaction = store
+        .connection
+        .transaction_with_behavior(TransactionBehavior::Immediate)
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    let active_count: i64 = transaction
+        .query_row(
+            "SELECT active_reference_count FROM runtime_payloads WHERE payload_sha256 = ?1",
+            [payload_sha256],
+            |row| row.get(0),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    if active_count != 0 {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    for manifest in &manifests {
+        let current: String = transaction
+            .query_row(
+                "SELECT lifecycle_state FROM runtime_artifact_states WHERE artifact_id = ?1",
+                [manifest.artifact_id.as_str()],
+                |row| row.get(0),
+            )
+            .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        if matches!(current.as_str(), "released" | "quarantined") {
+            transition_artifact_in_transaction(
+                &transaction,
+                manifest,
+                RuntimeArtifactLifecycleState::Deleted,
+                RuntimeArtifactIntegrityState::Deleted,
+                "artifact.payload_deleted",
+                occurred_at_epoch_ms,
+            )?;
+        } else if current != "deleted" {
+            return Err(RuntimeArtifactStoreError::Integrity);
+        }
+    }
+    transaction
+        .execute(
+            "UPDATE runtime_payloads
+             SET lifecycle_state = 'deleted', updated_at_epoch_ms = MAX(updated_at_epoch_ms, ?1)
+             WHERE payload_sha256 = ?2",
+            params![sql_u64(occurred_at_epoch_ms)?, payload_sha256],
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    transaction
+        .commit()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)
+}
+
+fn load_payload_manifests(
+    store: &OperationalStore,
+    payload_sha256: &str,
+) -> Result<Vec<RuntimeArtifactManifest>, RuntimeArtifactStoreError> {
+    let artifact_ids = store
+        .connection
+        .prepare(
+            "SELECT artifact_id FROM runtime_artifacts
+             WHERE payload_sha256 = ?1 ORDER BY artifact_id",
+        )
+        .and_then(|mut statement| {
+            statement
+                .query_map([payload_sha256], |row| row.get::<_, String>(0))?
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    artifact_ids
+        .into_iter()
+        .map(|artifact_id| load_artifact_manifest(store, &RuntimeArtifactId::from_raw(artifact_id)))
+        .collect()
+}
+
+struct RetainedPayloadRow {
+    payload_sha256: String,
+    byte_size: u64,
+    lifecycle_state: String,
+    active_reference_count: u64,
+}
+
+fn load_payload_rows(
+    store: &OperationalStore,
+) -> Result<Vec<RetainedPayloadRow>, RuntimeArtifactStoreError> {
+    store
+        .connection
+        .prepare(
+            "SELECT payload_sha256, byte_size, lifecycle_state, active_reference_count
+             FROM runtime_payloads ORDER BY payload_sha256",
+        )
+        .and_then(|mut statement| {
+            statement
+                .query_map([], |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, i64>(3)?,
+                    ))
+                })?
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?
+        .into_iter()
+        .map(|row| {
+            Ok(RetainedPayloadRow {
+                payload_sha256: row.0,
+                byte_size: u64::try_from(row.1)
+                    .map_err(|_| RuntimeArtifactStoreError::Integrity)?,
+                lifecycle_state: row.2,
+                active_reference_count: u64::try_from(row.3)
+                    .map_err(|_| RuntimeArtifactStoreError::Integrity)?,
+            })
+        })
+        .collect()
+}
+
+fn validate_payload_inventory(
+    inventory: &[RuntimeArtifactPayloadInventoryEntry],
+) -> Result<(), RuntimeArtifactStoreError> {
+    let mut prior: Option<&str> = None;
+    for entry in inventory {
+        if !valid_sha256(&entry.payload_sha256)
+            || entry.byte_size == 0
+            || entry.byte_size > MAX_RUNTIME_ARTIFACT_BYTES
+            || prior.is_some_and(|value| value >= entry.payload_sha256.as_str())
+        {
+            return Err(RuntimeArtifactStoreError::Payload(
+                RuntimeArtifactPayloadError::Invalid,
+            ));
+        }
+        prior = Some(entry.payload_sha256.as_str());
+    }
+    Ok(())
+}
+
+fn valid_lifecycle_pair(
+    lifecycle: RuntimeArtifactLifecycleState,
+    integrity: RuntimeArtifactIntegrityState,
+) -> bool {
+    matches!(
+        (lifecycle, integrity),
+        (
+            RuntimeArtifactLifecycleState::Active | RuntimeArtifactLifecycleState::Released,
+            RuntimeArtifactIntegrityState::Verified
+        ) | (
+            RuntimeArtifactLifecycleState::Quarantined,
+            RuntimeArtifactIntegrityState::Quarantined
+                | RuntimeArtifactIntegrityState::Missing
+                | RuntimeArtifactIntegrityState::Corrupt
+        ) | (
+            RuntimeArtifactLifecycleState::Deleted,
+            RuntimeArtifactIntegrityState::Deleted
+        )
+    )
+}
+
+fn verify_artifact_event_chains(
+    store: &OperationalStore,
+    artifact_ids: &[String],
+) -> Result<(), RuntimeArtifactStoreError> {
+    let events = store
+        .connection
+        .prepare(
+            "SELECT artifact_id, revision, lifecycle_state, integrity_state, reason_code,
+                    occurred_at_epoch_ms, previous_event_sha256, state_sha256, event_sha256
+             FROM runtime_artifact_events ORDER BY artifact_id, revision",
+        )
+        .and_then(|mut statement| {
+            statement
+                .query_map([], |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, String>(3)?,
+                        row.get::<_, String>(4)?,
+                        row.get::<_, i64>(5)?,
+                        row.get::<_, String>(6)?,
+                        row.get::<_, String>(7)?,
+                        row.get::<_, String>(8)?,
+                    ))
+                })?
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    let mut heads = BTreeMap::<String, (u64, String, String)>::new();
+    for event in events {
+        let artifact_id = RuntimeArtifactId::from_raw(event.0.clone());
+        let revision = u64::try_from(event.1).map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        let lifecycle = parse_lifecycle(&event.2)?;
+        let integrity = parse_integrity(&event.3)?;
+        let occurred_at =
+            u64::try_from(event.5).map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        let expected_revision = heads.get(&event.0).map_or(1, |head| head.0 + 1);
+        let expected_previous = heads
+            .get(&event.0)
+            .map_or(ZERO_SHA256, |head| head.1.as_str());
+        let state_sha256 = artifact_state_digest(
+            &artifact_id,
+            revision,
+            lifecycle,
+            integrity,
+            &event.4,
+            occurred_at,
+        );
+        let event_sha256 = artifact_event_digest(
+            &artifact_id,
+            revision,
+            lifecycle,
+            integrity,
+            &event.4,
+            occurred_at,
+            &event.6,
+            &event.7,
+        );
+        if revision != expected_revision
+            || event.6 != expected_previous
+            || event.7 != state_sha256
+            || event.8 != event_sha256
+            || !valid_reason_code(&event.4)
+            || !valid_lifecycle_pair(lifecycle, integrity)
+        {
+            return Err(RuntimeArtifactStoreError::Integrity);
+        }
+        heads.insert(event.0, (revision, event.8, event.7));
+    }
+    if heads.len() != artifact_ids.len() {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    for artifact_id in artifact_ids {
+        let retained = store
+            .connection
+            .query_row(
+                "SELECT revision, state_sha256 FROM runtime_artifact_states
+                 WHERE artifact_id = ?1",
+                [artifact_id],
+                |row| Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?)),
+            )
+            .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        let head = heads
+            .get(artifact_id)
+            .ok_or(RuntimeArtifactStoreError::Integrity)?;
+        if u64::try_from(retained.0).ok() != Some(head.0) || retained.1 != head.2 {
+            return Err(RuntimeArtifactStoreError::Integrity);
+        }
+    }
+    Ok(())
+}
+
+fn verify_resume_bindings(store: &OperationalStore) -> Result<(), RuntimeArtifactStoreError> {
+    let checkpoint_sha256s = store
+        .connection
+        .prepare("SELECT checkpoint_sha256 FROM runtime_resume_bindings ORDER BY checkpoint_sha256")
+        .and_then(|mut statement| {
+            statement
+                .query_map([], |row| row.get::<_, String>(0))?
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    let mut expected_references = 0_usize;
+    for checkpoint_sha256 in &checkpoint_sha256s {
+        let binding = load_runtime_resume_binding(store, checkpoint_sha256)
+            .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        expected_references = expected_references
+            .checked_add(binding.artifacts.len())
+            .ok_or(RuntimeArtifactStoreError::Integrity)?;
+    }
+    let retained_references: i64 = store
+        .connection
+        .query_row("SELECT COUNT(*) FROM runtime_resume_artifacts", [], |row| {
+            row.get(0)
+        })
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    if usize::try_from(retained_references).ok() == Some(expected_references) {
+        Ok(())
+    } else {
+        Err(RuntimeArtifactStoreError::Integrity)
+    }
+}
+
+fn load_runtime_resume_binding(
+    store: &OperationalStore,
+    checkpoint_sha256: &str,
+) -> Result<RuntimeResumeBinding, RuntimeArtifactStoreError> {
+    let retained = store
+        .connection
+        .query_row(
+            "SELECT checkpoint_id, session_id, task_id, run_id, event_sequence,
+                    event_id, event_sha256, binding_sha256, record_json
+             FROM runtime_resume_bindings WHERE checkpoint_sha256 = ?1",
+            [checkpoint_sha256],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, String>(5)?,
+                    row.get::<_, String>(6)?,
+                    row.get::<_, String>(7)?,
+                    row.get::<_, Vec<u8>>(8)?,
+                ))
+            },
+        )
+        .optional()
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?
+        .ok_or(RuntimeArtifactStoreError::NotFound)?;
+    let binding = from_json::<RuntimeResumeBinding>(&retained.8)
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    verify_runtime_resume_binding(&binding).map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    if binding.checkpoint_sha256 != checkpoint_sha256
+        || binding.checkpoint_id.as_str() != retained.0
+        || binding.session_id.as_str() != retained.1
+        || binding.task_id.as_str() != retained.2
+        || binding.run_id.as_str() != retained.3
+        || u64::try_from(retained.4).ok() != Some(binding.event_cursor.sequence)
+        || binding.event_cursor.event_id.as_str() != retained.5
+        || binding.event_cursor.event_sha256 != retained.6
+        || binding.binding_sha256 != retained.7
+    {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    let checkpoint_bytes = store
+        .connection
+        .query_row(
+            "SELECT record_json FROM session_checkpoints WHERE checkpoint_sha256 = ?1",
+            [checkpoint_sha256],
+            |row| row.get::<_, Vec<u8>>(0),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    let checkpoint = from_json::<SessionCheckpoint>(&checkpoint_bytes)
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    if checkpoint.checkpoint_id != binding.checkpoint_id
+        || checkpoint.checkpoint_sha256 != binding.checkpoint_sha256
+        || checkpoint.session_id != binding.session_id
+        || checkpoint.task_id != binding.task_id
+    {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    let event = store
+        .connection
+        .query_row(
+            "SELECT event_id, event_sha256 FROM runtime_events
+             WHERE run_id = ?1 AND sequence = ?2",
+            params![
+                binding.run_id.as_str(),
+                sql_u64(binding.event_cursor.sequence)?
+            ],
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    if event.0 != binding.event_cursor.event_id.as_str()
+        || event.1 != binding.event_cursor.event_sha256
+    {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    let rows = store
+        .connection
+        .prepare(
+            "SELECT artifact_id, manifest_sha256, payload_sha256, byte_size, media_type
+             FROM runtime_resume_artifacts WHERE checkpoint_sha256 = ?1 ORDER BY ordinal",
+        )
+        .and_then(|mut statement| {
+            statement
+                .query_map([checkpoint_sha256], |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, i64>(3)?,
+                        row.get::<_, String>(4)?,
+                    ))
+                })?
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    if rows.len() != binding.artifacts.len() {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    for (row, reference) in rows.iter().zip(&binding.artifacts) {
+        if row.0 != reference.artifact_id.as_str()
+            || row.1 != reference.manifest_sha256
+            || row.2 != reference.payload_sha256
+            || u64::try_from(row.3).ok() != Some(reference.byte_size)
+            || row.4 != reference.media_type
+        {
+            return Err(RuntimeArtifactStoreError::Integrity);
+        }
+        let manifest = load_artifact_manifest(store, &reference.artifact_id)
+            .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        verify_runtime_artifact_ref(reference, &manifest)
+            .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+        if manifest.session_id != binding.session_id
+            || manifest.task_id != binding.task_id
+            || manifest.producer_run_id != binding.run_id
+        {
+            return Err(RuntimeArtifactStoreError::Integrity);
+        }
+    }
+    Ok(binding)
+}
+
+fn persist_artifact_manifest(
+    store: &mut OperationalStore,
+    manifest: &RuntimeArtifactManifest,
+) -> Result<(), RuntimeArtifactStoreError> {
+    let record_json = to_canonical_json(manifest)
+        .map_err(|_| RuntimeArtifactStoreError::Contract(RuntimeArtifactError::Serialization))?;
+    let byte_size = sql_u64(manifest.byte_size)?;
+    let created_at = sql_u64(manifest.created_at_epoch_ms)?;
+    let expires_at = manifest
+        .retention
+        .expires_at_epoch_ms
+        .map(sql_u64)
+        .transpose()?;
+    let transaction = store
+        .connection
+        .transaction_with_behavior(TransactionBehavior::Immediate)
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    let retained_payload = transaction
+        .query_row(
+            "SELECT byte_size, lifecycle_state FROM runtime_payloads
+             WHERE payload_sha256 = ?1",
+            [&manifest.payload_sha256],
+            |row| Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?)),
+        )
+        .optional()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    match retained_payload {
+        Some((retained_size, retained_state)) => {
+            if retained_size != byte_size || retained_state != "active" {
+                return Err(RuntimeArtifactStoreError::Integrity);
+            }
+        }
+        None => {
+            transaction
+                .execute(
+                    "INSERT INTO runtime_payloads(
+                         payload_sha256, byte_size, lifecycle_state,
+                         active_reference_count, created_at_epoch_ms, updated_at_epoch_ms
+                     ) VALUES (?1, ?2, 'active', 0, ?3, ?3)",
+                    params![&manifest.payload_sha256, byte_size, created_at],
+                )
+                .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+        }
+    }
+    let retained_manifest = transaction
+        .query_row(
+            "SELECT manifest_sha256, manifest_json FROM runtime_artifacts
+             WHERE artifact_id = ?1",
+            [manifest.artifact_id.as_str()],
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, Vec<u8>>(1)?)),
+        )
+        .optional()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    if let Some((retained_sha256, retained_json)) = retained_manifest {
+        if retained_sha256 != manifest.manifest_sha256 || retained_json != record_json {
+            return Err(RuntimeArtifactStoreError::Integrity);
+        }
+        transaction
+            .commit()
+            .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+        return Ok(());
+    }
+    transaction
+        .execute(
+            "INSERT INTO runtime_artifacts(
+                 artifact_id, manifest_sha256, payload_sha256, byte_size, media_type,
+                 artifact_kind, sensitivity, retention_kind, retention_expires_at_epoch_ms,
+                 session_id, task_id, producer_run_id, producer_turn_id,
+                 producer_operation_id, receipt_id, policy_id, policy_sha256,
+                 created_at_epoch_ms, manifest_json
+             ) VALUES (
+                 ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,
+                 ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19
+             )",
+            params![
+                manifest.artifact_id.as_str(),
+                &manifest.manifest_sha256,
+                &manifest.payload_sha256,
+                byte_size,
+                &manifest.media_type,
+                artifact_kind_text(manifest.kind),
+                sensitivity_text(manifest.sensitivity),
+                retention_text(manifest.retention.kind),
+                expires_at,
+                manifest.session_id.as_str(),
+                manifest.task_id.as_str(),
+                manifest.producer_run_id.as_str(),
+                manifest
+                    .producer_turn_id
+                    .as_ref()
+                    .map(|value| value.as_str()),
+                manifest
+                    .producer_operation_id
+                    .as_ref()
+                    .map(|value| value.as_str()),
+                manifest.receipt_id.as_ref().map(|value| value.as_str()),
+                manifest.policy_id.as_str(),
+                &manifest.policy_sha256,
+                created_at,
+                record_json,
+            ],
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    insert_initial_artifact_state(&transaction, manifest)?;
+    let changed = transaction
+        .execute(
+            "UPDATE runtime_payloads
+             SET active_reference_count = active_reference_count + 1,
+                 updated_at_epoch_ms = MAX(updated_at_epoch_ms, ?1)
+             WHERE payload_sha256 = ?2 AND lifecycle_state = 'active'",
+            params![created_at, &manifest.payload_sha256],
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    if changed != 1 {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    transaction
+        .commit()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)
+}
+
+fn insert_initial_artifact_state(
+    transaction: &Transaction<'_>,
+    manifest: &RuntimeArtifactManifest,
+) -> Result<(), RuntimeArtifactStoreError> {
+    let revision = 1_u64;
+    let reason = "artifact.published";
+    let state_sha256 = artifact_state_digest(
+        &manifest.artifact_id,
+        revision,
+        RuntimeArtifactLifecycleState::Active,
+        RuntimeArtifactIntegrityState::Verified,
+        reason,
+        manifest.created_at_epoch_ms,
+    );
+    transaction
+        .execute(
+            "INSERT INTO runtime_artifact_states(
+                 artifact_id, revision, lifecycle_state, integrity_state,
+                 reason_code, updated_at_epoch_ms, state_sha256
+             ) VALUES (?1, 1, 'active', 'verified', ?2, ?3, ?4)",
+            params![
+                manifest.artifact_id.as_str(),
+                reason,
+                sql_u64(manifest.created_at_epoch_ms)?,
+                &state_sha256,
+            ],
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    let event_sha256 = artifact_event_digest(
+        &manifest.artifact_id,
+        revision,
+        RuntimeArtifactLifecycleState::Active,
+        RuntimeArtifactIntegrityState::Verified,
+        reason,
+        manifest.created_at_epoch_ms,
+        ZERO_SHA256,
+        &state_sha256,
+    );
+    transaction
+        .execute(
+            "INSERT INTO runtime_artifact_events(
+                 artifact_id, revision, lifecycle_state, integrity_state, reason_code,
+                 occurred_at_epoch_ms, previous_event_sha256, state_sha256, event_sha256
+             ) VALUES (?1, 1, 'active', 'verified', ?2, ?3, ?4, ?5, ?6)",
+            params![
+                manifest.artifact_id.as_str(),
+                reason,
+                sql_u64(manifest.created_at_epoch_ms)?,
+                ZERO_SHA256,
+                &state_sha256,
+                &event_sha256,
+            ],
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    Ok(())
+}
+
+fn load_artifact_manifest(
+    store: &OperationalStore,
+    artifact_id: &RuntimeArtifactId,
+) -> Result<RuntimeArtifactManifest, RuntimeArtifactStoreError> {
+    let row = store
+        .connection
+        .query_row(
+            "SELECT manifest_sha256, payload_sha256, byte_size, media_type,
+                    artifact_kind, sensitivity, retention_kind,
+                    retention_expires_at_epoch_ms, session_id, task_id,
+                    producer_run_id, producer_turn_id, producer_operation_id, receipt_id,
+                    policy_id, policy_sha256, created_at_epoch_ms, manifest_json
+             FROM runtime_artifacts WHERE artifact_id = ?1",
+            [artifact_id.as_str()],
+            |row| {
+                Ok(RetainedManifestRow {
+                    manifest_sha256: row.get(0)?,
+                    payload_sha256: row.get(1)?,
+                    byte_size: row.get(2)?,
+                    media_type: row.get(3)?,
+                    artifact_kind: row.get(4)?,
+                    sensitivity: row.get(5)?,
+                    retention_kind: row.get(6)?,
+                    retention_expires_at_epoch_ms: row.get(7)?,
+                    session_id: row.get(8)?,
+                    task_id: row.get(9)?,
+                    producer_run_id: row.get(10)?,
+                    producer_turn_id: row.get(11)?,
+                    producer_operation_id: row.get(12)?,
+                    receipt_id: row.get(13)?,
+                    policy_id: row.get(14)?,
+                    policy_sha256: row.get(15)?,
+                    created_at_epoch_ms: row.get(16)?,
+                    manifest_json: row.get(17)?,
+                })
+            },
+        )
+        .optional()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?
+        .ok_or(RuntimeArtifactStoreError::NotFound)?;
+    let manifest = from_json::<RuntimeArtifactManifest>(&row.manifest_json)
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    verify_runtime_artifact_manifest(&manifest)
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    if manifest.artifact_id != *artifact_id || !row.matches(&manifest) {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    Ok(manifest)
+}
+
+fn load_artifact_state(
+    store: &OperationalStore,
+    reference: &RuntimeArtifactRef,
+) -> Result<RuntimeArtifactState, RuntimeArtifactStoreError> {
+    let retained = store
+        .connection
+        .query_row(
+            "SELECT revision, lifecycle_state, integrity_state, reason_code,
+                    updated_at_epoch_ms, state_sha256
+             FROM runtime_artifact_states WHERE artifact_id = ?1",
+            [reference.artifact_id.as_str()],
+            |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, String>(5)?,
+                ))
+            },
+        )
+        .optional()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?
+        .ok_or(RuntimeArtifactStoreError::Integrity)?;
+    let revision = u64::try_from(retained.0).map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    let lifecycle = parse_lifecycle(&retained.1)?;
+    let integrity = parse_integrity(&retained.2)?;
+    let updated_at_epoch_ms =
+        u64::try_from(retained.4).map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    let expected = artifact_state_digest(
+        &reference.artifact_id,
+        revision,
+        lifecycle,
+        integrity,
+        &retained.3,
+        updated_at_epoch_ms,
+    );
+    if retained.5 != expected {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    Ok(RuntimeArtifactState {
+        reference: reference.clone(),
+        lifecycle,
+        integrity,
+        revision,
+        reason_code: retained.3,
+        updated_at_epoch_ms,
+    })
+}
+
+fn transition_artifact(
+    store: &mut OperationalStore,
+    manifest: &RuntimeArtifactManifest,
+    lifecycle: RuntimeArtifactLifecycleState,
+    integrity: RuntimeArtifactIntegrityState,
+    reason_code: &str,
+    occurred_at_epoch_ms: u64,
+) -> Result<(), RuntimeArtifactStoreError> {
+    if !valid_reason_code(reason_code) || occurred_at_epoch_ms < manifest.created_at_epoch_ms {
+        return Err(RuntimeArtifactStoreError::Contract(
+            RuntimeArtifactError::InvalidManifest,
+        ));
+    }
+    let transaction = store
+        .connection
+        .transaction_with_behavior(TransactionBehavior::Immediate)
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    transition_artifact_in_transaction(
+        &transaction,
+        manifest,
+        lifecycle,
+        integrity,
+        reason_code,
+        occurred_at_epoch_ms,
+    )?;
+    transaction
+        .commit()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)
+}
+
+fn transition_artifact_in_transaction(
+    transaction: &Transaction<'_>,
+    manifest: &RuntimeArtifactManifest,
+    lifecycle: RuntimeArtifactLifecycleState,
+    integrity: RuntimeArtifactIntegrityState,
+    reason_code: &str,
+    occurred_at_epoch_ms: u64,
+) -> Result<(), RuntimeArtifactStoreError> {
+    let current = transaction
+        .query_row(
+            "SELECT revision, lifecycle_state, integrity_state, updated_at_epoch_ms
+             FROM runtime_artifact_states WHERE artifact_id = ?1",
+            [manifest.artifact_id.as_str()],
+            |row| {
+                Ok((
+                    row.get::<_, i64>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, i64>(3)?,
+                ))
+            },
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    let revision = u64::try_from(current.0).map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    let current_lifecycle = parse_lifecycle(&current.1)?;
+    let current_integrity = parse_integrity(&current.2)?;
+    let current_time =
+        u64::try_from(current.3).map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    if occurred_at_epoch_ms < current_time {
+        return Err(RuntimeArtifactStoreError::Contract(
+            RuntimeArtifactError::InvalidManifest,
+        ));
+    }
+    if current_lifecycle == lifecycle && current_integrity == integrity {
+        return Ok(());
+    }
+    if !legal_lifecycle_transition(current_lifecycle, lifecycle, integrity) {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    let next_revision = revision
+        .checked_add(1)
+        .ok_or(RuntimeArtifactStoreError::Integrity)?;
+    let state_sha256 = artifact_state_digest(
+        &manifest.artifact_id,
+        next_revision,
+        lifecycle,
+        integrity,
+        reason_code,
+        occurred_at_epoch_ms,
+    );
+    let changed = transaction
+        .execute(
+            "UPDATE runtime_artifact_states
+             SET revision = ?1, lifecycle_state = ?2, integrity_state = ?3,
+                 reason_code = ?4, updated_at_epoch_ms = ?5, state_sha256 = ?6
+             WHERE artifact_id = ?7 AND revision = ?8",
+            params![
+                sql_u64(next_revision)?,
+                lifecycle_text(lifecycle),
+                integrity_text(integrity),
+                reason_code,
+                sql_u64(occurred_at_epoch_ms)?,
+                &state_sha256,
+                manifest.artifact_id.as_str(),
+                sql_u64(revision)?,
+            ],
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    if changed != 1 {
+        return Err(RuntimeArtifactStoreError::Integrity);
+    }
+    let previous_event_sha256: String = transaction
+        .query_row(
+            "SELECT event_sha256 FROM runtime_artifact_events
+             WHERE artifact_id = ?1 AND revision = ?2",
+            params![manifest.artifact_id.as_str(), sql_u64(revision)?],
+            |row| row.get(0),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Integrity)?;
+    let event_sha256 = artifact_event_digest(
+        &manifest.artifact_id,
+        next_revision,
+        lifecycle,
+        integrity,
+        reason_code,
+        occurred_at_epoch_ms,
+        &previous_event_sha256,
+        &state_sha256,
+    );
+    transaction
+        .execute(
+            "INSERT INTO runtime_artifact_events(
+                 artifact_id, revision, lifecycle_state, integrity_state, reason_code,
+                 occurred_at_epoch_ms, previous_event_sha256, state_sha256, event_sha256
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            params![
+                manifest.artifact_id.as_str(),
+                sql_u64(next_revision)?,
+                lifecycle_text(lifecycle),
+                integrity_text(integrity),
+                reason_code,
+                sql_u64(occurred_at_epoch_ms)?,
+                &previous_event_sha256,
+                &state_sha256,
+                &event_sha256,
+            ],
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    if current_lifecycle == RuntimeArtifactLifecycleState::Active
+        && lifecycle != RuntimeArtifactLifecycleState::Active
+    {
+        let changed = transaction
+            .execute(
+                "UPDATE runtime_payloads
+                 SET active_reference_count = active_reference_count - 1,
+                     updated_at_epoch_ms = MAX(updated_at_epoch_ms, ?1)
+                 WHERE payload_sha256 = ?2 AND active_reference_count > 0",
+                params![sql_u64(occurred_at_epoch_ms)?, &manifest.payload_sha256],
+            )
+            .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+        if changed != 1 {
+            return Err(RuntimeArtifactStoreError::Integrity);
+        }
+    }
+    Ok(())
+}
+
+fn legal_lifecycle_transition(
+    current: RuntimeArtifactLifecycleState,
+    next: RuntimeArtifactLifecycleState,
+    integrity: RuntimeArtifactIntegrityState,
+) -> bool {
+    matches!(
+        (current, next, integrity),
+        (
+            RuntimeArtifactLifecycleState::Active,
+            RuntimeArtifactLifecycleState::Released,
+            RuntimeArtifactIntegrityState::Verified
+        ) | (
+            RuntimeArtifactLifecycleState::Active,
+            RuntimeArtifactLifecycleState::Quarantined,
+            RuntimeArtifactIntegrityState::Quarantined
+                | RuntimeArtifactIntegrityState::Missing
+                | RuntimeArtifactIntegrityState::Corrupt
+        ) | (
+            RuntimeArtifactLifecycleState::Released | RuntimeArtifactLifecycleState::Quarantined,
+            RuntimeArtifactLifecycleState::Deleted,
+            RuntimeArtifactIntegrityState::Deleted
+        )
+    )
+}
+
+struct RetainedManifestRow {
+    manifest_sha256: String,
+    payload_sha256: String,
+    byte_size: i64,
+    media_type: String,
+    artifact_kind: String,
+    sensitivity: String,
+    retention_kind: String,
+    retention_expires_at_epoch_ms: Option<i64>,
+    session_id: String,
+    task_id: String,
+    producer_run_id: String,
+    producer_turn_id: Option<String>,
+    producer_operation_id: Option<String>,
+    receipt_id: Option<String>,
+    policy_id: String,
+    policy_sha256: String,
+    created_at_epoch_ms: i64,
+    manifest_json: Vec<u8>,
+}
+
+impl RetainedManifestRow {
+    fn matches(&self, manifest: &RuntimeArtifactManifest) -> bool {
+        self.manifest_sha256 == manifest.manifest_sha256
+            && self.payload_sha256 == manifest.payload_sha256
+            && u64::try_from(self.byte_size).ok() == Some(manifest.byte_size)
+            && self.media_type == manifest.media_type
+            && self.artifact_kind == artifact_kind_text(manifest.kind)
+            && self.sensitivity == sensitivity_text(manifest.sensitivity)
+            && self.retention_kind == retention_text(manifest.retention.kind)
+            && self
+                .retention_expires_at_epoch_ms
+                .and_then(|value| u64::try_from(value).ok())
+                == manifest.retention.expires_at_epoch_ms
+            && self.session_id == manifest.session_id.as_str()
+            && self.task_id == manifest.task_id.as_str()
+            && self.producer_run_id == manifest.producer_run_id.as_str()
+            && self.producer_turn_id.as_deref()
+                == manifest
+                    .producer_turn_id
+                    .as_ref()
+                    .map(|value| value.as_str())
+            && self.producer_operation_id.as_deref()
+                == manifest
+                    .producer_operation_id
+                    .as_ref()
+                    .map(|value| value.as_str())
+            && self.receipt_id.as_deref()
+                == manifest.receipt_id.as_ref().map(|value| value.as_str())
+            && self.policy_id == manifest.policy_id.as_str()
+            && self.policy_sha256 == manifest.policy_sha256
+            && u64::try_from(self.created_at_epoch_ms).ok() == Some(manifest.created_at_epoch_ms)
+    }
+}
+
+fn payload_observation(manifest: &RuntimeArtifactManifest) -> RuntimeArtifactPayloadObservation {
+    RuntimeArtifactPayloadObservation {
+        payload_sha256: manifest.payload_sha256.clone(),
+        byte_size: manifest.byte_size,
+    }
+}
+
+fn sql_u64(value: u64) -> Result<i64, RuntimeArtifactStoreError> {
+    i64::try_from(value)
+        .map_err(|_| RuntimeArtifactStoreError::Contract(RuntimeArtifactError::InvalidManifest))
+}
+
+const fn artifact_kind_text(kind: RuntimeArtifactKind) -> &'static str {
+    match kind {
+        RuntimeArtifactKind::Patch => "patch",
+        RuntimeArtifactKind::StandardOutput => "standard_output",
+        RuntimeArtifactKind::StandardError => "standard_error",
+        RuntimeArtifactKind::TestLog => "test_log",
+        RuntimeArtifactKind::GeneratedFile => "generated_file",
+        RuntimeArtifactKind::Report => "report",
+        RuntimeArtifactKind::ModelOutput => "model_output",
+    }
+}
+
+const fn sensitivity_text(sensitivity: ContextSensitivity) -> &'static str {
+    match sensitivity {
+        ContextSensitivity::Public => "public",
+        ContextSensitivity::Internal => "internal",
+        ContextSensitivity::Private => "private",
+        ContextSensitivity::Restricted => "restricted",
+    }
+}
+
+const fn retention_text(retention: RuntimeEventRetentionKind) -> &'static str {
+    match retention {
+        RuntimeEventRetentionKind::Ephemeral => "ephemeral",
+        RuntimeEventRetentionKind::Session => "session",
+        RuntimeEventRetentionKind::UntilExpiration => "until_expiration",
+        RuntimeEventRetentionKind::UserHold => "user_hold",
+    }
+}
+
+const fn lifecycle_text(lifecycle: RuntimeArtifactLifecycleState) -> &'static str {
+    match lifecycle {
+        RuntimeArtifactLifecycleState::Active => "active",
+        RuntimeArtifactLifecycleState::Quarantined => "quarantined",
+        RuntimeArtifactLifecycleState::Released => "released",
+        RuntimeArtifactLifecycleState::Deleted => "deleted",
+    }
+}
+
+const fn integrity_text(integrity: RuntimeArtifactIntegrityState) -> &'static str {
+    match integrity {
+        RuntimeArtifactIntegrityState::Verified => "verified",
+        RuntimeArtifactIntegrityState::Quarantined => "quarantined",
+        RuntimeArtifactIntegrityState::Missing => "missing",
+        RuntimeArtifactIntegrityState::Corrupt => "corrupt",
+        RuntimeArtifactIntegrityState::Deleted => "deleted",
+    }
+}
+
+fn parse_lifecycle(
+    value: &str,
+) -> Result<RuntimeArtifactLifecycleState, RuntimeArtifactStoreError> {
+    match value {
+        "active" => Ok(RuntimeArtifactLifecycleState::Active),
+        "quarantined" => Ok(RuntimeArtifactLifecycleState::Quarantined),
+        "released" => Ok(RuntimeArtifactLifecycleState::Released),
+        "deleted" => Ok(RuntimeArtifactLifecycleState::Deleted),
+        _ => Err(RuntimeArtifactStoreError::Integrity),
+    }
+}
+
+fn parse_integrity(
+    value: &str,
+) -> Result<RuntimeArtifactIntegrityState, RuntimeArtifactStoreError> {
+    match value {
+        "verified" => Ok(RuntimeArtifactIntegrityState::Verified),
+        "quarantined" => Ok(RuntimeArtifactIntegrityState::Quarantined),
+        "missing" => Ok(RuntimeArtifactIntegrityState::Missing),
+        "corrupt" => Ok(RuntimeArtifactIntegrityState::Corrupt),
+        "deleted" => Ok(RuntimeArtifactIntegrityState::Deleted),
+        _ => Err(RuntimeArtifactStoreError::Integrity),
+    }
+}
+
+fn valid_reason_code(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'_' | b'-')
+        })
+}
+
+fn artifact_state_digest(
+    artifact_id: &RuntimeArtifactId,
+    revision: u64,
+    lifecycle: RuntimeArtifactLifecycleState,
+    integrity: RuntimeArtifactIntegrityState,
+    reason_code: &str,
+    updated_at_epoch_ms: u64,
+) -> String {
+    digest_fields(&[
+        "agentmage.runtime-artifact-state.v1",
+        artifact_id.as_str(),
+        &revision.to_string(),
+        lifecycle_text(lifecycle),
+        integrity_text(integrity),
+        reason_code,
+        &updated_at_epoch_ms.to_string(),
+    ])
+}
+
+#[allow(clippy::too_many_arguments)]
+fn artifact_event_digest(
+    artifact_id: &RuntimeArtifactId,
+    revision: u64,
+    lifecycle: RuntimeArtifactLifecycleState,
+    integrity: RuntimeArtifactIntegrityState,
+    reason_code: &str,
+    occurred_at_epoch_ms: u64,
+    previous_event_sha256: &str,
+    state_sha256: &str,
+) -> String {
+    digest_fields(&[
+        "agentmage.runtime-artifact-event.v1",
+        artifact_id.as_str(),
+        &revision.to_string(),
+        lifecycle_text(lifecycle),
+        integrity_text(integrity),
+        reason_code,
+        &occurred_at_epoch_ms.to_string(),
+        previous_event_sha256,
+        state_sha256,
+    ])
+}
+
+fn digest_fields(fields: &[&str]) -> String {
+    let mut digest = Sha256::new();
+    for field in fields {
+        digest.update(field.as_bytes());
+        digest.update([0]);
+    }
+    digest
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 
 fn validate_manifest_fields(
@@ -296,20 +2119,40 @@ fn sha256(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+    use std::fs;
+    use std::io::{Cursor, Read};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
     use agentmage_kernel_contracts::{
-        CONTRACT_SCHEMA_VERSION, ContextSensitivity, PolicyId, RuntimeArtifactId,
-        RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactManifest,
-        RuntimeArtifactPreview, RuntimeEventCursor, RuntimeEventId, RuntimeEventRetention,
-        RuntimeEventRetentionKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId,
-        RuntimeTurnId, SessionCheckpointId, SessionId, TaskId,
+        CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity, ContextSensitivity, CorrelationId,
+        EvidenceId, ModelProfileId, PlanId, PlanStepId, PolicyId, RepositorySnapshotId,
+        RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
+        RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeArtifactPreview,
+        RuntimeEvent, RuntimeEventCursor, RuntimeEventId, RuntimeEventKind,
+        RuntimeEventPersistenceClass, RuntimeEventRetention, RuntimeEventRetentionKind,
+        RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId, RuntimeTurnId, SessionCheckpoint,
+        SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
+        TaskId, WorkspaceId,
     };
 
     use super::{
-        MAX_RUNTIME_ARTIFACT_BYTES, RuntimeArtifactError, runtime_artifact_ref,
-        runtime_payload_reference, seal_runtime_artifact_manifest, seal_runtime_resume_binding,
+        MAX_RUNTIME_ARTIFACT_BYTES, RuntimeArtifactError, RuntimeArtifactPayloadError,
+        RuntimeArtifactPayloadInventoryEntry, RuntimeArtifactPayloadObservation,
+        RuntimeArtifactPayloadPlacement, RuntimeArtifactPayloadStore, RuntimeArtifactReadRequest,
+        RuntimeArtifactStoreError, runtime_artifact_ref, runtime_payload_reference,
+        seal_runtime_artifact_manifest, seal_runtime_resume_binding,
         verify_runtime_artifact_manifest, verify_runtime_artifact_ref,
         verify_runtime_resume_binding,
     };
+    use crate::context_management::finalize_checkpoint;
+    use crate::operational_store::{
+        DurableAuthorityError, DurableAuthorityRuntime, OperationalStore, OperationalStoreKeyError,
+        OperationalStoreKeyProvider,
+    };
+    use crate::runtime_event::seal_runtime_event;
+
+    static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
 
     fn digest(value: char) -> String {
         value.to_string().repeat(64)
@@ -320,7 +2163,8 @@ mod tests {
             schema_version: CONTRACT_SCHEMA_VERSION,
             artifact_id: RuntimeArtifactId::from_raw("runtime-artifact-1"),
             kind: RuntimeArtifactKind::TestLog,
-            payload_sha256: digest('a'),
+            payload_sha256: "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882"
+                .to_owned(),
             byte_size: 10,
             media_type: "text/plain".to_owned(),
             sensitivity: ContextSensitivity::Private,
@@ -348,6 +2192,260 @@ mod tests {
             manifest_sha256: digest('0'),
         })
         .expect("valid manifest")
+    }
+
+    struct TestKey;
+
+    impl OperationalStoreKeyProvider for TestKey {
+        fn with_key<T>(
+            &mut self,
+            operation: impl FnOnce(&[u8]) -> T,
+        ) -> Result<T, OperationalStoreKeyError> {
+            Ok(operation(&[31; 32]))
+        }
+    }
+
+    #[derive(Default)]
+    struct FakePayloadStore {
+        objects: BTreeMap<String, Vec<u8>>,
+        quarantined: BTreeMap<String, Vec<u8>>,
+        interrupted_staging: u64,
+    }
+
+    impl RuntimeArtifactPayloadStore for FakePayloadStore {
+        type Staged = Vec<u8>;
+
+        fn stage(
+            &mut self,
+            _artifact_id: &RuntimeArtifactId,
+            source: &mut dyn Read,
+            maximum_bytes: u64,
+        ) -> Result<(Self::Staged, RuntimeArtifactPayloadObservation), RuntimeArtifactPayloadError>
+        {
+            let mut bytes = Vec::new();
+            source
+                .take(maximum_bytes + 1)
+                .read_to_end(&mut bytes)
+                .map_err(|_| RuntimeArtifactPayloadError::Durability)?;
+            if bytes.is_empty() || bytes.len() as u64 > maximum_bytes {
+                return Err(RuntimeArtifactPayloadError::ResourceLimit);
+            }
+            let observation = RuntimeArtifactPayloadObservation {
+                payload_sha256: super::sha256(&bytes),
+                byte_size: bytes.len() as u64,
+            };
+            Ok((bytes, observation))
+        }
+
+        fn discard_staged(
+            &mut self,
+            _staged: Self::Staged,
+        ) -> Result<(), RuntimeArtifactPayloadError> {
+            Ok(())
+        }
+
+        fn place(
+            &mut self,
+            staged: Self::Staged,
+            expected: &RuntimeArtifactPayloadObservation,
+        ) -> Result<RuntimeArtifactPayloadPlacement, RuntimeArtifactPayloadError> {
+            if staged.len() as u64 != expected.byte_size
+                || super::sha256(&staged) != expected.payload_sha256
+            {
+                return Err(RuntimeArtifactPayloadError::Invalid);
+            }
+            let deduplicated = match self.objects.get(&expected.payload_sha256) {
+                Some(retained) if retained == &staged => true,
+                Some(_) => return Err(RuntimeArtifactPayloadError::Conflict),
+                None => {
+                    self.objects.insert(expected.payload_sha256.clone(), staged);
+                    false
+                }
+            };
+            Ok(RuntimeArtifactPayloadPlacement {
+                observation: expected.clone(),
+                deduplicated,
+            })
+        }
+
+        fn verify(
+            &self,
+            expected: &RuntimeArtifactPayloadObservation,
+        ) -> Result<(), RuntimeArtifactPayloadError> {
+            let bytes = self
+                .objects
+                .get(&expected.payload_sha256)
+                .ok_or(RuntimeArtifactPayloadError::Missing)?;
+            if bytes.len() as u64 != expected.byte_size
+                || super::sha256(bytes) != expected.payload_sha256
+            {
+                return Err(RuntimeArtifactPayloadError::Corrupt);
+            }
+            Ok(())
+        }
+
+        fn read_complete(
+            &self,
+            expected: &RuntimeArtifactPayloadObservation,
+            maximum_bytes: u64,
+        ) -> Result<Vec<u8>, RuntimeArtifactPayloadError> {
+            if expected.byte_size > maximum_bytes {
+                return Err(RuntimeArtifactPayloadError::ResourceLimit);
+            }
+            self.verify(expected)?;
+            Ok(self.objects[&expected.payload_sha256].clone())
+        }
+
+        fn quarantine(
+            &mut self,
+            expected: &RuntimeArtifactPayloadObservation,
+        ) -> Result<(), RuntimeArtifactPayloadError> {
+            let bytes = self
+                .objects
+                .remove(&expected.payload_sha256)
+                .ok_or(RuntimeArtifactPayloadError::Missing)?;
+            self.quarantined
+                .insert(expected.payload_sha256.clone(), bytes);
+            Ok(())
+        }
+
+        fn delete(
+            &mut self,
+            expected: &RuntimeArtifactPayloadObservation,
+        ) -> Result<(), RuntimeArtifactPayloadError> {
+            if self.objects.remove(&expected.payload_sha256).is_some() {
+                Ok(())
+            } else {
+                Err(RuntimeArtifactPayloadError::Missing)
+            }
+        }
+
+        fn inventory(
+            &self,
+        ) -> Result<Vec<RuntimeArtifactPayloadInventoryEntry>, RuntimeArtifactPayloadError>
+        {
+            Ok(self
+                .objects
+                .iter()
+                .map(
+                    |(payload_sha256, bytes)| RuntimeArtifactPayloadInventoryEntry {
+                        payload_sha256: payload_sha256.clone(),
+                        byte_size: bytes.len() as u64,
+                    },
+                )
+                .collect())
+        }
+
+        fn cleanup_staging(&mut self) -> Result<u64, RuntimeArtifactPayloadError> {
+            let count = self.interrupted_staging;
+            self.interrupted_staging = 0;
+            Ok(count)
+        }
+    }
+
+    fn observation() -> StrictLocalStorageObservation {
+        StrictLocalStorageObservation {
+            filesystem: StorageFilesystemClass::Local,
+            synchronization_marker: None,
+            root_identity_sha256: [41; 32],
+            symlink_free: true,
+        }
+    }
+
+    fn temporary_directory() -> std::path::PathBuf {
+        let sequence = NEXT_DIRECTORY.fetch_add(1, Ordering::Relaxed);
+        let path = std::env::temp_dir().join(format!(
+            "agentmage-runtime-artifact-{}-{sequence}",
+            std::process::id()
+        ));
+        fs::create_dir(&path).expect("temporary directory");
+        path
+    }
+
+    fn runtime_with_run(path: &std::path::Path) -> DurableAuthorityRuntime {
+        let mut runtime =
+            DurableAuthorityRuntime::open(path, &observation(), &mut TestKey, 1).expect("runtime");
+        let event = seal_runtime_event(RuntimeEvent {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            event_id: RuntimeEventId::from_raw("event-runtime-artifact-start"),
+            run_id: RuntimeRunId::from_raw("run-1"),
+            session_id: SessionId::from_raw("session-1"),
+            task_id: TaskId::from_raw("task-1"),
+            turn_id: None,
+            operation_id: None,
+            correlation_id: CorrelationId::from_raw("correlation-1"),
+            causation_event_id: None,
+            sequence: 0,
+            occurred_at_epoch_ms: 1,
+            sensitivity: ContextSensitivity::Private,
+            retention: RuntimeEventRetention {
+                kind: RuntimeEventRetentionKind::Session,
+                expires_at_epoch_ms: None,
+            },
+            persistence: RuntimeEventPersistenceClass::Correctness,
+            policy_id: PolicyId::from_raw("policy-1"),
+            payload_reference: None,
+            kind: RuntimeEventKind::RunStarted {
+                request_sha256: digest('c'),
+            },
+            previous_event_sha256: digest('0'),
+            event_sha256: digest('0'),
+        })
+        .expect("run event");
+        runtime
+            .record_runtime_event(event)
+            .expect("run start persists");
+        runtime
+    }
+
+    fn manifest_with_id(artifact_id: &str) -> RuntimeArtifactManifest {
+        let mut candidate = manifest();
+        candidate.artifact_id = RuntimeArtifactId::from_raw(artifact_id);
+        seal_runtime_artifact_manifest(candidate).expect("manifest identity reseals")
+    }
+
+    fn checkpoint() -> SessionCheckpoint {
+        finalize_checkpoint(SessionCheckpoint {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: SessionCheckpointId::from_raw("checkpoint-runtime-artifact-1"),
+            session_id: SessionId::from_raw("session-1"),
+            task_id: TaskId::from_raw("task-1"),
+            objective_sha256: digest('1'),
+            plan_id: PlanId::from_raw("plan-1"),
+            plan_revision: 1,
+            plan_step_id: PlanStepId::from_raw("step-1"),
+            next_action_sha256: digest('2'),
+            workspace_id: WorkspaceId::from_raw("workspace-1"),
+            workspace_state_sha256: digest('3'),
+            repository_snapshot_id: RepositorySnapshotId::from_raw("snapshot-1"),
+            repository_branch: "main".to_owned(),
+            repository_map_sha256: digest('4'),
+            files: vec![CheckpointFileIdentity {
+                object_id: "object-1".to_owned(),
+                content_sha256: digest('5'),
+                observed_revision: "revision-1".to_owned(),
+            }],
+            instruction_sha256: digest('6'),
+            permission_profile_id: "permission-1".to_owned(),
+            permission_profile_sha256: digest('7'),
+            policy_id: PolicyId::from_raw("policy-1"),
+            policy_sha256: digest('b'),
+            model_profile_id: ModelProfileId::from_raw("model-1"),
+            model_manifest_sha256: digest('9'),
+            model_runtime_sha256: digest('a'),
+            evidence_ids: vec![EvidenceId::from_raw("evidence-1")],
+            citation_set_sha256: digest('c'),
+            blockers: Vec::new(),
+            context_packet_sha256: digest('d'),
+            action_id: None,
+            action_state: None,
+            consumed_grant_id: None,
+            receipt_id: None,
+            receipt_sha256: None,
+            ephemeral: false,
+            checkpoint_sha256: digest('0'),
+        })
+        .expect("checkpoint")
     }
 
     #[test]
@@ -461,5 +2559,336 @@ mod tests {
             seal_runtime_resume_binding(base),
             Err(RuntimeArtifactError::InvalidResumeBinding)
         );
+    }
+
+    #[test]
+    fn publication_deduplicates_without_broadening_owner_or_reference_state() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+        let bytes = b"0123456789";
+        let first = runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                manifest_with_id("runtime-artifact-1"),
+                &mut Cursor::new(bytes),
+            )
+            .expect("first artifact publishes");
+        assert!(!first.payload_deduplicated);
+        assert_eq!(
+            runtime
+                .read_runtime_artifact(
+                    &payloads,
+                    &RuntimeArtifactReadRequest {
+                        session_id: SessionId::from_raw("session-1"),
+                        task_id: TaskId::from_raw("task-1"),
+                        policy_sha256: digest('b'),
+                        reference: first.reference.clone(),
+                        now_epoch_ms: 1,
+                        maximum_bytes: 10,
+                    },
+                )
+                .expect("owner reads"),
+            bytes
+        );
+        assert_eq!(
+            runtime.read_runtime_artifact(
+                &payloads,
+                &RuntimeArtifactReadRequest {
+                    session_id: SessionId::from_raw("session-other"),
+                    task_id: TaskId::from_raw("task-1"),
+                    policy_sha256: digest('b'),
+                    reference: first.reference.clone(),
+                    now_epoch_ms: 1,
+                    maximum_bytes: 10,
+                },
+            ),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotAuthorized
+            ))
+        );
+
+        let duplicate = runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                first.manifest.clone(),
+                &mut Cursor::new(bytes),
+            )
+            .expect("exact duplicate is idempotent");
+        assert!(duplicate.payload_deduplicated);
+        assert_eq!(
+            runtime
+                .runtime_artifact_state(&first.reference)
+                .expect("state")
+                .revision,
+            1
+        );
+        let second = runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                manifest_with_id("runtime-artifact-2"),
+                &mut Cursor::new(bytes),
+            )
+            .expect("second logical reference deduplicates bytes");
+        assert!(second.payload_deduplicated);
+        assert_eq!(payloads.objects.len(), 1);
+
+        runtime
+            .release_runtime_artifact(
+                &SessionId::from_raw("session-1"),
+                &TaskId::from_raw("task-1"),
+                &digest('b'),
+                &first.reference,
+                2,
+            )
+            .expect("first reference releases");
+        let retained = runtime
+            .reconcile_runtime_artifacts(&mut payloads, 3)
+            .expect("shared payload remains");
+        assert_eq!(retained.verified_payloads, 1);
+        assert_eq!(payloads.objects.len(), 1);
+
+        runtime
+            .release_runtime_artifact(
+                &SessionId::from_raw("session-1"),
+                &TaskId::from_raw("task-1"),
+                &digest('b'),
+                &second.reference,
+                4,
+            )
+            .expect("second reference releases");
+        let collected = runtime
+            .reconcile_runtime_artifacts(&mut payloads, 5)
+            .expect("unreferenced payload collects");
+        assert_eq!(collected.deleted_orphans, 1);
+        assert!(payloads.objects.is_empty());
+        assert_eq!(
+            runtime
+                .runtime_artifact_state(&first.reference)
+                .expect("deleted first")
+                .lifecycle,
+            RuntimeArtifactLifecycleState::Deleted
+        );
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn missing_and_corrupt_payloads_quarantine_every_active_reference() {
+        for corrupt in [false, true] {
+            let directory = temporary_directory();
+            let path = directory.join("authority.db");
+            let mut runtime = runtime_with_run(&path);
+            let mut payloads = FakePayloadStore::default();
+            let publication = runtime
+                .publish_runtime_artifact(
+                    &mut payloads,
+                    manifest_with_id("runtime-artifact-1"),
+                    &mut Cursor::new(b"0123456789"),
+                )
+                .expect("artifact publishes");
+            if corrupt {
+                payloads
+                    .objects
+                    .get_mut(&publication.reference.payload_sha256)
+                    .expect("retained object")[0] = b'x';
+            } else {
+                payloads.objects.clear();
+            }
+            let report = runtime
+                .reconcile_runtime_artifacts(&mut payloads, 2)
+                .expect("integrity loss reconciles visibly");
+            assert_eq!(report.quarantined_payloads, 1);
+            let state = runtime
+                .runtime_artifact_state(&publication.reference)
+                .expect("quarantined state");
+            assert_eq!(state.lifecycle, RuntimeArtifactLifecycleState::Quarantined);
+            assert_eq!(
+                state.integrity,
+                if corrupt {
+                    RuntimeArtifactIntegrityState::Corrupt
+                } else {
+                    RuntimeArtifactIntegrityState::Missing
+                }
+            );
+            assert_eq!(
+                runtime.read_runtime_artifact(
+                    &payloads,
+                    &RuntimeArtifactReadRequest {
+                        session_id: SessionId::from_raw("session-1"),
+                        task_id: TaskId::from_raw("task-1"),
+                        policy_sha256: digest('b'),
+                        reference: publication.reference.clone(),
+                        now_epoch_ms: 2,
+                        maximum_bytes: 10,
+                    },
+                ),
+                Err(DurableAuthorityError::RuntimeArtifact(
+                    RuntimeArtifactStoreError::NotAuthorized
+                ))
+            );
+            drop(runtime);
+            fs::remove_dir_all(directory).expect("cleanup");
+        }
+    }
+
+    #[test]
+    fn metadata_projection_tampering_blocks_durable_restart() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        runtime
+            .publish_runtime_artifact(
+                &mut FakePayloadStore::default(),
+                manifest_with_id("runtime-artifact-1"),
+                &mut Cursor::new(b"0123456789"),
+            )
+            .expect("artifact publishes");
+        drop(runtime);
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey)
+            .expect("store opens before authority verification");
+        store
+            .connection
+            .execute(
+                "UPDATE runtime_artifacts SET media_type = 'application/json'
+                 WHERE artifact_id = 'runtime-artifact-1'",
+                [],
+            )
+            .expect("tamper projection");
+        drop(store);
+        assert!(DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey, 3).is_err());
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn checkpoint_cursor_and_artifact_set_publish_atomically_and_reopen() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+        let publication = runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                manifest_with_id("runtime-artifact-1"),
+                &mut Cursor::new(b"0123456789"),
+            )
+            .expect("artifact publishes");
+        let cursor = runtime
+            .runtime_event_cursor(&RuntimeRunId::from_raw("run-1"))
+            .expect("cursor loads")
+            .expect("cursor exists");
+        let checkpoint = checkpoint();
+        let binding = seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            run_id: RuntimeRunId::from_raw("run-1"),
+            event_cursor: cursor,
+            artifacts: vec![publication.reference],
+            binding_sha256: digest('0'),
+        })
+        .expect("binding");
+        runtime
+            .checkpoint_runtime_session(&checkpoint, &binding)
+            .expect("checkpoint and binding commit");
+        assert_eq!(
+            runtime
+                .current_runtime_resume_binding()
+                .expect("current binding"),
+            Some(binding.clone())
+        );
+        drop(runtime);
+
+        let reopened = DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey, 2)
+            .expect("verified runtime reopens");
+        assert_eq!(
+            reopened
+                .current_runtime_resume_binding()
+                .expect("reopened binding"),
+            Some(binding)
+        );
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn failed_resume_binding_rolls_back_the_checkpoint_and_requires_reopen() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let publication = runtime
+            .publish_runtime_artifact(
+                &mut FakePayloadStore::default(),
+                manifest_with_id("runtime-artifact-1"),
+                &mut Cursor::new(b"0123456789"),
+            )
+            .expect("artifact publishes");
+        let cursor = runtime
+            .runtime_event_cursor(&RuntimeRunId::from_raw("run-1"))
+            .expect("cursor loads")
+            .expect("cursor exists");
+        let checkpoint = checkpoint();
+        let binding = seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            run_id: RuntimeRunId::from_raw("run-1"),
+            event_cursor: cursor,
+            artifacts: vec![publication.reference],
+            binding_sha256: digest('0'),
+        })
+        .expect("binding");
+        drop(runtime);
+
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey)
+            .expect("store opens for failure injection");
+        store
+            .connection
+            .execute_batch(
+                "CREATE TRIGGER reject_runtime_resume_binding
+                 BEFORE INSERT ON runtime_resume_bindings
+                 BEGIN SELECT RAISE(ABORT, 'synthetic resume failure'); END;",
+            )
+            .expect("failure trigger");
+        drop(store);
+        let mut runtime = DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey, 2)
+            .expect("runtime reopens before checkpoint");
+        assert!(matches!(
+            runtime
+                .checkpoint_runtime_session(&checkpoint, &binding)
+                .expect_err("checkpoint transaction fails"),
+            DurableAuthorityError::Store(_)
+        ));
+        drop(runtime);
+
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey)
+            .expect("canonical store reopens after rollback");
+        let counts = store
+            .connection
+            .query_row(
+                "SELECT
+                    (SELECT COUNT(*) FROM session_checkpoints),
+                    (SELECT COUNT(*) FROM runtime_resume_bindings),
+                    (SELECT COUNT(*) FROM runtime_resume_artifacts),
+                    (SELECT generation FROM store_metadata WHERE singleton = 1)",
+                [],
+                |row| {
+                    Ok((
+                        row.get::<_, i64>(0)?,
+                        row.get::<_, i64>(1)?,
+                        row.get::<_, i64>(2)?,
+                        row.get::<_, i64>(3)?,
+                    ))
+                },
+            )
+            .expect("rollback counts");
+        assert_eq!(counts, (0, 0, 0, 0));
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
     }
 }
