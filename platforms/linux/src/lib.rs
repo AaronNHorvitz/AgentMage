@@ -95,8 +95,8 @@ use agentmage_kernel_contracts::{
 };
 use rustix::fd::OwnedFd;
 use rustix::fs::{
-    AtFlags, FileType, Mode, OFlags, ResolveFlags, Stat, StatxFlags, fstat, open, openat, openat2,
-    statx,
+    AtFlags, Dir, FileType, Mode, OFlags, ResolveFlags, Stat, StatxFlags, fstat, open, openat,
+    openat2, statx,
 };
 use rustix::io::{Errno, pread};
 use sha2::{Digest, Sha256};
@@ -108,6 +108,8 @@ pub const COMPONENT_ID: &str = "platform-linux";
 pub const DEFAULT_MAX_PREIMAGE_BYTES: u64 = 64 * 1024 * 1024;
 
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
+const MAX_DIRECTORY_OBSERVATION_NAMES: usize = 4_096;
+const MAX_DIRECTORY_OBSERVATION_BYTES: usize = 1024 * 1024;
 
 const STRICT_RESOLVE_FLAGS: ResolveFlags = ResolveFlags::BENEATH
     .union(ResolveFlags::NO_SYMLINKS)
@@ -238,6 +240,18 @@ impl LinuxAuthorizedWorkspace {
             return Err(adapter_error(PathAdapterErrorKind::MountChanged, None));
         }
         Ok(descriptor)
+    }
+
+    /// Observes a bounded sorted name projection from the continuously held root.
+    pub fn observe_root_names(
+        &self,
+        maximum_names: usize,
+        maximum_name_bytes: usize,
+    ) -> Result<Vec<String>, PathAdapterError> {
+        let descriptor = self.reopen_root_directory()?;
+        let names = observe_directory_names(&descriptor, maximum_names, maximum_name_bytes)?;
+        self.revalidate()?;
+        Ok(names)
     }
 }
 
@@ -392,6 +406,67 @@ impl LinuxHeldObject {
             return Err(adapter_error(PathAdapterErrorKind::IdentityChanged, None));
         }
         Ok(())
+    }
+
+    /// Reads the complete exact held-file preimage through its descriptor.
+    pub fn read_exact_bytes(&self) -> Result<Vec<u8>, PathAdapterError> {
+        if self.object_kind != WorkspaceObjectKind::RegularFile
+            || !matches!(
+                self.intent,
+                PathResolutionIntent::ReadFile | PathResolutionIntent::ContentHash
+            )
+        {
+            return Err(adapter_error(
+                PathAdapterErrorKind::ObjectKindMismatch,
+                None,
+            ));
+        }
+        self.revalidate()?;
+        let expected = self
+            .preimage
+            .as_ref()
+            .ok_or_else(|| adapter_error(PathAdapterErrorKind::IdentityChanged, None))?;
+        let length = usize::try_from(expected.byte_len())
+            .map_err(|_| adapter_error(PathAdapterErrorKind::ResourceLimitExceeded, None))?;
+        let mut bytes = vec![0_u8; length];
+        let mut offset = 0_usize;
+        while offset < bytes.len() {
+            let count = pread(&self.object_descriptor, &mut bytes[offset..], offset as u64)
+                .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, None))?;
+            if count == 0 {
+                return Err(adapter_error(PathAdapterErrorKind::IdentityChanged, None));
+            }
+            offset = offset
+                .checked_add(count)
+                .ok_or_else(|| adapter_error(PathAdapterErrorKind::ResourceLimitExceeded, None))?;
+        }
+        let observed: [u8; 32] = Sha256::digest(&bytes).into();
+        if &observed != expected.content_sha256() {
+            return Err(adapter_error(PathAdapterErrorKind::IdentityChanged, None));
+        }
+        self.revalidate()?;
+        Ok(bytes)
+    }
+
+    /// Observes a bounded sorted name projection from one held directory descriptor.
+    pub fn observe_directory_names(
+        &self,
+        maximum_names: usize,
+        maximum_name_bytes: usize,
+    ) -> Result<Vec<String>, PathAdapterError> {
+        if self.object_kind != WorkspaceObjectKind::Directory
+            || self.intent != PathResolutionIntent::ReadDirectory
+        {
+            return Err(adapter_error(
+                PathAdapterErrorKind::ObjectKindMismatch,
+                None,
+            ));
+        }
+        self.revalidate()?;
+        let names =
+            observe_directory_names(&self.object_descriptor, maximum_names, maximum_name_bytes)?;
+        self.revalidate()?;
+        Ok(names)
     }
 }
 
@@ -868,6 +943,55 @@ fn hash_preimage(
     Ok(FilePreimage::new(byte_len, digest.finalize().into()))
 }
 
+fn observe_directory_names(
+    descriptor: &OwnedFd,
+    maximum_names: usize,
+    maximum_name_bytes: usize,
+) -> Result<Vec<String>, PathAdapterError> {
+    if maximum_names == 0
+        || maximum_names > MAX_DIRECTORY_OBSERVATION_NAMES
+        || maximum_name_bytes == 0
+        || maximum_name_bytes > MAX_DIRECTORY_OBSERVATION_BYTES
+    {
+        return Err(adapter_error(
+            PathAdapterErrorKind::ResourceLimitExceeded,
+            None,
+        ));
+    }
+    let entries = Dir::read_from(descriptor)
+        .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, None))?;
+    let mut names = Vec::new();
+    let mut total_bytes = 0_usize;
+    for entry in entries {
+        let entry =
+            entry.map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, None))?;
+        let bytes = entry.file_name().to_bytes();
+        if matches!(bytes, b"." | b"..") {
+            continue;
+        }
+        if names.len() >= maximum_names {
+            return Err(adapter_error(
+                PathAdapterErrorKind::ResourceLimitExceeded,
+                None,
+            ));
+        }
+        total_bytes = total_bytes
+            .checked_add(bytes.len())
+            .filter(|value| *value <= maximum_name_bytes)
+            .ok_or_else(|| adapter_error(PathAdapterErrorKind::ResourceLimitExceeded, None))?;
+        names.push(
+            std::str::from_utf8(bytes)
+                .map_err(|_| adapter_error(PathAdapterErrorKind::UnsafeComponent, None))?
+                .to_owned(),
+        );
+    }
+    names.sort_unstable();
+    if names.windows(2).any(|pair| pair[0] >= pair[1]) {
+        return Err(adapter_error(PathAdapterErrorKind::PlatformFailure, None));
+    }
+    Ok(names)
+}
+
 fn identity_digest(domain: &[u8], snapshot: &LinuxStatSnapshot) -> [u8; 32] {
     let mut digest = Sha256::new();
     digest.update((domain.len() as u64).to_be_bytes());
@@ -1066,6 +1190,31 @@ mod tests {
     }
 
     #[test]
+    fn held_workspace_root_observes_sorted_bounded_child_names() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir(&root).expect("workspace creates");
+        fs::write(root.join("zeta.txt"), b"zeta\n").expect("zeta fixture writes");
+        fs::create_dir(root.join("alpha")).expect("alpha fixture creates");
+        let workspace = authorize_for_test(&root);
+
+        assert_eq!(
+            workspace
+                .observe_root_names(2, 32)
+                .expect("root observation succeeds"),
+            ["alpha".to_owned(), "zeta.txt".to_owned()]
+        );
+        let error = workspace
+            .observe_root_names(1, 32)
+            .expect_err("name limit rejects complete observation");
+        assert_eq!(error.kind(), PathAdapterErrorKind::ResourceLimitExceeded);
+        let error = workspace
+            .observe_root_names(2, 0)
+            .expect_err("zero byte limit rejects");
+        assert_eq!(error.kind(), PathAdapterErrorKind::ResourceLimitExceeded);
+    }
+
+    #[test]
     fn descriptor_walk_holds_the_original_file_and_exact_preimage_across_replacement() {
         let test = TestDirectory::new();
         let root = test.path.join("workspace");
@@ -1105,6 +1254,79 @@ mod tests {
         fs::write(root.join("docs/input.txt"), b"replacement bytes\n").expect("replacement writes");
         held.revalidate()
             .expect("held descriptor remains the validated original object");
+    }
+
+    #[test]
+    fn held_file_reads_exact_bytes_and_rejects_post_resolution_mutation() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir(&root).expect("workspace creates");
+        let original = b"exact held bytes\n";
+        fs::write(root.join("input.txt"), original).expect("fixture writes");
+        let workspace = authorize_for_test(&root);
+        let held = adapter()
+            .resolve(
+                &workspace,
+                &path(&["input.txt"]),
+                PathResolutionIntent::ContentHash,
+            )
+            .expect("held file resolves");
+
+        assert_eq!(held.read_exact_bytes().expect("exact bytes read"), original);
+        fs::write(root.join("input.txt"), b"mutated held bytes\n").expect("fixture mutates");
+        let error = held
+            .read_exact_bytes()
+            .expect_err("mutation invalidates exact read");
+        assert_eq!(error.kind(), PathAdapterErrorKind::IdentityChanged);
+    }
+
+    #[test]
+    fn held_directory_observes_names_and_rejects_file_read_semantics() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir_all(root.join("docs")).expect("fixture directories create");
+        fs::write(root.join("docs/beta.txt"), b"beta\n").expect("beta fixture writes");
+        fs::write(root.join("docs/alpha.txt"), b"alpha\n").expect("alpha fixture writes");
+        let workspace = authorize_for_test(&root);
+        let held = adapter()
+            .resolve(
+                &workspace,
+                &path(&["docs"]),
+                PathResolutionIntent::ReadDirectory,
+            )
+            .expect("held directory resolves");
+
+        assert_eq!(
+            held.observe_directory_names(2, 32)
+                .expect("directory observation succeeds"),
+            ["alpha.txt".to_owned(), "beta.txt".to_owned()]
+        );
+        let error = held
+            .read_exact_bytes()
+            .expect_err("directory cannot be read as a file");
+        assert_eq!(error.kind(), PathAdapterErrorKind::ObjectKindMismatch);
+    }
+
+    #[test]
+    fn held_directory_observation_rejects_post_resolution_mutation() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir_all(root.join("docs")).expect("fixture directories create");
+        fs::write(root.join("docs/original.txt"), b"original\n").expect("fixture writes");
+        let workspace = authorize_for_test(&root);
+        let held = adapter()
+            .resolve(
+                &workspace,
+                &path(&["docs"]),
+                PathResolutionIntent::ReadDirectory,
+            )
+            .expect("held directory resolves");
+
+        fs::write(root.join("docs/added.txt"), b"added\n").expect("directory mutates");
+        let error = held
+            .observe_directory_names(8, 128)
+            .expect_err("directory mutation invalidates observation");
+        assert_eq!(error.kind(), PathAdapterErrorKind::IdentityChanged);
     }
 
     #[test]
