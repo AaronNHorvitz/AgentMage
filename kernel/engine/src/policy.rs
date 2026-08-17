@@ -93,7 +93,7 @@ pub struct PolicyDocument {
     pub tools: ScopeRules<ToolPolicyBinding>,
     /// Operation-class allow/deny rules.
     pub operations: ScopeRules<OperationBinding>,
-    /// Workspace-target allow/deny rules.
+    /// Exact workspace-target or authorization-bound workspace-scope allow/deny rules.
     pub targets: ScopeRules<GrantTarget>,
     /// Argument digests denied even when an exact grant names them.
     pub denied_argument_sha256s: BTreeSet<String>,
@@ -364,10 +364,20 @@ impl PolicyEngine {
             return deny(PolicyDenialScope::Operation);
         }
         if context.targets != grant.targets
-            || context
-                .targets
-                .iter()
-                .any(|target| !self.document.targets.allows(target))
+            || context.targets.iter().any(|target| {
+                !self
+                    .document
+                    .targets
+                    .allowed
+                    .iter()
+                    .any(|allowed| allowed == target || allowed.contains(target))
+                    || self
+                        .document
+                        .targets
+                        .denied
+                        .iter()
+                        .any(|denied| denied == target || denied.overlaps_operation(target))
+            })
         {
             return deny(PolicyDenialScope::Path);
         }
@@ -487,7 +497,7 @@ fn validate_document(document: &PolicyDocument) -> Result<(), PolicyBuildError> 
         .iter()
         .chain(&document.targets.denied)
     {
-        if !target.is_operation_target() {
+        if !target.is_operation_target() && target.scope_path().is_none() {
             return Err(PolicyBuildError::InvalidDocument);
         }
         validate_scope_value(target.workspace_id().as_str())?;
@@ -766,6 +776,29 @@ mod tests {
         assert_eq!(
             engine.evaluate(&issuer, &forged, &exact).denial_scope,
             Some(PolicyDenialScope::Grant)
+        );
+    }
+
+    #[test]
+    fn authorization_bound_workspace_scopes_admit_only_contained_operation_targets() {
+        let mut admitted = document(GrantOperation::WorkspaceRead);
+        admitted.targets = ScopeRules {
+            allowed: BTreeSet::from([scope(&[])]),
+            denied: BTreeSet::from([scope(&["private"])]),
+        };
+        let engine = PolicyEngine::new(admitted).expect("scoped policy");
+        let (issuer, grant) = issued_operation(&engine, GrantOperation::WorkspaceRead);
+        assert!(engine.evaluate(&issuer, &grant, &context(&grant)).allowed);
+
+        let mut denied = document(GrantOperation::WorkspaceRead);
+        denied.targets = ScopeRules {
+            allowed: BTreeSet::from([scope(&[])]),
+            denied: BTreeSet::from([scope(&["src"])]),
+        };
+        assert_document_denies(
+            denied,
+            GrantOperation::WorkspaceRead,
+            PolicyDenialScope::Path,
         );
     }
 
