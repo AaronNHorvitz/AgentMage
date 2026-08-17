@@ -1317,7 +1317,10 @@ const fn retention_code(value: RuntimeEventRetentionKind) -> &'static str {
 
 #[cfg(test)]
 mod tests {
+    use std::env;
     use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::mpsc;
     use std::sync::{Arc, Mutex};
@@ -1327,8 +1330,9 @@ mod tests {
     use agentmage_kernel_contracts::{
         AgentStateKind, CONTRACT_SCHEMA_VERSION, ContextSensitivity, CorrelationId, PolicyId,
         RuntimeEvent, RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass,
-        RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeRunId, RuntimeTurnId, SessionId,
-        StorageFilesystemClass, StrictLocalStorageObservation, TaskId,
+        RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeRunId, RuntimeTurnId,
+        SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
+        TaskId,
     };
 
     use super::{
@@ -1343,7 +1347,65 @@ mod tests {
     };
 
     const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
+    const JOURNAL_CRASH_CHILD_EXIT: i32 = 87;
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum JournalCrashBoundary {
+        QueueAdmission,
+        BatchFlush,
+        CorrectnessTransaction,
+        SubscriberPublication,
+    }
+
+    impl JournalCrashBoundary {
+        const ALL: [Self; 4] = [
+            Self::QueueAdmission,
+            Self::BatchFlush,
+            Self::CorrectnessTransaction,
+            Self::SubscriberPublication,
+        ];
+
+        const fn code(self) -> &'static str {
+            match self {
+                Self::QueueAdmission => "queue-admission",
+                Self::BatchFlush => "batch-flush",
+                Self::CorrectnessTransaction => "correctness-transaction",
+                Self::SubscriberPublication => "subscriber-publication",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            Self::ALL
+                .into_iter()
+                .find(|boundary| boundary.code() == code)
+                .expect("declared journal crash boundary")
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum JournalCrashPosition {
+        Before,
+        After,
+    }
+
+    impl JournalCrashPosition {
+        const ALL: [Self; 2] = [Self::Before, Self::After];
+
+        const fn code(self) -> &'static str {
+            match self {
+                Self::Before => "before",
+                Self::After => "after",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            Self::ALL
+                .into_iter()
+                .find(|position| position.code() == code)
+                .expect("declared journal crash position")
+        }
+    }
 
     struct TestKey;
 
@@ -1437,6 +1499,138 @@ mod tests {
                 ),
             ]
         }
+    }
+
+    fn journal_crash_events(boundary: JournalCrashBoundary) -> [RuntimeEvent; 3] {
+        let mut fixture = EventFixture::new();
+        let start = fixture.event(
+            RuntimeEventKind::RunStarted {
+                request_sha256: "d".repeat(64),
+            },
+            None,
+        );
+        let middle = match boundary {
+            JournalCrashBoundary::QueueAdmission | JournalCrashBoundary::BatchFlush => fixture
+                .event(
+                    RuntimeEventKind::Progress {
+                        code: "runtime.progress".to_owned(),
+                    },
+                    None,
+                ),
+            JournalCrashBoundary::CorrectnessTransaction
+            | JournalCrashBoundary::SubscriberPublication => fixture.event(
+                RuntimeEventKind::CheckpointCommitted {
+                    checkpoint_id: SessionCheckpointId::from_raw("journal-crash-checkpoint-1"),
+                    checkpoint_sha256: "e".repeat(64),
+                },
+                None,
+            ),
+        };
+        let terminal = fixture.event(
+            RuntimeEventKind::RunTerminal {
+                state: AgentStateKind::Success,
+                outcome_sha256: "f".repeat(64),
+            },
+            None,
+        );
+        [start, middle, terminal]
+    }
+
+    fn journal_crash_marker(directory: &Path) -> PathBuf {
+        directory.join("subscriber-delivered")
+    }
+
+    fn journal_crash_stop() -> ! {
+        std::process::exit(JOURNAL_CRASH_CHILD_EXIT)
+    }
+
+    fn prepare_journal_crash_fixture(directory: &Path, boundary: JournalCrashBoundary) {
+        let [start, _, _] = journal_crash_events(boundary);
+        let store = Arc::new(Mutex::new(
+            OperationalStore::open(
+                &directory.join("authority.db"),
+                &observation(),
+                &mut TestKey,
+            )
+            .expect("journal crash store"),
+        ));
+        let worker = RuntimeJournalWorker::new(Arc::clone(&store)).expect("journal crash worker");
+        assert!(worker.append(start).expect("durable run start").durable);
+        drop(worker);
+        drop(store);
+    }
+
+    fn run_journal_crash_child(
+        directory: &Path,
+        boundary: JournalCrashBoundary,
+        position: JournalCrashPosition,
+    ) -> ! {
+        let [start, middle, _] = journal_crash_events(boundary);
+        let store = Arc::new(Mutex::new(
+            OperationalStore::open(
+                &directory.join("authority.db"),
+                &observation(),
+                &mut TestKey,
+            )
+            .expect("journal crash child store"),
+        ));
+        let worker = RuntimeJournalWorker::new(store).expect("journal crash child worker");
+        match boundary {
+            JournalCrashBoundary::QueueAdmission => {
+                if position == JournalCrashPosition::Before {
+                    journal_crash_stop();
+                }
+                let accepted = worker.append(middle).expect("progress queue admission");
+                assert!(!accepted.durable);
+            }
+            JournalCrashBoundary::BatchFlush => {
+                let accepted = worker.append(middle).expect("progress batch admission");
+                assert!(!accepted.durable);
+                if position == JournalCrashPosition::Before {
+                    journal_crash_stop();
+                }
+                assert_eq!(worker.flush_all().expect("progress batch flush"), 1);
+            }
+            JournalCrashBoundary::CorrectnessTransaction => {
+                if position == JournalCrashPosition::Before {
+                    journal_crash_stop();
+                }
+                assert!(
+                    worker
+                        .append(middle)
+                        .expect("correctness transaction")
+                        .durable
+                );
+            }
+            JournalCrashBoundary::SubscriberPublication => {
+                let publisher = RuntimeEventPublisher::new();
+                publisher.publish(start).expect("publisher run start");
+                let subscriber = publisher.subscribe(1).expect("bounded subscriber");
+                assert!(
+                    worker
+                        .append(middle.clone())
+                        .expect("subscriber durable predecessor")
+                        .durable
+                );
+                if position == JournalCrashPosition::Before {
+                    journal_crash_stop();
+                }
+                assert_eq!(
+                    publisher
+                        .publish(middle.clone())
+                        .expect("subscriber publication")
+                        .delivered,
+                    1
+                );
+                assert_eq!(
+                    subscriber.try_next().expect("subscriber receive"),
+                    Some(middle)
+                );
+                fs::write(journal_crash_marker(directory), b"delivered")
+                    .expect("subscriber delivery marker");
+            }
+        }
+        journal_crash_stop()
     }
 
     fn observation() -> StrictLocalStorageObservation {
@@ -1883,6 +2077,158 @@ mod tests {
         );
         drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    #[ignore = "subprocess stop target; invoked only by the Story 21.2 crash matrix"]
+    fn story_21_2_journal_crash_boundary_child() {
+        if env::var_os("AGENTMAGE_JOURNAL_CRASH_CHILD").is_none() {
+            return;
+        }
+        let directory = PathBuf::from(
+            env::var_os("AGENTMAGE_JOURNAL_CRASH_DIRECTORY").expect("child directory"),
+        );
+        let boundary = JournalCrashBoundary::from_code(
+            &env::var("AGENTMAGE_JOURNAL_CRASH_BOUNDARY").expect("child boundary"),
+        );
+        let position = JournalCrashPosition::from_code(
+            &env::var("AGENTMAGE_JOURNAL_CRASH_POSITION").expect("child position"),
+        );
+        run_journal_crash_child(&directory, boundary, position);
+    }
+
+    #[test]
+    fn story_21_2_process_stop_matrix_preserves_one_truthful_replay() {
+        let mut covered = 0_usize;
+        let mut matrix = Vec::new();
+        for boundary in JournalCrashBoundary::ALL {
+            for position in JournalCrashPosition::ALL {
+                let directory = temporary_directory();
+                prepare_journal_crash_fixture(&directory, boundary);
+                let [start, middle, terminal] = journal_crash_events(boundary);
+                let output = Command::new(env::current_exe().expect("current test executable"))
+                    .args([
+                        "--exact",
+                        "runtime_journal::tests::story_21_2_journal_crash_boundary_child",
+                        "--ignored",
+                        "--nocapture",
+                    ])
+                    .env("AGENTMAGE_JOURNAL_CRASH_CHILD", "1")
+                    .env("AGENTMAGE_JOURNAL_CRASH_DIRECTORY", &directory)
+                    .env("AGENTMAGE_JOURNAL_CRASH_BOUNDARY", boundary.code())
+                    .env("AGENTMAGE_JOURNAL_CRASH_POSITION", position.code())
+                    .output()
+                    .expect("journal crash child launches");
+                assert_eq!(
+                    output.status.code(),
+                    Some(JOURNAL_CRASH_CHILD_EXIT),
+                    "{boundary:?} {position:?}: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+
+                let store = Arc::new(Mutex::new(
+                    OperationalStore::open(
+                        &directory.join("authority.db"),
+                        &observation(),
+                        &mut TestKey,
+                    )
+                    .expect("journal crash recovery store"),
+                ));
+                let worker = RuntimeJournalWorker::new(Arc::clone(&store))
+                    .expect("journal crash recovery worker");
+                let retained = worker.load(&start.run_id).expect("recovered journal");
+                let recovered_event_count = retained.len();
+                assert!(
+                    retained
+                        .iter()
+                        .all(|event| !matches!(event.kind, RuntimeEventKind::RunTerminal { .. }))
+                );
+                let middle_must_be_durable = matches!(
+                    (boundary, position),
+                    (
+                        JournalCrashBoundary::BatchFlush,
+                        JournalCrashPosition::After
+                    ) | (
+                        JournalCrashBoundary::CorrectnessTransaction,
+                        JournalCrashPosition::After
+                    ) | (JournalCrashBoundary::SubscriberPublication, _)
+                );
+                let subscriber_delivered = journal_crash_marker(&directory).exists();
+                if middle_must_be_durable {
+                    assert_eq!(retained, [start.clone(), middle.clone()]);
+                } else {
+                    assert_eq!(retained.as_slice(), std::slice::from_ref(&start));
+                    let append = worker
+                        .append(middle.clone())
+                        .expect("replay missing accepted event");
+                    if middle.persistence == RuntimeEventPersistenceClass::Progress {
+                        assert!(!append.durable);
+                        assert_eq!(worker.flush_all().expect("replay progress flush"), 1);
+                    } else {
+                        assert!(append.durable);
+                    }
+                }
+                assert!(
+                    worker
+                        .append(terminal.clone())
+                        .expect("recovery terminal event")
+                        .durable
+                );
+                assert_eq!(
+                    worker.load(&start.run_id).expect("terminal replay"),
+                    [start.clone(), middle.clone(), terminal.clone()]
+                );
+                drop(worker);
+                drop(store);
+
+                let reopened = OperationalStore::open(
+                    &directory.join("authority.db"),
+                    &observation(),
+                    &mut TestKey,
+                )
+                .expect("second journal recovery");
+                assert_eq!(
+                    load_run_events(&reopened, &start.run_id).expect("verified second replay"),
+                    [start, middle, terminal]
+                );
+                drop(reopened);
+                assert_eq!(
+                    subscriber_delivered,
+                    boundary == JournalCrashBoundary::SubscriberPublication
+                        && position == JournalCrashPosition::After
+                );
+                matrix.push(serde_json::json!({
+                    "boundary": boundary.code(),
+                    "position": position.code(),
+                    "recovered_event_count": recovered_event_count,
+                    "middle_was_durable": middle_must_be_durable,
+                    "bounded_progress_loss": matches!(
+                        (boundary, position),
+                        (JournalCrashBoundary::QueueAdmission, JournalCrashPosition::After)
+                            | (JournalCrashBoundary::BatchFlush, JournalCrashPosition::Before)
+                    ),
+                    "subscriber_delivered": subscriber_delivered,
+                    "false_terminal_before_recovery": false,
+                    "final_event_count": 3,
+                    "second_reopen_verified": true,
+                }));
+                fs::remove_dir_all(directory).expect("journal crash cleanup");
+                covered += 1;
+            }
+        }
+        assert_eq!(covered, 8);
+        println!(
+            "AGENTMAGE_RUNTIME_CRASH_MATRIX={}",
+            serde_json::json!({
+                "boundary_count": JournalCrashBoundary::ALL.len(),
+                "position_count": JournalCrashPosition::ALL.len(),
+                "case_count": covered,
+                "cases": matrix,
+                "external_network_used": false,
+                "false_terminal_count": 0,
+                "manual_fuzzing_executed": false,
+            })
+        );
     }
 
     #[test]
