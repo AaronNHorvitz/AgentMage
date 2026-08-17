@@ -1,3 +1,6 @@
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
 use agentmage_kernel_contracts::{
     AgentStateKind, AuthorityClass, CONTRACT_SCHEMA_VERSION, ContextSensitivity, CorrelationId,
     EvidenceId, EvidenceKind, EvidenceReference, GrantOperation, ModelCancellationProbe,
@@ -5,6 +8,7 @@ use agentmage_kernel_contracts::{
     RuntimeApprovalResponse, RuntimeArtifactId, RuntimeArtifactRef, RuntimeEvent, RuntimeEventId,
     RuntimeEventKind, RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeOutcome,
     RuntimeOutput, RuntimePayloadReference, RuntimeRunRequest, RuntimeTurnId, SessionCheckpointId,
+    ToolId,
 };
 use agentmage_kernel_engine::{
     runtime_coordinator::{seal_runtime_outcome, verify_runtime_outcome},
@@ -24,8 +28,8 @@ use crate::native_chat_runtime::{
     NativeChatRuntimePort, NativeChatRuntimeService,
 };
 use crate::workflow_caller::{
-    InMemoryWorkflowCaller, WorkflowCallerIdentity, WorkflowCallerState, WorkflowRuntimeSubmission,
-    seal_workflow_runtime_submission,
+    InMemoryWorkflowCaller, WorkflowCallerError, WorkflowCallerIdentity, WorkflowCallerState,
+    WorkflowRuntimeSubmission, seal_workflow_runtime_submission,
 };
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -60,6 +64,113 @@ fn story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers() 
         outcome,
     });
     assert_three_client_parity(controlled_write_fixture());
+}
+
+#[test]
+fn story_50_2_narrow_workflow_authority_rejects_every_broadening_without_execution() {
+    let fixture = controlled_write_fixture();
+    let submission = workflow_submission(fixture.request.clone());
+    assert!(!submission.authority.unattended_approval);
+    assert!(
+        !submission
+            .authority
+            .operations
+            .contains(&GrantOperation::GitPush)
+    );
+    assert!(
+        !submission
+            .authority
+            .operations
+            .contains(&GrantOperation::WorkspaceWrite)
+    );
+
+    let mut aggregation = submission.clone();
+    aggregation
+        .authority
+        .operations
+        .push(GrantOperation::GitPush);
+    aggregation.authority.operations.sort();
+
+    let mut simulated_approval = submission.clone();
+    simulated_approval.authority.unattended_approval = true;
+
+    let mut tool_expansion = submission.clone();
+    tool_expansion
+        .requested_tool_ids
+        .push(ToolId::from_raw("unreviewed.tool"));
+    tool_expansion.requested_tool_ids.sort();
+
+    let mut root_expansion = submission.clone();
+    root_expansion.runtime_request.workspace_snapshot_sha256 = "f".repeat(64);
+
+    let mut model_switch = submission.clone();
+    model_switch.runtime_request.model_profile.profile_id =
+        agentmage_kernel_contracts::ModelProfileId::from_raw("unreviewed-model");
+
+    let mut hidden_retry = submission.clone();
+    hidden_retry.runtime_request.limits.max_model_calls += 1;
+
+    let mut result_as_authority = submission.clone();
+    result_as_authority.authority.source_sha256s[0] = fixture.outcome.outcome_sha256.clone();
+    result_as_authority
+        .authority
+        .operations
+        .push(GrantOperation::GitPush);
+    result_as_authority.authority.operations.sort();
+
+    let mut child_spawn = submission;
+    child_spawn
+        .requested_tool_ids
+        .push(ToolId::from_raw("workflow.child.spawn"));
+    child_spawn.requested_tool_ids.sort();
+
+    for attempted in [
+        aggregation,
+        simulated_approval,
+        tool_expansion,
+        root_expansion,
+        model_switch,
+        hidden_retry,
+        result_as_authority,
+        child_spawn,
+    ] {
+        assert_submission_denied_without_execution(attempted);
+    }
+}
+
+fn assert_submission_denied_without_execution(submission: WorkflowRuntimeSubmission) {
+    let advances = Arc::new(AtomicUsize::new(0));
+    let runtime = CountingCoordinator {
+        advances: Arc::clone(&advances),
+    };
+    assert!(matches!(
+        InMemoryWorkflowCaller::submit(runtime, submission),
+        Err(WorkflowCallerError::SubmissionDenied)
+    ));
+    assert_eq!(advances.load(Ordering::SeqCst), 0);
+}
+
+struct CountingCoordinator {
+    advances: Arc<AtomicUsize>,
+}
+
+impl CodingCoordinatorPort for CountingCoordinator {
+    fn advance(
+        &mut self,
+        _response: Option<&RuntimeApprovalResponse>,
+        _cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<RuntimeCoordinatorStep, CodingClientError> {
+        self.advances.fetch_add(1, Ordering::SeqCst);
+        Err(CodingClientError::Runtime)
+    }
+
+    fn runtime_events(&self) -> &[RuntimeEvent] {
+        &[]
+    }
+
+    fn runtime_artifacts(&self) -> &[RuntimeArtifactRef] {
+        &[]
+    }
 }
 
 fn assert_three_client_parity(fixture: ParityFixture) {
