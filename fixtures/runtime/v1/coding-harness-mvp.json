@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "milestone": "M-HARNESS-MVP",
+  "groups": [
+    {
+      "id": "S-048-MVP-E2E",
+      "cases": [
+        {
+          "id": "repository-exploration",
+          "expected": "verified_no_op",
+          "evidence_test": "s_048_mvp_e2e_repository_exploration_finishes_as_verified_no_op",
+          "prerequisite": null
+        },
+        {
+          "id": "one-file-patch",
+          "expected": "verified_success",
+          "evidence_test": "story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path",
+          "prerequisite": null
+        },
+        {
+          "id": "controlled-new-file",
+          "expected": "verified_success",
+          "evidence_test": "s_048_mvp_e2e_controlled_create_test_git_and_verify_path",
+          "prerequisite": null
+        },
+        {
+          "id": "focused-bug-fix",
+          "expected": "verified_success",
+          "evidence_test": "story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path",
+          "prerequisite": null
+        },
+        {
+          "id": "targeted-test",
+          "expected": "verified_success",
+          "evidence_test": "story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path",
+          "prerequisite": null
+        },
+        {
+          "id": "failed-test-before-revision",
+          "expected": "truthful_failure",
+          "evidence_test": "s_048_mvp_e2e_failed_validation_is_never_reported_as_success",
+          "prerequisite": null
+        },
+        {
+          "id": "revised-change-after-failure",
+          "expected": "verified_success",
+          "evidence_test": "story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path",
+          "prerequisite": null
+        },
+        {
+          "id": "user-denial",
+          "expected": "declined_without_effect",
+          "evidence_test": "s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect",
+          "prerequisite": null
+        },
+        {
+          "id": "user-cancellation",
+          "expected": "cancelled_without_effect",
+          "evidence_test": "s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect",
+          "prerequisite": null
+        },
+        {
+          "id": "admitted-local-model-workflow",
+          "expected": "verified_success",
+          "evidence_test": null,
+          "prerequisite": "sprint-49-exact-runtime-admission"
+        }
+      ]
+    },
+    {
+      "id": "S-048-MVP-STALE",
+      "cases": [
+        {
+          "id": "workspace",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_projection_binds_map_worktree_commit_and_workspace",
+          "prerequisite": null
+        },
+        {
+          "id": "worktree",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_profile_rejects_every_stale_foundational_binding",
+          "prerequisite": null
+        },
+        {
+          "id": "base-commit",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_profile_rejects_every_stale_foundational_binding",
+          "prerequisite": null
+        },
+        {
+          "id": "path",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_linux_binding_rejects_wrong_path_preimage_and_parent_relationship",
+          "prerequisite": null
+        },
+        {
+          "id": "preimage",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_linux_runtime_persists_stale_patch_invalidation_without_overwrite",
+          "prerequisite": null
+        },
+        {
+          "id": "plan",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_profile_dispatch_rejects_forged_change_plan_identity",
+          "prerequisite": null
+        },
+        {
+          "id": "tool-schema",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions",
+          "prerequisite": null
+        },
+        {
+          "id": "command-arguments",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_command_tool_rejects_overrides_and_duplicate_registration",
+          "prerequisite": null
+        },
+        {
+          "id": "model-profile",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_profile_rejects_every_stale_foundational_binding",
+          "prerequisite": null
+        },
+        {
+          "id": "policy",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions",
+          "prerequisite": null
+        },
+        {
+          "id": "grant",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_linux_runtime_rejects_substitution_staleness_and_unbudgeted_actions",
+          "prerequisite": null
+        },
+        {
+          "id": "preservation-manifest",
+          "expected": "denied_without_effect",
+          "evidence_test": "preservation_reconciliation_allows_only_operation_owned_fields",
+          "prerequisite": null
+        }
+      ]
+    },
+    {
+      "id": "S-048-MVP-ADVERSARIAL",
+      "cases": [
+        {
+          "id": "path-traversal",
+          "expected": "denied_without_effect",
+          "evidence_test": "story_48_2_change_tools_reject_traversal_out_of_scope_and_create_overrides",
+          "prerequisite": null
+        },
+        {
+          "id": "symlink-substitution",
+          "expected": "denied_without_effect",
+          "evidence_test": "native_collision_symlink_hardlink_and_limits_fail_without_effect",
+          "prerequisite": null
+        },
+        {
+          "id": "hostile-instructions",
+          "expected": "inert_or_narrowing_only",
+          "evidence_test": "hostile_repository_instructions_are_rejected_without_content_disclosure",
+          "prerequisite": null
+        },
+        {
+          "id": "command-metacharacters",
+          "expected": "denied_without_effect",
+          "evidence_test": "shell_grammar_response_files_and_credential_environment_fail_closed",
+          "prerequisite": null
+        },
+        {
+          "id": "environment-leakage",
+          "expected": "denied_without_effect",
+          "evidence_test": "worker_receives_only_the_fixed_environment_and_no_network",
+          "prerequisite": null
+        },
+        {
+          "id": "git-hooks-and-filters",
+          "expected": "inert",
+          "evidence_test": "every_operation_has_one_fixed_non_shell_plan_and_closed_environment",
+          "prerequisite": null
+        },
+        {
+          "id": "output-forgery",
+          "expected": "truthful_non_success",
+          "evidence_test": "story_48_2_verifier_rejects_stale_evidence_and_git_before_write",
+          "prerequisite": null
+        },
+        {
+          "id": "repeated-tool-calls",
+          "expected": "bounded_non_success",
+          "evidence_test": "repeated_call_guard_is_exact_bounded_and_non_authoritative",
+          "prerequisite": null
+        },
+        {
+          "id": "malformed-model-proposal",
+          "expected": "truthful_non_success",
+          "evidence_test": "story_23_4_malformed_model_result_fails_closed_with_terminal_evidence",
+          "prerequisite": null
+        },
+        {
+          "id": "oversized-output",
+          "expected": "bounded_non_success",
+          "evidence_test": "task_12_2_1_2_malformed_partial_duplicate_unknown_and_oversized_are_inert",
+          "prerequisite": null
+        },
+        {
+          "id": "false-completion",
+          "expected": "truthful_non_success",
+          "evidence_test": "story_48_2_no_op_requires_clean_git_and_rejects_model_state_substitution",
+          "prerequisite": null
+        },
+        {
+          "id": "failed-validation-forgery",
+          "expected": "truthful_non_success",
+          "evidence_test": "s_048_mvp_e2e_failed_validation_is_never_reported_as_success",
+          "prerequisite": null
+        }
+      ]
+    },
+    {
+      "id": "S-048-MVP-ABSENCE",
+      "cases": [
+        {
+          "id": "persistent-session-resume",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        },
+        {
+          "id": "durable-journal",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        },
+        {
+          "id": "complete-artifact-lifecycle",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        },
+        {
+          "id": "remote-git",
+          "expected": "absent",
+          "evidence_test": "story_48_2_native_catalog_is_exact_local_and_mcp_independent",
+          "prerequisite": null
+        },
+        {
+          "id": "git-commit",
+          "expected": "absent",
+          "evidence_test": "story_48_2_native_catalog_is_exact_local_and_mcp_independent",
+          "prerequisite": null
+        },
+        {
+          "id": "git-push",
+          "expected": "absent",
+          "evidence_test": "story_48_2_native_catalog_is_exact_local_and_mcp_independent",
+          "prerequisite": null
+        },
+        {
+          "id": "automatic-routing",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        },
+        {
+          "id": "mcp-dependency",
+          "expected": "absent",
+          "evidence_test": "story_48_2_native_catalog_is_exact_local_and_mcp_independent",
+          "prerequisite": null
+        },
+        {
+          "id": "browser-and-network",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        },
+        {
+          "id": "package-installation",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        },
+        {
+          "id": "complete-conversation-library",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        },
+        {
+          "id": "workflow-execution",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        },
+        {
+          "id": "child-agents",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        },
+        {
+          "id": "autonomous-publication",
+          "expected": "absent",
+          "evidence_test": "story_48_2_profile_binds_repository_worktree_model_offline_state_and_tools",
+          "prerequisite": null
+        }
+      ]
+    }
+  ]
+}

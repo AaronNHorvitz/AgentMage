@@ -31,15 +31,20 @@ use crate::{
 };
 
 /// Explicitly unavailable capability families in the first native coding profile.
-pub const MVP_PROHIBITED_CAPABILITIES: [&str; 12] = [
+pub const MVP_PROHIBITED_CAPABILITIES: [&str; 17] = [
     "autonomous-publication",
+    "automatic-routing",
     "browser",
     "child-agent",
+    "complete-artifact-lifecycle",
+    "complete-conversation-library",
+    "durable-journal",
     "git-commit",
     "git-push",
     "mcp-dependency",
     "network-access",
     "package-install",
+    "persistent-session-resume",
     "remote-git",
     "release",
     "workflow-execution",
@@ -882,6 +887,28 @@ pub(crate) mod tests {
         assert!(!profile.effective_guidance().grants_authority);
         assert!(!profile.effective_guidance().adds_tools);
         assert!(!profile.effective_guidance().declares_completion);
+        assert_eq!(
+            MVP_PROHIBITED_CAPABILITIES,
+            [
+                "autonomous-publication",
+                "automatic-routing",
+                "browser",
+                "child-agent",
+                "complete-artifact-lifecycle",
+                "complete-conversation-library",
+                "durable-journal",
+                "git-commit",
+                "git-push",
+                "mcp-dependency",
+                "network-access",
+                "package-install",
+                "persistent-session-resume",
+                "remote-git",
+                "release",
+                "workflow-execution",
+                "workspace-delete",
+            ]
+        );
         assert!(
             profile
                 .visible_tools()

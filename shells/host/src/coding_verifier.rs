@@ -64,18 +64,24 @@ pub struct CodingCompletionVerifier {
     workspace_snapshot_sha256: String,
     repository_snapshot_sha256: String,
     validation_templates: BTreeSet<(String, String)>,
-    required_validation_ids: BTreeSet<String>,
+    changed_validation_ids: BTreeSet<String>,
+    unconditional_validation_ids: BTreeSet<String>,
 }
 
 impl CodingCompletionVerifier {
     /// Binds one verifier to the profile's worktree and registered validations.
     #[must_use]
     pub fn for_profile(profile: &CodingSessionProfile) -> Self {
-        let required_validation_ids = profile
+        let changed_validation_ids = profile
             .change_plan()
             .planned_validation_ids()
             .iter()
-            .chain(profile.coding_guidance().required_validation_ids())
+            .cloned()
+            .collect();
+        let unconditional_validation_ids = profile
+            .coding_guidance()
+            .required_validation_ids()
+            .iter()
             .cloned()
             .collect();
         Self {
@@ -96,7 +102,8 @@ impl CodingCompletionVerifier {
                     )
                 })
                 .collect(),
-            required_validation_ids,
+            changed_validation_ids,
+            unconditional_validation_ids,
         }
     }
 
@@ -177,14 +184,23 @@ impl CodingCompletionVerifier {
             .collect::<BTreeSet<_>>();
         if (validation_required && validations.is_empty())
             || self
-                .required_validation_ids
+                .unconditional_validation_ids
                 .iter()
                 .any(|required| !completed_validation_ids.contains(required.as_str()))
         {
             return None;
         }
         if let Some(last_write) = last_write {
-            if !validations.iter().any(|(index, _)| *index > last_write)
+            let post_write_validation_ids = validations
+                .iter()
+                .filter(|(index, _)| *index > last_write)
+                .map(|(_, validation_id)| validation_id.as_str())
+                .collect::<BTreeSet<_>>();
+            if self
+                .changed_validation_ids
+                .iter()
+                .chain(&self.unconditional_validation_ids)
+                .any(|required| !post_write_validation_ids.contains(required.as_str()))
                 || !git_results.iter().any(|(index, _)| *index > last_write)
                 || !input
                     .evidence

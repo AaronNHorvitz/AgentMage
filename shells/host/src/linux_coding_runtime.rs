@@ -1950,10 +1950,11 @@ mod tests {
         StructuredEdit, StructuredLanguage, build_repository_map,
     };
     use agentmage_kernel_contracts::{
-        ActionId, AgentStateKind, AuthorityClass, BudgetLimit, BudgetResource,
-        CONTRACT_SCHEMA_VERSION, ClosedModelProposal, CorrelationId, DataSensitivity,
-        ExactModelProfile, GrantStatus, GrantTarget, ModelCancellationProbe, ModelContextPacket,
-        ModelMessageRole, ModelProposalKind, ModelResourceReport, ModelRunRequest, ModelRunResult,
+        ActionId, AgentStateKind, AuthorityClass, BoundaryKind, BudgetLimit, BudgetResource,
+        CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason, CancellationSignal,
+        ClosedModelProposal, CorrelationId, DataSensitivity, ExactModelProfile, GrantStatus,
+        GrantTarget, ModelCancellationProbe, ModelContextPacket, ModelMessageRole,
+        ModelProposalKind, ModelResourceReport, ModelRunRequest, ModelRunResult,
         ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate, PathResolutionIntent, PlanId,
         ProposalId, RollbackPlan, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
         RuntimeApprovalResponse, RuntimeOperationId, RuntimeRunId, RuntimeRunRequest,
@@ -2191,9 +2192,27 @@ mod tests {
         }
     }
 
-    #[derive(Default)]
     struct FakeGitExecutor {
         launches: usize,
+        stdout: Vec<u8>,
+    }
+
+    impl Default for FakeGitExecutor {
+        fn default() -> Self {
+            Self {
+                launches: 0,
+                stdout: b"# branch.head main\0? src/new.rs\0".to_vec(),
+            }
+        }
+    }
+
+    impl FakeGitExecutor {
+        fn clean() -> Self {
+            Self {
+                launches: 0,
+                stdout: b"# branch.head main\0".to_vec(),
+            }
+        }
     }
 
     impl BoundedRepositoryInspectionExecutor for FakeGitExecutor {
@@ -2209,7 +2228,7 @@ mod tests {
             assert!(working_directory.revalidate().is_ok());
             assert!(!cancellation.is_cancelled());
             assert_eq!(permit.prepared().arguments()[9], "status");
-            let stdout = b"# branch.head main\0? src/new.rs\0".to_vec();
+            let stdout = self.stdout.clone();
             RepositoryInspectionPlatformResult {
                 termination: RepositoryInspectionTermination::Exited,
                 exit_code: Some(0),
@@ -2874,6 +2893,312 @@ mod tests {
             sequence.push(event).expect("ordered runtime event");
         }
         assert!(sequence.is_terminal());
+    }
+
+    #[test]
+    fn s_048_mvp_e2e_controlled_create_test_git_and_verify_path() {
+        let mut fixture = fixture();
+        configure_controlled_create(&mut fixture);
+        let create = scripted_call(&fixture.call);
+
+        configure_targeted_validation(&mut fixture);
+        let validation = scripted_call(&fixture.call);
+
+        configure_git_status(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-git-after-create-e2e");
+        let git_after = scripted_call(&fixture.call);
+
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Validation];
+        fixture.request =
+            seal_runtime_run_request(fixture.request.clone()).expect("validation requirement");
+        let profile = fixture.profile_for_test();
+        let completion = coding_completion_payload(&CodingCompletionCandidate {
+            schema_version: 1,
+            objective_sha256: sha256(fixture.request.task.objective.as_bytes()),
+            terminal_claim: CodingTerminalClaim::Changed,
+            summary: "Created one planned file and verified the registered check.".to_owned(),
+            checks_not_run: Vec::new(),
+            residual_risks: Vec::new(),
+        })
+        .expect("completion payload");
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [
+                ScriptedCodingStep::Tool(create),
+                ScriptedCodingStep::Tool(validation),
+                ScriptedCodingStep::Tool(git_after),
+                ScriptedCodingStep::Complete(completion),
+            ]
+            .into_iter()
+            .collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("coding context");
+        let Fixture {
+            root,
+            request,
+            boundary,
+            ..
+        } = fixture;
+        let mut coordinator = compose_ephemeral_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(30_000),
+        )
+        .expect("ephemeral coding coordinator");
+
+        let mut next_response = None;
+        let outcome = loop {
+            match coordinator
+                .run_until_boundary(next_response.as_ref(), None)
+                .expect("coding coordinator boundary")
+            {
+                RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
+                    next_response = Some(response(&challenge, RuntimeApprovalDisposition::Allow));
+                }
+                RuntimeCoordinatorStep::Complete { outcome } => break outcome,
+            }
+        };
+
+        assert_eq!(outcome.state, AgentStateKind::Success, "{outcome:#?}");
+        assert_eq!(outcome.tool_call_count, 3);
+        assert_eq!(
+            fs::read(root.join("worktree/src/new.rs")).expect("created source"),
+            b"pub fn newly_created() {}\n"
+        );
+    }
+
+    #[test]
+    fn s_048_mvp_e2e_repository_exploration_finishes_as_verified_no_op() {
+        let mut fixture = fixture_with_git(FakeGitExecutor::clean());
+        configure_git_status(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-git-clean-e2e");
+        let clean_git = scripted_call(&fixture.call);
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Observation];
+        fixture.request =
+            seal_runtime_run_request(fixture.request.clone()).expect("observation requirement");
+
+        let profile = fixture.profile_for_test();
+        let completion = coding_completion_payload(&CodingCompletionCandidate {
+            schema_version: 1,
+            objective_sha256: sha256(fixture.request.task.objective.as_bytes()),
+            terminal_claim: CodingTerminalClaim::NoOp,
+            summary: "Inspected the requested source; no change was required.".to_owned(),
+            checks_not_run: vec!["No mutation-dependent validation was needed.".to_owned()],
+            residual_risks: Vec::new(),
+        })
+        .expect("completion payload");
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [
+                ScriptedCodingStep::Tool(clean_git),
+                ScriptedCodingStep::Complete(completion),
+            ]
+            .into_iter()
+            .collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("coding context");
+        let Fixture {
+            request, boundary, ..
+        } = fixture;
+        let mut coordinator = compose_ephemeral_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(40_000),
+        )
+        .expect("ephemeral coding coordinator");
+
+        let mut next_response = None;
+        let outcome = loop {
+            match coordinator
+                .run_until_boundary(next_response.as_ref(), None)
+                .expect("coding coordinator boundary")
+            {
+                RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
+                    next_response = Some(response(&challenge, RuntimeApprovalDisposition::Allow));
+                }
+                RuntimeCoordinatorStep::Complete { outcome } => break outcome,
+            }
+        };
+
+        assert_eq!(outcome.state, AgentStateKind::NoOp, "{outcome:#?}");
+        assert_eq!(outcome.tool_call_count, 1);
+        assert!(outcome.unresolved_codes.is_empty());
+    }
+
+    #[test]
+    fn s_048_mvp_e2e_denial_and_user_cancellation_start_no_effect() {
+        for cancel in [false, true] {
+            let mut fixture = fixture();
+            configure_structured_patch(&mut fixture);
+            let patch = scripted_call(&fixture.call);
+            let original =
+                fs::read(fixture.root.join("worktree/src/lib.rs")).expect("original source");
+            let profile = fixture.profile_for_test();
+            let model = ScriptedCodingModel {
+                profile: profile.model_profile().clone(),
+                steps: [ScriptedCodingStep::Tool(patch)].into_iter().collect(),
+                calls: 0,
+            };
+            let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+                .expect("coding context");
+            let Fixture {
+                root,
+                request,
+                boundary,
+                ..
+            } = fixture;
+            let mut coordinator = compose_ephemeral_coding_coordinator(
+                profile,
+                request,
+                model,
+                context,
+                boundary,
+                FixtureClock(50_000),
+            )
+            .expect("ephemeral coding coordinator");
+            let RuntimeCoordinatorStep::AwaitingApproval { challenge } = coordinator
+                .run_until_boundary(None, None)
+                .expect("approval boundary")
+            else {
+                panic!("patch must require approval");
+            };
+
+            let disposition = if cancel {
+                RuntimeApprovalDisposition::Allow
+            } else {
+                RuntimeApprovalDisposition::Deny
+            };
+            let approval_response = response(&challenge, disposition);
+            let cancellation = cancel.then(|| CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw("cancellation-coding-e2e"),
+                correlation_id: coordinator
+                    .events()
+                    .first()
+                    .expect("run-start event")
+                    .correlation_id
+                    .clone(),
+                task_id: challenge.task_id.clone(),
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Shell,
+            });
+            let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+                .run_until_boundary(
+                    Some(&approval_response),
+                    cancellation
+                        .as_ref()
+                        .map(|signal| signal as &dyn ModelCancellationProbe),
+                )
+                .expect("terminal boundary")
+            else {
+                panic!("denial or cancellation must be terminal");
+            };
+            assert_eq!(
+                outcome.state,
+                if cancel {
+                    AgentStateKind::Cancelled
+                } else {
+                    AgentStateKind::Declined
+                }
+            );
+            assert_eq!(
+                fs::read(root.join("worktree/src/lib.rs")).expect("preserved source"),
+                original
+            );
+            assert!(outcome.receipt_ids.is_empty());
+        }
+    }
+
+    #[test]
+    fn s_048_mvp_e2e_failed_validation_is_never_reported_as_success() {
+        let mut fixture = fixture();
+        configure_structured_patch(&mut fixture);
+        let patch = scripted_call(&fixture.call);
+        configure_targeted_validation(&mut fixture);
+        let validation = scripted_call(&fixture.call);
+        let executor = fixture
+            .boundary
+            .command_executor
+            .as_mut()
+            .expect("test command executor");
+        executor.exit_code = 1;
+        executor.stdout = serde_json::to_vec(&serde_json::json!({
+            "schema_version": 1,
+            "status": "assertion_failed",
+            "passed": 0,
+            "failed": 1,
+            "skipped": 0,
+            "duration_ms": 1,
+            "failed_names": ["fixture::regression"],
+            "artifact_ids": [],
+            "retry_count": 0,
+            "initial_failure_sha256": null
+        }))
+        .expect("failed validation output");
+
+        let profile = fixture.profile_for_test();
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [
+                ScriptedCodingStep::Tool(patch),
+                ScriptedCodingStep::Tool(validation),
+            ]
+            .into_iter()
+            .collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("coding context");
+        let Fixture {
+            root,
+            request,
+            boundary,
+            ..
+        } = fixture;
+        let mut coordinator = compose_ephemeral_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(60_000),
+        )
+        .expect("ephemeral coding coordinator");
+
+        let mut next_response = None;
+        let outcome = loop {
+            match coordinator
+                .run_until_boundary(next_response.as_ref(), None)
+                .expect("coding coordinator boundary")
+            {
+                RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
+                    next_response = Some(response(&challenge, RuntimeApprovalDisposition::Allow));
+                }
+                RuntimeCoordinatorStep::Complete { outcome } => break outcome,
+            }
+        };
+
+        assert_eq!(outcome.state, AgentStateKind::Failed, "{outcome:#?}");
+        assert!(
+            outcome
+                .unresolved_codes
+                .iter()
+                .any(|code| code == "runtime.tool.failed")
+        );
+        assert_eq!(
+            fs::read(root.join("worktree/src/lib.rs")).expect("changed source"),
+            b"pub fn runtime_updated() {}\n"
+        );
     }
 
     #[test]
