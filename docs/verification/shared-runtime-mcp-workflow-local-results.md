@@ -30,6 +30,7 @@ npm run docs:check
 | Three-client parity | `shells/host/src/runtime_parity_tests.rs` | Identical read-only and controlled-write requests across native Chat, interactive CLI, and workflow caller; exact event, artifact, receipt, checkpoint, evidence, and outcome equality |
 | Authority attack matrix | `shells/host/src/runtime_parity_tests.rs` | Eight narrower-node broadening attempts rejected before one instrumented coordinator advance |
 | Confusion and privacy matrix | Runtime event, journal, projection, artifact, recovery, and CLI verifier modules | Eight required confusion classes reject deterministically without false completion, cross-session disclosure, replay, or unverified presentation |
+| Dedicated journal worker | `kernel/engine/src/runtime_journal.rs`, `kernel/engine/src/operational_store.rs` | Bounded producer admission, asynchronous progress, correctness acknowledgement, one shared SQLCipher connection, explicit saturation, sticky failure, shutdown/reopen, and deterministic slow-store client isolation |
 | Reference load campaign | `artifacts/sprints/sprint-50/story-50.2-runtime-load` | 8,196-event journal/publisher run, 16 verified reopens, and 39 focused pressure, output, artifact, cancellation, and recovery tests pass on one recorded Fedora host; disposition remains `PARTIAL-PASS` |
 | Component-removal campaign | `artifacts/sprints/sprint-50/story-50.2-component-removal` | Four isolated offline feature builds prove compiled-source absence for CLI, native Chat, workflow caller, and optional projections while 923 scenario test executions and strict Clippy pass; disposition is limited to `LOCAL-SOURCE-PASS` |
 | Real runtime attachment | `shells/host/src/linux_coding_runtime.rs` | Deterministic Linux fake-model no-op and denial paths through the production coordinator composition |
@@ -60,7 +61,7 @@ built worker manifests. Those ignores are not converted into passes.
 
 Authenticated CLI stdin/history and installed transport, a production runtime
 factory, live MCP transport, installed real-runtime client parity,
-dedicated slow-disk writer isolation, installed reference-hardware campaigns,
+real-filesystem model-stream and cancellation isolation, installed reference-hardware campaigns,
 installed component-residue campaigns, Sprints 89-94, complete Sprint 95
 coordination, supported-platform evidence, independent review, and deferred
 manual fuzzing remain open. No sprint or release gate is closed by this report.

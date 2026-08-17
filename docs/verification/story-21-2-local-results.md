@@ -25,6 +25,12 @@
   synchronously commits correctness boundaries; batches progress and metrics;
   atomically rejects failed batches; flushes terminal predecessors; and rejects
   retained event or indexed-projection tampering on restart.
+- The dedicated bounded journal worker owns the batch writer on one named
+  thread over the sole shared SQLCipher connection. Progress admission remains
+  responsive while that connection is deliberately blocked, a full reservation
+  returns exact saturation without accepting the event, terminal flush and
+  shutdown preserve exact replay, and storage failure becomes sticky without
+  creating false history.
 - The JSON schema and canonical Rust example pass the repository schema gate.
 - Markdown and Mermaid validation pass for the Story 21.2 architecture record.
 
@@ -33,7 +39,12 @@
 ```text
 cargo test -p agentmage-kernel-engine runtime_event --lib --locked
 cargo test -p agentmage-kernel-engine runtime_journal --lib --locked
-cargo clippy -p agentmage-kernel-engine --lib --locked -- -D warnings
+cargo test -p agentmage-kernel-engine operational_store --lib --locked
+cargo test -p agentmage-kernel-engine runtime_artifact --lib --locked
+cargo test -p agentmage-kernel-engine --lib --locked
+cargo test -p agentmage-host --lib --locked
+cargo clippy -p agentmage-kernel-engine --lib --tests --locked -- -D warnings
+cargo clippy -p agentmage-host --lib --tests --locked -- -D warnings
 npm run schemas:check
 npx markdownlint-cli2 README.md docs/architecture/runtime-event-journal.md docs/verification/story-21-2-local-results.md
 python3 scripts/check_mermaid.py
@@ -41,11 +52,16 @@ python3 scripts/check_mermaid.py
 
 ## Open Evidence
 
-- The current durable writer defers and batches progress but still performs its
-  store calls on the coordinator thread. A dedicated bounded writer worker and
-  slow-disk cancellation proof remain open.
+- Atomic co-publication of every grant, effect, receipt, and checkpoint event
+  inside its owning authority transaction remains open. Correctness journal
+  acknowledgement is durable, but it is not evidence of that wider atomic
+  transaction binding.
+- The slow-store source test holds the sole connection lock deterministically;
+  real filesystem or device fault injection and integrated model-stream and
+  cancellation latency while storage is blocked remain open.
 - Persisted user transcript and local diagnostics lifecycle implementations
-  remain open and cannot be inferred from the published projection contract.
+  remain open. Their bounded in-memory projections do not establish durable
+  retention, export, deletion, or installed-client behavior.
 - Crash injection before and after every queue, transaction, subscriber,
   checkpoint, and terminal boundary remains open.
 - Event-count, byte, producer, consumer, disk-latency, cancellation, memory,

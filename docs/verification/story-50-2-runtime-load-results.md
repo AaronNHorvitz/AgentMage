@@ -33,9 +33,9 @@ Cargo command list, records process output and resource use, rejects an occupied
 evidence destination, and binds its report to the exact Git commit and source
 digests.
 
-## Current Boundary
+## Prior Retained Boundary
 
-The retained
+The currently retained historical
 [`report.json`](../../artifacts/sprints/sprint-50/story-50.2-runtime-load/report.json)
 is bound to source commit `268ea924efb88c11eef24b0eee03cce9febb4548`. All
 eight commands and 39 focused tests passed without a failed, ignored, or
@@ -57,13 +57,14 @@ measured test result.
 
 The run used Fedora Linux `7.1.6-201.fc44.x86_64` on an x86-64 Intel Core
 i9-13900KF host with 32 logical CPUs and 65,570,268 KiB of reported memory.
-The report disposition is deliberately `PARTIAL-PASS`: its measured campaign
-passed, while its declared architecture and installed-interface limitations
-remain open.
+The report disposition is deliberately `PARTIAL-PASS`. It predates the
+dedicated journal worker and remains a historical lower-level writer baseline,
+not current worker-backed evidence.
 
-This campaign cannot close Sub-task 50.2.3.3 by itself. The current journal
-writer has bounded deferred batches, but SQLite flushes still execute on the
-coordinator thread. A dedicated writer path and injected slow-disk evidence are
-still required before AgentMage can claim model-stream continuity and responsive
-cancellation while persistence is blocked. Installed native Chat and
-authenticated CLI measurements also remain open.
+Source commit `bd88b901773eb42a3dcdbba69490b8ccb664ef7d` changes the fixed profile
+to route the same 8,196-event workload through `RuntimeJournalWorker`, adds exact bounded saturation
+flush-and-retry, and adds a ninth dedicated worker-isolation command. A retained
+clean-source run of that revised profile is pending. Real filesystem
+fault injection, integrated model-stream and cancellation timing while storage
+is blocked, installed native Chat and authenticated CLI measurements, and
+independent review also remain open. Sub-task 50.2.3.3 therefore remains open.

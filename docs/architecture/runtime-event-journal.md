@@ -4,11 +4,12 @@
 
 This document is the review artifact for Story 21.2. The closed runtime-event
 envelope, hash-chain verifier, legal transition engine, bounded in-process
-publisher, durable journal queue, encrypted SQLite projection, terminal flush,
-and restart verification exist in source. The complete story remains open for
-dedicated writer-thread decoupling, transcript and diagnostics lifecycle
-implementation, crash injection at every boundary, reference-hardware pressure
-and throughput evidence, installed-client evidence, and independent review.
+publisher, dedicated bounded journal worker, encrypted SQLite projection,
+terminal flush, and restart verification exist in source. The complete story
+remains open for atomic correctness-event linkage to every owning authority
+transaction, persisted transcript and diagnostics lifecycle completion, crash
+injection at every boundary, real-disk cancellation evidence, installed-client
+evidence, and independent review.
 
 No statement in this document enables a model, platform, release, transcript,
 external telemetry path, or general event bus.
@@ -119,8 +120,8 @@ response. `DENY` removes the pending call and starts no effect.
 |---|---|---|---|---|
 | Canonical journal | Complete content-minimized event envelope and verified artifact references | Prompt prose, token fragments, raw tool output, absolute paths, secrets, transcript text | Encrypted local store; event retention is explicit | Authoritative ordered history |
 | Authenticated client stream | Verified canonical events needed for current presentation | Artifact payload bytes, credentials, hidden policy state | Bounded in process; client-controlled presentation retention | None |
-| Persisted user transcript | Explicitly selected user-visible messages and bounded rendered output | Grants, hidden policy state, credentials, unapproved restricted content | Optional, separately classified, separately deletable; implementation remains open | None |
-| Local diagnostics | Stable reason codes, component state, bounded counters, digests where approved | Prompts, source content, token text, environment values, credentials | Optional and content minimized; implementation remains open | None |
+| Persisted user transcript | Explicitly selected user-visible messages and bounded rendered output | Grants, hidden policy state, credentials, unapproved restricted content | Bounded construction and in-memory collection exist; encrypted persistence and deletion lifecycle remain open | None |
+| Local diagnostics | Stable reason codes, component state, bounded counters, digests where approved | Prompts, source content, token text, environment values, credentials | Bounded content-free collection exists; durable lifecycle and export integration remain open | None |
 | Local metrics | Approved content-free integer measurements | User text, model text, paths, identifiers not required by the metric contract | Optional bounded batches; no external telemetry dependency | None |
 | Runtime artifacts | Immutable large payload bytes plus manifest | Unreferenced ambient files and undeclared payloads | Encrypted local payload store with separate retention and deletion | Referenced evidence only |
 
@@ -162,19 +163,34 @@ access, or grant path.
 
 ```mermaid
 flowchart LR
-    E["Sealed canonical event"] --> S["Sequence and binding verifier"]
-    S --> C{"Persistence class"}
-    C -->|Correctness| Q["Bounded one-writer queue"]
-    C -->|Progress or metric| Q
-    Q --> B["Count and byte bounded batch"]
-    B --> X["One encrypted SQLite transaction"]
+    E["Sealed canonical event"] --> V["Producer validation and byte accounting"]
+    V --> Q["Bounded FIFO command queue"]
+    Q --> W["Named journal worker"]
+    W --> S["Sequence and binding verifier"]
+    S --> B["Count and byte bounded batch"]
+    B --> X["Sole shared SQLCipher connection"]
     X --> H["Verified durable cursor"]
-    S --> P["Nonblocking client publisher"]
-    X -. "restart verification" .-> S
+    X --> A["Correctness acknowledgement"]
+    V --> P["Independent nonblocking client publisher"]
+    X -. "reopen and replay verification" .-> S
 ```
 
-The current `RuntimeJournalWriter` is one-process and one-writer. Defaults and
-hard maxima are fixed in source:
+`RuntimeJournalWorker` owns one `RuntimeJournalWriter` on the named
+`agentmage-runtime-journal` thread. The worker and authority runtime share the
+sole exclusive SQLCipher connection through one process-local mutex; the
+worker does not open a second database connection or create a competing SQLite
+writer. WAL, `synchronous=FULL`, exclusive locking, foreign keys, secure delete,
+and a zero busy timeout remain verified properties of that connection.
+
+Producer admission verifies the sealed envelope, rejects ephemeral retention,
+computes canonical bytes, and reserves both event and byte capacity before a
+nonblocking queue send. Progress and metric submissions return after bounded
+admission and do not wait for the store. Correctness submissions carry a
+one-shot acknowledgement and return only after the worker commits that event
+and every accepted predecessor. Worker commands are FIFO, so explicit flush,
+load, reconfiguration, and shutdown observe every earlier accepted append.
+
+Defaults and hard maxima are fixed in source:
 
 | Ceiling | Default | Hard maximum |
 |---|---:|---:|
@@ -184,21 +200,39 @@ hard maxima are fixed in source:
 | Canonical bytes per batch | 512 KiB | 4 MiB |
 | Logical flush interval | 250 ms | 60 seconds |
 
-Correctness submission flushes itself and every queued predecessor in one
-transaction before returning. Progress and metrics are deferred until count,
-byte, age, explicit flush, checkpoint, terminal, or shutdown synchronization.
-Queue pressure triggers a bounded batch flush; it never grows the queue.
-Storage or integrity ambiguity poisons the owning authority object, and no false
-history is committed. Restart loads rows in sequence order and verifies the
-canonical bytes, indexed projections, hash chain, bindings, transitions, and
-terminal cursor before use.
+The logical producer reservation covers work already queued to the thread and
+progress held by the batch writer. A full event or byte reservation returns
+`runtime.journal.queue_saturated` without accepting the event; the caller may
+wait for an exact flush and retry that same sequence. The host maps this result
+to its closed resource-exhaustion state. Queue and byte accounting use checked
+reconciliation. An impossible committed count or byte total is an integrity
+failure, never a saturating subtraction.
 
-The current writer is still called on the coordinator thread. A dedicated
-bounded writer worker, explicit producer-side cancellation responsiveness under
-slow disk, progress coalescing, installed-host shutdown ownership, and measured
-latency budgets remain open under Sub-tasks 21.2.1.5, 21.2.3.2, 21.2.3.3, and
-21.2.3.5. Until those close, the implementation must be described as deferred
-batch persistence, not a fully decoupled asynchronous writer.
+Correctness submission flushes itself and every queued predecessor in one
+transaction before returning. Progress and metrics are deferred until batch,
+an explicit logical-age probe, explicit flush, checkpoint, terminal, or
+shutdown synchronization. The worker never persists one record per streamed
+token because token fragments are excluded from the event contract. The
+publisher is independent of the store lock, and a deterministic slow-store
+test proves accepted progress and client delivery can continue while the sole
+connection is unavailable.
+
+Storage, integrity, lock, or worker-channel ambiguity becomes sticky. The
+worker stops consuming queued work, correctness waiters receive failure or
+disconnect, and later calls fail closed. Normal drop sends a shutdown command,
+flushes accepted progress, marks the worker closed, and joins the thread;
+explicit terminal and checkpoint flushes remain the authoritative success
+boundaries. Reopen loads rows in sequence order and verifies canonical bytes,
+indexed projections, hash chain, bindings, transitions, and terminal cursor
+before use. A failed batch creates no false durable history.
+
+The fixed Fedora source-load profile requires at least 250 journal events per
+second for an 8,196-event worker-backed run, no more than 30 seconds of journal
+time, no more than 1,024 queued events or 4 MiB of queued canonical bytes, and
+16 verified reopens within 60 seconds. These are source-profile thresholds,
+not installed-platform guarantees. Real filesystem fault injection, integrated
+model-stream and cancellation latency under disk stall, and installed-host
+shutdown evidence remain open under Sub-tasks 21.2.3.2, 21.2.3.3, and 21.2.3.5.
 
 ## Reason Codes
 
@@ -222,6 +256,8 @@ batch persistence, not a fully decoupled asynchronous writer.
 | `runtime.journal.serialization_failed` | Canonical journal encoding failed | Reject |
 | `runtime.journal.storage_failed` | Atomic store operation failed or is ambiguous | Poison writer; require verified restart |
 | `runtime.journal.integrity_failed` | Retained state failed reconciliation | Poison writer; do not resume |
+| `runtime.journal.queue_saturated` | The configured event or byte reservation is full | Accept no event; flush or expose resource exhaustion before exact retry |
+| `runtime.journal.worker_unavailable` | The writer thread, channel, or shared store lock is unavailable | Poison writer; require verified restart |
 
 ## Verification Ownership
 
@@ -233,6 +269,7 @@ batch persistence, not a fully decoupled asynchronous writer.
 | Atomic batches, queue bounds, terminal flush, restart tamper detection | `runtime_journal` unit tests | Implemented locally |
 | Coordinator event emission and client verification | `runtime_loop`, `coding_client` tests | Implemented at source level |
 | Transcript and diagnostics lifecycle | Story 21.2 and later conversation work | Open |
-| Dedicated asynchronous worker and slow-disk cancellation | Story 21.2 / Story 50.2 | Open |
+| Dedicated bounded worker, saturation, sticky failure, shutdown, and slow-store client isolation | `runtime_journal` worker tests and Story 50.2 load campaign | Implemented at source level |
+| Real-disk model-stream and cancellation isolation | Story 21.2 / Story 50.2 | Open |
 | Full crash, pressure, canary, and benchmark campaign | Story 21.2.3 | Open |
 | Installed native-client and independent-review evidence | Sprint 23 and release gates | Open |
