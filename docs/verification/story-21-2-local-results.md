@@ -46,6 +46,11 @@
 - A story-local source-closure test fixes the security-authoritative kernel's
   direct dependencies and rejects external network or telemetry APIs in the
   runtime event, journal, projection, artifact, and CLI-client implementation.
+- A deterministic hashed index maps every Story 21.2 sub-task to its exact
+  statement, implementation files, executable tests, and retained evidence.
+  It preserves 11 complete, three partial, and two open sub-tasks and rejects
+  omission, reorder, status, statement, file, test, digest, and completion
+  mutations.
 - The JSON schema and canonical Rust example pass the repository schema gate.
 - Markdown and Mermaid validation pass for the Story 21.2 architecture record.
 
@@ -61,6 +66,8 @@ cargo test -p agentmage-kernel-engine --lib --locked
 cargo test -p agentmage-host --lib --locked
 cargo clippy -p agentmage-kernel-engine --lib --tests --locked -- -D warnings
 cargo clippy -p agentmage-host --lib --tests --locked -- -D warnings
+python3 scripts/story_21_2_evidence_index.py --check
+python3 -m unittest tests.test_story_21_2_evidence_index
 npm run schemas:check
 npx markdownlint-cli2 README.md docs/architecture/runtime-event-journal.md docs/verification/story-21-2-local-results.md
 python3 scripts/check_mermaid.py
@@ -93,8 +100,8 @@ python3 scripts/runtime_hardening_load.py --output <fresh-evidence-path>
 - One Fedora source-host latency, throughput, memory, and disk profile is
   retained. Installed-interface and additional supported-platform profiles
   remain open.
-- The requirement-to-code-to-test hashed evidence index and independent review
-  remain open.
+- Independent review of the hashed evidence index and every critical journal
+  boundary remains open.
 - Manual fuzzing remains deliberately deferred to the final campaign.
 
 These absences keep Story 21.2, Sprint 21, and every dependent release gate

@@ -283,6 +283,7 @@ shutdown evidence remain open under Sub-tasks 21.2.3.2, 21.2.3.3, and 21.2.3.5.
 | Transcript and diagnostics lifecycle | Story 21.2 and later conversation work | Open |
 | Dedicated bounded worker, saturation, sticky failure, shutdown, and slow-store client isolation | `runtime_journal` worker tests and Story 50.2 load campaign | Implemented at source level |
 | Projection canary exclusion, artifact-read isolation, and external-telemetry dependency closure | `runtime_projection` and `runtime_artifact` Story 21.2 tests | Implemented at source level; broader strict-local policy snapshot reconciliation remains separate |
+| Requirement-to-code-to-test traceability and file-integrity index | Story 21.2 evidence-index generator, mutation tests, and retained JSON index | Implemented with complete, partial, and open states preserved |
 | Real-disk model-stream and cancellation isolation | Story 21.2 / Story 50.2 | Open |
 | Full crash, pressure, and benchmark campaign | Story 21.2.3 | Open |
 | Installed native-client and independent-review evidence | Sprint 23 and release gates | Open |

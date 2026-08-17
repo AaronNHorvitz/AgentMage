@@ -1,0 +1,376 @@
+{
+  "artifacts": [
+    {
+      "bytes": 9977,
+      "path": "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
+      "sha256": "d42c2bfc3e59824786333b3e6ef30e1aa08ebf84740f8739a40b0dd78e50ed95"
+    },
+    {
+      "bytes": 18239,
+      "path": "docs/architecture/runtime-event-journal.md",
+      "sha256": "74eed7a105248913c5f3ba98ab1ecf001236a1e2f36683838373b55ed3122a8c"
+    },
+    {
+      "bytes": 6245,
+      "path": "docs/verification/story-21-2-local-results.md",
+      "sha256": "a2e2e9a58bceae638210c5c970a88f9e94988248076751b2883f6d9b0f97099a"
+    },
+    {
+      "bytes": 5290,
+      "path": "fixtures/runtime-hardening/v1/linux-reference-load-profile.json",
+      "sha256": "2c7f2af40859d6f75bf009e8fd168419c3e09963cfd497443afda58bbbd812da"
+    },
+    {
+      "bytes": 11161,
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "63a01ee7674916b9710cff5a326a75a3b95746bf0e45b704ded02d5cd9b3fd1e"
+    },
+    {
+      "bytes": 231964,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "49dbda3b46d59264f55a16aee539432328ccc34cf1ce7dc92f0b2d2a6f4f523b"
+    },
+    {
+      "bytes": 143808,
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "09f720988bb3b78f90293a6063a26a6b3777cf1aa5beab7b615d1accf6d7e8f5"
+    },
+    {
+      "bytes": 96665,
+      "path": "kernel/engine/src/runtime_event.rs",
+      "sha256": "b99c5e2b12d2c4fcd1167838953984c18170e9b1b5489228fcf8321e29054e0d"
+    },
+    {
+      "bytes": 76314,
+      "path": "kernel/engine/src/runtime_journal.rs",
+      "sha256": "a0c3fad1c0e448e71025ca13bf09ed3aebc7b892411fe0a947509999e41b9e70"
+    },
+    {
+      "bytes": 111468,
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "be2ddb7692bd291f3b243502245d3cfffe00d95bdaf4aeea62994a3c07802d23"
+    },
+    {
+      "bytes": 59587,
+      "path": "kernel/engine/src/runtime_projection.rs",
+      "sha256": "fc8d15ead9d1535637e193ad54301ac7d4157f2dd46b667595cfc450486aca7f"
+    },
+    {
+      "bytes": 812,
+      "path": "schemas/runtime/examples/runtime-event.valid.json",
+      "sha256": "7beb6c86d8d942183ed734f3212d85abcfeca7ab9771a03884bb7db8574869f5"
+    },
+    {
+      "bytes": 12447,
+      "path": "schemas/runtime/runtime-event.schema.json",
+      "sha256": "4f548abe890a9f13b01f385e447be10ab6b3ea9dc69105b1bbc4c8726819d973"
+    },
+    {
+      "bytes": 23455,
+      "path": "scripts/runtime_hardening_load.py",
+      "sha256": "e4cbd2358c2c155977945bf830d4c5687b863dc9ab536ff23b3b9e6113d93c36"
+    },
+    {
+      "bytes": 15079,
+      "path": "scripts/story_21_2_evidence_index.py",
+      "sha256": "e660d43719909d214e7bcd8204f6dd4e947cf230aa01390e44a6b02cf8709efa"
+    },
+    {
+      "bytes": 43101,
+      "path": "shells/host/src/cli_runtime.rs",
+      "sha256": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e"
+    },
+    {
+      "bytes": 186346,
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "fb24e4727310b6d00da1e078f5b2705decc3fcf6102eb71c67f1dcce7b7ac5f6"
+    },
+    {
+      "bytes": 3397,
+      "path": "tests/test_story_21_2_evidence_index.py",
+      "sha256": "83fcf22d04013421fa4230609ff665c914aa71b68492cf0a3237feca5e75ce96"
+    }
+  ],
+  "disposition": "partial-local-evidence",
+  "index_sha256": "679fb17d6b2eee4e39d95ecfffb239da215bc3b94c27f646e6439f5f7aa60616",
+  "limitations": [
+    "Atomic co-publication of grant, effect, receipt, and checkpoint events remains open.",
+    "The complete crash-boundary and real-filesystem latency matrices remain open.",
+    "Only one retained Fedora source-host benchmark profile exists.",
+    "Installed-client, supported-platform, and independent-review evidence remains open.",
+    "Product security mapping and deferred manual fuzzing remain open."
+  ],
+  "mappings": [
+    {
+      "checked": true,
+      "code": [
+        "kernel/contracts/src/runtime_event.rs",
+        "kernel/engine/src/runtime_event.rs",
+        "schemas/runtime/runtime-event.schema.json"
+      ],
+      "evidence": [
+        "schemas/runtime/examples/runtime-event.valid.json"
+      ],
+      "statement_sha256": "facd4223a1ab24477cd133e42e4c76a68ceb53cbd5f041564abcfd922b13260f",
+      "status": "complete",
+      "task_id": "21.2.1.1",
+      "tests": [
+        "story_21_2_runtime_event_contract_is_closed_and_hash_bound",
+        "story_21_2_json_fixture_uses_the_rust_canonical_digest"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_event.rs"
+      ],
+      "evidence": [
+        "docs/architecture/runtime-event-journal.md"
+      ],
+      "statement_sha256": "6208882ca9d8f57e4883e216018f710f5f7e7c51c61d374b82ff959051d74e28",
+      "status": "complete",
+      "task_id": "21.2.1.2",
+      "tests": [
+        "story_21_2_every_event_family_has_a_legal_transition_path",
+        "story_21_2_closed_event_families_have_one_canonical_persistence_class"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_projection.rs"
+      ],
+      "evidence": [
+        "docs/architecture/runtime-event-journal.md"
+      ],
+      "statement_sha256": "2effe9bd47bc7cb3ce495015cfc021bb2662445a895e19efdc18f2d557d10175",
+      "status": "complete",
+      "task_id": "21.2.1.3",
+      "tests": [
+        "story_50_2_verified_runtime_exchange_projects_valid_non_authoritative_turns",
+        "story_50_2_metrics_and_diagnostics_are_content_free_event_bound_and_bounded"
+      ]
+    },
+    {
+      "checked": false,
+      "code": [
+        "kernel/engine/src/operational_store.rs",
+        "kernel/engine/src/runtime_loop.rs",
+        "shells/host/src/linux_coding_runtime.rs"
+      ],
+      "evidence": [
+        "docs/verification/story-21-2-local-results.md"
+      ],
+      "statement_sha256": "70cfcd85a66776bea8d190a84dfb4f1e27f95ca4aceae7844f9ec5f973c0d122",
+      "status": "open",
+      "task_id": "21.2.1.4",
+      "tests": []
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_journal.rs"
+      ],
+      "evidence": [
+        "docs/architecture/runtime-event-journal.md"
+      ],
+      "statement_sha256": "8bc31e6b0047573e52347823e89c55b3f6b6227283b9d5b1da05271e3a30c5f6",
+      "status": "complete",
+      "task_id": "21.2.1.5",
+      "tests": [
+        "correctness_flushes_every_ordered_predecessor_and_reopens_exactly",
+        "story_50_2_dedicated_writer_saturation_is_bounded_and_recoverable"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_event.rs"
+      ],
+      "evidence": [
+        "docs/architecture/runtime-event-journal.md"
+      ],
+      "statement_sha256": "7a741ee05dc2fdd7bff6140e81c26efed4a772489c0db99bb9a1f6d95d76e77c",
+      "status": "complete",
+      "task_id": "21.2.1.6",
+      "tests": [
+        "story_21_2_publisher_is_ordered_bounded_and_nonblocking",
+        "story_21_2_subscriber_bounds_and_disconnect_are_non_authoritative"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/contracts/src/runtime_event.rs",
+        "schemas/runtime/runtime-event.schema.json"
+      ],
+      "evidence": [
+        "docs/architecture/runtime-event-journal.md",
+        "schemas/runtime/examples/runtime-event.valid.json"
+      ],
+      "statement_sha256": "75a28be76fa1a78be4ab971625e7e32c97a1b85262f08f00eeb8eb894c716480",
+      "status": "complete",
+      "task_id": "21.2.2.1",
+      "tests": [
+        "story_21_2_json_fixture_uses_the_rust_canonical_digest"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_projection.rs"
+      ],
+      "evidence": [
+        "docs/architecture/runtime-event-journal.md"
+      ],
+      "statement_sha256": "84a9ec81f67010c2e5eec094dd72a5b5985ed6dd8f64f1ca14a2827edb357a7d",
+      "status": "complete",
+      "task_id": "21.2.2.2",
+      "tests": [
+        "story_50_2_transcript_projection_obeys_opt_in_safe_mode_sensitivity_and_budget",
+        "story_50_2_safe_mode_and_restricted_events_never_collect_optional_telemetry"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_journal.rs",
+        "kernel/engine/src/operational_store.rs"
+      ],
+      "evidence": [
+        "docs/architecture/runtime-event-journal.md"
+      ],
+      "statement_sha256": "fa33864cf171fd00d4f18f01bebbbf26e8564bc75e8ba02ac2585722d4a14dc7",
+      "status": "complete",
+      "task_id": "21.2.2.3",
+      "tests": [
+        "story_21_2_dedicated_writer_keeps_progress_and_clients_off_slow_store"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "scripts/story_21_2_evidence_index.py"
+      ],
+      "evidence": [
+        "docs/verification/story-21-2-local-results.md"
+      ],
+      "statement_sha256": "a723150cc1d41e7e3c1a6270c5cf91099c0d9ca01115de4bb8735539271d7948",
+      "status": "complete",
+      "task_id": "21.2.2.4",
+      "tests": [
+        "test_current_index_is_exact_and_hash_bound"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_event.rs"
+      ],
+      "evidence": [
+        "docs/verification/story-21-2-local-results.md"
+      ],
+      "statement_sha256": "84d42a8bd60841ceb8096b5fecb0e0003ee74b2696d8530f72b1385246ee0feb",
+      "status": "complete",
+      "task_id": "21.2.3.1",
+      "tests": [
+        "story_21_2_every_event_family_has_a_legal_transition_path",
+        "story_21_2_sequence_rejects_reorder_replay_binding_and_post_terminal_events",
+        "story_21_2_every_stream_binding_dimension_is_immutable"
+      ]
+    },
+    {
+      "checked": false,
+      "code": [
+        "kernel/engine/src/runtime_journal.rs",
+        "kernel/engine/src/operational_store.rs"
+      ],
+      "evidence": [
+        "docs/verification/story-21-2-local-results.md"
+      ],
+      "statement_sha256": "8b83f2fd54a6d8c62fa5f8535db48effd4247bd71ccd03d2647fe626e3fffe44",
+      "status": "partial",
+      "task_id": "21.2.3.2",
+      "tests": [
+        "story_21_2_dedicated_writer_poison_is_sticky_without_false_history",
+        "ephemeral_events_and_failed_batches_leave_no_false_history"
+      ]
+    },
+    {
+      "checked": false,
+      "code": [
+        "kernel/engine/src/runtime_journal.rs"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
+        "fixtures/runtime-hardening/v1/linux-reference-load-profile.json"
+      ],
+      "statement_sha256": "66ee3d66935cecc75d2e90a9063b685f53d54e528b14b17982d29186eff8dbe3",
+      "status": "partial",
+      "task_id": "21.2.3.3",
+      "tests": [
+        "queue_pressure_flushes_in_declared_batches_without_growth",
+        "story_50_2_dedicated_writer_saturation_is_bounded_and_recoverable"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_artifact.rs",
+        "kernel/engine/src/runtime_projection.rs"
+      ],
+      "evidence": [
+        "docs/verification/story-21-2-local-results.md"
+      ],
+      "statement_sha256": "ae9ed6192181eb538cfcd49e6190d6ded2ed0070818f67548da55f2abec25233",
+      "status": "complete",
+      "task_id": "21.2.3.4",
+      "tests": [
+        "story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
+        "story_21_2_projection_runtime_has_no_external_telemetry_dependency",
+        "story_21_2_sensitive_canaries_are_excluded_or_restricted_in_every_projection"
+      ]
+    },
+    {
+      "checked": false,
+      "code": [
+        "kernel/engine/src/runtime_journal.rs",
+        "scripts/runtime_hardening_load.py"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
+        "fixtures/runtime-hardening/v1/linux-reference-load-profile.json"
+      ],
+      "statement_sha256": "760795ba3e24c9ee4452a145169f6508348be89b15357fde576acddce2453645",
+      "status": "partial",
+      "task_id": "21.2.3.5",
+      "tests": [
+        "story_50_2_reference_hardware_load_is_bounded_recoverable_and_nonblocking"
+      ]
+    },
+    {
+      "checked": false,
+      "code": [],
+      "evidence": [
+        "docs/verification/story-21-2-local-results.md"
+      ],
+      "statement_sha256": "9c843fdc8f2c9157cd060f88f2d616842e5b1034d965d4ec5a19d97193bfdbeb",
+      "status": "open",
+      "task_id": "21.2.3.6",
+      "tests": []
+    }
+  ],
+  "record_type": "story_21_2_requirement_code_test_evidence_index",
+  "schema_version": 1,
+  "source_revision": "fc2a9e3efe04839dc600064e4ebcfdaee63ffcab",
+  "story_id": "21.2",
+  "summary": {
+    "complete_count": 11,
+    "mapping_count": 16,
+    "open_count": 2,
+    "partial_count": 3,
+    "release_approved": false,
+    "sprint_complete": false,
+    "story_complete": false
+  }
+}
