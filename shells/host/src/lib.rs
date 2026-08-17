@@ -36,6 +36,10 @@ pub mod cli;
 pub mod linux_coding;
 
 #[cfg(target_os = "linux")]
+/// Linux approval, authority, and effect composition for the reusable coding runtime.
+pub mod linux_coding_runtime;
+
+#[cfg(target_os = "linux")]
 pub mod linux_read;
 
 /// Stable component identity used by diagnostics and build verification.

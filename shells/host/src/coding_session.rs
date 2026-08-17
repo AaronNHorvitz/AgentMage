@@ -439,7 +439,7 @@ fn hex_bytes(bytes: &[u8]) -> String {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use std::collections::BTreeMap;
 
     use agentmage_kernel_contracts::{
@@ -703,9 +703,18 @@ mod tests {
             .expect("offline proof")
     }
 
-    fn input() -> CodingSessionProfileInput {
+    pub(crate) fn input() -> CodingSessionProfileInput {
+        input_with_worktree_path_sha256("2".repeat(64))
+    }
+
+    pub(crate) fn input_with_worktree_path_sha256(
+        worktree_path_sha256: String,
+    ) -> CodingSessionProfileInput {
         let limits = limits();
-        let worktree = worktree(&limits);
+        let mut worktree = worktree(&limits);
+        worktree.worktree_path_sha256 = worktree_path_sha256;
+        worktree.record_sha256 = "0".repeat(64);
+        let worktree = OwnedWorktreeRecord::seal(worktree).expect("worktree path revision");
         let command = command();
         CodingSessionProfileInput {
             profile_id: "coding-profile-0001".to_owned(),

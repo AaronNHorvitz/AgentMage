@@ -17,6 +17,9 @@ use agentmage_platform_linux::{
     resolve_linux_workspace_object, select_linux_workspace,
 };
 
+#[cfg(test)]
+use agentmage_kernel_contracts::AdapterInstanceId;
+
 use crate::{
     coding_changes::{
         CodingWriteScope, bind_structured_patch_proposal,
@@ -183,14 +186,37 @@ impl<'workspace> PreparedLinuxCodingOperation<'workspace> {
             .revalidate()
             .map_err(|_| LinuxCodingBindingError::TargetDenied)
     }
+
+    /// Separates a retained operation into the exact inert plan and held execution material.
+    pub(crate) fn into_parts(
+        self,
+    ) -> (
+        PreparedNativeCodingOperation,
+        LinuxCodingTargetBinding,
+        Option<LinuxCodingWriteDraft>,
+        &'workspace LinuxAuthorizedWorkspace,
+    ) {
+        (
+            self.operation,
+            self.binding,
+            self.write_draft,
+            self.workspace,
+        )
+    }
 }
 
 /// One verified Linux owned-worktree projection for an immutable coding profile.
 pub struct LinuxCodingWorkspace<'session, 'platform> {
-    platform: &'platform VerifiedPlatformAdapter<LinuxPlatformAdapter>,
+    platform: LinuxCodingPlatform<'platform>,
     profile: &'session CodingSessionProfile,
     projection: CodingRepositoryProjection,
     workspace: LinuxAuthorizedWorkspace,
+}
+
+enum LinuxCodingPlatform<'platform> {
+    Verified(&'platform VerifiedPlatformAdapter<LinuxPlatformAdapter>),
+    #[cfg(test)]
+    Test(AdapterInstanceId),
 }
 
 impl std::fmt::Debug for LinuxCodingWorkspace<'_, '_> {
@@ -232,11 +258,51 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
         GrantTarget::held_workspace_root(&workspace)
             .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
         Ok(Self {
-            platform,
+            platform: LinuxCodingPlatform::Verified(platform),
             profile,
             projection,
             workspace,
         })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn bind_test(
+        profile: &'session CodingSessionProfile,
+        repository_map: RepositoryMap,
+        worktree_root: &Path,
+        authorization_id: WorkspaceAuthorizationId,
+        adapter_instance_id: AdapterInstanceId,
+    ) -> Result<Self, LinuxCodingBindingError> {
+        verify_worktree_path(
+            profile.worktree().worktree_path_sha256.as_str(),
+            worktree_root,
+        )?;
+        let projection = CodingRepositoryProjection::for_profile(profile, repository_map)
+            .map_err(|_| LinuxCodingBindingError::ProjectionDenied)?;
+        let workspace = agentmage_platform_linux::select_test_linux_workspace(
+            worktree_root,
+            profile.write_scope().workspace_id().clone(),
+            authorization_id,
+            adapter_instance_id.clone(),
+        )
+        .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
+        workspace
+            .revalidate()
+            .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
+        GrantTarget::held_workspace_root(&workspace)
+            .map_err(|_| LinuxCodingBindingError::WorktreeDenied)?;
+        Ok(Self {
+            platform: LinuxCodingPlatform::Test(adapter_instance_id),
+            profile,
+            projection,
+            workspace,
+        })
+    }
+
+    /// Returns the immutable profile whose repository and tool identities are held here.
+    #[must_use]
+    pub const fn profile(&self) -> &CodingSessionProfile {
+        self.profile
     }
 
     /// Returns the continuously held exact worktree root without granting its use.
@@ -256,9 +322,24 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
         let operation = NativeCodingOperationPlanner::new(self.profile, &self.projection)
             .prepare(call)
             .map_err(|_| LinuxCodingBindingError::OperationDenied)?;
-        let binding = bind_target(&self.workspace, operation.target(), |path, intent| {
-            resolve_linux_workspace_object(self.platform, &self.workspace, path, intent)
-        })?;
+        let binding = bind_target(
+            &self.workspace,
+            operation.target(),
+            |path, intent| match &self.platform {
+                LinuxCodingPlatform::Verified(platform) => {
+                    resolve_linux_workspace_object(platform, &self.workspace, path, intent)
+                }
+                #[cfg(test)]
+                LinuxCodingPlatform::Test(adapter_instance_id) => {
+                    agentmage_platform_linux::resolve_test_linux_workspace_object(
+                        &self.workspace,
+                        adapter_instance_id.clone(),
+                        path,
+                        intent,
+                    )
+                }
+            },
+        )?;
         let write_draft = compose_write_draft(
             self.profile.write_scope(),
             operation.prepared(),

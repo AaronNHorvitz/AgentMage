@@ -3,10 +3,11 @@
 use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
-    ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorizedWorkspaceHandle, CapabilityGrant,
-    GrantClass, GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
-    GrantTarget, OperationBinding, PolicyId, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeRunId, TaskId, ToolCall, WorkspaceScopePath, to_canonical_json,
+    ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorizedWorkspaceHandle,
+    CapabilityGrant, GrantClass, GrantId, GrantNonce, GrantOperation, GrantPreimage,
+    GrantSideEffect, GrantStatus, GrantTarget, OperationBinding, PolicyId,
+    RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeRunId,
+    TaskId, ToolCall, WorkspaceScopePath, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     approval::{render_approval_request, verify_approval_request},
@@ -138,6 +139,10 @@ where
 pub struct CodingRuntimePolicy {
     policy_id: PolicyId,
     engine: PolicyEngine,
+    actor_id: ActorId,
+    task_id: TaskId,
+    run_id: RuntimeRunId,
+    action_ids: BTreeSet<ActionId>,
     parent_targets: Vec<GrantTarget>,
     excluded_targets: Vec<GrantTarget>,
 }
@@ -153,6 +158,32 @@ impl CodingRuntimePolicy {
     #[must_use]
     pub const fn engine(&self) -> &PolicyEngine {
         &self.engine
+    }
+
+    /// Reports whether the immutable policy belongs to this exact bounded runtime run.
+    #[must_use]
+    pub fn binds_run(
+        &self,
+        actor_id: &ActorId,
+        task_id: &TaskId,
+        run_id: &RuntimeRunId,
+        maximum_tool_calls: u32,
+    ) -> bool {
+        self.actor_id == *actor_id
+            && self.task_id == *task_id
+            && self.run_id == *run_id
+            && maximum_tool_calls > 0
+            && self.action_ids.len() == maximum_tool_calls as usize
+            && (1..=maximum_tool_calls).all(|sequence| {
+                self.action_ids
+                    .contains(&runtime_action_id(run_id, sequence))
+            })
+    }
+
+    /// Reports whether one coordinator-selected action is inside the fixed run budget.
+    #[must_use]
+    pub fn admits_action(&self, action_id: &ActionId) -> bool {
+        self.action_ids.contains(action_id)
     }
 
     /// Returns the exact authorization-bound parent scopes.
@@ -373,7 +404,7 @@ where
         actors: exact_rules(request.actor_id.clone()),
         tasks: exact_rules(request.task_id.clone()),
         actions: ScopeRules {
-            allowed: actions,
+            allowed: actions.clone(),
             denied: BTreeSet::new(),
         },
         tools: ScopeRules {
@@ -399,6 +430,10 @@ where
     Ok(CodingRuntimePolicy {
         policy_id,
         engine,
+        actor_id: request.actor_id.clone(),
+        task_id: request.task_id.clone(),
+        run_id: request.run_id.clone(),
+        action_ids: actions,
         parent_targets: vec![parent_target],
         excluded_targets,
     })
