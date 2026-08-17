@@ -829,14 +829,14 @@ fn canonical_sha256(value: &impl Serialize) -> Result<String, RuntimeEventError>
 mod tests {
     use super::{
         RuntimeEventDelivery, RuntimeEventError, RuntimeEventPublisher, RuntimeEventSequence,
-        ZERO_SHA256, seal_runtime_event, verify_runtime_event,
+        ZERO_SHA256, runtime_event_persistence, seal_runtime_event, verify_runtime_event,
     };
     use agentmage_kernel_contracts::{
         AgentStateKind, ApprovalId, CONTRACT_SCHEMA_VERSION, ContextSensitivity, CorrelationId,
         GrantId, GrantOperation, ModelRunId, PolicyId, ReceiptId, RuntimeEvent, RuntimeEventId,
         RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
-        RuntimeEventRetentionKind, RuntimeOperationId, RuntimePayloadReference, RuntimeRunId,
-        RuntimeTurnId, SessionId, TaskId, ToolCallId,
+        RuntimeEventRetentionKind, RuntimeOperationId, RuntimePayloadReference,
+        RuntimePermissionDisposition, RuntimeRunId, RuntimeTurnId, SessionId, TaskId, ToolCallId,
     };
 
     struct FixtureStream {
@@ -1280,5 +1280,239 @@ mod tests {
         assert_eq!(event_names.len(), 21);
         assert!(!event_names.iter().any(|name| name.contains("token")));
         assert_eq!(CONTRACT_SCHEMA_VERSION, 2);
+    }
+
+    #[test]
+    fn story_21_2_closed_event_families_have_one_canonical_persistence_class() {
+        let cases = [
+            (
+                RuntimeEventKind::RunStarted {
+                    request_sha256: hash('1'),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::TurnStarted,
+                RuntimeEventPersistenceClass::Progress,
+            ),
+            (
+                RuntimeEventKind::TurnCompleted {
+                    outcome_sha256: hash('2'),
+                },
+                RuntimeEventPersistenceClass::Progress,
+            ),
+            (
+                RuntimeEventKind::ModelRequested {
+                    model_run_id: ModelRunId::from_raw("model-run-1"),
+                    request_sha256: hash('3'),
+                },
+                RuntimeEventPersistenceClass::Progress,
+            ),
+            (
+                RuntimeEventKind::ModelCompleted {
+                    model_run_id: ModelRunId::from_raw("model-run-1"),
+                    result_sha256: hash('4'),
+                },
+                RuntimeEventPersistenceClass::Progress,
+            ),
+            (
+                RuntimeEventKind::ModelFailed {
+                    model_run_id: ModelRunId::from_raw("model-run-1"),
+                    failure_code: "model.failed".to_owned(),
+                },
+                RuntimeEventPersistenceClass::Progress,
+            ),
+            (
+                RuntimeEventKind::ToolRequested {
+                    tool_call_id: ToolCallId::from_raw("tool-call-1"),
+                    arguments_sha256: hash('5'),
+                },
+                RuntimeEventPersistenceClass::Progress,
+            ),
+            (
+                RuntimeEventKind::ToolStarted {
+                    tool_call_id: ToolCallId::from_raw("tool-call-1"),
+                    authority_sha256: hash('6'),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::ToolCompleted {
+                    tool_call_id: ToolCallId::from_raw("tool-call-1"),
+                    receipt_id: ReceiptId::from_raw("receipt-1"),
+                    result_sha256: hash('7'),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::ToolFailed {
+                    tool_call_id: ToolCallId::from_raw("tool-call-1"),
+                    receipt_id: None,
+                    failure_code: "tool.failed".to_owned(),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::PermissionRequested {
+                    approval_id: ApprovalId::from_raw("approval-1"),
+                    operation: GrantOperation::WorkspaceRead,
+                    preview_sha256: hash('8'),
+                    expires_at_epoch_ms: 2_000,
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::PermissionDecided {
+                    approval_id: ApprovalId::from_raw("approval-1"),
+                    disposition: RuntimePermissionDisposition::Allow,
+                    grant_id: Some(GrantId::from_raw("grant-1")),
+                    decision_sha256: hash('9'),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::FileObserved {
+                    object_identity_sha256: hash('a'),
+                    observation_sha256: hash('b'),
+                },
+                RuntimeEventPersistenceClass::Progress,
+            ),
+            (
+                RuntimeEventKind::FileModified {
+                    object_identity_sha256: hash('a'),
+                    postcondition_sha256: hash('c'),
+                    receipt_id: ReceiptId::from_raw("receipt-1"),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::ArtifactCreated {
+                    artifact_id: agentmage_kernel_contracts::RuntimeArtifactId::from_raw(
+                        "artifact-1",
+                    ),
+                    manifest_sha256: hash('d'),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::CheckpointCommitted {
+                    checkpoint_id: agentmage_kernel_contracts::SessionCheckpointId::from_raw(
+                        "checkpoint-1",
+                    ),
+                    checkpoint_sha256: hash('e'),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::CancellationRequested {
+                    cancellation_id: agentmage_kernel_contracts::CancellationId::from_raw(
+                        "cancellation-1",
+                    ),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::CancellationObserved {
+                    cancellation_id: agentmage_kernel_contracts::CancellationId::from_raw(
+                        "cancellation-1",
+                    ),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+            (
+                RuntimeEventKind::Progress {
+                    code: "runtime.progress".to_owned(),
+                },
+                RuntimeEventPersistenceClass::Progress,
+            ),
+            (
+                RuntimeEventKind::Metric {
+                    name: "runtime.queue.depth".to_owned(),
+                    value: 1,
+                },
+                RuntimeEventPersistenceClass::Metric,
+            ),
+            (
+                RuntimeEventKind::RunTerminal {
+                    state: AgentStateKind::Success,
+                    outcome_sha256: hash('f'),
+                },
+                RuntimeEventPersistenceClass::Correctness,
+            ),
+        ];
+        assert_eq!(cases.len(), 21);
+        for (kind, expected) in cases {
+            assert_eq!(runtime_event_persistence(&kind), expected);
+        }
+    }
+
+    #[test]
+    fn story_21_2_every_stream_binding_dimension_is_immutable() {
+        let events = valid_sequence();
+        let mut mutations = Vec::new();
+
+        let mut run = events[1].clone();
+        run.run_id = RuntimeRunId::from_raw("run-other");
+        mutations.push(run);
+
+        let mut session = events[1].clone();
+        session.session_id = SessionId::from_raw("session-other");
+        mutations.push(session);
+
+        let mut task = events[1].clone();
+        task.task_id = TaskId::from_raw("task-other");
+        mutations.push(task);
+
+        let mut correlation = events[1].clone();
+        correlation.correlation_id = CorrelationId::from_raw("correlation-other");
+        mutations.push(correlation);
+
+        let mut policy = events[1].clone();
+        policy.policy_id = PolicyId::from_raw("policy-other");
+        mutations.push(policy);
+
+        for changed in mutations {
+            let changed =
+                seal_runtime_event(changed).expect("binding mutation remains well formed");
+            let mut sequence = RuntimeEventSequence::new();
+            sequence.push(&events[0]).expect("run starts");
+            assert_eq!(
+                sequence.push(&changed),
+                Err(RuntimeEventError::BindingMismatch)
+            );
+        }
+    }
+
+    #[test]
+    fn story_21_2_subscriber_bounds_and_disconnect_are_non_authoritative() {
+        let events = valid_sequence();
+        let publisher = RuntimeEventPublisher::new();
+        assert!(matches!(
+            publisher.subscribe(0),
+            Err(RuntimeEventError::SubscriberLimit)
+        ));
+        assert!(matches!(
+            publisher.subscribe(4_097),
+            Err(RuntimeEventError::SubscriberLimit)
+        ));
+
+        let subscriber = publisher.subscribe(1).expect("bounded subscriber");
+        drop(subscriber);
+        assert_eq!(
+            publisher
+                .publish(events[0].clone())
+                .expect("runtime continues"),
+            RuntimeEventDelivery {
+                delivered: 0,
+                lagged: 0,
+                disconnected: 1,
+            }
+        );
+        for event in events.into_iter().skip(1) {
+            publisher
+                .publish(event)
+                .expect("disconnected client has no authority");
+        }
+        assert_eq!(publisher.event_count(), Ok(12));
     }
 }
