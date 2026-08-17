@@ -24,7 +24,7 @@ use super::{
     ReusableRuntimeCoordinator, RuntimeClock, RuntimeContextPort, RuntimeCoordinatorStep,
     RuntimeLoopError, RuntimeModelPort, RuntimePermissionEvaluation, RuntimePortFailure,
     RuntimeToolBoundary, RuntimeToolExecution, RuntimeVerificationInput, RuntimeVerifierPort,
-    derived_id, runtime_tool_references,
+    derived_id, runtime_action_id, runtime_tool_references,
 };
 use crate::model_codec::{proposal_digest, tests_support::profile};
 use crate::runtime_coordinator::{
@@ -35,6 +35,20 @@ use crate::tooling::{Tool, ToolRegistry};
 
 const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const SNAPSHOT: &str = "snapshot-0001";
+
+#[test]
+fn story_48_2_runtime_action_ids_are_precomputable_stable_and_sequence_bound() {
+    let run_id = RuntimeRunId::from_raw("run-action-policy-0001");
+    let first = runtime_action_id(&run_id, 1);
+    assert_eq!(first, runtime_action_id(&run_id, 1));
+    assert_ne!(first, runtime_action_id(&run_id, 2));
+    assert_ne!(
+        first,
+        runtime_action_id(&RuntimeRunId::from_raw("run-other"), 1)
+    );
+    assert!(first.as_str().starts_with("action:"));
+    assert!(first.as_str().len() <= 128);
+}
 
 #[derive(Clone, Copy)]
 enum ModelScript {

@@ -852,11 +852,7 @@ where
             schema_version: CONTRACT_SCHEMA_VERSION,
             tool_call_id: candidate.tool_call_id,
             correlation_id: self.correlation_id.clone(),
-            action_id: ActionId::from_raw(derived_id(
-                "action",
-                self.request.run_id.as_str(),
-                u64::from(self.tool_call_count),
-            )),
+            action_id: runtime_action_id(&self.request.run_id, self.tool_call_count),
             tool_id: candidate.tool_id,
             tool_version: candidate.tool_version,
             arguments: candidate.arguments,
@@ -1456,6 +1452,18 @@ pub fn runtime_tool_references(
             })
         })
         .collect()
+}
+
+/// Derives the exact one-based action identity the coordinator will assign to a tool call.
+///
+/// Trusted session-policy composition can enumerate the request's bounded tool-call budget before
+/// model execution without granting the model any control over an action identity.
+#[must_use]
+pub fn runtime_action_id(
+    run_id: &agentmage_kernel_contracts::RuntimeRunId,
+    sequence: u32,
+) -> ActionId {
+    ActionId::from_raw(derived_id("action", run_id.as_str(), u64::from(sequence)))
 }
 
 fn permission_challenge(
