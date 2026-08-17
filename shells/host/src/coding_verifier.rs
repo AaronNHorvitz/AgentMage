@@ -64,12 +64,20 @@ pub struct CodingCompletionVerifier {
     workspace_snapshot_sha256: String,
     repository_snapshot_sha256: String,
     validation_templates: BTreeSet<(String, String)>,
+    required_validation_ids: BTreeSet<String>,
 }
 
 impl CodingCompletionVerifier {
     /// Binds one verifier to the profile's worktree and registered validations.
     #[must_use]
     pub fn for_profile(profile: &CodingSessionProfile) -> Self {
+        let required_validation_ids = profile
+            .change_plan()
+            .planned_validation_ids()
+            .iter()
+            .chain(profile.coding_guidance().required_validation_ids())
+            .cloned()
+            .collect();
         Self {
             verifier_id: VerifierId::from_raw(format!(
                 "coding-verifier:{}",
@@ -88,6 +96,7 @@ impl CodingCompletionVerifier {
                     )
                 })
                 .collect(),
+            required_validation_ids,
         }
     }
 
@@ -141,11 +150,14 @@ impl CodingCompletionVerifier {
         }
 
         let last_write = write_indexes.last().copied();
-        let validation_indexes = input
+        let validations = input
             .tool_results
             .iter()
             .enumerate()
-            .filter_map(|(index, result)| self.full_validation(result).then_some(index))
+            .filter_map(|(index, result)| {
+                self.full_validation(result)
+                    .map(|validation_id| (index, validation_id))
+            })
             .collect::<Vec<_>>();
         let git_results = input
             .tool_results
@@ -159,11 +171,20 @@ impl CodingCompletionVerifier {
             .work_packet
             .required_evidence
             .contains(&EvidenceKind::Validation);
-        if validation_required && validation_indexes.is_empty() {
+        let completed_validation_ids = validations
+            .iter()
+            .map(|(_, validation_id)| validation_id.as_str())
+            .collect::<BTreeSet<_>>();
+        if (validation_required && validations.is_empty())
+            || self
+                .required_validation_ids
+                .iter()
+                .any(|required| !completed_validation_ids.contains(required.as_str()))
+        {
             return None;
         }
         if let Some(last_write) = last_write {
-            if !validation_indexes.iter().any(|index| *index > last_write)
+            if !validations.iter().any(|(index, _)| *index > last_write)
                 || !git_results.iter().any(|(index, _)| *index > last_write)
                 || !input
                     .evidence
@@ -183,23 +204,25 @@ impl CodingCompletionVerifier {
         }
     }
 
-    fn full_validation(&self, result: &agentmage_kernel_contracts::ToolResult) -> bool {
-        let Some(payload) = result.output.as_ref() else {
-            return false;
-        };
+    fn full_validation(&self, result: &agentmage_kernel_contracts::ToolResult) -> Option<String> {
+        let payload = result.output.as_ref()?;
         if payload.schema.schema_id.as_str() != TARGETED_VALIDATION_OUTPUT_SCHEMA_ID
             || payload.sha256 != sha256(&payload.bytes)
         {
-            return false;
+            return None;
         }
-        serde_json::from_slice::<ValidationReceipt>(&payload.bytes).is_ok_and(|receipt| {
-            receipt.is_full_pass()
-                && !receipt.execution_authority
-                && receipt.execution_scope_sha256 == self.workspace_snapshot_sha256
-                && self
-                    .validation_templates
-                    .contains(&(receipt.validation_id, receipt.validation_template_sha256))
-        })
+        serde_json::from_slice::<ValidationReceipt>(&payload.bytes)
+            .ok()
+            .filter(|receipt| {
+                receipt.is_full_pass()
+                    && !receipt.execution_authority
+                    && receipt.execution_scope_sha256 == self.workspace_snapshot_sha256
+                    && self.validation_templates.contains(&(
+                        receipt.validation_id.clone(),
+                        receipt.validation_template_sha256.clone(),
+                    ))
+            })
+            .map(|receipt| receipt.validation_id)
     }
 
     fn git_result(

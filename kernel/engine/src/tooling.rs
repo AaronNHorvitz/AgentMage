@@ -150,6 +150,15 @@ impl ToolRegistry {
             .collect()
     }
 
+    /// Retains only definitions accepted by one trusted composition-time narrowing predicate.
+    ///
+    /// This operation can only remove non-executable registrations. It cannot add a tool, execute
+    /// one, or create authority, and is intended for immutable profile construction.
+    pub fn retain_tools(&mut self, mut retain: impl FnMut(&ToolDefinition) -> bool) {
+        self.tools
+            .retain(|_, registered| retain(&registered.definition));
+    }
+
     /// Validates a call against its exact frozen definition and schema identity.
     pub fn validate_arguments(
         &self,

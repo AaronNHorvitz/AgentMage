@@ -33,12 +33,13 @@ where
     T: RuntimeToolBoundary,
     C: RuntimeClock,
 {
-    let registry = native_coding_runtime_registry(
+    let mut registry = native_coding_runtime_registry(
         profile.write_scope().clone(),
         profile.commands().clone(),
         profile.validations().clone(),
     )
     .map_err(|_| RuntimeLoopError::ToolCatalogBinding)?;
+    profile.coding_guidance().restrict_registry(&mut registry);
     ReusableRuntimeCoordinator::new(
         request,
         model,

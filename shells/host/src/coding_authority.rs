@@ -20,6 +20,8 @@ use agentmage_kernel_engine::{
 };
 use sha2::{Digest, Sha256};
 
+use crate::coding_session::CodingSessionProfile;
+
 const MAX_OPERATION_TARGETS: usize = 128;
 const OPERATION_GRANT_LIFETIME_MS: u64 = 30_000;
 
@@ -126,10 +128,8 @@ where
     pub run_id: &'request RuntimeRunId,
     /// Continuously held authorized workspace root.
     pub workspace: &'request Workspace,
-    /// Exact immutable native tool registry.
-    pub registry: &'request ToolRegistry,
-    /// Inclusive maximum number of coordinator tool calls.
-    pub maximum_tool_calls: u32,
+    /// Exact immutable coding profile whose tools, limits, and guidance govern this run.
+    pub profile: &'request CodingSessionProfile,
     /// Canonical authorization-bound subtrees denied throughout the run.
     pub excluded_scopes: Vec<WorkspaceScopePath>,
 }
@@ -345,7 +345,13 @@ pub fn build_coding_runtime_policy<Workspace>(
 where
     Workspace: AuthorizedWorkspaceHandle,
 {
-    if request.maximum_tool_calls == 0 || request.registry.list_tools().is_empty() {
+    let registry = request.profile.registry();
+    let maximum_tool_calls = request.profile.limits().max_tool_calls;
+    if request.workspace.workspace_id() != request.profile.write_scope().workspace_id()
+        || request.task_id.as_str() != request.profile.worktree().task_id
+        || maximum_tool_calls == 0
+        || registry.list_tools().is_empty()
+    {
         return Err(CodingApprovalError::PolicyDenied);
     }
     let parent_scope = WorkspaceScopePath::new(
@@ -355,8 +361,11 @@ where
     .map_err(|_| CodingApprovalError::PolicyDenied)?;
     let parent_target = GrantTarget::workspace_scope(request.workspace, parent_scope)
         .map_err(|_| CodingApprovalError::PolicyDenied)?;
-    let mut excluded_targets = request
-        .excluded_scopes
+    let mut excluded_scopes = request.profile.coding_guidance().excluded_scopes().to_vec();
+    excluded_scopes.extend(request.excluded_scopes);
+    excluded_scopes.sort();
+    excluded_scopes.dedup();
+    let mut excluded_targets = excluded_scopes
         .into_iter()
         .map(|scope| {
             GrantTarget::workspace_scope(request.workspace, scope)
@@ -364,11 +373,7 @@ where
         })
         .collect::<Result<Vec<_>, _>>()?;
     excluded_targets.sort();
-    if excluded_targets.windows(2).any(|pair| pair[0] == pair[1]) {
-        return Err(CodingApprovalError::PolicyDenied);
-    }
-
-    let definitions = request.registry.list_tools();
+    let definitions = registry.list_tools();
     let tools = definitions
         .iter()
         .map(|definition| ToolPolicyBinding {
@@ -392,10 +397,10 @@ where
     {
         return Err(CodingApprovalError::PolicyDenied);
     }
-    let actions = (1..=request.maximum_tool_calls)
+    let actions = (1..=maximum_tool_calls)
         .map(|sequence| runtime_action_id(request.run_id, sequence))
         .collect::<BTreeSet<_>>();
-    if actions.len() != request.maximum_tool_calls as usize {
+    if actions.len() != maximum_tool_calls as usize {
         return Err(CodingApprovalError::PolicyDenied);
     }
     let engine = PolicyEngine::new(PolicyDocument {
@@ -622,6 +627,7 @@ mod tests {
     use agentmage_kernel_engine::{
         approval::verify_approval_request,
         grants::{GrantIssuer, SessionReadGrantRequest},
+        instruction_provenance::{GuidanceConstraint, GuidanceConstraintKind},
         policy::PolicyEvaluationContext,
         runtime_coordinator::seal_runtime_approval_challenge,
     };
@@ -635,7 +641,7 @@ mod tests {
     impl agentmage_kernel_contracts::AuthorizedWorkspaceHandle for Workspace {
         fn workspace_id(&self) -> &WorkspaceId {
             static ID: std::sync::OnceLock<WorkspaceId> = std::sync::OnceLock::new();
-            ID.get_or_init(|| WorkspaceId::from_raw("workspace-coding-approval"))
+            ID.get_or_init(|| WorkspaceId::from_raw("workspace-coding"))
         }
 
         fn authorization_id(&self) -> &WorkspaceAuthorizationId {
@@ -694,7 +700,11 @@ mod tests {
     fn story_48_2_coding_approval_binds_parent_call_targets_preimages_and_plan() {
         use agentmage_kernel_contracts::AuthorizedWorkspaceHandle as _;
 
-        let registry = read_only_runtime_registry().expect("registry");
+        let profile = crate::coding_session::CodingSessionProfile::build(
+            crate::coding_session::tests::input(),
+        )
+        .expect("coding profile");
+        let registry = profile.registry();
         let definition = registry
             .get_tool(
                 &agentmage_kernel_contracts::ToolId::from_raw(ReadOnlyToolKind::ReadText.id()),
@@ -763,7 +773,7 @@ mod tests {
         })
         .expect("held target");
         let approval = render_coding_approval_request(
-            &registry,
+            registry,
             CodingApprovalRequest {
                 parent: &parent,
                 approval_id: ApprovalId::from_raw("approval-coding"),
@@ -778,7 +788,7 @@ mod tests {
         )
         .expect("approval renders");
 
-        verify_approval_request(&registry, &approval).expect("approval verifies");
+        verify_approval_request(registry, &approval).expect("approval verifies");
         assert_eq!(approval.targets, [target]);
         assert_eq!(approval.preimages.len(), 1);
         assert_eq!(
@@ -1052,17 +1062,29 @@ mod tests {
     fn story_48_2_runtime_policy_is_stable_across_bounded_actions_and_denies_expansion() {
         use agentmage_kernel_contracts::AuthorizedWorkspaceHandle as _;
 
-        let registry = read_only_runtime_registry().expect("registry");
+        let profile = crate::coding_session::CodingSessionProfile::build(
+            crate::coding_guidance::tests::profile_input_with(vec![
+                GuidanceConstraint {
+                    kind: GuidanceConstraintKind::ExcludeScope,
+                    target: "generated-scope".to_owned(),
+                },
+                GuidanceConstraint {
+                    kind: GuidanceConstraintKind::ReduceBudget,
+                    target: "max_tool_calls=4".to_owned(),
+                },
+            ]),
+        )
+        .expect("narrowed coding profile");
+        let registry = profile.registry();
         let run_id = RuntimeRunId::from_raw("run-coding-envelope");
         let actor_id = ActorId::from_raw("actor-coding-envelope");
-        let task_id = TaskId::from_raw("task-coding-envelope");
+        let task_id = TaskId::from_raw(profile.worktree().task_id.clone());
         let runtime_policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
             actor_id: &actor_id,
             task_id: &task_id,
             run_id: &run_id,
             workspace: &Workspace,
-            registry: &registry,
-            maximum_tool_calls: 3,
+            profile: &profile,
             excluded_scopes: vec![
                 WorkspaceScopePath::new(Workspace.workspace_id().clone(), ["private"])
                     .expect("excluded scope"),
@@ -1076,7 +1098,8 @@ mod tests {
                 .starts_with("policy:coding:")
         );
         assert_eq!(runtime_policy.parent_targets().len(), 1);
-        assert_eq!(runtime_policy.excluded_targets().len(), 1);
+        assert_eq!(runtime_policy.excluded_targets().len(), 2);
+        assert!(runtime_policy.binds_run(&actor_id, &task_id, &run_id, 4));
 
         let definition = registry
             .get_tool(
@@ -1183,7 +1206,7 @@ mod tests {
                 .allowed
         );
         let mut outside_budget = context;
-        outside_budget.action_id = runtime_action_id(&run_id, 4);
+        outside_budget.action_id = runtime_action_id(&run_id, profile.limits().max_tool_calls + 1);
         assert!(
             !runtime_policy
                 .engine()

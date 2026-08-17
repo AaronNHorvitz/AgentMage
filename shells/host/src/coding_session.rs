@@ -25,6 +25,7 @@ use sha2::{Digest, Sha256};
 
 use crate::{
     coding_changes::CodingWriteScope,
+    coding_guidance::{CodingGuidancePolicy, compile_coding_guidance},
     coding_plan::CodingPlanBinding,
     coding_tools::{CodingToolCatalogError, native_coding_runtime_registry},
 };
@@ -136,6 +137,7 @@ pub struct CodingSessionProfile {
     change_plan: CodingPlanBinding,
     instruction_ledger: InstructionEvidenceLedger,
     effective_guidance: EffectiveGuidance,
+    coding_guidance: CodingGuidancePolicy,
     commands: CommandRegistry,
     validations: ValidationTemplateRegistry,
     limits: RuntimeRunLimits,
@@ -164,11 +166,21 @@ impl CodingSessionProfile {
         validate_static_input(&input)?;
         let effective_guidance = effective_guidance(&input.instruction_ledger)
             .map_err(|_| CodingSessionProfileError::InstructionDenied)?;
-        let registry = native_coding_runtime_registry(
+        let mut registry = native_coding_runtime_registry(
             input.write_scope.clone(),
             input.commands.clone(),
             input.validations.clone(),
         )?;
+        let coding_guidance = compile_coding_guidance(
+            input.write_scope.workspace_id(),
+            &input.instruction_ledger,
+            &effective_guidance,
+            &registry,
+            &input.validations,
+            &input.limits,
+        )
+        .map_err(|_| CodingSessionProfileError::InstructionDenied)?;
+        coding_guidance.restrict_registry(&mut registry);
         let visible_tools = runtime_tool_references(&registry)
             .map_err(|_| CodingSessionProfileError::CatalogDenied)?;
         let tool_catalog_sha256 =
@@ -191,9 +203,10 @@ impl CodingSessionProfile {
             change_plan: &input.change_plan,
             instruction_ledger_sha256: &input.instruction_ledger.ledger_sha256,
             effective_guidance_sha256: &effective_guidance.guidance_sha256,
+            coding_guidance: &coding_guidance,
             commands: input.commands.commands(),
             validations: &input.validations,
-            limits: &input.limits,
+            limits: coding_guidance.limits(),
             prohibited_capabilities: &MVP_PROHIBITED_CAPABILITIES,
         })?;
         Ok(Self {
@@ -211,9 +224,10 @@ impl CodingSessionProfile {
             change_plan: input.change_plan,
             instruction_ledger: input.instruction_ledger,
             effective_guidance,
+            limits: coding_guidance.limits().clone(),
+            coding_guidance,
             commands: input.commands,
             validations: input.validations,
-            limits: input.limits,
             registry,
             profile_sha256,
         })
@@ -303,6 +317,12 @@ impl CodingSessionProfile {
         &self.effective_guidance
     }
 
+    /// Returns the deterministic authority-reducing effects applied to this profile.
+    #[must_use]
+    pub const fn coding_guidance(&self) -> &CodingGuidancePolicy {
+        &self.coding_guidance
+    }
+
     /// Returns the exact frozen command registry.
     #[must_use]
     pub const fn commands(&self) -> &CommandRegistry {
@@ -358,6 +378,7 @@ struct ProfileMaterial<'a> {
     change_plan: &'a CodingPlanBinding,
     instruction_ledger_sha256: &'a str,
     effective_guidance_sha256: &'a str,
+    coding_guidance: &'a CodingGuidancePolicy,
     commands: Vec<&'a agentmage_kernel_engine::command_runner::CommandSpec>,
     validations: &'a ValidationTemplateRegistry,
     limits: &'a RuntimeRunLimits,
@@ -437,6 +458,17 @@ fn validate_static_input(
                 )
                 .is_err()
         })
+        || input
+            .change_plan
+            .planned_validation_ids()
+            .iter()
+            .any(|validation_id| {
+                !input
+                    .validations
+                    .templates
+                    .iter()
+                    .any(|template| template.validation_id == *validation_id)
+            })
     {
         return Err(CodingSessionProfileError::ValidationDenied);
     }

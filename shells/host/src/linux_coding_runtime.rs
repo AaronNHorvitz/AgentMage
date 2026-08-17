@@ -2309,8 +2309,7 @@ mod tests {
             task_id: &task_id,
             run_id: &run_id,
             workspace: workspace.workspace(),
-            registry: profile.registry(),
-            maximum_tool_calls: profile.limits().max_tool_calls,
+            profile,
             excluded_scopes: Vec::new(),
         })
         .expect("coding runtime policy");

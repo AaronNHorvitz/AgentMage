@@ -202,6 +202,12 @@ impl CodingPlanBinding {
         &self.binding_sha256
     }
 
+    /// Returns every validation identity declared by the verified change plan.
+    #[must_use]
+    pub fn planned_validation_ids(&self) -> &[String] {
+        &self.planned_validation_ids
+    }
+
     /// Reports whether one write proposal cites this exact verified plan chain.
     #[must_use]
     pub fn matches_write_proposal(&self, intent_sha256: &str, plan_sha256: &str) -> bool {

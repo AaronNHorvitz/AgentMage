@@ -10,6 +10,8 @@ pub mod coding_changes;
 /// Bounded model-context composition for shared coding sessions.
 pub mod coding_context;
 pub mod coding_dispatch;
+/// Deterministic narrowing of coding profiles from explicitly trusted guidance.
+pub mod coding_guidance;
 /// Interface-neutral composition for the shared local coding runtime.
 pub mod coding_harness;
 /// Profile-bound authority planning for native coding calls.
