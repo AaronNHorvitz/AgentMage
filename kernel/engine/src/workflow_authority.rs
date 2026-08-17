@@ -293,4 +293,25 @@ mod tests {
             Err(WorkflowAuthorityError::InvalidIntersection)
         );
     }
+
+    #[test]
+    fn every_layer_can_narrow_but_no_single_layer_can_aggregate_privilege() {
+        for layer_index in 0..WorkflowAuthorityLayerKind::ALL.len() {
+            let mut narrowed = layers();
+            narrowed[layer_index]
+                .operations
+                .retain(|operation| *operation != GrantOperation::ModelInference);
+            let result = intersect_workflow_authority(narrowed).expect("narrowed intersection");
+            assert!(!result.operations.contains(&GrantOperation::ModelInference));
+
+            let mut attempted_aggregation = layers();
+            attempted_aggregation[layer_index]
+                .operations
+                .push(GrantOperation::GitPush);
+            attempted_aggregation[layer_index].operations.sort();
+            let result = intersect_workflow_authority(attempted_aggregation)
+                .expect("non-common privilege remains absent");
+            assert!(!result.operations.contains(&GrantOperation::GitPush));
+        }
+    }
 }

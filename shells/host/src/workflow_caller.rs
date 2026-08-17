@@ -457,5 +457,34 @@ mod tests {
             seal_workflow_runtime_submission(unattended),
             Err(WorkflowCallerError::SubmissionDenied)
         );
+
+        let mut model_switch = submission();
+        model_switch.runtime_request.model_profile.profile_id =
+            agentmage_kernel_contracts::ModelProfileId::from_raw("unreviewed-model");
+        assert_eq!(
+            seal_workflow_runtime_submission(model_switch),
+            Err(WorkflowCallerError::SubmissionDenied)
+        );
+
+        let mut hidden_retry = submission();
+        hidden_retry.runtime_request.limits.max_model_calls += 1;
+        assert_eq!(
+            seal_workflow_runtime_submission(hidden_retry),
+            Err(WorkflowCallerError::SubmissionDenied)
+        );
+
+        let mut root_expansion = submission();
+        root_expansion.runtime_request.workspace_snapshot_sha256 = "f".repeat(64);
+        assert_eq!(
+            seal_workflow_runtime_submission(root_expansion),
+            Err(WorkflowCallerError::SubmissionDenied)
+        );
+
+        let mut wildcard_caller = submission();
+        wildcard_caller.caller.node_id = "*".to_owned();
+        assert_eq!(
+            seal_workflow_runtime_submission(wildcard_caller),
+            Err(WorkflowCallerError::SubmissionDenied)
+        );
     }
 }

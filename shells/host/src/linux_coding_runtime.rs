@@ -2329,8 +2329,8 @@ mod tests {
         },
         linux_coding::LinuxCodingWorkspace,
         workflow_caller::{
-            InMemoryWorkflowCaller, WorkflowCallerIdentity, WorkflowCallerState,
-            WorkflowRuntimeSubmission, seal_workflow_runtime_submission,
+            InMemoryWorkflowCaller, WorkflowCallerError, WorkflowCallerIdentity,
+            WorkflowCallerState, WorkflowRuntimeSubmission, seal_workflow_runtime_submission,
         },
     };
 
@@ -3545,6 +3545,12 @@ mod tests {
         let waiting = caller.advance(None).expect("approval boundary");
         assert_eq!(waiting.state, WorkflowCallerState::WaitingForUser);
         let challenge = waiting.approval.expect("protected challenge");
+        let mut stale_response = response(&challenge, RuntimeApprovalDisposition::Allow);
+        stale_response.approval_id = ApprovalId::from_raw("stale-workflow-approval");
+        assert_eq!(
+            caller.resume_after_user_decision(&stale_response, None),
+            Err(WorkflowCallerError::TransitionDenied)
+        );
         let denied = caller
             .resume_after_user_decision(
                 &response(&challenge, RuntimeApprovalDisposition::Deny),
