@@ -240,6 +240,12 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         })
     }
 
+    /// Returns the exact admitted profile bound to this controller.
+    #[must_use]
+    pub const fn exact_profile(&self) -> &ExactModelProfile {
+        self.admitted.exact_profile()
+    }
+
     /// Verifies and loads the exact selected tuple.
     pub fn load(&mut self) -> Result<ModelLoadReceipt, ModelRuntimeGateError> {
         if self.loaded {

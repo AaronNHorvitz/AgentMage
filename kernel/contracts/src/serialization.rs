@@ -77,6 +77,8 @@ impl_versioned_contract!(
     crate::Receipt,
     crate::RenderedHandoff,
     crate::RuntimeEvent,
+    crate::RuntimeApprovalChallenge,
+    crate::RuntimeApprovalResponse,
     crate::RuntimeOutcome,
     crate::RuntimeRunRequest,
     crate::Task,

@@ -337,7 +337,11 @@ impl RuntimeEventSequence {
                 }
                 Ok(())
             }
-            RuntimeEventKind::PermissionDecided { approval_id, .. } => {
+            RuntimeEventKind::PermissionDecided {
+                approval_id,
+                disposition,
+                ..
+            } => {
                 self.require_active_turn(event)?;
                 let operation_id = required_operation(event)?;
                 if self
@@ -349,6 +353,18 @@ impl RuntimeEventSequence {
                     return Err(RuntimeEventError::IllegalTransition);
                 }
                 self.permissions.remove(approval_id.as_str());
+                if *disposition == RuntimePermissionDisposition::Deny {
+                    let denied_tool = self
+                        .tools
+                        .iter()
+                        .find(|(_, tool)| {
+                            tool.phase == ToolPhase::Requested
+                                && tool.operation_id.as_str() == operation_id
+                        })
+                        .map(|(tool_call_id, _)| tool_call_id.clone())
+                        .ok_or(RuntimeEventError::IllegalTransition)?;
+                    self.tools.remove(&denied_tool);
+                }
                 Ok(())
             }
             RuntimeEventKind::FileObserved { .. } | RuntimeEventKind::FileModified { .. } => {
@@ -563,7 +579,7 @@ fn validate_runtime_event_shape(event: &RuntimeEvent) -> Result<(), RuntimeEvent
         || !valid_sha256(&event.previous_event_sha256)
         || !valid_sha256(&event.event_sha256)
         || !valid_retention(event)
-        || event.persistence != required_persistence(&event.kind)
+        || event.persistence != runtime_event_persistence(&event.kind)
         || !valid_kind(&event.kind)
         || !valid_payload_reference(event.payload_reference.as_ref())
         || !valid_payload_placement(event)
@@ -585,7 +601,9 @@ fn valid_retention(event: &RuntimeEvent) -> bool {
     }
 }
 
-fn required_persistence(kind: &RuntimeEventKind) -> RuntimeEventPersistenceClass {
+/// Returns the one canonical persistence projection for a runtime event kind.
+#[must_use]
+pub const fn runtime_event_persistence(kind: &RuntimeEventKind) -> RuntimeEventPersistenceClass {
     match kind {
         RuntimeEventKind::TurnStarted
         | RuntimeEventKind::TurnCompleted { .. }

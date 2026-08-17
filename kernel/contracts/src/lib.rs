@@ -204,6 +204,7 @@ pub use runtime_event::{
     RuntimeEventRetentionKind, RuntimePayloadReference, RuntimePermissionDisposition,
 };
 pub use runtime_run::{
+    RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
     RuntimeEventCursor, RuntimeOutcome, RuntimeOutput, RuntimeRunLimits, RuntimeRunRequest,
     RuntimeSessionMode, RuntimeToolReference,
 };

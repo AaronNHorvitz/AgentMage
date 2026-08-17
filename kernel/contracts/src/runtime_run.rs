@@ -1,9 +1,10 @@
 //! Interface-independent reusable-runtime request and outcome contracts.
 
 use crate::{
-    AgentStateKind, ContextBudget, ContractPayload, EvidenceReference, ExactModelProfile, PolicyId,
-    ReceiptId, RepositorySnapshotId, RuntimeEventId, RuntimePayloadReference, RuntimeRunId,
-    SessionId, Task, TaskId, ToolCatalogId, ToolId, WorkPacket, WorkspaceId,
+    AgentStateKind, ApprovalId, ContextBudget, ContractPayload, EvidenceReference,
+    ExactModelProfile, GrantId, GrantOperation, PolicyId, ReceiptId, RepositorySnapshotId,
+    RuntimeEventId, RuntimeOperationId, RuntimePayloadReference, RuntimeRunId, RuntimeTurnId,
+    SessionId, Task, TaskId, ToolCallId, ToolCatalogId, ToolId, WorkPacket, WorkspaceId,
 };
 
 /// Closed persistence and authority mode selected for one runtime run.
@@ -68,6 +69,63 @@ pub struct RuntimeEventCursor {
     pub sequence: u64,
     /// Lowercase SHA-256 digest of the last verified event.
     pub event_sha256: String,
+}
+
+/// User decision accepted by a protected runtime approval boundary.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RuntimeApprovalDisposition {
+    /// Permit only the exact operation after separate grant validation and consumption.
+    Allow,
+    /// Decline the exact operation without effect.
+    Deny,
+}
+
+/// One immutable protected approval challenge returned by the coordinator.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeApprovalChallenge {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Owning runtime run.
+    pub run_id: RuntimeRunId,
+    /// Owning task.
+    pub task_id: TaskId,
+    /// Exact turn awaiting the decision.
+    pub turn_id: RuntimeTurnId,
+    /// Exact proposed operation.
+    pub operation_id: RuntimeOperationId,
+    /// Exact proposed tool call.
+    pub tool_call_id: ToolCallId,
+    /// Stable protected approval identity.
+    pub approval_id: ApprovalId,
+    /// Closed canonical operation awaiting approval.
+    pub operation: GrantOperation,
+    /// Digest of the complete user-visible preview.
+    pub preview_sha256: String,
+    /// Exclusive approval expiration in Unix epoch milliseconds.
+    pub expires_at_epoch_ms: u64,
+    /// Digest of this challenge with this field set to all zeroes.
+    pub challenge_sha256: String,
+}
+
+/// One exact client response to a protected runtime approval challenge.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeApprovalResponse {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Owning runtime run.
+    pub run_id: RuntimeRunId,
+    /// Exact protected approval identity.
+    pub approval_id: ApprovalId,
+    /// User-selected disposition.
+    pub disposition: RuntimeApprovalDisposition,
+    /// Exact challenge digest displayed to the user.
+    pub challenge_sha256: String,
+    /// Exact separately issued grant identity only for an allowed response.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub grant_id: Option<GrantId>,
 }
 
 /// One versioned request admitted by the reusable runtime coordinator.
@@ -155,10 +213,10 @@ pub struct RuntimeOutcome {
     pub model_call_count: u32,
     /// Number of tool calls admitted.
     pub tool_call_count: u32,
-    /// Last canonical runtime event identity.
-    pub last_event_id: RuntimeEventId,
-    /// Last canonical runtime event digest.
-    pub last_event_sha256: String,
+    /// Verified event immediately preceding the terminal event.
+    pub prior_event_id: RuntimeEventId,
+    /// Digest of the verified event immediately preceding the terminal event.
+    pub prior_event_sha256: String,
     /// Current grounded evidence retained in stable order.
     pub evidence: Vec<EvidenceReference>,
     /// Canonical operation receipts retained in stable order.

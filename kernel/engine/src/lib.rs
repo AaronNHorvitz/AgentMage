@@ -99,6 +99,8 @@ pub mod run_control;
 pub mod runtime_coordinator;
 /// Hash-chained runtime events and bounded ordered client publication.
 pub mod runtime_event;
+/// Interface-independent ephemeral read-only runtime coordinator.
+pub mod runtime_loop;
 /// Bounded, configuration-bound session environment and provenance capture.
 pub mod session_environment;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.

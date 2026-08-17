@@ -4,7 +4,8 @@ use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, ContractPayload, EvidenceReference, MAX_CONTRACT_JSON_BYTES,
-    ModelRuntimeKind, RuntimeOutcome, RuntimeOutput, RuntimeRunRequest, RuntimeSessionMode,
+    ModelRuntimeKind, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
+    RuntimeApprovalResponse, RuntimeOutcome, RuntimeOutput, RuntimeRunRequest, RuntimeSessionMode,
     RuntimeToolReference, TaskStatus, WorkPacketState,
 };
 use serde::Serialize;
@@ -43,6 +44,8 @@ pub enum RuntimeCoordinatorError {
     WorkPacketDenied,
     /// An output placement or terminal-state relationship is not legal for the selected mode.
     OutcomeDenied,
+    /// A protected approval challenge or response is stale, mismatched, or malformed.
+    ApprovalDenied,
     /// Canonical serialization failed.
     Serialization,
 }
@@ -60,9 +63,60 @@ impl RuntimeCoordinatorError {
             Self::ModelProfileDenied => "runtime.coordinator.model_profile_denied",
             Self::WorkPacketDenied => "runtime.coordinator.work_packet_denied",
             Self::OutcomeDenied => "runtime.coordinator.outcome_denied",
+            Self::ApprovalDenied => "runtime.coordinator.approval_denied",
             Self::Serialization => "runtime.coordinator.serialization_failed",
         }
     }
+}
+
+/// Seals one protected approval challenge with its canonical digest.
+pub fn seal_runtime_approval_challenge(
+    mut challenge: RuntimeApprovalChallenge,
+) -> Result<RuntimeApprovalChallenge, RuntimeCoordinatorError> {
+    challenge.schema_version = CONTRACT_SCHEMA_VERSION;
+    challenge.challenge_sha256 = ZERO_SHA256.to_owned();
+    validate_approval_challenge_shape(&challenge)?;
+    challenge.challenge_sha256 = canonical_sha256(&challenge)?;
+    Ok(challenge)
+}
+
+/// Verifies one protected approval challenge's shape and canonical digest.
+pub fn verify_runtime_approval_challenge(
+    challenge: &RuntimeApprovalChallenge,
+) -> Result<(), RuntimeCoordinatorError> {
+    validate_approval_challenge_shape(challenge)?;
+    let mut preimage = challenge.clone();
+    preimage.challenge_sha256 = ZERO_SHA256.to_owned();
+    if canonical_sha256(&preimage)? != challenge.challenge_sha256 {
+        return Err(RuntimeCoordinatorError::DigestMismatch);
+    }
+    Ok(())
+}
+
+/// Verifies one client approval response against the exact current challenge and clock.
+pub fn verify_runtime_approval_response(
+    challenge: &RuntimeApprovalChallenge,
+    response: &RuntimeApprovalResponse,
+    now_epoch_ms: u64,
+) -> Result<(), RuntimeCoordinatorError> {
+    verify_runtime_approval_challenge(challenge)?;
+    if response.schema_version != CONTRACT_SCHEMA_VERSION
+        || response.run_id != challenge.run_id
+        || response.approval_id != challenge.approval_id
+        || response.challenge_sha256 != challenge.challenge_sha256
+        || now_epoch_ms >= challenge.expires_at_epoch_ms
+        || !valid_sha256(&response.challenge_sha256)
+        || match response.disposition {
+            RuntimeApprovalDisposition::Allow => response
+                .grant_id
+                .as_ref()
+                .is_none_or(|grant_id| !valid_identifier(grant_id.as_str())),
+            RuntimeApprovalDisposition::Deny => response.grant_id.is_some(),
+        }
+    {
+        return Err(RuntimeCoordinatorError::ApprovalDenied);
+    }
+    Ok(())
 }
 
 /// Seals one statically valid runtime request with its canonical SHA-256 digest.
@@ -188,6 +242,27 @@ fn validate_runtime_run_request_shape(
     Ok(())
 }
 
+fn validate_approval_challenge_shape(
+    challenge: &RuntimeApprovalChallenge,
+) -> Result<(), RuntimeCoordinatorError> {
+    if challenge.schema_version != CONTRACT_SCHEMA_VERSION {
+        return Err(RuntimeCoordinatorError::VersionMismatch);
+    }
+    if !valid_identifier(challenge.run_id.as_str())
+        || !valid_identifier(challenge.task_id.as_str())
+        || !valid_identifier(challenge.turn_id.as_str())
+        || !valid_identifier(challenge.operation_id.as_str())
+        || !valid_identifier(challenge.tool_call_id.as_str())
+        || !valid_identifier(challenge.approval_id.as_str())
+        || !valid_sha256(&challenge.preview_sha256)
+        || challenge.expires_at_epoch_ms == 0
+        || !valid_sha256(&challenge.challenge_sha256)
+    {
+        return Err(RuntimeCoordinatorError::ApprovalDenied);
+    }
+    Ok(())
+}
+
 fn validate_profile_and_context(
     request: &RuntimeRunRequest,
 ) -> Result<(), RuntimeCoordinatorError> {
@@ -263,8 +338,8 @@ fn validate_runtime_outcome_shape(
         || outcome.turn_count > request.limits.max_turns
         || outcome.model_call_count > request.limits.max_model_calls
         || outcome.tool_call_count > request.limits.max_tool_calls
-        || !valid_identifier(outcome.last_event_id.as_str())
-        || !valid_sha256(&outcome.last_event_sha256)
+        || !valid_identifier(outcome.prior_event_id.as_str())
+        || !valid_sha256(&outcome.prior_event_sha256)
         || !valid_sha256(&outcome.outcome_sha256)
         || !valid_evidence(&outcome.evidence)
         || !unique_identifiers(outcome.receipt_ids.iter().map(|value| value.as_str()))
@@ -604,8 +679,8 @@ mod tests {
             turn_count: 2,
             model_call_count: 2,
             tool_call_count: 1,
-            last_event_id: RuntimeEventId::from_raw("event-0012"),
-            last_event_sha256: "d".repeat(64),
+            prior_event_id: RuntimeEventId::from_raw("event-0012"),
+            prior_event_sha256: "d".repeat(64),
             evidence: vec![evidence()],
             receipt_ids: vec![ReceiptId::from_raw("receipt-0001")],
             unresolved_codes: Vec::new(),
