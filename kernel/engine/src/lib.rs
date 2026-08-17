@@ -115,6 +115,8 @@ pub mod runtime_hardening;
 pub mod runtime_journal;
 /// Interface-independent reusable runtime coordinator.
 pub mod runtime_loop;
+/// Deterministic, non-authoritative selection of one safe action after runtime interruption.
+pub mod runtime_recovery;
 /// Bounded, configuration-bound session environment and provenance capture.
 pub mod session_environment;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.
