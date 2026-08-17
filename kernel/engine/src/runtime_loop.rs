@@ -37,7 +37,8 @@ use crate::runtime_coordinator::{
     verify_runtime_run_request,
 };
 use crate::runtime_event::{
-    RuntimeEventDelivery, RuntimeEventError, RuntimeEventPublisher, RuntimeEventSubscription,
+    RuntimeEventBatch, RuntimeEventBatchLimits, RuntimeEventDelivery, RuntimeEventError,
+    RuntimeEventPublisher, RuntimeEventSubscription, replay_runtime_events,
     runtime_event_persistence, seal_runtime_event,
 };
 use crate::runtime_hardening::{RuntimeResourceLedger, RuntimeResourceSnapshot};
@@ -728,6 +729,15 @@ where
     #[must_use]
     pub const fn resource_snapshot(&self) -> &RuntimeResourceSnapshot {
         self.resources.snapshot()
+    }
+
+    /// Replays one verified bounded event page after an exact client reconnect cursor.
+    pub fn replay_events(
+        &self,
+        after: Option<&RuntimeEventCursor>,
+        limits: RuntimeEventBatchLimits,
+    ) -> Result<RuntimeEventBatch, RuntimeLoopError> {
+        replay_runtime_events(&self.events, after, limits).map_err(Into::into)
     }
 
     /// Runs until a protected approval or canonical terminal outcome is reached.

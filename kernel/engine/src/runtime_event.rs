@@ -5,9 +5,9 @@ use std::sync::Mutex;
 use std::sync::mpsc::{Receiver, SyncSender, TryRecvError, TrySendError, sync_channel};
 
 use agentmage_kernel_contracts::{
-    AgentStateKind, CONTRACT_SCHEMA_VERSION, RuntimeEvent, RuntimeEventKind,
+    AgentStateKind, CONTRACT_SCHEMA_VERSION, RuntimeEvent, RuntimeEventCursor, RuntimeEventKind,
     RuntimeEventPersistenceClass, RuntimeEventRetentionKind, RuntimePayloadReference,
-    RuntimePermissionDisposition,
+    RuntimePermissionDisposition, to_canonical_json,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -18,6 +18,10 @@ const MAX_CODE_BYTES: usize = 128;
 const MAX_MEDIA_TYPE_BYTES: usize = 128;
 const MAX_SUBSCRIBERS: usize = 32;
 const MAX_SUBSCRIBER_CAPACITY: usize = 4_096;
+/// Maximum canonical events returned by one client drain or replay page.
+pub const MAX_RUNTIME_EVENT_BATCH_EVENTS: usize = 256;
+/// Maximum canonical event-envelope bytes returned by one client drain or replay page.
+pub const MAX_RUNTIME_EVENT_BATCH_BYTES: usize = 1024 * 1024;
 
 /// Stable fail-closed reason a runtime event or stream was refused.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -44,6 +48,10 @@ pub enum RuntimeEventError {
     PublisherUnavailable,
     /// A removed or closed subscriber cannot receive more events.
     SubscriberDisconnected,
+    /// A client drain or replay page requested invalid count or byte ceilings.
+    BatchLimit,
+    /// A reconnect cursor does not identify the exact retained event in this run.
+    ReplayCursorMismatch,
     /// Canonical serialization failed.
     Serialization,
 }
@@ -64,9 +72,81 @@ impl RuntimeEventError {
             Self::SubscriberLimit => "runtime.event.subscriber_limit",
             Self::PublisherUnavailable => "runtime.event.publisher_unavailable",
             Self::SubscriberDisconnected => "runtime.event.subscriber_disconnected",
+            Self::BatchLimit => "runtime.event.batch_limit",
+            Self::ReplayCursorMismatch => "runtime.event.replay_cursor_mismatch",
             Self::Serialization => "runtime.event.serialization_failed",
         }
     }
+}
+
+/// Closed count and byte ceilings for one client event batch.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RuntimeEventBatchLimits {
+    /// Maximum canonical event envelopes returned by the operation.
+    pub max_events: usize,
+    /// Maximum aggregate canonical envelope bytes returned by the operation.
+    pub max_bytes: usize,
+}
+
+impl RuntimeEventBatchLimits {
+    fn validate(self) -> Result<(), RuntimeEventError> {
+        if self.max_events == 0
+            || self.max_events > MAX_RUNTIME_EVENT_BATCH_EVENTS
+            || self.max_bytes == 0
+            || self.max_bytes > MAX_RUNTIME_EVENT_BATCH_BYTES
+        {
+            return Err(RuntimeEventError::BatchLimit);
+        }
+        Ok(())
+    }
+}
+
+/// Content-free adjacent progress or metric coalescing for client rendering only.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum RuntimeStatusSummary {
+    /// Adjacent equal progress codes represented by their exact canonical sequence range.
+    Progress {
+        /// Stable progress code.
+        code: String,
+        /// First canonical sequence represented by this summary.
+        first_sequence: u64,
+        /// Last canonical sequence represented by this summary.
+        last_sequence: u64,
+        /// Number of adjacent canonical progress events represented.
+        occurrences: u32,
+    },
+    /// Adjacent equal metric identities represented by their latest value and sequence range.
+    Metric {
+        /// Stable metric identity.
+        name: String,
+        /// Latest observed metric value.
+        latest_value: i64,
+        /// First canonical sequence represented by this summary.
+        first_sequence: u64,
+        /// Last canonical sequence represented by this summary.
+        last_sequence: u64,
+        /// Number of adjacent canonical metric samples represented.
+        samples: u32,
+    },
+}
+
+/// One bounded canonical client batch plus optional content-free rendering summaries.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeEventBatch {
+    /// Complete canonical events in exact order; correctness records are never coalesced away.
+    pub events: Vec<RuntimeEvent>,
+    /// Aggregate canonical bytes represented by `events`.
+    pub canonical_bytes: usize,
+    /// Adjacent progress and metric summaries derived without changing the canonical events.
+    pub status_summaries: Vec<RuntimeStatusSummary>,
+    /// Last canonical event returned, or the supplied replay cursor when no newer event exists.
+    pub next_cursor: Option<RuntimeEventCursor>,
+    /// Whether another bounded drain or replay request may return additional events.
+    pub has_more: bool,
+    /// Whether the returned/replayed history reaches one verified terminal event.
+    pub terminal: bool,
+    /// Whether the live subscription was removed or closed and must reconnect by cursor.
+    pub disconnected: bool,
 }
 
 /// Result of publishing one verified event to bounded subscribers.
@@ -84,16 +164,84 @@ pub struct RuntimeEventDelivery {
 #[derive(Debug)]
 pub struct RuntimeEventSubscription {
     receiver: Receiver<RuntimeEvent>,
+    pending: Mutex<Option<RuntimeEvent>>,
 }
 
 impl RuntimeEventSubscription {
     /// Returns the next event without blocking, or `None` when no event is currently queued.
     pub fn try_next(&self) -> Result<Option<RuntimeEvent>, RuntimeEventError> {
+        let mut pending = self
+            .pending
+            .lock()
+            .map_err(|_| RuntimeEventError::PublisherUnavailable)?;
+        if pending.is_some() {
+            return Ok(pending.take());
+        }
         match self.receiver.try_recv() {
             Ok(event) => Ok(Some(event)),
             Err(TryRecvError::Empty) => Ok(None),
             Err(TryRecvError::Disconnected) => Err(RuntimeEventError::SubscriberDisconnected),
         }
+    }
+
+    /// Drains one nonblocking count-and-byte-bounded canonical batch.
+    pub fn try_next_batch(
+        &self,
+        limits: RuntimeEventBatchLimits,
+    ) -> Result<RuntimeEventBatch, RuntimeEventError> {
+        limits.validate()?;
+        let mut pending = self
+            .pending
+            .lock()
+            .map_err(|_| RuntimeEventError::PublisherUnavailable)?;
+        let mut events = Vec::with_capacity(limits.max_events);
+        let mut canonical_bytes = 0_usize;
+        let mut disconnected = false;
+        let mut terminal = false;
+        while events.len() < limits.max_events {
+            let next = if let Some(event) = pending.take() {
+                Some(event)
+            } else {
+                match self.receiver.try_recv() {
+                    Ok(event) => Some(event),
+                    Err(TryRecvError::Empty) => None,
+                    Err(TryRecvError::Disconnected) => {
+                        disconnected = true;
+                        None
+                    }
+                }
+            };
+            let Some(event) = next else {
+                break;
+            };
+            let event_bytes = canonical_event_bytes(&event)?;
+            let next_bytes = canonical_bytes
+                .checked_add(event_bytes)
+                .ok_or(RuntimeEventError::BatchLimit)?;
+            if next_bytes > limits.max_bytes {
+                if events.is_empty() {
+                    *pending = Some(event);
+                    return Err(RuntimeEventError::BatchLimit);
+                }
+                *pending = Some(event);
+                break;
+            }
+            terminal = matches!(event.kind, RuntimeEventKind::RunTerminal { .. });
+            canonical_bytes = next_bytes;
+            events.push(event);
+            if terminal {
+                break;
+            }
+        }
+        let has_more = pending.is_some() || (!terminal && events.len() == limits.max_events);
+        Ok(event_batch(
+            events,
+            canonical_bytes,
+            None,
+            has_more,
+            terminal,
+            disconnected,
+        ))
     }
 }
 
@@ -499,7 +647,10 @@ impl RuntimeEventPublisher {
             .ok_or(RuntimeEventError::SubscriberLimit)?;
         let (sender, receiver) = sync_channel(capacity);
         state.subscribers.insert(subscriber_id, sender);
-        Ok(RuntimeEventSubscription { receiver })
+        Ok(RuntimeEventSubscription {
+            receiver,
+            pending: Mutex::new(None),
+        })
     }
 
     /// Verifies one event, advances the canonical sequence, and offers it to every subscriber.
@@ -542,6 +693,162 @@ impl Default for RuntimeEventPublisher {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Returns one fully verified, bounded replay page after an optional exact reconnect cursor.
+pub fn replay_runtime_events(
+    events: &[RuntimeEvent],
+    after: Option<&RuntimeEventCursor>,
+    limits: RuntimeEventBatchLimits,
+) -> Result<RuntimeEventBatch, RuntimeEventError> {
+    limits.validate()?;
+    let mut sequence = RuntimeEventSequence::new();
+    for event in events {
+        sequence.push(event)?;
+    }
+    let start = match after {
+        Some(cursor) => {
+            let index = usize::try_from(cursor.sequence)
+                .map_err(|_| RuntimeEventError::ReplayCursorMismatch)?;
+            let event = events
+                .get(index)
+                .ok_or(RuntimeEventError::ReplayCursorMismatch)?;
+            if event.run_id != cursor.run_id
+                || event.event_id != cursor.event_id
+                || event.sequence != cursor.sequence
+                || event.event_sha256 != cursor.event_sha256
+            {
+                return Err(RuntimeEventError::ReplayCursorMismatch);
+            }
+            index
+                .checked_add(1)
+                .ok_or(RuntimeEventError::ReplayCursorMismatch)?
+        }
+        None => 0,
+    };
+    let mut page = Vec::with_capacity(limits.max_events.min(events.len().saturating_sub(start)));
+    let mut canonical_bytes = 0_usize;
+    let mut next_index = start;
+    while next_index < events.len() && page.len() < limits.max_events {
+        let event = events[next_index].clone();
+        let event_bytes = canonical_event_bytes(&event)?;
+        let next_bytes = canonical_bytes
+            .checked_add(event_bytes)
+            .ok_or(RuntimeEventError::BatchLimit)?;
+        if next_bytes > limits.max_bytes {
+            if page.is_empty() {
+                return Err(RuntimeEventError::BatchLimit);
+            }
+            break;
+        }
+        canonical_bytes = next_bytes;
+        page.push(event);
+        next_index += 1;
+    }
+    let has_more = next_index < events.len();
+    let terminal = !has_more && sequence.is_terminal();
+    Ok(event_batch(
+        page,
+        canonical_bytes,
+        after.cloned(),
+        has_more,
+        terminal,
+        false,
+    ))
+}
+
+fn event_batch(
+    events: Vec<RuntimeEvent>,
+    canonical_bytes: usize,
+    fallback_cursor: Option<RuntimeEventCursor>,
+    has_more: bool,
+    terminal: bool,
+    disconnected: bool,
+) -> RuntimeEventBatch {
+    let next_cursor = events.last().map(runtime_event_cursor).or(fallback_cursor);
+    let status_summaries = coalesced_status_summaries(&events);
+    RuntimeEventBatch {
+        events,
+        canonical_bytes,
+        status_summaries,
+        next_cursor,
+        has_more,
+        terminal,
+        disconnected,
+    }
+}
+
+fn canonical_event_bytes(event: &RuntimeEvent) -> Result<usize, RuntimeEventError> {
+    to_canonical_json(event)
+        .map(|bytes| bytes.len())
+        .map_err(|_| RuntimeEventError::Serialization)
+}
+
+fn runtime_event_cursor(event: &RuntimeEvent) -> RuntimeEventCursor {
+    RuntimeEventCursor {
+        run_id: event.run_id.clone(),
+        event_id: event.event_id.clone(),
+        sequence: event.sequence,
+        event_sha256: event.event_sha256.clone(),
+    }
+}
+
+fn coalesced_status_summaries(events: &[RuntimeEvent]) -> Vec<RuntimeStatusSummary> {
+    let mut summaries = Vec::new();
+    let mut prior_was_status = false;
+    for event in events {
+        match &event.kind {
+            RuntimeEventKind::Progress { code } => {
+                if let Some(RuntimeStatusSummary::Progress {
+                    code: prior_code,
+                    last_sequence,
+                    occurrences,
+                    ..
+                }) = summaries.last_mut()
+                    && prior_was_status
+                    && prior_code == code
+                {
+                    *last_sequence = event.sequence;
+                    *occurrences = occurrences.saturating_add(1);
+                } else {
+                    summaries.push(RuntimeStatusSummary::Progress {
+                        code: code.clone(),
+                        first_sequence: event.sequence,
+                        last_sequence: event.sequence,
+                        occurrences: 1,
+                    });
+                }
+                prior_was_status = true;
+            }
+            RuntimeEventKind::Metric { name, value } => {
+                if let Some(RuntimeStatusSummary::Metric {
+                    name: prior_name,
+                    latest_value,
+                    last_sequence,
+                    samples,
+                    ..
+                }) = summaries.last_mut()
+                    && prior_was_status
+                    && prior_name == name
+                {
+                    *latest_value = *value;
+                    *last_sequence = event.sequence;
+                    *samples = samples.saturating_add(1);
+                } else {
+                    summaries.push(RuntimeStatusSummary::Metric {
+                        name: name.clone(),
+                        latest_value: *value,
+                        first_sequence: event.sequence,
+                        last_sequence: event.sequence,
+                        samples: 1,
+                    });
+                }
+                prior_was_status = true;
+            }
+            _ => prior_was_status = false,
+        }
+    }
+    summaries
 }
 
 /// Seals one statically valid runtime event with its canonical SHA-256 digest.
@@ -828,8 +1135,10 @@ fn canonical_sha256(value: &impl Serialize) -> Result<String, RuntimeEventError>
 #[cfg(test)]
 mod tests {
     use super::{
+        MAX_RUNTIME_EVENT_BATCH_BYTES, MAX_RUNTIME_EVENT_BATCH_EVENTS, RuntimeEventBatchLimits,
         RuntimeEventDelivery, RuntimeEventError, RuntimeEventPublisher, RuntimeEventSequence,
-        ZERO_SHA256, runtime_event_persistence, seal_runtime_event, verify_runtime_event,
+        RuntimeStatusSummary, ZERO_SHA256, replay_runtime_events, runtime_event_persistence,
+        seal_runtime_event, verify_runtime_event,
     };
     use agentmage_kernel_contracts::{
         AgentStateKind, ApprovalId, CONTRACT_SCHEMA_VERSION, ContextSensitivity, CorrelationId,
@@ -1014,6 +1323,72 @@ mod tests {
                 RuntimeEventKind::RunTerminal {
                     state: AgentStateKind::Success,
                     outcome_sha256: hash('c'),
+                },
+                None,
+                None,
+            ),
+        ]
+    }
+
+    fn status_sequence() -> Vec<RuntimeEvent> {
+        let mut fixtures = FixtureStream::new();
+        vec![
+            fixtures.event(
+                RuntimeEventKind::RunStarted {
+                    request_sha256: hash('1'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(RuntimeEventKind::TurnStarted, Some("turn-status"), None),
+            fixtures.event(
+                RuntimeEventKind::Progress {
+                    code: "runtime.fixture.progress".to_owned(),
+                },
+                Some("turn-status"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::Progress {
+                    code: "runtime.fixture.progress".to_owned(),
+                },
+                Some("turn-status"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::Metric {
+                    name: "runtime.fixture.metric".to_owned(),
+                    value: 1,
+                },
+                Some("turn-status"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::Metric {
+                    name: "runtime.fixture.metric".to_owned(),
+                    value: 2,
+                },
+                Some("turn-status"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::Progress {
+                    code: "runtime.fixture.progress".to_owned(),
+                },
+                Some("turn-status"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::TurnCompleted {
+                    outcome_sha256: hash('2'),
+                },
+                Some("turn-status"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::RunTerminal {
+                    state: AgentStateKind::Success,
+                    outcome_sha256: hash('3'),
                 },
                 None,
                 None,
@@ -1514,5 +1889,196 @@ mod tests {
                 .expect("disconnected client has no authority");
         }
         assert_eq!(publisher.event_count(), Ok(12));
+    }
+
+    #[test]
+    fn story_50_2_replay_pages_reconstruct_the_exact_terminal_chain() {
+        let events = valid_sequence();
+        let limits = RuntimeEventBatchLimits {
+            max_events: 3,
+            max_bytes: MAX_RUNTIME_EVENT_BATCH_BYTES,
+        };
+        let mut cursor = None;
+        let mut replayed = Vec::new();
+        loop {
+            let batch = replay_runtime_events(&events, cursor.as_ref(), limits)
+                .expect("bounded replay page");
+            assert!(batch.events.len() <= limits.max_events);
+            assert!(batch.canonical_bytes <= limits.max_bytes);
+            replayed.extend(batch.events.clone());
+            cursor = batch.next_cursor;
+            if !batch.has_more {
+                assert!(batch.terminal);
+                break;
+            }
+        }
+        assert_eq!(replayed, events);
+
+        let terminal_cursor = cursor.expect("terminal replay cursor");
+        let empty = replay_runtime_events(&events, Some(&terminal_cursor), limits)
+            .expect("terminal cursor is idempotent");
+        assert!(empty.events.is_empty());
+        assert_eq!(empty.next_cursor, Some(terminal_cursor));
+        assert!(empty.terminal);
+        assert!(!empty.has_more);
+    }
+
+    #[test]
+    fn story_50_2_replay_rejects_cursor_drift_and_undersized_pages() {
+        let events = valid_sequence();
+        let first_bytes = agentmage_kernel_contracts::to_canonical_json(&events[0])
+            .expect("fixture serializes")
+            .len();
+        let exact = replay_runtime_events(
+            &events,
+            None,
+            RuntimeEventBatchLimits {
+                max_events: 2,
+                max_bytes: first_bytes,
+            },
+        )
+        .expect("exact first-event byte ceiling admits");
+        assert_eq!(exact.events, events[..1]);
+        assert!(exact.has_more);
+        assert_eq!(
+            replay_runtime_events(
+                &events,
+                None,
+                RuntimeEventBatchLimits {
+                    max_events: 1,
+                    max_bytes: first_bytes - 1,
+                },
+            ),
+            Err(RuntimeEventError::BatchLimit)
+        );
+
+        let mut cursor = exact.next_cursor.expect("first cursor");
+        cursor.event_sha256 = hash('f');
+        assert_eq!(
+            replay_runtime_events(
+                &events,
+                Some(&cursor),
+                RuntimeEventBatchLimits {
+                    max_events: 1,
+                    max_bytes: MAX_RUNTIME_EVENT_BATCH_BYTES,
+                },
+            ),
+            Err(RuntimeEventError::ReplayCursorMismatch)
+        );
+        assert_eq!(
+            replay_runtime_events(
+                &events,
+                None,
+                RuntimeEventBatchLimits {
+                    max_events: MAX_RUNTIME_EVENT_BATCH_EVENTS + 1,
+                    max_bytes: MAX_RUNTIME_EVENT_BATCH_BYTES,
+                },
+            ),
+            Err(RuntimeEventError::BatchLimit)
+        );
+    }
+
+    #[test]
+    fn story_50_2_status_coalescing_never_removes_canonical_events() {
+        let events = status_sequence();
+        let batch = replay_runtime_events(
+            &events,
+            None,
+            RuntimeEventBatchLimits {
+                max_events: events.len(),
+                max_bytes: MAX_RUNTIME_EVENT_BATCH_BYTES,
+            },
+        )
+        .expect("status replay");
+        assert_eq!(batch.events, events);
+        assert_eq!(
+            batch.status_summaries,
+            [
+                RuntimeStatusSummary::Progress {
+                    code: "runtime.fixture.progress".to_owned(),
+                    first_sequence: 2,
+                    last_sequence: 3,
+                    occurrences: 2,
+                },
+                RuntimeStatusSummary::Metric {
+                    name: "runtime.fixture.metric".to_owned(),
+                    latest_value: 2,
+                    first_sequence: 4,
+                    last_sequence: 5,
+                    samples: 2,
+                },
+                RuntimeStatusSummary::Progress {
+                    code: "runtime.fixture.progress".to_owned(),
+                    first_sequence: 6,
+                    last_sequence: 6,
+                    occurrences: 1,
+                },
+            ]
+        );
+        assert!(batch.terminal);
+    }
+
+    #[test]
+    fn story_50_2_slow_client_drains_then_reconnects_without_event_loss() {
+        let events = valid_sequence();
+        let publisher = RuntimeEventPublisher::new();
+        let subscriber = publisher.subscribe(2).expect("bounded subscriber");
+        for event in events.clone() {
+            publisher.publish(event).expect("runtime never blocks");
+        }
+        let queued = subscriber
+            .try_next_batch(RuntimeEventBatchLimits {
+                max_events: MAX_RUNTIME_EVENT_BATCH_EVENTS,
+                max_bytes: MAX_RUNTIME_EVENT_BATCH_BYTES,
+            })
+            .expect("queued prefix drains");
+        assert_eq!(queued.events, events[..2]);
+        assert!(queued.disconnected);
+        assert!(!queued.terminal);
+
+        let replay = replay_runtime_events(
+            &events,
+            queued.next_cursor.as_ref(),
+            RuntimeEventBatchLimits {
+                max_events: MAX_RUNTIME_EVENT_BATCH_EVENTS,
+                max_bytes: MAX_RUNTIME_EVENT_BATCH_BYTES,
+            },
+        )
+        .expect("exact cursor reconnects");
+        let mut reconstructed = queued.events;
+        reconstructed.extend(replay.events);
+        assert_eq!(reconstructed, events);
+        assert!(replay.terminal);
+    }
+
+    #[test]
+    fn story_50_2_live_batch_stashes_the_first_event_beyond_its_byte_ceiling() {
+        let events = valid_sequence();
+        let publisher = RuntimeEventPublisher::new();
+        let subscriber = publisher
+            .subscribe(events.len())
+            .expect("bounded subscriber");
+        for event in events.iter().cloned() {
+            publisher.publish(event).expect("publish fixture");
+        }
+        let first_bytes = agentmage_kernel_contracts::to_canonical_json(&events[0])
+            .expect("fixture serializes")
+            .len();
+        let first = subscriber
+            .try_next_batch(RuntimeEventBatchLimits {
+                max_events: events.len(),
+                max_bytes: first_bytes,
+            })
+            .expect("first byte-bounded batch");
+        assert_eq!(first.events, events[..1]);
+        assert!(first.has_more);
+        let remaining = subscriber
+            .try_next_batch(RuntimeEventBatchLimits {
+                max_events: events.len(),
+                max_bytes: MAX_RUNTIME_EVENT_BATCH_BYTES,
+            })
+            .expect("stashed event leads the next batch");
+        assert_eq!(remaining.events, events[1..]);
+        assert!(remaining.terminal);
     }
 }

@@ -97,7 +97,9 @@ impl From<RuntimeEventError> for RuntimeJournalError {
             | RuntimeEventError::DigestMismatch
             | RuntimeEventError::SubscriberLimit
             | RuntimeEventError::PublisherUnavailable
-            | RuntimeEventError::SubscriberDisconnected => Self::InvalidEvent,
+            | RuntimeEventError::SubscriberDisconnected
+            | RuntimeEventError::BatchLimit
+            | RuntimeEventError::ReplayCursorMismatch => Self::InvalidEvent,
         }
     }
 }
