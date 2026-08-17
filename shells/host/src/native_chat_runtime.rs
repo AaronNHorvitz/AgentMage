@@ -193,8 +193,10 @@ where
         }
         let request = self.factory.prepare_runtime_request(&input)?;
         verify_runtime_run_request(&request).map_err(|_| NativeChatRuntimeError::RequestDenied)?;
-        if request.mode != RuntimeSessionMode::EphemeralReadOnly
-            || request.event_cursor.is_some()
+        if !matches!(
+            request.mode,
+            RuntimeSessionMode::EphemeralReadOnly | RuntimeSessionMode::ControlledWrite
+        ) || request.event_cursor.is_some()
             || request.model_profile.profile_id.as_str() != input.profile_id
             || request.workspace_id.as_str() != input.workspace_id
             || request.task.objective != input.prompt
@@ -216,12 +218,13 @@ where
         let key = request.run_id.as_str().to_owned();
         let prepared = self
             .prepared
-            .remove(&key)
+            .get(&key)
             .ok_or(NativeChatRuntimeError::RunUnavailable)?;
-        if prepared != request || self.active.contains_key(&key) {
+        if prepared != &request || self.active.contains_key(&key) {
             return Err(NativeChatRuntimeError::RequestDenied);
         }
         let coordinator = self.factory.compose_runtime(&request)?;
+        self.prepared.remove(&key);
         let mut session = CoordinatorNativeChatSession::new(request, coordinator)?;
         let step = session.start()?;
         self.active.insert(key, session);
@@ -506,10 +509,13 @@ mod tests {
         RuntimeApprovalResponse, RuntimeArtifactId, RuntimeArtifactRef, RuntimeEvent,
         RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventRetention,
         RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutcome,
-        RuntimePermissionDisposition, RuntimeRunRequest, RuntimeTurnId, ToolCallId,
+        RuntimePermissionDisposition, RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId,
+        ToolCallId,
     };
     use agentmage_kernel_engine::{
-        runtime_coordinator::{seal_runtime_approval_challenge, seal_runtime_outcome},
+        runtime_coordinator::{
+            seal_runtime_approval_challenge, seal_runtime_outcome, seal_runtime_run_request,
+        },
         runtime_event::{runtime_event_persistence, seal_runtime_event},
         runtime_loop::RuntimeCoordinatorStep,
     };
@@ -665,6 +671,47 @@ mod tests {
             service.advance(&request.run_id, &request.request_sha256, None, None),
             Err(NativeChatRuntimeError::RunUnavailable)
         );
+    }
+
+    #[test]
+    fn controlled_write_mode_is_admitted_only_from_the_exact_trusted_factory_request() {
+        let (_, events, outcome, _) = crate::runtime_read_tests::completed_native_read_fixture();
+        let (_, controlled_request) = crate::coding_run::tests::fixture_profile_and_request();
+        let input = NativeChatPrepareInput {
+            profile_id: controlled_request
+                .model_profile
+                .profile_id
+                .as_str()
+                .to_owned(),
+            expected_entry_sha256: "a".repeat(64),
+            workspace_id: controlled_request.workspace_id.as_str().to_owned(),
+            workspace_root: "/tmp/agentmage-controlled-chat-fixture".to_owned(),
+            prompt: controlled_request.task.objective.clone(),
+        };
+        let factory = ReplayFactory {
+            expected_input: input.clone(),
+            request: controlled_request.clone(),
+            events,
+            artifacts: Vec::new(),
+            outcome,
+        };
+        let mut service = NativeChatRuntimeService::new(factory);
+
+        let prepared = service.prepare(input).expect("trusted mode is admitted");
+        assert_eq!(prepared, controlled_request);
+        assert_eq!(prepared.mode, RuntimeSessionMode::ControlledWrite);
+
+        let mut substituted = prepared.clone();
+        substituted.mode = RuntimeSessionMode::DurableReadOnly;
+        substituted.request_sha256 = ZERO_SHA256.to_owned();
+        substituted = seal_runtime_run_request(substituted).expect("substitution reseals");
+        assert_eq!(
+            service.start(substituted),
+            Err(NativeChatRuntimeError::RequestDenied)
+        );
+        service
+            .release(&prepared.run_id, &prepared.request_sha256)
+            .expect("substitution did not consume prepared request");
     }
 
     #[test]

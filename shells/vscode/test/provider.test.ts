@@ -872,6 +872,20 @@ void test("native Chat renders one complete shared-runtime stream and outcome", 
   assert.equal(bridge.previewCalls, 0);
 });
 
+void test("native Chat accepts an exact host-framed controlled-write run", async () => {
+  const { controller, bridge, signal } = fixture();
+  const prompt = "Apply one already policy-bound coding change";
+  bridge.runtimePreparedRequest = runtimeRequest(prompt, "controlled_write");
+  bridge.runtimeSteps.push((requestId) => completedRuntimeStep(requestId));
+
+  const response = await controller.respond(prompt, signal, runtimeProfile());
+
+  assert.match(response.text, /Status: SUCCESS/u);
+  assert.equal(bridge.runtimeStartCalls, 1);
+  assert.equal(bridge.runtimeReleaseCalls, 1);
+  assert.equal(bridge.previewCalls, 0);
+});
+
 void test("native Chat rejects a substituted profile workspace or prompt before start", async () => {
   const { controller, bridge, signal } = fixture();
   const prompt = "Inspect the selected workspace";
@@ -990,12 +1004,15 @@ function runtimeProfile(): {
   };
 }
 
-function runtimeRequest(prompt: string): RuntimeRunRequestEnvelope {
+function runtimeRequest(
+  prompt: string,
+  mode: RuntimeRunRequestEnvelope["mode"] = "ephemeral_read_only",
+): RuntimeRunRequestEnvelope {
   return {
     schema_version: 2,
     run_id: "run-0001",
     session_id: "session-0001",
-    mode: "ephemeral_read_only",
+    mode,
     task: {
       schema_version: 2,
       task_id: "task-0001",

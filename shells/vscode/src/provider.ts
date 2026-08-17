@@ -851,7 +851,7 @@ export class SecureReadController {
       request.workspace_id !== workspace.id ||
       request.task.objective !== prompt ||
       request.task.session_id !== request.session_id ||
-      request.mode !== "ephemeral_read_only"
+      !["ephemeral_read_only", "controlled_write"].includes(request.mode)
     ) {
       await this.releaseRuntime(request.run_id, request.request_sha256);
       return deniedResult(

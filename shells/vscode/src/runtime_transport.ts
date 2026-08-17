@@ -126,7 +126,7 @@ export interface RuntimeRunRequestEnvelope {
   readonly schema_version: 2;
   readonly run_id: string;
   readonly session_id: string;
-  readonly mode: "ephemeral_read_only";
+  readonly mode: "ephemeral_read_only" | "controlled_write";
   readonly task: RuntimeTaskEnvelope;
   readonly work_packet: unknown;
   readonly workspace_id: string;
@@ -394,7 +394,9 @@ export function parseRuntimeRunRequest(
     record.schema_version !== RUNTIME_CONTRACT_VERSION ||
     !validIdentifier(record.run_id) ||
     !validIdentifier(record.session_id) ||
-    record.mode !== "ephemeral_read_only" ||
+    !["ephemeral_read_only", "controlled_write"].includes(
+      String(record.mode),
+    ) ||
     task.session_id !== record.session_id ||
     !isRecord(record.work_packet) ||
     !validIdentifier(record.workspace_id) ||

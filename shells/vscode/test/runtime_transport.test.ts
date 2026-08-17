@@ -19,6 +19,22 @@ void test("closed runtime request and host response reject unknown fields", () =
   assert.equal(parsed.kind, "runtime_prepared");
   assert.equal(parsed.run_request.model_profile.profile_id, "profile-0001");
 
+  const controlled = parseRuntimeHostResponse({
+    ...prepared,
+    run_request: { ...prepared.run_request, mode: "controlled_write" },
+  });
+  assert.equal(controlled.kind, "runtime_prepared");
+  assert.equal(controlled.run_request.mode, "controlled_write");
+
+  assert.throws(
+    () =>
+      parseRuntimeHostResponse({
+        ...prepared,
+        run_request: { ...prepared.run_request, mode: "durable_read_only" },
+      }),
+    RuntimeTransportFailure,
+  );
+
   assert.throws(
     () =>
       parseRuntimeHostResponse({
