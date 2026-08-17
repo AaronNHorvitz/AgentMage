@@ -885,6 +885,25 @@ Changes to the implementation sequence follow these rules:
 15. Decision 0027 appends `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-VSC-003`, and their acceptance tests; preserves every completed item and stable identifier; supersedes only unimplemented E4B prerequisite and hard-coded picker assumptions; and reconciles future work within Sprints 12-15, 23, 49, 163-165, and 166 without adding or renumbering a sprint.
 16. The interactive coding harness is an additive client and composition path for existing requirements. Its appended stories preserve completed work and sprint identities, use one shared runtime coordinator, keep native tools outside MCP, and define `M-HARNESS-MVP` as an internal story-level milestone that does not supersede any sprint or release gate.
 
+### 12.1 Interactive Coding Runtime Execution Order
+
+The dependency-preserving implementation order for the interactive coding runtime is:
+
+1. Complete the Story 21.2 runtime-event envelope and ordered client stream.
+2. Complete the ephemeral Story 23.4 coordinator and deterministic fake-model vertical slice.
+3. Compose the existing controlled-write, bounded-command, owned-worktree, planning, structured-patch, and trusted-validation contracts behind that coordinator.
+4. Implement the named Story 48.2 MVP tasks and the exact `S-048-MVP-E2E`, `S-048-MVP-STALE`, `S-048-MVP-ADVERSARIAL`, and `S-048-MVP-ABSENCE` fixture groups. A real admitted-local-model result remains owned by Sprint 49 and cannot be replaced by deterministic-fake evidence.
+5. Integrate the durable journal, runtime-artifact lifecycle, checkpoint cursor, and session-resume path without changing the ephemeral runtime authority boundary.
+6. Finish the interactive CLI and headless clients as thin runtime callers with artifact-backed bounded output.
+7. Execute the Sprint 49 exact alternate-runtime adapter evaluation and admit only measured, provenance-complete profiles.
+8. Execute Story 50.2 interface parity, interruption recovery, pressure, performance, and workflow-port hardening.
+9. Add MCP only through Sprints 80-81 and attach workflow callers only through their owning Sprint 95 contracts.
+10. Re-run the complete documentation, schema, requirement, evidence, and traceability gates after each normative reconciliation and before any release claim.
+
+This sequence is an execution dependency, not permission to close a sprint early. Every deferred
+manual fuzz, native-platform, external-service, independent-review, signing, notarization, and
+paid-infrastructure result remains visibly open until its own evidence exists.
+
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 
 ## 13. Starting the Build
