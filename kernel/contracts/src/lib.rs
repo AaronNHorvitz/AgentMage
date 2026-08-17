@@ -35,6 +35,7 @@ mod platform_path;
 mod prompt;
 mod reasoning;
 mod runtime_event;
+mod runtime_run;
 mod serialization;
 mod task;
 mod tool;
@@ -201,6 +202,10 @@ pub use reasoning::{
 pub use runtime_event::{
     RuntimeEvent, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
     RuntimeEventRetentionKind, RuntimePayloadReference, RuntimePermissionDisposition,
+};
+pub use runtime_run::{
+    RuntimeEventCursor, RuntimeOutcome, RuntimeOutput, RuntimeRunLimits, RuntimeRunRequest,
+    RuntimeSessionMode, RuntimeToolReference,
 };
 pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,
