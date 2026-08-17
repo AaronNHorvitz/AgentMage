@@ -372,7 +372,7 @@ fn map_runtime_error(_error: CodingClientError) -> WorkflowCallerError {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use agentmage_kernel_contracts::GrantOperation;
     use agentmage_kernel_engine::workflow_authority::{
         WorkflowAuthorityLayer, WorkflowAuthorityLayerKind, intersect_workflow_authority,
@@ -381,7 +381,7 @@ mod tests {
     use super::*;
     use crate::coding_run::tests::fixture_profile_and_request;
 
-    fn submission() -> WorkflowRuntimeSubmission {
+    pub(crate) fn submission() -> WorkflowRuntimeSubmission {
         let (_, request) = fixture_profile_and_request();
         let mut tool_ids = request
             .visible_tools

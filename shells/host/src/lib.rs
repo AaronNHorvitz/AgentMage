@@ -40,6 +40,8 @@ pub mod protocol;
 pub mod runtime_tools;
 /// Caller-neutral, narrowing-only workflow attachment to the shared coding runtime.
 pub mod workflow_caller;
+/// Narrow child-assignment adapter over the shared workflow caller runtime.
+pub mod workflow_assignment;
 
 /// Versioned thin-client contracts shared by terminal and headless interfaces.
 pub mod headless;

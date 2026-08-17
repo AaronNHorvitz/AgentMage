@@ -2328,6 +2328,10 @@ mod tests {
             CodingCompletionCandidate, CodingTerminalClaim, coding_completion_payload,
         },
         linux_coding::LinuxCodingWorkspace,
+        workflow_assignment::{
+            ChildReviewDisposition, ChildRuntimeAssignment, ChildRuntimeCaller,
+            seal_child_runtime_assignment,
+        },
         workflow_caller::{
             InMemoryWorkflowCaller, WorkflowCallerError, WorkflowCallerIdentity,
             WorkflowCallerState, WorkflowRuntimeSubmission, seal_workflow_runtime_submission,
@@ -3432,7 +3436,7 @@ mod tests {
     }
 
     #[test]
-    fn story_50_2_workflow_caller_uses_the_real_no_op_runtime_path() {
+    fn story_50_2_and_sprint_95_child_caller_use_the_real_no_op_runtime_path() {
         let mut fixture = fixture_with_git(FakeGitExecutor::clean());
         configure_git_status(&mut fixture);
         fixture.call.tool_call_id = ToolCallId::from_raw("call-git-workflow-e2e");
@@ -3466,7 +3470,21 @@ mod tests {
         let Fixture {
             request, boundary, ..
         } = fixture;
-        let submission = workflow_submission(&request);
+        let mut submission = workflow_submission(&request);
+        submission.caller.node_id = "fixture-child".to_owned();
+        submission.submission_sha256 = "0".repeat(64);
+        let submission = seal_workflow_runtime_submission(submission).expect("child submission");
+        let assignment = seal_child_runtime_assignment(ChildRuntimeAssignment {
+            assignment_id: "fixture-child-assignment".to_owned(),
+            parent_invocation_id: submission.caller.parent_invocation_id.clone(),
+            child_id: submission.caller.node_id.clone(),
+            dependency_ids: Vec::new(),
+            nesting_depth: 1,
+            submission,
+            parent_review_required: true,
+            assignment_sha256: "0".repeat(64),
+        })
+        .expect("child assignment");
         let coordinator = compose_ephemeral_coding_coordinator(
             profile,
             request,
@@ -3477,7 +3495,7 @@ mod tests {
         )
         .expect("ephemeral coding coordinator");
         let mut caller =
-            InMemoryWorkflowCaller::submit(coordinator, submission).expect("workflow caller");
+            ChildRuntimeCaller::submit(coordinator, assignment).expect("child runtime caller");
 
         let waiting = caller.advance(None).expect("workflow approval boundary");
         assert_eq!(waiting.state, WorkflowCallerState::WaitingForUser);
@@ -3489,6 +3507,11 @@ mod tests {
             )
             .expect("workflow terminal boundary");
         assert_eq!(step.state, WorkflowCallerState::Terminal);
+        let proposal = caller
+            .terminal_proposal(step.clone())
+            .expect("untrusted child proposal");
+        assert_eq!(proposal.review, ChildReviewDisposition::Pending);
+        assert!(!proposal.authority_from_result);
         assert_eq!(
             step.outcome.expect("terminal outcome").state,
             AgentStateKind::NoOp
