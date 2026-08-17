@@ -1932,7 +1932,9 @@ fn hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::VecDeque;
     use std::fs;
+    use std::ops::Deref;
     use std::os::unix::fs::PermissionsExt as _;
     use std::path::PathBuf;
     use std::process::Command;
@@ -1948,13 +1950,17 @@ mod tests {
         StructuredEdit, StructuredLanguage, build_repository_map,
     };
     use agentmage_kernel_contracts::{
-        ActionId, AuthorityClass, BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION,
-        CorrelationId, DataSensitivity, GrantStatus, GrantTarget, PathResolutionIntent, PlanId,
-        RollbackPlan, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-        RuntimeApprovalResponse, RuntimeOperationId, RuntimeRunId, RuntimeRunRequest,
-        RuntimeSessionMode, RuntimeTurnId, SessionId, StopCondition, StopConditionKind, Task,
-        TaskId, TaskStatus, ToolCall, ToolCallId, ToolId, WorkPacket, WorkPacketId,
-        WorkPacketState, WorkspaceAuthorizationId, WorkspacePath,
+        ActionId, AgentStateKind, AuthorityClass, BudgetLimit, BudgetResource,
+        CONTRACT_SCHEMA_VERSION, ClosedModelProposal, CorrelationId, DataSensitivity,
+        ExactModelProfile, GrantStatus, GrantTarget, ModelCancellationProbe, ModelContextPacket,
+        ModelMessageRole, ModelProposalKind, ModelResourceReport, ModelRunRequest, ModelRunResult,
+        ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate, PathResolutionIntent, PlanId,
+        ProposalId, RollbackPlan,
+        RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
+        RuntimeOperationId, RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId,
+        SessionId, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall,
+        ToolCallId, ToolId, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceAuthorizationId,
+        WorkspacePath,
     };
     use agentmage_kernel_engine::{
         command_runner::{
@@ -1965,8 +1971,15 @@ mod tests {
             BoundedRepositoryInspectionExecutor, RepositoryInspectionLaunchPermit,
             RepositoryInspectionPlatformResult, RepositoryInspectionTermination,
         },
-        runtime_coordinator::{seal_runtime_approval_challenge, seal_runtime_run_request},
-        runtime_loop::{RuntimePermissionEvaluation, RuntimeToolBoundary, runtime_action_id},
+        model_codec::proposal_digest,
+        runtime_coordinator::{
+            seal_runtime_approval_challenge, seal_runtime_run_request, verify_runtime_outcome,
+        },
+        runtime_event::RuntimeEventSequence,
+        runtime_loop::{
+            RuntimeClock, RuntimeCoordinatorStep, RuntimeModelPort, RuntimePermissionEvaluation,
+            RuntimeToolBoundary, runtime_action_id,
+        },
     };
     use agentmage_platform_linux::{
         LinuxBoundedRepositoryInspectionExecutor, LinuxGitArtifact, LinuxSandboxLimits,
@@ -1977,6 +1990,7 @@ mod tests {
     use super::*;
     use crate::{
         coding_authority::{CodingRuntimePolicyRequest, build_coding_runtime_policy},
+        coding_context::{CodingContextPort, CodingTokenCounter},
         coding_changes::{
             CONTROLLED_CHANGE_TOOL_VERSION, CONTROLLED_CREATE_TOOL_ID,
             ControlledFileClassification, ControlledFileCreationProposal, STRUCTURED_PATCH_TOOL_ID,
@@ -1984,10 +1998,30 @@ mod tests {
         },
         coding_session::{CodingSessionProfile, tests::input_with_worktree_path_sha256},
         coding_tools::TargetedValidationRequest,
+        coding_harness::compose_ephemeral_coding_coordinator,
+        coding_verifier::{
+            CodingCompletionCandidate, CodingTerminalClaim, coding_completion_payload,
+        },
         linux_coding::LinuxCodingWorkspace,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
+
+    struct TempRoot(PathBuf);
+
+    impl Deref for TempRoot {
+        type Target = PathBuf;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl Drop for TempRoot {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
 
     struct TestKey([u8; 32]);
 
@@ -2006,6 +2040,109 @@ mod tests {
         fn next(&mut self, prefix: &str) -> Result<String, LinuxCodingRuntimeError> {
             self.0 += 1;
             Ok(format!("{prefix}-{:032x}", self.0))
+        }
+    }
+
+    enum ScriptedCodingStep {
+        Tool(ModelToolCallCandidate),
+        Complete(ContractPayload),
+    }
+
+    struct ScriptedCodingModel {
+        profile: ExactModelProfile,
+        steps: VecDeque<ScriptedCodingStep>,
+        calls: u32,
+    }
+
+    impl RuntimeModelPort for ScriptedCodingModel {
+        fn exact_profile(&self) -> &ExactModelProfile {
+            &self.profile
+        }
+
+        fn run_model(
+            &mut self,
+            request: &ModelRunRequest,
+            context: &ModelContextPacket,
+            _cancellation: Option<&dyn ModelCancellationProbe>,
+        ) -> Result<ModelRunResult, RuntimePortFailure> {
+            assert!(context
+                .messages
+                .iter()
+                .any(|message| message.role == ModelMessageRole::System));
+            let step = self
+                .steps
+                .pop_front()
+                .ok_or(RuntimePortFailure::ResourceExhausted)?;
+            self.calls += 1;
+            let (kind, payload, tool_call) = match step {
+                ScriptedCodingStep::Tool(call) => (ModelProposalKind::ToolCall, None, Some(call)),
+                ScriptedCodingStep::Complete(payload) => (
+                    ModelProposalKind::CompletionCandidate,
+                    Some(payload),
+                    None,
+                ),
+            };
+            let mut proposal = ClosedModelProposal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                proposal_id: ProposalId::from_raw(format!(
+                    "coding-e2e-proposal-{}",
+                    self.calls
+                )),
+                model_run_id: request.model_run_id.clone(),
+                context_packet_id: request.context_packet_id.clone(),
+                profile_id: request.profile_id.clone(),
+                codec_id: self.profile.codec.codec_id.clone(),
+                correlation_id: request.correlation_id.clone(),
+                kind,
+                payload,
+                tool_call,
+                proposal_sha256: "0".repeat(64),
+            };
+            proposal.proposal_sha256 =
+                proposal_digest(&proposal).map_err(|_| RuntimePortFailure::Invalid)?;
+            Ok(ModelRunResult {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                model_run_id: request.model_run_id.clone(),
+                stream_id: ModelStreamId::from_raw(format!("coding-e2e-stream-{}", self.calls)),
+                correlation_id: request.correlation_id.clone(),
+                terminal_state: ModelRunTerminalState::Proposed,
+                fragment_count: 1,
+                response_sha256: sha256(proposal.proposal_sha256.as_bytes()),
+                proposal: Some(proposal),
+                failure: None,
+                resources: ModelResourceReport {
+                    adapter_id: request.adapter_id.clone(),
+                    profile_id: request.profile_id.clone(),
+                    model_run_id: Some(request.model_run_id.clone()),
+                    resident_memory_bytes: 1,
+                    accelerator_memory_bytes: 0,
+                    input_tokens: context.input_tokens,
+                    output_tokens: 1,
+                    elapsed_ms: 1,
+                },
+            })
+        }
+    }
+
+    struct FixtureTokenCounter;
+
+    impl CodingTokenCounter for FixtureTokenCounter {
+        fn counter_id(&self) -> &str {
+            "fixture-counter-v1"
+        }
+
+        fn count_tokens(&mut self, bytes: &[u8]) -> Result<u32, RuntimePortFailure> {
+            u32::try_from(bytes.len().div_ceil(4).max(1))
+                .map_err(|_| RuntimePortFailure::ResourceExhausted)
+        }
+    }
+
+    struct FixtureClock(u64);
+
+    impl RuntimeClock for FixtureClock {
+        fn now_epoch_ms(&mut self) -> Result<u64, RuntimePortFailure> {
+            self.0 += 1;
+            Ok(self.0)
         }
     }
 
@@ -2096,7 +2233,7 @@ mod tests {
     where
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
-        root: PathBuf,
+        root: TempRoot,
         request: RuntimeRunRequest,
         definition: ToolDefinition,
         call: ToolCall,
@@ -2109,15 +2246,6 @@ mod tests {
             FakeCommandExecutor,
             G,
         >,
-    }
-
-    impl<G> Drop for Fixture<G>
-    where
-        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
-    {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.root);
-        }
     }
 
     fn fixture() -> Fixture {
@@ -2237,7 +2365,7 @@ mod tests {
         })
         .expect("coding runtime boundary");
         Fixture {
-            root,
+            root: TempRoot(root),
             request,
             definition,
             call,
@@ -2539,6 +2667,77 @@ mod tests {
         );
     }
 
+    fn configure_targeted_validation<G>(fixture: &mut Fixture<G>)
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        let template = fixture
+            .profile_for_test()
+            .validations()
+            .templates
+            .first()
+            .expect("validation template")
+            .clone();
+        let definition = fixture
+            .profile_for_test()
+            .registry()
+            .get_tool(
+                &ToolId::from_raw(crate::coding_tools::TARGETED_VALIDATION_TOOL_ID),
+                crate::coding_tools::TARGETED_VALIDATION_TOOL_VERSION,
+            )
+            .expect("validation tool")
+            .clone();
+        let arguments = serde_json::to_vec(&TargetedValidationRequest {
+            schema_version: 1,
+            validation_attempt_id: "validation-attempt-e2e".to_owned(),
+            validation_id: template.validation_id,
+            template_sha256: template.template_sha256,
+        })
+        .expect("validation request");
+        fixture.call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-validation-e2e"),
+            correlation_id: CorrelationId::from_raw("correlation-coding-runtime"),
+            action_id: runtime_action_id(&fixture.request.run_id, 1),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&arguments),
+                bytes: arguments,
+            },
+        };
+        fixture.definition = definition;
+        fixture
+            .boundary
+            .command_executor
+            .as_mut()
+            .expect("test command executor")
+            .stdout = serde_json::to_vec(&serde_json::json!({
+                "schema_version": 1,
+                "status": "passed",
+                "passed": 1,
+                "failed": 0,
+                "skipped": 0,
+                "duration_ms": 1,
+                "failed_names": [],
+                "artifact_ids": [],
+                "retry_count": 0,
+                "initial_failure_sha256": null
+            }))
+            .expect("validation output");
+    }
+
+    fn scripted_call(call: &ToolCall) -> ModelToolCallCandidate {
+        ModelToolCallCandidate {
+            tool_call_id: call.tool_call_id.clone(),
+            tool_id: call.tool_id.clone(),
+            tool_version: call.tool_version.clone(),
+            arguments: call.arguments.clone(),
+        }
+    }
+
     fn approve<G>(fixture: &mut Fixture<G>, now_epoch_ms: u64) -> RuntimePermissionEvaluation
     where
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
@@ -2565,6 +2764,102 @@ mod tests {
                 now_epoch_ms + 1,
             )
             .expect("exact approval")
+    }
+
+    #[test]
+    fn story_48_2_fake_model_completes_real_git_patch_test_git_and_verify_path() {
+        let mut fixture = fixture();
+        configure_git_status(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-git-before-e2e");
+        let git_before = scripted_call(&fixture.call);
+
+        configure_structured_patch(&mut fixture);
+        let patch = scripted_call(&fixture.call);
+
+        configure_targeted_validation(&mut fixture);
+        let validation = scripted_call(&fixture.call);
+
+        configure_git_status(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-git-after-e2e");
+        let git_after = scripted_call(&fixture.call);
+
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Validation];
+        fixture.request = seal_runtime_run_request(fixture.request.clone())
+            .expect("updated evidence requirement");
+
+        let profile = fixture.profile_for_test();
+        let completion = coding_completion_payload(&CodingCompletionCandidate {
+            schema_version: 1,
+            objective_sha256: sha256(fixture.request.task.objective.as_bytes()),
+            terminal_claim: CodingTerminalClaim::Changed,
+            summary: "Updated the bounded fixture and verified the registered test.".to_owned(),
+            checks_not_run: Vec::new(),
+            residual_risks: Vec::new(),
+        })
+        .expect("completion payload");
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [
+                ScriptedCodingStep::Tool(git_before),
+                ScriptedCodingStep::Tool(patch),
+                ScriptedCodingStep::Tool(validation),
+                ScriptedCodingStep::Tool(git_after),
+                ScriptedCodingStep::Complete(completion),
+            ]
+            .into_iter()
+            .collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("coding context");
+        let Fixture {
+            root,
+            request,
+            boundary,
+            ..
+        } = fixture;
+        let admitted_request = request.clone();
+        let mut coordinator = compose_ephemeral_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(20_000),
+        )
+        .expect("ephemeral coding coordinator");
+
+        let mut next_response = None;
+        let outcome = loop {
+            match coordinator
+                .run_until_boundary(next_response.as_ref(), None)
+                .expect("coding coordinator boundary")
+            {
+                RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
+                    next_response = Some(response(
+                        &challenge,
+                        RuntimeApprovalDisposition::Allow,
+                    ));
+                }
+                RuntimeCoordinatorStep::Complete { outcome } => break outcome,
+            }
+        };
+
+        assert_eq!(outcome.state, AgentStateKind::Success, "{outcome:#?}");
+        assert_eq!(outcome.model_call_count, 5);
+        assert_eq!(outcome.tool_call_count, 4);
+        assert_eq!(outcome.receipt_ids.len(), 4);
+        assert!(outcome.unresolved_codes.is_empty());
+        assert_eq!(
+            fs::read(root.join("worktree/src/lib.rs")).expect("updated source"),
+            b"pub fn runtime_updated() {}\n"
+        );
+        verify_runtime_outcome(&outcome, &admitted_request).expect("verified runtime outcome");
+        let mut sequence = RuntimeEventSequence::new();
+        for event in coordinator.events() {
+            sequence.push(event).expect("ordered runtime event");
+        }
+        assert!(sequence.is_terminal());
     }
 
     #[test]
@@ -3287,7 +3582,7 @@ mod tests {
     where
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
-        fn profile_for_test(&self) -> &CodingSessionProfile {
+        fn profile_for_test(&self) -> &'static CodingSessionProfile {
             self.boundary.workspace.profile()
         }
     }

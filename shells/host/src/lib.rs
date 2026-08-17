@@ -6,6 +6,8 @@
 pub mod code_change;
 /// Bounded model-context composition for shared coding sessions.
 pub mod coding_context;
+/// Interface-neutral composition for the shared local coding runtime.
+pub mod coding_harness;
 /// Exact non-authoritative approval composition for native coding operations.
 pub mod coding_authority;
 pub mod coding_changes;
