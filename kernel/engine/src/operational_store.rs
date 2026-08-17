@@ -13,7 +13,7 @@ use std::time::Duration;
 
 use agentmage_kernel_contracts::{
     ActionState, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
-    CapabilityGrant, GrantId, GrantNonce, GrantStatus, OperationOutcome, Receipt,
+    CapabilityGrant, GrantId, GrantNonce, GrantStatus, OperationOutcome, Receipt, RuntimeEvent,
     RuntimeResumeBinding, SessionCheckpoint, StrictLocalStorageObservation, from_json,
     to_canonical_json,
 };
@@ -49,7 +49,7 @@ use crate::runtime_artifact::{
 };
 use crate::runtime_journal::{
     RuntimeJournalAppend, RuntimeJournalError, RuntimeJournalLimits, RuntimeJournalWorker,
-    current_cursor, verify_all as verify_runtime_journal,
+    append_transaction_events, current_cursor, verify_all as verify_runtime_journal,
 };
 use crate::strict_local::{StrictLocalStorageDecision, evaluate_storage};
 use crate::tooling::ToolRegistry;
@@ -1086,6 +1086,48 @@ impl OperationalStore {
         }
     }
 
+    fn persist_authority_with_runtime_events(
+        &mut self,
+        issuer: &GrantIssuer,
+        coordinator: &AuthorityTransactionCoordinator,
+        runtime_events: &[RuntimeEvent],
+    ) -> Result<(), OperationalStoreError> {
+        if self.poisoned || runtime_events.is_empty() {
+            return Err(if self.poisoned {
+                OperationalStoreError::Poisoned
+            } else {
+                OperationalStoreError::PersistenceFailure
+            });
+        }
+        let next_generation = self
+            .generation
+            .checked_add(1)
+            .ok_or(OperationalStoreError::PersistenceFailure)?;
+        let state_sha256 = authority_state_sha256(issuer, coordinator)?;
+        let result = persist_snapshot(
+            &mut self.connection,
+            self.generation,
+            next_generation,
+            &state_sha256,
+            issuer,
+            coordinator,
+            SnapshotContinuity {
+                runtime_events,
+                ..SnapshotContinuity::default()
+            },
+        );
+        match result {
+            Ok(()) => {
+                self.generation = next_generation;
+                Ok(())
+            }
+            Err(error) => {
+                self.poisoned = true;
+                Err(error)
+            }
+        }
+    }
+
     fn persist_authority_with_session_checkpoint(
         &mut self,
         issuer: &GrantIssuer,
@@ -1111,6 +1153,7 @@ impl OperationalStore {
             SnapshotContinuity {
                 session_checkpoint: Some(checkpoint),
                 runtime_resume_binding: None,
+                runtime_events: &[],
             },
         );
         match result {
@@ -1131,6 +1174,7 @@ impl OperationalStore {
         coordinator: &AuthorityTransactionCoordinator,
         checkpoint: &SessionCheckpoint,
         binding: &RuntimeResumeBinding,
+        runtime_events: &[RuntimeEvent],
     ) -> Result<(), OperationalStoreError> {
         if self.poisoned {
             return Err(OperationalStoreError::Poisoned);
@@ -1153,6 +1197,7 @@ impl OperationalStore {
             SnapshotContinuity {
                 session_checkpoint: Some(checkpoint),
                 runtime_resume_binding: Some(binding),
+                runtime_events,
             },
         );
         match result {
@@ -1174,7 +1219,25 @@ pub struct DurableAuthorityRuntime {
     issuer: GrantIssuer,
     coordinator: AuthorityTransactionCoordinator,
     runtime_journal: RuntimeJournalWorker,
+    pending_runtime_effect: Option<AuthorityTransactionId>,
+    pending_specialized_effect: Option<String>,
     poisoned: bool,
+}
+
+/// Single-use proof that one terminal authority snapshot awaits its receipt event.
+#[derive(Debug)]
+pub struct PendingRuntimeEffectCommit {
+    transaction_id: AuthorityTransactionId,
+    receipt_id: agentmage_kernel_contracts::ReceiptId,
+    receipt_sha256: String,
+    started_event: RuntimeEvent,
+}
+
+/// Single-use proof that one specialized effect awaits its terminal receipt event.
+#[derive(Debug)]
+pub struct PendingSpecializedEffectCommit {
+    operation_id: String,
+    started_event: RuntimeEvent,
 }
 
 impl fmt::Debug for DurableAuthorityRuntime {
@@ -1238,6 +1301,8 @@ impl DurableAuthorityRuntime {
             issuer,
             coordinator,
             runtime_journal,
+            pending_runtime_effect: None,
+            pending_specialized_effect: None,
             poisoned: false,
         };
         runtime.recover_interrupted(recovery_epoch_ms)?;
@@ -1314,6 +1379,22 @@ impl DurableAuthorityRuntime {
                 Err(DurableAuthorityError::RuntimeJournal(error))
             }
         }
+    }
+
+    /// Co-publishes one correctness event with an unchanged authority snapshot generation.
+    pub fn record_runtime_event_with_authority_snapshot(
+        &mut self,
+        event: RuntimeEvent,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.flush_runtime_events()?;
+        let result = self.lock_store()?.persist_authority_with_runtime_events(
+            &self.issuer,
+            &self.coordinator,
+            std::slice::from_ref(&event),
+        );
+        result.map_err(|error| self.poison(error))?;
+        self.reconcile_runtime_journal()
     }
 
     /// Flushes queued progress after its declared logical interval.
@@ -1521,8 +1602,47 @@ impl DurableAuthorityRuntime {
                 &self.coordinator,
                 checkpoint,
                 binding,
+                &[],
             );
         result.map_err(|error| self.poison(error))
+    }
+
+    /// Atomically publishes a safe checkpoint, its binding, and its correctness event.
+    pub fn checkpoint_runtime_session_with_event(
+        &mut self,
+        checkpoint: &SessionCheckpoint,
+        binding: &RuntimeResumeBinding,
+        event: RuntimeEvent,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        verify_runtime_resume_binding(binding)
+            .map_err(|error| DurableAuthorityError::RuntimeArtifact(error.into()))?;
+        self.flush_runtime_events()?;
+        let cursor = {
+            let store = self.lock_store()?;
+            current_cursor(&store, &binding.run_id)
+                .map_err(DurableAuthorityError::RuntimeJournal)?
+                .ok_or(DurableAuthorityError::RuntimeArtifact(
+                    RuntimeArtifactStoreError::NotFound,
+                ))?
+        };
+        if cursor != binding.event_cursor {
+            return Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotAuthorized,
+            ));
+        }
+        let result = self
+            .lock_store()?
+            .persist_authority_with_runtime_checkpoint(
+                &self.issuer,
+                &self.coordinator,
+                checkpoint,
+                binding,
+                std::slice::from_ref(&event),
+            );
+        result.map_err(|error| self.poison(error))?;
+        self.reconcile_runtime_journal()?;
+        Ok(())
     }
 
     /// Issues one parent grant and publishes it atomically before returning it.
@@ -1543,6 +1663,25 @@ impl DurableAuthorityRuntime {
         Ok(grant)
     }
 
+    /// Issues one parent grant and co-publishes its exact correctness event.
+    pub fn issue_session_read_with_runtime_event<R, F>(
+        &mut self,
+        request: SessionReadGrantRequest,
+        build_event: F,
+    ) -> Result<(CapabilityGrant, R, RuntimeEvent), DurableAuthorityError>
+    where
+        F: FnOnce(&CapabilityGrant) -> Result<(R, RuntimeEvent), RuntimeJournalError>,
+    {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let grant = candidate
+            .issue_session_read(request)
+            .map_err(DurableAuthorityError::Grant)?;
+        let (result, event) = build_event(&grant).map_err(DurableAuthorityError::RuntimeJournal)?;
+        self.commit_candidate_with_runtime_events(candidate, std::slice::from_ref(&event))?;
+        Ok((grant, result, event))
+    }
+
     /// Derives one exact operation grant and publishes parent and child atomically.
     pub fn derive_operation(
         &mut self,
@@ -1560,6 +1699,26 @@ impl DurableAuthorityRuntime {
         result.map_err(|error| self.poison(error))?;
         self.issuer = candidate;
         Ok(grant)
+    }
+
+    /// Derives one operation grant and co-publishes its exact correctness event.
+    pub fn derive_operation_with_runtime_event<R, F>(
+        &mut self,
+        parent_grant_id: &GrantId,
+        request: DerivedOperationGrantRequest,
+        build_event: F,
+    ) -> Result<(CapabilityGrant, R, RuntimeEvent), DurableAuthorityError>
+    where
+        F: FnOnce(&CapabilityGrant) -> Result<(R, RuntimeEvent), RuntimeJournalError>,
+    {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let grant = candidate
+            .derive_operation(parent_grant_id, request)
+            .map_err(DurableAuthorityError::Grant)?;
+        let (result, event) = build_event(&grant).map_err(DurableAuthorityError::RuntimeJournal)?;
+        self.commit_candidate_with_runtime_events(candidate, std::slice::from_ref(&event))?;
+        Ok((grant, result, event))
     }
 
     /// Issues one exact controlled-write grant and atomically publishes its grant revisions.
@@ -1582,6 +1741,28 @@ impl DurableAuthorityRuntime {
         Ok(approval)
     }
 
+    /// Issues one controlled-write grant and co-publishes its correctness event.
+    pub fn issue_write_approval_with_runtime_event<R, F>(
+        &mut self,
+        change_set: &ShadowChangeSet,
+        preview: &WriteApprovalPreview,
+        decision: &WriteApprovalDecision,
+        request: WriteGrantRequest,
+        build_event: F,
+    ) -> Result<(WriteApprovalReceipt, R, RuntimeEvent), DurableAuthorityError>
+    where
+        F: FnOnce(&WriteApprovalReceipt) -> Result<(R, RuntimeEvent), RuntimeJournalError>,
+    {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let approval = issue_write_grant(&mut candidate, change_set, preview, decision, request)
+            .map_err(DurableAuthorityError::WriteApproval)?;
+        let (result, event) =
+            build_event(&approval).map_err(DurableAuthorityError::RuntimeJournal)?;
+        self.commit_candidate_with_runtime_events(candidate, std::slice::from_ref(&event))?;
+        Ok((approval, result, event))
+    }
+
     /// Issues one exact controlled-filesystem grant and atomically publishes its revisions.
     pub fn issue_filesystem_approval(
         &mut self,
@@ -1600,6 +1781,28 @@ impl DurableAuthorityRuntime {
         result.map_err(|error| self.poison(error))?;
         self.issuer = candidate;
         Ok(approval)
+    }
+
+    /// Issues one filesystem grant and co-publishes its correctness event.
+    pub fn issue_filesystem_approval_with_runtime_event<R, F>(
+        &mut self,
+        plan: &FilesystemPlan,
+        preview: &FilesystemApprovalPreview,
+        decision: &FilesystemApprovalDecision,
+        request: FilesystemGrantRequest,
+        build_event: F,
+    ) -> Result<(FilesystemApprovalReceipt, R, RuntimeEvent), DurableAuthorityError>
+    where
+        F: FnOnce(&FilesystemApprovalReceipt) -> Result<(R, RuntimeEvent), RuntimeJournalError>,
+    {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let approval = issue_filesystem_grant(&mut candidate, plan, preview, decision, request)
+            .map_err(DurableAuthorityError::FilesystemApproval)?;
+        let (result, event) =
+            build_event(&approval).map_err(DurableAuthorityError::RuntimeJournal)?;
+        self.commit_candidate_with_runtime_events(candidate, std::slice::from_ref(&event))?;
+        Ok((approval, result, event))
     }
 
     /// Executes an exact controlled write after durably checkpointing consumed authority.
@@ -1640,6 +1843,78 @@ impl DurableAuthorityRuntime {
         result.map_err(DurableAuthorityError::WriteTransaction)
     }
 
+    /// Executes one controlled write with its start event in the authority-consumption commit.
+    pub fn begin_controlled_write_with_runtime_event<D: AtomicWriteDriver>(
+        &mut self,
+        policy: &PolicyEngine,
+        change_set: &ShadowChangeSet,
+        approval: &WriteApprovalReceipt,
+        request: WriteTransactionRequest,
+        driver: &mut D,
+        started_event: RuntimeEvent,
+    ) -> Result<(WriteTransactionResult, PendingSpecializedEffectCommit), DurableAuthorityError>
+    {
+        self.ensure_usable()?;
+        self.flush_runtime_events()?;
+        let operation_id = request.transaction_id.clone();
+        let mut store_error = None;
+        let mut started_committed = false;
+        let result = {
+            let shared_store = Arc::clone(&self.store);
+            let mut store = lock_shared_store(&shared_store)?;
+            let coordinator = &self.coordinator;
+            execute_write_transaction_with_checkpoint(
+                &mut self.issuer,
+                policy,
+                change_set,
+                approval,
+                request,
+                driver,
+                &mut |issuer| {
+                    let persisted = if started_committed {
+                        store.persist_authority(issuer, coordinator)
+                    } else {
+                        store.persist_authority_with_runtime_events(
+                            issuer,
+                            coordinator,
+                            std::slice::from_ref(&started_event),
+                        )
+                    };
+                    persisted
+                        .map(|()| started_committed = true)
+                        .map_err(|error| store_error = Some(error))
+                },
+            )
+        };
+        if let Some(error) = store_error {
+            self.poisoned = true;
+            return Err(DurableAuthorityError::Store(error));
+        }
+        let result = match result {
+            Ok(result) if started_committed => result,
+            Ok(_) => {
+                self.poisoned = true;
+                return Err(DurableAuthorityError::RuntimeJournal(
+                    RuntimeJournalError::Integrity,
+                ));
+            }
+            Err(error) => {
+                if started_committed {
+                    let _ = self.reconcile_runtime_journal();
+                }
+                return Err(DurableAuthorityError::WriteTransaction(error));
+            }
+        };
+        self.pending_specialized_effect = Some(operation_id.clone());
+        Ok((
+            result,
+            PendingSpecializedEffectCommit {
+                operation_id,
+                started_event,
+            },
+        ))
+    }
+
     /// Executes an exact filesystem operation after durably checkpointing consumed authority.
     pub fn execute_controlled_filesystem<D: ControlledFilesystemDriver>(
         &mut self,
@@ -1678,6 +1953,101 @@ impl DurableAuthorityRuntime {
         result.map_err(DurableAuthorityError::FilesystemTransaction)
     }
 
+    /// Executes one filesystem effect with its start event in the authority-consumption commit.
+    pub fn begin_controlled_filesystem_with_runtime_event<D: ControlledFilesystemDriver>(
+        &mut self,
+        policy: &PolicyEngine,
+        plan: &FilesystemPlan,
+        approval: &FilesystemApprovalReceipt,
+        request: FilesystemTransactionRequest,
+        driver: &mut D,
+        started_event: RuntimeEvent,
+    ) -> Result<(FilesystemTransactionResult, PendingSpecializedEffectCommit), DurableAuthorityError>
+    {
+        self.ensure_usable()?;
+        self.flush_runtime_events()?;
+        let operation_id = request.transaction_id.clone();
+        let mut store_error = None;
+        let mut started_committed = false;
+        let result = {
+            let shared_store = Arc::clone(&self.store);
+            let mut store = lock_shared_store(&shared_store)?;
+            let coordinator = &self.coordinator;
+            execute_filesystem_transaction_with_checkpoint(
+                &mut self.issuer,
+                policy,
+                plan,
+                approval,
+                request,
+                driver,
+                &mut |issuer| {
+                    let persisted = if started_committed {
+                        store.persist_authority(issuer, coordinator)
+                    } else {
+                        store.persist_authority_with_runtime_events(
+                            issuer,
+                            coordinator,
+                            std::slice::from_ref(&started_event),
+                        )
+                    };
+                    persisted
+                        .map(|()| started_committed = true)
+                        .map_err(|error| store_error = Some(error))
+                },
+            )
+        };
+        if let Some(error) = store_error {
+            self.poisoned = true;
+            return Err(DurableAuthorityError::Store(error));
+        }
+        let result = match result {
+            Ok(result) if started_committed => result,
+            Ok(_) => {
+                self.poisoned = true;
+                return Err(DurableAuthorityError::RuntimeJournal(
+                    RuntimeJournalError::Integrity,
+                ));
+            }
+            Err(error) => {
+                if started_committed {
+                    let _ = self.reconcile_runtime_journal();
+                }
+                return Err(DurableAuthorityError::FilesystemTransaction(error));
+            }
+        };
+        self.pending_specialized_effect = Some(operation_id.clone());
+        Ok((
+            result,
+            PendingSpecializedEffectCommit {
+                operation_id,
+                started_event,
+            },
+        ))
+    }
+
+    /// Commits one specialized terminal receipt event after exact result normalization.
+    pub fn finish_specialized_effect_with_runtime_event(
+        &mut self,
+        pending: PendingSpecializedEffectCommit,
+        terminal_event: RuntimeEvent,
+    ) -> Result<[RuntimeEvent; 2], DurableAuthorityError> {
+        if self.poisoned
+            || self.pending_specialized_effect.as_deref() != Some(&pending.operation_id)
+        {
+            self.poisoned = true;
+            return Err(DurableAuthorityError::Poisoned);
+        }
+        let result = self.lock_store()?.persist_authority_with_runtime_events(
+            &self.issuer,
+            &self.coordinator,
+            std::slice::from_ref(&terminal_event),
+        );
+        result.map_err(|error| self.poison(error))?;
+        self.pending_specialized_effect = None;
+        self.reconcile_runtime_journal()?;
+        Ok([pending.started_event, terminal_event])
+    }
+
     /// Executes one effect only after every pre-launch state is durably committed.
     pub fn execute_effect<D: EffectDriver>(
         &mut self,
@@ -1712,6 +2082,114 @@ impl DurableAuthorityRuntime {
                 Err(DurableAuthorityError::Transaction(error))
             }
         }
+    }
+
+    /// Begins one effect and leaves its terminal snapshot pending one exact receipt event.
+    pub fn begin_effect_with_runtime_event<D: EffectDriver>(
+        &mut self,
+        registry: &ToolRegistry,
+        policy: &PolicyEngine,
+        request: AuthorityTransactionRequest,
+        driver: &mut D,
+        started_event: RuntimeEvent,
+    ) -> Result<(Receipt, PendingRuntimeEffectCommit), DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.flush_runtime_events()?;
+        let transaction_id = request.transaction_id().clone();
+        let shared_store = Arc::clone(&self.store);
+        let mut started_committed = false;
+        let result = {
+            let mut store = lock_shared_store(&shared_store)?;
+            self.coordinator.execute_with_checkpoint(
+                registry,
+                &mut self.issuer,
+                policy,
+                &request,
+                driver,
+                &mut |issuer, coordinator| {
+                    let state = coordinator
+                        .current(&transaction_id)
+                        .map(|record| record.state)
+                        .ok_or(AuthorityTransactionError::PersistenceFailure)?;
+                    let persisted = if state == AuthorityTransactionState::LaunchCommitted
+                        && !started_committed
+                    {
+                        store.persist_authority_with_runtime_events(
+                            issuer,
+                            coordinator,
+                            std::slice::from_ref(&started_event),
+                        )
+                    } else if state == AuthorityTransactionState::Terminal {
+                        Ok(())
+                    } else {
+                        store.persist_authority(issuer, coordinator)
+                    };
+                    persisted
+                        .map(|()| {
+                            if state == AuthorityTransactionState::LaunchCommitted {
+                                started_committed = true;
+                            }
+                        })
+                        .map_err(|_| AuthorityTransactionError::PersistenceFailure)
+                },
+            )
+        };
+        let receipt = match result {
+            Ok(receipt) if started_committed => receipt,
+            Ok(_) => {
+                self.poisoned = true;
+                return Err(DurableAuthorityError::RuntimeJournal(
+                    RuntimeJournalError::Integrity,
+                ));
+            }
+            Err(error) => {
+                if started_committed {
+                    let _ = self.reconcile_runtime_journal();
+                }
+                if error == AuthorityTransactionError::PersistenceFailure {
+                    self.poisoned = true;
+                }
+                return Err(DurableAuthorityError::Transaction(error));
+            }
+        };
+        self.pending_runtime_effect = Some(transaction_id.clone());
+        Ok((
+            receipt.clone(),
+            PendingRuntimeEffectCommit {
+                transaction_id,
+                receipt_id: receipt.receipt_id.clone(),
+                receipt_sha256: receipt.receipt_sha256.clone(),
+                started_event,
+            },
+        ))
+    }
+
+    /// Commits one pending terminal authority snapshot with its exact receipt event.
+    pub fn finish_effect_with_runtime_event(
+        &mut self,
+        pending: PendingRuntimeEffectCommit,
+        terminal_event: RuntimeEvent,
+    ) -> Result<[RuntimeEvent; 2], DurableAuthorityError> {
+        if self.poisoned
+            || self.pending_runtime_effect.as_ref() != Some(&pending.transaction_id)
+            || !self.coordinator.receipts().iter().any(|receipt| {
+                receipt.authority_transaction_id == pending.transaction_id
+                    && receipt.receipt_id == pending.receipt_id
+                    && receipt.receipt_sha256 == pending.receipt_sha256
+            })
+        {
+            self.poisoned = true;
+            return Err(DurableAuthorityError::Poisoned);
+        }
+        let result = self.lock_store()?.persist_authority_with_runtime_events(
+            &self.issuer,
+            &self.coordinator,
+            std::slice::from_ref(&terminal_event),
+        );
+        result.map_err(|error| self.poison(error))?;
+        self.pending_runtime_effect = None;
+        self.reconcile_runtime_journal()?;
+        Ok([pending.started_event, terminal_event])
     }
 
     /// Executes one effect and atomically publishes its terminal state and next checkpoint.
@@ -1839,8 +2317,38 @@ impl DurableAuthorityRuntime {
         Ok(())
     }
 
+    fn commit_candidate_with_runtime_events(
+        &mut self,
+        candidate: GrantIssuer,
+        events: &[RuntimeEvent],
+    ) -> Result<(), DurableAuthorityError> {
+        self.flush_runtime_events()?;
+        let result = self.lock_store()?.persist_authority_with_runtime_events(
+            &candidate,
+            &self.coordinator,
+            events,
+        );
+        result.map_err(|error| self.poison(error))?;
+        self.issuer = candidate;
+        self.reconcile_runtime_journal()
+    }
+
+    fn reconcile_runtime_journal(&mut self) -> Result<(), DurableAuthorityError> {
+        match self.runtime_journal.reconcile() {
+            Ok(()) => Ok(()),
+            Err(error) => {
+                self.poisoned = true;
+                Err(DurableAuthorityError::RuntimeJournal(error))
+            }
+        }
+    }
+
     fn ensure_usable(&self) -> Result<(), DurableAuthorityError> {
-        if self.poisoned || self.lock_store()?.poisoned {
+        if self.poisoned
+            || self.pending_runtime_effect.is_some()
+            || self.pending_specialized_effect.is_some()
+            || self.lock_store()?.poisoned
+        {
             Err(DurableAuthorityError::Poisoned)
         } else {
             Ok(())
@@ -2215,6 +2723,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
 struct SnapshotContinuity<'a> {
     session_checkpoint: Option<&'a SessionCheckpoint>,
     runtime_resume_binding: Option<&'a RuntimeResumeBinding>,
+    runtime_events: &'a [RuntimeEvent],
 }
 
 fn persist_snapshot(
@@ -2309,6 +2818,13 @@ fn persist_snapshot(
     } else if continuity.runtime_resume_binding.is_some() {
         return Err(OperationalStoreError::CheckpointRejected);
     }
+    append_transaction_events(&transaction, continuity.runtime_events).map_err(|error| {
+        if matches!(error, RuntimeJournalError::Storage) {
+            OperationalStoreError::PersistenceFailure
+        } else {
+            OperationalStoreError::IntegrityFailure
+        }
+    })?;
     transaction
         .commit()
         .map_err(|_| OperationalStoreError::PersistenceFailure)
@@ -3752,27 +4268,34 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
-        CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity, CloudSynchronizationMarker, EvidenceId,
-        ModelProfileId, PlanId, PlanStepId, PolicyId, RepositorySnapshotId, SessionCheckpoint,
+        ActorId, AdapterInstanceId, ApprovalId, AuthorizedWorkspaceHandle, CONTRACT_SCHEMA_VERSION,
+        CheckpointFileIdentity, CloudSynchronizationMarker, ContextSensitivity, CorrelationId,
+        DataSensitivity, EvidenceId, GrantId, GrantNonce, GrantOperation, GrantTarget,
+        HeldWorkspaceRoot, ModelProfileId, PathPlatform, PlanId, PlanStepId, PolicyId,
+        RepositorySnapshotId, RuntimeEvent, RuntimeEventCursor, RuntimeEventId, RuntimeEventKind,
+        RuntimeEventPersistenceClass, RuntimeEventRetention, RuntimeEventRetentionKind,
+        RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId, RuntimeTurnId, SessionCheckpoint,
         SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
-        TaskId, WorkspaceId,
+        TaskId, ToolCallId, WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectIdentity,
+        WorkspaceScopePath,
     };
     use rusqlite::params;
     use serde_json::Value;
 
     use super::{
-        MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL,
-        MIGRATION_4_SCHEMA_SQL, MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL,
-        MIGRATION_7_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
-        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
-        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
-        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
-        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
-        verify_runtime_configuration,
+        DurableAuthorityError, DurableAuthorityRuntime, MIGRATION_1_SCHEMA_SQL,
+        MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, MIGRATION_4_SCHEMA_SQL,
+        MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, MIGRATION_7_SCHEMA_SQL, OperationalStore,
+        OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyLifecycle,
+        OperationalStoreKeyProvider, RetentionAssignment, RetentionDisposition, RetentionHoldKind,
+        RetentionRecordFamily, RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256,
+        is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_file,
+        sha256_hex, sqlite_artifact_paths, verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::context_management::finalize_checkpoint;
-    use crate::grants::GrantIssuer;
+    use crate::grants::{GrantIssuer, SessionReadGrantRequest};
+    use crate::runtime_event::seal_runtime_event;
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
 
@@ -3989,6 +4512,252 @@ mod tests {
         ));
         fs::create_dir(&path).expect("temporary directory");
         path
+    }
+
+    #[derive(Debug)]
+    struct SyntheticHeldRoot {
+        workspace_id: WorkspaceId,
+        authorization_id: WorkspaceAuthorizationId,
+        adapter_instance_id: AdapterInstanceId,
+        identity: WorkspaceObjectIdentity,
+    }
+
+    impl AuthorizedWorkspaceHandle for SyntheticHeldRoot {
+        fn workspace_id(&self) -> &WorkspaceId {
+            &self.workspace_id
+        }
+
+        fn authorization_id(&self) -> &WorkspaceAuthorizationId {
+            &self.authorization_id
+        }
+
+        fn adapter_instance_id(&self) -> &AdapterInstanceId {
+            &self.adapter_instance_id
+        }
+
+        fn platform(&self) -> PathPlatform {
+            self.identity.platform()
+        }
+    }
+
+    impl HeldWorkspaceRoot for SyntheticHeldRoot {
+        fn root_identity(&self) -> &WorkspaceObjectIdentity {
+            &self.identity
+        }
+    }
+
+    fn atomic_test_target() -> GrantTarget {
+        let root = SyntheticHeldRoot {
+            workspace_id: WorkspaceId::from_raw("atomic-workspace-1"),
+            authorization_id: WorkspaceAuthorizationId::from_raw("atomic-authorization-1"),
+            adapter_instance_id: AdapterInstanceId::from_raw("atomic-adapter-1"),
+            identity: WorkspaceObjectIdentity::new(
+                PathPlatform::DeterministicFake,
+                [17; 32],
+                [18; 32],
+            ),
+        };
+        let scope =
+            WorkspaceScopePath::new(root.workspace_id.clone(), std::iter::empty::<String>())
+                .expect("synthetic root scope");
+        GrantTarget::workspace_scope(&root, scope).expect("synthetic workspace scope")
+    }
+
+    fn atomic_session_read_request(grant_id: GrantId) -> SessionReadGrantRequest {
+        SessionReadGrantRequest {
+            grant_id,
+            actor_id: ActorId::from_raw("atomic-actor-1"),
+            session_id: SessionId::from_raw("atomic-session-1"),
+            task_id: TaskId::from_raw("atomic-task-1"),
+            targets: vec![atomic_test_target()],
+            excluded_targets: Vec::new(),
+            sensitivity: DataSensitivity::Operational,
+            issued_at_epoch_ms: 1_000,
+            expires_at_epoch_ms: 61_000,
+            nonce: GrantNonce::from_raw("atomic-nonce-1"),
+            maximum_derived_operations: 4,
+            preview_sha256: hash('d'),
+            policy_sha256: hash('e'),
+        }
+    }
+
+    struct AtomicEventStream {
+        next_sequence: u64,
+        previous_sha256: String,
+        causation_event_id: Option<RuntimeEventId>,
+    }
+
+    impl AtomicEventStream {
+        fn new() -> Self {
+            Self {
+                next_sequence: 0,
+                previous_sha256: ZERO_SHA256.to_owned(),
+                causation_event_id: None,
+            }
+        }
+
+        fn event(
+            &mut self,
+            kind: RuntimeEventKind,
+            turn_id: Option<&str>,
+            operation_id: Option<&str>,
+        ) -> RuntimeEvent {
+            let persistence = match kind {
+                RuntimeEventKind::TurnStarted | RuntimeEventKind::ToolRequested { .. } => {
+                    RuntimeEventPersistenceClass::Progress
+                }
+                _ => RuntimeEventPersistenceClass::Correctness,
+            };
+            let event_id = RuntimeEventId::from_raw(format!("atomic-event-{}", self.next_sequence));
+            let event = seal_runtime_event(RuntimeEvent {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                event_id: event_id.clone(),
+                run_id: RuntimeRunId::from_raw("atomic-run-1"),
+                session_id: SessionId::from_raw("atomic-session-1"),
+                task_id: TaskId::from_raw("atomic-task-1"),
+                turn_id: turn_id.map(RuntimeTurnId::from_raw),
+                operation_id: operation_id.map(RuntimeOperationId::from_raw),
+                correlation_id: CorrelationId::from_raw("atomic-correlation-1"),
+                causation_event_id: self.causation_event_id.clone(),
+                sequence: self.next_sequence,
+                occurred_at_epoch_ms: 2_000 + self.next_sequence,
+                sensitivity: ContextSensitivity::Private,
+                retention: RuntimeEventRetention {
+                    kind: RuntimeEventRetentionKind::Session,
+                    expires_at_epoch_ms: None,
+                },
+                persistence,
+                policy_id: PolicyId::from_raw("atomic-policy-1"),
+                payload_reference: None,
+                kind,
+                previous_event_sha256: self.previous_sha256.clone(),
+                event_sha256: ZERO_SHA256.to_owned(),
+            })
+            .expect("atomic fixture event");
+            self.next_sequence += 1;
+            self.previous_sha256.clone_from(&event.event_sha256);
+            self.causation_event_id = Some(event_id);
+            event
+        }
+
+        fn permission_request_prefix(&mut self) -> [RuntimeEvent; 3] {
+            [
+                self.event(
+                    RuntimeEventKind::RunStarted {
+                        request_sha256: hash('1'),
+                    },
+                    None,
+                    None,
+                ),
+                self.event(RuntimeEventKind::TurnStarted, Some("atomic-turn-1"), None),
+                self.event(
+                    RuntimeEventKind::ToolRequested {
+                        tool_call_id: ToolCallId::from_raw("atomic-tool-call-1"),
+                        arguments_sha256: hash('2'),
+                    },
+                    Some("atomic-turn-1"),
+                    Some("atomic-operation-1"),
+                ),
+            ]
+        }
+
+        fn permission_requested(&mut self) -> RuntimeEvent {
+            self.event(
+                RuntimeEventKind::PermissionRequested {
+                    approval_id: ApprovalId::from_raw("atomic-approval-1"),
+                    operation: GrantOperation::WorkspaceRead,
+                    preview_sha256: hash('3'),
+                    expires_at_epoch_ms: 61_000,
+                },
+                Some("atomic-turn-1"),
+                Some("atomic-operation-1"),
+            )
+        }
+    }
+
+    fn atomic_checkpoint_publication() -> (
+        SessionCheckpoint,
+        RuntimeResumeBinding,
+        RuntimeEvent,
+        RuntimeEvent,
+    ) {
+        let checkpoint = session_checkpoint(false);
+        let run_id = RuntimeRunId::from_raw("atomic-checkpoint-run-1");
+        let correlation_id = CorrelationId::from_raw("atomic-checkpoint-correlation-1");
+        let start_event_id = RuntimeEventId::from_raw("atomic-checkpoint-event-0");
+        let start_event = seal_runtime_event(RuntimeEvent {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            event_id: start_event_id.clone(),
+            run_id: run_id.clone(),
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            turn_id: None,
+            operation_id: None,
+            correlation_id: correlation_id.clone(),
+            causation_event_id: None,
+            sequence: 0,
+            occurred_at_epoch_ms: 4_000,
+            sensitivity: ContextSensitivity::Private,
+            retention: RuntimeEventRetention {
+                kind: RuntimeEventRetentionKind::Session,
+                expires_at_epoch_ms: None,
+            },
+            persistence: RuntimeEventPersistenceClass::Correctness,
+            policy_id: checkpoint.policy_id.clone(),
+            payload_reference: None,
+            kind: RuntimeEventKind::RunStarted {
+                request_sha256: hash('f'),
+            },
+            previous_event_sha256: ZERO_SHA256.to_owned(),
+            event_sha256: ZERO_SHA256.to_owned(),
+        })
+        .expect("checkpoint run start");
+        let binding = crate::runtime_artifact::seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            run_id: run_id.clone(),
+            event_cursor: RuntimeEventCursor {
+                run_id: run_id.clone(),
+                event_id: start_event.event_id.clone(),
+                sequence: start_event.sequence,
+                event_sha256: start_event.event_sha256.clone(),
+            },
+            artifacts: Vec::new(),
+            binding_sha256: ZERO_SHA256.to_owned(),
+        })
+        .expect("checkpoint binding");
+        let checkpoint_event = seal_runtime_event(RuntimeEvent {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            event_id: RuntimeEventId::from_raw("atomic-checkpoint-event-1"),
+            run_id,
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            turn_id: None,
+            operation_id: None,
+            correlation_id,
+            causation_event_id: Some(start_event_id),
+            sequence: 1,
+            occurred_at_epoch_ms: 4_001,
+            sensitivity: ContextSensitivity::Private,
+            retention: RuntimeEventRetention {
+                kind: RuntimeEventRetentionKind::Session,
+                expires_at_epoch_ms: None,
+            },
+            persistence: RuntimeEventPersistenceClass::Correctness,
+            policy_id: checkpoint.policy_id.clone(),
+            payload_reference: None,
+            kind: RuntimeEventKind::CheckpointCommitted {
+                checkpoint_id: checkpoint.checkpoint_id.clone(),
+                checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            },
+            previous_event_sha256: start_event.event_sha256.clone(),
+            event_sha256: ZERO_SHA256.to_owned(),
+        })
+        .expect("checkpoint event");
+        (checkpoint, binding, start_event, checkpoint_event)
     }
 
     fn assert_artifacts_exclude_canary(store: &Path, backup: &Path, export: &Path, canary: &str) {
@@ -4543,6 +5312,292 @@ mod tests {
         );
         assert!(!remote_export.exists());
         drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn correctness_event_and_parent_grant_survive_one_atomic_reopen() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let key = [61; 32];
+        let grant_id = GrantId::from_raw("atomic-grant-success-1");
+        let run_id = RuntimeRunId::from_raw("atomic-run-1");
+        let mut stream = AtomicEventStream::new();
+        let prefix = stream.permission_request_prefix();
+        let permission_event = stream.permission_requested();
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey(key), 500)
+                .expect("durable runtime");
+
+        for event in &prefix {
+            runtime
+                .record_runtime_event(event.clone())
+                .expect("prefix event");
+        }
+        assert_eq!(runtime.generation().expect("initial generation"), 0);
+
+        let (grant, marker, committed_event) = runtime
+            .issue_session_read_with_runtime_event(
+                atomic_session_read_request(grant_id.clone()),
+                |_| Ok(("co-published", permission_event.clone())),
+            )
+            .expect("atomic parent grant and permission event");
+        assert_eq!(marker, "co-published");
+        assert_eq!(grant.grant_id, grant_id);
+        assert_eq!(committed_event, permission_event);
+        assert_eq!(runtime.generation().expect("published generation"), 1);
+        assert_eq!(
+            runtime.runtime_events(&run_id).expect("complete journal"),
+            [prefix.as_slice(), std::slice::from_ref(&permission_event)].concat()
+        );
+        drop(runtime);
+
+        let reopened =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey(key), 3_000)
+                .expect("reopened durable runtime");
+        assert_eq!(reopened.generation().expect("reopened generation"), 1);
+        assert_eq!(
+            reopened
+                .current_grant(&grant_id)
+                .expect("reopened parent grant")
+                .grant_id,
+            grant_id
+        );
+        assert_eq!(
+            reopened
+                .runtime_events(&run_id)
+                .expect("reopened complete journal"),
+            [prefix.as_slice(), std::slice::from_ref(&permission_event)].concat()
+        );
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn correctness_event_insert_failure_rolls_back_parent_grant_and_generation() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let grant_id = GrantId::from_raw("atomic-grant-rollback-1");
+        let mut stream = AtomicEventStream::new();
+        let prefix = stream.permission_request_prefix();
+        let permission_event = stream.permission_requested();
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey([62; 32]), 500)
+                .expect("durable runtime");
+
+        for event in prefix {
+            runtime.record_runtime_event(event).expect("prefix event");
+        }
+        let generation_before = runtime.generation().expect("generation before fault");
+        {
+            let store = runtime.store.lock().expect("store lock");
+            store
+                .connection
+                .execute_batch(
+                    "CREATE TRIGGER fail_atomic_runtime_event
+                     BEFORE INSERT ON runtime_events
+                     WHEN NEW.sequence = 3
+                     BEGIN
+                        SELECT RAISE(ABORT, 'injected runtime event failure');
+                     END;",
+                )
+                .expect("fault trigger");
+        }
+
+        assert_eq!(
+            runtime
+                .issue_session_read_with_runtime_event(
+                    atomic_session_read_request(grant_id.clone()),
+                    |_| Ok(((), permission_event)),
+                )
+                .expect_err("journal failure must roll back authority"),
+            DurableAuthorityError::Store(OperationalStoreError::PersistenceFailure)
+        );
+        assert!(runtime.current_grant(&grant_id).is_none());
+
+        let store = runtime.store.lock().expect("store lock after rollback");
+        assert_eq!(store.generation(), generation_before);
+        assert_eq!(
+            store
+                .connection
+                .query_row(
+                    "SELECT generation FROM store_metadata WHERE singleton = 1",
+                    [],
+                    |row| row.get::<_, i64>(0),
+                )
+                .expect("durable generation"),
+            generation_before as i64
+        );
+        assert_eq!(
+            store
+                .connection
+                .query_row(
+                    "SELECT COUNT(*) FROM grant_identities WHERE grant_id = ?1",
+                    [grant_id.as_str()],
+                    |row| row.get::<_, i64>(0),
+                )
+                .expect("grant identity count"),
+            0
+        );
+        assert_eq!(
+            store
+                .connection
+                .query_row(
+                    "SELECT COUNT(*) FROM runtime_events WHERE run_id = ?1 AND sequence = 3",
+                    ["atomic-run-1"],
+                    |row| row.get::<_, i64>(0),
+                )
+                .expect("failed event count"),
+            0
+        );
+        assert_eq!(
+            store
+                .connection
+                .query_row(
+                    "SELECT COUNT(*) FROM runtime_events WHERE run_id = ?1",
+                    ["atomic-run-1"],
+                    |row| row.get::<_, i64>(0),
+                )
+                .expect("retained predecessor count"),
+            3
+        );
+        drop(store);
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn correctness_event_checkpoint_and_binding_survive_one_atomic_reopen() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let key = [63; 32];
+        let (checkpoint, binding, start_event, checkpoint_event) = atomic_checkpoint_publication();
+        let run_id = start_event.run_id.clone();
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey(key), 500)
+                .expect("durable runtime");
+        runtime
+            .record_runtime_event(start_event.clone())
+            .expect("run start");
+
+        runtime
+            .checkpoint_runtime_session_with_event(&checkpoint, &binding, checkpoint_event.clone())
+            .expect("atomic checkpoint publication");
+        assert_eq!(runtime.generation().expect("published generation"), 1);
+        assert_eq!(
+            runtime
+                .current_session_checkpoint()
+                .expect("current checkpoint"),
+            Some(checkpoint.clone())
+        );
+        assert_eq!(
+            runtime
+                .current_runtime_resume_binding()
+                .expect("current binding"),
+            Some(binding.clone())
+        );
+        assert_eq!(
+            runtime.runtime_events(&run_id).expect("checkpoint journal"),
+            [start_event.clone(), checkpoint_event.clone()]
+        );
+        drop(runtime);
+
+        let reopened =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey(key), 5_000)
+                .expect("reopened durable runtime");
+        assert_eq!(
+            reopened
+                .current_session_checkpoint()
+                .expect("reopened checkpoint"),
+            Some(checkpoint)
+        );
+        assert_eq!(
+            reopened
+                .current_runtime_resume_binding()
+                .expect("reopened binding"),
+            Some(binding)
+        );
+        assert_eq!(
+            reopened
+                .runtime_events(&run_id)
+                .expect("reopened checkpoint journal"),
+            [start_event, checkpoint_event]
+        );
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn correctness_event_insert_failure_rolls_back_checkpoint_and_binding() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let (checkpoint, binding, start_event, checkpoint_event) = atomic_checkpoint_publication();
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey([64; 32]), 500)
+                .expect("durable runtime");
+        runtime
+            .record_runtime_event(start_event)
+            .expect("run start");
+        let generation_before = runtime.generation().expect("generation before fault");
+        {
+            let store = runtime.store.lock().expect("store lock");
+            store
+                .connection
+                .execute_batch(
+                    "CREATE TRIGGER fail_atomic_checkpoint_event
+                     BEFORE INSERT ON runtime_events
+                     WHEN NEW.sequence = 1
+                     BEGIN
+                        SELECT RAISE(ABORT, 'injected checkpoint event failure');
+                     END;",
+                )
+                .expect("fault trigger");
+        }
+
+        assert_eq!(
+            runtime
+                .checkpoint_runtime_session_with_event(&checkpoint, &binding, checkpoint_event)
+                .expect_err("journal failure must roll back checkpoint"),
+            DurableAuthorityError::Store(OperationalStoreError::PersistenceFailure)
+        );
+
+        let store = runtime.store.lock().expect("store lock after rollback");
+        assert_eq!(store.generation(), generation_before);
+        for (table, key_column, key) in [
+            (
+                "session_checkpoints",
+                "checkpoint_id",
+                checkpoint.checkpoint_id.as_str(),
+            ),
+            (
+                "runtime_resume_bindings",
+                "checkpoint_id",
+                checkpoint.checkpoint_id.as_str(),
+            ),
+        ] {
+            let sql = format!("SELECT COUNT(*) FROM {table} WHERE {key_column} = ?1");
+            assert_eq!(
+                store
+                    .connection
+                    .query_row(&sql, [key], |row| row.get::<_, i64>(0))
+                    .expect("rolled-back checkpoint record count"),
+                0
+            );
+        }
+        assert_eq!(
+            store
+                .connection
+                .query_row(
+                    "SELECT COUNT(*) FROM runtime_events
+                     WHERE run_id = ?1 AND sequence = 1",
+                    [binding.run_id.as_str()],
+                    |row| row.get::<_, i64>(0),
+                )
+                .expect("rolled-back checkpoint event count"),
+            0
+        );
+        drop(store);
+        drop(runtime);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 

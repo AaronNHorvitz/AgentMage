@@ -38,7 +38,7 @@ use crate::runtime_coordinator::{
 };
 use crate::runtime_event::{
     RuntimeEventBatch, RuntimeEventBatchLimits, RuntimeEventDelivery, RuntimeEventError,
-    RuntimeEventPublisher, RuntimeEventSubscription, replay_runtime_events,
+    RuntimeEventPublisher, RuntimeEventSequence, RuntimeEventSubscription, replay_runtime_events,
     runtime_event_persistence, seal_runtime_event,
 };
 use crate::runtime_hardening::{RuntimeResourceLedger, RuntimeResourceSnapshot};
@@ -228,6 +228,72 @@ pub trait RuntimeToolBoundary {
         call: &ToolCall,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure>;
+}
+
+/// One tool result whose correctness events were committed by the owning authority transaction.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeToolCorrectnessCommit {
+    /// Exact terminal tool execution returned by the trusted host.
+    pub execution: RuntimeToolExecution,
+    /// Ordered correctness events already committed with authority and receipt state.
+    pub events: Vec<RuntimeEvent>,
+}
+
+/// Durable authority/event transaction boundary implemented by a trusted runtime host.
+///
+/// Event builders have no persistence authority. They only seal the coordinator's next exact
+/// event after the host has derived the result that must be represented in the owning transaction.
+#[allow(clippy::too_many_arguments)]
+pub trait RuntimeCorrectnessTransactionPort {
+    /// Evaluates one call and atomically co-publishes its permission-request event.
+    fn evaluate_with_correctness_event(
+        &mut self,
+        request: &RuntimeRunRequest,
+        operation_id: &RuntimeOperationId,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+        build_event: &mut dyn FnMut(
+            &RuntimePermissionEvaluation,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure>;
+
+    /// Resolves one protected decision and co-publishes its exact grant or denial event.
+    fn resolve_with_correctness_event(
+        &mut self,
+        request: &RuntimeRunRequest,
+        challenge: &RuntimeApprovalChallenge,
+        response: &RuntimeApprovalResponse,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+        build_event: &mut dyn FnMut(
+            &RuntimePermissionEvaluation,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure>;
+
+    /// Executes once and co-publishes the start and terminal receipt events.
+    fn execute_with_correctness_events(
+        &mut self,
+        request: &RuntimeRunRequest,
+        evaluation: &RuntimePermissionEvaluation,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+        started_event: RuntimeEvent,
+        build_terminal_event: &mut dyn FnMut(
+            &RuntimeToolExecution,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure>;
+
+    /// Commits one safe checkpoint and its exact journal marker in the same transaction.
+    fn commit_checkpoint_with_correctness_event(
+        &mut self,
+        input: RuntimeCheckpointCommit<'_>,
+        build_event: &mut dyn FnMut(
+            &RuntimeCheckpointPublication,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimeCheckpointPublication, RuntimeEvent), RuntimePortFailure>;
 }
 
 /// Optional durable journal boundary implemented by a trusted runtime host.
@@ -428,6 +494,50 @@ struct RuntimeCheckpointHooks<T> {
         fn(&mut T, &RuntimeRunRequest) -> Result<Option<RuntimeResumeSnapshot>, RuntimePortFailure>,
 }
 
+#[derive(Clone, Copy)]
+#[allow(clippy::type_complexity)]
+struct RuntimeCorrectnessHooks<T> {
+    evaluate: for<'a> fn(
+        &mut T,
+        &RuntimeRunRequest,
+        &RuntimeOperationId,
+        &ToolDefinition,
+        &ToolCall,
+        u64,
+        &'a mut dyn FnMut(&RuntimePermissionEvaluation) -> Result<RuntimeEvent, RuntimePortFailure>,
+    )
+        -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure>,
+    resolve: for<'a> fn(
+        &mut T,
+        &RuntimeRunRequest,
+        &RuntimeApprovalChallenge,
+        &RuntimeApprovalResponse,
+        &ToolDefinition,
+        &ToolCall,
+        u64,
+        &'a mut dyn FnMut(&RuntimePermissionEvaluation) -> Result<RuntimeEvent, RuntimePortFailure>,
+    )
+        -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure>,
+    execute: for<'a> fn(
+        &mut T,
+        &RuntimeRunRequest,
+        &RuntimePermissionEvaluation,
+        &ToolDefinition,
+        &ToolCall,
+        Option<&dyn ModelCancellationProbe>,
+        RuntimeEvent,
+        &'a mut dyn FnMut(&RuntimeToolExecution) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure>,
+    checkpoint: for<'a, 'b> fn(
+        &mut T,
+        RuntimeCheckpointCommit<'a>,
+        &'b mut dyn FnMut(&RuntimeCheckpointPublication) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<
+        (RuntimeCheckpointPublication, RuntimeEvent),
+        RuntimePortFailure,
+    >,
+}
+
 /// One reusable, interface-neutral runtime coordinator.
 pub struct ReusableRuntimeCoordinator<M, X, T, V, C>
 where
@@ -449,6 +559,7 @@ where
     journal: Option<RuntimeJournalHooks<T>>,
     artifact: Option<RuntimeArtifactHooks<T>>,
     checkpoint: Option<RuntimeCheckpointHooks<T>>,
+    correctness: Option<RuntimeCorrectnessHooks<T>>,
     state: AgentStateController,
     attempt_guard: ToolAttemptGuard,
     events: Vec<RuntimeEvent>,
@@ -498,6 +609,7 @@ where
             None,
             None,
             None,
+            None,
         )
     }
 
@@ -512,7 +624,7 @@ where
         clock: C,
     ) -> Result<Self, RuntimeLoopError>
     where
-        T: RuntimeJournalPort,
+        T: RuntimeJournalPort + RuntimeCorrectnessTransactionPort,
     {
         Self::compose(
             request,
@@ -529,6 +641,7 @@ where
             }),
             None,
             None,
+            Some(runtime_correctness_hooks::<T>()),
         )
     }
 
@@ -543,7 +656,7 @@ where
         clock: C,
     ) -> Result<Self, RuntimeLoopError>
     where
-        T: RuntimeJournalPort + RuntimeArtifactPort,
+        T: RuntimeJournalPort + RuntimeArtifactPort + RuntimeCorrectnessTransactionPort,
     {
         Self::compose(
             request,
@@ -562,6 +675,7 @@ where
                 publish: publish_runtime_artifact::<T>,
             }),
             None,
+            Some(runtime_correctness_hooks::<T>()),
         )
     }
 
@@ -576,7 +690,10 @@ where
         clock: C,
     ) -> Result<Self, RuntimeLoopError>
     where
-        T: RuntimeJournalPort + RuntimeArtifactPort + RuntimeCheckpointPort,
+        T: RuntimeJournalPort
+            + RuntimeArtifactPort
+            + RuntimeCheckpointPort
+            + RuntimeCorrectnessTransactionPort,
     {
         Self::compose(
             request,
@@ -598,6 +715,7 @@ where
                 commit: commit_runtime_checkpoint::<T>,
                 load: load_runtime_checkpoint::<T>,
             }),
+            Some(runtime_correctness_hooks::<T>()),
         )
     }
 
@@ -613,9 +731,13 @@ where
         journal: Option<RuntimeJournalHooks<T>>,
         artifact: Option<RuntimeArtifactHooks<T>>,
         checkpoint: Option<RuntimeCheckpointHooks<T>>,
+        correctness: Option<RuntimeCorrectnessHooks<T>>,
     ) -> Result<Self, RuntimeLoopError> {
         verify_runtime_run_request(&request)?;
         if request.mode == RuntimeSessionMode::DurableReadOnly && journal.is_none() {
+            return Err(RuntimeLoopError::UnsupportedMode);
+        }
+        if journal.is_some() != correctness.is_some() {
             return Err(RuntimeLoopError::UnsupportedMode);
         }
         if request.mode == RuntimeSessionMode::EphemeralReadOnly && journal.is_some() {
@@ -671,6 +793,7 @@ where
             journal,
             artifact,
             checkpoint,
+            correctness,
             state: AgentStateController::new(),
             attempt_guard,
             events: Vec::new(),
@@ -1304,10 +1427,67 @@ where
             .clock
             .now_epoch_ms()
             .map_err(RuntimeLoopError::Dependency)?;
-        let evaluation = self
-            .tool_boundary
-            .evaluate(&self.request, &operation_id, &definition, &call, now)
-            .map_err(RuntimeLoopError::Dependency)?;
+        let mut permission_request_emitted = false;
+        let evaluation =
+            if let Some(evaluate) = self.correctness.as_ref().map(|hooks| hooks.evaluate) {
+                let request = self.request.clone();
+                let correlation_id = self.correlation_id.clone();
+                let prior = self.events.last().cloned();
+                let mut resources = self.resources.clone();
+                let mut built = None;
+                let mut build_event = |evaluation: &RuntimePermissionEvaluation| {
+                    if built.is_some() {
+                        return Err(RuntimePortFailure::Invalid);
+                    }
+                    let challenge = permission_challenge(
+                        &request,
+                        &turn_id,
+                        &operation_id,
+                        &definition,
+                        &call,
+                        evaluation,
+                    )
+                    .map_err(|_| RuntimePortFailure::Invalid)?;
+                    let event = prepare_runtime_event(
+                        &request,
+                        &correlation_id,
+                        prior.as_ref(),
+                        now,
+                        RuntimeEventKind::PermissionRequested {
+                            approval_id: challenge.approval_id,
+                            operation: challenge.operation,
+                            preview_sha256: challenge.preview_sha256,
+                            expires_at_epoch_ms: challenge.expires_at_epoch_ms,
+                        },
+                        Some(&turn_id),
+                        Some(&operation_id),
+                        true,
+                        &mut resources,
+                    )?;
+                    built = Some(event.clone());
+                    Ok(event)
+                };
+                let (evaluation, event) = evaluate(
+                    &mut self.tool_boundary,
+                    &self.request,
+                    &operation_id,
+                    &definition,
+                    &call,
+                    now,
+                    &mut build_event,
+                )
+                .map_err(RuntimeLoopError::Dependency)?;
+                if built.as_ref() != Some(&event) {
+                    return Err(RuntimeLoopError::InvalidBoundaryResult);
+                }
+                self.accept_committed_events(vec![event], resources)?;
+                permission_request_emitted = true;
+                evaluation
+            } else {
+                self.tool_boundary
+                    .evaluate(&self.request, &operation_id, &definition, &call, now)
+                    .map_err(RuntimeLoopError::Dependency)?
+            };
         self.process_permission(
             evaluation,
             definition,
@@ -1315,6 +1495,8 @@ where
             turn_id,
             operation_id,
             cancellation,
+            permission_request_emitted,
+            false,
             false,
             now,
         )
@@ -1329,7 +1511,9 @@ where
         turn_id: RuntimeTurnId,
         operation_id: RuntimeOperationId,
         cancellation: Option<&dyn ModelCancellationProbe>,
-        request_already_emitted: bool,
+        permission_request_emitted: bool,
+        permission_decision_emitted: bool,
+        resolving_existing_request: bool,
         now_epoch_ms: u64,
     ) -> Result<(), RuntimeLoopError> {
         if !valid_permission_evaluation(&evaluation, now_epoch_ms) {
@@ -1343,7 +1527,7 @@ where
             &call,
             &evaluation,
         )?;
-        if !request_already_emitted {
+        if !permission_request_emitted {
             self.emit(
                 RuntimeEventKind::PermissionRequested {
                     approval_id: challenge.approval_id.clone(),
@@ -1357,7 +1541,7 @@ where
         }
         match &evaluation {
             RuntimePermissionEvaluation::Ask { .. } => {
-                if request_already_emitted {
+                if resolving_existing_request || permission_decision_emitted {
                     return Err(RuntimeLoopError::InvalidBoundaryResult);
                 }
                 self.pending = Some(PendingApproval {
@@ -1378,16 +1562,18 @@ where
                 self.resources
                     .record_denial()
                     .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
-                self.emit(
-                    RuntimeEventKind::PermissionDecided {
-                        approval_id: approval_id.clone(),
-                        disposition: RuntimePermissionDisposition::Deny,
-                        grant_id: None,
-                        decision_sha256: decision_sha256.clone(),
-                    },
-                    Some(&turn_id),
-                    Some(&operation_id),
-                )?;
+                if !permission_decision_emitted {
+                    self.emit(
+                        RuntimeEventKind::PermissionDecided {
+                            approval_id: approval_id.clone(),
+                            disposition: RuntimePermissionDisposition::Deny,
+                            grant_id: None,
+                            decision_sha256: decision_sha256.clone(),
+                        },
+                        Some(&turn_id),
+                        Some(&operation_id),
+                    )?;
+                }
                 self.state
                     .transition(AgentStateKind::Declined)
                     .map_err(|_| RuntimeLoopError::State)?;
@@ -1401,32 +1587,114 @@ where
                 authority_sha256,
                 ..
             } => {
-                self.emit(
-                    RuntimeEventKind::PermissionDecided {
-                        approval_id: approval_id.clone(),
-                        disposition: RuntimePermissionDisposition::Allow,
-                        grant_id: Some(grant_id.clone()),
-                        decision_sha256: decision_sha256.clone(),
-                    },
-                    Some(&turn_id),
-                    Some(&operation_id),
-                )?;
+                if !permission_decision_emitted {
+                    self.emit(
+                        RuntimeEventKind::PermissionDecided {
+                            approval_id: approval_id.clone(),
+                            disposition: RuntimePermissionDisposition::Allow,
+                            grant_id: Some(grant_id.clone()),
+                            decision_sha256: decision_sha256.clone(),
+                        },
+                        Some(&turn_id),
+                        Some(&operation_id),
+                    )?;
+                }
                 self.state
                     .transition(AgentStateKind::Execution)
                     .map_err(|_| RuntimeLoopError::State)?;
-                self.emit(
-                    RuntimeEventKind::ToolStarted {
-                        tool_call_id: call.tool_call_id.clone(),
-                        authority_sha256: authority_sha256.clone(),
-                    },
-                    Some(&turn_id),
-                    Some(&operation_id),
-                )?;
-                let execution = self
-                    .tool_boundary
-                    .execute(&self.request, &evaluation, &definition, &call, cancellation)
+                if let Some(execute) = self.correctness.as_ref().map(|hooks| hooks.execute) {
+                    let started_at_epoch_ms = self
+                        .clock
+                        .now_epoch_ms()
+                        .map_err(RuntimeLoopError::Dependency)?;
+                    let request = self.request.clone();
+                    let correlation_id = self.correlation_id.clone();
+                    let prior = self.events.last().cloned();
+                    let mut resources = self.resources.clone();
+                    let started_event = prepare_runtime_event(
+                        &request,
+                        &correlation_id,
+                        prior.as_ref(),
+                        started_at_epoch_ms,
+                        RuntimeEventKind::ToolStarted {
+                            tool_call_id: call.tool_call_id.clone(),
+                            authority_sha256: authority_sha256.clone(),
+                        },
+                        Some(&turn_id),
+                        Some(&operation_id),
+                        true,
+                        &mut resources,
+                    )
                     .map_err(RuntimeLoopError::Dependency)?;
-                self.complete_tool(execution, definition, call, turn_id, operation_id)
+                    let mut built_terminal = None;
+                    let clock = &mut self.clock;
+                    let mut build_terminal = |execution: &RuntimeToolExecution| {
+                        if built_terminal.is_some()
+                            || !valid_tool_execution(execution, &definition, &call, &request)
+                        {
+                            return Err(RuntimePortFailure::Invalid);
+                        }
+                        let terminal_at_epoch_ms = clock.now_epoch_ms()?;
+                        let kind = runtime_tool_terminal_event(execution, &call)?;
+                        let event = prepare_runtime_event(
+                            &request,
+                            &correlation_id,
+                            Some(&started_event),
+                            terminal_at_epoch_ms,
+                            kind,
+                            Some(&turn_id),
+                            Some(&operation_id),
+                            true,
+                            &mut resources,
+                        )?;
+                        built_terminal = Some(event.clone());
+                        Ok(event)
+                    };
+                    let commit = execute(
+                        &mut self.tool_boundary,
+                        &self.request,
+                        &evaluation,
+                        &definition,
+                        &call,
+                        cancellation,
+                        started_event.clone(),
+                        &mut build_terminal,
+                    )
+                    .map_err(RuntimeLoopError::Dependency)?;
+                    if commit.events
+                        != [
+                            started_event,
+                            built_terminal
+                                .clone()
+                                .ok_or(RuntimeLoopError::InvalidBoundaryResult)?,
+                        ]
+                    {
+                        return Err(RuntimeLoopError::InvalidBoundaryResult);
+                    }
+                    self.accept_committed_events(commit.events, resources)?;
+                    self.complete_tool(
+                        commit.execution,
+                        definition,
+                        call,
+                        turn_id,
+                        operation_id,
+                        true,
+                    )
+                } else {
+                    self.emit(
+                        RuntimeEventKind::ToolStarted {
+                            tool_call_id: call.tool_call_id.clone(),
+                            authority_sha256: authority_sha256.clone(),
+                        },
+                        Some(&turn_id),
+                        Some(&operation_id),
+                    )?;
+                    let execution = self
+                        .tool_boundary
+                        .execute(&self.request, &evaluation, &definition, &call, cancellation)
+                        .map_err(RuntimeLoopError::Dependency)?;
+                    self.complete_tool(execution, definition, call, turn_id, operation_id, false)
+                }
             }
         }
     }
@@ -1442,17 +1710,87 @@ where
             .now_epoch_ms()
             .map_err(RuntimeLoopError::Dependency)?;
         verify_runtime_approval_response(&pending.challenge, response, now)?;
-        let evaluation = self
-            .tool_boundary
-            .resolve(
+        let mut permission_decision_emitted = false;
+        let evaluation = if let Some(resolve) = self.correctness.as_ref().map(|hooks| hooks.resolve)
+        {
+            let request = self.request.clone();
+            let correlation_id = self.correlation_id.clone();
+            let prior = self.events.last().cloned();
+            let mut resources = self.resources.clone();
+            let mut built = None;
+            let mut build_event = |evaluation: &RuntimePermissionEvaluation| {
+                if built.is_some() {
+                    return Err(RuntimePortFailure::Invalid);
+                }
+                let kind = match evaluation {
+                    RuntimePermissionEvaluation::Allow {
+                        approval_id,
+                        grant_id,
+                        decision_sha256,
+                        ..
+                    } => RuntimeEventKind::PermissionDecided {
+                        approval_id: approval_id.clone(),
+                        disposition: RuntimePermissionDisposition::Allow,
+                        grant_id: Some(grant_id.clone()),
+                        decision_sha256: decision_sha256.clone(),
+                    },
+                    RuntimePermissionEvaluation::Deny {
+                        approval_id,
+                        decision_sha256,
+                        ..
+                    } => RuntimeEventKind::PermissionDecided {
+                        approval_id: approval_id.clone(),
+                        disposition: RuntimePermissionDisposition::Deny,
+                        grant_id: None,
+                        decision_sha256: decision_sha256.clone(),
+                    },
+                    RuntimePermissionEvaluation::Ask { .. } => {
+                        return Err(RuntimePortFailure::Invalid);
+                    }
+                };
+                let event = prepare_runtime_event(
+                    &request,
+                    &correlation_id,
+                    prior.as_ref(),
+                    now,
+                    kind,
+                    Some(&pending.turn_id),
+                    Some(&pending.operation_id),
+                    true,
+                    &mut resources,
+                )?;
+                built = Some(event.clone());
+                Ok(event)
+            };
+            let (evaluation, event) = resolve(
+                &mut self.tool_boundary,
                 &self.request,
                 &pending.challenge,
                 response,
                 &pending.definition,
                 &pending.call,
                 now,
+                &mut build_event,
             )
             .map_err(RuntimeLoopError::Dependency)?;
+            if built.as_ref() != Some(&event) {
+                return Err(RuntimeLoopError::InvalidBoundaryResult);
+            }
+            self.accept_committed_events(vec![event], resources)?;
+            permission_decision_emitted = true;
+            evaluation
+        } else {
+            self.tool_boundary
+                .resolve(
+                    &self.request,
+                    &pending.challenge,
+                    response,
+                    &pending.definition,
+                    &pending.call,
+                    now,
+                )
+                .map_err(RuntimeLoopError::Dependency)?
+        };
         let resolved_challenge = permission_challenge(
             &self.request,
             &pending.turn_id,
@@ -1488,6 +1826,8 @@ where
             pending.operation_id,
             cancellation,
             true,
+            permission_decision_emitted,
+            true,
             now,
         )
     }
@@ -1499,6 +1839,7 @@ where
         call: ToolCall,
         turn_id: RuntimeTurnId,
         operation_id: RuntimeOperationId,
+        terminal_event_emitted: bool,
     ) -> Result<(), RuntimeLoopError> {
         if !valid_tool_execution(&execution, &definition, &call, &self.request) {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
@@ -1520,15 +1861,17 @@ where
                         )?
                         .is_none();
                 }
-                self.emit(
-                    RuntimeEventKind::ToolCompleted {
-                        tool_call_id: call.tool_call_id,
-                        receipt_id: execution.receipt_id.clone(),
-                        result_sha256,
-                    },
-                    Some(&turn_id),
-                    Some(&operation_id),
-                )?;
+                if !terminal_event_emitted {
+                    self.emit(
+                        RuntimeEventKind::ToolCompleted {
+                            tool_call_id: call.tool_call_id,
+                            receipt_id: execution.receipt_id.clone(),
+                            result_sha256,
+                        },
+                        Some(&turn_id),
+                        Some(&operation_id),
+                    )?;
+                }
                 self.receipt_ids.push(execution.receipt_id);
                 for item in &execution.result.evidence {
                     if !self
@@ -1585,6 +1928,7 @@ where
                 operation_id,
                 AgentStateKind::Failed,
                 "runtime.tool.denied_after_launch",
+                terminal_event_emitted,
             ),
             OperationOutcome::Cancelled => self.finish_tool_non_success(
                 execution,
@@ -1593,6 +1937,7 @@ where
                 operation_id,
                 AgentStateKind::Cancelled,
                 "runtime.tool.cancelled",
+                terminal_event_emitted,
             ),
             OperationOutcome::TimedOut => self.finish_tool_non_success(
                 execution,
@@ -1601,6 +1946,7 @@ where
                 operation_id,
                 AgentStateKind::Exhausted,
                 "runtime.tool.timed_out",
+                terminal_event_emitted,
             ),
             OperationOutcome::Failed => self.finish_tool_non_success(
                 execution,
@@ -1609,6 +1955,7 @@ where
                 operation_id,
                 AgentStateKind::Failed,
                 "runtime.tool.failed",
+                terminal_event_emitted,
             ),
             OperationOutcome::Uncertain => self.finish_tool_non_success(
                 execution,
@@ -1617,6 +1964,7 @@ where
                 operation_id,
                 AgentStateKind::Uncertain,
                 "runtime.tool.uncertain",
+                terminal_event_emitted,
             ),
         }
     }
@@ -1695,17 +2043,60 @@ where
         );
         let mut artifacts = self.artifact_references.clone();
         artifacts.sort_by(|left, right| left.artifact_id.as_str().cmp(right.artifact_id.as_str()));
-        let publication = commit(
-            &mut self.tool_boundary,
-            RuntimeCheckpointCommit {
-                request: &self.request,
-                continuation: &continuation,
-                continuation_artifact: &continuation_artifact,
-                event_cursor: &event_cursor,
-                artifacts: &artifacts,
-            },
-        )
-        .map_err(RuntimeLoopError::Dependency)?;
+        let input = RuntimeCheckpointCommit {
+            request: &self.request,
+            continuation: &continuation,
+            continuation_artifact: &continuation_artifact,
+            event_cursor: &event_cursor,
+            artifacts: &artifacts,
+        };
+        let correctness_checkpoint = self.correctness.as_ref().map(|hooks| hooks.checkpoint);
+        let (publication, committed_event, committed_resources) = if let Some(checkpoint) =
+            correctness_checkpoint
+        {
+            let occurred_at_epoch_ms = self
+                .clock
+                .now_epoch_ms()
+                .map_err(RuntimeLoopError::Dependency)?;
+            let request = self.request.clone();
+            let correlation_id = self.correlation_id.clone();
+            let prior = self.events.last().cloned();
+            let mut resources = self.resources.clone();
+            let mut built = None;
+            let mut build_event = |publication: &RuntimeCheckpointPublication| {
+                if built.is_some() {
+                    return Err(RuntimePortFailure::Invalid);
+                }
+                let event = prepare_runtime_event(
+                    &request,
+                    &correlation_id,
+                    prior.as_ref(),
+                    occurred_at_epoch_ms,
+                    RuntimeEventKind::CheckpointCommitted {
+                        checkpoint_id: publication.checkpoint.checkpoint_id.clone(),
+                        checkpoint_sha256: publication.checkpoint.checkpoint_sha256.clone(),
+                    },
+                    None,
+                    None,
+                    true,
+                    &mut resources,
+                )?;
+                built = Some(event.clone());
+                Ok(event)
+            };
+            let (publication, event) = checkpoint(&mut self.tool_boundary, input, &mut build_event)
+                .map_err(RuntimeLoopError::Dependency)?;
+            if built.as_ref() != Some(&event) {
+                return Err(RuntimeLoopError::InvalidBoundaryResult);
+            }
+            (publication, Some(event), Some(resources))
+        } else {
+            (
+                commit(&mut self.tool_boundary, input).map_err(RuntimeLoopError::Dependency)?,
+                None,
+                None,
+            )
+        };
         validate_runtime_checkpoint_publication(
             &self.request,
             &continuation,
@@ -1714,14 +2105,18 @@ where
             &artifacts,
             &publication,
         )?;
-        self.emit(
-            RuntimeEventKind::CheckpointCommitted {
-                checkpoint_id: publication.checkpoint.checkpoint_id,
-                checkpoint_sha256: publication.checkpoint.checkpoint_sha256,
-            },
-            None,
-            None,
-        )?;
+        if let (Some(event), Some(resources)) = (committed_event, committed_resources) {
+            self.accept_committed_events(vec![event], resources)?;
+        } else {
+            self.emit(
+                RuntimeEventKind::CheckpointCommitted {
+                    checkpoint_id: publication.checkpoint.checkpoint_id,
+                    checkpoint_sha256: publication.checkpoint.checkpoint_sha256,
+                },
+                None,
+                None,
+            )?;
+        }
         Ok(())
     }
 
@@ -1824,16 +2219,19 @@ where
         operation_id: RuntimeOperationId,
         terminal: AgentStateKind,
         code: &str,
+        terminal_event_emitted: bool,
     ) -> Result<(), RuntimeLoopError> {
-        self.emit(
-            RuntimeEventKind::ToolFailed {
-                tool_call_id: call.tool_call_id,
-                receipt_id: Some(execution.receipt_id.clone()),
-                failure_code: code.to_owned(),
-            },
-            Some(&turn_id),
-            Some(&operation_id),
-        )?;
+        if !terminal_event_emitted {
+            self.emit(
+                RuntimeEventKind::ToolFailed {
+                    tool_call_id: call.tool_call_id,
+                    receipt_id: Some(execution.receipt_id.clone()),
+                    failure_code: code.to_owned(),
+                },
+                Some(&turn_id),
+                Some(&operation_id),
+            )?;
+        }
         self.receipt_ids.push(execution.receipt_id);
         self.transition_terminal(terminal)?;
         self.close_turn(&turn_id, execution.receipt_sha256)?;
@@ -2097,6 +2495,26 @@ where
         Ok(delivery)
     }
 
+    fn accept_committed_events(
+        &mut self,
+        events: Vec<RuntimeEvent>,
+        resources: RuntimeResourceLedger,
+    ) -> Result<(), RuntimeLoopError> {
+        if events.is_empty() {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
+        let mut sequence = RuntimeEventSequence::new();
+        for event in self.events.iter().chain(&events) {
+            sequence.push(event)?;
+        }
+        for event in &events {
+            self.publisher.publish(event.clone())?;
+        }
+        self.events.extend(events);
+        self.resources = resources;
+        Ok(())
+    }
+
     fn route_runtime_output(
         &mut self,
         payload: agentmage_kernel_contracts::ContractPayload,
@@ -2272,6 +2690,95 @@ fn load_runtime_checkpoint<T: RuntimeCheckpointPort>(
     port.load_runtime_checkpoint(request)
 }
 
+fn runtime_correctness_hooks<T: RuntimeCorrectnessTransactionPort>() -> RuntimeCorrectnessHooks<T> {
+    RuntimeCorrectnessHooks {
+        evaluate: evaluate_with_correctness_event::<T>,
+        resolve: resolve_with_correctness_event::<T>,
+        execute: execute_with_correctness_events::<T>,
+        checkpoint: commit_checkpoint_with_correctness_event::<T>,
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn evaluate_with_correctness_event<T: RuntimeCorrectnessTransactionPort>(
+    port: &mut T,
+    request: &RuntimeRunRequest,
+    operation_id: &RuntimeOperationId,
+    definition: &ToolDefinition,
+    call: &ToolCall,
+    now_epoch_ms: u64,
+    build_event: &mut dyn FnMut(
+        &RuntimePermissionEvaluation,
+    ) -> Result<RuntimeEvent, RuntimePortFailure>,
+) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
+    port.evaluate_with_correctness_event(
+        request,
+        operation_id,
+        definition,
+        call,
+        now_epoch_ms,
+        build_event,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn resolve_with_correctness_event<T: RuntimeCorrectnessTransactionPort>(
+    port: &mut T,
+    request: &RuntimeRunRequest,
+    challenge: &RuntimeApprovalChallenge,
+    response: &RuntimeApprovalResponse,
+    definition: &ToolDefinition,
+    call: &ToolCall,
+    now_epoch_ms: u64,
+    build_event: &mut dyn FnMut(
+        &RuntimePermissionEvaluation,
+    ) -> Result<RuntimeEvent, RuntimePortFailure>,
+) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
+    port.resolve_with_correctness_event(
+        request,
+        challenge,
+        response,
+        definition,
+        call,
+        now_epoch_ms,
+        build_event,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn execute_with_correctness_events<T: RuntimeCorrectnessTransactionPort>(
+    port: &mut T,
+    request: &RuntimeRunRequest,
+    evaluation: &RuntimePermissionEvaluation,
+    definition: &ToolDefinition,
+    call: &ToolCall,
+    cancellation: Option<&dyn ModelCancellationProbe>,
+    started_event: RuntimeEvent,
+    build_terminal_event: &mut dyn FnMut(
+        &RuntimeToolExecution,
+    ) -> Result<RuntimeEvent, RuntimePortFailure>,
+) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure> {
+    port.execute_with_correctness_events(
+        request,
+        evaluation,
+        definition,
+        call,
+        cancellation,
+        started_event,
+        build_terminal_event,
+    )
+}
+
+fn commit_checkpoint_with_correctness_event<T: RuntimeCorrectnessTransactionPort>(
+    port: &mut T,
+    input: RuntimeCheckpointCommit<'_>,
+    build_event: &mut dyn FnMut(
+        &RuntimeCheckpointPublication,
+    ) -> Result<RuntimeEvent, RuntimePortFailure>,
+) -> Result<(RuntimeCheckpointPublication, RuntimeEvent), RuntimePortFailure> {
+    port.commit_checkpoint_with_correctness_event(input, build_event)
+}
+
 fn runtime_payload_reference_from_artifact(
     reference: &RuntimeArtifactRef,
 ) -> Result<RuntimePayloadReference, RuntimeLoopError> {
@@ -2306,6 +2813,66 @@ fn runtime_event_cursor(event: &RuntimeEvent) -> RuntimeEventCursor {
         sequence: event.sequence,
         event_sha256: event.event_sha256.clone(),
     }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn prepare_runtime_event(
+    request: &RuntimeRunRequest,
+    correlation_id: &CorrelationId,
+    prior: Option<&RuntimeEvent>,
+    occurred_at_epoch_ms: u64,
+    kind: RuntimeEventKind,
+    turn_id: Option<&RuntimeTurnId>,
+    operation_id: Option<&RuntimeOperationId>,
+    journaled: bool,
+    resources: &mut RuntimeResourceLedger,
+) -> Result<RuntimeEvent, RuntimePortFailure> {
+    let sequence = prior.map_or(0, |event| event.sequence.saturating_add(1));
+    if sequence >= u64::from(request.limits.max_events)
+        || occurred_at_epoch_ms == 0
+        || prior.is_some_and(|event| occurred_at_epoch_ms < event.occurred_at_epoch_ms)
+    {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    let event = seal_runtime_event(RuntimeEvent {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        event_id: RuntimeEventId::from_raw(derived_id("event", request.run_id.as_str(), sequence)),
+        run_id: request.run_id.clone(),
+        session_id: request.session_id.clone(),
+        task_id: request.task.task_id.clone(),
+        turn_id: turn_id.cloned(),
+        operation_id: operation_id.cloned(),
+        correlation_id: correlation_id.clone(),
+        causation_event_id: prior.map(|event| event.event_id.clone()),
+        sequence,
+        occurred_at_epoch_ms,
+        sensitivity: runtime_sensitivity(request),
+        retention: RuntimeEventRetention {
+            kind: if journaled {
+                RuntimeEventRetentionKind::Session
+            } else {
+                RuntimeEventRetentionKind::Ephemeral
+            },
+            expires_at_epoch_ms: None,
+        },
+        persistence: runtime_event_persistence(&kind),
+        policy_id: request.policy_id.clone(),
+        payload_reference: None,
+        kind,
+        previous_event_sha256: prior.map_or_else(
+            || ZERO_SHA256.to_owned(),
+            |event| event.event_sha256.clone(),
+        ),
+        event_sha256: ZERO_SHA256.to_owned(),
+    })
+    .map_err(|_| RuntimePortFailure::Invalid)?;
+    let event_bytes = to_canonical_json(&event)
+        .map_err(|_| RuntimePortFailure::Invalid)?
+        .len();
+    resources
+        .admit_event(u64::try_from(event_bytes).map_err(|_| RuntimePortFailure::Invalid)?)
+        .map_err(|_| RuntimePortFailure::ResourceExhausted)?;
+    Ok(event)
 }
 
 fn validate_runtime_checkpoint_publication(
@@ -2739,6 +3306,36 @@ fn valid_tool_execution(
                 && evidence.observed_revision.as_deref()
                     == Some(request.repository_snapshot_id.as_str())
         })
+}
+
+fn runtime_tool_terminal_event(
+    execution: &RuntimeToolExecution,
+    call: &ToolCall,
+) -> Result<RuntimeEventKind, RuntimePortFailure> {
+    if execution.result.tool_call_id != call.tool_call_id {
+        return Err(RuntimePortFailure::Invalid);
+    }
+    match execution.result.outcome {
+        OperationOutcome::Succeeded => Ok(RuntimeEventKind::ToolCompleted {
+            tool_call_id: call.tool_call_id.clone(),
+            receipt_id: execution.receipt_id.clone(),
+            result_sha256: contract_sha256(&execution.result)
+                .map_err(|_| RuntimePortFailure::Invalid)?,
+        }),
+        outcome => Ok(RuntimeEventKind::ToolFailed {
+            tool_call_id: call.tool_call_id.clone(),
+            receipt_id: Some(execution.receipt_id.clone()),
+            failure_code: match outcome {
+                OperationOutcome::Denied => "runtime.tool.denied_after_launch",
+                OperationOutcome::Cancelled => "runtime.tool.cancelled",
+                OperationOutcome::TimedOut => "runtime.tool.timed_out",
+                OperationOutcome::Failed => "runtime.tool.failed",
+                OperationOutcome::Uncertain => "runtime.tool.uncertain",
+                OperationOutcome::Succeeded => return Err(RuntimePortFailure::Invalid),
+            }
+            .to_owned(),
+        }),
+    }
 }
 
 fn catalog_allowed_for_mode(mode: RuntimeSessionMode, registry: &ToolRegistry) -> bool {

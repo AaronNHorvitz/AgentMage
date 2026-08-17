@@ -32,7 +32,9 @@ use agentmage_kernel_engine::{
         render_filesystem_preview, verify_filesystem_receipts,
     },
     grants::SessionReadGrantRequest,
-    operational_store::DurableAuthorityError,
+    operational_store::{
+        DurableAuthorityError, PendingRuntimeEffectCommit, PendingSpecializedEffectCommit,
+    },
     policy::PolicyEvaluationContext,
     propagation::CancellationToken,
     repository_inspection::{
@@ -50,8 +52,9 @@ use agentmage_kernel_engine::{
     runtime_journal::RuntimeJournalError,
     runtime_loop::{
         RuntimeArtifactPort, RuntimeCheckpointCommit, RuntimeCheckpointPort,
-        RuntimeCheckpointPublication, RuntimeJournalPort, RuntimePermissionEvaluation,
-        RuntimePortFailure, RuntimeResumeSnapshot, RuntimeToolBoundary, RuntimeToolExecution,
+        RuntimeCheckpointPublication, RuntimeCorrectnessTransactionPort, RuntimeJournalPort,
+        RuntimePermissionEvaluation, RuntimePortFailure, RuntimeResumeSnapshot,
+        RuntimeToolBoundary, RuntimeToolCorrectnessCommit, RuntimeToolExecution,
     },
     validation_result::{
         ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationStatus,
@@ -78,7 +81,8 @@ use crate::{
     },
     coding_authority::{
         ApprovedCodingGrant, ApprovedCodingGrantRequest, CodingApprovalRequest,
-        CodingRuntimePolicy, derive_approved_coding_grant, render_coding_approval_request,
+        CodingRuntimePolicy, derive_approved_coding_grant, derive_approved_coding_grant_with_event,
+        render_coding_approval_request,
     },
     coding_dispatch::PreparedNativeCodingCall,
     linux_coding::{
@@ -180,6 +184,97 @@ impl PendingCodingAuthority {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+fn build_pending_coding_authority(
+    parent: &agentmage_kernel_contracts::CapabilityGrant,
+    registry: &agentmage_kernel_engine::tooling::ToolRegistry,
+    prepared: &PreparedLinuxCodingOperation<'_>,
+    call: &ToolCall,
+    operation_id: &RuntimeOperationId,
+    approval_id: ApprovalId,
+    proposed_grant_id: GrantId,
+    plan_id: String,
+    now_epoch_ms: u64,
+    expires_at_epoch_ms: u64,
+) -> Result<PendingCodingAuthority, RuntimePortFailure> {
+    match prepared.write_draft() {
+        Some(LinuxCodingWriteDraft::StructuredPatch(plan)) => {
+            let LinuxCodingTargetBinding::ExistingFile { target, .. } = prepared.binding() else {
+                return Err(RuntimePortFailure::Invalid);
+            };
+            let summary = plan.summary();
+            let change_set = build_structured_shadow_change_set(
+                parent,
+                StructuredShadowChangeSetRequest {
+                    change_set_id: plan_id,
+                    observed_at_epoch_ms: now_epoch_ms,
+                    intent_sha256: summary.intent_sha256.clone(),
+                    change_plan_sha256: summary.change_plan_sha256.clone(),
+                    scope: WriteChangeScope::Minimal,
+                    expanded_scope_approval_sha256: None,
+                    changes: vec![BoundStructuredChange {
+                        operation_id: operation_id.as_str().to_owned(),
+                        target: target.clone(),
+                        plan: plan.clone(),
+                    }],
+                    review: coding_write_review(true, prepared.operation().plan_sha256()),
+                    permitted_verification: coding_write_verification(),
+                },
+            )
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+            let preview =
+                render_write_preview(&change_set).map_err(|_| RuntimePortFailure::Invalid)?;
+            Ok(PendingCodingAuthority::StructuredWrite {
+                approval_id,
+                proposed_grant_id,
+                parent_grant_id: parent.grant_id.clone(),
+                preview: Box::new(preview),
+                change_set: Box::new(change_set),
+            })
+        }
+        Some(LinuxCodingWriteDraft::ControlledCreate(draft)) => {
+            let plan = build_filesystem_plan(
+                parent,
+                FilesystemPlanRequest {
+                    plan_id,
+                    observed_at_epoch_ms: now_epoch_ms,
+                    operations: vec![draft.clone()],
+                    review: coding_write_review(false, prepared.operation().plan_sha256()),
+                    permitted_verification: coding_write_verification(),
+                },
+            )
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+            let preview =
+                render_filesystem_preview(&plan).map_err(|_| RuntimePortFailure::Invalid)?;
+            Ok(PendingCodingAuthority::FilesystemWrite {
+                approval_id,
+                proposed_grant_id,
+                parent_grant_id: parent.grant_id.clone(),
+                preview: Box::new(preview),
+                plan: Box::new(plan),
+            })
+        }
+        None => {
+            let approval = render_coding_approval_request(
+                registry,
+                CodingApprovalRequest {
+                    parent,
+                    approval_id,
+                    proposed_grant_id,
+                    call,
+                    operation: prepared.operation().operation(),
+                    targets: operation_targets(prepared.binding())?,
+                    operation_plan_sha256: prepared.operation().plan_sha256(),
+                    issued_at_epoch_ms: now_epoch_ms,
+                    expires_at_epoch_ms,
+                },
+            )
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+            Ok(PendingCodingAuthority::Generic(Box::new(approval)))
+        }
+    }
+}
+
 struct PendingCodingOperation<'workspace> {
     operation_id: RuntimeOperationId,
     operation: GrantOperation,
@@ -217,6 +312,15 @@ struct IssuedCodingOperation<'workspace> {
     prepared: PreparedLinuxCodingOperation<'workspace>,
     resolved_at_epoch_ms: u64,
 }
+
+struct RuntimeEffectEventContext<'builder> {
+    started_event: RuntimeEvent,
+    build_terminal_event:
+        &'builder mut dyn FnMut(&RuntimeToolExecution) -> Result<RuntimeEvent, RuntimePortFailure>,
+}
+
+type PermissionEventBuilder<'a> =
+    dyn FnMut(&RuntimePermissionEvaluation) -> Result<RuntimeEvent, RuntimePortFailure> + 'a;
 
 impl IssuedCodingOperation<'_> {
     fn approval_id(&self) -> &ApprovalId {
@@ -394,7 +498,8 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         now_epoch_ms: u64,
-    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        mut build_event: Option<&mut PermissionEventBuilder<'_>>,
+    ) -> Result<(RuntimePermissionEvaluation, Option<RuntimeEvent>), RuntimePortFailure> {
         if self.pending.len() >= MAX_PENDING_OPERATIONS
             || !self.request_matches(request)
             || !self.definition_matches(definition, call)
@@ -426,110 +531,67 @@ where
         )?;
         let parent_grant_id = GrantId::from_raw(self.next_id("grant-parent")?);
         let parent_nonce = GrantNonce::from_raw(self.next_id("nonce-parent")?);
-        let parent = self
-            .authority
-            .authority_mut()
-            .issue_session_read(SessionReadGrantRequest {
-                grant_id: parent_grant_id,
-                actor_id: self.actor_id.clone(),
-                session_id: self.session_id.clone(),
-                task_id: request.task.task_id.clone(),
-                targets: self.policy.parent_targets().to_vec(),
-                excluded_targets: self.policy.excluded_targets().to_vec(),
-                sensitivity: self.sensitivity,
-                issued_at_epoch_ms: now_epoch_ms,
-                expires_at_epoch_ms,
-                nonce: parent_nonce,
-                maximum_derived_operations: 1,
-                preview_sha256: parent_preview_sha256,
-                policy_sha256: self.policy.engine().policy_sha256().to_owned(),
-            })
-            .map_err(|_| RuntimePortFailure::Invalid)?;
         let approval_id = ApprovalId::from_raw(self.next_id("approval")?);
         let proposed_grant_id = GrantId::from_raw(self.next_id("grant-operation")?);
         let plan_id = self.next_id("change-plan")?;
-        let authority = match prepared.write_draft() {
-            Some(LinuxCodingWriteDraft::StructuredPatch(plan)) => {
-                let LinuxCodingTargetBinding::ExistingFile { target, .. } = prepared.binding()
-                else {
-                    return Err(RuntimePortFailure::Invalid);
-                };
-                let summary = plan.summary();
-                let change_set = build_structured_shadow_change_set(
-                    &parent,
-                    StructuredShadowChangeSetRequest {
-                        change_set_id: plan_id,
-                        observed_at_epoch_ms: now_epoch_ms,
-                        intent_sha256: summary.intent_sha256.clone(),
-                        change_plan_sha256: summary.change_plan_sha256.clone(),
-                        scope: WriteChangeScope::Minimal,
-                        expanded_scope_approval_sha256: None,
-                        changes: vec![BoundStructuredChange {
-                            operation_id: operation_id.as_str().to_owned(),
-                            target: target.clone(),
-                            plan: plan.clone(),
-                        }],
-                        review: coding_write_review(true, prepared.operation().plan_sha256()),
-                        permitted_verification: coding_write_verification(),
-                    },
-                )
-                .map_err(|_| RuntimePortFailure::Invalid)?;
-                let preview =
-                    render_write_preview(&change_set).map_err(|_| RuntimePortFailure::Invalid)?;
-                PendingCodingAuthority::StructuredWrite {
-                    approval_id,
-                    proposed_grant_id,
-                    parent_grant_id: parent.grant_id.clone(),
-                    preview: Box::new(preview),
-                    change_set: Box::new(change_set),
-                }
-            }
-            Some(LinuxCodingWriteDraft::ControlledCreate(draft)) => {
-                let plan = build_filesystem_plan(
-                    &parent,
-                    FilesystemPlanRequest {
-                        plan_id,
-                        observed_at_epoch_ms: now_epoch_ms,
-                        operations: vec![draft.clone()],
-                        review: coding_write_review(false, prepared.operation().plan_sha256()),
-                        permitted_verification: coding_write_verification(),
-                    },
-                )
-                .map_err(|_| RuntimePortFailure::Invalid)?;
-                let preview =
-                    render_filesystem_preview(&plan).map_err(|_| RuntimePortFailure::Invalid)?;
-                PendingCodingAuthority::FilesystemWrite {
-                    approval_id,
-                    proposed_grant_id,
-                    parent_grant_id: parent.grant_id.clone(),
-                    preview: Box::new(preview),
-                    plan: Box::new(plan),
-                }
-            }
-            None => {
-                let approval = render_coding_approval_request(
-                    self.workspace.profile().registry(),
-                    CodingApprovalRequest {
-                        parent: &parent,
-                        approval_id,
-                        proposed_grant_id,
-                        call,
-                        operation: prepared.operation().operation(),
-                        targets: operation_targets(prepared.binding())?,
-                        operation_plan_sha256: prepared.operation().plan_sha256(),
-                        issued_at_epoch_ms: now_epoch_ms,
-                        expires_at_epoch_ms,
-                    },
-                )
-                .map_err(|_| RuntimePortFailure::Invalid)?;
-                PendingCodingAuthority::Generic(Box::new(approval))
-            }
-        };
-        let evaluation = RuntimePermissionEvaluation::Ask {
-            approval_id: authority.approval_id().clone(),
-            grant_id: authority.proposed_grant_id().clone(),
-            preview_sha256: authority.preview_sha256().to_owned(),
+        let grant_request = SessionReadGrantRequest {
+            grant_id: parent_grant_id,
+            actor_id: self.actor_id.clone(),
+            session_id: self.session_id.clone(),
+            task_id: request.task.task_id.clone(),
+            targets: self.policy.parent_targets().to_vec(),
+            excluded_targets: self.policy.excluded_targets().to_vec(),
+            sensitivity: self.sensitivity,
+            issued_at_epoch_ms: now_epoch_ms,
             expires_at_epoch_ms,
+            nonce: parent_nonce,
+            maximum_derived_operations: 1,
+            preview_sha256: parent_preview_sha256,
+            policy_sha256: self.policy.engine().policy_sha256().to_owned(),
+        };
+        let registry = self.workspace.profile().registry();
+        let build_authority = |parent: &agentmage_kernel_contracts::CapabilityGrant| {
+            let authority = build_pending_coding_authority(
+                parent,
+                registry,
+                &prepared,
+                call,
+                operation_id,
+                approval_id.clone(),
+                proposed_grant_id.clone(),
+                plan_id.clone(),
+                now_epoch_ms,
+                expires_at_epoch_ms,
+            )?;
+            let evaluation = RuntimePermissionEvaluation::Ask {
+                approval_id: authority.approval_id().clone(),
+                grant_id: authority.proposed_grant_id().clone(),
+                preview_sha256: authority.preview_sha256().to_owned(),
+                expires_at_epoch_ms,
+            };
+            Ok::<_, RuntimePortFailure>((authority, evaluation))
+        };
+        let (authority, evaluation, committed_event) = if let Some(builder) = build_event.as_mut() {
+            let (_, (authority, evaluation), event) = self
+                .authority
+                .authority_mut()
+                .issue_session_read_with_runtime_event(grant_request, |parent| {
+                    let (authority, evaluation) =
+                        build_authority(parent).map_err(|_| RuntimeJournalError::InvalidEvent)?;
+                    let event =
+                        builder(&evaluation).map_err(|_| RuntimeJournalError::InvalidEvent)?;
+                    Ok(((authority, evaluation), event))
+                })
+                .map_err(map_journal_failure)?;
+            (authority, evaluation, Some(event))
+        } else {
+            let parent = self
+                .authority
+                .authority_mut()
+                .issue_session_read(grant_request)
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+            let (authority, evaluation) = build_authority(&parent)?;
+            (authority, evaluation, None)
         };
         let key = authority.approval_id().as_str().to_owned();
         if self
@@ -552,9 +614,10 @@ where
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
-        Ok(evaluation)
+        Ok((evaluation, committed_event))
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn resolve_call(
         &mut self,
         request: &RuntimeRunRequest,
@@ -563,7 +626,8 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         now_epoch_ms: u64,
-    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        mut build_event: Option<&mut PermissionEventBuilder<'_>>,
+    ) -> Result<(RuntimePermissionEvaluation, Option<RuntimeEvent>), RuntimePortFailure> {
         if !self.request_matches(request) || !self.definition_matches(definition, call) {
             return Err(RuntimePortFailure::Invalid);
         }
@@ -580,14 +644,25 @@ where
                 .pending
                 .remove(key)
                 .ok_or(RuntimePortFailure::Invalid)?;
-            return Ok(RuntimePermissionEvaluation::Deny {
+            let evaluation = RuntimePermissionEvaluation::Deny {
                 approval_id: pending.authority.approval_id().clone(),
                 grant_id: pending.authority.proposed_grant_id().clone(),
                 preview_sha256: pending.authority.preview_sha256().to_owned(),
                 expires_at_epoch_ms: pending.expires_at_epoch_ms,
                 decision_sha256,
                 reason_code: "runtime.coding.user-denied".to_owned(),
-            });
+            };
+            let event = if let Some(builder) = build_event.as_mut() {
+                let event = builder(&evaluation)?;
+                self.authority
+                    .authority_mut()
+                    .record_runtime_event_with_authority_snapshot(event.clone())
+                    .map_err(map_journal_failure)?;
+                Some(event)
+            } else {
+                None
+            };
+            return Ok((evaluation, event));
         }
 
         pending
@@ -602,9 +677,9 @@ where
             .remove(key)
             .ok_or(RuntimePortFailure::Invalid)?;
         let operation_nonce = GrantNonce::from_raw(self.next_id("nonce-operation")?);
-        let issued_authority = match pending.authority {
+        let (issued_authority, committed_event) = match pending.authority {
             PendingCodingAuthority::Generic(approval) => {
-                let approved = derive_approved_coding_grant(ApprovedCodingGrantRequest {
+                let grant_request = ApprovedCodingGrantRequest {
                     authority: self.authority.authority_mut(),
                     registry: self.workspace.profile().registry(),
                     policy: self.policy.engine(),
@@ -613,12 +688,26 @@ where
                     response,
                     nonce: operation_nonce,
                     now_epoch_ms,
-                })
-                .map_err(|_| RuntimePortFailure::Invalid)?;
-                IssuedCodingAuthority::Generic {
-                    approval,
-                    approved: Box::new(approved),
-                }
+                };
+                let (approved, event) = if let Some(builder) = build_event.as_mut() {
+                    let (approved, event) =
+                        derive_approved_coding_grant_with_event(grant_request, *builder)
+                            .map_err(|_| RuntimePortFailure::Invalid)?;
+                    (approved, Some(event))
+                } else {
+                    (
+                        derive_approved_coding_grant(grant_request)
+                            .map_err(|_| RuntimePortFailure::Invalid)?,
+                        None,
+                    )
+                };
+                (
+                    IssuedCodingAuthority::Generic {
+                        approval,
+                        approved: Box::new(approved),
+                    },
+                    event,
+                )
             }
             PendingCodingAuthority::StructuredWrite {
                 approval_id,
@@ -627,40 +716,69 @@ where
                 preview,
                 change_set,
             } => {
-                let approval = self
-                    .authority
-                    .authority_mut()
-                    .issue_write_approval(
-                        &change_set,
-                        &preview,
-                        &WriteApprovalDecision {
-                            approval_id: approval_id.clone(),
-                            approved_change_set_sha256: change_set.change_set_sha256().to_owned(),
-                            approved_preview_sha256: preview.preview_sha256.clone(),
-                            approved_at_epoch_ms: now_epoch_ms,
-                            expires_at_epoch_ms: pending.expires_at_epoch_ms,
-                            permitted_verification: change_set.permitted_verification().to_vec(),
-                            user_confirmed: true,
-                        },
-                        WriteGrantRequest {
-                            parent_grant_id,
-                            grant_id: proposed_grant_id,
-                            action_id: call.action_id.clone(),
-                            action_kind: ActionKind::DeterministicTool,
-                            tool_id: call.tool_id.clone(),
-                            tool_version: call.tool_version.clone(),
-                            nonce: operation_nonce,
-                            policy_sha256: self.policy.engine().policy_sha256().to_owned(),
-                        },
+                let decision = WriteApprovalDecision {
+                    approval_id: approval_id.clone(),
+                    approved_change_set_sha256: change_set.change_set_sha256().to_owned(),
+                    approved_preview_sha256: preview.preview_sha256.clone(),
+                    approved_at_epoch_ms: now_epoch_ms,
+                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                    permitted_verification: change_set.permitted_verification().to_vec(),
+                    user_confirmed: true,
+                };
+                let request = WriteGrantRequest {
+                    parent_grant_id,
+                    grant_id: proposed_grant_id,
+                    action_id: call.action_id.clone(),
+                    action_kind: ActionKind::DeterministicTool,
+                    tool_id: call.tool_id.clone(),
+                    tool_version: call.tool_version.clone(),
+                    nonce: operation_nonce,
+                    policy_sha256: self.policy.engine().policy_sha256().to_owned(),
+                };
+                let (approval, event) = if let Some(builder) = build_event.as_mut() {
+                    let (approval, _, event) = self
+                        .authority
+                        .authority_mut()
+                        .issue_write_approval_with_runtime_event(
+                            &change_set,
+                            &preview,
+                            &decision,
+                            request,
+                            |approval| {
+                                let evaluation = RuntimePermissionEvaluation::Allow {
+                                    approval_id: approval_id.clone(),
+                                    preview_sha256: preview.preview_sha256.clone(),
+                                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                                    grant_id: approval.grant.grant_id.clone(),
+                                    decision_sha256: decision_sha256.clone(),
+                                    authority_sha256: approval.binding_sha256.clone(),
+                                };
+                                let event = builder(&evaluation)
+                                    .map_err(|_| RuntimeJournalError::InvalidEvent)?;
+                                Ok(((), event))
+                            },
+                        )
+                        .map_err(map_journal_failure)?;
+                    (approval, Some(event))
+                } else {
+                    (
+                        self.authority
+                            .authority_mut()
+                            .issue_write_approval(&change_set, &preview, &decision, request)
+                            .map_err(|_| RuntimePortFailure::Unavailable)?,
+                        None,
                     )
-                    .map_err(|_| RuntimePortFailure::Unavailable)?;
-                IssuedCodingAuthority::StructuredWrite {
-                    approval_id,
-                    preview_sha256: preview.preview_sha256,
-                    decision_sha256: decision_sha256.clone(),
-                    approval: Box::new(approval),
-                    change_set,
-                }
+                };
+                (
+                    IssuedCodingAuthority::StructuredWrite {
+                        approval_id,
+                        preview_sha256: preview.preview_sha256,
+                        decision_sha256: decision_sha256.clone(),
+                        approval: Box::new(approval),
+                        change_set,
+                    },
+                    event,
+                )
             }
             PendingCodingAuthority::FilesystemWrite {
                 approval_id,
@@ -669,41 +787,70 @@ where
                 preview,
                 plan,
             } => {
-                let approval = self
-                    .authority
-                    .authority_mut()
-                    .issue_filesystem_approval(
-                        &plan,
-                        &preview,
-                        &FilesystemApprovalDecision {
-                            approval_id: approval_id.clone(),
-                            approved_plan_sha256: plan.plan_sha256().to_owned(),
-                            approved_preview_sha256: preview.preview_sha256.clone(),
-                            approved_at_epoch_ms: now_epoch_ms,
-                            expires_at_epoch_ms: pending.expires_at_epoch_ms,
-                            permitted_verification: plan.permitted_verification().to_vec(),
-                            user_confirmed: true,
-                            high_risk_delete_confirmed: false,
-                        },
-                        FilesystemGrantRequest {
-                            parent_grant_id,
-                            grant_id: proposed_grant_id,
-                            action_id: call.action_id.clone(),
-                            action_kind: ActionKind::DeterministicTool,
-                            tool_id: call.tool_id.clone(),
-                            tool_version: call.tool_version.clone(),
-                            nonce: operation_nonce,
-                            policy_sha256: self.policy.engine().policy_sha256().to_owned(),
-                        },
+                let decision = FilesystemApprovalDecision {
+                    approval_id: approval_id.clone(),
+                    approved_plan_sha256: plan.plan_sha256().to_owned(),
+                    approved_preview_sha256: preview.preview_sha256.clone(),
+                    approved_at_epoch_ms: now_epoch_ms,
+                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                    permitted_verification: plan.permitted_verification().to_vec(),
+                    user_confirmed: true,
+                    high_risk_delete_confirmed: false,
+                };
+                let request = FilesystemGrantRequest {
+                    parent_grant_id,
+                    grant_id: proposed_grant_id,
+                    action_id: call.action_id.clone(),
+                    action_kind: ActionKind::DeterministicTool,
+                    tool_id: call.tool_id.clone(),
+                    tool_version: call.tool_version.clone(),
+                    nonce: operation_nonce,
+                    policy_sha256: self.policy.engine().policy_sha256().to_owned(),
+                };
+                let (approval, event) = if let Some(builder) = build_event.as_mut() {
+                    let (approval, _, event) = self
+                        .authority
+                        .authority_mut()
+                        .issue_filesystem_approval_with_runtime_event(
+                            &plan,
+                            &preview,
+                            &decision,
+                            request,
+                            |approval| {
+                                let evaluation = RuntimePermissionEvaluation::Allow {
+                                    approval_id: approval_id.clone(),
+                                    preview_sha256: preview.preview_sha256.clone(),
+                                    expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                                    grant_id: approval.grant.grant_id.clone(),
+                                    decision_sha256: decision_sha256.clone(),
+                                    authority_sha256: approval.binding_sha256.clone(),
+                                };
+                                let event = builder(&evaluation)
+                                    .map_err(|_| RuntimeJournalError::InvalidEvent)?;
+                                Ok(((), event))
+                            },
+                        )
+                        .map_err(map_journal_failure)?;
+                    (approval, Some(event))
+                } else {
+                    (
+                        self.authority
+                            .authority_mut()
+                            .issue_filesystem_approval(&plan, &preview, &decision, request)
+                            .map_err(|_| RuntimePortFailure::Unavailable)?,
+                        None,
                     )
-                    .map_err(|_| RuntimePortFailure::Unavailable)?;
-                IssuedCodingAuthority::FilesystemWrite {
-                    approval_id,
-                    preview_sha256: preview.preview_sha256,
-                    decision_sha256: decision_sha256.clone(),
-                    approval: Box::new(approval),
-                    plan,
-                }
+                };
+                (
+                    IssuedCodingAuthority::FilesystemWrite {
+                        approval_id,
+                        preview_sha256: preview.preview_sha256,
+                        decision_sha256: decision_sha256.clone(),
+                        approval: Box::new(approval),
+                        plan,
+                    },
+                    event,
+                )
             }
         };
         let issued = IssuedCodingOperation {
@@ -728,7 +875,7 @@ where
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
-        Ok(evaluation)
+        Ok((evaluation, committed_event))
     }
 
     fn execute_call(
@@ -738,7 +885,8 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
-    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let RuntimePermissionEvaluation::Allow {
             approval_id,
             preview_sha256,
@@ -791,23 +939,33 @@ where
         let issued = self.issued.remove(key).ok_or(RuntimePortFailure::Invalid)?;
         match issued.prepared.operation().prepared() {
             PreparedNativeCodingCall::ReadOnly { .. } => {
-                self.execute_prepared_read(request, definition, call, issued)
+                self.execute_prepared_read(request, definition, call, issued, event_context)
             }
             PreparedNativeCodingCall::GitInspection { .. } => {
-                self.execute_prepared_git(request, definition, call, issued)
+                self.execute_prepared_git(request, definition, call, issued, event_context)
             }
             PreparedNativeCodingCall::Command { .. } => {
-                self.execute_prepared_command(request, definition, call, issued)
+                self.execute_prepared_command(request, definition, call, issued, event_context)
             }
             PreparedNativeCodingCall::Validation { .. } => {
-                self.execute_prepared_validation(request, definition, call, issued)
+                self.execute_prepared_validation(request, definition, call, issued, event_context)
             }
-            PreparedNativeCodingCall::StructuredPatch { .. } => {
-                self.execute_prepared_structured_write(request, definition, call, issued)
-            }
-            PreparedNativeCodingCall::ControlledCreate { .. } => {
-                self.execute_prepared_controlled_create(request, definition, call, issued)
-            }
+            PreparedNativeCodingCall::StructuredPatch { .. } => self
+                .execute_prepared_structured_write(
+                    request,
+                    definition,
+                    call,
+                    issued,
+                    event_context,
+                ),
+            PreparedNativeCodingCall::ControlledCreate { .. } => self
+                .execute_prepared_controlled_create(
+                    request,
+                    definition,
+                    call,
+                    issued,
+                    event_context,
+                ),
         }
     }
 
@@ -817,7 +975,8 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
         let (operation, binding, write_draft, _) = issued.prepared.into_parts();
@@ -840,21 +999,22 @@ where
         .map_err(|_| RuntimePortFailure::Invalid)?;
         let runner = self.sandbox.take().ok_or(RuntimePortFailure::Unavailable)?;
         let mut driver = LinuxReadOnlyToolEffectDriver::new(runner, worker_input);
-        let receipt_result = self.authority.authority_mut().execute_effect(
+        let receipt_result = self.execute_effect_authority(
             self.workspace.profile().registry(),
             &policy,
             transaction,
             &mut driver,
+            event_context.as_ref(),
         );
         let worker_result = driver.take_result();
         self.sandbox = Some(driver.into_runner());
-        let receipt = receipt_result.map_err(|_| RuntimePortFailure::Uncertain)?;
+        let (receipt, pending) = receipt_result?;
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
         let worker_result = worker_result.ok_or(RuntimePortFailure::Uncertain)?;
         if !worker_result.success() {
-            return Ok(RuntimeToolExecution {
+            let execution = RuntimeToolExecution {
                 receipt_id: receipt.receipt_id,
                 receipt_sha256: receipt.receipt_sha256,
                 result: ToolResult {
@@ -869,7 +1029,8 @@ where
                     elapsed_ms: 0,
                     state_change: StateChange::NotChanged,
                 },
-            });
+            };
+            return self.finish_effect_execution(execution, event_context, pending);
         }
         let result = serde_json::from_slice::<ReadOnlyResult>(worker_result.stdout())
             .ok()
@@ -901,7 +1062,7 @@ where
         } else {
             Vec::new()
         };
-        Ok(RuntimeToolExecution {
+        let execution = RuntimeToolExecution {
             receipt_id: receipt.receipt_id,
             receipt_sha256: receipt.receipt_sha256,
             result: ToolResult {
@@ -921,7 +1082,8 @@ where
                 elapsed_ms: 0,
                 state_change: StateChange::NotChanged,
             },
-        })
+        };
+        self.finish_effect_execution(execution, event_context, pending)
     }
 
     fn execute_prepared_command(
@@ -930,7 +1092,8 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
         let (operation, binding, write_draft, workspace) = issued.prepared.into_parts();
@@ -955,16 +1118,17 @@ where
             .ok_or(RuntimePortFailure::Unavailable)?;
         let mut driver =
             CommandEffectDriver::new(executor, workspace, prepared.clone(), cancellation);
-        let receipt_result = self.authority.authority_mut().execute_effect(
+        let receipt_result = self.execute_effect_authority(
             self.workspace.profile().registry(),
             &policy,
             transaction,
             &mut driver,
+            event_context.as_ref(),
         );
         let command_receipt = driver.take_receipt();
         let output = driver.take_output();
         self.command_executor = Some(driver.into_executor());
-        let receipt = receipt_result.map_err(|_| RuntimePortFailure::Uncertain)?;
+        let (receipt, pending) = receipt_result?;
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
@@ -973,7 +1137,9 @@ where
         if !verify_command_receipt(&prepared, &command_receipt) {
             return Err(RuntimePortFailure::Uncertain);
         }
-        self.command_execution(request, definition, call, receipt, command_receipt, output)
+        let execution =
+            self.command_execution(request, definition, call, receipt, command_receipt, output)?;
+        self.finish_effect_execution(execution, event_context, pending)
     }
 
     fn execute_prepared_git(
@@ -982,7 +1148,8 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
         let operation_plan_sha256 = issued.prepared.operation().plan_sha256().to_owned();
@@ -1016,15 +1183,16 @@ where
             .ok_or(RuntimePortFailure::Unavailable)?;
         let mut driver =
             RepositoryInspectionEffectDriver::new(executor, workspace, prepared, cancellation);
-        let receipt_result = self.authority.authority_mut().execute_effect(
+        let receipt_result = self.execute_effect_authority(
             self.workspace.profile().registry(),
             &policy,
             transaction,
             &mut driver,
+            event_context.as_ref(),
         );
         let platform = driver.take_result();
         self.git_executor = Some(driver.into_executor());
-        let receipt = receipt_result.map_err(|_| RuntimePortFailure::Uncertain)?;
+        let (receipt, pending) = receipt_result?;
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
@@ -1034,7 +1202,7 @@ where
             platform.termination,
             RepositoryInspectionTermination::Exited
         ) {
-            return Ok(RuntimeToolExecution {
+            let execution = RuntimeToolExecution {
                 receipt_id: receipt.receipt_id,
                 receipt_sha256: receipt.receipt_sha256,
                 result: ToolResult {
@@ -1053,7 +1221,8 @@ where
                         StateChange::Uncertain
                     },
                 },
-            });
+            };
+            return self.finish_effect_execution(execution, event_context, pending);
         }
         let git_result = parse_git_inspection(
             &git_request,
@@ -1067,14 +1236,15 @@ where
         if !git_result.verify() {
             return Err(RuntimePortFailure::Uncertain);
         }
-        self.git_execution(
+        let execution = self.git_execution(
             request,
             definition,
             call,
             receipt,
             git_result,
             platform.elapsed_ms,
-        )
+        )?;
+        self.finish_effect_execution(execution, event_context, pending)
     }
 
     fn git_execution(
@@ -1130,7 +1300,8 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let (generic_approval, approved) = issued.generic_authority()?;
         let approval_sha256 = generic_approval.confirmation_sha256.clone();
         let policy = approved.policy.clone();
@@ -1173,16 +1344,17 @@ where
             cancellation,
             wrapper,
         );
-        let receipt_result = self.authority.authority_mut().execute_effect(
+        let receipt_result = self.execute_effect_authority(
             self.workspace.profile().registry(),
             &policy,
             transaction,
             &mut driver,
+            event_context.as_ref(),
         );
         let command_receipt = driver.take_receipt();
         let output = driver.take_output();
         self.command_executor = Some(driver.into_executor());
-        let receipt = receipt_result.map_err(|_| RuntimePortFailure::Uncertain)?;
+        let (receipt, pending) = receipt_result?;
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
@@ -1217,7 +1389,9 @@ where
         if !verify_validation_receipt(&template, &prepared, &command_receipt, &validation_receipt) {
             return Err(RuntimePortFailure::Uncertain);
         }
-        self.validation_execution(request, definition, call, receipt, validation_receipt)
+        let execution =
+            self.validation_execution(request, definition, call, receipt, validation_receipt)?;
+        self.finish_effect_execution(execution, event_context, pending)
     }
 
     fn validation_execution(
@@ -1323,7 +1497,8 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let IssuedCodingOperation {
             authority:
                 IssuedCodingAuthority::StructuredWrite {
@@ -1364,20 +1539,39 @@ where
         let mut driver =
             LinuxAtomicWriteDriver::new(workspace, LinuxAtomicWriteDriverLimits::default());
         let policy = self.policy.engine().clone();
-        let result = self
-            .authority
-            .authority_mut()
-            .execute_controlled_write(
-                &policy,
-                &change_set,
-                &approval,
-                WriteTransactionRequest {
-                    transaction_id,
-                    now_epoch_ms: resolved_at_epoch_ms,
-                },
-                &mut driver,
+        let write_request = WriteTransactionRequest {
+            transaction_id,
+            now_epoch_ms: resolved_at_epoch_ms,
+        };
+        let (result, pending) = if let Some(context) = event_context.as_ref() {
+            let (result, pending) = self
+                .authority
+                .authority_mut()
+                .begin_controlled_write_with_runtime_event(
+                    &policy,
+                    &change_set,
+                    &approval,
+                    write_request,
+                    &mut driver,
+                    context.started_event.clone(),
+                )
+                .map_err(map_journal_failure)?;
+            (result, Some(pending))
+        } else {
+            (
+                self.authority
+                    .authority_mut()
+                    .execute_controlled_write(
+                        &policy,
+                        &change_set,
+                        &approval,
+                        write_request,
+                        &mut driver,
+                    )
+                    .map_err(|_| RuntimePortFailure::Uncertain)?,
+                None,
             )
-            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        };
         verify_write_receipts(&result.receipts).map_err(|_| RuntimePortFailure::Uncertain)?;
         self.authority
             .revalidate_root()
@@ -1387,7 +1581,7 @@ where
             .last()
             .ok_or(RuntimePortFailure::Uncertain)?;
         let (outcome, state_change) = write_transaction_outcome(result.outcome);
-        self.controlled_change_execution(
+        let execution = self.controlled_change_execution(
             request,
             definition,
             call,
@@ -1402,7 +1596,8 @@ where
                 receipt_sha256: receipt.receipt_sha256.clone(),
             },
             state_change,
-        )
+        )?;
+        self.finish_specialized_effect_event(execution, event_context, pending)
     }
 
     fn execute_prepared_controlled_create(
@@ -1411,7 +1606,8 @@ where
         definition: &ToolDefinition,
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
-    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let IssuedCodingOperation {
             authority: IssuedCodingAuthority::FilesystemWrite { approval, plan, .. },
             prepared,
@@ -1439,21 +1635,40 @@ where
         let mut driver =
             LinuxControlledFilesystemDriver::new(workspace, LinuxFilesystemDriverLimits::default());
         let policy = self.policy.engine().clone();
-        let result = self
-            .authority
-            .authority_mut()
-            .execute_controlled_filesystem(
-                &policy,
-                &plan,
-                &approval,
-                FilesystemTransactionRequest {
-                    transaction_id,
-                    now_epoch_ms: resolved_at_epoch_ms,
-                    cancelled_before_consume: false,
-                },
-                &mut driver,
+        let filesystem_request = FilesystemTransactionRequest {
+            transaction_id,
+            now_epoch_ms: resolved_at_epoch_ms,
+            cancelled_before_consume: false,
+        };
+        let (result, pending) = if let Some(context) = event_context.as_ref() {
+            let (result, pending) = self
+                .authority
+                .authority_mut()
+                .begin_controlled_filesystem_with_runtime_event(
+                    &policy,
+                    &plan,
+                    &approval,
+                    filesystem_request,
+                    &mut driver,
+                    context.started_event.clone(),
+                )
+                .map_err(map_journal_failure)?;
+            (result, Some(pending))
+        } else {
+            (
+                self.authority
+                    .authority_mut()
+                    .execute_controlled_filesystem(
+                        &policy,
+                        &plan,
+                        &approval,
+                        filesystem_request,
+                        &mut driver,
+                    )
+                    .map_err(|_| RuntimePortFailure::Uncertain)?,
+                None,
             )
-            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        };
         verify_filesystem_receipts(&result.receipts).map_err(|_| RuntimePortFailure::Uncertain)?;
         self.authority
             .revalidate_root()
@@ -1467,7 +1682,7 @@ where
             .as_deref()
             .ok_or(RuntimePortFailure::Uncertain)?;
         let (outcome, state_change) = filesystem_transaction_outcome(result.outcome);
-        self.controlled_change_execution(
+        let execution = self.controlled_change_execution(
             request,
             definition,
             call,
@@ -1482,7 +1697,8 @@ where
                 receipt_sha256: receipt.receipt_sha256.clone(),
             },
             state_change,
-        )
+        )?;
+        self.finish_specialized_effect_event(execution, event_context, pending)
     }
 
     fn controlled_change_execution(
@@ -1529,6 +1745,90 @@ where
                 state_change,
             },
         })
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn execute_effect_authority<D: agentmage_kernel_engine::authority_transaction::EffectDriver>(
+        &mut self,
+        registry: &agentmage_kernel_engine::tooling::ToolRegistry,
+        policy: &agentmage_kernel_engine::policy::PolicyEngine,
+        transaction: AuthorityTransactionRequest,
+        driver: &mut D,
+        event_context: Option<&RuntimeEffectEventContext<'_>>,
+    ) -> Result<
+        (
+            agentmage_kernel_contracts::Receipt,
+            Option<PendingRuntimeEffectCommit>,
+        ),
+        RuntimePortFailure,
+    > {
+        if let Some(context) = event_context {
+            self.authority
+                .authority_mut()
+                .begin_effect_with_runtime_event(
+                    registry,
+                    policy,
+                    transaction,
+                    driver,
+                    context.started_event.clone(),
+                )
+                .map_err(map_journal_failure)
+                .map(|(receipt, pending)| (receipt, Some(pending)))
+        } else {
+            self.authority
+                .authority_mut()
+                .execute_effect(registry, policy, transaction, driver)
+                .map_err(|_| RuntimePortFailure::Uncertain)
+                .map(|receipt| (receipt, None))
+        }
+    }
+
+    fn finish_effect_execution(
+        &mut self,
+        execution: RuntimeToolExecution,
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+        pending: Option<PendingRuntimeEffectCommit>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
+        match (event_context, pending) {
+            (None, None) => Ok((execution, Vec::new())),
+            (Some(context), Some(pending)) => {
+                let terminal = (context.build_terminal_event)(&execution)?;
+                let events = self
+                    .authority
+                    .authority_mut()
+                    .finish_effect_with_runtime_event(pending, terminal)
+                    .map_err(map_journal_failure)?;
+                self.authority
+                    .revalidate_root()
+                    .map_err(|_| RuntimePortFailure::Uncertain)?;
+                Ok((execution, events.into()))
+            }
+            _ => Err(RuntimePortFailure::Invalid),
+        }
+    }
+
+    fn finish_specialized_effect_event(
+        &mut self,
+        execution: RuntimeToolExecution,
+        event_context: Option<RuntimeEffectEventContext<'_>>,
+        pending: Option<PendingSpecializedEffectCommit>,
+    ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
+        match (event_context, pending) {
+            (None, None) => Ok((execution, Vec::new())),
+            (Some(context), Some(pending)) => {
+                let terminal = (context.build_terminal_event)(&execution)?;
+                let events = self
+                    .authority
+                    .authority_mut()
+                    .finish_specialized_effect_with_runtime_event(pending, terminal)
+                    .map_err(map_journal_failure)?;
+                self.authority
+                    .revalidate_root()
+                    .map_err(|_| RuntimePortFailure::Uncertain)?;
+                Ok((execution, events.into()))
+            }
+            _ => Err(RuntimePortFailure::Invalid),
+        }
     }
 
     fn authority_transaction(
@@ -1616,138 +1916,7 @@ where
                 .is_ok()
     }
 
-    fn next_id(&mut self, prefix: &str) -> Result<String, RuntimePortFailure> {
-        self.identities
-            .next(prefix)
-            .map_err(|_| RuntimePortFailure::Unavailable)
-    }
-}
-
-impl<'workspace, 'session, 'platform, I, E, G> RuntimeToolBoundary
-    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
-where
-    I: CodingIdentitySource,
-    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
-    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
-{
-    fn evaluate(
-        &mut self,
-        request: &RuntimeRunRequest,
-        operation_id: &RuntimeOperationId,
-        definition: &ToolDefinition,
-        call: &ToolCall,
-        now_epoch_ms: u64,
-    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
-        self.evaluate_call(request, operation_id, definition, call, now_epoch_ms)
-    }
-
-    fn resolve(
-        &mut self,
-        request: &RuntimeRunRequest,
-        challenge: &RuntimeApprovalChallenge,
-        response: &RuntimeApprovalResponse,
-        definition: &ToolDefinition,
-        call: &ToolCall,
-        now_epoch_ms: u64,
-    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
-        self.resolve_call(request, challenge, response, definition, call, now_epoch_ms)
-    }
-
-    fn execute(
-        &mut self,
-        request: &RuntimeRunRequest,
-        evaluation: &RuntimePermissionEvaluation,
-        definition: &ToolDefinition,
-        call: &ToolCall,
-        cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
-    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
-        self.execute_call(request, evaluation, definition, call, cancellation)
-    }
-}
-
-impl<'workspace, 'session, 'platform, I, E, G> RuntimeJournalPort
-    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
-where
-    I: CodingIdentitySource,
-    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
-    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
-{
-    fn append_runtime_event(&mut self, event: &RuntimeEvent) -> Result<(), RuntimePortFailure> {
-        self.authority
-            .revalidate_root()
-            .map_err(|_| RuntimePortFailure::Uncertain)?;
-        self.authority
-            .authority_mut()
-            .record_runtime_event(event.clone())
-            .map_err(map_journal_failure)?;
-        self.authority
-            .revalidate_root()
-            .map_err(|_| RuntimePortFailure::Uncertain)
-    }
-
-    fn flush_runtime_events(&mut self) -> Result<(), RuntimePortFailure> {
-        self.authority
-            .revalidate_root()
-            .map_err(|_| RuntimePortFailure::Uncertain)?;
-        self.authority
-            .authority_mut()
-            .flush_runtime_events()
-            .map_err(map_journal_failure)?;
-        self.authority
-            .revalidate_root()
-            .map_err(|_| RuntimePortFailure::Uncertain)
-    }
-
-    fn load_runtime_events(
-        &mut self,
-        run_id: &RuntimeRunId,
-    ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure> {
-        self.authority
-            .revalidate_root()
-            .map_err(|_| RuntimePortFailure::Uncertain)?;
-        let events = self
-            .authority
-            .authority()
-            .runtime_events(run_id)
-            .map_err(map_journal_failure)?;
-        self.authority
-            .revalidate_root()
-            .map_err(|_| RuntimePortFailure::Uncertain)?;
-        Ok(events)
-    }
-}
-
-impl<'workspace, 'session, 'platform, I, E, G> RuntimeArtifactPort
-    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
-where
-    I: CodingIdentitySource,
-    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
-    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
-{
-    fn publish_runtime_artifact(
-        &mut self,
-        manifest: RuntimeArtifactManifest,
-        payload: &[u8],
-    ) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
-        let publication = self
-            .authority
-            .publish_runtime_artifact(manifest.clone(), &mut Cursor::new(payload))
-            .map_err(map_journal_failure)?;
-        if publication.manifest != manifest {
-            return Err(RuntimePortFailure::Invalid);
-        }
-        Ok(publication.reference)
-    }
-}
-
-impl<'workspace, 'session, 'platform, I, E, G> RuntimeCheckpointPort
-    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
-where
-    I: CodingIdentitySource,
-    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
-    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
-{
-    fn commit_runtime_checkpoint(
+    fn build_checkpoint_publication(
         &mut self,
         input: RuntimeCheckpointCommit<'_>,
     ) -> Result<RuntimeCheckpointPublication, RuntimePortFailure> {
@@ -1845,16 +2014,269 @@ where
             binding_sha256: "0".repeat(64),
         })
         .map_err(|_| RuntimePortFailure::Invalid)?;
-        self.authority
-            .checkpoint_runtime_session(&checkpoint, &binding)
-            .map_err(map_journal_failure)?;
-        self.authority
-            .revalidate_root()
-            .map_err(|_| RuntimePortFailure::Uncertain)?;
         Ok(RuntimeCheckpointPublication {
             checkpoint,
             binding,
         })
+    }
+
+    fn next_id(&mut self, prefix: &str) -> Result<String, RuntimePortFailure> {
+        self.identities
+            .next(prefix)
+            .map_err(|_| RuntimePortFailure::Unavailable)
+    }
+}
+
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeToolBoundary
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    fn evaluate(
+        &mut self,
+        request: &RuntimeRunRequest,
+        operation_id: &RuntimeOperationId,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        self.evaluate_call(request, operation_id, definition, call, now_epoch_ms, None)
+            .map(|(evaluation, _)| evaluation)
+    }
+
+    fn resolve(
+        &mut self,
+        request: &RuntimeRunRequest,
+        challenge: &RuntimeApprovalChallenge,
+        response: &RuntimeApprovalResponse,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        self.resolve_call(
+            request,
+            challenge,
+            response,
+            definition,
+            call,
+            now_epoch_ms,
+            None,
+        )
+        .map(|(evaluation, _)| evaluation)
+    }
+
+    fn execute(
+        &mut self,
+        request: &RuntimeRunRequest,
+        evaluation: &RuntimePermissionEvaluation,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        self.execute_call(request, evaluation, definition, call, cancellation, None)
+            .map(|(execution, _)| execution)
+    }
+}
+
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeJournalPort
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    fn append_runtime_event(&mut self, event: &RuntimeEvent) -> Result<(), RuntimePortFailure> {
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        self.authority
+            .authority_mut()
+            .record_runtime_event(event.clone())
+            .map_err(map_journal_failure)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)
+    }
+
+    fn flush_runtime_events(&mut self) -> Result<(), RuntimePortFailure> {
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        self.authority
+            .authority_mut()
+            .flush_runtime_events()
+            .map_err(map_journal_failure)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)
+    }
+
+    fn load_runtime_events(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure> {
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let events = self
+            .authority
+            .authority()
+            .runtime_events(run_id)
+            .map_err(map_journal_failure)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        Ok(events)
+    }
+}
+
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeCorrectnessTransactionPort
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    fn evaluate_with_correctness_event(
+        &mut self,
+        request: &RuntimeRunRequest,
+        operation_id: &RuntimeOperationId,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+        build_event: &mut dyn FnMut(
+            &RuntimePermissionEvaluation,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
+        let (evaluation, event) = self.evaluate_call(
+            request,
+            operation_id,
+            definition,
+            call,
+            now_epoch_ms,
+            Some(build_event),
+        )?;
+        Ok((evaluation, event.ok_or(RuntimePortFailure::Invalid)?))
+    }
+
+    fn resolve_with_correctness_event(
+        &mut self,
+        request: &RuntimeRunRequest,
+        challenge: &RuntimeApprovalChallenge,
+        response: &RuntimeApprovalResponse,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+        build_event: &mut dyn FnMut(
+            &RuntimePermissionEvaluation,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
+        let (evaluation, event) = self.resolve_call(
+            request,
+            challenge,
+            response,
+            definition,
+            call,
+            now_epoch_ms,
+            Some(build_event),
+        )?;
+        Ok((evaluation, event.ok_or(RuntimePortFailure::Invalid)?))
+    }
+
+    fn execute_with_correctness_events(
+        &mut self,
+        request: &RuntimeRunRequest,
+        evaluation: &RuntimePermissionEvaluation,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+        started_event: RuntimeEvent,
+        build_terminal_event: &mut dyn FnMut(
+            &RuntimeToolExecution,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure> {
+        let (execution, events) = self.execute_call(
+            request,
+            evaluation,
+            definition,
+            call,
+            cancellation,
+            Some(RuntimeEffectEventContext {
+                started_event,
+                build_terminal_event,
+            }),
+        )?;
+        Ok(RuntimeToolCorrectnessCommit { execution, events })
+    }
+
+    fn commit_checkpoint_with_correctness_event(
+        &mut self,
+        input: RuntimeCheckpointCommit<'_>,
+        build_event: &mut dyn FnMut(
+            &RuntimeCheckpointPublication,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimeCheckpointPublication, RuntimeEvent), RuntimePortFailure> {
+        let publication = self.build_checkpoint_publication(input)?;
+        let event = build_event(&publication)?;
+        self.authority
+            .authority_mut()
+            .checkpoint_runtime_session_with_event(
+                &publication.checkpoint,
+                &publication.binding,
+                event.clone(),
+            )
+            .map_err(map_journal_failure)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        Ok((publication, event))
+    }
+}
+
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeArtifactPort
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    fn publish_runtime_artifact(
+        &mut self,
+        manifest: RuntimeArtifactManifest,
+        payload: &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
+        let publication = self
+            .authority
+            .publish_runtime_artifact(manifest.clone(), &mut Cursor::new(payload))
+            .map_err(map_journal_failure)?;
+        if publication.manifest != manifest {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        Ok(publication.reference)
+    }
+}
+
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeCheckpointPort
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    fn commit_runtime_checkpoint(
+        &mut self,
+        input: RuntimeCheckpointCommit<'_>,
+    ) -> Result<RuntimeCheckpointPublication, RuntimePortFailure> {
+        let publication = self.build_checkpoint_publication(input)?;
+        self.authority
+            .checkpoint_runtime_session(&publication.checkpoint, &publication.binding)
+            .map_err(map_journal_failure)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        Ok(publication)
     }
 
     fn load_runtime_checkpoint(
@@ -3718,6 +4140,31 @@ mod tests {
             coordinator.events().iter().any(|event| {
                 matches!(event.kind, RuntimeEventKind::CheckpointCommitted { .. })
             })
+        );
+        let event_position = |predicate: fn(&RuntimeEventKind) -> bool| {
+            coordinator
+                .events()
+                .iter()
+                .position(|event| predicate(&event.kind))
+                .expect("required durable correctness event")
+        };
+        let permission_requested =
+            event_position(|kind| matches!(kind, RuntimeEventKind::PermissionRequested { .. }));
+        let permission_decided =
+            event_position(|kind| matches!(kind, RuntimeEventKind::PermissionDecided { .. }));
+        let tool_started =
+            event_position(|kind| matches!(kind, RuntimeEventKind::ToolStarted { .. }));
+        let tool_completed =
+            event_position(|kind| matches!(kind, RuntimeEventKind::ToolCompleted { .. }));
+        let checkpoint_committed =
+            event_position(|kind| matches!(kind, RuntimeEventKind::CheckpointCommitted { .. }));
+        assert!(permission_requested < permission_decided);
+        assert!(permission_decided < tool_started);
+        assert!(tool_started < tool_completed);
+        assert!(tool_completed < checkpoint_committed);
+        assert!(
+            coordinator.events()[tool_started].occurred_at_epoch_ms
+                < coordinator.events()[tool_completed].occurred_at_epoch_ms
         );
         let mut sequence = RuntimeEventSequence::new();
         for event in coordinator.events() {

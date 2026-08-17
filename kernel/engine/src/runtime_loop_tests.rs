@@ -26,10 +26,11 @@ use sha2::{Digest, Sha256};
 use super::{
     MAX_RUNTIME_INLINE_OUTPUT_BYTES, ReusableRuntimeCoordinator, RuntimeArtifactPort,
     RuntimeCheckpointCommit, RuntimeCheckpointPort, RuntimeCheckpointPublication, RuntimeClock,
-    RuntimeContextPort, RuntimeCoordinatorStep, RuntimeJournalPort, RuntimeLoopError,
-    RuntimeModelPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeResumeSnapshot,
-    RuntimeToolBoundary, RuntimeToolExecution, RuntimeVerificationInput, RuntimeVerifierPort,
-    derived_id, runtime_action_id, runtime_event_cursor, runtime_tool_references,
+    RuntimeContextPort, RuntimeCoordinatorStep, RuntimeCorrectnessTransactionPort,
+    RuntimeJournalPort, RuntimeLoopError, RuntimeModelPort, RuntimePermissionEvaluation,
+    RuntimePortFailure, RuntimeResumeSnapshot, RuntimeToolBoundary, RuntimeToolCorrectnessCommit,
+    RuntimeToolExecution, RuntimeVerificationInput, RuntimeVerifierPort, derived_id,
+    runtime_action_id, runtime_event_cursor, runtime_tool_references,
 };
 use crate::context_management::finalize_checkpoint;
 use crate::model_codec::{proposal_digest, tests_support::profile};
@@ -422,6 +423,100 @@ impl RuntimeJournalPort for FakeToolBoundary {
                     .cloned()
                     .collect()
             })
+    }
+}
+
+impl RuntimeCorrectnessTransactionPort for FakeToolBoundary {
+    fn evaluate_with_correctness_event(
+        &mut self,
+        request: &RuntimeRunRequest,
+        operation_id: &RuntimeOperationId,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+        build_event: &mut dyn FnMut(
+            &RuntimePermissionEvaluation,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
+        let evaluation = <Self as RuntimeToolBoundary>::evaluate(
+            self,
+            request,
+            operation_id,
+            definition,
+            call,
+            now_epoch_ms,
+        )?;
+        let event = build_event(&evaluation)?;
+        self.append_runtime_event(&event)?;
+        Ok((evaluation, event))
+    }
+
+    fn resolve_with_correctness_event(
+        &mut self,
+        request: &RuntimeRunRequest,
+        challenge: &agentmage_kernel_contracts::RuntimeApprovalChallenge,
+        response: &RuntimeApprovalResponse,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        now_epoch_ms: u64,
+        build_event: &mut dyn FnMut(
+            &RuntimePermissionEvaluation,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
+        let evaluation = <Self as RuntimeToolBoundary>::resolve(
+            self,
+            request,
+            challenge,
+            response,
+            definition,
+            call,
+            now_epoch_ms,
+        )?;
+        let event = build_event(&evaluation)?;
+        self.append_runtime_event(&event)?;
+        Ok((evaluation, event))
+    }
+
+    fn execute_with_correctness_events(
+        &mut self,
+        request: &RuntimeRunRequest,
+        evaluation: &RuntimePermissionEvaluation,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+        started_event: RuntimeEvent,
+        build_terminal_event: &mut dyn FnMut(
+            &RuntimeToolExecution,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure> {
+        self.append_runtime_event(&started_event)?;
+        let execution = <Self as RuntimeToolBoundary>::execute(
+            self,
+            request,
+            evaluation,
+            definition,
+            call,
+            cancellation,
+        )?;
+        let terminal = build_terminal_event(&execution)?;
+        self.append_runtime_event(&terminal)?;
+        Ok(RuntimeToolCorrectnessCommit {
+            execution,
+            events: vec![started_event, terminal],
+        })
+    }
+
+    fn commit_checkpoint_with_correctness_event(
+        &mut self,
+        input: RuntimeCheckpointCommit<'_>,
+        build_event: &mut dyn FnMut(
+            &RuntimeCheckpointPublication,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimeCheckpointPublication, RuntimeEvent), RuntimePortFailure> {
+        let publication = self.commit_runtime_checkpoint(input)?;
+        let event = build_event(&publication)?;
+        self.append_runtime_event(&event)?;
+        Ok((publication, event))
     }
 }
 
@@ -1176,7 +1271,7 @@ fn durable_large_model_output_is_artifact_backed_and_event_referenced() {
 }
 
 #[test]
-fn durable_large_tool_output_is_receipt_bound_before_completion() {
+fn durable_tool_receipt_commits_before_its_bound_large_artifact() {
     let profile = profile("runtime-loop-tool-artifact");
     let registry = registry_for_operation(GrantOperation::WorkspaceRead);
     let mut request = request(profile.clone(), &registry);
@@ -1228,7 +1323,7 @@ fn durable_large_tool_output_is_receipt_bound_before_completion() {
         .iter()
         .position(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
         .expect("tool completion exists");
-    assert!(artifact_index < completion_index);
+    assert!(completion_index < artifact_index);
     assert!(coordinator.events()[artifact_index].operation_id.is_some());
     let retained = artifacts
         .lock()

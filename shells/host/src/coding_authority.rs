@@ -6,8 +6,8 @@ use agentmage_kernel_contracts::{
     ActionId, ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorizedWorkspaceHandle,
     CapabilityGrant, GrantClass, GrantId, GrantNonce, GrantOperation, GrantPreimage,
     GrantSideEffect, GrantStatus, GrantTarget, OperationBinding, PolicyId,
-    RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeRunId,
-    TaskId, ToolCall, WorkspaceScopePath, to_canonical_json,
+    RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeEvent,
+    RuntimeRunId, TaskId, ToolCall, WorkspaceScopePath, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     approval::{render_approval_request, verify_approval_request},
@@ -15,7 +15,8 @@ use agentmage_kernel_engine::{
     operational_store::DurableAuthorityRuntime,
     policy::{PolicyDocument, PolicyEngine, ScopeRules, ToolPolicyBinding},
     runtime_coordinator::verify_runtime_approval_response,
-    runtime_loop::runtime_action_id,
+    runtime_journal::RuntimeJournalError,
+    runtime_loop::{RuntimePermissionEvaluation, RuntimePortFailure, runtime_action_id},
     tooling::ToolRegistry,
 };
 use sha2::{Digest, Sha256};
@@ -448,6 +449,60 @@ where
 pub fn derive_approved_coding_grant(
     request: ApprovedCodingGrantRequest<'_>,
 ) -> Result<ApprovedCodingGrant, CodingApprovalError> {
+    let (parent_grant_id, grant_request, policy, decision_sha256) =
+        approved_coding_derivation(&request)?;
+    let grant = request
+        .authority
+        .derive_operation(&parent_grant_id, grant_request)
+        .map_err(|_| CodingApprovalError::AuthorityDenied)?;
+    let authority_sha256 =
+        canonical_contract_sha256(&grant).map_err(|_| CodingApprovalError::AuthorityDenied)?;
+    Ok(ApprovedCodingGrant {
+        grant,
+        policy,
+        decision_sha256,
+        authority_sha256,
+    })
+}
+
+/// Verifies one allow decision and co-publishes the derived grant with its runtime event.
+pub fn derive_approved_coding_grant_with_event(
+    request: ApprovedCodingGrantRequest<'_>,
+    build_event: &mut dyn FnMut(
+        &RuntimePermissionEvaluation,
+    ) -> Result<RuntimeEvent, RuntimePortFailure>,
+) -> Result<(ApprovedCodingGrant, RuntimeEvent), CodingApprovalError> {
+    let (parent_grant_id, grant_request, policy, decision_sha256) =
+        approved_coding_derivation(&request)?;
+    let (_, approved, event) = request
+        .authority
+        .derive_operation_with_runtime_event(&parent_grant_id, grant_request, |grant| {
+            let authority_sha256 =
+                canonical_contract_sha256(grant).map_err(|_| RuntimeJournalError::InvalidEvent)?;
+            let approved = ApprovedCodingGrant {
+                grant: grant.clone(),
+                policy: policy.clone(),
+                decision_sha256: decision_sha256.clone(),
+                authority_sha256,
+            };
+            let evaluation = RuntimePermissionEvaluation::Allow {
+                approval_id: request.approval.approval_id.clone(),
+                preview_sha256: request.approval.confirmation_sha256.clone(),
+                expires_at_epoch_ms: request.approval.expires_at_epoch_ms,
+                grant_id: approved.grant.grant_id.clone(),
+                decision_sha256: approved.decision_sha256.clone(),
+                authority_sha256: approved.authority_sha256.clone(),
+            };
+            let event = build_event(&evaluation).map_err(|_| RuntimeJournalError::InvalidEvent)?;
+            Ok((approved, event))
+        })
+        .map_err(|_| CodingApprovalError::AuthorityDenied)?;
+    Ok((approved, event))
+}
+
+fn approved_coding_derivation(
+    request: &ApprovedCodingGrantRequest<'_>,
+) -> Result<(GrantId, DerivedOperationGrantRequest, PolicyEngine, String), CodingApprovalError> {
     verify_approval_request(request.registry, request.approval)
         .map_err(|_| CodingApprovalError::DecisionDenied)?;
     verify_coding_decision(
@@ -478,28 +533,20 @@ pub fn derive_approved_coding_grant(
         .checked_add(OPERATION_GRANT_LIFETIME_MS)
         .map(|expires| expires.min(request.approval.expires_at_epoch_ms))
         .ok_or(CodingApprovalError::AuthorityDenied)?;
-    let grant = request
-        .authority
-        .derive_operation(
-            &request.approval.parent_grant_id,
-            operation_grant_request(
-                request.approval,
-                request.nonce,
-                request.now_epoch_ms,
-                operation_expires_at_epoch_ms,
-            )?,
-        )
-        .map_err(|_| CodingApprovalError::AuthorityDenied)?;
+    let grant_request = operation_grant_request(
+        request.approval,
+        request.nonce.clone(),
+        request.now_epoch_ms,
+        operation_expires_at_epoch_ms,
+    )?;
     let decision_sha256 = canonical_contract_sha256(request.response)
         .map_err(|_| CodingApprovalError::DecisionDenied)?;
-    let authority_sha256 =
-        canonical_contract_sha256(&grant).map_err(|_| CodingApprovalError::AuthorityDenied)?;
-    Ok(ApprovedCodingGrant {
-        grant,
-        policy: request.policy.clone(),
+    Ok((
+        request.approval.parent_grant_id.clone(),
+        grant_request,
+        request.policy.clone(),
         decision_sha256,
-        authority_sha256,
-    })
+    ))
 }
 
 fn verify_coding_decision(

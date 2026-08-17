@@ -257,6 +257,7 @@ struct StreamBinding {
 enum ToolPhase {
     Requested,
     Started,
+    Completed,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -400,11 +401,15 @@ impl RuntimeEventSequence {
             RuntimeEventKind::TurnCompleted { .. } => {
                 self.require_active_turn(event)?;
                 if self.active_model_run_id.is_some()
-                    || !self.tools.is_empty()
+                    || self
+                        .tools
+                        .values()
+                        .any(|tool| tool.phase != ToolPhase::Completed)
                     || !self.permissions.is_empty()
                 {
                     return Err(RuntimeEventError::IllegalTransition);
                 }
+                self.tools.clear();
                 self.active_turn_id = None;
                 Ok(())
             }
@@ -459,8 +464,19 @@ impl RuntimeEventSequence {
                 tool.phase = ToolPhase::Started;
                 Ok(())
             }
-            RuntimeEventKind::ToolCompleted { tool_call_id, .. }
-            | RuntimeEventKind::ToolFailed { tool_call_id, .. } => {
+            RuntimeEventKind::ToolCompleted { tool_call_id, .. } => {
+                self.require_active_turn(event)?;
+                let operation_id = required_operation(event)?;
+                let Some(tool) = self.tools.get_mut(tool_call_id.as_str()) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if tool.phase != ToolPhase::Started || tool.operation_id != operation_id {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                tool.phase = ToolPhase::Completed;
+                Ok(())
+            }
+            RuntimeEventKind::ToolFailed { tool_call_id, .. } => {
                 self.require_active_turn(event)?;
                 let operation_id = required_operation(event)?;
                 let Some(tool) = self.tools.get(tool_call_id.as_str()) else {
@@ -528,7 +544,7 @@ impl RuntimeEventSequence {
                 if event.turn_id.is_some() {
                     self.require_active_turn(event)?;
                     if event.operation_id.is_some() {
-                        self.require_started_operation(event)?;
+                        self.require_artifact_operation(event)?;
                     }
                 } else if event.operation_id.is_some()
                     || self.active_turn_id.is_some()
@@ -597,6 +613,18 @@ impl RuntimeEventSequence {
         let operation_id = required_operation(event)?;
         if !self.tools.values().any(|tool| {
             tool.phase == ToolPhase::Started && tool.operation_id.as_str() == operation_id
+        }) {
+            return Err(RuntimeEventError::IllegalTransition);
+        }
+        Ok(())
+    }
+
+    fn require_artifact_operation(&self, event: &RuntimeEvent) -> Result<(), RuntimeEventError> {
+        self.require_active_turn(event)?;
+        let operation_id = required_operation(event)?;
+        if !self.tools.values().any(|tool| {
+            matches!(tool.phase, ToolPhase::Started | ToolPhase::Completed)
+                && tool.operation_id.as_str() == operation_id
         }) {
             return Err(RuntimeEventError::IllegalTransition);
         }

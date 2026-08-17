@@ -430,6 +430,9 @@ enum RuntimeJournalWorkerCommand {
         limits: RuntimeJournalLimits,
         reply: UnitReply,
     },
+    Reconcile {
+        reply: UnitReply,
+    },
     Shutdown {
         reply: UnitReply,
     },
@@ -616,6 +619,15 @@ impl RuntimeJournalWorker {
             .map_err(|_| RuntimeJournalError::WorkerUnavailable)?
     }
 
+    /// Rebuilds verified sequence state after an owning transaction appended journal rows.
+    pub(crate) fn reconcile(&self) -> Result<(), RuntimeJournalError> {
+        let (reply, receiver) = mpsc::sync_channel(1);
+        self.send_control(RuntimeJournalWorkerCommand::Reconcile { reply })?;
+        receiver
+            .recv()
+            .map_err(|_| RuntimeJournalError::WorkerUnavailable)?
+    }
+
     fn send_control(
         &self,
         command: RuntimeJournalWorkerCommand,
@@ -756,6 +768,23 @@ fn handle_worker_command(
                 worker_state.limits = limits;
                 *writer = replacement;
                 Ok(())
+            });
+            if let Err(error) = &result
+                && error.poisons_writer()
+            {
+                set_worker_failure(state, *error);
+            }
+            let _ = reply.send(result);
+        }
+        RuntimeJournalWorkerCommand::Reconcile { reply } => {
+            let result = worker_queue_snapshot(state).and_then(|snapshot| {
+                if snapshot.0 > 0 || writer.has_pending_events() || !pending_sizes.is_empty() {
+                    return Err(RuntimeJournalError::Integrity);
+                }
+                with_worker_store(store, |store| {
+                    verify_all(store)?;
+                    writer.rebuild_sequences(store)
+                })
             });
             if let Err(error) = &result
                 && error.poisons_writer()
@@ -955,6 +984,17 @@ fn append_batch(
     transaction
         .commit()
         .map_err(|_| RuntimeJournalError::Storage)
+}
+
+/// Appends correctness events inside an already-open owning store transaction.
+pub(crate) fn append_transaction_events(
+    transaction: &Transaction<'_>,
+    events: &[RuntimeEvent],
+) -> Result<(), RuntimeJournalError> {
+    for event in events {
+        append_event(transaction, event)?;
+    }
+    Ok(())
 }
 
 fn append_event(

@@ -1244,12 +1244,13 @@ mod tests {
         CancellationPoint, EffectAuthorization, EffectDriver, EffectLaunch, EffectResult,
         FaultPoint, valid_transition,
     };
+    use crate::runtime_event::seal_runtime_event;
     use crate::{
         context_management::{CheckpointError, finalize_checkpoint},
         grants::{DerivedOperationGrantRequest, GrantIssuer, SessionReadGrantRequest},
         operational_store::{
-            DurableAuthorityRuntime, OperationalStore, OperationalStoreKeyError,
-            OperationalStoreKeyProvider,
+            DurableAuthorityError, DurableAuthorityRuntime, OperationalStore,
+            OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyProvider,
         },
         policy::{
             PolicyEngine, PolicyEvaluationContext, StrictLocalReadOnlyScope, ToolPolicyBinding,
@@ -1260,14 +1261,17 @@ mod tests {
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActionState, ActorId, AdapterInstanceId, ApprovalId,
         AuthorityTransactionId, AuthorityTransactionState, CapabilityGrant, CheckpointFileIdentity,
-        ContractPayload, CorrelationId, DataSensitivity, EvidenceId, FilePreimage, GrantId,
-        GrantNonce, GrantOperation, GrantSideEffect, GrantStatus, HeldWorkspaceObject,
-        ModelProfileId, OperationAttemptId, OperationBinding, OperationOutcome, PathPlatform,
-        PathResolutionIntent, PlanId, PlanStepId, PolicyId, Receipt, RepositorySnapshotId,
-        RequiredGrantTemplate, SchemaId, SchemaReference, SessionCheckpoint, SessionCheckpointId,
-        SessionId, StateChange, StorageFilesystemClass, StrictLocalStorageObservation, TaskId,
-        ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceAuthorizationId,
-        WorkspaceId, WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
+        ContextSensitivity, ContractPayload, CorrelationId, DataSensitivity, EvidenceId,
+        FilePreimage, GrantId, GrantNonce, GrantOperation, GrantSideEffect, GrantStatus,
+        HeldWorkspaceObject, ModelProfileId, OperationAttemptId, OperationBinding,
+        OperationOutcome, PathPlatform, PathResolutionIntent, PlanId, PlanStepId, PolicyId,
+        Receipt, RepositorySnapshotId, RequiredGrantTemplate, RuntimeEvent, RuntimeEventId,
+        RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
+        RuntimeEventRetentionKind, RuntimeOperationId, RuntimeRunId, RuntimeTurnId, SchemaId,
+        SchemaReference, SessionCheckpoint, SessionCheckpointId, SessionId, StateChange,
+        StorageFilesystemClass, StrictLocalStorageObservation, TaskId, ToolCall, ToolCallId,
+        ToolDefinition, ToolId, ToolRiskLevel, WorkspaceAuthorizationId, WorkspaceId,
+        WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
     };
 
     static NEXT_STORE_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -1300,6 +1304,84 @@ mod tests {
         ));
         fs::create_dir(&path).expect("store directory");
         path
+    }
+
+    struct EffectEventStream {
+        next_sequence: u64,
+        previous_sha256: String,
+        causation_event_id: Option<RuntimeEventId>,
+    }
+
+    impl EffectEventStream {
+        fn new() -> Self {
+            Self {
+                next_sequence: 0,
+                previous_sha256: "0".repeat(64),
+                causation_event_id: None,
+            }
+        }
+
+        fn event(&mut self, kind: RuntimeEventKind) -> RuntimeEvent {
+            let persistence = match &kind {
+                RuntimeEventKind::TurnStarted | RuntimeEventKind::ToolRequested { .. } => {
+                    RuntimeEventPersistenceClass::Progress
+                }
+                _ => RuntimeEventPersistenceClass::Correctness,
+            };
+            let (turn_id, operation_id) = match &kind {
+                RuntimeEventKind::RunStarted { .. } => (None, None),
+                RuntimeEventKind::TurnStarted => {
+                    (Some(RuntimeTurnId::from_raw("effect-turn-1")), None)
+                }
+                _ => (
+                    Some(RuntimeTurnId::from_raw("effect-turn-1")),
+                    Some(RuntimeOperationId::from_raw("effect-operation-1")),
+                ),
+            };
+            let event_id = RuntimeEventId::from_raw(format!("effect-event-{}", self.next_sequence));
+            let event = seal_runtime_event(RuntimeEvent {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                event_id: event_id.clone(),
+                run_id: RuntimeRunId::from_raw("effect-run-1"),
+                session_id: SessionId::from_raw("session-0001"),
+                task_id: TaskId::from_raw("task-0001"),
+                turn_id,
+                operation_id,
+                correlation_id: CorrelationId::from_raw("correlation-0001"),
+                causation_event_id: self.causation_event_id.clone(),
+                sequence: self.next_sequence,
+                occurred_at_epoch_ms: 5_000 + self.next_sequence,
+                sensitivity: ContextSensitivity::Private,
+                retention: RuntimeEventRetention {
+                    kind: RuntimeEventRetentionKind::Session,
+                    expires_at_epoch_ms: None,
+                },
+                persistence,
+                policy_id: PolicyId::from_raw("effect-policy-1"),
+                payload_reference: None,
+                kind,
+                previous_event_sha256: self.previous_sha256.clone(),
+                event_sha256: "0".repeat(64),
+            })
+            .expect("effect fixture event");
+            self.next_sequence += 1;
+            self.previous_sha256.clone_from(&event.event_sha256);
+            self.causation_event_id = Some(event_id);
+            event
+        }
+
+        fn prefix(&mut self) -> [RuntimeEvent; 3] {
+            [
+                self.event(RuntimeEventKind::RunStarted {
+                    request_sha256: "a".repeat(64),
+                }),
+                self.event(RuntimeEventKind::TurnStarted),
+                self.event(RuntimeEventKind::ToolRequested {
+                    tool_call_id: ToolCallId::from_raw("call-0001"),
+                    arguments_sha256: super::sha256_hex(b"{}"),
+                }),
+            ]
+        }
     }
 
     struct FixtureTool(ToolDefinition);
@@ -2257,6 +2339,171 @@ mod tests {
         assert_eq!(replay.launches, 0);
 
         drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn effect_start_and_terminal_receipt_events_reopen_with_exact_authority() {
+        let fixture = fixture();
+        let transaction_request = request(&fixture);
+        let directory = store_directory();
+        let path = directory.join("authority.db");
+        let observation = store_observation();
+        let key = [26; 32];
+        let mut store = OperationalStore::open(&path, &observation, &mut TestStoreKey(key))
+            .expect("encrypted store opens");
+        store
+            .persist_authority(&fixture.issuer, &AuthorityTransactionCoordinator::new())
+            .expect("initial grants persist");
+        drop(store);
+
+        let mut stream = EffectEventStream::new();
+        let prefix = stream.prefix();
+        let started_event = stream.event(RuntimeEventKind::ToolStarted {
+            tool_call_id: fixture.call.tool_call_id.clone(),
+            authority_sha256: "7".repeat(64),
+        });
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey(key), 7_000)
+                .expect("runtime opens");
+        for event in &prefix {
+            runtime
+                .record_runtime_event(event.clone())
+                .expect("effect prefix event");
+        }
+        let mut driver = FakeDriver {
+            launch: Some(EffectLaunch::completed(success())),
+            ..FakeDriver::default()
+        };
+        let (receipt, pending) = runtime
+            .begin_effect_with_runtime_event(
+                &fixture.registry,
+                &fixture.policy,
+                transaction_request,
+                &mut driver,
+                started_event.clone(),
+            )
+            .expect("effect begins with atomic start event");
+        let terminal_event = stream.event(RuntimeEventKind::ToolCompleted {
+            tool_call_id: fixture.call.tool_call_id.clone(),
+            receipt_id: receipt.receipt_id.clone(),
+            result_sha256: "6".repeat(64),
+        });
+        assert_eq!(
+            runtime
+                .finish_effect_with_runtime_event(pending, terminal_event.clone())
+                .expect("terminal receipt and event commit"),
+            [started_event.clone(), terminal_event.clone()]
+        );
+        assert_eq!(driver.launches, 1);
+        let expected_events = [
+            prefix.as_slice(),
+            &[started_event.clone(), terminal_event.clone()],
+        ]
+        .concat();
+        assert_eq!(
+            runtime
+                .runtime_events(&RuntimeRunId::from_raw("effect-run-1"))
+                .expect("complete effect journal"),
+            expected_events
+        );
+        drop(runtime);
+
+        let reopened =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey(key), 8_000)
+                .expect("terminal effect reopens");
+        assert_eq!(reopened.receipts(), std::slice::from_ref(&receipt));
+        assert_eq!(
+            reopened
+                .current_transaction(&fixture.transaction_id)
+                .expect("reopened transaction")
+                .state,
+            AuthorityTransactionState::Terminal
+        );
+        assert_eq!(
+            reopened
+                .runtime_events(&RuntimeRunId::from_raw("effect-run-1"))
+                .expect("reopened effect journal"),
+            expected_events
+        );
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn rejected_terminal_event_requires_recovery_without_a_false_completion_event() {
+        let fixture = fixture();
+        let transaction_request = request(&fixture);
+        let directory = store_directory();
+        let path = directory.join("authority.db");
+        let observation = store_observation();
+        let key = [27; 32];
+        let mut store = OperationalStore::open(&path, &observation, &mut TestStoreKey(key))
+            .expect("encrypted store opens");
+        store
+            .persist_authority(&fixture.issuer, &AuthorityTransactionCoordinator::new())
+            .expect("initial grants persist");
+        drop(store);
+
+        let mut stream = EffectEventStream::new();
+        let prefix = stream.prefix();
+        let started_event = stream.event(RuntimeEventKind::ToolStarted {
+            tool_call_id: fixture.call.tool_call_id.clone(),
+            authority_sha256: "7".repeat(64),
+        });
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey(key), 7_000)
+                .expect("runtime opens");
+        for event in &prefix {
+            runtime
+                .record_runtime_event(event.clone())
+                .expect("effect prefix event");
+        }
+        let mut driver = FakeDriver {
+            launch: Some(EffectLaunch::completed(success())),
+            ..FakeDriver::default()
+        };
+        let (receipt, pending) = runtime
+            .begin_effect_with_runtime_event(
+                &fixture.registry,
+                &fixture.policy,
+                transaction_request,
+                &mut driver,
+                started_event.clone(),
+            )
+            .expect("effect begins with atomic start event");
+        let mut invalid_terminal = stream.event(RuntimeEventKind::ToolCompleted {
+            tool_call_id: fixture.call.tool_call_id.clone(),
+            receipt_id: receipt.receipt_id,
+            result_sha256: "6".repeat(64),
+        });
+        invalid_terminal.event_sha256 = "invalid".to_owned();
+        assert_eq!(
+            runtime
+                .finish_effect_with_runtime_event(pending, invalid_terminal)
+                .expect_err("invalid terminal event must reject the terminal snapshot"),
+            DurableAuthorityError::Store(OperationalStoreError::IntegrityFailure)
+        );
+        drop(runtime);
+
+        let recovered =
+            DurableAuthorityRuntime::open(&path, &observation, &mut TestStoreKey(key), 8_000)
+                .expect("reconciled result recovers deterministically");
+        assert_eq!(recovered.receipts().len(), 1);
+        assert_eq!(recovered.receipts()[0].outcome, OperationOutcome::Succeeded);
+        let retained_events = recovered
+            .runtime_events(&RuntimeRunId::from_raw("effect-run-1"))
+            .expect("truthful incomplete effect journal");
+        assert_eq!(
+            retained_events,
+            [prefix.as_slice(), std::slice::from_ref(&started_event)].concat()
+        );
+        assert!(
+            retained_events
+                .iter()
+                .all(|event| !matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+        );
+        drop(recovered);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 

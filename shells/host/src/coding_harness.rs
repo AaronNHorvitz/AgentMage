@@ -3,8 +3,8 @@
 use agentmage_kernel_contracts::RuntimeRunRequest;
 use agentmage_kernel_engine::runtime_loop::{
     ReusableRuntimeCoordinator, RuntimeArtifactPort, RuntimeCheckpointPort, RuntimeClock,
-    RuntimeContextPort, RuntimeJournalPort, RuntimeLoopError, RuntimeModelPort,
-    RuntimeToolBoundary,
+    RuntimeContextPort, RuntimeCorrectnessTransactionPort, RuntimeJournalPort, RuntimeLoopError,
+    RuntimeModelPort, RuntimeToolBoundary,
 };
 
 use crate::{
@@ -71,7 +71,11 @@ pub fn compose_durable_coding_coordinator<M, X, T, C>(
 where
     M: RuntimeModelPort,
     X: RuntimeContextPort,
-    T: RuntimeToolBoundary + RuntimeJournalPort + RuntimeArtifactPort + RuntimeCheckpointPort,
+    T: RuntimeToolBoundary
+        + RuntimeJournalPort
+        + RuntimeArtifactPort
+        + RuntimeCheckpointPort
+        + RuntimeCorrectnessTransactionPort,
     C: RuntimeClock,
 {
     let mut registry = native_coding_runtime_registry(
