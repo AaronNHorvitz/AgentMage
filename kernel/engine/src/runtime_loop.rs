@@ -226,6 +226,10 @@ pub struct RuntimeVerificationInput<'a> {
     pub postconditions: &'a [PostconditionId],
     /// Current grounded evidence available to deterministic checks.
     pub evidence: &'a [EvidenceReference],
+    /// Ordered successful tool results observed by this coordinator.
+    pub tool_results: &'a [ToolResult],
+    /// Canonical effect receipts accumulated by this coordinator.
+    pub receipt_ids: &'a [ReceiptId],
 }
 
 /// Deterministic verifier boundary; model prose and client claims remain ineligible.
@@ -783,6 +787,8 @@ where
                 state_revision: self.state.revision(),
                 postconditions: &postconditions,
                 evidence: &self.evidence,
+                tool_results: &self.tool_results,
+                receipt_ids: &self.receipt_ids,
             })
             .map_err(RuntimeLoopError::Dependency)?;
         let completion = match registry.verify(&candidate) {

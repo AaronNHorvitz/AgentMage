@@ -17,6 +17,8 @@ pub mod coding_projection;
 pub mod coding_run;
 pub mod coding_session;
 pub mod coding_tools;
+/// Deterministic completion verification for bounded coding sessions.
+pub mod coding_verifier;
 
 /// One-use reviewed local diagnostic export workflow.
 pub mod diagnostic_export;

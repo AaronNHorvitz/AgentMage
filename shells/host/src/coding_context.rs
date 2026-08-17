@@ -18,6 +18,7 @@ use sha2::{Digest, Sha256};
 use crate::{
     coding_session::{CodingSessionProfile, MVP_PROHIBITED_CAPABILITIES},
     coding_tools::{CodingModelToolContract, model_visible_coding_tools},
+    coding_verifier::{CODING_COMPLETION_INPUT_SCHEMA_JSON, coding_completion_schema},
 };
 
 const CONTEXT_ITEM_SCHEMA_ID: &str = "agentmage.runtime.coding-context-item";
@@ -161,6 +162,9 @@ where
             tools: &tools,
             commands: profile.commands().commands(),
             validations: profile.validations(),
+            completion_schema: coding_completion_schema(),
+            completion_schema_json: serde_json::from_str(CODING_COMPLETION_INPUT_SCHEMA_JSON)
+                .map_err(|_| CodingContextError::InvalidSource)?,
             effective_guidance: profile.effective_guidance(),
             prohibited_capabilities: &MVP_PROHIBITED_CAPABILITIES,
             invariants: &[
@@ -374,6 +378,8 @@ struct CodingSystemContract<'a> {
     tools: &'a [CodingModelToolContract],
     commands: Vec<&'a agentmage_kernel_engine::command_runner::CommandSpec>,
     validations: &'a agentmage_kernel_engine::validation_template::ValidationTemplateRegistry,
+    completion_schema: agentmage_kernel_contracts::SchemaReference,
+    completion_schema_json: serde_json::Value,
     effective_guidance: &'a agentmage_kernel_engine::instruction_provenance::EffectiveGuidance,
     prohibited_capabilities: &'a [&'static str],
     invariants: &'a [&'static str],
