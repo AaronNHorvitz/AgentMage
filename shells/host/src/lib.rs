@@ -4,6 +4,7 @@
 
 /// Authority-free composition of structured edits into kernel shadow changes.
 pub mod code_change;
+pub mod coding_changes;
 pub mod coding_tools;
 
 /// One-use reviewed local diagnostic export workflow.
