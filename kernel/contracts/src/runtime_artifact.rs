@@ -180,6 +180,44 @@ pub struct RuntimeToolAttemptState {
     pub call_depth: u8,
 }
 
+/// Content-free resource usage retained across one durable restart.
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeResourceUsage {
+    /// Admitted plan-step or turn attempts.
+    pub plan_steps: u64,
+    /// Admitted model calls.
+    pub model_calls: u64,
+    /// Admitted tool-call attempts.
+    pub tool_calls: u64,
+    /// Aggregate context and tool-argument bytes admitted as input.
+    pub input_bytes: u64,
+    /// Aggregate user-visible payload bytes admitted as output.
+    pub output_bytes: u64,
+    /// Aggregate model and trusted-worker elapsed milliseconds.
+    pub elapsed_ms: u64,
+    /// Peak trusted memory observation in bytes.
+    pub peak_memory_bytes: u64,
+    /// Aggregate retained artifact and scratch bytes accounted to the run.
+    pub disk_bytes: u64,
+    /// Conservative process attempts admitted before launch.
+    pub process_count: u64,
+    /// Canonical event envelopes admitted by the coordinator.
+    pub event_count: u32,
+    /// Aggregate canonical event-envelope bytes admitted by the coordinator.
+    pub event_bytes: u64,
+    /// Immutable artifacts admitted by the coordinator.
+    pub artifact_count: u32,
+    /// Aggregate immutable artifact payload bytes admitted by the coordinator.
+    pub artifact_bytes: u64,
+    /// Policy or user denials observed by the coordinator.
+    pub denial_count: u32,
+    /// Malformed model proposals observed by the coordinator.
+    pub parser_failure_count: u32,
+    /// Runtime-internal retries attempted by the coordinator; currently always zero.
+    pub retry_count: u32,
+}
+
 /// Canonical interface-neutral coordinator state retained only at a safe continuation boundary.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -212,6 +250,8 @@ pub struct RuntimeContinuationState {
     pub context_refresh_count: u32,
     /// Consecutive safe-boundary turns that produced no new evidence.
     pub no_progress_turns: u32,
+    /// Complete content-free resource accounting at this safe boundary.
+    pub resources: RuntimeResourceUsage,
     /// Ordered content-free repeated-call guard state.
     pub tool_attempts: Vec<RuntimeToolAttemptState>,
     /// Ordered tool results required to reconstruct the next bounded context.

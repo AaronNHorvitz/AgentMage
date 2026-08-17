@@ -109,6 +109,8 @@ pub mod runtime_artifact;
 pub mod runtime_coordinator;
 /// Hash-chained runtime events and bounded ordered client publication.
 pub mod runtime_event;
+/// Request-bound runtime resource ceilings and content-free accounting.
+pub mod runtime_hardening;
 /// Bounded durable runtime-event batching over the canonical encrypted store.
 pub mod runtime_journal;
 /// Interface-independent reusable runtime coordinator.

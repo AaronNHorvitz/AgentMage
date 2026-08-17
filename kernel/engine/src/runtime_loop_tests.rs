@@ -13,12 +13,13 @@ use agentmage_kernel_contracts::{
     ReceiptId, RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan,
     RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeArtifactManifest,
     RuntimeArtifactRef, RuntimeEvent, RuntimeEventKind, RuntimeEventRetentionKind,
-    RuntimeOperationId, RuntimeOutput, RuntimeResumeBinding, RuntimeRunId, RuntimeRunLimits,
-    RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference, SessionCheckpoint,
-    SessionCheckpointId, SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId,
-    TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
-    VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
-    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
+    RuntimeOperationId, RuntimeOutput, RuntimeResourceUsage, RuntimeResumeBinding, RuntimeRunId,
+    RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference,
+    SessionCheckpoint, SessionCheckpointId, SessionId, StateChange, StopCondition,
+    StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId,
+    ToolResult, ToolRiskLevel, VerifierCandidate, VerifierDisposition, VerifierId,
+    VerifierRecordId, VerifierSource, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId,
+    to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -39,6 +40,10 @@ use crate::runtime_coordinator::{
     runtime_tool_catalog_sha256, seal_runtime_run_request, verify_runtime_outcome,
 };
 use crate::runtime_event::RuntimeEventSequence;
+use crate::runtime_hardening::{
+    MAX_RUNTIME_CLIENT_QUEUE_BYTES, MAX_RUNTIME_EVENT_ENVELOPE_BYTES, RuntimeHardeningError,
+    RuntimeHardeningLimits, RuntimeResourceLedger,
+};
 use crate::tooling::{Tool, ToolRegistry};
 
 const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -765,11 +770,39 @@ fn packet() -> WorkPacket {
                 limit: 4,
             },
             BudgetLimit {
+                resource: BudgetResource::ToolCallDepth,
+                limit: 1,
+            },
+            BudgetLimit {
                 resource: BudgetResource::ModelCalls,
                 limit: 4,
             },
             BudgetLimit {
                 resource: BudgetResource::ToolCalls,
+                limit: 4,
+            },
+            BudgetLimit {
+                resource: BudgetResource::InputBytes,
+                limit: 4_096,
+            },
+            BudgetLimit {
+                resource: BudgetResource::OutputBytes,
+                limit: 1024 * 1024,
+            },
+            BudgetLimit {
+                resource: BudgetResource::ElapsedMilliseconds,
+                limit: 100_000,
+            },
+            BudgetLimit {
+                resource: BudgetResource::MemoryBytes,
+                limit: 1,
+            },
+            BudgetLimit {
+                resource: BudgetResource::DiskBytes,
+                limit: 64 * 1024 * 1024,
+            },
+            BudgetLimit {
+                resource: BudgetResource::ProcessCount,
                 limit: 4,
             },
         ],
@@ -1549,5 +1582,277 @@ fn story_23_4_expired_allow_is_rejected_before_worker_launch() {
             .events()
             .iter()
             .any(|event| matches!(event.kind, RuntimeEventKind::ToolStarted { .. }))
+    );
+}
+
+fn controlled_write_hardening_request() -> RuntimeRunRequest {
+    let registry = registry_for_operation(GrantOperation::WorkspaceWrite);
+    let mut request = request(profile("runtime-hardening"), &registry);
+    request.mode = RuntimeSessionMode::ControlledWrite;
+    request
+}
+
+fn required_budget_minimum(request: &RuntimeRunRequest, resource: BudgetResource) -> u64 {
+    match resource {
+        BudgetResource::PlanSteps => u64::from(request.limits.max_turns),
+        BudgetResource::ToolCallDepth => u64::from(request.limits.max_tool_call_depth),
+        BudgetResource::ModelCalls => u64::from(request.limits.max_model_calls),
+        BudgetResource::ToolCalls => u64::from(request.limits.max_tool_calls),
+        BudgetResource::InputBytes => request
+            .context_budget
+            .max_input_bytes
+            .checked_mul(u64::from(request.limits.max_context_refreshes))
+            .expect("fixture input ceiling remains bounded"),
+        BudgetResource::OutputBytes | BudgetResource::DiskBytes => request.limits.max_output_bytes,
+        BudgetResource::ElapsedMilliseconds => request.limits.max_elapsed_ms,
+        BudgetResource::MemoryBytes => 1,
+        BudgetResource::ProcessCount => u64::from(request.limits.max_tool_calls.min(1)),
+    }
+}
+
+#[test]
+fn story_50_2_controlled_write_requires_every_bound_resource_budget() {
+    let request = controlled_write_hardening_request();
+    let required = [
+        BudgetResource::PlanSteps,
+        BudgetResource::ToolCallDepth,
+        BudgetResource::ModelCalls,
+        BudgetResource::ToolCalls,
+        BudgetResource::InputBytes,
+        BudgetResource::OutputBytes,
+        BudgetResource::ElapsedMilliseconds,
+        BudgetResource::MemoryBytes,
+        BudgetResource::DiskBytes,
+        BudgetResource::ProcessCount,
+    ];
+
+    for resource in required {
+        let mut missing = request.clone();
+        missing
+            .work_packet
+            .budgets
+            .retain(|budget| budget.resource != resource);
+        assert_eq!(
+            RuntimeHardeningLimits::from_request(&missing),
+            Err(RuntimeHardeningError::MissingBudget(resource))
+        );
+
+        let mut narrow = request.clone();
+        let minimum = required_budget_minimum(&narrow, resource);
+        narrow
+            .work_packet
+            .budgets
+            .iter_mut()
+            .find(|budget| budget.resource == resource)
+            .expect("required fixture budget exists")
+            .limit = minimum - 1;
+        assert_eq!(
+            RuntimeHardeningLimits::from_request(&narrow),
+            Err(RuntimeHardeningError::BudgetBinding(resource))
+        );
+    }
+}
+
+#[test]
+fn story_50_2_cumulative_budget_overage_is_non_mutating() {
+    let request = controlled_write_hardening_request();
+    for resource in [
+        BudgetResource::PlanSteps,
+        BudgetResource::ModelCalls,
+        BudgetResource::ToolCalls,
+        BudgetResource::InputBytes,
+        BudgetResource::OutputBytes,
+        BudgetResource::ElapsedMilliseconds,
+        BudgetResource::DiskBytes,
+        BudgetResource::ProcessCount,
+    ] {
+        let limit = request
+            .work_packet
+            .budgets
+            .iter()
+            .find(|budget| budget.resource == resource)
+            .expect("fixture budget exists")
+            .limit;
+        let mut ledger = RuntimeResourceLedger::new(&request).expect("ledger admits fixture");
+        ledger.consume(resource, limit).expect("exact limit admits");
+        let exact = ledger.snapshot().clone();
+        assert_eq!(
+            ledger.consume(resource, 1),
+            Err(RuntimeHardeningError::ResourceExhausted(resource))
+        );
+        assert_eq!(ledger.snapshot(), &exact);
+    }
+}
+
+#[test]
+fn story_50_2_peak_memory_and_failure_ceilings_are_non_mutating() {
+    let request = controlled_write_hardening_request();
+    let memory_limit = request
+        .work_packet
+        .budgets
+        .iter()
+        .find(|budget| budget.resource == BudgetResource::MemoryBytes)
+        .expect("memory budget exists")
+        .limit;
+    let mut ledger = RuntimeResourceLedger::new(&request).expect("ledger admits fixture");
+    ledger
+        .observe_memory_peak(memory_limit)
+        .expect("exact memory peak admits");
+    ledger
+        .observe_memory_peak(memory_limit.saturating_sub(1))
+        .expect("lower observation does not accumulate");
+    let exact_memory = ledger.snapshot().clone();
+    assert_eq!(
+        ledger.observe_memory_peak(memory_limit + 1),
+        Err(RuntimeHardeningError::ResourceExhausted(
+            BudgetResource::MemoryBytes
+        ))
+    );
+    assert_eq!(ledger.snapshot(), &exact_memory);
+
+    ledger.record_denial().expect("first denial admits");
+    let exact_denial = ledger.snapshot().clone();
+    assert_eq!(
+        ledger.record_denial(),
+        Err(RuntimeHardeningError::InvalidLimits)
+    );
+    assert_eq!(ledger.snapshot(), &exact_denial);
+
+    ledger
+        .record_parser_failure()
+        .expect("first parser failure admits");
+    let exact_parser = ledger.snapshot().clone();
+    assert_eq!(
+        ledger.record_parser_failure(),
+        Err(RuntimeHardeningError::InvalidLimits)
+    );
+    assert_eq!(ledger.snapshot(), &exact_parser);
+
+    let before_retry = ledger.snapshot().clone();
+    assert_eq!(
+        ledger.record_retry(),
+        Err(RuntimeHardeningError::RetryDenied)
+    );
+    assert_eq!(ledger.snapshot(), &before_retry);
+}
+
+#[test]
+fn story_50_2_subscription_capacity_is_bounded_by_count_and_bytes() {
+    let mut request = controlled_write_hardening_request();
+    request.limits.max_events = 4_096;
+    let ledger = RuntimeResourceLedger::new(&request).expect("ledger admits fixture");
+    let byte_capacity =
+        usize::try_from(MAX_RUNTIME_CLIENT_QUEUE_BYTES / MAX_RUNTIME_EVENT_ENVELOPE_BYTES)
+            .expect("fixture capacity fits usize");
+
+    ledger
+        .validate_subscription_capacity(byte_capacity)
+        .expect("exact byte-bounded capacity admits");
+    assert_eq!(
+        ledger.validate_subscription_capacity(0),
+        Err(RuntimeHardeningError::InvalidLimits)
+    );
+    assert_eq!(
+        ledger.validate_subscription_capacity(byte_capacity + 1),
+        Err(RuntimeHardeningError::InvalidLimits)
+    );
+}
+
+#[test]
+fn story_50_2_event_and_artifact_overage_is_non_mutating() {
+    let mut event_request = controlled_write_hardening_request();
+    event_request.limits.max_events = 2;
+    let mut event_ledger =
+        RuntimeResourceLedger::new(&event_request).expect("event ledger admits fixture");
+    event_ledger
+        .admit_event(MAX_RUNTIME_EVENT_ENVELOPE_BYTES)
+        .expect("first exact envelope admits");
+    event_ledger
+        .admit_event(MAX_RUNTIME_EVENT_ENVELOPE_BYTES)
+        .expect("run event ceiling admits");
+    let exact_events = event_ledger.snapshot().clone();
+    assert_eq!(
+        event_ledger.admit_event(1),
+        Err(RuntimeHardeningError::EventEnvelopeExhausted)
+    );
+    assert_eq!(event_ledger.snapshot(), &exact_events);
+
+    let mut artifact_request = controlled_write_hardening_request();
+    artifact_request
+        .work_packet
+        .budgets
+        .iter_mut()
+        .find(|budget| budget.resource == BudgetResource::DiskBytes)
+        .expect("disk budget exists")
+        .limit = artifact_request.limits.max_output_bytes;
+    let mut byte_ledger =
+        RuntimeResourceLedger::new(&artifact_request).expect("artifact ledger admits fixture");
+    byte_ledger
+        .admit_artifact(artifact_request.limits.max_output_bytes)
+        .expect("exact aggregate artifact bytes admit");
+    let exact_artifact_bytes = byte_ledger.snapshot().clone();
+    assert_eq!(
+        byte_ledger.admit_artifact(1),
+        Err(RuntimeHardeningError::ArtifactExhausted)
+    );
+    assert_eq!(byte_ledger.snapshot(), &exact_artifact_bytes);
+
+    let mut count_ledger = RuntimeResourceLedger::new(&controlled_write_hardening_request())
+        .expect("artifact count ledger admits fixture");
+    let artifact_count = count_ledger.limits().artifact_count;
+    for _ in 0..artifact_count {
+        count_ledger
+            .admit_artifact(1)
+            .expect("artifact count within ceiling admits");
+    }
+    let exact_artifact_count = count_ledger.snapshot().clone();
+    assert_eq!(
+        count_ledger.admit_artifact(1),
+        Err(RuntimeHardeningError::ArtifactExhausted)
+    );
+    assert_eq!(count_ledger.snapshot(), &exact_artifact_count);
+}
+
+#[test]
+fn story_50_2_durable_restore_rejects_usage_drift() {
+    let request = controlled_write_hardening_request();
+    let mut ledger = RuntimeResourceLedger::new(&request).expect("ledger admits fixture");
+    ledger
+        .consume(BudgetResource::PlanSteps, 1)
+        .expect("plan usage admits");
+    ledger.admit_event(128).expect("event admits");
+    ledger.admit_artifact(64).expect("artifact admits");
+    let usage = ledger.durable_usage();
+    assert_eq!(
+        RuntimeResourceLedger::restore(&request, &usage)
+            .expect("exact durable usage restores")
+            .durable_usage(),
+        usage
+    );
+
+    let mut artifact_drift = usage.clone();
+    artifact_drift.artifact_bytes = artifact_drift.disk_bytes + 1;
+    assert_eq!(
+        RuntimeResourceLedger::restore(&request, &artifact_drift),
+        Err(RuntimeHardeningError::InvalidLimits)
+    );
+
+    let mut event_drift = usage.clone();
+    event_drift.event_bytes = u64::from(event_drift.event_count)
+        .checked_mul(MAX_RUNTIME_EVENT_ENVELOPE_BYTES)
+        .expect("fixture event product fits")
+        + 1;
+    assert_eq!(
+        RuntimeResourceLedger::restore(&request, &event_drift),
+        Err(RuntimeHardeningError::InvalidLimits)
+    );
+
+    let retry_drift = RuntimeResourceUsage {
+        retry_count: 1,
+        ..usage
+    };
+    assert_eq!(
+        RuntimeResourceLedger::restore(&request, &retry_drift),
+        Err(RuntimeHardeningError::InvalidLimits)
     );
 }

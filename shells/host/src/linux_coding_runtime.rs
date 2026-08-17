@@ -2803,15 +2803,43 @@ mod tests {
             budgets: vec![
                 BudgetLimit {
                     resource: BudgetResource::PlanSteps,
-                    limit: 3,
+                    limit: 16,
+                },
+                BudgetLimit {
+                    resource: BudgetResource::ToolCallDepth,
+                    limit: 2,
                 },
                 BudgetLimit {
                     resource: BudgetResource::ModelCalls,
-                    limit: 3,
+                    limit: 32,
                 },
                 BudgetLimit {
                     resource: BudgetResource::ToolCalls,
-                    limit: 2,
+                    limit: 32,
+                },
+                BudgetLimit {
+                    resource: BudgetResource::InputBytes,
+                    limit: 4 * 1024 * 1024,
+                },
+                BudgetLimit {
+                    resource: BudgetResource::OutputBytes,
+                    limit: 4 * 1024 * 1024,
+                },
+                BudgetLimit {
+                    resource: BudgetResource::ElapsedMilliseconds,
+                    limit: 600_000,
+                },
+                BudgetLimit {
+                    resource: BudgetResource::MemoryBytes,
+                    limit: 256 * 1024 * 1024,
+                },
+                BudgetLimit {
+                    resource: BudgetResource::DiskBytes,
+                    limit: 64 * 1024 * 1024,
+                },
+                BudgetLimit {
+                    resource: BudgetResource::ProcessCount,
+                    limit: 32,
                 },
             ],
             stop_conditions: [

@@ -2065,6 +2065,7 @@ fn validate_runtime_continuation_state(
         || continuation.tool_results.len() > MAX_RUNTIME_CONTINUATION_RESULTS
         || continuation.receipt_ids.len() != continuation.tool_results.len()
         || continuation.no_progress_turns > continuation.turn_count
+        || !valid_continuation_resources(continuation)
         || !valid_continuation_tool_results(&continuation.tool_results)
         || !valid_continuation_tool_attempts(&continuation.tool_attempts)
         || !continuation
@@ -2080,6 +2081,28 @@ fn validate_runtime_continuation_state(
         return Err(RuntimeArtifactError::InvalidContinuation);
     }
     Ok(())
+}
+
+fn valid_continuation_resources(continuation: &RuntimeContinuationState) -> bool {
+    let resources = &continuation.resources;
+    let artifact_bytes = continuation
+        .artifacts
+        .iter()
+        .try_fold(0_u64, |total, artifact| {
+            total.checked_add(artifact.byte_size)
+        });
+    resources.plan_steps == u64::from(continuation.turn_count)
+        && resources.model_calls == u64::from(continuation.model_call_count)
+        && resources.tool_calls == u64::from(continuation.tool_call_count)
+        && u32::try_from(continuation.event_cursor.sequence.saturating_add(1)).ok()
+            == Some(resources.event_count)
+        && resources.event_bytes >= u64::from(resources.event_count)
+        && usize::try_from(resources.artifact_count).ok() == Some(continuation.artifacts.len())
+        && artifact_bytes == Some(resources.artifact_bytes)
+        && resources.disk_bytes >= resources.artifact_bytes
+        && resources.denial_count == 0
+        && resources.parser_failure_count == 0
+        && resources.retry_count == 0
 }
 
 fn valid_continuation_transitions(continuation: &RuntimeContinuationState) -> bool {
@@ -2711,6 +2734,24 @@ mod tests {
             tool_call_count: 0,
             context_refresh_count: 1,
             no_progress_turns: 0,
+            resources: agentmage_kernel_contracts::RuntimeResourceUsage {
+                plan_steps: 1,
+                model_calls: 1,
+                tool_calls: 0,
+                input_bytes: 1,
+                output_bytes: 0,
+                elapsed_ms: 1,
+                peak_memory_bytes: 1,
+                disk_bytes: 0,
+                process_count: 0,
+                event_count: 9,
+                event_bytes: 9,
+                artifact_count: 0,
+                artifact_bytes: 0,
+                denial_count: 0,
+                parser_failure_count: 0,
+                retry_count: 0,
+            },
             tool_attempts: Vec::new(),
             tool_results: Vec::new(),
             evidence: Vec::new(),
@@ -2861,6 +2902,11 @@ mod tests {
         let output_bytes = vec![b'x'; agentmage_kernel_contracts::MAX_CONTRACT_JSON_BYTES + 1];
         let tool_call_id = agentmage_kernel_contracts::ToolCallId::from_raw("call-large-1");
         continuation.tool_call_count = 1;
+        continuation.resources.tool_calls = 1;
+        continuation.resources.output_bytes = output_bytes
+            .len()
+            .try_into()
+            .expect("fixture output size fits u64");
         continuation.tool_attempts = vec![agentmage_kernel_contracts::RuntimeToolAttemptState {
             schema_version: CONTRACT_SCHEMA_VERSION,
             sequence: 1,
@@ -2933,6 +2979,8 @@ mod tests {
     fn continuation_digest_binds_cursor_and_collected_state() {
         let mut changed = continuation();
         changed.event_cursor.sequence += 1;
+        changed.resources.event_count += 1;
+        changed.resources.event_bytes += 1;
         assert_eq!(
             verify_runtime_continuation_state(&changed),
             Err(RuntimeArtifactError::DigestMismatch)

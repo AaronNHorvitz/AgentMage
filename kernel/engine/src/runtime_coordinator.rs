@@ -12,6 +12,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use crate::model_runtime::{ModelAdmissionCatalog, ModelUsePurpose};
+use crate::runtime_hardening::RuntimeHardeningLimits;
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const MAX_IDENTIFIER_BYTES: usize = 128;
@@ -228,6 +229,8 @@ fn validate_runtime_run_request_shape(
     }
     validate_profile_and_context(request)?;
     validate_limits(request)?;
+    RuntimeHardeningLimits::from_request(request)
+        .map_err(|_| RuntimeCoordinatorError::InvalidLimits)?;
     if request.tool_catalog_sha256
         != runtime_tool_catalog_sha256(&request.tool_catalog_id, &request.visible_tools)?
     {

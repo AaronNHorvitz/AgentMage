@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
-    ActionId, AgentProposal, AgentStateKind, ApprovalId, CONTRACT_SCHEMA_VERSION,
+    ActionId, AgentProposal, AgentStateKind, ApprovalId, BudgetResource, CONTRACT_SCHEMA_VERSION,
     CancellationSignal, ClosedModelProposal, ContextPacketId, CorrelationId, EvidenceReference,
     ExactModelProfile, GrantId, GrantOperation, LocalModelRuntime, ModelCancellationProbe,
     ModelContextPacket, ModelFamilyCodec, ModelProposalKind, ModelRunId, ModelRunRequest,
@@ -40,6 +40,7 @@ use crate::runtime_event::{
     RuntimeEventDelivery, RuntimeEventError, RuntimeEventPublisher, RuntimeEventSubscription,
     runtime_event_persistence, seal_runtime_event,
 };
+use crate::runtime_hardening::{RuntimeResourceLedger, RuntimeResourceSnapshot};
 use crate::tooling::{
     PreGrantDispatchDisposition, ProposalOrigin, ToolAttemptGuard, ToolDispatcher, ToolRegistry,
 };
@@ -443,6 +444,7 @@ where
     verifier: V,
     clock: C,
     publisher: RuntimeEventPublisher,
+    resources: RuntimeResourceLedger,
     journal: Option<RuntimeJournalHooks<T>>,
     artifact: Option<RuntimeArtifactHooks<T>>,
     checkpoint: Option<RuntimeCheckpointHooks<T>>,
@@ -650,6 +652,8 @@ where
             request.limits.max_tool_call_depth,
         )
         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let resources = RuntimeResourceLedger::new(&request)
+            .map_err(|_| RuntimeLoopError::Contract(RuntimeCoordinatorError::InvalidLimits))?;
         let correlation_id =
             CorrelationId::from_raw(derived_id("correlation", request.run_id.as_str(), 0));
         let evidence = request.work_packet.authoritative_evidence.clone();
@@ -662,6 +666,7 @@ where
             verifier,
             clock,
             publisher: RuntimeEventPublisher::new(),
+            resources,
             journal,
             artifact,
             checkpoint,
@@ -695,6 +700,9 @@ where
         &self,
         capacity: usize,
     ) -> Result<RuntimeEventSubscription, RuntimeLoopError> {
+        self.resources
+            .validate_subscription_capacity(capacity)
+            .map_err(|_| RuntimeLoopError::Event(RuntimeEventError::SubscriberLimit))?;
         self.publisher.subscribe(capacity).map_err(Into::into)
     }
 
@@ -714,6 +722,12 @@ where
     #[must_use]
     pub fn artifact_references(&self) -> &[RuntimeArtifactRef] {
         &self.artifact_references
+    }
+
+    /// Returns content-free request-bound resource accounting for diagnostics and verification.
+    #[must_use]
+    pub const fn resource_snapshot(&self) -> &RuntimeResourceSnapshot {
+        self.resources.snapshot()
     }
 
     /// Runs until a protected approval or canonical terminal outcome is reached.
@@ -819,6 +833,9 @@ where
         &mut self,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
+        self.resources
+            .consume(BudgetResource::PlanSteps, 1)
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         self.turn_count += 1;
         self.context_refresh_count += 1;
         let turn_id = RuntimeTurnId::from_raw(derived_id(
@@ -852,7 +869,17 @@ where
                 );
             }
         };
+        if self
+            .resources
+            .consume(BudgetResource::InputBytes, context.input_bytes)
+            .is_err()
+        {
+            return self.finish_budget_exhaustion(&turn_id);
+        }
 
+        self.resources
+            .consume(BudgetResource::ModelCalls, 1)
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         self.model_call_count += 1;
         let model_run_id = ModelRunId::from_raw(derived_id(
             "model-run",
@@ -905,12 +932,35 @@ where
             )?;
             return self.finish_model_failure(&turn_id, RuntimePortFailure::Invalid);
         }
+        let model_memory = result
+            .resources
+            .resident_memory_bytes
+            .checked_add(result.resources.accelerator_memory_bytes);
+        if model_memory.is_none_or(|bytes| self.resources.observe_memory_peak(bytes).is_err())
+            || self
+                .resources
+                .consume(
+                    BudgetResource::ElapsedMilliseconds,
+                    result.resources.elapsed_ms,
+                )
+                .is_err()
+        {
+            self.emit(
+                RuntimeEventKind::ModelFailed {
+                    model_run_id,
+                    failure_code: "runtime.budget.exhausted".to_owned(),
+                },
+                Some(&turn_id),
+                None,
+            )?;
+            return self.finish_model_failure(&turn_id, RuntimePortFailure::ResourceExhausted);
+        }
         let result_sha256 = contract_sha256(&result)?;
         match result.terminal_state {
             ModelRunTerminalState::Proposed => {
                 self.emit(
                     RuntimeEventKind::ModelCompleted {
-                        model_run_id,
+                        model_run_id: model_run_id.clone(),
                         result_sha256,
                     },
                     Some(&turn_id),
@@ -924,7 +974,7 @@ where
             ModelRunTerminalState::Cancelled => {
                 self.emit(
                     RuntimeEventKind::ModelFailed {
-                        model_run_id,
+                        model_run_id: model_run_id.clone(),
                         failure_code: "runtime.model.cancelled".to_owned(),
                     },
                     Some(&turn_id),
@@ -935,7 +985,7 @@ where
             ModelRunTerminalState::TimedOut => {
                 self.emit(
                     RuntimeEventKind::ModelFailed {
-                        model_run_id,
+                        model_run_id: model_run_id.clone(),
                         failure_code: "runtime.model.timed_out".to_owned(),
                     },
                     Some(&turn_id),
@@ -946,7 +996,7 @@ where
             ModelRunTerminalState::ResourceExhausted => {
                 self.emit(
                     RuntimeEventKind::ModelFailed {
-                        model_run_id,
+                        model_run_id: model_run_id.clone(),
                         failure_code: "runtime.model.resource_exhausted".to_owned(),
                     },
                     Some(&turn_id),
@@ -1020,18 +1070,22 @@ where
             ModelProposalKind::EvidenceRequest
             | ModelProposalKind::UserQuestion
             | ModelProposalKind::Blocked => {
-                let output = proposal
-                    .payload
-                    .map(|payload| {
-                        self.route_runtime_output(
+                let output = match proposal.payload {
+                    Some(payload) => {
+                        let Some(output) = self.route_runtime_output(
                             payload,
                             RuntimeArtifactKind::ModelOutput,
                             &turn_id,
                             None,
                             None,
-                        )
-                    })
-                    .transpose()?;
+                        )?
+                        else {
+                            return self.finish_budget_exhaustion(&turn_id);
+                        };
+                        Some(output)
+                    }
+                    None => None,
+                };
                 self.state
                     .transition(AgentStateKind::Blocked)
                     .map_err(|_| RuntimeLoopError::State)?;
@@ -1091,13 +1145,16 @@ where
         let completion = match registry.verify(&candidate) {
             Ok(completion) => completion,
             Err(_) => {
-                let output = self.route_runtime_output(
+                let Some(output) = self.route_runtime_output(
                     payload,
                     RuntimeArtifactKind::ModelOutput,
                     &turn_id,
                     None,
                     None,
-                )?;
+                )?
+                else {
+                    return self.finish_budget_exhaustion(&turn_id);
+                };
                 self.state
                     .transition(AgentStateKind::Failed)
                     .map_err(|_| RuntimeLoopError::State)?;
@@ -1109,13 +1166,16 @@ where
                 );
             }
         };
-        let output = self.route_runtime_output(
+        let Some(output) = self.route_runtime_output(
             payload,
             RuntimeArtifactKind::ModelOutput,
             &turn_id,
             None,
             None,
-        )?;
+        )?
+        else {
+            return self.finish_budget_exhaustion(&turn_id);
+        };
         self.state
             .complete(&completion)
             .map_err(|_| RuntimeLoopError::State)?;
@@ -1162,6 +1222,9 @@ where
         let Some(candidate) = proposal.tool_call else {
             return self.finish_invalid_proposal(&turn_id);
         };
+        self.resources
+            .consume(BudgetResource::ToolCalls, 1)
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         self.tool_call_count += 1;
         let call = ToolCall {
             schema_version: CONTRACT_SCHEMA_VERSION,
@@ -1177,6 +1240,24 @@ where
             .validate_arguments(&call)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?
             .clone();
+        let process_attempts = u64::from(
+            definition.required_grant.operation.operation() == GrantOperation::CommandExecute,
+        );
+        if self
+            .resources
+            .consume(
+                BudgetResource::InputBytes,
+                u64::try_from(call.arguments.bytes.len())
+                    .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+            )
+            .is_err()
+            || self
+                .resources
+                .consume(BudgetResource::ProcessCount, process_attempts)
+                .is_err()
+        {
+            return self.finish_budget_exhaustion(&turn_id);
+        }
         let receipt = ToolDispatcher::new(&self.registry).dispatch(ProposalOrigin::Model, &call);
         if receipt.disposition != PreGrantDispatchDisposition::GrantRequired {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
@@ -1284,6 +1365,9 @@ where
                 reason_code,
                 ..
             } => {
+                self.resources
+                    .record_denial()
+                    .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
                 self.emit(
                     RuntimeEventKind::PermissionDecided {
                         approval_id: approval_id.clone(),
@@ -1413,18 +1497,18 @@ where
         match execution.result.outcome {
             OperationOutcome::Succeeded => {
                 let result_sha256 = contract_sha256(&execution.result)?;
-                if let Some(payload) = execution.result.output.clone()
-                    && payload.bytes.len() > MAX_RUNTIME_INLINE_OUTPUT_BYTES
-                    && self.artifact.is_some()
-                {
+                let mut output_exhausted = false;
+                if let Some(payload) = execution.result.output.clone() {
                     let artifact_kind = tool_artifact_kind(&definition, &payload.media_type);
-                    self.route_runtime_output(
-                        payload,
-                        artifact_kind,
-                        &turn_id,
-                        Some(&operation_id),
-                        Some(&execution.receipt_id),
-                    )?;
+                    output_exhausted = self
+                        .route_runtime_output(
+                            payload,
+                            artifact_kind,
+                            &turn_id,
+                            Some(&operation_id),
+                            Some(&execution.receipt_id),
+                        )?
+                        .is_none();
                 }
                 self.emit(
                     RuntimeEventKind::ToolCompleted {
@@ -1461,7 +1545,14 @@ where
                     self.no_progress_turns = 0;
                 }
                 self.close_turn(&turn_id, execution.receipt_sha256)?;
-                if self.no_progress_turns >= self.request.limits.max_no_progress_turns {
+                if output_exhausted {
+                    self.transition_terminal(AgentStateKind::Exhausted)?;
+                    self.finish_terminal(
+                        AgentStateKind::Exhausted,
+                        vec!["runtime.budget.exhausted".to_owned()],
+                        None,
+                    )
+                } else if self.no_progress_turns >= self.request.limits.max_no_progress_turns {
                     self.state
                         .transition(AgentStateKind::Stalled)
                         .map_err(|_| RuntimeLoopError::State)?;
@@ -1552,6 +1643,7 @@ where
             tool_call_count: self.tool_call_count,
             context_refresh_count: self.context_refresh_count,
             no_progress_turns: self.no_progress_turns,
+            resources: self.resources.durable_usage(),
             tool_attempts: self.tool_attempts.clone(),
             tool_results: self.tool_results.clone(),
             evidence: self.evidence.clone(),
@@ -1562,6 +1654,21 @@ where
         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         let payload = encode_runtime_continuation_state(&continuation)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        if self
+            .resources
+            .admit_artifact(
+                u64::try_from(payload.len())
+                    .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+            )
+            .is_err()
+        {
+            self.transition_terminal(AgentStateKind::Exhausted)?;
+            return self.finish_terminal(
+                AgentStateKind::Exhausted,
+                vec!["runtime.budget.exhausted".to_owned()],
+                None,
+            );
+        }
         let continuation_artifact = self.publish_artifact_bytes(
             &payload,
             RUNTIME_CONTINUATION_MEDIA_TYPE,
@@ -1644,6 +1751,38 @@ where
             &snapshot.continuation.tool_attempts,
         )
         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let mut restored_resources =
+            RuntimeResourceLedger::restore(&self.request, &snapshot.continuation.resources)
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let event_bytes = events.iter().try_fold(0_u64, |total, event| {
+            let bytes = to_canonical_json(event)
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?
+                .len();
+            total
+                .checked_add(
+                    u64::try_from(bytes).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+                )
+                .ok_or(RuntimeLoopError::InvalidBoundaryResult)
+        })?;
+        let artifact_bytes =
+            snapshot
+                .binding
+                .artifacts
+                .iter()
+                .try_fold(0_u64, |total, artifact| {
+                    total
+                        .checked_add(artifact.byte_size)
+                        .ok_or(RuntimeLoopError::InvalidBoundaryResult)
+                })?;
+        restored_resources
+            .reconcile_durable_projection(
+                u32::try_from(events.len()).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+                event_bytes,
+                u32::try_from(snapshot.binding.artifacts.len())
+                    .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+                artifact_bytes,
+            )
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         for event in &events {
             self.publisher.publish(event.clone())?;
         }
@@ -1652,6 +1791,7 @@ where
         self.events = events;
         self.state = restored_state;
         self.attempt_guard = restored_guard;
+        self.resources = restored_resources;
         self.tool_results = snapshot.continuation.tool_results;
         self.evidence = snapshot.continuation.evidence;
         self.receipt_ids = snapshot.continuation.receipt_ids;
@@ -1691,6 +1831,9 @@ where
     }
 
     fn finish_invalid_proposal(&mut self, turn_id: &RuntimeTurnId) -> Result<(), RuntimeLoopError> {
+        self.resources
+            .record_parser_failure()
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         self.transition_terminal(AgentStateKind::Failed)?;
         self.close_turn(turn_id, sha256(b"runtime.proposal.invalid"))?;
         self.finish_terminal(
@@ -1716,6 +1859,19 @@ where
         self.transition_terminal(state)?;
         self.close_turn(turn_id, sha256(failure.code().as_bytes()))?;
         self.finish_terminal(state, vec![failure.code().to_owned()], None)
+    }
+
+    fn finish_budget_exhaustion(
+        &mut self,
+        turn_id: &RuntimeTurnId,
+    ) -> Result<(), RuntimeLoopError> {
+        self.transition_terminal(AgentStateKind::Exhausted)?;
+        self.close_turn(turn_id, sha256(b"runtime.budget.exhausted"))?;
+        self.finish_terminal(
+            AgentStateKind::Exhausted,
+            vec!["runtime.budget.exhausted".to_owned()],
+            None,
+        )
     }
 
     fn cancel(&mut self, signal: CancellationSignal) -> Result<(), RuntimeLoopError> {
@@ -1914,6 +2070,14 @@ where
             ),
             event_sha256: ZERO_SHA256.to_owned(),
         })?;
+        let event_bytes = to_canonical_json(&event)
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?
+            .len();
+        self.resources
+            .admit_event(
+                u64::try_from(event_bytes).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+            )
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         if let Some(journal) = self.journal.as_ref() {
             (journal.append)(&mut self.tool_boundary, &event)
                 .map_err(RuntimeLoopError::Dependency)?;
@@ -1930,9 +2094,21 @@ where
         turn_id: &RuntimeTurnId,
         operation_id: Option<&RuntimeOperationId>,
         receipt_id: Option<&ReceiptId>,
-    ) -> Result<RuntimeOutput, RuntimeLoopError> {
+    ) -> Result<Option<RuntimeOutput>, RuntimeLoopError> {
+        let payload_bytes = u64::try_from(payload.bytes.len())
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        if self
+            .resources
+            .consume(BudgetResource::OutputBytes, payload_bytes)
+            .is_err()
+        {
+            return Ok(None);
+        }
         if payload.bytes.len() <= MAX_RUNTIME_INLINE_OUTPUT_BYTES || self.artifact.is_none() {
-            return Ok(RuntimeOutput::Inline { payload });
+            return Ok(Some(RuntimeOutput::Inline { payload }));
+        }
+        if self.resources.admit_artifact(payload_bytes).is_err() {
+            return Ok(None);
         }
         let payload_reference =
             runtime_payload_reference_from_artifact(&self.publish_artifact_bytes(
@@ -1944,9 +2120,9 @@ where
                 receipt_id,
                 true,
             )?)?;
-        Ok(RuntimeOutput::Artifact {
+        Ok(Some(RuntimeOutput::Artifact {
             reference: payload_reference,
-        })
+        }))
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2453,6 +2629,8 @@ fn valid_model_result(result: &ModelRunResult, request: &ModelRunRequest) -> boo
         || result.resources.adapter_id != request.adapter_id
         || result.resources.profile_id != request.profile_id
         || result.resources.model_run_id.as_ref() != Some(&request.model_run_id)
+        || result.resources.output_tokens > request.max_output_tokens
+        || result.resources.elapsed_ms > request.timeout_ms
     {
         return false;
     }
