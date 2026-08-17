@@ -5,12 +5,12 @@
 This document is the review artifact for Story 21.2. The closed runtime-event
 envelope, hash-chain verifier, legal transition engine, bounded in-process
 publisher, dedicated bounded journal worker, encrypted SQLite projection,
-terminal flush, restart verification, and story-local projection canary
-coverage exist in source. The complete story remains open for atomic
-correctness-event linkage to every owning authority transaction, persisted
-transcript and diagnostics lifecycle completion, crash injection at every
-boundary, real-disk cancellation evidence, installed-client evidence, and
-independent review.
+terminal flush, restart verification, authority-owned correctness-event
+transactions, and story-local projection canary coverage exist in source. The
+complete story remains open for persisted transcript and diagnostics lifecycle
+completion, crash injection at every boundary, recovery-event reconciliation,
+real-disk cancellation evidence, installed-client evidence, and independent
+review.
 
 No statement in this document enables a model, platform, release, transcript,
 external telemetry path, or general event bus.
@@ -22,9 +22,10 @@ external telemetry path, or general event bus.
 2. Only the runtime coordinator creates canonical events. A model, client,
    tool, transcript renderer, diagnostics sink, or subscriber cannot create
    authority or certify completion through an event.
-3. Correctness events are committed before their effect or terminal result is
-   represented as durable. Progress and metrics may be delayed only within
-   declared count, byte, batch, and age ceilings.
+3. A grant, effect launch, receipt, or checkpoint correctness event is written
+   inside the SQLite transaction that publishes its owning authority state.
+   Progress and metrics may be delayed only within declared count, byte,
+   batch, and age ceilings.
 4. Raw prompts, token fragments, secrets, credentials, environment values,
    absolute paths, large output, and transcript prose do not belong in the
    canonical event envelope.
@@ -90,30 +91,63 @@ nondecreasing. No event is legal after `run_terminal`.
 sequenceDiagram
     participant M as Model adapter
     participant R as Runtime coordinator
-    participant P as Policy and grant boundary
+    participant P as Authority transaction boundary
     participant T as Tool worker
-    participant J as Canonical journal
     M-->>R: Typed tool proposal only
-    R->>J: tool_requested
     R->>P: Evaluate exact operation
-    alt ASK
-        R->>J: permission_requested
-        P-->>R: Exact user decision and grant
-        R->>J: permission_decided
+    P->>P: TX parent grant + permission_requested
+    P-->>R: Protected approval challenge + committed event
+    alt ALLOW
+        R->>P: Exact user decision
+        P->>P: TX operation grant + permission_decided
+        P-->>R: Allowed authority + committed event
+        R->>P: Begin exact effect
+        P->>P: TX launch authority + tool_started
+        P->>T: Execute bounded operation
+        T-->>P: Normalized result
+        P->>P: TX terminal receipt + tool_completed or tool_failed
+        P-->>R: Execution + committed events
+        R->>P: Commit safe checkpoint
+        P->>P: TX checkpoint + resume binding + checkpoint_committed
     else DENY
-        R->>J: permission_decided (DENY)
+        R->>P: Exact denial
+        P->>P: TX unchanged authority snapshot + permission_decided
+        P-->>R: Denied result + committed event
     end
-    R->>P: Consume exact grant
-    R->>J: tool_started with authority digest
-    R->>T: Execute bounded operation
-    T-->>R: Result and receipt
-    R->>J: effect observation and tool terminal event
 ```
 
 The event is evidence of a completed authority transition, not the authority
 itself. `ALLOW` can reach `tool_started` only after the policy boundary returns
 and consumes an exact current grant. `ASK` starts no effect while awaiting a
 response. `DENY` removes the pending call and starts no effect.
+
+### Atomic correctness transactions
+
+| Boundary | Rows co-published before acknowledgement | Failure behavior |
+|---|---|---|
+| Permission request | New session parent grant revisions and exact `permission_requested` event | Candidate grant remains absent if event validation or insertion fails. |
+| Permission allow | Derived operation grant revisions and exact `permission_decided` event | Parent remains current without the proposed child grant. |
+| Permission deny | Unchanged authority snapshot generation and exact denial event | No effect authority exists and no denial event is claimed. |
+| Generic effect start | Consumed grant and launch-committed transaction revision with exact `tool_started` event | No worker launch is acknowledged unless both records commit. |
+| Generic terminal result | Terminal transaction, canonical receipt, final grant state, and exact `tool_completed` or `tool_failed` event | A rejected event leaves the last recoverable preterminal authority revision durable. |
+| Controlled write or filesystem start | First durable authority-consumption checkpoint and exact `tool_started` event | The specialized effect cannot be reported as started without its consumed authority snapshot. |
+| Controlled write or filesystem terminal | Final current authority snapshot and exact normalized terminal event | A failed event publication poisons the in-process runtime and requires reopen. |
+| Safe checkpoint | Session checkpoint, runtime resume binding, and exact `checkpoint_committed` event | Generation, checkpoint, binding, and event all roll back together. |
+
+The authority runtime flushes every previously accepted asynchronous event
+before a direct correctness transaction. SQLite validates and inserts the new
+event rows before committing the authority generation. Only then does the
+runtime replace its in-memory grant candidate, acknowledge the coordinator,
+and reconcile the dedicated writer's verified sequence. An insertion,
+constraint, integrity, or commit failure poisons the current store/runtime and
+requires a verified reopen.
+
+The focused rollback tests inject SQLite event failures and prove that no grant,
+checkpoint, binding, generation, or false terminal event survives its failed
+transaction. A process stop after an actual worker launch can still require
+authority recovery while the event stream ends at `tool_started`; completing
+and testing that recovery-to-terminal-event reconciliation remains owned by
+Sub-task 21.2.3.2 and is not claimed here.
 
 ## Projection Matrix
 
@@ -220,14 +254,16 @@ to its closed resource-exhaustion state. Queue and byte accounting use checked
 reconciliation. An impossible committed count or byte total is an integrity
 failure, never a saturating subtraction.
 
-Correctness submission flushes itself and every queued predecessor in one
-transaction before returning. Progress and metrics are deferred until batch,
-an explicit logical-age probe, explicit flush, checkpoint, terminal, or
-shutdown synchronization. The worker never persists one record per streamed
-token because token fragments are excluded from the event contract. The
-publisher is independent of the store lock, and a deterministic slow-store
-test proves accepted progress and client delivery can continue while the sole
-connection is unavailable.
+Standalone correctness submission flushes itself and every queued predecessor
+in one worker transaction before returning. Transaction-bound correctness first
+flushes every accepted predecessor, inserts the new event inside its owning
+authority transaction, and reconciles the worker sequence after commit.
+Progress and metrics are deferred until batch, an explicit logical-age probe,
+explicit flush, checkpoint, terminal, or shutdown synchronization. The worker
+never persists one record per streamed token because token fragments are
+excluded from the event contract. The publisher is independent of the store
+lock, and a deterministic slow-store test proves accepted progress and client
+delivery can continue while the sole connection is unavailable.
 
 Storage, integrity, lock, or worker-channel ambiguity becomes sticky. The
 worker stops consuming queued work, correctness waiters receive failure or
@@ -279,6 +315,7 @@ shutdown evidence remain open under Sub-tasks 21.2.3.2, 21.2.3.3, and 21.2.3.5.
 | Legal ordering and binding rejection | `runtime_event` unit tests | Implemented locally; exhaustive family matrix retained here |
 | Bounded nonblocking subscribers | `runtime_event` unit tests | Implemented locally |
 | Atomic batches, queue bounds, terminal flush, restart tamper detection | `runtime_journal` unit tests | Implemented locally |
+| Grant, effect, receipt, and checkpoint event co-publication | `operational_store`, `authority_transaction`, `runtime_loop`, and Linux host tests | Implemented locally; full process-stop recovery matrix remains open |
 | Coordinator event emission and client verification | `runtime_loop`, `coding_client` tests | Implemented at source level |
 | Transcript and diagnostics lifecycle | Story 21.2 and later conversation work | Open |
 | Dedicated bounded worker, saturation, sticky failure, shutdown, and slow-store client isolation | `runtime_journal` worker tests and Story 50.2 load campaign | Implemented at source level |

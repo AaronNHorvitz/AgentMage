@@ -33,6 +33,22 @@
   returns exact saturation without accepting the event, terminal flush and
   shutdown preserve exact replay, and storage failure becomes sticky without
   creating false history.
+- The durable correctness port co-publishes permission requests with parent
+  grants, allow decisions with operation grants, tool starts with consumed
+  launch authority, terminal tool events with normalized receipt state, and
+  checkpoint events with the checkpoint and resume binding. Direct commits
+  flush accepted asynchronous predecessors and reconcile the worker sequence
+  after success.
+- Paired SQLCipher tests prove parent grant/event and checkpoint/binding/event
+  publication survive a process reopen together. Injected event-insert failures
+  preserve the prior generation and leave no candidate grant, checkpoint,
+  binding, or false terminal event. Generic effect tests prove the start and
+  terminal receipt chain reopens exactly and that a rejected terminal event
+  requires authority recovery without inventing a completion event.
+- The durable Linux coding composition emits and verifies the exact ordered
+  subsequence `permission_requested`, `permission_decided`, `tool_started`,
+  `tool_completed`, and `checkpoint_committed`; the terminal timestamp is
+  sampled only after normalized tool execution returns.
 - The immutable Fedora worker campaign binds nine command logs and 42 focused
   tests to source commit `f8d521c4dc4bb9b2053447a61aaac04028b4906b`;
   its 8,196-event workload, bounded saturation recovery, memory, disk,
@@ -48,7 +64,7 @@
   runtime event, journal, projection, artifact, and CLI-client implementation.
 - A deterministic hashed index maps every Story 21.2 sub-task to its exact
   statement, implementation files, executable tests, and retained evidence.
-  It preserves 11 complete, three partial, and two open sub-tasks and rejects
+  It preserves 12 complete, three partial, and one open sub-task and rejects
   omission, reorder, status, statement, file, test, digest, and completion
   mutations.
 - The JSON schema and canonical Rust example pass the repository schema gate.
@@ -64,8 +80,8 @@ cargo test -p agentmage-kernel-engine runtime_artifact --lib --locked
 cargo test -p agentmage-kernel-engine story_21_2_ --lib --locked
 cargo test -p agentmage-kernel-engine --lib --locked
 cargo test -p agentmage-host --lib --locked
-cargo clippy -p agentmage-kernel-engine --lib --tests --locked -- -D warnings
-cargo clippy -p agentmage-host --lib --tests --locked -- -D warnings
+cargo clippy -p agentmage-kernel-engine --all-targets --locked -- -D warnings
+cargo clippy -p agentmage-host --all-targets --locked -- -D warnings
 python3 scripts/story_21_2_evidence_index.py --check
 python3 -m unittest tests.test_story_21_2_evidence_index
 npm run schemas:check
@@ -76,10 +92,10 @@ python3 scripts/runtime_hardening_load.py --output <fresh-evidence-path>
 
 ## Open Evidence
 
-- Atomic co-publication of every grant, effect, receipt, and checkpoint event
-  inside its owning authority transaction remains open. Correctness journal
-  acknowledgement is durable, but it is not evidence of that wider atomic
-  transaction binding.
+- Complete process-stop reconciliation between a physically launched effect,
+  recovered authority/receipt state, and the still-open `tool_started` journal
+  transition remains under the crash-boundary matrix. The current source does
+  not fabricate a terminal event during authority-only recovery.
 - The slow-store source test holds the sole connection lock deterministically;
   real filesystem or device fault injection and integrated model-stream and
   cancellation latency while storage is blocked remain open.

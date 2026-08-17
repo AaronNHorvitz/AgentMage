@@ -29,9 +29,9 @@ class Story212EvidenceIndexTests(unittest.TestCase):
             [mapping["task_id"] for mapping in index["mappings"]],
             [mapping["task_id"] for mapping in MAPPINGS],
         )
-        self.assertEqual(index["summary"]["complete_count"], 11)
+        self.assertEqual(index["summary"]["complete_count"], 12)
         self.assertEqual(index["summary"]["partial_count"], 3)
-        self.assertEqual(index["summary"]["open_count"], 2)
+        self.assertEqual(index["summary"]["open_count"], 1)
         self.assertFalse(index["summary"]["story_complete"])
         self.assertTrue(all(len(item["statement_sha256"]) == 64 for item in index["mappings"]))
 

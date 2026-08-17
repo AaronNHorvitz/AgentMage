@@ -30,6 +30,7 @@ EVIDENCE_PATHS = (
     "docs/verification/story-21-2-local-results.md",
     "fixtures/runtime-hardening/v1/linux-reference-load-profile.json",
     "kernel/contracts/src/runtime_event.rs",
+    "kernel/engine/src/authority_transaction.rs",
     "kernel/engine/src/operational_store.rs",
     "kernel/engine/src/runtime_artifact.rs",
     "kernel/engine/src/runtime_event.rs",
@@ -82,14 +83,27 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
     },
     {
         "task_id": "21.2.1.4",
-        "status": "open",
+        "status": "complete",
         "code": [
+            "kernel/engine/src/authority_transaction.rs",
             "kernel/engine/src/operational_store.rs",
+            "kernel/engine/src/runtime_journal.rs",
             "kernel/engine/src/runtime_loop.rs",
             "shells/host/src/linux_coding_runtime.rs",
         ],
-        "tests": [],
-        "evidence": ["docs/verification/story-21-2-local-results.md"],
+        "tests": [
+            "correctness_event_and_parent_grant_survive_one_atomic_reopen",
+            "correctness_event_insert_failure_rolls_back_parent_grant_and_generation",
+            "effect_start_and_terminal_receipt_events_reopen_with_exact_authority",
+            "rejected_terminal_event_requires_recovery_without_a_false_completion_event",
+            "correctness_event_checkpoint_and_binding_survive_one_atomic_reopen",
+            "correctness_event_insert_failure_rolls_back_checkpoint_and_binding",
+            "durable_coding_run_persists_continuation_artifact_and_checkpoint",
+        ],
+        "evidence": [
+            "docs/architecture/runtime-event-journal.md",
+            "docs/verification/story-21-2-local-results.md",
+        ],
     },
     {
         "task_id": "21.2.1.5",
@@ -225,7 +239,7 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
 )
 
 LIMITATIONS = (
-    "Atomic co-publication of grant, effect, receipt, and checkpoint events remains open.",
+    "Complete process-stop recovery-to-terminal-event reconciliation remains open.",
     "The complete crash-boundary and real-filesystem latency matrices remain open.",
     "Only one retained Fedora source-host benchmark profile exists.",
     "Installed-client, supported-platform, and independent-review evidence remains open.",
