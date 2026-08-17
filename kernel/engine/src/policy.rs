@@ -487,7 +487,7 @@ fn validate_document(document: &PolicyDocument) -> Result<(), PolicyBuildError> 
         .iter()
         .chain(&document.targets.denied)
     {
-        if target.workspace_path().is_none() {
+        if !target.is_operation_target() {
             return Err(PolicyBuildError::InvalidDocument);
         }
         validate_scope_value(target.workspace_id().as_str())?;

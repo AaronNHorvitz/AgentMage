@@ -160,9 +160,7 @@ fn validate_scope(
     if targets.is_empty() || targets.len() > MAX_TARGETS || excluded_targets.len() > MAX_TARGETS {
         return Err(ApprovalRenderError::InvalidInput);
     }
-    if targets
-        .iter()
-        .any(|target| target.workspace_path().is_none())
+    if targets.iter().any(|target| !target.is_operation_target())
         || excluded_targets
             .iter()
             .any(|target| target.scope_path().is_none())

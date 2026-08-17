@@ -836,7 +836,7 @@ fn validate_derived_request(
     if request
         .targets
         .iter()
-        .any(|target| target.workspace_path().is_none())
+        .any(|target| !target.is_operation_target())
     {
         return Err(GrantIssueError::InvalidInput);
     }
@@ -849,7 +849,7 @@ fn validate_derived_request(
         parent
             .excluded_targets
             .iter()
-            .any(|excluded| target_within(target, excluded))
+            .any(|excluded| excluded.overlaps_operation(target))
     }) {
         return Err(GrantIssueError::ScopeBroadened);
     }
@@ -1010,10 +1010,58 @@ mod tests {
     };
     use crate::test_target::{preimage, scope, target, target_for};
     use agentmage_kernel_contracts::{
-        ActionId, ActionKind, ActorId, ApprovalId, CapabilityGrant, DataSensitivity, GrantClass,
-        GrantId, GrantNonce, GrantOperation, GrantSideEffect, GrantStatus, OperationBinding,
-        SessionId, TaskId, ToolId,
+        ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, AuthorizedWorkspaceHandle,
+        CapabilityGrant, DataSensitivity, GrantClass, GrantId, GrantNonce, GrantOperation,
+        GrantSideEffect, GrantStatus, GrantTarget, HeldWorkspaceRoot, OperationBinding,
+        PathPlatform, SessionId, TaskId, ToolId, WorkspaceAuthorizationId, WorkspaceId,
+        WorkspaceObjectIdentity,
     };
+
+    #[derive(Debug)]
+    struct SyntheticHeldRoot {
+        workspace_id: WorkspaceId,
+        authorization_id: WorkspaceAuthorizationId,
+        adapter_instance_id: AdapterInstanceId,
+        identity: WorkspaceObjectIdentity,
+    }
+
+    impl AuthorizedWorkspaceHandle for SyntheticHeldRoot {
+        fn workspace_id(&self) -> &WorkspaceId {
+            &self.workspace_id
+        }
+
+        fn authorization_id(&self) -> &WorkspaceAuthorizationId {
+            &self.authorization_id
+        }
+
+        fn adapter_instance_id(&self) -> &AdapterInstanceId {
+            &self.adapter_instance_id
+        }
+
+        fn platform(&self) -> PathPlatform {
+            self.identity.platform()
+        }
+    }
+
+    impl HeldWorkspaceRoot for SyntheticHeldRoot {
+        fn root_identity(&self) -> &WorkspaceObjectIdentity {
+            &self.identity
+        }
+    }
+
+    fn held_root_target() -> GrantTarget {
+        GrantTarget::held_workspace_root(&SyntheticHeldRoot {
+            workspace_id: WorkspaceId::from_raw("workspace-0001"),
+            authorization_id: WorkspaceAuthorizationId::from_raw("authorization-0001"),
+            adapter_instance_id: AdapterInstanceId::from_raw("adapter-0001"),
+            identity: WorkspaceObjectIdentity::new(
+                PathPlatform::DeterministicFake,
+                [7; 32],
+                [8; 32],
+            ),
+        })
+        .expect("held root target")
+    }
 
     fn session_request() -> SessionReadGrantRequest {
         SessionReadGrantRequest {
@@ -1241,6 +1289,13 @@ mod tests {
         let error = issuer
             .derive_operation(&parent.grant_id, reused.clone())
             .expect_err("excluded child must fail");
+        assert_eq!(error, GrantIssueError::ScopeBroadened);
+
+        reused.targets = vec![held_root_target()];
+        reused.preimages.clear();
+        let error = issuer
+            .derive_operation(&parent.grant_id, reused.clone())
+            .expect_err("root target overlapping an excluded child must fail");
         assert_eq!(error, GrantIssueError::ScopeBroadened);
 
         reused.targets = vec![target_for(

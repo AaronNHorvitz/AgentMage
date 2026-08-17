@@ -17,16 +17,23 @@ authorization remain outside this increment.
 contains one `WorkspaceId` and normalized relative components. Its private
 fields and custom deserializer force all values through the same validation.
 
-`WorkspaceScopePath` is the root-capable counterpart used only for approved
-session scope. It permits zero components for the workspace root and otherwise
-uses the exact `WorkspacePath` component validator. `GrantTarget` then closes
-the authority representation into either an authorization-bound scope or an
-exact held object; raw string components are not retained as a weaker grant
-path.
+`WorkspaceScopePath` is the root-capable counterpart used for approved session
+scope and for the path-free identity of a held workspace root. It permits zero
+components for the workspace root and otherwise uses the exact `WorkspacePath`
+component validator. `GrantTarget` closes the authority representation into an
+authorization-bound session scope, an exact held child object, or an exact
+descriptor-held workspace root; raw string components are not retained as a
+weaker grant path.
 
 `AuthorizedWorkspaceHandle` binds a workspace authorization to one
 `AdapterInstanceId`, `WorkspaceAuthorizationId`, `WorkspaceId`, and
 `PathPlatform`. Its native root capability remains private to the adapter.
+
+`HeldWorkspaceRoot` extends that handle with content-free identity evidence for
+the continuously held root descriptor. It exists so an owned-worktree command
+can bind the repository root without making an empty `WorkspacePath` valid.
+Held-root operation authority overlaps every excluded subtree in the same
+workspace and is therefore denied when such an exclusion is inherited.
 
 `HeldWorkspaceObject` retains the native object from validation through use and
 reports only canonical path, authorization, adapter, intent, object kind,
@@ -108,7 +115,8 @@ user interface. Debug and error output remain redacted. Any URI or rendered
 - Confirm held-object identity and exact preimage checks span validation and
   use.
 - Confirm session scopes and operation targets share the canonical component
-  parser and that only a session scope may name the root.
+  parser and that root operation authority requires a distinct held-root
+  descriptor rather than an empty `WorkspacePath`.
 - Confirm the worker boundary receives no workspace-root descriptor.
 - Confirm denial errors remain content-free and display links remain one-way.
 - Confirm macOS and Ubuntu claims remain blocked until their own execution

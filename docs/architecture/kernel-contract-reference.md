@@ -164,10 +164,11 @@ grant.
 candidate. `GrantClass` distinguishes parent session-read scope from a derived
 single-operation scope. `OperationBinding` closes the operation and authority
 taxonomy without a wildcard. `GrantTarget` is a tagged private-field value: a
-session target contains an authorization-bound `WorkspaceScopePath`, while an
-operation target contains a non-empty `WorkspacePath`, authorization and
-adapter identities, platform, object kind, object identity, and required file
-preimage. `GrantPreimage`, `GrantSideEffect`, `GrantNonce`, and `GrantStatus`
+session target contains an authorization-bound `WorkspaceScopePath`; a held-child
+operation target contains a non-empty `WorkspacePath`, authorization and adapter
+identities, platform, object kind, object identity, and required file preimage;
+and a held-root operation target binds an empty root scope to the identity of its
+continuously held descriptor. `GrantPreimage`, `GrantSideEffect`, `GrantNonce`, and `GrantStatus`
 bind indexed state, expected effects, anti-replay identity, use accounting, and
 lifecycle. Parsing the record does not make it current or authorize execution;
 issuer retention, policy, consumption, and exact held-object matching remain
@@ -177,15 +178,18 @@ kernel and platform-driver responsibilities.
 
 `WorkspacePath`, `WorkspaceScopePath`, and `WorkspacePathComponent` represent
 bounded, workspace-relative canonical components. `WorkspaceScopePath` alone
-may be empty to name an explicitly authorized root; every non-root component
-uses the same validator as `WorkspacePath`. `WorkspacePathError` and
+may be empty to name an explicitly authorized session root or identify an exact
+`HeldWorkspaceRoot`; it is never accepted as a held-child path. Every non-root
+component uses the same validator as `WorkspacePath`. `WorkspacePathError` and
 `WorkspacePathErrorKind` report content-free rejection classes. The limits are
 `MAX_WORKSPACE_PATH_COMPONENTS` and
 `MAX_WORKSPACE_PATH_COMPONENT_BYTES`.
 
 `PlatformPathAdapter` owns native `AuthorizedWorkspaceHandle` and
 `HeldWorkspaceObject` implementations so handles cannot be mixed across adapter
-instances. `PathPlatform`, `PathResolutionIntent`, `WorkspaceObjectKind`,
+instances. `HeldWorkspaceRoot` separately identifies a continuously held root
+descriptor without weakening the non-empty child-path contract. `PathPlatform`,
+`PathResolutionIntent`, `WorkspaceObjectKind`,
 `WorkspaceObjectIdentity`, and `FilePreimage` retain only bounded identity and
 digest evidence. `PathAdapterError` and `PathAdapterErrorKind` reject unsafe,
 stale, aliased, changed, unsupported, or over-limit resolutions without

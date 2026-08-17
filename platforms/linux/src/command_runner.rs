@@ -12,7 +12,6 @@ use std::process::{Child, Command, ExitStatus, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use agentmage_kernel_contracts::{HeldWorkspaceObject, PathResolutionIntent, WorkspaceObjectKind};
 use agentmage_kernel_engine::command_runner::{
     BoundedCommandExecutor, CommandLaunchPermit, CommandPlatformResult, CommandRegistry,
     CommandSpec, CommandTermination, CommandWorkingDirectory,
@@ -28,7 +27,7 @@ use rustix::process::getuid;
 use rustix::rand::{GetRandomFlags, getrandom};
 use sha2::{Digest, Sha256};
 
-use crate::{LinuxHeldObject, sandbox::compile_seccomp_policy};
+use crate::{LinuxAuthorizedWorkspace, sandbox::compile_seccomp_policy};
 
 const MAX_ARTIFACT_BYTES: u64 = 256 * 1024 * 1024;
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
@@ -179,7 +178,7 @@ impl LinuxBoundedCommandExecutor {
     fn run(
         &self,
         command: &CommandSpec,
-        held_working_directory: &LinuxHeldObject,
+        held_working_directory: &LinuxAuthorizedWorkspace,
         cancellation: &CancellationToken,
     ) -> CommandPlatformResult {
         let Some(artifact) = self.manifest.commands.get(&(
@@ -197,12 +196,7 @@ impl LinuxBoundedCommandExecutor {
         {
             return failed("linux.command.artifact.changed");
         }
-        if command.working_directory == CommandWorkingDirectory::OwnedWorktree
-            && (held_working_directory.intent() != PathResolutionIntent::ReadDirectory
-                || held_working_directory.object_kind() != WorkspaceObjectKind::Directory
-                || held_working_directory.preimage().is_some()
-                || held_working_directory.revalidate().is_err())
-        {
+        if held_working_directory.revalidate().is_err() {
             return failed("linux.command.worktree.changed");
         }
 
@@ -308,7 +302,7 @@ impl LinuxBoundedCommandExecutor {
         if command.working_directory == CommandWorkingDirectory::OwnedWorktree {
             let descriptor_path = format!(
                 "/proc/self/fd/{}",
-                held_working_directory.object_descriptor.as_raw_fd()
+                held_working_directory.root_descriptor.as_raw_fd()
             );
             let Ok(worktree_descriptor) = fs::File::open(descriptor_path) else {
                 return failed("linux.command.worktree.descriptor");
@@ -439,7 +433,7 @@ impl LinuxBoundedCommandExecutor {
 }
 
 impl BoundedCommandExecutor for LinuxBoundedCommandExecutor {
-    type WorkingDirectory = LinuxHeldObject;
+    type WorkingDirectory = LinuxAuthorizedWorkspace;
 
     fn execute(
         &mut self,
@@ -750,8 +744,8 @@ mod tests {
 
     use agentmage_kernel_contracts::{
         AdapterInstanceId, BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId,
-        CancellationReason, CancellationSignal, CorrelationId, PathResolutionIntent,
-        PlatformPathAdapter, TaskId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
+        CancellationReason, CancellationSignal, CorrelationId, TaskId, WorkspaceAuthorizationId,
+        WorkspaceId,
     };
     use agentmage_kernel_engine::command_runner::{
         CommandBounds, CommandRegistry, CommandRisk, CommandSpec, CommandTermination,
@@ -762,7 +756,7 @@ mod tests {
     use sha2::Digest as _;
 
     use super::{LinuxBoundedCommandExecutor, LinuxCommandManifest};
-    use crate::{DEFAULT_MAX_PREIMAGE_BYTES, LinuxHeldObject, LinuxPathAdapter};
+    use crate::LinuxAuthorizedWorkspace;
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -786,31 +780,20 @@ mod tests {
         }
     }
 
-    fn held_worktree() -> (TestDirectory, LinuxHeldObject) {
+    fn held_worktree() -> (TestDirectory, LinuxAuthorizedWorkspace) {
         let temporary = TestDirectory::new();
         fs::create_dir(temporary.0.join("owned-worktree")).expect("worktree creates");
         fs::write(temporary.0.join("owned-worktree/marker.txt"), b"agentmage")
             .expect("marker writes");
         let adapter_id = AdapterInstanceId::from_raw("adapter-linux-command-0001");
         let workspace = crate::authorize_workspace_root(
-            &temporary.0,
+            &temporary.0.join("owned-worktree"),
             WorkspaceId::from_raw("workspace-linux-command-0001"),
             WorkspaceAuthorizationId::from_raw("authorization-linux-command-0001"),
-            adapter_id.clone(),
+            adapter_id,
         )
         .expect("workspace authorizes");
-        let held = LinuxPathAdapter::new(adapter_id, DEFAULT_MAX_PREIMAGE_BYTES)
-            .resolve(
-                &workspace,
-                &WorkspacePath::new(
-                    WorkspaceId::from_raw("workspace-linux-command-0001"),
-                    ["owned-worktree"],
-                )
-                .expect("worktree path"),
-                PathResolutionIntent::ReadDirectory,
-            )
-            .expect("worktree resolves");
-        (temporary, held)
+        (temporary, workspace)
     }
 
     #[test]

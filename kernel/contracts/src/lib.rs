@@ -188,9 +188,9 @@ pub use platform::{
     PlatformStartupErrorKind, REQUIRED_PLATFORM_CAPABILITIES,
 };
 pub use platform_path::{
-    AuthorizedWorkspaceHandle, FilePreimage, HeldWorkspaceObject, PathAdapterError,
-    PathAdapterErrorKind, PathPlatform, PathResolutionIntent, PlatformPathAdapter,
-    WorkspaceObjectIdentity, WorkspaceObjectKind,
+    AuthorizedWorkspaceHandle, FilePreimage, HeldWorkspaceObject, HeldWorkspaceRoot,
+    PathAdapterError, PathAdapterErrorKind, PathPlatform, PathResolutionIntent,
+    PlatformPathAdapter, WorkspaceObjectIdentity, WorkspaceObjectKind,
 };
 pub use prompt::{Prompt, PromptMessage, PromptRole};
 pub use reasoning::{

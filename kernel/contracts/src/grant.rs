@@ -2,10 +2,10 @@
 
 use crate::{
     ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, AuthorizedWorkspaceHandle,
-    DataSensitivity, FilePreimage, GrantId, GrantNonce, HeldWorkspaceObject, OperationBinding,
-    PathPlatform, SessionId, TaskId, ToolId, WorkspaceAuthorizationId, WorkspaceId,
-    WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath, WorkspacePathComponent,
-    WorkspaceScopePath,
+    DataSensitivity, FilePreimage, GrantId, GrantNonce, HeldWorkspaceObject, HeldWorkspaceRoot,
+    OperationBinding, PathPlatform, SessionId, TaskId, ToolId, WorkspaceAuthorizationId,
+    WorkspaceId, WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
+    WorkspacePathComponent, WorkspaceScopePath,
 };
 
 /// Authority role assigned to one grant record.
@@ -52,13 +52,21 @@ enum GrantTargetBinding {
         #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
         preimage: Option<FilePreimage>,
     },
+    HeldWorkspaceRoot {
+        path: WorkspaceScopePath,
+        authorization_id: WorkspaceAuthorizationId,
+        adapter_instance_id: AdapterInstanceId,
+        platform: PathPlatform,
+        object_identity: WorkspaceObjectIdentity,
+    },
 }
 
 /// Canonical authorization-bound scope or exact descriptor-held object bound into a grant.
 ///
 /// Fields are private and deserialization revalidates cross-field invariants. Session parents
-/// carry only workspace scopes. Derived operation grants carry only exact held objects, so no
-/// operation target can contain raw path strings or omit platform identity.
+/// carry only workspace scopes. Derived operation grants carry exact held objects or an exact
+/// descriptor-held workspace root, so no operation target can contain raw path strings or omit
+/// platform identity.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize)]
 #[serde(transparent)]
 pub struct GrantTarget(GrantTargetBinding);
@@ -95,12 +103,26 @@ impl GrantTarget {
         Self::try_from(binding)
     }
 
+    /// Binds one exact descriptor-held workspace root and its platform identity.
+    pub fn held_workspace_root(held: &impl HeldWorkspaceRoot) -> Result<Self, GrantTargetError> {
+        let binding = GrantTargetBinding::HeldWorkspaceRoot {
+            path: WorkspaceScopePath::new(held.workspace_id().clone(), std::iter::empty::<&str>())
+                .map_err(|_| GrantTargetError::InvalidBinding)?,
+            authorization_id: held.authorization_id().clone(),
+            adapter_instance_id: held.adapter_instance_id().clone(),
+            platform: held.platform(),
+            object_identity: held.root_identity().clone(),
+        };
+        Self::try_from(binding)
+    }
+
     /// Returns the exact workspace identity.
     #[must_use]
     pub fn workspace_id(&self) -> &WorkspaceId {
         match &self.0 {
             GrantTargetBinding::WorkspaceScope { path, .. } => path.workspace_id(),
             GrantTargetBinding::HeldObject { path, .. } => path.workspace_id(),
+            GrantTargetBinding::HeldWorkspaceRoot { path, .. } => path.workspace_id(),
         }
     }
 
@@ -112,6 +134,9 @@ impl GrantTarget {
                 authorization_id, ..
             }
             | GrantTargetBinding::HeldObject {
+                authorization_id, ..
+            }
+            | GrantTargetBinding::HeldWorkspaceRoot {
                 authorization_id, ..
             } => authorization_id,
         }
@@ -128,6 +153,10 @@ impl GrantTarget {
             | GrantTargetBinding::HeldObject {
                 adapter_instance_id,
                 ..
+            }
+            | GrantTargetBinding::HeldWorkspaceRoot {
+                adapter_instance_id,
+                ..
             } => adapter_instance_id,
         }
     }
@@ -137,7 +166,8 @@ impl GrantTarget {
     pub const fn platform(&self) -> PathPlatform {
         match &self.0 {
             GrantTargetBinding::WorkspaceScope { platform, .. }
-            | GrantTargetBinding::HeldObject { platform, .. } => *platform,
+            | GrantTargetBinding::HeldObject { platform, .. }
+            | GrantTargetBinding::HeldWorkspaceRoot { platform, .. } => *platform,
         }
     }
 
@@ -147,6 +177,7 @@ impl GrantTarget {
         match &self.0 {
             GrantTargetBinding::WorkspaceScope { path, .. } => path.components(),
             GrantTargetBinding::HeldObject { path, .. } => path.components(),
+            GrantTargetBinding::HeldWorkspaceRoot { path, .. } => path.components(),
         }
     }
 
@@ -155,7 +186,8 @@ impl GrantTarget {
     pub const fn scope_path(&self) -> Option<&WorkspaceScopePath> {
         match &self.0 {
             GrantTargetBinding::WorkspaceScope { path, .. } => Some(path),
-            GrantTargetBinding::HeldObject { .. } => None,
+            GrantTargetBinding::HeldObject { .. }
+            | GrantTargetBinding::HeldWorkspaceRoot { .. } => None,
         }
     }
 
@@ -165,7 +197,17 @@ impl GrantTarget {
         match &self.0 {
             GrantTargetBinding::WorkspaceScope { .. } => None,
             GrantTargetBinding::HeldObject { path, .. } => Some(path),
+            GrantTargetBinding::HeldWorkspaceRoot { .. } => None,
         }
+    }
+
+    /// Reports whether this target carries exact operation authority.
+    #[must_use]
+    pub const fn is_operation_target(&self) -> bool {
+        matches!(
+            self.0,
+            GrantTargetBinding::HeldObject { .. } | GrantTargetBinding::HeldWorkspaceRoot { .. }
+        )
     }
 
     /// Returns the exact object kind for an operation target.
@@ -174,6 +216,7 @@ impl GrantTarget {
         match &self.0 {
             GrantTargetBinding::WorkspaceScope { .. } => None,
             GrantTargetBinding::HeldObject { object_kind, .. } => Some(*object_kind),
+            GrantTargetBinding::HeldWorkspaceRoot { .. } => Some(WorkspaceObjectKind::Directory),
         }
     }
 
@@ -183,6 +226,9 @@ impl GrantTarget {
         match &self.0 {
             GrantTargetBinding::WorkspaceScope { .. } => None,
             GrantTargetBinding::HeldObject {
+                object_identity, ..
+            }
+            | GrantTargetBinding::HeldWorkspaceRoot {
                 object_identity, ..
             } => Some(object_identity),
         }
@@ -194,6 +240,7 @@ impl GrantTarget {
         match &self.0 {
             GrantTargetBinding::WorkspaceScope { .. } => None,
             GrantTargetBinding::HeldObject { preimage, .. } => preimage.as_ref(),
+            GrantTargetBinding::HeldWorkspaceRoot { .. } => None,
         }
     }
 
@@ -212,7 +259,33 @@ impl GrantTarget {
         match (&candidate.0, candidate.workspace_path()) {
             (GrantTargetBinding::WorkspaceScope { path, .. }, _) => scope.contains_scope(path),
             (GrantTargetBinding::HeldObject { .. }, Some(path)) => scope.contains_path(path),
+            (GrantTargetBinding::HeldWorkspaceRoot { path, .. }, _) => scope.contains_scope(path),
             _ => false,
+        }
+    }
+
+    /// Reports whether this scope overlaps an exact operation target.
+    ///
+    /// A held workspace root overlaps every subtree exclusion in that workspace,
+    /// while a held child object overlaps only a scope that contains its path.
+    #[must_use]
+    pub fn overlaps_operation(&self, candidate: &Self) -> bool {
+        if self.authorization_id() != candidate.authorization_id()
+            || self.adapter_instance_id() != candidate.adapter_instance_id()
+            || self.platform() != candidate.platform()
+            || !candidate.is_operation_target()
+        {
+            return false;
+        }
+        let Some(scope) = self.scope_path() else {
+            return false;
+        };
+        match &candidate.0 {
+            GrantTargetBinding::HeldObject { path, .. } => scope.contains_path(path),
+            GrantTargetBinding::HeldWorkspaceRoot { path, .. } => {
+                scope.contains_scope(path) || path.contains_scope(scope)
+            }
+            GrantTargetBinding::WorkspaceScope { .. } => false,
         }
     }
 
@@ -220,6 +293,12 @@ impl GrantTarget {
     #[must_use]
     pub fn matches_held_object(&self, held: &impl HeldWorkspaceObject) -> bool {
         Self::held_object(held).as_ref() == Ok(self)
+    }
+
+    /// Reports whether this exact operation target names the supplied held workspace root.
+    #[must_use]
+    pub fn matches_held_workspace_root(&self, held: &impl HeldWorkspaceRoot) -> bool {
+        Self::held_workspace_root(held).as_ref() == Ok(self)
     }
 
     /// Returns the lowercase object-identity digest used by the preimage record.
@@ -270,6 +349,19 @@ impl TryFrom<GrantTargetBinding> for GrantTarget {
                         (WorkspaceObjectKind::RegularFile, Some(_))
                             | (WorkspaceObjectKind::Directory, None)
                     )
+            }
+            GrantTargetBinding::HeldWorkspaceRoot {
+                path,
+                authorization_id,
+                adapter_instance_id,
+                platform,
+                object_identity,
+            } => {
+                valid_identity(path.workspace_id().as_str())
+                    && path.components().is_empty()
+                    && valid_identity(authorization_id.as_str())
+                    && valid_identity(adapter_instance_id.as_str())
+                    && object_identity.platform() == *platform
             }
         };
         valid

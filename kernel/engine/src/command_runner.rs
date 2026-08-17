@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 use agentmage_kernel_contracts::{
-    GrantOperation, HeldWorkspaceObject, OperationOutcome, StateChange,
+    GrantOperation, HeldWorkspaceRoot, OperationOutcome, StateChange,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -610,8 +610,8 @@ impl fmt::Debug for CommandLaunchPermit<'_> {
 
 /// Trusted platform executor whose launch requires a kernel-created permit.
 pub trait BoundedCommandExecutor {
-    /// Platform-owned held directory type accepted by this executor.
-    type WorkingDirectory: HeldWorkspaceObject;
+    /// Platform-owned held workspace-root type accepted by this executor.
+    type WorkingDirectory: HeldWorkspaceRoot;
 
     /// Executes one exact non-interactive command inside the platform sandbox.
     fn execute(
@@ -682,19 +682,15 @@ impl<E, H> fmt::Debug for CommandEffectDriver<E, H> {
 impl<E, H> EffectDriver for CommandEffectDriver<E, H>
 where
     E: BoundedCommandExecutor<WorkingDirectory = H>,
-    H: HeldWorkspaceObject,
+    H: HeldWorkspaceRoot,
 {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
         let call = authorization.call();
         if authorization.operation().operation() != GrantOperation::CommandExecute
-            || !authorization.authorizes_held_object(&self.held_working_directory)
+            || !authorization.authorizes_held_workspace_root(&self.held_working_directory)
             || call.arguments.sha256 != self.prepared.request_sha256
             || call.arguments.bytes != self.prepared.request_bytes
             || sha256_hex(&call.arguments.bytes) != call.arguments.sha256
-            || !working_directory_matches(
-                self.prepared.command.working_directory,
-                &self.held_working_directory,
-            )
         {
             self.error = Some(CommandError::AuthorityMismatch);
             return EffectLaunch::failed();
@@ -741,16 +737,6 @@ where
             }
         }
     }
-}
-
-fn working_directory_matches(
-    working_directory: CommandWorkingDirectory,
-    held: &impl HeldWorkspaceObject,
-) -> bool {
-    working_directory == CommandWorkingDirectory::EmptyScratch
-        || (held.intent() == agentmage_kernel_contracts::PathResolutionIntent::ReadDirectory
-            && held.object_kind() == agentmage_kernel_contracts::WorkspaceObjectKind::Directory
-            && held.preimage().is_none())
 }
 
 fn seal_receipt(
@@ -986,17 +972,17 @@ mod tests {
         PolicyDocument, PolicyEngine, PolicyEvaluationContext, ScopeRules, ToolPolicyBinding,
     };
     use crate::propagation::CancellationToken;
-    use crate::test_target::{preimage, scope};
+    use crate::test_target::scope;
     use crate::tooling::{Tool, ToolRegistry};
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId,
-        BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
-        CancellationSignal, CapabilityGrant, ContractPayload, CorrelationId, DataSensitivity,
-        FilePreimage, GrantId, GrantNonce, GrantOperation, GrantSideEffect, HeldWorkspaceObject,
-        OperationAttemptId, OperationBinding, OperationOutcome, PathPlatform, PathResolutionIntent,
+        AuthorizedWorkspaceHandle, BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId,
+        CancellationReason, CancellationSignal, CapabilityGrant, ContractPayload, CorrelationId,
+        DataSensitivity, GrantId, GrantNonce, GrantOperation, GrantSideEffect, HeldWorkspaceRoot,
+        OperationAttemptId, OperationBinding, OperationOutcome, PathPlatform,
         RequiredGrantTemplate, SchemaId, SchemaReference, SessionId, TaskId, ToolCall, ToolCallId,
         ToolDefinition, ToolId, ToolRiskLevel, WorkspaceAuthorizationId, WorkspaceId,
-        WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
+        WorkspaceObjectIdentity,
     };
 
     fn spec(arguments: Vec<String>) -> Result<CommandSpec, CommandError> {
@@ -1006,7 +992,7 @@ mod tests {
             "/usr/bin/printf",
             "1".repeat(64),
             arguments,
-            CommandWorkingDirectory::EmptyScratch,
+            CommandWorkingDirectory::OwnedWorktree,
             BTreeMap::from([
                 ("LANG".to_owned(), "C".to_owned()),
                 ("TZ".to_owned(), "UTC".to_owned()),
@@ -1051,16 +1037,15 @@ mod tests {
     }
 
     #[test]
-    fn owned_worktree_mode_requires_one_exact_held_directory() {
+    fn owned_worktree_mode_uses_one_exact_held_workspace_root() {
         let fixture = authority_fixture();
-        assert!(super::working_directory_matches(
-            CommandWorkingDirectory::EmptyScratch,
-            &fixture.held
-        ));
-        assert!(!super::working_directory_matches(
-            CommandWorkingDirectory::OwnedWorktree,
-            &fixture.held
-        ));
+        let target = agentmage_kernel_contracts::GrantTarget::held_workspace_root(&fixture.held)
+            .expect("held root target");
+        assert_eq!(
+            fixture.prepared.command().working_directory,
+            CommandWorkingDirectory::OwnedWorktree
+        );
+        assert!(target.matches_held_workspace_root(&fixture.held));
     }
 
     #[test]
@@ -1088,17 +1073,16 @@ mod tests {
     }
 
     #[derive(Debug)]
-    struct SyntheticHeldObject {
-        path: WorkspacePath,
+    struct SyntheticHeldRoot {
+        workspace_id: WorkspaceId,
         authorization_id: WorkspaceAuthorizationId,
         adapter_instance_id: AdapterInstanceId,
         identity: WorkspaceObjectIdentity,
-        preimage: FilePreimage,
     }
 
-    impl HeldWorkspaceObject for SyntheticHeldObject {
-        fn workspace_path(&self) -> &WorkspacePath {
-            &self.path
+    impl AuthorizedWorkspaceHandle for SyntheticHeldRoot {
+        fn workspace_id(&self) -> &WorkspaceId {
+            &self.workspace_id
         }
 
         fn authorization_id(&self) -> &WorkspaceAuthorizationId {
@@ -1109,20 +1093,14 @@ mod tests {
             &self.adapter_instance_id
         }
 
-        fn intent(&self) -> PathResolutionIntent {
-            PathResolutionIntent::ReadFile
+        fn platform(&self) -> PathPlatform {
+            self.identity.platform()
         }
+    }
 
-        fn object_kind(&self) -> WorkspaceObjectKind {
-            WorkspaceObjectKind::RegularFile
-        }
-
-        fn object_identity(&self) -> &WorkspaceObjectIdentity {
+    impl HeldWorkspaceRoot for SyntheticHeldRoot {
+        fn root_identity(&self) -> &WorkspaceObjectIdentity {
             &self.identity
-        }
-
-        fn preimage(&self) -> Option<&FilePreimage> {
-            Some(&self.preimage)
         }
     }
 
@@ -1132,7 +1110,7 @@ mod tests {
     }
 
     impl BoundedCommandExecutor for FakeExecutor {
-        type WorkingDirectory = SyntheticHeldObject;
+        type WorkingDirectory = SyntheticHeldRoot;
 
         fn execute(
             &mut self,
@@ -1141,10 +1119,7 @@ mod tests {
             _cancellation: &CancellationToken,
         ) -> CommandPlatformResult {
             assert_eq!(permit.command().template_id, "fixture.printf");
-            assert_eq!(
-                working_directory.path.components()[0].as_str(),
-                "fixture.txt"
-            );
+            assert_eq!(working_directory.workspace_id.as_str(), "workspace-0001");
             self.launches += 1;
             self.result.take().expect("one fake result")
         }
@@ -1158,7 +1133,7 @@ mod tests {
         call: ToolCall,
         context: PolicyEvaluationContext,
         approval_id: ApprovalId,
-        held: SyntheticHeldObject,
+        held: SyntheticHeldRoot,
         prepared: super::PreparedCommand,
     }
 
@@ -1191,9 +1166,8 @@ mod tests {
         let actor_id = ActorId::from_raw("actor-local-0001");
         let session_id = SessionId::from_raw("session-0001");
         let task_id = TaskId::from_raw("task-0001");
-        let held = SyntheticHeldObject {
-            path: WorkspacePath::new(WorkspaceId::from_raw("workspace-0001"), ["fixture.txt"])
-                .expect("path"),
+        let held = SyntheticHeldRoot {
+            workspace_id: WorkspaceId::from_raw("workspace-0001"),
             authorization_id: WorkspaceAuthorizationId::from_raw("authorization-0001"),
             adapter_instance_id: AdapterInstanceId::from_raw("adapter-0001"),
             identity: WorkspaceObjectIdentity::new(
@@ -1201,9 +1175,9 @@ mod tests {
                 [1; 32],
                 [2; 32],
             ),
-            preimage: FilePreimage::new(7, [3; 32]),
         };
-        let target = agentmage_kernel_contracts::GrantTarget::held_object(&held).expect("target");
+        let target =
+            agentmage_kernel_contracts::GrantTarget::held_workspace_root(&held).expect("target");
         let document = PolicyDocument {
             schema_version: 1,
             revision: 1,
@@ -1289,7 +1263,7 @@ mod tests {
                     tool_version: "1.0.0".to_owned(),
                     targets: vec![target.clone()],
                     argument_sha256: prepared.request_sha256().to_owned(),
-                    preimages: vec![preimage(0, &target)],
+                    preimages: Vec::new(),
                     expected_side_effects: vec![GrantSideEffect {
                         operation,
                         target_indexes: vec![0],

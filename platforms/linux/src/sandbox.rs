@@ -1415,7 +1415,7 @@ mod tests {
         PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
         WorkspaceScopePath, WorkspaceSnapshot,
     };
-    use rustix::fs::{Mode, OFlags, SealFlags, fcntl_get_seals, open};
+    use rustix::fs::{SealFlags, fcntl_get_seals};
     use rustix::io::{pread, write};
 
     use super::{
@@ -1426,7 +1426,7 @@ mod tests {
     };
     use crate::{
         DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPathAdapter,
-        snapshot,
+        authorize_workspace_root,
     };
 
     fn temp_directory(label: &str) -> PathBuf {
@@ -1440,20 +1440,13 @@ mod tests {
     }
 
     fn authorize(root: &Path) -> LinuxAuthorizedWorkspace {
-        let root_descriptor = open(
+        authorize_workspace_root(
             root,
-            OFlags::PATH | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
-            Mode::empty(),
+            WorkspaceId::from_raw("workspace-sandbox"),
+            WorkspaceAuthorizationId::from_raw("authorization-sandbox"),
+            AdapterInstanceId::from_raw("adapter-linux"),
         )
-        .expect("root descriptor");
-        let root_snapshot = snapshot(&root_descriptor, None).expect("root snapshot");
-        LinuxAuthorizedWorkspace {
-            workspace_id: WorkspaceId::from_raw("workspace-sandbox"),
-            authorization_id: WorkspaceAuthorizationId::from_raw("authorization-sandbox"),
-            adapter_instance_id: AdapterInstanceId::from_raw("adapter-linux"),
-            root_descriptor,
-            root_snapshot,
-        }
+        .expect("workspace authorization")
     }
 
     fn hold(

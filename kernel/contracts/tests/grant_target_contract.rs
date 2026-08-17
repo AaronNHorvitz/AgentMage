@@ -1,7 +1,8 @@
 use agentmage_kernel_contracts::{
     AdapterInstanceId, AuthorizedWorkspaceHandle, FilePreimage, GrantPreimage, GrantTarget,
-    HeldWorkspaceObject, PathPlatform, PathResolutionIntent, WorkspaceAuthorizationId, WorkspaceId,
-    WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath, WorkspaceScopePath,
+    HeldWorkspaceObject, HeldWorkspaceRoot, PathPlatform, PathResolutionIntent,
+    WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectIdentity, WorkspaceObjectKind,
+    WorkspacePath, WorkspaceScopePath,
 };
 
 #[derive(Debug)]
@@ -9,6 +10,13 @@ struct FakeWorkspace {
     workspace_id: WorkspaceId,
     authorization_id: WorkspaceAuthorizationId,
     adapter_instance_id: AdapterInstanceId,
+    root_identity: WorkspaceObjectIdentity,
+}
+
+impl HeldWorkspaceRoot for FakeWorkspace {
+    fn root_identity(&self) -> &WorkspaceObjectIdentity {
+        &self.root_identity
+    }
 }
 
 impl AuthorizedWorkspaceHandle for FakeWorkspace {
@@ -73,7 +81,51 @@ fn workspace() -> FakeWorkspace {
         workspace_id: WorkspaceId::from_raw("workspace-0001"),
         authorization_id: WorkspaceAuthorizationId::from_raw("authorization-0001"),
         adapter_instance_id: AdapterInstanceId::from_raw("adapter-0001"),
+        root_identity: WorkspaceObjectIdentity::new(
+            PathPlatform::DeterministicFake,
+            [4; 32],
+            [5; 32],
+        ),
     }
+}
+
+#[test]
+fn held_workspace_root_is_an_exact_root_operation_target() {
+    let workspace = workspace();
+    let scope = GrantTarget::workspace_scope(
+        &workspace,
+        WorkspaceScopePath::new(workspace.workspace_id.clone(), std::iter::empty::<&str>())
+            .expect("root scope"),
+    )
+    .expect("bound root scope");
+    let target = GrantTarget::held_workspace_root(&workspace).expect("held root target");
+
+    assert!(scope.contains(&target));
+    assert!(target.is_operation_target());
+    assert!(target.scope_path().is_none());
+    assert!(target.workspace_path().is_none());
+    assert!(target.path_components().is_empty());
+    assert_eq!(target.object_kind(), Some(WorkspaceObjectKind::Directory));
+    assert_eq!(target.object_identity(), Some(&workspace.root_identity));
+    assert!(target.preimage().is_none());
+    assert!(GrantPreimage::for_target(0, &target).is_none());
+    assert!(target.matches_held_workspace_root(&workspace));
+
+    let excluded_child = GrantTarget::workspace_scope(
+        &workspace,
+        WorkspaceScopePath::new(workspace.workspace_id.clone(), ["private"])
+            .expect("excluded child scope"),
+    )
+    .expect("bound child scope");
+    assert!(excluded_child.overlaps_operation(&target));
+
+    let encoded = serde_json::to_value(&target).expect("serialize root target");
+    let decoded: GrantTarget = serde_json::from_value(encoded.clone()).expect("root target");
+    assert_eq!(decoded, target);
+
+    let mut non_root = encoded;
+    non_root["path"]["components"] = serde_json::json!(["child"]);
+    assert!(serde_json::from_value::<GrantTarget>(non_root).is_err());
 }
 
 fn held() -> FakeHeldObject {

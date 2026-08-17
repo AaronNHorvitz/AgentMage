@@ -239,6 +239,15 @@ pub trait AuthorizedWorkspaceHandle: fmt::Debug + Send + Sync {
     fn platform(&self) -> PathPlatform;
 }
 
+/// Adapter-owned workspace root held continuously from authorization through use.
+///
+/// A workspace root has no non-empty [`WorkspacePath`]. This separate contract keeps
+/// root authority explicit without weakening the canonical child-path invariant.
+pub trait HeldWorkspaceRoot: AuthorizedWorkspaceHandle {
+    /// Returns the platform-scoped identity of the continuously held root descriptor.
+    fn root_identity(&self) -> &WorkspaceObjectIdentity;
+}
+
 /// Adapter-owned object held continuously from path validation through use.
 pub trait HeldWorkspaceObject: fmt::Debug + Send {
     /// Returns the exact canonical workspace path used for resolution.

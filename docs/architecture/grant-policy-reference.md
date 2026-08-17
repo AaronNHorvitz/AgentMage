@@ -38,7 +38,7 @@ nullable are still required in JSON. Unknown keys fail closed.
 | 11 | `operation` | `OperationBinding` | Binds taxonomy version, operation, and derived authority class. |
 | 12 | `tool_id` | required nullable `ToolId` | Binds an exact registered tool for operation grants. |
 | 13 | `tool_version` | required nullable string | Binds the immutable tool-contract version. |
-| 14 | `targets` | ordered `GrantTarget[]` | Carries parent scopes or exact held-object operation targets. |
+| 14 | `targets` | ordered `GrantTarget[]` | Carries parent scopes, exact held-child targets, or an exact descriptor-held workspace root. |
 | 15 | `excluded_targets` | ordered scope `GrantTarget[]` | Retains inherited authorization-bound excluded subtrees. |
 | 16 | `sensitivity` | `DataSensitivity` | Binds the reviewed data class. |
 | 17 | `argument_sha256` | lowercase SHA-256 | Binds canonical arguments or the session-scope description. |
@@ -62,6 +62,7 @@ nullable are still required in JSON. Unknown keys fail closed.
 |---|---|---|
 | `GrantTarget.workspace_scope` | `target_kind`, canonical `WorkspaceScopePath`, authorization ID, adapter ID, platform | Root or subtree scope; components use the same parser as `WorkspacePath`. |
 | `GrantTarget.held_object` | `target_kind`, canonical `WorkspacePath`, authorization ID, adapter ID, platform, object kind, object identity, required nullable preimage | Non-empty exact operation object; regular files require a preimage and directories prohibit one. |
+| `GrantTarget.held_workspace_root` | `target_kind`, empty canonical `WorkspaceScopePath`, authorization ID, adapter ID, platform, root object identity | Exact descriptor-held root operation target; never appears as a session scope or non-empty child path. |
 | `GrantPreimage` | `target_index`, `content_sha256`, `observed_revision` | Must be the canonical digest and object revision derived from the indexed held target. |
 | `GrantSideEffect` | `operation`, `target_indexes`, `details_sha256` | Operation equals the grant operation; indexes name targets; details use a canonical digest. |
 
@@ -71,7 +72,7 @@ nullable are still required in JSON. Unknown keys fail closed.
 |---|---|---|
 | Operation | `workspace_read` only | One exact closed operation |
 | Action and tool | Required nullable fields are `null` | Exact action, kind, tool, and version |
-| Scope | Non-empty authorization-bound root/subtree scopes and nested exclusions | Exact held objects contained by the same authorization, adapter, platform, and parent scope |
+| Scope | Non-empty authorization-bound root/subtree scopes and nested exclusions | Exact held objects or a held workspace root contained by the same authorization, adapter, platform, and parent scope; every intersecting exclusion denies |
 | Lifetime | Positive and no longer than 24 hours | Positive, begins before parent expiry, never outlives parent |
 | Use | 1 to 4,096 derivations | Exactly one use, initially zero |
 | Parent | Required nullable fields are `null` | Exact parent identity and pre-derivation revision hash |

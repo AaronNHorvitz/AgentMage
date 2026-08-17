@@ -89,8 +89,8 @@ use std::path::{Component, Path};
 
 use agentmage_kernel_contracts::{
     AdapterInstanceId, AuthorizedWorkspaceHandle, DisplayFileLink, DisplayLinkErrorKind,
-    FilePreimage, HeldWorkspaceObject, PathAdapterError, PathAdapterErrorKind, PathPlatform,
-    PathResolutionIntent, PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId,
+    FilePreimage, HeldWorkspaceObject, HeldWorkspaceRoot, PathAdapterError, PathAdapterErrorKind,
+    PathPlatform, PathResolutionIntent, PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId,
     WorkspaceObjectIdentity, WorkspaceObjectKind, WorkspacePath,
 };
 use rustix::fd::OwnedFd;
@@ -176,6 +176,7 @@ pub struct LinuxAuthorizedWorkspace {
     adapter_instance_id: AdapterInstanceId,
     root_descriptor: OwnedFd,
     root_snapshot: LinuxStatSnapshot,
+    root_identity: WorkspaceObjectIdentity,
 }
 
 impl fmt::Debug for LinuxAuthorizedWorkspace {
@@ -204,6 +205,23 @@ impl AuthorizedWorkspaceHandle for LinuxAuthorizedWorkspace {
 
     fn platform(&self) -> PathPlatform {
         PathPlatform::Linux
+    }
+}
+
+impl HeldWorkspaceRoot for LinuxAuthorizedWorkspace {
+    fn root_identity(&self) -> &WorkspaceObjectIdentity {
+        &self.root_identity
+    }
+}
+
+impl LinuxAuthorizedWorkspace {
+    /// Revalidates the continuously held workspace-root descriptor and identity.
+    pub fn revalidate(&self) -> Result<(), PathAdapterError> {
+        let root_now = snapshot(&self.root_descriptor, None)?;
+        if !self.root_snapshot.same_object(&root_now) || self.root_snapshot.mode != root_now.mode {
+            return Err(adapter_error(PathAdapterErrorKind::MountChanged, None));
+        }
+        Ok(())
     }
 }
 
@@ -251,13 +269,23 @@ fn authorize_workspace_root(
             None,
         ));
     }
+    let root_identity = workspace_root_identity(&root_snapshot);
     Ok(LinuxAuthorizedWorkspace {
         workspace_id,
         authorization_id,
         adapter_instance_id,
         root_descriptor: descriptor,
         root_snapshot,
+        root_identity,
     })
+}
+
+fn workspace_root_identity(snapshot: &LinuxStatSnapshot) -> WorkspaceObjectIdentity {
+    WorkspaceObjectIdentity::new(
+        PathPlatform::Linux,
+        identity_digest(b"agentmage.linux.mount.v1", snapshot),
+        identity_digest(b"agentmage.linux.workspace-root.v1", snapshot),
+    )
 }
 
 /// Linux object whose workspace root and resolved object descriptors remain held.
@@ -893,9 +921,9 @@ mod tests {
     use std::thread;
 
     use agentmage_kernel_contracts::{
-        AdapterInstanceId, HeldWorkspaceObject, PathAdapterErrorKind, PathResolutionIntent,
-        PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectKind,
-        WorkspacePath, WorkspacePathErrorKind,
+        AdapterInstanceId, HeldWorkspaceObject, HeldWorkspaceRoot, PathAdapterErrorKind,
+        PathResolutionIntent, PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId,
+        WorkspaceObjectKind, WorkspacePath, WorkspacePathErrorKind,
     };
     use rustix::fs::{Mode, OFlags, open, openat2};
     use rustix::io::Errno;
@@ -953,12 +981,14 @@ mod tests {
         )
         .expect("test root opens");
         let root_snapshot = super::snapshot(&root_descriptor, None).expect("test root stats");
+        let root_identity = super::workspace_root_identity(&root_snapshot);
         LinuxAuthorizedWorkspace {
             workspace_id: WorkspaceId::from_raw("workspace-0001"),
             authorization_id: WorkspaceAuthorizationId::from_raw("authorization-0001"),
             adapter_instance_id: AdapterInstanceId::from_raw("adapter-linux-0001"),
             root_descriptor,
             root_snapshot,
+            root_identity,
         }
     }
 
@@ -1003,6 +1033,20 @@ mod tests {
             &expected
         );
         held.revalidate().expect("logical fixture remains current");
+    }
+
+    #[test]
+    fn held_workspace_root_survives_child_changes_and_retains_exact_identity() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir(&root).expect("workspace creates");
+        let workspace = authorize_for_test(&root);
+        let identity = workspace.root_identity().clone();
+
+        fs::write(root.join("new-child.txt"), b"changed contents").expect("child write succeeds");
+
+        workspace.revalidate().expect("held root remains current");
+        assert_eq!(workspace.root_identity(), &identity);
     }
 
     #[test]

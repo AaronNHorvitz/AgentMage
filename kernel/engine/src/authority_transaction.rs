@@ -5,8 +5,8 @@ use std::{collections::BTreeMap, fmt, fmt::Write as _};
 use agentmage_kernel_contracts::{
     ApprovalId, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
     ContractError, ErrorCategory, ErrorId, GrantId, GrantPreimage, GrantTarget,
-    HeldWorkspaceObject, OperationAttemptId, OperationBinding, OperationOutcome, Receipt,
-    ReceiptId, RetryDisposition, StateChange, ToolCall, to_canonical_json,
+    HeldWorkspaceObject, HeldWorkspaceRoot, OperationAttemptId, OperationBinding, OperationOutcome,
+    Receipt, ReceiptId, RetryDisposition, StateChange, ToolCall, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -205,6 +205,18 @@ impl EffectAuthorization<'_> {
         self.authorizes_held_objects(std::slice::from_ref(held))
     }
 
+    /// Reports whether this one-target permit exactly names a held workspace root.
+    #[must_use]
+    pub fn authorizes_held_workspace_root(&self, held: &impl HeldWorkspaceRoot) -> bool {
+        self.targets.len() == 1
+            && self.preimages.is_empty()
+            && self.targets[0].matches_held_workspace_root(held)
+            && !self
+                .excluded_targets
+                .iter()
+                .any(|excluded| excluded.overlaps_operation(&self.targets[0]))
+    }
+
     /// Reports whether every ordered target names one exact continuously held object.
     #[must_use]
     pub fn authorizes_held_objects<T: HeldWorkspaceObject>(&self, held: &[T]) -> bool {
@@ -217,7 +229,7 @@ impl EffectAuthorization<'_> {
                 || self
                     .excluded_targets
                     .iter()
-                    .any(|excluded| excluded.contains(target))
+                    .any(|excluded| excluded.overlaps_operation(target))
             {
                 return false;
             }
