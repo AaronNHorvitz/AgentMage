@@ -61,6 +61,26 @@ define_identifier!(
 );
 define_identifier!(TaskId, "Stable identity for one user-directed task.");
 define_identifier!(
+    RuntimeRunId,
+    "Stable identity for one bounded reusable-runtime run."
+);
+define_identifier!(
+    RuntimeTurnId,
+    "Stable identity for one ordered turn within a runtime run."
+);
+define_identifier!(
+    RuntimeOperationId,
+    "Stable identity for one proposed or executing runtime operation."
+);
+define_identifier!(
+    RuntimeEventId,
+    "Stable identity for one immutable runtime event."
+);
+define_identifier!(
+    RuntimeArtifactId,
+    "Stable identity for one content-addressed runtime artifact."
+);
+define_identifier!(
     WorkPacketId,
     "Stable identity for one revision-controlled work packet."
 );

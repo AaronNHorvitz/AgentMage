@@ -34,6 +34,7 @@ mod platform;
 mod platform_path;
 mod prompt;
 mod reasoning;
+mod runtime_event;
 mod serialization;
 mod task;
 mod tool;
@@ -137,7 +138,8 @@ pub use ids::{
     ConversationTurnId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce, ModelAdapterId,
     ModelCodecId, ModelManifestId, ModelMessageId, ModelProfileId, ModelRunId, ModelStreamId,
     OperationAttemptId, PlanId, PlanStepId, PolicyId, PostconditionId, PromptId, ProposalId,
-    ReceiptId, RepositorySnapshotId, SchemaId, SessionCheckpointId, SessionId, TaskId, ToolCallId,
+    ReceiptId, RepositorySnapshotId, RuntimeArtifactId, RuntimeEventId, RuntimeOperationId,
+    RuntimeRunId, RuntimeTurnId, SchemaId, SessionCheckpointId, SessionId, TaskId, ToolCallId,
     ToolCatalogId, ToolId, VerifierId, VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId,
     WorkspaceId,
 };
@@ -195,6 +197,10 @@ pub use reasoning::{
     ClarificationImpact, ClarificationQuestion, ClarificationState, ContradictionRecord,
     HypothesisRecord, HypothesisStatus, IndependentVerificationRequest,
     IndependentVerificationResult, ProblemFact, ProblemFrame, VerificationDisposition,
+};
+pub use runtime_event::{
+    RuntimeEvent, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
+    RuntimeEventRetentionKind, RuntimePayloadReference, RuntimePermissionDisposition,
 };
 pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,

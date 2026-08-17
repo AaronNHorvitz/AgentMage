@@ -95,6 +95,8 @@ pub mod repository_safety;
 pub mod review_packet;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
+/// Hash-chained runtime events and bounded ordered client publication.
+pub mod runtime_event;
 /// Bounded, configuration-bound session environment and provenance capture.
 pub mod session_environment;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.

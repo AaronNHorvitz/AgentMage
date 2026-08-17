@@ -1,0 +1,385 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/runtime-event.schema.json",
+  "title": "AgentMage Runtime Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "run_id",
+    "session_id",
+    "task_id",
+    "turn_id",
+    "operation_id",
+    "correlation_id",
+    "causation_event_id",
+    "sequence",
+    "occurred_at_epoch_ms",
+    "sensitivity",
+    "retention",
+    "persistence",
+    "policy_id",
+    "payload_reference",
+    "kind",
+    "previous_event_sha256",
+    "event_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "event_id": { "$ref": "#/$defs/identifier" },
+    "run_id": { "$ref": "#/$defs/identifier" },
+    "session_id": { "$ref": "#/$defs/identifier" },
+    "task_id": { "$ref": "#/$defs/identifier" },
+    "turn_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "operation_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "correlation_id": { "$ref": "#/$defs/identifier" },
+    "causation_event_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "occurred_at_epoch_ms": { "type": "integer", "minimum": 1 },
+    "sensitivity": {
+      "enum": ["public", "internal", "private", "restricted"]
+    },
+    "retention": { "$ref": "#/$defs/retention" },
+    "persistence": { "enum": ["correctness", "progress", "metric"] },
+    "policy_id": { "$ref": "#/$defs/identifier" },
+    "payload_reference": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/payloadReference" }]
+    },
+    "kind": { "$ref": "#/$defs/eventKind" },
+    "previous_event_sha256": { "$ref": "#/$defs/sha256" },
+    "event_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "optionalIdentifier": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+    },
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "operation": {
+      "enum": [
+        "workspace_read",
+        "workspace_write",
+        "workspace_delete",
+        "command_execute",
+        "network_access",
+        "git_clone",
+        "git_fetch",
+        "git_worktree_create",
+        "git_worktree_remove",
+        "git_branch_fast_forward",
+        "git_commit",
+        "git_push",
+        "publish",
+        "send",
+        "upload",
+        "deploy",
+        "database_read",
+        "database_write",
+        "credential_access",
+        "model_inference",
+        "draft_create",
+        "administration"
+      ]
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "expires_at_epoch_ms"],
+      "properties": {
+        "kind": {
+          "enum": ["ephemeral", "session", "until_expiration", "user_hold"]
+        },
+        "expires_at_epoch_ms": {
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "const": "until_expiration" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "expires_at_epoch_ms": { "type": "integer", "minimum": 1 }
+            }
+          },
+          "else": {
+            "properties": { "expires_at_epoch_ms": { "type": "null" } }
+          }
+        }
+      ]
+    },
+    "payloadReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "sha256", "byte_size", "media_type"],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/identifier" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "byte_size": { "type": "integer", "minimum": 1 },
+        "media_type": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9/+.-]{0,127}$"
+        }
+      }
+    },
+    "eventKind": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "request_sha256"],
+          "properties": {
+            "event": { "const": "run_started" },
+            "request_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event"],
+          "properties": { "event": { "const": "turn_started" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "outcome_sha256"],
+          "properties": {
+            "event": { "const": "turn_completed" },
+            "outcome_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "model_run_id", "request_sha256"],
+          "properties": {
+            "event": { "const": "model_requested" },
+            "model_run_id": { "$ref": "#/$defs/identifier" },
+            "request_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "model_run_id", "result_sha256"],
+          "properties": {
+            "event": { "const": "model_completed" },
+            "model_run_id": { "$ref": "#/$defs/identifier" },
+            "result_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "model_run_id", "failure_code"],
+          "properties": {
+            "event": { "const": "model_failed" },
+            "model_run_id": { "$ref": "#/$defs/identifier" },
+            "failure_code": { "$ref": "#/$defs/code" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "tool_call_id", "arguments_sha256"],
+          "properties": {
+            "event": { "const": "tool_requested" },
+            "tool_call_id": { "$ref": "#/$defs/identifier" },
+            "arguments_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "tool_call_id", "authority_sha256"],
+          "properties": {
+            "event": { "const": "tool_started" },
+            "tool_call_id": { "$ref": "#/$defs/identifier" },
+            "authority_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "tool_call_id", "receipt_id", "result_sha256"],
+          "properties": {
+            "event": { "const": "tool_completed" },
+            "tool_call_id": { "$ref": "#/$defs/identifier" },
+            "receipt_id": { "$ref": "#/$defs/identifier" },
+            "result_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "tool_call_id", "receipt_id", "failure_code"],
+          "properties": {
+            "event": { "const": "tool_failed" },
+            "tool_call_id": { "$ref": "#/$defs/identifier" },
+            "receipt_id": { "$ref": "#/$defs/optionalIdentifier" },
+            "failure_code": { "$ref": "#/$defs/code" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "event",
+            "approval_id",
+            "operation",
+            "preview_sha256",
+            "expires_at_epoch_ms"
+          ],
+          "properties": {
+            "event": { "const": "permission_requested" },
+            "approval_id": { "$ref": "#/$defs/identifier" },
+            "operation": { "$ref": "#/$defs/operation" },
+            "preview_sha256": { "$ref": "#/$defs/sha256" },
+            "expires_at_epoch_ms": { "type": "integer", "minimum": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "event",
+            "approval_id",
+            "disposition",
+            "grant_id",
+            "decision_sha256"
+          ],
+          "properties": {
+            "event": { "const": "permission_decided" },
+            "approval_id": { "$ref": "#/$defs/identifier" },
+            "disposition": { "enum": ["ALLOW", "ASK", "DENY"] },
+            "grant_id": { "$ref": "#/$defs/optionalIdentifier" },
+            "decision_sha256": { "$ref": "#/$defs/sha256" }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": { "disposition": { "const": "ALLOW" } },
+                "required": ["disposition"]
+              },
+              "then": {
+                "properties": { "grant_id": { "$ref": "#/$defs/identifier" } }
+              },
+              "else": { "properties": { "grant_id": { "type": "null" } } }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "object_identity_sha256", "observation_sha256"],
+          "properties": {
+            "event": { "const": "file_observed" },
+            "object_identity_sha256": { "$ref": "#/$defs/sha256" },
+            "observation_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "event",
+            "object_identity_sha256",
+            "postcondition_sha256",
+            "receipt_id"
+          ],
+          "properties": {
+            "event": { "const": "file_modified" },
+            "object_identity_sha256": { "$ref": "#/$defs/sha256" },
+            "postcondition_sha256": { "$ref": "#/$defs/sha256" },
+            "receipt_id": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "artifact_id", "manifest_sha256"],
+          "properties": {
+            "event": { "const": "artifact_created" },
+            "artifact_id": { "$ref": "#/$defs/identifier" },
+            "manifest_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "checkpoint_id", "checkpoint_sha256"],
+          "properties": {
+            "event": { "const": "checkpoint_committed" },
+            "checkpoint_id": { "$ref": "#/$defs/identifier" },
+            "checkpoint_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "cancellation_id"],
+          "properties": {
+            "event": {
+              "enum": ["cancellation_requested", "cancellation_observed"]
+            },
+            "cancellation_id": { "$ref": "#/$defs/identifier" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "code"],
+          "properties": {
+            "event": { "const": "progress" },
+            "code": { "$ref": "#/$defs/code" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "name", "value"],
+          "properties": {
+            "event": { "const": "metric" },
+            "name": { "$ref": "#/$defs/code" },
+            "value": { "type": "integer" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "state", "outcome_sha256"],
+          "properties": {
+            "event": { "const": "run_terminal" },
+            "state": {
+              "enum": [
+                "SUCCESS",
+                "NO_OP",
+                "BLOCKED",
+                "DECLINED",
+                "STALLED",
+                "EXHAUSTED",
+                "UNCERTAIN",
+                "CANCELLED",
+                "FAILED"
+              ]
+            },
+            "outcome_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        }
+      ]
+    }
+  }
+}

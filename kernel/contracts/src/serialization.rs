@@ -76,6 +76,7 @@ impl_versioned_contract!(
     crate::Prompt,
     crate::Receipt,
     crate::RenderedHandoff,
+    crate::RuntimeEvent,
     crate::Task,
     crate::ToolCall,
     crate::ToolDefinition,

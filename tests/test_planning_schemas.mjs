@@ -356,6 +356,7 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
   assert.deepEqual(RUNTIME_RECORD_TYPES, [
     "single-agent-state-machine",
     "agent-progress-event",
+    "runtime-event",
     "session-environment-capture",
     "write-aware-checkpoint",
     "command-preview",
@@ -905,6 +906,40 @@ test("runtime schemas reject missing and unknown fields", () => {
     unknown.model_instruction = "broaden authority";
     assert.equal(
       validateRuntimeRecord(recordType, unknown, runtimeValidators).valid,
+      false,
+    );
+  }
+});
+
+test("runtime events reject inline sensitive content and invented token events", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/runtime-event.valid.json"),
+      "utf8",
+    ),
+  );
+  const mutations = [
+    (record) => {
+      record.prompt = "secret prompt canary";
+    },
+    (record) => {
+      record.kind.token_fragment = "secret token canary";
+    },
+    (record) => {
+      record.kind = { event: "model_token", token: "secret token canary" };
+    },
+    (record) => {
+      record.workspace_path = "/private/workspace/canary";
+    },
+    (record) => {
+      record.credential = "credential-canary";
+    },
+  ];
+  for (const mutate of mutations) {
+    const changed = structuredClone(source);
+    mutate(changed);
+    assert.equal(
+      validateRuntimeRecord("runtime-event", changed, runtimeValidators).valid,
       false,
     );
   }

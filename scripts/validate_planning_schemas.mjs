@@ -53,6 +53,7 @@ export const CONFIGURATION_REVIEW_TYPES = Object.freeze([
 export const RUNTIME_RECORD_TYPES = Object.freeze([
   "single-agent-state-machine",
   "agent-progress-event",
+  "runtime-event",
   "session-environment-capture",
   "write-aware-checkpoint",
   "command-preview",
