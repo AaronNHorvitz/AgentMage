@@ -165,7 +165,7 @@ pub enum RuntimePermissionEvaluation {
     },
 }
 
-/// One terminal read-only tool execution returned after authority consumption.
+/// One terminal tool execution returned after exact authority consumption.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeToolExecution {
     /// Canonical operation receipt identity.
@@ -199,7 +199,7 @@ pub trait RuntimeToolBoundary {
         now_epoch_ms: u64,
     ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure>;
 
-    /// Consumes exact allowed authority and executes one read-only call once.
+    /// Consumes exact allowed authority and executes one admitted call once.
     fn execute(
         &mut self,
         request: &RuntimeRunRequest,
@@ -256,7 +256,7 @@ pub enum RuntimeCoordinatorStep {
 pub enum RuntimeLoopError {
     /// The submitted runtime contract failed closed verification.
     Contract(RuntimeCoordinatorError),
-    /// Only the ephemeral read-only mode is implemented by this coordinator.
+    /// Durable state or a resume cursor was requested without durable ports.
     UnsupportedMode,
     /// The model port is not bound to the exact request profile.
     ModelBinding,
@@ -292,7 +292,7 @@ struct PendingApproval {
     operation_id: RuntimeOperationId,
 }
 
-/// One reusable, interface-neutral, ephemeral read-only runtime coordinator.
+/// One reusable, interface-neutral ephemeral runtime coordinator.
 pub struct ReusableRuntimeCoordinator<M, X, T, V, C>
 where
     M: RuntimeModelPort,
@@ -346,7 +346,7 @@ where
         clock: C,
     ) -> Result<Self, RuntimeLoopError> {
         verify_runtime_run_request(&request)?;
-        if request.mode != RuntimeSessionMode::EphemeralReadOnly {
+        if request.mode == RuntimeSessionMode::DurableReadOnly || request.event_cursor.is_some() {
             return Err(RuntimeLoopError::UnsupportedMode);
         }
         if model.exact_profile() != &request.model_profile {

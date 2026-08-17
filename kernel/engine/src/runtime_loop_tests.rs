@@ -420,9 +420,27 @@ fn coordinator(
     permission: PermissionScript,
     emit_tool_evidence: bool,
 ) -> (FixtureCoordinator, Arc<AtomicUsize>) {
+    coordinator_for_mode(
+        RuntimeSessionMode::EphemeralReadOnly,
+        scripts,
+        permission,
+        emit_tool_evidence,
+    )
+    .expect("fixture coordinator builds")
+}
+
+fn coordinator_for_mode(
+    mode: RuntimeSessionMode,
+    scripts: impl IntoIterator<Item = ModelScript>,
+    permission: PermissionScript,
+    emit_tool_evidence: bool,
+) -> Result<(FixtureCoordinator, Arc<AtomicUsize>), RuntimeLoopError> {
     let profile = profile("runtime-loop");
     let registry = registry();
-    let request = request(profile.clone(), &registry);
+    let mut request = request(profile.clone(), &registry);
+    request.mode = mode;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("mode-specific request seals");
     let executions = Arc::new(AtomicUsize::new(0));
     let coordinator = ReusableRuntimeCoordinator::new(
         request,
@@ -439,9 +457,8 @@ fn coordinator(
             source: VerifierSource::DeterministicPostcondition,
         },
         FakeClock { now: 1_000 },
-    )
-    .expect("fixture coordinator builds");
-    (coordinator, executions)
+    )?;
+    Ok((coordinator, executions))
 }
 
 fn request(profile: ExactModelProfile, registry: &ToolRegistry) -> RuntimeRunRequest {
@@ -668,6 +685,44 @@ fn story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order() {
     }
     assert_eq!(delivered, coordinator.events());
     assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn story_48_2_controlled_write_mode_uses_the_same_ephemeral_coordinator_boundary() {
+    let (mut coordinator, executions) = coordinator_for_mode(
+        RuntimeSessionMode::ControlledWrite,
+        [ModelScript::Completion],
+        PermissionScript::Allow,
+        true,
+    )
+    .expect("controlled-write coordinator builds");
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("controlled-write mode reaches the verifier")
+    else {
+        panic!("direct completion cannot request approval");
+    };
+    assert_eq!(
+        coordinator.request.mode,
+        RuntimeSessionMode::ControlledWrite
+    );
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(executions.load(Ordering::SeqCst), 0);
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn durable_mode_remains_unavailable_without_journal_and_resume_ports() {
+    assert!(matches!(
+        coordinator_for_mode(
+            RuntimeSessionMode::DurableReadOnly,
+            [ModelScript::Completion],
+            PermissionScript::Allow,
+            true,
+        ),
+        Err(RuntimeLoopError::UnsupportedMode)
+    ));
 }
 
 #[test]
