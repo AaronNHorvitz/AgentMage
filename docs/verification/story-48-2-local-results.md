@@ -64,8 +64,9 @@ npm run docs:check
 - Story 22.2 still owns complete artifact publication, generated-file handling,
   retention, collection, corruption, recovery, and pressure evidence.
 - Crash, timeout, artifact-failure, every-event-phase cancellation, descendant
-  cleanup, cross-interface parity, installed-package, supported-platform,
-  performance, pressure, canary, and independent-review campaigns remain open.
+  cleanup, installed real-runtime cross-interface parity, installed-package,
+  supported-platform, performance, pressure, canary, and independent-review
+  campaigns remain open. Source-level three-client projection parity passes.
 - Manual fuzzing remains deliberately deferred to the final campaign.
 
 These absences keep `M-HARNESS-MVP`, Story 48.2, Sprint 48, and dependent release

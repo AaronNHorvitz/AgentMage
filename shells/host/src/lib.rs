@@ -70,3 +70,5 @@ pub const COMPONENT_ID: &str = "shell-host";
 
 #[cfg(test)]
 mod runtime_read_tests;
+#[cfg(test)]
+mod runtime_parity_tests;

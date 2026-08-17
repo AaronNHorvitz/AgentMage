@@ -3968,8 +3968,9 @@ count remains zero. Both implementation and artifact tasks, the verification tas
     Source-level progress: [`cli_runtime.rs`](shells/host/src/cli_runtime.rs) now drives the exact
     host-framed native Chat runtime port, independently verifies request, ordered events, complete
     artifacts, protected approval or cancellation, terminal outcome, and release, and owns no
-    execution branch or authority. The item remains open pending the complete native Chat/CLI/future
-    caller parity campaign and authenticated installed-interface evidence.
+    execution branch or authority. Source-level three-client projection parity now passes; the item
+    remains open pending authenticated installed interfaces over the complete production runtime
+    composition.
   - [ ] **Sub-task 50.2.1.2:** Define and enforce run, turn, model, context, tool, process, event-queue, artifact, output, memory, disk, elapsed-time, retry, denial, parser-failure, and no-progress ceilings with one visible exhaustion result.
   - [ ] **Sub-task 50.2.1.3:** Implement bounded event coalescing, batching, slow-client handling, disconnect/reconnect, artifact preview paging, terminal flush, and shutdown without dropping correctness records or blocking model/tool cancellation indefinitely.
   - [ ] **Sub-task 50.2.1.4:** Reconcile crash and restart across model, context, approval, write, command, validation, event, artifact, checkpoint, and terminal states; preserve one safe next action and never replay a consumed grant or uncertain effect.
@@ -3984,7 +3985,7 @@ count remains zero. Both implementation and artifact tasks, the verification tas
   - [x] **Sub-task 50.2.2.5:** Publish the exact responsibilities retained for Sprints 89-95: leases/retries, schedules, agent definitions, child isolation, coordination, conflict handling, and director views. Evidence: `docs/architecture/shared-runtime-workflow-and-mcp.md` enumerates the retained responsibilities and explicitly denies current workflow-engine or director completion.
 
 - [ ] **Task 50.2.3 - Verify parity, isolation, performance, and future composition**
-  - [ ] **Sub-task 50.2.3.1:** Run identical read-only and coding packets through native Chat, interactive CLI, and the in-memory future-caller adapter; assert equal policy, model, context, tools, events, artifacts, receipts, checkpoints, evidence, and outcome apart from presentation.
+  - [x] **Sub-task 50.2.3.1:** Run identical read-only and coding packets through native Chat, interactive CLI, and the in-memory future-caller adapter; assert equal policy, model, context, tools, events, artifacts, receipts, checkpoints, evidence, and outcome apart from presentation. Evidence: `runtime_parity_tests.rs` sends one real deterministic native-read packet and one controlled-write packet with a verified artifact and checkpoint through `NativeChatRuntimeService`, `drive_interactive_cli_runtime`, and `InMemoryWorkflowCaller`; complete requests and every non-presentation event, artifact, receipt, checkpoint, evidence item, and outcome are byte-equal.
   - [ ] **Sub-task 50.2.3.2:** Generate narrower workflow-node grants and attempt privilege aggregation, interactive-approval simulation, tool expansion, root expansion, model switch, hidden retry, result-as-authority, and child spawning; assert exact denial and zero broadened effect.
   - [ ] **Sub-task 50.2.3.3:** Execute sustained, burst, maximum-output, slow-client, queue-saturation, artifact-pressure, cancellation, and restart campaigns on recorded reference hardware; assert declared latency, throughput, memory, disk, cleanup, and recovery ceilings.
   - [ ] **Sub-task 50.2.3.4:** Seed transcript/journal/metrics confusion, artifact-reference confusion, cross-session access, stale checkpoints, duplicate events, malformed terminal states, and interface-specific bypasses; assert deterministic rejection and no false completion or disclosure.
@@ -4005,7 +4006,7 @@ count remains zero. Both implementation and artifact tasks, the verification tas
 - [x] **Sprint AC 50.AC3:** CLI and other clients cannot bypass grants, storage, retention, receipts, or offline policy. Evidence: focused thin-CLI tests retain interface-neutral command parsing and fail-closed transport, the Sprint 48 schemas and semantic checks bind headless grants and hash-chained receipts, and the v0.4 architecture leaves all authority in existing kernel transactions; no integrated transport or client-side authority exists.
 - [x] **Sprint AC 50.AC4:** Hosted mutation and automatic publication remain impossible. Evidence: nine skills deny thirteen autonomous-operation classes, the v0.4 manifest has no network or publication authority, and gate mutation tests fail every attempted activation.
 - [x] **Sprint AC 50.AC5:** `G-V0.4` closes only after coding, shell, model, security, recovery, and documentation suites pass. Evidence: [`v0.4-release-readiness.json`](artifacts/sprints/sprint-50/v0.4-release-readiness.json) fixes `gate_closed` and `release_allowed` false while upstream, coordinator, parity, model, platform, lifecycle, accessibility, signing, independent-review, and manual-fuzz blockers remain; every overclaim mutation fails.
-- [ ] **Sprint AC 50.AC6:** Native Chat, interactive CLI, and the future-caller test adapter use one coordinator and produce equivalent non-presentation policy, event, artifact, receipt, checkpoint, evidence, and terminal results.
+- [x] **Sprint AC 50.AC6:** Native Chat, interactive CLI, and the future-caller test adapter use one coordinator and produce equivalent non-presentation policy, event, artifact, receipt, checkpoint, evidence, and terminal results. Evidence: the two-packet `runtime_parity_tests` campaign uses the same replayable `CodingCoordinatorPort` behind all three callers and asserts complete projection equality, including the read tool receipt and the coding artifact and checkpoint.
 - [ ] **Sprint AC 50.AC7:** Runtime load, queue, output, artifact, cancellation, crash, recovery, retention, removal, and privacy campaigns meet declared bounds without per-token synchronous journal writes or false success.
 - [ ] **Sprint AC 50.AC8:** The future workflow attachment port enforces narrower authority and leaves scheduling, retries, workflow design, child agents, and multi-agent coordination to their existing later sprints.
 
@@ -4016,7 +4017,7 @@ commands exit zero and all eleven focused suites report zero blocking skips. Nin
 54 invalid-definition cases, 117 prohibited-operation attempts, six repository-failure scenarios,
 and the blocked v0.4 release boundary pass locally. Sprint 50 remains **BLOCKED** because Sprints
 41 through 49 are blocked and the coding product coordinator, authenticated native Chat/CLI
-workflow, cross-interface parity campaign, registered write/command/commit profiles, admitted live
+workflow, installed real-runtime parity, registered write/command/commit profiles, admitted live
 model, native cross-platform acceptance, complete lifecycle/accessibility/recovery campaign,
 trusted installed-package execution, independent review, and deferred manual fuzzing remain absent.
 The implementation and verification tasks, both story criteria, Story 50.1, Sprint AC 50.AC1, and
