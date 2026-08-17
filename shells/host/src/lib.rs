@@ -4,6 +4,8 @@
 
 /// Authority-free composition of structured edits into kernel shadow changes.
 pub mod code_change;
+/// Exact non-authoritative approval composition for native coding operations.
+pub mod coding_authority;
 pub mod coding_changes;
 pub mod coding_dispatch;
 /// Profile-bound authority planning for native coding calls.
