@@ -3,7 +3,10 @@
 use std::collections::BTreeMap;
 use std::fmt::Write;
 
-use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath};
+use agentmage_kernel_contracts::{
+    CONTRACT_SCHEMA_VERSION, GrantOperation, OperationBinding, RequiredGrantTemplate, SchemaId,
+    SchemaReference, ToolDefinition, ToolId, ToolRiskLevel, WorkspaceId, WorkspacePath,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -11,6 +14,54 @@ const MAX_GIT_RECORDS: u32 = 1_000;
 const MAX_GIT_OUTPUT_BYTES: u64 = 4 * 1024 * 1024;
 const MAX_GIT_PATHS: usize = 256;
 const MAX_GIT_REVISION_BYTES: usize = 256;
+
+/// Stable native tool identity for bounded read-only Git inspection.
+pub const GIT_INSPECTION_TOOL_ID: &str = "agentmage.git.inspect";
+
+/// Immutable contract version for bounded read-only Git inspection.
+pub const GIT_INSPECTION_TOOL_VERSION: &str = "1.0.0";
+
+/// Closed input-schema identity for bounded read-only Git inspection.
+pub const GIT_INSPECTION_INPUT_SCHEMA_ID: &str = "agentmage.git.inspect.input";
+
+/// Closed output-schema identity for bounded read-only Git inspection.
+pub const GIT_INSPECTION_OUTPUT_SCHEMA_ID: &str = "agentmage.git.inspect.output";
+
+/// Canonical closed JSON Schema for one bounded Git inspection request.
+pub const GIT_INSPECTION_INPUT_SCHEMA_JSON: &str = r#"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.git.inspect.input","type":"object","additionalProperties":false,"required":["schema_version","operation","revision","object_id","pathspecs","max_records","max_output_bytes"],"properties":{"schema_version":{"const":1},"operation":{"enum":["status","current_branch","upstream","branch_list","log","diff","staged_diff","show","worktree_list","object","ref","dirty_tree","untracked_files"]},"revision":{"type":["string","null"],"maxLength":256},"object_id":{"type":["string","null"],"pattern":"^(?:[0-9A-Fa-f]{40}|[0-9A-Fa-f]{64})$"},"pathspecs":{"type":"array","maxItems":256,"items":{"type":"array","minItems":1,"maxItems":256,"items":{"type":"string","minLength":1,"maxLength":255}}},"max_records":{"type":"integer","minimum":1,"maximum":1000},"max_output_bytes":{"type":"integer","minimum":1,"maximum":4194304}}}"#;
+
+/// Canonical closed JSON Schema for one bounded Git inspection result.
+pub const GIT_INSPECTION_OUTPUT_SCHEMA_JSON: &str = r#"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.git.inspect.output","type":"object","additionalProperties":false,"required":["schema_version","operation","repository_sha256","worktree_sha256","revision","outcome","records","observed_bytes","truncated","dirty","freshness_sha256","result_sha256"],"properties":{"schema_version":{"const":1},"operation":{"enum":["status","current_branch","upstream","branch_list","log","diff","staged_diff","show","worktree_list","object","ref","dirty_tree","untracked_files"]},"repository_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"worktree_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"revision":{"type":["string","null"]},"outcome":{"enum":["succeeded","no_result","truncated","failed"]},"records":{"type":"array","maxItems":1000,"items":{"type":"object","additionalProperties":false,"required":["sequence","record_kind","escaped_text","raw_sha256"],"properties":{"sequence":{"type":"integer","minimum":1},"record_kind":{"type":"string"},"escaped_text":{"type":"string"},"raw_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}}}},"observed_bytes":{"type":"integer","minimum":0,"maximum":4194304},"truncated":{"type":"boolean"},"dirty":{"type":["boolean","null"]},"freshness_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"result_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}}}"#;
+
+/// Returns the declarative definition for bounded read-only Git inspection.
+#[must_use]
+pub fn git_inspection_tool_definition() -> ToolDefinition {
+    let operation = OperationBinding::new(GrantOperation::WorkspaceRead);
+    ToolDefinition {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        tool_id: ToolId::from_raw(GIT_INSPECTION_TOOL_ID),
+        tool_version: GIT_INSPECTION_TOOL_VERSION.to_owned(),
+        display_name: "Inspect Git repository".to_owned(),
+        description: "Runs one fixed bounded read-only Git inspection over an exact held worktree"
+            .to_owned(),
+        input_schema: git_schema(
+            GIT_INSPECTION_INPUT_SCHEMA_ID,
+            GIT_INSPECTION_INPUT_SCHEMA_JSON.as_bytes(),
+        ),
+        output_schema: git_schema(
+            GIT_INSPECTION_OUTPUT_SCHEMA_ID,
+            GIT_INSPECTION_OUTPUT_SCHEMA_JSON.as_bytes(),
+        ),
+        risk_level: ToolRiskLevel::Low,
+        declared_effects: vec![operation],
+        required_grant: RequiredGrantTemplate {
+            operation,
+            target_scope: "one-exact-held-repository-worktree".to_owned(),
+            single_use: true,
+        },
+        timeout_ms: 15_000,
+    }
+}
 
 /// Fixed read-only Git operation identities admitted by the initial pack.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -348,6 +399,19 @@ pub fn plan_git_inspection(
     })
 }
 
+/// Parses and validates one duplicate-key-free closed Git inspection request.
+pub fn validate_git_inspection_request(
+    bytes: &[u8],
+) -> Result<GitInspectionRequest, GitInspectionError> {
+    if bytes.is_empty() || bytes.len() > 64 * 1024 {
+        return Err(GitInspectionError::InvalidRequest);
+    }
+    let request = crate::protocol::parse_closed_json(bytes)
+        .map_err(|()| GitInspectionError::InvalidRequest)?;
+    validate_request(&request)?;
+    Ok(request)
+}
+
 /// Parses bounded fixed-worker output into control-safe untrusted evidence.
 pub fn parse_git_inspection(
     request: &GitInspectionRequest,
@@ -566,6 +630,14 @@ fn sha256_hex(bytes: &[u8]) -> String {
     output
 }
 
+fn git_schema(id: &str, bytes: &[u8]) -> SchemaReference {
+    SchemaReference {
+        schema_id: SchemaId::from_raw(id),
+        schema_version: 1,
+        schema_sha256: sha256_hex(bytes),
+    }
+}
+
 fn is_sha256(value: &str) -> bool {
     value.len() == 64
         && value
@@ -583,11 +655,14 @@ mod tests {
     use std::process::{Command, Stdio};
     use std::sync::atomic::{AtomicU64, Ordering};
 
+    use agentmage_kernel_contracts::{GrantOperation, ToolRiskLevel};
     use sha2::{Digest, Sha256};
 
     use super::{
-        GitInspectionOperation, GitInspectionOutcome, GitInspectionRequest, parse_git_inspection,
-        plan_git_inspection,
+        GIT_INSPECTION_INPUT_SCHEMA_JSON, GIT_INSPECTION_OUTPUT_SCHEMA_JSON,
+        GIT_INSPECTION_TOOL_ID, GIT_INSPECTION_TOOL_VERSION, GitInspectionOperation,
+        GitInspectionOutcome, GitInspectionRequest, git_inspection_tool_definition,
+        parse_git_inspection, plan_git_inspection, validate_git_inspection_request,
     };
 
     fn request(operation: GitInspectionOperation) -> GitInspectionRequest {
@@ -603,6 +678,53 @@ mod tests {
             pathspecs: Vec::new(),
             max_records: 100,
             max_output_bytes: 1024,
+        }
+    }
+
+    #[test]
+    fn native_definition_is_closed_content_bound_and_read_only() {
+        let definition = git_inspection_tool_definition();
+        assert_eq!(definition.tool_id.as_str(), GIT_INSPECTION_TOOL_ID);
+        assert_eq!(definition.tool_version, GIT_INSPECTION_TOOL_VERSION);
+        assert_eq!(definition.risk_level, ToolRiskLevel::Low);
+        assert_eq!(definition.declared_effects.len(), 1);
+        assert_eq!(
+            definition.declared_effects[0].operation(),
+            GrantOperation::WorkspaceRead
+        );
+        assert_eq!(
+            definition.required_grant.operation.operation(),
+            GrantOperation::WorkspaceRead
+        );
+        assert!(definition.required_grant.single_use);
+        for schema in [
+            GIT_INSPECTION_INPUT_SCHEMA_JSON,
+            GIT_INSPECTION_OUTPUT_SCHEMA_JSON,
+        ] {
+            let value: serde_json::Value = serde_json::from_str(schema).expect("schema JSON");
+            assert_eq!(value["additionalProperties"], false);
+        }
+        assert_ne!(
+            definition.input_schema.schema_sha256,
+            definition.output_schema.schema_sha256
+        );
+    }
+
+    #[test]
+    fn native_request_validation_rejects_duplicate_unknown_and_unsafe_fields() {
+        let valid = serde_json::to_vec(&request(GitInspectionOperation::Status))
+            .expect("valid Git request");
+        assert!(validate_git_inspection_request(&valid).is_ok());
+
+        let duplicate = br#"{"schema_version":1,"schema_version":1,"operation":"status","revision":null,"object_id":null,"pathspecs":[],"max_records":100,"max_output_bytes":1024}"#;
+        let unknown = br#"{"schema_version":1,"operation":"status","revision":null,"object_id":null,"pathspecs":[],"max_records":100,"max_output_bytes":1024,"command":"reset --hard"}"#;
+        let unsafe_revision = br#"{"schema_version":1,"operation":"show","revision":"--exec-path=/tmp","object_id":null,"pathspecs":[],"max_records":100,"max_output_bytes":1024}"#;
+        for invalid in [
+            duplicate.as_slice(),
+            unknown.as_slice(),
+            unsafe_revision.as_slice(),
+        ] {
+            assert!(validate_git_inspection_request(invalid).is_err());
         }
     }
 

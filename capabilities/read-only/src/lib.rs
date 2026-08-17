@@ -15,9 +15,12 @@ pub use catalog::{
     read_only_tool_definition, read_only_tool_definitions, read_only_tool_kind,
 };
 pub use git::{
-    GitCommandPlan, GitInspectionError, GitInspectionOperation, GitInspectionOutcome,
-    GitInspectionRequest, GitInspectionResult, GitRecord, parse_git_inspection,
-    plan_git_inspection,
+    GIT_INSPECTION_INPUT_SCHEMA_ID, GIT_INSPECTION_INPUT_SCHEMA_JSON,
+    GIT_INSPECTION_OUTPUT_SCHEMA_ID, GIT_INSPECTION_OUTPUT_SCHEMA_JSON, GIT_INSPECTION_TOOL_ID,
+    GIT_INSPECTION_TOOL_VERSION, GitCommandPlan, GitInspectionError, GitInspectionOperation,
+    GitInspectionOutcome, GitInspectionRequest, GitInspectionResult, GitRecord,
+    git_inspection_tool_definition, parse_git_inspection, plan_git_inspection,
+    validate_git_inspection_request,
 };
 pub use protocol::{
     MAX_READ_ONLY_CALL_DEPTH, MAX_READ_ONLY_DEPTH, MAX_READ_ONLY_FILES, MAX_READ_ONLY_INPUT_BYTES,
