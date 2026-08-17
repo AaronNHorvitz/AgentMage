@@ -12,7 +12,8 @@ use sha2::{Digest, Sha256};
 
 use crate::{
     mcp_registry::{
-        McpProcessObservation, McpRegistryError, verify_mcp_connection, verify_mcp_manifest,
+        McpProcessObservation, McpRegistryError, mcp_discovery, verify_mcp_connection,
+        verify_mcp_manifest,
     },
     tooling::ToolRegistry,
 };
@@ -93,6 +94,7 @@ impl McpGatewaySession {
             next_receipt: 1,
             disconnected: false,
         };
+        session.push_receipt(McpReceiptKind::ManifestVerified, None, None)?;
         session.push_receipt(McpReceiptKind::Connected, None, None)?;
         Ok(session)
     }
@@ -101,6 +103,18 @@ impl McpGatewaySession {
     #[must_use]
     pub fn receipts(&self) -> &[McpReceipt] {
         &self.receipts
+    }
+
+    /// Returns deterministic manifest-backed discovery and records its attributable receipt.
+    pub fn discover(
+        &mut self,
+        now_epoch_ms: u64,
+    ) -> Result<agentmage_kernel_contracts::McpDiscovery, McpGatewayError> {
+        self.verify_live(now_epoch_ms)?;
+        let discovery =
+            mcp_discovery(&self.manifest, &self.connection).map_err(map_registry_error)?;
+        self.push_receipt(McpReceiptKind::Discovered, None, None)?;
+        Ok(discovery)
     }
 
     /// Revalidates and admits one sealed request through the common tool registry.
@@ -601,6 +615,7 @@ mod tests {
         let mut gateway =
             McpGatewaySession::open(manifest.clone(), connection.clone(), observation, 1_100)
                 .expect("gateway");
+        gateway.discover(1_150).expect("discovery");
         let request = request(&manifest, &connection, &common, "request-0001");
         gateway
             .admit_request(&common, request.clone(), 1_200)
@@ -610,7 +625,7 @@ mod tests {
             .accept_response(&request, response.clone(), 1_300)
             .expect("accepted response");
         assert_eq!(accepted, response);
-        assert_eq!(gateway.receipts().len(), 3);
+        assert_eq!(gateway.receipts().len(), 5);
         assert!(
             gateway
                 .receipts()
@@ -670,7 +685,7 @@ mod tests {
                 Err(McpGatewayError::ResponseDenied),
                 "{attack}"
             );
-            assert_eq!(gateway.receipts().len(), 2, "{attack}");
+            assert_eq!(gateway.receipts().len(), 3, "{attack}");
         }
     }
 
@@ -715,6 +730,6 @@ mod tests {
                 descendants_terminated: true,
             })
             .expect("disconnect");
-        assert_eq!(gateway.receipts().len(), 4);
+        assert_eq!(gateway.receipts().len(), 5);
     }
 }
