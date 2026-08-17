@@ -2220,7 +2220,7 @@ mod tests {
             .expect("terminal publication succeeds");
         assert_eq!(receipt.outcome, OperationOutcome::Succeeded);
         assert_eq!(driver.launches, 1);
-        assert!(runtime.generation() > initial_generation);
+        assert!(runtime.generation().expect("runtime generation") > initial_generation);
         assert_eq!(
             runtime
                 .current_session_checkpoint()

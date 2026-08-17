@@ -47,6 +47,7 @@ use agentmage_kernel_engine::{
         verify_runtime_continuation_state,
     },
     runtime_coordinator::{verify_runtime_approval_response, verify_runtime_run_request},
+    runtime_journal::RuntimeJournalError,
     runtime_loop::{
         RuntimeArtifactPort, RuntimeCheckpointCommit, RuntimeCheckpointPort,
         RuntimeCheckpointPublication, RuntimeJournalPort, RuntimePermissionEvaluation,
@@ -1945,6 +1946,9 @@ where
 
 fn map_journal_failure(error: DurableAuthorityError) -> RuntimePortFailure {
     match error {
+        DurableAuthorityError::RuntimeJournal(RuntimeJournalError::QueueSaturated) => {
+            RuntimePortFailure::ResourceExhausted
+        }
         DurableAuthorityError::RuntimeJournal(error) if !error.poisons_writer() => {
             RuntimePortFailure::Invalid
         }

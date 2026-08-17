@@ -1,6 +1,10 @@
 //! Bounded durable runtime-event batching over the canonical encrypted store.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
+use std::fmt;
+use std::sync::mpsc::{self, Receiver, SyncSender, TrySendError};
+use std::sync::{Arc, Mutex};
+use std::thread::{self, JoinHandle};
 
 use agentmage_kernel_contracts::{
     AgentStateKind, ContextSensitivity, RuntimeEvent, RuntimeEventCursor, RuntimeEventKind,
@@ -17,6 +21,7 @@ const MAX_QUEUE_BYTES: usize = 16 * 1024 * 1024;
 const MAX_BATCH_EVENTS: usize = 512;
 const MAX_BATCH_BYTES: usize = 4 * 1024 * 1024;
 const MAX_FLUSH_INTERVAL_MS: u64 = 60_000;
+const WORKER_CONTROL_SLOTS: usize = 8;
 
 /// Fixed ceilings for deferred progress and metric persistence.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -60,6 +65,10 @@ pub enum RuntimeJournalError {
     Storage,
     /// A retained journal row, digest, binding, or terminal head failed restart verification.
     Integrity,
+    /// The bounded producer queue has no capacity for another event.
+    QueueSaturated,
+    /// The dedicated writer thread, channel, or shared store lock is unavailable.
+    WorkerUnavailable,
 }
 
 impl RuntimeJournalError {
@@ -73,13 +82,18 @@ impl RuntimeJournalError {
             Self::Serialization => "runtime.journal.serialization_failed",
             Self::Storage => "runtime.journal.storage_failed",
             Self::Integrity => "runtime.journal.integrity_failed",
+            Self::QueueSaturated => "runtime.journal.queue_saturated",
+            Self::WorkerUnavailable => "runtime.journal.worker_unavailable",
         }
     }
 
     /// Returns whether the failure makes the current writer result ambiguous until restart.
     #[must_use]
     pub const fn poisons_writer(self) -> bool {
-        matches!(self, Self::Storage | Self::Integrity)
+        matches!(
+            self,
+            Self::Storage | Self::Integrity | Self::WorkerUnavailable
+        )
     }
 }
 
@@ -185,16 +199,27 @@ impl RuntimeJournalWriter {
             return Err(RuntimeJournalError::InvalidEvent);
         }
         self.ensure_sequence(store, &event.run_id)?;
-        self.sequences
+        let admission = self
+            .sequences
             .get_mut(event.run_id.as_str())
             .ok_or(RuntimeJournalError::Integrity)?
-            .push(&event)?;
+            .push(&event);
+        if let Err(error) = admission {
+            self.rebuild_sequences(store)?;
+            return Err(error.into());
+        }
 
         let queue_full = self.pending.len() == self.limits.queue_event_capacity
             || self.pending_bytes.saturating_add(canonical_bytes) > self.limits.queue_byte_capacity;
-        if queue_full && let Err(error) = self.flush_all(store) {
-            self.rebuild_sequences(store)?;
-            return Err(error);
+        let mut committed_events = 0;
+        if queue_full {
+            match self.flush_all(store) {
+                Ok(committed) => committed_events += committed,
+                Err(error) => {
+                    self.rebuild_sequences(store)?;
+                    return Err(error);
+                }
+            }
         }
         self.oldest_pending_epoch_ms
             .get_or_insert(event.occurred_at_epoch_ms);
@@ -207,7 +232,7 @@ impl RuntimeJournalWriter {
 
         let should_batch = self.pending.len() >= self.limits.batch_event_capacity
             || self.pending_bytes >= self.limits.batch_byte_capacity;
-        let committed_events = if correctness {
+        committed_events += if correctness {
             self.flush_all(store)?
         } else if should_batch {
             self.flush_one_batch(store)?
@@ -311,7 +336,8 @@ impl RuntimeJournalWriter {
             self.sequences
                 .get_mut(item.event.run_id.as_str())
                 .ok_or(RuntimeJournalError::Integrity)?
-                .push(&item.event)?;
+                .push(&item.event)
+                .map_err(|_| RuntimeJournalError::Integrity)?;
         }
         Ok(())
     }
@@ -321,6 +347,525 @@ impl Default for RuntimeJournalWriter {
     fn default() -> Self {
         Self::new(RuntimeJournalLimits::default()).expect("default journal limits are valid")
     }
+}
+
+#[derive(Debug)]
+struct RuntimeJournalWorkerState {
+    limits: RuntimeJournalLimits,
+    outstanding_events: usize,
+    outstanding_bytes: usize,
+    sticky_error: Option<RuntimeJournalError>,
+    closed: bool,
+}
+
+impl RuntimeJournalWorkerState {
+    fn reserve(&mut self, canonical_bytes: usize) -> Result<(), RuntimeJournalError> {
+        if let Some(error) = self.sticky_error {
+            return Err(error);
+        }
+        if self.closed {
+            return Err(RuntimeJournalError::WorkerUnavailable);
+        }
+        if self.outstanding_events >= self.limits.queue_event_capacity
+            || self.outstanding_bytes.saturating_add(canonical_bytes)
+                > self.limits.queue_byte_capacity
+        {
+            return Err(RuntimeJournalError::QueueSaturated);
+        }
+        self.outstanding_events += 1;
+        self.outstanding_bytes += canonical_bytes;
+        Ok(())
+    }
+
+    fn rollback_reservation(&mut self, canonical_bytes: usize) -> Result<(), RuntimeJournalError> {
+        if self.outstanding_events == 0 || self.outstanding_bytes < canonical_bytes {
+            return Err(RuntimeJournalError::Integrity);
+        }
+        self.outstanding_events -= 1;
+        self.outstanding_bytes -= canonical_bytes;
+        Ok(())
+    }
+
+    fn commit(
+        &mut self,
+        committed_bytes: usize,
+        committed_events: usize,
+    ) -> Result<(), RuntimeJournalError> {
+        if self.outstanding_events < committed_events || self.outstanding_bytes < committed_bytes {
+            return Err(RuntimeJournalError::Integrity);
+        }
+        self.outstanding_events -= committed_events;
+        self.outstanding_bytes -= committed_bytes;
+        Ok(())
+    }
+
+    fn fail(&mut self, error: RuntimeJournalError) {
+        self.sticky_error.get_or_insert(error);
+    }
+}
+
+type AppendReply = SyncSender<Result<RuntimeJournalAppend, RuntimeJournalError>>;
+type CountReply = SyncSender<Result<usize, RuntimeJournalError>>;
+type EventsReply = SyncSender<Result<Vec<RuntimeEvent>, RuntimeJournalError>>;
+type UnitReply = SyncSender<Result<(), RuntimeJournalError>>;
+
+enum RuntimeJournalWorkerCommand {
+    Append {
+        event: Box<RuntimeEvent>,
+        canonical_bytes: usize,
+        reply: Option<AppendReply>,
+    },
+    FlushDue {
+        now_epoch_ms: u64,
+        reply: CountReply,
+    },
+    FlushAll {
+        reply: CountReply,
+    },
+    Load {
+        run_id: RuntimeRunId,
+        reply: EventsReply,
+    },
+    Configure {
+        limits: RuntimeJournalLimits,
+        reply: UnitReply,
+    },
+    Shutdown {
+        reply: UnitReply,
+    },
+}
+
+/// Dedicated bounded writer for asynchronous progress and acknowledged correctness events.
+pub(crate) struct RuntimeJournalWorker {
+    sender: SyncSender<RuntimeJournalWorkerCommand>,
+    state: Arc<Mutex<RuntimeJournalWorkerState>>,
+    join: Option<JoinHandle<()>>,
+}
+
+impl fmt::Debug for RuntimeJournalWorker {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let state = self.state.lock().ok();
+        formatter
+            .debug_struct("RuntimeJournalWorker")
+            .field(
+                "outstanding_events",
+                &state.as_ref().map(|state| state.outstanding_events),
+            )
+            .field(
+                "outstanding_bytes",
+                &state.as_ref().map(|state| state.outstanding_bytes),
+            )
+            .field(
+                "sticky_error",
+                &state.as_ref().and_then(|state| state.sticky_error),
+            )
+            .finish_non_exhaustive()
+    }
+}
+
+impl RuntimeJournalWorker {
+    /// Starts one named writer thread over the sole shared encrypted store.
+    pub(crate) fn new(store: Arc<Mutex<OperationalStore>>) -> Result<Self, RuntimeJournalError> {
+        let limits = RuntimeJournalLimits::default();
+        let state = Arc::new(Mutex::new(RuntimeJournalWorkerState {
+            limits,
+            outstanding_events: 0,
+            outstanding_bytes: 0,
+            sticky_error: None,
+            closed: false,
+        }));
+        let (sender, receiver) = mpsc::sync_channel(
+            MAX_QUEUE_EVENTS
+                .checked_add(WORKER_CONTROL_SLOTS)
+                .ok_or(RuntimeJournalError::InvalidLimits)?,
+        );
+        let worker_state = Arc::clone(&state);
+        let join = thread::Builder::new()
+            .name("agentmage-runtime-journal".to_owned())
+            .spawn(move || runtime_journal_worker_loop(store, receiver, worker_state, limits))
+            .map_err(|_| RuntimeJournalError::WorkerUnavailable)?;
+        Ok(Self {
+            sender,
+            state,
+            join: Some(join),
+        })
+    }
+
+    /// Validates and accepts one event, waiting only for correctness durability.
+    pub(crate) fn append(
+        &self,
+        event: RuntimeEvent,
+    ) -> Result<RuntimeJournalAppend, RuntimeJournalError> {
+        verify_runtime_event(&event)?;
+        if event.retention.kind == RuntimeEventRetentionKind::Ephemeral {
+            return Err(RuntimeJournalError::InvalidEvent);
+        }
+        let canonical_bytes = to_canonical_json(&event)
+            .map_err(|_| RuntimeJournalError::Serialization)?
+            .len();
+        if canonical_bytes == 0 {
+            return Err(RuntimeJournalError::InvalidEvent);
+        }
+        {
+            let mut state = self
+                .state
+                .lock()
+                .map_err(|_| RuntimeJournalError::WorkerUnavailable)?;
+            if canonical_bytes > state.limits.queue_byte_capacity {
+                return Err(RuntimeJournalError::InvalidEvent);
+            }
+            state.reserve(canonical_bytes)?;
+        }
+
+        let correctness = event.persistence == RuntimeEventPersistenceClass::Correctness;
+        let (reply, receiver) = if correctness {
+            let (reply, receiver) = mpsc::sync_channel(1);
+            (Some(reply), Some(receiver))
+        } else {
+            (None, None)
+        };
+        let command = RuntimeJournalWorkerCommand::Append {
+            event: Box::new(event),
+            canonical_bytes,
+            reply,
+        };
+        if let Err(error) = self.sender.try_send(command) {
+            let mut state = self
+                .state
+                .lock()
+                .map_err(|_| RuntimeJournalError::WorkerUnavailable)?;
+            if let Err(error) = state.rollback_reservation(canonical_bytes) {
+                state.fail(error);
+                return Err(error);
+            }
+            let error = match error {
+                TrySendError::Full(_) => RuntimeJournalError::QueueSaturated,
+                TrySendError::Disconnected(_) => RuntimeJournalError::WorkerUnavailable,
+            };
+            if error.poisons_writer() {
+                state.fail(error);
+            }
+            return Err(error);
+        }
+
+        if let Some(receiver) = receiver {
+            return receiver
+                .recv()
+                .map_err(|_| RuntimeJournalError::WorkerUnavailable)?;
+        }
+        let state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimeJournalError::WorkerUnavailable)?;
+        if let Some(error) = state.sticky_error {
+            return Err(error);
+        }
+        Ok(RuntimeJournalAppend {
+            durable: false,
+            committed_events: 0,
+            queued_events: state.outstanding_events,
+            queued_bytes: state.outstanding_bytes,
+        })
+    }
+
+    /// Flushes progress that reached its logical age and waits for exact completion.
+    pub(crate) fn flush_due(&self, now_epoch_ms: u64) -> Result<usize, RuntimeJournalError> {
+        let (reply, receiver) = mpsc::sync_channel(1);
+        self.send_control(RuntimeJournalWorkerCommand::FlushDue {
+            now_epoch_ms,
+            reply,
+        })?;
+        receiver
+            .recv()
+            .map_err(|_| RuntimeJournalError::WorkerUnavailable)?
+    }
+
+    /// Flushes every accepted event and waits for one exact durable result.
+    pub(crate) fn flush_all(&self) -> Result<usize, RuntimeJournalError> {
+        let (reply, receiver) = mpsc::sync_channel(1);
+        self.send_control(RuntimeJournalWorkerCommand::FlushAll { reply })?;
+        receiver
+            .recv()
+            .map_err(|_| RuntimeJournalError::WorkerUnavailable)?
+    }
+
+    /// Loads one verified durable run after every earlier worker command is observed.
+    pub(crate) fn load(
+        &self,
+        run_id: &RuntimeRunId,
+    ) -> Result<Vec<RuntimeEvent>, RuntimeJournalError> {
+        let (reply, receiver) = mpsc::sync_channel(1);
+        self.send_control(RuntimeJournalWorkerCommand::Load {
+            run_id: run_id.clone(),
+            reply,
+        })?;
+        receiver
+            .recv()
+            .map_err(|_| RuntimeJournalError::WorkerUnavailable)?
+    }
+
+    /// Replaces limits only while no accepted event remains outstanding.
+    pub(crate) fn configure(
+        &self,
+        limits: RuntimeJournalLimits,
+    ) -> Result<(), RuntimeJournalError> {
+        let (reply, receiver) = mpsc::sync_channel(1);
+        self.send_control(RuntimeJournalWorkerCommand::Configure { limits, reply })?;
+        receiver
+            .recv()
+            .map_err(|_| RuntimeJournalError::WorkerUnavailable)?
+    }
+
+    fn send_control(
+        &self,
+        command: RuntimeJournalWorkerCommand,
+    ) -> Result<(), RuntimeJournalError> {
+        let state = self
+            .state
+            .lock()
+            .map_err(|_| RuntimeJournalError::WorkerUnavailable)?;
+        if let Some(error) = state.sticky_error {
+            return Err(error);
+        }
+        if state.closed {
+            return Err(RuntimeJournalError::WorkerUnavailable);
+        }
+        drop(state);
+        self.sender
+            .send(command)
+            .map_err(|_| RuntimeJournalError::WorkerUnavailable)
+    }
+}
+
+impl Drop for RuntimeJournalWorker {
+    fn drop(&mut self) {
+        let (reply, receiver) = mpsc::sync_channel(1);
+        let _ = self
+            .sender
+            .send(RuntimeJournalWorkerCommand::Shutdown { reply });
+        let _ = receiver.recv();
+        if let Some(join) = self.join.take() {
+            let _ = join.join();
+        }
+    }
+}
+
+fn runtime_journal_worker_loop(
+    store: Arc<Mutex<OperationalStore>>,
+    receiver: Receiver<RuntimeJournalWorkerCommand>,
+    state: Arc<Mutex<RuntimeJournalWorkerState>>,
+    initial_limits: RuntimeJournalLimits,
+) {
+    let mut writer = match RuntimeJournalWriter::new(initial_limits) {
+        Ok(writer) => writer,
+        Err(error) => {
+            set_worker_failure(&state, error);
+            return;
+        }
+    };
+    let mut pending_sizes = VecDeque::new();
+    while let Ok(command) = receiver.recv() {
+        let stop = matches!(command, RuntimeJournalWorkerCommand::Shutdown { .. });
+        handle_worker_command(command, &store, &state, &mut writer, &mut pending_sizes);
+        if stop || worker_has_failed(&state) {
+            return;
+        }
+    }
+    set_worker_failure(&state, RuntimeJournalError::WorkerUnavailable);
+}
+
+fn handle_worker_command(
+    command: RuntimeJournalWorkerCommand,
+    store: &Arc<Mutex<OperationalStore>>,
+    state: &Arc<Mutex<RuntimeJournalWorkerState>>,
+    writer: &mut RuntimeJournalWriter,
+    pending_sizes: &mut VecDeque<usize>,
+) {
+    match command {
+        RuntimeJournalWorkerCommand::Append {
+            event,
+            canonical_bytes,
+            reply,
+        } => {
+            let asynchronous = reply.is_none();
+            pending_sizes.push_back(canonical_bytes);
+            let result = with_worker_store(store, |store| writer.append(store, *event));
+            let result = match result {
+                Ok(append) => commit_worker_events(state, pending_sizes, append.committed_events)
+                    .and_then(|()| worker_queue_snapshot(state))
+                    .map(|snapshot| RuntimeJournalAppend {
+                        durable: append.durable,
+                        committed_events: append.committed_events,
+                        queued_events: snapshot.0,
+                        queued_bytes: snapshot.1,
+                    }),
+                Err(error) if !error.poisons_writer() => {
+                    match rollback_worker_event(state, pending_sizes, canonical_bytes) {
+                        Ok(()) => Err(error),
+                        Err(rollback_error) => Err(rollback_error),
+                    }
+                }
+                Err(error) => Err(error),
+            };
+            if let Err(error) = result {
+                if error.poisons_writer() {
+                    set_worker_failure(state, error);
+                } else if asynchronous {
+                    set_worker_failure(state, RuntimeJournalError::Integrity);
+                }
+            }
+            if let Some(reply) = reply {
+                let _ = reply.send(result);
+            }
+        }
+        RuntimeJournalWorkerCommand::FlushDue {
+            now_epoch_ms,
+            reply,
+        } => {
+            let result = with_worker_store(store, |store| writer.flush_due(store, now_epoch_ms));
+            finish_count_result(result, state, pending_sizes, &reply);
+        }
+        RuntimeJournalWorkerCommand::FlushAll { reply } => {
+            let result = with_worker_store(store, |store| writer.flush_all(store));
+            finish_count_result(result, state, pending_sizes, &reply);
+        }
+        RuntimeJournalWorkerCommand::Load { run_id, reply } => {
+            let result = with_worker_store(store, |store| load_run_events(store, &run_id));
+            if let Err(error) = &result
+                && error.poisons_writer()
+            {
+                set_worker_failure(state, *error);
+            }
+            let _ = reply.send(result);
+        }
+        RuntimeJournalWorkerCommand::Configure { limits, reply } => {
+            let result = RuntimeJournalWriter::new(limits).and_then(|replacement| {
+                let snapshot = worker_queue_snapshot(state)?;
+                if snapshot.0 > 0 || writer.has_pending_events() {
+                    return Err(RuntimeJournalError::InvalidLimits);
+                }
+                let mut worker_state = state
+                    .lock()
+                    .map_err(|_| RuntimeJournalError::WorkerUnavailable)?;
+                if let Some(error) = worker_state.sticky_error {
+                    return Err(error);
+                }
+                if worker_state.closed {
+                    return Err(RuntimeJournalError::WorkerUnavailable);
+                }
+                worker_state.limits = limits;
+                *writer = replacement;
+                Ok(())
+            });
+            if let Err(error) = &result
+                && error.poisons_writer()
+            {
+                set_worker_failure(state, *error);
+            }
+            let _ = reply.send(result);
+        }
+        RuntimeJournalWorkerCommand::Shutdown { reply } => {
+            let result = with_worker_store(store, |store| writer.flush_all(store))
+                .and_then(|count| commit_worker_events(state, pending_sizes, count));
+            if let Err(error) = &result
+                && error.poisons_writer()
+            {
+                set_worker_failure(state, *error);
+            }
+            let close_result = state
+                .lock()
+                .map_err(|_| RuntimeJournalError::WorkerUnavailable)
+                .map(|mut state| state.closed = true);
+            let result = result.and(close_result);
+            let _ = reply.send(result);
+        }
+    }
+}
+
+fn with_worker_store<T>(
+    store: &Arc<Mutex<OperationalStore>>,
+    operation: impl FnOnce(&mut OperationalStore) -> Result<T, RuntimeJournalError>,
+) -> Result<T, RuntimeJournalError> {
+    let mut store = store
+        .lock()
+        .map_err(|_| RuntimeJournalError::WorkerUnavailable)?;
+    operation(&mut store)
+}
+
+fn finish_count_result(
+    result: Result<usize, RuntimeJournalError>,
+    state: &Arc<Mutex<RuntimeJournalWorkerState>>,
+    pending_sizes: &mut VecDeque<usize>,
+    reply: &CountReply,
+) {
+    let result = result.and_then(|count| {
+        commit_worker_events(state, pending_sizes, count)?;
+        Ok(count)
+    });
+    if let Err(error) = &result
+        && error.poisons_writer()
+    {
+        set_worker_failure(state, *error);
+    }
+    let _ = reply.send(result);
+}
+
+fn commit_worker_events(
+    state: &Arc<Mutex<RuntimeJournalWorkerState>>,
+    pending_sizes: &mut VecDeque<usize>,
+    count: usize,
+) -> Result<(), RuntimeJournalError> {
+    if count > pending_sizes.len() {
+        return Err(RuntimeJournalError::Integrity);
+    }
+    let committed_bytes = pending_sizes
+        .iter()
+        .take(count)
+        .try_fold(0_usize, |total, bytes| total.checked_add(*bytes))
+        .ok_or(RuntimeJournalError::Integrity)?;
+    state
+        .lock()
+        .map_err(|_| RuntimeJournalError::WorkerUnavailable)?
+        .commit(committed_bytes, count)?;
+    pending_sizes.drain(..count);
+    Ok(())
+}
+
+fn rollback_worker_event(
+    state: &Arc<Mutex<RuntimeJournalWorkerState>>,
+    pending_sizes: &mut VecDeque<usize>,
+    canonical_bytes: usize,
+) -> Result<(), RuntimeJournalError> {
+    if pending_sizes.back().copied() != Some(canonical_bytes) {
+        return Err(RuntimeJournalError::Integrity);
+    }
+    state
+        .lock()
+        .map_err(|_| RuntimeJournalError::WorkerUnavailable)?
+        .rollback_reservation(canonical_bytes)?;
+    pending_sizes.pop_back();
+    Ok(())
+}
+
+fn worker_queue_snapshot(
+    state: &Arc<Mutex<RuntimeJournalWorkerState>>,
+) -> Result<(usize, usize), RuntimeJournalError> {
+    state
+        .lock()
+        .map_err(|_| RuntimeJournalError::WorkerUnavailable)
+        .map(|state| (state.outstanding_events, state.outstanding_bytes))
+}
+
+fn set_worker_failure(state: &Arc<Mutex<RuntimeJournalWorkerState>>, error: RuntimeJournalError) {
+    if let Ok(mut state) = state.lock() {
+        state.fail(error);
+    }
+}
+
+fn worker_has_failed(state: &Arc<Mutex<RuntimeJournalWorkerState>>) -> bool {
+    state
+        .lock()
+        .map_or(true, |state| state.sticky_error.is_some())
 }
 
 /// Loads and verifies the exact durable history for one run.
@@ -734,6 +1279,9 @@ const fn retention_code(value: RuntimeEventRetentionKind) -> &'static str {
 mod tests {
     use std::fs;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::mpsc;
+    use std::sync::{Arc, Mutex};
+    use std::thread;
     use std::time::{Duration, Instant};
 
     use agentmage_kernel_contracts::{
@@ -744,8 +1292,8 @@ mod tests {
     };
 
     use super::{
-        RuntimeJournalError, RuntimeJournalLimits, RuntimeJournalWriter, current_cursor,
-        load_run_events,
+        RuntimeJournalError, RuntimeJournalLimits, RuntimeJournalWorker, RuntimeJournalWriter,
+        current_cursor, load_run_events,
     };
     use crate::operational_store::{
         OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
@@ -898,6 +1446,198 @@ mod tests {
                     .parse::<u64>()
                     .ok()
             })
+    }
+
+    #[test]
+    fn story_21_2_dedicated_writer_keeps_progress_and_clients_off_slow_store() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let store = Arc::new(Mutex::new(
+            OperationalStore::open(&path, &observation(), &mut TestKey).expect("encrypted store"),
+        ));
+        let worker = RuntimeJournalWorker::new(Arc::clone(&store)).expect("journal worker");
+        let events = EventFixture::new().complete_run();
+        let publisher = RuntimeEventPublisher::new();
+        let subscriber = publisher.subscribe(events.len()).expect("subscriber");
+
+        assert!(worker.append(events[0].clone()).expect("run start").durable);
+        publisher.publish(events[0].clone()).expect("publish start");
+        assert_eq!(
+            subscriber.try_next().expect("receive start"),
+            Some(events[0].clone())
+        );
+
+        let store_guard = store.lock().expect("hold simulated slow store");
+        let (reply, result) = mpsc::sync_channel(1);
+        thread::scope(|scope| {
+            scope.spawn(|| {
+                let started = Instant::now();
+                let append = worker.append(events[1].clone());
+                let _ = reply.send((append, started.elapsed()));
+            });
+            let (append, elapsed) = match result.recv_timeout(Duration::from_millis(250)) {
+                Ok(result) => result,
+                Err(error) => {
+                    drop(store_guard);
+                    panic!("progress producer blocked on slow store: {error}");
+                }
+            };
+            let append = append.expect("progress accepted");
+            assert!(!append.durable);
+            assert!(elapsed < Duration::from_millis(250));
+
+            publisher.publish(events[1].clone()).expect("publish turn");
+            assert_eq!(
+                subscriber.try_next().expect("receive turn"),
+                Some(events[1].clone())
+            );
+            assert!(
+                !worker
+                    .append(events[2].clone())
+                    .expect("progress accepted")
+                    .durable
+            );
+            publisher
+                .publish(events[2].clone())
+                .expect("publish progress");
+            assert_eq!(
+                subscriber.try_next().expect("receive progress"),
+                Some(events[2].clone())
+            );
+            drop(store_guard);
+        });
+
+        assert!(
+            !worker
+                .append(events[3].clone())
+                .expect("turn end accepted")
+                .durable
+        );
+        publisher
+            .publish(events[3].clone())
+            .expect("publish turn end");
+        assert!(
+            worker
+                .append(events[4].clone())
+                .expect("terminal commits")
+                .durable
+        );
+        publisher
+            .publish(events[4].clone())
+            .expect("publish terminal");
+        assert_eq!(worker.flush_all(), Ok(0));
+        assert_eq!(worker.load(&events[0].run_id), Ok(events.clone()));
+        drop(worker);
+        drop(store);
+        let reopened =
+            OperationalStore::open(&path, &observation(), &mut TestKey).expect("verified restart");
+        assert_eq!(load_run_events(&reopened, &events[0].run_id), Ok(events));
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("remove directory");
+    }
+
+    #[test]
+    fn story_50_2_dedicated_writer_saturation_is_bounded_and_recoverable() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let store = Arc::new(Mutex::new(
+            OperationalStore::open(&path, &observation(), &mut TestKey).expect("encrypted store"),
+        ));
+        let worker = RuntimeJournalWorker::new(Arc::clone(&store)).expect("journal worker");
+        worker
+            .configure(RuntimeJournalLimits {
+                queue_event_capacity: 2,
+                queue_byte_capacity: 64 * 1024,
+                batch_event_capacity: 2,
+                batch_byte_capacity: 64 * 1024,
+                flush_interval_ms: 250,
+            })
+            .expect("bounded limits");
+        let mut fixture = EventFixture::new();
+        let start = fixture.event(
+            RuntimeEventKind::RunStarted {
+                request_sha256: "a".repeat(64),
+            },
+            None,
+        );
+        let turn = fixture.event(RuntimeEventKind::TurnStarted, Some("journal-turn-1"));
+        let first = fixture.event(
+            RuntimeEventKind::Progress {
+                code: "runtime.progress.first".to_owned(),
+            },
+            Some("journal-turn-1"),
+        );
+        let second = fixture.event(
+            RuntimeEventKind::Progress {
+                code: "runtime.progress.second".to_owned(),
+            },
+            Some("journal-turn-1"),
+        );
+
+        worker.append(start.clone()).expect("start commits");
+        let store_guard = store.lock().expect("hold simulated slow store");
+        worker.append(turn.clone()).expect("turn queues");
+        worker.append(first.clone()).expect("first progress queues");
+        assert_eq!(
+            worker.append(second.clone()),
+            Err(RuntimeJournalError::QueueSaturated)
+        );
+        drop(store_guard);
+        worker.flush_all().expect("accepted progress flushes");
+        worker
+            .append(second.clone())
+            .expect("rejected event retries exactly");
+        worker.flush_all().expect("retried progress flushes");
+        assert_eq!(
+            worker.load(&start.run_id),
+            Ok(vec![start, turn, first, second])
+        );
+        drop(worker);
+        drop(store);
+        fs::remove_dir_all(directory).expect("remove directory");
+    }
+
+    #[test]
+    fn story_21_2_dedicated_writer_poison_is_sticky_without_false_history() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let store = Arc::new(Mutex::new(
+            OperationalStore::open(&path, &observation(), &mut TestKey).expect("encrypted store"),
+        ));
+        let worker = RuntimeJournalWorker::new(Arc::clone(&store)).expect("journal worker");
+        let events = EventFixture::new().complete_run();
+
+        worker.append(events[0].clone()).expect("run start commits");
+        store
+            .lock()
+            .expect("store remains available")
+            .connection
+            .execute_batch(
+                "CREATE TRIGGER reject_worker_runtime_sequence_one
+                 BEFORE INSERT ON runtime_events WHEN NEW.sequence = 1
+                 BEGIN SELECT RAISE(ABORT, 'synthetic worker journal failure'); END;",
+            )
+            .expect("failure trigger");
+        worker
+            .append(events[1].clone())
+            .expect("progress is accepted asynchronously");
+
+        assert_eq!(worker.flush_all(), Err(RuntimeJournalError::Storage));
+        assert_eq!(
+            worker.load(&events[0].run_id),
+            Err(RuntimeJournalError::Storage)
+        );
+        assert_eq!(
+            load_run_events(
+                &store.lock().expect("inspect committed history"),
+                &events[0].run_id,
+            ),
+            Ok(vec![events[0].clone()])
+        );
+
+        drop(worker);
+        drop(store);
+        fs::remove_dir_all(directory).expect("remove directory");
     }
 
     #[test]

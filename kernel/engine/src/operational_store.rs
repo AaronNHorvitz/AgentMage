@@ -8,6 +8,7 @@ use std::io::Write as _;
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
 use std::path::{Component, Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
 
 use agentmage_kernel_contracts::{
@@ -47,8 +48,8 @@ use crate::runtime_artifact::{
     runtime_artifact_state, verify_all as verify_runtime_artifacts, verify_runtime_resume_binding,
 };
 use crate::runtime_journal::{
-    RuntimeJournalAppend, RuntimeJournalError, RuntimeJournalLimits, RuntimeJournalWriter,
-    current_cursor, load_run_events, verify_all as verify_runtime_journal,
+    RuntimeJournalAppend, RuntimeJournalError, RuntimeJournalLimits, RuntimeJournalWorker,
+    current_cursor, verify_all as verify_runtime_journal,
 };
 use crate::strict_local::{StrictLocalStorageDecision, evaluate_storage};
 use crate::tooling::ToolRegistry;
@@ -1169,10 +1170,10 @@ impl OperationalStore {
 
 /// Composed durable grant issuer and sole public effect-launch boundary.
 pub struct DurableAuthorityRuntime {
-    store: OperationalStore,
+    store: Arc<Mutex<OperationalStore>>,
     issuer: GrantIssuer,
     coordinator: AuthorityTransactionCoordinator,
-    runtime_journal: RuntimeJournalWriter,
+    runtime_journal: RuntimeJournalWorker,
     poisoned: bool,
 }
 
@@ -1180,7 +1181,10 @@ impl fmt::Debug for DurableAuthorityRuntime {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("DurableAuthorityRuntime")
-            .field("generation", &self.store.generation())
+            .field(
+                "generation",
+                &self.store.lock().ok().map(|store| store.generation()),
+            )
             .field("poisoned", &self.poisoned)
             .finish_non_exhaustive()
     }
@@ -1226,11 +1230,14 @@ impl DurableAuthorityRuntime {
         let (issuer, coordinator) = store
             .load_authority()
             .map_err(DurableAuthorityError::Store)?;
+        let store = Arc::new(Mutex::new(store));
+        let runtime_journal = RuntimeJournalWorker::new(Arc::clone(&store))
+            .map_err(DurableAuthorityError::RuntimeJournal)?;
         let mut runtime = Self {
             store,
             issuer,
             coordinator,
-            runtime_journal: RuntimeJournalWriter::default(),
+            runtime_journal,
             poisoned: false,
         };
         runtime.recover_interrupted(recovery_epoch_ms)?;
@@ -1244,9 +1251,8 @@ impl DurableAuthorityRuntime {
     }
 
     /// Returns the last atomically published authority/checkpoint generation.
-    #[must_use]
-    pub const fn generation(&self) -> u64 {
-        self.store.generation()
+    pub fn generation(&self) -> Result<u64, DurableAuthorityError> {
+        Ok(self.lock_store()?.generation())
     }
 
     /// Returns one current canonical transaction revision.
@@ -1268,7 +1274,7 @@ impl DurableAuthorityRuntime {
     pub fn current_session_checkpoint(
         &self,
     ) -> Result<Option<SessionCheckpoint>, DurableAuthorityError> {
-        self.store
+        self.lock_store()?
             .current_session_checkpoint()
             .map_err(DurableAuthorityError::Store)
     }
@@ -1278,7 +1284,8 @@ impl DurableAuthorityRuntime {
         &self,
     ) -> Result<Option<RuntimeResumeBinding>, DurableAuthorityError> {
         self.ensure_usable()?;
-        current_runtime_resume_binding(&self.store).map_err(DurableAuthorityError::RuntimeArtifact)
+        let store = self.lock_store()?;
+        current_runtime_resume_binding(&store).map_err(DurableAuthorityError::RuntimeArtifact)
     }
 
     /// Replaces the empty runtime-journal queue with explicitly bounded writer limits.
@@ -1287,14 +1294,9 @@ impl DurableAuthorityRuntime {
         limits: RuntimeJournalLimits,
     ) -> Result<(), DurableAuthorityError> {
         self.ensure_usable()?;
-        if self.runtime_journal.has_pending_events() {
-            return Err(DurableAuthorityError::RuntimeJournal(
-                RuntimeJournalError::InvalidLimits,
-            ));
-        }
-        self.runtime_journal =
-            RuntimeJournalWriter::new(limits).map_err(DurableAuthorityError::RuntimeJournal)?;
-        Ok(())
+        self.runtime_journal
+            .configure(limits)
+            .map_err(DurableAuthorityError::RuntimeJournal)
     }
 
     /// Verifies, queues, and synchronously commits correctness-bearing runtime events.
@@ -1303,7 +1305,7 @@ impl DurableAuthorityRuntime {
         event: agentmage_kernel_contracts::RuntimeEvent,
     ) -> Result<RuntimeJournalAppend, DurableAuthorityError> {
         self.ensure_usable()?;
-        match self.runtime_journal.append(&mut self.store, event) {
+        match self.runtime_journal.append(event) {
             Ok(result) => Ok(result),
             Err(error) => {
                 if error.poisons_writer() {
@@ -1320,10 +1322,7 @@ impl DurableAuthorityRuntime {
         now_epoch_ms: u64,
     ) -> Result<usize, DurableAuthorityError> {
         self.ensure_usable()?;
-        match self
-            .runtime_journal
-            .flush_due(&mut self.store, now_epoch_ms)
-        {
+        match self.runtime_journal.flush_due(now_epoch_ms) {
             Ok(count) => Ok(count),
             Err(error) => {
                 if error.poisons_writer() {
@@ -1337,7 +1336,7 @@ impl DurableAuthorityRuntime {
     /// Flushes all queued progress at checkpoint, shutdown, or explicit synchronization.
     pub fn flush_runtime_events(&mut self) -> Result<usize, DurableAuthorityError> {
         self.ensure_usable()?;
-        match self.runtime_journal.flush_all(&mut self.store) {
+        match self.runtime_journal.flush_all() {
             Ok(count) => Ok(count),
             Err(error) => {
                 if error.poisons_writer() {
@@ -1354,7 +1353,9 @@ impl DurableAuthorityRuntime {
         run_id: &agentmage_kernel_contracts::RuntimeRunId,
     ) -> Result<Vec<agentmage_kernel_contracts::RuntimeEvent>, DurableAuthorityError> {
         self.ensure_usable()?;
-        load_run_events(&self.store, run_id).map_err(DurableAuthorityError::RuntimeJournal)
+        self.runtime_journal
+            .load(run_id)
+            .map_err(DurableAuthorityError::RuntimeJournal)
     }
 
     /// Returns the last fully committed event cursor for one run.
@@ -1363,7 +1364,8 @@ impl DurableAuthorityRuntime {
         run_id: &agentmage_kernel_contracts::RuntimeRunId,
     ) -> Result<Option<agentmage_kernel_contracts::RuntimeEventCursor>, DurableAuthorityError> {
         self.ensure_usable()?;
-        current_cursor(&self.store, run_id).map_err(DurableAuthorityError::RuntimeJournal)
+        let store = self.lock_store()?;
+        current_cursor(&store, run_id).map_err(DurableAuthorityError::RuntimeJournal)
     }
 
     /// Publishes one bounded payload through private staging and canonical metadata.
@@ -1374,7 +1376,11 @@ impl DurableAuthorityRuntime {
         source: &mut dyn std::io::Read,
     ) -> Result<RuntimeArtifactPublication, DurableAuthorityError> {
         self.ensure_usable()?;
-        match publish_runtime_artifact(&mut self.store, payloads, manifest, source) {
+        let result = {
+            let mut store = self.lock_store()?;
+            publish_runtime_artifact(&mut store, payloads, manifest, source)
+        };
+        match result {
             Ok(publication) => Ok(publication),
             Err(error) => {
                 if error.poisons_runtime() {
@@ -1391,8 +1397,8 @@ impl DurableAuthorityRuntime {
         reference: &agentmage_kernel_contracts::RuntimeArtifactRef,
     ) -> Result<RuntimeArtifactState, DurableAuthorityError> {
         self.ensure_usable()?;
-        runtime_artifact_state(&self.store, reference)
-            .map_err(DurableAuthorityError::RuntimeArtifact)
+        let store = self.lock_store()?;
+        runtime_artifact_state(&store, reference).map_err(DurableAuthorityError::RuntimeArtifact)
     }
 
     /// Reads complete verified bytes only for their exact session, task, policy, and ceiling.
@@ -1402,7 +1408,8 @@ impl DurableAuthorityRuntime {
         request: &RuntimeArtifactReadRequest,
     ) -> Result<Vec<u8>, DurableAuthorityError> {
         self.ensure_usable()?;
-        read_runtime_artifact(&self.store, payloads, request)
+        let store = self.lock_store()?;
+        read_runtime_artifact(&store, payloads, request)
             .map_err(DurableAuthorityError::RuntimeArtifact)
     }
 
@@ -1413,7 +1420,8 @@ impl DurableAuthorityRuntime {
         request: &RuntimeArtifactPageRequest,
     ) -> Result<RuntimeArtifactPage, DurableAuthorityError> {
         self.ensure_usable()?;
-        read_runtime_artifact_page(&self.store, payloads, request)
+        let store = self.lock_store()?;
+        read_runtime_artifact_page(&store, payloads, request)
             .map_err(DurableAuthorityError::RuntimeArtifact)
     }
 
@@ -1427,14 +1435,18 @@ impl DurableAuthorityRuntime {
         occurred_at_epoch_ms: u64,
     ) -> Result<RuntimeArtifactState, DurableAuthorityError> {
         self.ensure_usable()?;
-        match release_runtime_artifact(
-            &mut self.store,
-            session_id,
-            task_id,
-            policy_sha256,
-            reference,
-            occurred_at_epoch_ms,
-        ) {
+        let result = {
+            let mut store = self.lock_store()?;
+            release_runtime_artifact(
+                &mut store,
+                session_id,
+                task_id,
+                policy_sha256,
+                reference,
+                occurred_at_epoch_ms,
+            )
+        };
+        match result {
             Ok(state) => Ok(state),
             Err(error) => {
                 if error.poisons_runtime() {
@@ -1452,7 +1464,11 @@ impl DurableAuthorityRuntime {
         now_epoch_ms: u64,
     ) -> Result<RuntimeArtifactReconciliation, DurableAuthorityError> {
         self.ensure_usable()?;
-        match reconcile_runtime_artifacts(&mut self.store, payloads, now_epoch_ms) {
+        let result = {
+            let mut store = self.lock_store()?;
+            reconcile_runtime_artifacts(&mut store, payloads, now_epoch_ms)
+        };
+        match result {
             Ok(report) => Ok(report),
             Err(error) => {
                 if error.poisons_runtime() {
@@ -1469,9 +1485,10 @@ impl DurableAuthorityRuntime {
         checkpoint: &SessionCheckpoint,
     ) -> Result<(), DurableAuthorityError> {
         self.ensure_usable()?;
-        self.store
-            .persist_authority_with_session_checkpoint(&self.issuer, &self.coordinator, checkpoint)
-            .map_err(|error| self.poison(error))
+        let result = self
+            .lock_store()?
+            .persist_authority_with_session_checkpoint(&self.issuer, &self.coordinator, checkpoint);
+        result.map_err(|error| self.poison(error))
     }
 
     /// Atomically publishes one safe checkpoint with its committed cursor and artifact set.
@@ -1484,24 +1501,28 @@ impl DurableAuthorityRuntime {
         verify_runtime_resume_binding(binding)
             .map_err(|error| DurableAuthorityError::RuntimeArtifact(error.into()))?;
         self.flush_runtime_events()?;
-        let cursor = current_cursor(&self.store, &binding.run_id)
-            .map_err(DurableAuthorityError::RuntimeJournal)?
-            .ok_or(DurableAuthorityError::RuntimeArtifact(
-                RuntimeArtifactStoreError::NotFound,
-            ))?;
+        let cursor = {
+            let store = self.lock_store()?;
+            current_cursor(&store, &binding.run_id)
+                .map_err(DurableAuthorityError::RuntimeJournal)?
+                .ok_or(DurableAuthorityError::RuntimeArtifact(
+                    RuntimeArtifactStoreError::NotFound,
+                ))?
+        };
         if cursor != binding.event_cursor {
             return Err(DurableAuthorityError::RuntimeArtifact(
                 RuntimeArtifactStoreError::NotAuthorized,
             ));
         }
-        self.store
+        let result = self
+            .lock_store()?
             .persist_authority_with_runtime_checkpoint(
                 &self.issuer,
                 &self.coordinator,
                 checkpoint,
                 binding,
-            )
-            .map_err(|error| self.poison(error))
+            );
+        result.map_err(|error| self.poison(error))
     }
 
     /// Issues one parent grant and publishes it atomically before returning it.
@@ -1514,9 +1535,10 @@ impl DurableAuthorityRuntime {
         let grant = candidate
             .issue_session_read(request)
             .map_err(DurableAuthorityError::Grant)?;
-        self.store
-            .persist_authority(&candidate, &self.coordinator)
-            .map_err(|error| self.poison(error))?;
+        let result = self
+            .lock_store()?
+            .persist_authority(&candidate, &self.coordinator);
+        result.map_err(|error| self.poison(error))?;
         self.issuer = candidate;
         Ok(grant)
     }
@@ -1532,9 +1554,10 @@ impl DurableAuthorityRuntime {
         let grant = candidate
             .derive_operation(parent_grant_id, request)
             .map_err(DurableAuthorityError::Grant)?;
-        self.store
-            .persist_authority(&candidate, &self.coordinator)
-            .map_err(|error| self.poison(error))?;
+        let result = self
+            .lock_store()?
+            .persist_authority(&candidate, &self.coordinator);
+        result.map_err(|error| self.poison(error))?;
         self.issuer = candidate;
         Ok(grant)
     }
@@ -1551,9 +1574,10 @@ impl DurableAuthorityRuntime {
         let mut candidate = self.issuer.clone();
         let approval = issue_write_grant(&mut candidate, change_set, preview, decision, request)
             .map_err(DurableAuthorityError::WriteApproval)?;
-        self.store
-            .persist_authority(&candidate, &self.coordinator)
-            .map_err(|error| self.poison(error))?;
+        let result = self
+            .lock_store()?
+            .persist_authority(&candidate, &self.coordinator);
+        result.map_err(|error| self.poison(error))?;
         self.issuer = candidate;
         Ok(approval)
     }
@@ -1570,9 +1594,10 @@ impl DurableAuthorityRuntime {
         let mut candidate = self.issuer.clone();
         let approval = issue_filesystem_grant(&mut candidate, plan, preview, decision, request)
             .map_err(DurableAuthorityError::FilesystemApproval)?;
-        self.store
-            .persist_authority(&candidate, &self.coordinator)
-            .map_err(|error| self.poison(error))?;
+        let result = self
+            .lock_store()?
+            .persist_authority(&candidate, &self.coordinator);
+        result.map_err(|error| self.poison(error))?;
         self.issuer = candidate;
         Ok(approval)
     }
@@ -1589,7 +1614,8 @@ impl DurableAuthorityRuntime {
         self.ensure_usable()?;
         let mut store_error = None;
         let result = {
-            let store = &mut self.store;
+            let shared_store = Arc::clone(&self.store);
+            let mut store = lock_shared_store(&shared_store)?;
             let coordinator = &self.coordinator;
             execute_write_transaction_with_checkpoint(
                 &mut self.issuer,
@@ -1626,7 +1652,8 @@ impl DurableAuthorityRuntime {
         self.ensure_usable()?;
         let mut store_error = None;
         let result = {
-            let store = &mut self.store;
+            let shared_store = Arc::clone(&self.store);
+            let mut store = lock_shared_store(&shared_store)?;
             let coordinator = &self.coordinator;
             execute_filesystem_transaction_with_checkpoint(
                 &mut self.issuer,
@@ -1660,19 +1687,22 @@ impl DurableAuthorityRuntime {
         driver: &mut D,
     ) -> Result<Receipt, DurableAuthorityError> {
         self.ensure_usable()?;
-        let store = &mut self.store;
-        let result = self.coordinator.execute_with_checkpoint(
-            registry,
-            &mut self.issuer,
-            policy,
-            &request,
-            driver,
-            &mut |issuer, coordinator| {
-                store
-                    .persist_authority(issuer, coordinator)
-                    .map_err(|_| AuthorityTransactionError::PersistenceFailure)
-            },
-        );
+        let shared_store = Arc::clone(&self.store);
+        let result = {
+            let mut store = lock_shared_store(&shared_store)?;
+            self.coordinator.execute_with_checkpoint(
+                registry,
+                &mut self.issuer,
+                policy,
+                &request,
+                driver,
+                &mut |issuer, coordinator| {
+                    store
+                        .persist_authority(issuer, coordinator)
+                        .map_err(|_| AuthorityTransactionError::PersistenceFailure)
+                },
+            )
+        };
         match result {
             Ok(receipt) => Ok(receipt),
             Err(error) => {
@@ -1699,7 +1729,8 @@ impl DurableAuthorityRuntime {
     {
         self.ensure_usable()?;
         let transaction_id = request.transaction_id().clone();
-        let store = &mut self.store;
+        let shared_store = Arc::clone(&self.store);
+        let mut store = lock_shared_store(&shared_store)?;
         let mut built_checkpoint = None;
         let mut checkpoint_error = None;
         let mut store_error = None;
@@ -1779,7 +1810,7 @@ impl DurableAuthorityRuntime {
         provider: &mut P,
     ) -> Result<EncryptedBackupReceipt, DurableAuthorityError> {
         self.ensure_usable()?;
-        self.store
+        self.lock_store()?
             .backup(destination, observation, provider)
             .map_err(DurableAuthorityError::Store)
     }
@@ -1790,7 +1821,8 @@ impl DurableAuthorityRuntime {
     ) -> Result<(), DurableAuthorityError> {
         let transaction_ids = self.coordinator.nonterminal_ids();
         for transaction_id in transaction_ids {
-            let store = &mut self.store;
+            let shared_store = Arc::clone(&self.store);
+            let mut store = lock_shared_store(&shared_store)?;
             self.coordinator
                 .recover_with_checkpoint(
                     &mut self.issuer,
@@ -1808,17 +1840,27 @@ impl DurableAuthorityRuntime {
     }
 
     fn ensure_usable(&self) -> Result<(), DurableAuthorityError> {
-        if self.poisoned || self.store.poisoned {
+        if self.poisoned || self.lock_store()?.poisoned {
             Err(DurableAuthorityError::Poisoned)
         } else {
             Ok(())
         }
     }
 
+    fn lock_store(&self) -> Result<MutexGuard<'_, OperationalStore>, DurableAuthorityError> {
+        lock_shared_store(&self.store)
+    }
+
     fn poison(&mut self, error: OperationalStoreError) -> DurableAuthorityError {
         self.poisoned = true;
         DurableAuthorityError::Store(error)
     }
+}
+
+fn lock_shared_store(
+    store: &Arc<Mutex<OperationalStore>>,
+) -> Result<MutexGuard<'_, OperationalStore>, DurableAuthorityError> {
+    store.lock().map_err(|_| DurableAuthorityError::Poisoned)
 }
 
 fn open_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalStoreError> {
