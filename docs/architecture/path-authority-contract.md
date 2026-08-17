@@ -31,9 +31,10 @@ weaker grant path.
 
 `HeldWorkspaceRoot` extends that handle with content-free identity evidence for
 the continuously held root descriptor. It exists so an owned-worktree command
-can bind the repository root without making an empty `WorkspacePath` valid.
-Held-root operation authority overlaps every excluded subtree in the same
-workspace and is therefore denied when such an exclusion is inherited.
+or controlled root-file destination can bind the repository root without making
+an empty `WorkspacePath` valid. Held-root operation authority overlaps every
+excluded subtree in the same workspace and is therefore denied when such an
+exclusion is inherited.
 
 `HeldWorkspaceObject` retains the native object from validation through use and
 reports only canonical path, authorization, adapter, intent, object kind,

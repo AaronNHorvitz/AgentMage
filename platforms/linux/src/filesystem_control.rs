@@ -152,28 +152,41 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
                 destination: None,
             });
         };
-        let parent_path = expected_parent
-            .workspace_path()
-            .ok_or(FilesystemDriverError::ObservationUnavailable)?;
-        let held_parent = self
-            .adapter()
-            .resolve(
-                self.workspace,
-                parent_path,
-                PathResolutionIntent::ReadDirectory,
-            )
-            .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
-        let current_parent = GrantTarget::held_object(&held_parent)
-            .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
+        let (current_parent, destination_sibling_names) =
+            if let Some(parent_path) = expected_parent.workspace_path() {
+                let held_parent = self
+                    .adapter()
+                    .resolve(
+                        self.workspace,
+                        parent_path,
+                        PathResolutionIntent::ReadDirectory,
+                    )
+                    .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
+                let current_parent = GrantTarget::held_object(&held_parent)
+                    .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
+                let sibling_names = self.list_siblings(&held_parent.object_descriptor)?;
+                held_parent
+                    .revalidate()
+                    .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
+                (current_parent, sibling_names)
+            } else {
+                let current_parent = GrantTarget::held_workspace_root(self.workspace)
+                    .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
+                let descriptor = self
+                    .workspace
+                    .reopen_root_directory()
+                    .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
+                let sibling_names = self.list_siblings(&descriptor)?;
+                self.workspace
+                    .revalidate()
+                    .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
+                (current_parent, sibling_names)
+            };
         if &current_parent != expected_parent {
             return Err(FilesystemDriverError::ObservationUnavailable);
         }
-        let destination_sibling_names = self.list_siblings(&held_parent.object_descriptor)?;
         let destination_path = destination_path(operation)?;
         let destination = self.observe_optional_file(&destination_path)?;
-        held_parent
-            .revalidate()
-            .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
         Ok(FilesystemOperationObservation {
             source,
             destination_parent: Some(current_parent),
@@ -425,15 +438,20 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
     }
 
     fn destination_parent_is_exact(&self, expected: &GrantTarget) -> bool {
-        let Some(path) = expected.workspace_path() else {
-            return false;
-        };
-        self.adapter()
-            .resolve(self.workspace, path, PathResolutionIntent::ReadDirectory)
-            .ok()
-            .and_then(|held| GrantTarget::held_object(&held).ok())
-            .as_ref()
-            == Some(expected)
+        match expected.workspace_path() {
+            Some(path) => {
+                self.adapter()
+                    .resolve(self.workspace, path, PathResolutionIntent::ReadDirectory)
+                    .ok()
+                    .and_then(|held| GrantTarget::held_object(&held).ok())
+                    .as_ref()
+                    == Some(expected)
+            }
+            None => {
+                self.workspace.revalidate().is_ok()
+                    && GrantTarget::held_workspace_root(self.workspace).as_ref() == Ok(expected)
+            }
+        }
     }
 
     fn entry_matches(&self, path: &WorkspacePath, expected: &[u8], mode: u32) -> bool {
@@ -594,27 +612,22 @@ fn destination_path(
 ) -> Result<WorkspacePath, FilesystemDriverError> {
     let parent = operation
         .destination_parent()
-        .and_then(GrantTarget::workspace_path)
         .ok_or(FilesystemDriverError::ObservationUnavailable)?;
-    let name = operation
+    let display = operation
         .destination_path()
-        .and_then(|path| path.rsplit('/').next())
         .ok_or(FilesystemDriverError::ObservationUnavailable)?;
-    let mut components = parent
-        .components()
-        .iter()
-        .map(|component| component.as_str().to_owned())
-        .collect::<Vec<_>>();
-    components.push(name.to_owned());
-    let path = WorkspacePath::new(parent.workspace_id().clone(), components)
+    let path = WorkspacePath::new(parent.workspace_id().clone(), display.split('/'))
         .map_err(|_| FilesystemDriverError::ObservationUnavailable)?;
-    let display = path
+    let canonical_display = path
         .components()
         .iter()
         .map(|component| component.as_str())
         .collect::<Vec<_>>()
         .join("/");
-    if Some(display.as_str()) != operation.destination_path() {
+    if canonical_display != display
+        || path.components().len() != parent.path_components().len() + 1
+        || !path.components().starts_with(parent.path_components())
+    {
         return Err(FilesystemDriverError::ObservationUnavailable);
     }
     Ok(path)
@@ -792,6 +805,29 @@ mod tests {
         }
     }
 
+    fn root_destination_draft(
+        workspace: &LinuxAuthorizedWorkspace,
+        workspace_id: &WorkspaceId,
+        name: &str,
+    ) -> NewDestinationDraft {
+        let mut siblings = fs::read_dir(workspace_absolute(workspace, &[]))
+            .expect("root destination listing")
+            .map(|entry| {
+                entry
+                    .expect("root destination entry")
+                    .file_name()
+                    .into_string()
+                    .expect("UTF-8 fixture name")
+            })
+            .collect::<Vec<_>>();
+        siblings.sort_unstable();
+        NewDestinationDraft {
+            parent: GrantTarget::held_workspace_root(workspace).expect("held root target"),
+            path: WorkspacePath::new(workspace_id.clone(), [name]).expect("root destination path"),
+            observed_sibling_names: siblings,
+        }
+    }
+
     fn workspace_absolute(workspace: &LinuxAuthorizedWorkspace, components: &[&str]) -> PathBuf {
         let root = fs::read_link(format!(
             "/proc/self/fd/{}",
@@ -868,13 +904,7 @@ mod tests {
             vec![
                 FilesystemOperationDraft::Create {
                     operation_id: "linux-operation-create".to_owned(),
-                    destination: destination_draft(
-                        &adapter,
-                        &workspace,
-                        &workspace_id,
-                        &["new"],
-                        "created.txt",
-                    ),
+                    destination: root_destination_draft(&workspace, &workspace_id, "created.txt"),
                     content: b"created\n".to_vec(),
                     mode: 0o600,
                     classification: FileClassification::Documentation,
@@ -995,13 +1025,7 @@ mod tests {
                     )
                     .expect("root target"),
                 ],
-                excluded_targets: vec![
-                    GrantTarget::workspace_scope(
-                        &workspace,
-                        WorkspaceScopePath::new(workspace_id, ["private"]).expect("private scope"),
-                    )
-                    .expect("private target"),
-                ],
+                excluded_targets: Vec::new(),
                 sensitivity: DataSensitivity::Restricted,
                 issued_at_epoch_ms: 1_000,
                 expires_at_epoch_ms: 100_000,
@@ -1095,11 +1119,11 @@ mod tests {
             Ok(FilesystemTransactionOutcome::Committed)
         );
         assert_eq!(
-            fs::read(regular.root.path().join("new/created.txt")).expect("created bytes"),
+            fs::read(regular.root.path().join("created.txt")).expect("created bytes"),
             b"created\n"
         );
         assert_eq!(
-            fs::metadata(regular.root.path().join("new/created.txt"))
+            fs::metadata(regular.root.path().join("created.txt"))
                 .expect("created metadata")
                 .mode()
                 & 0o777,
@@ -1139,22 +1163,18 @@ mod tests {
     #[test]
     fn native_collision_symlink_hardlink_and_limits_fail_without_effect() {
         let mut collision = fixture(false);
-        fs::write(collision.root.path().join("new/CREATED.TXT"), b"owner\n")
-            .expect("case collision");
+        fs::write(collision.root.path().join("CREATED.TXT"), b"owner\n").expect("case collision");
         assert_eq!(
             execute(&mut collision),
             Err(FilesystemTransactionError::PreapplyDenied)
         );
-        assert!(!collision.root.path().join("new/created.txt").exists());
+        assert!(!collision.root.path().join("created.txt").exists());
 
         let mut symlink_fixture = fixture(false);
         let outside = symlink_fixture.root.path().join("outside.txt");
         fs::write(&outside, b"outside\n").expect("outside fixture");
-        symlink(
-            &outside,
-            symlink_fixture.root.path().join("new/created.txt"),
-        )
-        .expect("destination symlink");
+        symlink(&outside, symlink_fixture.root.path().join("created.txt"))
+            .expect("destination symlink");
         assert_eq!(
             execute(&mut symlink_fixture),
             Err(FilesystemTransactionError::ObservationFailed)

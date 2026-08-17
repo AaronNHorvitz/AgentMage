@@ -2229,7 +2229,7 @@ fn validate_destination(
     destination: &NewDestinationDraft,
     protect_name: bool,
 ) -> Result<(), FilesystemPlanError> {
-    if destination.parent.workspace_path().is_none()
+    if !destination.parent.is_operation_target()
         || destination.parent.object_kind() != Some(WorkspaceObjectKind::Directory)
         || destination.parent.preimage().is_some()
         || destination.path.components().len() > MAX_PATH_DEPTH
@@ -2281,7 +2281,7 @@ fn validate_inside_parent(
         || parent
             .excluded_targets
             .iter()
-            .any(|excluded| excluded.contains(target))
+            .any(|excluded| excluded.overlaps_operation(target))
     {
         return Err(FilesystemPlanError::ScopeDenied);
     }

@@ -99,17 +99,18 @@ record exists must use an explicit schema increment and migration decision.
 
 ### Subsequent Coding-Runtime Extension
 
-The interactive coding runtime later required exact command authority over an
-AgentMage-owned worktree root. A root cannot be represented by `WorkspacePath`
-without weakening this decision's non-empty child-path invariant. The contract
-therefore gained a closed `held_workspace_root` operation-target variant and a
-`HeldWorkspaceRoot` trait. The variant retains an empty canonical root scope
-only as path-free identity, binds the continuously held root descriptor's
-platform identity, carries no file preimage, and is never accepted as a session
-scope or held child object. Any inherited subtree exclusion overlaps this root
-target and denies the operation. Existing `workspace_scope` and `held_object`
-wire records remain unchanged and continue to deserialize exactly; unknown root
-targets continue to fail closed in older readers.
+The interactive coding runtime later required exact command and controlled
+direct-child creation authority over an AgentMage-owned worktree root. A root
+cannot be represented by `WorkspacePath` without weakening this decision's
+non-empty child-path invariant. The contract therefore gained a closed
+`held_workspace_root` operation-target variant and a `HeldWorkspaceRoot` trait.
+The variant retains an empty canonical root scope only as path-free identity,
+binds the continuously held root descriptor's platform identity, carries no file
+preimage, and is never accepted as a session scope or held child object. Any
+inherited subtree exclusion overlaps this root target and denies the operation.
+Existing `workspace_scope` and `held_object` wire records remain unchanged and
+continue to deserialize exactly; unknown root targets continue to fail closed
+in older readers.
 
 This additive pre-release extension explicitly amends the wire-compatibility
 paragraph above for this one target kind. Durable version-2 records using the

@@ -62,7 +62,7 @@ nullable are still required in JSON. Unknown keys fail closed.
 |---|---|---|
 | `GrantTarget.workspace_scope` | `target_kind`, canonical `WorkspaceScopePath`, authorization ID, adapter ID, platform | Root or subtree scope; components use the same parser as `WorkspacePath`. |
 | `GrantTarget.held_object` | `target_kind`, canonical `WorkspacePath`, authorization ID, adapter ID, platform, object kind, object identity, required nullable preimage | Non-empty exact operation object; regular files require a preimage and directories prohibit one. |
-| `GrantTarget.held_workspace_root` | `target_kind`, empty canonical `WorkspaceScopePath`, authorization ID, adapter ID, platform, root object identity | Exact descriptor-held root operation target; never appears as a session scope or non-empty child path. |
+| `GrantTarget.held_workspace_root` | `target_kind`, empty canonical `WorkspaceScopePath`, authorization ID, adapter ID, platform, root object identity | Exact descriptor-held root operation target for bounded root operations such as an owned-worktree command or direct-child creation; never appears as a session scope or non-empty child path. |
 | `GrantPreimage` | `target_index`, `content_sha256`, `observed_revision` | Must be the canonical digest and object revision derived from the indexed held target. |
 | `GrantSideEffect` | `operation`, `target_indexes`, `details_sha256` | Operation equals the grant operation; indexes name targets; details use a canonical digest. |
 

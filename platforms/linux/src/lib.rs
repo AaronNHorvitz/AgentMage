@@ -223,6 +223,22 @@ impl LinuxAuthorizedWorkspace {
         }
         Ok(())
     }
+
+    pub(crate) fn reopen_root_directory(&self) -> Result<OwnedFd, PathAdapterError> {
+        self.revalidate()?;
+        let descriptor = openat(
+            &self.root_descriptor,
+            ".",
+            OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
+            Mode::empty(),
+        )
+        .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, None))?;
+        let observed = snapshot(&descriptor, None)?;
+        if !self.root_snapshot.same_object(&observed) || self.root_snapshot.mode != observed.mode {
+            return Err(adapter_error(PathAdapterErrorKind::MountChanged, None));
+        }
+        Ok(descriptor)
+    }
 }
 
 fn authorize_workspace_root(

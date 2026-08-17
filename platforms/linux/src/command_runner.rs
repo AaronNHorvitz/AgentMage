@@ -300,14 +300,10 @@ impl LinuxBoundedCommandExecutor {
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
         if command.working_directory == CommandWorkingDirectory::OwnedWorktree {
-            let descriptor_path = format!(
-                "/proc/self/fd/{}",
-                held_working_directory.root_descriptor.as_raw_fd()
-            );
-            let Ok(worktree_descriptor) = fs::File::open(descriptor_path) else {
+            let Ok(worktree_descriptor) = held_working_directory.reopen_root_directory() else {
                 return failed("linux.command.worktree.descriptor");
             };
-            process.stdin(Stdio::from(worktree_descriptor));
+            process.stdin(Stdio::from(fs::File::from(worktree_descriptor)));
         } else {
             process.stdin(Stdio::null());
         }

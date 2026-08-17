@@ -283,7 +283,7 @@ pub fn controlled_create_parent_observation_sha256(
 ) -> Result<String, CodingChangeError> {
     if parent.object_kind() != Some(WorkspaceObjectKind::Directory)
         || parent.preimage().is_some()
-        || parent.workspace_path().is_none()
+        || !parent.is_operation_target()
         || observed_sibling_names
             .windows(2)
             .any(|pair| pair[0] >= pair[1])
@@ -311,11 +311,9 @@ pub fn prepare_controlled_file_creation(
 ) -> Result<FilesystemOperationDraft, CodingChangeError> {
     validate_create(scope, &proposal)?;
     let path = scope.resolve(&proposal.path)?;
-    let parent_path = parent
-        .workspace_path()
-        .ok_or(CodingChangeError::ParentObservationMismatch)?;
-    if parent_path.workspace_id() != path.workspace_id()
-        || parent_path.components() != &path.components()[..path.components().len() - 1]
+    let parent_matches = parent.workspace_id() == path.workspace_id()
+        && parent.path_components() == &path.components()[..path.components().len() - 1];
+    if !parent_matches
         || controlled_create_parent_observation_sha256(&parent, &observed_sibling_names)?
             != proposal.expected_parent_sha256
     {
@@ -617,6 +615,22 @@ mod tests {
         .expect("held parent")
     }
 
+    fn root_parent() -> GrantTarget {
+        serde_json::from_value(json!({
+            "target_kind": "held_workspace_root",
+            "path": {"workspace_id": "workspace-coding", "components": []},
+            "authorization_id": "authorization-coding",
+            "adapter_instance_id": "adapter-coding",
+            "platform": "deterministic_fake",
+            "object_identity": {
+                "platform": "deterministic_fake",
+                "mount_identity_sha256": vec![1_u8; 32],
+                "object_identity_sha256": vec![2_u8; 32]
+            }
+        }))
+        .expect("held workspace root")
+    }
+
     fn call(definition: &ToolDefinition, bytes: Vec<u8>) -> ToolCall {
         ToolCall {
             schema_version: CONTRACT_SCHEMA_VERSION,
@@ -743,6 +757,28 @@ mod tests {
             prepare_controlled_file_creation(&scope, proposal, parent, stale_siblings),
             Err(CodingChangeError::ParentObservationMismatch)
         ));
+    }
+
+    #[test]
+    fn story_48_2_create_proposal_supports_the_exact_owned_worktree_root() {
+        let scope =
+            CodingWriteScope::new(WorkspaceId::from_raw("workspace-coding"), vec![Vec::new()])
+                .expect("root write scope");
+        let parent = root_parent();
+        let siblings = vec!["Cargo.toml".to_owned(), "src".to_owned()];
+        let mut proposal = create();
+        proposal.path = vec!["README.md".to_owned()];
+        proposal.expected_parent_sha256 =
+            controlled_create_parent_observation_sha256(&parent, &siblings)
+                .expect("root observation");
+
+        let draft = prepare_controlled_file_creation(&scope, proposal, parent.clone(), siblings)
+            .expect("root creation draft");
+        let FilesystemOperationDraft::Create { destination, .. } = draft else {
+            panic!("wrong filesystem draft");
+        };
+        assert_eq!(destination.parent, parent);
+        assert_eq!(destination.path.components()[0].as_str(), "README.md");
     }
 
     #[test]
