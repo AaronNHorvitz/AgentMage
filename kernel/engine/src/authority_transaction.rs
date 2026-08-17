@@ -4,7 +4,7 @@ use std::{collections::BTreeMap, fmt, fmt::Write as _};
 
 use agentmage_kernel_contracts::{
     ApprovalId, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
-    ContractError, ErrorCategory, ErrorId, GrantId, GrantPreimage, GrantTarget,
+    ContractError, ErrorCategory, ErrorId, GrantId, GrantPreimage, GrantSideEffect, GrantTarget,
     HeldWorkspaceObject, HeldWorkspaceRoot, OperationAttemptId, OperationBinding, OperationOutcome,
     Receipt, ReceiptId, RetryDisposition, StateChange, ToolCall, to_canonical_json,
 };
@@ -154,6 +154,7 @@ pub struct EffectAuthorization<'transaction> {
     targets: &'transaction [GrantTarget],
     excluded_targets: &'transaction [GrantTarget],
     preimages: &'transaction [GrantPreimage],
+    expected_side_effects: &'transaction [GrantSideEffect],
 }
 
 impl EffectAuthorization<'_> {
@@ -197,6 +198,12 @@ impl EffectAuthorization<'_> {
     #[must_use]
     pub const fn excluded_targets(&self) -> &[GrantTarget] {
         self.excluded_targets
+    }
+
+    /// Returns the exact expected-effect descriptions bound into consumed authority.
+    #[must_use]
+    pub const fn expected_side_effects(&self) -> &[GrantSideEffect] {
+        self.expected_side_effects
     }
 
     /// Reports whether this one-target permit exactly names a continuously held object.
@@ -553,6 +560,7 @@ impl AuthorityTransactionCoordinator {
         let targets = grant.targets.clone();
         let excluded_targets = grant.excluded_targets.clone();
         let preimages = grant.preimages.clone();
+        let expected_side_effects = grant.expected_side_effects.clone();
 
         let consumed =
             match issuer.consume_for_execution(&request.grant_id, policy, &request.context) {
@@ -628,6 +636,7 @@ impl AuthorityTransactionCoordinator {
             targets: &targets,
             excluded_targets: &excluded_targets,
             preimages: &preimages,
+            expected_side_effects: &expected_side_effects,
         };
         let launched = driver.execute(authorization);
         if fault == Some(FaultPoint::WorkerReturned) {

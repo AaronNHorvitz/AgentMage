@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 use agentmage_kernel_contracts::{
-    GrantOperation, HeldWorkspaceRoot, OperationOutcome, StateChange,
+    GrantOperation, HeldWorkspaceRoot, OperationOutcome, StateChange, ToolCall, ToolId,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -654,11 +654,66 @@ pub trait BoundedCommandExecutor {
     ) -> CommandPlatformResult;
 }
 
+/// Exact outer tool-call binding for a registered command used by a trusted wrapper.
+///
+/// A wrapper such as targeted validation may carry arguments that are intentionally
+/// different from its internal command request. This binding admits that command only
+/// when consumed authority names the same wrapper call and the same operation plan that
+/// was rendered in the approval preview.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RegisteredCommandWrapperBinding {
+    tool_id: ToolId,
+    tool_version: String,
+    argument_sha256: String,
+    operation_plan_sha256: String,
+}
+
+impl RegisteredCommandWrapperBinding {
+    /// Freezes one already validated wrapper call and its trusted operation-plan digest.
+    pub fn new(
+        call: &ToolCall,
+        operation_plan_sha256: impl Into<String>,
+    ) -> Result<Self, CommandError> {
+        let operation_plan_sha256 = operation_plan_sha256.into();
+        validate_digest(&call.arguments.sha256)?;
+        validate_digest(&operation_plan_sha256)?;
+        if sha256_hex(&call.arguments.bytes) != call.arguments.sha256 {
+            return Err(CommandError::RequestMismatch);
+        }
+        Ok(Self {
+            tool_id: call.tool_id.clone(),
+            tool_version: call.tool_version.clone(),
+            argument_sha256: call.arguments.sha256.clone(),
+            operation_plan_sha256,
+        })
+    }
+
+    fn matches(&self, authorization: &EffectAuthorization<'_>) -> bool {
+        let call = authorization.call();
+        let side_effects = authorization.expected_side_effects();
+        call.tool_id == self.tool_id
+            && call.tool_version == self.tool_version
+            && call.arguments.sha256 == self.argument_sha256
+            && sha256_hex(&call.arguments.bytes) == call.arguments.sha256
+            && side_effects.len() == 1
+            && side_effects[0].operation == authorization.operation()
+            && side_effects[0].target_indexes == [0]
+            && side_effects[0].details_sha256 == self.operation_plan_sha256
+    }
+}
+
+#[derive(Clone, Debug)]
+enum CommandAuthorityBinding {
+    Direct,
+    RegisteredWrapper(RegisteredCommandWrapperBinding),
+}
+
 /// Inert command driver crossing the effect boundary only with consumed authority.
 pub struct CommandEffectDriver<E, H> {
     executor: E,
     held_working_directory: H,
     prepared: PreparedCommand,
+    authority_binding: CommandAuthorityBinding,
     cancellation: CancellationToken,
     receipt: Option<CommandReceipt>,
     output: Option<CommandCapturedOutput>,
@@ -678,6 +733,28 @@ impl<E, H> CommandEffectDriver<E, H> {
             executor,
             held_working_directory,
             prepared,
+            authority_binding: CommandAuthorityBinding::Direct,
+            cancellation,
+            receipt: None,
+            output: None,
+            error: None,
+        }
+    }
+
+    /// Creates an inert command driver nested under one exact registered wrapper call.
+    #[must_use]
+    pub const fn new_registered_wrapper(
+        executor: E,
+        held_working_directory: H,
+        prepared: PreparedCommand,
+        cancellation: CancellationToken,
+        binding: RegisteredCommandWrapperBinding,
+    ) -> Self {
+        Self {
+            executor,
+            held_working_directory,
+            prepared,
+            authority_binding: CommandAuthorityBinding::RegisteredWrapper(binding),
             cancellation,
             receipt: None,
             output: None,
@@ -727,11 +804,17 @@ where
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
         let call = authorization.call();
         let held_working_directory = self.held_working_directory.borrow();
+        let arguments_match = match &self.authority_binding {
+            CommandAuthorityBinding::Direct => {
+                call.arguments.sha256 == self.prepared.request_sha256
+                    && call.arguments.bytes == self.prepared.request_bytes
+                    && sha256_hex(&call.arguments.bytes) == call.arguments.sha256
+            }
+            CommandAuthorityBinding::RegisteredWrapper(binding) => binding.matches(&authorization),
+        };
         if authorization.operation().operation() != GrantOperation::CommandExecute
             || !authorization.authorizes_held_workspace_root(held_working_directory)
-            || call.arguments.sha256 != self.prepared.request_sha256
-            || call.arguments.bytes != self.prepared.request_bytes
-            || sha256_hex(&call.arguments.bytes) != call.arguments.sha256
+            || !arguments_match
         {
             self.error = Some(CommandError::AuthorityMismatch);
             return EffectLaunch::failed();
@@ -1008,7 +1091,8 @@ mod tests {
     use super::{
         BoundedCommandExecutor, CommandBounds, CommandEffectDriver, CommandError,
         CommandLaunchPermit, CommandPlatformResult, CommandRegistry, CommandRequest, CommandRisk,
-        CommandSpec, CommandTermination, CommandWorkingDirectory, prepare_command,
+        CommandSpec, CommandTermination, CommandWorkingDirectory, RegisteredCommandWrapperBinding,
+        prepare_command,
     };
     use crate::authority_transaction::{
         AuthorityTransactionCoordinator, AuthorityTransactionRequest,
@@ -1494,6 +1578,55 @@ mod tests {
             &driver.prepared,
             &command_receipt
         ));
+        assert_eq!(driver.into_executor().launches, 0);
+    }
+
+    #[test]
+    fn registered_wrapper_rejects_an_unapproved_operation_plan_before_launch() {
+        let mut fixture = authority_fixture();
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Tool,
+            fixture.grant.task_id.clone(),
+            fixture.call.correlation_id.clone(),
+        );
+        let wrapper = RegisteredCommandWrapperBinding::new(&fixture.call, "9".repeat(64))
+            .expect("well-formed wrapper binding");
+        let executor = FakeExecutor {
+            launches: 0,
+            result: Some(successful_platform_result()),
+        };
+        let mut driver = CommandEffectDriver::new_registered_wrapper(
+            executor,
+            fixture.held,
+            fixture.prepared,
+            cancellation,
+            wrapper,
+        );
+        let request = AuthorityTransactionRequest::new(
+            AuthorityTransactionId::from_raw("transaction-command-wrapper-0001"),
+            OperationAttemptId::from_raw("attempt-command-wrapper-0001"),
+            fixture.approval_id,
+            fixture.grant.grant_id,
+            fixture.call,
+            fixture.context,
+            4_000,
+            "1970-01-01T00:00:04Z",
+        )
+        .expect("transaction request");
+        let receipt = AuthorityTransactionCoordinator::new()
+            .execute_effect(
+                &fixture.registry,
+                &mut fixture.issuer,
+                &fixture.policy,
+                request,
+                &mut driver,
+            )
+            .expect("closed failed command");
+
+        assert_eq!(receipt.outcome, OperationOutcome::Failed);
+        assert_eq!(driver.take_error(), Some(CommandError::AuthorityMismatch));
+        assert!(driver.take_receipt().is_none());
+        assert!(driver.take_output().is_none());
         assert_eq!(driver.into_executor().launches, 0);
     }
 }

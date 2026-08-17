@@ -16,7 +16,7 @@ use agentmage_kernel_engine::{
     authority_transaction::AuthorityTransactionRequest,
     command_runner::{
         BoundedCommandExecutor, CommandCapturedOutput, CommandEffectDriver, CommandReceipt,
-        verify_command_receipt,
+        RegisteredCommandWrapperBinding, verify_command_receipt,
     },
     grants::SessionReadGrantRequest,
     policy::PolicyEvaluationContext,
@@ -24,6 +24,10 @@ use agentmage_kernel_engine::{
     runtime_coordinator::{verify_runtime_approval_response, verify_runtime_run_request},
     runtime_loop::{
         RuntimePermissionEvaluation, RuntimePortFailure, RuntimeToolBoundary, RuntimeToolExecution,
+    },
+    validation_result::{
+        ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationStatus,
+        normalize_validation_result, verify_validation_receipt,
     },
 };
 use agentmage_platform_linux::{
@@ -454,6 +458,9 @@ where
             PreparedNativeCodingCall::Command { .. } => {
                 self.execute_prepared_command(request, definition, call, issued)
             }
+            PreparedNativeCodingCall::Validation { .. } => {
+                self.execute_prepared_validation(request, definition, call, issued)
+            }
             _ => Err(RuntimePortFailure::Unavailable),
         }
     }
@@ -657,6 +664,147 @@ where
         self.command_execution(request, definition, call, receipt, command_receipt, output)
     }
 
+    fn execute_prepared_validation(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        issued: IssuedCodingOperation<'workspace>,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let transaction = self.authority_transaction(call, &issued)?;
+        let approval_sha256 = issued.approval.confirmation_sha256.clone();
+        let operation_plan_sha256 = issued.prepared.operation().plan_sha256().to_owned();
+        let (operation, binding, write_draft, workspace) = issued.prepared.into_parts();
+        let (validation_request, template, prepared) = match operation.prepared() {
+            PreparedNativeCodingCall::Validation {
+                request,
+                template,
+                prepared,
+            } => (
+                request.clone(),
+                template.as_ref().clone(),
+                prepared.as_ref().clone(),
+            ),
+            _ => return Err(RuntimePortFailure::Invalid),
+        };
+        if !matches!(binding, LinuxCodingTargetBinding::OwnedWorktreeRoot { .. })
+            || operation.expected_state_change() != StateChange::NotChanged
+            || write_draft.is_some()
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let cancellation = CancellationToken::root(
+            agentmage_kernel_contracts::BoundaryKind::Tool,
+            request.task.task_id.clone(),
+            call.correlation_id.clone(),
+        );
+        let executor = self
+            .command_executor
+            .take()
+            .ok_or(RuntimePortFailure::Unavailable)?;
+        let wrapper = RegisteredCommandWrapperBinding::new(call, operation_plan_sha256)
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        let mut driver = CommandEffectDriver::new_registered_wrapper(
+            executor,
+            workspace,
+            prepared.clone(),
+            cancellation,
+            wrapper,
+        );
+        let receipt_result = self.authority.authority_mut().execute_effect(
+            self.workspace.profile().registry(),
+            &issued.approved.policy,
+            transaction,
+            &mut driver,
+        );
+        let command_receipt = driver.take_receipt();
+        let output = driver.take_output();
+        self.command_executor = Some(driver.into_executor());
+        let receipt = receipt_result.map_err(|_| RuntimePortFailure::Uncertain)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let command_receipt = command_receipt.ok_or(RuntimePortFailure::Uncertain)?;
+        let output = output.ok_or(RuntimePortFailure::Uncertain)?;
+        if !verify_command_receipt(&prepared, &command_receipt)
+            || !captured_output_matches(&output, &command_receipt)
+        {
+            return Err(RuntimePortFailure::Uncertain);
+        }
+        let validation_receipt = normalize_validation_result(
+            &template,
+            &prepared,
+            &command_receipt,
+            ValidationObservation {
+                validation_attempt_id: validation_request.validation_attempt_id,
+                approval_sha256,
+                stdout: output.stdout().to_vec(),
+                stderr: output.stderr().to_vec(),
+                stdout_classification: ValidationOutputClassification::Restricted,
+                stderr_classification: ValidationOutputClassification::Restricted,
+                secret_match_count: 0,
+                artifacts: Vec::new(),
+                affected_files: Vec::new(),
+                changed_paths: Vec::new(),
+                baseline_failure_sha256s: Vec::new(),
+                baseline_known_clean: false,
+                unverified_kinds: Vec::new(),
+            },
+        )
+        .map_err(|_| RuntimePortFailure::Uncertain)?;
+        if !verify_validation_receipt(&template, &prepared, &command_receipt, &validation_receipt) {
+            return Err(RuntimePortFailure::Uncertain);
+        }
+        self.validation_execution(request, definition, call, receipt, validation_receipt)
+    }
+
+    fn validation_execution(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        receipt: agentmage_kernel_contracts::Receipt,
+        validation_receipt: ValidationReceipt,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let output_bytes =
+            serde_json::to_vec(&validation_receipt).map_err(|_| RuntimePortFailure::Invalid)?;
+        if output_bytes.len() as u64 > request.limits.max_output_bytes {
+            return Err(RuntimePortFailure::ResourceExhausted);
+        }
+        let evidence = vec![EvidenceReference {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            evidence_id: EvidenceId::from_raw(self.next_id("evidence")?),
+            kind: EvidenceKind::Validation,
+            source_id: format!("native:{}@{}", call.tool_id.as_str(), call.tool_version),
+            object_id: validation_receipt.validation_attempt_id.clone(),
+            fragment: None,
+            content_sha256: validation_receipt.receipt_sha256.clone(),
+            observed_revision: Some(request.repository_snapshot_id.as_str().to_owned()),
+        }];
+        let outcome = validation_outcome(validation_receipt.status);
+        Ok(RuntimeToolExecution {
+            receipt_id: receipt.receipt_id,
+            receipt_sha256: receipt.receipt_sha256,
+            result: ToolResult {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                tool_call_id: call.tool_call_id.clone(),
+                correlation_id: call.correlation_id.clone(),
+                outcome,
+                output: Some(ContractPayload {
+                    schema: definition.output_schema.clone(),
+                    media_type: "application/json".to_owned(),
+                    sha256: sha256(&output_bytes),
+                    bytes: output_bytes,
+                }),
+                validation_issues: Vec::new(),
+                evidence,
+                error: None,
+                elapsed_ms: validation_receipt.duration_ms,
+                state_change: StateChange::NotChanged,
+            },
+        })
+    }
+
     fn command_execution(
         &mut self,
         request: &RuntimeRunRequest,
@@ -666,11 +814,7 @@ where
         command_receipt: CommandReceipt,
         output: CommandCapturedOutput,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
-        if output.stdout().len() as u64 != command_receipt.stdout_retained_bytes
-            || output.stderr().len() as u64 != command_receipt.stderr_retained_bytes
-            || sha256(output.stdout()) != command_receipt.stdout_sha256
-            || sha256(output.stderr()) != command_receipt.stderr_sha256
-        {
+        if !captured_output_matches(&output, &command_receipt) {
             return Err(RuntimePortFailure::Uncertain);
         }
         let output_bytes =
@@ -926,6 +1070,32 @@ const fn read_outcome(outcome: ReadOnlyOutcome) -> OperationOutcome {
     }
 }
 
+fn captured_output_matches(output: &CommandCapturedOutput, receipt: &CommandReceipt) -> bool {
+    output.stdout().len() as u64 == receipt.stdout_retained_bytes
+        && output.stderr().len() as u64 == receipt.stderr_retained_bytes
+        && sha256(output.stdout()) == receipt.stdout_sha256
+        && sha256(output.stderr()) == receipt.stderr_sha256
+}
+
+const fn validation_outcome(status: ValidationStatus) -> OperationOutcome {
+    match status {
+        ValidationStatus::Passed => OperationOutcome::Succeeded,
+        ValidationStatus::Cancelled => OperationOutcome::Cancelled,
+        ValidationStatus::TimedOut => OperationOutcome::TimedOut,
+        ValidationStatus::AssertionFailed
+        | ValidationStatus::CompileFailed
+        | ValidationStatus::InfrastructureFailed
+        | ValidationStatus::Crashed
+        | ValidationStatus::Flaky
+        | ValidationStatus::SkippedOnly
+        | ValidationStatus::Malformed
+        | ValidationStatus::Truncated
+        | ValidationStatus::ZeroTests
+        | ValidationStatus::Unverified
+        | ValidationStatus::SensitiveOutput => OperationOutcome::Failed,
+    }
+}
+
 fn sha256(bytes: &[u8]) -> String {
     let mut output = String::with_capacity(64);
     for byte in Sha256::digest(bytes) {
@@ -980,6 +1150,7 @@ mod tests {
     use crate::{
         coding_authority::{CodingRuntimePolicyRequest, build_coding_runtime_policy},
         coding_session::{CodingSessionProfile, tests::input_with_worktree_path_sha256},
+        coding_tools::TargetedValidationRequest,
         linux_coding::LinuxCodingWorkspace,
     };
 
@@ -1005,9 +1176,22 @@ mod tests {
         }
     }
 
-    #[derive(Default)]
     struct FakeCommandExecutor {
         launches: usize,
+        stdout: Vec<u8>,
+        stderr: Vec<u8>,
+        exit_code: i32,
+    }
+
+    impl Default for FakeCommandExecutor {
+        fn default() -> Self {
+            Self {
+                launches: 0,
+                stdout: b"command-ok\n".to_vec(),
+                stderr: Vec::new(),
+                exit_code: 0,
+            }
+        }
     }
 
     impl BoundedCommandExecutor for FakeCommandExecutor {
@@ -1022,17 +1206,18 @@ mod tests {
             self.launches += 1;
             assert!(working_directory.revalidate().is_ok());
             assert!(!cancellation.is_cancelled());
-            let stdout = b"command-ok\n".to_vec();
+            let stdout = self.stdout.clone();
+            let stderr = self.stderr.clone();
             CommandPlatformResult {
                 termination: CommandTermination::Exited,
-                exit_code: Some(0),
+                exit_code: Some(self.exit_code),
                 signal: None,
                 stdout_sha256: sha256(&stdout),
                 stdout_total_bytes: stdout.len() as u64,
                 stdout,
-                stderr_sha256: sha256(&[]),
-                stderr_total_bytes: 0,
-                stderr: Vec::new(),
+                stderr_sha256: sha256(&stderr),
+                stderr_total_bytes: stderr.len() as u64,
+                stderr,
                 elapsed_ms: 2,
                 descendants_terminated: true,
                 platform_code: "fixture.command.exited".to_owned(),
@@ -1555,6 +1740,108 @@ mod tests {
                 .launches,
             1
         );
+        assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
+    }
+
+    #[test]
+    fn story_48_2_linux_runtime_normalizes_targeted_validation_after_one_granted_command() {
+        let mut fixture = fixture();
+        let template = fixture
+            .profile_for_test()
+            .validations()
+            .templates
+            .first()
+            .expect("validation template")
+            .clone();
+        let definition = fixture
+            .profile_for_test()
+            .registry()
+            .get_tool(
+                &ToolId::from_raw(crate::coding_tools::TARGETED_VALIDATION_TOOL_ID),
+                crate::coding_tools::TARGETED_VALIDATION_TOOL_VERSION,
+            )
+            .expect("validation tool")
+            .clone();
+        let arguments = serde_json::to_vec(&TargetedValidationRequest {
+            schema_version: 1,
+            validation_attempt_id: "validation-attempt-runtime".to_owned(),
+            validation_id: template.validation_id.clone(),
+            template_sha256: template.template_sha256.clone(),
+        })
+        .expect("validation request");
+        fixture.call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-validation-runtime"),
+            correlation_id: CorrelationId::from_raw("correlation-coding-runtime"),
+            action_id: runtime_action_id(&fixture.request.run_id, 1),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&arguments),
+                bytes: arguments,
+            },
+        };
+        fixture.definition = definition;
+        fixture
+            .boundary
+            .command_executor
+            .as_mut()
+            .expect("test executor")
+            .stdout = serde_json::to_vec(&serde_json::json!({
+            "schema_version": 1,
+            "status": "passed",
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
+            "duration_ms": 1,
+            "failed_names": [],
+            "artifact_ids": [],
+            "retry_count": 0,
+            "initial_failure_sha256": null
+        }))
+        .expect("validation output");
+        let evaluation = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                5_000,
+            )
+            .expect("validation approval preview");
+        let challenge = challenge(&fixture, &evaluation);
+        let allowed = fixture
+            .boundary
+            .resolve(
+                &fixture.request,
+                &challenge,
+                &response(&challenge, RuntimeApprovalDisposition::Allow),
+                &fixture.definition,
+                &fixture.call,
+                5_001,
+            )
+            .expect("validation allow");
+        let execution = fixture
+            .boundary
+            .execute(
+                &fixture.request,
+                &allowed,
+                &fixture.definition,
+                &fixture.call,
+                None,
+            )
+            .expect("targeted validation execution");
+
+        assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        let validation_receipt: ValidationReceipt =
+            serde_json::from_slice(&execution.result.output.expect("validation output").bytes)
+                .expect("validation receipt payload");
+        assert_eq!(validation_receipt.status, ValidationStatus::Passed);
+        assert_eq!(validation_receipt.passed, 1);
+        assert_eq!(execution.result.evidence[0].kind, EvidenceKind::Validation);
         assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
     }
 
