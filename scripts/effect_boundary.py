@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ENGINE = Path("kernel/engine/src/authority_transaction.rs")
 COMMAND_RUNNER = Path("kernel/engine/src/command_runner.rs")
 REPOSITORY_SAFETY = Path("kernel/engine/src/repository_safety.rs")
+REPOSITORY_INSPECTION = Path("kernel/engine/src/repository_inspection.rs")
 LOCAL_COMMIT = Path("kernel/engine/src/local_commit.rs")
 OPERATIONAL_STORE = Path("kernel/engine/src/operational_store.rs")
 CONFIGURATION = Path("kernel/engine/src/configuration.rs")
@@ -26,6 +27,7 @@ LINUX_IPC = Path("platforms/linux/src/ipc.rs")
 PERMIT_USERS = {
     ENGINE,
     COMMAND_RUNNER,
+    REPOSITORY_INSPECTION,
     REPOSITORY_SAFETY,
     LOCAL_COMMIT,
     LINUX_CONFIGURATION,

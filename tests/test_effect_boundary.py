@@ -114,6 +114,15 @@ class EffectBoundaryTests(unittest.TestCase):
             failures,
         )
 
+    def test_repository_inspection_is_a_registered_permit_consumer(self) -> None:
+        failures = validate_effect_boundary()
+
+        self.assertNotIn(
+            "unregistered effect-authorization consumer: "
+            "kernel/engine/src/repository_inspection.rs",
+            failures,
+        )
+
     def test_local_commit_is_a_registered_permit_consumer(self) -> None:
         failures = validate_effect_boundary()
 
