@@ -416,6 +416,30 @@ pub fn verify_runtime_continuation_state(
     Ok(())
 }
 
+/// Encodes one verified continuation canonically up to the private artifact ceiling.
+pub fn encode_runtime_continuation_state(
+    continuation: &RuntimeContinuationState,
+) -> Result<Vec<u8>, RuntimeArtifactError> {
+    verify_runtime_continuation_state(continuation)?;
+    continuation_json(continuation)
+}
+
+/// Decodes one canonical continuation artifact and verifies every internal binding.
+pub fn decode_runtime_continuation_state(
+    bytes: &[u8],
+) -> Result<RuntimeContinuationState, RuntimeArtifactError> {
+    if bytes.is_empty() || bytes.len() as u64 > MAX_RUNTIME_ARTIFACT_BYTES {
+        return Err(RuntimeArtifactError::InvalidContinuation);
+    }
+    let continuation = serde_json::from_slice::<RuntimeContinuationState>(bytes)
+        .map_err(|_| RuntimeArtifactError::Serialization)?;
+    verify_runtime_continuation_state(&continuation)?;
+    if continuation_json(&continuation)? != bytes {
+        return Err(RuntimeArtifactError::InvalidContinuation);
+    }
+    Ok(continuation)
+}
+
 /// Publishes one verified payload and immutable manifest through the canonical ordering.
 pub(crate) fn publish_runtime_artifact<S: RuntimeArtifactPayloadStore>(
     store: &mut OperationalStore,
@@ -2003,9 +2027,18 @@ fn continuation_digest(
 ) -> Result<String, RuntimeArtifactError> {
     let mut candidate = continuation.clone();
     candidate.continuation_sha256 = ZERO_SHA256.to_owned();
-    to_canonical_json(&candidate)
-        .map(|bytes| sha256(&bytes))
-        .map_err(|_| RuntimeArtifactError::Serialization)
+    continuation_json(&candidate).map(|bytes| sha256(&bytes))
+}
+
+fn continuation_json(
+    continuation: &RuntimeContinuationState,
+) -> Result<Vec<u8>, RuntimeArtifactError> {
+    let bytes =
+        serde_json::to_vec(continuation).map_err(|_| RuntimeArtifactError::Serialization)?;
+    if bytes.is_empty() || bytes.len() as u64 > MAX_RUNTIME_ARTIFACT_BYTES {
+        return Err(RuntimeArtifactError::Serialization);
+    }
+    Ok(bytes)
 }
 
 fn validate_runtime_continuation_state(
@@ -2322,14 +2355,15 @@ mod tests {
         RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
         RuntimeEventRetentionKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId,
         RuntimeTurnId, SessionCheckpoint, SessionCheckpointId, SessionId, StorageFilesystemClass,
-        StrictLocalStorageObservation, TaskId, WorkspaceId, from_json, to_canonical_json,
+        StrictLocalStorageObservation, TaskId, WorkspaceId,
     };
 
     use super::{
         MAX_RUNTIME_ARTIFACT_BYTES, RuntimeArtifactError, RuntimeArtifactPayloadError,
         RuntimeArtifactPayloadInventoryEntry, RuntimeArtifactPayloadObservation,
         RuntimeArtifactPayloadPlacement, RuntimeArtifactPayloadStore, RuntimeArtifactReadRequest,
-        RuntimeArtifactStoreError, runtime_artifact_ref, runtime_payload_reference,
+        RuntimeArtifactStoreError, decode_runtime_continuation_state,
+        encode_runtime_continuation_state, runtime_artifact_ref, runtime_payload_reference,
         seal_runtime_artifact_manifest, seal_runtime_continuation_state,
         seal_runtime_resume_binding, verify_runtime_artifact_manifest, verify_runtime_artifact_ref,
         verify_runtime_continuation_state, verify_runtime_resume_binding,
@@ -2805,12 +2839,70 @@ mod tests {
         let continuation = continuation();
         verify_runtime_continuation_state(&continuation).expect("continuation verifies");
 
-        let encoded = to_canonical_json(&continuation).expect("continuation serializes");
-        let decoded = from_json::<RuntimeContinuationState>(&encoded)
-            .expect("continuation deserializes under the versioned contract");
+        let encoded = encode_runtime_continuation_state(&continuation)
+            .expect("continuation serializes canonically");
+        let decoded = decode_runtime_continuation_state(&encoded)
+            .expect("continuation deserializes under its artifact contract");
         assert_eq!(decoded, continuation);
         assert_eq!(decoded.agent_state, AgentStateKind::Observation);
         assert_eq!(decoded.agent_state_revision, 8);
+
+        let mut noncanonical = encoded;
+        noncanonical.push(b' ');
+        assert_eq!(
+            decode_runtime_continuation_state(&noncanonical),
+            Err(RuntimeArtifactError::InvalidContinuation)
+        );
+    }
+
+    #[test]
+    fn continuation_codec_supports_verified_payloads_above_shared_json_limit() {
+        let mut continuation = continuation();
+        let output_bytes = vec![b'x'; agentmage_kernel_contracts::MAX_CONTRACT_JSON_BYTES + 1];
+        let tool_call_id = agentmage_kernel_contracts::ToolCallId::from_raw("call-large-1");
+        continuation.tool_call_count = 1;
+        continuation.tool_attempts = vec![agentmage_kernel_contracts::RuntimeToolAttemptState {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            sequence: 1,
+            tool_call_id: tool_call_id.clone(),
+            semantic_sha256: digest('e'),
+            occurrence: 1,
+            call_depth: 0,
+        }];
+        continuation.tool_results = vec![agentmage_kernel_contracts::ToolResult {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id,
+            correlation_id: CorrelationId::from_raw("correlation-large-1"),
+            outcome: agentmage_kernel_contracts::OperationOutcome::Succeeded,
+            output: Some(agentmage_kernel_contracts::ContractPayload {
+                schema: agentmage_kernel_contracts::SchemaReference {
+                    schema_id: agentmage_kernel_contracts::SchemaId::from_raw("large.output"),
+                    schema_version: 1,
+                    schema_sha256: digest('f'),
+                },
+                media_type: "application/octet-stream".to_owned(),
+                sha256: super::sha256(&output_bytes),
+                bytes: output_bytes,
+            }),
+            validation_issues: Vec::new(),
+            evidence: Vec::new(),
+            error: None,
+            elapsed_ms: 1,
+            state_change: agentmage_kernel_contracts::StateChange::NotChanged,
+        }];
+        continuation.receipt_ids = vec![agentmage_kernel_contracts::ReceiptId::from_raw(
+            "receipt-large-1",
+        )];
+        continuation.continuation_sha256 = digest('0');
+        let continuation =
+            seal_runtime_continuation_state(continuation).expect("large continuation seals");
+        let encoded = encode_runtime_continuation_state(&continuation)
+            .expect("artifact codec exceeds shared JSON limit safely");
+        assert!(encoded.len() > agentmage_kernel_contracts::MAX_CONTRACT_JSON_BYTES);
+        assert_eq!(
+            decode_runtime_continuation_state(&encoded).expect("large continuation decodes"),
+            continuation
+        );
     }
 
     #[test]

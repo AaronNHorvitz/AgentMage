@@ -26,9 +26,10 @@ use crate::agent_verifier::{VerifierContext, VerifierRegistry};
 use crate::context_management::verify_checkpoint;
 use crate::model_runtime::{LocalModelController, ModelRuntimeGateError};
 use crate::runtime_artifact::{
-    MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, runtime_artifact_ref,
-    runtime_payload_reference, seal_runtime_artifact_manifest, seal_runtime_continuation_state,
-    verify_runtime_artifact_ref, verify_runtime_continuation_state, verify_runtime_resume_binding,
+    MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE,
+    encode_runtime_continuation_state, runtime_artifact_ref, runtime_payload_reference,
+    seal_runtime_artifact_manifest, seal_runtime_continuation_state, verify_runtime_artifact_ref,
+    verify_runtime_continuation_state, verify_runtime_resume_binding,
 };
 use crate::runtime_coordinator::{
     RuntimeCoordinatorError, runtime_tool_catalog_sha256, seal_runtime_approval_challenge,
@@ -1559,7 +1560,7 @@ where
             continuation_sha256: ZERO_SHA256.to_owned(),
         })
         .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
-        let payload = to_canonical_json(&continuation)
+        let payload = encode_runtime_continuation_state(&continuation)
             .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
         let continuation_artifact = self.publish_artifact_bytes(
             &payload,
