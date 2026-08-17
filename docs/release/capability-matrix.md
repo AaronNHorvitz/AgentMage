@@ -23,7 +23,7 @@
 | Exact local model lifecycle | Implemented contract | No production signed catalog or native Chat model route. |
 | Native and guarded Docker inference profiles | Implemented contract | No admitted production profile; Docker remains optional and disabled. |
 | VS Code model discovery and revalidation | Integrated locally with zero profiles | Signed catalog bootstrap and installed-native evidence remain open. |
-| VS Code model response streaming | Planned integration | Structured final parts exist; model-token streaming and exact token count do not. |
+| VS Code shared-runtime response streaming | Implemented contract | Deterministic fixtures stream verified events and canonical output; no installed production runtime/model route, model-token streaming, or exact tokenizer count. |
 | Diagnostics and reviewed local export | Integrated locally | Supported-platform installed evidence remains open. |
 | Manual Codex handoff packet | Implemented contract | Production session composition and installed-native evidence remain open. |
 | Automatic Codex transfer | Excluded | No invocation, tab control, clipboard write, URI, runtime, network, or submission surface. |

@@ -6,10 +6,11 @@ The thin-client protocol and local command parser are source-level pre-alpha
 contracts. They are executable and tested, but they are not an integrated
 product workflow. The repository now contains the reusable runtime coordinator,
 ordered event and journal components, content-addressed runtime artifact
-components, and a source-level native coding composition. These components are
-not yet connected to an authenticated product transport, canonical conversation
-or knowledge coordinator, admitted-model client workflow, or installed-package
-activation path.
+components, a source-level native coding composition, and an authenticated
+native Chat runtime transport adapter. The adapter is tested with deterministic
+runtime fixtures, but it is not yet connected to a production runtime factory,
+admitted-model client workflow, canonical conversation or knowledge
+coordinator, or installed-package activation path.
 
 Operational invocations therefore fail closed with exit code `5` and
 `client.transport.failed`. Help, version, completion, parsing, rendering, schema
@@ -64,6 +65,14 @@ ACP-compatible clients use that contract without an interactive approval
 channel. A later workflow or agent node can submit a bounded work packet through
 the same port with an authority intersection narrower than an interactive
 session. The runtime contract has no terminal, editor, or workflow-UI type.
+
+The native Chat implementation remains presentation-only. It forwards the
+exact host-framed request unchanged, verifies run/session/task/policy bindings,
+contiguous sequence, previous-event digest, correlation, timestamps,
+causation, protected approval identity, cancellation identity, and terminal
+outcome relationships, and renders only verified event labels and
+digest-checked output. It cannot select a fallback, dispatch a tool, mint a
+grant, alter policy, or certify success.
 
 The visible execution dispositions preserve existing grant semantics:
 
@@ -172,9 +181,10 @@ guessing.
 ## Native Effects
 
 Thin clients contain no direct storage, filesystem, tool, model, connector,
-credential, browser, application-launch, or raw-host-socket interface. Native
-effects remain kernel mediated. The repository's effect-boundary checker treats
-the shell as a presentation boundary and rejects process-launch APIs there.
+credential, browser, application-launch, or ambient socket authority. Native
+Chat uses only its authenticated package-provided IPC bridge; native effects
+remain kernel mediated. The repository's effect-boundary checker treats the
+shell as a presentation boundary and rejects process-launch APIs there.
 
 Built-in filesystem, repository search, patch, controlled write, command,
 validation, and Git providers register directly through the common tool
@@ -201,10 +211,11 @@ application launch.
 
 ## Remaining Product Work
 
-This contract does not establish an integrated command-line product. Remaining
-work includes authenticated product transport composition, canonical
+This contract does not establish an integrated command-line or installed native
+Chat product. Remaining work includes production runtime-factory and
+admitted-model composition behind the authenticated transport, canonical
 conversation and knowledge coordinators, live MCP/native disconnect and
-descendant-process cleanup
-campaigns, supported-platform package acceptance, independent review, and the
-separately deferred manual fuzz campaign. Those absences remain blockers and
-must not be inferred from passing source-level contract tests.
+descendant-process cleanup campaigns, supported-platform package acceptance,
+independent review, and the separately deferred manual fuzz campaign. Those
+absences remain blockers and must not be inferred from passing source-level
+contract tests.

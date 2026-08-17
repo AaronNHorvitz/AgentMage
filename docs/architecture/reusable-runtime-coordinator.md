@@ -8,16 +8,22 @@ event, state, context, model, tool, policy, approval, cancellation, verifier,
 journal, artifact, and checkpoint composition exists. A deterministic fake
 model completes a native read-only tool call through that composition.
 
-Native Visual Studio Code Chat does not yet submit this runtime request or
-consume its canonical event stream. The installed host still exposes the older
-read-specific protocol. This document therefore makes no installed-product,
-enabled-model, supported-platform, or release claim.
+The source-level Visual Studio Code provider now submits this request through a
+closed authenticated host protocol, verifies and renders its canonical event
+stream, relays one protected approval response, cancels through a hash-bound
+cursor, and displays the canonical outcome. The installed host still does not
+compose a production runtime factory or admitted model. This document therefore
+makes no installed-product, enabled-model, supported-platform, or release claim.
 
 ## Component Ownership
 
 ```mermaid
 flowchart TB
-    CLIENT["Native Chat, CLI, or bounded caller"] --> REQUEST["RuntimeRunRequest"]
+    CHAT["VS Code native Chat"] --> SHELL["RuntimeStreamVerifier"]
+    SHELL --> IPC["Authenticated host protocol"]
+    IPC --> ADAPTER["NativeChatRuntimeService"]
+    ADAPTER --> REQUEST["RuntimeRunRequest"]
+    CLIENT["CLI or bounded caller"] --> REQUEST
     REQUEST --> COORD["ReusableRuntimeCoordinator"]
     COORD --> STATE["AgentStateController"]
     COORD --> MODEL["RuntimeModelPort"]
@@ -181,10 +187,11 @@ dispatch tools, mint grants, read artifact bytes, alter policy, select a model,
 or claim completion.
 
 The same driver is exercised by current terminal/headless source-level tests.
-Native Chat still needs a host transport adapter that submits the exact request,
-streams verified events, relays a protected response, cancels by exact identity,
-and renders the outcome. Until that exists, cross-interface parity remains
-open.
+Native Chat now has a transport-neutral host adapter and a TypeScript thin
+client that submit the exact request, stream verified events, relay a protected
+response, cancel by exact identity, release completed state, and render the
+outcome. The installed host must still compose that adapter with a production
+runtime factory and admitted profile; cross-interface parity also remains open.
 
 ## Data Flow
 
@@ -209,7 +216,7 @@ duplicate registration refusal, and the native fake-read vertical slice.
 
 Still open:
 
-- native Chat transport and installed-host composition;
+- installed-host runtime-factory and admitted-model composition;
 - complete direct-answer, multi-read, search, Git, repeat, no-progress, budget,
   disconnect, and injected-failure fixture matrix;
 - native Chat versus CLI parity;
