@@ -476,13 +476,15 @@ impl RuntimeEventSequence {
             RuntimeEventKind::PermissionRequested { approval_id, .. } => {
                 self.require_active_turn(event)?;
                 let operation_id = required_operation(event)?.to_owned();
-                if self
-                    .permissions
-                    .insert(approval_id.as_str().to_owned(), operation_id)
-                    .is_some()
+                if self.permissions.contains_key(approval_id.as_str())
+                    || !self.tools.values().any(|tool| {
+                        tool.phase == ToolPhase::Requested && tool.operation_id == operation_id
+                    })
                 {
                     return Err(RuntimeEventError::IllegalTransition);
                 }
+                self.permissions
+                    .insert(approval_id.as_str().to_owned(), operation_id);
                 Ok(())
             }
             RuntimeEventKind::PermissionDecided {
@@ -500,17 +502,22 @@ impl RuntimeEventSequence {
                 {
                     return Err(RuntimeEventError::IllegalTransition);
                 }
+                let denied_tool = if *disposition == RuntimePermissionDisposition::Deny {
+                    Some(
+                        self.tools
+                            .iter()
+                            .find(|(_, tool)| {
+                                tool.phase == ToolPhase::Requested
+                                    && tool.operation_id.as_str() == operation_id
+                            })
+                            .map(|(tool_call_id, _)| tool_call_id.clone())
+                            .ok_or(RuntimeEventError::IllegalTransition)?,
+                    )
+                } else {
+                    None
+                };
                 self.permissions.remove(approval_id.as_str());
-                if *disposition == RuntimePermissionDisposition::Deny {
-                    let denied_tool = self
-                        .tools
-                        .iter()
-                        .find(|(_, tool)| {
-                            tool.phase == ToolPhase::Requested
-                                && tool.operation_id.as_str() == operation_id
-                        })
-                        .map(|(tool_call_id, _)| tool_call_id.clone())
-                        .ok_or(RuntimeEventError::IllegalTransition)?;
+                if let Some(denied_tool) = denied_tool {
                     self.tools.remove(&denied_tool);
                 }
                 Ok(())
@@ -1134,6 +1141,8 @@ fn canonical_sha256(value: &impl Serialize) -> Result<String, RuntimeEventError>
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
+
     use super::{
         MAX_RUNTIME_EVENT_BATCH_BYTES, MAX_RUNTIME_EVENT_BATCH_EVENTS, RuntimeEventBatchLimits,
         RuntimeEventDelivery, RuntimeEventError, RuntimeEventPublisher, RuntimeEventSequence,
@@ -1141,11 +1150,12 @@ mod tests {
         seal_runtime_event, verify_runtime_event,
     };
     use agentmage_kernel_contracts::{
-        AgentStateKind, ApprovalId, CONTRACT_SCHEMA_VERSION, ContextSensitivity, CorrelationId,
-        GrantId, GrantOperation, ModelRunId, PolicyId, ReceiptId, RuntimeEvent, RuntimeEventId,
-        RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
-        RuntimeEventRetentionKind, RuntimeOperationId, RuntimePayloadReference,
-        RuntimePermissionDisposition, RuntimeRunId, RuntimeTurnId, SessionId, TaskId, ToolCallId,
+        AgentStateKind, ApprovalId, CONTRACT_SCHEMA_VERSION, CancellationId, ContextSensitivity,
+        CorrelationId, GrantId, GrantOperation, ModelRunId, PolicyId, ReceiptId, RuntimeArtifactId,
+        RuntimeEvent, RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass,
+        RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeOperationId,
+        RuntimePayloadReference, RuntimePermissionDisposition, RuntimeRunId, RuntimeTurnId,
+        SessionCheckpointId, SessionId, TaskId, ToolCallId,
     };
 
     struct FixtureStream {
@@ -1330,6 +1340,269 @@ mod tests {
         ]
     }
 
+    fn exhaustive_sequence() -> Vec<RuntimeEvent> {
+        let mut fixtures = FixtureStream::new();
+        vec![
+            fixtures.event(
+                RuntimeEventKind::RunStarted {
+                    request_sha256: hash('1'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(RuntimeEventKind::TurnStarted, Some("turn-complete"), None),
+            fixtures.event(
+                RuntimeEventKind::ModelRequested {
+                    model_run_id: ModelRunId::from_raw("model-complete"),
+                    request_sha256: hash('2'),
+                },
+                Some("turn-complete"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::ModelCompleted {
+                    model_run_id: ModelRunId::from_raw("model-complete"),
+                    result_sha256: hash('3'),
+                },
+                Some("turn-complete"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::ToolRequested {
+                    tool_call_id: ToolCallId::from_raw("tool-complete"),
+                    arguments_sha256: hash('4'),
+                },
+                Some("turn-complete"),
+                Some("operation-complete"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::PermissionRequested {
+                    approval_id: ApprovalId::from_raw("approval-allow"),
+                    operation: GrantOperation::WorkspaceWrite,
+                    preview_sha256: hash('5'),
+                    expires_at_epoch_ms: 10_000,
+                },
+                Some("turn-complete"),
+                Some("operation-complete"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::PermissionDecided {
+                    approval_id: ApprovalId::from_raw("approval-allow"),
+                    disposition: RuntimePermissionDisposition::Allow,
+                    grant_id: Some(GrantId::from_raw("grant-allow")),
+                    decision_sha256: hash('6'),
+                },
+                Some("turn-complete"),
+                Some("operation-complete"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::ToolStarted {
+                    tool_call_id: ToolCallId::from_raw("tool-complete"),
+                    authority_sha256: hash('7'),
+                },
+                Some("turn-complete"),
+                Some("operation-complete"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::FileObserved {
+                    object_identity_sha256: hash('8'),
+                    observation_sha256: hash('9'),
+                },
+                Some("turn-complete"),
+                Some("operation-complete"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::FileModified {
+                    object_identity_sha256: hash('8'),
+                    postcondition_sha256: hash('a'),
+                    receipt_id: ReceiptId::from_raw("receipt-complete"),
+                },
+                Some("turn-complete"),
+                Some("operation-complete"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::ArtifactCreated {
+                    artifact_id: RuntimeArtifactId::from_raw("artifact-complete"),
+                    manifest_sha256: hash('b'),
+                },
+                Some("turn-complete"),
+                Some("operation-complete"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::ToolCompleted {
+                    tool_call_id: ToolCallId::from_raw("tool-complete"),
+                    receipt_id: ReceiptId::from_raw("receipt-complete"),
+                    result_sha256: hash('c'),
+                },
+                Some("turn-complete"),
+                Some("operation-complete"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::Progress {
+                    code: "runtime.exhaustive.progress".to_owned(),
+                },
+                Some("turn-complete"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::Metric {
+                    name: "runtime.exhaustive.metric".to_owned(),
+                    value: 1,
+                },
+                Some("turn-complete"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::TurnCompleted {
+                    outcome_sha256: hash('d'),
+                },
+                Some("turn-complete"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::CheckpointCommitted {
+                    checkpoint_id: SessionCheckpointId::from_raw("checkpoint-complete"),
+                    checkpoint_sha256: hash('e'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(RuntimeEventKind::TurnStarted, Some("turn-deny"), None),
+            fixtures.event(
+                RuntimeEventKind::ModelRequested {
+                    model_run_id: ModelRunId::from_raw("model-failed"),
+                    request_sha256: hash('f'),
+                },
+                Some("turn-deny"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::ModelFailed {
+                    model_run_id: ModelRunId::from_raw("model-failed"),
+                    failure_code: "model.exhaustive.failed".to_owned(),
+                },
+                Some("turn-deny"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::ToolRequested {
+                    tool_call_id: ToolCallId::from_raw("tool-denied"),
+                    arguments_sha256: hash('1'),
+                },
+                Some("turn-deny"),
+                Some("operation-denied"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::PermissionRequested {
+                    approval_id: ApprovalId::from_raw("approval-deny"),
+                    operation: GrantOperation::WorkspaceRead,
+                    preview_sha256: hash('2'),
+                    expires_at_epoch_ms: 20_000,
+                },
+                Some("turn-deny"),
+                Some("operation-denied"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::PermissionDecided {
+                    approval_id: ApprovalId::from_raw("approval-deny"),
+                    disposition: RuntimePermissionDisposition::Deny,
+                    grant_id: None,
+                    decision_sha256: hash('3'),
+                },
+                Some("turn-deny"),
+                Some("operation-denied"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::TurnCompleted {
+                    outcome_sha256: hash('4'),
+                },
+                Some("turn-deny"),
+                None,
+            ),
+            fixtures.event(RuntimeEventKind::TurnStarted, Some("turn-failed"), None),
+            fixtures.event(
+                RuntimeEventKind::ToolRequested {
+                    tool_call_id: ToolCallId::from_raw("tool-failed"),
+                    arguments_sha256: hash('5'),
+                },
+                Some("turn-failed"),
+                Some("operation-failed"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::ToolStarted {
+                    tool_call_id: ToolCallId::from_raw("tool-failed"),
+                    authority_sha256: hash('6'),
+                },
+                Some("turn-failed"),
+                Some("operation-failed"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::ToolFailed {
+                    tool_call_id: ToolCallId::from_raw("tool-failed"),
+                    receipt_id: Some(ReceiptId::from_raw("receipt-failed")),
+                    failure_code: "tool.exhaustive.failed".to_owned(),
+                },
+                Some("turn-failed"),
+                Some("operation-failed"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::TurnCompleted {
+                    outcome_sha256: hash('7'),
+                },
+                Some("turn-failed"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::CancellationRequested {
+                    cancellation_id: CancellationId::from_raw("cancellation-complete"),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::CancellationObserved {
+                    cancellation_id: CancellationId::from_raw("cancellation-complete"),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::RunTerminal {
+                    state: AgentStateKind::Cancelled,
+                    outcome_sha256: hash('8'),
+                },
+                None,
+                None,
+            ),
+        ]
+    }
+
+    const fn event_family(kind: &RuntimeEventKind) -> &'static str {
+        match kind {
+            RuntimeEventKind::RunStarted { .. } => "run_started",
+            RuntimeEventKind::TurnStarted => "turn_started",
+            RuntimeEventKind::TurnCompleted { .. } => "turn_completed",
+            RuntimeEventKind::ModelRequested { .. } => "model_requested",
+            RuntimeEventKind::ModelCompleted { .. } => "model_completed",
+            RuntimeEventKind::ModelFailed { .. } => "model_failed",
+            RuntimeEventKind::ToolRequested { .. } => "tool_requested",
+            RuntimeEventKind::ToolStarted { .. } => "tool_started",
+            RuntimeEventKind::ToolCompleted { .. } => "tool_completed",
+            RuntimeEventKind::ToolFailed { .. } => "tool_failed",
+            RuntimeEventKind::PermissionRequested { .. } => "permission_requested",
+            RuntimeEventKind::PermissionDecided { .. } => "permission_decided",
+            RuntimeEventKind::FileObserved { .. } => "file_observed",
+            RuntimeEventKind::FileModified { .. } => "file_modified",
+            RuntimeEventKind::ArtifactCreated { .. } => "artifact_created",
+            RuntimeEventKind::CheckpointCommitted { .. } => "checkpoint_committed",
+            RuntimeEventKind::CancellationRequested { .. } => "cancellation_requested",
+            RuntimeEventKind::CancellationObserved { .. } => "cancellation_observed",
+            RuntimeEventKind::Progress { .. } => "progress",
+            RuntimeEventKind::Metric { .. } => "metric",
+            RuntimeEventKind::RunTerminal { .. } => "run_terminal",
+        }
+    }
+
     fn status_sequence() -> Vec<RuntimeEvent> {
         let mut fixtures = FixtureStream::new();
         vec![
@@ -1445,6 +1718,128 @@ mod tests {
     }
 
     #[test]
+    fn story_21_2_every_event_family_has_a_legal_transition_path() {
+        let events = exhaustive_sequence();
+        let mut sequence = RuntimeEventSequence::new();
+        let mut observed = BTreeSet::new();
+        for event in &events {
+            sequence
+                .push(event)
+                .unwrap_or_else(|error| panic!("{}: {error:?}", event_family(&event.kind)));
+            observed.insert(event_family(&event.kind));
+        }
+        assert_eq!(
+            observed,
+            BTreeSet::from([
+                "artifact_created",
+                "cancellation_observed",
+                "cancellation_requested",
+                "checkpoint_committed",
+                "file_modified",
+                "file_observed",
+                "metric",
+                "model_completed",
+                "model_failed",
+                "model_requested",
+                "permission_decided",
+                "permission_requested",
+                "progress",
+                "run_started",
+                "run_terminal",
+                "tool_completed",
+                "tool_failed",
+                "tool_requested",
+                "tool_started",
+                "turn_completed",
+                "turn_started",
+            ])
+        );
+        assert_eq!(sequence.event_count(), events.len() as u64);
+        assert!(sequence.is_terminal());
+    }
+
+    #[test]
+    fn story_21_2_rejected_duplicate_transition_is_non_mutating() {
+        let mut fixtures = FixtureStream::new();
+        let start = fixtures.event(
+            RuntimeEventKind::RunStarted {
+                request_sha256: hash('1'),
+            },
+            None,
+            None,
+        );
+        let turn = fixtures.event(RuntimeEventKind::TurnStarted, Some("turn-duplicate"), None);
+        let first_tool = fixtures.event(
+            RuntimeEventKind::ToolRequested {
+                tool_call_id: ToolCallId::from_raw("tool-first"),
+                arguments_sha256: hash('2'),
+            },
+            Some("turn-duplicate"),
+            Some("operation-first"),
+        );
+        let permission = fixtures.event(
+            RuntimeEventKind::PermissionRequested {
+                approval_id: ApprovalId::from_raw("approval-duplicate"),
+                operation: GrantOperation::WorkspaceRead,
+                preview_sha256: hash('3'),
+                expires_at_epoch_ms: 10_000,
+            },
+            Some("turn-duplicate"),
+            Some("operation-first"),
+        );
+        let second_tool = fixtures.event(
+            RuntimeEventKind::ToolRequested {
+                tool_call_id: ToolCallId::from_raw("tool-second"),
+                arguments_sha256: hash('4'),
+            },
+            Some("turn-duplicate"),
+            Some("operation-second"),
+        );
+        let duplicate = fixtures.event(
+            RuntimeEventKind::PermissionRequested {
+                approval_id: ApprovalId::from_raw("approval-duplicate"),
+                operation: GrantOperation::WorkspaceRead,
+                preview_sha256: hash('5'),
+                expires_at_epoch_ms: 10_001,
+            },
+            Some("turn-duplicate"),
+            Some("operation-second"),
+        );
+
+        let mut sequence = RuntimeEventSequence::new();
+        for event in [&start, &turn, &first_tool, &permission, &second_tool] {
+            sequence.push(event).expect("legal prefix");
+        }
+        assert_eq!(
+            sequence.push(&duplicate),
+            Err(RuntimeEventError::IllegalTransition)
+        );
+
+        let mut recovered = duplicate;
+        recovered.kind = RuntimeEventKind::PermissionDecided {
+            approval_id: ApprovalId::from_raw("approval-duplicate"),
+            disposition: RuntimePermissionDisposition::Allow,
+            grant_id: Some(GrantId::from_raw("grant-recovered")),
+            decision_sha256: hash('6'),
+        };
+        recovered.operation_id = Some(RuntimeOperationId::from_raw("operation-first"));
+        recovered.event_sha256 = ZERO_SHA256.to_owned();
+        let recovered = seal_runtime_event(recovered).expect("recovery event seals");
+        sequence
+            .push(&recovered)
+            .expect("rejected duplicate changed no state");
+        assert_eq!(sequence.event_count(), 6);
+    }
+
+    #[test]
+    fn story_21_2_unknown_event_family_is_rejected_by_closed_decode() {
+        let mut value = serde_json::to_value(&valid_sequence()[0]).expect("event JSON");
+        value["kind"]["event"] = serde_json::Value::String("unknown_event".to_owned());
+        let bytes = serde_json::to_vec(&value).expect("unknown event bytes");
+        assert!(agentmage_kernel_contracts::from_json::<RuntimeEvent>(&bytes).is_err());
+    }
+
+    #[test]
     fn story_21_2_sequence_rejects_reorder_replay_binding_and_post_terminal_events() {
         let events = valid_sequence();
 
@@ -1517,6 +1912,21 @@ mod tests {
         sequence.push(&turn).expect("turn");
         assert_eq!(
             sequence.push(&started),
+            Err(RuntimeEventError::IllegalTransition)
+        );
+
+        let mut orphan_permission = started;
+        orphan_permission.kind = RuntimeEventKind::PermissionRequested {
+            approval_id: ApprovalId::from_raw("approval-orphan"),
+            operation: GrantOperation::WorkspaceRead,
+            preview_sha256: hash('3'),
+            expires_at_epoch_ms: 10_000,
+        };
+        orphan_permission.event_sha256 = ZERO_SHA256.to_owned();
+        let orphan_permission =
+            seal_runtime_event(orphan_permission).expect("orphan permission reseals");
+        assert_eq!(
+            sequence.push(&orphan_permission),
             Err(RuntimeEventError::IllegalTransition)
         );
     }
