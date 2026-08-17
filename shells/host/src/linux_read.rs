@@ -513,6 +513,11 @@ where
                 cancellation_id,
                 after_event_cursor.as_ref(),
             ),
+            HostRequest::ReleaseRuntime {
+                run_id,
+                request_sha256,
+                ..
+            } => self.release_runtime(&request_id, &run_id, &request_sha256),
         };
         result.unwrap_or_else(|error| HostResponse::Denied {
             schema_version: HOST_PROTOCOL_VERSION,
@@ -608,6 +613,25 @@ where
             .cancel(run_id, request_sha256, cancellation_id, after_event_cursor)
             .map_err(LinuxReadError::NativeChatRuntime)?;
         Ok(runtime_response(request_id, step))
+    }
+
+    fn release_runtime(
+        &mut self,
+        request_id: &str,
+        run_id: &agentmage_kernel_contracts::RuntimeRunId,
+        request_sha256: &str,
+    ) -> Result<HostResponse, LinuxReadError> {
+        self.native_chat_runtime
+            .as_mut()
+            .ok_or(LinuxReadError::NativeChatRuntime(
+                NativeChatRuntimeError::RunUnavailable,
+            ))?
+            .release(run_id, request_sha256)
+            .map_err(LinuxReadError::NativeChatRuntime)?;
+        Ok(HostResponse::Cancelled {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: request_id.to_owned(),
+        })
     }
 
     fn preview_handoff(&mut self, request_id: &str) -> Result<HostResponse, LinuxReadError> {
@@ -1824,7 +1848,8 @@ fn request_id(request: &HostRequest) -> &str {
         | HostRequest::PrepareRuntime { request_id, .. }
         | HostRequest::StartRuntime { request_id, .. }
         | HostRequest::AdvanceRuntime { request_id, .. }
-        | HostRequest::CancelRuntime { request_id, .. } => request_id,
+        | HostRequest::CancelRuntime { request_id, .. }
+        | HostRequest::ReleaseRuntime { request_id, .. } => request_id,
     }
 }
 
@@ -1993,6 +2018,14 @@ mod tests {
             _after_event_cursor: Option<&RuntimeEventCursor>,
         ) -> Result<NativeChatRuntimeStep, NativeChatRuntimeError> {
             Ok(self.step.clone())
+        }
+
+        fn release(
+            &mut self,
+            _run_id: &RuntimeRunId,
+            _request_sha256: &str,
+        ) -> Result<(), NativeChatRuntimeError> {
+            Ok(())
         }
     }
 

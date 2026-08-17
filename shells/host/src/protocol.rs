@@ -302,6 +302,17 @@ pub enum HostRequest {
         #[serde(deserialize_with = "deserialize_required_option")]
         after_event_cursor: Option<RuntimeEventCursor>,
     },
+    /// Discard one unstarted request or remove one terminal runtime session.
+    ReleaseRuntime {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact prepared or terminal runtime run.
+        run_id: RuntimeRunId,
+        /// Digest of the exact admitted runtime request.
+        request_sha256: String,
+    },
 }
 
 impl HostRequest {
@@ -566,6 +577,17 @@ impl HostRequest {
                             || !valid_sha256(&cursor.event_sha256)
                     })
                 {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::ReleaseRuntime {
+                schema_version,
+                request_id,
+                run_id,
+                request_sha256,
+            } => {
+                if !valid_identifier(run_id.as_str()) || !valid_sha256(request_sha256) {
                     return Err(HostProtocolError::InvalidValue);
                 }
                 (*schema_version, request_id)
@@ -1087,6 +1109,18 @@ mod tests {
                 after_event_cursor: None,
                 ..
             })
+        ));
+
+        let release = json!({
+            "kind": "release_runtime",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-runtime-0005",
+            "run_id": run_request.run_id,
+            "request_sha256": run_request.request_sha256
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&release).expect("request JSON")),
+            Ok(HostRequest::ReleaseRuntime { .. })
         ));
     }
 

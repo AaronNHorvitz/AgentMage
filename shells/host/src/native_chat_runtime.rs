@@ -125,6 +125,13 @@ pub trait NativeChatRuntimePort {
         cancellation_id: CancellationId,
         after_event_cursor: Option<&RuntimeEventCursor>,
     ) -> Result<NativeChatRuntimeStep, NativeChatRuntimeError>;
+
+    /// Discards one unstarted request or removes one already terminal run.
+    fn release(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+    ) -> Result<(), NativeChatRuntimeError>;
 }
 
 /// Trusted composition boundary that frames requests and creates the shared coordinator.
@@ -243,6 +250,30 @@ where
             .get_mut(run_id.as_str())
             .ok_or(NativeChatRuntimeError::RunUnavailable)?
             .cancel(request_sha256, cancellation_id, after_event_cursor)
+    }
+
+    fn release(
+        &mut self,
+        run_id: &RuntimeRunId,
+        request_sha256: &str,
+    ) -> Result<(), NativeChatRuntimeError> {
+        let key = run_id.as_str();
+        if let Some(request) = self.prepared.get(key) {
+            if request.request_sha256 != request_sha256 {
+                return Err(NativeChatRuntimeError::RequestDenied);
+            }
+            self.prepared.remove(key);
+            return Ok(());
+        }
+        let session = self
+            .active
+            .get(key)
+            .ok_or(NativeChatRuntimeError::RunUnavailable)?;
+        if !session.is_terminal() || session.request.request_sha256 != request_sha256 {
+            return Err(NativeChatRuntimeError::RequestDenied);
+        }
+        self.active.remove(key);
+        Ok(())
     }
 }
 
@@ -605,6 +636,13 @@ mod tests {
         );
         assert_eq!(
             service.start(prepared),
+            Err(NativeChatRuntimeError::RunUnavailable)
+        );
+        service
+            .release(&request.run_id, &request.request_sha256)
+            .expect("terminal replay state is explicitly released");
+        assert_eq!(
+            service.advance(&request.run_id, &request.request_sha256, None, None),
             Err(NativeChatRuntimeError::RunUnavailable)
         );
     }
