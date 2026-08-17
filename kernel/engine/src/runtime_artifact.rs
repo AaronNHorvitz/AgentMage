@@ -2028,10 +2028,17 @@ fn validate_runtime_continuation_state(
         || continuation.model_call_count != continuation.turn_count
         || continuation.context_refresh_count != continuation.turn_count
         || continuation.tool_call_count as usize != continuation.tool_results.len()
+        || continuation.tool_call_count as usize != continuation.tool_attempts.len()
         || continuation.tool_results.len() > MAX_RUNTIME_CONTINUATION_RESULTS
         || continuation.receipt_ids.len() != continuation.tool_results.len()
         || continuation.no_progress_turns > continuation.turn_count
         || !valid_continuation_tool_results(&continuation.tool_results)
+        || !valid_continuation_tool_attempts(&continuation.tool_attempts)
+        || !continuation
+            .tool_results
+            .iter()
+            .zip(&continuation.tool_attempts)
+            .all(|(result, attempt)| result.tool_call_id == attempt.tool_call_id)
         || !valid_sorted_evidence(&continuation.evidence)
         || !valid_sorted_receipts(&continuation.receipt_ids)
         || !valid_sorted_artifacts(&continuation.artifacts)
@@ -2085,6 +2092,21 @@ fn valid_continuation_tool_results(results: &[agentmage_kernel_contracts::ToolRe
             })
             && valid_sorted_evidence(&result.evidence)
             && call_ids.insert(result.tool_call_id.as_str())
+    })
+}
+
+fn valid_continuation_tool_attempts(
+    attempts: &[agentmage_kernel_contracts::RuntimeToolAttemptState],
+) -> bool {
+    let mut call_ids = BTreeSet::new();
+    attempts.iter().enumerate().all(|(index, attempt)| {
+        attempt.schema_version == CONTRACT_SCHEMA_VERSION
+            && attempt.sequence == index as u64 + 1
+            && valid_identifier(attempt.tool_call_id.as_str())
+            && valid_sha256(&attempt.semantic_sha256)
+            && attempt.occurrence > 0
+            && attempt.call_depth <= 32
+            && call_ids.insert(attempt.tool_call_id.as_str())
     })
 }
 
@@ -2655,6 +2677,7 @@ mod tests {
             tool_call_count: 0,
             context_refresh_count: 1,
             no_progress_turns: 0,
+            tool_attempts: Vec::new(),
             tool_results: Vec::new(),
             evidence: Vec::new(),
             receipt_ids: Vec::new(),

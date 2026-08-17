@@ -84,6 +84,7 @@ impl_versioned_contract!(
     crate::RuntimeContinuationState,
     crate::RuntimeOutcome,
     crate::RuntimeResumeBinding,
+    crate::RuntimeToolAttemptState,
     crate::RuntimeRunRequest,
     crate::Task,
     crate::ToolCall,

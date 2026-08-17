@@ -5,8 +5,8 @@ use std::fmt::Write;
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, ContractError, ErrorCategory, ErrorId, OperationOutcome,
-    RetryDisposition, SchemaReference, StateChange, ToolCall, ToolDefinition, ToolId, ToolResult,
-    ValidationIssue, ValidationSeverity,
+    RetryDisposition, RuntimeToolAttemptState, SchemaReference, StateChange, ToolCall,
+    ToolDefinition, ToolId, ToolResult, ValidationIssue, ValidationSeverity,
 };
 use serde::de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor};
 use sha2::{Digest, Sha256};
@@ -202,6 +202,8 @@ pub enum ToolAttemptGuardError {
     DuplicateCallIdentity,
     /// The same semantic call reached its configured repeat ceiling.
     RepeatLimitExceeded,
+    /// Persisted attempt state is malformed, unordered, or exceeds current limits.
+    InvalidRestoredState,
 }
 
 impl ToolAttemptGuardError {
@@ -213,6 +215,7 @@ impl ToolAttemptGuardError {
             Self::CallDepthExceeded => "tool.attempt.call_depth.exceeded",
             Self::DuplicateCallIdentity => "tool.attempt.call_identity.duplicate",
             Self::RepeatLimitExceeded => "tool.attempt.repeat_limit.exceeded",
+            Self::InvalidRestoredState => "tool.attempt.restored_state.invalid",
         }
     }
 }
@@ -255,6 +258,52 @@ impl ToolAttemptGuard {
             seen_call_ids: BTreeSet::new(),
             occurrences: BTreeMap::new(),
         })
+    }
+
+    /// Restores exact content-free guard state after a verified safe-boundary restart.
+    pub fn restore(
+        maximum_repeats: u8,
+        maximum_call_depth: u8,
+        attempts: &[RuntimeToolAttemptState],
+    ) -> Result<Self, ToolAttemptGuardError> {
+        let mut guard = Self::new(maximum_repeats, maximum_call_depth)?;
+        for attempt in attempts {
+            if attempt.schema_version != CONTRACT_SCHEMA_VERSION
+                || attempt.sequence != guard.next_sequence
+                || attempt.tool_call_id.as_str().is_empty()
+                || attempt.semantic_sha256.len() != 64
+                || !attempt
+                    .semantic_sha256
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+                || attempt.occurrence == 0
+                || attempt.occurrence > guard.maximum_repeats
+                || attempt.call_depth > guard.maximum_call_depth
+                || !guard
+                    .seen_call_ids
+                    .insert(attempt.tool_call_id.as_str().to_owned())
+            {
+                return Err(ToolAttemptGuardError::InvalidRestoredState);
+            }
+            let expected_occurrence = guard
+                .occurrences
+                .get(&attempt.semantic_sha256)
+                .copied()
+                .unwrap_or(0)
+                .checked_add(1)
+                .ok_or(ToolAttemptGuardError::InvalidRestoredState)?;
+            if attempt.occurrence != expected_occurrence {
+                return Err(ToolAttemptGuardError::InvalidRestoredState);
+            }
+            guard
+                .occurrences
+                .insert(attempt.semantic_sha256.clone(), attempt.occurrence);
+            guard.next_sequence = guard
+                .next_sequence
+                .checked_add(1)
+                .ok_or(ToolAttemptGuardError::InvalidRestoredState)?;
+        }
+        Ok(guard)
     }
 
     /// Records one validated attempt or refuses it without changing guard state.
@@ -737,8 +786,9 @@ mod tests {
     };
     use agentmage_kernel_contracts::{
         ActionId, CONTRACT_SCHEMA_VERSION, ContractPayload, CorrelationId, GrantOperation,
-        OperationBinding, OperationOutcome, RequiredGrantTemplate, SchemaId, SchemaReference,
-        StateChange, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel,
+        OperationBinding, OperationOutcome, RequiredGrantTemplate, RuntimeToolAttemptState,
+        SchemaId, SchemaReference, StateChange, ToolCall, ToolCallId, ToolDefinition, ToolId,
+        ToolRiskLevel,
     };
     use serde_json::{Value, json};
 
@@ -1021,6 +1071,52 @@ mod tests {
         assert!(matches!(
             ToolAttemptGuard::new(0, 0),
             Err(ToolAttemptGuardError::InvalidLimit)
+        ));
+    }
+
+    #[test]
+    fn repeated_call_guard_restores_content_free_enforcement_state() {
+        let mut original = ToolAttemptGuard::new(2, 3).expect("bounded guard");
+        let first = call("fixture.read", br#"{"path":"fixture.txt"}"#);
+        let first_record = original.record_attempt(&first, 0).expect("first attempt");
+        let mut second = first.clone();
+        second.tool_call_id = ToolCallId::from_raw("call-0002");
+        let second_record = original.record_attempt(&second, 1).expect("second attempt");
+        let attempts = [
+            RuntimeToolAttemptState {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                sequence: first_record.sequence,
+                tool_call_id: first.tool_call_id.clone(),
+                semantic_sha256: first_record.semantic_sha256,
+                occurrence: first_record.occurrence,
+                call_depth: first_record.call_depth,
+            },
+            RuntimeToolAttemptState {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                sequence: second_record.sequence,
+                tool_call_id: second.tool_call_id.clone(),
+                semantic_sha256: second_record.semantic_sha256,
+                occurrence: second_record.occurrence,
+                call_depth: second_record.call_depth,
+            },
+        ];
+        let mut restored = ToolAttemptGuard::restore(2, 3, &attempts).expect("guard restores");
+        assert_eq!(
+            restored.record_attempt(&first, 0),
+            Err(ToolAttemptGuardError::DuplicateCallIdentity)
+        );
+        let mut third = second;
+        third.tool_call_id = ToolCallId::from_raw("call-0003");
+        assert_eq!(
+            restored.record_attempt(&third, 0),
+            Err(ToolAttemptGuardError::RepeatLimitExceeded)
+        );
+
+        let mut malformed = attempts.to_vec();
+        malformed[1].sequence = 9;
+        assert!(matches!(
+            ToolAttemptGuard::restore(2, 3, &malformed),
+            Err(ToolAttemptGuardError::InvalidRestoredState)
         ));
     }
 

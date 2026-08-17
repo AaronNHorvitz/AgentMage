@@ -3,7 +3,7 @@
 use crate::{
     AgentStateKind, AgentStateTransition, ContextSensitivity, EvidenceReference, PolicyId,
     ReceiptId, RuntimeArtifactId, RuntimeEventCursor, RuntimeEventRetention, RuntimeOperationId,
-    RuntimeRunId, RuntimeTurnId, SessionCheckpointId, SessionId, TaskId, ToolResult,
+    RuntimeRunId, RuntimeTurnId, SessionCheckpointId, SessionId, TaskId, ToolCallId, ToolResult,
 };
 
 /// Closed semantic family for one runtime-generated payload.
@@ -162,6 +162,24 @@ pub struct RuntimeResumeBinding {
     pub binding_sha256: String,
 }
 
+/// Content-free repeated-call guard state retained across one durable restart.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeToolAttemptState {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Monotonic one-based attempt sequence.
+    pub sequence: u64,
+    /// Exact admitted tool-call identity.
+    pub tool_call_id: ToolCallId,
+    /// Digest of tool, version, action, schema, and exact argument identity.
+    pub semantic_sha256: String,
+    /// One-based occurrence of this semantic call.
+    pub occurrence: u8,
+    /// Explicit nested call depth.
+    pub call_depth: u8,
+}
+
 /// Canonical interface-neutral coordinator state retained only at a safe continuation boundary.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -194,6 +212,8 @@ pub struct RuntimeContinuationState {
     pub context_refresh_count: u32,
     /// Consecutive safe-boundary turns that produced no new evidence.
     pub no_progress_turns: u32,
+    /// Ordered content-free repeated-call guard state.
+    pub tool_attempts: Vec<RuntimeToolAttemptState>,
     /// Ordered tool results required to reconstruct the next bounded context.
     pub tool_results: Vec<ToolResult>,
     /// Current grounded evidence in stable identity order.
