@@ -450,6 +450,83 @@ fn canonical_sha256(value: &impl Serialize) -> Result<String, McpRegistryError> 
 }
 
 #[cfg(test)]
+pub(crate) fn fixture_mcp_manifest() -> McpManifest {
+    use agentmage_kernel_contracts::{
+        McpLimits, McpResponseClass, McpToolManifest, McpTransport, OperationBinding,
+        RequiredGrantTemplate, SchemaId, SchemaReference, ToolRiskLevel,
+    };
+
+    let schema = |id: &str, byte: char| SchemaReference {
+        schema_id: SchemaId::from_raw(id),
+        schema_version: 1,
+        schema_sha256: byte.to_string().repeat(64),
+    };
+    seal_mcp_manifest(McpManifest {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        server_id: "fixture.mcp".to_owned(),
+        server_version: "1.0.0".to_owned(),
+        package_sha256: "3".repeat(64),
+        process_sha256: "4".repeat(64),
+        transport: McpTransport {
+            kind: McpTransportKind::LocalProcessStdio,
+            endpoint_identity_sha256: "5".repeat(64),
+            destination: String::new(),
+        },
+        tools: vec![McpToolManifest {
+            definition: ToolDefinition {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                tool_id: ToolId::from_raw("mcp.fixture.read"),
+                tool_version: "1.0.0".to_owned(),
+                display_name: "Fixture MCP read".to_owned(),
+                description: "Reads one exact reviewed fixture scope".to_owned(),
+                input_schema: schema("mcp.fixture.input", '1'),
+                output_schema: schema("mcp.fixture.output", '2'),
+                risk_level: ToolRiskLevel::Low,
+                declared_effects: vec![OperationBinding::new(GrantOperation::WorkspaceRead)],
+                required_grant: RequiredGrantTemplate {
+                    operation: OperationBinding::new(GrantOperation::WorkspaceRead),
+                    target_scope: "mcp.fixture.scope".to_owned(),
+                    single_use: true,
+                },
+                timeout_ms: 1_000,
+            },
+            response_class: McpResponseClass::UntrustedStructuredData,
+            side_effect: StateChange::NotChanged,
+        }],
+        resources: Vec::new(),
+        prompts: Vec::new(),
+        workspace_root_sha256s: vec!["6".repeat(64)],
+        network_destinations: Vec::new(),
+        credential_ids: Vec::new(),
+        limits: McpLimits {
+            max_tools: 1,
+            max_resources: 1,
+            max_prompts: 1,
+            max_request_bytes: 4_096,
+            max_response_bytes: 8_192,
+            max_response_items: 16,
+            timeout_ms: 5_000,
+            max_concurrency: 1,
+        },
+        cancellation_supported: true,
+        requested_operations: vec![GrantOperation::WorkspaceRead],
+        manifest_sha256: ZERO_SHA256.to_owned(),
+    })
+    .expect("read-only MCP fixture manifest")
+}
+
+#[cfg(test)]
+pub(crate) fn fixture_mcp_observation(manifest: &McpManifest) -> McpProcessObservation {
+    McpProcessObservation {
+        package_sha256: manifest.package_sha256.clone(),
+        process_sha256: manifest.process_sha256.clone(),
+        endpoint_identity_sha256: manifest.transport.endpoint_identity_sha256.clone(),
+        transport: manifest.transport.kind,
+        descendants_contained: true,
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
         AuthorityClass, McpLimits, McpResponseClass, McpToolManifest, McpTransport,
