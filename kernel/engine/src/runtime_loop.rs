@@ -8,11 +8,13 @@ use agentmage_kernel_contracts::{
     ExactModelProfile, GrantId, GrantOperation, LocalModelRuntime, ModelCancellationProbe,
     ModelContextPacket, ModelFamilyCodec, ModelProposalKind, ModelRunId, ModelRunRequest,
     ModelRunResult, ModelRunTerminalState, OperationOutcome, PostconditionId, ReceiptId,
-    RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeEvent,
-    RuntimeEventId, RuntimeEventKind, RuntimeEventRetention, RuntimeEventRetentionKind,
-    RuntimeOperationId, RuntimeOutcome, RuntimeOutput, RuntimePermissionDisposition,
-    RuntimeRunRequest, RuntimeSessionMode, RuntimeToolReference, RuntimeTurnId, StateChange,
-    ToolCall, ToolDefinition, ToolResult, VerifierCandidate, VerifierId, to_canonical_json,
+    RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
+    RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactManifest,
+    RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeEvent, RuntimeEventId, RuntimeEventKind,
+    RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutcome,
+    RuntimeOutput, RuntimePayloadReference, RuntimePermissionDisposition, RuntimeRunRequest,
+    RuntimeSessionMode, RuntimeToolReference, RuntimeTurnId, StateChange, ToolCall, ToolDefinition,
+    ToolResult, VerifierCandidate, VerifierId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -20,6 +22,10 @@ use crate::agent_proposal::{ExpectedProposalContext, ProposalAdmissionRegistry};
 use crate::agent_state::AgentStateController;
 use crate::agent_verifier::{VerifierContext, VerifierRegistry};
 use crate::model_runtime::{LocalModelController, ModelRuntimeGateError};
+use crate::runtime_artifact::{
+    MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, runtime_artifact_ref, runtime_payload_reference,
+    seal_runtime_artifact_manifest, verify_runtime_artifact_ref,
+};
 use crate::runtime_coordinator::{
     RuntimeCoordinatorError, runtime_tool_catalog_sha256, seal_runtime_approval_challenge,
     seal_runtime_outcome, verify_runtime_approval_response, verify_runtime_run_request,
@@ -35,6 +41,8 @@ use crate::tooling::{
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const MIN_RUNTIME_EVENTS: u32 = 6;
 const SHA256_BYTES: usize = 64;
+/// Maximum terminal or tool payload retained inline once a runtime artifact port is active.
+pub const MAX_RUNTIME_INLINE_OUTPUT_BYTES: usize = 64 * 1024;
 
 /// Closed dependency failure observed by the coordinator.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -233,6 +241,19 @@ pub trait RuntimeJournalPort {
     ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure>;
 }
 
+/// Optional private content-addressed artifact boundary implemented by a trusted runtime host.
+///
+/// Implementations receive only a sealed path-free manifest and bounded bytes. The model, client,
+/// tool registry, and renderer never receive native payload-store authority.
+pub trait RuntimeArtifactPort {
+    /// Publishes one exact immutable payload and returns its complete path-free reference.
+    fn publish_runtime_artifact(
+        &mut self,
+        manifest: RuntimeArtifactManifest,
+        payload: &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimePortFailure>;
+}
+
 /// Exact deterministic completion input exposed to a verifier implementation.
 pub struct RuntimeVerificationInput<'a> {
     /// Owning runtime request.
@@ -329,6 +350,15 @@ struct RuntimeJournalHooks<T> {
     ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure>,
 }
 
+#[derive(Clone, Copy)]
+struct RuntimeArtifactHooks<T> {
+    publish: fn(
+        &mut T,
+        RuntimeArtifactManifest,
+        &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimePortFailure>,
+}
+
 /// One reusable, interface-neutral runtime coordinator.
 pub struct ReusableRuntimeCoordinator<M, X, T, V, C>
 where
@@ -347,12 +377,14 @@ where
     clock: C,
     publisher: RuntimeEventPublisher,
     journal: Option<RuntimeJournalHooks<T>>,
+    artifact: Option<RuntimeArtifactHooks<T>>,
     state: AgentStateController,
     attempt_guard: ToolAttemptGuard,
     events: Vec<RuntimeEvent>,
     tool_results: Vec<ToolResult>,
     evidence: Vec<EvidenceReference>,
     receipt_ids: Vec<ReceiptId>,
+    artifact_references: Vec<RuntimeArtifactRef>,
     pending: Option<PendingApproval>,
     outcome: Option<RuntimeOutcome>,
     active_turn: Option<RuntimeTurnId>,
@@ -392,6 +424,7 @@ where
             verifier,
             clock,
             None,
+            None,
         )
     }
 
@@ -421,6 +454,39 @@ where
                 flush: flush_runtime_events::<T>,
                 load: load_runtime_events::<T>,
             }),
+            None,
+        )
+    }
+
+    /// Composes one persisted request with both canonical journal and private artifact ports.
+    pub fn new_with_persistence(
+        request: RuntimeRunRequest,
+        model: M,
+        context: X,
+        registry: ToolRegistry,
+        tool_boundary: T,
+        verifier: V,
+        clock: C,
+    ) -> Result<Self, RuntimeLoopError>
+    where
+        T: RuntimeJournalPort + RuntimeArtifactPort,
+    {
+        Self::compose(
+            request,
+            model,
+            context,
+            registry,
+            tool_boundary,
+            verifier,
+            clock,
+            Some(RuntimeJournalHooks {
+                append: append_runtime_event::<T>,
+                flush: flush_runtime_events::<T>,
+                load: load_runtime_events::<T>,
+            }),
+            Some(RuntimeArtifactHooks {
+                publish: publish_runtime_artifact::<T>,
+            }),
         )
     }
 
@@ -434,6 +500,7 @@ where
         verifier: V,
         clock: C,
         journal: Option<RuntimeJournalHooks<T>>,
+        artifact: Option<RuntimeArtifactHooks<T>>,
     ) -> Result<Self, RuntimeLoopError> {
         verify_runtime_run_request(&request)?;
         if (request.mode == RuntimeSessionMode::DurableReadOnly || request.event_cursor.is_some())
@@ -442,6 +509,11 @@ where
             return Err(RuntimeLoopError::UnsupportedMode);
         }
         if request.mode == RuntimeSessionMode::EphemeralReadOnly && journal.is_some() {
+            return Err(RuntimeLoopError::UnsupportedMode);
+        }
+        if artifact.is_some()
+            && (journal.is_none() || request.mode == RuntimeSessionMode::EphemeralReadOnly)
+        {
             return Err(RuntimeLoopError::UnsupportedMode);
         }
         if let Some(cursor) = &request.event_cursor {
@@ -497,12 +569,14 @@ where
             clock,
             publisher: RuntimeEventPublisher::new(),
             journal,
+            artifact,
             state: AgentStateController::new(),
             attempt_guard,
             events: Vec::new(),
             tool_results: Vec::new(),
             evidence,
             receipt_ids: Vec::new(),
+            artifact_references: Vec::new(),
             pending: None,
             outcome: None,
             active_turn: None,
@@ -534,6 +608,12 @@ where
     #[must_use]
     pub const fn outcome(&self) -> Option<&RuntimeOutcome> {
         self.outcome.as_ref()
+    }
+
+    /// Returns exact verified artifacts published by this invocation in creation order.
+    #[must_use]
+    pub fn artifact_references(&self) -> &[RuntimeArtifactRef] {
+        &self.artifact_references
     }
 
     /// Runs until a protected approval or canonical terminal outcome is reached.
@@ -840,6 +920,18 @@ where
             ModelProposalKind::EvidenceRequest
             | ModelProposalKind::UserQuestion
             | ModelProposalKind::Blocked => {
+                let output = proposal
+                    .payload
+                    .map(|payload| {
+                        self.route_runtime_output(
+                            payload,
+                            RuntimeArtifactKind::ModelOutput,
+                            &turn_id,
+                            None,
+                            None,
+                        )
+                    })
+                    .transpose()?;
                 self.state
                     .transition(AgentStateKind::Blocked)
                     .map_err(|_| RuntimeLoopError::State)?;
@@ -847,9 +939,7 @@ where
                 self.finish_terminal(
                     AgentStateKind::Blocked,
                     vec!["runtime.proposal.blocked".to_owned()],
-                    proposal
-                        .payload
-                        .map(|payload| RuntimeOutput::Inline { payload }),
+                    output,
                 )
             }
         }
@@ -901,6 +991,13 @@ where
         let completion = match registry.verify(&candidate) {
             Ok(completion) => completion,
             Err(_) => {
+                let output = self.route_runtime_output(
+                    payload,
+                    RuntimeArtifactKind::ModelOutput,
+                    &turn_id,
+                    None,
+                    None,
+                )?;
                 self.state
                     .transition(AgentStateKind::Failed)
                     .map_err(|_| RuntimeLoopError::State)?;
@@ -908,10 +1005,17 @@ where
                 return self.finish_terminal(
                     AgentStateKind::Failed,
                     vec!["runtime.verification.failed".to_owned()],
-                    Some(RuntimeOutput::Inline { payload }),
+                    Some(output),
                 );
             }
         };
+        let output = self.route_runtime_output(
+            payload,
+            RuntimeArtifactKind::ModelOutput,
+            &turn_id,
+            None,
+            None,
+        )?;
         self.state
             .complete(&completion)
             .map_err(|_| RuntimeLoopError::State)?;
@@ -932,11 +1036,7 @@ where
             .sort_by(|left, right| left.evidence_id.as_str().cmp(right.evidence_id.as_str()));
         let terminal = self.state.current();
         self.close_turn(&turn_id, proposal.proposal_sha256)?;
-        self.finish_terminal(
-            terminal,
-            Vec::new(),
-            Some(RuntimeOutput::Inline { payload }),
-        )
+        self.finish_terminal(terminal, Vec::new(), Some(output))
     }
 
     fn propose_tool(
@@ -1201,11 +1301,25 @@ where
         let prior_evidence = self.evidence.len();
         match execution.result.outcome {
             OperationOutcome::Succeeded => {
+                let result_sha256 = contract_sha256(&execution.result)?;
+                if let Some(payload) = execution.result.output.clone()
+                    && payload.bytes.len() > MAX_RUNTIME_INLINE_OUTPUT_BYTES
+                    && self.artifact.is_some()
+                {
+                    let artifact_kind = tool_artifact_kind(&definition, &payload.media_type);
+                    self.route_runtime_output(
+                        payload,
+                        artifact_kind,
+                        &turn_id,
+                        Some(&operation_id),
+                        Some(&execution.receipt_id),
+                    )?;
+                }
                 self.emit(
                     RuntimeEventKind::ToolCompleted {
                         tool_call_id: call.tool_call_id,
                         receipt_id: execution.receipt_id.clone(),
-                        result_sha256: contract_sha256(&execution.result)?,
+                        result_sha256,
                     },
                     Some(&turn_id),
                     Some(&operation_id),
@@ -1488,6 +1602,17 @@ where
         turn_id: Option<&RuntimeTurnId>,
         operation_id: Option<&RuntimeOperationId>,
     ) -> Result<RuntimeEventDelivery, RuntimeLoopError> {
+        self.emit_at_with_payload(occurred_at_epoch_ms, kind, turn_id, operation_id, None)
+    }
+
+    fn emit_at_with_payload(
+        &mut self,
+        occurred_at_epoch_ms: u64,
+        kind: RuntimeEventKind,
+        turn_id: Option<&RuntimeTurnId>,
+        operation_id: Option<&RuntimeOperationId>,
+        payload_reference: Option<RuntimePayloadReference>,
+    ) -> Result<RuntimeEventDelivery, RuntimeLoopError> {
         if self.events.len() >= self.request.limits.max_events as usize
             || occurred_at_epoch_ms == 0
             || self
@@ -1525,7 +1650,7 @@ where
             },
             persistence: runtime_event_persistence(&kind),
             policy_id: self.request.policy_id.clone(),
-            payload_reference: None,
+            payload_reference,
             kind,
             previous_event_sha256: self.events.last().map_or_else(
                 || ZERO_SHA256.to_owned(),
@@ -1540,6 +1665,84 @@ where
         let delivery = self.publisher.publish(event.clone())?;
         self.events.push(event);
         Ok(delivery)
+    }
+
+    fn route_runtime_output(
+        &mut self,
+        payload: agentmage_kernel_contracts::ContractPayload,
+        kind: RuntimeArtifactKind,
+        turn_id: &RuntimeTurnId,
+        operation_id: Option<&RuntimeOperationId>,
+        receipt_id: Option<&ReceiptId>,
+    ) -> Result<RuntimeOutput, RuntimeLoopError> {
+        if payload.bytes.len() <= MAX_RUNTIME_INLINE_OUTPUT_BYTES || self.artifact.is_none() {
+            return Ok(RuntimeOutput::Inline { payload });
+        }
+        let publish = self
+            .artifact
+            .as_ref()
+            .ok_or(RuntimeLoopError::UnsupportedMode)?
+            .publish;
+        let created_at_epoch_ms = self
+            .clock
+            .now_epoch_ms()
+            .map_err(RuntimeLoopError::Dependency)?;
+        let artifact_id = RuntimeArtifactId::from_raw(derived_id(
+            "artifact",
+            self.request.run_id.as_str(),
+            self.artifact_references.len() as u64 + 1,
+        ));
+        let manifest = seal_runtime_artifact_manifest(RuntimeArtifactManifest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            artifact_id: artifact_id.clone(),
+            kind,
+            payload_sha256: payload.sha256.clone(),
+            byte_size: payload.bytes.len() as u64,
+            media_type: payload.media_type.clone(),
+            sensitivity: runtime_sensitivity(&self.request),
+            retention: RuntimeEventRetention {
+                kind: RuntimeEventRetentionKind::Session,
+                expires_at_epoch_ms: None,
+            },
+            session_id: self.request.session_id.clone(),
+            task_id: self.request.task.task_id.clone(),
+            producer_run_id: self.request.run_id.clone(),
+            producer_turn_id: Some(turn_id.clone()),
+            producer_operation_id: operation_id.cloned(),
+            receipt_id: receipt_id.cloned(),
+            policy_id: self.request.policy_id.clone(),
+            policy_sha256: self.request.policy_sha256.clone(),
+            created_at_epoch_ms,
+            integrity: RuntimeArtifactIntegrityState::Verified,
+            preview: runtime_artifact_preview(&payload.bytes),
+            manifest_sha256: ZERO_SHA256.to_owned(),
+        })
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let expected =
+            runtime_artifact_ref(&manifest).map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let reference = publish(&mut self.tool_boundary, manifest.clone(), &payload.bytes)
+            .map_err(RuntimeLoopError::Dependency)?;
+        verify_runtime_artifact_ref(&reference, &manifest)
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        if reference != expected {
+            return Err(RuntimeLoopError::InvalidBoundaryResult);
+        }
+        let payload_reference = runtime_payload_reference(&manifest)
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        self.emit_at_with_payload(
+            created_at_epoch_ms,
+            RuntimeEventKind::ArtifactCreated {
+                artifact_id,
+                manifest_sha256: manifest.manifest_sha256,
+            },
+            Some(turn_id),
+            operation_id,
+            Some(payload_reference.clone()),
+        )?;
+        self.artifact_references.push(reference);
+        Ok(RuntimeOutput::Artifact {
+            reference: payload_reference,
+        })
     }
 
     fn remaining_events(&self) -> u32 {
@@ -1577,6 +1780,47 @@ fn load_runtime_events<T: RuntimeJournalPort>(
     run_id: &agentmage_kernel_contracts::RuntimeRunId,
 ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure> {
     port.load_runtime_events(run_id)
+}
+
+fn publish_runtime_artifact<T: RuntimeArtifactPort>(
+    port: &mut T,
+    manifest: RuntimeArtifactManifest,
+    payload: &[u8],
+) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
+    port.publish_runtime_artifact(manifest, payload)
+}
+
+fn tool_artifact_kind(definition: &ToolDefinition, media_type: &str) -> RuntimeArtifactKind {
+    if definition.tool_id.as_str().contains("validation") {
+        RuntimeArtifactKind::TestLog
+    } else {
+        match definition.required_grant.operation.operation() {
+            GrantOperation::CommandExecute => RuntimeArtifactKind::StandardOutput,
+            GrantOperation::WorkspaceWrite if media_type == "text/x-diff" => {
+                RuntimeArtifactKind::Patch
+            }
+            GrantOperation::WorkspaceWrite => RuntimeArtifactKind::Report,
+            _ => RuntimeArtifactKind::Report,
+        }
+    }
+}
+
+fn runtime_artifact_preview(bytes: &[u8]) -> Option<RuntimeArtifactPreview> {
+    let text = std::str::from_utf8(bytes).ok()?;
+    let mut end = text.len().min(MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES);
+    while end > 0 && !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    if end == 0 {
+        return None;
+    }
+    let preview = &text[..end];
+    Some(RuntimeArtifactPreview {
+        text: preview.to_owned(),
+        byte_size: end as u32,
+        truncated: end < bytes.len(),
+        sha256: sha256(preview.as_bytes()),
+    })
 }
 
 /// Computes exact stable tool references for one frozen registry.

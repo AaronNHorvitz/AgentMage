@@ -372,7 +372,9 @@ impl RuntimeEventSequence {
             }
             RuntimeEventKind::ArtifactCreated { .. } => {
                 self.require_active_turn(event)?;
-                required_operation(event)?;
+                if event.operation_id.is_some() {
+                    self.require_started_operation(event)?;
+                }
                 Ok(())
             }
             RuntimeEventKind::CheckpointCommitted { .. } => {

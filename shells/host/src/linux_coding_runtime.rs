@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
+use std::io::Cursor;
 
 use agentmage_capability_read_only::{
     GitCommandPlan, GitInspectionOperation, GitInspectionOutcome, GitInspectionRequest,
@@ -12,8 +13,9 @@ use agentmage_kernel_contracts::{
     AuthorizedWorkspaceHandle, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind,
     EvidenceReference, GrantId, GrantNonce, GrantOperation, OperationAttemptId, OperationOutcome,
     ReceiptId, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
-    RuntimeEvent, RuntimeOperationId, RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode,
-    SessionId, StateChange, ToolCall, ToolDefinition, ToolResult, to_canonical_json,
+    RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent, RuntimeOperationId, RuntimeRunId,
+    RuntimeRunRequest, RuntimeSessionMode, SessionId, StateChange, ToolCall, ToolDefinition,
+    ToolResult, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     authority_transaction::AuthorityTransactionRequest,
@@ -39,8 +41,8 @@ use agentmage_kernel_engine::{
     },
     runtime_coordinator::{verify_runtime_approval_response, verify_runtime_run_request},
     runtime_loop::{
-        RuntimeJournalPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeToolBoundary,
-        RuntimeToolExecution,
+        RuntimeArtifactPort, RuntimeJournalPort, RuntimePermissionEvaluation, RuntimePortFailure,
+        RuntimeToolBoundary, RuntimeToolExecution,
     },
     validation_result::{
         ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationStatus,
@@ -1704,6 +1706,29 @@ where
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
         Ok(events)
+    }
+}
+
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeArtifactPort
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    fn publish_runtime_artifact(
+        &mut self,
+        manifest: RuntimeArtifactManifest,
+        payload: &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
+        let publication = self
+            .authority
+            .publish_runtime_artifact(manifest.clone(), &mut Cursor::new(payload))
+            .map_err(map_journal_failure)?;
+        if publication.manifest != manifest {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        Ok(publication.reference)
     }
 }
 

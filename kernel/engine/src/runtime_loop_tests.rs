@@ -11,22 +11,25 @@ use agentmage_kernel_contracts::{
     ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate,
     OperationBinding, OperationOutcome, PlanId, PolicyId, PostconditionResult, ReceiptId,
     RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeEvent, RuntimeEventKind, RuntimeEventRetentionKind,
-    RuntimeOperationId, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode,
-    SchemaId, SchemaReference, SessionId, StateChange, StopCondition, StopConditionKind, Task,
-    TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
-    VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
-    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
+    RuntimeApprovalResponse, RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent,
+    RuntimeEventKind, RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutput, RuntimeRunId,
+    RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference, SessionId,
+    StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall,
+    ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel, VerifierCandidate,
+    VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource, WorkPacket, WorkPacketId,
+    WorkPacketState, WorkspaceId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
 use super::{
-    ReusableRuntimeCoordinator, RuntimeClock, RuntimeContextPort, RuntimeCoordinatorStep,
-    RuntimeJournalPort, RuntimeLoopError, RuntimeModelPort, RuntimePermissionEvaluation,
-    RuntimePortFailure, RuntimeToolBoundary, RuntimeToolExecution, RuntimeVerificationInput,
-    RuntimeVerifierPort, derived_id, runtime_action_id, runtime_tool_references,
+    MAX_RUNTIME_INLINE_OUTPUT_BYTES, ReusableRuntimeCoordinator, RuntimeArtifactPort, RuntimeClock,
+    RuntimeContextPort, RuntimeCoordinatorStep, RuntimeJournalPort, RuntimeLoopError,
+    RuntimeModelPort, RuntimePermissionEvaluation, RuntimePortFailure, RuntimeToolBoundary,
+    RuntimeToolExecution, RuntimeVerificationInput, RuntimeVerifierPort, derived_id,
+    runtime_action_id, runtime_tool_references,
 };
 use crate::model_codec::{proposal_digest, tests_support::profile};
+use crate::runtime_artifact::{runtime_artifact_ref, verify_runtime_artifact_manifest};
 use crate::runtime_coordinator::{
     runtime_tool_catalog_sha256, seal_runtime_run_request, verify_runtime_outcome,
 };
@@ -53,6 +56,7 @@ fn story_48_2_runtime_action_ids_are_precomputable_stable_and_sequence_bound() {
 #[derive(Clone, Copy)]
 enum ModelScript {
     Completion,
+    LargeCompletion,
     Tool,
     Malformed,
 }
@@ -93,6 +97,14 @@ impl RuntimeModelPort for FakeModel {
             ModelScript::Completion | ModelScript::Malformed => (
                 ModelProposalKind::CompletionCandidate,
                 Some(payload("runtime.answer", b"verified fixture answer")),
+                None,
+            ),
+            ModelScript::LargeCompletion => (
+                ModelProposalKind::CompletionCandidate,
+                Some(payload(
+                    "runtime.answer",
+                    &vec![b'x'; MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1],
+                )),
                 None,
             ),
             ModelScript::Tool => (
@@ -211,13 +223,17 @@ enum PermissionScript {
     Expired,
 }
 
+type PublishedArtifacts = Arc<Mutex<Vec<(RuntimeArtifactManifest, Vec<u8>)>>>;
+
 struct FakeToolBoundary {
     script: PermissionScript,
     executions: Arc<AtomicUsize>,
     emit_evidence: bool,
     state_change: StateChange,
+    tool_output_bytes: usize,
     journal: Arc<Mutex<Vec<RuntimeEvent>>>,
     journal_flushes: Arc<AtomicUsize>,
+    artifacts: PublishedArtifacts,
 }
 
 impl FakeToolBoundary {
@@ -321,12 +337,17 @@ impl RuntimeToolBoundary for FakeToolBoundary {
         } else {
             Vec::new()
         };
+        let output = if self.tool_output_bytes > 0 {
+            vec![b't'; self.tool_output_bytes]
+        } else {
+            b"fixture contents".to_vec()
+        };
         let result = ToolResult {
             schema_version: CONTRACT_SCHEMA_VERSION,
             tool_call_id: call.tool_call_id.clone(),
             correlation_id: call.correlation_id.clone(),
             outcome: OperationOutcome::Succeeded,
-            output: Some(payload("fixture.output", b"fixture contents")),
+            output: Some(payload("fixture.output", &output)),
             validation_issues: Vec::new(),
             evidence,
             error: None,
@@ -389,6 +410,26 @@ impl RuntimeJournalPort for FakeToolBoundary {
                     .cloned()
                     .collect()
             })
+    }
+}
+
+impl RuntimeArtifactPort for FakeToolBoundary {
+    fn publish_runtime_artifact(
+        &mut self,
+        manifest: RuntimeArtifactManifest,
+        payload: &[u8],
+    ) -> Result<RuntimeArtifactRef, RuntimePortFailure> {
+        verify_runtime_artifact_manifest(&manifest).map_err(|_| RuntimePortFailure::Invalid)?;
+        if manifest.payload_sha256 != sha256(payload) || manifest.byte_size != payload.len() as u64
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let reference = runtime_artifact_ref(&manifest).map_err(|_| RuntimePortFailure::Invalid)?;
+        self.artifacts
+            .lock()
+            .map_err(|_| RuntimePortFailure::Uncertain)?
+            .push((manifest, payload.to_vec()));
+        Ok(reference)
     }
 }
 
@@ -532,8 +573,10 @@ fn coordinator_for_mode_and_operation(
             } else {
                 StateChange::NotChanged
             },
+            tool_output_bytes: 0,
             journal: Arc::new(Mutex::new(Vec::new())),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::new(Mutex::new(Vec::new())),
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-0001"),
@@ -886,8 +929,10 @@ fn durable_mode_persists_ordered_session_events_before_terminal_return() {
             executions: Arc::new(AtomicUsize::new(0)),
             emit_evidence: true,
             state_change: StateChange::NotChanged,
+            tool_output_bytes: 0,
             journal: Arc::clone(&journal),
             journal_flushes: Arc::clone(&flushes),
+            artifacts: Arc::new(Mutex::new(Vec::new())),
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-durable-0001"),
@@ -917,6 +962,151 @@ fn durable_mode_persists_ordered_session_events_before_terminal_return() {
 }
 
 #[test]
+fn durable_large_model_output_is_artifact_backed_and_event_referenced() {
+    let profile = profile("runtime-loop-artifact");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let mut request = request(profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.limits.max_output_bytes = (MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1) as u64;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("artifact request seals");
+    let journal = Arc::new(Mutex::new(Vec::new()));
+    let artifacts = Arc::new(Mutex::new(Vec::new()));
+    let mut coordinator = ReusableRuntimeCoordinator::new_with_persistence(
+        request,
+        FakeModel::new(profile, [ModelScript::LargeCompletion]),
+        FakeContext,
+        registry,
+        FakeToolBoundary {
+            script: PermissionScript::Allow,
+            executions: Arc::new(AtomicUsize::new(0)),
+            emit_evidence: true,
+            state_change: StateChange::NotChanged,
+            tool_output_bytes: 0,
+            journal: Arc::clone(&journal),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::clone(&artifacts),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-artifact-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 4_000 },
+    )
+    .expect("artifact-backed coordinator builds");
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("artifact-backed completion")
+    else {
+        panic!("direct completion cannot pause");
+    };
+    let RuntimeOutput::Artifact { reference } = outcome.output.expect("output exists") else {
+        panic!("large durable output must not remain inline");
+    };
+    assert_eq!(
+        reference.byte_size,
+        (MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1) as u64
+    );
+    assert_eq!(coordinator.artifact_references().len(), 1);
+    assert_eq!(
+        coordinator.artifact_references()[0].artifact_id,
+        reference.artifact_id
+    );
+    let artifact_event = coordinator
+        .events()
+        .iter()
+        .find(|event| matches!(event.kind, RuntimeEventKind::ArtifactCreated { .. }))
+        .expect("artifact event exists");
+    assert!(artifact_event.operation_id.is_none());
+    assert_eq!(artifact_event.payload_reference.as_ref(), Some(&reference));
+    let retained = artifacts
+        .lock()
+        .expect("artifact fixture remains available");
+    assert_eq!(retained.len(), 1);
+    assert_eq!(retained[0].1.len(), MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1);
+    assert_eq!(
+        *journal.lock().expect("journal remains available"),
+        coordinator.events()
+    );
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn durable_large_tool_output_is_receipt_bound_before_completion() {
+    let profile = profile("runtime-loop-tool-artifact");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let mut request = request(profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.limits.max_output_bytes = (MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1) as u64;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("tool artifact request seals");
+    let journal = Arc::new(Mutex::new(Vec::new()));
+    let artifacts = Arc::new(Mutex::new(Vec::new()));
+    let mut coordinator = ReusableRuntimeCoordinator::new_with_persistence(
+        request,
+        FakeModel::new(profile, [ModelScript::Tool, ModelScript::Completion]),
+        FakeContext,
+        registry,
+        FakeToolBoundary {
+            script: PermissionScript::Allow,
+            executions: Arc::new(AtomicUsize::new(0)),
+            emit_evidence: true,
+            state_change: StateChange::NotChanged,
+            tool_output_bytes: MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1,
+            journal: Arc::clone(&journal),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::clone(&artifacts),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-tool-artifact-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 5_000 },
+    )
+    .expect("tool artifact coordinator builds");
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("tool artifact run completes")
+    else {
+        panic!("allowed fixture cannot pause");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(coordinator.artifact_references().len(), 1);
+    let artifact_index = coordinator
+        .events()
+        .iter()
+        .position(|event| matches!(event.kind, RuntimeEventKind::ArtifactCreated { .. }))
+        .expect("artifact event exists");
+    let completion_index = coordinator
+        .events()
+        .iter()
+        .position(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+        .expect("tool completion exists");
+    assert!(artifact_index < completion_index);
+    assert!(coordinator.events()[artifact_index].operation_id.is_some());
+    let retained = artifacts
+        .lock()
+        .expect("artifact fixture remains available");
+    assert_eq!(retained.len(), 1);
+    assert_eq!(
+        retained[0]
+            .0
+            .receipt_id
+            .as_ref()
+            .map(|value| value.as_str()),
+        Some("receipt-1")
+    );
+    assert_eq!(retained[0].1.len(), MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1);
+    assert_eq!(
+        *journal.lock().expect("journal remains available"),
+        coordinator.events()
+    );
+    assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
 fn ephemeral_mode_cannot_accidentally_attach_a_durable_journal() {
     let profile = profile("runtime-loop-ephemeral-journal");
     let registry = registry_for_operation(GrantOperation::WorkspaceRead);
@@ -932,8 +1122,10 @@ fn ephemeral_mode_cannot_accidentally_attach_a_durable_journal() {
             executions: Arc::new(AtomicUsize::new(0)),
             emit_evidence: true,
             state_change: StateChange::NotChanged,
+            tool_output_bytes: 0,
             journal: Arc::clone(&journal),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::new(Mutex::new(Vec::new())),
         },
         FakeVerifier {
             verifier_id: VerifierId::from_raw("verifier-ephemeral-0001"),
