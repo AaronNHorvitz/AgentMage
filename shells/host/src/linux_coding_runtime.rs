@@ -1360,6 +1360,7 @@ mod tests {
     use std::fs;
     use std::os::unix::fs::PermissionsExt as _;
     use std::path::PathBuf;
+    use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_capability_read_only::{
@@ -1391,7 +1392,8 @@ mod tests {
         runtime_loop::{RuntimePermissionEvaluation, RuntimeToolBoundary, runtime_action_id},
     };
     use agentmage_platform_linux::{
-        LinuxSandboxLimits, LinuxSandboxManifest, LinuxSandboxRunner, linux_repository_path_sha256,
+        LinuxBoundedRepositoryInspectionExecutor, LinuxGitArtifact, LinuxSandboxLimits,
+        LinuxSandboxManifest, LinuxSandboxRunner, linux_repository_path_sha256,
         open_test_linux_authority,
     };
 
@@ -1508,7 +1510,10 @@ mod tests {
         }
     }
 
-    struct Fixture {
+    struct Fixture<G = FakeGitExecutor>
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
         root: PathBuf,
         request: RuntimeRunRequest,
         definition: ToolDefinition,
@@ -1520,17 +1525,27 @@ mod tests {
             'static,
             TestIdentities,
             FakeCommandExecutor,
-            FakeGitExecutor,
+            G,
         >,
     }
 
-    impl Drop for Fixture {
+    impl<G> Drop for Fixture<G>
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.root);
         }
     }
 
     fn fixture() -> Fixture {
+        fixture_with_git(FakeGitExecutor::default())
+    }
+
+    fn fixture_with_git<G>(git_executor: G) -> Fixture<G>
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
         let root = temp_root("boundary");
         let worktree_root = root.join("worktree");
         let state_root = root.join("state");
@@ -1631,7 +1646,7 @@ mod tests {
             authority,
             sandbox,
             command_executor: FakeCommandExecutor::default(),
-            git_executor: FakeGitExecutor::default(),
+            git_executor,
             policy,
             actor_id,
             session_id,
@@ -1752,10 +1767,13 @@ mod tests {
         }
     }
 
-    fn challenge(
-        fixture: &Fixture,
+    fn challenge<G>(
+        fixture: &Fixture<G>,
         evaluation: &RuntimePermissionEvaluation,
-    ) -> RuntimeApprovalChallenge {
+    ) -> RuntimeApprovalChallenge
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
         let RuntimePermissionEvaluation::Ask {
             approval_id,
             grant_id,
@@ -1795,6 +1813,46 @@ mod tests {
             grant_id: (disposition == RuntimeApprovalDisposition::Allow)
                 .then(|| challenge.proposed_grant_id.clone()),
         }
+    }
+
+    fn configure_git_status<G>(fixture: &mut Fixture<G>)
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        let definition = fixture
+            .profile_for_test()
+            .registry()
+            .get_tool(
+                &ToolId::from_raw(GIT_INSPECTION_TOOL_ID),
+                GIT_INSPECTION_TOOL_VERSION,
+            )
+            .expect("Git inspection tool")
+            .clone();
+        let arguments = serde_json::to_vec(&GitInspectionRequest {
+            schema_version: 1,
+            operation: GitInspectionOperation::Status,
+            revision: None,
+            object_id: None,
+            pathspecs: Vec::new(),
+            max_records: 32,
+            max_output_bytes: 4_096,
+        })
+        .expect("Git inspection request");
+        fixture.call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-git-runtime"),
+            correlation_id: CorrelationId::from_raw("correlation-coding-runtime"),
+            action_id: runtime_action_id(&fixture.request.run_id, 1),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&arguments),
+                bytes: arguments,
+            },
+        };
+        fixture.definition = definition;
     }
 
     #[test]
@@ -2031,40 +2089,7 @@ mod tests {
     #[test]
     fn story_48_2_linux_runtime_executes_one_kernel_checked_git_inspection() {
         let mut fixture = fixture();
-        let definition = fixture
-            .profile_for_test()
-            .registry()
-            .get_tool(
-                &ToolId::from_raw(GIT_INSPECTION_TOOL_ID),
-                GIT_INSPECTION_TOOL_VERSION,
-            )
-            .expect("Git inspection tool")
-            .clone();
-        let arguments = serde_json::to_vec(&GitInspectionRequest {
-            schema_version: 1,
-            operation: GitInspectionOperation::Status,
-            revision: None,
-            object_id: None,
-            pathspecs: Vec::new(),
-            max_records: 32,
-            max_output_bytes: 4_096,
-        })
-        .expect("Git inspection request");
-        fixture.call = ToolCall {
-            schema_version: CONTRACT_SCHEMA_VERSION,
-            tool_call_id: ToolCallId::from_raw("call-git-runtime"),
-            correlation_id: CorrelationId::from_raw("correlation-coding-runtime"),
-            action_id: runtime_action_id(&fixture.request.run_id, 1),
-            tool_id: definition.tool_id.clone(),
-            tool_version: definition.tool_version.clone(),
-            arguments: ContractPayload {
-                schema: definition.input_schema.clone(),
-                media_type: "application/json".to_owned(),
-                sha256: sha256(&arguments),
-                bytes: arguments,
-            },
-        };
-        fixture.definition = definition;
+        configure_git_status(&mut fixture);
         let evaluation = fixture
             .boundary
             .evaluate(
@@ -2114,6 +2139,67 @@ mod tests {
                 .expect("returned Git executor")
                 .launches,
             1
+        );
+        assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
+    }
+
+    #[test]
+    fn story_48_2_linux_git_adapter_runs_the_approved_plan_without_a_shell() {
+        let git = LinuxGitArtifact::verify("/usr/bin/git").expect("verified system Git");
+        let mut fixture = fixture_with_git(LinuxBoundedRepositoryInspectionExecutor::new(git));
+        let initialized = Command::new("/usr/bin/git")
+            .env_clear()
+            .env("HOME", "/nonexistent")
+            .env("LANG", "C")
+            .args(["init", "--quiet", "--initial-branch=main"])
+            .current_dir(fixture.root.join("worktree"))
+            .status()
+            .expect("initialize fixture repository");
+        assert!(initialized.success());
+        configure_git_status(&mut fixture);
+        let evaluation = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                4_200,
+            )
+            .expect("Git approval preview");
+        let challenge = challenge(&fixture, &evaluation);
+        let allowed = fixture
+            .boundary
+            .resolve(
+                &fixture.request,
+                &challenge,
+                &response(&challenge, RuntimeApprovalDisposition::Allow),
+                &fixture.definition,
+                &fixture.call,
+                4_201,
+            )
+            .expect("Git allow");
+        let execution = fixture
+            .boundary
+            .execute(
+                &fixture.request,
+                &allowed,
+                &fixture.definition,
+                &fixture.call,
+                None,
+            )
+            .expect("live Git inspection");
+
+        assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        let result: GitInspectionResult =
+            serde_json::from_slice(&execution.result.output.expect("Git output").bytes)
+                .expect("Git result payload");
+        assert!(result.verify());
+        assert!(
+            result
+                .records
+                .iter()
+                .any(|record| record.record_kind == "untracked")
         );
         assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
     }
@@ -2270,7 +2356,10 @@ mod tests {
         assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
     }
 
-    impl Fixture {
+    impl<G> Fixture<G>
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
         fn profile_for_test(&self) -> &CodingSessionProfile {
             self.boundary.workspace.profile()
         }

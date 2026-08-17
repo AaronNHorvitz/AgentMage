@@ -3,9 +3,11 @@
 use std::fmt;
 use std::fmt::Write as _;
 use std::fs;
-use std::io::Read;
+use std::io::{Read, Write};
+use std::os::fd::AsRawFd as _;
 use std::os::unix::ffi::OsStrExt as _;
 use std::os::unix::fs::MetadataExt as _;
+use std::os::unix::process::CommandExt as _;
 use std::path::{Component, Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::thread;
@@ -13,6 +15,10 @@ use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::OperationOutcome;
 use agentmage_kernel_engine::propagation::CancellationToken;
+use agentmage_kernel_engine::repository_inspection::{
+    BoundedRepositoryInspectionExecutor, RepositoryInspectionLaunchPermit,
+    RepositoryInspectionPlatformResult, RepositoryInspectionTermination,
+};
 use agentmage_kernel_engine::repository_safety::{
     BoundedRepositoryExecutor, GitInvocationKind, HardenedGitInvocation, RepositoryLaunchPermit,
     RepositoryOperation, RepositoryOperationPlan, RepositoryPlatformResult,
@@ -21,7 +27,7 @@ use agentmage_kernel_engine::repository_safety::{
 use rustix::fd::OwnedFd;
 use rustix::fs::{FileType, Mode, OFlags, fstat, open};
 use rustix::io::pread;
-use rustix::process::getuid;
+use rustix::process::{Pid, Signal, getuid, kill_process_group, test_kill_process_group};
 use sha2::{Digest, Sha256};
 
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
@@ -29,7 +35,9 @@ const MAX_OBSERVATION_BYTES: usize = 4 * 1024 * 1024;
 const MAX_HASHED_FILE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_METADATA_ENTRIES: usize = 16_384;
 const PROCESS_TIMEOUT: Duration = Duration::from_secs(30);
+const INSPECTION_PROCESS_TIMEOUT: Duration = Duration::from_secs(15);
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
+const PROCESS_GROUP_GRACE: Duration = Duration::from_millis(250);
 
 /// Stable failure class at the Linux repository boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -421,6 +429,281 @@ impl LinuxRepositoryCollector {
             Err(error(LinuxRepositoryErrorKind::ObservationFailed))
         }
     }
+}
+
+/// Pinned offline executor for one kernel-validated read-only Git inspection.
+#[derive(Debug)]
+pub struct LinuxBoundedRepositoryInspectionExecutor {
+    git: LinuxGitArtifact,
+}
+
+impl LinuxBoundedRepositoryInspectionExecutor {
+    /// Creates an inert executor around one descriptor-held Git artifact.
+    #[must_use]
+    pub const fn new(git: LinuxGitArtifact) -> Self {
+        Self { git }
+    }
+
+    fn run(
+        &self,
+        permit: RepositoryInspectionLaunchPermit<'_>,
+        working_directory: &crate::LinuxAuthorizedWorkspace,
+        cancellation: &CancellationToken,
+    ) -> RepositoryInspectionPlatformResult {
+        let prepared = permit.prepared();
+        if revalidate_git_artifact(&self.git).is_err() || working_directory.revalidate().is_err() {
+            return failed_inspection("linux.git-inspection.preflight.failed");
+        }
+        let Ok(root) = working_directory.reopen_root_directory() else {
+            return failed_inspection("linux.git-inspection.root.failed");
+        };
+        let root_path = format!("/proc/self/fd/{}", root.as_raw_fd());
+        let mut command = Command::new(&self.git.launch_path);
+        command
+            .env_clear()
+            .envs(prepared.environment().iter())
+            .args(prepared.arguments())
+            .current_dir(root_path)
+            .process_group(0)
+            .stdin(if prepared.stdin().is_empty() {
+                Stdio::null()
+            } else {
+                Stdio::piped()
+            })
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+
+        let started = Instant::now();
+        let Ok(mut child) = command.spawn() else {
+            return failed_inspection("linux.git-inspection.launch.failed");
+        };
+        let Some(process_group) = i32::try_from(child.id()).ok().and_then(Pid::from_raw) else {
+            let _ = child.kill();
+            let _ = child.wait();
+            return failed_inspection("linux.git-inspection.process-group.failed");
+        };
+        if !prepared.stdin().is_empty() {
+            let wrote_input = child
+                .stdin
+                .take()
+                .is_some_and(|mut input| input.write_all(prepared.stdin()).is_ok());
+            if !wrote_input {
+                let cleanup = terminate_inspection_group(&mut child, process_group);
+                return failed_inspection_with_cleanup(
+                    "linux.git-inspection.stdin.failed",
+                    cleanup,
+                    started.elapsed(),
+                );
+            }
+        }
+        let Some(stdout) = child.stdout.take() else {
+            let cleanup = terminate_inspection_group(&mut child, process_group);
+            return failed_inspection_with_cleanup(
+                "linux.git-inspection.stdout.failed",
+                cleanup,
+                started.elapsed(),
+            );
+        };
+        let Some(stderr) = child.stderr.take() else {
+            let cleanup = terminate_inspection_group(&mut child, process_group);
+            return failed_inspection_with_cleanup(
+                "linux.git-inspection.stderr.failed",
+                cleanup,
+                started.elapsed(),
+            );
+        };
+        let stdout_reader = thread::spawn(move || read_inspection_output(stdout));
+        let stderr_reader = thread::spawn(move || read_inspection_output(stderr));
+        let deadline = started + INSPECTION_PROCESS_TIMEOUT;
+        let (mut termination, mut exit_code, mut cleanup_verified, platform_code) = loop {
+            match child.try_wait() {
+                Ok(Some(status)) => {
+                    let cleanup = reconcile_inspection_group(process_group);
+                    let Some(code) = status.code() else {
+                        break (
+                            RepositoryInspectionTermination::LaunchFailed,
+                            None,
+                            cleanup,
+                            "linux.git-inspection.signal",
+                        );
+                    };
+                    break (
+                        RepositoryInspectionTermination::Exited,
+                        Some(code),
+                        cleanup,
+                        "linux.git-inspection.exited",
+                    );
+                }
+                Ok(None) if cancellation.is_cancelled() => {
+                    let cleanup = terminate_inspection_group(&mut child, process_group);
+                    break (
+                        RepositoryInspectionTermination::Cancelled,
+                        None,
+                        cleanup,
+                        "linux.git-inspection.cancelled",
+                    );
+                }
+                Ok(None) if Instant::now() >= deadline => {
+                    let cleanup = terminate_inspection_group(&mut child, process_group);
+                    break (
+                        RepositoryInspectionTermination::TimedOut,
+                        None,
+                        cleanup,
+                        "linux.git-inspection.timed-out",
+                    );
+                }
+                Ok(None) => thread::sleep(POLL_INTERVAL),
+                Err(_) => {
+                    let cleanup = terminate_inspection_group(&mut child, process_group);
+                    break (
+                        RepositoryInspectionTermination::LaunchFailed,
+                        None,
+                        cleanup,
+                        "linux.git-inspection.wait.failed",
+                    );
+                }
+            }
+        };
+        let Ok(stdout) = stdout_reader.join().unwrap_or(Err(())) else {
+            return failed_inspection_with_cleanup(
+                "linux.git-inspection.stdout.read-failed",
+                cleanup_verified,
+                started.elapsed(),
+            );
+        };
+        let Ok(stderr) = stderr_reader.join().unwrap_or(Err(())) else {
+            return failed_inspection_with_cleanup(
+                "linux.git-inspection.stderr.read-failed",
+                cleanup_verified,
+                started.elapsed(),
+            );
+        };
+        let mut platform_code = platform_code;
+        if stdout.exceeded || stderr.exceeded {
+            termination = RepositoryInspectionTermination::OutputLimit;
+            exit_code = None;
+            platform_code = "linux.git-inspection.output-limit";
+        }
+        if working_directory.revalidate().is_err() {
+            termination = RepositoryInspectionTermination::LaunchFailed;
+            exit_code = None;
+            cleanup_verified = false;
+            platform_code = "linux.git-inspection.root.changed";
+        }
+        RepositoryInspectionPlatformResult {
+            termination,
+            exit_code,
+            stdout_sha256: hash(&stdout.retained),
+            stdout_bytes: stdout.retained.len() as u64,
+            stdout: stdout.retained,
+            stderr_sha256: hash(&stderr.retained),
+            stderr_bytes: stderr.retained.len() as u64,
+            elapsed_ms: elapsed_millis(started.elapsed()),
+            descendants_terminated: cleanup_verified,
+            platform_code: platform_code.to_owned(),
+        }
+    }
+}
+
+impl BoundedRepositoryInspectionExecutor for LinuxBoundedRepositoryInspectionExecutor {
+    type WorkingDirectory = crate::LinuxAuthorizedWorkspace;
+
+    fn execute(
+        &mut self,
+        permit: RepositoryInspectionLaunchPermit<'_>,
+        working_directory: &Self::WorkingDirectory,
+        cancellation: &CancellationToken,
+    ) -> RepositoryInspectionPlatformResult {
+        self.run(permit, working_directory, cancellation)
+    }
+}
+
+struct InspectionOutput {
+    retained: Vec<u8>,
+    exceeded: bool,
+}
+
+fn read_inspection_output(mut input: impl Read) -> Result<InspectionOutput, ()> {
+    let mut retained = Vec::with_capacity(MAX_OBSERVATION_BYTES);
+    let mut buffer = [0_u8; HASH_BUFFER_BYTES];
+    loop {
+        let count = input.read(&mut buffer).map_err(|_| ())?;
+        if count == 0 {
+            break;
+        }
+        if retained.len().saturating_add(count) > MAX_OBSERVATION_BYTES {
+            let remaining = MAX_OBSERVATION_BYTES.saturating_sub(retained.len());
+            retained.extend_from_slice(&buffer[..remaining]);
+            return Ok(InspectionOutput {
+                retained,
+                exceeded: true,
+            });
+        }
+        retained.extend_from_slice(&buffer[..count]);
+    }
+    Ok(InspectionOutput {
+        retained,
+        exceeded: false,
+    })
+}
+
+fn terminate_inspection_group(child: &mut Child, process_group: Pid) -> bool {
+    let _ = kill_process_group(process_group, Signal::TERM);
+    let deadline = Instant::now() + PROCESS_GROUP_GRACE;
+    loop {
+        match child.try_wait() {
+            Ok(Some(_)) => break,
+            Ok(None) if Instant::now() < deadline => thread::sleep(POLL_INTERVAL),
+            Ok(None) | Err(_) => {
+                let _ = kill_process_group(process_group, Signal::KILL);
+                let _ = child.wait();
+                break;
+            }
+        }
+    }
+    reconcile_inspection_group(process_group)
+}
+
+fn reconcile_inspection_group(process_group: Pid) -> bool {
+    match test_kill_process_group(process_group) {
+        Err(rustix::io::Errno::SRCH) => true,
+        Ok(()) => {
+            let _ = kill_process_group(process_group, Signal::KILL);
+            thread::sleep(POLL_INTERVAL);
+            matches!(
+                test_kill_process_group(process_group),
+                Err(rustix::io::Errno::SRCH)
+            )
+        }
+        Err(_) => false,
+    }
+}
+
+fn failed_inspection(code: &str) -> RepositoryInspectionPlatformResult {
+    failed_inspection_with_cleanup(code, true, Duration::ZERO)
+}
+
+fn failed_inspection_with_cleanup(
+    code: &str,
+    cleanup_verified: bool,
+    elapsed: Duration,
+) -> RepositoryInspectionPlatformResult {
+    RepositoryInspectionPlatformResult {
+        termination: RepositoryInspectionTermination::LaunchFailed,
+        exit_code: None,
+        stdout: Vec::new(),
+        stdout_sha256: hash(&[]),
+        stdout_bytes: 0,
+        stderr_sha256: hash(&[]),
+        stderr_bytes: 0,
+        elapsed_ms: elapsed_millis(elapsed),
+        descendants_terminated: cleanup_verified,
+        platform_code: code.to_owned(),
+    }
+}
+
+fn elapsed_millis(elapsed: Duration) -> u64 {
+    u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX)
 }
 
 /// Local-only Linux executor for exact worktree and compare-and-swap plans.
