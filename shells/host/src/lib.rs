@@ -13,6 +13,8 @@ pub mod coding_dispatch;
 /// Profile-bound authority planning for native coding calls.
 pub mod coding_operation;
 pub mod coding_projection;
+/// Exact interface-neutral runtime request framing for coding sessions.
+pub mod coding_run;
 pub mod coding_session;
 pub mod coding_tools;
 
