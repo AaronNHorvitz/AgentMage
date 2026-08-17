@@ -1,5 +1,6 @@
 //! Exact command templates, previews, execution permits, and terminal receipts.
 
+use std::borrow::Borrow;
 use std::collections::BTreeMap;
 use std::fmt;
 
@@ -681,13 +682,14 @@ impl<E, H> fmt::Debug for CommandEffectDriver<E, H> {
 
 impl<E, H> EffectDriver for CommandEffectDriver<E, H>
 where
-    E: BoundedCommandExecutor<WorkingDirectory = H>,
-    H: HeldWorkspaceRoot,
+    E: BoundedCommandExecutor,
+    H: Borrow<E::WorkingDirectory>,
 {
     fn execute(&mut self, authorization: EffectAuthorization<'_>) -> EffectLaunch {
         let call = authorization.call();
+        let held_working_directory = self.held_working_directory.borrow();
         if authorization.operation().operation() != GrantOperation::CommandExecute
-            || !authorization.authorizes_held_workspace_root(&self.held_working_directory)
+            || !authorization.authorizes_held_workspace_root(held_working_directory)
             || call.arguments.sha256 != self.prepared.request_sha256
             || call.arguments.bytes != self.prepared.request_bytes
             || sha256_hex(&call.arguments.bytes) != call.arguments.sha256
@@ -716,7 +718,7 @@ where
                 CommandLaunchPermit {
                     command: &self.prepared.command,
                 },
-                &self.held_working_directory,
+                held_working_directory,
                 &self.cancellation,
             )
         };
@@ -1339,7 +1341,7 @@ mod tests {
             result: Some(successful_platform_result()),
         };
         let mut driver =
-            CommandEffectDriver::new(executor, fixture.held, fixture.prepared, cancellation);
+            CommandEffectDriver::new(executor, &fixture.held, fixture.prepared, cancellation);
         let request = AuthorityTransactionRequest::new(
             AuthorityTransactionId::from_raw("transaction-command-0001"),
             OperationAttemptId::from_raw("attempt-command-0001"),
