@@ -494,6 +494,7 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Security Policy](./SECURITY.md) - private reporting, supported versions, remediation, signed manual patch delivery, emergency disablement, and end of support.
 - [Runtime Boundaries](./RUNTIME-BOUNDARIES.md) - trust boundaries, classified data flows, privileges, processes, sockets, lifecycle, and runtime parity.
 - [Runtime Event Journal](./docs/architecture/runtime-event-journal.md) - canonical event envelope, legal ordering, projection separation, bounded publication, durable writer design, and current evidence limits.
+- [Reusable Runtime Coordinator](./docs/architecture/reusable-runtime-coordinator.md) - one interface-independent model/context/tool/policy/event/outcome loop, native fake-read slice, client boundary, and remaining integration work.
 - [Delivery System Architecture](./DELIVERY-SYSTEM.md) - provider-neutral delivery graph, adapter contract, capability classes, operation lifecycle, conformance levels, and extreme tests.
 - [Planning, Review, and Delivery Agent Profiles](./docs/architecture/planning-review-and-delivery-agent-profiles.md) - standardized role catalog, shared-runtime boundary, deterministic services, and canonical issue, bug, pull-request, and roadmap workflows.
 - [Productivity System Architecture](./PRODUCTIVITY-SYSTEM.md) - autonomy, communications, personal-information, document, finance, workflow, and read-only cloud-observer contracts.
