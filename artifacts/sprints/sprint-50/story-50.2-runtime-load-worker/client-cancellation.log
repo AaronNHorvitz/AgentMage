@@ -1,0 +1,11 @@
+   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+   Compiling agentmage-platform-linux v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/platforms/linux)
+   Compiling agentmage-host v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/shells/host)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.07s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-423eb316feee59e2)
+
+running 1 test
+test cli_runtime::tests::protected_denial_and_cancellation_return_through_exact_runtime_cursor ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 123 filtered out; finished in 0.01s
+

@@ -31,6 +31,10 @@
   returns exact saturation without accepting the event, terminal flush and
   shutdown preserve exact replay, and storage failure becomes sticky without
   creating false history.
+- The immutable Fedora worker campaign binds nine command logs and 42 focused
+  tests to source commit `f8d521c4dc4bb9b2053447a61aaac04028b4906b`;
+  its 8,196-event workload, bounded saturation recovery, memory, disk,
+  throughput, publisher, and 16-reopen measurements pass the fixed profile.
 - The JSON schema and canonical Rust example pass the repository schema gate.
 - Markdown and Mermaid validation pass for the Story 21.2 architecture record.
 
@@ -48,6 +52,7 @@ cargo clippy -p agentmage-host --lib --tests --locked -- -D warnings
 npm run schemas:check
 npx markdownlint-cli2 README.md docs/architecture/runtime-event-journal.md docs/verification/story-21-2-local-results.md
 python3 scripts/check_mermaid.py
+python3 scripts/runtime_hardening_load.py --output <fresh-evidence-path>
 ```
 
 ## Open Evidence
@@ -64,12 +69,15 @@ python3 scripts/check_mermaid.py
   retention, export, deletion, or installed-client behavior.
 - Crash injection before and after every queue, transaction, subscriber,
   checkpoint, and terminal boundary remains open.
-- Event-count, byte, producer, consumer, disk-latency, cancellation, memory,
-  and model-stream pressure campaigns remain open.
+- The retained campaign covers event count, producer saturation, one slow
+  consumer, bounded memory/disk, isolated slow-store admission, cancellation
+  fixtures, and restart. Exhaustive byte edges, real disk latency, and
+  integrated model-stream/cancellation pressure remain open.
 - Secret, prompt, token-fragment, path, environment, credential, transcript,
   diagnostics, and metric canary scans remain open as a complete campaign.
-- Reference-hardware latency, throughput, memory, and disk measurements remain
-  open.
+- One Fedora source-host latency, throughput, memory, and disk profile is
+  retained. Installed-interface and additional supported-platform profiles
+  remain open.
 - The requirement-to-code-to-test hashed evidence index and independent review
   remain open.
 - Manual fuzzing remains deliberately deferred to the final campaign.

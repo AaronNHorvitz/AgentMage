@@ -1,0 +1,9 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+running 2 tests
+test runtime_loop::tests::durable_large_tool_output_is_receipt_bound_before_completion ... ok
+test runtime_loop::tests::durable_large_model_output_is_artifact_backed_and_event_referenced ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 592 filtered out; finished in 0.03s
+

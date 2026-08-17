@@ -1,0 +1,323 @@
+{
+  "campaign_passed": true,
+  "commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "story_50_2_reference_hardware_load_is_bounded_recoverable_and_nonblocking",
+        "--",
+        "--ignored",
+        "--nocapture"
+      ],
+      "elapsed_ms": 16930,
+      "exit_code": 0,
+      "failures": [],
+      "id": "reference-load",
+      "log": "reference-load.log",
+      "maximum_rss_kib": 53172,
+      "metrics": {
+        "cleanup_verified": true,
+        "event_count": 8196,
+        "fast_deliveries": 8196,
+        "journal_elapsed_ms": 2304,
+        "journal_events_per_second": 3557,
+        "lagged_subscribers": 1,
+        "maximum_queued_bytes": 733184,
+        "maximum_queued_events": 1024,
+        "publish_elapsed_ms": 258,
+        "publish_events_per_second": 31767,
+        "queue_saturations": 7,
+        "resident_memory_kib": 53996,
+        "restart_cycles": 16,
+        "restart_elapsed_ms": 13935,
+        "retained_disk_bytes": 10813336
+      },
+      "output_sha256": "f0863d8d5ae038a9ec09e6b9b8ddca0e0da36aeb0ef03bd60d72f66962abf7ce",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 593,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 1
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "runtime_loop::tests::story_50_2_"
+      ],
+      "elapsed_ms": 40,
+      "exit_code": 0,
+      "failures": [],
+      "id": "resource-ceilings",
+      "log": "resource-ceilings.log",
+      "maximum_rss_kib": 38436,
+      "metrics": null,
+      "output_sha256": "256916e94d170a64864c7ae789e4442beb67493354e1955546e356878d968bb1",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 588,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 6
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "runtime_event::tests::story_50_2_"
+      ],
+      "elapsed_ms": 40,
+      "exit_code": 0,
+      "failures": [],
+      "id": "event-pressure",
+      "log": "event-pressure.log",
+      "maximum_rss_kib": 39028,
+      "metrics": null,
+      "output_sha256": "56b29351ab269d38de5f2738bed80194b6704d6cb024849c7a0fe9ac8841a927",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 589,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 5
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "dedicated_writer"
+      ],
+      "elapsed_ms": 150,
+      "exit_code": 0,
+      "failures": [],
+      "id": "writer-isolation",
+      "log": "writer-isolation.log",
+      "maximum_rss_kib": 38928,
+      "metrics": null,
+      "output_sha256": "b268382b8e2338f1e9102452d5e84abadebc5f6b6cd9b3a03aa0121e9d47739b",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 591,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 3
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "durable_large_"
+      ],
+      "elapsed_ms": 70,
+      "exit_code": 0,
+      "failures": [],
+      "id": "maximum-output",
+      "log": "maximum-output.log",
+      "maximum_rss_kib": 38772,
+      "metrics": null,
+      "output_sha256": "03bfcf13aa0aa9f22ce0aa8707c9188e76d92fdd076fc024b76f1ef466265e87",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 592,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 2
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "runtime_artifact::tests"
+      ],
+      "elapsed_ms": 690,
+      "exit_code": 0,
+      "failures": [],
+      "id": "artifact-pressure",
+      "log": "artifact-pressure.log",
+      "maximum_rss_kib": 43192,
+      "metrics": null,
+      "output_sha256": "199708590035e73796247054cbd8a41e4a3b0061721b9c01752c511774813212",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 579,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 15
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "story_23_4_cancellation_wins_over_a_pending_allow_response"
+      ],
+      "elapsed_ms": 50,
+      "exit_code": 0,
+      "failures": [],
+      "id": "cancellation",
+      "log": "cancellation.log",
+      "maximum_rss_kib": 39140,
+      "metrics": null,
+      "output_sha256": "4e3c0cc322ca26f5350e1d2043b0f63fe90accdac04c6f19ac49b7f2a88adbfd",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 593,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 1
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "protected_denial_and_cancellation_return_through_exact_runtime_cursor"
+      ],
+      "elapsed_ms": 3100,
+      "exit_code": 0,
+      "failures": [],
+      "id": "client-cancellation",
+      "log": "client-cancellation.log",
+      "maximum_rss_kib": 1094532,
+      "metrics": null,
+      "output_sha256": "8ee911541a7a6912f998a83bf4d582d9e9bc7f874e4d5d92883f5915d3154f03",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 123,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 1
+      }
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--lib",
+        "runtime_recovery::tests"
+      ],
+      "elapsed_ms": 40,
+      "exit_code": 0,
+      "failures": [],
+      "id": "restart-recovery",
+      "log": "restart-recovery.log",
+      "maximum_rss_kib": 39060,
+      "metrics": null,
+      "output_sha256": "383002c7091003a3c919eb6813fe98ccdf534a291def2e96a3c8eeba27026535",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 586,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 8
+      }
+    }
+  ],
+  "declared_limitations": [
+    "The campaign measures one recorded Fedora Linux host and is not portable platform evidence.",
+    "The dedicated-writer test holds the sole SQLCipher connection lock as a deterministic slow-store surrogate; it is not an injected filesystem, device, or power-loss campaign.",
+    "The source-level worker-isolation group proves bounded producer and client-stream responsiveness while persistence is blocked, but it does not prove installed model-stream or cancellation latency under a real disk stall.",
+    "The maximum-output group verifies artifact-backed output above the inline limit and exact configured resource ceilings; it is not a model-quality benchmark.",
+    "Installed native Chat and authenticated CLI transport evidence remains outside this source-level campaign."
+  ],
+  "disposition": "PARTIAL-PASS",
+  "environment": {
+    "cpu_model": "13th Gen Intel(R) Core(TM) i9-13900KF",
+    "logical_cpus": 32,
+    "machine": "x86_64",
+    "memory_kib": 65570268,
+    "python": "3.14.6",
+    "release": "7.1.6-201.fc44.x86_64",
+    "system": "Linux"
+  },
+  "failures": [],
+  "metric_thresholds": {
+    "expected_lagged_subscribers": 1,
+    "maximum_journal_elapsed_ms": 30000,
+    "maximum_publish_elapsed_ms": 10000,
+    "maximum_queued_bytes": 4194304,
+    "maximum_queued_events": 1024,
+    "maximum_resident_memory_kib": 1048576,
+    "maximum_restart_elapsed_ms": 60000,
+    "maximum_retained_disk_bytes": 134217728,
+    "minimum_journal_events_per_second": 250,
+    "minimum_publish_events_per_second": 1000
+  },
+  "metrics": {
+    "cleanup_verified": true,
+    "event_count": 8196,
+    "fast_deliveries": 8196,
+    "journal_elapsed_ms": 2304,
+    "journal_events_per_second": 3557,
+    "lagged_subscribers": 1,
+    "maximum_queued_bytes": 733184,
+    "maximum_queued_events": 1024,
+    "publish_elapsed_ms": 258,
+    "publish_events_per_second": 31767,
+    "queue_saturations": 7,
+    "resident_memory_kib": 53996,
+    "restart_cycles": 16,
+    "restart_elapsed_ms": 13935,
+    "retained_disk_bytes": 10813336
+  },
+  "profile_id": "story-50.2-linux-reference-load-v1",
+  "record_type": "story_50_2_runtime_load",
+  "schema_version": 1,
+  "source": {
+    "revision": "f8d521c4dc4bb9b2053447a61aaac04028b4906b",
+    "tree": "0e4deda0e20604bde88a6cbbeb88c15243147b71"
+  },
+  "source_sha256": {
+    "fixtures/runtime-hardening/v1/linux-reference-load-profile.json": "2c7f2af40859d6f75bf009e8fd168419c3e09963cfd497443afda58bbbd812da",
+    "kernel/engine/src/operational_store.rs": "49dbda3b46d59264f55a16aee539432328ccc34cf1ce7dc92f0b2d2a6f4f523b",
+    "kernel/engine/src/runtime_artifact.rs": "cbca508696296ea2948eb8fcce31e6abfbb72a7573d1b536f4816a27b7d05308",
+    "kernel/engine/src/runtime_event.rs": "1b42a09d68da0da30bd0ca9facaff5c63b4c406021fa9d5a9daed828b736d740",
+    "kernel/engine/src/runtime_hardening.rs": "a0fd11e26ffd568e8da0d1e366d92caa11bbd94d6a8014fd913bdc0921871471",
+    "kernel/engine/src/runtime_journal.rs": "c3552f224874e70b817b851b0b2f5df9de3a5917b92e755e73c68f586977a149",
+    "kernel/engine/src/runtime_loop_tests.rs": "2285f40b0b3d4787a280a4ac7b76720a4feb81fa4bd5edb5cc0c76c1f3aab2d2",
+    "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",
+    "scripts/runtime_hardening_load.py": "e4cbd2358c2c155977945bf830d4c5687b863dc9ab536ff23b3b9e6113d93c36",
+    "shells/host/src/cli_runtime.rs": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e",
+    "shells/host/src/linux_coding_runtime.rs": "fb24e4727310b6d00da1e078f5b2705decc3fcf6102eb71c67f1dcce7b7ac5f6",
+    "tests/test_runtime_hardening_load.py": "e2dc909eae2a51a578f9fb188992ae0d0e10beea546fc7a9bbd19e7c70db0ac1"
+  },
+  "workload": {
+    "progress_events": 8192,
+    "restart_cycles": 16,
+    "slow_subscriber_capacity": 1,
+    "total_events": 8196
+  }
+}

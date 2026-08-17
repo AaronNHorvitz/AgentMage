@@ -25,13 +25,16 @@ ordinary unit tests do not inherit hardware-specific timing thresholds.
 ## Command
 
 ```text
-python3 scripts/runtime_hardening_load.py
+python3 scripts/runtime_hardening_load.py \
+  --output artifacts/sprints/sprint-50/story-50.2-runtime-load-worker
 ```
 
 The generator requires a clean source tree, invokes only its closed no-shell
 Cargo command list, records process output and resource use, rejects an occupied
 evidence destination, and binds its report to the exact Git commit and source
-digests.
+digests. The command above is the historical generation command; its immutable
+destination is now occupied by the retained result and is intentionally not
+overwritten by a rerun.
 
 ## Prior Retained Boundary
 
@@ -61,10 +64,37 @@ The report disposition is deliberately `PARTIAL-PASS`. It predates the
 dedicated journal worker and remains a historical lower-level writer baseline,
 not current worker-backed evidence.
 
-Source commit `bd88b901773eb42a3dcdbba69490b8ccb664ef7d` changes the fixed profile
-to route the same 8,196-event workload through `RuntimeJournalWorker`, adds exact bounded saturation
-flush-and-retry, and adds a ninth dedicated worker-isolation command. A retained
-clean-source run of that revised profile is pending. Real filesystem
-fault injection, integrated model-stream and cancellation timing while storage
-is blocked, installed native Chat and authenticated CLI measurements, and
-independent review also remain open. Sub-task 50.2.3.3 therefore remains open.
+## Current Worker-Backed Boundary
+
+The retained
+[`report.json`](../../artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json)
+is bound to source commit `f8d521c4dc4bb9b2053447a61aaac04028b4906b`.
+All nine commands and 42 focused tests passed without a failed, ignored, or
+measured test result. The main workload runs through `RuntimeJournalWorker`, and
+the dedicated isolation group covers slow-store progress admission, independent
+client publication, explicit producer saturation, exact retry, sticky storage
+failure, normal shutdown, and verified reopen.
+
+| Measurement | Recorded result | Declared ceiling or floor |
+|---|---:|---:|
+| Canonical events | 8,196 | exactly 8,196 |
+| Journal elapsed time | 2,304 ms | at most 30,000 ms |
+| Journal throughput | 3,557 events/s | at least 250 events/s |
+| Publisher elapsed time | 258 ms | at most 10,000 ms |
+| Publisher throughput | 31,767 events/s | at least 1,000 events/s |
+| Queue saturation recoveries | 7 | each rejected event is flushed and retried once |
+| Maximum queued events | 1,024 | at most 1,024 |
+| Maximum queued bytes | 733,184 | at most 4,194,304 |
+| Resident memory | 53,996 KiB | at most 1,048,576 KiB |
+| Retained encrypted-store bytes | 10,813,336 | at most 134,217,728 |
+| Verified reopen cycles | 16 | exactly 16 |
+| Reopen elapsed time | 13,935 ms | at most 60,000 ms |
+
+The current run used Fedora Linux `7.1.6-201.fc44.x86_64` on an x86-64 Intel
+Core i9-13900KF host with 32 logical CPUs and 65,570,268 KiB of reported memory.
+Its disposition remains deliberately `PARTIAL-PASS`. Holding the sole SQLCipher
+connection lock is a deterministic slow-store surrogate, not a real filesystem,
+device, power-loss, or installed-client campaign. Integrated model-stream and
+cancellation timing during a real disk stall, installed native Chat and
+authenticated CLI measurements, supported-platform evidence, and independent
+review remain open. Sub-task 50.2.3.3 is not closed by this source-level result.
