@@ -34,6 +34,7 @@ mod platform;
 mod platform_path;
 mod prompt;
 mod reasoning;
+mod runtime_artifact;
 mod runtime_event;
 mod runtime_run;
 mod serialization;
@@ -198,6 +199,10 @@ pub use reasoning::{
     ClarificationImpact, ClarificationQuestion, ClarificationState, ContradictionRecord,
     HypothesisRecord, HypothesisStatus, IndependentVerificationRequest,
     IndependentVerificationResult, ProblemFact, ProblemFrame, VerificationDisposition,
+};
+pub use runtime_artifact::{
+    RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactLifecycleState,
+    RuntimeArtifactManifest, RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeResumeBinding,
 };
 pub use runtime_event::{
     RuntimeEvent, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
