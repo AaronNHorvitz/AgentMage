@@ -495,6 +495,7 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Runtime Boundaries](./RUNTIME-BOUNDARIES.md) - trust boundaries, classified data flows, privileges, processes, sockets, lifecycle, and runtime parity.
 - [Runtime Event Journal](./docs/architecture/runtime-event-journal.md) - canonical event envelope, legal ordering, projection separation, bounded publication, durable writer design, and current evidence limits.
 - [Reusable Runtime Coordinator](./docs/architecture/reusable-runtime-coordinator.md) - one interface-independent model/context/tool/policy/event/outcome loop, native fake-read slice, client boundary, and remaining integration work.
+- [Coding Harness Local Results](./docs/verification/story-48-2-local-results.md) - exact Story 48.2 profile, fixture, source-level client, and current admitted-model and installed-interface evidence status.
 - [Delivery System Architecture](./DELIVERY-SYSTEM.md) - provider-neutral delivery graph, adapter contract, capability classes, operation lifecycle, conformance levels, and extreme tests.
 - [Planning, Review, and Delivery Agent Profiles](./docs/architecture/planning-review-and-delivery-agent-profiles.md) - standardized role catalog, shared-runtime boundary, deterministic services, and canonical issue, bug, pull-request, and roadmap workflows.
 - [Productivity System Architecture](./PRODUCTIVITY-SYSTEM.md) - autonomy, communications, personal-information, document, finance, workflow, and read-only cloud-observer contracts.
