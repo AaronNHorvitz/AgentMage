@@ -323,6 +323,13 @@ pub struct ConversationCompactionReceipt {
     pub source_turns_rewritten: bool,
 }
 
+/// Verifies one immutable conversation turn without reading or changing storage.
+pub(crate) fn verify_conversation_turn(
+    turn: &ConversationTurn,
+) -> Result<(), ConversationLibraryError> {
+    validate_turn(turn)
+}
+
 impl OperationalStore {
     /// Creates one canonical conversation with no turns in the encrypted store.
     pub fn create_conversation(

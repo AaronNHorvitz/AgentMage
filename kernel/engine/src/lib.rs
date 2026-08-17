@@ -117,6 +117,8 @@ pub mod runtime_journal;
 pub mod runtime_lifecycle;
 /// Interface-independent reusable runtime coordinator.
 pub mod runtime_loop;
+/// Optional bounded transcript, metric, and diagnostic projections.
+pub mod runtime_projection;
 /// Deterministic, non-authoritative selection of one safe action after runtime interruption.
 pub mod runtime_recovery;
 /// Bounded, configuration-bound session environment and provenance capture.
