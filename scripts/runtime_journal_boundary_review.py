@@ -143,6 +143,11 @@ def check_record(identifier: str, passed: bool, detail: str) -> dict[str, Any]:
     return {"check_id": identifier, "passed": passed, "detail": detail}
 
 
+def production_source(source: str) -> str:
+    """Exclude inline Rust test modules from production dependency checks."""
+    return source.split("\n#[cfg(test)]", maxsplit=1)[0]
+
+
 def review_checks(revision: str) -> list[dict[str, Any]]:
     schema = json_blob(revision, SOURCE_PATHS[0])
     contract = git_blob(revision, "kernel/contracts/src/runtime_event.rs").decode("utf-8")
@@ -216,7 +221,10 @@ def review_checks(revision: str) -> list[dict[str, Any]]:
             "story_21_2_durable_model_progress_and_cancellation_survive_delayed_sqlcipher",
         )
     )
-    source_closure = "\n".join((event_source, journal, runtime_loop, projection, artifact))
+    source_closure = "\n".join(
+        production_source(source)
+        for source in (event_source, journal, runtime_loop, projection, artifact)
+    )
     network_free = all(token not in source_closure for token in PROHIBITED_NETWORK_TOKENS)
     crash_valid = (
         crash.get("status") == "pass-current-linux-source-boundary"
@@ -229,7 +237,10 @@ def review_checks(revision: str) -> list[dict[str, Any]]:
         and all(pressure.get("coverage", {}).values())
         and pressure.get("metrics", {}).get("external_network_used") is False
         and pressure.get("raw_trace", {}).get("sha256") == sha256_bytes(pressure_log)
-        and any("not physical" in item for item in pressure.get("limitations", []))
+        and any(
+            "physical device" in item.lower() and "not claimed" in item.lower()
+            for item in pressure.get("limitations", [])
+        )
     )
     load_valid = (
         load.get("campaign_passed") is True
@@ -254,12 +265,13 @@ def review_checks(revision: str) -> list[dict[str, Any]]:
             "story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
         )
     )
+    limitation_source = (architecture + "\n" + tasks).lower()
     limitation_truth = all(
-        phrase in architecture + tasks
+        phrase in limitation_source
         for phrase in (
-            "Physical filesystem/device",
+            "physical filesystem/device",
             "independent",
-            "Manual fuzzing",
+            "manual fuzzing",
         )
     )
     return [
