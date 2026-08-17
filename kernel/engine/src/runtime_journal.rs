@@ -1378,7 +1378,7 @@ mod tests {
                 self.event(RuntimeEventKind::TurnStarted, Some("journal-turn-1")),
                 self.event(
                     RuntimeEventKind::Progress {
-                        code: "runtime.progress.fixture".to_owned(),
+                        code: "runtime.progress".to_owned(),
                     },
                     Some("journal-turn-1"),
                 ),
@@ -1563,13 +1563,13 @@ mod tests {
         let turn = fixture.event(RuntimeEventKind::TurnStarted, Some("journal-turn-1"));
         let first = fixture.event(
             RuntimeEventKind::Progress {
-                code: "runtime.progress.first".to_owned(),
+                code: "runtime.progress".to_owned(),
             },
             Some("journal-turn-1"),
         );
         let second = fixture.event(
             RuntimeEventKind::Progress {
-                code: "runtime.progress.second".to_owned(),
+                code: "runtime.progress".to_owned(),
             },
             Some("journal-turn-1"),
         );
@@ -1863,7 +1863,7 @@ mod tests {
         for _ in 0..PROGRESS_EVENTS {
             events.push(fixture.event(
                 RuntimeEventKind::Progress {
-                    code: "runtime.progress.reference_load".to_owned(),
+                    code: "runtime.progress".to_owned(),
                 },
                 Some("journal-turn-1"),
             ));

@@ -14,7 +14,10 @@ use sha2::{Digest, Sha256};
 use crate::{
     conversation_library::verify_conversation_turn,
     runtime_coordinator::{verify_runtime_outcome, verify_runtime_run_request},
-    runtime_event::verify_runtime_event,
+    runtime_event::{
+        is_approved_runtime_metric_name, is_approved_runtime_model_failure,
+        is_approved_runtime_tool_failure, verify_runtime_event,
+    },
 };
 
 const PROJECTION_SCHEMA_VERSION: u16 = 1;
@@ -476,7 +479,7 @@ pub fn verify_runtime_metric_projection(
 ) -> Result<(), RuntimeProjectionError> {
     if !valid_id(projection.run_id.as_str())
         || !valid_id(projection.event_id.as_str())
-        || !valid_code(&projection.name)
+        || !is_approved_runtime_metric_name(&projection.name)
         || projection.occurred_at_epoch_ms == 0
     {
         return Err(RuntimeProjectionError::InvalidSource);
@@ -497,7 +500,7 @@ pub fn verify_runtime_diagnostic_projection(
 ) -> Result<(), RuntimeProjectionError> {
     if !valid_id(projection.run_id.as_str())
         || !valid_id(projection.event_id.as_str())
-        || !valid_code(&projection.reason_code)
+        || !approved_diagnostic_reason(projection.kind, &projection.reason_code)
         || projection.occurred_at_epoch_ms == 0
     {
         return Err(RuntimeProjectionError::InvalidSource);
@@ -734,6 +737,25 @@ const fn terminal_reason_code(state: AgentStateKind) -> &'static str {
     }
 }
 
+fn approved_diagnostic_reason(kind: RuntimeDiagnosticKind, value: &str) -> bool {
+    match kind {
+        RuntimeDiagnosticKind::ModelFailure => is_approved_runtime_model_failure(value),
+        RuntimeDiagnosticKind::ToolFailure => is_approved_runtime_tool_failure(value),
+        RuntimeDiagnosticKind::Terminal => matches!(
+            value,
+            "runtime.terminal.success"
+                | "runtime.terminal.no_op"
+                | "runtime.terminal.blocked"
+                | "runtime.terminal.declined"
+                | "runtime.terminal.stalled"
+                | "runtime.terminal.exhausted"
+                | "runtime.terminal.uncertain"
+                | "runtime.terminal.cancelled"
+                | "runtime.terminal.failed"
+        ),
+    }
+}
+
 fn transcript_turn_id(run_id: &RuntimeRunId, role: &str) -> ConversationTurnId {
     let digest = sha256(format!("runtime-transcript-v1\n{}\n{role}\n", run_id.as_str()).as_bytes());
     ConversationTurnId::from_raw(format!("turn-runtime-{}", &digest[..32]))
@@ -759,16 +781,6 @@ fn valid_id(value: &str) -> bool {
         && value
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b':'))
-}
-
-fn valid_code(value: &str) -> bool {
-    !value.is_empty()
-        && value.len() <= 128
-        && value.bytes().all(|byte| {
-            byte.is_ascii_lowercase()
-                || byte.is_ascii_digit()
-                || matches!(byte, b'.' | b'_' | b'-' | b':')
-        })
 }
 
 fn valid_sha256(value: &str) -> bool {
@@ -1151,7 +1163,7 @@ mod tests {
         assert_eq!(collector.metrics()[0].name, "runtime.queue.depth");
         verify_runtime_metric_projection(&collector.metrics()[0]).expect("metric verifies");
         let mut malformed_metric = collector.metrics()[0].clone();
-        malformed_metric.name = "not/a/content/free/code".to_owned();
+        malformed_metric.name = "runtime.queue.depth.syntheticcredentialcanary".to_owned();
         malformed_metric.projection_sha256 = ZERO_SHA256.to_owned();
         malformed_metric.projection_sha256 =
             canonical_sha256(&malformed_metric).expect("metric rehashes");
@@ -1183,7 +1195,7 @@ mod tests {
         verify_runtime_diagnostic_projection(&collector.diagnostics()[0])
             .expect("diagnostic verifies");
         let mut malformed_diagnostic = collector.diagnostics()[0].clone();
-        malformed_diagnostic.reason_code = "secret\nvalue".to_owned();
+        malformed_diagnostic.reason_code = "runtime.model.syntheticcredentialcanary".to_owned();
         malformed_diagnostic.projection_sha256 = ZERO_SHA256.to_owned();
         malformed_diagnostic.projection_sha256 =
             canonical_sha256(&malformed_diagnostic).expect("diagnostic rehashes");
@@ -1252,6 +1264,113 @@ mod tests {
             Ok(RuntimeProjectionCollection::default())
         );
         assert_eq!(collector.diagnostics().len(), 1);
+    }
+
+    #[test]
+    fn story_21_2_sensitive_canaries_require_exclusion_or_explicit_text_retention() {
+        let canaries = [
+            "SYNTHETIC_SECRET_CANARY_21_2",
+            "SYNTHETIC_RESTRICTED_CONTENT_21_2",
+            "SYNTHETIC_PROMPT_CANARY_21_2",
+            "SYNTHETIC_TOKEN_FRAGMENT_21_2",
+            "/synthetic/private/path/canary-21-2",
+            "SYNTHETIC_ENV_CANARY_21_2=value",
+            "syntheticcredentialcanarydeadbeef",
+        ];
+        let canary_text = canaries.join(" ");
+        let mut candidate_request = request();
+        candidate_request.task.objective.clone_from(&canary_text);
+        candidate_request
+            .work_packet
+            .objective
+            .clone_from(&canary_text);
+        candidate_request.request_sha256 = ZERO_SHA256.to_owned();
+        let request = seal_runtime_run_request(candidate_request).expect("canary request seals");
+
+        let mut candidate_outcome = outcome(&request);
+        let RuntimeOutput::Inline { payload } = candidate_outcome
+            .output
+            .as_mut()
+            .expect("inline fixture output")
+        else {
+            panic!("fixture output changed");
+        };
+        payload.bytes = canary_text.as_bytes().to_vec();
+        payload.sha256 = sha256(&payload.bytes);
+        candidate_outcome.outcome_sha256 = ZERO_SHA256.to_owned();
+        let outcome =
+            seal_runtime_outcome(candidate_outcome, &request).expect("canary outcome seals");
+
+        let projection_policy = policy(&request);
+        let mut hash_only = placement();
+        hash_only.retain_text = false;
+        let projection =
+            project_runtime_transcript(&projection_policy, &request, &outcome, &hash_only)
+                .expect("hash-only transcript projects");
+        assert!(projection.user_turn.text.is_none());
+        assert!(projection.assistant_turn.text.is_none());
+        let projection_bytes = serde_json::to_vec(&projection).expect("projection serializes");
+        for canary in canaries {
+            assert!(
+                !projection_bytes
+                    .windows(canary.len())
+                    .any(|window| window == canary.as_bytes()),
+                "hash-only projection retained a synthetic canary"
+            );
+        }
+
+        let mut restricted = placement();
+        restricted.sensitivity = DataSensitivity::Restricted;
+        assert_eq!(
+            project_runtime_transcript(&projection_policy, &request, &outcome, &restricted),
+            Err(RuntimeProjectionError::Restricted)
+        );
+
+        let mut model_canary = event(
+            &request,
+            2,
+            ContextSensitivity::Private,
+            RuntimeEventKind::ModelFailed {
+                model_run_id: agentmage_kernel_contracts::ModelRunId::from_raw("model-canary"),
+                failure_code: "runtime.model.timed_out".to_owned(),
+            },
+        );
+        model_canary.kind = RuntimeEventKind::ModelFailed {
+            model_run_id: agentmage_kernel_contracts::ModelRunId::from_raw("model-canary"),
+            failure_code: "runtime.model.syntheticcredentialcanary".to_owned(),
+        };
+        model_canary.event_sha256 = ZERO_SHA256.to_owned();
+        assert!(seal_runtime_event(model_canary).is_err());
+
+        let mut metric_canary = event(
+            &request,
+            3,
+            ContextSensitivity::Private,
+            RuntimeEventKind::Metric {
+                name: "runtime.queue.depth".to_owned(),
+                value: 1,
+            },
+        );
+        metric_canary.kind = RuntimeEventKind::Metric {
+            name: "runtime.queue.depth.syntheticcredentialcanary".to_owned(),
+            value: 1,
+        };
+        metric_canary.event_sha256 = ZERO_SHA256.to_owned();
+        assert!(seal_runtime_event(metric_canary).is_err());
+
+        let mut progress_canary = event(
+            &request,
+            4,
+            ContextSensitivity::Private,
+            RuntimeEventKind::Progress {
+                code: "runtime.progress".to_owned(),
+            },
+        );
+        progress_canary.kind = RuntimeEventKind::Progress {
+            code: "runtime.progress.syntheticcredentialcanary".to_owned(),
+        };
+        progress_canary.event_sha256 = ZERO_SHA256.to_owned();
+        assert!(seal_runtime_event(progress_canary).is_err());
     }
 
     #[test]

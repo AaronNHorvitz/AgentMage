@@ -14,7 +14,6 @@ use sha2::{Digest, Sha256};
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const MAX_IDENTIFIER_BYTES: usize = 128;
-const MAX_CODE_BYTES: usize = 128;
 const MAX_MEDIA_TYPE_BYTES: usize = 128;
 const MAX_SUBSCRIBERS: usize = 32;
 const MAX_SUBSCRIBER_CAPACITY: usize = 4_096;
@@ -976,7 +975,10 @@ fn valid_kind(kind: &RuntimeEventKind) -> bool {
         RuntimeEventKind::ModelFailed {
             model_run_id,
             failure_code,
-        } => valid_identifier(model_run_id.as_str()) && valid_code(failure_code),
+        } => {
+            valid_identifier(model_run_id.as_str())
+                && is_approved_runtime_model_failure(failure_code)
+        }
         RuntimeEventKind::ToolRequested {
             tool_call_id,
             arguments_sha256,
@@ -1003,7 +1005,7 @@ fn valid_kind(kind: &RuntimeEventKind) -> bool {
                 && receipt_id
                     .as_ref()
                     .is_none_or(|value| valid_identifier(value.as_str()))
-                && valid_code(failure_code)
+                && is_approved_runtime_tool_failure(failure_code)
         }
         RuntimeEventKind::PermissionRequested {
             approval_id,
@@ -1057,8 +1059,8 @@ fn valid_kind(kind: &RuntimeEventKind) -> bool {
         | RuntimeEventKind::CancellationObserved { cancellation_id } => {
             valid_identifier(cancellation_id.as_str())
         }
-        RuntimeEventKind::Progress { code } => valid_code(code),
-        RuntimeEventKind::Metric { name, .. } => valid_code(name),
+        RuntimeEventKind::Progress { code } => is_approved_runtime_progress_code(code),
+        RuntimeEventKind::Metric { name, .. } => is_approved_runtime_metric_name(name),
     }
 }
 
@@ -1116,12 +1118,41 @@ fn valid_identifier(value: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b':'))
 }
 
-fn valid_code(value: &str) -> bool {
-    !value.is_empty()
-        && value.len() <= MAX_CODE_BYTES
-        && value.bytes().all(|byte| {
-            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'_' | b'-')
-        })
+pub(crate) fn is_approved_runtime_model_failure(value: &str) -> bool {
+    matches!(
+        value,
+        "runtime.port.invalid"
+            | "runtime.port.unavailable"
+            | "runtime.port.cancelled"
+            | "runtime.port.timed_out"
+            | "runtime.port.resource_exhausted"
+            | "runtime.port.uncertain"
+            | "runtime.model.result_invalid"
+            | "runtime.budget.exhausted"
+            | "runtime.model.cancelled"
+            | "runtime.model.timed_out"
+            | "runtime.model.resource_exhausted"
+            | "runtime.model.no_typed_proposal"
+    )
+}
+
+pub(crate) fn is_approved_runtime_tool_failure(value: &str) -> bool {
+    matches!(
+        value,
+        "runtime.tool.denied_after_launch"
+            | "runtime.tool.cancelled"
+            | "runtime.tool.timed_out"
+            | "runtime.tool.failed"
+            | "runtime.tool.uncertain"
+    )
+}
+
+pub(crate) fn is_approved_runtime_progress_code(value: &str) -> bool {
+    value == "runtime.progress"
+}
+
+pub(crate) fn is_approved_runtime_metric_name(value: &str) -> bool {
+    value == "runtime.queue.depth"
 }
 
 fn valid_sha256(value: &str) -> bool {
@@ -1439,14 +1470,14 @@ mod tests {
             ),
             fixtures.event(
                 RuntimeEventKind::Progress {
-                    code: "runtime.exhaustive.progress".to_owned(),
+                    code: "runtime.progress".to_owned(),
                 },
                 Some("turn-complete"),
                 None,
             ),
             fixtures.event(
                 RuntimeEventKind::Metric {
-                    name: "runtime.exhaustive.metric".to_owned(),
+                    name: "runtime.queue.depth".to_owned(),
                     value: 1,
                 },
                 Some("turn-complete"),
@@ -1479,7 +1510,7 @@ mod tests {
             fixtures.event(
                 RuntimeEventKind::ModelFailed {
                     model_run_id: ModelRunId::from_raw("model-failed"),
-                    failure_code: "model.exhaustive.failed".to_owned(),
+                    failure_code: "runtime.model.no_typed_proposal".to_owned(),
                 },
                 Some("turn-deny"),
                 None,
@@ -1540,7 +1571,7 @@ mod tests {
                 RuntimeEventKind::ToolFailed {
                     tool_call_id: ToolCallId::from_raw("tool-failed"),
                     receipt_id: Some(ReceiptId::from_raw("receipt-failed")),
-                    failure_code: "tool.exhaustive.failed".to_owned(),
+                    failure_code: "runtime.tool.failed".to_owned(),
                 },
                 Some("turn-failed"),
                 Some("operation-failed"),
@@ -1616,21 +1647,21 @@ mod tests {
             fixtures.event(RuntimeEventKind::TurnStarted, Some("turn-status"), None),
             fixtures.event(
                 RuntimeEventKind::Progress {
-                    code: "runtime.fixture.progress".to_owned(),
+                    code: "runtime.progress".to_owned(),
                 },
                 Some("turn-status"),
                 None,
             ),
             fixtures.event(
                 RuntimeEventKind::Progress {
-                    code: "runtime.fixture.progress".to_owned(),
+                    code: "runtime.progress".to_owned(),
                 },
                 Some("turn-status"),
                 None,
             ),
             fixtures.event(
                 RuntimeEventKind::Metric {
-                    name: "runtime.fixture.metric".to_owned(),
+                    name: "runtime.queue.depth".to_owned(),
                     value: 1,
                 },
                 Some("turn-status"),
@@ -1638,7 +1669,7 @@ mod tests {
             ),
             fixtures.event(
                 RuntimeEventKind::Metric {
-                    name: "runtime.fixture.metric".to_owned(),
+                    name: "runtime.queue.depth".to_owned(),
                     value: 2,
                 },
                 Some("turn-status"),
@@ -1646,7 +1677,7 @@ mod tests {
             ),
             fixtures.event(
                 RuntimeEventKind::Progress {
-                    code: "runtime.fixture.progress".to_owned(),
+                    code: "runtime.progress".to_owned(),
                 },
                 Some("turn-status"),
                 None,
@@ -2103,7 +2134,7 @@ mod tests {
             (
                 RuntimeEventKind::ModelFailed {
                     model_run_id: ModelRunId::from_raw("model-run-1"),
-                    failure_code: "model.failed".to_owned(),
+                    failure_code: "runtime.model.result_invalid".to_owned(),
                 },
                 RuntimeEventPersistenceClass::Progress,
             ),
@@ -2133,7 +2164,7 @@ mod tests {
                 RuntimeEventKind::ToolFailed {
                     tool_call_id: ToolCallId::from_raw("tool-call-1"),
                     receipt_id: None,
-                    failure_code: "tool.failed".to_owned(),
+                    failure_code: "runtime.tool.failed".to_owned(),
                 },
                 RuntimeEventPersistenceClass::Correctness,
             ),
@@ -2405,20 +2436,20 @@ mod tests {
             batch.status_summaries,
             [
                 RuntimeStatusSummary::Progress {
-                    code: "runtime.fixture.progress".to_owned(),
+                    code: "runtime.progress".to_owned(),
                     first_sequence: 2,
                     last_sequence: 3,
                     occurrences: 2,
                 },
                 RuntimeStatusSummary::Metric {
-                    name: "runtime.fixture.metric".to_owned(),
+                    name: "runtime.queue.depth".to_owned(),
                     latest_value: 2,
                     first_sequence: 4,
                     last_sequence: 5,
                     samples: 2,
                 },
                 RuntimeStatusSummary::Progress {
-                    code: "runtime.fixture.progress".to_owned(),
+                    code: "runtime.progress".to_owned(),
                     first_sequence: 6,
                     last_sequence: 6,
                     occurrences: 1,
