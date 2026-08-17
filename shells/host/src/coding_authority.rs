@@ -1,14 +1,25 @@
-//! Exact non-authoritative approval composition for native coding operations.
+//! Exact approval and single-use authority composition for native coding operations.
+
+use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
-    ActionKind, ApprovalId, ApprovalRequest, CapabilityGrant, GrantClass, GrantId, GrantOperation,
-    GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, OperationBinding, ToolCall,
-    to_canonical_json,
+    ActionKind, ActorId, ApprovalId, ApprovalRequest, CapabilityGrant, GrantClass, GrantId,
+    GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+    OperationBinding, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
+    RuntimeApprovalResponse, TaskId, ToolCall, to_canonical_json,
 };
-use agentmage_kernel_engine::{approval::render_approval_request, tooling::ToolRegistry};
+use agentmage_kernel_engine::{
+    approval::{render_approval_request, verify_approval_request},
+    grants::DerivedOperationGrantRequest,
+    operational_store::DurableAuthorityRuntime,
+    policy::{PolicyDocument, PolicyEngine, ScopeRules, ToolPolicyBinding},
+    runtime_coordinator::verify_runtime_approval_response,
+    tooling::ToolRegistry,
+};
 use sha2::{Digest, Sha256};
 
 const MAX_OPERATION_TARGETS: usize = 128;
+const OPERATION_GRANT_LIFETIME_MS: u64 = 30_000;
 
 /// Stable content-free refusal while composing one coding approval display.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -21,6 +32,12 @@ pub enum CodingApprovalError {
     ProposalDenied,
     /// The common approval renderer rejected the exact registered call.
     RenderingDenied,
+    /// The exact operation policy could not be constructed.
+    PolicyDenied,
+    /// The protected client decision did not match the displayed operation.
+    DecisionDenied,
+    /// Durable grant derivation or canonical authority binding failed.
+    AuthorityDenied,
 }
 
 impl CodingApprovalError {
@@ -32,6 +49,9 @@ impl CodingApprovalError {
             Self::TargetDenied => "runtime.coding-approval.target-denied",
             Self::ProposalDenied => "runtime.coding-approval.proposal-denied",
             Self::RenderingDenied => "runtime.coding-approval.rendering-denied",
+            Self::PolicyDenied => "runtime.coding-approval.policy-denied",
+            Self::DecisionDenied => "runtime.coding-approval.decision-denied",
+            Self::AuthorityDenied => "runtime.coding-approval.authority-denied",
         }
     }
 }
@@ -56,6 +76,37 @@ pub struct CodingApprovalRequest<'request> {
     pub issued_at_epoch_ms: u64,
     /// Exclusive proposed operation-grant expiration.
     pub expires_at_epoch_ms: u64,
+}
+
+/// Inputs for converting one exact protected decision into durable single-use authority.
+pub struct ApprovedCodingGrantRequest<'request> {
+    /// Durable kernel authority store that owns grant issuance.
+    pub authority: &'request mut DurableAuthorityRuntime,
+    /// Exact immutable native tool registry used to render the preview.
+    pub registry: &'request ToolRegistry,
+    /// Exact protected display object retained by the trusted boundary.
+    pub approval: &'request ApprovalRequest,
+    /// Exact coordinator challenge derived from that display.
+    pub challenge: &'request RuntimeApprovalChallenge,
+    /// Exact authenticated client response to the challenge.
+    pub response: &'request RuntimeApprovalResponse,
+    /// Fresh kernel-selected anti-replay nonce.
+    pub nonce: GrantNonce,
+    /// Trusted decision instant supplied by the coordinator clock.
+    pub now_epoch_ms: u64,
+}
+
+/// One exact issued operation grant and the policy required to consume it.
+#[derive(Debug)]
+pub struct ApprovedCodingGrant {
+    /// Durable, separately issued, single-use operation grant.
+    pub grant: CapabilityGrant,
+    /// Exact deny-by-default policy bound into the parent and child grants.
+    pub policy: PolicyEngine,
+    /// Digest of the exact authenticated client response.
+    pub decision_sha256: String,
+    /// Digest of the exact issued operation-grant revision.
+    pub authority_sha256: String,
 }
 
 /// Renders one exact coding operation through the existing protected approval contract.
@@ -143,6 +194,193 @@ pub fn render_coding_approval_request(
     .map_err(|_| CodingApprovalError::RenderingDenied)
 }
 
+/// Builds one deny-by-default policy for exactly one native coding operation.
+pub fn exact_coding_policy(
+    actor_id: &ActorId,
+    task_id: &TaskId,
+    call: &ToolCall,
+    operation: OperationBinding,
+    targets: &[GrantTarget],
+) -> Result<PolicyEngine, CodingApprovalError> {
+    if !matches!(
+        operation.operation(),
+        GrantOperation::WorkspaceRead
+            | GrantOperation::WorkspaceWrite
+            | GrantOperation::CommandExecute
+    ) || targets.is_empty()
+        || targets.len() > MAX_OPERATION_TARGETS
+        || targets.iter().any(|target| !target.is_operation_target())
+        || targets.iter().collect::<BTreeSet<_>>().len() != targets.len()
+    {
+        return Err(CodingApprovalError::PolicyDenied);
+    }
+    let first = &targets[0];
+    if targets.iter().any(|target| {
+        target.workspace_id() != first.workspace_id()
+            || target.authorization_id() != first.authorization_id()
+            || target.adapter_instance_id() != first.adapter_instance_id()
+            || target.platform() != first.platform()
+    }) {
+        return Err(CodingApprovalError::PolicyDenied);
+    }
+
+    PolicyEngine::new(PolicyDocument {
+        schema_version: 1,
+        revision: 1,
+        actors: exact_rules(actor_id.clone()),
+        tasks: exact_rules(task_id.clone()),
+        actions: exact_rules(call.action_id.clone()),
+        tools: exact_rules(ToolPolicyBinding {
+            tool_id: call.tool_id.clone(),
+            tool_version: call.tool_version.clone(),
+        }),
+        operations: exact_rules(operation),
+        targets: ScopeRules {
+            allowed: targets.iter().cloned().collect(),
+            denied: BTreeSet::new(),
+        },
+        denied_argument_sha256s: BTreeSet::new(),
+        denied_preimage_sha256s: BTreeSet::new(),
+        network_scopes: ScopeRules::deny_all(),
+        credential_scopes: ScopeRules::deny_all(),
+        publication_scopes: ScopeRules::deny_all(),
+    })
+    .map_err(|_| CodingApprovalError::PolicyDenied)
+}
+
+/// Verifies one protected allow decision and durably derives its exact operation grant.
+pub fn derive_approved_coding_grant(
+    request: ApprovedCodingGrantRequest<'_>,
+) -> Result<ApprovedCodingGrant, CodingApprovalError> {
+    verify_approval_request(request.registry, request.approval)
+        .map_err(|_| CodingApprovalError::DecisionDenied)?;
+    verify_coding_decision(
+        request.approval,
+        request.challenge,
+        request.response,
+        request.now_epoch_ms,
+    )?;
+    let policy = exact_coding_policy(
+        &request.approval.actor_id,
+        &request.approval.task_id,
+        &request.approval.tool_call,
+        request.approval.operation,
+        &request.approval.targets,
+    )?;
+    if policy.policy_sha256() != request.approval.policy_sha256 {
+        return Err(CodingApprovalError::PolicyDenied);
+    }
+    let current_parent = request
+        .authority
+        .current_grant(&request.approval.parent_grant_id)
+        .ok_or(CodingApprovalError::AuthorityDenied)?;
+    if current_parent.actor_id != request.approval.actor_id
+        || current_parent.session_id != request.approval.session_id
+        || current_parent.task_id != request.approval.task_id
+        || current_parent.policy_sha256 != request.approval.policy_sha256
+        || canonical_contract_sha256(current_parent)
+            .map_err(|_| CodingApprovalError::AuthorityDenied)?
+            != request.approval.parent_grant_sha256
+    {
+        return Err(CodingApprovalError::AuthorityDenied);
+    }
+    let operation_expires_at_epoch_ms = request
+        .now_epoch_ms
+        .checked_add(OPERATION_GRANT_LIFETIME_MS)
+        .map(|expires| expires.min(request.approval.expires_at_epoch_ms))
+        .ok_or(CodingApprovalError::AuthorityDenied)?;
+    let grant = request
+        .authority
+        .derive_operation(
+            &request.approval.parent_grant_id,
+            operation_grant_request(
+                request.approval,
+                request.nonce,
+                request.now_epoch_ms,
+                operation_expires_at_epoch_ms,
+            )?,
+        )
+        .map_err(|_| CodingApprovalError::AuthorityDenied)?;
+    let decision_sha256 = canonical_contract_sha256(request.response)
+        .map_err(|_| CodingApprovalError::DecisionDenied)?;
+    let authority_sha256 =
+        canonical_contract_sha256(&grant).map_err(|_| CodingApprovalError::AuthorityDenied)?;
+    Ok(ApprovedCodingGrant {
+        grant,
+        policy,
+        decision_sha256,
+        authority_sha256,
+    })
+}
+
+fn verify_coding_decision(
+    approval: &ApprovalRequest,
+    challenge: &RuntimeApprovalChallenge,
+    response: &RuntimeApprovalResponse,
+    now_epoch_ms: u64,
+) -> Result<(), CodingApprovalError> {
+    verify_runtime_approval_response(challenge, response, now_epoch_ms)
+        .map_err(|_| CodingApprovalError::DecisionDenied)?;
+    if response.disposition != RuntimeApprovalDisposition::Allow
+        || challenge.task_id != approval.task_id
+        || challenge.tool_call_id != approval.tool_call.tool_call_id
+        || challenge.approval_id != approval.approval_id
+        || challenge.proposed_grant_id != approval.proposed_grant_id
+        || challenge.operation != approval.operation.operation()
+        || challenge.preview_sha256 != approval.confirmation_sha256
+        || challenge.expires_at_epoch_ms != approval.expires_at_epoch_ms
+        || response.grant_id.as_ref() != Some(&approval.proposed_grant_id)
+        || now_epoch_ms < approval.issued_at_epoch_ms
+        || now_epoch_ms >= approval.expires_at_epoch_ms
+    {
+        return Err(CodingApprovalError::DecisionDenied);
+    }
+    Ok(())
+}
+
+fn operation_grant_request(
+    approval: &ApprovalRequest,
+    nonce: GrantNonce,
+    issued_at_epoch_ms: u64,
+    expires_at_epoch_ms: u64,
+) -> Result<DerivedOperationGrantRequest, CodingApprovalError> {
+    if issued_at_epoch_ms < approval.issued_at_epoch_ms
+        || expires_at_epoch_ms <= issued_at_epoch_ms
+        || expires_at_epoch_ms > approval.expires_at_epoch_ms
+    {
+        return Err(CodingApprovalError::AuthorityDenied);
+    }
+    Ok(DerivedOperationGrantRequest {
+        grant_id: approval.proposed_grant_id.clone(),
+        approval_id: approval.approval_id.clone(),
+        action_id: approval.tool_call.action_id.clone(),
+        action_kind: approval.action_kind,
+        operation: approval.operation,
+        tool_id: approval.tool_call.tool_id.clone(),
+        tool_version: approval.tool_call.tool_version.clone(),
+        targets: approval.targets.clone(),
+        argument_sha256: approval.tool_call.arguments.sha256.clone(),
+        preimages: approval.preimages.clone(),
+        expected_side_effects: approval.expected_side_effects.clone(),
+        rollback_description: approval.rollback_description.clone(),
+        issued_at_epoch_ms,
+        expires_at_epoch_ms,
+        nonce,
+        preview_sha256: approval.confirmation_sha256.clone(),
+        policy_sha256: approval.policy_sha256.clone(),
+    })
+}
+
+fn exact_rules<T>(value: T) -> ScopeRules<T>
+where
+    T: Ord,
+{
+    ScopeRules {
+        allowed: BTreeSet::from([value]),
+        denied: BTreeSet::new(),
+    }
+}
+
 fn validate_parent(parent: &CapabilityGrant, now_epoch_ms: u64) -> Result<(), CodingApprovalError> {
     if parent.grant_class != GrantClass::SessionRead
         || parent.status != GrantStatus::Issued
@@ -161,6 +399,15 @@ fn canonical_sha256(value: &CapabilityGrant) -> Result<String, CodingApprovalErr
     to_canonical_json(value)
         .map(|bytes| sha256(&bytes))
         .map_err(|_| CodingApprovalError::ParentDenied)
+}
+
+fn canonical_contract_sha256<T>(value: &T) -> Result<String, ()>
+where
+    T: agentmage_kernel_contracts::VersionedContract,
+{
+    to_canonical_json(value)
+        .map(|bytes| sha256(&bytes))
+        .map_err(|_| ())
 }
 
 fn is_sha256(value: &str) -> bool {
@@ -191,6 +438,8 @@ mod tests {
     use agentmage_kernel_engine::{
         approval::verify_approval_request,
         grants::{GrantIssuer, SessionReadGrantRequest},
+        policy::PolicyEvaluationContext,
+        runtime_coordinator::seal_runtime_approval_challenge,
     };
 
     use super::*;
@@ -443,5 +692,175 @@ mod tests {
             ),
             Err(CodingApprovalError::TargetDenied)
         );
+    }
+
+    #[test]
+    fn story_48_2_allow_decision_derives_only_the_exact_policy_bound_grant() {
+        use agentmage_kernel_contracts::AuthorizedWorkspaceHandle as _;
+
+        let registry = read_only_runtime_registry().expect("registry");
+        let definition = registry
+            .get_tool(
+                &agentmage_kernel_contracts::ToolId::from_raw(ReadOnlyToolKind::ReadText.id()),
+                "1.0.0",
+            )
+            .expect("definition");
+        let bytes = serde_json::to_vec(&ReadOnlyRequest {
+            schema_version: 1,
+            paths: vec![vec!["src".to_owned(), "lib.rs".to_owned()]],
+            query: None,
+            byte_offset: Some(0),
+            byte_count: Some(128),
+            encoding: ReadOnlyEncoding::Utf8,
+            limits: ReadOnlyLimits::default(),
+            call_depth: 0,
+        })
+        .expect("request bytes");
+        let call = ToolCall {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-coding-policy"),
+            correlation_id: CorrelationId::from_raw("correlation-coding-policy"),
+            action_id: ActionId::from_raw("action-coding-policy"),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&bytes),
+                bytes,
+            },
+        };
+        let content = b"pub fn run() {}\n";
+        let digest: [u8; 32] = Sha256::digest(content).into();
+        let target = GrantTarget::held_object(&Held {
+            path: WorkspacePath::new(Workspace.workspace_id().clone(), ["src", "lib.rs"])
+                .expect("held path"),
+            preimage: FilePreimage::new(
+                u64::try_from(content.len()).expect("content length"),
+                digest,
+            ),
+            identity: WorkspaceObjectIdentity::new(
+                PathPlatform::DeterministicFake,
+                [1; 32],
+                [2; 32],
+            ),
+        })
+        .expect("held target");
+        let actor_id = ActorId::from_raw("actor-coding-policy");
+        let task_id = TaskId::from_raw("task-coding-policy");
+        let operation = OperationBinding::new(GrantOperation::WorkspaceRead);
+        let policy = exact_coding_policy(
+            &actor_id,
+            &task_id,
+            &call,
+            operation,
+            std::slice::from_ref(&target),
+        )
+        .expect("exact policy");
+        let scope = GrantTarget::workspace_scope(
+            &Workspace,
+            WorkspaceScopePath::new(Workspace.workspace_id().clone(), ["src"]).expect("scope path"),
+        )
+        .expect("scope target");
+        let mut issuer = GrantIssuer::new();
+        let parent = issuer
+            .issue_session_read(SessionReadGrantRequest {
+                grant_id: GrantId::from_raw("grant-coding-policy-parent"),
+                actor_id: actor_id.clone(),
+                session_id: SessionId::from_raw("session-coding-policy"),
+                task_id: task_id.clone(),
+                targets: vec![scope],
+                excluded_targets: Vec::new(),
+                sensitivity: DataSensitivity::Restricted,
+                issued_at_epoch_ms: 1_000,
+                expires_at_epoch_ms: 20_000,
+                nonce: GrantNonce::from_raw("nonce-coding-policy-parent"),
+                maximum_derived_operations: 1,
+                preview_sha256: "a".repeat(64),
+                policy_sha256: policy.policy_sha256().to_owned(),
+            })
+            .expect("parent grant");
+        let approval = render_coding_approval_request(
+            &registry,
+            CodingApprovalRequest {
+                parent: &parent,
+                approval_id: ApprovalId::from_raw("approval-coding-policy"),
+                proposed_grant_id: GrantId::from_raw("grant-coding-policy-operation"),
+                call: &call,
+                operation,
+                targets: vec![target],
+                operation_plan_sha256: &"c".repeat(64),
+                issued_at_epoch_ms: 2_000,
+                expires_at_epoch_ms: 10_000,
+            },
+        )
+        .expect("approval");
+        let challenge = seal_runtime_approval_challenge(RuntimeApprovalChallenge {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            run_id: agentmage_kernel_contracts::RuntimeRunId::from_raw("run-coding-policy"),
+            task_id: task_id.clone(),
+            turn_id: agentmage_kernel_contracts::RuntimeTurnId::from_raw("turn-coding-policy"),
+            operation_id: agentmage_kernel_contracts::RuntimeOperationId::from_raw(
+                "operation-coding-policy",
+            ),
+            tool_call_id: call.tool_call_id.clone(),
+            approval_id: approval.approval_id.clone(),
+            proposed_grant_id: approval.proposed_grant_id.clone(),
+            operation: GrantOperation::WorkspaceRead,
+            preview_sha256: approval.confirmation_sha256.clone(),
+            expires_at_epoch_ms: approval.expires_at_epoch_ms,
+            challenge_sha256: "0".repeat(64),
+        })
+        .expect("challenge");
+        let response = RuntimeApprovalResponse {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            run_id: challenge.run_id.clone(),
+            approval_id: challenge.approval_id.clone(),
+            disposition: RuntimeApprovalDisposition::Allow,
+            challenge_sha256: challenge.challenge_sha256.clone(),
+            grant_id: Some(challenge.proposed_grant_id.clone()),
+        };
+        verify_coding_decision(&approval, &challenge, &response, 3_000).expect("exact response");
+        let mut substituted = response.clone();
+        substituted.grant_id = Some(GrantId::from_raw("grant-substituted"));
+        assert_eq!(
+            verify_coding_decision(&approval, &challenge, &substituted, 3_000),
+            Err(CodingApprovalError::DecisionDenied)
+        );
+
+        let child = issuer
+            .derive_operation(
+                &parent.grant_id,
+                operation_grant_request(
+                    &approval,
+                    GrantNonce::from_raw("nonce-coding-policy-operation"),
+                    3_000,
+                    9_000,
+                )
+                .expect("derived request"),
+            )
+            .expect("child grant");
+        let context = PolicyEvaluationContext {
+            actor_id,
+            session_id: child.session_id.clone(),
+            task_id,
+            action_id: call.action_id,
+            action_kind: ActionKind::DeterministicTool,
+            tool_id: call.tool_id,
+            tool_version: call.tool_version,
+            targets: child.targets.clone(),
+            argument_sha256: child.argument_sha256.clone(),
+            preimages: child.preimages.clone(),
+            expected_side_effects: child.expected_side_effects.clone(),
+            preview_sha256: child.preview_sha256.clone(),
+            now_epoch_ms: 4_000,
+            network_scope: None,
+            credential_scope: None,
+            publication_scope: None,
+        };
+        assert!(policy.evaluate(&issuer, &child, &context).allowed);
+        let mut broadened = context;
+        broadened.targets.clear();
+        assert!(!policy.evaluate(&issuer, &child, &broadened).allowed);
     }
 }
