@@ -17,6 +17,7 @@ import {
   parseLocalHandoffReceipt,
   parseRenderedHandoff,
 } from "./handoff.js";
+import { parseRuntimeHostResponse } from "./runtime_transport.js";
 
 const LINUX_IPC_PROTOCOL_VERSION = 1;
 const AUTHENTICATION_DOMAIN = Buffer.from(
@@ -25,7 +26,7 @@ const AUTHENTICATION_DOMAIN = Buffer.from(
 );
 const HANDSHAKE_BYTES = 68;
 const MAX_REQUEST_BYTES = 64 * 1024;
-const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
+const MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
 
 /** One-use launch material delivered directly by the verified package bootstrap. */
 export interface LinuxHostLaunchCredentials {
@@ -146,6 +147,36 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
     return this.safeReadExchange(request);
   }
 
+  prepareRuntime(
+    request: Parameters<HostBridge["prepareRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  startRuntime(
+    request: Parameters<HostBridge["startRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  advanceRuntime(
+    request: Parameters<HostBridge["advanceRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  cancelRuntime(
+    request: Parameters<HostBridge["cancelRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
+  releaseRuntime(
+    request: Parameters<HostBridge["releaseRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
+  }
+
   /** Closes the local channel and erases retained one-use secret bytes. */
   dispose(): void {
     this.socket?.destroy();
@@ -177,7 +208,9 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
       response.kind === "diagnostic_export_completed" ||
       response.kind === "handoff_preview" ||
       response.kind === "handoff_rendered" ||
-      response.kind === "handoff_receipt"
+      response.kind === "handoff_receipt" ||
+      response.kind === "runtime_prepared" ||
+      response.kind === "runtime_step"
         ? {
             kind: "denied",
             schema_version: HOST_PROTOCOL_VERSION,
@@ -363,6 +396,13 @@ function parseResponse(candidate: unknown): HostResponse {
     throw new HostBridgeFailure();
   }
   switch (candidate.kind) {
+    case "runtime_prepared":
+    case "runtime_step":
+      try {
+        return parseRuntimeHostResponse(candidate);
+      } catch {
+        throw new HostBridgeFailure();
+      }
     case "handoff_preview":
       requireKeys(candidate, [
         "kind",

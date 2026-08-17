@@ -177,6 +177,36 @@ class SupervisedHostBridge implements HostBridge {
     return this.bridge.cancelRead(request);
   }
 
+  prepareRuntime(
+    request: Parameters<HostBridge["prepareRuntime"]>[0],
+  ): ReturnType<HostBridge["prepareRuntime"]> {
+    return this.bridge.prepareRuntime(request);
+  }
+
+  startRuntime(
+    request: Parameters<HostBridge["startRuntime"]>[0],
+  ): ReturnType<HostBridge["startRuntime"]> {
+    return this.bridge.startRuntime(request);
+  }
+
+  advanceRuntime(
+    request: Parameters<HostBridge["advanceRuntime"]>[0],
+  ): ReturnType<HostBridge["advanceRuntime"]> {
+    return this.bridge.advanceRuntime(request);
+  }
+
+  cancelRuntime(
+    request: Parameters<HostBridge["cancelRuntime"]>[0],
+  ): ReturnType<HostBridge["cancelRuntime"]> {
+    return this.bridge.cancelRuntime(request);
+  }
+
+  releaseRuntime(
+    request: Parameters<HostBridge["releaseRuntime"]>[0],
+  ): ReturnType<HostBridge["releaseRuntime"]> {
+    return this.bridge.releaseRuntime(request);
+  }
+
   dispose(): void {
     if (this.disposed) {
       return;

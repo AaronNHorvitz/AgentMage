@@ -15,6 +15,20 @@ import {
   type LocalHandoffReceipt,
   type RenderedHandoff,
 } from "./handoff.js";
+import {
+  parseRuntimeHostResponse,
+  parseRuntimeRunRequest,
+  renderRuntimeEvent,
+  renderRuntimeOutcome,
+  runtimeApprovalResponse,
+  RuntimeStreamVerifier,
+  type RuntimeApprovalChallengeEnvelope,
+  type RuntimeApprovalResponseEnvelope,
+  type RuntimeEventCursorEnvelope,
+  type RuntimeHostResponse,
+  type RuntimeRunRequestEnvelope,
+  type RuntimeStepResponse,
+} from "./runtime_transport.js";
 
 export const PROVIDER_VENDOR = "agentmage" as const;
 export const HOST_PROTOCOL_VERSION = 1 as const;
@@ -127,6 +141,7 @@ export type HostReadResponse =
 
 export type HostResponse =
   | HostReadResponse
+  | RuntimeHostResponse
   | {
       readonly kind: "models_discovered";
       readonly schema_version: 1;
@@ -271,6 +286,52 @@ export interface HostBridge {
     readonly preview_id: string;
   }): Promise<HostReadResponse>;
 
+  prepareRuntime(request: {
+    readonly kind: "prepare_runtime";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly profile_id: string;
+    readonly expected_entry_sha256: string;
+    readonly workspace_id: string;
+    readonly workspace_root: string;
+    readonly prompt: string;
+  }): Promise<HostResponse>;
+
+  startRuntime(request: {
+    readonly kind: "start_runtime";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly run_request: RuntimeRunRequestEnvelope;
+  }): Promise<HostResponse>;
+
+  advanceRuntime(request: {
+    readonly kind: "advance_runtime";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly run_id: string;
+    readonly request_sha256: string;
+    readonly after_event_cursor: RuntimeEventCursorEnvelope | null;
+    readonly approval_response: RuntimeApprovalResponseEnvelope | null;
+  }): Promise<HostResponse>;
+
+  cancelRuntime(request: {
+    readonly kind: "cancel_runtime";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly run_id: string;
+    readonly request_sha256: string;
+    readonly cancellation_id: string;
+    readonly after_event_cursor: RuntimeEventCursorEnvelope | null;
+  }): Promise<HostResponse>;
+
+  releaseRuntime(request: {
+    readonly kind: "release_runtime";
+    readonly schema_version: 1;
+    readonly request_id: string;
+    readonly run_id: string;
+    readonly request_sha256: string;
+  }): Promise<HostResponse>;
+
   dispose(): void;
 }
 
@@ -293,6 +354,30 @@ export interface ApprovalUi {
     readonly approved: boolean;
     readonly nonPublicAcknowledged: boolean;
   }>;
+  confirmRuntimeApproval(
+    challenge: RuntimeApprovalChallengeEnvelope,
+  ): Promise<"allow" | "deny">;
+}
+
+export interface SelectedRuntimeProfile {
+  readonly profileId: string;
+  readonly expectedEntrySha256: string;
+}
+
+interface PendingRuntimeRun {
+  readonly requestSha256: string;
+  readonly cancellationId: string;
+  cursor: RuntimeEventCursorEnvelope | null;
+  started: boolean;
+  terminal: boolean;
+  cancellationSent: boolean;
+  requestCancellation: (() => void) | undefined;
+  cancellationResponse: Promise<HostResponse> | undefined;
+}
+
+interface RuntimeCancellationExchange {
+  readonly requestId: string;
+  readonly response: Promise<HostResponse>;
 }
 
 export interface CancellationSubscription {
@@ -419,6 +504,46 @@ export class UnavailableHostBridge implements HostBridge {
     );
   }
 
+  prepareRuntime(
+    request: Parameters<HostBridge["prepareRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  startRuntime(
+    request: Parameters<HostBridge["startRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  advanceRuntime(
+    request: Parameters<HostBridge["advanceRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  cancelRuntime(
+    request: Parameters<HostBridge["cancelRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
+  releaseRuntime(
+    request: Parameters<HostBridge["releaseRuntime"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
   dispose(): void {}
 }
 
@@ -438,6 +563,7 @@ export class SecureReadController {
   private readonly pendingPreviews = new Set<string>();
   private readonly pendingDiagnosticExports = new Set<string>();
   private readonly pendingHandoffs = new Set<string>();
+  private readonly pendingRuntimeRuns = new Map<string, PendingRuntimeRun>();
 
   constructor(
     private readonly host: HostBridge,
@@ -526,6 +652,8 @@ export class SecureReadController {
   async respond(
     prompt: string,
     cancellation: CancellationSignal,
+    runtimeProfile?: SelectedRuntimeProfile,
+    onPart?: (part: string) => void,
   ): Promise<ControllerResult> {
     if (this.disposed) {
       return deniedResult(
@@ -564,6 +692,14 @@ export class SecureReadController {
     }
     const components = parseReadCommand(prompt);
     if (components === undefined) {
+      if (runtimeProfile !== undefined) {
+        return this.runNativeChatRuntime(
+          prompt,
+          runtimeProfile,
+          cancellation,
+          onPart,
+        );
+      }
       return deniedResult(
         "vscode.read.command_invalid",
         "The request does not match an available bounded command.",
@@ -655,6 +791,281 @@ export class SecureReadController {
       }
       subscription.dispose();
     }
+  }
+
+  private async runNativeChatRuntime(
+    prompt: string,
+    profile: SelectedRuntimeProfile,
+    cancellation: CancellationSignal,
+    onPart: ((part: string) => void) | undefined,
+  ): Promise<ControllerResult> {
+    if (
+      !validIdentifier(profile.profileId) ||
+      !validSha256(profile.expectedEntrySha256) ||
+      prompt.trim().length === 0 ||
+      Buffer.byteLength(prompt, "utf8") > MAX_PROMPT_BYTES ||
+      prompt.includes("\0")
+    ) {
+      return deniedResult(
+        "vscode.runtime.request_invalid",
+        "The selected model or request did not match the closed runtime boundary.",
+      );
+    }
+    const workspace = this.workspaces.selectedLocalWorkspace();
+    if (workspace === undefined) {
+      return deniedResult(
+        "vscode.workspace.unavailable",
+        "Select exactly one local file workspace before retrying.",
+      );
+    }
+    if (this.disposed || cancellation.isCancellationRequested) {
+      return cancelledResult();
+    }
+
+    const prepareRequestId = this.identities.next();
+    const preparedResponse = await this.host.prepareRuntime({
+      kind: "prepare_runtime",
+      schema_version: HOST_PROTOCOL_VERSION,
+      request_id: prepareRequestId,
+      profile_id: profile.profileId,
+      expected_entry_sha256: profile.expectedEntrySha256,
+      workspace_id: workspace.id,
+      workspace_root: workspace.root,
+      prompt,
+    });
+    let request: RuntimeRunRequestEnvelope;
+    try {
+      const parsed = parseRuntimeHostResponse(preparedResponse);
+      if (
+        parsed.kind !== "runtime_prepared" ||
+        parsed.request_id !== prepareRequestId
+      ) {
+        throw new Error("runtime prepare mismatch");
+      }
+      request = parseRuntimeRunRequest(parsed.run_request);
+    } catch {
+      return runtimeHostDenied(preparedResponse, prepareRequestId);
+    }
+    if (
+      request.model_profile.profile_id !== profile.profileId ||
+      request.workspace_id !== workspace.id ||
+      request.task.objective !== prompt ||
+      request.task.session_id !== request.session_id ||
+      request.mode !== "ephemeral_read_only"
+    ) {
+      await this.releaseRuntime(request.run_id, request.request_sha256);
+      return deniedResult(
+        "vscode.runtime.request_substituted",
+        "The host-framed runtime request did not match the selected model, workspace, or prompt.",
+      );
+    }
+
+    const active: PendingRuntimeRun = {
+      requestSha256: request.request_sha256,
+      cancellationId: `runtime-cancel-${this.identities.next()}`,
+      cursor: null,
+      started: false,
+      terminal: false,
+      cancellationSent: false,
+      requestCancellation: undefined,
+      cancellationResponse: undefined,
+    };
+    this.pendingRuntimeRuns.set(request.run_id, active);
+    const cancellationState: {
+      exchange: RuntimeCancellationExchange | undefined;
+    } = { exchange: undefined };
+    const pendingCancellation = (): RuntimeCancellationExchange | undefined =>
+      cancellationState.exchange;
+    const requestCancellation = (): void => {
+      if (!active.started || active.terminal || active.cancellationSent) {
+        return;
+      }
+      active.cancellationSent = true;
+      const requestId = this.identities.next();
+      cancellationState.exchange = {
+        requestId,
+        response: this.host.cancelRuntime({
+          kind: "cancel_runtime",
+          schema_version: HOST_PROTOCOL_VERSION,
+          request_id: requestId,
+          run_id: request.run_id,
+          request_sha256: request.request_sha256,
+          cancellation_id: active.cancellationId,
+          after_event_cursor: active.cursor,
+        }),
+      };
+      active.cancellationResponse = cancellationState.exchange.response;
+    };
+    active.requestCancellation = requestCancellation;
+    const subscription =
+      cancellation.onCancellationRequested(requestCancellation);
+    const verifier = new RuntimeStreamVerifier(request);
+    const parts: string[] = [];
+    const emit = (part: string): void => {
+      parts.push(part);
+      onPart?.(part);
+    };
+    let progressStarted = false;
+    const acceptStep = (
+      response: HostResponse,
+      expectedRequestId: string,
+      expectedCancellationId?: string,
+    ): RuntimeStepResponse => {
+      const parsed = parseRuntimeHostResponse(response);
+      if (
+        parsed.kind !== "runtime_step" ||
+        parsed.request_id !== expectedRequestId
+      ) {
+        throw new Error("runtime step mismatch");
+      }
+      const events = verifier.accept(parsed);
+      if (
+        expectedCancellationId !== undefined &&
+        parsed.outcome?.state === "CANCELLED" &&
+        (!events.some(
+          (event) =>
+            event.kind.event === "cancellation_requested" &&
+            event.kind.cancellation_id === expectedCancellationId,
+        ) ||
+          !events.some(
+            (event) =>
+              event.kind.event === "cancellation_observed" &&
+              event.kind.cancellation_id === expectedCancellationId,
+          ))
+      ) {
+        throw new Error("runtime cancellation identity mismatch");
+      }
+      active.cursor = verifier.cursor();
+      if (!progressStarted) {
+        progressStarted = true;
+        emit("# AgentMage Runtime\n\n## Progress\n\n");
+      }
+      for (const event of events) {
+        emit(renderRuntimeEvent(event));
+      }
+      if (parsed.outcome !== null) {
+        active.terminal = true;
+      }
+      return parsed;
+    };
+
+    try {
+      if (this.disposed || cancellation.isCancellationRequested) {
+        return cancelledResult();
+      }
+      active.started = true;
+      const startRequestId = this.identities.next();
+      const startResponse = await this.host.startRuntime({
+        kind: "start_runtime",
+        schema_version: HOST_PROTOCOL_VERSION,
+        request_id: startRequestId,
+        run_request: request,
+      });
+      if (cancellation.isCancellationRequested) {
+        requestCancellation();
+      }
+      const cancellationAfterStart = pendingCancellation();
+      let step =
+        cancellationAfterStart === undefined
+          ? acceptStep(startResponse, startRequestId)
+          : acceptStep(
+              await cancellationAfterStart.response,
+              cancellationAfterStart.requestId,
+              active.cancellationId,
+            );
+
+      while (step.outcome === null) {
+        const challenge = step.approval;
+        if (challenge === null) {
+          throw new Error("runtime boundary missing challenge");
+        }
+        let disposition: "allow" | "deny" | undefined;
+        if (!cancellation.isCancellationRequested && !this.disposed) {
+          disposition = await this.approvals.confirmRuntimeApproval(challenge);
+        }
+        if (
+          disposition === undefined ||
+          cancellation.isCancellationRequested ||
+          this.disposed ||
+          Date.now() >= challenge.expires_at_epoch_ms
+        ) {
+          requestCancellation();
+        }
+
+        const cancellationAfterDecision = pendingCancellation();
+        if (cancellationAfterDecision !== undefined) {
+          step = acceptStep(
+            await cancellationAfterDecision.response,
+            cancellationAfterDecision.requestId,
+            active.cancellationId,
+          );
+          continue;
+        }
+        const advanceRequestId = this.identities.next();
+        const advanceResponse = await this.host.advanceRuntime({
+          kind: "advance_runtime",
+          schema_version: HOST_PROTOCOL_VERSION,
+          request_id: advanceRequestId,
+          run_id: request.run_id,
+          request_sha256: request.request_sha256,
+          after_event_cursor: active.cursor,
+          approval_response: runtimeApprovalResponse(
+            challenge,
+            disposition ?? "deny",
+          ),
+        });
+        if (cancellation.isCancellationRequested) {
+          requestCancellation();
+        }
+        const cancellationAfterAdvance = pendingCancellation();
+        step =
+          cancellationAfterAdvance === undefined
+            ? acceptStep(advanceResponse, advanceRequestId)
+            : acceptStep(
+                await cancellationAfterAdvance.response,
+                cancellationAfterAdvance.requestId,
+                active.cancellationId,
+              );
+      }
+
+      emit(renderRuntimeOutcome(step.outcome));
+      return result(...parts);
+    } catch {
+      const stopped = deniedResult(
+        "vscode.runtime.response_invalid",
+        "The shared runtime returned an invalid or unavailable boundary. AgentMage stopped the request.",
+      );
+      for (const part of stopped.parts) {
+        emit(part);
+      }
+      return result(...parts);
+    } finally {
+      subscription.dispose();
+      if (active.started && !active.terminal && !active.cancellationSent) {
+        requestCancellation();
+      }
+      const pending = pendingCancellation();
+      if (pending !== undefined) {
+        await pending.response.catch(() => undefined);
+      }
+      await this.releaseRuntime(request.run_id, request.request_sha256);
+      this.pendingRuntimeRuns.delete(request.run_id);
+    }
+  }
+
+  private async releaseRuntime(
+    runId: string,
+    requestSha256: string,
+  ): Promise<void> {
+    await this.host
+      .releaseRuntime({
+        kind: "release_runtime",
+        schema_version: HOST_PROTOCOL_VERSION,
+        request_id: this.identities.next(),
+        run_id: runId,
+        request_sha256: requestSha256,
+      })
+      .catch(() => undefined);
   }
 
   private async exportDiagnostics(
@@ -846,6 +1257,10 @@ export class SecureReadController {
     this.pendingDiagnosticExports.clear();
     const handoffs = [...this.pendingHandoffs];
     this.pendingHandoffs.clear();
+    const runtimeRuns = [...this.pendingRuntimeRuns.entries()];
+    for (const [, active] of runtimeRuns) {
+      active.requestCancellation?.();
+    }
     await Promise.allSettled([
       ...previews.map((previewId) =>
         this.host.cancelRead({
@@ -871,7 +1286,12 @@ export class SecureReadController {
           preview_id: previewId,
         }),
       ),
+      ...runtimeRuns.map(async ([runId, active]) => {
+        await active.cancellationResponse?.catch(() => undefined);
+        await this.releaseRuntime(runId, active.requestSha256);
+      }),
     ]);
+    this.pendingRuntimeRuns.clear();
     this.host.dispose();
   }
 
@@ -920,6 +1340,28 @@ function renderHandoffTerminal(
   return deniedResult(
     "vscode.host.response_invalid",
     "The local host returned an invalid handoff response. Nothing was delivered.",
+  );
+}
+
+function runtimeHostDenied(
+  response: HostResponse,
+  expectedRequestId: string,
+): ControllerResult {
+  if (
+    response.kind === "denied" &&
+    response.schema_version === HOST_PROTOCOL_VERSION &&
+    response.request_id === expectedRequestId
+  ) {
+    return deniedResult(
+      validCode(response.code)
+        ? response.code
+        : "vscode.runtime.response_invalid",
+      "The local host refused the runtime request. No substitute model or route was used.",
+    );
+  }
+  return deniedResult(
+    "vscode.runtime.response_invalid",
+    "The local host returned an invalid runtime response. No substitute model or route was used.",
   );
 }
 

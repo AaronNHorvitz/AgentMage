@@ -10,12 +10,19 @@ import {
   type CancellationSubscription,
   type HostBridge,
   type HostReadResponse,
+  type HostResponse,
   type LocalWorkspace,
   type ReadPreview,
   type RequestIdentitySource,
   type WorkspaceSource,
 } from "../src/provider.js";
 import { LOCAL_HANDOFF_NOTICE } from "../src/handoff.js";
+import type {
+  RuntimeApprovalResponseEnvelope,
+  RuntimeEventCursorEnvelope,
+  RuntimeRunRequestEnvelope,
+} from "../src/runtime_transport.js";
+import { parseRuntimeHostResponse } from "../src/runtime_transport.js";
 
 class Identities implements RequestIdentitySource {
   private nextValue = 0;
@@ -56,6 +63,10 @@ class Approvals implements ApprovalUi {
   diagnosticApproved = true;
   handoffApproved = true;
   nonPublicAcknowledged = true;
+  runtimeDisposition: "allow" | "deny" = "deny";
+  runtimeApprovalCalls = 0;
+  onRuntimeConfirmation: (() => void) | undefined;
+  runtimeBarrier: Promise<void> | undefined;
 
   confirmWorkspace(): Promise<boolean> {
     return Promise.resolve(this.workspaceApproved);
@@ -84,6 +95,13 @@ class Approvals implements ApprovalUi {
       nonPublicAcknowledged: this.nonPublicAcknowledged,
     });
   }
+
+  async confirmRuntimeApproval(): Promise<"allow" | "deny"> {
+    this.runtimeApprovalCalls += 1;
+    this.onRuntimeConfirmation?.();
+    await this.runtimeBarrier;
+    return this.runtimeDisposition;
+  }
 }
 
 class Bridge implements HostBridge {
@@ -104,6 +122,16 @@ class Bridge implements HostBridge {
   handoffRenderCalls = 0;
   handoffCancellationCalls = 0;
   handoffDenialCalls = 0;
+  runtimePreparedRequest: RuntimeRunRequestEnvelope | undefined;
+  runtimeSteps: Array<(requestId: string) => HostResponse> = [];
+  runtimePrepareCalls = 0;
+  runtimeStartCalls = 0;
+  runtimeAdvanceCalls = 0;
+  runtimeCancellationCalls = 0;
+  runtimeReleaseCalls = 0;
+  lastRuntimeCursor: RuntimeEventCursorEnvelope | null = null;
+  lastRuntimeApproval: RuntimeApprovalResponseEnvelope | null = null;
+  lastRuntimeCancellationId: string | undefined;
 
   previewHandoff(
     request: Parameters<HostBridge["previewHandoff"]>[0],
@@ -319,9 +347,74 @@ class Bridge implements HostBridge {
     });
   }
 
+  prepareRuntime(
+    request: Parameters<HostBridge["prepareRuntime"]>[0],
+  ): ReturnType<HostBridge["prepareRuntime"]> {
+    this.runtimePrepareCalls += 1;
+    return Promise.resolve(
+      this.runtimePreparedRequest === undefined
+        ? runtimeDenied(request.request_id)
+        : {
+            kind: "runtime_prepared",
+            schema_version: 1,
+            request_id: request.request_id,
+            run_request: this.runtimePreparedRequest,
+          },
+    );
+  }
+
+  startRuntime(
+    request: Parameters<HostBridge["startRuntime"]>[0],
+  ): ReturnType<HostBridge["startRuntime"]> {
+    this.runtimeStartCalls += 1;
+    return Promise.resolve(this.nextRuntimeStep(request.request_id));
+  }
+
+  advanceRuntime(
+    request: Parameters<HostBridge["advanceRuntime"]>[0],
+  ): ReturnType<HostBridge["advanceRuntime"]> {
+    this.runtimeAdvanceCalls += 1;
+    this.lastRuntimeCursor = request.after_event_cursor;
+    this.lastRuntimeApproval = request.approval_response;
+    return Promise.resolve(this.nextRuntimeStep(request.request_id));
+  }
+
+  cancelRuntime(
+    request: Parameters<HostBridge["cancelRuntime"]>[0],
+  ): ReturnType<HostBridge["cancelRuntime"]> {
+    this.runtimeCancellationCalls += 1;
+    this.lastRuntimeCursor = request.after_event_cursor;
+    this.lastRuntimeCancellationId = request.cancellation_id;
+    return Promise.resolve(this.nextRuntimeStep(request.request_id));
+  }
+
+  releaseRuntime(
+    request: Parameters<HostBridge["releaseRuntime"]>[0],
+  ): ReturnType<HostBridge["releaseRuntime"]> {
+    this.runtimeReleaseCalls += 1;
+    return Promise.resolve({
+      kind: "cancelled",
+      schema_version: 1,
+      request_id: request.request_id,
+    });
+  }
+
+  private nextRuntimeStep(requestId: string): HostResponse {
+    return this.runtimeSteps.shift()?.(requestId) ?? runtimeDenied(requestId);
+  }
+
   dispose(): void {
     this.disposed = true;
   }
+}
+
+function runtimeDenied(requestId: string): HostReadResponse {
+  return {
+    kind: "denied",
+    schema_version: 1,
+    request_id: requestId,
+    code: "host.runtime.run_unavailable",
+  };
 }
 
 function emptyModelSnapshot() {
@@ -753,3 +846,402 @@ void test("deactivation cancels an unconsumed preview and closes the controller"
   const afterDeactivation = await controller.respond("read src/lib.ts", signal);
   assert.match(afterDeactivation.text, /host\.deactivated/);
 });
+
+void test("native Chat renders one complete shared-runtime stream and outcome", async () => {
+  const { controller, bridge, signal } = fixture();
+  const prompt = "Inspect the selected workspace";
+  bridge.runtimePreparedRequest = runtimeRequest(prompt);
+  bridge.runtimeSteps.push((requestId) => completedRuntimeStep(requestId));
+  const streamed: string[] = [];
+
+  const response = await controller.respond(
+    prompt,
+    signal,
+    runtimeProfile(),
+    (part) => streamed.push(part),
+  );
+
+  assert.deepEqual(streamed, response.parts);
+  assert.match(response.text, /Verified local result/u);
+  assert.match(response.text, /Status: SUCCESS/u);
+  assert.equal(bridge.runtimePrepareCalls, 1);
+  assert.equal(bridge.runtimeStartCalls, 1);
+  assert.equal(bridge.runtimeAdvanceCalls, 0);
+  assert.equal(bridge.runtimeCancellationCalls, 0);
+  assert.equal(bridge.runtimeReleaseCalls, 1);
+  assert.equal(bridge.previewCalls, 0);
+});
+
+void test("native Chat rejects a substituted profile workspace or prompt before start", async () => {
+  const { controller, bridge, signal } = fixture();
+  const prompt = "Inspect the selected workspace";
+  bridge.runtimePreparedRequest = {
+    ...runtimeRequest(prompt),
+    model_profile: { profile_id: "profile-substituted" },
+  };
+
+  const response = await controller.respond(prompt, signal, runtimeProfile());
+
+  assert.match(response.text, /runtime\.request_substituted/u);
+  assert.equal(bridge.runtimeStartCalls, 0);
+  assert.equal(bridge.runtimeCancellationCalls, 0);
+  assert.equal(bridge.runtimeReleaseCalls, 1);
+});
+
+void test("native Chat relays one exact protected denial before terminal output", async () => {
+  const { controller, bridge, approvals, signal } = fixture();
+  const prompt = "Review the selected repository";
+  bridge.runtimePreparedRequest = runtimeRequest(prompt);
+  bridge.runtimeSteps.push(
+    (requestId) => approvalRuntimeStep(requestId),
+    (requestId) => declinedRuntimeStep(requestId),
+  );
+  approvals.runtimeDisposition = "deny";
+
+  const response = await controller.respond(prompt, signal, runtimeProfile());
+
+  assert.match(response.text, /Approval required/u);
+  assert.match(response.text, /Status: DECLINED/u);
+  assert.equal(approvals.runtimeApprovalCalls, 1);
+  assert.equal(bridge.runtimeAdvanceCalls, 1);
+  assert.deepEqual(bridge.lastRuntimeCursor, {
+    run_id: "run-0001",
+    event_id: "event-0001",
+    sequence: 1,
+    event_sha256: "b".repeat(64),
+  });
+  assert.deepEqual(bridge.lastRuntimeApproval, {
+    schema_version: 2,
+    run_id: "run-0001",
+    approval_id: "approval-0001",
+    disposition: "deny",
+    challenge_sha256: "8".repeat(64),
+    grant_id: null,
+  });
+  assert.equal(bridge.runtimeReleaseCalls, 1);
+});
+
+void test("native Chat cancellation uses the exact accepted cursor and starts no approval", async () => {
+  const { controller, bridge, approvals, signal } = fixture();
+  const prompt = "Review the selected repository";
+  bridge.runtimePreparedRequest = runtimeRequest(prompt);
+  bridge.runtimeSteps.push(
+    (requestId) => approvalRuntimeStep(requestId),
+    (requestId) =>
+      cancelledRuntimeStep(
+        requestId,
+        bridge.lastRuntimeCancellationId ?? "missing-cancellation",
+      ),
+  );
+  approvals.onRuntimeConfirmation = () => signal.cancel();
+
+  const response = await controller.respond(prompt, signal, runtimeProfile());
+
+  assert.match(response.text, /Cancellation completed/u);
+  assert.match(response.text, /Status: CANCELLED/u);
+  assert.equal(bridge.runtimeAdvanceCalls, 0);
+  assert.equal(bridge.runtimeCancellationCalls, 1);
+  assert.equal(bridge.lastRuntimeCursor?.sequence, 1);
+  assert.match(bridge.lastRuntimeCancellationId ?? "", /^runtime-cancel-/u);
+  assert.equal(bridge.runtimeReleaseCalls, 1);
+});
+
+void test("deactivation cancels and releases an active native Chat run before IPC closes", async () => {
+  const { controller, bridge, approvals, signal } = fixture();
+  const prompt = "Review the selected repository";
+  bridge.runtimePreparedRequest = runtimeRequest(prompt);
+  bridge.runtimeSteps.push(
+    (requestId) => approvalRuntimeStep(requestId),
+    (requestId) =>
+      cancelledRuntimeStep(
+        requestId,
+        bridge.lastRuntimeCancellationId ?? "missing-cancellation",
+      ),
+  );
+  let approvalEntered: (() => void) | undefined;
+  const entered = new Promise<void>((resolve) => {
+    approvalEntered = resolve;
+  });
+  let releaseApproval: (() => void) | undefined;
+  approvals.runtimeBarrier = new Promise<void>((resolve) => {
+    releaseApproval = resolve;
+  });
+  approvals.onRuntimeConfirmation = approvalEntered;
+
+  const response = controller.respond(prompt, signal, runtimeProfile());
+  await entered;
+  const deactivation = controller.dispose();
+  releaseApproval?.();
+  const [completed] = await Promise.all([response, deactivation]);
+
+  assert.match(completed.text, /Status: CANCELLED/u);
+  assert.equal(bridge.runtimeCancellationCalls, 1);
+  assert.ok(bridge.runtimeReleaseCalls >= 1);
+  assert.equal(bridge.disposed, true);
+});
+
+function runtimeProfile(): {
+  readonly profileId: string;
+  readonly expectedEntrySha256: string;
+} {
+  return {
+    profileId: "profile-0001",
+    expectedEntrySha256: "f".repeat(64),
+  };
+}
+
+function runtimeRequest(prompt: string): RuntimeRunRequestEnvelope {
+  return {
+    schema_version: 2,
+    run_id: "run-0001",
+    session_id: "session-0001",
+    mode: "ephemeral_read_only",
+    task: {
+      schema_version: 2,
+      task_id: "task-0001",
+      session_id: "session-0001",
+      objective: prompt,
+      acceptance_criteria: ["Report grounded findings"],
+      constraints: ["Remain read only"],
+      status: "ready",
+    },
+    work_packet: {},
+    workspace_id: "workspace-0001",
+    workspace_snapshot_sha256: "1".repeat(64),
+    repository_snapshot_id: "repository-snapshot-0001",
+    repository_snapshot_sha256: "2".repeat(64),
+    model_profile: { profile_id: "profile-0001" },
+    context_budget: {},
+    tool_catalog_id: "tool-catalog-0001",
+    tool_catalog_sha256: "3".repeat(64),
+    visible_tools: [],
+    policy_id: "policy-0001",
+    policy_sha256: "4".repeat(64),
+    limits: {},
+    event_cursor: null,
+    request_sha256: "5".repeat(64),
+  };
+}
+
+function completedRuntimeStep(requestId: string): HostResponse {
+  const text = "Verified local result.\n";
+  const bytes = [...Buffer.from(text, "utf8")];
+  const outputSha256 = createHash("sha256")
+    .update(Uint8Array.from(bytes))
+    .digest("hex");
+  return runtimeStep(requestId, completedEvents(), null, {
+    ...runtimeOutcome("SUCCESS", "event-0002", "c".repeat(64)),
+    evidence: [runtimeEvidence()],
+    output: {
+      storage: "inline",
+      payload: {
+        schema: {
+          schema_id: "runtime-output",
+          schema_version: 2,
+          schema_sha256: "9".repeat(64),
+        },
+        media_type: "text/markdown",
+        bytes,
+        sha256: outputSha256,
+      },
+    },
+  });
+}
+
+function approvalRuntimeStep(requestId: string): HostResponse {
+  const expiresAt = Date.now() + 60_000;
+  return runtimeStep(
+    requestId,
+    [
+      runtimeEvent(0, "0".repeat(64), null, {
+        event: "run_started",
+        request_sha256: "5".repeat(64),
+      }),
+      runtimeEvent(1, "a".repeat(64), "event-0000", {
+        event: "permission_requested",
+        approval_id: "approval-0001",
+        operation: "workspace_read",
+        preview_sha256: "6".repeat(64),
+        expires_at_epoch_ms: expiresAt,
+      }),
+    ],
+    {
+      schema_version: 2,
+      run_id: "run-0001",
+      task_id: "task-0001",
+      turn_id: "turn-0001",
+      operation_id: "operation-0001",
+      tool_call_id: "tool-call-0001",
+      approval_id: "approval-0001",
+      proposed_grant_id: "grant-0001",
+      operation: "workspace_read",
+      preview_sha256: "6".repeat(64),
+      expires_at_epoch_ms: expiresAt,
+      challenge_sha256: "8".repeat(64),
+    },
+    null,
+  );
+}
+
+function declinedRuntimeStep(requestId: string): HostResponse {
+  return runtimeStep(
+    requestId,
+    [
+      runtimeEvent(2, "b".repeat(64), "event-0001", {
+        event: "permission_decided",
+        approval_id: "approval-0001",
+        disposition: "DENY",
+        grant_id: null,
+        decision_sha256: "8".repeat(64),
+      }),
+      runtimeEvent(3, "c".repeat(64), "event-0002", {
+        event: "turn_completed",
+        outcome_sha256: "9".repeat(64),
+      }),
+      runtimeEvent(4, "d".repeat(64), "event-0003", {
+        event: "run_terminal",
+        state: "DECLINED",
+        outcome_sha256: "e".repeat(64),
+      }),
+    ],
+    null,
+    runtimeOutcome("DECLINED", "event-0003", "d".repeat(64)),
+  );
+}
+
+function cancelledRuntimeStep(
+  requestId: string,
+  cancellationId: string,
+): HostResponse {
+  return runtimeStep(
+    requestId,
+    [
+      runtimeEvent(2, "b".repeat(64), "event-0001", {
+        event: "cancellation_requested",
+        cancellation_id: cancellationId,
+      }),
+      runtimeEvent(3, "c".repeat(64), "event-0002", {
+        event: "cancellation_observed",
+        cancellation_id: cancellationId,
+      }),
+      runtimeEvent(4, "d".repeat(64), "event-0003", {
+        event: "run_terminal",
+        state: "CANCELLED",
+        outcome_sha256: "e".repeat(64),
+      }),
+    ],
+    null,
+    runtimeOutcome("CANCELLED", "event-0003", "d".repeat(64)),
+  );
+}
+
+function runtimeStep(
+  requestId: string,
+  events: readonly Record<string, unknown>[],
+  approval: Record<string, unknown> | null,
+  outcome: Record<string, unknown> | null,
+): HostResponse {
+  return parseRuntimeHostResponse({
+    kind: "runtime_step",
+    schema_version: 1,
+    request_id: requestId,
+    run_id: "run-0001",
+    request_sha256: "5".repeat(64),
+    events,
+    approval,
+    outcome,
+  });
+}
+
+function completedEvents(): readonly Record<string, unknown>[] {
+  return [
+    runtimeEvent(0, "0".repeat(64), null, {
+      event: "run_started",
+      request_sha256: "5".repeat(64),
+    }),
+    runtimeEvent(1, "a".repeat(64), "event-0000", {
+      event: "turn_started",
+    }),
+    runtimeEvent(2, "b".repeat(64), "event-0001", {
+      event: "turn_completed",
+      outcome_sha256: "9".repeat(64),
+    }),
+    runtimeEvent(3, "c".repeat(64), "event-0002", {
+      event: "run_terminal",
+      state: "SUCCESS",
+      outcome_sha256: "e".repeat(64),
+    }),
+  ];
+}
+
+function runtimeEvent(
+  sequence: number,
+  previousEventSha256: string,
+  causationEventId: string | null,
+  kind: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    schema_version: 2,
+    event_id: `event-${sequence.toString().padStart(4, "0")}`,
+    run_id: "run-0001",
+    session_id: "session-0001",
+    task_id: "task-0001",
+    turn_id:
+      sequence === 0 || kind.event === "run_terminal" ? null : "turn-0001",
+    operation_id:
+      kind.event === "permission_requested" ||
+      kind.event === "permission_decided"
+        ? "operation-0001"
+        : null,
+    correlation_id: "correlation-0001",
+    causation_event_id: causationEventId,
+    sequence,
+    occurred_at_epoch_ms: 1_000 + sequence,
+    sensitivity: "internal",
+    retention: { kind: "ephemeral", expires_at_epoch_ms: null },
+    persistence: "correctness",
+    policy_id: "policy-0001",
+    payload_reference: null,
+    kind,
+    previous_event_sha256: previousEventSha256,
+    event_sha256: String.fromCharCode("a".charCodeAt(0) + sequence).repeat(64),
+  };
+}
+
+function runtimeOutcome(
+  state: "SUCCESS" | "DECLINED" | "CANCELLED",
+  priorEventId: string,
+  priorEventSha256: string,
+): Record<string, unknown> {
+  return {
+    schema_version: 2,
+    run_id: "run-0001",
+    session_id: "session-0001",
+    task_id: "task-0001",
+    request_sha256: "5".repeat(64),
+    state,
+    turn_count: 1,
+    model_call_count: 1,
+    tool_call_count: 0,
+    prior_event_id: priorEventId,
+    prior_event_sha256: priorEventSha256,
+    evidence: [],
+    receipt_ids: [],
+    unresolved_codes: [],
+    output: null,
+    outcome_sha256: "e".repeat(64),
+  };
+}
+
+function runtimeEvidence(): Record<string, unknown> {
+  return {
+    schema_version: 2,
+    evidence_id: "evidence-0001",
+    kind: "validation",
+    source_id: "fixture",
+    object_id: "runtime output",
+    fragment: null,
+    content_sha256: "d".repeat(64),
+    observed_revision: "fixture-revision",
+  };
+}

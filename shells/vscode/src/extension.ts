@@ -17,6 +17,7 @@ import {
   type NativeModelInformation,
 } from "./model_discovery.js";
 import type { HandoffReview } from "./handoff.js";
+import type { RuntimeApprovalChallengeEnvelope } from "./runtime_transport.js";
 
 type AgentMageModelInformation = vscode.LanguageModelChatInformation &
   NativeModelInformation;
@@ -116,6 +117,22 @@ class VsCodeApprovalUi implements ApprovalUi {
         selection === approveLabel && review.manifest.acknowledgment_required,
     };
   }
+
+  async confirmRuntimeApproval(
+    challenge: RuntimeApprovalChallengeEnvelope,
+  ): Promise<"allow" | "deny"> {
+    const selection = await vscode.window.showWarningMessage(
+      [
+        `Allow this ${challenge.operation.replaceAll("_", " ")} operation once?`,
+        `Preview: ${challenge.preview_sha256}.`,
+        `Approval: ${challenge.approval_id}.`,
+      ].join(" "),
+      { modal: true },
+      "Allow Once",
+      "Deny",
+    );
+    return selection === "Allow Once" ? "allow" : "deny";
+  }
 }
 
 /** Activates the real VS Code provider with a fail-closed host bridge. */
@@ -161,9 +178,28 @@ export async function activate(
           return;
         }
         const prompt = lastUserText(messages);
-        const response = await controller.respond(prompt, token);
-        for (const part of response.parts) {
-          progress.report(new vscode.LanguageModelTextPart(part));
+        let reportedParts = 0;
+        const response = await controller.respond(
+          prompt,
+          token,
+          {
+            profileId: model.id,
+            expectedEntrySha256: model.entrySha256,
+          },
+          (part) => {
+            reportedParts += 1;
+            progress.report(new vscode.LanguageModelTextPart(part));
+          },
+        );
+        for (
+          let index = reportedParts;
+          index < response.parts.length;
+          index += 1
+        ) {
+          const part = response.parts[index];
+          if (part !== undefined) {
+            progress.report(new vscode.LanguageModelTextPart(part));
+          }
         }
       },
       provideTokenCount: (_model, value) => {

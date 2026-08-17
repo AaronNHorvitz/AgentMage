@@ -240,6 +240,90 @@ void test("delivery claim in authenticated handoff fails closed", async () => {
   }
 });
 
+void test("authenticated bridge transports one exact host-framed runtime request", async () => {
+  const runRequest = runtimeRunRequest();
+  const fixture = await socketFixture({
+    kind: "runtime_prepared",
+    schema_version: 1,
+    request_id: "request-runtime-prepare-0001",
+    run_request: runRequest,
+  });
+  try {
+    const bridge = new AuthenticatedLinuxHostBridge(fixture.credentials);
+    const response = await bridge.prepareRuntime({
+      kind: "prepare_runtime",
+      schema_version: 1,
+      request_id: "request-runtime-prepare-0001",
+      profile_id: "profile-0001",
+      expected_entry_sha256: "f".repeat(64),
+      workspace_id: "workspace-0001",
+      workspace_root: "/tmp/workspace",
+      prompt: "Inspect the selected workspace",
+    });
+    assert.equal(response.kind, "runtime_prepared");
+    assert.deepEqual(fixture.observedRequest, {
+      kind: "prepare_runtime",
+      schema_version: 1,
+      request_id: "request-runtime-prepare-0001",
+      profile_id: "profile-0001",
+      expected_entry_sha256: "f".repeat(64),
+      workspace_id: "workspace-0001",
+      workspace_root: "/tmp/workspace",
+      prompt: "Inspect the selected workspace",
+    });
+    bridge.dispose();
+  } finally {
+    await fixture.close();
+  }
+});
+
+void test("authenticated bridge validates runtime events and protected approval", async () => {
+  const fixture = await socketFixture(runtimeApprovalStep());
+  try {
+    const bridge = new AuthenticatedLinuxHostBridge(fixture.credentials);
+    const response = await bridge.startRuntime({
+      kind: "start_runtime",
+      schema_version: 1,
+      request_id: "request-runtime-step-0001",
+      run_request: runtimeRunRequest(),
+    });
+    assert.equal(response.kind, "runtime_step");
+    assert.equal(
+      response.kind === "runtime_step" ? response.approval?.approval_id : null,
+      "approval-0001",
+    );
+    bridge.dispose();
+  } finally {
+    await fixture.close();
+  }
+});
+
+void test("hidden runtime event authority fails closed at authenticated transport", async () => {
+  const changed = runtimeApprovalStep();
+  const first = changed.events[0];
+  assert.ok(first !== undefined);
+  changed.events[0] = { ...first, execute_directly: true };
+  const fixture = await socketFixture(changed);
+  try {
+    const bridge = new AuthenticatedLinuxHostBridge(fixture.credentials);
+    const response = await bridge.startRuntime({
+      kind: "start_runtime",
+      schema_version: 1,
+      request_id: "request-runtime-step-0001",
+      run_request: runtimeRunRequest(),
+    });
+    assert.deepEqual(response, {
+      kind: "denied",
+      schema_version: 1,
+      request_id: "request-runtime-step-0001",
+      code: "host.connection.failed",
+    });
+    bridge.dispose();
+  } finally {
+    await fixture.close();
+  }
+});
+
 void test("out-of-range launch identity fails before socket access", () => {
   const credentials: LinuxHostLaunchCredentials = {
     endpoint: "/tmp/agentmage-invalid.sock",
@@ -304,6 +388,116 @@ function objectDigest(value: unknown): string {
   return createHash("sha256")
     .update(JSON.stringify(value), "utf8")
     .digest("hex");
+}
+
+function runtimeRunRequest() {
+  return {
+    schema_version: 2 as const,
+    run_id: "run-0001",
+    session_id: "session-0001",
+    mode: "ephemeral_read_only" as const,
+    task: {
+      schema_version: 2 as const,
+      task_id: "task-0001",
+      session_id: "session-0001",
+      objective: "Inspect the selected workspace",
+      acceptance_criteria: ["Report grounded findings"],
+      constraints: ["Remain read only"],
+      status: "ready" as const,
+    },
+    work_packet: {},
+    workspace_id: "workspace-0001",
+    workspace_snapshot_sha256: "1".repeat(64),
+    repository_snapshot_id: "repository-snapshot-0001",
+    repository_snapshot_sha256: "2".repeat(64),
+    model_profile: { profile_id: "profile-0001" },
+    context_budget: {},
+    tool_catalog_id: "tool-catalog-0001",
+    tool_catalog_sha256: "3".repeat(64),
+    visible_tools: [],
+    policy_id: "policy-0001",
+    policy_sha256: "4".repeat(64),
+    limits: {},
+    event_cursor: null,
+    request_sha256: "5".repeat(64),
+  };
+}
+
+function runtimeApprovalStep(): {
+  kind: "runtime_step";
+  schema_version: 1;
+  request_id: string;
+  run_id: string;
+  request_sha256: string;
+  events: Record<string, unknown>[];
+  approval: Record<string, unknown>;
+  outcome: null;
+} {
+  const expiresAt = Date.now() + 60_000;
+  return {
+    kind: "runtime_step",
+    schema_version: 1,
+    request_id: "request-runtime-step-0001",
+    run_id: "run-0001",
+    request_sha256: "5".repeat(64),
+    events: [
+      runtimeEvent(0, "0".repeat(64), null, {
+        event: "run_started",
+        request_sha256: "5".repeat(64),
+      }),
+      runtimeEvent(1, "a".repeat(64), "event-0000", {
+        event: "permission_requested",
+        approval_id: "approval-0001",
+        operation: "workspace_read",
+        preview_sha256: "6".repeat(64),
+        expires_at_epoch_ms: expiresAt,
+      }),
+    ],
+    approval: {
+      schema_version: 2,
+      run_id: "run-0001",
+      task_id: "task-0001",
+      turn_id: "turn-0001",
+      operation_id: "operation-0001",
+      tool_call_id: "tool-call-0001",
+      approval_id: "approval-0001",
+      proposed_grant_id: "grant-0001",
+      operation: "workspace_read",
+      preview_sha256: "6".repeat(64),
+      expires_at_epoch_ms: expiresAt,
+      challenge_sha256: "8".repeat(64),
+    },
+    outcome: null,
+  };
+}
+
+function runtimeEvent(
+  sequence: number,
+  previousEventSha256: string,
+  causationEventId: string | null,
+  kind: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    schema_version: 2,
+    event_id: `event-${sequence.toString().padStart(4, "0")}`,
+    run_id: "run-0001",
+    session_id: "session-0001",
+    task_id: "task-0001",
+    turn_id: sequence === 0 ? null : "turn-0001",
+    operation_id: null,
+    correlation_id: "correlation-0001",
+    causation_event_id: causationEventId,
+    sequence,
+    occurred_at_epoch_ms: 1_000 + sequence,
+    sensitivity: "internal",
+    retention: { kind: "ephemeral", expires_at_epoch_ms: null },
+    persistence: "correctness",
+    policy_id: "policy-0001",
+    payload_reference: null,
+    kind,
+    previous_event_sha256: previousEventSha256,
+    event_sha256: String.fromCharCode("a".charCodeAt(0) + sequence).repeat(64),
+  };
 }
 
 async function socketFixture(response: object): Promise<{
