@@ -128,6 +128,8 @@ pub mod write_approval;
 pub mod write_recovery;
 /// Grant-consuming atomic write coordination, receipts, restoration, and rollback proposals.
 pub mod write_transaction;
+/// Narrowing-only authority intersection for future workflow callers.
+pub mod workflow_authority;
 
 #[cfg(test)]
 mod s012_it01;
