@@ -1332,7 +1332,7 @@ mod tests {
         RuntimeEvent, RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass,
         RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeRunId, RuntimeTurnId,
         SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
-        TaskId,
+        TaskId, to_canonical_json,
     };
 
     use super::{
@@ -1826,6 +1826,130 @@ mod tests {
             worker.load(&start.run_id),
             Ok(vec![start, turn, first, second])
         );
+        drop(worker);
+        drop(store);
+        fs::remove_dir_all(directory).expect("remove directory");
+    }
+
+    #[test]
+    fn story_21_2_worker_enforces_the_exact_canonical_byte_boundary() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let store = Arc::new(Mutex::new(
+            OperationalStore::open(&path, &observation(), &mut TestKey).expect("encrypted store"),
+        ));
+        let worker = RuntimeJournalWorker::new(Arc::clone(&store)).expect("journal worker");
+        let mut fixture = EventFixture::new();
+        let events = vec![
+            fixture.event(
+                RuntimeEventKind::RunStarted {
+                    request_sha256: "a".repeat(64),
+                },
+                None,
+            ),
+            fixture.event(RuntimeEventKind::TurnStarted, Some("journal-turn-1")),
+            fixture.event(
+                RuntimeEventKind::Progress {
+                    code: "runtime.progress".to_owned(),
+                },
+                Some("journal-turn-1"),
+            ),
+            fixture.event(
+                RuntimeEventKind::Progress {
+                    code: "runtime.progress".to_owned(),
+                },
+                Some("journal-turn-1"),
+            ),
+            fixture.event(
+                RuntimeEventKind::Progress {
+                    code: "runtime.progress".to_owned(),
+                },
+                Some("journal-turn-1"),
+            ),
+            fixture.event(
+                RuntimeEventKind::TurnCompleted {
+                    outcome_sha256: "b".repeat(64),
+                },
+                Some("journal-turn-1"),
+            ),
+            fixture.event(
+                RuntimeEventKind::RunTerminal {
+                    state: AgentStateKind::Success,
+                    outcome_sha256: "c".repeat(64),
+                },
+                None,
+            ),
+        ];
+        let canonical_bytes = events
+            .iter()
+            .map(|event| {
+                to_canonical_json(event)
+                    .expect("canonical event bytes")
+                    .len()
+            })
+            .collect::<Vec<_>>();
+
+        let rejected_pair_capacity = canonical_bytes[1]
+            .checked_add(canonical_bytes[2])
+            .and_then(|bytes| bytes.checked_sub(1))
+            .expect("one-byte-below capacity");
+        assert!(canonical_bytes[0] <= rejected_pair_capacity);
+        worker
+            .configure(RuntimeJournalLimits {
+                queue_event_capacity: 4,
+                queue_byte_capacity: rejected_pair_capacity,
+                batch_event_capacity: 4,
+                batch_byte_capacity: rejected_pair_capacity,
+                flush_interval_ms: 250,
+            })
+            .expect("one-byte-below limits");
+        worker.append(events[0].clone()).expect("run start commits");
+
+        let store_guard = store.lock().expect("delay the sole SQLCipher writer");
+        let first = worker.append(events[1].clone()).expect("first event fits");
+        assert_eq!(first.queued_bytes, canonical_bytes[1]);
+        assert_eq!(
+            worker.append(events[2].clone()),
+            Err(RuntimeJournalError::QueueSaturated)
+        );
+        drop(store_guard);
+        worker.flush_all().expect("accepted predecessor flushes");
+        worker
+            .append(events[2].clone())
+            .expect("rejected event retries once");
+        worker.flush_all().expect("retried event flushes");
+
+        let exact_pair_capacity = canonical_bytes[3]
+            .checked_add(canonical_bytes[4])
+            .expect("exact pair capacity");
+        worker
+            .configure(RuntimeJournalLimits {
+                queue_event_capacity: 4,
+                queue_byte_capacity: exact_pair_capacity,
+                batch_event_capacity: 4,
+                batch_byte_capacity: exact_pair_capacity,
+                flush_interval_ms: 250,
+            })
+            .expect("exact-fit limits");
+        let store_guard = store.lock().expect("delay the sole SQLCipher writer");
+        worker
+            .append(events[3].clone())
+            .expect("first exact-fit event");
+        let exact = worker
+            .append(events[4].clone())
+            .expect("second exact-fit event");
+        assert_eq!(exact.queued_events, 2);
+        assert_eq!(exact.queued_bytes, exact_pair_capacity);
+        drop(store_guard);
+        worker.flush_all().expect("exact-fit pair flushes");
+
+        worker
+            .append(events[5].clone())
+            .expect("turn completion queues");
+        worker.flush_all().expect("turn completion flushes");
+        worker.append(events[6].clone()).expect("terminal commits");
+        assert_eq!(worker.load(&events[0].run_id), Ok(events));
+
         drop(worker);
         drop(store);
         fs::remove_dir_all(directory).expect("remove directory");
