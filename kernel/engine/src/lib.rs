@@ -63,6 +63,8 @@ pub mod instruction_provenance;
 pub mod local_commit;
 /// Authority-free meeting preparation, source-preserving minutes, and continuity.
 pub mod meeting_continuity;
+/// Exact non-activating evaluation gate for alternate local model runtimes.
+pub mod model_adapter_evaluation;
 pub mod model_codec;
 /// Candidate-neutral native-picker projection and stale-selection refusal.
 pub mod model_discovery;

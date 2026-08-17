@@ -1,0 +1,14 @@
+{
+  "candidate_id": "docker-model-runner-gemma4-e4b-quarantined",
+  "kind": "docker_model_runner",
+  "disposition": "rejected",
+  "reason_codes": [
+    "model.adapter.lifecycle-removal-failed",
+    "model.adapter.local-runtime-contract-absent",
+    "model.adapter.role-quality-failed",
+    "model.adapter.runtime-parity-failed"
+  ],
+  "evidence_generation_sha256": "b754cd50d0bc278e4513c81f045dea2a36cd6fe73495519ba642db1debc1edbd",
+  "activation_authority": false,
+  "evaluation_sha256": "9c8144b53ac5b97e9d37773fea4b33178a6c70a3286f46c254d489316a7b4eb9"
+}
