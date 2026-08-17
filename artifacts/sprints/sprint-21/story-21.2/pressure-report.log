@@ -1,0 +1,20 @@
+=== canonical-byte-boundary ===
+
+running 1 test
+test runtime_journal::tests::story_21_2_worker_enforces_the_exact_canonical_byte_boundary ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 609 filtered out; finished in 0.04s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+=== delayed-sqlcipher-cancellation ===
+
+running 1 test
+AGENTMAGE_RUNTIME_PRESSURE_METRICS={"cancellation_latency_us":1054,"cancellation_limit_ms":250,"client_progress_while_store_delayed":true,"external_network_used":false,"fragment_count_before_cancellation":17,"store_delay_ms":18,"terminal_waited_for_correctness_durability":true}
+test runtime_loop::tests::story_21_2_durable_model_progress_and_cancellation_survive_delayed_sqlcipher ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 609 filtered out; finished in 0.06s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)

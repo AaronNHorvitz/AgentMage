@@ -292,10 +292,18 @@ The fixed Fedora source-load profile requires at least 250 journal events per
 second for an 8,196-event worker-backed run, no more than 30 seconds of journal
 time, no more than 1,024 queued events or 4 MiB of queued canonical bytes, and
 16 verified reopens within 60 seconds. These are source-profile thresholds,
-not installed-platform guarantees. Real filesystem fault injection, integrated
-model-stream and cancellation latency under disk stall, and installed-host
-shutdown evidence remain open under Sub-tasks 21.2.3.3 and 21.2.3.5 and later
-installed-platform gates.
+not installed-platform guarantees. A separate source-pressure campaign proves
+that one byte below a two-event canonical reservation is rejected, an exact
+byte reservation is accepted, model work and client progress continue while
+the sole SQLCipher store mutex is held, cancellation is observed inside the
+250-millisecond ceiling, and terminal publication waits for correctness
+durability. Its hash-bound report and repository-root-redacted trace are
+retained as
+[`pressure-report.json`](../../artifacts/sprints/sprint-21/story-21.2/pressure-report.json)
+and `pressure-report.log`. The deterministic mutex delay is not physical
+filesystem/device fault injection; installed model/runtime, shutdown, and
+additional supported-platform evidence remain open under Sub-tasks 21.2.3.3
+and 21.2.3.5 and later installed-platform gates.
 
 ## Reason Codes
 
@@ -336,7 +344,7 @@ installed-platform gates.
 | Dedicated bounded worker, saturation, sticky failure, shutdown, and slow-store client isolation | `runtime_journal` worker tests and Story 50.2 load campaign | Implemented at source level |
 | Projection canary exclusion, artifact-read isolation, and external-telemetry dependency closure | `runtime_projection` and `runtime_artifact` Story 21.2 tests | Implemented at source level; broader strict-local policy snapshot reconciliation remains separate |
 | Requirement-to-code-to-test traceability and file-integrity index | Story 21.2 evidence-index generator, mutation tests, and retained JSON index | Implemented with complete, partial, and open states preserved |
-| Real-disk model-stream and cancellation isolation | Story 21.2 / Story 50.2 | Open |
+| Deterministic SQLCipher-delay model progress, client progress, cancellation, and terminal isolation | Story 21.2 pressure runner | Implemented locally; physical filesystem/device delay remains open |
 | Journal queue, batch, correctness-transaction, and subscriber process-stop matrix | Story 21.2 crash runner, raw trace, and mutation tests | Implemented locally |
-| Real-disk pressure, integrated physical-effect recovery, and multi-profile benchmark campaign | Story 21.2.3 | Open |
+| Physical filesystem/device pressure, integrated physical-effect recovery, and multi-profile benchmark campaign | Story 21.2.3 | Open |
 | Installed native-client and independent-review evidence | Sprint 23 and release gates | Open |

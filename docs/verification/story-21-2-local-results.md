@@ -57,6 +57,15 @@
   encrypted reopen. The report binds the repository-root-redacted command
   trace, command identity, source revision, and source files and passes four
   closed-shape and mutation tests.
+- The retained source-pressure campaign rejects a one-byte-short cumulative
+  reservation, accepts the exact canonical byte boundary, and replays the
+  rejected event once after flush. Its durable coordinator advances 17 model
+  fragment steps while the sole SQLCipher store mutex is held, observes
+  cancellation in 1,054 microseconds against a 250-millisecond ceiling,
+  publishes model failure to the client during the delay, and withholds the
+  terminal event until correctness durability resumes. The report and raw
+  checkout-root-redacted trace bind both exact tests to source commit
+  `8af0e30602040a316f15eededf2ab9fe02db9f38` and pass four evidence tests.
 - The immutable Fedora worker campaign binds nine command logs and 42 focused
   tests to source commit `f8d521c4dc4bb9b2053447a61aaac04028b4906b`;
   its 8,196-event workload, bounded saturation recovery, memory, disk,
@@ -94,6 +103,8 @@ python3 scripts/story_21_2_evidence_index.py --check
 python3 -m unittest tests.test_story_21_2_evidence_index
 python3 scripts/story_21_2_crash_evidence.py
 python3 -m unittest tests.test_story_21_2_crash_evidence
+python3 scripts/story_21_2_pressure_evidence.py
+python3 -m unittest tests.test_story_21_2_pressure_evidence
 npm run schemas:check
 npx markdownlint-cli2 README.md docs/architecture/runtime-event-journal.md docs/verification/story-21-2-local-results.md
 python3 scripts/check_mermaid.py
@@ -106,19 +117,19 @@ python3 scripts/runtime_hardening_load.py --output <fresh-evidence-path>
   recovered authority/receipt state, and a still-open `tool_started` journal
   transition remains outside the journal-only matrix. The current source does
   not fabricate a terminal event during authority-only recovery.
-- The slow-store source test holds the sole connection lock deterministically;
-  real filesystem or device fault injection and integrated model-stream and
-  cancellation latency while storage is blocked remain open.
+- The slow-store pressure tests hold the sole connection mutex
+  deterministically. Physical filesystem/device fault injection and installed
+  model-runtime or native-client pressure remain open.
 - Persisted user transcript and local diagnostics lifecycle implementations
   remain open. Their bounded in-memory projections do not establish durable
   retention, export, deletion, or installed-client behavior.
 - Kernel `SIGKILL`, host power loss, torn-sector, controller-failure, and
   filesystem-corruption campaigns remain open; the retained matrix uses
   deterministic process exit without unwinding.
-- The retained campaign covers event count, producer saturation, one slow
-  consumer, bounded memory/disk, isolated slow-store admission, cancellation
-  fixtures, and restart. Exhaustive byte edges, real disk latency, and
-  integrated model-stream/cancellation pressure remain open.
+- The retained campaigns cover event count and exact byte edges, producer
+  saturation, one slow consumer, bounded memory/disk, isolated slow-store
+  admission, integrated source-level model progress and cancellation, and
+  restart. Physical disk/device latency fault injection remains open.
 - Product-wide memory-dump, crash-artifact, installed-client, and operating
   system telemetry observation remains outside this story-local projection
   campaign. The repository-wide strict-local source policy snapshot also needs

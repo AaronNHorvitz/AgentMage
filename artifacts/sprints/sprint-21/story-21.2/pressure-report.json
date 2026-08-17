@@ -1,0 +1,90 @@
+{
+  "artifact_id": "story-21.2-runtime-journal-pressure",
+  "commands": [
+    {
+      "argv_sha256": "3338f8becc8e686015e87a330636b0b65f71a662719394cf42e406e62e5f2e90",
+      "command_id": "canonical-byte-boundary",
+      "elapsed_ms": 95,
+      "exit_code": 0,
+      "failed": 0,
+      "passed": 1
+    },
+    {
+      "argv_sha256": "4bfe3a14dd15493c236b43a93762bf10aae85b11acb06debb6fb92af6b7b9cbb",
+      "command_id": "delayed-sqlcipher-cancellation",
+      "elapsed_ms": 115,
+      "exit_code": 0,
+      "failed": 0,
+      "passed": 1
+    }
+  ],
+  "coverage": {
+    "cancellation_order_replayed_exactly": true,
+    "client_progress_while_store_delayed": true,
+    "exact_queue_byte_capacity_accepted": true,
+    "model_progress_while_store_delayed": true,
+    "one_byte_below_queue_capacity_rejected": true,
+    "rejected_event_retry_replayed_once": true,
+    "terminal_waited_for_correctness_durability": true
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The SQLCipher delay is induced by holding the process-owned sole-store mutex; physical device, controller, filesystem, and kernel fault injection are not claimed.",
+    "The model boundary is a deterministic source fixture; installed model-runtime and native-client performance are not claimed.",
+    "The result is current-host Linux source evidence, not an additional supported-platform profile or release evidence.",
+    "Manual fuzzing remains deferred and was not executed by this campaign.",
+    "The retained command trace replaces the absolute checkout root with the literal <repository-root>; metrics and test results are unchanged."
+  ],
+  "metrics": {
+    "cancellation_latency_us": 1054,
+    "cancellation_limit_ms": 250,
+    "client_progress_while_store_delayed": true,
+    "external_network_used": false,
+    "fragment_count_before_cancellation": 17,
+    "store_delay_ms": 18,
+    "terminal_waited_for_correctness_durability": true
+  },
+  "private_user_data_used": false,
+  "raw_trace": {
+    "bytes": 1122,
+    "path": "artifacts/sprints/sprint-21/story-21.2/pressure-report.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "1b9ed6adff2a7345a86ec62f3a9cad05e56c68607d8357176df47dbad7b5e263"
+  },
+  "schema_version": 1,
+  "source_revision": "8af0e30602040a316f15eededf2ab9fe02db9f38",
+  "sources": [
+    {
+      "bytes": 96409,
+      "path": "kernel/engine/src/runtime_journal.rs",
+      "sha256": "6d961665fc0163026e57ef38ad312c28a720347af178833f8d79679f7d81409e"
+    },
+    {
+      "bytes": 136080,
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "a62532d85d54052acc4e8ae7f9ab1547fc9d0d73470c743d40198a29e9e39728"
+    },
+    {
+      "bytes": 90067,
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "c8f24c701a6ad5afe895749c9353b20be4795f2f7c98725582f60a84be729d92"
+    },
+    {
+      "bytes": 13894,
+      "path": "scripts/story_21_2_pressure_evidence.py",
+      "sha256": "d20e4bc4cbbb14ed7fdc5c4a002384f245b6e4ecaa9e7a75c6ed3b05b4b96395"
+    },
+    {
+      "bytes": 2622,
+      "path": "tests/test_story_21_2_pressure_evidence.py",
+      "sha256": "a43fbbd33a35e6e7444fe81bc1018b58ffc2d5e85e0ad7058706a8bb222f3621"
+    }
+  ],
+  "status": "pass-current-linux-source-pressure",
+  "task_ids": [
+    "21.2.3.3",
+    "RV-18"
+  ]
+}
