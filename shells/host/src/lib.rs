@@ -34,14 +34,17 @@ pub mod diagnostic_export;
 /// Authority-free knowledge-preview composition into kernel filesystem drafts.
 pub mod knowledge_write;
 
+/// Transport-neutral native Chat adapter for the shared runtime coordinator.
+pub mod native_chat_runtime;
+
 pub mod protocol;
 
 /// Native capability registration for the shared runtime tool dispatcher.
 pub mod runtime_tools;
-/// Caller-neutral, narrowing-only workflow attachment to the shared coding runtime.
-pub mod workflow_caller;
 /// Narrow child-assignment adapter over the shared workflow caller runtime.
 pub mod workflow_assignment;
+/// Caller-neutral, narrowing-only workflow attachment to the shared coding runtime.
+pub mod workflow_caller;
 
 /// Versioned thin-client contracts shared by terminal and headless interfaces.
 pub mod headless;

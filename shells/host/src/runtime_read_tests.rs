@@ -14,11 +14,11 @@ use agentmage_kernel_contracts::{
     ModelMessageId, ModelMessageRole, ModelProposalKind, ModelResourceReport, ModelRunRequest,
     ModelRunResult, ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate, OperationOutcome,
     PlanId, PolicyId, PostconditionResult, ReceiptId, RepositorySnapshotId, RollbackPlan,
-    RuntimeOperationId, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode,
-    SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall,
-    ToolCatalogId, ToolDefinition, ToolId, ToolResult, VerifierCandidate, VerifierDisposition,
-    VerifierId, VerifierRecordId, VerifierSource, WorkPacket, WorkPacketId, WorkPacketState,
-    WorkspaceId, to_canonical_json,
+    RuntimeEvent, RuntimeOperationId, RuntimeOutcome, RuntimeRunId, RuntimeRunLimits,
+    RuntimeRunRequest, RuntimeSessionMode, SessionId, StateChange, StopCondition,
+    StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId,
+    ToolResult, VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId,
+    VerifierSource, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
 };
 use agentmage_kernel_engine::model_codec::proposal_digest;
 use agentmage_kernel_engine::runtime_coordinator::{
@@ -316,6 +316,27 @@ impl RuntimeVerifierPort for NativeReadVerifier {
 
 #[test]
 fn story_23_4_fake_model_uses_existing_native_read_tool_then_verifies_completion() {
+    let (request, events, outcome, observed_result) = completed_native_read_fixture();
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(outcome.turn_count, 2);
+    assert_eq!(outcome.model_call_count, 2);
+    assert_eq!(outcome.tool_call_count, 1);
+    assert_eq!(outcome.receipt_ids.len(), 1);
+    assert!(observed_result);
+    assert!(outcome.evidence.iter().any(|item| {
+        item.evidence_id.as_str() == "native-read-evidence-0001"
+            && item.observed_revision.as_deref() == Some(SNAPSHOT_ID)
+    }));
+    verify_runtime_outcome(&outcome, &request).expect("outcome verifies");
+    let mut sequence = RuntimeEventSequence::new();
+    for event in &events {
+        sequence.push(event).expect("ordered runtime event");
+    }
+    assert!(sequence.is_terminal());
+}
+
+pub(crate) fn completed_native_read_fixture()
+-> (RuntimeRunRequest, Vec<RuntimeEvent>, RuntimeOutcome, bool) {
     let registry = read_only_runtime_registry().expect("native read registry");
     let profile = deterministic_profile();
     let read_request = ReadOnlyRequest {
@@ -379,22 +400,18 @@ fn story_23_4_fake_model_uses_existing_native_read_tool_then_verifies_completion
     else {
         panic!("pre-authorized deterministic read cannot pause");
     };
-    assert_eq!(outcome.state, AgentStateKind::Success);
-    assert_eq!(outcome.turn_count, 2);
-    assert_eq!(outcome.model_call_count, 2);
-    assert_eq!(outcome.tool_call_count, 1);
-    assert_eq!(outcome.receipt_ids.len(), 1);
-    assert!(observed_result.load(Ordering::SeqCst));
-    assert!(outcome.evidence.iter().any(|item| {
-        item.evidence_id.as_str() == "native-read-evidence-0001"
-            && item.observed_revision.as_deref() == Some(SNAPSHOT_ID)
-    }));
     verify_runtime_outcome(&outcome, &admitted_request).expect("outcome verifies");
     let mut sequence = RuntimeEventSequence::new();
     for event in coordinator.events() {
         sequence.push(event).expect("ordered runtime event");
     }
     assert!(sequence.is_terminal());
+    (
+        admitted_request,
+        coordinator.events().to_vec(),
+        outcome,
+        observed_result.load(Ordering::SeqCst),
+    )
 }
 
 fn deterministic_profile() -> ExactModelProfile {

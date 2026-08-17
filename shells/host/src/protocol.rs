@@ -4,9 +4,12 @@ use serde::{Deserialize, Deserializer, Serialize};
 
 use agentmage_capability_read_only::ReadOnlyResult;
 use agentmage_kernel_contracts::{
-    DoctorReport, HandoffProhibitedAction, HandoffReview, LocalHandoffReceipt, ModelPickerSnapshot,
-    ModelSelectionRevalidation, RenderedHandoff,
+    CancellationId, DoctorReport, HandoffProhibitedAction, HandoffReview, LocalHandoffReceipt,
+    ModelPickerSnapshot, ModelSelectionRevalidation, RenderedHandoff, RuntimeApprovalChallenge,
+    RuntimeApprovalResponse, RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId,
+    RuntimeRunRequest,
 };
+use agentmage_kernel_engine::runtime_coordinator::verify_runtime_run_request;
 
 /// Version of the Phase 9 host protocol.
 pub const HOST_PROTOCOL_VERSION: u16 = 1;
@@ -21,6 +24,7 @@ const MAX_IDENTIFIER_BYTES: usize = 128;
 const MAX_COMPONENTS: usize = 256;
 const MAX_COMPONENT_BYTES: usize = 255;
 const MAX_TOOL_ARGUMENT_BYTES: usize = 64 * 1024;
+const MAX_RUNTIME_PROMPT_BYTES: usize = 4 * 1024;
 
 /// Exact object kind requested for one bounded worker projection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -69,7 +73,7 @@ impl HostProtocolError {
 }
 
 /// Exact request admitted from an authenticated VS Code peer.
-#[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostRequest {
     /// Build one exact local-only handoff review from trusted current session state.
@@ -238,6 +242,65 @@ pub enum HostRequest {
         request_id: String,
         /// Exact pending preview identity.
         preview_id: String,
+    },
+    /// Ask the trusted host to frame one exact native Chat runtime request.
+    PrepareRuntime {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact user-selected profile identity.
+        profile_id: String,
+        /// Digest of the exact picker entry shown to the user.
+        expected_entry_sha256: String,
+        /// Stable workspace identity selected by the shell.
+        workspace_id: String,
+        /// Absolute root supplied only from the selected local VS Code workspace.
+        workspace_root: String,
+        /// Bounded user request, retained as inert task input.
+        prompt: String,
+    },
+    /// Submit one host-framed request to the shared runtime coordinator.
+    StartRuntime {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact request previously framed by the trusted host.
+        run_request: Box<RuntimeRunRequest>,
+    },
+    /// Advance or replay one exact shared-runtime run.
+    AdvanceRuntime {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact active runtime run.
+        run_id: RuntimeRunId,
+        /// Digest of the exact admitted runtime request.
+        request_sha256: String,
+        /// Exact last event already accepted by the shell, or `null` for none.
+        #[serde(deserialize_with = "deserialize_required_option")]
+        after_event_cursor: Option<RuntimeEventCursor>,
+        /// Exact protected user response, or `null` for a replay-only poll.
+        #[serde(deserialize_with = "deserialize_required_option")]
+        approval_response: Option<RuntimeApprovalResponse>,
+    },
+    /// Cancel one exact shared-runtime run from the shell boundary.
+    CancelRuntime {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact active runtime run.
+        run_id: RuntimeRunId,
+        /// Digest of the exact admitted runtime request.
+        request_sha256: String,
+        /// Stable cancellation-tree identity selected for this request.
+        cancellation_id: CancellationId,
+        /// Exact last event already accepted by the shell, or `null` for none.
+        #[serde(deserialize_with = "deserialize_required_option")]
+        after_event_cursor: Option<RuntimeEventCursor>,
     },
 }
 
@@ -424,6 +487,89 @@ impl HostRequest {
                 }
                 (*schema_version, request_id)
             }
+            Self::PrepareRuntime {
+                schema_version,
+                request_id,
+                profile_id,
+                expected_entry_sha256,
+                workspace_id,
+                workspace_root,
+                prompt,
+            } => {
+                if !valid_identifier(profile_id)
+                    || !valid_sha256(expected_entry_sha256)
+                    || !valid_identifier(workspace_id)
+                    || workspace_root.is_empty()
+                    || workspace_root.len() > 4_096
+                    || workspace_root.contains('\0')
+                    || prompt.trim().is_empty()
+                    || prompt.len() > MAX_RUNTIME_PROMPT_BYTES
+                    || prompt.contains('\0')
+                {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::StartRuntime {
+                schema_version,
+                request_id,
+                run_request,
+            } => {
+                verify_runtime_run_request(run_request)
+                    .map_err(|_| HostProtocolError::InvalidValue)?;
+                (*schema_version, request_id)
+            }
+            Self::AdvanceRuntime {
+                schema_version,
+                request_id,
+                run_id,
+                request_sha256,
+                after_event_cursor,
+                approval_response,
+                ..
+            } => {
+                if !valid_identifier(run_id.as_str())
+                    || !valid_sha256(request_sha256)
+                    || after_event_cursor.as_ref().is_some_and(|cursor| {
+                        cursor.run_id != *run_id
+                            || !valid_identifier(cursor.event_id.as_str())
+                            || !valid_sha256(&cursor.event_sha256)
+                    })
+                    || approval_response.as_ref().is_some_and(|response| {
+                        response.run_id != *run_id
+                            || !valid_identifier(response.approval_id.as_str())
+                            || !valid_sha256(&response.challenge_sha256)
+                            || response
+                                .grant_id
+                                .as_ref()
+                                .is_some_and(|grant_id| !valid_identifier(grant_id.as_str()))
+                    })
+                {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
+            Self::CancelRuntime {
+                schema_version,
+                request_id,
+                run_id,
+                request_sha256,
+                cancellation_id,
+                after_event_cursor,
+            } => {
+                if !valid_identifier(run_id.as_str())
+                    || !valid_sha256(request_sha256)
+                    || !valid_identifier(cancellation_id.as_str())
+                    || after_event_cursor.as_ref().is_some_and(|cursor| {
+                        cursor.run_id != *run_id
+                            || !valid_identifier(cursor.event_id.as_str())
+                            || !valid_sha256(&cursor.event_sha256)
+                    })
+                {
+                    return Err(HostProtocolError::InvalidValue);
+                }
+                (*schema_version, request_id)
+            }
         };
         if version != HOST_PROTOCOL_VERSION {
             return Err(HostProtocolError::VersionMismatch);
@@ -450,7 +596,7 @@ pub struct ReceiptSummary {
 }
 
 /// Exact bounded response returned by the host.
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostResponse {
     /// Mandatory exact local-only handoff review.
@@ -613,6 +759,34 @@ pub enum HostResponse {
         /// Durable content-free receipt fields.
         receipt: ReceiptSummary,
     },
+    /// One exact reusable-runtime request framed by the trusted host.
+    RuntimePrepared {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Exact request that may be submitted unchanged to the shared coordinator.
+        run_request: Box<RuntimeRunRequest>,
+    },
+    /// One ordered shared-runtime boundary projection.
+    RuntimeStep {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Exact active runtime run.
+        run_id: RuntimeRunId,
+        /// Digest of the exact admitted runtime request.
+        request_sha256: String,
+        /// Ordered verified events after the shell's supplied cursor.
+        events: Vec<RuntimeEvent>,
+        /// Exact protected challenge only while the coordinator is waiting.
+        #[serde(deserialize_with = "deserialize_required_option")]
+        approval: Option<RuntimeApprovalChallenge>,
+        /// Canonical outcome only after the coordinator reaches a terminal state.
+        #[serde(deserialize_with = "deserialize_required_option")]
+        outcome: Option<Box<RuntimeOutcome>>,
+    },
     /// A pending preview was cancelled before execution.
     Cancelled {
         /// Protocol schema version.
@@ -701,6 +875,9 @@ fn valid_semver(value: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use agentmage_kernel_contracts::{
+        CONTRACT_SCHEMA_VERSION, RuntimeApprovalDisposition, RuntimeApprovalResponse,
+    };
     use serde_json::json;
 
     use super::{
@@ -814,6 +991,102 @@ mod tests {
         assert!(matches!(
             parse_request(&serde_json::to_vec(&invalid_digest).expect("request JSON")),
             Err(HostProtocolError::InvalidValue)
+        ));
+    }
+
+    #[test]
+    fn native_chat_runtime_requests_are_closed_exact_and_host_framed() {
+        let prepare = json!({
+            "kind": "prepare_runtime",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-runtime-0001",
+            "profile_id": "exact-profile-0001",
+            "expected_entry_sha256": "a".repeat(64),
+            "workspace_id": "workspace-0001",
+            "workspace_root": "/tmp/workspace",
+            "prompt": "Inspect the bounded repository"
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&prepare).expect("request JSON")),
+            Ok(HostRequest::PrepareRuntime { .. })
+        ));
+        let mut endpoint_injection = prepare.clone();
+        endpoint_injection["model_endpoint"] = json!("https://example.invalid");
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&endpoint_injection).expect("request JSON")),
+            Err(HostProtocolError::Malformed)
+        ));
+
+        let (_, run_request) = crate::coding_run::tests::fixture_profile_and_request();
+        let start = HostRequest::StartRuntime {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-runtime-0002".to_owned(),
+            run_request: Box::new(run_request.clone()),
+        };
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&start).expect("request JSON")),
+            Ok(HostRequest::StartRuntime { .. })
+        ));
+
+        let advance = HostRequest::AdvanceRuntime {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-runtime-0003".to_owned(),
+            run_id: run_request.run_id.clone(),
+            request_sha256: run_request.request_sha256.clone(),
+            after_event_cursor: Some(agentmage_kernel_contracts::RuntimeEventCursor {
+                run_id: run_request.run_id.clone(),
+                event_id: agentmage_kernel_contracts::RuntimeEventId::from_raw(
+                    "runtime-event-0007",
+                ),
+                sequence: 7,
+                event_sha256: "c".repeat(64),
+            }),
+            approval_response: Some(RuntimeApprovalResponse {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                run_id: run_request.run_id.clone(),
+                approval_id: agentmage_kernel_contracts::ApprovalId::from_raw(
+                    "runtime-approval-0001",
+                ),
+                disposition: RuntimeApprovalDisposition::Deny,
+                challenge_sha256: "b".repeat(64),
+                grant_id: None,
+            }),
+        };
+        let encoded = serde_json::to_vec(&advance).expect("advance JSON");
+        assert!(matches!(
+            parse_request(&encoded),
+            Ok(HostRequest::AdvanceRuntime {
+                after_event_cursor: Some(agentmage_kernel_contracts::RuntimeEventCursor {
+                    sequence: 7,
+                    ..
+                }),
+                approval_response: Some(_),
+                ..
+            })
+        ));
+        let mut hidden_authority: serde_json::Value =
+            serde_json::from_slice(&encoded).expect("advance value");
+        hidden_authority["approval_response"]["policy_override"] = json!(true);
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&hidden_authority).expect("request JSON")),
+            Err(HostProtocolError::Malformed)
+        ));
+
+        let cancel = json!({
+            "kind": "cancel_runtime",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-runtime-0004",
+            "run_id": run_request.run_id,
+            "request_sha256": run_request.request_sha256,
+            "cancellation_id": "runtime-cancellation-0001",
+            "after_event_cursor": null
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&cancel).expect("request JSON")),
+            Ok(HostRequest::CancelRuntime {
+                after_event_cursor: None,
+                ..
+            })
         ));
     }
 
