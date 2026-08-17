@@ -8,18 +8,24 @@ use agentmage_capability_read_only::{
     GitInspectionResult, ReadOnlyOutcome, ReadOnlyResult, parse_git_inspection,
 };
 use agentmage_kernel_contracts::{
-    ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId, AuthorizedWorkspaceHandle,
-    ContractPayload, DataSensitivity, EvidenceId, EvidenceKind, EvidenceReference, GrantId,
-    GrantNonce, OperationAttemptId, OperationOutcome, RuntimeApprovalChallenge,
-    RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeOperationId, RuntimeRunRequest,
-    RuntimeSessionMode, SessionId, StateChange, ToolCall, ToolDefinition, ToolResult,
-    to_canonical_json,
+    ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
+    AuthorizedWorkspaceHandle, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind,
+    EvidenceReference, GrantId, GrantNonce, GrantOperation, OperationAttemptId, OperationOutcome,
+    ReceiptId, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
+    RuntimeOperationId, RuntimeRunRequest, RuntimeSessionMode, SessionId, StateChange, ToolCall,
+    ToolDefinition, ToolResult, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     authority_transaction::AuthorityTransactionRequest,
     command_runner::{
         BoundedCommandExecutor, CommandCapturedOutput, CommandEffectDriver, CommandReceipt,
         RegisteredCommandWrapperBinding, verify_command_receipt,
+    },
+    filesystem_control::{
+        FilesystemApprovalDecision, FilesystemApprovalPreview, FilesystemApprovalReceipt,
+        FilesystemGrantRequest, FilesystemPlan, FilesystemPlanRequest,
+        FilesystemTransactionOutcome, FilesystemTransactionRequest, build_filesystem_plan,
+        render_filesystem_preview, verify_filesystem_receipts,
     },
     grants::SessionReadGrantRequest,
     policy::PolicyEvaluationContext,
@@ -38,22 +44,34 @@ use agentmage_kernel_engine::{
         ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationStatus,
         normalize_validation_result, verify_validation_receipt,
     },
+    write_approval::{
+        ShadowChangeSet, WriteApprovalDecision, WriteApprovalPreview, WriteApprovalReceipt,
+        WriteChangeScope, WriteGrantRequest, WriteReviewNarrative, render_write_preview,
+    },
+    write_transaction::{WriteTransactionOutcome, WriteTransactionRequest, verify_write_receipts},
 };
 use agentmage_platform_linux::{
-    LinuxAuthorityRuntime, LinuxAuthorizedWorkspace, LinuxReadOnlyToolEffectDriver,
-    LinuxReadOnlyToolInput, LinuxSandboxRunner,
+    LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits, LinuxAuthorityRuntime,
+    LinuxAuthorizedWorkspace, LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits,
+    LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxRunner,
 };
 use rustix::rand::{GetRandomFlags, getrandom};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use crate::{
+    code_change::{
+        BoundStructuredChange, StructuredShadowChangeSetRequest, build_structured_shadow_change_set,
+    },
     coding_authority::{
         ApprovedCodingGrant, ApprovedCodingGrantRequest, CodingApprovalRequest,
         CodingRuntimePolicy, derive_approved_coding_grant, render_coding_approval_request,
     },
     coding_dispatch::PreparedNativeCodingCall,
-    linux_coding::{LinuxCodingTargetBinding, LinuxCodingWorkspace, PreparedLinuxCodingOperation},
+    linux_coding::{
+        LinuxCodingTargetBinding, LinuxCodingWorkspace, LinuxCodingWriteDraft,
+        PreparedLinuxCodingOperation,
+    },
 };
 
 const PREVIEW_LIFETIME_MS: u64 = 60_000;
@@ -101,17 +119,145 @@ impl CodingIdentitySource for OsCodingIdentitySource {
     }
 }
 
+enum PendingCodingAuthority {
+    Generic(Box<ApprovalRequest>),
+    StructuredWrite {
+        approval_id: ApprovalId,
+        proposed_grant_id: GrantId,
+        parent_grant_id: GrantId,
+        preview: Box<WriteApprovalPreview>,
+        change_set: Box<ShadowChangeSet>,
+    },
+    FilesystemWrite {
+        approval_id: ApprovalId,
+        proposed_grant_id: GrantId,
+        parent_grant_id: GrantId,
+        preview: Box<FilesystemApprovalPreview>,
+        plan: Box<FilesystemPlan>,
+    },
+}
+
+impl PendingCodingAuthority {
+    fn approval_id(&self) -> &ApprovalId {
+        match self {
+            Self::Generic(approval) => &approval.approval_id,
+            Self::StructuredWrite { approval_id, .. }
+            | Self::FilesystemWrite { approval_id, .. } => approval_id,
+        }
+    }
+
+    fn proposed_grant_id(&self) -> &GrantId {
+        match self {
+            Self::Generic(approval) => &approval.proposed_grant_id,
+            Self::StructuredWrite {
+                proposed_grant_id, ..
+            }
+            | Self::FilesystemWrite {
+                proposed_grant_id, ..
+            } => proposed_grant_id,
+        }
+    }
+
+    fn preview_sha256(&self) -> &str {
+        match self {
+            Self::Generic(approval) => &approval.confirmation_sha256,
+            Self::StructuredWrite { preview, .. } => &preview.preview_sha256,
+            Self::FilesystemWrite { preview, .. } => &preview.preview_sha256,
+        }
+    }
+}
+
 struct PendingCodingOperation<'workspace> {
     operation_id: RuntimeOperationId,
-    approval: ApprovalRequest,
+    operation: GrantOperation,
+    tool_call: ToolCall,
+    expires_at_epoch_ms: u64,
+    authority: PendingCodingAuthority,
     prepared: PreparedLinuxCodingOperation<'workspace>,
 }
 
+enum IssuedCodingAuthority {
+    Generic {
+        approval: Box<ApprovalRequest>,
+        approved: Box<ApprovedCodingGrant>,
+    },
+    StructuredWrite {
+        approval_id: ApprovalId,
+        preview_sha256: String,
+        decision_sha256: String,
+        approval: Box<WriteApprovalReceipt>,
+        change_set: Box<ShadowChangeSet>,
+    },
+    FilesystemWrite {
+        approval_id: ApprovalId,
+        preview_sha256: String,
+        decision_sha256: String,
+        approval: Box<FilesystemApprovalReceipt>,
+        plan: Box<FilesystemPlan>,
+    },
+}
+
 struct IssuedCodingOperation<'workspace> {
-    approval: ApprovalRequest,
-    approved: ApprovedCodingGrant,
+    tool_call: ToolCall,
+    expires_at_epoch_ms: u64,
+    authority: IssuedCodingAuthority,
     prepared: PreparedLinuxCodingOperation<'workspace>,
     resolved_at_epoch_ms: u64,
+}
+
+impl IssuedCodingOperation<'_> {
+    fn approval_id(&self) -> &ApprovalId {
+        match &self.authority {
+            IssuedCodingAuthority::Generic { approval, .. } => &approval.approval_id,
+            IssuedCodingAuthority::StructuredWrite { approval_id, .. }
+            | IssuedCodingAuthority::FilesystemWrite { approval_id, .. } => approval_id,
+        }
+    }
+
+    fn preview_sha256(&self) -> &str {
+        match &self.authority {
+            IssuedCodingAuthority::Generic { approval, .. } => &approval.confirmation_sha256,
+            IssuedCodingAuthority::StructuredWrite { preview_sha256, .. }
+            | IssuedCodingAuthority::FilesystemWrite { preview_sha256, .. } => preview_sha256,
+        }
+    }
+
+    fn grant_id(&self) -> &GrantId {
+        match &self.authority {
+            IssuedCodingAuthority::Generic { approved, .. } => &approved.grant.grant_id,
+            IssuedCodingAuthority::StructuredWrite { approval, .. } => &approval.grant.grant_id,
+            IssuedCodingAuthority::FilesystemWrite { approval, .. } => &approval.grant.grant_id,
+        }
+    }
+
+    fn decision_sha256(&self) -> &str {
+        match &self.authority {
+            IssuedCodingAuthority::Generic { approved, .. } => &approved.decision_sha256,
+            IssuedCodingAuthority::StructuredWrite {
+                decision_sha256, ..
+            }
+            | IssuedCodingAuthority::FilesystemWrite {
+                decision_sha256, ..
+            } => decision_sha256,
+        }
+    }
+
+    fn authority_sha256(&self) -> &str {
+        match &self.authority {
+            IssuedCodingAuthority::Generic { approved, .. } => &approved.authority_sha256,
+            IssuedCodingAuthority::StructuredWrite { approval, .. } => &approval.binding_sha256,
+            IssuedCodingAuthority::FilesystemWrite { approval, .. } => &approval.binding_sha256,
+        }
+    }
+
+    fn generic_authority(
+        &self,
+    ) -> Result<(&ApprovalRequest, &ApprovedCodingGrant), RuntimePortFailure> {
+        match &self.authority {
+            IssuedCodingAuthority::Generic { approval, approved } => Ok((approval, approved)),
+            _ => Err(RuntimePortFailure::Invalid),
+        }
+    }
 }
 
 /// Explicit verified dependencies required to construct one Linux coding boundary.
@@ -254,7 +400,6 @@ where
         let prepared = workspace
             .prepare(call)
             .map_err(|_| RuntimePortFailure::Invalid)?;
-        let targets = operation_targets(prepared.binding())?;
         let expires_at_epoch_ms = now_epoch_ms
             .checked_add(PREVIEW_LIFETIME_MS)
             .ok_or(RuntimePortFailure::Invalid)?;
@@ -287,35 +432,103 @@ where
                 policy_sha256: self.policy.engine().policy_sha256().to_owned(),
             })
             .map_err(|_| RuntimePortFailure::Invalid)?;
-        let approval = render_coding_approval_request(
-            self.workspace.profile().registry(),
-            CodingApprovalRequest {
-                parent: &parent,
-                approval_id: ApprovalId::from_raw(self.next_id("approval")?),
-                proposed_grant_id: GrantId::from_raw(self.next_id("grant-operation")?),
-                call,
-                operation: prepared.operation().operation(),
-                targets,
-                operation_plan_sha256: prepared.operation().plan_sha256(),
-                issued_at_epoch_ms: now_epoch_ms,
-                expires_at_epoch_ms,
-            },
-        )
-        .map_err(|_| RuntimePortFailure::Invalid)?;
-        let evaluation = RuntimePermissionEvaluation::Ask {
-            approval_id: approval.approval_id.clone(),
-            grant_id: approval.proposed_grant_id.clone(),
-            preview_sha256: approval.confirmation_sha256.clone(),
-            expires_at_epoch_ms: approval.expires_at_epoch_ms,
+        let approval_id = ApprovalId::from_raw(self.next_id("approval")?);
+        let proposed_grant_id = GrantId::from_raw(self.next_id("grant-operation")?);
+        let plan_id = self.next_id("change-plan")?;
+        let authority = match prepared.write_draft() {
+            Some(LinuxCodingWriteDraft::StructuredPatch(plan)) => {
+                let LinuxCodingTargetBinding::ExistingFile { target, .. } = prepared.binding()
+                else {
+                    return Err(RuntimePortFailure::Invalid);
+                };
+                let summary = plan.summary();
+                let change_set = build_structured_shadow_change_set(
+                    &parent,
+                    StructuredShadowChangeSetRequest {
+                        change_set_id: plan_id,
+                        observed_at_epoch_ms: now_epoch_ms,
+                        intent_sha256: summary.intent_sha256.clone(),
+                        change_plan_sha256: summary.change_plan_sha256.clone(),
+                        scope: WriteChangeScope::Minimal,
+                        expanded_scope_approval_sha256: None,
+                        changes: vec![BoundStructuredChange {
+                            operation_id: operation_id.as_str().to_owned(),
+                            target: target.clone(),
+                            plan: plan.clone(),
+                        }],
+                        review: coding_write_review(true, prepared.operation().plan_sha256()),
+                        permitted_verification: coding_write_verification(),
+                    },
+                )
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+                let preview =
+                    render_write_preview(&change_set).map_err(|_| RuntimePortFailure::Invalid)?;
+                PendingCodingAuthority::StructuredWrite {
+                    approval_id,
+                    proposed_grant_id,
+                    parent_grant_id: parent.grant_id.clone(),
+                    preview: Box::new(preview),
+                    change_set: Box::new(change_set),
+                }
+            }
+            Some(LinuxCodingWriteDraft::ControlledCreate(draft)) => {
+                let plan = build_filesystem_plan(
+                    &parent,
+                    FilesystemPlanRequest {
+                        plan_id,
+                        observed_at_epoch_ms: now_epoch_ms,
+                        operations: vec![draft.clone()],
+                        review: coding_write_review(false, prepared.operation().plan_sha256()),
+                        permitted_verification: coding_write_verification(),
+                    },
+                )
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+                let preview =
+                    render_filesystem_preview(&plan).map_err(|_| RuntimePortFailure::Invalid)?;
+                PendingCodingAuthority::FilesystemWrite {
+                    approval_id,
+                    proposed_grant_id,
+                    parent_grant_id: parent.grant_id.clone(),
+                    preview: Box::new(preview),
+                    plan: Box::new(plan),
+                }
+            }
+            None => {
+                let approval = render_coding_approval_request(
+                    self.workspace.profile().registry(),
+                    CodingApprovalRequest {
+                        parent: &parent,
+                        approval_id,
+                        proposed_grant_id,
+                        call,
+                        operation: prepared.operation().operation(),
+                        targets: operation_targets(prepared.binding())?,
+                        operation_plan_sha256: prepared.operation().plan_sha256(),
+                        issued_at_epoch_ms: now_epoch_ms,
+                        expires_at_epoch_ms,
+                    },
+                )
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+                PendingCodingAuthority::Generic(Box::new(approval))
+            }
         };
-        let key = approval.approval_id.as_str().to_owned();
+        let evaluation = RuntimePermissionEvaluation::Ask {
+            approval_id: authority.approval_id().clone(),
+            grant_id: authority.proposed_grant_id().clone(),
+            preview_sha256: authority.preview_sha256().to_owned(),
+            expires_at_epoch_ms,
+        };
+        let key = authority.approval_id().as_str().to_owned();
         if self
             .pending
             .insert(
                 key,
                 PendingCodingOperation {
                     operation_id: operation_id.clone(),
-                    approval,
+                    operation: prepared.operation().operation().operation(),
+                    tool_call: call.clone(),
+                    expires_at_epoch_ms,
+                    authority,
                     prepared,
                 },
             )
@@ -355,10 +568,10 @@ where
                 .remove(key)
                 .ok_or(RuntimePortFailure::Invalid)?;
             return Ok(RuntimePermissionEvaluation::Deny {
-                approval_id: pending.approval.approval_id,
-                grant_id: pending.approval.proposed_grant_id,
-                preview_sha256: pending.approval.confirmation_sha256,
-                expires_at_epoch_ms: pending.approval.expires_at_epoch_ms,
+                approval_id: pending.authority.approval_id().clone(),
+                grant_id: pending.authority.proposed_grant_id().clone(),
+                preview_sha256: pending.authority.preview_sha256().to_owned(),
+                expires_at_epoch_ms: pending.expires_at_epoch_ms,
                 decision_sha256,
                 reason_code: "runtime.coding.user-denied".to_owned(),
             });
@@ -376,39 +589,127 @@ where
             .remove(key)
             .ok_or(RuntimePortFailure::Invalid)?;
         let operation_nonce = GrantNonce::from_raw(self.next_id("nonce-operation")?);
-        let approved = derive_approved_coding_grant(ApprovedCodingGrantRequest {
-            authority: self.authority.authority_mut(),
-            registry: self.workspace.profile().registry(),
-            policy: self.policy.engine(),
-            approval: &pending.approval,
-            challenge,
-            response,
-            nonce: operation_nonce,
-            now_epoch_ms,
-        })
-        .map_err(|_| RuntimePortFailure::Invalid)?;
-        let evaluation = RuntimePermissionEvaluation::Allow {
-            approval_id: pending.approval.approval_id.clone(),
-            preview_sha256: pending.approval.confirmation_sha256.clone(),
-            expires_at_epoch_ms: pending.approval.expires_at_epoch_ms,
-            grant_id: approved.grant.grant_id.clone(),
-            decision_sha256: approved.decision_sha256.clone(),
-            authority_sha256: approved.authority_sha256.clone(),
+        let issued_authority = match pending.authority {
+            PendingCodingAuthority::Generic(approval) => {
+                let approved = derive_approved_coding_grant(ApprovedCodingGrantRequest {
+                    authority: self.authority.authority_mut(),
+                    registry: self.workspace.profile().registry(),
+                    policy: self.policy.engine(),
+                    approval: &approval,
+                    challenge,
+                    response,
+                    nonce: operation_nonce,
+                    now_epoch_ms,
+                })
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+                IssuedCodingAuthority::Generic {
+                    approval,
+                    approved: Box::new(approved),
+                }
+            }
+            PendingCodingAuthority::StructuredWrite {
+                approval_id,
+                proposed_grant_id,
+                parent_grant_id,
+                preview,
+                change_set,
+            } => {
+                let approval = self
+                    .authority
+                    .authority_mut()
+                    .issue_write_approval(
+                        &change_set,
+                        &preview,
+                        &WriteApprovalDecision {
+                            approval_id: approval_id.clone(),
+                            approved_change_set_sha256: change_set.change_set_sha256().to_owned(),
+                            approved_preview_sha256: preview.preview_sha256.clone(),
+                            approved_at_epoch_ms: now_epoch_ms,
+                            expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                            permitted_verification: change_set.permitted_verification().to_vec(),
+                            user_confirmed: true,
+                        },
+                        WriteGrantRequest {
+                            parent_grant_id,
+                            grant_id: proposed_grant_id,
+                            action_id: call.action_id.clone(),
+                            action_kind: ActionKind::DeterministicTool,
+                            tool_id: call.tool_id.clone(),
+                            tool_version: call.tool_version.clone(),
+                            nonce: operation_nonce,
+                            policy_sha256: self.policy.engine().policy_sha256().to_owned(),
+                        },
+                    )
+                    .map_err(|_| RuntimePortFailure::Unavailable)?;
+                IssuedCodingAuthority::StructuredWrite {
+                    approval_id,
+                    preview_sha256: preview.preview_sha256,
+                    decision_sha256: decision_sha256.clone(),
+                    approval: Box::new(approval),
+                    change_set,
+                }
+            }
+            PendingCodingAuthority::FilesystemWrite {
+                approval_id,
+                proposed_grant_id,
+                parent_grant_id,
+                preview,
+                plan,
+            } => {
+                let approval = self
+                    .authority
+                    .authority_mut()
+                    .issue_filesystem_approval(
+                        &plan,
+                        &preview,
+                        &FilesystemApprovalDecision {
+                            approval_id: approval_id.clone(),
+                            approved_plan_sha256: plan.plan_sha256().to_owned(),
+                            approved_preview_sha256: preview.preview_sha256.clone(),
+                            approved_at_epoch_ms: now_epoch_ms,
+                            expires_at_epoch_ms: pending.expires_at_epoch_ms,
+                            permitted_verification: plan.permitted_verification().to_vec(),
+                            user_confirmed: true,
+                            high_risk_delete_confirmed: false,
+                        },
+                        FilesystemGrantRequest {
+                            parent_grant_id,
+                            grant_id: proposed_grant_id,
+                            action_id: call.action_id.clone(),
+                            action_kind: ActionKind::DeterministicTool,
+                            tool_id: call.tool_id.clone(),
+                            tool_version: call.tool_version.clone(),
+                            nonce: operation_nonce,
+                            policy_sha256: self.policy.engine().policy_sha256().to_owned(),
+                        },
+                    )
+                    .map_err(|_| RuntimePortFailure::Unavailable)?;
+                IssuedCodingAuthority::FilesystemWrite {
+                    approval_id,
+                    preview_sha256: preview.preview_sha256,
+                    decision_sha256: decision_sha256.clone(),
+                    approval: Box::new(approval),
+                    plan,
+                }
+            }
         };
-        let grant_key = approved.grant.grant_id.as_str().to_owned();
-        if self
-            .issued
-            .insert(
-                grant_key,
-                IssuedCodingOperation {
-                    approval: pending.approval,
-                    approved,
-                    prepared: pending.prepared,
-                    resolved_at_epoch_ms: now_epoch_ms,
-                },
-            )
-            .is_some()
-        {
+        let issued = IssuedCodingOperation {
+            tool_call: pending.tool_call,
+            expires_at_epoch_ms: pending.expires_at_epoch_ms,
+            authority: issued_authority,
+            prepared: pending.prepared,
+            resolved_at_epoch_ms: now_epoch_ms,
+        };
+        let evaluation = RuntimePermissionEvaluation::Allow {
+            approval_id: issued.approval_id().clone(),
+            preview_sha256: issued.preview_sha256().to_owned(),
+            expires_at_epoch_ms: issued.expires_at_epoch_ms,
+            grant_id: issued.grant_id().clone(),
+            decision_sha256: issued.decision_sha256().to_owned(),
+            authority_sha256: issued.authority_sha256().to_owned(),
+        };
+        let grant_key = issued.grant_id().as_str().to_owned();
+        if self.issued.insert(grant_key, issued).is_some() {
             return Err(RuntimePortFailure::Invalid);
         }
         self.authority
@@ -441,13 +742,13 @@ where
         }
         let key = grant_id.as_str();
         let issued = self.issued.get(key).ok_or(RuntimePortFailure::Invalid)?;
-        if issued.approval.approval_id != *approval_id
-            || issued.approval.confirmation_sha256 != *preview_sha256
-            || issued.approval.expires_at_epoch_ms != *expires_at_epoch_ms
-            || issued.approval.tool_call != *call
-            || issued.approved.grant.grant_id != *grant_id
-            || issued.approved.decision_sha256 != *decision_sha256
-            || issued.approved.authority_sha256 != *authority_sha256
+        if issued.approval_id() != approval_id
+            || issued.preview_sha256() != preview_sha256
+            || issued.expires_at_epoch_ms != *expires_at_epoch_ms
+            || issued.tool_call != *call
+            || issued.grant_id() != grant_id
+            || issued.decision_sha256() != decision_sha256
+            || issued.authority_sha256() != authority_sha256
         {
             return Err(RuntimePortFailure::Invalid);
         }
@@ -460,10 +761,17 @@ where
         {
             return Err(RuntimePortFailure::Cancelled);
         }
-        issued
-            .prepared
-            .revalidate()
-            .map_err(|_| RuntimePortFailure::Invalid)?;
+        if matches!(&issued.authority, IssuedCodingAuthority::Generic { .. }) {
+            issued
+                .prepared
+                .revalidate()
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+        } else {
+            self.workspace
+                .workspace()
+                .revalidate()
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+        }
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
@@ -481,7 +789,12 @@ where
             PreparedNativeCodingCall::Validation { .. } => {
                 self.execute_prepared_validation(request, definition, call, issued)
             }
-            _ => Err(RuntimePortFailure::Unavailable),
+            PreparedNativeCodingCall::StructuredPatch { .. } => {
+                self.execute_prepared_structured_write(request, definition, call, issued)
+            }
+            PreparedNativeCodingCall::ControlledCreate { .. } => {
+                self.execute_prepared_controlled_create(request, definition, call, issued)
+            }
         }
     }
 
@@ -492,6 +805,8 @@ where
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let policy = issued.generic_authority()?.1.policy.clone();
+        let transaction = self.authority_transaction(call, &issued)?;
         let (operation, binding, write_draft, _) = issued.prepared.into_parts();
         let kind = match operation.prepared() {
             PreparedNativeCodingCall::ReadOnly { kind, .. } => *kind,
@@ -510,48 +825,11 @@ where
             held,
         )
         .map_err(|_| RuntimePortFailure::Invalid)?;
-        let grant = &issued.approved.grant;
-        let action_id = grant.action_id.clone().ok_or(RuntimePortFailure::Invalid)?;
-        let action_kind = grant.action_kind.ok_or(RuntimePortFailure::Invalid)?;
-        let tool_id = grant.tool_id.clone().ok_or(RuntimePortFailure::Invalid)?;
-        let tool_version = grant
-            .tool_version
-            .clone()
-            .ok_or(RuntimePortFailure::Invalid)?;
-        let context = PolicyEvaluationContext {
-            actor_id: grant.actor_id.clone(),
-            session_id: grant.session_id.clone(),
-            task_id: grant.task_id.clone(),
-            action_id,
-            action_kind,
-            tool_id,
-            tool_version,
-            targets: grant.targets.clone(),
-            argument_sha256: grant.argument_sha256.clone(),
-            preimages: grant.preimages.clone(),
-            expected_side_effects: grant.expected_side_effects.clone(),
-            preview_sha256: grant.preview_sha256.clone(),
-            now_epoch_ms: issued.resolved_at_epoch_ms,
-            network_scope: None,
-            credential_scope: None,
-            publication_scope: None,
-        };
-        let transaction = AuthorityTransactionRequest::new(
-            AuthorityTransactionId::from_raw(self.next_id("transaction")?),
-            OperationAttemptId::from_raw(self.next_id("attempt")?),
-            issued.approval.approval_id,
-            grant.grant_id.clone(),
-            call.clone(),
-            context,
-            issued.resolved_at_epoch_ms,
-            format!("epoch-ms:{}", issued.resolved_at_epoch_ms),
-        )
-        .map_err(|_| RuntimePortFailure::Invalid)?;
         let runner = self.sandbox.take().ok_or(RuntimePortFailure::Unavailable)?;
         let mut driver = LinuxReadOnlyToolEffectDriver::new(runner, worker_input);
         let receipt_result = self.authority.authority_mut().execute_effect(
             self.workspace.profile().registry(),
-            &issued.approved.policy,
+            &policy,
             transaction,
             &mut driver,
         );
@@ -640,6 +918,7 @@ where
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
         let (operation, binding, write_draft, workspace) = issued.prepared.into_parts();
         let prepared = match operation.prepared() {
@@ -665,7 +944,7 @@ where
             CommandEffectDriver::new(executor, workspace, prepared.clone(), cancellation);
         let receipt_result = self.authority.authority_mut().execute_effect(
             self.workspace.profile().registry(),
-            &issued.approved.policy,
+            &policy,
             transaction,
             &mut driver,
         );
@@ -691,6 +970,7 @@ where
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let policy = issued.generic_authority()?.1.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
         let operation_plan_sha256 = issued.prepared.operation().plan_sha256().to_owned();
         let (operation, binding, write_draft, workspace) = issued.prepared.into_parts();
@@ -725,7 +1005,7 @@ where
             RepositoryInspectionEffectDriver::new(executor, workspace, prepared, cancellation);
         let receipt_result = self.authority.authority_mut().execute_effect(
             self.workspace.profile().registry(),
-            &issued.approved.policy,
+            &policy,
             transaction,
             &mut driver,
         );
@@ -838,8 +1118,10 @@ where
         call: &ToolCall,
         issued: IssuedCodingOperation<'workspace>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let (generic_approval, approved) = issued.generic_authority()?;
+        let approval_sha256 = generic_approval.confirmation_sha256.clone();
+        let policy = approved.policy.clone();
         let transaction = self.authority_transaction(call, &issued)?;
-        let approval_sha256 = issued.approval.confirmation_sha256.clone();
         let operation_plan_sha256 = issued.prepared.operation().plan_sha256().to_owned();
         let (operation, binding, write_draft, workspace) = issued.prepared.into_parts();
         let (validation_request, template, prepared) = match operation.prepared() {
@@ -880,7 +1162,7 @@ where
         );
         let receipt_result = self.authority.authority_mut().execute_effect(
             self.workspace.profile().registry(),
-            &issued.approved.policy,
+            &policy,
             transaction,
             &mut driver,
         );
@@ -1022,12 +1304,227 @@ where
         })
     }
 
+    fn execute_prepared_structured_write(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        issued: IssuedCodingOperation<'workspace>,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let IssuedCodingOperation {
+            authority:
+                IssuedCodingAuthority::StructuredWrite {
+                    approval,
+                    change_set,
+                    ..
+                },
+            prepared,
+            resolved_at_epoch_ms,
+            ..
+        } = issued
+        else {
+            return Err(RuntimePortFailure::Invalid);
+        };
+        let (operation, binding, write_draft, workspace) = prepared.into_parts();
+        let Some(LinuxCodingWriteDraft::StructuredPatch(plan)) = write_draft else {
+            return Err(RuntimePortFailure::Invalid);
+        };
+        let LinuxCodingTargetBinding::ExistingFile { target, .. } = binding else {
+            return Err(RuntimePortFailure::Invalid);
+        };
+        let Some(change) = change_set.operations().first() else {
+            return Err(RuntimePortFailure::Invalid);
+        };
+        if change_set.operations().len() != 1
+            || !matches!(
+                operation.prepared(),
+                PreparedNativeCodingCall::StructuredPatch { .. }
+            )
+            || operation.expected_state_change() != StateChange::Changed
+            || change.target() != &target
+            || change.preimage_bytes() != plan.preimage()
+            || change.proposed_bytes() != plan.postimage()
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let transaction_id = self.next_id("write-transaction")?;
+        let mut driver =
+            LinuxAtomicWriteDriver::new(workspace, LinuxAtomicWriteDriverLimits::default());
+        let policy = self.policy.engine().clone();
+        let result = self
+            .authority
+            .authority_mut()
+            .execute_controlled_write(
+                &policy,
+                &change_set,
+                &approval,
+                WriteTransactionRequest {
+                    transaction_id,
+                    now_epoch_ms: resolved_at_epoch_ms,
+                },
+                &mut driver,
+            )
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        verify_write_receipts(&result.receipts).map_err(|_| RuntimePortFailure::Uncertain)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let receipt = result
+            .receipts
+            .last()
+            .ok_or(RuntimePortFailure::Uncertain)?;
+        let (outcome, state_change) = write_transaction_outcome(result.outcome);
+        self.controlled_change_execution(
+            request,
+            definition,
+            call,
+            ControlledChangeOutput {
+                schema_version: 1,
+                operation_id: receipt.operation_id.clone(),
+                outcome,
+                path_sha256: sha256(change.path().as_bytes()),
+                preimage_sha256: Some(receipt.preimage_sha256.clone()),
+                postimage_sha256: receipt.postimage_sha256.clone(),
+                receipt_id: specialized_receipt_id("write", &receipt.receipt_sha256),
+                receipt_sha256: receipt.receipt_sha256.clone(),
+            },
+            state_change,
+        )
+    }
+
+    fn execute_prepared_controlled_create(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        issued: IssuedCodingOperation<'workspace>,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let IssuedCodingOperation {
+            authority: IssuedCodingAuthority::FilesystemWrite { approval, plan, .. },
+            prepared,
+            resolved_at_epoch_ms,
+            ..
+        } = issued
+        else {
+            return Err(RuntimePortFailure::Invalid);
+        };
+        let (operation, binding, write_draft, workspace) = prepared.into_parts();
+        let Some(LinuxCodingWriteDraft::ControlledCreate(_)) = write_draft else {
+            return Err(RuntimePortFailure::Invalid);
+        };
+        if !matches!(binding, LinuxCodingTargetBinding::DestinationParent { .. })
+            || !matches!(
+                operation.prepared(),
+                PreparedNativeCodingCall::ControlledCreate { .. }
+            )
+            || operation.expected_state_change() != StateChange::Changed
+            || plan.operations().len() != 1
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let transaction_id = self.next_id("filesystem-transaction")?;
+        let mut driver =
+            LinuxControlledFilesystemDriver::new(workspace, LinuxFilesystemDriverLimits::default());
+        let policy = self.policy.engine().clone();
+        let result = self
+            .authority
+            .authority_mut()
+            .execute_controlled_filesystem(
+                &policy,
+                &plan,
+                &approval,
+                FilesystemTransactionRequest {
+                    transaction_id,
+                    now_epoch_ms: resolved_at_epoch_ms,
+                    cancelled_before_consume: false,
+                },
+                &mut driver,
+            )
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        verify_filesystem_receipts(&result.receipts).map_err(|_| RuntimePortFailure::Uncertain)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let receipt = result
+            .receipts
+            .last()
+            .ok_or(RuntimePortFailure::Uncertain)?;
+        let destination = receipt
+            .destination_path
+            .as_deref()
+            .ok_or(RuntimePortFailure::Uncertain)?;
+        let (outcome, state_change) = filesystem_transaction_outcome(result.outcome);
+        self.controlled_change_execution(
+            request,
+            definition,
+            call,
+            ControlledChangeOutput {
+                schema_version: 1,
+                operation_id: receipt.operation_id.clone(),
+                outcome,
+                path_sha256: sha256(destination.as_bytes()),
+                preimage_sha256: None,
+                postimage_sha256: receipt.postimage_sha256.clone(),
+                receipt_id: specialized_receipt_id("filesystem", &receipt.receipt_sha256),
+                receipt_sha256: receipt.receipt_sha256.clone(),
+            },
+            state_change,
+        )
+    }
+
+    fn controlled_change_execution(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        output: ControlledChangeOutput,
+        state_change: StateChange,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let output_bytes = serde_json::to_vec(&output).map_err(|_| RuntimePortFailure::Invalid)?;
+        if output_bytes.len() as u64 > request.limits.max_output_bytes {
+            return Err(RuntimePortFailure::ResourceExhausted);
+        }
+        let receipt_id = ReceiptId::from_raw(output.receipt_id.clone());
+        let evidence = vec![EvidenceReference {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            evidence_id: EvidenceId::from_raw(self.next_id("evidence")?),
+            kind: EvidenceKind::Receipt,
+            source_id: format!("native:{}@{}", call.tool_id.as_str(), call.tool_version),
+            object_id: output.operation_id.clone(),
+            fragment: None,
+            content_sha256: output.receipt_sha256.clone(),
+            observed_revision: Some(request.repository_snapshot_id.as_str().to_owned()),
+        }];
+        Ok(RuntimeToolExecution {
+            receipt_id,
+            receipt_sha256: output.receipt_sha256.clone(),
+            result: ToolResult {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                tool_call_id: call.tool_call_id.clone(),
+                correlation_id: call.correlation_id.clone(),
+                outcome: output.outcome,
+                output: Some(ContractPayload {
+                    schema: definition.output_schema.clone(),
+                    media_type: "application/json".to_owned(),
+                    sha256: sha256(&output_bytes),
+                    bytes: output_bytes,
+                }),
+                validation_issues: Vec::new(),
+                evidence,
+                error: None,
+                elapsed_ms: 0,
+                state_change,
+            },
+        })
+    }
+
     fn authority_transaction(
         &mut self,
         call: &ToolCall,
         issued: &IssuedCodingOperation<'workspace>,
     ) -> Result<AuthorityTransactionRequest, RuntimePortFailure> {
-        let grant = &issued.approved.grant;
+        let (approval, approved) = issued.generic_authority()?;
+        let grant = &approved.grant;
         let action_id = grant.action_id.clone().ok_or(RuntimePortFailure::Invalid)?;
         let action_kind = grant.action_kind.ok_or(RuntimePortFailure::Invalid)?;
         let tool_id = grant.tool_id.clone().ok_or(RuntimePortFailure::Invalid)?;
@@ -1056,7 +1553,7 @@ where
         AuthorityTransactionRequest::new(
             AuthorityTransactionId::from_raw(self.next_id("transaction")?),
             OperationAttemptId::from_raw(self.next_id("attempt")?),
-            issued.approval.approval_id.clone(),
+            approval.approval_id.clone(),
             grant.grant_id.clone(),
             call.clone(),
             context,
@@ -1169,6 +1666,84 @@ fn operation_targets(
         .collect()
 }
 
+#[derive(Serialize)]
+#[serde(deny_unknown_fields)]
+struct ControlledChangeOutput {
+    schema_version: u16,
+    operation_id: String,
+    outcome: OperationOutcome,
+    path_sha256: String,
+    preimage_sha256: Option<String>,
+    postimage_sha256: String,
+    receipt_id: String,
+    receipt_sha256: String,
+}
+
+fn coding_write_review(
+    structured_patch: bool,
+    operation_plan_sha256: &str,
+) -> WriteReviewNarrative {
+    let change = if structured_patch {
+        "exact structured replacement"
+    } else {
+        "exact absent-file creation"
+    };
+    WriteReviewNarrative {
+        rationale: format!("Apply one {change} bound to operation plan {operation_plan_sha256}"),
+        behavior_change: format!("The approved owned worktree receives only the reviewed {change}"),
+        verification_plan: vec![
+            "Freshly observe the exact approved postimage after atomic application".to_owned(),
+        ],
+        risks: vec!["Concurrent target changes must cause refusal or exact restoration".to_owned()],
+        rollback: if structured_patch {
+            "Restore the exact reviewed preimage if application or postimage verification fails"
+                .to_owned()
+        } else {
+            "Remove only the newly created exact file through a separately approved operation"
+                .to_owned()
+        },
+        unverified_assumptions: vec![
+            "Separately permissioned project validation has not run yet".to_owned(),
+        ],
+    }
+}
+
+fn coding_write_verification() -> Vec<String> {
+    vec!["postwrite.exact-observation".to_owned()]
+}
+
+const fn write_transaction_outcome(
+    outcome: WriteTransactionOutcome,
+) -> (OperationOutcome, StateChange) {
+    match outcome {
+        WriteTransactionOutcome::Committed => (OperationOutcome::Succeeded, StateChange::Changed),
+        WriteTransactionOutcome::FailedNoChange | WriteTransactionOutcome::Restored => {
+            (OperationOutcome::Failed, StateChange::NotChanged)
+        }
+        WriteTransactionOutcome::Uncertain => (OperationOutcome::Uncertain, StateChange::Uncertain),
+    }
+}
+
+const fn filesystem_transaction_outcome(
+    outcome: FilesystemTransactionOutcome,
+) -> (OperationOutcome, StateChange) {
+    match outcome {
+        FilesystemTransactionOutcome::Committed => {
+            (OperationOutcome::Succeeded, StateChange::Changed)
+        }
+        FilesystemTransactionOutcome::FailedNoChange | FilesystemTransactionOutcome::Restored => {
+            (OperationOutcome::Failed, StateChange::NotChanged)
+        }
+        FilesystemTransactionOutcome::Uncertain => {
+            (OperationOutcome::Uncertain, StateChange::Uncertain)
+        }
+    }
+}
+
+fn specialized_receipt_id(kind: &str, receipt_sha256: &str) -> String {
+    format!("receipt-{kind}-{}", &receipt_sha256[..32])
+}
+
 fn challenge_matches(
     request: &RuntimeRunRequest,
     challenge: &RuntimeApprovalChallenge,
@@ -1179,12 +1754,12 @@ fn challenge_matches(
         && challenge.task_id == request.task.task_id
         && challenge.operation_id == pending.operation_id
         && challenge.tool_call_id == call.tool_call_id
-        && challenge.approval_id == pending.approval.approval_id
-        && challenge.proposed_grant_id == pending.approval.proposed_grant_id
-        && challenge.operation == pending.approval.operation.operation()
-        && challenge.preview_sha256 == pending.approval.confirmation_sha256
-        && challenge.expires_at_epoch_ms == pending.approval.expires_at_epoch_ms
-        && pending.approval.tool_call == *call
+        && challenge.approval_id == *pending.authority.approval_id()
+        && challenge.proposed_grant_id == *pending.authority.proposed_grant_id()
+        && challenge.operation == pending.operation
+        && challenge.preview_sha256 == pending.authority.preview_sha256()
+        && challenge.expires_at_epoch_ms == pending.expires_at_epoch_ms
+        && pending.tool_call == *call
 }
 
 #[derive(Serialize)]
@@ -1369,15 +1944,17 @@ mod tests {
         plan_git_inspection,
     };
     use agentmage_capability_repository_map::{
-        GitTrackedState, RepositoryFileInput, RepositoryMapInput, build_repository_map,
+        GitTrackedState, RepositoryFileInput, RepositoryMapInput, StructuredArtifactClass,
+        StructuredEdit, StructuredLanguage, build_repository_map,
     };
     use agentmage_kernel_contracts::{
         ActionId, AuthorityClass, BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION,
-        CorrelationId, DataSensitivity, PlanId, RollbackPlan, RuntimeApprovalChallenge,
-        RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeOperationId, RuntimeRunId,
-        RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId, SessionId, StopCondition,
-        StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCallId, ToolId, WorkPacket,
-        WorkPacketId, WorkPacketState, WorkspaceAuthorizationId,
+        CorrelationId, DataSensitivity, GrantStatus, GrantTarget, PathResolutionIntent, PlanId,
+        RollbackPlan, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
+        RuntimeApprovalResponse, RuntimeOperationId, RuntimeRunId, RuntimeRunRequest,
+        RuntimeSessionMode, RuntimeTurnId, SessionId, StopCondition, StopConditionKind, Task,
+        TaskId, TaskStatus, ToolCall, ToolCallId, ToolId, WorkPacket, WorkPacketId,
+        WorkPacketState, WorkspaceAuthorizationId, WorkspacePath,
     };
     use agentmage_kernel_engine::{
         command_runner::{
@@ -1394,12 +1971,17 @@ mod tests {
     use agentmage_platform_linux::{
         LinuxBoundedRepositoryInspectionExecutor, LinuxGitArtifact, LinuxSandboxLimits,
         LinuxSandboxManifest, LinuxSandboxRunner, linux_repository_path_sha256,
-        open_test_linux_authority,
+        open_test_linux_authority, resolve_test_linux_workspace_object,
     };
 
     use super::*;
     use crate::{
         coding_authority::{CodingRuntimePolicyRequest, build_coding_runtime_policy},
+        coding_changes::{
+            CONTROLLED_CHANGE_TOOL_VERSION, CONTROLLED_CREATE_TOOL_ID,
+            ControlledFileClassification, ControlledFileCreationProposal, STRUCTURED_PATCH_TOOL_ID,
+            StructuredPatchProposal, controlled_create_parent_observation_sha256,
+        },
         coding_session::{CodingSessionProfile, tests::input_with_worktree_path_sha256},
         coding_tools::TargetedValidationRequest,
         linux_coding::LinuxCodingWorkspace,
@@ -1853,6 +2435,136 @@ mod tests {
             },
         };
         fixture.definition = definition;
+    }
+
+    fn configure_runtime_call<G, T>(
+        fixture: &mut Fixture<G>,
+        tool_id: &str,
+        call_id: &str,
+        value: &T,
+    ) where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+        T: serde::Serialize,
+    {
+        let definition = fixture
+            .profile_for_test()
+            .registry()
+            .get_tool(&ToolId::from_raw(tool_id), CONTROLLED_CHANGE_TOOL_VERSION)
+            .expect("controlled-change tool")
+            .clone();
+        let arguments = serde_json::to_vec(value).expect("controlled-change request");
+        fixture.call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw(call_id),
+            correlation_id: CorrelationId::from_raw("correlation-coding-runtime"),
+            action_id: runtime_action_id(&fixture.request.run_id, 1),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&arguments),
+                bytes: arguments,
+            },
+        };
+        fixture.definition = definition;
+    }
+
+    fn configure_structured_patch<G>(fixture: &mut Fixture<G>)
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        let source = fs::read(fixture.root.join("worktree/src/lib.rs")).expect("source preimage");
+        configure_runtime_call(
+            fixture,
+            STRUCTURED_PATCH_TOOL_ID,
+            "call-patch-runtime",
+            &StructuredPatchProposal {
+                schema_version: 1,
+                change_id: "change-patch-runtime".to_owned(),
+                path: vec!["src".to_owned(), "lib.rs".to_owned()],
+                expected_preimage_sha256: sha256(&source),
+                intent_sha256: "1".repeat(64),
+                change_plan_sha256: "2".repeat(64),
+                language: StructuredLanguage::Rust,
+                artifact_class: StructuredArtifactClass::Code,
+                edits: vec![StructuredEdit::RenameIdentifier {
+                    edit_id: "edit-patch-runtime".to_owned(),
+                    old: "runtime_fixture".to_owned(),
+                    replacement: "runtime_updated".to_owned(),
+                }],
+                additional_review_hooks: Vec::new(),
+                generated: false,
+                allow_generated: false,
+            },
+        );
+    }
+
+    fn configure_controlled_create<G>(fixture: &mut Fixture<G>)
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        let workspace = fixture.boundary.workspace.workspace();
+        let parent_path = WorkspacePath::new(workspace.workspace_id().clone(), ["src"])
+            .expect("source parent path");
+        let held_parent = resolve_test_linux_workspace_object(
+            workspace,
+            workspace.adapter_instance_id().clone(),
+            &parent_path,
+            PathResolutionIntent::ReadDirectory,
+        )
+        .expect("source parent");
+        let parent = GrantTarget::held_object(&held_parent).expect("source parent target");
+        let siblings = held_parent
+            .observe_directory_names(4_096, 1024 * 1024)
+            .expect("source sibling projection");
+        let expected_parent_sha256 =
+            controlled_create_parent_observation_sha256(&parent, &siblings)
+                .expect("source parent observation");
+        configure_runtime_call(
+            fixture,
+            CONTROLLED_CREATE_TOOL_ID,
+            "call-create-runtime",
+            &ControlledFileCreationProposal {
+                schema_version: 1,
+                creation_id: "creation-runtime".to_owned(),
+                path: vec!["src".to_owned(), "new.rs".to_owned()],
+                content: "pub fn newly_created() {}\n".to_owned(),
+                mode: 0o644,
+                classification: ControlledFileClassification::SourceCode,
+                intent_sha256: "3".repeat(64),
+                change_plan_sha256: "4".repeat(64),
+                expected_parent_sha256,
+            },
+        );
+    }
+
+    fn approve<G>(fixture: &mut Fixture<G>, now_epoch_ms: u64) -> RuntimePermissionEvaluation
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        let evaluation = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                now_epoch_ms,
+            )
+            .expect("approval preview");
+        let challenge = challenge(fixture, &evaluation);
+        fixture
+            .boundary
+            .resolve(
+                &fixture.request,
+                &challenge,
+                &response(&challenge, RuntimeApprovalDisposition::Allow),
+                &fixture.definition,
+                &fixture.call,
+                now_epoch_ms + 1,
+            )
+            .expect("exact approval")
     }
 
     #[test]
@@ -2354,6 +3066,221 @@ mod tests {
         assert_eq!(validation_receipt.passed, 1);
         assert_eq!(execution.result.evidence[0].kind, EvidenceKind::Validation);
         assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
+    }
+
+    #[test]
+    fn story_48_2_linux_runtime_applies_one_exact_structured_patch() {
+        let mut fixture = fixture();
+        let untouched_path = fixture.root.join("worktree/src/untouched.rs");
+        fs::write(&untouched_path, b"pub fn untouched() {}\n").expect("untouched source");
+        configure_structured_patch(&mut fixture);
+        let allowed = approve(&mut fixture, 6_000);
+        let grant_id = match &allowed {
+            RuntimePermissionEvaluation::Allow { grant_id, .. } => grant_id.clone(),
+            _ => panic!("expected exact write grant"),
+        };
+
+        let execution = fixture
+            .boundary
+            .execute(
+                &fixture.request,
+                &allowed,
+                &fixture.definition,
+                &fixture.call,
+                None,
+            )
+            .expect("structured write execution");
+
+        assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        assert_eq!(execution.result.state_change, StateChange::Changed);
+        assert_eq!(execution.result.evidence[0].kind, EvidenceKind::Receipt);
+        assert_eq!(
+            fs::read(fixture.root.join("worktree/src/lib.rs")).expect("updated source"),
+            b"pub fn runtime_updated() {}\n"
+        );
+        assert_eq!(
+            fs::read(&untouched_path).expect("untouched source remains"),
+            b"pub fn untouched() {}\n"
+        );
+        let output: serde_json::Value = serde_json::from_slice(
+            &execution
+                .result
+                .output
+                .expect("controlled write output")
+                .bytes,
+        )
+        .expect("controlled write JSON");
+        assert_eq!(output["outcome"], "succeeded");
+        assert_eq!(
+            output["preimage_sha256"],
+            sha256(b"pub fn runtime_fixture() {}\n")
+        );
+        assert_eq!(
+            fixture
+                .boundary
+                .authority
+                .authority()
+                .current_grant(&grant_id)
+                .expect("durable write grant")
+                .status,
+            GrantStatus::Consumed
+        );
+    }
+
+    #[test]
+    fn story_48_2_linux_runtime_creates_one_exact_absent_file() {
+        let mut fixture = fixture();
+        let original = fs::read(fixture.root.join("worktree/src/lib.rs")).expect("original source");
+        configure_controlled_create(&mut fixture);
+        let allowed = approve(&mut fixture, 7_000);
+        let grant_id = match &allowed {
+            RuntimePermissionEvaluation::Allow { grant_id, .. } => grant_id.clone(),
+            _ => panic!("expected exact filesystem grant"),
+        };
+
+        let execution = fixture
+            .boundary
+            .execute(
+                &fixture.request,
+                &allowed,
+                &fixture.definition,
+                &fixture.call,
+                None,
+            )
+            .expect("controlled create execution");
+
+        assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        assert_eq!(execution.result.state_change, StateChange::Changed);
+        assert_eq!(
+            fs::read(fixture.root.join("worktree/src/new.rs")).expect("created source"),
+            b"pub fn newly_created() {}\n"
+        );
+        assert_eq!(
+            fs::read(fixture.root.join("worktree/src/lib.rs")).expect("original source remains"),
+            original
+        );
+        let output: serde_json::Value = serde_json::from_slice(
+            &execution
+                .result
+                .output
+                .expect("controlled create output")
+                .bytes,
+        )
+        .expect("controlled create JSON");
+        assert!(output["preimage_sha256"].is_null());
+        assert_eq!(
+            fixture
+                .boundary
+                .authority
+                .authority()
+                .current_grant(&grant_id)
+                .expect("durable filesystem grant")
+                .status,
+            GrantStatus::Consumed
+        );
+    }
+
+    #[test]
+    fn story_48_2_linux_runtime_persists_stale_patch_invalidation_without_overwrite() {
+        let mut fixture = fixture();
+        configure_structured_patch(&mut fixture);
+        let allowed = approve(&mut fixture, 8_000);
+        let grant_id = match &allowed {
+            RuntimePermissionEvaluation::Allow { grant_id, .. } => grant_id.clone(),
+            _ => panic!("expected exact write grant"),
+        };
+        let concurrent = b"pub fn concurrent_user_change() {}\n";
+        fs::write(fixture.root.join("worktree/src/lib.rs"), concurrent)
+            .expect("concurrent source change");
+
+        assert_eq!(
+            fixture.boundary.execute(
+                &fixture.request,
+                &allowed,
+                &fixture.definition,
+                &fixture.call,
+                None,
+            ),
+            Err(RuntimePortFailure::Uncertain)
+        );
+        assert_eq!(
+            fs::read(fixture.root.join("worktree/src/lib.rs")).expect("concurrent source remains"),
+            concurrent
+        );
+        assert_eq!(
+            fixture
+                .boundary
+                .authority
+                .authority()
+                .current_grant(&grant_id)
+                .expect("invalidated write grant")
+                .status,
+            GrantStatus::Invalidated
+        );
+    }
+
+    #[test]
+    fn story_48_2_linux_runtime_denial_and_create_collision_are_inert() {
+        let mut denied = fixture();
+        configure_controlled_create(&mut denied);
+        let evaluation = denied
+            .boundary
+            .evaluate(
+                &denied.request,
+                &denied.operation_id,
+                &denied.definition,
+                &denied.call,
+                9_000,
+            )
+            .expect("create preview");
+        let challenge = challenge(&denied, &evaluation);
+        denied
+            .boundary
+            .resolve(
+                &denied.request,
+                &challenge,
+                &response(&challenge, RuntimeApprovalDisposition::Deny),
+                &denied.definition,
+                &denied.call,
+                9_001,
+            )
+            .expect("create denial");
+        assert!(!denied.root.join("worktree/src/new.rs").exists());
+
+        let mut collision = fixture();
+        configure_controlled_create(&mut collision);
+        let allowed = approve(&mut collision, 10_000);
+        let grant_id = match &allowed {
+            RuntimePermissionEvaluation::Allow { grant_id, .. } => grant_id.clone(),
+            _ => panic!("expected exact filesystem grant"),
+        };
+        let user_content = b"pub fn user_created_first() {}\n";
+        fs::write(collision.root.join("worktree/src/new.rs"), user_content)
+            .expect("user collision");
+        assert_eq!(
+            collision.boundary.execute(
+                &collision.request,
+                &allowed,
+                &collision.definition,
+                &collision.call,
+                None,
+            ),
+            Err(RuntimePortFailure::Uncertain)
+        );
+        assert_eq!(
+            fs::read(collision.root.join("worktree/src/new.rs")).expect("collision remains"),
+            user_content
+        );
+        assert_eq!(
+            collision
+                .boundary
+                .authority
+                .authority()
+                .current_grant(&grant_id)
+                .expect("invalidated filesystem grant")
+                .status,
+            GrantStatus::Invalidated
+        );
     }
 
     impl<G> Fixture<G>

@@ -27,12 +27,26 @@ use crate::authority_transaction::{
     EffectDriver,
 };
 use crate::context_management::{CheckpointError, verify_checkpoint};
+use crate::filesystem_control::{
+    ControlledFilesystemDriver, FilesystemApprovalDecision, FilesystemApprovalPreview,
+    FilesystemApprovalReceipt, FilesystemGrantRequest, FilesystemPlan, FilesystemPlanError,
+    FilesystemTransactionError, FilesystemTransactionRequest, FilesystemTransactionResult,
+    execute_filesystem_transaction_with_checkpoint, issue_filesystem_grant,
+};
 use crate::grants::{
     DerivedOperationGrantRequest, GrantIssueError, GrantIssuer, SessionReadGrantRequest,
 };
 use crate::policy::PolicyEngine;
 use crate::strict_local::{StrictLocalStorageDecision, evaluate_storage};
 use crate::tooling::ToolRegistry;
+use crate::write_approval::{
+    ShadowChangeSet, WriteApprovalDecision, WriteApprovalError, WriteApprovalPreview,
+    WriteApprovalReceipt, WriteGrantRequest, issue_write_grant,
+};
+use crate::write_transaction::{
+    AtomicWriteDriver, WriteTransactionError, WriteTransactionRequest, WriteTransactionResult,
+    execute_write_transaction_with_checkpoint,
+};
 
 const SCHEMA_VERSION: i64 = 5;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -1120,6 +1134,14 @@ pub enum DurableAuthorityError {
     Poisoned,
     /// The proposed safe-boundary checkpoint failed its closed contract.
     Checkpoint(CheckpointError),
+    /// A controlled-write approval could not be issued from the durable grant state.
+    WriteApproval(WriteApprovalError),
+    /// A controlled-filesystem approval could not be issued from the durable grant state.
+    FilesystemApproval(FilesystemPlanError),
+    /// A controlled-write transaction failed at its bounded authority boundary.
+    WriteTransaction(WriteTransactionError),
+    /// A controlled-filesystem transaction failed at its bounded authority boundary.
+    FilesystemTransaction(FilesystemTransactionError),
 }
 
 impl DurableAuthorityRuntime {
@@ -1225,6 +1247,118 @@ impl DurableAuthorityRuntime {
             .map_err(|error| self.poison(error))?;
         self.issuer = candidate;
         Ok(grant)
+    }
+
+    /// Issues one exact controlled-write grant and atomically publishes its grant revisions.
+    pub fn issue_write_approval(
+        &mut self,
+        change_set: &ShadowChangeSet,
+        preview: &WriteApprovalPreview,
+        decision: &WriteApprovalDecision,
+        request: WriteGrantRequest,
+    ) -> Result<WriteApprovalReceipt, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let approval = issue_write_grant(&mut candidate, change_set, preview, decision, request)
+            .map_err(DurableAuthorityError::WriteApproval)?;
+        self.store
+            .persist_authority(&candidate, &self.coordinator)
+            .map_err(|error| self.poison(error))?;
+        self.issuer = candidate;
+        Ok(approval)
+    }
+
+    /// Issues one exact controlled-filesystem grant and atomically publishes its revisions.
+    pub fn issue_filesystem_approval(
+        &mut self,
+        plan: &FilesystemPlan,
+        preview: &FilesystemApprovalPreview,
+        decision: &FilesystemApprovalDecision,
+        request: FilesystemGrantRequest,
+    ) -> Result<FilesystemApprovalReceipt, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let mut candidate = self.issuer.clone();
+        let approval = issue_filesystem_grant(&mut candidate, plan, preview, decision, request)
+            .map_err(DurableAuthorityError::FilesystemApproval)?;
+        self.store
+            .persist_authority(&candidate, &self.coordinator)
+            .map_err(|error| self.poison(error))?;
+        self.issuer = candidate;
+        Ok(approval)
+    }
+
+    /// Executes an exact controlled write after durably checkpointing consumed authority.
+    pub fn execute_controlled_write<D: AtomicWriteDriver>(
+        &mut self,
+        policy: &PolicyEngine,
+        change_set: &ShadowChangeSet,
+        approval: &WriteApprovalReceipt,
+        request: WriteTransactionRequest,
+        driver: &mut D,
+    ) -> Result<WriteTransactionResult, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let mut store_error = None;
+        let result = {
+            let store = &mut self.store;
+            let coordinator = &self.coordinator;
+            execute_write_transaction_with_checkpoint(
+                &mut self.issuer,
+                policy,
+                change_set,
+                approval,
+                request,
+                driver,
+                &mut |issuer| {
+                    store
+                        .persist_authority(issuer, coordinator)
+                        .map_err(|error| {
+                            store_error = Some(error);
+                        })
+                },
+            )
+        };
+        if let Some(error) = store_error {
+            self.poisoned = true;
+            return Err(DurableAuthorityError::Store(error));
+        }
+        result.map_err(DurableAuthorityError::WriteTransaction)
+    }
+
+    /// Executes an exact filesystem operation after durably checkpointing consumed authority.
+    pub fn execute_controlled_filesystem<D: ControlledFilesystemDriver>(
+        &mut self,
+        policy: &PolicyEngine,
+        plan: &FilesystemPlan,
+        approval: &FilesystemApprovalReceipt,
+        request: FilesystemTransactionRequest,
+        driver: &mut D,
+    ) -> Result<FilesystemTransactionResult, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let mut store_error = None;
+        let result = {
+            let store = &mut self.store;
+            let coordinator = &self.coordinator;
+            execute_filesystem_transaction_with_checkpoint(
+                &mut self.issuer,
+                policy,
+                plan,
+                approval,
+                request,
+                driver,
+                &mut |issuer| {
+                    store
+                        .persist_authority(issuer, coordinator)
+                        .map_err(|error| {
+                            store_error = Some(error);
+                        })
+                },
+            )
+        };
+        if let Some(error) = store_error {
+            self.poisoned = true;
+            return Err(DurableAuthorityError::Store(error));
+        }
+        result.map_err(DurableAuthorityError::FilesystemTransaction)
     }
 
     /// Executes one effect only after every pre-launch state is durably committed.

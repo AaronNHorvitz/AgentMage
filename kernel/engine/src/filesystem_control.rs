@@ -588,6 +588,8 @@ pub enum FilesystemTransactionError {
     DriverReportInvalid,
     /// Receipt hashing or lifecycle state became inconsistent.
     ReceiptIntegrity,
+    /// Durable grant state could not be checkpointed around mutation.
+    PersistenceFailed,
 }
 
 impl FilesystemTransactionError {
@@ -601,6 +603,7 @@ impl FilesystemTransactionError {
             Self::ObservationFailed => "filesystem.transaction.observation_failed",
             Self::DriverReportInvalid => "filesystem.transaction.driver_report_invalid",
             Self::ReceiptIntegrity => "filesystem.transaction.receipt_integrity",
+            Self::PersistenceFailed => "filesystem.transaction.persistence_failed",
         }
     }
 }
@@ -1254,10 +1257,39 @@ pub fn execute_filesystem_transaction<D: ControlledFilesystemDriver>(
     request: FilesystemTransactionRequest,
     driver: &mut D,
 ) -> Result<FilesystemTransactionResult, FilesystemTransactionError> {
+    execute_filesystem_transaction_with_checkpoint(
+        issuer,
+        policy,
+        plan,
+        approval,
+        request,
+        driver,
+        &mut |_| Ok(()),
+    )
+}
+
+/// Executes a filesystem transaction with durable checkpoints around effect authority.
+///
+/// Grant consumption is checkpointed before the driver can mutate anything. An uncertain
+/// terminal grant revision is checkpointed again before this function returns.
+pub(crate) fn execute_filesystem_transaction_with_checkpoint<D, C>(
+    issuer: &mut GrantIssuer,
+    policy: &PolicyEngine,
+    plan: &FilesystemPlan,
+    approval: &FilesystemApprovalReceipt,
+    request: FilesystemTransactionRequest,
+    driver: &mut D,
+    checkpoint: &mut C,
+) -> Result<FilesystemTransactionResult, FilesystemTransactionError>
+where
+    D: ControlledFilesystemDriver,
+    C: FnMut(&GrantIssuer) -> Result<(), ()>,
+{
     validate_transaction_identifier(&request.transaction_id)?;
     validate_transaction_binding(issuer, plan, approval)?;
     if request.cancelled_before_consume {
         invalidate_filesystem_grant(issuer, &approval.grant.grant_id, request.now_epoch_ms)?;
+        checkpoint(issuer).map_err(|()| FilesystemTransactionError::PersistenceFailed)?;
         return Err(FilesystemTransactionError::PreapplyDenied);
     }
     let current = driver
@@ -1265,10 +1297,12 @@ pub fn execute_filesystem_transaction<D: ControlledFilesystemDriver>(
         .map_err(|_| FilesystemTransactionError::ObservationFailed)?;
     if !observations_match_prestate(plan, &current) {
         invalidate_filesystem_grant(issuer, &approval.grant.grant_id, request.now_epoch_ms)?;
+        checkpoint(issuer).map_err(|()| FilesystemTransactionError::PersistenceFailed)?;
         return Err(FilesystemTransactionError::PreapplyDenied);
     }
     let context = filesystem_policy_context(&approval.grant, request.now_epoch_ms)?;
     let consumption = issuer.consume_for_execution(&approval.grant.grant_id, policy, &context)?;
+    checkpoint(issuer).map_err(|()| FilesystemTransactionError::PersistenceFailed)?;
     let mut ledger = FilesystemReceiptLedger::new(
         &request.transaction_id,
         plan,
@@ -1383,6 +1417,7 @@ pub fn execute_filesystem_transaction<D: ControlledFilesystemDriver>(
                 request.now_epoch_ms,
             )
             .map_err(|_| FilesystemTransactionError::ReceiptIntegrity)?;
+        checkpoint(issuer).map_err(|()| FilesystemTransactionError::PersistenceFailed)?;
     }
     let result = FilesystemTransactionResult {
         transaction_id: request.transaction_id.clone(),
@@ -2503,8 +2538,9 @@ mod tests {
         FilesystemRestoreReport, FilesystemTransactionError, FilesystemTransactionOutcome,
         FilesystemTransactionRequest, NewDestinationDraft, ObservedFilesystemEntry,
         StructuredPatch, StructuredPatchHunk, apply_structured_patch, build_filesystem_plan,
-        execute_filesystem_transaction, filesystem_indexes, hex_sha256, issue_filesystem_grant,
-        parse_structured_patch_json, render_filesystem_preview, verify_filesystem_receipts,
+        execute_filesystem_transaction, execute_filesystem_transaction_with_checkpoint,
+        filesystem_indexes, hex_sha256, issue_filesystem_grant, parse_structured_patch_json,
+        render_filesystem_preview, verify_filesystem_receipts,
     };
     use crate::grants::{GrantIssuer, SessionReadGrantRequest};
     use crate::policy::{PolicyDocument, PolicyEngine, ScopeRules, ToolPolicyBinding};
@@ -3648,6 +3684,36 @@ mod tests {
             );
             verify_filesystem_receipts(&result.receipts).expect("receipt chain");
         }
+    }
+
+    #[test]
+    fn durable_checkpoint_failure_stops_before_filesystem_driver_apply() {
+        let mut fixture = transaction_fixture(false);
+        let mut driver = MemoryFilesystemDriver::new(&fixture.plan, FilesystemDriverMode::Success);
+        let grant_id = fixture.approval.grant.grant_id.clone();
+        let result = execute_filesystem_transaction_with_checkpoint(
+            &mut fixture.issuer,
+            &fixture.policy,
+            &fixture.plan,
+            &fixture.approval,
+            FilesystemTransactionRequest {
+                transaction_id: "filesystem-transaction-checkpoint".to_owned(),
+                now_epoch_ms: 4_000,
+                cancelled_before_consume: false,
+            },
+            &mut driver,
+            &mut |issuer| {
+                assert_eq!(
+                    issuer.current(&grant_id).map(|grant| grant.status),
+                    Some(GrantStatus::Consumed)
+                );
+                Err(())
+            },
+        );
+
+        assert_eq!(result, Err(FilesystemTransactionError::PersistenceFailed));
+        assert_eq!(driver.apply_calls, 0);
+        assert_eq!(driver.restore_calls, 0);
     }
 
     #[test]

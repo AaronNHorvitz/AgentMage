@@ -37,6 +37,8 @@ pub enum WriteTransactionError {
     DriverReportInvalid,
     /// Receipt hashing or transition state became inconsistent.
     ReceiptIntegrity,
+    /// Durable grant consumption could not be checkpointed before mutation.
+    PersistenceFailed,
 }
 
 impl WriteTransactionError {
@@ -50,6 +52,7 @@ impl WriteTransactionError {
             Self::ObservationFailed => "write.transaction.observation_failed",
             Self::DriverReportInvalid => "write.transaction.driver_report_invalid",
             Self::ReceiptIntegrity => "write.transaction.receipt_integrity",
+            Self::PersistenceFailed => "write.transaction.persistence_failed",
         }
     }
 }
@@ -320,13 +323,48 @@ pub fn execute_write_transaction<D: AtomicWriteDriver>(
     request: WriteTransactionRequest,
     driver: &mut D,
 ) -> Result<WriteTransactionResult, WriteTransactionError> {
+    execute_write_transaction_with_checkpoint(
+        issuer,
+        policy,
+        change_set,
+        approval,
+        request,
+        driver,
+        &mut |_| Ok(()),
+    )
+}
+
+/// Executes a write transaction with a mandatory post-consumption, pre-effect checkpoint.
+///
+/// The durable authority wrapper uses this path to make one-use grant consumption crash-safe
+/// before the platform driver can receive mutation authority. The public in-memory API above
+/// retains its existing behavior through an inert checkpoint.
+pub(crate) fn execute_write_transaction_with_checkpoint<D, C>(
+    issuer: &mut GrantIssuer,
+    policy: &PolicyEngine,
+    change_set: &ShadowChangeSet,
+    approval: &WriteApprovalReceipt,
+    request: WriteTransactionRequest,
+    driver: &mut D,
+    checkpoint: &mut C,
+) -> Result<WriteTransactionResult, WriteTransactionError>
+where
+    D: AtomicWriteDriver,
+    C: FnMut(&GrantIssuer) -> Result<(), ()>,
+{
     validate_identifier(&request.transaction_id)?;
     let current = driver
         .observe(change_set)
         .map_err(|_| WriteTransactionError::ObservationFailed)?;
-    revalidate_before_apply(issuer, change_set, approval, &current, request.now_epoch_ms)?;
+    if let Err(error) =
+        revalidate_before_apply(issuer, change_set, approval, &current, request.now_epoch_ms)
+    {
+        checkpoint(issuer).map_err(|()| WriteTransactionError::PersistenceFailed)?;
+        return Err(error.into());
+    }
     let context = policy_context(&approval.grant, request.now_epoch_ms)?;
     let consumption = issuer.consume_for_execution(&approval.grant.grant_id, policy, &context)?;
+    checkpoint(issuer).map_err(|()| WriteTransactionError::PersistenceFailed)?;
     let mut ledger = WriteReceiptLedger::new(
         &request.transaction_id,
         change_set,
@@ -1324,6 +1362,35 @@ mod tests {
             }]
         );
         assert_eq!(verify_write_receipts(&result.receipts), Ok(()));
+    }
+
+    #[test]
+    fn durable_checkpoint_failure_stops_before_write_driver_apply() {
+        let mut fixture = fixture(1);
+        let mut driver = MemoryDriver::new(&fixture.change_set, DriverMode::Success);
+        let grant_id = fixture.approval.grant.grant_id.clone();
+        let result = execute_write_transaction_with_checkpoint(
+            &mut fixture.issuer,
+            &fixture.policy,
+            &fixture.change_set,
+            &fixture.approval,
+            WriteTransactionRequest {
+                transaction_id: "write-transaction-checkpoint".to_owned(),
+                now_epoch_ms: 4_000,
+            },
+            &mut driver,
+            &mut |issuer| {
+                assert_eq!(
+                    issuer.current(&grant_id).map(|grant| grant.status),
+                    Some(GrantStatus::Consumed)
+                );
+                Err(())
+            },
+        );
+
+        assert_eq!(result, Err(WriteTransactionError::PersistenceFailed));
+        assert_eq!(driver.apply_calls, 0);
+        assert_eq!(driver.restore_calls, 0);
     }
 
     #[test]
