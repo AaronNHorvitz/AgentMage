@@ -58,7 +58,7 @@
         "-p",
         "agentmage-kernel-engine",
         "--lib",
-        "runtime_loop_tests::story_50_2_"
+        "runtime_loop::tests::story_50_2_"
       ],
       "minimum_passed": 6,
       "maximum_elapsed_ms": 120000,
