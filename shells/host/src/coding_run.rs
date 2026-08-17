@@ -1,8 +1,8 @@
 //! Exact runtime-request framing for one bounded coding session.
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, PlanId, PolicyId, RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode,
-    SessionId, Task, TaskId, TaskStatus, WorkPacket,
+    CONTRACT_SCHEMA_VERSION, PlanId, PolicyId, RuntimeEventCursor, RuntimeRunId, RuntimeRunRequest,
+    RuntimeSessionMode, SessionId, Task, TaskId, TaskStatus, WorkPacket,
 };
 use agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request;
 
@@ -53,6 +53,26 @@ pub fn build_ephemeral_coding_run_request(
     profile: &CodingSessionProfile,
     input: CodingRunRequestInput,
 ) -> Result<RuntimeRunRequest, CodingRunRequestError> {
+    build_coding_run_request(profile, input, None)
+}
+
+/// Seals one interface-neutral durable controlled-write runtime request.
+///
+/// A missing cursor starts a new durable run. A present cursor requests resumption and remains
+/// inert until the trusted checkpoint port verifies the complete journal and continuation binding.
+pub fn build_durable_coding_run_request(
+    profile: &CodingSessionProfile,
+    input: CodingRunRequestInput,
+    event_cursor: Option<RuntimeEventCursor>,
+) -> Result<RuntimeRunRequest, CodingRunRequestError> {
+    build_coding_run_request(profile, input, event_cursor)
+}
+
+fn build_coding_run_request(
+    profile: &CodingSessionProfile,
+    input: CodingRunRequestInput,
+    event_cursor: Option<RuntimeEventCursor>,
+) -> Result<RuntimeRunRequest, CodingRunRequestError> {
     let task_id = TaskId::from_raw(profile.worktree().task_id.clone());
     if input.objective.is_empty()
         || input.acceptance_criteria.is_empty()
@@ -96,7 +116,7 @@ pub fn build_ephemeral_coding_run_request(
         policy_id: input.policy_id,
         policy_sha256: input.policy_sha256,
         limits: profile.limits().clone(),
-        event_cursor: None,
+        event_cursor,
         request_sha256: "0".repeat(64),
     };
     seal_runtime_run_request(request).map_err(|_| CodingRunRequestError::ContractDenied)
@@ -167,6 +187,30 @@ pub(crate) mod tests {
             build_ephemeral_coding_run_request(&profile, malformed_policy),
             Err(CodingRunRequestError::BindingDenied)
         );
+    }
+
+    #[test]
+    fn durable_coding_request_preserves_an_exact_resume_cursor() {
+        use agentmage_kernel_contracts::{RuntimeEventCursor, RuntimeEventId};
+
+        let profile = CodingSessionProfile::build(input()).expect("coding profile");
+        let packet = fixture_work_packet(&profile);
+        let cursor = RuntimeEventCursor {
+            run_id: RuntimeRunId::from_raw("coding-run-0001"),
+            event_id: RuntimeEventId::from_raw("runtime-event-0001"),
+            sequence: 7,
+            event_sha256: "c".repeat(64),
+        };
+        let request = build_durable_coding_run_request(
+            &profile,
+            input_for(packet, "Inspect and repair one bounded fixture"),
+            Some(cursor.clone()),
+        )
+        .expect("durable coding request");
+
+        verify_runtime_run_request(&request).expect("runtime request verifies");
+        assert_eq!(request.mode, RuntimeSessionMode::ControlledWrite);
+        assert_eq!(request.event_cursor, Some(cursor));
     }
 
     pub(crate) fn fixture_profile_and_request() -> (CodingSessionProfile, RuntimeRunRequest) {

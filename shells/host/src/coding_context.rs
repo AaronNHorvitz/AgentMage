@@ -206,7 +206,6 @@ where
 
     fn request_matches(&self, request: &RuntimeRunRequest) -> bool {
         request.mode == RuntimeSessionMode::ControlledWrite
-            && request.event_cursor.is_none()
             && request.workspace_id == self.binding.workspace_id
             && request.task.task_id == self.binding.task_id
             && request.work_packet.task_id == self.binding.task_id
@@ -652,6 +651,37 @@ mod tests {
             CodingContextPort::for_profile(&profile, Vec::new(), FixtureCounter("wrong-counter")),
             Err(CodingContextError::TokenCounterMismatch)
         ));
+    }
+
+    #[test]
+    fn coding_context_accepts_a_contract_valid_resume_cursor() {
+        use agentmage_kernel_contracts::{RuntimeEventCursor, RuntimeEventId};
+
+        let profile = CodingSessionProfile::build(input()).expect("coding profile");
+        let mut request = request(&profile);
+        request.event_cursor = Some(RuntimeEventCursor {
+            run_id: request.run_id.clone(),
+            event_id: RuntimeEventId::from_raw("runtime-event-resume"),
+            sequence: 9,
+            event_sha256: "d".repeat(64),
+        });
+        request = seal_runtime_run_request(request).expect("sealed resume request");
+        let mut context = CodingContextPort::for_profile(
+            &profile,
+            Vec::new(),
+            FixtureCounter("fixture-counter-v1"),
+        )
+        .expect("coding context");
+
+        context
+            .build_context(
+                &request,
+                ContextPacketId::from_raw("context-resume"),
+                2,
+                &[],
+                &[],
+            )
+            .expect("resume context");
     }
 
     fn request(profile: &CodingSessionProfile) -> RuntimeRunRequest {

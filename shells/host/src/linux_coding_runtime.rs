@@ -12,10 +12,11 @@ use agentmage_kernel_contracts::{
     ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
     AuthorizedWorkspaceHandle, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind,
     EvidenceReference, GrantId, GrantNonce, GrantOperation, OperationAttemptId, OperationOutcome,
-    ReceiptId, RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
-    RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent, RuntimeOperationId, RuntimeRunId,
-    RuntimeRunRequest, RuntimeSessionMode, SessionId, StateChange, ToolCall, ToolDefinition,
-    ToolResult, to_canonical_json,
+    PlanStepId, ReceiptId, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
+    RuntimeApprovalResponse, RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent,
+    RuntimeEventKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId, RuntimeRunRequest,
+    RuntimeSessionMode, SessionCheckpoint, SessionCheckpointId, SessionId, StateChange, ToolCall,
+    ToolDefinition, ToolResult, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     authority_transaction::AuthorityTransactionRequest,
@@ -23,6 +24,7 @@ use agentmage_kernel_engine::{
         BoundedCommandExecutor, CommandCapturedOutput, CommandEffectDriver, CommandReceipt,
         RegisteredCommandWrapperBinding, verify_command_receipt,
     },
+    context_management::finalize_checkpoint,
     filesystem_control::{
         FilesystemApprovalDecision, FilesystemApprovalPreview, FilesystemApprovalReceipt,
         FilesystemGrantRequest, FilesystemPlan, FilesystemPlanRequest,
@@ -39,10 +41,16 @@ use agentmage_kernel_engine::{
         RepositoryInspectionPlatformResult, RepositoryInspectionRequest,
         RepositoryInspectionTermination, prepare_repository_inspection,
     },
+    runtime_artifact::{
+        MAX_RUNTIME_ARTIFACT_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE, RuntimeArtifactReadRequest,
+        decode_runtime_continuation_state, seal_runtime_resume_binding,
+        verify_runtime_continuation_state,
+    },
     runtime_coordinator::{verify_runtime_approval_response, verify_runtime_run_request},
     runtime_loop::{
-        RuntimeArtifactPort, RuntimeJournalPort, RuntimePermissionEvaluation, RuntimePortFailure,
-        RuntimeToolBoundary, RuntimeToolExecution,
+        RuntimeArtifactPort, RuntimeCheckpointCommit, RuntimeCheckpointPort,
+        RuntimeCheckpointPublication, RuntimeJournalPort, RuntimePermissionEvaluation,
+        RuntimePortFailure, RuntimeResumeSnapshot, RuntimeToolBoundary, RuntimeToolExecution,
     },
     validation_result::{
         ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationStatus,
@@ -1571,7 +1579,6 @@ where
         let profile = self.workspace.profile();
         verify_runtime_run_request(request).is_ok()
             && request.mode == RuntimeSessionMode::ControlledWrite
-            && request.event_cursor.is_none()
             && request.session_id == self.session_id
             && request.task.task_id.as_str() == profile.worktree().task_id
             && request.workspace_id == *profile.write_scope().workspace_id()
@@ -1729,6 +1736,210 @@ where
             return Err(RuntimePortFailure::Invalid);
         }
         Ok(publication.reference)
+    }
+}
+
+impl<'workspace, 'session, 'platform, I, E, G> RuntimeCheckpointPort
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
+where
+    I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+{
+    fn commit_runtime_checkpoint(
+        &mut self,
+        input: RuntimeCheckpointCommit<'_>,
+    ) -> Result<RuntimeCheckpointPublication, RuntimePortFailure> {
+        if !self.request_matches(input.request)
+            || verify_runtime_continuation_state(input.continuation).is_err()
+            || input.continuation_artifact.media_type != RUNTIME_CONTINUATION_MEDIA_TYPE
+            || input.continuation.run_id != input.request.run_id
+            || input.continuation.session_id != input.request.session_id
+            || input.continuation.task_id != input.request.task.task_id
+            || input.event_cursor.run_id != input.request.run_id
+            || !input
+                .artifacts
+                .iter()
+                .any(|reference| reference == input.continuation_artifact)
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let checkpoint_id = SessionCheckpointId::from_raw(self.next_id("checkpoint")?);
+        let plan_step_id = PlanStepId::from_raw(self.next_id("plan-step")?);
+        let profile = self.workspace.profile();
+        let plan_id = input
+            .request
+            .work_packet
+            .plan_id
+            .clone()
+            .filter(|plan_id| plan_id.as_str() == profile.change_plan().plan_id())
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let mut evidence_ids = input
+            .continuation
+            .evidence
+            .iter()
+            .map(|evidence| evidence.evidence_id.clone())
+            .collect::<Vec<_>>();
+        evidence_ids.sort_by(|left, right| left.as_str().cmp(right.as_str()));
+        let citation_set_sha256 = serde_json::to_vec(&evidence_ids)
+            .map(|bytes| sha256(&bytes))
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        let next_action_sha256 = sha256(
+            format!(
+                "runtime-resume:{}:{}",
+                input.request.run_id.as_str(),
+                input.continuation.continuation_sha256
+            )
+            .as_bytes(),
+        );
+        let checkpoint = finalize_checkpoint(SessionCheckpoint {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            checkpoint_id,
+            session_id: input.request.session_id.clone(),
+            task_id: input.request.task.task_id.clone(),
+            objective_sha256: sha256(input.request.task.objective.as_bytes()),
+            plan_id,
+            plan_revision: input.request.work_packet.revision,
+            plan_step_id,
+            next_action_sha256,
+            workspace_id: input.request.workspace_id.clone(),
+            workspace_state_sha256: profile.worktree().record_sha256.clone(),
+            repository_snapshot_id: input.request.repository_snapshot_id.clone(),
+            repository_branch: profile.worktree().branch_ref.clone(),
+            repository_map_sha256: input.request.repository_snapshot_sha256.clone(),
+            files: Vec::new(),
+            instruction_sha256: profile.instruction_ledger().ledger_sha256.clone(),
+            permission_profile_id: input.request.policy_id.as_str().to_owned(),
+            permission_profile_sha256: input.request.policy_sha256.clone(),
+            policy_id: input.request.policy_id.clone(),
+            policy_sha256: input.request.policy_sha256.clone(),
+            model_profile_id: input.request.model_profile.profile_id.clone(),
+            model_manifest_sha256: input.request.model_profile.manifest_sha256.clone(),
+            model_runtime_sha256: input.request.model_profile.runtime.runtime_sha256.clone(),
+            evidence_ids,
+            citation_set_sha256,
+            blockers: Vec::new(),
+            context_packet_sha256: input.continuation.continuation_sha256.clone(),
+            action_id: None,
+            action_state: None,
+            consumed_grant_id: None,
+            receipt_id: None,
+            receipt_sha256: None,
+            ephemeral: false,
+            checkpoint_sha256: "0".repeat(64),
+        })
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        let binding = seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: input.request.session_id.clone(),
+            task_id: input.request.task.task_id.clone(),
+            run_id: input.request.run_id.clone(),
+            event_cursor: input.event_cursor.clone(),
+            artifacts: input.artifacts.to_vec(),
+            binding_sha256: "0".repeat(64),
+        })
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        self.authority
+            .checkpoint_runtime_session(&checkpoint, &binding)
+            .map_err(map_journal_failure)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        Ok(RuntimeCheckpointPublication {
+            checkpoint,
+            binding,
+        })
+    }
+
+    fn load_runtime_checkpoint(
+        &mut self,
+        request: &RuntimeRunRequest,
+    ) -> Result<Option<RuntimeResumeSnapshot>, RuntimePortFailure> {
+        if request.event_cursor.is_none() || !self.request_matches(request) {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let checkpoint = self
+            .authority
+            .authority()
+            .current_session_checkpoint()
+            .map_err(map_journal_failure)?;
+        let binding = self
+            .authority
+            .authority()
+            .current_runtime_resume_binding()
+            .map_err(map_journal_failure)?;
+        let (Some(checkpoint), Some(binding)) = (checkpoint, binding) else {
+            return Ok(None);
+        };
+        let events = self
+            .authority
+            .authority()
+            .runtime_events(&request.run_id)
+            .map_err(map_journal_failure)?;
+        let event_index = usize::try_from(binding.event_cursor.sequence)
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        let event = events.get(event_index).ok_or(RuntimePortFailure::Invalid)?;
+        let RuntimeEventKind::ArtifactCreated {
+            artifact_id,
+            manifest_sha256,
+        } = &event.kind
+        else {
+            return Err(RuntimePortFailure::Invalid);
+        };
+        if event.run_id != binding.event_cursor.run_id
+            || event.event_id != binding.event_cursor.event_id
+            || event.event_sha256 != binding.event_cursor.event_sha256
+            || event.sequence != binding.event_cursor.sequence
+            || event.turn_id.is_some()
+            || event.operation_id.is_some()
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let continuation_artifact = binding
+            .artifacts
+            .iter()
+            .find(|reference| {
+                reference.artifact_id == *artifact_id
+                    && reference.manifest_sha256 == *manifest_sha256
+                    && reference.media_type == RUNTIME_CONTINUATION_MEDIA_TYPE
+            })
+            .cloned()
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let now_epoch_ms = events
+            .last()
+            .map(|retained| retained.occurred_at_epoch_ms)
+            .filter(|value| *value > 0)
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let bytes = self
+            .authority
+            .read_runtime_artifact(&RuntimeArtifactReadRequest {
+                session_id: request.session_id.clone(),
+                task_id: request.task.task_id.clone(),
+                policy_sha256: request.policy_sha256.clone(),
+                reference: continuation_artifact.clone(),
+                now_epoch_ms,
+                maximum_bytes: MAX_RUNTIME_ARTIFACT_BYTES,
+            })
+            .map_err(map_journal_failure)?;
+        let continuation =
+            decode_runtime_continuation_state(&bytes).map_err(|_| RuntimePortFailure::Invalid)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        Ok(Some(RuntimeResumeSnapshot {
+            checkpoint,
+            binding,
+            continuation,
+            continuation_artifact,
+        }))
     }
 }
 
@@ -2097,7 +2308,9 @@ mod tests {
             StructuredPatchProposal, controlled_create_parent_observation_sha256,
         },
         coding_context::{CodingContextPort, CodingTokenCounter},
-        coding_harness::compose_ephemeral_coding_coordinator,
+        coding_harness::{
+            compose_durable_coding_coordinator, compose_ephemeral_coding_coordinator,
+        },
         coding_session::{CodingSessionProfile, tests::input_with_worktree_path_sha256},
         coding_tools::TargetedValidationRequest,
         coding_verifier::{
@@ -2512,7 +2725,7 @@ mod tests {
                 constraints: vec!["No network".to_owned()],
                 status: TaskStatus::Ready,
             },
-            work_packet: work_packet(task_id),
+            work_packet: work_packet(profile, task_id),
             workspace_id: profile.write_scope().workspace_id().clone(),
             workspace_snapshot_sha256: profile.worktree().record_sha256.clone(),
             repository_snapshot_id: profile.repository_snapshot_id().clone(),
@@ -2531,7 +2744,7 @@ mod tests {
         .expect("runtime request")
     }
 
-    fn work_packet(task_id: TaskId) -> WorkPacket {
+    fn work_packet(profile: &CodingSessionProfile, task_id: TaskId) -> WorkPacket {
         WorkPacket {
             schema_version: CONTRACT_SCHEMA_VERSION,
             work_packet_id: WorkPacketId::from_raw("packet-coding-runtime"),
@@ -2589,7 +2802,7 @@ mod tests {
             completion_evidence: Vec::new(),
             superseding_work: None,
             validation_issues: Vec::new(),
-            plan_id: Some(PlanId::from_raw("plan-coding-runtime")),
+            plan_id: Some(PlanId::from_raw(profile.change_plan().plan_id().to_owned())),
             state: WorkPacketState::Active,
         }
     }
@@ -3134,6 +3347,83 @@ mod tests {
         assert_eq!(outcome.state, AgentStateKind::NoOp, "{outcome:#?}");
         assert_eq!(outcome.tool_call_count, 1);
         assert!(outcome.unresolved_codes.is_empty());
+    }
+
+    #[test]
+    fn durable_coding_run_persists_continuation_artifact_and_checkpoint() {
+        let mut fixture = fixture_with_git(FakeGitExecutor::clean());
+        configure_git_status(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-git-durable-e2e");
+        let clean_git = scripted_call(&fixture.call);
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Observation];
+        fixture.request =
+            seal_runtime_run_request(fixture.request.clone()).expect("observation requirement");
+
+        let profile = fixture.profile_for_test();
+        let completion = coding_completion_payload(&CodingCompletionCandidate {
+            schema_version: 1,
+            objective_sha256: sha256(fixture.request.task.objective.as_bytes()),
+            terminal_claim: CodingTerminalClaim::NoOp,
+            summary: "Inspected the requested source; no change was required.".to_owned(),
+            checks_not_run: vec!["No mutation-dependent validation was needed.".to_owned()],
+            residual_risks: Vec::new(),
+        })
+        .expect("completion payload");
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [
+                ScriptedCodingStep::Tool(clean_git),
+                ScriptedCodingStep::Complete(completion),
+            ]
+            .into_iter()
+            .collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("coding context");
+        let Fixture {
+            request, boundary, ..
+        } = fixture;
+        let mut coordinator = compose_durable_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(45_000),
+        )
+        .expect("durable coding coordinator");
+
+        let mut next_response = None;
+        let outcome = loop {
+            match coordinator
+                .run_until_boundary(next_response.as_ref(), None)
+                .expect("coding coordinator boundary")
+            {
+                RuntimeCoordinatorStep::AwaitingApproval { challenge } => {
+                    next_response = Some(response(&challenge, RuntimeApprovalDisposition::Allow));
+                }
+                RuntimeCoordinatorStep::Complete { outcome } => break outcome,
+            }
+        };
+
+        assert_eq!(outcome.state, AgentStateKind::NoOp, "{outcome:#?}");
+        assert!(
+            coordinator
+                .artifact_references()
+                .iter()
+                .any(|reference| { reference.media_type == RUNTIME_CONTINUATION_MEDIA_TYPE })
+        );
+        assert!(
+            coordinator.events().iter().any(|event| {
+                matches!(event.kind, RuntimeEventKind::CheckpointCommitted { .. })
+            })
+        );
+        let mut sequence = RuntimeEventSequence::new();
+        for event in coordinator.events() {
+            sequence.push(event).expect("ordered durable runtime event");
+        }
+        assert!(sequence.is_terminal());
     }
 
     #[test]
