@@ -14,16 +14,21 @@ use agentmage_kernel_contracts::{
 };
 use agentmage_kernel_engine::{
     authority_transaction::AuthorityTransactionRequest,
+    command_runner::{
+        BoundedCommandExecutor, CommandCapturedOutput, CommandEffectDriver, CommandReceipt,
+        verify_command_receipt,
+    },
     grants::SessionReadGrantRequest,
     policy::PolicyEvaluationContext,
+    propagation::CancellationToken,
     runtime_coordinator::{verify_runtime_approval_response, verify_runtime_run_request},
     runtime_loop::{
         RuntimePermissionEvaluation, RuntimePortFailure, RuntimeToolBoundary, RuntimeToolExecution,
     },
 };
 use agentmage_platform_linux::{
-    LinuxAuthorityRuntime, LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput,
-    LinuxSandboxRunner,
+    LinuxAuthorityRuntime, LinuxAuthorizedWorkspace, LinuxReadOnlyToolEffectDriver,
+    LinuxReadOnlyToolInput, LinuxSandboxRunner,
 };
 use rustix::rand::{GetRandomFlags, getrandom};
 use serde::Serialize;
@@ -97,9 +102,10 @@ struct IssuedCodingOperation<'workspace> {
 }
 
 /// Explicit verified dependencies required to construct one Linux coding boundary.
-pub struct LinuxCodingRuntimeBoundaryInput<'workspace, 'session, 'platform, I>
+pub struct LinuxCodingRuntimeBoundaryInput<'workspace, 'session, 'platform, I, E>
 where
     I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
     /// Descriptor-bound owned worktree and immutable coding profile.
     pub workspace: &'workspace LinuxCodingWorkspace<'session, 'platform>,
@@ -107,6 +113,8 @@ where
     pub authority: LinuxAuthorityRuntime,
     /// Verified offline Linux worker sandbox.
     pub sandbox: LinuxSandboxRunner,
+    /// Verified bounded command executor for the profile's exact command inventory.
+    pub command_executor: E,
     /// Run-stable deny-by-default policy bound into the runtime request.
     pub policy: CodingRuntimePolicy,
     /// Exact authenticated local actor.
@@ -120,13 +128,15 @@ where
 }
 
 /// Production Linux implementation of the reusable runtime's native coding boundary.
-pub struct LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I>
+pub struct LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E>
 where
     I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
     workspace: &'workspace LinuxCodingWorkspace<'session, 'platform>,
     authority: LinuxAuthorityRuntime,
     sandbox: Option<LinuxSandboxRunner>,
+    command_executor: Option<E>,
     policy: CodingRuntimePolicy,
     actor_id: ActorId,
     session_id: SessionId,
@@ -136,19 +146,21 @@ where
     issued: BTreeMap<String, IssuedCodingOperation<'workspace>>,
 }
 
-impl<'workspace, 'session, 'platform, I>
-    LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I>
+impl<'workspace, 'session, 'platform, I, E>
+    LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E>
 where
     I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
     /// Composes already verified workspace, authority, sandbox, and policy objects.
     pub fn new(
-        input: LinuxCodingRuntimeBoundaryInput<'workspace, 'session, 'platform, I>,
+        input: LinuxCodingRuntimeBoundaryInput<'workspace, 'session, 'platform, I, E>,
     ) -> Result<Self, LinuxCodingRuntimeError> {
         let LinuxCodingRuntimeBoundaryInput {
             workspace,
             authority,
             sandbox,
+            command_executor,
             policy,
             actor_id,
             session_id,
@@ -184,6 +196,7 @@ where
             workspace,
             authority,
             sandbox: Some(sandbox),
+            command_executor: Some(command_executor),
             policy,
             actor_id,
             session_id,
@@ -434,7 +447,15 @@ where
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Unavailable)?;
         let issued = self.issued.remove(key).ok_or(RuntimePortFailure::Invalid)?;
-        self.execute_prepared_read(request, definition, call, issued)
+        match issued.prepared.operation().prepared() {
+            PreparedNativeCodingCall::ReadOnly { .. } => {
+                self.execute_prepared_read(request, definition, call, issued)
+            }
+            PreparedNativeCodingCall::Command { .. } => {
+                self.execute_prepared_command(request, definition, call, issued)
+            }
+            _ => Err(RuntimePortFailure::Unavailable),
+        }
     }
 
     fn execute_prepared_read(
@@ -585,6 +606,155 @@ where
         })
     }
 
+    fn execute_prepared_command(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        issued: IssuedCodingOperation<'workspace>,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        let transaction = self.authority_transaction(call, &issued)?;
+        let (operation, binding, write_draft, workspace) = issued.prepared.into_parts();
+        let prepared = match operation.prepared() {
+            PreparedNativeCodingCall::Command { prepared } => prepared.as_ref().clone(),
+            _ => return Err(RuntimePortFailure::Invalid),
+        };
+        if !matches!(binding, LinuxCodingTargetBinding::OwnedWorktreeRoot { .. })
+            || operation.expected_state_change() != StateChange::NotChanged
+            || write_draft.is_some()
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let cancellation = CancellationToken::root(
+            agentmage_kernel_contracts::BoundaryKind::Tool,
+            request.task.task_id.clone(),
+            call.correlation_id.clone(),
+        );
+        let executor = self
+            .command_executor
+            .take()
+            .ok_or(RuntimePortFailure::Unavailable)?;
+        let mut driver =
+            CommandEffectDriver::new(executor, workspace, prepared.clone(), cancellation);
+        let receipt_result = self.authority.authority_mut().execute_effect(
+            self.workspace.profile().registry(),
+            &issued.approved.policy,
+            transaction,
+            &mut driver,
+        );
+        let command_receipt = driver.take_receipt();
+        let output = driver.take_output();
+        self.command_executor = Some(driver.into_executor());
+        let receipt = receipt_result.map_err(|_| RuntimePortFailure::Uncertain)?;
+        self.authority
+            .revalidate_root()
+            .map_err(|_| RuntimePortFailure::Uncertain)?;
+        let command_receipt = command_receipt.ok_or(RuntimePortFailure::Uncertain)?;
+        let output = output.ok_or(RuntimePortFailure::Uncertain)?;
+        if !verify_command_receipt(&prepared, &command_receipt) {
+            return Err(RuntimePortFailure::Uncertain);
+        }
+        self.command_execution(request, definition, call, receipt, command_receipt, output)
+    }
+
+    fn command_execution(
+        &mut self,
+        request: &RuntimeRunRequest,
+        definition: &ToolDefinition,
+        call: &ToolCall,
+        receipt: agentmage_kernel_contracts::Receipt,
+        command_receipt: CommandReceipt,
+        output: CommandCapturedOutput,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        if output.stdout().len() as u64 != command_receipt.stdout_retained_bytes
+            || output.stderr().len() as u64 != command_receipt.stderr_retained_bytes
+            || sha256(output.stdout()) != command_receipt.stdout_sha256
+            || sha256(output.stderr()) != command_receipt.stderr_sha256
+        {
+            return Err(RuntimePortFailure::Uncertain);
+        }
+        let output_bytes =
+            serde_json::to_vec(&command_receipt).map_err(|_| RuntimePortFailure::Invalid)?;
+        if output_bytes.len() as u64 > request.limits.max_output_bytes {
+            return Err(RuntimePortFailure::ResourceExhausted);
+        }
+        let evidence = vec![EvidenceReference {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            evidence_id: EvidenceId::from_raw(self.next_id("evidence")?),
+            kind: EvidenceKind::ToolOutput,
+            source_id: format!("native:{}@{}", call.tool_id.as_str(), call.tool_version),
+            object_id: call.tool_call_id.as_str().to_owned(),
+            fragment: None,
+            content_sha256: command_receipt.receipt_sha256.clone(),
+            observed_revision: Some(request.repository_snapshot_id.as_str().to_owned()),
+        }];
+        Ok(RuntimeToolExecution {
+            receipt_id: receipt.receipt_id,
+            receipt_sha256: receipt.receipt_sha256,
+            result: ToolResult {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                tool_call_id: call.tool_call_id.clone(),
+                correlation_id: call.correlation_id.clone(),
+                outcome: command_receipt.outcome,
+                output: Some(ContractPayload {
+                    schema: definition.output_schema.clone(),
+                    media_type: "application/json".to_owned(),
+                    sha256: sha256(&output_bytes),
+                    bytes: output_bytes,
+                }),
+                validation_issues: Vec::new(),
+                evidence,
+                error: None,
+                elapsed_ms: command_receipt.elapsed_ms,
+                state_change: StateChange::NotChanged,
+            },
+        })
+    }
+
+    fn authority_transaction(
+        &mut self,
+        call: &ToolCall,
+        issued: &IssuedCodingOperation<'workspace>,
+    ) -> Result<AuthorityTransactionRequest, RuntimePortFailure> {
+        let grant = &issued.approved.grant;
+        let action_id = grant.action_id.clone().ok_or(RuntimePortFailure::Invalid)?;
+        let action_kind = grant.action_kind.ok_or(RuntimePortFailure::Invalid)?;
+        let tool_id = grant.tool_id.clone().ok_or(RuntimePortFailure::Invalid)?;
+        let tool_version = grant
+            .tool_version
+            .clone()
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let context = PolicyEvaluationContext {
+            actor_id: grant.actor_id.clone(),
+            session_id: grant.session_id.clone(),
+            task_id: grant.task_id.clone(),
+            action_id,
+            action_kind,
+            tool_id,
+            tool_version,
+            targets: grant.targets.clone(),
+            argument_sha256: grant.argument_sha256.clone(),
+            preimages: grant.preimages.clone(),
+            expected_side_effects: grant.expected_side_effects.clone(),
+            preview_sha256: grant.preview_sha256.clone(),
+            now_epoch_ms: issued.resolved_at_epoch_ms,
+            network_scope: None,
+            credential_scope: None,
+            publication_scope: None,
+        };
+        AuthorityTransactionRequest::new(
+            AuthorityTransactionId::from_raw(self.next_id("transaction")?),
+            OperationAttemptId::from_raw(self.next_id("attempt")?),
+            issued.approval.approval_id.clone(),
+            grant.grant_id.clone(),
+            call.clone(),
+            context,
+            issued.resolved_at_epoch_ms,
+            format!("epoch-ms:{}", issued.resolved_at_epoch_ms),
+        )
+        .map_err(|_| RuntimePortFailure::Invalid)
+    }
+
     fn request_matches(&self, request: &RuntimeRunRequest) -> bool {
         let profile = self.workspace.profile();
         verify_runtime_run_request(request).is_ok()
@@ -633,10 +803,11 @@ where
     }
 }
 
-impl<'workspace, 'session, 'platform, I> RuntimeToolBoundary
-    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I>
+impl<'workspace, 'session, 'platform, I, E> RuntimeToolBoundary
+    for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E>
 where
     I: CodingIdentitySource,
+    E: BoundedCommandExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
 {
     fn evaluate(
         &mut self,
@@ -790,9 +961,12 @@ mod tests {
         RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeOperationId, RuntimeRunId,
         RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId, SessionId, StopCondition,
         StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCallId, ToolId, WorkPacket,
-        WorkPacketId, WorkPacketState, WorkspaceAuthorizationId, WorkspaceScopePath,
+        WorkPacketId, WorkPacketState, WorkspaceAuthorizationId,
     };
     use agentmage_kernel_engine::{
+        command_runner::{
+            CommandLaunchPermit, CommandPlatformResult, CommandRequest, CommandTermination,
+        },
         operational_store::{OperationalStoreKeyError, OperationalStoreKeyProvider},
         runtime_coordinator::{seal_runtime_approval_challenge, seal_runtime_run_request},
         runtime_loop::{RuntimePermissionEvaluation, RuntimeToolBoundary, runtime_action_id},
@@ -831,13 +1005,54 @@ mod tests {
         }
     }
 
+    #[derive(Default)]
+    struct FakeCommandExecutor {
+        launches: usize,
+    }
+
+    impl BoundedCommandExecutor for FakeCommandExecutor {
+        type WorkingDirectory = LinuxAuthorizedWorkspace;
+
+        fn execute(
+            &mut self,
+            _permit: CommandLaunchPermit<'_>,
+            working_directory: &Self::WorkingDirectory,
+            cancellation: &CancellationToken,
+        ) -> CommandPlatformResult {
+            self.launches += 1;
+            assert!(working_directory.revalidate().is_ok());
+            assert!(!cancellation.is_cancelled());
+            let stdout = b"command-ok\n".to_vec();
+            CommandPlatformResult {
+                termination: CommandTermination::Exited,
+                exit_code: Some(0),
+                signal: None,
+                stdout_sha256: sha256(&stdout),
+                stdout_total_bytes: stdout.len() as u64,
+                stdout,
+                stderr_sha256: sha256(&[]),
+                stderr_total_bytes: 0,
+                stderr: Vec::new(),
+                elapsed_ms: 2,
+                descendants_terminated: true,
+                platform_code: "fixture.command.exited".to_owned(),
+            }
+        }
+    }
+
     struct Fixture {
         root: PathBuf,
         request: RuntimeRunRequest,
         definition: ToolDefinition,
         call: ToolCall,
         operation_id: RuntimeOperationId,
-        boundary: LinuxCodingRuntimeBoundary<'static, 'static, 'static, TestIdentities>,
+        boundary: LinuxCodingRuntimeBoundary<
+            'static,
+            'static,
+            'static,
+            TestIdentities,
+            FakeCommandExecutor,
+        >,
     }
 
     impl Drop for Fixture {
@@ -904,10 +1119,7 @@ mod tests {
             workspace: workspace.workspace(),
             registry: profile.registry(),
             maximum_tool_calls: profile.limits().max_tool_calls,
-            excluded_scopes: vec![
-                WorkspaceScopePath::new(profile.write_scope().workspace_id().clone(), ["private"])
-                    .expect("excluded scope"),
-            ],
+            excluded_scopes: Vec::new(),
         })
         .expect("coding runtime policy");
         let request = runtime_request(profile, &policy, run_id, session_id.clone(), task_id);
@@ -949,6 +1161,7 @@ mod tests {
             workspace,
             authority,
             sandbox,
+            command_executor: FakeCommandExecutor::default(),
             policy,
             actor_id,
             session_id,
@@ -1247,6 +1460,108 @@ mod tests {
             ),
             Err(RuntimePortFailure::Invalid)
         );
+    }
+
+    #[test]
+    fn story_48_2_linux_runtime_executes_one_exact_bounded_command_after_approval() {
+        let mut fixture = fixture();
+        let command = fixture
+            .profile_for_test()
+            .commands()
+            .commands()
+            .into_iter()
+            .next()
+            .expect("registered command");
+        let definition = fixture
+            .profile_for_test()
+            .registry()
+            .get_tool(
+                &ToolId::from_raw(crate::coding_tools::BOUNDED_COMMAND_TOOL_ID),
+                crate::coding_tools::BOUNDED_COMMAND_TOOL_VERSION,
+            )
+            .expect("command tool")
+            .clone();
+        let arguments =
+            serde_json::to_vec(&CommandRequest::new("command-attempt-runtime", command))
+                .expect("command request");
+        let call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-command-runtime"),
+            correlation_id: CorrelationId::from_raw("correlation-coding-runtime"),
+            action_id: runtime_action_id(&fixture.request.run_id, 1),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&arguments),
+                bytes: arguments,
+            },
+        };
+        fixture.call = call;
+        fixture.definition = definition;
+        assert!(fixture.boundary.request_matches(&fixture.request));
+        assert!(
+            fixture
+                .boundary
+                .definition_matches(&fixture.definition, &fixture.call)
+        );
+        assert!(fixture.boundary.workspace.prepare(&fixture.call).is_ok());
+        let evaluation = fixture
+            .boundary
+            .evaluate(
+                &fixture.request,
+                &fixture.operation_id,
+                &fixture.definition,
+                &fixture.call,
+                4_000,
+            )
+            .expect("command approval preview");
+        let challenge = challenge(&fixture, &evaluation);
+        let allowed = fixture
+            .boundary
+            .resolve(
+                &fixture.request,
+                &challenge,
+                &response(&challenge, RuntimeApprovalDisposition::Allow),
+                &fixture.definition,
+                &fixture.call,
+                4_001,
+            )
+            .expect("command allow");
+        let execution = fixture
+            .boundary
+            .execute(
+                &fixture.request,
+                &allowed,
+                &fixture.definition,
+                &fixture.call,
+                None,
+            )
+            .expect("bounded command execution");
+
+        assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        let command_receipt: CommandReceipt =
+            serde_json::from_slice(&execution.result.output.expect("command output").bytes)
+                .expect("command receipt payload");
+        assert_eq!(command_receipt.stdout_sha256, sha256(b"command-ok\n"));
+        assert_eq!(execution.result.evidence.len(), 1);
+        assert_eq!(
+            fixture
+                .boundary
+                .command_executor
+                .as_ref()
+                .expect("returned executor")
+                .launches,
+            1
+        );
+        assert_eq!(fixture.boundary.authority.authority().receipts().len(), 1);
+    }
+
+    impl Fixture {
+        fn profile_for_test(&self) -> &CodingSessionProfile {
+            self.boundary.workspace.profile()
+        }
     }
 
     fn sandbox() -> LinuxSandboxRunner {

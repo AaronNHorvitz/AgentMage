@@ -544,6 +544,37 @@ pub struct CommandReceipt {
     pub receipt_sha256: String,
 }
 
+/// Bounded process output retained beside, but not embedded in, a command receipt.
+#[derive(Clone, PartialEq, Eq)]
+pub struct CommandCapturedOutput {
+    stdout: Vec<u8>,
+    stderr: Vec<u8>,
+}
+
+impl CommandCapturedOutput {
+    /// Returns the bounded retained standard-output bytes.
+    #[must_use]
+    pub fn stdout(&self) -> &[u8] {
+        &self.stdout
+    }
+
+    /// Returns the bounded retained standard-error bytes.
+    #[must_use]
+    pub fn stderr(&self) -> &[u8] {
+        &self.stderr
+    }
+}
+
+impl fmt::Debug for CommandCapturedOutput {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("CommandCapturedOutput")
+            .field("stdout_bytes", &self.stdout.len())
+            .field("stderr_bytes", &self.stderr.len())
+            .finish()
+    }
+}
+
 /// Verifies a terminal receipt against the exact prepared command and closed outcome rules.
 #[must_use]
 pub fn verify_command_receipt(prepared: &PreparedCommand, receipt: &CommandReceipt) -> bool {
@@ -630,6 +661,7 @@ pub struct CommandEffectDriver<E, H> {
     prepared: PreparedCommand,
     cancellation: CancellationToken,
     receipt: Option<CommandReceipt>,
+    output: Option<CommandCapturedOutput>,
     error: Option<CommandError>,
 }
 
@@ -648,6 +680,7 @@ impl<E, H> CommandEffectDriver<E, H> {
             prepared,
             cancellation,
             receipt: None,
+            output: None,
             error: None,
         }
     }
@@ -655,6 +688,11 @@ impl<E, H> CommandEffectDriver<E, H> {
     /// Takes the command-specific terminal receipt after mediated execution.
     pub fn take_receipt(&mut self) -> Option<CommandReceipt> {
         self.receipt.take()
+    }
+
+    /// Takes bounded process output after mediated execution.
+    pub fn take_output(&mut self) -> Option<CommandCapturedOutput> {
+        self.output.take()
     }
 
     /// Takes a content-free command-boundary error.
@@ -675,6 +713,7 @@ impl<E, H> fmt::Debug for CommandEffectDriver<E, H> {
             .debug_struct("CommandEffectDriver")
             .field("template_id", &self.prepared.command.template_id)
             .field("has_receipt", &self.receipt.is_some())
+            .field("has_output", &self.output.is_some())
             .field("has_error", &self.error.is_some())
             .finish_non_exhaustive()
     }
@@ -723,6 +762,10 @@ where
             )
         };
 
+        let output = CommandCapturedOutput {
+            stdout: platform.stdout.clone(),
+            stderr: platform.stderr.clone(),
+        };
         match seal_receipt(&authorization, &self.prepared, platform) {
             Ok(receipt) => {
                 let effect = EffectResult::from_redacted_material(
@@ -731,6 +774,7 @@ where
                     StateChange::NotChanged,
                 );
                 self.receipt = Some(receipt);
+                self.output = Some(output);
                 EffectLaunch::completed(effect)
             }
             Err(error) => {
@@ -1364,6 +1408,9 @@ mod tests {
             .expect("mediated command");
         assert_eq!(receipt.outcome, OperationOutcome::Succeeded);
         let command_receipt = driver.take_receipt().expect("command receipt");
+        let output = driver.take_output().expect("captured output");
+        assert_eq!(output.stdout(), b"agentmage-ok");
+        assert!(output.stderr().is_empty());
         assert_eq!(command_receipt.outcome, OperationOutcome::Succeeded);
         assert_eq!(command_receipt.exit_code, Some(0));
         assert_eq!(
@@ -1438,6 +1485,9 @@ mod tests {
             .expect("cancelled command");
         assert_eq!(receipt.outcome, OperationOutcome::Cancelled);
         let command_receipt = driver.take_receipt().expect("command receipt");
+        let output = driver.take_output().expect("captured output");
+        assert!(output.stdout().is_empty());
+        assert!(output.stderr().is_empty());
         assert_eq!(command_receipt.outcome, OperationOutcome::Cancelled);
         assert_eq!(command_receipt.termination, CommandTermination::Cancelled);
         assert!(super::verify_command_receipt(
