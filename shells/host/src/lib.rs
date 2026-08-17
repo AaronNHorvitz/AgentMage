@@ -6,6 +6,7 @@
 pub mod code_change;
 pub mod coding_changes;
 pub mod coding_dispatch;
+pub mod coding_projection;
 pub mod coding_session;
 pub mod coding_tools;
 
