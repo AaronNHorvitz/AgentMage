@@ -113,6 +113,8 @@ pub mod runtime_event;
 pub mod runtime_hardening;
 /// Bounded durable runtime-event batching over the canonical encrypted store.
 pub mod runtime_journal;
+/// Cross-domain runtime lifecycle planning without aggregated authority.
+pub mod runtime_lifecycle;
 /// Interface-independent reusable runtime coordinator.
 pub mod runtime_loop;
 /// Deterministic, non-authoritative selection of one safe action after runtime interruption.
