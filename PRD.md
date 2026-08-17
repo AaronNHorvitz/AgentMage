@@ -206,8 +206,8 @@ flowchart TB
     TOOLREG --> POLICY
     POLICY --> ADAPTERS
     ADAPTERS --> TOOLS["Sandboxed native tools"]
-    MCP["MCP gateway"] -. "reviewed registration" .-> TOOLREG
-    POLICY -. "later authorized external operation" .-> MCP
+    MCP["Read-only MCP gateway contracts"] -. "reviewed optional registration" .-> TOOLREG
+    POLICY -. "platform transport still gated" .-> MCP
     ADAPTERS --> MODEL["Approved local model runtime"]
     TOOLS --> EVENTS
     MODEL --> EVENTS
@@ -227,13 +227,20 @@ Platform adapters implement local inference, workspace authorization, secure pat
 
 ### 5.2 Capability Packs
 
-Capability packs supply bounded tools and workflows through kernel contracts. The planned sequence is Core Read-Only; Knowledge, Obsidian, and Memory; Controlled Writes; Coding and Complete Local CLI; Manual Frontier Consultation; Administrative and Document Work; Read-Only GitHub and Connectors; delivery, productivity, finance, and Cloud Observer; then the first-GA Public Research, Continuity, Credential Broker, Approved Model Management, and Whole-Codebase Audit capabilities. Native filesystem, search, Git, patch, command, and validation providers register directly through the kernel tool abstraction. Later MCP adapters register reviewed external capabilities through the same dispatcher and receipt path; MCP is not the transport for built-in local tools. Desktop, package, Model Context Protocol, richer browser, hosted-action, scheduling, multi-agent, and experimental-model capabilities remain separately gated according to their recorded release.
+Capability packs supply bounded tools and workflows through kernel contracts. The planned sequence is Core Read-Only; Knowledge, Obsidian, and Memory; Controlled Writes; Coding and Complete Local CLI; Manual Frontier Consultation; Administrative and Document Work; Read-Only GitHub and Connectors; delivery, productivity, finance, and Cloud Observer; then the first-GA Public Research, Continuity, Credential Broker, Approved Model Management, and Whole-Codebase Audit capabilities. Native filesystem, search, Git, patch, command, and validation providers register directly through the kernel tool abstraction. Source-level read-only MCP contracts now provide reviewed manifests, exact identity binding, optional common-registry adaptation, bounded request/response mediation, cancellation/disconnect cleanup assertions, and content-minimized receipts; MCP is not the transport for built-in local tools. Production MCP process and network transports, full grant/event/evidence parity, desktop, packages, richer browser, hosted-action, scheduling, multi-agent coordination, and experimental-model capabilities remain separately gated according to their recorded releases.
 
 Only Core Read-Only is enabled in v0.1.
 
 ### 5.3 Shells
 
 Shells display state and collect user intent but carry no independent authority. The sole v0.1 user interface is native Visual Studio Code Chat, located beside the separate Codex tab. Codex is not an AgentMage shell, model, tool, fallback, or router destination. A development-only command-line diagnostic harness may exercise kernel contracts but is not a second supported user interface. The v0.4 interactive coding CLI becomes the first complete coding client of the same reusable runtime used by native Chat. A later workflow or agent node submits a bounded work packet through that runtime contract with an authority intersection that can be narrower than an interactive session. A complete desktop shell arrives later.
+
+The source tree now contains the caller-neutral workflow envelope and its
+seven-layer authority intersection. A deterministic child-assignment adapter
+uses that same port and can return only an untrusted proposal pending parent
+review. It does not implement the later workflow scheduler, leases, retries,
+durable definitions, recursive spawning, parallel writable execution, or
+conflict resolution described by Sprints 89-95.
 
 ### 5.4 Request, Authority, and Evidence Flow
 

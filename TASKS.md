@@ -3972,11 +3972,11 @@ count remains zero. Both implementation and artifact tasks, the verification tas
   - [ ] **Sub-task 50.2.1.6:** Keep runtime configuration, request, event, tool, model, permission, state, and artifact contracts free of terminal, Visual Studio Code, desktop, or workflow-rendering types.
 
 - [ ] **Task 50.2.2 - Define the future workflow attachment port without building a workflow engine**
-  - [ ] **Sub-task 50.2.2.1:** Define a caller-neutral runtime port accepting a validated bounded `WorkPacket`, parent/caller identity, exact snapshot, budgets, requested tool set, evidence requirements, stop conditions, and an effective authority intersection.
-  - [ ] **Sub-task 50.2.2.2:** Define workflow-node lifecycle mapping for submit, acknowledge, stream, wait-for-user, cancel, resume, terminal outcome, and evidence return using existing runtime events and checkpoints.
-  - [ ] **Sub-task 50.2.2.3:** Compute effective workflow-node authority as the intersection of user, workflow, node, parent, task, policy, and explicit grant scope; prohibit aggregation, inheritance from result content, and conversion of `ASK` into unattended approval.
-  - [ ] **Sub-task 50.2.2.4:** Provide an in-memory deterministic-node test adapter that submits a fake bounded work packet and consumes runtime events without implementing branching UI, scheduler, retries, multi-agent coordination, or durable workflow definitions.
-  - [ ] **Sub-task 50.2.2.5:** Publish the exact responsibilities retained for Sprints 89-95: leases/retries, schedules, agent definitions, child isolation, coordination, conflict handling, and director views.
+  - [x] **Sub-task 50.2.2.1:** Define a caller-neutral runtime port accepting a validated bounded `WorkPacket`, parent/caller identity, exact snapshot, budgets, requested tool set, evidence requirements, stop conditions, and an effective authority intersection. Evidence: `WorkflowRuntimeSubmission` binds the complete verified runtime request and exact work packet, caller ancestry, canonical visible tool set, workspace/repository snapshots, limits, evidence and stop requirements inherited from the packet, and sealed effective authority without a duplicate execution schema.
+  - [x] **Sub-task 50.2.2.2:** Define workflow-node lifecycle mapping for submit, acknowledge, stream, wait-for-user, cancel, resume, terminal outcome, and evidence return using existing runtime events and checkpoints. Evidence: `InMemoryWorkflowCaller` maps the closed lifecycle onto the existing coordinator, independently verifies the canonical event sequence, exposes protected approval wait/resume, and returns the runtime outcome, evidence, and artifact references.
+  - [x] **Sub-task 50.2.2.3:** Compute effective workflow-node authority as the intersection of user, workflow, node, parent, task, policy, and explicit grant scope; prohibit aggregation, inheritance from result content, and conversion of `ASK` into unattended approval. Evidence: `workflow_authority.rs` requires exactly seven canonical layers and computes set intersection only; property tests prove every layer can narrow, no layer can aggregate a privilege, and unattended approval or retained-result broadening fails closed.
+  - [x] **Sub-task 50.2.2.4:** Provide an in-memory deterministic-node test adapter that submits a fake bounded work packet and consumes runtime events without implementing branching UI, scheduler, retries, multi-agent coordination, or durable workflow definitions. Evidence: deterministic Linux fake-model tests run no-op and denied controlled-write paths through the real reusable coordinator and the in-memory caller without another execution loop.
+  - [x] **Sub-task 50.2.2.5:** Publish the exact responsibilities retained for Sprints 89-95: leases/retries, schedules, agent definitions, child isolation, coordination, conflict handling, and director views. Evidence: `docs/architecture/shared-runtime-workflow-and-mcp.md` enumerates the retained responsibilities and explicitly denies current workflow-engine or director completion.
 
 - [ ] **Task 50.2.3 - Verify parity, isolation, performance, and future composition**
   - [ ] **Sub-task 50.2.3.1:** Run identical read-only and coding packets through native Chat, interactive CLI, and the in-memory future-caller adapter; assert equal policy, model, context, tools, events, artifacts, receipts, checkpoints, evidence, and outcome apart from presentation.
@@ -5718,20 +5718,20 @@ platform, or release gate is closed.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 80.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 80.1.1.1** (legacy `S-065-I01`): Define MCP connection, discovery, tool, resource, prompt, request, response, error, cancellation, and disconnect contracts.
-  - [ ] **Sub-task 80.1.1.2** (legacy `S-065-I02`): Require a declarative manifest containing identity, version, package and process hashes, transport, schemas, side effects, roots, destinations, secrets, limits, cancellation, and requested authority.
-  - [ ] **Sub-task 80.1.1.3** (legacy `S-065-I03`): Verify process identity and package hash at launch and connection and invalidate grants when either changes.
-  - [ ] **Sub-task 80.1.1.4** (legacy `S-065-I04`): Distinguish in-process, local process, local socket, loopback, and remote transports visibly.
-  - [ ] **Sub-task 80.1.1.5:** Define MCP as an optional external-tool provider adapter behind the common `ToolRegistry` and `ToolDispatcher`; preserve native filesystem, repository, patch, command, validation, and Git registrations without an MCP dependency.
+  - [x] **Sub-task 80.1.1.1** (legacy `S-065-I01`): Define MCP connection, discovery, tool, resource, prompt, request, response, error, cancellation, and disconnect contracts. Evidence: `kernel/contracts/src/mcp.rs` defines the closed versioned data family without an execution or authority method.
+  - [x] **Sub-task 80.1.1.2** (legacy `S-065-I02`): Require a declarative manifest containing identity, version, package and process hashes, transport, schemas, side effects, roots, destinations, secrets, limits, cancellation, and requested authority. Evidence: `McpManifest` and `seal_mcp_manifest` require every named field, canonical ordering, exact limits, and a canonical digest; current admission denies credential identities and operations other than `workspace_read`.
+  - [x] **Sub-task 80.1.1.3** (legacy `S-065-I03`): Verify process identity and package hash at launch and connection and invalidate grants when either changes. Evidence: `McpProcessObservation`, `admit_mcp_connection`, and `verify_mcp_connection` bind package, process, endpoint, transport, containment, manifest, and expiry; any drift invalidates the connection authority before request admission.
+  - [x] **Sub-task 80.1.1.4** (legacy `S-065-I04`): Distinguish in-process, local process, local socket, loopback, and remote transports visibly. Evidence: the closed `McpTransportKind` taxonomy and transport-specific destination validation cover all five families with focused tests.
+  - [x] **Sub-task 80.1.1.5:** Define MCP as an optional external-tool provider adapter behind the common `ToolRegistry` and `ToolDispatcher`; preserve native filesystem, repository, patch, command, validation, and Git registrations without an MCP dependency. Evidence: `McpManifestRegistry::register_tools_into` uses the common `Tool` contract, rejects native and MCP identity shadowing, and tests rebuilding an independent native-only registry after MCP disablement.
 
 - [ ] **Task 80.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 80.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
-  - [ ] **Sub-task 80.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
+  - [x] **Sub-task 80.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story. Evidence: `mcp.rs` and `mcp_registry.rs` contain the isolated Story 80 contract and identity implementation.
+  - [x] **Sub-task 80.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story. Evidence: `docs/verification/shared-runtime-mcp-workflow-local-results.md` maps source and tests; canonical source records are Git content-addressed and the documentation gate verifies links and traceability.
 
 - [ ] **Task 80.1.3 - Verify and close the story**
-  - [ ] **Sub-task 80.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 80.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 80.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
+  - [x] **Sub-task 80.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Evidence: focused registry tests cover valid manifests and transports, write/secret denial, identity drift, expiry, containment failure, optional registration, disablement, and shadow denial with no effect executor.
+  - [x] **Sub-task 80.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Evidence: common-registry integration and mutation tests reject write operations, changed side effects, credentials, native shadowing, process drift, escaped descendants, and unsealed changes.
+  - [x] **Sub-task 80.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Evidence: the local results document records passing focused tests and keeps live process, supported-platform, independent-review, and deferred-fuzz evidence explicitly open; Sprint 80 remains open.
   - [ ] **Sub-task 80.1.3.4 - Product security evidence:** Map `SR-GOV-010`, `SR-ACC-001` through `SR-ACC-008`, `SR-AI-005`, `SR-TST-002`/`SR-TST-004`/`SR-TST-006`; retain conformance vectors, malicious-server corpus, process/network traces, parity report, cleanup scan, and independent gateway review.
 
 ##### Story Acceptance Criteria
@@ -5769,16 +5769,16 @@ platform, or release gate is closed.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 81.1.1 - Implement the bounded story**
-  - [ ] **Sub-task 81.1.1.1** (legacy `S-065-I05`): Scope every server independently to workspace roots, network destinations, credentials, operation classes, response classes, budgets, and expiry.
-  - [ ] **Sub-task 81.1.1.2** (legacy `S-065-I06`): Validate request and response schemas, item counts, byte limits, content classification, bounded logging, timeout, cancellation, termination, and malformed output.
-  - [ ] **Sub-task 81.1.1.3** (legacy `S-065-I07`): Emit receipts for discovery, connection, manifest verification, request, response classification, side effects, cancellation, failure, and disconnect.
-  - [ ] **Sub-task 81.1.1.4** (legacy `S-065-I08`): Register only read-only tools and prohibit direct filesystem, shell, secret, network, connector, publication, or approval inheritance.
+  - [x] **Sub-task 81.1.1.1** (legacy `S-065-I05`): Scope every server independently to workspace roots, network destinations, credentials, operation classes, response classes, budgets, and expiry. Evidence: each sealed manifest and expiring connection carries exact independent scopes, closed response classes, bounds, and identity; current admission permits no credential identity and only `workspace_read`.
+  - [x] **Sub-task 81.1.1.2** (legacy `S-065-I06`): Validate request and response schemas, item counts, byte limits, content classification, bounded logging, timeout, cancellation, termination, and malformed output. Evidence: `mcp_gateway.rs` seals one-use requests and rejects schema, digest, item, byte, timeout, classification, identity, lifecycle, cancellation-cleanup, and disconnect-cleanup violations without retaining raw payloads in receipts.
+  - [x] **Sub-task 81.1.1.3** (legacy `S-065-I07`): Emit receipts for discovery, connection, manifest verification, request, response classification, side effects, cancellation, failure, and disconnect. Evidence: `McpGatewaySession` emits canonically hashed, content-minimized receipts for every listed lifecycle class and fixes side effects to `NotChanged`.
+  - [x] **Sub-task 81.1.1.4** (legacy `S-065-I08`): Register only read-only tools and prohibit direct filesystem, shell, secret, network, connector, publication, or approval inheritance. Evidence: manifest validation admits exactly one common `WorkspaceRead` effect per tool, denies changed side effects and credentials, and the gateway type exposes no filesystem, shell, connector, model, secret, publication, or approval API.
   - [ ] **Sub-task 81.1.1.5:** Adapt each admitted MCP tool into the existing provider-neutral registration and dispatch path so native and MCP-backed tools share argument validation, classification, grants, budgets, cancellation, events, receipts, and evidence without sharing process authority.
 
 - [ ] **Task 81.1.2 - Produce reviewable artifacts**
-  - [ ] **Sub-task 81.1.2.1:** Kernel MCP gateway and manifest registry.
-  - [ ] **Sub-task 81.1.2.2:** Transport and process-identity verifier.
-  - [ ] **Sub-task 81.1.2.3:** Read-only MCP receipt and classification schemas.
+  - [x] **Sub-task 81.1.2.1:** Kernel MCP gateway and manifest registry. Evidence: `mcp_gateway.rs` and `mcp_registry.rs`.
+  - [x] **Sub-task 81.1.2.2:** Transport and process-identity verifier. Evidence: transport-specific manifest validation and exact package/process/endpoint/containment observations gate every connection and request; native process-launch enforcement remains explicitly open.
+  - [x] **Sub-task 81.1.2.3:** Read-only MCP receipt and classification schemas. Evidence: `McpResponseClass`, `McpTerminalState`, `McpReceiptKind`, and `McpReceipt` are closed contracts with gateway validation and canonical hashing.
   - [ ] **Sub-task 81.1.2.4:** Malicious server, malformed protocol, timeout, and bypass corpus.
 
 - [ ] **Task 81.1.3 - Verify and close the story**
@@ -6484,7 +6484,7 @@ platform, or release gate is closed.
   - [ ] **Sub-task 95.1.1.3** (legacy `S-072-I08`): Treat child results as untrusted proposals and require parent review of sources, receipts, changes, validation, and completion.
   - [ ] **Sub-task 95.1.1.4** (legacy `S-072-I09`): Implement conflict preservation and resolution, parent accept or reject or revise, sequential pipelines, and bounded parallel read-only review.
   - [ ] **Sub-task 95.1.1.5** (legacy `S-072-I10`): Emit attributable per-child receipts and a director view for assignments, models, budgets, actions, approvals, failures, and results.
-  - [ ] **Sub-task 95.1.1.6:** Submit each workflow or child-agent assignment through the shared caller-neutral runtime request/event/outcome port from Story 50.2, with no separate model loop, tool router, permission engine, journal, session store, or artifact store.
+  - [x] **Sub-task 95.1.1.6:** Submit each workflow or child-agent assignment through the shared caller-neutral runtime request/event/outcome port from Story 50.2, with no separate model loop, tool router, permission engine, journal, session store, or artifact store. Evidence: `ChildRuntimeCaller` wraps `InMemoryWorkflowCaller`; the deterministic Linux integration reaches the real coordinator approval and terminal path, then converts the outcome to an authority-free proposal pending parent review.
 
 - [ ] **Task 95.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 95.1.2.1:** Child-grant and assignment protocols.

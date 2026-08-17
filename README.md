@@ -262,8 +262,8 @@ flowchart LR
     RC --> TR["Common tool registry and dispatcher"]
     TR --> P
     P --> T["Sandboxed native tool worker"]
-    MCP["MCP gateway"] -. "reviewed registration" .-> TR
-    P -. "later authorized external operation" .-> MCP
+    MCP["Read-only MCP gateway contracts"] -. "reviewed optional registration" .-> TR
+    P -. "platform transport still gated" .-> MCP
     T --> EV["Events, receipts, citations, and evidence"]
     MCP --> EV
     EV --> RC
@@ -307,8 +307,10 @@ ordered event and terminal-outcome contracts. `ALLOW`, `ASK`, and `DENY` are
 visible projections of current policy and exact grant state, not replacement
 authority objects. Built-in filesystem, search, patch, write, command,
 validation, and Git providers use the native tool registry and dispatcher;
-later MCP adapters enter through the same dispatcher without wrapping those
-built-in tools.
+reviewed MCP definitions enter through the same dispatcher without wrapping
+those built-in tools. The read-only MCP contract, manifest registry, identity
+binding, bounded gateway, and receipt path now exist as isolated source-level
+components. No production MCP process or network transport is activated.
 
 The earliest useful internal coding milestone, `M-HARNESS-MVP`, is one
 interactive local session with an admitted model, one approved repository and
@@ -316,10 +318,20 @@ owned worktree, native read/search/edit/command/test/Git tools, protected
 approvals, streaming and cancellation, bounded output with explicit truncation,
 current receipts, and a final evidence-backed change summary. Persistent session
 resume, the complete durable-journal and content-addressed-artifact lifecycle,
-remote Git, commit, push, advanced indexing, routing, MCP, full
+remote Git, commit, push, advanced indexing, routing, live MCP transport, full
 conversation-library behavior, workflow orchestration, and multiple agents
 remain outside that milestone and retain their existing gates. Passing it does
 not close Sprint 48, Sprint 50, or `G-V0.4`.
+
+The shared coding runtime now also has a sealed caller-neutral workflow port,
+seven-layer narrowing authority intersection, and in-memory child-assignment
+adapter. The deterministic Linux fixture proves that workflow and child callers
+pause at the same protected approval boundary and return the same canonical
+runtime outcome. Child output is retained only as an authority-free proposal
+pending parent review. Scheduling, retries, leases, durable workflow graphs,
+multi-agent coordination, and writable-child conflict handling remain in their
+own later sprints. See the
+[shared runtime, workflow, and MCP boundaries](./docs/architecture/shared-runtime-workflow-and-mcp.md).
 
 The current Linux candidate obtains expected runtime and mechanism identities
 from a strictly parsed, detached-signature-verified release manifest independent

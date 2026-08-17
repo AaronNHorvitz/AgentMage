@@ -36,7 +36,7 @@ flowchart LR
     K --> P["Policy and exact grant validation"]
     P --> D["Common tool dispatcher"]
     D --> NT["Native tool provider"]
-    D -. "later reviewed adapter" .-> M["MCP gateway"]
+    D -. "reviewed optional definition" .-> M["Read-only MCP gateway contracts"]
     NT --> E["Observation, receipt, and artifact references"]
     M --> E
     E --> R
@@ -178,9 +178,13 @@ the shell as a presentation boundary and rejects process-launch APIs there.
 
 Built-in filesystem, repository search, patch, controlled write, command,
 validation, and Git providers register directly through the common tool
-registry and dispatcher. They do not require MCP. Later MCP-backed tools enter
-through a reviewed gateway behind the same validation, classification, grant,
-budget, cancellation, event, receipt, and evidence path.
+registry and dispatcher. They do not require MCP. Reviewed read-only MCP
+definitions can now be adapted into a fresh common registry without shadowing
+native identities. The source-level MCP gateway validates immutable manifests,
+package/process/endpoint observations, request and response bounds,
+classification, cancellation cleanup, disconnect, and receipts. A production
+MCP process or network adapter and complete runtime grant/event/evidence parity
+remain gated.
 
 Large patches, command output, test logs, generated files, reports, and large
 model output use verified content-addressed runtime artifact references. The
@@ -198,9 +202,9 @@ application launch.
 ## Remaining Product Work
 
 This contract does not establish an integrated command-line product. Remaining
-work includes authenticated local transport composition, the shared runtime
-coordinator, event journal and artifact store, canonical conversation and
-knowledge coordinators, native disconnect and descendant-process cleanup
+work includes authenticated product transport composition, canonical
+conversation and knowledge coordinators, live MCP/native disconnect and
+descendant-process cleanup
 campaigns, supported-platform package acceptance, independent review, and the
 separately deferred manual fuzz campaign. Those absences remain blockers and
 must not be inferred from passing source-level contract tests.

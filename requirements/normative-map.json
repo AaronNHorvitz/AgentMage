@@ -19,7 +19,7 @@
     },
     {
       "heading": "6. Target v0.1 User Experience",
-      "line": 276,
+      "line": 283,
       "requirement_ids": [
         "AM-HOF-001"
       ],
@@ -27,7 +27,7 @@
     },
     {
       "heading": "7. Platform and Runtime",
-      "line": 282,
+      "line": 289,
       "requirement_ids": [
         "AM-PLT-001"
       ],
@@ -35,7 +35,7 @@
     },
     {
       "heading": "7. Platform and Runtime",
-      "line": 284,
+      "line": 291,
       "requirement_ids": [
         "AM-PLT-001",
         "AM-TST-001",
@@ -45,7 +45,7 @@
     },
     {
       "heading": "7.1 macOS Reference Runtime",
-      "line": 328,
+      "line": 335,
       "requirement_ids": [
         "AM-PLT-001",
         "AM-TST-002"
@@ -54,7 +54,7 @@
     },
     {
       "heading": "7.2 Fedora and Ubuntu Runtime",
-      "line": 350,
+      "line": 357,
       "requirement_ids": [
         "AM-PLT-001",
         "AM-PRV-001",
@@ -64,7 +64,7 @@
     },
     {
       "heading": "7.2 Fedora and Ubuntu Runtime",
-      "line": 352,
+      "line": 359,
       "requirement_ids": [
         "AM-MDL-003"
       ],
@@ -72,7 +72,7 @@
     },
     {
       "heading": "8. Model Policy and Routing",
-      "line": 361,
+      "line": 368,
       "requirement_ids": [
         "AM-MDL-004"
       ],
@@ -80,7 +80,7 @@
     },
     {
       "heading": "8. Model Policy and Routing",
-      "line": 389,
+      "line": 396,
       "requirement_ids": [
         "AM-MDL-004",
         "AM-MDL-005",
@@ -90,7 +90,7 @@
     },
     {
       "heading": "8. Model Policy and Routing",
-      "line": 396,
+      "line": 403,
       "requirement_ids": [
         "AM-MDL-006"
       ],
@@ -98,7 +98,7 @@
     },
     {
       "heading": "8. Model Policy and Routing",
-      "line": 402,
+      "line": 409,
       "requirement_ids": [
         "AM-MDL-007"
       ],
@@ -106,7 +106,7 @@
     },
     {
       "heading": "8. Model Policy and Routing",
-      "line": 413,
+      "line": 420,
       "requirement_ids": [
         "AM-MDL-002",
         "AM-MDL-005"
@@ -115,7 +115,7 @@
     },
     {
       "heading": "8. Model Policy and Routing",
-      "line": 414,
+      "line": 421,
       "requirement_ids": [
         "AM-MDL-002",
         "AM-MDL-005"
@@ -124,7 +124,7 @@
     },
     {
       "heading": "9. Threat Model and Process Boundaries",
-      "line": 438,
+      "line": 445,
       "requirement_ids": [
         "AM-INS-001"
       ],
@@ -132,7 +132,7 @@
     },
     {
       "heading": "9. Threat Model and Process Boundaries",
-      "line": 440,
+      "line": 447,
       "requirement_ids": [
         "AM-MDL-001",
         "AM-MDL-003",
@@ -146,7 +146,7 @@
     },
     {
       "heading": "9. Threat Model and Process Boundaries",
-      "line": 442,
+      "line": 449,
       "requirement_ids": [
         "AM-SEC-001"
       ],
@@ -154,7 +154,7 @@
     },
     {
       "heading": "10. Capability Grants",
-      "line": 457,
+      "line": 464,
       "requirement_ids": [
         "AM-AUT-001"
       ],
@@ -162,7 +162,7 @@
     },
     {
       "heading": "11. Path Contract",
-      "line": 465,
+      "line": 472,
       "requirement_ids": [
         "AM-PTH-001"
       ],
@@ -170,7 +170,7 @@
     },
     {
       "heading": "12. Canonical Data and Storage",
-      "line": 474,
+      "line": 481,
       "requirement_ids": [
         "AM-DAT-001"
       ],
@@ -178,7 +178,7 @@
     },
     {
       "heading": "12. Canonical Data and Storage",
-      "line": 489,
+      "line": 496,
       "requirement_ids": [
         "AM-DAT-001"
       ],
@@ -186,7 +186,7 @@
     },
     {
       "heading": "12. Canonical Data and Storage",
-      "line": 493,
+      "line": 500,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-REP-001",
@@ -196,7 +196,7 @@
     },
     {
       "heading": "13. Privacy, Encryption, and Retention",
-      "line": 508,
+      "line": 515,
       "requirement_ids": [
         "AM-PRV-001"
       ],
@@ -204,7 +204,7 @@
     },
     {
       "heading": "14. Offline and Network Contract",
-      "line": 516,
+      "line": 523,
       "requirement_ids": [
         "AM-MDL-001",
         "AM-MDL-004",
@@ -214,7 +214,7 @@
     },
     {
       "heading": "15. Codex Handoff Boundary",
-      "line": 524,
+      "line": 531,
       "requirement_ids": [
         "AM-HOF-001"
       ],
@@ -222,7 +222,7 @@
     },
     {
       "heading": "15. Codex Handoff Boundary",
-      "line": 526,
+      "line": 533,
       "requirement_ids": [
         "AM-HOF-001"
       ],
@@ -230,7 +230,7 @@
     },
     {
       "heading": "16. Evidence and Completion",
-      "line": 541,
+      "line": 548,
       "requirement_ids": [
         "AM-AGT-001",
         "AM-EVD-001",
@@ -240,7 +240,7 @@
     },
     {
       "heading": "16. Evidence and Completion",
-      "line": 543,
+      "line": 550,
       "requirement_ids": [
         "AM-DAT-001",
         "AM-EVD-001"
@@ -249,7 +249,7 @@
     },
     {
       "heading": "17. Release Acceptance",
-      "line": 566,
+      "line": 573,
       "requirement_ids": [
         "AM-MDL-004",
         "AM-MDL-006",
@@ -259,7 +259,7 @@
     },
     {
       "heading": "17. Release Acceptance",
-      "line": 568,
+      "line": 575,
       "requirement_ids": [
         "AM-MDL-005",
         "AM-MDL-006",
@@ -269,7 +269,7 @@
     },
     {
       "heading": "17. Release Acceptance",
-      "line": 576,
+      "line": 583,
       "requirement_ids": [
         "AM-DOC-001",
         "AM-TST-001",
