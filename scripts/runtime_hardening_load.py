@@ -18,7 +18,9 @@ try:
     from scripts.evidence_core import (
         EvidenceError,
         atomic_write,
+        bounded_read,
         canonical_json_bytes,
+        git_blob,
         git_source_identity,
         read_json_object,
         sha256_bytes,
@@ -28,7 +30,9 @@ except ModuleNotFoundError:
     from evidence_core import (  # type: ignore[no-redef]
         EvidenceError,
         atomic_write,
+        bounded_read,
         canonical_json_bytes,
+        git_blob,
         git_source_identity,
         read_json_object,
         sha256_bytes,
@@ -366,6 +370,187 @@ def _hardware() -> dict[str, Any]:
     }
 
 
+def report_failures(
+    report: dict[str, Any], profile: dict[str, Any], artifact_root: Path
+) -> list[str]:
+    """Recompute report, historical-source, and raw-log integrity."""
+
+    failures: list[str] = []
+    expected_fields = {
+        "schema_version",
+        "record_type",
+        "profile_id",
+        "source",
+        "source_sha256",
+        "environment",
+        "workload",
+        "metric_thresholds",
+        "commands",
+        "metrics",
+        "failures",
+        "campaign_passed",
+        "disposition",
+        "declared_limitations",
+    }
+    if set(report) != expected_fields:
+        return ["runtime.load.report.fields"]
+    if (
+        report["schema_version"] != 1
+        or report["record_type"] != "story_50_2_runtime_load"
+        or report["profile_id"] != profile["profile_id"]
+        or report["workload"] != profile["workload"]
+        or report["metric_thresholds"] != profile["metric_thresholds"]
+        or report["declared_limitations"] != profile["declared_limitations"]
+    ):
+        failures.append("runtime.load.report.identity")
+
+    source = report["source"]
+    if not isinstance(source, dict) or set(source) != {"revision", "tree"}:
+        failures.append("runtime.load.report.source")
+        revision = ""
+    else:
+        revision = source["revision"]
+        try:
+            if git_source_identity(ROOT, revision) != source:
+                failures.append("runtime.load.report.source")
+        except EvidenceError:
+            failures.append("runtime.load.report.source")
+
+    source_sha256 = report["source_sha256"]
+    if not isinstance(source_sha256, dict) or set(source_sha256) != set(
+        profile["source_files"]
+    ):
+        failures.append("runtime.load.report.source_hashes")
+    elif revision:
+        for path in profile["source_files"]:
+            try:
+                observed = sha256_bytes(git_blob(ROOT, revision, path))
+            except EvidenceError:
+                failures.append("runtime.load.report.source_hashes")
+                break
+            if source_sha256[path] != observed:
+                failures.append("runtime.load.report.source_hashes")
+                break
+
+    environment = report["environment"]
+    if (
+        not isinstance(environment, dict)
+        or set(environment)
+        != {
+            "system",
+            "release",
+            "machine",
+            "cpu_model",
+            "logical_cpus",
+            "memory_kib",
+            "python",
+        }
+        or environment.get("system") != "Linux"
+        or not isinstance(environment.get("logical_cpus"), int)
+        or environment["logical_cpus"] <= 0
+        or not isinstance(environment.get("memory_kib"), int)
+        or environment["memory_kib"] <= 0
+    ):
+        failures.append("runtime.load.report.environment")
+
+    commands = report["commands"]
+    expected_campaign_failures: list[str] = []
+    metric_records: list[dict[str, Any]] = []
+    if not isinstance(commands, list) or len(commands) != len(profile["commands"]):
+        failures.append("runtime.load.report.commands")
+    else:
+        for record, expected in zip(commands, profile["commands"], strict=True):
+            command_failures = _report_command_failures(
+                record, expected, artifact_root
+            )
+            if command_failures is None:
+                failures.append("runtime.load.report.command")
+                continue
+            if record["failures"] != command_failures:
+                failures.append("runtime.load.report.command_failures")
+            expected_campaign_failures.extend(command_failures)
+            if record["metrics"] is not None:
+                metric_records.append(record["metrics"])
+
+    if len(metric_records) != 1 or report["metrics"] != (
+        metric_records[0] if len(metric_records) == 1 else {}
+    ):
+        expected_campaign_failures.append("runtime.load.metrics.count")
+        failures.append("runtime.load.report.metrics")
+    else:
+        expected_campaign_failures.extend(metric_failures(report["metrics"], profile))
+
+    expected_campaign_failures = sorted(set(expected_campaign_failures))
+    expected_pass = not expected_campaign_failures
+    if report["failures"] != expected_campaign_failures:
+        failures.append("runtime.load.report.failures")
+    if report["campaign_passed"] is not expected_pass:
+        failures.append("runtime.load.report.disposition")
+    expected_disposition = "PARTIAL-PASS" if expected_pass else "FAILED"
+    if report["disposition"] != expected_disposition:
+        failures.append("runtime.load.report.disposition")
+    return sorted(set(failures))
+
+
+def _report_command_failures(
+    record: Any, expected: dict[str, Any], artifact_root: Path
+) -> list[str] | None:
+    if not isinstance(record, dict) or set(record) != {
+        "id",
+        "argv",
+        "exit_code",
+        "elapsed_ms",
+        "maximum_rss_kib",
+        "tests",
+        "output_sha256",
+        "failures",
+        "metrics",
+        "log",
+    }:
+        return None
+    if record["id"] != expected["id"] or record["argv"] != expected["argv"]:
+        return None
+    tests = record["tests"]
+    if not isinstance(tests, dict) or set(tests) != {
+        "passed",
+        "failed",
+        "ignored",
+        "measured",
+        "filtered_out",
+    }:
+        return None
+    if any(not isinstance(value, int) or value < 0 for value in tests.values()):
+        return None
+    log_name = record["log"]
+    if log_name != f"{expected['id']}.log":
+        return None
+    try:
+        output = bounded_read(
+            artifact_root,
+            log_name,
+            maximum_bytes=MAXIMUM_COMMAND_OUTPUT_BYTES,
+        )
+    except EvidenceError:
+        return None
+    if record["output_sha256"] != sha256_bytes(output):
+        return None
+
+    failures: list[str] = []
+    if record["exit_code"] != 0:
+        failures.append("runtime.load.command.exit")
+    if tests["passed"] < expected["minimum_passed"] or tests["failed"] != 0:
+        failures.append("runtime.load.command.tests")
+    if tests["ignored"] != 0 or tests["measured"] != 0:
+        failures.append("runtime.load.command.skips")
+    if not _at_most(record["elapsed_ms"], expected["maximum_elapsed_ms"]):
+        failures.append("runtime.load.command.elapsed")
+    if not _at_most(record["maximum_rss_kib"], expected["maximum_rss_kib"]):
+        failures.append("runtime.load.command.memory")
+    if expected["requires_load_metrics"] != (record["metrics"] is not None):
+        failures.append("runtime.load.command.metrics")
+    return failures
+
+
 def _require_clean_tree() -> None:
     result = subprocess.run(
         ["git", "status", "--porcelain"],
@@ -437,6 +622,11 @@ def generate(output: Path) -> dict[str, Any]:
             "disposition": "PARTIAL-PASS" if not campaign_failures else "FAILED",
             "declared_limitations": profile["declared_limitations"],
         }
+        validation_failures = report_failures(report, profile, staging)
+        if validation_failures:
+            raise CampaignError(
+                "runtime.load.report.invalid:" + ",".join(validation_failures)
+            )
         atomic_write(staging / "report.json", canonical_json_bytes(report))
         os.replace(staging, output)
         return report
