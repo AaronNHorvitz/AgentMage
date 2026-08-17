@@ -8,6 +8,11 @@ exit codes, and human or JSON event rendering. It does not yet have an
 authenticated product transport. Operational commands fail closed with
 `client.transport.failed` until that transport is composed.
 
+The planned public interactive coding entry point is `agentmage code` or a
+subsequently approved equivalent. That interface will be a thin client of the
+same reusable runtime coordinator as native Chat. The current `agent` name is a
+source-level detail and is not a public command compatibility promise.
+
 ## Build And Inspect
 
 Build the current source candidate:
@@ -84,6 +89,39 @@ error equivalent to:
 There is no hidden prompt, browser launch, cloud login, fallback transport, or
 application launch.
 
+## Planned Interactive Coding Session
+
+The first useful coding-harness milestone composes existing AgentMage contracts
+in one local terminal session:
+
+1. Authenticate the client, select one admitted local model, and bind one
+   approved repository plus an AgentMage-owned worktree.
+2. Explore, read, and search through native registered tools and bounded model
+   context.
+3. Produce an evidence-backed plan and exact-preimage patch or controlled file
+   creation.
+4. Render `ALLOW`, `ASK`, or `DENY` from kernel policy. An `ASK` pauses for an
+   exact protected approval; the prompt itself carries no authority.
+5. Execute only separately granted writes, commands, and targeted tests through
+   their existing sandboxed workers.
+6. Inspect Git status, diff, log, and show through native read tools and render
+   bounded output with explicit truncation; use verified runtime artifact
+   references once that lifecycle is enabled.
+7. Finish with receipts, checks run and not run, changed files, residual risks,
+   and one evidence-backed terminal outcome.
+
+Native tools use the common `ToolRegistry` and `ToolDispatcher`; MCP is not a
+prerequisite or wrapper for built-in filesystem, Git, patch, command, or test
+operations. The runtime journal, optional transcript, and optional local
+content-free diagnostics remain separate. Progress and token streaming do not
+perform one synchronous durable write per token.
+
+Persistent session resume, the complete durable-journal and
+content-addressed-artifact lifecycle, remote Git, commit, push, advanced deep
+indexing, measured routing, MCP, the complete conversation library, desktop UI,
+workflow design, and multiple agents remain outside this first milestone and
+retain their later gates.
+
 ## Exit Codes
 
 | Code | Meaning |
@@ -99,10 +137,10 @@ application launch.
 | `9` | Incompatible protocol or policy version |
 
 Successful operational execution will require an authenticated local host and
-the same kernel request, policy decision, grant, receipt, evidence, and final
-state used by native Chat. Noninteractive callers must present an exact bounded,
-expiring, single-use grant before dispatch; they cannot obtain authority through
-an interactive prompt.
+the same runtime request, kernel policy decision, grant, event journal, artifact
+references, receipt, evidence, and final state used by native Chat.
+Noninteractive callers must present an exact bounded, expiring, single-use grant
+before dispatch; they cannot obtain authority through an interactive prompt.
 
 ## Protocol References
 

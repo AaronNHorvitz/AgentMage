@@ -100,7 +100,7 @@ Each document has an independent revision. A derived document's version number d
 
 The target AgentMage product is a local-first software-development, delivery, productivity, research, continuity, and whole-codebase audit assistant that combines deterministic tools with approved local models. When implemented and enabled through its gates, it will read bounded local workspaces, preserve resumable state, run tools inside enforceable Linux and Windows boundaries, research current public information with citations, protect connected credentials, create encrypted continuity snapshots, audit repositories larger than model context with exact evidence and coverage, and show evidence for its claims. Apple Silicon macOS remains a retained post-GA platform lane.
 
-The complete product adds knowledge management, coding, documents, administrative work, GitHub and GitHub Enterprise, work planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security findings, service catalogs, releases, manual frontier consultation, plugins, browser research, scheduled work, and bounded specialist agents. These capabilities are divided across internal milestones and remain disabled until their own authority, privacy, security, recovery, and acceptance gates pass. v0.1 is deliberately limited to a read-only local evidence assistant in native Visual Studio Code Chat; under Decision 0008 it is an internal milestone, not the first supported public release.
+The complete product adds knowledge management, coding, documents, administrative work, GitHub and GitHub Enterprise, work planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security findings, service catalogs, releases, manual frontier consultation, plugins, browser research, scheduled work, and bounded specialist agents. Its interactive coding harness is the first complete client of a reusable AgentMage runtime, not a separate agent implementation. These capabilities are divided across internal milestones and remain disabled until their own authority, privacy, security, recovery, and acceptance gates pass. v0.1 is deliberately limited to a read-only local evidence assistant in native Visual Studio Code Chat; under Decision 0008 it is an internal milestone, not the first supported public release.
 
 ## 2. Problem
 
@@ -139,6 +139,7 @@ AgentMage separates deterministic work, model inference, authorization, evidence
 27. Distinguish narrow token repeatability from deterministic policy, authority, effect mediation, verified outcomes, and reproducible audit evidence; publish separate quality and diagnostic-repeatability results without claiming universal model determinism.
 28. Keep semantic classification advisory and authority-reducing: deterministic deny-first policy governs typed facts, while learned classifiers can only deny, narrow, redact, isolate, or escalate.
 29. Use a persisted bounded agent state machine in which only deterministic postcondition evidence can establish success or verified no-op and every other terminal result remains visibly non-successful.
+30. Expose one interface-independent runtime coordinator to native Chat, the interactive coding CLI, later thin clients, and future workflow or agent nodes so model, context, tool, permission, event, session, and artifact behavior is implemented once.
 
 ## 4. Non-Goals
 
@@ -167,7 +168,7 @@ AgentMage has three layers with one-way dependencies.
 flowchart TB
     subgraph Shells["Authority-free shells"]
         VSC["Native VS Code Chat - v0.1"]
-        CLI["Complete local CLI - v0.4"]
+        CLI["Interactive coding CLI - v0.4"]
         DESK["Desktop applications - v1+"]
     end
 
@@ -180,45 +181,59 @@ flowchart TB
         CONTINUITY["Encrypted Continuity"]
         MODELS["Approved Model Management"]
         AUDIT["Whole-Codebase Audit"]
+        FLOW["Future workflow and agent nodes"]
         LATER["Later gated capabilities"]
     end
 
     subgraph Kernel["Interface-independent kernel"]
         CONTRACTS["Typed contracts"]
+        RUNTIME["Reusable runtime coordinator"]
+        CONTEXT["Context manager"]
+        TOOLREG["Tool registry and dispatcher"]
         POLICY["Policy and CapabilityGrant"]
-        EVIDENCE["Receipts and evidence"]
-        STATE["Encrypted operational state"]
+        EVENTS["Runtime events and receipts"]
+        STATE["Encrypted state and execution journal"]
+        ARTIFACTS["Content-addressed runtime artifacts"]
         ADAPTERS["Platform adapters"]
     end
 
-    Shells --> Kernel
-    Packs --> Kernel
-    CONTRACTS --> POLICY
+    Shells --> RUNTIME
+    Packs --> RUNTIME
+    CONTRACTS --> RUNTIME
+    RUNTIME --> CONTEXT
+    RUNTIME --> POLICY
+    RUNTIME --> TOOLREG
+    TOOLREG --> POLICY
     POLICY --> ADAPTERS
-    ADAPTERS --> TOOLS["Sandboxed tools"]
+    ADAPTERS --> TOOLS["Sandboxed native tools"]
+    MCP["MCP gateway"] -. "reviewed registration" .-> TOOLREG
+    POLICY -. "later authorized external operation" .-> MCP
     ADAPTERS --> MODEL["Approved local model runtime"]
-    TOOLS --> EVIDENCE
-    MODEL --> EVIDENCE
-    EVIDENCE --> STATE
+    TOOLS --> EVENTS
+    MODEL --> EVENTS
+    EVENTS --> STATE
+    EVENTS --> ARTIFACTS
 ```
 
 Dependencies point toward the kernel. The kernel never imports a capability pack or shell. Every interface and capability must use the same typed contracts, platform adapters, policy checks, grants, receipts, classification, cancellation, and recovery behavior.
 
 ### 5.1 Kernel
 
-The kernel owns configuration, tasks, policy, capability grants, receipts, canonical operational storage, model adapters, sandboxed tool execution, platform-security contracts, classification, retention, and recovery. It has no dependency on a capability pack or user interface.
+The kernel owns configuration, tasks, policy, capability grants, receipts, canonical operational storage, model adapters, sandboxed tool execution, platform-security contracts, classification, retention, and recovery. It also owns an interface-independent runtime coordinator that composes the existing bounded agent state machine, model controller, context manager, tool registry and dispatcher, grant issuer, store, event sink, and artifact references for one run. It has no dependency on a capability pack or user interface.
+
+The coordinator accepts a versioned runtime request and emits a versioned ordered event stream plus one terminal outcome. It describes and sequences work but receives no independent authority. Effect eligibility remains a kernel policy decision and effect execution still occurs only after exact grant validation and consumption at the existing dispatcher boundary.
 
 Platform adapters implement local inference, workspace authorization, secure path resolution, tool confinement, secret storage, process limits, installation, and updates. Capability packs and shells cannot branch around or weaken these contracts.
 
 ### 5.2 Capability Packs
 
-Capability packs supply bounded tools and workflows through kernel contracts. The planned sequence is Core Read-Only; Knowledge, Obsidian, and Memory; Controlled Writes; Coding and Complete Local CLI; Manual Frontier Consultation; Administrative and Document Work; Read-Only GitHub and Connectors; delivery, productivity, finance, and Cloud Observer; then the first-GA Public Research, Continuity, Credential Broker, Approved Model Management, and Whole-Codebase Audit capabilities. Desktop, package, Model Context Protocol, richer browser, hosted-action, scheduling, multi-agent, and experimental-model capabilities remain separately gated according to their recorded release.
+Capability packs supply bounded tools and workflows through kernel contracts. The planned sequence is Core Read-Only; Knowledge, Obsidian, and Memory; Controlled Writes; Coding and Complete Local CLI; Manual Frontier Consultation; Administrative and Document Work; Read-Only GitHub and Connectors; delivery, productivity, finance, and Cloud Observer; then the first-GA Public Research, Continuity, Credential Broker, Approved Model Management, and Whole-Codebase Audit capabilities. Native filesystem, search, Git, patch, command, and validation providers register directly through the kernel tool abstraction. Later MCP adapters register reviewed external capabilities through the same dispatcher and receipt path; MCP is not the transport for built-in local tools. Desktop, package, Model Context Protocol, richer browser, hosted-action, scheduling, multi-agent, and experimental-model capabilities remain separately gated according to their recorded release.
 
 Only Core Read-Only is enabled in v0.1.
 
 ### 5.3 Shells
 
-Shells display state and collect user intent but carry no independent authority. The sole v0.1 user interface is native Visual Studio Code Chat, located beside the separate Codex tab. Codex is not an AgentMage shell, model, tool, fallback, or router destination. A development-only command-line diagnostic harness may exercise kernel contracts but is not a second supported user interface. A complete CLI and desktop shell arrive later.
+Shells display state and collect user intent but carry no independent authority. The sole v0.1 user interface is native Visual Studio Code Chat, located beside the separate Codex tab. Codex is not an AgentMage shell, model, tool, fallback, or router destination. A development-only command-line diagnostic harness may exercise kernel contracts but is not a second supported user interface. The v0.4 interactive coding CLI becomes the first complete coding client of the same reusable runtime used by native Chat. A later workflow or agent node submits a bounded work packet through that runtime contract with an authority intersection that can be narrower than an interactive session. A complete desktop shell arrives later.
 
 ### 5.4 Request, Authority, and Evidence Flow
 
@@ -226,19 +241,23 @@ Shells display state and collect user intent but carry no independent authority.
 sequenceDiagram
     actor User
     participant Chat as Native VS Code Chat
+    participant Runtime as Runtime Coordinator
     participant Kernel as AgentMage Kernel
     participant Model as Approved Local Model
     participant Tool as Sandboxed Tool Worker
 
     User->>Chat: Submit request and workspace selection
-    Chat->>Kernel: Send authenticated intent
+    Chat->>Runtime: Send authenticated runtime request
+    Runtime->>Kernel: Bind task, context, policy, and session
     Kernel->>Model: Send bounded, sensitivity-labeled context
-    Model-->>Kernel: Return untrusted proposal or tool request
+    Model-->>Runtime: Return untrusted proposal or tool request
+    Runtime->>Kernel: Request exact policy disposition
     Kernel->>Kernel: Validate policy and consume exact grant
     Kernel->>Tool: Execute one bounded operation
     Tool-->>Kernel: Return result and receipt
-    Kernel->>Kernel: Resolve citations and evidence states
-    Kernel-->>Chat: Stream result, evidence, denial, or failure
+    Kernel-->>Runtime: Return observation, receipt, and evidence
+    Runtime->>Runtime: Update context, journal, and checkpoint
+    Runtime-->>Chat: Stream result, evidence, approval request, denial, or failure
     Chat-->>User: Display outcome and any required decision
 ```
 
@@ -341,6 +360,12 @@ family codecs govern each model's tokenizer, template, reasoning controls, messa
 tokens, tool grammar, and translation into the closed AgentMage proposal contract. Kernel policy,
 authority, context, workers, verifiers, and evidence never branch directly on a model family.
 
+The same contract represents structured proposal support, tool calling, streaming, context and
+output limits, vision, reasoning controls, token counting, cancellation, resources, and known
+limitations. Later Ollama, vLLM, or OpenAI-compatible local adapters enter as exact admitted runtime
+profiles with explicit endpoint, process, network, codec, provenance, parity, and removal evidence;
+the coding-harness MVP has no generic arbitrary-endpoint path.
+
 Muse Glimmer is the primary implementation and deep-evaluation candidate, not an approved or
 enabled dependency. Its first evaluation tuple is a first-party text-only artifact through a pinned
 native llama.cpp build on the Fedora development workstation, one inference slot, synthetic data,
@@ -392,6 +417,20 @@ behavior.
 
 Automatic routing, fallback, and ensembles remain disabled until a later release defines and passes task-class thresholds. A later release may recommend frontier consultation and prepare a packet, but no release may autonomously deliver it.
 
+### 5.5 Runtime Events, Sessions, and Artifacts
+
+One runtime run binds its request, session, task, work packet, workspace and repository snapshot, selected exact model profile, context packet, visible budgets, tool catalog, policy identity, and terminal outcome. The coordinator exposes `ALLOW`, `ASK`, and `DENY` as user-facing execution dispositions over the existing authority system:
+
+- `ALLOW` means current policy and an exact consumable grant permit dispatch.
+- `ASK` means the proposed operation is eligible for a protected approval request but no effect begins until a new exact grant is issued and consumed.
+- `DENY` means the operation is prohibited, invalid, unsupported, or outside current scope and produces no effect.
+
+The runtime event envelope carries schema, run, session, task, turn, operation, correlation, causation, sequence, sensitivity, retention, and payload-reference identities. Event families cover runs, turns, model calls, tool calls, permission decisions, file observations or changes, artifacts, checkpoints, and terminal outcomes. Correctness-bearing grant, effect, receipt, and checkpoint transitions share the canonical transaction boundary. Progress and content-free metrics use bounded asynchronous queues and batches. Streamed tokens remain presentation data rather than synchronous durable event rows.
+
+The durable execution journal, optional persisted conversation transcript, and optional content-free diagnostics or metrics are separate projections with separate retention. Large patches, command output, test logs, generated files, reports, and large model output use immutable content-addressed artifact references instead of giant event payloads. Runtime artifacts live under the approved local data root and are distinct from the repository's checked-in `artifacts/` verification evidence. Encrypted SQLite remains authoritative for artifact metadata, references, retention, journal order, and checkpoint linkage.
+
+Context construction stays deliberate and bounded. The coordinator uses the existing repository map, search, current Git state, project instructions, context manager, checked summaries, source reopening, and artifact excerpts instead of loading an entire repository or transcript into one model request.
+
 ## 9. Threat Model and Process Boundaries
 
 Protected assets include user files, conversation text, operational state, grants, receipts, credentials, encryption keys, and computing resources. Expected threats include prompt injection, malicious workspace files, incorrect model output, path traversal, symlink races, grant replay, secret extraction, unauthorized egress, hostile archives, crashes, and local-record tampering.
@@ -429,13 +468,16 @@ The kernel resolves paths beneath an already-authorized workspace handle and hol
 
 AgentMage assigns one authority to each data domain:
 
-- **Encrypted SQLite:** sole authority for sessions, tasks, plans, actions, grants, receipts, checkpoints, decisions, file observations, and resume state.
+- **Encrypted SQLite:** sole authority for sessions, tasks, plans, actions, grants, runtime-event order, receipts, checkpoints, decisions, file observations, runtime-artifact metadata and references, and resume state.
+- **Local content-addressed runtime artifact store:** immutable payload bytes for bounded large outputs, addressed by verified digest and governed by the SQLite metadata, classification, retention, and reference records.
 - **Markdown beginning in v0.2:** sole authority for user-owned knowledge and approved portable long-term memory.
 - **JSON Lines:** explicit derived audit or export format only; never a co-authoritative database.
 
 ```mermaid
 flowchart TD
-    OP["Sessions, objectives, plans, actions, grants, receipts, checkpoints"] --> SQL[("Encrypted SQLite")]
+    OP["Sessions, plans, actions, grants, events, receipts, checkpoints"] --> SQL[("Encrypted SQLite")]
+    SQL --> REF["Verified runtime artifact references"]
+    REF --> BLOB["Content-addressed encrypted payloads"]
     RM["Bounded repository-map observations"] --> SQL
     HK["v0.2+ human-owned knowledge and approved portable memory"] --> MD["Canonical Markdown"]
     SQL --> EXP["Derived JSON Lines audit or export"]
@@ -446,7 +488,11 @@ flowchart TD
 
 No action transaction dual-writes canonical state. Generated Markdown views, JSON Lines exports, caches, and indexes are labeled derivatives and cannot become authority through user-interface behavior, model output, or recovery shortcuts.
 
+Artifact publication uses staged bytes, digest and size verification, atomic placement, then a transactional metadata reference; an incomplete or mismatched object remains unavailable.
+
 v0.1 persists only the minimum state required for one resumable read-only session. This includes content-hash-keyed repository-map metadata and bounded symbol/source-range records, but not an unbounded copy of workspace text. SQLite uses one writer, transactions, write-ahead logging, foreign keys, migrations, and atomic checkpoints. Generated Markdown views and JSON Lines exports never become startup authority without explicit validated import.
+
+Runtime-event persistence batches non-correctness progress records within explicit memory, byte, and latency ceilings; grant, effect, receipt, and checkpoint facts retain their correctness transaction.
 
 ## 13. Privacy, Encryption, and Retention
 
@@ -575,7 +621,7 @@ flowchart LR
 | Epic 1 / v0.1 internal | Read-only local evidence-assistant foundation in native Visual Studio Code Chat | 4-25 | One admitted user-selected local profile through the candidate-neutral runtime; Muse-first and role-aware Gemma evaluation; deterministic repository map and local evidence; no writes, generic shell, semantic index, web, connectors, plugins, scheduling, child agents, or Codex transfer. |
 | Epic 2 / v0.2 | Knowledge, direct read-only Obsidian and Markdown, rolling memory, conversation continuity, and optional approved local semantic retrieval | 26-34 | Markdown is canonical for human knowledge; semantic retrieval is opt-in, local, deletable, and never a replacement for deterministic search. The release remains read-only. |
 | Epic 3 / v0.3 | Controlled local file and knowledge writes | 35-40 | Exact-preimage shadow changes, exact preview, single-use grants, stale rejection, atomic application, receipts, verification, and rollback; no generic shell. |
-| Epic 4 / v0.4 | Coding, isolated worktrees, trusted validation commands, and complete local CLI | 41-50 | Worktrees supplement but never replace operating-system sandboxing; remote Git reads are visible and bounded; commands and every write remain separately granted and receipted. |
+| Epic 4 / v0.4 | Reusable coding runtime, interactive coding harness, isolated worktrees, trusted validation commands, and complete local CLI | 41-50 | The earliest harness milestone uses one admitted local model, native repository read/search/edit/command/test/Git tools, exact approvals, an owned worktree, streamed events, bounded output, current receipts, and final evidence. Persistent resume, the complete journal/artifact lifecycle, advanced deep indexing, remote Git, commit, routing, MCP, full conversation-library features, and workflow orchestration remain later enhancements rather than hidden MVP prerequisites. |
 | Epic 5 / v0.5 | Manual Frontier Consultation | 51-53 | Redacted local packet, user-controlled export, untrusted result import, and local revalidation; no autonomous Codex or external-model delivery. |
 | Epic 6 / v0.6 | Administrative, secretary, document, rich artifact, and structured-data work | 54-69 | No unattended correspondence, live-calendar mutation, hidden external delivery, or unverified artifact completion. |
 | Epic 7 / v0.7 internal | User-initiated read-only GitHub and connector foundations | 70-75 | Visible temporary destination-scoped network use, sensitivity-labeled local cache, credentials outside model context, and no hosted writes. |

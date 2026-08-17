@@ -39,17 +39,20 @@ the model, skill, client, repository, or worktree:
 
 ```mermaid
 flowchart TD
-    I["User intent"] --> M["Current repository map and citations"]
+    I["Native Chat or interactive coding CLI"] --> RT["Reusable runtime coordinator"]
+    RT --> M["Current repository map and citations"]
     M --> S["Declarative coding skill context"]
     S --> P["Evidence-backed plan"]
     P --> C["Exact-preimage shadow change"]
     C --> V["Separately granted trusted validation"]
-    V --> R["Complete review packet"]
-    R --> U["Exact user approval"]
+    V --> REV["Complete review packet"]
+    REV --> U["Exact user approval"]
     U --> L["Optional signed local commit"]
     L --> Q["Receipt and recovery state"]
+    Q --> J["Execution journal and artifact references"]
     W["Owned worktree"] --> C
     OS["Operating-system sandbox"] --> V
+    F["Future workflow or agent node"] -. "same runtime request" .-> RT
 ```
 
 An owned Git worktree isolates repository state but is not an operating-system sandbox. Every
@@ -65,6 +68,41 @@ invoke models directly, register tools, execute commands, or bypass offline poli
 contains a command parser and interface-neutral schemas, but no authenticated product transport or
 coding coordinator currently composes the complete transaction. Consequently, no full Chat/CLI
 workflow or parity claim exists.
+
+The planned coordinator is shared kernel composition, not a second agent implementation. It binds
+one runtime request to the persisted agent state, selected exact local model, bounded context,
+native tool registry and dispatcher, policy disposition, journal cursor, runtime artifacts,
+cancellation, and terminal outcome. `ALLOW`, `ASK`, and `DENY` remain projections of the existing
+grant transaction: only a current consumed grant reaches an effect, an approval request pauses
+without effect, and a denial remains a no-effect result.
+
+Built-in repository exploration, file read/search, patch, controlled create, command, validation,
+and Git inspection tools register natively through the common dispatcher. MCP remains a later
+extension adapter for reviewed external capabilities and is not inserted between the coordinator
+and built-in tools.
+
+## Earliest Interactive Harness Milestone
+
+`M-HARNESS-MVP` is one interactive `agentmage code` session using one admitted local model, one
+approved repository and AgentMage-owned worktree, native exploration/read/search, patch and
+controlled-create tools, bounded commands, targeted tests, Git status/diff/log/show, protected
+approval prompts, streaming and cancellation, bounded output with explicit truncation, current
+receipts, and a final evidence-backed change summary.
+
+The milestone excludes persistent session resume, the complete durable-journal and
+content-addressed-artifact lifecycle, remote Git, commit, push, advanced deep indexing, measured
+model routing, MCP, the complete conversation library, desktop UI, workflow design, and multiple
+agents. Those capabilities retain their existing tasks and gates. Passing the milestone does not
+close Sprint 48, Sprint 50, or `G-V0.4`.
+
+## Workflow Attachment Point
+
+A later workflow or agent node submits the same versioned runtime request or bounded work packet
+and consumes the same events, artifacts, receipts, and terminal outcome. Its effective authority is
+the intersection of workflow, node, parent, task, and user scope and can be narrower than an
+interactive session. The runtime exposes no terminal or editor assumptions, so later deterministic,
+validation, approval, execution, branch, retry, and multi-agent nodes compose around it rather than
+replacing it.
 
 ## Release Boundary
 

@@ -6,6 +6,20 @@ The coding contracts and declarative skill pack are source-level pre-alpha evide
 not yet expose an integrated coding workflow through native Chat or the local CLI. The sequence
 below defines the intended review path and stop conditions; it is not a supported-product claim.
 
+The planned interactive harness is a thin client of the reusable kernel runtime coordinator. It
+does not own a model loop, tool router, approval system, journal, session store, or artifact store.
+Built-in local coding tools register directly through the common tool dispatcher; MCP remains an
+optional later adapter for reviewed external tools.
+
+The earliest useful `M-HARNESS-MVP` path includes one admitted local model, one approved repository
+and owned worktree, exploration/read/search, patch and controlled creation, bounded commands,
+targeted tests, Git status/diff/log/show, exact approvals, streaming/cancellation, runtime events,
+bounded output with explicit truncation, current receipts, and a final evidence-backed summary.
+Persistent session resume, complete durable-journal and content-addressed-artifact lifecycle, remote
+Git, commit, push, advanced indexing, routing, MCP, full conversation-library behavior, workflow
+orchestration, and multiple agents remain later work and do not become hidden prerequisites for
+that milestone.
+
 ## Repository Comprehension
 
 1. Select one exact repository, owned worktree, branch, revision, and approved root.

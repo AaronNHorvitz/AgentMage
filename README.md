@@ -100,6 +100,14 @@ cross-interface parity, and `G-V0.4` release evidence remain blocked; see the
 [coding-skill architecture](./docs/architecture/coding-skills-and-release-boundary.md)
 and [bounded coding guide](./docs/guides/bounded-coding-workflows.md).
 
+The planned interactive coding harness is now reconciled as the first complete
+client of a reusable AgentMage runtime coordinator. The plan reuses the current
+agent state, model, context, tool, grant, storage, receipt, write, command,
+worktree, validation, and thin-client contracts; it adds ordered runtime events,
+content-addressed large-output artifacts, product composition, and an
+interactive `agentmage code` path. This is planning only and changes no current
+implementation or support status.
+
 Sprint 51 now has source-level measured frontier-tier decisions and a
 deterministic local disclosure composer layered over the manual handoff
 boundary. It keeps user clarification separate, requires an attempted local
@@ -238,16 +246,27 @@ AgentMage v1.0 GA builds the delivery system on the internal milestones. Its sup
 ```mermaid
 flowchart LR
     U["User intent and approval"] --> V["Native VS Code Chat"]
-    V --> K["AgentMage kernel"]
+    U --> CLI["Interactive coding CLI - v0.4"]
+    V --> RC["Reusable runtime coordinator"]
+    CLI --> RC
+    FLOWNODE["Future workflow or agent node"] -. "bounded runtime request" .-> RC
+    RC --> K["AgentMage kernel"]
+    RC --> CTX["Context and persisted agent state"]
     K --> P["Policy engine and CapabilityGrant validation"]
-    K <--> M["Candidate-neutral LocalModelRuntime"]
+    RC <--> M["Candidate-neutral LocalModelRuntime"]
     M <--> F["Closed model-family codec"]
     F <--> Q["Exact admitted local profile"]
-    P --> T["Sandboxed deterministic tool worker"]
-    T --> E["Receipts, citations, and evidence states"]
-    E --> K
-    K <--> S[("SQLCipher operational store")]
-    K --> V
+    RC --> TR["Common tool registry and dispatcher"]
+    TR --> P
+    P --> T["Sandboxed native tool worker"]
+    MCP["MCP gateway"] -. "reviewed registration" .-> TR
+    P -. "later authorized external operation" .-> MCP
+    T --> EV["Events, receipts, citations, and evidence"]
+    MCP --> EV
+    EV --> RC
+    RC <--> S[("SQLCipher state and execution journal")]
+    EV --> RA["Content-addressed runtime artifacts"]
+    RC --> V
     I["Separate model installer/importer"] --> A["Verified local model store"]
     A --> Q
     K --> D["Provider-neutral delivery graph"]
@@ -277,6 +296,27 @@ AgentMage has three one-way product layers:
 Shells and models carry no authority. Only the kernel can validate and consume a capability grant. Codex is an adjacent user-controlled surface, not an AgentMage shell, model, tool, fallback, router destination, or subagent.
 
 Platform adapters implement inference, workspace authorization, secure paths, tool confinement, secret storage, process limits, installation, and updates. Provider adapters implement the lifecycle in [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md). Capability packs, provider adapters, and shells cannot bypass those contracts or weaken them on one operating system.
+
+The runtime coordinator is kernel composition, not a fourth product layer or a
+second agent. Native Chat, the coding CLI, later thin clients, and future
+workflow nodes submit the same versioned runtime request and receive the same
+ordered event and terminal-outcome contracts. `ALLOW`, `ASK`, and `DENY` are
+visible projections of current policy and exact grant state, not replacement
+authority objects. Built-in filesystem, search, patch, write, command,
+validation, and Git providers use the native tool registry and dispatcher;
+later MCP adapters enter through the same dispatcher without wrapping those
+built-in tools.
+
+The earliest useful internal coding milestone, `M-HARNESS-MVP`, is one
+interactive local session with an admitted model, one approved repository and
+owned worktree, native read/search/edit/command/test/Git tools, protected
+approvals, streaming and cancellation, bounded output with explicit truncation,
+current receipts, and a final evidence-backed change summary. Persistent session
+resume, the complete durable-journal and content-addressed-artifact lifecycle,
+remote Git, commit, push, advanced indexing, routing, MCP, full
+conversation-library behavior, workflow orchestration, and multiple agents
+remain outside that milestone and retain their existing gates. Passing it does
+not close Sprint 48, Sprint 50, or `G-V0.4`.
 
 The current Linux candidate obtains expected runtime and mechanism identities
 from a strictly parsed, detached-signature-verified release manifest independent
@@ -338,6 +378,11 @@ installations reauthenticate connected accounts instead of restoring raw credent
 v0.1 uses explicit user model selection. It attempts deterministic operations first, never switches models automatically, never contacts a frontier model, and stops visibly when the selected model cannot satisfy the task contract. The product is a probabilistic planner inside a deterministic effect machine: model output is an untrusted proposal, `CapabilityGrant` is the only authority, and only deterministic postcondition evidence can establish `SUCCESS` or verified `NO_OP`.
 
 `LocalModelRuntime` is candidate neutral. Runtime adapters own verified loading, health, token counting, streaming, cancellation, resources, isolation, and zero-network behavior. Closed family codecs own tokenizer, chat template, reasoning controls, message boundaries, end tokens, tool protocol, and translation into AgentMage's typed proposal schema. An exact profile binds the model revision, artifacts, transformations, tokenizer, template, codec, runtime, quantization, modalities, context, decoding, platform, hardware envelope, policy, lifecycle state, and evaluation evidence. The kernel never branches on a Muse, Gemma, or other family name.
+
+Later Ollama, vLLM, or OpenAI-compatible local adapters can enter only as exact
+admitted `LocalModelRuntime` profiles with explicit endpoint, process, network,
+codec, provenance, capability, parity, lifecycle, and removal evidence. The
+interactive coding-harness MVP exposes no generic arbitrary endpoint.
 
 Muse Glimmer is the primary implementation and deep-evaluation candidate, but it is not approved or supported. The initial development catalog also inventories every eligible official first-party Gemma model at a pinned source freeze and assigns role-appropriate generative, tool, safety, embedding, multimodal, specialist, research, or legacy tests. A profile that cannot run on a reference machine receives a visible `BLOCKED-HARDWARE` result instead of being omitted. Other eligible first-party candidates may enter through the same contract. Existing Gemma 4 E4B and Gemma 4 12B Unified rejected records remain historical evidence, not prerequisites or automatic fallbacks.
 

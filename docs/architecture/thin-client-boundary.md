@@ -5,7 +5,8 @@
 The thin-client protocol and local command parser are source-level pre-alpha
 contracts. They are executable and tested, but they are not an integrated
 product workflow. The repository does not yet compose an authenticated product
-transport, canonical conversation coordinator, canonical knowledge coordinator,
+transport, reusable runtime coordinator, canonical conversation coordinator,
+canonical knowledge coordinator, runtime event journal, runtime artifact store,
 or installed-package activation path for these clients.
 
 Operational invocations therefore fail closed with exit code `5` and
@@ -21,17 +22,23 @@ or native effects.
 
 ```mermaid
 flowchart LR
-    N["Native Chat"] --> T["Authenticated thin transport"]
+    CHAT["Native Chat"] --> T["Authenticated thin transport"]
     C["Interactive CLI"] --> T
     J["JSON client"] --> T
     S["SDK client"] --> T
     A["ACP-compatible client"] --> T
+    W["Future workflow or agent node"] -. "bounded runtime request" .-> R
     T --> V["Request and event verifier"]
-    V --> K["Canonical kernel operation"]
+    V --> R["Shared runtime coordinator"]
+    R --> K["Canonical kernel operation"]
     K --> P["Policy and exact grant validation"]
-    P --> E["Mediated effects and receipts"]
-    E --> K
-    K --> V
+    P --> D["Common tool dispatcher"]
+    D --> NT["Native tool provider"]
+    D -. "later reviewed adapter" .-> M["MCP gateway"]
+    NT --> E["Observation, receipt, and artifact references"]
+    M --> E
+    E --> R
+    R --> V
     V --> T
 ```
 
@@ -40,6 +47,29 @@ channel can exist. It is never an authority source. The
 `kernel_request_sha256` excludes the display surface and binds the workspace,
 closed command, and exact policy identity. Equivalent requests therefore reach
 the same kernel operation regardless of client.
+
+## Shared Runtime Coordinator
+
+The coordinator is an interface-independent composition boundary inside the
+kernel. It combines the persisted agent state machine, selected exact model
+profile, context manager, registered tools, policy and grant checks, canonical
+store, ordered event sink, runtime artifact references, cancellation, and one
+terminal outcome. It receives no new authority by being shared.
+
+Native Chat and the interactive coding CLI submit the same versioned runtime
+request and consume the same runtime event envelope. JSON, SDK, and
+ACP-compatible clients use that contract without an interactive approval
+channel. A later workflow or agent node can submit a bounded work packet through
+the same port with an authority intersection narrower than an interactive
+session. The runtime contract has no terminal, editor, or workflow-UI type.
+
+The visible execution dispositions preserve existing grant semantics:
+
+- `ALLOW` continues to dispatch only when current policy and an exact consumable
+  grant permit the operation.
+- `ASK` emits an approval request and pauses without launching a worker.
+- `DENY` emits one no-effect refusal for prohibited, invalid, unsupported, or
+  out-of-scope work.
 
 ## Closed Request
 
@@ -113,8 +143,17 @@ reordered, oversized, policy-drifted, request-drifted, or post-terminal stream
 cannot be reported as success.
 
 The visible payload taxonomy is status, bounded content, approval request,
-receipt, completion, denial, or cancellation. Content channels distinguish
-ordinary content, progress, preview, diff, citation, and error narration.
+receipt, artifact reference, completion, denial, or cancellation. Content
+channels distinguish ordinary content, progress, preview, diff, citation, and
+error narration.
+
+The client stream is not itself the canonical durable journal. Correctness
+events for grants, effects, receipts, and checkpoints share the canonical store
+transaction. Progress and content-free metrics use bounded asynchronous queues
+and batches with explicit saturation behavior. Streamed model tokens are
+presentation fragments rather than one synchronous database row per token. The
+optional persisted transcript and optional local diagnostics or metrics remain
+separate from the execution journal.
 
 ## Cancellation, Replay, And Resume
 
@@ -135,6 +174,19 @@ credential, browser, application-launch, or raw-host-socket interface. Native
 effects remain kernel mediated. The repository's effect-boundary checker treats
 the shell as a presentation boundary and rejects process-launch APIs there.
 
+Built-in filesystem, repository search, patch, controlled write, command,
+validation, and Git providers register directly through the common tool
+registry and dispatcher. They do not require MCP. Later MCP-backed tools enter
+through a reviewed gateway behind the same validation, classification, grant,
+budget, cancellation, event, receipt, and evidence path.
+
+Large patches, command output, test logs, generated files, reports, and large
+model output use verified content-addressed runtime artifact references. The
+encrypted operational store remains authoritative for their metadata,
+classification, retention, references, and checkpoint links. These private
+runtime objects are distinct from checked-in sprint evidence under
+`artifacts/`.
+
 The adversarial contract corpus is
 [`sprint-48-headless-corpus.json`](../verification/sprint-48-headless-corpus.json).
 It records content-minimized fail-closed cases for malformed requests, authority
@@ -144,8 +196,9 @@ application launch.
 ## Remaining Product Work
 
 This contract does not establish an integrated command-line product. Remaining
-work includes authenticated local transport composition, canonical runtime and
-storage coordinators, native disconnect and descendant-process cleanup
+work includes authenticated local transport composition, the shared runtime
+coordinator, event journal and artifact store, canonical conversation and
+knowledge coordinators, native disconnect and descendant-process cleanup
 campaigns, supported-platform package acceptance, independent review, and the
 separately deferred manual fuzz campaign. Those absences remain blockers and
 must not be inferred from passing source-level contract tests.

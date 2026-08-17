@@ -147,17 +147,27 @@ AgentMage is implemented as three one-way product layers over explicit platform 
 
 ```mermaid
 flowchart TB
-    SHELLS["Shells<br/>VS Code, later CLI and desktop"] --> KERNEL["Interface-independent kernel"]
-    PACKS["Capability packs<br/>read-only first, later authority gated"] --> KERNEL
+    SHELLS["Shells<br/>VS Code, coding CLI, later desktop"] --> RUNTIME["Reusable runtime coordinator"]
+    PACKS["Capability packs<br/>read-only first, later authority gated"] --> RUNTIME
+    WORKFLOW["Future workflow and agent nodes"] -. "typed bounded requests" .-> RUNTIME
+    RUNTIME --> KERNEL["Interface-independent kernel"]
+    RUNTIME --> CONTEXT["Context and bounded agent state"]
+    RUNTIME --> TOOLREG["Tool registry and dispatcher"]
     KERNEL --> POLICY["Policy, grants, receipts, classification, and recovery"]
+    TOOLREG --> POLICY
     POLICY --> PLATFORM["Linux, Windows, and retained macOS platform adapters"]
-    PLATFORM --> TOOLS["Sandboxed deterministic workers"]
+    PLATFORM --> TOOLS["Sandboxed native deterministic workers"]
+    MCP["MCP gateway"] -. "reviewed registration" .-> TOOLREG
+    POLICY -. "later authorized external operation" .-> MCP
     PLATFORM --> ADAPTER["Candidate-neutral LocalModelRuntime"]
     ADAPTER --> CODEC["Closed family codec"]
     CODEC --> PROFILE["Exact admitted profile"]
     PROFILE --> NATIVE["Native llama.cpp"]
     PROFILE --> DMR["Gated Docker Model Runner"]
-    POLICY <--> STATE[("Encrypted operational store")]
+    POLICY <--> STATE[("Encrypted state and execution journal")]
+    RUNTIME --> EVENTS["Versioned runtime events"]
+    EVENTS --> STATE
+    EVENTS --> ARTIFACTS["Content-addressed runtime artifacts"]
     TOOLS --> EVIDENCE["Receipts and citations"]
     CODEC --> EVIDENCE
     POLICY --> GRAPH["Provider-neutral delivery graph"]
@@ -207,6 +217,11 @@ official first-party Gemma profile is inventoried at a pinned source freeze and
 tested only in applicable roles; other eligible candidates use the same intake.
 All remain non-authoritative and disabled until exact-profile admission passes.
 
+Later Ollama, vLLM, or OpenAI-compatible local adapters use that same runtime
+contract only as exact admitted endpoint/process/network profiles with explicit
+capabilities, codec, provenance, zero-egress, parity, lifecycle, and removal
+evidence. The interactive coding-harness MVP has no arbitrary endpoint registry.
+
 The agent loop persists typed states and named terminal outcomes. Deterministic
 policy, a consumed grant, a restricted worker, and a deterministic postcondition
 verifier surround every model proposal. Learned classification can restrict or
@@ -219,7 +234,7 @@ Synthetic fixtures, read-only tools, Git inspection, repository mapping, receipt
 
 ### 4.5 One Interface Before Additional Shells
 
-Native Visual Studio Code Chat is the sole v0.1 interface. The deterministic `agentmage doctor` response is rendered there. A development diagnostic harness and read-only reviewer verifier may exercise contracts but are not supported end-user shells. The complete CLI is introduced in v0.4, and standalone macOS and Linux desktop applications are introduced in v1+ only after the shared kernel is stable.
+Native Visual Studio Code Chat is the sole v0.1 interface. The deterministic `agentmage doctor` response is rendered there. A development diagnostic harness and read-only reviewer verifier may exercise contracts but are not supported end-user shells. The v0.4 interactive coding CLI is the first complete coding client of the same reusable runtime coordinator used by native Chat; it is not a second agent loop or storage authority. Standalone macOS and Linux desktop applications are introduced in v1+ only after the shared runtime and kernel are stable.
 
 ### 4.6 Authority Added Incrementally
 
@@ -259,6 +274,32 @@ encrypted checkpoints preserve progress and invalidate stale dependencies. The c
 has no audit write grant, and potentially writing commands run only in disposable copy-on-write
 workspaces. [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md) owns this contract.
 
+### 4.11 Reusable Runtime, Journal, and Artifact Layer
+
+The runtime coordinator composes existing kernel contracts for one run: persisted agent state,
+candidate-neutral model control, bounded context, tool discovery and dispatch, policy and grants,
+receipts, checkpoints, ordered events, and terminal outcomes. Native Chat, the interactive coding
+CLI, JSON/SDK/ACP clients, and later workflow nodes submit versioned runtime requests and receive the
+same runtime events. Client presentation never becomes a policy, tool, model, storage, or effect
+boundary.
+
+The visible `ALLOW`, `ASK`, and `DENY` dispositions are projections of existing kernel authority.
+`ALLOW` reaches dispatch only with a current exact grant; `ASK` pauses and emits a protected approval
+request without starting an effect; `DENY` records a no-effect refusal. Future workflow nodes use the
+same mechanism with the intersection of workflow, node, parent, task, and user authority, which can
+be narrower than an interactive session.
+
+The event path is deliberately small. Correctness-bearing grant, effect, receipt, and checkpoint
+records share the canonical SQLite transaction. Progress and content-free metrics use bounded
+asynchronous queues, batching, and explicit saturation behavior. The durable execution journal,
+persisted transcript, and optional local diagnostics/metrics are separate projections. Streamed
+tokens are not synchronously persisted as individual events.
+
+Large patches, command streams, test logs, generated files, reports, and model outputs use verified
+content-addressed runtime artifacts under the approved local data root. SQLite owns their metadata,
+classification, references, retention, and checkpoint linkage. These runtime objects are distinct
+from checked-in release and sprint evidence under `artifacts/`.
+
 ## 5. Cross-Cutting Workstreams
 
 These workstreams continue across multiple epics even though their first deliverables occur in a specific sprint range.
@@ -270,8 +311,9 @@ These workstreams continue across multiple epics even though their first deliver
 | Platform engineering | Epics 1 and 10 | Linux Bubblewrap/seccomp/cgroups/Secret Service, Windows MSIX/AppContainer/named-pipe/DPAPI/NTFS boundaries, retained macOS signing/sandbox/XPC/Keychain/Metal, native and Docker runtime boundaries, packaging and updates |
 | Model lifecycle | Epic 0 feasibility, Epic 1 implementation | Provenance policy, early E4B/fallback evidence, approved-artifact catalog, installer/importer, native/Docker parity, Chat diagnostics, explicit selection, later measured routing |
 | Data and privacy | Epic 1 | Classification, encrypted operational state, retention, local data root, knowledge authority, export, backup, and deletion |
-| Deterministic evidence | Epic 1 | Read-only tools, Git, repository map, evidence states, citations, reconciliation, and truthful completion |
-| User interfaces | Epic 1 | Native Visual Studio Code Chat, later complete CLI and desktop applications using the same kernel |
+| Deterministic evidence | Epic 1 | Read-only tools, Git, repository map, evidence states, citations, runtime journal, large-output artifact references, reconciliation, and truthful completion |
+| Runtime composition | Epics 1 and 4 | Shared run request/event/outcome contracts, bounded agent loop, context, model, tool dispatch, policy dispositions, session state, cancellation, journal, artifacts, and recovery |
+| User interfaces | Epic 1 | Native Visual Studio Code Chat, then the v0.4 interactive coding CLI and later desktop applications using the same runtime coordinator and kernel |
 | Capability expansion | Epics 2-8 | Knowledge, writes, coding, frontier consultation, documents, connectors, web, schedules, and agents |
 | Delivery graph and adapters | Epics 7-10 | Provider SDK, identity correlation, GitHub/GHES, Jira, Azure DevOps, GitLab, Jenkins, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, and releases |
 | Delivery operations | Epic 10 | Idempotency, uncertain-result reconciliation, CI execution, promotion, health, drift, rollback, feature flags, migrations, and ChatOps notifications |
@@ -372,6 +414,41 @@ lifecycle is not platform support; and platform support is not final release.
 7. Fix and rerun every affected boundary after the campaign, then enter Sprint
    166 independent release reproduction.
 
+### 6.3 Interactive Coding Harness Dependency Slice
+
+This slice clarifies the dependency path already distributed across Sprints 12, 21-23, 35-50,
+80-81, and 92-95. It adds no parallel product and moves no completed task. Story-level
+implementation retains the completed Sprint 12 bounded agent-state, planning, classifier,
+verifier, budget, and terminal-outcome contracts as prerequisites and follows this approved order:
+
+1. Define the Story 21.2 runtime event envelope, ordered client stream, and correctness-event
+   linkage required by the coordinator.
+2. Implement the ephemeral Story 23.4 interface-independent runtime coordinator and prove one
+   fake-model read-only vertical slice with existing native read tools.
+3. Compose the existing Sprints 35-40 controlled-write contracts and Sprints 41-46 command,
+   owned-worktree, planning, patch, and trusted-validation contracts through the shared runtime and
+   common native tool dispatcher.
+4. Implement the named Story 48.2 `M-HARNESS-MVP` tasks and exact `S-048-MVP-E2E`,
+   `S-048-MVP-STALE`, `S-048-MVP-ADVERSARIAL`, and `S-048-MVP-ABSENCE` fixture groups.
+5. Complete durable journal persistence, asynchronous progress batching, transcript/metrics
+   separation, content-addressed artifact storage, checkpoint linkage, and session-resume
+   integration from Stories 21.2, 22.1, and 22.2.
+6. Finish the complete Sprint 48 interactive/headless CLI integration and artifact-backed output.
+7. Complete the Sprint 49 exact alternate-local-runtime adapter evaluation without admitting a
+   generic arbitrary endpoint.
+8. Execute Story 50.2 cross-interface parity, recovery, performance, retention, removal, and
+   workflow-port hardening.
+9. Add read-only MCP interoperability in Sprints 80-81 behind the common dispatcher, then attach
+   Sprint 95 workflow and child-agent callers through the same runtime request/event/outcome port
+   with narrower authority intersections.
+
+The first usable internal milestone is `M-HARNESS-MVP` inside Sprint 48. Numeric sprint order and all
+existing release gates remain intact. Persistent session resume, complete durable-journal and
+content-addressed-artifact lifecycle, advanced Sprint 43 deep comprehension, Sprint 47 local commit,
+Sprint 49 measured routing, full conversation-library features, remote Git, MCP, hosted operations,
+desktop UI, workflow orchestration, and multiple agents add value later but do not define that
+milestone's functional boundary. Their own sprint and release gates remain unchanged.
+
 ## 7. Epic Implementation Milestones
 
 ### 7.1 Epic 0 - Foundation
@@ -433,11 +510,27 @@ lifecycle is not platform support; and platform support is not final release.
 
 **Objective:** Add bounded coding workflows and a complete local command-line shell without creating an alternate authority path.
 
-**Primary outcomes:** bounded direct command execution; visible exact remote Git reads; repository preservation manifests; namespaced fetches; isolated AgentMage-owned worktrees and temporary commit indexes; deep repository comprehension; change intent and reproduction; structured code changes; language-service reads; trusted validation commands; review packets; signed local source control; complete interactive and headless CLI; later model profiles and measured local routing.
+**Primary outcomes:** reusable coding runtime composition; bounded direct command execution; visible exact remote Git reads; repository preservation manifests; namespaced fetches; isolated AgentMage-owned worktrees and temporary commit indexes; deep repository comprehension; change intent and reproduction; structured code changes; language-service reads; trusted validation commands; review packets; signed local source control; complete interactive and headless CLI; later model profiles and measured local routing.
+
+**Earliest usable coding-harness milestone (`M-HARNESS-MVP`):** one admitted local model; one approved
+local repository and owned worktree; native exploration, read, search, patch, controlled create,
+bounded command, targeted test, and Git status/diff/log/show tools; `ALLOW`/`ASK`/`DENY` approval
+rendering over exact grants; streaming and cancellation; bounded output with explicit truncation;
+current receipts; and a final evidence-backed change summary. The milestone uses a single ephemeral
+interactive CLI session and does not include persistent resume, the complete durable-journal or
+content-addressed-artifact lifecycle, remote Git, commit, push, advanced deep indexing, automatic
+model routing, MCP, the complete conversation library, desktop UI, workflow design, or multiple
+agents.
+
+**Runtime-hardening outcome:** native Chat and CLI submit equivalent runtime requests and obtain
+equivalent policy, receipt, event, artifact, and terminal-state results. Load, queue saturation,
+output pressure, cancellation, crash recovery, cleanup, retention, and redaction evidence closes
+before `G-V0.4`. A future workflow executor can submit a bounded work packet through the same
+runtime port, but the workflow engine itself remains later scope.
 
 **Boundary:** Worktrees provide change isolation, not the security sandbox. Clone, fetch, worktree lifecycle, branch fast-forward, commit, and push are distinct kernel operations governed by [`docs/security/repository-safety.md`](./docs/security/repository-safety.md). Generic pull, force, reset, clean, discard, implicit ref updates, repository hooks/filters, and model access to raw Git are absent. Commands, writes, commits, and remote operations remain separately bounded and granted. Headless use fails closed when authority is missing or ambiguous.
 
-**Exit condition:** `G-V0.4` passes only when coding, command, worktree, validation, shell, model, security, recovery, and documentation suites pass.
+**Exit condition:** `G-V0.4` passes only when coding, command, worktree, validation, runtime, journal, artifact, shell, model, security, recovery, and documentation suites pass. Passing `M-HARNESS-MVP` alone does not close `G-V0.4`.
 
 ### 7.6 Epic 5 - v0.5 Manual Frontier Consultation
 
@@ -790,6 +883,7 @@ Changes to the implementation sequence follow these rules:
 13. Decision 0025 defers only real `RM-024` fuzz-engine execution to the final pre-release campaign. Every affected task and gate remains open, and all other verification continues with each bounded change.
 14. Decision 0026 appends `AM-PCAL-001`, `AT-PCAL-001`, and Story 139.2 inside the existing productivity family; it preserves dependency order, requires structured provider paths where available, and admits no Proton Calendar implementation or support claim before its confirmed-UI gate passes.
 15. Decision 0027 appends `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-VSC-003`, and their acceptance tests; preserves every completed item and stable identifier; supersedes only unimplemented E4B prerequisite and hard-coded picker assumptions; and reconciles future work within Sprints 12-15, 23, 49, 163-165, and 166 without adding or renumbering a sprint.
+16. The interactive coding harness is an additive client and composition path for existing requirements. Its appended stories preserve completed work and sprint identities, use one shared runtime coordinator, keep native tools outside MCP, and define `M-HARNESS-MVP` as an internal story-level milestone that does not supersede any sprint or release gate.
 
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 

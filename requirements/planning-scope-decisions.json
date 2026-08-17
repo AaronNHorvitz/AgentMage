@@ -2,8 +2,8 @@
   "current_source_hashes": {
     "architecture/status-model.json": "94f82dbe2f0db086e6793cdc675c925c86dd210dcbb437ef53d38a8bf68d489a",
     "requirements/additions-only-baseline.json": "e478d00f5b9de793c850260ee7afbbbfd61ac03b1677857ddeaa33a6bcf63695",
-    "requirements/normative-map.json": "3fe913ff6d5c40da65aea24f1363a157b053b6c135a7cb8a97d40fb2a11fac26",
-    "requirements/registry.json": "07a12c8b5708ffb5ce7630b0aec0e9b35b458e64c4aad1b1c54cf8b6e80fa678"
+    "requirements/normative-map.json": "a19ac113386d42e5fd6700ff79ea1c552e8c54667c320e4cb655a9decca6fbca",
+    "requirements/registry.json": "91c35a930a062f4f973b93ffc51e676c179372b1f219133d781fb8db507dfc7e"
   },
   "decisions": [
     {

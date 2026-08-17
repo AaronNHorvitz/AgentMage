@@ -22,14 +22,21 @@ This document gives reviewers and implementers one concrete description of Agent
 ```mermaid
 flowchart LR
     U["User"] -->|"intent and approval; ephemeral"| V["Native VS Code Chat extension"]
+    U -->|"interactive intent and approval; ephemeral"| CLI["Interactive coding CLI"]
     V -->|"authenticated request; ephemeral"| B["AgentMage bridge"]
     B -->|"typed local protocol; ephemeral"| K["AgentMage kernel"]
+    CLI -->|"authenticated request and event stream; ephemeral"| K
+    WF["Future workflow or agent node"] -. "typed bounded request; later" .-> K
+
+    K -->|"run coordination; operational"| RUNCOORD["Reusable runtime coordinator"]
+    RUNCOORD -->|"bounded context; ephemeral or restricted"| A
+    RUNCOORD -->|"registered operation request"| K
 
     K -->|"exact grant plus bounded input; ephemeral"| T["Sandboxed tool worker"]
     T -->|"read-only authorized bytes; restricted until classified"| W["User-selected workspace"]
     T -->|"bounded result; ephemeral"| K
 
-    K -->|"bounded context packet; ephemeral or restricted"| A["Candidate-neutral LocalModelRuntime"]
+    A["Candidate-neutral LocalModelRuntime"]
     A -->|"one exact profile"| F["Closed family codec"]
     F -->|"verified native profile"| N["Native llama.cpp"]
     F -->|"verified compatibility profile"| D["Docker Model Runner"]
@@ -37,7 +44,9 @@ flowchart LR
     D -->|"raw output; untrusted"| F
     F -->|"typed proposal; untrusted and inert"| K
 
-    K <--> |"operational records; encrypted"| S[("Encrypted SQLite")]
+    K <--> |"operational records and event journal; encrypted"| S[("Encrypted SQLite")]
+    RUNCOORD -->|"large-output reference; operational"| AR["Runtime artifact store"]
+    AR -->|"digest and lifecycle metadata; encrypted"| S
     K -->|"key reference only"| Q["OS secret store"]
     Q -->|"key material; restricted"| K
 
@@ -46,8 +55,8 @@ flowchart LR
     M -->|"digest-verified load"| D
     X -. "temporary acquisition network only" .-> R["Approved artifact source"]
 
-    C["User-reviewed handoff preview"] -. "manual disclosure outside AgentMage" .-> E["Separate external product"]
-    K -->|"classified and redacted preview"| C
+    HANDOFF["User-reviewed handoff preview"] -. "manual disclosure outside AgentMage" .-> E["Separate external product"]
+    K -->|"classified and redacted preview"| HANDOFF
 
     K -->|"exact connected grant; ephemeral"| P["Provider adapter worker"]
     P -->|"bounded TLS request"| H["Approved provider host"]
@@ -69,7 +78,7 @@ flowchart LR
     GB -->|"operation-scoped resolution"| Q
 
     K -->|"exact read-only audit grant"| AC["Audit coordinator"]
-    AC -->|"read-only scope"| RC["Repository census worker"]
+    AC -->|"read-only scope"| CENSUS["Repository census worker"]
     AC -->|"bounded source units"| PG["Parser and graph workers"]
     AC -->|"disposable command plan"| AV["Audit verification worker"]
     AV -->|"writes only here"| CO["Copy-on-write audit workspace"]
@@ -85,8 +94,12 @@ The dotted handoff edge is not an AgentMage network path. It depicts a separate 
 | Process or component | Authority | Explicitly prohibited |
 |---|---|---|
 | Visual Studio Code extension | Display, interaction, cancellation, and authenticated protocol transport | Workspace reads, raw model access, grant minting, key access, network transfer, and tool execution |
+| Interactive coding CLI | Terminal input, event rendering, protected approval interaction, cancellation, and authenticated protocol transport | Direct workspace, Git, command, model, storage, key, connector, grant, or effect authority |
 | Native bridge | Authenticate the installed extension and carry typed messages | Workspace, model, tool, key, and policy authority |
 | AgentMage kernel | Policy, grants, orchestration, storage, receipts, classification, and approved adapter selection | Unreviewed ambient filesystem or network access |
+| Runtime coordinator | Compose one bounded run across agent state, model, context, tools, policy dispositions, events, artifacts, checkpoints, cancellation, and terminal outcome | Grant minting outside the kernel transaction, direct native effects, raw credentials, shell-specific authority, hidden fallback, or self-certified completion |
+| Runtime event writer | Persist correctness events transactionally and batch approved progress or content-free metric events under bounded queues | Per-token synchronous writes, unbounded queues, secret-bearing telemetry, external telemetry dependency, reordered terminal truth, or authority decisions |
+| Runtime artifact store | Stage, digest, atomically place, open, retain, and collect large runtime payloads under the approved local data root | Treating paths as authority, mutable overwrite, executable loading, workspace publication, unreferenced disclosure, or startup authority independent of SQLite metadata |
 | Sandboxed tool worker | One consumed grant and one bounded read-only workspace scope | Network, persistence, credentials, model access, and authority reuse |
 | Native model service | Inference for one hash-pinned model profile | Workspace, tools, grants, credentials, and network authority |
 | Docker Model Runner | Local inference for one digest-pinned model profile | AgentMage authority of any kind; non-loopback exposure; runtime artifact acquisition |
@@ -152,6 +165,7 @@ AgentMage never describes a Docker-backed installation as wholly unprivileged un
 | Connection | Transport | Required controls |
 |---|---|---|
 | VS Code extension to bridge/kernel | macOS authenticated App Group IPC or Linux mode `0600` Unix socket | Peer identity, launch challenge, session binding, replay defense, version negotiation, size limits, and cancellation |
+| Interactive CLI to kernel | Authenticated owner-local IPC using the shipped platform transport | Peer and session identity, versioned runtime request/event contracts, replay defense, protected approval channel, size/output limits, cancellation, and no direct native-effect handles |
 | Kernel to tool worker | Private per-operation IPC | One consumed grant, worker identity, bounded schema, timeout, descendant cleanup, and one terminal receipt |
 | Kernel to candidate-neutral model adapter | Private local IPC, preferably a mode `0600` Unix socket | Exact model/artifact/tokenizer/template/codec/runtime/context/decoding/profile verification, process identity, no non-local bind, limits, cancellation, and no model authority |
 | Kernel adapter to Docker Model Runner | Authenticated Unix socket to a dedicated guard; guard-only loopback connection inside the private runner namespace | Exact private wildcard bind and loopback connect target, immutable image/model digest, no non-loopback or ordinary-container access, no acquisition, egress proof, and local-client probes |
@@ -194,6 +208,7 @@ Decision 0032 makes a complete fresh topology observation mandatory before Docke
 8. A continuity run snapshots local canonical state into staging, encrypts and seals it, completes the immutable manifest atomically, and only then permits an optional cloud transfer. Restore occurs into separate staging and swaps only after integrity, compatibility, and user confirmation pass.
 9. A model-manager operation launches the separate installer/importer for one confirmed catalog profile, keeps all acquisition in quarantine, and changes the active profile only through verified atomic activation or rollback. Muse-first evaluation priority and a Gemma catalog entry create no activation authority.
 10. A whole-codebase audit freezes its exact source and scope identity, inventories the repository, builds deterministic structure, processes bounded semantic packets, reconciles cross-module evidence, and compiles a report. Cancellation checkpoints current work; removal terminates every audit worker and deletes only retention-selected audit state.
+11. An interactive coding run binds one runtime request, selected exact model profile, workspace and owned-worktree snapshot, context budget, visible tool catalog, policy identity, journal cursor, and artifact namespace. Shutdown or cancellation records one terminal state, checkpoints only safe resumable state, flushes bounded correctness records, and terminates every owned worker and descendant.
 
 No AgentMage process silently persists as a system-wide daemon. Any user-session launch mechanism is declared, visible in diagnostics, removable, and tested for stop, restart, update, rollback, and uninstall behavior.
 
@@ -222,6 +237,41 @@ and `FAILED`. Only current deterministic postcondition evidence can produce
 `SUCCESS` or verified `NO_OP`. Restart revalidates task, snapshot, policy,
 profile, pending authority, consumed grants, and uncertain effects; model prose,
 confidence, a model judge, or a classifier cannot convert any non-success state.
+
+## 7A. Runtime Coordination, Events, and Artifacts
+
+The runtime coordinator is an in-kernel composition service over existing contracts. It accepts one
+versioned request from an authenticated shell or later workflow caller, restores or creates one
+session, selects the exact admitted model profile chosen under current policy, builds a bounded
+context packet, exposes only registered task-eligible tools, and advances the persisted agent state
+machine. It emits ordered events and one terminal outcome. It has no raw filesystem, process,
+network, credential, or provider handle and has no independent grant issuer.
+
+`ALLOW`, `ASK`, and `DENY` are execution dispositions rather than authority objects. `ALLOW` means
+the exact operation can proceed through current policy and a consumed grant. `ASK` emits a protected
+approval request and transitions to wait-for-user without starting a worker. `DENY` emits a
+content-minimized no-effect result. A later workflow node receives the intersection of workflow,
+node, parent, task, and user scope, so using the same runtime never implies interactive-session
+authority.
+
+Each event carries run, session, task, turn, operation, correlation, causation, sequence, schema,
+sensitivity, retention, policy, and payload-reference identity. Correctness-bearing grant, effect,
+receipt, and checkpoint changes are persisted with the canonical SQLite transaction. Progress and
+content-free metrics enter a bounded in-process queue with explicit batching, saturation, flush,
+failure, and shutdown behavior. Streamed tokens are rendered through the client stream and are not
+written as one durable row per token.
+
+The durable execution journal, optional persisted transcript, and optional local diagnostics or
+metrics are separate projections. External telemetry is absent from normal local operation. Large
+patches, standard output/error, test logs, generated files, reports, and model output are staged,
+hashed, size checked, atomically placed in the private content-addressed runtime artifact store, and
+referenced from SQLite. The artifact store is not the checked-in repository `artifacts/` evidence
+directory. Checkpoints bind the last committed event cursor and exact artifact references; startup
+verifies those references before resume and quarantines missing or mismatched objects.
+
+Native filesystem, repository-search, patch, controlled-write, command, validation, and Git tools
+register directly with the existing tool registry and dispatcher. A later MCP gateway registers
+reviewed external tools through that same path. The model has no direct native-tool or MCP channel.
 
 ## 8. Runtime Parity and Evaluation Gate
 

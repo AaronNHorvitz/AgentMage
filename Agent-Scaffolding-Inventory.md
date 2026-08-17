@@ -129,6 +129,13 @@ Every capability pack declares its tools, data access, required grants, acceptan
 
 The kernel uses explicit platform adapters for local inference, workspace authorization, secure path resolution, tool confinement, secret storage, resource control, installation, and updates. Capability packs and shells cannot branch on the operating system or bypass those contracts.
 
+The reusable runtime coordinator is a kernel composition boundary, not a fourth layer. Native Chat,
+the interactive coding CLI, later thin clients, and future workflow or agent nodes submit the same
+versioned run request and consume the same ordered events and terminal outcome. Built-in local tools
+register through the kernel tool registry and dispatcher. MCP remains a later extension gateway for
+reviewed external capabilities and is not the transport for native filesystem, Git, patch, command,
+or validation tools.
+
 ## Executable v0.1 Backlog
 
 The following table is the complete executable backlog for v0.1, **Read-Only Local Evidence Assistant**. A requirement enters implementation only through this table. Every row has a stable identifier, explicit dependencies, disposition, release target, and acceptance-test identifiers.
@@ -178,7 +185,7 @@ Every `Build` row is new AgentMage work. A `Verify` row establishes an environme
 | v0.1 | MacBook Pro M5-first, Fedora-compatible, and Ubuntu-compatible read-only evidence assistant in native Visual Studio Code Chat using one manually selected admitted local profile, model diagnostics, deterministic repository maps, explicit evidence states, and local Codex handoff previews. Muse Glimmer is the primary deep-evaluation candidate, and the initial development inventory evaluates eligible official first-party Gemma profiles by role without making any one candidate a prerequisite. | Intel Mac, Windows, Codex invocation or transfer, Obsidian, semantic/vector indexing, writes, coding changes, frontier delivery, full CLI, standalone desktop UI, GitHub, browser, connectors, schedules, child agents. |
 | v0.2 | Knowledge pack: direct read-only Obsidian and Markdown knowledge, portable long-term memory, and handoffs. | Writes to user files and all external integrations. |
 | v0.3 | Controlled Writes pack: new-file staging and exact-preimage patches using capability grants. | Commit, push, publication, and unattended writes. |
-| v0.4 | Coding pack and complete command-line shell: repository comprehension, tests, bounded patches, and review packets. | Automatic commit, push, merge, or publication. |
+| v0.4 | Reusable coding runtime and complete command-line shell: interactive `agentmage code`, repository comprehension, native read/search/edit/command/test/Git tools, exact approvals, runtime events and artifacts, bounded patches, review packets, and a later workflow attachment port. | `M-HARNESS-MVP` is an ephemeral bounded-output slice and excludes persistent resume, complete journal/artifact lifecycle, remote Git, commit, push, advanced indexing, routing, MCP, full conversation-library behavior, workflow execution, multiple agents, and publication; the complete v0.4 gate retains its broader existing work. |
 | v0.5 | Frontier Consultation pack: user-reviewed local packets for manual export and validated import. | Agent-initiated, automatic, or unattended cloud transfer. |
 | v0.6 | Administrative and Document packs. | Sending correspondence or changing live calendars. |
 | v0.7 | Read-only GitHub and approved connector foundations. | Automatic hosted changes. |
@@ -237,6 +244,8 @@ gate.
 - [ ] `CAPABILITY GATE` Permit other eligible first-party candidates to enter the development inventory through the same provenance, policy, profile, codec, runtime, hardware, quality, security, and evidence gates; retain arbitrary or provenance-incomplete user imports for the post-GA Experimental Model Lab.
 - [ ] `CAPABILITY GATE` Keep one large active model and one inference slot by default until a separately measured concurrency or routing profile passes; Muse focus does not authorize hidden model switching.
 - [ ] `CAPABILITY GATE` Create separate quality and diagnostic-repeatability profiles; never merge their results or claim that temperature zero, top-k one, a fixed seed, or repeated output proves cross-runtime, cross-driver, cross-device, or universal model determinism.
+- [ ] `BUILD` expose model capability metadata for structured proposals, tool calling, streaming, context and output limits, vision, reasoning controls, token counting, cancellation, resource reporting, and known limitations through `LocalModelRuntime` rather than family-specific harness branches.
+- [ ] `ROADMAP` admit later Ollama, vLLM, and OpenAI-compatible local endpoint adapters only as exact manifest-bound `LocalModelRuntime` profiles with endpoint identity, process/network boundary, codec, provenance, zero-egress, capability, parity, and removal evidence; do not expose a generic arbitrary endpoint in the coding-harness MVP.
 
 ## 1A. Model Routing and Local Resource Management
 
@@ -310,6 +319,11 @@ The orchestrator is the control layer that turns a user request into bounded ste
 - [ ] `BUILD` turn, token, context, retry, parser-failure, denial, repeated-proposal, tool, effect, elapsed-time, resource, and no-progress ceilings enforced outside the model.
 - [ ] `CAPABILITY GATE` On interruption or restart, revalidate task, snapshot, policy, model profile, context packet, pending authority, in-flight effect, and verifier state; never replay a consumed grant or assume a timed-out effect did not occur.
 - [ ] `BUILD` a verifier registry that prefers exact state, hash, schema, compiler, test, linter, policy, or provider field truth and keeps any model judge separately identified, authority-free, and unable to approve its own work.
+- [ ] `BUILD` an interface-independent runtime coordinator that composes the persisted agent state machine, selected model controller, context manager, tool registry and dispatcher, policy and grants, canonical store, event sink, artifact references, cancellation, and terminal outcome for one bounded run.
+- [ ] `BUILD` versioned `RuntimeRunRequest`, `RuntimeEvent`, and `RuntimeOutcome` contracts shared by native Chat, interactive CLI, JSON, software-development-kit, Agent Client Protocol, and later workflow-node callers.
+- [ ] `CAPABILITY GATE` Keep runtime coordination descriptive and authority-free; every effect still reaches the existing grant issuer and tool dispatcher with the exact current policy, task, workspace, arguments, preimages, and one consumable grant.
+- [ ] `BUILD` map user-visible `ALLOW`, `ASK`, and `DENY` dispositions onto existing policy and grant states so `ASK` pauses without effect, `ALLOW` dispatches only after exact grant consumption, and `DENY` records one no-effect outcome.
+- [ ] `BUILD` a narrow in-process runtime event publisher and bounded subscriber contract for client streaming, canonical journaling, checkpoints, and local projections without creating a general plugin event bus.
 
 ## 2A. AgentMage Session Behavior
 
@@ -446,6 +460,8 @@ This section defines how tools are described, discovered, validated, called, and
 - [ ] `BUILD` deterministic fake tools for tests.
 - [ ] `BUILD` tool discovery that exposes only tools approved for the current workspace and task.
 - [ ] `DEFER` automatic installation of tools or packages.
+- [ ] `CAPABILITY GATE` Register built-in filesystem, repository search, patch, controlled write, command, validation, and Git providers directly through the common `ToolRegistry` and `ToolDispatcher`; do not require MCP for native local tools.
+- [ ] `BUILD` one provider-neutral registration adapter so a later reviewed MCP gateway can expose external tools through the same argument validation, classification, grant, budget, cancellation, receipt, and evidence path as native tools.
 
 ## 5. Permissions, Approval, and Safety
 
@@ -708,6 +724,12 @@ Gemma is stateless between sessions, but persistence must not create competing a
 - [ ] `BUILD` session summary, resume-card, and handoff export generation from canonical records.
 - [ ] `BUILD` a handoff validator that checks required fields and referenced evidence before import or resume.
 - [ ] `BUILD` explicit user controls to inspect, correct, supersede, expire, export, or delete eligible local records.
+- [ ] `BUILD` a runtime artifact reference and manifest containing digest, byte size, media type, sensitivity, retention, producer operation, created time, integrity state, and associated receipt without carrying path authority.
+- [ ] `BUILD` a local content-addressed runtime artifact store under the approved data root for large patches, standard output/error, test logs, generated files, reports, and large model output; keep SQLite authoritative for metadata, references, and lifecycle state.
+- [ ] `CAPABILITY GATE` Publish runtime artifacts through bounded staging, digest and size verification, atomic placement, and one transactional SQLite reference; reject missing, partial, mismatched, oversized, expired, or unauthorized objects.
+- [ ] `BUILD` artifact deduplication, reference-aware retention and collection, interrupted-write cleanup, corruption quarantine, cryptographic deletion where eligible, and startup integrity reconciliation.
+- [ ] `CAPABILITY GATE` Bind checkpoints to the last committed runtime-event cursor and exact artifact references so resume reconstructs one run without replaying an effect or copying large payloads into the transcript.
+- [ ] `BUILD` keep runtime artifacts under the private data root distinct from checked-in sprint and release evidence under the repository `artifacts/` directory.
 
 ## 10A. Context Window and Conversation Continuity
 
@@ -1274,6 +1296,13 @@ This section records what the assistant did, when it did it, and what evidence i
 - [ ] `BUILD` retention enforcement and cryptographic deletion according to the data-classification policy.
 - [ ] `BUILD` JSON Lines audit export only as an explicit, versioned, derived operation; never treat exported logs as canonical state.
 - [ ] `BUILD` an error taxonomy that separates user error, missing access, policy denial, tool failure, model failure, timeout, and invalid output.
+- [ ] `BUILD` a closed runtime-event envelope with run, session, task, turn, operation, correlation, causation, sequence, timestamp, sensitivity, retention, payload-reference, policy, and schema identities.
+- [ ] `BUILD` runtime events for run, turn, model, tool, permission, file, artifact, checkpoint, cancellation, and terminal-outcome transitions with one deterministic ordering and replay rule.
+- [ ] `CAPABILITY GATE` Separate the durable execution journal, optional persisted user transcript, and optional content-free local diagnostics or metrics into independently classified and retained projections.
+- [ ] `CAPABILITY GATE` Commit correctness-bearing grant, effect, receipt, and checkpoint events with their canonical transaction while routing progress and content-free metrics through bounded asynchronous queues and batches.
+- [ ] `BUILD` queue saturation, batching, flush, shutdown, restart, duplicate, out-of-order, sink-failure, and backpressure behavior that preserves truthful terminal state and does not block model throughput indefinitely.
+- [ ] `CAPABILITY GATE` Treat streamed model tokens as bounded presentation data rather than one synchronous durable database write per token.
+- [ ] `VERIFY` runtime journal ordering, deterministic replay, redaction, canary exclusion, queue pressure, sink recovery, event-to-receipt reconciliation, and measured throughput against declared ceilings.
 
 ## 24. Queues, Jobs, and Controlled Retries
 
@@ -1336,6 +1365,10 @@ This section adds evidence-oriented research and visible interaction with applic
 ## 26. External Connectors and Model Context Protocol
 
 Connectors would let the assistant reach systems such as source-control hosting, email, messaging platform, document repository, or databases. This section exists to keep those integrations explicitly scoped, authenticated, rate-limited, logged, and deferred until local tools are trustworthy.
+
+MCP is one reviewed external-provider adapter behind the common tool dispatcher. It does not replace
+native local tool providers and does not sit between the runtime coordinator and built-in coding
+operations.
 
 - [ ] `DEFER` Model Context Protocol servers until local filesystem, Git, documents, and memory are reliable.
 - [ ] `CAPABILITY GATE` Route every Model Context Protocol and plugin connection, discovery action, request, response, and side effect through the same kernel capability gateway, policy engine, grant checks, limits, and receipt ledger as core tools.
@@ -1432,6 +1465,14 @@ This interface provides the complete agent through an ordinary terminal without 
 - [ ] `BUILD` `agent checkpoint`, `handoff`, `audit`, `memory inspect`, `memory correct`, `export`, and `import` commands.
 - [ ] `BUILD` a terminal conversation picker with date filters, text search, preview, open, resume, branch, pin, archive, and delete actions.
 - [ ] `VERIFY` every command with the network disabled and confirm that no command silently launches a browser, Obsidian, a cloud login, or an external application.
+- [ ] `CAPABILITY GATE` Expose the first complete interactive coding harness as `agentmage code` or the approved final command name while retaining the current `agent` binary as a pre-alpha source detail until migration is reviewed.
+- [ ] `BUILD` an interactive read-evaluate-render loop with bounded multiline input, streaming runtime events, status updates, protected approval prompts, cancellation, and a final evidence-backed change summary.
+- [ ] `BUILD` compose repository exploration, file read/search, code search, patch application, controlled file creation, bounded command execution, targeted tests, and Git status/diff/log/show through the shared runtime and native tool registry.
+- [ ] `CAPABILITY GATE` Run mutating coding sessions only in an exact AgentMage-owned worktree with separately granted writes and commands; preserve the user's checkout, index, untracked files, notes, and unrelated Git state.
+- [ ] `BUILD` render large patches, command streams, and test output from verified runtime artifact references with bounded previews and explicit truncation rather than embedding unbounded payloads in events.
+- [ ] `VERIFY` the coding harness with fake and admitted local model profiles, denied/asked/allowed tools, stale preimages, path attacks, command timeout, malformed model output, repeated calls, cancellation, restart, artifact corruption, and Git-preservation fixtures.
+- [ ] `CAPABILITY GATE` Define the first usable harness milestone as one ephemeral local interactive session with an admitted local model, native read/search/edit/command/test/Git tools, approvals, streamed events, bounded output, current receipts, and a final summary; keep persistent resume, complete journal/artifact lifecycle, remote Git, commit, push, advanced indexing, routing, MCP, complete conversation-library behavior, workflow design, and multiple agents outside that milestone.
+- [ ] `BUILD` expose a future workflow-node runtime port that accepts the same bounded work packet and emits the same events and outcome with a narrower authority intersection and no CLI presentation dependency.
 
 ## 27B. Local Desktop Application
 
