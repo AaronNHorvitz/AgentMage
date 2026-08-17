@@ -30,6 +30,10 @@ pub mod headless;
 pub mod cli;
 
 #[cfg(target_os = "linux")]
+/// Linux owned-worktree binding for native coding operations.
+pub mod linux_coding;
+
+#[cfg(target_os = "linux")]
 pub mod linux_read;
 
 /// Stable component identity used by diagnostics and build verification.
