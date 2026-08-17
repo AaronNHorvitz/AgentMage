@@ -2,7 +2,7 @@
 
 use std::fmt;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 
 use agentmage_kernel_contracts::RuntimeArtifactId;
 use agentmage_kernel_engine::runtime_artifact::{
@@ -400,6 +400,48 @@ impl RuntimeArtifactPayloadStore for LinuxRuntimeArtifactPayloadStore {
         self.revalidate()?;
         if observed != *expected {
             return Err(RuntimeArtifactPayloadError::Corrupt);
+        }
+        Ok(bytes)
+    }
+
+    fn read_range(
+        &self,
+        expected: &RuntimeArtifactPayloadObservation,
+        offset: u64,
+        maximum_bytes: u64,
+    ) -> Result<Vec<u8>, RuntimeArtifactPayloadError> {
+        validate_observation(expected)?;
+        if maximum_bytes == 0
+            || maximum_bytes > MAX_RUNTIME_ARTIFACT_BYTES
+            || offset >= expected.byte_size
+        {
+            return Err(RuntimeArtifactPayloadError::ResourceLimit);
+        }
+        let verified = self.verify_active(expected)?;
+        self.revalidate()?;
+        let descriptor = open_regular(&self.objects, &expected.payload_sha256)?;
+        let before = file_snapshot(&self.objects, &descriptor)?;
+        if before != verified {
+            return Err(RuntimeArtifactPayloadError::Conflict);
+        }
+        let read_descriptor = descriptor
+            .try_clone()
+            .map_err(|_| RuntimeArtifactPayloadError::Durability)?;
+        let mut file = File::from(read_descriptor);
+        file.seek(SeekFrom::Start(offset))
+            .map_err(|_| RuntimeArtifactPayloadError::Durability)?;
+        let byte_count = maximum_bytes.min(expected.byte_size - offset);
+        let mut bytes = vec![
+            0;
+            usize::try_from(byte_count)
+                .map_err(|_| RuntimeArtifactPayloadError::ResourceLimit)?
+        ];
+        file.read_exact(&mut bytes)
+            .map_err(|_| RuntimeArtifactPayloadError::Corrupt)?;
+        let after = file_snapshot(&self.objects, &descriptor)?;
+        self.revalidate()?;
+        if before != after {
+            return Err(RuntimeArtifactPayloadError::Conflict);
         }
         Ok(bytes)
     }
@@ -826,6 +868,20 @@ mod tests {
                 .read_complete(&observation, bytes.len() as u64)
                 .expect("payload reads"),
             bytes
+        );
+        assert_eq!(
+            store
+                .read_range(&observation, 8, 8)
+                .expect("bounded range reads"),
+            bytes[8..16]
+        );
+        assert_eq!(
+            store.read_range(&observation, bytes.len() as u64, 1),
+            Err(RuntimeArtifactPayloadError::ResourceLimit)
+        );
+        assert_eq!(
+            store.read_range(&observation, 0, 0),
+            Err(RuntimeArtifactPayloadError::ResourceLimit)
         );
         assert_eq!(
             store.inventory().expect("inventory reads"),

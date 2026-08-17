@@ -39,10 +39,11 @@ use crate::grants::{
 };
 use crate::policy::PolicyEngine;
 use crate::runtime_artifact::{
-    RuntimeArtifactPayloadStore, RuntimeArtifactPublication, RuntimeArtifactReadRequest,
-    RuntimeArtifactReconciliation, RuntimeArtifactState, RuntimeArtifactStoreError,
-    current_runtime_resume_binding, persist_runtime_resume_binding, publish_runtime_artifact,
-    read_runtime_artifact, reconcile_runtime_artifacts, release_runtime_artifact,
+    RuntimeArtifactPage, RuntimeArtifactPageRequest, RuntimeArtifactPayloadStore,
+    RuntimeArtifactPublication, RuntimeArtifactReadRequest, RuntimeArtifactReconciliation,
+    RuntimeArtifactState, RuntimeArtifactStoreError, current_runtime_resume_binding,
+    persist_runtime_resume_binding, publish_runtime_artifact, read_runtime_artifact,
+    read_runtime_artifact_page, reconcile_runtime_artifacts, release_runtime_artifact,
     runtime_artifact_state, verify_all as verify_runtime_artifacts, verify_runtime_resume_binding,
 };
 use crate::runtime_journal::{
@@ -1402,6 +1403,17 @@ impl DurableAuthorityRuntime {
     ) -> Result<Vec<u8>, DurableAuthorityError> {
         self.ensure_usable()?;
         read_runtime_artifact(&self.store, payloads, request)
+            .map_err(DurableAuthorityError::RuntimeArtifact)
+    }
+
+    /// Reads one bounded verified page under the artifact's exact owner and policy revision.
+    pub fn read_runtime_artifact_page<S: RuntimeArtifactPayloadStore>(
+        &self,
+        payloads: &S,
+        request: &RuntimeArtifactPageRequest,
+    ) -> Result<RuntimeArtifactPage, DurableAuthorityError> {
+        self.ensure_usable()?;
+        read_runtime_artifact_page(&self.store, payloads, request)
             .map_err(DurableAuthorityError::RuntimeArtifact)
     }
 

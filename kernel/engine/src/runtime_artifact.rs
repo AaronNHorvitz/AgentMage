@@ -143,6 +143,14 @@ pub trait RuntimeArtifactPayloadStore {
         maximum_bytes: u64,
     ) -> Result<Vec<u8>, RuntimeArtifactPayloadError>;
 
+    /// Reads one bounded range after verifying the complete immutable object identity.
+    fn read_range(
+        &self,
+        expected: &RuntimeArtifactPayloadObservation,
+        offset: u64,
+        maximum_bytes: u64,
+    ) -> Result<Vec<u8>, RuntimeArtifactPayloadError>;
+
     /// Isolates a corrupt or uncertain retained object from the active namespace.
     fn quarantine(
         &mut self,
@@ -266,6 +274,42 @@ pub struct RuntimeArtifactReadRequest {
     pub now_epoch_ms: u64,
     /// Maximum complete payload bytes the caller is prepared to accept.
     pub maximum_bytes: u64,
+}
+
+/// Exact owner, policy, time, range, and resource bindings for one artifact preview page.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeArtifactPageRequest {
+    /// Owning session that must match immutable artifact metadata.
+    pub session_id: SessionId,
+    /// Owning task that must match immutable artifact metadata.
+    pub task_id: TaskId,
+    /// Exact current policy revision digest.
+    pub policy_sha256: String,
+    /// Complete path-free artifact reference.
+    pub reference: RuntimeArtifactRef,
+    /// Trusted read time used for expiration enforcement.
+    pub now_epoch_ms: u64,
+    /// Zero-based payload byte offset.
+    pub offset: u64,
+    /// Maximum bytes returned by this page.
+    pub maximum_bytes: u32,
+}
+
+/// One bounded verified artifact page without path or future-read authority.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeArtifactPage {
+    /// Exact path-free artifact reference used for the read.
+    pub reference: RuntimeArtifactRef,
+    /// Zero-based offset of the first returned byte.
+    pub offset: u64,
+    /// Bounded immutable payload bytes for this page.
+    pub bytes: Vec<u8>,
+    /// Lowercase SHA-256 digest of the exact page bytes.
+    pub page_sha256: String,
+    /// Next page offset, absent when this page reaches the complete payload size.
+    pub next_offset: Option<u64>,
+    /// Whether this page reaches the complete immutable payload size.
+    pub complete: bool,
 }
 
 /// Content-free startup reconciliation counts.
@@ -667,21 +711,14 @@ pub(crate) fn read_runtime_artifact<S: RuntimeArtifactPayloadStore>(
     payloads: &S,
     request: &RuntimeArtifactReadRequest,
 ) -> Result<Vec<u8>, RuntimeArtifactStoreError> {
-    let manifest = load_artifact_manifest(store, &request.reference.artifact_id)?;
-    verify_runtime_artifact_ref(&request.reference, &manifest)?;
-    let state = load_artifact_state(store, &request.reference)?;
-    if manifest.session_id != request.session_id
-        || manifest.task_id != request.task_id
-        || manifest.policy_sha256 != request.policy_sha256
-        || state.lifecycle != RuntimeArtifactLifecycleState::Active
-        || state.integrity != RuntimeArtifactIntegrityState::Verified
-        || manifest
-            .retention
-            .expires_at_epoch_ms
-            .is_some_and(|expires| expires <= request.now_epoch_ms)
-    {
-        return Err(RuntimeArtifactStoreError::NotAuthorized);
-    }
+    let manifest = authorize_runtime_artifact_read(
+        store,
+        &request.session_id,
+        &request.task_id,
+        &request.policy_sha256,
+        &request.reference,
+        request.now_epoch_ms,
+    )?;
     if request.maximum_bytes == 0 || request.maximum_bytes < manifest.byte_size {
         return Err(RuntimeArtifactStoreError::Payload(
             RuntimeArtifactPayloadError::ResourceLimit,
@@ -696,6 +733,86 @@ pub(crate) fn read_runtime_artifact<S: RuntimeArtifactPayloadStore>(
         ));
     }
     Ok(bytes)
+}
+
+/// Opens one verified bounded artifact page under the exact owner and policy revision.
+pub(crate) fn read_runtime_artifact_page<S: RuntimeArtifactPayloadStore>(
+    store: &OperationalStore,
+    payloads: &S,
+    request: &RuntimeArtifactPageRequest,
+) -> Result<RuntimeArtifactPage, RuntimeArtifactStoreError> {
+    let manifest = authorize_runtime_artifact_read(
+        store,
+        &request.session_id,
+        &request.task_id,
+        &request.policy_sha256,
+        &request.reference,
+        request.now_epoch_ms,
+    )?;
+    let maximum_bytes = usize::try_from(request.maximum_bytes).map_err(|_| {
+        RuntimeArtifactStoreError::Payload(RuntimeArtifactPayloadError::ResourceLimit)
+    })?;
+    if maximum_bytes == 0
+        || maximum_bytes > MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES
+        || request.offset >= manifest.byte_size
+    {
+        return Err(RuntimeArtifactStoreError::Payload(
+            RuntimeArtifactPayloadError::ResourceLimit,
+        ));
+    }
+    let expected = payload_observation(&manifest);
+    payloads.verify(&expected)?;
+    let bytes = payloads.read_range(&expected, request.offset, u64::from(request.maximum_bytes))?;
+    let byte_count = u64::try_from(bytes.len())
+        .map_err(|_| RuntimeArtifactStoreError::Payload(RuntimeArtifactPayloadError::Corrupt))?;
+    let expected_byte_count =
+        u64::from(request.maximum_bytes).min(manifest.byte_size - request.offset);
+    let end = request
+        .offset
+        .checked_add(byte_count)
+        .ok_or(RuntimeArtifactStoreError::Payload(
+            RuntimeArtifactPayloadError::Corrupt,
+        ))?;
+    if bytes.is_empty() || byte_count != expected_byte_count || end > manifest.byte_size {
+        return Err(RuntimeArtifactStoreError::Payload(
+            RuntimeArtifactPayloadError::Corrupt,
+        ));
+    }
+    let complete = end == manifest.byte_size;
+    Ok(RuntimeArtifactPage {
+        reference: request.reference.clone(),
+        offset: request.offset,
+        page_sha256: sha256(&bytes),
+        bytes,
+        next_offset: (!complete).then_some(end),
+        complete,
+    })
+}
+
+fn authorize_runtime_artifact_read(
+    store: &OperationalStore,
+    session_id: &SessionId,
+    task_id: &TaskId,
+    policy_sha256: &str,
+    reference: &RuntimeArtifactRef,
+    now_epoch_ms: u64,
+) -> Result<RuntimeArtifactManifest, RuntimeArtifactStoreError> {
+    let manifest = load_artifact_manifest(store, &reference.artifact_id)?;
+    verify_runtime_artifact_ref(reference, &manifest)?;
+    let state = load_artifact_state(store, reference)?;
+    if &manifest.session_id != session_id
+        || &manifest.task_id != task_id
+        || manifest.policy_sha256 != policy_sha256
+        || state.lifecycle != RuntimeArtifactLifecycleState::Active
+        || state.integrity != RuntimeArtifactIntegrityState::Verified
+        || manifest
+            .retention
+            .expires_at_epoch_ms
+            .is_some_and(|expires| expires <= now_epoch_ms)
+    {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    Ok(manifest)
 }
 
 /// Releases one active reference under its exact owner and current policy revision.
@@ -2382,12 +2499,12 @@ mod tests {
     };
 
     use super::{
-        MAX_RUNTIME_ARTIFACT_BYTES, RuntimeArtifactError, RuntimeArtifactPayloadError,
-        RuntimeArtifactPayloadInventoryEntry, RuntimeArtifactPayloadObservation,
-        RuntimeArtifactPayloadPlacement, RuntimeArtifactPayloadStore, RuntimeArtifactReadRequest,
-        RuntimeArtifactStoreError, decode_runtime_continuation_state,
-        encode_runtime_continuation_state, runtime_artifact_ref, runtime_payload_reference,
-        seal_runtime_artifact_manifest, seal_runtime_continuation_state,
+        MAX_RUNTIME_ARTIFACT_BYTES, RuntimeArtifactError, RuntimeArtifactPageRequest,
+        RuntimeArtifactPayloadError, RuntimeArtifactPayloadInventoryEntry,
+        RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadPlacement,
+        RuntimeArtifactPayloadStore, RuntimeArtifactReadRequest, RuntimeArtifactStoreError,
+        decode_runtime_continuation_state, encode_runtime_continuation_state, runtime_artifact_ref,
+        runtime_payload_reference, seal_runtime_artifact_manifest, seal_runtime_continuation_state,
         seal_runtime_resume_binding, verify_runtime_artifact_manifest, verify_runtime_artifact_ref,
         verify_runtime_continuation_state, verify_runtime_resume_binding,
     };
@@ -2540,6 +2657,24 @@ mod tests {
             }
             self.verify(expected)?;
             Ok(self.objects[&expected.payload_sha256].clone())
+        }
+
+        fn read_range(
+            &self,
+            expected: &RuntimeArtifactPayloadObservation,
+            offset: u64,
+            maximum_bytes: u64,
+        ) -> Result<Vec<u8>, RuntimeArtifactPayloadError> {
+            self.verify(expected)?;
+            let bytes = &self.objects[&expected.payload_sha256];
+            let start =
+                usize::try_from(offset).map_err(|_| RuntimeArtifactPayloadError::ResourceLimit)?;
+            let maximum = usize::try_from(maximum_bytes)
+                .map_err(|_| RuntimeArtifactPayloadError::ResourceLimit)?;
+            if maximum == 0 || start >= bytes.len() {
+                return Err(RuntimeArtifactPayloadError::ResourceLimit);
+            }
+            Ok(bytes[start..start.saturating_add(maximum).min(bytes.len())].to_vec())
         }
 
         fn quarantine(
@@ -2992,6 +3127,84 @@ mod tests {
             verify_runtime_continuation_state(&changed),
             Err(RuntimeArtifactError::DigestMismatch)
         );
+    }
+
+    #[test]
+    fn story_50_2_artifact_pages_are_owner_bound_bounded_and_exact() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+        let bytes = b"0123456789";
+        let publication = runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                manifest_with_id("runtime-artifact-page-1"),
+                &mut Cursor::new(bytes),
+            )
+            .expect("artifact publishes");
+        let request = |offset, maximum_bytes| RuntimeArtifactPageRequest {
+            session_id: SessionId::from_raw("session-1"),
+            task_id: TaskId::from_raw("task-1"),
+            policy_sha256: digest('b'),
+            reference: publication.reference.clone(),
+            now_epoch_ms: 1,
+            offset,
+            maximum_bytes,
+        };
+
+        let first = runtime
+            .read_runtime_artifact_page(&payloads, &request(0, 4))
+            .expect("first page reads");
+        assert_eq!(first.bytes, b"0123");
+        assert_eq!(first.page_sha256, super::sha256(b"0123"));
+        assert_eq!(first.next_offset, Some(4));
+        assert!(!first.complete);
+        let second = runtime
+            .read_runtime_artifact_page(&payloads, &request(4, 4))
+            .expect("second page reads");
+        let third = runtime
+            .read_runtime_artifact_page(&payloads, &request(8, 4))
+            .expect("terminal page reads");
+        assert_eq!(second.bytes, b"4567");
+        assert_eq!(third.bytes, b"89");
+        assert_eq!(third.next_offset, None);
+        assert!(third.complete);
+
+        assert_eq!(
+            runtime.read_runtime_artifact_page(&payloads, &request(10, 4)),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::Payload(RuntimeArtifactPayloadError::ResourceLimit)
+            ))
+        );
+        assert_eq!(
+            runtime.read_runtime_artifact_page(&payloads, &request(0, 4_097)),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::Payload(RuntimeArtifactPayloadError::ResourceLimit)
+            ))
+        );
+
+        let mut wrong_owner = request(0, 4);
+        wrong_owner.session_id = SessionId::from_raw("session-other");
+        assert_eq!(
+            runtime.read_runtime_artifact_page(&payloads, &wrong_owner),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotAuthorized
+            ))
+        );
+
+        payloads
+            .objects
+            .get_mut(&publication.reference.payload_sha256)
+            .expect("retained payload exists")[0] = b'x';
+        assert_eq!(
+            runtime.read_runtime_artifact_page(&payloads, &request(0, 4)),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::Payload(RuntimeArtifactPayloadError::Corrupt)
+            ))
+        );
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
     }
 
     #[test]
