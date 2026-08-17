@@ -1,6 +1,9 @@
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, Mutex};
+use std::fs;
+use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex, mpsc};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{
     AgentStateKind, ApprovalId, AuthorityClass, BoundaryKind, BudgetLimit, BudgetResource,
@@ -8,18 +11,18 @@ use agentmage_kernel_contracts::{
     ContextPacketId, ContractPayload, CorrelationId, DataSensitivity, EvidenceId, EvidenceKind,
     EvidenceReference, ExactModelProfile, GrantId, GrantOperation, ModelContextPacket,
     ModelMessage, ModelMessageId, ModelMessageRole, ModelProposalKind, ModelResourceReport,
-    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate,
-    OperationBinding, OperationOutcome, PlanId, PlanStepId, PolicyId, PostconditionResult,
-    ReceiptId, RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan,
+    ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelStreamId,
+    ModelToolCallCandidate, OperationBinding, OperationOutcome, PlanId, PlanStepId, PolicyId,
+    PostconditionResult, ReceiptId, RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan,
     RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeArtifactManifest,
     RuntimeArtifactRef, RuntimeEvent, RuntimeEventKind, RuntimeEventRetentionKind,
     RuntimeOperationId, RuntimeOutput, RuntimeResourceUsage, RuntimeResumeBinding, RuntimeRunId,
     RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference,
     SessionCheckpoint, SessionCheckpointId, SessionId, StateChange, StopCondition,
-    StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId,
-    ToolResult, ToolRiskLevel, VerifierCandidate, VerifierDisposition, VerifierId,
-    VerifierRecordId, VerifierSource, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId,
-    to_canonical_json,
+    StopConditionKind, StorageFilesystemClass, StrictLocalStorageObservation, Task, TaskId,
+    TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
+    VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
+    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -34,6 +37,9 @@ use super::{
 };
 use crate::context_management::finalize_checkpoint;
 use crate::model_codec::{proposal_digest, tests_support::profile};
+use crate::operational_store::{
+    OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
+};
 use crate::runtime_artifact::{
     runtime_artifact_ref, seal_runtime_resume_binding, verify_runtime_artifact_manifest,
 };
@@ -45,10 +51,12 @@ use crate::runtime_hardening::{
     MAX_RUNTIME_CLIENT_QUEUE_BYTES, MAX_RUNTIME_EVENT_ENVELOPE_BYTES, RuntimeHardeningError,
     RuntimeHardeningLimits, RuntimeResourceLedger,
 };
+use crate::runtime_journal::{RuntimeJournalError, RuntimeJournalWorker};
 use crate::tooling::{Tool, ToolRegistry};
 
 const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const SNAPSHOT: &str = "snapshot-0001";
+static PRESSURE_TEMP_ID: AtomicU64 = AtomicU64::new(1);
 
 #[test]
 fn story_48_2_runtime_action_ids_are_precomputable_stable_and_sequence_bound() {
@@ -175,6 +183,257 @@ impl RuntimeModelPort for FakeModel {
             },
         })
     }
+}
+
+struct PressureStreamingModel {
+    profile: ExactModelProfile,
+    started: Option<mpsc::SyncSender<()>>,
+    release: mpsc::Receiver<()>,
+    fragments: Arc<AtomicUsize>,
+    cancellation_seen: Arc<AtomicBool>,
+}
+
+impl RuntimeModelPort for PressureStreamingModel {
+    fn exact_profile(&self) -> &ExactModelProfile {
+        &self.profile
+    }
+
+    fn run_model(
+        &mut self,
+        request: &ModelRunRequest,
+        _context: &ModelContextPacket,
+        cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+    ) -> Result<ModelRunResult, RuntimePortFailure> {
+        self.started
+            .take()
+            .ok_or(RuntimePortFailure::Invalid)?
+            .send(())
+            .map_err(|_| RuntimePortFailure::Unavailable)?;
+        self.release
+            .recv_timeout(Duration::from_secs(1))
+            .map_err(|_| RuntimePortFailure::TimedOut)?;
+
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            let fragments = self.fragments.fetch_add(1, Ordering::SeqCst) + 1;
+            let signal = cancellation
+                .map(agentmage_kernel_contracts::ModelCancellationProbe::observe)
+                .transpose()
+                .map_err(|_| RuntimePortFailure::Unavailable)?
+                .flatten();
+            if signal.is_some() {
+                self.cancellation_seen.store(true, Ordering::SeqCst);
+                let fragment_count =
+                    u32::try_from(fragments).map_err(|_| RuntimePortFailure::ResourceExhausted)?;
+                return Ok(ModelRunResult {
+                    schema_version: CONTRACT_SCHEMA_VERSION,
+                    model_run_id: request.model_run_id.clone(),
+                    stream_id: ModelStreamId::from_raw("pressure-stream-1"),
+                    correlation_id: request.correlation_id.clone(),
+                    terminal_state: ModelRunTerminalState::Cancelled,
+                    fragment_count,
+                    response_sha256: sha256(format!("pressure:{fragments}").as_bytes()),
+                    proposal: None,
+                    failure: Some(ModelRuntimeFailure {
+                        code: "runtime.model.cancelled".to_owned(),
+                        retryable_after_correction: false,
+                        dependency_recovery_required: false,
+                        contract_error: None,
+                    }),
+                    resources: ModelResourceReport {
+                        adapter_id: request.adapter_id.clone(),
+                        profile_id: request.profile_id.clone(),
+                        model_run_id: Some(request.model_run_id.clone()),
+                        resident_memory_bytes: 1,
+                        accelerator_memory_bytes: 0,
+                        input_tokens: 1,
+                        output_tokens: 1,
+                        elapsed_ms: 1,
+                    },
+                });
+            }
+            if Instant::now() >= deadline {
+                return Err(RuntimePortFailure::TimedOut);
+            }
+            thread::sleep(Duration::from_millis(1));
+        }
+    }
+}
+
+struct PressureCancellationProbe {
+    requested: AtomicBool,
+    signal: CancellationSignal,
+}
+
+impl agentmage_kernel_contracts::ModelCancellationProbe for PressureCancellationProbe {
+    fn observe(&self) -> Result<Option<CancellationSignal>, ModelRuntimeFailure> {
+        Ok(self
+            .requested
+            .load(Ordering::SeqCst)
+            .then(|| self.signal.clone()))
+    }
+}
+
+struct PressureJournalBoundary {
+    worker: Arc<RuntimeJournalWorker>,
+}
+
+impl RuntimeToolBoundary for PressureJournalBoundary {
+    fn evaluate(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        _operation_id: &RuntimeOperationId,
+        _definition: &ToolDefinition,
+        _call: &ToolCall,
+        _now_epoch_ms: u64,
+    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        Err(RuntimePortFailure::Unavailable)
+    }
+
+    fn resolve(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        _challenge: &agentmage_kernel_contracts::RuntimeApprovalChallenge,
+        _response: &RuntimeApprovalResponse,
+        _definition: &ToolDefinition,
+        _call: &ToolCall,
+        _now_epoch_ms: u64,
+    ) -> Result<RuntimePermissionEvaluation, RuntimePortFailure> {
+        Err(RuntimePortFailure::Unavailable)
+    }
+
+    fn execute(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        _evaluation: &RuntimePermissionEvaluation,
+        _definition: &ToolDefinition,
+        _call: &ToolCall,
+        _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+    ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
+        Err(RuntimePortFailure::Unavailable)
+    }
+}
+
+impl RuntimeJournalPort for PressureJournalBoundary {
+    fn append_runtime_event(&mut self, event: &RuntimeEvent) -> Result<(), RuntimePortFailure> {
+        self.worker
+            .append(event.clone())
+            .map(|_| ())
+            .map_err(map_pressure_journal_error)
+    }
+
+    fn flush_runtime_events(&mut self) -> Result<(), RuntimePortFailure> {
+        self.worker
+            .flush_all()
+            .map(|_| ())
+            .map_err(map_pressure_journal_error)
+    }
+
+    fn load_runtime_events(
+        &mut self,
+        run_id: &RuntimeRunId,
+    ) -> Result<Vec<RuntimeEvent>, RuntimePortFailure> {
+        self.worker.load(run_id).map_err(map_pressure_journal_error)
+    }
+}
+
+impl RuntimeCorrectnessTransactionPort for PressureJournalBoundary {
+    fn evaluate_with_correctness_event(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        _operation_id: &RuntimeOperationId,
+        _definition: &ToolDefinition,
+        _call: &ToolCall,
+        _now_epoch_ms: u64,
+        _build_event: &mut dyn FnMut(
+            &RuntimePermissionEvaluation,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
+        Err(RuntimePortFailure::Unavailable)
+    }
+
+    fn resolve_with_correctness_event(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        _challenge: &agentmage_kernel_contracts::RuntimeApprovalChallenge,
+        _response: &RuntimeApprovalResponse,
+        _definition: &ToolDefinition,
+        _call: &ToolCall,
+        _now_epoch_ms: u64,
+        _build_event: &mut dyn FnMut(
+            &RuntimePermissionEvaluation,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimePermissionEvaluation, RuntimeEvent), RuntimePortFailure> {
+        Err(RuntimePortFailure::Unavailable)
+    }
+
+    fn execute_with_correctness_events(
+        &mut self,
+        _request: &RuntimeRunRequest,
+        _evaluation: &RuntimePermissionEvaluation,
+        _definition: &ToolDefinition,
+        _call: &ToolCall,
+        _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
+        _started_event: RuntimeEvent,
+        _build_terminal_event: &mut dyn FnMut(
+            &RuntimeToolExecution,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<RuntimeToolCorrectnessCommit, RuntimePortFailure> {
+        Err(RuntimePortFailure::Unavailable)
+    }
+
+    fn commit_checkpoint_with_correctness_event(
+        &mut self,
+        _input: RuntimeCheckpointCommit<'_>,
+        _build_event: &mut dyn FnMut(
+            &RuntimeCheckpointPublication,
+        ) -> Result<RuntimeEvent, RuntimePortFailure>,
+    ) -> Result<(RuntimeCheckpointPublication, RuntimeEvent), RuntimePortFailure> {
+        Err(RuntimePortFailure::Unavailable)
+    }
+}
+
+struct PressureTestKey;
+
+impl OperationalStoreKeyProvider for PressureTestKey {
+    fn with_key<T>(
+        &mut self,
+        operation: impl FnOnce(&[u8]) -> T,
+    ) -> Result<T, OperationalStoreKeyError> {
+        Ok(operation(&[81; 32]))
+    }
+}
+
+fn map_pressure_journal_error(error: RuntimeJournalError) -> RuntimePortFailure {
+    match error {
+        RuntimeJournalError::InvalidLimits
+        | RuntimeJournalError::InvalidEvent
+        | RuntimeJournalError::OrderingMismatch
+        | RuntimeJournalError::Serialization => RuntimePortFailure::Invalid,
+        RuntimeJournalError::QueueSaturated => RuntimePortFailure::ResourceExhausted,
+        RuntimeJournalError::Storage
+        | RuntimeJournalError::Integrity
+        | RuntimeJournalError::WorkerUnavailable => RuntimePortFailure::Unavailable,
+    }
+}
+
+fn pressure_observation() -> StrictLocalStorageObservation {
+    StrictLocalStorageObservation {
+        filesystem: StorageFilesystemClass::Local,
+        synchronization_marker: None,
+        root_identity_sha256: [11; 32],
+        symlink_free: true,
+    }
+}
+
+fn pressure_temporary_directory() -> std::path::PathBuf {
+    let sequence = PRESSURE_TEMP_ID.fetch_add(1, Ordering::Relaxed);
+    let path = std::env::temp_dir().join(format!(
+        "agentmage-runtime-loop-pressure-{}-{sequence}",
+        std::process::id()
+    ));
+    fs::create_dir(&path).expect("pressure temporary directory");
+    path
 }
 
 struct FakeContext;
@@ -1143,6 +1402,200 @@ fn durable_mode_remains_unavailable_without_journal_and_resume_ports() {
         ),
         Err(RuntimeLoopError::UnsupportedMode)
     ));
+}
+
+#[test]
+fn story_21_2_durable_model_progress_and_cancellation_survive_delayed_sqlcipher() {
+    const FRAGMENTS_BEFORE_CANCEL: usize = 16;
+    const CANCELLATION_LIMIT: Duration = Duration::from_millis(250);
+
+    let directory = pressure_temporary_directory();
+    let path = directory.join("authority.db");
+    let store = Arc::new(Mutex::new(
+        OperationalStore::open(&path, &pressure_observation(), &mut PressureTestKey)
+            .expect("encrypted pressure store"),
+    ));
+    let worker = Arc::new(
+        RuntimeJournalWorker::new(Arc::clone(&store)).expect("bounded pressure journal worker"),
+    );
+    let profile = profile("runtime-loop-pressure");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let mut request = request(profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("durable pressure request seals");
+    let signal = CancellationSignal {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        cancellation_id: CancellationId::from_raw("pressure-cancellation-0001"),
+        correlation_id: CorrelationId::from_raw(derived_id(
+            "correlation",
+            request.run_id.as_str(),
+            0,
+        )),
+        task_id: request.task.task_id.clone(),
+        reason: CancellationReason::UserRequested,
+        requested_by: BoundaryKind::Shell,
+    };
+    let cancellation = Arc::new(PressureCancellationProbe {
+        requested: AtomicBool::new(false),
+        signal,
+    });
+    let fragments = Arc::new(AtomicUsize::new(0));
+    let cancellation_seen = Arc::new(AtomicBool::new(false));
+    let (started_sender, started_receiver) = mpsc::sync_channel(1);
+    let (release_sender, release_receiver) = mpsc::sync_channel(1);
+    let model = PressureStreamingModel {
+        profile,
+        started: Some(started_sender),
+        release: release_receiver,
+        fragments: Arc::clone(&fragments),
+        cancellation_seen: Arc::clone(&cancellation_seen),
+    };
+    let boundary = PressureJournalBoundary {
+        worker: Arc::clone(&worker),
+    };
+    let mut coordinator = ReusableRuntimeCoordinator::new_with_journal(
+        request,
+        model,
+        FakeContext,
+        registry,
+        boundary,
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-pressure-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 8_000 },
+    )
+    .expect("durable pressure coordinator builds");
+    let subscription = coordinator
+        .subscribe_events(16)
+        .expect("pressure subscriber binds");
+    let cancellation_for_run = Arc::clone(&cancellation);
+    let mut delivered = Vec::new();
+
+    let (coordinator, step, cancellation_latency, store_delay) = thread::scope(|scope| {
+        let handle = scope.spawn(move || {
+            let step = coordinator.run_until_boundary(None, Some(cancellation_for_run.as_ref()));
+            (coordinator, step)
+        });
+        started_receiver
+            .recv_timeout(Duration::from_secs(1))
+            .expect("model reaches its stream boundary");
+
+        let store_guard = store.lock().expect("delay the sole SQLCipher writer");
+        let store_delay_started = Instant::now();
+        release_sender
+            .send(())
+            .expect("release model stream under store delay");
+        let fragment_deadline = Instant::now() + Duration::from_secs(1);
+        while fragments.load(Ordering::SeqCst) < FRAGMENTS_BEFORE_CANCEL
+            && Instant::now() < fragment_deadline
+        {
+            thread::sleep(Duration::from_millis(1));
+        }
+        assert!(
+            fragments.load(Ordering::SeqCst) >= FRAGMENTS_BEFORE_CANCEL,
+            "model progress must continue while the encrypted store is delayed"
+        );
+
+        let cancellation_started = Instant::now();
+        cancellation.requested.store(true, Ordering::SeqCst);
+        let cancellation_deadline = cancellation_started + CANCELLATION_LIMIT;
+        while !cancellation_seen.load(Ordering::SeqCst) && Instant::now() < cancellation_deadline {
+            thread::sleep(Duration::from_millis(1));
+        }
+        let cancellation_latency = cancellation_started.elapsed();
+        assert!(cancellation_seen.load(Ordering::SeqCst));
+        assert!(cancellation_latency < CANCELLATION_LIMIT);
+
+        let client_deadline = Instant::now() + Duration::from_secs(1);
+        let mut saw_model_failure = false;
+        while !saw_model_failure && Instant::now() < client_deadline {
+            while let Some(event) = subscription.try_next().expect("subscriber remains live") {
+                saw_model_failure |= matches!(event.kind, RuntimeEventKind::ModelFailed { .. });
+                delivered.push(event);
+            }
+            if !saw_model_failure {
+                thread::sleep(Duration::from_millis(1));
+            }
+        }
+        assert!(saw_model_failure);
+        assert!(
+            !delivered
+                .iter()
+                .any(|event| matches!(event.kind, RuntimeEventKind::RunTerminal { .. }))
+        );
+        assert!(
+            !handle.is_finished(),
+            "terminal return must wait for the blocked correctness write"
+        );
+        let store_delay = store_delay_started.elapsed();
+        drop(store_guard);
+        let (coordinator, step) = handle.join().expect("pressure coordinator joins");
+        (coordinator, step, cancellation_latency, store_delay)
+    });
+
+    let RuntimeCoordinatorStep::Complete { outcome } =
+        step.expect("pressure cancellation closes truthfully")
+    else {
+        panic!("cancelled model cannot request approval");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Cancelled, "{outcome:#?}");
+    while let Some(event) = subscription.try_next().expect("subscriber remains live") {
+        delivered.push(event);
+    }
+    assert_eq!(delivered, coordinator.events());
+    let cancellation_requested = coordinator
+        .events()
+        .iter()
+        .position(|event| matches!(event.kind, RuntimeEventKind::CancellationRequested { .. }))
+        .expect("cancellation request is journaled");
+    let cancellation_observed = coordinator
+        .events()
+        .iter()
+        .position(|event| matches!(event.kind, RuntimeEventKind::CancellationObserved { .. }))
+        .expect("cancellation observation is journaled");
+    let terminal = coordinator
+        .events()
+        .iter()
+        .position(|event| matches!(event.kind, RuntimeEventKind::RunTerminal { .. }))
+        .expect("terminal event is journaled");
+    assert!(cancellation_requested < cancellation_observed);
+    assert!(cancellation_observed < terminal);
+    assert_eq!(
+        worker.load(&coordinator.request.run_id),
+        Ok(coordinator.events().to_vec())
+    );
+    let mut sequence = RuntimeEventSequence::new();
+    for event in coordinator.events() {
+        sequence
+            .push(event)
+            .expect("pressure event sequence remains valid");
+    }
+    assert!(sequence.is_terminal());
+    assert_eq!(sequence.event_count(), coordinator.events().len() as u64);
+    verify_runtime_outcome(&outcome, &coordinator.request)
+        .expect("pressure outcome remains request-bound");
+
+    println!(
+        "AGENTMAGE_RUNTIME_PRESSURE_METRICS={}",
+        serde_json::json!({
+            "cancellation_latency_us": u64::try_from(cancellation_latency.as_micros())
+                .unwrap_or(u64::MAX),
+            "cancellation_limit_ms": CANCELLATION_LIMIT.as_millis(),
+            "client_progress_while_store_delayed": true,
+            "external_network_used": false,
+            "fragment_count_before_cancellation": fragments.load(Ordering::SeqCst),
+            "store_delay_ms": u64::try_from(store_delay.as_millis()).unwrap_or(u64::MAX),
+            "terminal_waited_for_correctness_durability": true,
+        })
+    );
+
+    drop(subscription);
+    drop(coordinator);
+    drop(worker);
+    drop(store);
+    fs::remove_dir_all(directory).expect("remove pressure directory");
 }
 
 #[test]

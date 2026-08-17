@@ -1113,7 +1113,10 @@ where
                     Some(&turn_id),
                     None,
                 )?;
-                self.finish_model_failure(&turn_id, RuntimePortFailure::Cancelled)
+                match observe_cancellation(cancellation)? {
+                    Some(signal) => self.cancel(signal),
+                    None => self.finish_model_failure(&turn_id, RuntimePortFailure::Invalid),
+                }
             }
             ModelRunTerminalState::TimedOut => {
                 self.emit(
