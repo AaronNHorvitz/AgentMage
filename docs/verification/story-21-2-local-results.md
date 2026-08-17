@@ -37,6 +37,15 @@
   tests to source commit `f8d521c4dc4bb9b2053447a61aaac04028b4906b`;
   its 8,196-event workload, bounded saturation recovery, memory, disk,
   throughput, publisher, and 16-reopen measurements pass the fixed profile.
+- Seven synthetic sensitive-content classes are absent from serialized
+  hash-only transcript, canonical/client event, diagnostic, metric, artifact
+  manifest, artifact reference, and event-reference projections. Restricted
+  transcript placement is refused, valid-looking unregistered event codes are
+  rejected, artifact bytes require an exact owner-bound read, and a
+  cross-session artifact read is denied.
+- A story-local source-closure test fixes the security-authoritative kernel's
+  direct dependencies and rejects external network or telemetry APIs in the
+  runtime event, journal, projection, artifact, and CLI-client implementation.
 - The JSON schema and canonical Rust example pass the repository schema gate.
 - Markdown and Mermaid validation pass for the Story 21.2 architecture record.
 
@@ -47,6 +56,7 @@ cargo test -p agentmage-kernel-engine runtime_event --lib --locked
 cargo test -p agentmage-kernel-engine runtime_journal --lib --locked
 cargo test -p agentmage-kernel-engine operational_store --lib --locked
 cargo test -p agentmage-kernel-engine runtime_artifact --lib --locked
+cargo test -p agentmage-kernel-engine story_21_2_ --lib --locked
 cargo test -p agentmage-kernel-engine --lib --locked
 cargo test -p agentmage-host --lib --locked
 cargo clippy -p agentmage-kernel-engine --lib --tests --locked -- -D warnings
@@ -75,8 +85,11 @@ python3 scripts/runtime_hardening_load.py --output <fresh-evidence-path>
   consumer, bounded memory/disk, isolated slow-store admission, cancellation
   fixtures, and restart. Exhaustive byte edges, real disk latency, and
   integrated model-stream/cancellation pressure remain open.
-- Secret, prompt, token-fragment, path, environment, credential, transcript,
-  diagnostics, and metric canary scans remain open as a complete campaign.
+- Product-wide memory-dump, crash-artifact, installed-client, and operating
+  system telemetry observation remains outside this story-local projection
+  campaign. The repository-wide strict-local source policy snapshot also needs
+  reconciliation with broader post-baseline source and package additions; it
+  is not reported as passing by this result.
 - One Fedora source-host latency, throughput, memory, and disk profile is
   retained. Installed-interface and additional supported-platform profiles
   remain open.

@@ -5,11 +5,12 @@
 This document is the review artifact for Story 21.2. The closed runtime-event
 envelope, hash-chain verifier, legal transition engine, bounded in-process
 publisher, dedicated bounded journal worker, encrypted SQLite projection,
-terminal flush, and restart verification exist in source. The complete story
-remains open for atomic correctness-event linkage to every owning authority
-transaction, persisted transcript and diagnostics lifecycle completion, crash
-injection at every boundary, real-disk cancellation evidence, installed-client
-evidence, and independent review.
+terminal flush, restart verification, and story-local projection canary
+coverage exist in source. The complete story remains open for atomic
+correctness-event linkage to every owning authority transaction, persisted
+transcript and diagnostics lifecycle completion, crash injection at every
+boundary, real-disk cancellation evidence, installed-client evidence, and
+independent review.
 
 No statement in this document enables a model, platform, release, transcript,
 external telemetry path, or general event bus.
@@ -127,6 +128,17 @@ response. `DENY` removes the pending call and starts no effect.
 
 Projection selection occurs after classification. A projection cannot rewrite a
 canonical event, infer a grant, or substitute transcript prose for evidence.
+Seven synthetic content classes now exercise this boundary. Hash-only
+transcripts, canonical/client events, diagnostics, metrics, artifact manifests,
+artifact references, and event payload references retain none of the seeded
+secret, restricted-content, prompt, token-fragment, path, environment, or
+credential text. Restricted transcript placement is refused. Runtime artifact
+payload bytes remain separately classified content and can be returned only by
+an exact owner-, task-, policy-, digest-, size-, and time-bound read; their
+path-free projections disclose only immutable metadata. A source-closure test
+also fixes the kernel's direct dependencies and rejects external network or
+telemetry APIs in the event, journal, projection, artifact, and CLI-client
+implementation.
 
 ## Sensitivity and Retention
 
@@ -270,6 +282,7 @@ shutdown evidence remain open under Sub-tasks 21.2.3.2, 21.2.3.3, and 21.2.3.5.
 | Coordinator event emission and client verification | `runtime_loop`, `coding_client` tests | Implemented at source level |
 | Transcript and diagnostics lifecycle | Story 21.2 and later conversation work | Open |
 | Dedicated bounded worker, saturation, sticky failure, shutdown, and slow-store client isolation | `runtime_journal` worker tests and Story 50.2 load campaign | Implemented at source level |
+| Projection canary exclusion, artifact-read isolation, and external-telemetry dependency closure | `runtime_projection` and `runtime_artifact` Story 21.2 tests | Implemented at source level; broader strict-local policy snapshot reconciliation remains separate |
 | Real-disk model-stream and cancellation isolation | Story 21.2 / Story 50.2 | Open |
-| Full crash, pressure, canary, and benchmark campaign | Story 21.2.3 | Open |
+| Full crash, pressure, and benchmark campaign | Story 21.2.3 | Open |
 | Installed native-client and independent-review evidence | Sprint 23 and release gates | Open |
