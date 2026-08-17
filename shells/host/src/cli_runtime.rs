@@ -799,6 +799,55 @@ mod tests {
     }
 
     #[test]
+    fn story_50_2_confusion_and_interface_bypasses_never_present_or_complete() {
+        let (request, events, outcome, _) =
+            crate::runtime_read_tests::completed_native_read_fixture();
+        let input = input(&request);
+
+        let mut replayed = events.clone();
+        replayed.insert(1, events[0].clone());
+        assert_evidence_denied(&request, &input, replayed, Vec::new(), outcome.clone());
+
+        let mut foreign_session = events.clone();
+        foreign_session[0].session_id =
+            agentmage_kernel_contracts::SessionId::from_raw("session-foreign");
+        foreign_session[0] =
+            seal_runtime_event(foreign_session[0].clone()).expect("foreign event reseals");
+        assert_evidence_denied(
+            &request,
+            &input,
+            foreign_session,
+            Vec::new(),
+            outcome.clone(),
+        );
+
+        let mut malformed_terminal = events.clone();
+        let terminal = malformed_terminal
+            .last_mut()
+            .expect("terminal event exists");
+        let RuntimeEventKind::RunTerminal { state, .. } = &mut terminal.kind else {
+            panic!("fixture must end in a terminal event");
+        };
+        *state = AgentStateKind::Failed;
+        *terminal = seal_runtime_event(terminal.clone()).expect("terminal mutation reseals");
+        assert_evidence_denied(
+            &request,
+            &input,
+            malformed_terminal,
+            Vec::new(),
+            outcome.clone(),
+        );
+
+        let mut forged_run = step(&request, events.clone(), None, Some(outcome.clone()));
+        forged_run.run_id = agentmage_kernel_contracts::RuntimeRunId::from_raw("run-foreign");
+        assert_step_evidence_denied(&request, &input, forged_run);
+
+        let mut forged_request = step(&request, events, None, Some(outcome));
+        forged_request.request_sha256 = "f".repeat(64);
+        assert_step_evidence_denied(&request, &input, forged_request);
+    }
+
+    #[test]
     fn terminal_presentation_failure_releases_without_claiming_completion() {
         let (request, events, outcome, _) =
             crate::runtime_read_tests::completed_native_read_fixture();
@@ -832,17 +881,29 @@ mod tests {
         artifacts: Vec<RuntimeArtifactRef>,
         outcome: RuntimeOutcome,
     ) {
-        let mut port = ScriptedPort {
-            input: input.clone(),
-            request: request.clone(),
-            start: Some(NativeChatRuntimeStep {
+        assert_step_evidence_denied(
+            request,
+            input,
+            NativeChatRuntimeStep {
                 run_id: request.run_id.clone(),
                 request_sha256: request.request_sha256.clone(),
                 events,
                 artifacts,
                 approval: None,
                 outcome: Some(outcome),
-            }),
+            },
+        );
+    }
+
+    fn assert_step_evidence_denied(
+        request: &RuntimeRunRequest,
+        input: &NativeChatPrepareInput,
+        step: NativeChatRuntimeStep,
+    ) {
+        let mut port = ScriptedPort {
+            input: input.clone(),
+            request: request.clone(),
+            start: Some(step),
             advance: None,
             cancel: None,
             released: 0,
