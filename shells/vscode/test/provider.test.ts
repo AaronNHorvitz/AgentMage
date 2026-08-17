@@ -1148,6 +1148,7 @@ function runtimeStep(
     run_id: "run-0001",
     request_sha256: "5".repeat(64),
     events,
+    artifacts: [],
     approval,
     outcome,
   });

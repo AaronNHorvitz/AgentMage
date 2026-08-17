@@ -1822,6 +1822,7 @@ fn runtime_response(request_id: &str, step: NativeChatRuntimeStep) -> HostRespon
         run_id: step.run_id,
         request_sha256: step.request_sha256,
         events: step.events,
+        artifacts: step.artifacts,
         approval: step.approval,
         outcome: step.outcome.map(Box::new),
     }
@@ -2337,6 +2338,7 @@ mod tests {
                 run_id: request.run_id.clone(),
                 request_sha256: request.request_sha256.clone(),
                 events: events.clone(),
+                artifacts: Vec::new(),
                 approval: None,
                 outcome: Some(outcome.clone()),
             },
@@ -2358,12 +2360,14 @@ mod tests {
                 run_id,
                 request_sha256,
                 events: actual_events,
+                artifacts,
                 approval: None,
                 outcome: Some(actual_outcome),
                 ..
             } if run_id == request.run_id
                 && request_sha256 == request.request_sha256
                 && actual_events == events
+                && artifacts.is_empty()
                 && *actual_outcome == outcome
         ));
         fs::remove_dir_all(state).expect("remove state");

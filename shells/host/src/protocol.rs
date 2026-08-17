@@ -6,8 +6,8 @@ use agentmage_capability_read_only::ReadOnlyResult;
 use agentmage_kernel_contracts::{
     CancellationId, DoctorReport, HandoffProhibitedAction, HandoffReview, LocalHandoffReceipt,
     ModelPickerSnapshot, ModelSelectionRevalidation, RenderedHandoff, RuntimeApprovalChallenge,
-    RuntimeApprovalResponse, RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId,
-    RuntimeRunRequest,
+    RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor, RuntimeOutcome,
+    RuntimeRunId, RuntimeRunRequest,
 };
 use agentmage_kernel_engine::runtime_coordinator::verify_runtime_run_request;
 
@@ -802,6 +802,8 @@ pub enum HostResponse {
         request_sha256: String,
         /// Ordered verified events after the shell's supplied cursor.
         events: Vec<RuntimeEvent>,
+        /// Complete verified artifact-reference set currently owned by the coordinator.
+        artifacts: Vec<RuntimeArtifactRef>,
         /// Exact protected challenge only while the coordinator is waiting.
         #[serde(deserialize_with = "deserialize_required_option")]
         approval: Option<RuntimeApprovalChallenge>,

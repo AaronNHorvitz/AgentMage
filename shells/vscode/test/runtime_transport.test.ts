@@ -109,6 +109,37 @@ void test("stream substitution reordering and payload mutation fail closed", () 
   );
 });
 
+void test("artifact references remain complete and event-bound across runtime steps", () => {
+  const exact = parseRuntimeHostResponse(artifactTerminalResponse());
+  assert.equal(exact.kind, "runtime_step");
+  new RuntimeStreamVerifier(runtimeRequest()).accept(exact);
+  assert.equal(exact.artifacts.length, 1);
+
+  const missing = artifactTerminalResponse();
+  missing.artifacts = [];
+  const parsedMissing = parseRuntimeHostResponse(missing);
+  assert.equal(parsedMissing.kind, "runtime_step");
+  assert.throws(
+    () => new RuntimeStreamVerifier(runtimeRequest()).accept(parsedMissing),
+    RuntimeTransportFailure,
+  );
+
+  const substituted = artifactTerminalResponse();
+  const reference = substituted.artifacts[0];
+  assert.ok(reference !== undefined);
+  substituted.artifacts[0] = {
+    ...reference,
+    manifest_sha256: "f".repeat(64),
+  };
+  const parsedSubstitution = parseRuntimeHostResponse(substituted);
+  assert.equal(parsedSubstitution.kind, "runtime_step");
+  assert.throws(
+    () =>
+      new RuntimeStreamVerifier(runtimeRequest()).accept(parsedSubstitution),
+    RuntimeTransportFailure,
+  );
+});
+
 void test("approval is bound to the exact last permission event and grant", () => {
   const request = runtimeRequest();
   const parsed = parseRuntimeHostResponse(approvalResponse());
@@ -217,6 +248,7 @@ export function terminalResponse(): MutableRuntimeStep {
     run_id: "run-0001",
     request_sha256: "5".repeat(64),
     events,
+    artifacts: [],
     approval: null,
     outcome: {
       schema_version: 2,
@@ -251,6 +283,37 @@ export function terminalResponse(): MutableRuntimeStep {
   };
 }
 
+function artifactTerminalResponse(): MutableRuntimeStep {
+  const response = terminalResponse();
+  const event = response.events[2];
+  assert.ok(event !== undefined);
+  response.events[2] = {
+    ...event,
+    payload_reference: {
+      artifact_id: "runtime-artifact-0001",
+      sha256: "d".repeat(64),
+      byte_size: 17,
+      media_type: "text/plain",
+    },
+    kind: {
+      event: "artifact_created",
+      artifact_id: "runtime-artifact-0001",
+      manifest_sha256: "e".repeat(64),
+    },
+  };
+  response.artifacts = [
+    {
+      schema_version: 2,
+      artifact_id: "runtime-artifact-0001",
+      manifest_sha256: "e".repeat(64),
+      payload_sha256: "d".repeat(64),
+      byte_size: 17,
+      media_type: "text/plain",
+    },
+  ];
+  return response;
+}
+
 export function approvalResponse(): MutableRuntimeStep {
   const events = [
     runtimeEvent(0, ZERO_SHA256, null, {
@@ -272,6 +335,7 @@ export function approvalResponse(): MutableRuntimeStep {
     run_id: "run-0001",
     request_sha256: "5".repeat(64),
     events,
+    artifacts: [],
     approval: {
       schema_version: 2,
       run_id: "run-0001",
@@ -297,6 +361,7 @@ interface MutableRuntimeStep {
   run_id: string;
   request_sha256: string;
   events: MutableRuntimeEvent[];
+  artifacts: Record<string, unknown>[];
   approval: null | Record<string, unknown>;
   outcome: null | Record<string, unknown>;
 }
@@ -317,7 +382,7 @@ interface MutableRuntimeEvent {
   retention: { kind: "ephemeral"; expires_at_epoch_ms: null };
   persistence: "correctness";
   policy_id: string;
-  payload_reference: null;
+  payload_reference: null | Record<string, unknown>;
   kind: Record<string, unknown>;
   previous_event_sha256: string;
   event_sha256: string;

@@ -225,6 +225,15 @@ interface RuntimeArtifactOutput {
 
 export type RuntimeOutputEnvelope = RuntimeInlineOutput | RuntimeArtifactOutput;
 
+export interface RuntimeArtifactReferenceEnvelope {
+  readonly schema_version: 2;
+  readonly artifact_id: string;
+  readonly manifest_sha256: string;
+  readonly payload_sha256: string;
+  readonly byte_size: number;
+  readonly media_type: string;
+}
+
 export interface RuntimeOutcomeEnvelope {
   readonly schema_version: 2;
   readonly run_id: string;
@@ -258,6 +267,7 @@ export interface RuntimeStepResponse {
   readonly run_id: string;
   readonly request_sha256: string;
   readonly events: readonly RuntimeEventEnvelope[];
+  readonly artifacts: readonly RuntimeArtifactReferenceEnvelope[];
   readonly approval: RuntimeApprovalChallengeEnvelope | null;
   readonly outcome: RuntimeOutcomeEnvelope | null;
 }
@@ -294,6 +304,7 @@ export function parseRuntimeHostResponse(
   if (record.kind === "runtime_step") {
     requireKeys(record, [
       "approval",
+      "artifacts",
       "events",
       "kind",
       "outcome",
@@ -306,7 +317,9 @@ export function parseRuntimeHostResponse(
       !validIdentifier(record.run_id) ||
       !validSha256(record.request_sha256) ||
       !Array.isArray(record.events) ||
-      record.events.length > 65_536
+      record.events.length > 65_536 ||
+      !Array.isArray(record.artifacts) ||
+      record.artifacts.length > 1_024
     ) {
       throw new RuntimeTransportFailure();
     }
@@ -320,6 +333,7 @@ export function parseRuntimeHostResponse(
       throw new RuntimeTransportFailure();
     }
     const events = record.events.map(parseRuntimeEvent);
+    const artifacts = record.artifacts.map(parseRuntimeArtifactReference);
     if (
       events.some((event) => event.run_id !== record.run_id) ||
       (approval !== null && approval.run_id !== record.run_id) ||
@@ -336,11 +350,37 @@ export function parseRuntimeHostResponse(
       run_id: record.run_id,
       request_sha256: record.request_sha256,
       events,
+      artifacts,
       approval,
       outcome,
     };
   }
   throw new RuntimeTransportFailure();
+}
+
+function parseRuntimeArtifactReference(
+  candidate: unknown,
+): RuntimeArtifactReferenceEnvelope {
+  const record = requiredRecord(candidate);
+  requireKeys(record, [
+    "artifact_id",
+    "byte_size",
+    "manifest_sha256",
+    "media_type",
+    "payload_sha256",
+    "schema_version",
+  ]);
+  if (
+    record.schema_version !== RUNTIME_CONTRACT_VERSION ||
+    !validIdentifier(record.artifact_id) ||
+    !validSha256(record.manifest_sha256) ||
+    !validSha256(record.payload_sha256) ||
+    !positiveSafeInteger(record.byte_size) ||
+    !validMediaType(record.media_type)
+  ) {
+    throw new RuntimeTransportFailure();
+  }
+  return record as unknown as RuntimeArtifactReferenceEnvelope;
 }
 
 export function parseRuntimeRunRequest(
@@ -406,6 +446,15 @@ export function runtimeCursor(
 export class RuntimeStreamVerifier {
   private readonly eventIds = new Set<string>();
   private readonly eventDigests = new Map<string, string>();
+  private readonly artifactEvents = new Map<
+    string,
+    {
+      readonly manifestSha256: string;
+      readonly payloadSha256: string;
+      readonly byteSize: number;
+      readonly mediaType: string;
+    }
+  >();
   private nextSequence = 0;
   private previousEventSha256 = ZERO_SHA256;
   private correlationId: string | undefined;
@@ -424,6 +473,24 @@ export class RuntimeStreamVerifier {
     }
     for (const event of step.events) {
       this.acceptEvent(event);
+    }
+    const artifactIds = new Set<string>();
+    if (step.artifacts.length !== this.artifactEvents.size) {
+      throw new RuntimeTransportFailure();
+    }
+    for (const reference of step.artifacts) {
+      const eventReference = this.artifactEvents.get(reference.artifact_id);
+      if (
+        artifactIds.has(reference.artifact_id) ||
+        eventReference === undefined ||
+        eventReference.manifestSha256 !== reference.manifest_sha256 ||
+        eventReference.payloadSha256 !== reference.payload_sha256 ||
+        eventReference.byteSize !== reference.byte_size ||
+        eventReference.mediaType !== reference.media_type
+      ) {
+        throw new RuntimeTransportFailure();
+      }
+      artifactIds.add(reference.artifact_id);
     }
     if (step.approval !== null) {
       const last = this.lastEvent;
@@ -444,6 +511,17 @@ export class RuntimeStreamVerifier {
     }
     if (step.outcome !== null) {
       const terminal = this.terminalEvent;
+      const artifactOutput =
+        step.outcome.output?.storage === "artifact"
+          ? step.outcome.output.reference
+          : undefined;
+      const retainedOutput =
+        artifactOutput === undefined
+          ? undefined
+          : step.artifacts.find(
+              (reference) =>
+                reference.artifact_id === artifactOutput.artifact_id,
+            );
       if (
         terminal === undefined ||
         step.outcome.run_id !== this.request.run_id ||
@@ -455,7 +533,12 @@ export class RuntimeStreamVerifier {
         terminal.causation_event_id !== step.outcome.prior_event_id ||
         terminal.previous_event_sha256 !== step.outcome.prior_event_sha256 ||
         this.eventDigests.get(step.outcome.prior_event_id) !==
-          step.outcome.prior_event_sha256
+          step.outcome.prior_event_sha256 ||
+        (artifactOutput !== undefined &&
+          (retainedOutput === undefined ||
+            retainedOutput.payload_sha256 !== artifactOutput.sha256 ||
+            retainedOutput.byte_size !== artifactOutput.byte_size ||
+            retainedOutput.media_type !== artifactOutput.media_type))
       ) {
         throw new RuntimeTransportFailure();
       }
@@ -498,6 +581,24 @@ export class RuntimeStreamVerifier {
     this.correlationId ??= event.correlation_id;
     this.lastOccurredAt = event.occurred_at_epoch_ms;
     this.lastEvent = event;
+    if (event.kind.event === "artifact_created") {
+      const artifactId = event.kind.artifact_id as string;
+      const manifestSha256 = event.kind.manifest_sha256 as string;
+      const payload = event.payload_reference;
+      if (
+        this.artifactEvents.has(artifactId) ||
+        payload === null ||
+        payload.artifact_id !== artifactId
+      ) {
+        throw new RuntimeTransportFailure();
+      }
+      this.artifactEvents.set(artifactId, {
+        manifestSha256,
+        payloadSha256: payload.sha256 as string,
+        byteSize: payload.byte_size as number,
+        mediaType: payload.media_type as string,
+      });
+    }
     if (event.kind.event === "run_terminal") {
       this.terminalEvent = event;
     }

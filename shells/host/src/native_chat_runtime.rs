@@ -5,8 +5,8 @@ use std::fmt;
 
 use agentmage_kernel_contracts::{
     BoundaryKind, CancellationId, CancellationReason, CancellationSignal, RuntimeApprovalChallenge,
-    RuntimeApprovalResponse, RuntimeEvent, RuntimeEventCursor, RuntimeEventKind, RuntimeOutcome,
-    RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode,
+    RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor,
+    RuntimeEventKind, RuntimeOutcome, RuntimeRunId, RuntimeRunRequest, RuntimeSessionMode,
 };
 use agentmage_kernel_engine::{
     runtime_coordinator::{
@@ -45,6 +45,8 @@ pub struct NativeChatRuntimeStep {
     pub request_sha256: String,
     /// Ordered verified events after the caller's supplied cursor.
     pub events: Vec<RuntimeEvent>,
+    /// Complete verified artifact-reference set currently owned by the coordinator.
+    pub artifacts: Vec<RuntimeArtifactRef>,
     /// Exact protected challenge only while the coordinator is waiting.
     pub approval: Option<RuntimeApprovalChallenge>,
     /// Canonical outcome only after terminal completion.
@@ -476,6 +478,7 @@ where
             run_id: self.request.run_id.clone(),
             request_sha256: self.request.request_sha256.clone(),
             events: events[first..].to_vec(),
+            artifacts: self.runtime.runtime_artifacts().to_vec(),
             approval: self.pending_approval.clone(),
             outcome: self.outcome.clone(),
         })
@@ -500,10 +503,10 @@ mod tests {
     use agentmage_kernel_contracts::{
         AgentStateKind, ApprovalId, CancellationSignal, ContextSensitivity, CorrelationId, GrantId,
         GrantOperation, ModelCancellationProbe, ModelRunId, RuntimeApprovalDisposition,
-        RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor,
-        RuntimeEventId, RuntimeEventKind, RuntimeEventRetention, RuntimeEventRetentionKind,
-        RuntimeOperationId, RuntimeOutcome, RuntimePermissionDisposition, RuntimeRunRequest,
-        RuntimeTurnId, ToolCallId,
+        RuntimeApprovalResponse, RuntimeArtifactId, RuntimeArtifactRef, RuntimeEvent,
+        RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventRetention,
+        RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutcome,
+        RuntimePermissionDisposition, RuntimeRunRequest, RuntimeTurnId, ToolCallId,
     };
     use agentmage_kernel_engine::{
         runtime_coordinator::{seal_runtime_approval_challenge, seal_runtime_outcome},
@@ -521,6 +524,7 @@ mod tests {
 
     struct ReplayCoordinator {
         events: Vec<RuntimeEvent>,
+        artifacts: Vec<RuntimeArtifactRef>,
         outcome: RuntimeOutcome,
     }
 
@@ -540,7 +544,7 @@ mod tests {
         }
 
         fn runtime_artifacts(&self) -> &[RuntimeArtifactRef] {
-            &[]
+            &self.artifacts
         }
     }
 
@@ -548,6 +552,7 @@ mod tests {
         expected_input: NativeChatPrepareInput,
         request: RuntimeRunRequest,
         events: Vec<RuntimeEvent>,
+        artifacts: Vec<RuntimeArtifactRef>,
         outcome: RuntimeOutcome,
     }
 
@@ -573,6 +578,7 @@ mod tests {
             }
             Ok(ReplayCoordinator {
                 events: self.events.clone(),
+                artifacts: self.artifacts.clone(),
                 outcome: self.outcome.clone(),
             })
         }
@@ -594,6 +600,14 @@ mod tests {
             expected_input: input.clone(),
             request: request.clone(),
             events: events.clone(),
+            artifacts: vec![RuntimeArtifactRef {
+                schema_version: request.schema_version,
+                artifact_id: RuntimeArtifactId::from_raw("runtime-artifact-native-chat-0001"),
+                manifest_sha256: "e".repeat(64),
+                payload_sha256: "f".repeat(64),
+                byte_size: 17,
+                media_type: "text/plain".to_owned(),
+            }],
             outcome: outcome.clone(),
         };
         let mut service = NativeChatRuntimeService::new(factory);
@@ -604,6 +618,11 @@ mod tests {
             .start(prepared.clone())
             .expect("shared runtime is started");
         assert_eq!(step.events, events);
+        assert_eq!(step.artifacts.len(), 1);
+        assert_eq!(
+            step.artifacts[0].artifact_id.as_str(),
+            "runtime-artifact-native-chat-0001"
+        );
         assert_eq!(step.outcome.as_ref(), Some(&outcome));
         assert!(step.approval.is_none());
 
@@ -617,6 +636,7 @@ mod tests {
             )
             .expect("verified cursor replays only unseen events");
         assert_eq!(replay.events, step.events[1..]);
+        assert_eq!(replay.artifacts, step.artifacts);
         assert_eq!(replay.outcome, step.outcome);
 
         let mut substituted_cursor = first_cursor;

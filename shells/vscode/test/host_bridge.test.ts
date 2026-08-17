@@ -430,6 +430,7 @@ function runtimeApprovalStep(): {
   run_id: string;
   request_sha256: string;
   events: Record<string, unknown>[];
+  artifacts: Record<string, unknown>[];
   approval: Record<string, unknown>;
   outcome: null;
 } {
@@ -453,6 +454,7 @@ function runtimeApprovalStep(): {
         expires_at_epoch_ms: expiresAt,
       }),
     ],
+    artifacts: [],
     approval: {
       schema_version: 2,
       run_id: "run-0001",
