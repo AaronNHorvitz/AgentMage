@@ -3,18 +3,26 @@
 use std::fmt::Write;
 use std::path::Path;
 
-use agentmage_capability_repository_map::RepositoryMap;
+use agentmage_capability_repository_map::{RepositoryMap, StructuredFileChangePlan};
 use agentmage_kernel_contracts::{
     AuthorizedWorkspaceHandle, GrantTarget, HeldWorkspaceObject, PathResolutionIntent,
     WorkspaceAuthorizationId, WorkspaceObjectKind, WorkspacePath,
 };
-use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
+use agentmage_kernel_engine::{
+    filesystem_control::FilesystemOperationDraft, platform_startup::VerifiedPlatformAdapter,
+};
 use agentmage_platform_linux::{
-    LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPlatformAdapter, linux_repository_path_sha256,
+    LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPlatformAdapter,
+    MAX_DIRECTORY_OBSERVATION_BYTES, MAX_DIRECTORY_OBSERVATION_NAMES, linux_repository_path_sha256,
     resolve_linux_workspace_object, select_linux_workspace,
 };
 
 use crate::{
+    coding_changes::{
+        CodingWriteScope, bind_structured_patch_proposal,
+        controlled_create_parent_observation_sha256, prepare_controlled_file_creation,
+    },
+    coding_dispatch::PreparedNativeCodingCall,
     coding_operation::{
         NativeCodingOperationPlanner, NativeCodingTargetPlan, PreparedNativeCodingOperation,
     },
@@ -77,9 +85,18 @@ pub enum LinuxCodingTargetBinding {
         target: GrantTarget,
         /// Exact direct-child destination that must remain absent.
         destination: WorkspacePath,
-        /// Model-observed parent projection digest awaiting trusted reconciliation.
-        expected_parent_sha256: String,
+        /// Trusted sorted bounded sibling-name observation.
+        observed_sibling_names: Vec<String>,
     },
+}
+
+/// Trusted authority-free write material composed from one model proposal.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LinuxCodingWriteDraft {
+    /// Existing structured-edit plan bound to exact descriptor-read preimage bytes.
+    StructuredPatch(StructuredFileChangePlan),
+    /// Existing controlled-filesystem creation draft bound to a held parent observation.
+    ControlledCreate(FilesystemOperationDraft),
 }
 
 impl std::fmt::Debug for LinuxCodingTargetBinding {
@@ -127,6 +144,7 @@ impl LinuxCodingTargetBinding {
 pub struct PreparedLinuxCodingOperation<'workspace> {
     operation: PreparedNativeCodingOperation,
     binding: LinuxCodingTargetBinding,
+    write_draft: Option<LinuxCodingWriteDraft>,
     workspace: &'workspace LinuxAuthorizedWorkspace,
 }
 
@@ -143,10 +161,27 @@ impl<'workspace> PreparedLinuxCodingOperation<'workspace> {
         &self.binding
     }
 
+    /// Returns trusted write material when this operation proposes a filesystem change.
+    #[must_use]
+    pub const fn write_draft(&self) -> Option<&LinuxCodingWriteDraft> {
+        self.write_draft.as_ref()
+    }
+
     /// Returns the continuously held worktree root that owns every relative binding.
     #[must_use]
     pub const fn workspace(&self) -> &LinuxAuthorizedWorkspace {
         self.workspace
+    }
+
+    /// Revalidates every held target and exact directory observation before authority use.
+    pub fn revalidate(&self) -> Result<(), LinuxCodingBindingError> {
+        self.workspace
+            .revalidate()
+            .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
+        revalidate_binding(self.workspace, &self.binding)?;
+        self.workspace
+            .revalidate()
+            .map_err(|_| LinuxCodingBindingError::TargetDenied)
     }
 }
 
@@ -224,14 +259,20 @@ impl<'session, 'platform> LinuxCodingWorkspace<'session, 'platform> {
         let binding = bind_target(&self.workspace, operation.target(), |path, intent| {
             resolve_linux_workspace_object(self.platform, &self.workspace, path, intent)
         })?;
-        self.workspace
-            .revalidate()
-            .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
-        Ok(PreparedLinuxCodingOperation {
+        let write_draft = compose_write_draft(
+            self.profile.write_scope(),
+            operation.prepared(),
+            operation.target(),
+            &binding,
+        )?;
+        let prepared = PreparedLinuxCodingOperation {
             operation,
             binding,
+            write_draft,
             workspace: &self.workspace,
-        })
+        };
+        prepared.revalidate()?;
+        Ok(prepared)
     }
 }
 
@@ -317,25 +358,149 @@ fn bind_target(
             {
                 return Err(LinuxCodingBindingError::TargetDenied);
             }
-            let (held_parent, target) = if let Some(parent) = parent {
+            let (held_parent, target, observed_sibling_names) = if let Some(parent) = parent {
                 let held = resolve(parent, PathResolutionIntent::ReadDirectory)
                     .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
                 let target = GrantTarget::held_object(&held)
                     .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
-                (Some(held), target)
+                let names = held
+                    .observe_directory_names(
+                        MAX_DIRECTORY_OBSERVATION_NAMES,
+                        MAX_DIRECTORY_OBSERVATION_BYTES,
+                    )
+                    .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
+                (Some(held), target, names)
             } else {
+                let names = workspace
+                    .observe_root_names(
+                        MAX_DIRECTORY_OBSERVATION_NAMES,
+                        MAX_DIRECTORY_OBSERVATION_BYTES,
+                    )
+                    .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
                 (
                     None,
                     GrantTarget::held_workspace_root(workspace)
                         .map_err(|_| LinuxCodingBindingError::TargetDenied)?,
+                    names,
                 )
             };
+            if controlled_create_parent_observation_sha256(&target, &observed_sibling_names)
+                .as_deref()
+                != Ok(expected_parent_sha256)
+            {
+                return Err(LinuxCodingBindingError::TargetDenied);
+            }
             Ok(LinuxCodingTargetBinding::DestinationParent {
                 held_parent,
                 target,
                 destination: destination.clone(),
-                expected_parent_sha256: expected_parent_sha256.clone(),
+                observed_sibling_names,
             })
+        }
+    }
+}
+
+fn compose_write_draft(
+    scope: &CodingWriteScope,
+    prepared: &PreparedNativeCodingCall,
+    target_plan: &NativeCodingTargetPlan,
+    binding: &LinuxCodingTargetBinding,
+) -> Result<Option<LinuxCodingWriteDraft>, LinuxCodingBindingError> {
+    match (prepared, target_plan, binding) {
+        (
+            PreparedNativeCodingCall::StructuredPatch { proposal },
+            NativeCodingTargetPlan::ExistingFile {
+                path,
+                expected_preimage_sha256,
+            },
+            LinuxCodingTargetBinding::ExistingFile { held, target },
+        ) if held.workspace_path() == path
+            && target.workspace_path() == Some(path)
+            && proposal.expected_preimage_sha256 == *expected_preimage_sha256 =>
+        {
+            let preimage = held
+                .read_exact_bytes()
+                .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
+            bind_structured_patch_proposal(scope, proposal.clone(), preimage)
+                .map(LinuxCodingWriteDraft::StructuredPatch)
+                .map(Some)
+                .map_err(|_| LinuxCodingBindingError::TargetDenied)
+        }
+        (
+            PreparedNativeCodingCall::ControlledCreate { proposal },
+            NativeCodingTargetPlan::DestinationParent {
+                destination,
+                expected_parent_sha256,
+                ..
+            },
+            LinuxCodingTargetBinding::DestinationParent {
+                target,
+                destination: bound_destination,
+                observed_sibling_names,
+                ..
+            },
+        ) if destination == bound_destination
+            && proposal.expected_parent_sha256 == *expected_parent_sha256 =>
+        {
+            prepare_controlled_file_creation(
+                scope,
+                proposal.clone(),
+                target.clone(),
+                observed_sibling_names.clone(),
+            )
+            .map(LinuxCodingWriteDraft::ControlledCreate)
+            .map(Some)
+            .map_err(|_| LinuxCodingBindingError::TargetDenied)
+        }
+        (
+            PreparedNativeCodingCall::ReadOnly { .. },
+            NativeCodingTargetPlan::ReadProjection { .. },
+            LinuxCodingTargetBinding::ReadProjection { .. },
+        )
+        | (
+            PreparedNativeCodingCall::GitInspection { .. }
+            | PreparedNativeCodingCall::Command { .. }
+            | PreparedNativeCodingCall::Validation { .. },
+            NativeCodingTargetPlan::OwnedWorktreeRoot,
+            LinuxCodingTargetBinding::OwnedWorktreeRoot { .. },
+        ) => Ok(None),
+        _ => Err(LinuxCodingBindingError::TargetDenied),
+    }
+}
+
+fn revalidate_binding(
+    workspace: &LinuxAuthorizedWorkspace,
+    binding: &LinuxCodingTargetBinding,
+) -> Result<(), LinuxCodingBindingError> {
+    match binding {
+        LinuxCodingTargetBinding::ReadProjection { held, .. } => held
+            .iter()
+            .try_for_each(|object| object.revalidate())
+            .map_err(|_| LinuxCodingBindingError::TargetDenied),
+        LinuxCodingTargetBinding::OwnedWorktreeRoot { .. } => Ok(()),
+        LinuxCodingTargetBinding::ExistingFile { held, .. } => held
+            .revalidate()
+            .map_err(|_| LinuxCodingBindingError::TargetDenied),
+        LinuxCodingTargetBinding::DestinationParent {
+            held_parent,
+            observed_sibling_names,
+            ..
+        } => {
+            let current = if let Some(parent) = held_parent {
+                parent.observe_directory_names(
+                    MAX_DIRECTORY_OBSERVATION_NAMES,
+                    MAX_DIRECTORY_OBSERVATION_BYTES,
+                )
+            } else {
+                workspace.observe_root_names(
+                    MAX_DIRECTORY_OBSERVATION_NAMES,
+                    MAX_DIRECTORY_OBSERVATION_BYTES,
+                )
+            }
+            .map_err(|_| LinuxCodingBindingError::TargetDenied)?;
+            (current == *observed_sibling_names)
+                .then_some(())
+                .ok_or(LinuxCodingBindingError::TargetDenied)
         }
     }
 }
@@ -362,6 +527,9 @@ mod tests {
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicU64, Ordering};
 
+    use agentmage_capability_repository_map::{
+        StructuredArtifactClass, StructuredEdit, StructuredLanguage,
+    };
     use agentmage_kernel_contracts::{
         AdapterInstanceId, WorkspaceId, WorkspaceObjectKind, WorkspacePath,
     };
@@ -371,7 +539,12 @@ mod tests {
     use sha2::{Digest, Sha256};
 
     use super::*;
-    use crate::coding_projection::CodingProjectionObject;
+    use crate::{
+        coding_changes::{
+            ControlledFileClassification, ControlledFileCreationProposal, StructuredPatchProposal,
+        },
+        coding_projection::CodingProjectionObject,
+    };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -438,12 +611,30 @@ mod tests {
         .expect("file binding");
         assert_eq!(file.target_count(), 1);
 
+        let parent_path = path(&workspace_id, &["src"]);
+        let held_parent = resolve_test_linux_workspace_object(
+            &workspace,
+            adapter_id.clone(),
+            &parent_path,
+            PathResolutionIntent::ReadDirectory,
+        )
+        .expect("parent observation resolves");
+        let parent_target = GrantTarget::held_object(&held_parent).expect("parent target");
+        let sibling_names = held_parent
+            .observe_directory_names(
+                MAX_DIRECTORY_OBSERVATION_NAMES,
+                MAX_DIRECTORY_OBSERVATION_BYTES,
+            )
+            .expect("sibling names");
+        let expected_parent_sha256 =
+            controlled_create_parent_observation_sha256(&parent_target, &sibling_names)
+                .expect("parent observation digest");
         let parent = bind_target(
             &workspace,
             &NativeCodingTargetPlan::DestinationParent {
-                parent: Some(path(&workspace_id, &["src"])),
+                parent: Some(parent_path),
                 destination: path(&workspace_id, &["src", "new.rs"]),
-                expected_parent_sha256: "b".repeat(64),
+                expected_parent_sha256,
             },
             |path, intent| {
                 resolve_test_linux_workspace_object(&workspace, adapter_id.clone(), path, intent)
@@ -492,6 +683,158 @@ mod tests {
             }),
             Err(LinuxCodingBindingError::TargetDenied)
         ));
+    }
+
+    #[test]
+    fn story_48_2_linux_composes_exact_patch_and_controlled_create_drafts() {
+        let fixture = Fixture::new();
+        let workspace_id = WorkspaceId::from_raw("workspace-linux-coding");
+        let adapter_id = AdapterInstanceId::from_raw("adapter-linux-coding");
+        let workspace = select_test_linux_workspace(
+            &fixture.root,
+            workspace_id.clone(),
+            WorkspaceAuthorizationId::from_raw("authorization-linux-coding"),
+            adapter_id.clone(),
+        )
+        .expect("test workspace");
+        let scope = CodingWriteScope::new(workspace_id.clone(), vec![vec!["src".to_owned()]])
+            .expect("write scope");
+
+        let patch_proposal = StructuredPatchProposal {
+            schema_version: 1,
+            change_id: "change-linux-coding".to_owned(),
+            path: vec!["src".to_owned(), "lib.rs".to_owned()],
+            expected_preimage_sha256: sha256_hex(b"pub fn run() {}\n"),
+            intent_sha256: "a".repeat(64),
+            change_plan_sha256: "b".repeat(64),
+            language: StructuredLanguage::Rust,
+            artifact_class: StructuredArtifactClass::Code,
+            edits: vec![StructuredEdit::RenameIdentifier {
+                edit_id: "edit-linux-coding".to_owned(),
+                old: "run".to_owned(),
+                replacement: "execute".to_owned(),
+            }],
+            additional_review_hooks: Vec::new(),
+            generated: false,
+            allow_generated: false,
+        };
+        let patch_target = NativeCodingTargetPlan::ExistingFile {
+            path: path(&workspace_id, &["src", "lib.rs"]),
+            expected_preimage_sha256: patch_proposal.expected_preimage_sha256.clone(),
+        };
+        let patch_binding = bind_target(&workspace, &patch_target, |path, intent| {
+            resolve_test_linux_workspace_object(&workspace, adapter_id.clone(), path, intent)
+        })
+        .expect("patch target binds");
+        let patch_draft = compose_write_draft(
+            &scope,
+            &PreparedNativeCodingCall::StructuredPatch {
+                proposal: patch_proposal,
+            },
+            &patch_target,
+            &patch_binding,
+        )
+        .expect("patch composes")
+        .expect("patch write draft");
+        let LinuxCodingWriteDraft::StructuredPatch(plan) = patch_draft else {
+            panic!("wrong patch draft");
+        };
+        assert_eq!(plan.postimage(), b"pub fn execute() {}\n");
+
+        let parent_path = path(&workspace_id, &["src"]);
+        let held_parent = resolve_test_linux_workspace_object(
+            &workspace,
+            adapter_id.clone(),
+            &parent_path,
+            PathResolutionIntent::ReadDirectory,
+        )
+        .expect("parent resolves");
+        let parent_target = GrantTarget::held_object(&held_parent).expect("parent target");
+        let sibling_names = held_parent
+            .observe_directory_names(
+                MAX_DIRECTORY_OBSERVATION_NAMES,
+                MAX_DIRECTORY_OBSERVATION_BYTES,
+            )
+            .expect("sibling names");
+        let expected_parent_sha256 =
+            controlled_create_parent_observation_sha256(&parent_target, &sibling_names)
+                .expect("parent digest");
+        let create_proposal = ControlledFileCreationProposal {
+            schema_version: 1,
+            creation_id: "create-linux-coding".to_owned(),
+            path: vec!["src".to_owned(), "new.rs".to_owned()],
+            content: "pub fn added() {}\n".to_owned(),
+            mode: 0o644,
+            classification: ControlledFileClassification::SourceCode,
+            intent_sha256: "c".repeat(64),
+            change_plan_sha256: "d".repeat(64),
+            expected_parent_sha256: expected_parent_sha256.clone(),
+        };
+        let create_target = NativeCodingTargetPlan::DestinationParent {
+            parent: Some(parent_path),
+            destination: path(&workspace_id, &["src", "new.rs"]),
+            expected_parent_sha256,
+        };
+        let create_binding = bind_target(&workspace, &create_target, |path, intent| {
+            resolve_test_linux_workspace_object(&workspace, adapter_id.clone(), path, intent)
+        })
+        .expect("create target binds");
+        let create_draft = compose_write_draft(
+            &scope,
+            &PreparedNativeCodingCall::ControlledCreate {
+                proposal: create_proposal,
+            },
+            &create_target,
+            &create_binding,
+        )
+        .expect("create composes")
+        .expect("create write draft");
+        assert!(matches!(
+            create_draft,
+            LinuxCodingWriteDraft::ControlledCreate(FilesystemOperationDraft::Create { .. })
+        ));
+    }
+
+    #[test]
+    fn story_48_2_linux_create_binding_detects_stale_root_observation() {
+        let fixture = Fixture::new();
+        let workspace_id = WorkspaceId::from_raw("workspace-linux-coding");
+        let adapter_id = AdapterInstanceId::from_raw("adapter-linux-coding");
+        let workspace = select_test_linux_workspace(
+            &fixture.root,
+            workspace_id.clone(),
+            WorkspaceAuthorizationId::from_raw("authorization-linux-coding"),
+            adapter_id.clone(),
+        )
+        .expect("test workspace");
+        let root_target = GrantTarget::held_workspace_root(&workspace).expect("root target");
+        let sibling_names = workspace
+            .observe_root_names(
+                MAX_DIRECTORY_OBSERVATION_NAMES,
+                MAX_DIRECTORY_OBSERVATION_BYTES,
+            )
+            .expect("root names");
+        let expected_parent_sha256 =
+            controlled_create_parent_observation_sha256(&root_target, &sibling_names)
+                .expect("root digest");
+        let binding = bind_target(
+            &workspace,
+            &NativeCodingTargetPlan::DestinationParent {
+                parent: None,
+                destination: path(&workspace_id, &["README.md"]),
+                expected_parent_sha256,
+            },
+            |path, intent| {
+                resolve_test_linux_workspace_object(&workspace, adapter_id.clone(), path, intent)
+            },
+        )
+        .expect("root destination binds");
+
+        fs::write(fixture.root.join("LICENSE"), b"license\n").expect("root mutates");
+        assert_eq!(
+            revalidate_binding(&workspace, &binding),
+            Err(LinuxCodingBindingError::TargetDenied)
+        );
     }
 
     fn path(workspace_id: &WorkspaceId, components: &[&str]) -> WorkspacePath {

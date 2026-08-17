@@ -108,8 +108,10 @@ pub const COMPONENT_ID: &str = "platform-linux";
 pub const DEFAULT_MAX_PREIMAGE_BYTES: u64 = 64 * 1024 * 1024;
 
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
-const MAX_DIRECTORY_OBSERVATION_NAMES: usize = 4_096;
-const MAX_DIRECTORY_OBSERVATION_BYTES: usize = 1024 * 1024;
+/// Default and hard maximum number of names in one exact directory observation.
+pub const MAX_DIRECTORY_OBSERVATION_NAMES: usize = 4_096;
+/// Default and hard maximum UTF-8 bytes in one exact directory-name observation.
+pub const MAX_DIRECTORY_OBSERVATION_BYTES: usize = 1024 * 1024;
 
 const STRICT_RESOLVE_FLAGS: ResolveFlags = ResolveFlags::BENEATH
     .union(ResolveFlags::NO_SYMLINKS)
