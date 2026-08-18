@@ -81,14 +81,14 @@ class PromotedLinuxVmMatrixTests(unittest.TestCase):
     def test_inner_guest_diagnostic_is_bounded_and_path_redacted(self) -> None:
         diagnostic = bounded_failure("\n".join(["/home/agentmage/source/private"] * 20))
         self.assertNotIn("/home/agentmage", diagnostic)
-        self.assertLessEqual(len(diagnostic), 2400)
+        self.assertLessEqual(len(diagnostic), 8000)
         self.assertEqual(diagnostic.count("<GUEST_SOURCE>"), 12)
 
     def test_acquisition_diagnostic_is_bounded_and_path_redacted(self) -> None:
         output = "\n".join(["/home/agentmage/source/private"] * 20)
         diagnostic = bounded_diagnostic(output)
         self.assertNotIn("/home/agentmage", diagnostic)
-        self.assertLessEqual(len(diagnostic), 2400)
+        self.assertLessEqual(len(diagnostic), 10000)
         self.assertEqual(diagnostic.count("<GUEST_SOURCE>"), 12)
 
     def test_bootstrap_gives_npm_its_pinned_node_path(self) -> None:

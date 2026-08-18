@@ -114,8 +114,8 @@ def scp_from_guest(vm: vm_support.VmHandle, source: str, destination: Path) -> N
 def bounded_diagnostic(output: str) -> str:
     sanitized = output.replace("/home/agentmage/source", "<GUEST_SOURCE>")
     sanitized = sanitized.replace("/home/agentmage", "<GUEST_HOME>")
-    lines = [line[-240:] for line in sanitized.splitlines()[-12:]]
-    return " | ".join(lines)[:2400] or "no-output"
+    lines = [line[-8000:] for line in sanitized.splitlines()[-12:]]
+    return " | ".join(lines)[-10000:] or "no-output"
 
 
 def diagnostic_guest_script(

@@ -56,7 +56,14 @@ def bounded_failure(output: str) -> str:
     sanitized = output.replace(str(ROOT), "<GUEST_SOURCE>")
     sanitized = sanitized.replace("/home/agentmage/source", "<GUEST_SOURCE>")
     sanitized = sanitized.replace("/home/agentmage", "<GUEST_HOME>")
-    return " | ".join(line[-240:] for line in sanitized.splitlines()[-12:])[:2400] or "no-output"
+    lines = sanitized.splitlines()
+    diagnostic = [
+        line
+        for line in lines
+        if any(marker in line for marker in ("panicked at", "FAILED", "failures:", "error:", "Error:"))
+    ]
+    selected = diagnostic[-30:] + lines[-12:]
+    return " | ".join(line[-1000:] for line in selected)[-8000:] or "no-output"
 
 
 def sha256_file(path: Path) -> str:
