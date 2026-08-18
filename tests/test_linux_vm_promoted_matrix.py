@@ -99,6 +99,7 @@ class PromotedLinuxVmMatrixTests(unittest.TestCase):
                 script,
             )
             self.assertIn("/opt/node/bin/npm install --global", script)
+            self.assertIn(" unzip", script)
 
     def test_guest_checkout_is_fail_fast_and_detached(self) -> None:
         source = Path("scripts/linux_vm_promoted_matrix.py").read_text(encoding="utf-8")

@@ -143,7 +143,7 @@ def system_dependencies_script(target: docker_vm.Target) -> str:
             "bash bubblewrap ca-certificates cpio curl gcc gcc-c++ git glibc-devel gnupg2 "
             "gnupg2-gpgconf libsecret make openssl-devel python3 rpm-build systemd xz "
             "atk cups-libs dbus-libs mesa-libgbm glib2 gtk3 nspr nss "
-            "libX11-xcb libXcomposite libXdamage libXfixes libXrandr libxkbcommon"
+            "libX11-xcb libXcomposite libXdamage libXfixes libXrandr libxkbcommon unzip"
         )
         return f"sudo dnf -y -q install {packages} >/dev/null"
     else:
@@ -152,7 +152,7 @@ def system_dependencies_script(target: docker_vm.Target) -> str:
             "libssl-dev python3 rpm systemd xz-utils libasound2t64 libatk-bridge2.0-0 "
             "libatk1.0-0 libcups2 libdbus-1-3 libdrm2 libgbm1 libglib2.0-0t64 "
             "libgtk-3-0t64 libnspr4 libnss3 libx11-xcb1 libxcomposite1 libxdamage1 "
-            "libxfixes3 libxkbcommon0 libxrandr2"
+            "libxfixes3 libxkbcommon0 libxrandr2 unzip"
         )
         return (
             "sudo apt-get -qq update >/dev/null && "
