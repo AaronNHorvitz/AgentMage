@@ -413,6 +413,39 @@ impl WriteRaceBoundary {
         Self::AfterStagedRemoval,
         Self::AfterCleanupDurable,
     ];
+
+    fn code(self) -> &'static str {
+        match self {
+            Self::AfterInitialObservation => "after-initial-observation",
+            Self::AfterParentOpened => "after-parent-opened",
+            Self::BeforeStaging => "before-staging",
+            Self::AfterStaging => "after-staging",
+            Self::BeforeExchange => "before-exchange",
+            Self::AfterExchange => "after-exchange",
+            Self::AfterDisplacedVerification => "after-displaced-verification",
+            Self::AfterExchangeDurable => "after-exchange-durable",
+            Self::AfterStagedRemoval => "after-staged-removal",
+            Self::AfterCleanupDurable => "after-cleanup-durable",
+        }
+    }
+
+    fn from_code(code: &str) -> Self {
+        Self::ALL
+            .into_iter()
+            .find(|boundary| boundary.code() == code)
+            .unwrap_or_else(|| panic!("undeclared write race boundary: {code}"))
+    }
+
+    const fn leaves_postimage(self) -> bool {
+        matches!(
+            self,
+            Self::AfterExchange
+                | Self::AfterDisplacedVerification
+                | Self::AfterExchangeDurable
+                | Self::AfterStagedRemoval
+                | Self::AfterCleanupDurable
+        )
+    }
 }
 
 #[cfg(test)]
@@ -429,6 +462,21 @@ impl WritePass {
             "apply" => Self::Apply,
             "restore" => Self::Restore,
             _ => panic!("undeclared write pass: {purpose}"),
+        }
+    }
+
+    const fn code(self) -> &'static str {
+        match self {
+            Self::Apply => "apply",
+            Self::Restore => "restore",
+        }
+    }
+
+    fn from_code(code: &str) -> Self {
+        match code {
+            "apply" => Self::Apply,
+            "restore" => Self::Restore,
+            _ => panic!("undeclared write pass: {code}"),
         }
     }
 }
@@ -863,9 +911,11 @@ fn hex_digest(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
+    use std::env;
     use std::fs;
     use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
     use std::path::{Path, PathBuf};
+    use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
@@ -898,8 +948,12 @@ mod tests {
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
     const TRANSACTION_ID: &str = "linux-write-transaction-0001";
+    const WRITE_CRASH_CHILD_EXIT: i32 = 86;
 
-    struct TestDirectory(PathBuf);
+    struct TestDirectory {
+        path: PathBuf,
+        remove_on_drop: bool,
+    }
 
     impl TestDirectory {
         fn new() -> Self {
@@ -907,17 +961,29 @@ mod tests {
             let path = std::env::temp_dir()
                 .join(format!("agentmage-linux-write-{}-{id}", std::process::id()));
             fs::create_dir(&path).expect("temporary write root");
-            Self(path)
+            Self {
+                path,
+                remove_on_drop: true,
+            }
+        }
+
+        fn retained(path: PathBuf) -> Self {
+            Self {
+                path,
+                remove_on_drop: false,
+            }
         }
 
         fn path(&self) -> &Path {
-            &self.0
+            &self.path
         }
     }
 
     impl Drop for TestDirectory {
         fn drop(&mut self) {
-            fs::remove_dir_all(&self.0).expect("temporary write root removed");
+            if self.remove_on_drop {
+                fs::remove_dir_all(&self.path).expect("temporary write root removed");
+            }
         }
     }
 
@@ -956,7 +1022,14 @@ mod tests {
     }
 
     fn fixture(operation_count: usize) -> Fixture {
-        let root = TestDirectory::new();
+        fixture_in(TestDirectory::new(), operation_count)
+    }
+
+    fn fixture_at(path: PathBuf, operation_count: usize) -> Fixture {
+        fixture_in(TestDirectory::retained(path), operation_count)
+    }
+
+    fn fixture_in(root: TestDirectory, operation_count: usize) -> Fixture {
         fs::create_dir(root.path().join("src")).expect("fixture parent");
         let workspace_id = WorkspaceId::from_raw("workspace-linux-write");
         let authorization_id = WorkspaceAuthorizationId::from_raw("authorization-linux-write");
@@ -1182,6 +1255,163 @@ mod tests {
             &mut driver,
         )
         .map(|result| result.outcome)
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum VerificationCrashPosition {
+        Before,
+        After,
+    }
+
+    impl VerificationCrashPosition {
+        const ALL: [Self; 2] = [Self::Before, Self::After];
+
+        const fn code(self) -> &'static str {
+            match self {
+                Self::Before => "before",
+                Self::After => "after",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            match code {
+                "before" => Self::Before,
+                "after" => Self::After,
+                _ => panic!("undeclared verification crash position: {code}"),
+            }
+        }
+    }
+
+    struct VerificationCrashDriver<'workspace> {
+        inner: LinuxAtomicWriteDriver<'workspace>,
+        position: Option<VerificationCrashPosition>,
+        observations: usize,
+    }
+
+    impl AtomicWriteDriver for VerificationCrashDriver<'_> {
+        fn observe(
+            &mut self,
+            change_set: &ShadowChangeSet,
+        ) -> Result<
+            Vec<agentmage_kernel_engine::write_approval::CurrentWriteTarget>,
+            agentmage_kernel_engine::write_transaction::WriteDriverError,
+        > {
+            self.observations += 1;
+            if self.observations == 2 && self.position == Some(VerificationCrashPosition::Before) {
+                std::process::exit(WRITE_CRASH_CHILD_EXIT);
+            }
+            let result = self.inner.observe(change_set);
+            if self.observations == 2 && self.position == Some(VerificationCrashPosition::After) {
+                std::process::exit(WRITE_CRASH_CHILD_EXIT);
+            }
+            result
+        }
+
+        fn apply(
+            &mut self,
+            authorization: agentmage_kernel_engine::write_transaction::WriteApplyAuthorization<'_>,
+        ) -> agentmage_kernel_engine::write_transaction::WriteApplyReport {
+            self.inner.apply(authorization)
+        }
+
+        fn restore(
+            &mut self,
+            authorization: agentmage_kernel_engine::write_transaction::WriteRestoreAuthorization<
+                '_,
+            >,
+        ) -> agentmage_kernel_engine::write_transaction::WriteRestoreReport {
+            self.inner.restore(authorization)
+        }
+    }
+
+    fn run_write_crash_child() {
+        let root =
+            PathBuf::from(env::var_os("AGENTMAGE_WRITE_CRASH_ROOT").expect("write crash root"));
+        let pass = WritePass::from_code(
+            &env::var("AGENTMAGE_WRITE_CRASH_PASS").expect("write crash pass"),
+        );
+        let verification = env::var("AGENTMAGE_WRITE_CRASH_VERIFICATION")
+            .ok()
+            .map(|value| VerificationCrashPosition::from_code(&value));
+        let operation_count = if pass == WritePass::Restore { 2 } else { 1 };
+        let mut fixture = fixture_at(root, operation_count);
+        if pass == WritePass::Restore {
+            let collision_name = temporary_name(
+                TRANSACTION_ID,
+                1,
+                "apply",
+                fixture.change_set.operations()[1].proposed_bytes(),
+            );
+            fs::write(
+                fixture._root.path().join("src").join(collision_name),
+                b"restore crash collision owner\n",
+            )
+            .expect("restore crash collision");
+        }
+        let selected_boundary = env::var("AGENTMAGE_WRITE_CRASH_BOUNDARY")
+            .ok()
+            .map(|value| WriteRaceBoundary::from_code(&value));
+        let inner = LinuxAtomicWriteDriver::new(
+            &fixture.workspace,
+            LinuxAtomicWriteDriverLimits {
+                maximum_file_bytes: 1024 * 1024,
+                maximum_transaction_bytes: 4 * 1024 * 1024,
+                ..LinuxAtomicWriteDriverLimits::default()
+            },
+        )
+        .with_race_hook(move |event| {
+            if event.pass == pass && Some(event.boundary) == selected_boundary {
+                std::process::exit(WRITE_CRASH_CHILD_EXIT);
+            }
+        });
+        let mut driver = VerificationCrashDriver {
+            inner,
+            position: verification,
+            observations: 0,
+        };
+        let _ = execute_write_transaction(
+            &mut fixture.issuer,
+            &fixture.policy,
+            &fixture.change_set,
+            &fixture.approval,
+            WriteTransactionRequest {
+                transaction_id: TRANSACTION_ID.to_owned(),
+                now_epoch_ms: 4_000,
+            },
+            &mut driver,
+        );
+        panic!("write crash child did not stop at its declared boundary");
+    }
+
+    fn launch_write_crash_child(
+        root: &Path,
+        pass: WritePass,
+        boundary: Option<WriteRaceBoundary>,
+        verification: Option<VerificationCrashPosition>,
+    ) {
+        let mut command = Command::new(env::current_exe().expect("current test executable"));
+        command
+            .args([
+                "--exact",
+                "write_transaction::tests::s_029_rt01_write_crash_boundary_child",
+                "--nocapture",
+            ])
+            .env("AGENTMAGE_WRITE_CRASH_CHILD", "1")
+            .env("AGENTMAGE_WRITE_CRASH_ROOT", root)
+            .env("AGENTMAGE_WRITE_CRASH_PASS", pass.code());
+        if let Some(boundary) = boundary {
+            command.env("AGENTMAGE_WRITE_CRASH_BOUNDARY", boundary.code());
+        }
+        if let Some(verification) = verification {
+            command.env("AGENTMAGE_WRITE_CRASH_VERIFICATION", verification.code());
+        }
+        let output = command.output().expect("write crash child launches");
+        assert_eq!(
+            output.status.code(),
+            Some(WRITE_CRASH_CHILD_EXIT),
+            "{pass:?} {boundary:?} {verification:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 
     #[test]
@@ -1471,6 +1701,47 @@ mod tests {
                             .starts_with(".agentmage-write-")),
                     "{boundary:?}"
                 );
+            }
+        }
+    }
+
+    #[test]
+    fn s_029_rt01_write_crash_boundary_child() {
+        if env::var_os("AGENTMAGE_WRITE_CRASH_CHILD").is_some() {
+            run_write_crash_child();
+        }
+    }
+
+    #[test]
+    fn s_029_rt01_process_stops_leave_only_reviewed_target_bytes() {
+        let preimage: &[u8] = b"{\"value\":0}\n";
+        let postimage: &[u8] = b"{\"value\":10}\n";
+        for pass in [WritePass::Apply, WritePass::Restore] {
+            for boundary in WriteRaceBoundary::ALL {
+                let root = TestDirectory::new();
+                launch_write_crash_child(root.path(), pass, Some(boundary), None);
+                let observed = fs::read(root.path().join("src/fixture-0.json"))
+                    .expect("crash target remains readable");
+                let expected = match (pass, boundary.leaves_postimage()) {
+                    (WritePass::Apply, true) | (WritePass::Restore, false) => postimage,
+                    (WritePass::Apply, false) | (WritePass::Restore, true) => preimage,
+                };
+                assert_eq!(observed, expected, "{pass:?} {boundary:?}");
+            }
+        }
+
+        for pass in [WritePass::Apply, WritePass::Restore] {
+            for position in VerificationCrashPosition::ALL {
+                let root = TestDirectory::new();
+                launch_write_crash_child(root.path(), pass, None, Some(position));
+                let observed = fs::read(root.path().join("src/fixture-0.json"))
+                    .expect("verification crash target remains readable");
+                let expected = if pass == WritePass::Apply {
+                    postimage
+                } else {
+                    preimage
+                };
+                assert_eq!(observed, expected, "{pass:?} verification {position:?}");
             }
         }
     }
