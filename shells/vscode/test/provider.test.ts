@@ -635,7 +635,7 @@ void test("doctor rejects prohibited-source fields without canary disclosure", a
       return {
         ...response,
         report: { ...response.report, [field]: canary },
-      } as HostResponse;
+      };
     };
     const response = await controller.respond("doctor", signal);
     assert.match(response.text, /vscode\.host\.response_invalid/);
