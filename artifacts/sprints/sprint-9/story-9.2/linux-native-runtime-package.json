@@ -474,27 +474,27 @@
     "name": "llama-b10333-bin-ubuntu-vulkan-x64.tar.gz",
     "sha256": "f14e312fbee33ce60d2eed7036de5debe31c1d7f4d8f0e37920eb0a2de0854a5"
   },
-  "source_revision": "b1bc089aa9418e99cfb542da651e048358f8e68a",
+  "source_revision": "f74feb4443e0be16156324a7a050f92cae7db6dd",
   "sources": [
     {
-      "bytes": 13090,
+      "bytes": 26805,
       "path": "Cargo.lock",
-      "sha256": "4ac2d06c0c8a8ce64301e7d0765a4a3283a2a07e6016f897585d204983896665"
+      "sha256": "62921f4c19f5c73ad4a348954ff211d46c58fe1debf254ef0c74f3d24595b79f"
     },
     {
-      "bytes": 1452,
+      "bytes": 2209,
       "path": "Cargo.toml",
-      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
+      "sha256": "3f7cc376e76edb6ad4a3fd5f99489a0231843496d9edd664da8621064dc02786"
     },
     {
-      "bytes": 37719,
+      "bytes": 42971,
       "path": "RUNTIME-BOUNDARIES.md",
-      "sha256": "5cfc656282d85dbda58d16d2b170d6e0c1ce297af27f0d0aa588a63ec45fd6be"
+      "sha256": "606c0bfcbb3c926c718df62e886310c362369c71e85d2def2363e4a0452e8c27"
     },
     {
-      "bytes": 5966,
+      "bytes": 6178,
       "path": "architecture/build-contract.json",
-      "sha256": "2ef37fb693f63e511c213c443d8745c9607c7a31ee444d6d38f6d6ffdffcb232"
+      "sha256": "3e3737dfbbe8df366f29f7cec2a1a6f08087d67f747a63b86be7e78646fc63b7"
     },
     {
       "bytes": 2195,
@@ -542,24 +542,24 @@
       "sha256": "21346c06fb86b418706326b186609f8e1f690d6b57b53e73d02b4ad8e28e53ea"
     },
     {
-      "bytes": 21893,
+      "bytes": 24149,
       "path": "package.json",
-      "sha256": "581b848bfc87dad43f0094adca61890fbb0a601229aec3b78fb73a1142b5ca21"
+      "sha256": "7a59fece7e53413b5ac50619b6201e384cef89a02117370a2fcba7f359eb2b3a"
     },
     {
-      "bytes": 739,
+      "bytes": 820,
       "path": "platforms/linux-inference/Cargo.toml",
-      "sha256": "24fe5aa9596bf6e59582bef810bf5dad9be4106bb5d2773221cb13b5a68fec63"
+      "sha256": "a4143fefbaa1ababfb26bc7701ef7c3fe9919a1122abbc98a0ae2841858d73b9"
     },
     {
-      "bytes": 3081,
+      "bytes": 3690,
       "path": "platforms/linux-inference/README.md",
-      "sha256": "0888a85ea12c726e795be68477660ede385b292affe6a50d16c7996ce00b924f"
+      "sha256": "74274927a4cf6f0a0c6a703a5ac4ba52368151d51c31a709010e88884b375369"
     },
     {
-      "bytes": 8503,
+      "bytes": 10013,
       "path": "platforms/linux-inference/src/lib.rs",
-      "sha256": "cd9b74efbacd1083c0178cf4308b6258945c5dfa736f4c5bf0dc11c30a3ac283"
+      "sha256": "217781dfac5151ac95334134e3eb5f45c6a0d24aa7bebdeea28d1005975eb51c"
     },
     {
       "bytes": 574,
@@ -587,14 +587,14 @@
       "sha256": "af21085bb5ab1f66a00f748f83afc6c107a155d33ecc8caff8cf90f653093585"
     },
     {
-      "bytes": 4843,
+      "bytes": 6127,
       "path": "platforms/linux-inference/tests/process_boundary.rs",
-      "sha256": "891b06ea3c3fe8a6d228405d5a4bfccbeb9d7222f18d73fe43981f8ee9eeddfc"
+      "sha256": "99809033b45a2c64d3d8c541cb84c02f00e76378570ba6986c944b6b870d7c0b"
     },
     {
-      "bytes": 14277,
+      "bytes": 15424,
       "path": "scripts/build_contract.py",
-      "sha256": "3e277b3007b024fba14d00d43999ec297b4361f156700262995bf1c76384631d"
+      "sha256": "be16c5945f72690265f27a4e6d510db602ee7562db357c15e4660da3ca8c69d9"
     },
     {
       "bytes": 26065,
@@ -614,7 +614,7 @@
     {
       "bytes": 5442,
       "path": "tests/test_component_inventory.py",
-      "sha256": "fe1339315d8a1934c42577f7c284e47bd44a22514c6b30262de48ebce859f4b5"
+      "sha256": "e7302c707da9ae124972b65c9259922a73ea4a1e7bdff3ce29be283ac3a4d52f"
     },
     {
       "bytes": 6027,
