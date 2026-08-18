@@ -1,0 +1,79 @@
+{
+  "artifact_id": "story-22.2-native-runtime-artifact-pressure",
+  "external_network_used": false,
+  "limitations": [
+    "Measurements describe one current Fedora x86-64 source-test process and are not a cross-platform or installed-package performance guarantee.",
+    "The campaign uses a debug test binary and deliberately re-verifies the complete 64 MiB encrypted object for each bounded page read.",
+    "The 1,024 logical references deduplicate one small payload; unique-object and mixed-size populations remain separate capacity work.",
+    "Physical disk-full, device-latency, power-loss, controller-failure, and filesystem-corruption injection are not claimed.",
+    "Windows and macOS native artifact-store evidence and independent review remain open.",
+    "Manual fuzzing remains deferred and was not executed by this campaign."
+  ],
+  "metrics": {
+    "active_object_count_at_checkpoint": 1,
+    "checkpoint_reference_count": 1024,
+    "checkpoint_release_blocked": true,
+    "collection_elapsed_ms": 1482,
+    "deduplicated_reference_count": 1023,
+    "external_network_used": false,
+    "final_active_object_count": 0,
+    "final_disk_bytes": 4866048,
+    "final_reopen_verified": true,
+    "latency_ceiling_ms": 300000,
+    "manual_fuzzing_executed": false,
+    "maximum_disk_bytes": 67782117,
+    "maximum_elapsed_ms": 93454,
+    "maximum_payload_bytes": 67108864,
+    "overflow_reference_count_rejected": 1025,
+    "page_bytes": 4096,
+    "reference_disk_bytes": 4698999,
+    "reference_elapsed_ms": 2322,
+    "reopen_elapsed_ms": 1557,
+    "resident_delta_ceiling_kib": 524288,
+    "resident_delta_kib": 66636,
+    "resident_peak_kib": 85156,
+    "resident_start_kib": 18520,
+    "retained_disk_ceiling_bytes": 134217728,
+    "total_elapsed_ms": 121866
+  },
+  "private_user_data_used": false,
+  "raw_trace": {
+    "bytes": 1317,
+    "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "783f232dbca295fd0dfee9c33940ccbb63b80023634d6173512571c4311c8b68"
+  },
+  "schema_version": 1,
+  "source_revision": "d6b23aee6aeb6357388139b08b863433f7b4c532",
+  "sources": [
+    {
+      "bytes": 84332,
+      "path": "platforms/linux/src/runtime_artifact_store.rs",
+      "sha256": "1ad92f84b3a125d500f7695baf4b6dba14f53ce12e6c92f8da3433c8a8f6a78e"
+    },
+    {
+      "bytes": 13754,
+      "path": "scripts/story_22_2_artifact_pressure_evidence.py",
+      "sha256": "e287d3e3a92c45e0324334d81aacfcfd63ab608577bff9374ec50eea2d264b67"
+    },
+    {
+      "bytes": 3511,
+      "path": "tests/test_story_22_2_artifact_pressure_evidence.py",
+      "sha256": "d4a0362ce7774ae864506d0303b39677ed3a8e961082c9bb7d1b7d22e2db316e"
+    }
+  ],
+  "status": "pass-current-linux-native-reference-host",
+  "task_ids": [
+    "22.2.3.5",
+    "RV-16",
+    "RV-17",
+    "RV-18"
+  ],
+  "verification": {
+    "command_elapsed_ms": 121977,
+    "command_id": "f4cfaba19f87bbb0be280354ec01e12ef57e1f67232ccb6d39a75bcfe960e5e1",
+    "exit_code": 0
+  }
+}

@@ -320,6 +320,12 @@ Current automated coverage includes:
 - Separate bounded Linux command stdout/stderr and validation-log candidates,
   including independent large-stream artifact publication and native producer
   assertions.
+- Deterministic native namespace-substitution checks at the private store,
+  staging, objects, and quarantine directory names. Each fixed name is reopened
+  descriptor-relatively and must still resolve to the held inode before the
+  next effect. Executable payload modes, traversal names, symlinks, hard links,
+  and a repository `artifacts/` lookalike also fail or remain outside private
+  inventory as required.
 - Fourteen native Linux subprocess-stop cases spanning before and after
   encrypted staging, atomic placement, SQLCipher metadata commit, durable
   artifact-event commit, checkpoint commit, reference release, and collection.
@@ -327,6 +333,12 @@ Current automated coverage includes:
   orphan, mutable overwrite, duplicate artifact event, or invented checkpoint.
   The hash-bound report and redacted raw trace are retained under
   `artifacts/sprints/sprint-22/story-22.2/`.
+- One explicit native ceiling campaign publishes and pages a 64 MiB encrypted
+  object, admits exactly 1,024 sorted checkpoint references deduplicated onto
+  one immutable object, rejects reference 1,025, blocks checkpoint-rooted
+  release, collects after an empty successor checkpoint, and verifies a final
+  reopen. Its hash-bound report retains measured elapsed time, resident memory,
+  disk bytes, and stated host-local limitations.
 - Fedora journal and artifact pressure measurements retained by Story 50.2.
 
 Still open before Story 22.2 can pass:
@@ -337,8 +349,10 @@ Still open before Story 22.2 can pass:
   torn-sector/controller failure, and filesystem corruption. The current
   native matrix stops immediately before and after each declared transaction
   edge without unwinding; it does not claim those physical-fault conditions.
-- Native path-race, disk-full, device-latency, high-volume retention, and
-  complete durable-resume campaigns.
+- Physical disk-full and device-latency injection, mixed-size unique-object
+  pressure, and the complete production durable-resume campaign. The current
+  path-substitution matrix and deduplicated ceiling campaign do not substitute
+  for those remaining classes.
 - Windows native artifact-store implementation and evidence; retained macOS work
   remains outside the current GA dependency lane.
 - End-to-end production evidence for a tool that emits generated-file bytes;
