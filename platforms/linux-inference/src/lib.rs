@@ -75,9 +75,9 @@ pub use model_download::{
 pub use model_install_lifecycle::{
     ActiveModelManifest, ActiveModelRecord, ModelActivationDisposition, ModelActivationReceipt,
     ModelActivationStage, ModelArtifactScanReport, ModelInstallLifecycleError,
-    ModelInstallSelfTestReport, ModelInstallVerifier, ModelStoreRecoveryReceipt,
-    activate_verified_model, read_active_model_manifest, recover_model_store,
-    rollback_active_model,
+    ModelInstallSelfTestReport, ModelInstallVerifier, ModelRollbackStage,
+    ModelStoreRecoveryReceipt, activate_verified_model, read_active_model_manifest,
+    recover_model_store, rollback_active_model, rollback_active_model_with_interruption,
 };
 pub use model_install_verifier::NativeModelInstallVerifier;
 pub use model_installer_process::{

@@ -134,6 +134,17 @@ pub enum ModelActivationStage {
     ManifestCommitted,
 }
 
+/// Observable rollback transition for crash-recovery verification.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ModelRollbackStage {
+    /// The predecessor and its retained artifact were revalidated.
+    PredecessorVerified,
+    /// The rollback manifest was durably written but not yet renamed.
+    ManifestPrepared,
+    /// The rollback manifest rename and directory sync completed.
+    ManifestCommitted,
+}
+
 /// Terminal activation disposition.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ModelActivationDisposition {
@@ -196,6 +207,8 @@ pub enum ModelInstallLifecycleError {
     Conflict,
     /// A deterministic interruption fixture stopped at the named stage.
     Interrupted(ModelActivationStage),
+    /// A deterministic interruption fixture stopped at the named rollback stage.
+    RollbackInterrupted(ModelRollbackStage),
     /// No previous exact record was available for rollback.
     RollbackUnavailable,
     /// A bounded filesystem operation failed.
@@ -211,7 +224,9 @@ impl ModelInstallLifecycleError {
             Self::Busy => "model.install-lifecycle.busy",
             Self::StagingMismatch => "model.install-lifecycle.staging-mismatch",
             Self::Conflict => "model.install-lifecycle.conflict",
-            Self::Interrupted(_) => "model.install-lifecycle.interrupted",
+            Self::Interrupted(_) | Self::RollbackInterrupted(_) => {
+                "model.install-lifecycle.interrupted"
+            }
             Self::RollbackUnavailable => "model.install-lifecycle.rollback-unavailable",
             Self::Filesystem => "model.install-lifecycle.filesystem",
         }
@@ -310,7 +325,16 @@ pub fn activate_verified_model(
 /// Revalidates and atomically restores the one retained predecessor.
 pub fn rollback_active_model(
     store: &Path,
+    verifier: impl FnMut(&ActiveModelRecord, &Path) -> bool,
+) -> Result<ModelActivationReceipt, ModelInstallLifecycleError> {
+    rollback_active_model_with_interruption(store, verifier, |_| false)
+}
+
+/// Revalidates and rolls back with deterministic crash boundaries for verification.
+pub fn rollback_active_model_with_interruption(
+    store: &Path,
     mut verifier: impl FnMut(&ActiveModelRecord, &Path) -> bool,
+    mut interrupt: impl FnMut(ModelRollbackStage) -> bool,
 ) -> Result<ModelActivationReceipt, ModelInstallLifecycleError> {
     let store = open_store(store).map_err(map_store_error)?;
     let _lock = acquire_lock(&store)?;
@@ -324,6 +348,7 @@ pub fn rollback_active_model(
     if !valid_record_artifact(&previous, &artifact)? || !verifier(&previous, &artifact) {
         return Err(ModelInstallLifecycleError::UnsafeState);
     }
+    stop_rollback_if_requested(&mut interrupt, ModelRollbackStage::PredecessorVerified)?;
     let generation = current.generation.saturating_add(1);
     let next = ActiveModelManifest {
         schema_version: 1,
@@ -332,8 +357,10 @@ pub fn rollback_active_model(
         previous: None,
     };
     prepare_manifest(&store.held_path, &next)?;
+    stop_rollback_if_requested(&mut interrupt, ModelRollbackStage::ManifestPrepared)?;
     commit_prepared_manifest(&store.held_path, generation)?;
     store.sync().map_err(map_store_error)?;
+    stop_rollback_if_requested(&mut interrupt, ModelRollbackStage::ManifestCommitted)?;
     Ok(activation_receipt(
         ModelActivationDisposition::RolledBack,
         generation,
@@ -673,6 +700,17 @@ fn stop_if_requested(
     }
 }
 
+fn stop_rollback_if_requested(
+    interrupt: &mut impl FnMut(ModelRollbackStage) -> bool,
+    stage: ModelRollbackStage,
+) -> Result<(), ModelInstallLifecycleError> {
+    if interrupt(stage) {
+        Err(ModelInstallLifecycleError::RollbackInterrupted(stage))
+    } else {
+        Ok(())
+    }
+}
+
 fn activation_receipt(
     disposition: ModelActivationDisposition,
     generation: u64,
@@ -736,9 +774,10 @@ mod tests {
 
     use super::{
         ModelActivationDisposition, ModelActivationStage, ModelArtifactScanReport,
-        ModelInstallLifecycleError, ModelInstallSelfTestReport, ModelInstallVerifier, acquire_lock,
-        activate_verified_model, lower_hex, read_active_model_manifest, recover_model_store,
-        rollback_active_model,
+        ModelInstallLifecycleError, ModelInstallSelfTestReport, ModelInstallVerifier,
+        ModelRollbackStage, acquire_lock, activate_verified_model, lower_hex,
+        read_active_model_manifest, recover_model_store, rollback_active_model,
+        rollback_active_model_with_interruption,
     };
     use crate::model_acquisition::open_store;
 
@@ -962,6 +1001,93 @@ mod tests {
             }
             assert!(!recovery.installer_authority_present);
         }
+    }
+
+    #[test]
+    fn rollback_interruption_recovers_current_or_verified_predecessor() {
+        for stage in [
+            ModelRollbackStage::PredecessorVerified,
+            ModelRollbackStage::ManifestPrepared,
+            ModelRollbackStage::ManifestCommitted,
+        ] {
+            let directory = TestDirectory::new();
+            let first_bytes = b"GGUFrollback-crash-first";
+            let first = profile(first_bytes, "rollback-crash-first");
+            let first_name = stage_fixture(&directory.0, &first, first_bytes);
+            activate_verified_model(
+                &first,
+                &directory.0,
+                &first_name,
+                &mut Verifier {
+                    scan_passes: true,
+                    self_test_passes: true,
+                },
+                |_| false,
+            )
+            .expect("first activation");
+            let second_bytes = b"GGUFrollback-crash-second";
+            let second = profile(second_bytes, "rollback-crash-second");
+            let second_name = stage_fixture(&directory.0, &second, second_bytes);
+            activate_verified_model(
+                &second,
+                &directory.0,
+                &second_name,
+                &mut Verifier {
+                    scan_passes: true,
+                    self_test_passes: true,
+                },
+                |_| false,
+            )
+            .expect("second activation");
+
+            let result = rollback_active_model_with_interruption(
+                &directory.0,
+                |_, _| true,
+                |current| current == stage,
+            );
+            assert_eq!(
+                result.expect_err("interruption"),
+                ModelInstallLifecycleError::RollbackInterrupted(stage)
+            );
+            let recovery = recover_model_store(&directory.0).expect("recover");
+            let active = read_active_model_manifest(&directory.0)
+                .expect("read")
+                .expect("active")
+                .active
+                .profile_id;
+            if stage == ModelRollbackStage::ManifestCommitted {
+                assert_eq!(active, first.profile_id);
+            } else {
+                assert_eq!(active, second.profile_id);
+            }
+            assert!(!recovery.installer_authority_present);
+        }
+    }
+
+    #[test]
+    fn cleanup_recovery_is_idempotent_after_partial_progress() {
+        let directory = TestDirectory::new();
+        let installed = format!("{}.gguf", "a".repeat(64));
+        for name in [
+            ".staging-first.part",
+            ".staging-second.part",
+            installed.as_str(),
+        ] {
+            fs::write(directory.0.join(name), b"residue").expect("residue");
+            fs::set_permissions(directory.0.join(name), fs::Permissions::from_mode(0o600))
+                .expect("mode");
+        }
+        fs::remove_file(directory.0.join(".staging-first.part")).expect("partial cleanup");
+
+        let first = recover_model_store(&directory.0).expect("resume cleanup");
+        assert_eq!(
+            first.removed_names,
+            [".staging-second.part".to_owned(), installed]
+        );
+        let second = recover_model_store(&directory.0).expect("repeat cleanup");
+        assert!(second.removed_names.is_empty());
+        assert!(second.retained_inactive_names.is_empty());
+        assert!(!second.installer_authority_present);
     }
 
     #[test]
