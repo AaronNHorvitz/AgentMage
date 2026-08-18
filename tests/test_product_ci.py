@@ -144,7 +144,7 @@ class ProductCiTests(unittest.TestCase):
         native = self.policy["native_linux"]
         self.assertEqual(native["execution_venue"], "local-disposable-kvm")
         self.assertEqual(
-            native["disposition"], "pending-complete-local-vm-execution"
+            native["disposition"], "complete-local-vm-execution"
         )
         self.assertEqual(len(native["expected_tests"]), 19)
         self.assertEqual(

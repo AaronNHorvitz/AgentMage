@@ -57,3 +57,9 @@ recovery, removal, native-runtime, and Docker-compatibility lanes then execute
 inside that guest. Native and Docker receipts are separate and cannot satisfy
 one another. Automated accessibility does not substitute for human review,
 and KVM evidence is not physical-host or release evidence.
+
+The current retained result is
+`artifacts/sprints/sprint-9/story-9.1/linux-vm-promoted-matrix.json`. It closes
+Task `9.1.4.4` and the local Linux VM regression task. Story 9.1 remains open
+for its required independent critical-boundary review; this project cannot
+self-certify that review.

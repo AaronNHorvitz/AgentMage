@@ -1,0 +1,1513 @@
+{
+  "adapter_results_interchangeable": false,
+  "human_accessibility_review_claim": false,
+  "lane_order": [
+    "product",
+    "documentation",
+    "package",
+    "lifecycle",
+    "security",
+    "accessibility",
+    "recovery",
+    "removal",
+    "native-runtime",
+    "docker-compatibility"
+  ],
+  "model_inference_claim": false,
+  "physical_host_claim": false,
+  "private_host_data_retained": false,
+  "qemu": {
+    "launcher_class": "fedora-toolbox",
+    "sha256": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+    "version": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)"
+  },
+  "record_type": "linux-vm-promoted-matrix-evidence",
+  "release_claim": false,
+  "repository_credentials_injected": false,
+  "schema_version": 1,
+  "source_revision": "dd588124cf7603114533e2192971316526b14f8d",
+  "sources": [
+    {
+      "bytes": 1508248,
+      "path": "TASKS.md",
+      "sha256": "a9125900cd22b62c652793d0eb924e702e66a3afbe83ed590e3001de76b12651"
+    },
+    {
+      "bytes": 4451,
+      "path": "architecture/clean-build-policy.json",
+      "sha256": "9530d37da134615bf2346e263f23bcddfb48b7bcd8b1441536ca9f2838220401"
+    },
+    {
+      "bytes": 3924,
+      "path": "architecture/linux-vm-base-images.json",
+      "sha256": "093ec9f100d08a07b1de437ea2e8de143e7446b6e03ea93b0bd3bd6ddf5a945c"
+    },
+    {
+      "bytes": 5506,
+      "path": "docs/decisions/0040-local-platform-validation-and-manual-macos.md",
+      "sha256": "79c1b2158aaee51cd438e8d736416df3b37579f4f2a8370357700870bb107ae8"
+    },
+    {
+      "bytes": 2310,
+      "path": "docs/support/linux-vm-regression.md",
+      "sha256": "d4356ce68d0391b34de0cbab095ba45650973ace139c3e8f323f69c3f0836ee8"
+    },
+    {
+      "bytes": 24404,
+      "path": "package.json",
+      "sha256": "b5bb10e321071eb729657fc726574637741936857111ee16c8eb4d4db0abc094"
+    },
+    {
+      "bytes": 13192,
+      "path": "scripts/linux_vm_promoted_guest.py",
+      "sha256": "a1603dd66f7e6ee70afb6b4e16564cbc697a024b484595c7fec398bb0a6efccc"
+    },
+    {
+      "bytes": 21883,
+      "path": "scripts/linux_vm_promoted_matrix.py",
+      "sha256": "410fecafefb11cca6f08380019d840c17a484d681de29a7e8385fa67226bea3a"
+    },
+    {
+      "bytes": 6653,
+      "path": "tests/test_linux_vm_promoted_matrix.py",
+      "sha256": "42972b77e0a7e5e4f86694442acf9140e671997503188a0f4c43917a4e5e430a"
+    }
+  ],
+  "status": "pass-independent-fedora-ubuntu-matrices",
+  "target_results_interchangeable": false,
+  "targets": [
+    {
+      "cleanup": {
+        "connected": {
+          "loopback_ssh_listener_absent": true,
+          "qemu_process_absent": true
+        },
+        "credential_material_absent": true,
+        "offline": {
+          "loopback_ssh_listener_absent": true,
+          "qemu_process_absent": true
+        },
+        "overlay_absent": true,
+        "transient_source_absent": true
+      },
+      "guest_result": {
+        "command_receipts": [
+          {
+            "command_id": "product-1",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "product",
+            "observed_exit": "zero",
+            "output_bytes": 157095,
+            "output_sha256": "dfb6a7b46d6c5776ba05eff03862e6f073feb4c6bd07cc4163a5bc27dd3d5e5d"
+          },
+          {
+            "command_id": "documentation-2",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "documentation",
+            "observed_exit": "zero",
+            "output_bytes": 11481,
+            "output_sha256": "d0378681ff2fac3bbf904b01ff1056a71d89dbc87c483d3c4b9420d59532cbb9"
+          },
+          {
+            "command_id": "package-3",
+            "executable": "cargo",
+            "expected_exit": "zero",
+            "lane": "package",
+            "observed_exit": "zero",
+            "output_bytes": 4097,
+            "output_sha256": "65ebf6e1ddbbfb555b4fad95595c7dd10ac829f85d534cb486860184a7372512"
+          },
+          {
+            "command_id": "package-4",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "package",
+            "observed_exit": "zero",
+            "output_bytes": 70,
+            "output_sha256": "1ea8516eedc6f4f8c0796096bff9abd640232cfd15dc8c129b015d545a9e6d46"
+          },
+          {
+            "command_id": "package-5",
+            "executable": "python3",
+            "expected_exit": "zero",
+            "lane": "package",
+            "observed_exit": "zero",
+            "output_bytes": 268,
+            "output_sha256": "a1b126afdf95e72278e71989bb62d0e60100d74bb9fbf0ebf0c282c1673db672"
+          },
+          {
+            "command_id": "package-6",
+            "executable": "python3",
+            "expected_exit": "zero",
+            "lane": "package",
+            "observed_exit": "zero",
+            "output_bytes": 268,
+            "output_sha256": "f941e83ce748ec722020e21473aa7a7caef44576d491e2e8d12c13f344bc333b"
+          },
+          {
+            "command_id": "lifecycle-7",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "lifecycle-8",
+            "executable": "rpm",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "f7af902eefb89f3a2216d798078294bb927e71c64bad70551f80effabd375875"
+          },
+          {
+            "command_id": "lifecycle-9",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "lifecycle-10",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "lifecycle-11",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "lifecycle-12",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "lifecycle-13",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "lifecycle-14",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "lifecycle-15",
+            "executable": "sudo",
+            "expected_exit": "nonzero",
+            "lane": "lifecycle",
+            "observed_exit": "nonzero",
+            "output_bytes": 194,
+            "output_sha256": "26612b8b01b73b5dd442d9e6f9f94a90b8940b0b7a68dca38eaced91204021ad"
+          },
+          {
+            "command_id": "lifecycle-16",
+            "executable": "rpm",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "f7af902eefb89f3a2216d798078294bb927e71c64bad70551f80effabd375875"
+          },
+          {
+            "command_id": "lifecycle-17",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "lifecycle-18",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "lifecycle-19",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "lifecycle-20",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "lifecycle-21",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "lifecycle-22",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "lifecycle-23",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "lifecycle-24",
+            "executable": "rpm",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "e6635045e1d2478ec4ca712d8c0e1dfcef8bb7b5b1e8e3bb560d37fe399a9e72"
+          },
+          {
+            "command_id": "lifecycle-25",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "lifecycle-26",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "lifecycle-27",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "lifecycle-28",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "lifecycle-29",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "lifecycle-30",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "lifecycle-31",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "lifecycle-32",
+            "executable": "rpm",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "f7af902eefb89f3a2216d798078294bb927e71c64bad70551f80effabd375875"
+          },
+          {
+            "command_id": "lifecycle-33",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "lifecycle-34",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "lifecycle-35",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "lifecycle-36",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "lifecycle-37",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "lifecycle-38",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "security-39",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "security",
+            "observed_exit": "zero",
+            "output_bytes": 176,
+            "output_sha256": "da1c12215fe79c81b5e1dd7c36777210eaa28d4113ed27bf9cd6237acfe3a6bf"
+          },
+          {
+            "command_id": "security-40",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "security",
+            "observed_exit": "zero",
+            "output_bytes": 176,
+            "output_sha256": "6c96a364333973286062ddefb6bf7c0cfa6e634f242b0c2007976813f1591336"
+          },
+          {
+            "command_id": "security-41",
+            "executable": "cargo",
+            "expected_exit": "zero",
+            "lane": "security",
+            "observed_exit": "zero",
+            "output_bytes": 16106,
+            "output_sha256": "dc81ab48b79ab585ed3375ea832073524af614ca857ef31d1e100a93859d840e"
+          },
+          {
+            "command_id": "accessibility-42",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "accessibility",
+            "observed_exit": "zero",
+            "output_bytes": 4531,
+            "output_sha256": "80e4aa69941bf0b321ff7143493d62177acce358b08992ab77629d5bae6ff654"
+          },
+          {
+            "command_id": "accessibility-43",
+            "executable": "cargo",
+            "expected_exit": "zero",
+            "lane": "accessibility",
+            "observed_exit": "zero",
+            "output_bytes": 3997,
+            "output_sha256": "bce3e4b5a8bc18fb10dd79db6712e535000956030655215e48ddb9ae4f70e9fe"
+          },
+          {
+            "command_id": "recovery-44",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "recovery-45",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "recovery-46",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "recovery-47",
+            "executable": "rpm",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "e6635045e1d2478ec4ca712d8c0e1dfcef8bb7b5b1e8e3bb560d37fe399a9e72"
+          },
+          {
+            "command_id": "recovery-48",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "recovery-49",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "recovery-50",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "recovery-51",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "recovery-52",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "recovery-53",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "removal-54",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "removal",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "removal-55",
+            "executable": "rpm",
+            "expected_exit": "nonzero",
+            "lane": "removal",
+            "observed_exit": "nonzero",
+            "output_bytes": 35,
+            "output_sha256": "372fc553b3ad566f1c1b1d5f62a772d7cdb08d900943c5ce6d0b61d46e3b29ff"
+          },
+          {
+            "command_id": "removal-56",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "removal",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "native-runtime-57",
+            "executable": "python3",
+            "expected_exit": "zero",
+            "lane": "native-runtime",
+            "observed_exit": "zero",
+            "output_bytes": 348,
+            "output_sha256": "2e31f78b095729ea34ba3a59ed852b0deb6fb298ec90d4a2bd6f73988b45dc8e"
+          },
+          {
+            "command_id": "native-runtime-58",
+            "executable": "python3",
+            "expected_exit": "zero",
+            "lane": "native-runtime",
+            "observed_exit": "zero",
+            "output_bytes": 274,
+            "output_sha256": "9d85abc39662f98ee12705355fb4be67be3bf411adde28e1a79ac71b484cb1e1"
+          },
+          {
+            "command_id": "docker-compatibility-59",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "docker-compatibility",
+            "observed_exit": "zero",
+            "output_bytes": 7,
+            "output_sha256": "192810742b73c1e5e7226e070cc85be0f626f41b8d36e39da78fe434e3d58ac3"
+          },
+          {
+            "command_id": "docker-compatibility-60",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "docker-compatibility",
+            "observed_exit": "zero",
+            "output_bytes": 8262,
+            "output_sha256": "41ecb792760155704b10253491bb3ba06f38f90e3053f74c4f3f32be147ecb2a"
+          },
+          {
+            "command_id": "docker-compatibility-61",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "docker-compatibility",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "docker-compatibility-62",
+            "executable": "cargo",
+            "expected_exit": "zero",
+            "lane": "docker-compatibility",
+            "observed_exit": "zero",
+            "output_bytes": 512,
+            "output_sha256": "7d1392942519083770a68458a6fd962fffd780a9ddd541a82f3dfd7697541d06"
+          }
+        ],
+        "distribution": "fedora",
+        "human_accessibility_review_claim": false,
+        "lanes": [
+          {
+            "command_count": 1,
+            "id": "product",
+            "receipt_sha256": "8314dda080d3bffbd280a6a8a6889e80dcf991f20b50152ac2b525ce4fda2a14",
+            "status": "pass"
+          },
+          {
+            "command_count": 1,
+            "id": "documentation",
+            "receipt_sha256": "8199f5d861a7e06014dba652abc673258de555a29fac19248bb1b20e09b9d313",
+            "status": "pass"
+          },
+          {
+            "candidate_sha256": [
+              "559af509eace4826ffc975f9ec67e6243c3834720d1716e9924bab69a60ac57e",
+              "2bab5843bb475663f8d45429d08bb1286553dfe637c3a75f1bb4b37166d06d29"
+            ],
+            "command_count": 4,
+            "id": "package",
+            "package_format": "rpm",
+            "receipt_sha256": "4b9e2d4c235b5c20dab2d927731e2482b60902ec46ae9de67c441186df03910d",
+            "status": "pass"
+          },
+          {
+            "command_count": 32,
+            "corrupt_upgrade_refused": true,
+            "id": "lifecycle",
+            "prior_state_preserved": true,
+            "receipt_sha256": "875b923ebb780572bdf790e9323b7ca4210af8169bb47b9c10f7ce592d92faa6",
+            "status": "pass"
+          },
+          {
+            "command_count": 3,
+            "id": "security",
+            "receipt_sha256": "eea3ea3c5b99fc15a9a1240acc4688b38bad1fbb444a0160fc93694241e96a39",
+            "status": "pass"
+          },
+          {
+            "command_count": 2,
+            "human_review": false,
+            "id": "accessibility",
+            "receipt_sha256": "43344487ac1c68a610132aa4b5b5e3181ca322639eec5f9a0e4f64210f54eaa9",
+            "scope": "automated-contracts-only",
+            "status": "pass"
+          },
+          {
+            "clean_reinstall": true,
+            "command_count": 10,
+            "id": "recovery",
+            "receipt_sha256": "06227cf94d606de8e3ada8ce7928ab2db5f5c287eec296ad5f2dfee351661baf",
+            "status": "pass"
+          },
+          {
+            "command_count": 3,
+            "filesystem_residue_absent": true,
+            "id": "removal",
+            "package_record_absent": true,
+            "receipt_sha256": "f69b3f89412fdc2a27c1e34711bc489466206f21382e922e8ab7eb627a103a66",
+            "status": "pass"
+          },
+          {
+            "adapter": "native-llama-cpp",
+            "command_count": 2,
+            "id": "native-runtime",
+            "package_sha256": "f746577fb74de40527f5e00417f9207ca4118f4fefac9de8ac6896f520ee2bab",
+            "receipt_sha256": "3e8d429e2dc1a0c586eef595d938a7c50492eefe79340fd4cf296aa79ad279aa",
+            "status": "pass"
+          },
+          {
+            "adapter": "docker-model-runner-compatibility",
+            "command_count": 4,
+            "id": "docker-compatibility",
+            "model_inference": false,
+            "receipt_sha256": "76a2453b949a89bf503b6c3668eb2aa7170206b97d12d692f7f27f2df36f9d2b",
+            "separate_from_native": true,
+            "status": "pass"
+          }
+        ],
+        "model_inference_executed": false,
+        "native_and_docker_results_distinct": true,
+        "network_used": false,
+        "record_type": "agentmage-linux-promoted-guest-result",
+        "release_claim": false,
+        "schema_version": 1,
+        "status": "pass"
+      },
+      "observation_sha256": {
+        "processes": "79997ae88ca2303bb8eef68cba7684569884b78fea260cac92f74073ed79a4e5",
+        "sockets": "fc71c4b48e0e033e8f388ea02315d3a282dfea63b68a0babf93349d1570bc1fe"
+      },
+      "packages": [
+        {
+          "id": "ca-certificates",
+          "version": "0:2025.2.80_v9.0.304-6.fc44"
+        },
+        {
+          "id": "docker-cli",
+          "version": "0:29.6.2-1.fc44"
+        },
+        {
+          "id": "iproute",
+          "version": "0:6.17.0-2.fc44"
+        },
+        {
+          "id": "jq",
+          "version": "0:1.8.1-3.fc44"
+        },
+        {
+          "id": "moby-engine",
+          "version": "0:29.6.2-1.fc44"
+        },
+        {
+          "id": "openssh-server",
+          "version": "0:10.2p1-7.fc44"
+        },
+        {
+          "id": "procps-ng",
+          "version": "0:4.0.6-1.fc44"
+        },
+        {
+          "id": "python3",
+          "version": "0:3.14.3-2.fc44"
+        },
+        {
+          "id": "shadow-utils",
+          "version": "2:4.19.0-6.fc44"
+        },
+        {
+          "id": "sudo",
+          "version": "0:1.9.17-7.p2.fc44"
+        },
+        {
+          "id": "util-linux",
+          "version": "0:2.41.3-12.fc44"
+        }
+      ],
+      "prepared_base_sha256": "6338412bba54ac99f9e7c3c619b0ab60b4880a5eadb723a1d3d41acc10183938",
+      "source_bundle_sha256": "8e92dc110a2e1421079c40f736278f57a8345089b9520417aab7317d590daaa6",
+      "source_revision": "dd588124cf7603114533e2192971316526b14f8d",
+      "strict_offline": true,
+      "target_id": "fedora-44-x86_64"
+    },
+    {
+      "cleanup": {
+        "connected": {
+          "loopback_ssh_listener_absent": true,
+          "qemu_process_absent": true
+        },
+        "credential_material_absent": true,
+        "offline": {
+          "loopback_ssh_listener_absent": true,
+          "qemu_process_absent": true
+        },
+        "overlay_absent": true,
+        "transient_source_absent": true
+      },
+      "guest_result": {
+        "command_receipts": [
+          {
+            "command_id": "product-1",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "product",
+            "observed_exit": "zero",
+            "output_bytes": 157100,
+            "output_sha256": "769df5f17ba29c038cad4dba587dd6f08f5134ea9eba8430eb268966beb43f2e"
+          },
+          {
+            "command_id": "documentation-2",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "documentation",
+            "observed_exit": "zero",
+            "output_bytes": 11482,
+            "output_sha256": "4ca4bee14372d7f3e8bc9dd827682191b88a6da51a358ad69ccb716511174a66"
+          },
+          {
+            "command_id": "package-3",
+            "executable": "cargo",
+            "expected_exit": "zero",
+            "lane": "package",
+            "observed_exit": "zero",
+            "output_bytes": 4097,
+            "output_sha256": "af3dd0b81db7358685f06faf8690eac98bf9a3dcec39cbb54cbcd9dee6fa4c08"
+          },
+          {
+            "command_id": "package-4",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "package",
+            "observed_exit": "zero",
+            "output_bytes": 70,
+            "output_sha256": "1ea8516eedc6f4f8c0796096bff9abd640232cfd15dc8c129b015d545a9e6d46"
+          },
+          {
+            "command_id": "package-5",
+            "executable": "python3",
+            "expected_exit": "zero",
+            "lane": "package",
+            "observed_exit": "zero",
+            "output_bytes": 263,
+            "output_sha256": "16e5f45e2c24ff1ca646a27d2861895d722a3c6c21edccd7ca97eb57ce13c920"
+          },
+          {
+            "command_id": "package-6",
+            "executable": "python3",
+            "expected_exit": "zero",
+            "lane": "package",
+            "observed_exit": "zero",
+            "output_bytes": 263,
+            "output_sha256": "9ecb41a3cbf0bec36b5da50916c5ed76edadd6768c44404af4201fb60729c427"
+          },
+          {
+            "command_id": "lifecycle-7",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 242,
+            "output_sha256": "5ab083118a43a121961cf5c15a50a455c11debafcdf3edfd0bcd2851f3982f5e"
+          },
+          {
+            "command_id": "lifecycle-8",
+            "executable": "dpkg-query",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "f7af902eefb89f3a2216d798078294bb927e71c64bad70551f80effabd375875"
+          },
+          {
+            "command_id": "lifecycle-9",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "lifecycle-10",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "lifecycle-11",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "lifecycle-12",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "lifecycle-13",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "lifecycle-14",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "lifecycle-15",
+            "executable": "sudo",
+            "expected_exit": "nonzero",
+            "lane": "lifecycle",
+            "observed_exit": "nonzero",
+            "output_bytes": 591,
+            "output_sha256": "88dbe14adb84e762f9963c686f8b18f0be15b7ce2c426245168b6b162d2a5c1c"
+          },
+          {
+            "command_id": "lifecycle-16",
+            "executable": "dpkg-query",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "f7af902eefb89f3a2216d798078294bb927e71c64bad70551f80effabd375875"
+          },
+          {
+            "command_id": "lifecycle-17",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "lifecycle-18",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "lifecycle-19",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "lifecycle-20",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "lifecycle-21",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "lifecycle-22",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "lifecycle-23",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 204,
+            "output_sha256": "f203d5e96905092652700febbeeca33a7c7b5f4a2f03c0b36eaf227412e0701a"
+          },
+          {
+            "command_id": "lifecycle-24",
+            "executable": "dpkg-query",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "e6635045e1d2478ec4ca712d8c0e1dfcef8bb7b5b1e8e3bb560d37fe399a9e72"
+          },
+          {
+            "command_id": "lifecycle-25",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "lifecycle-26",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "lifecycle-27",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "lifecycle-28",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "lifecycle-29",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "lifecycle-30",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "lifecycle-31",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 260,
+            "output_sha256": "8bca0fbb5572abbb119f9d74f5d7b14becfe931456d52f0b4eda9dc89460d1e1"
+          },
+          {
+            "command_id": "lifecycle-32",
+            "executable": "dpkg-query",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "f7af902eefb89f3a2216d798078294bb927e71c64bad70551f80effabd375875"
+          },
+          {
+            "command_id": "lifecycle-33",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "lifecycle-34",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "lifecycle-35",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "lifecycle-36",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "lifecycle-37",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "lifecycle-38",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "lifecycle",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "security-39",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "security",
+            "observed_exit": "zero",
+            "output_bytes": 176,
+            "output_sha256": "da1c12215fe79c81b5e1dd7c36777210eaa28d4113ed27bf9cd6237acfe3a6bf"
+          },
+          {
+            "command_id": "security-40",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "security",
+            "observed_exit": "zero",
+            "output_bytes": 176,
+            "output_sha256": "6c96a364333973286062ddefb6bf7c0cfa6e634f242b0c2007976813f1591336"
+          },
+          {
+            "command_id": "security-41",
+            "executable": "cargo",
+            "expected_exit": "zero",
+            "lane": "security",
+            "observed_exit": "zero",
+            "output_bytes": 16106,
+            "output_sha256": "efcd1b41b9bda4f68588661cc5905ebac64ec6e99281920d7269e4e602169f4a"
+          },
+          {
+            "command_id": "accessibility-42",
+            "executable": "npm",
+            "expected_exit": "zero",
+            "lane": "accessibility",
+            "observed_exit": "zero",
+            "output_bytes": 4537,
+            "output_sha256": "a06aed9542ae8b828d27220dc3d0ba21457f19034bd9bd3c199ec8392384067f"
+          },
+          {
+            "command_id": "accessibility-43",
+            "executable": "cargo",
+            "expected_exit": "zero",
+            "lane": "accessibility",
+            "observed_exit": "zero",
+            "output_bytes": 3997,
+            "output_sha256": "a929d568530cc209d05821a9b2e110c9b4d33a738702e989848c5a6c63724ef4"
+          },
+          {
+            "command_id": "recovery-44",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 103,
+            "output_sha256": "0f961975d21912d0a6b0a642f5b23c36fb65a20de0da01cac0ed30c3dd2260c1"
+          },
+          {
+            "command_id": "recovery-45",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "recovery-46",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 242,
+            "output_sha256": "24ba8599afc2e918530f53e062bceccc256f055c0d5a75de7490e39d81da52c1"
+          },
+          {
+            "command_id": "recovery-47",
+            "executable": "dpkg-query",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "e6635045e1d2478ec4ca712d8c0e1dfcef8bb7b5b1e8e3bb560d37fe399a9e72"
+          },
+          {
+            "command_id": "recovery-48",
+            "executable": "agentmage-host",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "command_id": "recovery-49",
+            "executable": "agentmage-native-inference",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8"
+          },
+          {
+            "command_id": "recovery-50",
+            "executable": "agentmage-model-installer",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 306,
+            "output_sha256": "e80be008733334308a50135a1f1eec11d7d5d62497decf725f144d425bdfafb4"
+          },
+          {
+            "command_id": "recovery-51",
+            "executable": "agentmage-docker-guard",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed"
+          },
+          {
+            "command_id": "recovery-52",
+            "executable": "agentmage-docker-topology-collector",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3"
+          },
+          {
+            "command_id": "recovery-53",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "recovery",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "removal-54",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "removal",
+            "observed_exit": "zero",
+            "output_bytes": 103,
+            "output_sha256": "ab1c7c5523e6e2b079286d8083261130083a56958abcf00d435a67311c86a0ef"
+          },
+          {
+            "command_id": "removal-55",
+            "executable": "dpkg",
+            "expected_exit": "nonzero",
+            "lane": "removal",
+            "observed_exit": "nonzero",
+            "output_bytes": 143,
+            "output_sha256": "9686aecfc80e88cdec4a695e37f514daf61dc9bac41827620d7c6f86118ecc04"
+          },
+          {
+            "command_id": "removal-56",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "removal",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "native-runtime-57",
+            "executable": "python3",
+            "expected_exit": "zero",
+            "lane": "native-runtime",
+            "observed_exit": "zero",
+            "output_bytes": 348,
+            "output_sha256": "6128ff95ba3dae8ed84ce7daecf0332768462dc4f1e9775ad37f5c2330fe3993"
+          },
+          {
+            "command_id": "native-runtime-58",
+            "executable": "python3",
+            "expected_exit": "zero",
+            "lane": "native-runtime",
+            "observed_exit": "zero",
+            "output_bytes": 274,
+            "output_sha256": "8bf5684b2ba50e01ee14bb3837977b1533b7c1b32c9f0e6843f4cdce81e5b2ca"
+          },
+          {
+            "command_id": "docker-compatibility-59",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "docker-compatibility",
+            "observed_exit": "zero",
+            "output_bytes": 7,
+            "output_sha256": "d381e4233ed0e6833f1b701c03eed328c734b2a743ff00bed3b9f9645ff3853e"
+          },
+          {
+            "command_id": "docker-compatibility-60",
+            "executable": "sudo",
+            "expected_exit": "zero",
+            "lane": "docker-compatibility",
+            "observed_exit": "zero",
+            "output_bytes": 8090,
+            "output_sha256": "9450149bb30cd942ba265d884533ce0cef3b10806e41fb887ac440a6c65a6e27"
+          },
+          {
+            "command_id": "docker-compatibility-61",
+            "executable": "bash",
+            "expected_exit": "zero",
+            "lane": "docker-compatibility",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "command_id": "docker-compatibility-62",
+            "executable": "cargo",
+            "expected_exit": "zero",
+            "lane": "docker-compatibility",
+            "observed_exit": "zero",
+            "output_bytes": 512,
+            "output_sha256": "29f64cf61a25f235136b884cde85af12086e416ec7e2573b68d51117811b81f3"
+          }
+        ],
+        "distribution": "ubuntu",
+        "human_accessibility_review_claim": false,
+        "lanes": [
+          {
+            "command_count": 1,
+            "id": "product",
+            "receipt_sha256": "4e82ecd696e898775ed03c388ab3a927057eea8db1615d49971480895e35f613",
+            "status": "pass"
+          },
+          {
+            "command_count": 1,
+            "id": "documentation",
+            "receipt_sha256": "4e4fdfda888df5c792242349555e11ee97c87f34f938dc72dae14aac702a825b",
+            "status": "pass"
+          },
+          {
+            "candidate_sha256": [
+              "9e9140fd6a115a5573f7c5a5ae332e93a55e9765a2cd7107b83c772020cbbdf1",
+              "6a8142ef6fe18cbf2c96afc975fb32ce3c2237bdf04e295138afb92efae35a83"
+            ],
+            "command_count": 4,
+            "id": "package",
+            "package_format": "deb",
+            "receipt_sha256": "a058d08fed76984c727addcee62f32045ef6b40d34444f9bae92064d8ce7b469",
+            "status": "pass"
+          },
+          {
+            "command_count": 32,
+            "corrupt_upgrade_refused": true,
+            "id": "lifecycle",
+            "prior_state_preserved": true,
+            "receipt_sha256": "5931dd7aa58419be5736cdfd74cb2c896341a868c1e66ac10b8ec1b7ff0fa868",
+            "status": "pass"
+          },
+          {
+            "command_count": 3,
+            "id": "security",
+            "receipt_sha256": "4017fc4f6eea576e64c214d3bd2b45554baad0442d07daa05d5eb7f3d3ae3711",
+            "status": "pass"
+          },
+          {
+            "command_count": 2,
+            "human_review": false,
+            "id": "accessibility",
+            "receipt_sha256": "eb7129a9ee57af34cecd08d394b17786fb8df918c25692b2c4d48a69d1903a47",
+            "scope": "automated-contracts-only",
+            "status": "pass"
+          },
+          {
+            "clean_reinstall": true,
+            "command_count": 10,
+            "id": "recovery",
+            "receipt_sha256": "7951fe44dd16b68d8fe5015ebf0dd0b84f7ebdf6bfd7f8af6ce8751935edf6c2",
+            "status": "pass"
+          },
+          {
+            "command_count": 3,
+            "filesystem_residue_absent": true,
+            "id": "removal",
+            "package_record_absent": true,
+            "receipt_sha256": "db7d80be9e6faca78eeb43e1a1e2072f54f99fb6edf808d0fe6da644eec379ce",
+            "status": "pass"
+          },
+          {
+            "adapter": "native-llama-cpp",
+            "command_count": 2,
+            "id": "native-runtime",
+            "package_sha256": "ca5885e1b1de650ca1e81f41937e2c6c004036d0a81725cf1e7e941216f41a2a",
+            "receipt_sha256": "1fd179e3c39e6daa80d02ae67cc0bef54d1235e187510bac61ea451ec0f7a606",
+            "status": "pass"
+          },
+          {
+            "adapter": "docker-model-runner-compatibility",
+            "command_count": 4,
+            "id": "docker-compatibility",
+            "model_inference": false,
+            "receipt_sha256": "ac00653a4a89d52ce5a982f07c8d8b4409c0b854360a7ab2ba26ba2e08588bd3",
+            "separate_from_native": true,
+            "status": "pass"
+          }
+        ],
+        "model_inference_executed": false,
+        "native_and_docker_results_distinct": true,
+        "network_used": false,
+        "record_type": "agentmage-linux-promoted-guest-result",
+        "release_claim": false,
+        "schema_version": 1,
+        "status": "pass"
+      },
+      "observation_sha256": {
+        "processes": "58e9b521a8849a93ca95f7bd3f765cf2473015982548e4c5cfe2aa47975c927a",
+        "sockets": "4c5de72e90752a43d3d5fa0fbcd92a54372d4cbd999bfabb88cc210ded92b60d"
+      },
+      "packages": [
+        {
+          "id": "ca-certificates",
+          "version": "20260601~26.04.1"
+        },
+        {
+          "id": "docker.io",
+          "version": "29.1.3-0ubuntu4.1"
+        },
+        {
+          "id": "iproute2",
+          "version": "6.19.0-1ubuntu1.1"
+        },
+        {
+          "id": "jq",
+          "version": "1.8.1-4ubuntu2"
+        },
+        {
+          "id": "openssh-server",
+          "version": "1:10.2p1-2ubuntu3.5"
+        },
+        {
+          "id": "procps",
+          "version": "2:4.0.4-9ubuntu1"
+        },
+        {
+          "id": "python3",
+          "version": "3.14.3-0ubuntu2"
+        },
+        {
+          "id": "sudo",
+          "version": "1.9.17p2-1ubuntu3"
+        },
+        {
+          "id": "util-linux",
+          "version": "2.41.3-3ubuntu2"
+        }
+      ],
+      "prepared_base_sha256": "e9924f3d542065e8184ff5c6be0853167ea5e4d63984d9f71b5ee4d667104154",
+      "source_bundle_sha256": "8e92dc110a2e1421079c40f736278f57a8345089b9520417aab7317d590daaa6",
+      "source_revision": "dd588124cf7603114533e2192971316526b14f8d",
+      "strict_offline": true,
+      "target_id": "ubuntu-26.04-x86_64"
+    }
+  ],
+  "task_id": "9.1.4.4"
+}

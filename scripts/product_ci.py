@@ -172,7 +172,7 @@ def validate_contract(
         failures.append("product CI native Linux venue drifted")
     if native.get("targets") != ["fedora-x86_64", "ubuntu-x86_64"]:
         failures.append("product CI native Linux target closure drifted")
-    if native.get("disposition") != "pending-complete-local-vm-execution":
+    if native.get("disposition") != "complete-local-vm-execution":
         failures.append("product CI native disposition drifted")
     if native.get("inventory_command") != [
         "cargo",

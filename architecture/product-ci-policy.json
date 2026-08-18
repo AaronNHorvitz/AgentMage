@@ -65,7 +65,7 @@
   "native_linux": {
     "execution_venue": "local-disposable-kvm",
     "targets": ["fedora-x86_64", "ubuntu-x86_64"],
-    "disposition": "pending-complete-local-vm-execution",
+    "disposition": "complete-local-vm-execution",
     "inventory_command": [
       "cargo",
       "test",
