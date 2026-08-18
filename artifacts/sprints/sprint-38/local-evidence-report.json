@@ -37,7 +37,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "knowledge-tests",
-      "output_sha256": "c9dbd98bdd1d7e73637b1477b1e2c2584bd72b05813716e322426e3e8c412205"
+      "output_sha256": "a9e1143aa67e148ad0f064e6096e93fa4755928d0c99812b0860038c2548e799"
     },
     {
       "argv": [
@@ -51,7 +51,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "host-knowledge-tests",
-      "output_sha256": "05a9ac130a87f413eb0156337e80951b392c8509ff2612180f0bcaf19ebe1b55"
+      "output_sha256": "515e736c909c55d276f3c4889943ed5fb271c1e5613e783713e0f415a5f8bd30"
     },
     {
       "argv": [
@@ -65,7 +65,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "host-library-tests",
-      "output_sha256": "d33ad72e1c4c76a217e96ab967fa0b0c79edfb98e2c98b30050c199ab26e6eb9"
+      "output_sha256": "0b040cbd62974820295038fcfba775b5afb6b172bee7b542e526d6bab85dbece"
     },
     {
       "argv": [
@@ -95,7 +95,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "8fbfc7d57f44b14ec5ea501fb5fcc7d50ce15968367e28d09e9a08fc340c74fc"
+      "output_sha256": "9513434065fad1de8cf1cde84ec7b53686bdf28ffd834a9ba7aa7f41472c7283"
     },
     {
       "argv": [
@@ -195,6 +195,7 @@
     "manual_fuzzing_complete": false,
     "namespace_compare_and_swap": true,
     "native_end_to_end_knowledge_transaction": true,
+    "native_source_index_process_stop_matrix": true,
     "network_access": false,
     "non_fedora_native_evidence": false,
     "plain_folder_obsidian_domain_parity": true,
@@ -221,7 +222,7 @@
     "SR-TST-004",
     "SR-TST-005"
   ],
-  "source_revision": "6c61a9f0010e91e6932d7a715417107595e6936e",
+  "source_revision": "04ecea01e9638ff9bfa54d955b8b5b30b8c83ef3",
   "source_sha256": {
     "architecture/dependency-rules.json": "8c172b72aed797bb76fde19f3612c6c83e3877295a58dd18e11c421dfa07d6ad",
     "capabilities/knowledge/src/knowledge_write.rs": "03b1e1db9de279355b72a6530d06f2e136fb4cf6d6b803479eb70b9c1176a37d",
@@ -229,13 +230,13 @@
     "capabilities/knowledge/src/obsidian.rs": "9c30374ba5d54debc7b160389b72dad03e1a23e942407a1e70cde4f35910a2ab",
     "capabilities/knowledge/src/obsidian_index.rs": "da3400f399af82ce641bf2f66df17dabd53a5e22eb0e3bd6c4e79651b4b55ed4",
     "capabilities/knowledge/src/plain_folder.rs": "34df6fe363a79497a26397522ec535fbb1910ba1c38abfc0fb91540f09129b84",
-    "docs/architecture/controlled-markdown-knowledge-writes.md": "00eb26432a0296c7f2c81b4028016467843e7327a39735e936958f6a4867e036",
-    "docs/verification/sprint-38-local-results.md": "bbaadf6280b8e9d3f9aac80e7a68598cf8995664b1c87eb9d514ce5f9853d6cf",
+    "docs/architecture/controlled-markdown-knowledge-writes.md": "45a66b1cc4fde610e41b177c0c4854e25622f5c2a31865b516eeb53aa0d55df7",
+    "docs/verification/sprint-38-local-results.md": "246b225be6e2e7813b4185ddf13426100b676d9c274d844360b158d295ef0b4f",
     "docs/verification/sprint-38-markdown-knowledge-corpus.json": "4dae8b2cb8630a94d09093de703d61d5eea221f4dbddcaeb2264dd2fe2cbd373",
-    "scripts/sprint_38_evidence.py": "445d17cd2cbc9d6d3fe267708fd1cfa354652ef813bb0389d8e9b663be771f0a",
+    "scripts/sprint_38_evidence.py": "62bd463f3fa5da603f3b946bf93bf54842b949e8b28308a80da64a273fa8e04c",
     "security/strict-local-source-policy.json": "be2a710589b3c8040373cf9e4aaed33314c188328a717590fd65a22b8ddca696",
-    "shells/host/src/knowledge_write.rs": "9516b1fbd040c106dd304ba22e175be5281d986ff4b51ef707e614e7298c364e",
-    "tests/test_sprint_38_evidence.py": "50c128304b4fcb9e8505b23e31968a9970003b3c36dc06b1f9440a0c7691d391"
+    "shells/host/src/knowledge_write.rs": "1f070afe543c044bd375be5913702f327a8c30ae0f09b73e32879873180e39b6",
+    "tests/test_sprint_38_evidence.py": "e5f92a674551398d867ddfae8903c23c1db4009511673cdd89d03706cd3024d5"
   },
   "summary": {
     "crash_and_race_matrix_passed": false,
@@ -257,6 +258,7 @@
     "independent_review": false,
     "manual_fuzzing": false,
     "native_end_to_end_knowledge_transaction": true,
+    "native_source_index_process_stop_matrix": true,
     "non_fedora_native_evidence": false,
     "trusted_package_launcher_test_environment": false,
     "upstream_sprint_37_gate": false
