@@ -10,6 +10,7 @@ from pathlib import Path
 
 from scripts.package_candidate import (
     MANIFEST_PATH,
+    PAYLOAD_DIRECTORIES,
     PackageCandidateError,
     build_deb,
     build_payload,
@@ -140,6 +141,9 @@ class PackageCandidateTests(unittest.TestCase):
         vsix = self.root / "agentmage.vsix"
         build_vsix(self.extension, self.license, vsix)
         payload = self.root / "payload"
+        mutable_directory = payload / "usr/libexec/agentmage"
+        mutable_directory.mkdir(parents=True)
+        mutable_directory.chmod(0o775)
         build_payload(
             self.host,
             self.inference_adapter,
@@ -195,6 +199,12 @@ class PackageCandidateTests(unittest.TestCase):
             0o755,
         )
         self.assertEqual(stat.S_IMODE((payload / MANIFEST_PATH).stat().st_mode), 0o644)
+        for relative in PAYLOAD_DIRECTORIES:
+            self.assertEqual(
+                stat.S_IMODE((payload / relative).stat().st_mode),
+                0o755,
+                relative.as_posix(),
+            )
 
     def test_release_payload_is_distinct_and_requires_a_positive_sequence(self) -> None:
         vsix = self.root / "agentmage.vsix"

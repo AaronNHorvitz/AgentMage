@@ -34,6 +34,15 @@ PAYLOAD_FILES: Final = (
     PurePosixPath("usr/share/licenses/agentmage/LICENSE"),
 )
 EXECUTABLE_PAYLOAD_FILES: Final = frozenset(PAYLOAD_FILES[:6])
+PAYLOAD_DIRECTORIES: Final = (
+    PurePosixPath("usr"),
+    PurePosixPath("usr/libexec"),
+    PurePosixPath("usr/libexec/agentmage"),
+    PurePosixPath("usr/share"),
+    PurePosixPath("usr/share/agentmage"),
+    PurePosixPath("usr/share/licenses"),
+    PurePosixPath("usr/share/licenses/agentmage"),
+)
 
 
 class PackageCandidateError(ValueError):
@@ -225,6 +234,10 @@ def build_payload_class(
         license_path,
     ):
         require_regular(path)
+    for relative in PAYLOAD_DIRECTORIES:
+        directory = root / relative
+        directory.mkdir(parents=True, exist_ok=True)
+        directory.chmod(0o755)
     destinations = {
         PAYLOAD_FILES[0]: host,
         PAYLOAD_FILES[1]: inference_adapter,
@@ -238,7 +251,6 @@ def build_payload_class(
     records = []
     for relative, source in destinations.items():
         destination = root / relative
-        destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, destination)
         mode = 0o755 if relative in EXECUTABLE_PAYLOAD_FILES else 0o644
         destination.chmod(mode)
@@ -264,7 +276,6 @@ def build_payload_class(
     if release_sequence is not None:
         manifest["release_sequence"] = release_sequence
     manifest_path = root / MANIFEST_PATH
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_bytes(canonical_json(manifest))
     manifest_path.chmod(0o644)
     return manifest
