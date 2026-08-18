@@ -99,6 +99,8 @@ IMPLEMENTED: Final = {
     "native_filesystem_driver": True,
     "native_linux_atomic_exchange_and_restore": True,
     "native_linux_descriptor_race_fixtures": True,
+    "native_linux_parent_rename_boundary_matrix": True,
+    "native_linux_process_stop_matrix": True,
     "native_atomicity_proven": False,
     "native_race_matrix_complete": False,
     "crash_durability_matrix_complete": False,
@@ -196,6 +198,8 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "native_filesystem_driver_evidence": local_pass,
             "native_linux_atomic_exchange_and_restore": local_pass,
             "native_linux_descriptor_race_fixtures": local_pass,
+            "native_linux_parent_rename_boundary_matrix": local_pass,
+            "native_linux_process_stop_matrix": local_pass,
             "native_race_matrix": False,
             "native_mount_change_matrix": False,
             "crash_durability_matrix": False,
@@ -273,6 +277,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     for field in (
         "post_preview_mutation_matrix", "native_filesystem_driver_evidence",
         "native_linux_atomic_exchange_and_restore", "native_linux_descriptor_race_fixtures",
+        "native_linux_parent_rename_boundary_matrix", "native_linux_process_stop_matrix",
     ):
         if verification.get(field) is not True:
             failures.append(f"missing local verification: {field}")

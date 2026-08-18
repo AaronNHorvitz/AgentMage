@@ -56,6 +56,12 @@ interface. The Linux implementation additionally holds descriptors, stages in th
 rechecks identity before exchange, and verifies the displaced object. Those controls have local race
 fixtures, but they are not evidence that every mount, kernel, filesystem, or crash boundary is proven.
 
+The Linux driver also reopens and compares the authorized parent before exchange and at every
+post-exchange cleanup boundary. If a parent rename is detected while the displaced preimage still
+exists, it exchanges the preimage back. If cleanup already removed that object, it reconstructs the
+exact retained preimage in the held directory only while the approved postimage identity and bytes
+still match. A competing target is never overwritten during reconciliation.
+
 ## Apply and Restoration Contract
 
 An apply report must be internally consistent and ordered. Complete success names every operation
@@ -117,7 +123,10 @@ shell, process, network, Git, or external-delivery path.
 The local in-memory and Fedora native-driver fixtures prove kernel state transitions, exact
 restoration logic, one-file atomic exchange, stale-approval refusal, grant replay refusal, and
 preservation of competing state during selected replacement, symlink, rename, and concurrent-writer
-races. They do not prove real mount replacement, every race boundary on every promised platform, or
-durability across process and machine crashes. Sprint 35 is also blocked, and independent transaction
+races. The Fedora subprocess matrix additionally stops without destructors at ten apply boundaries,
+ten restoration boundaries, and immediately before and after apply/restoration verification; every
+reopened target contains only the reviewed preimage or approved postimage. These results do not prove
+real mount replacement, every boundary on every promised platform, authority/checkpoint-store crash
+transitions, or machine/power-loss durability. Sprint 35 is also blocked, and independent transaction
 review is absent. Sprint 36 remains blocked until those dependencies and the complete native
 `S-029-ST01` and `S-029-RT01` evidence are current.

@@ -10,8 +10,10 @@
 | Post-preview mutation matrix | Pass |
 | Fedora native filesystem driver | Pass |
 | Fedora descriptor-race fixtures | Partial pass |
+| Fedora parent-rename boundary matrix | Pass (10 boundaries) |
+| Fedora subprocess-stop matrix | Pass (24 cases) |
 | Mount-change and complete cross-platform race matrix | Absent |
-| Crash/durability matrix | Absent |
+| Authority/checkpoint and machine-crash durability matrix | Absent |
 | Upstream Sprint 35 gate | Blocked |
 | Independent Sprint 36 transaction review | Absent |
 | Sprint result | Blocked |
@@ -38,6 +40,11 @@
 - Local race fixtures preserve competing state during file replacement, symlink substitution,
   directory rename, and concurrent writes before and after exchange. Consumed grant and approval
   replay never causes a second apply.
+- Parent-directory replacement at each of ten staging, exchange, displaced-preimage, and cleanup
+  boundaries preserves both the competing canonical path and the exact authorized object bytes.
+- Twenty-four real child-process stops cover ten apply boundaries, ten restoration boundaries, and
+  immediately before and after apply/restoration verification. Reopening the target always returns
+  either the reviewed preimage or exact approved postimage.
 - The complete product gate verifies the Rust workspace, VS Code shell, strict-local source,
   hostile-network denial, effect mediation, build, tests, and documentation invariants.
 
@@ -45,8 +52,8 @@
 
 Sprint 35 remains blocked, so Sprint 36's declared dependency is not satisfied. The Fedora native
 fixtures do not substitute for a real mount-change test, every race boundary on every promised
-platform, or durability across process and machine crashes. The complete `S-029-ST01` and
-`S-029-RT01` matrices and independent transaction review are absent.
+platform, authority/checkpoint-store crash transitions, or machine and power-loss durability. The
+complete `S-029-ST01` and `S-029-RT01` matrices and independent transaction review are absent.
 
 Sprint 36 therefore remains blocked. Its retained report is generated at
 `artifacts/sprints/sprint-36/local-evidence-report.json` from a committed revision.

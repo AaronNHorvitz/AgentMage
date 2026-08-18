@@ -47,6 +47,10 @@ class Sprint36EvidenceTests(unittest.TestCase):
         self.assertTrue(value["summary"]["native_filesystem_driver_proven"])
         self.assertTrue(value["verification_evidence"]["post_preview_mutation_matrix"])
         self.assertTrue(value["verification_evidence"]["native_linux_descriptor_race_fixtures"])
+        self.assertTrue(
+            value["verification_evidence"]["native_linux_parent_rename_boundary_matrix"]
+        )
+        self.assertTrue(value["verification_evidence"]["native_linux_process_stop_matrix"])
 
     def test_dependency_native_crash_review_network_and_release_overclaims_fail(self) -> None:
         mutations = (
