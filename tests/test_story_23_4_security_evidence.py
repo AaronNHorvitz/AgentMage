@@ -44,7 +44,7 @@ class Story234SecurityEvidenceTests(unittest.TestCase):
         self.assertIn("not occurred", MAPPINGS["SR-TST-011"]["remaining"])
 
     def test_commands_are_unique_bounded_and_do_not_use_network_tools(self) -> None:
-        self.assertEqual(len(COMMANDS), 7)
+        self.assertEqual(len(COMMANDS), 8)
         self.assertEqual(len({identity for identity, _, _ in COMMANDS}), len(COMMANDS))
         forbidden = {"curl", "wget", "ssh", "scp", "nc"}
         self.assertTrue(

@@ -38,6 +38,9 @@ RUNTIME_REPORT: Final = (
     "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
 )
 RUNTIME_LOG: Final = "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log"
+BOUNDARY_REVIEW: Final = (
+    "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json"
+)
 
 SOURCE_PATHS: Final = (
     SECURITY_REVIEW,
@@ -45,6 +48,7 @@ SOURCE_PATHS: Final = (
     LOCAL_RESULTS,
     RUNTIME_REPORT,
     RUNTIME_LOG,
+    BOUNDARY_REVIEW,
     "kernel/contracts/src/runtime_event.rs",
     "kernel/contracts/src/runtime_run.rs",
     "kernel/engine/src/runtime_coordinator.rs",
@@ -58,8 +62,10 @@ SOURCE_PATHS: Final = (
     "shells/host/src/runtime_read_tests.rs",
     "scripts/dependency_rules.py",
     "scripts/effect_boundary.py",
+    "scripts/runtime_coordinator_boundary_review.py",
     "scripts/story_23_4_runtime_evidence.py",
     "scripts/story_23_4_security_evidence.py",
+    "tests/test_runtime_coordinator_boundary_review.py",
     "tests/test_story_23_4_runtime_evidence.py",
     "tests/test_story_23_4_security_evidence.py",
 )
@@ -68,6 +74,11 @@ COMMANDS: Final = (
     (
         "retained-runtime-evidence",
         ("python3", "scripts/story_23_4_runtime_evidence.py"),
+        0,
+    ),
+    (
+        "coordinator-boundary-review",
+        ("python3", "scripts/runtime_coordinator_boundary_review.py"),
         0,
     ),
     (
@@ -169,7 +180,7 @@ MAPPINGS: Final = {
     ),
     "SR-ACC-006": mapping(
         PARTIAL,
-        ["shells/host/src/runtime_read_tests.rs", RUNTIME_REPORT],
+        ["shells/host/src/runtime_read_tests.rs", RUNTIME_REPORT, BOUNDARY_REVIEW],
         "Installed-process ambient-home and credential canary inspection remains open.",
     ),
     "SR-ACC-007": mapping(
@@ -194,7 +205,7 @@ MAPPINGS: Final = {
     ),
     "SR-AI-005": mapping(
         PARTIAL,
-        ["shells/host/src/cli_runtime.rs", RUNTIME_REPORT],
+        ["shells/host/src/cli_runtime.rs", RUNTIME_REPORT, BOUNDARY_REVIEW],
         "The complete labeled direct and indirect injection corpus is not claimed.",
     ),
     "SR-AI-006": mapping(
@@ -304,7 +315,12 @@ MAPPINGS: Final = {
     ),
     "SR-TST-003": mapping(
         PARTIAL,
-        [RUNTIME_REPORT, "scripts/dependency_rules.py", "scripts/effect_boundary.py"],
+        [
+            RUNTIME_REPORT,
+            BOUNDARY_REVIEW,
+            "scripts/dependency_rules.py",
+            "scripts/effect_boundary.py",
+        ],
         "Release SAST, dependency, secret, and platform-security scans remain separate.",
     ),
     "SR-TST-004": mapping(
@@ -334,7 +350,7 @@ MAPPINGS: Final = {
     ),
     "RV-05": mapping(
         PARTIAL,
-        ["shells/host/src/native_chat_runtime.rs", RUNTIME_REPORT],
+        ["shells/host/src/native_chat_runtime.rs", RUNTIME_REPORT, BOUNDARY_REVIEW],
         "Source replay and identity tests pass; installed IPC observation remains open.",
     ),
     "RV-17": mapping(
