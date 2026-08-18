@@ -9,7 +9,8 @@ use agentmage_kernel_engine::filesystem_control::{
     FilesystemOperationObservation, FilesystemPlan, FilesystemRestoreAuthorization,
     FilesystemRestoreReport, ObservedFilesystemEntry,
 };
-use rustix::fs::{AtFlags, Dir, RenameFlags, fstat, fsync, renameat_with, unlinkat};
+use rustix::fs::{AtFlags, Dir, RenameFlags, fstat, fsync, renameat_with, statat, unlinkat};
+use rustix::io::Errno;
 
 use crate::{
     LinuxAuthorizedWorkspace, LinuxPathAdapter,
@@ -292,9 +293,8 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
                 }
                 self.create_exact(transaction_id, index, operation, "copy")
             }
-            FilesystemOperationKind::Move | FilesystemOperationKind::TrashDelete => {
-                self.move_exact(operation, false)
-            }
+            FilesystemOperationKind::Move => self.move_exact(operation, false, "move"),
+            FilesystemOperationKind::TrashDelete => self.move_exact(operation, false, "trash"),
         }
     }
 
@@ -414,11 +414,18 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
         }
     }
 
-    fn move_exact(&self, operation: &FilesystemOperation, reverse: bool) -> EffectOutcome {
-        let Some(source_target) = operation.source() else {
+    fn move_exact(
+        &mut self,
+        operation: &FilesystemOperation,
+        reverse: bool,
+        purpose: &str,
+    ) -> EffectOutcome {
+        #[cfg(not(test))]
+        let _ = purpose;
+        let Some(planned_source_target) = operation.source() else {
             return EffectOutcome::NoChange;
         };
-        let Some(source_path) = source_target.workspace_path() else {
+        let Some(source_path) = planned_source_target.workspace_path() else {
             return EffectOutcome::NoChange;
         };
         let destination_path = match destination_path(operation) {
@@ -432,11 +439,29 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
         };
         let expected_bytes = operation.postimage_bytes();
         let expected_mode = operation.destination_mode().unwrap_or(u32::MAX);
-        let source_matches = if reverse {
-            self.entry_matches(from_path, expected_bytes, expected_mode)
-        } else {
-            self.source_is_exact(operation)
+        let held_source =
+            match self
+                .adapter()
+                .resolve(self.workspace, from_path, PathResolutionIntent::ReadFile)
+            {
+                Ok(value) => value,
+                Err(_) => return EffectOutcome::NoChange,
+            };
+        let source_bytes = match read_held_bytes(&held_source, self.limits.maximum_file_bytes) {
+            Ok(value) => value,
+            Err(_) => return EffectOutcome::NoChange,
         };
+        let source_mode = match fstat(&held_source.object_descriptor) {
+            Ok(value) => value.st_mode & 0o777,
+            Err(_) => return EffectOutcome::NoChange,
+        };
+        let source_target = match GrantTarget::held_object(&held_source) {
+            Ok(value) => value,
+            Err(_) => return EffectOutcome::NoChange,
+        };
+        let source_matches = source_bytes == expected_bytes
+            && source_mode == expected_mode
+            && (reverse || &source_target == planned_source_target);
         if !source_matches || self.observe_optional_file(to_path).ok() != Some(None) {
             return EffectOutcome::NoChange;
         }
@@ -447,6 +472,14 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
         {
             return EffectOutcome::NoChange;
         }
+        let Some(from_parent_target) = self.current_parent_target(from_path) else {
+            return EffectOutcome::NoChange;
+        };
+        let Some(to_parent_target) = self.current_parent_target(to_path) else {
+            return EffectOutcome::NoChange;
+        };
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterInitialObservation);
         let (from_directory, from_name) = match open_parent(self.workspace, from_path.components())
         {
             Ok(value) => value,
@@ -456,6 +489,8 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
             Ok(value) => value,
             Err(_) => return EffectOutcome::NoChange,
         };
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterParentOpened);
         let from_stat = match fstat(&from_directory) {
             Ok(value) => value,
             Err(_) => return EffectOutcome::NoChange,
@@ -465,6 +500,38 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
             Err(_) => return EffectOutcome::NoChange,
         };
         if from_stat.st_dev != to_stat.st_dev {
+            return EffectOutcome::NoChange;
+        }
+        let source_snapshot = match crate::snapshot(&held_source.object_descriptor, None) {
+            Ok(value) => value,
+            Err(_) => return EffectOutcome::NoChange,
+        };
+        if !self.held_parent_is_current(&from_parent_target, from_path, &from_directory)
+            || !self.held_parent_is_current(&to_parent_target, to_path, &to_directory)
+            || !held_file_matches(
+                &from_directory,
+                &from_name,
+                &source_snapshot,
+                expected_bytes,
+                self.limits.maximum_file_bytes,
+            )
+            || !held_entry_absent(&to_directory, &to_name)
+        {
+            return EffectOutcome::NoChange;
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::BeforeCommit);
+        if !self.held_parent_is_current(&from_parent_target, from_path, &from_directory)
+            || !self.held_parent_is_current(&to_parent_target, to_path, &to_directory)
+            || !held_file_matches(
+                &from_directory,
+                &from_name,
+                &source_snapshot,
+                expected_bytes,
+                self.limits.maximum_file_bytes,
+            )
+            || !held_entry_absent(&to_directory, &to_name)
+        {
             return EffectOutcome::NoChange;
         }
         if renameat_with(
@@ -478,15 +545,67 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
         {
             return EffectOutcome::NoChange;
         }
-        if fsync(&from_directory).is_err() || fsync(&to_directory).is_err() {
-            return EffectOutcome::Uncertain;
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterCommit);
+        if !self.held_parent_is_current(&from_parent_target, from_path, &from_directory)
+            || !self.held_parent_is_current(&to_parent_target, to_path, &to_directory)
+        {
+            return rollback_move(
+                &from_directory,
+                &from_name,
+                &to_directory,
+                &to_name,
+                &source_snapshot,
+                expected_bytes,
+                self.limits.maximum_file_bytes,
+            );
         }
-        if self.observe_optional_file(from_path).ok() == Some(None)
-            && self.entry_matches(to_path, expected_bytes, expected_mode)
+        if fsync(&from_directory).is_err() || fsync(&to_directory).is_err() {
+            return rollback_move(
+                &from_directory,
+                &from_name,
+                &to_directory,
+                &to_name,
+                &source_snapshot,
+                expected_bytes,
+                self.limits.maximum_file_bytes,
+            );
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterCommitDurable);
+        if !self.held_parent_is_current(&from_parent_target, from_path, &from_directory)
+            || !self.held_parent_is_current(&to_parent_target, to_path, &to_directory)
+            || self.observe_optional_file(from_path).ok() != Some(None)
+            || !self.entry_target_matches(to_path, &source_target, expected_bytes, expected_mode)
+        {
+            return rollback_move(
+                &from_directory,
+                &from_name,
+                &to_directory,
+                &to_name,
+                &source_snapshot,
+                expected_bytes,
+                self.limits.maximum_file_bytes,
+            );
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterVerification);
+        if self.held_parent_is_current(&from_parent_target, from_path, &from_directory)
+            && self.held_parent_is_current(&to_parent_target, to_path, &to_directory)
+            && self.observe_optional_file(from_path).ok() == Some(None)
+            && self.entry_target_matches(to_path, &source_target, expected_bytes, expected_mode)
         {
             EffectOutcome::Applied
         } else {
-            EffectOutcome::Uncertain
+            rollback_move(
+                &from_directory,
+                &from_name,
+                &to_directory,
+                &to_name,
+                &source_snapshot,
+                expected_bytes,
+                self.limits.maximum_file_bytes,
+            )
         }
     }
 
@@ -532,6 +651,57 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
     ) -> bool {
         self.destination_parent_is_exact(expected)
             && parent_is_current(self.workspace, destination.components(), held_directory)
+    }
+
+    fn held_parent_is_current(
+        &self,
+        expected: &GrantTarget,
+        path: &WorkspacePath,
+        held_directory: &rustix::fd::OwnedFd,
+    ) -> bool {
+        self.destination_parent_is_exact(expected)
+            && parent_is_current(self.workspace, path.components(), held_directory)
+    }
+
+    fn current_parent_target(&self, path: &WorkspacePath) -> Option<GrantTarget> {
+        let (_, parent_components) = path.components().split_last()?;
+        if parent_components.is_empty() {
+            return GrantTarget::held_workspace_root(self.workspace).ok();
+        }
+        let parent_path = WorkspacePath::new(
+            path.workspace_id().clone(),
+            parent_components.iter().map(|component| component.as_str()),
+        )
+        .ok()?;
+        let held = self
+            .adapter()
+            .resolve(
+                self.workspace,
+                &parent_path,
+                PathResolutionIntent::ReadDirectory,
+            )
+            .ok()?;
+        GrantTarget::held_object(&held).ok()
+    }
+
+    fn entry_target_matches(
+        &self,
+        path: &WorkspacePath,
+        target: &GrantTarget,
+        expected: &[u8],
+        mode: u32,
+    ) -> bool {
+        self.observe_optional_file(path)
+            .ok()
+            .flatten()
+            .is_some_and(|entry| {
+                entry.target.authorization_id() == target.authorization_id()
+                    && entry.target.adapter_instance_id() == target.adapter_instance_id()
+                    && entry.target.platform() == target.platform()
+                    && entry.target.object_identity() == target.object_identity()
+                    && entry.bytes == expected
+                    && entry.mode == mode
+            })
     }
 
     fn entry_matches(&self, path: &WorkspacePath, expected: &[u8], mode: u32) -> bool {
@@ -597,8 +767,9 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
                     ReplaceOutcome::Uncertain => EffectOutcome::Uncertain,
                 }
             }
-            FilesystemOperationKind::Move | FilesystemOperationKind::TrashDelete => {
-                self.move_exact(operation, true)
+            FilesystemOperationKind::Move => self.move_exact(operation, true, "restore-move"),
+            FilesystemOperationKind::TrashDelete => {
+                self.move_exact(operation, true, "restore-trash")
             }
         }
     }
@@ -725,6 +896,58 @@ fn remove_created_entry(
     EffectOutcome::NoChange
 }
 
+fn held_entry_absent(directory: &rustix::fd::OwnedFd, name: &str) -> bool {
+    statat(directory, name, AtFlags::SYMLINK_NOFOLLOW).is_err_and(|error| error == Errno::NOENT)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn rollback_move(
+    from_directory: &rustix::fd::OwnedFd,
+    from_name: &str,
+    to_directory: &rustix::fd::OwnedFd,
+    to_name: &str,
+    expected_snapshot: &crate::LinuxStatSnapshot,
+    expected_bytes: &[u8],
+    maximum_bytes: u64,
+) -> EffectOutcome {
+    if !held_entry_absent(from_directory, from_name)
+        || !held_file_matches(
+            to_directory,
+            to_name,
+            expected_snapshot,
+            expected_bytes,
+            maximum_bytes,
+        )
+    {
+        return EffectOutcome::Uncertain;
+    }
+    if renameat_with(
+        to_directory,
+        to_name,
+        from_directory,
+        from_name,
+        RenameFlags::NOREPLACE,
+    )
+    .is_err()
+        || fsync(to_directory).is_err()
+        || fsync(from_directory).is_err()
+    {
+        return EffectOutcome::Uncertain;
+    }
+    if held_file_matches(
+        from_directory,
+        from_name,
+        expected_snapshot,
+        expected_bytes,
+        maximum_bytes,
+    ) && held_entry_absent(to_directory, to_name)
+    {
+        EffectOutcome::NoChange
+    } else {
+        EffectOutcome::Uncertain
+    }
+}
+
 #[cfg(test)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FilesystemRaceBoundary {
@@ -745,6 +968,15 @@ impl FilesystemRaceBoundary {
         Self::AfterParentOpened,
         Self::BeforeStaging,
         Self::AfterStaging,
+        Self::BeforeCommit,
+        Self::AfterCommit,
+        Self::AfterCommitDurable,
+        Self::AfterVerification,
+    ];
+
+    const MOVE_ALL: [Self; 6] = [
+        Self::AfterInitialObservation,
+        Self::AfterParentOpened,
         Self::BeforeCommit,
         Self::AfterCommit,
         Self::AfterCommitDurable,
@@ -1668,6 +1900,93 @@ mod tests {
                 fs::read(fixture.root.path().join("src/patch.txt")).expect("patch restored"),
                 b"alpha\nbeta\ngamma\n"
             );
+        }
+    }
+
+    #[test]
+    fn s_030_st01_move_parent_renames_at_every_boundary_preserve_both_owners() {
+        for boundary in FilesystemRaceBoundary::MOVE_ALL {
+            for parent in ["src", "trash"] {
+                let mut fixture = fixture(true);
+                let canonical_parent = fixture.root.path().join(parent);
+                let authorized_parent = fixture.root.path().join(format!("{parent}-authorized"));
+                let fired = Rc::new(Cell::new(false));
+                let hook_fired = Rc::clone(&fired);
+                let hook_canonical = canonical_parent.clone();
+                let hook_authorized = authorized_parent.clone();
+                let mut driver = LinuxControlledFilesystemDriver::new(
+                    &fixture.workspace,
+                    LinuxFilesystemDriverLimits {
+                        maximum_file_bytes: 1024 * 1024,
+                        maximum_transaction_bytes: 4 * 1024 * 1024,
+                        ..LinuxFilesystemDriverLimits::default()
+                    },
+                )
+                .with_race_hook(move |event: FilesystemLifecycleEvent| {
+                    if event.purpose == "trash"
+                        && event.boundary == boundary
+                        && !hook_fired.replace(true)
+                    {
+                        fs::rename(&hook_canonical, &hook_authorized)
+                            .expect("rename authorized move parent");
+                        fs::create_dir(&hook_canonical).expect("create replacement move parent");
+                        fs::write(hook_canonical.join("owner.txt"), b"competing owner\n")
+                            .expect("write competing owner");
+                    }
+                });
+                let outcome = execute_filesystem_transaction(
+                    &mut fixture.issuer,
+                    &fixture.policy,
+                    &fixture.plan,
+                    &fixture.approval,
+                    FilesystemTransactionRequest {
+                        transaction_id: TRANSACTION_ID.to_owned(),
+                        now_epoch_ms: 4_000,
+                        cancelled_before_consume: false,
+                    },
+                    &mut driver,
+                )
+                .map(|result| result.outcome);
+
+                assert!(
+                    fired.get(),
+                    "hook did not fire for {parent} at {boundary:?}"
+                );
+                assert!(
+                    matches!(
+                        outcome,
+                        Ok(FilesystemTransactionOutcome::FailedNoChange)
+                            | Ok(FilesystemTransactionOutcome::Restored)
+                            | Ok(FilesystemTransactionOutcome::Uncertain)
+                    ),
+                    "unexpected {parent} outcome at {boundary:?}: {outcome:?}"
+                );
+                assert_eq!(
+                    fs::read(canonical_parent.join("owner.txt"))
+                        .expect("competing move owner preserved"),
+                    b"competing owner\n",
+                    "canonical {parent} replacement changed at {boundary:?}"
+                );
+                let authorized_source = if parent == "src" {
+                    authorized_parent.join("obsolete.txt")
+                } else {
+                    fixture.root.path().join("src/obsolete.txt")
+                };
+                assert_eq!(
+                    fs::read(&authorized_source).expect("authorized source restored"),
+                    b"obsolete\n",
+                    "authorized source changed for {parent} at {boundary:?}"
+                );
+                let authorized_destination = if parent == "trash" {
+                    authorized_parent.join("obsolete.txt")
+                } else {
+                    fixture.root.path().join("trash/obsolete.txt")
+                };
+                assert!(
+                    !authorized_destination.exists(),
+                    "authorized destination retained an effect for {parent} at {boundary:?}"
+                );
+            }
         }
     }
 }
