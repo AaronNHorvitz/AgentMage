@@ -1,0 +1,201 @@
+{
+  "artifact_id": "story-22.2-runtime-artifact-boundary-review",
+  "checks": [
+    {
+      "check_id": "closed-path-free-schemas",
+      "detail": "All four public schemas are closed and contain no path authority.",
+      "passed": true
+    },
+    {
+      "check_id": "path-free-contract",
+      "detail": "Artifact references, manifests, operator views, and resume bindings expose no native path type.",
+      "passed": true
+    },
+    {
+      "check_id": "owner-bound-bounded-reads",
+      "detail": "Reads bind exact owner, policy, state, integrity, and byte ceilings.",
+      "passed": true
+    },
+    {
+      "check_id": "transactional-reference-lifecycle",
+      "detail": "Metadata, lifecycle, checkpoint references, and active counts remain transactional.",
+      "passed": true
+    },
+    {
+      "check_id": "descriptor-safe-linux-store",
+      "detail": "Linux storage uses held descriptors, no-follow access, no-replace placement, exact modes, and identity checks.",
+      "passed": true
+    },
+    {
+      "check_id": "encrypted-integrity-boundary",
+      "detail": "Versioned encryption, domain separation, authentication, quarantine, and deletion tests remain named.",
+      "passed": true
+    },
+    {
+      "check_id": "memory-safe-network-free-closure",
+      "detail": "Production artifact closure contains no unsafe block or network client token.",
+      "passed": true
+    },
+    {
+      "check_id": "repository-evidence-separation",
+      "detail": "Repository evidence is not private runtime-artifact authority.",
+      "passed": true
+    },
+    {
+      "check_id": "crash-report-integrity",
+      "detail": "Fourteen declared native stop positions and their raw trace reconcile.",
+      "passed": true
+    },
+    {
+      "check_id": "integrity-report-closure",
+      "detail": "Nine integrity and hostile-boundary groups and their raw trace reconcile.",
+      "passed": true
+    },
+    {
+      "check_id": "pressure-report-integrity",
+      "detail": "Payload, reference, mixed-object, rejection, and cleanup ceilings reconcile.",
+      "passed": true
+    },
+    {
+      "check_id": "resume-report-integrity",
+      "detail": "Exact checkpoint, command/test, and terminal model artifacts recover without replay overclaim.",
+      "passed": true
+    },
+    {
+      "check_id": "evidence-index-truth",
+      "detail": "The source-bound index denies story, sprint, and release completion.",
+      "passed": true
+    },
+    {
+      "check_id": "limitation-truth",
+      "detail": "Physical, concurrency, platform, independent-review, and fuzzing gaps remain visible.",
+      "passed": true
+    }
+  ],
+  "external_network_used": false,
+  "independent_cryptographic_review_performed": false,
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This is an independent automated source-boundary review, not an independent human or cryptographic review.",
+    "Stops inside filesystem or SQLite syscalls, physical storage faults, and host power loss are not exercised.",
+    "Installed clients, Windows storage, additional supported-platform packages, and real-model sessions are not reviewed.",
+    "Concurrent collection and quarantined-payload operator recovery remain open.",
+    "Manual fuzzing remains deferred and was not executed.",
+    "No release approval, model enablement, platform support, or deployment authority follows from this review."
+  ],
+  "manual_fuzzing_executed": false,
+  "private_user_data_used": false,
+  "release_approved": false,
+  "report_sha256": "8b4817ae61a9b977af4a29766a5a4490460425e7a871592138f0dc1399890340",
+  "review_type": "independent-automated-boundary-review",
+  "schema_version": 1,
+  "source_revision": "cc070fff4a10f0e9049f148c916cb228726ddcd9",
+  "sources": [
+    {
+      "bytes": 1106,
+      "path": "schemas/runtime/runtime-artifact-reference.schema.json",
+      "sha256": "c58b50916ef1b1b791228d1fdcac5953b8027bbb455e3a33c19163351732d42d"
+    },
+    {
+      "bytes": 4266,
+      "path": "schemas/runtime/runtime-artifact-manifest.schema.json",
+      "sha256": "164cf90f8a4b6a422ea1f7f7ec323df1e444a813084cd15c8fe5cfb62471edb6"
+    },
+    {
+      "bytes": 3379,
+      "path": "schemas/runtime/runtime-artifact-operator-view.schema.json",
+      "sha256": "3a85e3b14f6a183060d68c76ebe252e821993164eba7916a2f61977541d8b47b"
+    },
+    {
+      "bytes": 1699,
+      "path": "schemas/runtime/runtime-resume-binding.schema.json",
+      "sha256": "b0472f287bf79c71a16706ccbc90761c9a44e3b919065d6f579c1a826b10587e"
+    },
+    {
+      "bytes": 14525,
+      "path": "kernel/contracts/src/runtime_artifact.rs",
+      "sha256": "8fdb490ec397bb2e7975876e03d196e78c2e3abad2ee3ea27983184be8b3ebb4"
+    },
+    {
+      "bytes": 165968,
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "193b8402fdcd452bc248bd39c4888dd12579906dfc579348eab978602d44287d"
+    },
+    {
+      "bytes": 5502,
+      "path": "kernel/engine/migrations/operational-store/0007-runtime-artifacts.sql",
+      "sha256": "266f7eba307f96257baae58cc31b9df9c9a8ff40492f5ac274b9d4171e3883a0"
+    },
+    {
+      "bytes": 87286,
+      "path": "platforms/linux/src/runtime_artifact_store.rs",
+      "sha256": "e6d99a3359db663956dfdd585fbf0d323d85f6b8a68b707b3c42e5985c94f1ca"
+    },
+    {
+      "bytes": 23269,
+      "path": "docs/architecture/runtime-artifact-lifecycle.md",
+      "sha256": "d908f5bf7636c17a55a3bea70c77de26f55a88597533efe56b6d35f24dc80140"
+    },
+    {
+      "bytes": 1502719,
+      "path": "TASKS.md",
+      "sha256": "3f61363b62164011f6d59ea103093c81b1aeaab9d8e8278216541889b70a3967"
+    },
+    {
+      "bytes": 17578,
+      "path": "scripts/runtime_artifact_boundary_review.py",
+      "sha256": "9d3de259310bcadda32d8e32b75f094ece35cc75153ea407976743381c931a8b"
+    },
+    {
+      "bytes": 2413,
+      "path": "tests/test_runtime_artifact_boundary_review.py",
+      "sha256": "8f5655952dbf4581ba5c1abc0241c48a6c2a0541388b50b4b0a9c61afea87e7d"
+    },
+    {
+      "bytes": 10561,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
+      "sha256": "5f04691bc6a2452b9ec0d5e4792251eff2c46c880119f6a259752281091eac13"
+    },
+    {
+      "bytes": 6336,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.log",
+      "sha256": "df875d09765252dc1947d68fccf9a9e82ee28f3c81db27f542f88f20fd21787a"
+    },
+    {
+      "bytes": 7491,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json",
+      "sha256": "12036cba05724b0589be67ea6ec214a023cbbb9fe9929436cc3c7bd8580eab96"
+    },
+    {
+      "bytes": 10965,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.log",
+      "sha256": "15da933feeaa11cab762025feb222a73824dbaa61b7aadd270ab9a4328c83682"
+    },
+    {
+      "bytes": 3301,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
+      "sha256": "8b5c17448f06dd4047bc502798cb3c3f1a08b0988b81f4ad1f2338b1446142ef"
+    },
+    {
+      "bytes": 1506,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log",
+      "sha256": "5c589612653fbbd44e32bbfdf8ab0b1e21a8cf0d5702e47f7baa928dddcb6dfb"
+    },
+    {
+      "bytes": 4273,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json",
+      "sha256": "f3004a750ed6e69b8309a0bce271b34b5a00f8a7a5813b4bfba4641dfa54a97f"
+    },
+    {
+      "bytes": 1924,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.log",
+      "sha256": "9740c28ae7d3aa6ddd4c03bda09a3a2ccf4a1e912a1a1697bd506bd0cf960e6a"
+    },
+    {
+      "bytes": 19654,
+      "path": "artifacts/sprints/sprint-22/story-22.2/evidence-index.json",
+      "sha256": "8cca77006b6fa0becdb9c43b488e7f9ede67d8cbe3ac7d5960bd3503fccd215e"
+    }
+  ],
+  "status": "pass-independent-automated-source-boundary-review"
+}
