@@ -41,6 +41,19 @@ It executes dependency acquisition and local connected-adapter observation,
 restarts the same disposable overlay under restricted networking, proves an
 external connection is denied, runs its committed contract and focused tests,
 and retains only bounded hashes, counts, package identities, and cleanup state.
-This closes Task `9.1.4.3`. The complete independent Fedora and Ubuntu promoted
-product matrices remain open under Task `9.1.4.4`. KVM evidence is not
-physical-host or release evidence.
+This closes Task `9.1.4.3`. The independent promoted matrix controller is run
+from a clean exact source revision with the pinned native-runtime input:
+
+```bash
+AGENTMAGE_LLAMA_CPP_ARCHIVE=/path/to/pinned-b10333.tar.gz \
+  npm run linux-vm-regression:matrix:build
+npm run linux-vm-regression:matrix:check
+```
+
+Each distribution gets a distinct fresh overlay. Dependency and browser
+acquisition occur before the restart into restricted networking. Product,
+documentation, package, lifecycle, security, automated accessibility,
+recovery, removal, native-runtime, and Docker-compatibility lanes then execute
+inside that guest. Native and Docker receipts are separate and cannot satisfy
+one another. Automated accessibility does not substitute for human review,
+and KVM evidence is not physical-host or release evidence.
