@@ -21,6 +21,7 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/lib.rs",
     "capabilities/knowledge/src/memory.rs",
     "capabilities/knowledge/src/memory_lifecycle.rs",
+    "capabilities/knowledge/src/memory_portable.rs",
     "capabilities/knowledge/src/memory_working.rs",
     "docs/architecture/source-backed-memory-boundary.md",
     "docs/verification/sprint-31-local-results.md",
@@ -52,7 +53,6 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-30-BLOCKED", "owner": "30.1"},
-    {"code": "ENCRYPTED-MEMORY-EXPORT-IMPORT-ABSENT", "owner": "31.1.1.7"},
     {"code": "PROTECTED-MEMORY-FILE-RECOVERY-ABSENT", "owner": "31.1.1.8"},
     {"code": "INDEPENDENT-SPRINT-31-REVIEW-ABSENT", "owner": "31.1.3.5"},
 ]
@@ -68,7 +68,9 @@ IMPLEMENTED: Final = {
     "compaction_to_review_candidates_only": True,
     "selective_scoped_explainable_loading": True,
     "durable_memory_file_write": False,
-    "encrypted_versioned_export_import": False,
+    "encrypted_versioned_export_import": True,
+    "portable_identity_and_secret_exclusion": True,
+    "complete_catalog_digest_binding": True,
     "installed_file_recovery_and_machine_migration": False,
 }
 
@@ -144,7 +146,9 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "portable_no_write_markdown_preview_suite": local_pass,
             "complete_local_product_and_docs_gates": local_pass,
             "upstream_sprint_30_gate": False,
-            "encrypted_memory_export_import": False,
+            "encrypted_memory_export_import": local_pass,
+            "wrong_key_tamper_truncation_and_version_refusal": local_pass,
+            "portable_identity_and_secret_exclusion": local_pass,
             "protected_file_recovery_and_migration": False,
             "independent_review": False,
         },
@@ -153,7 +157,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "local_memory_contract_passed": local_pass,
             "sprint_status": "BLOCKED",
             "durable_file_write_enabled": False,
-            "encrypted_export_import_available": False,
+            "encrypted_export_import_available": local_pass,
             "automatic_memory_promotion": False,
             "release_approval": False,
         },
@@ -184,21 +188,26 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "local_memory_contract_passed": True,
         "sprint_status": "BLOCKED",
         "durable_file_write_enabled": False,
-        "encrypted_export_import_available": False,
+        "encrypted_export_import_available": True,
         "automatic_memory_promotion": False,
         "release_approval": False,
     }:
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
     for field in (
-        "upstream_sprint_30_gate", "encrypted_memory_export_import",
-        "protected_file_recovery_and_migration", "independent_review",
+        "upstream_sprint_30_gate", "protected_file_recovery_and_migration", "independent_review",
     ):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
     for field in (
-        "durable_memory_file_write", "encrypted_versioned_export_import",
-        "installed_file_recovery_and_machine_migration",
+        "encrypted_memory_export_import",
+        "wrong_key_tamper_truncation_and_version_refusal",
+        "portable_identity_and_secret_exclusion",
+    ):
+        if verification.get(field) is not True:
+            failures.append(f"verification missing: {field}")
+    for field in (
+        "durable_memory_file_write", "installed_file_recovery_and_machine_migration",
     ):
         if report.get("implemented_contracts", {}).get(field) is not False:
             failures.append(f"implementation overclaim: {field}")

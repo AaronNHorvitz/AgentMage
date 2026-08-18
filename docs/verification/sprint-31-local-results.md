@@ -5,7 +5,7 @@
 | Gate | Sprint 31 |
 | Local candidate/lifecycle/preview/retrieval contracts | Pass |
 | Durable file writes | Absent |
-| Encrypted portable export/import | Absent |
+| Encrypted portable export/import | Pass at pure capability boundary |
 | Sprint result | Blocked |
 
 ## Verified Locally
@@ -26,13 +26,20 @@
   emits review candidates without creating durable memory or clearing temporary state.
 - Selective loading enforces exact workspace/project/conversation boundaries, filters by type,
   tag, link, source, relevance, state, and budgets, and explains every inclusion.
+- Versioned XChaCha20-Poly1305 export/import preserves the complete catalog, revision, stable
+  identities, lifecycle state, links, evidence, and full catalog digest across fresh entropy.
+- Wrong keys, ciphertext changes, truncation, format-version drift, zero key/entropy, machine-path
+  evidence, restricted data, and malformed portable identities fail closed without a partial
+  imported catalog.
+- Keys are caller-owned and zeroized on drop, debug output is redacted, and ciphertext proposals
+  and import receipts have fixed false filesystem-write markers.
 - The strict-local source audit finds no undeclared network path.
 
 ## Open Evidence
 
-Sprint 30 remains blocked. Encrypted versioned export/import, protected file-adapter writes,
-interrupted-write recovery, backup restore, simultaneous-edit handling, migration evidence, and
-independent review are absent.
+Sprint 30 remains blocked. Protected file-adapter writes, trusted key-store and entropy adapters,
+interrupted-write recovery, backup restore, simultaneous-edit handling, installed migration
+evidence, and independent review are absent.
 
 Sprint 31 therefore remains blocked despite passing its locally executable policy, lifecycle,
 preview, working-memory, and selective-loading scope. Its report is generated at

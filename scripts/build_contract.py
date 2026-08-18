@@ -39,6 +39,8 @@ EXPECTED_CARGO_PACKAGES = {
         "agentmage-capability-knowledge",
         {
             "agentmage-kernel-contracts",
+            "chacha20poly1305",
+            "hkdf",
             "lopdf",
             "quick-xml",
             "rusqlite",
@@ -46,6 +48,7 @@ EXPECTED_CARGO_PACKAGES = {
             "serde_json",
             "sha2",
             "unicode-normalization",
+            "zeroize",
             "zip",
         },
     ),

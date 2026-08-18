@@ -32,17 +32,19 @@ class Sprint31EvidenceTests(unittest.TestCase):
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertTrue(value["implemented_contracts"]["source_backed_candidate_policy"])
+        self.assertTrue(value["implemented_contracts"]["encrypted_versioned_export_import"])
+        self.assertTrue(value["summary"]["encrypted_export_import_available"])
         self.assertFalse(value["summary"]["automatic_memory_promotion"])
 
-    def test_file_crypto_recovery_promotion_and_release_overclaims_fail(self) -> None:
+    def test_file_recovery_promotion_release_and_crypto_regressions_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"durable_file_write_enabled": True}),
-            lambda value: value["summary"].update({"encrypted_export_import_available": True}),
+            lambda value: value["summary"].update({"encrypted_export_import_available": False}),
             lambda value: value["summary"].update({"automatic_memory_promotion": True}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update(
-                {"encrypted_memory_export_import": True}
+                {"encrypted_memory_export_import": False}
             ),
             lambda value: value["verification_evidence"].update(
                 {"protected_file_recovery_and_migration": True}

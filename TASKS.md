@@ -2561,18 +2561,18 @@ claims.
   - [x] **Sub-task 31.1.1.4** (legacy `S-026-I04`): Create bounded `WORKING.md` with complete-load limits and end-of-task compaction into reviewed durable candidates.
   - [x] **Sub-task 31.1.1.5** (legacy `S-026-I05`): Implement selective long-term loading by tag, link, source, relevance, and context budget.
   - [x] **Sub-task 31.1.1.6** (legacy `S-026-I06`): Implement contradiction preservation, supersession, correction, decay, inspection, deletion, and last-verification state.
-  - [ ] **Sub-task 31.1.1.7** (legacy `S-026-I07`): Implement encrypted versioned export and import without machine-specific paths or secrets.
-  - [ ] **Sub-task 31.1.1.8** (legacy `S-026-I08`): Test project isolation, stale summaries, interrupted writes, corrupt indexes, backup restore, and migration between machines.
+  - [x] **Sub-task 31.1.1.7** (legacy `S-026-I07`): Implement encrypted versioned export and import without machine-specific paths or secrets. Evidence: commit `5b6ba2b3` adds a bounded version-1 XChaCha20-Poly1305 envelope with HKDF-SHA-256 domain separation, caller-owned zeroized key material, caller-supplied fresh salt/nonce, closed-schema import into a new catalog, complete catalog-field digest binding, portable-identity and restricted/secret/path exclusion, and wrong-key/tamper/truncation/version refusal without any file-write method.
+  - [ ] **Sub-task 31.1.1.8** (legacy `S-026-I08`): Test project isolation, stale summaries, interrupted writes, corrupt indexes, backup restore, and migration between machines. Partial local evidence: workspace/project/conversation isolation, stale selection state, complete encrypted export/import, fresh-entropy migration, malformed/tampered import, and catalog digest drift pass; protected-file interruption, corrupt installed index, backup restore, simultaneous-edit, and installed cross-machine campaigns remain absent.
 
 - [ ] **Task 31.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 31.1.2.1:** Memory schemas and candidate-policy engine.
   - [x] **Sub-task 31.1.2.2:** Human-readable memory templates and lint.
-  - [ ] **Sub-task 31.1.2.3:** Memory inspection, correction, supersession, export, and deletion interfaces.
+  - [x] **Sub-task 31.1.2.3:** Memory inspection, correction, supersession, export, and deletion interfaces. Evidence: the source-level catalog exposes bounded inspect/get/items, correction and supersession transitions, encrypted export/import, tombstoning deletion, Markdown previews, and selective loading without granting file authority.
   - [ ] **Sub-task 31.1.2.4:** Recovery and isolation test bundle.
 
 - [ ] **Task 31.1.3 - Verify and close the story**
   - [x] **Sub-task 31.1.3.1:** `S-026-UT01` classifies candidate facts as temporary context, durable fact, preference, procedure, unresolved claim, contradiction, or prohibited content; assert source requirements and confidence/state rules.
-  - [ ] **Sub-task 31.1.3.2:** `S-026-UT02` exercises approve, reject, edit, supersede, correct, export, expire, hold, and delete operations; assert linked indexes/views update and history remains bounded and attributable.
+  - [x] **Sub-task 31.1.3.2:** `S-026-UT02` exercises approve, reject, edit, supersede, correct, export, expire, hold, and delete operations; assert linked indexes/views update and history remains bounded and attributable. Evidence: candidate, lifecycle, Markdown-preview, selective-loading, full-catalog-digest, and portable-export suites exercise every named operation with atomic catalog revisions, retained source/decision identities, current/historical views, and no automatic decision or write.
   - [x] **Sub-task 31.1.3.3:** `S-026-ST01` attempts secret capture, inferred-sensitive memory, cross-person/project leakage, prompt-based self-promotion, and source-free durable claims; assert no automatic durable memory.
   - [ ] **Sub-task 31.1.3.4:** `S-026-RT01` interrupts memory-file and index updates, restores backups, and resolves simultaneous edits; assert valid Markdown, no lost user text, exact conflict preservation, and deterministic rebuild.
   - [ ] **Sub-task 31.1.3.5 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-010`, `SR-AI-003`/`SR-AI-007`/`SR-AI-008`, `SR-CIV-001` through `SR-CIV-005`; retain candidate decisions, canary scans, lifecycle receipts, conflict files, and recovery hashes.
@@ -2580,7 +2580,7 @@ claims.
 ##### Story Acceptance Criteria
 
 - [x] **Story AC 31.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no durable memory exists without a visible source-backed candidate and the required user/policy decision; the model cannot remember, correct, or delete facts on its own authority.
-- [ ] **Story AC 31.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a user can inspect, search, correct, supersede, export, and delete every memory item and trace it to source, decision, date, scope, and current status.
+- [x] **Story AC 31.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then a user can inspect, search, correct, supersede, export, and delete every memory item and trace it to source, decision, date, scope, and current status.
 
 #### Sprint Acceptance Criteria
 
@@ -2590,7 +2590,7 @@ claims.
 - [x] **Sprint AC 31.AC4:** Unrelated workspace or project memory never enters a task.
 - [ ] **Sprint AC 31.AC5:** Export, import, backup, and restore preserve evidence identities without credentials or machine-specific authority.
 
-**Local evidence:** Implementation commits `8bb6776`, `4ed2609`, and `c08f002`, evidence definition commit `d4cd4d2`, and retained report [`artifacts/sprints/sprint-31/local-evidence-report.json`](artifacts/sprints/sprint-31/local-evidence-report.json) complete the locally executable source-backed candidate, explicit-decision, contradiction, lifecycle, Markdown-preview, bounded working-memory, compaction, selective-loading, isolation, and adversarial scope. Sub-tasks `31.1.1.7`, `31.1.1.8`, `31.1.2.3`, `31.1.2.4`, `31.1.3.2`, `31.1.3.4`, and `31.1.3.5`, Story AC `31.1.AC2`, Sprint AC `31.AC5`, the parent task/story boxes, and this sprint remain open because encrypted export/import and installed file recovery/migration evidence are absent, independent Sprint 31 review is absent, and upstream Sprint 30 is blocked.
+**Local evidence:** Implementation commits `8bb6776`, `4ed2609`, `c08f002`, and `5b6ba2b3`, evidence definition commit `d4cd4d2`, and retained report [`artifacts/sprints/sprint-31/local-evidence-report.json`](artifacts/sprints/sprint-31/local-evidence-report.json) complete the locally executable source-backed candidate, explicit-decision, contradiction, lifecycle, Markdown-preview, bounded working-memory, compaction, selective-loading, isolation, encrypted portable export/import, complete catalog-digest, and adversarial scope. Sub-tasks `31.1.1.8`, `31.1.2.4`, `31.1.3.4`, and `31.1.3.5`, Sprint AC `31.AC5`, the parent task/story boxes, and this sprint remain open because protected installed file recovery, backup/restore, simultaneous-edit, installed migration, independent Sprint 31 review, and upstream Sprint 30 closure are absent.
 
 **Gate decision:** Sprint 31 is PASS only when Story 31.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 32 - Conversation Search and Branching

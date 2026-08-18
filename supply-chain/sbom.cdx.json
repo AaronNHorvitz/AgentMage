@@ -93,7 +93,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "5d75fb80e3da92ff51fed9df5490c481742669ae7f05519495a71042cfa7571b"
+          "content": "c64df9b867416b93efa70902e9df36c8b36fd708dd34eac206e85b1a6656c713"
         }
       ],
       "licenses": [
@@ -15269,6 +15269,8 @@
     {
       "dependsOn": [
         "cargo:agentmage-kernel-contracts@0.0.0",
+        "cargo:chacha20poly1305@0.11.0",
+        "cargo:hkdf@0.13.0",
         "cargo:lopdf@0.44.0",
         "cargo:quick-xml@0.41.0",
         "cargo:rusqlite@0.40.2",
@@ -15276,6 +15278,7 @@
         "cargo:serde_json@1.0.151",
         "cargo:sha2@0.11.0",
         "cargo:unicode-normalization@0.1.25",
+        "cargo:zeroize@1.9.0",
         "cargo:zip@8.6.0"
       ],
       "ref": "cargo:agentmage-capability-knowledge@0.0.0"
@@ -18412,7 +18415,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:a3b9b7b2-cfc6-5595-a497-e6c869ae08c2",
+  "serialNumber": "urn:uuid:4796ffa3-6800-5305-a45d-4fc92d5c8679",
   "specVersion": "1.6",
   "version": 1
 }

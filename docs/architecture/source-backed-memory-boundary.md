@@ -20,8 +20,10 @@ flowchart LR
     X --> C
     L --> T["Edit, supersede, correct, decay, hold, expire, delete"]
     T --> L
+    L --> E["Versioned authenticated portable export"]
+    E --> I["Closed-schema verified import into a new catalog"]
     F["Filesystem apply"] -. "absent" .-> M
-    E["Encrypted portable export/import"] -. "deferred" .-> L
+    K["Credential and random adapters"] --> E
 ```
 
 ## Candidate Policy
@@ -71,10 +73,33 @@ verification, and identity under result and byte budgets. Every hit includes sou
 sensitivity, status, last verification, and supersession. The result explicitly records that no
 cross-workspace content entered.
 
+## Portable Encrypted Export
+
+The portable boundary serializes the complete current and historical catalog into a closed
+version-1 envelope and encrypts it in place with XChaCha20-Poly1305. HKDF-SHA-256 derives a
+domain-separated file key from a nonzero 256-bit key supplied by a trusted credential adapter and
+a fresh 256-bit public salt. The trusted caller also supplies a fresh 192-bit nonce; this pure
+capability does not acquire randomness, open a credential store, or retain the key in debug output.
+
+The authenticated header binds format version, salt, nonce, exact plaintext length, and plaintext
+digest. The envelope binds catalog revision, a full catalog digest, and every item field including
+scope, content, tags, links, evidence, sensitivity, lifecycle dates, decision identities, and
+supersession. Import verifies length, version, AEAD, plaintext digest, closed JSON schema, portable
+identities, link closure, lifecycle states, and recomputed catalog digest before constructing a new
+in-memory catalog. Wrong keys, changed bytes, truncation, version drift, duplicate identities,
+invalid transitions, and digest drift fail without a partial catalog.
+
+Export refuses restricted data, credential candidates, absolute host-path evidence, nonportable
+identities, and invalid evidence metadata. Ciphertext proposals and import receipts expose no
+filesystem apply method and retain fixed false machine-path, credential, and file-write markers.
+Fresh salt and nonce generation, key storage, and durable file application remain responsibilities
+of later trusted platform adapters.
+
 ## Open Boundary
 
-This sprint slice does not write `MEMORY.md` or `WORKING.md`; it produces source-preserving previews
-for a later protected file adapter. It also does not implement encrypted versioned export/import,
-atomic installed-file recovery, backup restore, simultaneous-edit conflict files, or machine
-migration evidence. Those items, upstream Sprint 30 closure, and independent review remain
+This sprint slice does not write `MEMORY.md`, `WORKING.md`, or encrypted exports; it produces
+source-preserving Markdown previews and authenticated ciphertext proposals for later protected file
+adapters. Atomic installed-file recovery, backup restore, simultaneous-edit conflict files,
+credential-store integration, trusted entropy acquisition, and installed machine-migration
+evidence remain absent. Those items, upstream Sprint 30 closure, and independent review remain
 required before Sprint 31 can pass.
