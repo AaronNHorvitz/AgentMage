@@ -190,8 +190,10 @@ class CleanBuildEvidenceTests(unittest.TestCase):
         recipe = (ROOT / "release/clean-build/Containerfile.linux").read_text()
         self.assertIn("dnf install -y bash bubblewrap ca-certificates curl gcc git ", recipe)
         self.assertIn("bash bubblewrap build-essential ca-certificates curl git ", recipe)
-        self.assertIn("glibc-devel libsecret make", recipe)
-        self.assertIn("git libsecret-tools libssl-dev", recipe)
+        self.assertIn("glibc-devel gnupg2 gnupg2-gpgconf libsecret", recipe)
+        self.assertIn("curl git gnupg libsecret-tools", recipe)
+        self.assertIn("glibc-devel gnupg2 gnupg2-gpgconf libsecret make", recipe)
+        self.assertIn("git gnupg libsecret-tools libssl-dev", recipe)
         self.assertIn("python3 shadow-utils systemd xz", recipe)
         self.assertIn("passwd python3 systemd xz-utils", recipe)
         ownership = recipe.index("chown -R 10001:10001 /opt/cargo")
@@ -222,6 +224,8 @@ class CleanBuildEvidenceTests(unittest.TestCase):
                     "bash",
                     "bubblewrap",
                     "git",
+                    "gpg",
+                    "gpgconf",
                     "secret-tool",
                     "systemd-run",
                 ]

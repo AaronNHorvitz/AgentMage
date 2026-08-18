@@ -365,7 +365,15 @@ def validate_policy(policy: Any) -> list[str]:
     if policy.get("toolchains", {}).get("git") != "platform-packaged":
         failures.append("clean-build Git runtime dependency is not declared")
     if policy.get("runtime_dependencies") != {
-        "platform_packaged": ["bash", "bubblewrap", "git", "secret-tool", "systemd-run"]
+        "platform_packaged": [
+            "bash",
+            "bubblewrap",
+            "git",
+            "gpg",
+            "gpgconf",
+            "secret-tool",
+            "systemd-run",
+        ]
     }:
         failures.append("clean-build platform runtime dependencies drifted")
     if policy.get("platform_status") != {

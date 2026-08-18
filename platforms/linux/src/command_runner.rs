@@ -794,7 +794,8 @@ mod tests {
 
     #[test]
     fn manifest_binds_every_registered_executable_digest() {
-        let executable = "/usr/bin/printf";
+        let executable = fs::canonicalize("/usr/bin/printf").expect("canonical printf");
+        let executable = executable.to_str().expect("UTF-8 executable");
         let command = CommandSpec::seal(
             "fixture.printf",
             "1.0.0",
@@ -822,10 +823,12 @@ mod tests {
 
     #[test]
     fn manifest_rejects_executable_digest_drift() {
+        let executable = fs::canonicalize("/usr/bin/printf").expect("canonical printf");
+        let executable = executable.to_str().expect("UTF-8 executable");
         let command = CommandSpec::seal(
             "fixture.printf",
             "1.0.0",
-            "/usr/bin/printf",
+            executable,
             "1".repeat(64),
             vec!["agentmage-ok".to_owned()],
             CommandWorkingDirectory::EmptyScratch,
@@ -849,7 +852,8 @@ mod tests {
     #[test]
     #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
     fn live_exact_command_runs_offline_with_literal_output() {
-        let executable = "/usr/bin/printf";
+        let executable = fs::canonicalize("/usr/bin/printf").expect("canonical printf");
+        let executable = executable.to_str().expect("UTF-8 executable");
         let command = CommandSpec::seal(
             "fixture.printf",
             "1.0.0",
