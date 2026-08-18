@@ -356,7 +356,7 @@ def main() -> int:
             failures = validate_report(report)
             if failures:
                 raise ParityEvidenceError("; ".join(failures))
-            OUTPUT.parent.mkdir(parents=True)
+            OUTPUT.parent.mkdir(parents=True, exist_ok=True)
             OUTPUT.write_bytes(canonical_json(report))
         else:
             report = read_json(OUTPUT)
