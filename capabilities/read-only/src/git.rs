@@ -834,6 +834,43 @@ mod tests {
         assert_eq!(fixture.snapshot(), clean_snapshot);
         assert!(canaries.iter().all(|path| !path.exists()));
 
+        let branch_output = fixture.execute(
+            &plan_git_inspection(&request(GitInspectionOperation::BranchList))
+                .expect("branch-list plan"),
+        );
+        assert!(
+            branch_output
+                .stdout
+                .windows(b"refs/heads/main".len())
+                .any(|window| { window == b"refs/heads/main" })
+        );
+        let mut tag_request = request(GitInspectionOperation::Ref);
+        tag_request.revision = Some("refs/tags/fixture-tag".to_owned());
+        let tag_output = fixture.execute(&plan_git_inspection(&tag_request).expect("tag-ref plan"));
+        assert_eq!(
+            String::from_utf8(tag_output.stdout)
+                .expect("tag output UTF-8")
+                .trim(),
+            fixture.head()
+        );
+        let ignored_output = fixture.execute(
+            &plan_git_inspection(&request(GitInspectionOperation::UntrackedFiles))
+                .expect("ignored-file plan"),
+        );
+        assert!(
+            !ignored_output
+                .stdout
+                .windows(b"ignored.txt".len())
+                .any(|window| { window == b"ignored.txt" })
+        );
+        let mut metadata_request = request(GitInspectionOperation::Object);
+        metadata_request.object_id = Some(fixture.head());
+        let metadata_output =
+            fixture.execute(&plan_git_inspection(&metadata_request).expect("object-metadata plan"));
+        assert_eq!(metadata_output.stdout, b"commit\n");
+        assert_eq!(fixture.snapshot(), clean_snapshot);
+        assert!(canaries.iter().all(|path| !path.exists()));
+
         fs::write(fixture.path.join("tracked.txt"), "dirty\n").expect("dirty fixture");
         fs::write(fixture.path.join("untracked.txt"), "untracked\n").expect("untracked fixture");
         let dirty_request = request(GitInspectionOperation::DirtyTree);

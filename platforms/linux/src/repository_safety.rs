@@ -290,18 +290,28 @@ impl LinuxRepositoryCollector {
             None
         };
 
-        let status = self.observe(
+        let index_paths = self.observe(scope, &["ls-files", "--stage", "-z"])?;
+        let worktree_state = hash_worktree_tree(&scope.checkout_root)?;
+        let untracked_paths =
+            self.observe(scope, &["ls-files", "--others", "--exclude-standard", "-z"])?;
+        let ignored_paths = self.observe(
             scope,
             &[
-                "status",
-                "--porcelain=v2",
+                "ls-files",
+                "--others",
+                "--ignored",
+                "--exclude-standard",
                 "-z",
-                "--untracked-files=all",
-                "--ignored=matching",
-                "--no-renames",
             ],
         )?;
-        let (untracked_count, ignored_count) = status_counts(&status)?;
+        let untracked_count = nul_record_count(&untracked_paths)?;
+        let ignored_count = nul_record_count(&ignored_paths)?;
+        let path_dispositions = framed_observations(&[
+            ("index", &index_paths),
+            ("worktree", &worktree_state),
+            ("untracked", &untracked_paths),
+            ("ignored", &ignored_paths),
+        ])?;
         let config = self.observe(
             scope,
             &["config", "--local", "--no-includes", "--null", "--list"],
@@ -380,7 +390,7 @@ impl LinuxRepositoryCollector {
             upstream,
             detached,
             index_sha256,
-            path_dispositions_sha256: hash(&status),
+            path_dispositions_sha256: hash(&path_dispositions),
             untracked_count,
             ignored_count,
             local_branches_sha256: hash(&local_branches),
@@ -1466,21 +1476,33 @@ fn text_required(bytes: Vec<u8>) -> Result<String, LinuxRepositoryError> {
     Ok(value)
 }
 
-fn status_counts(bytes: &[u8]) -> Result<(u32, u32), LinuxRepositoryError> {
-    let mut untracked = 0_u32;
-    let mut ignored = 0_u32;
-    for record in bytes
-        .split(|byte| *byte == 0)
-        .filter(|record| !record.is_empty())
-    {
-        match record.first() {
-            Some(b'?') => untracked = untracked.saturating_add(1),
-            Some(b'!') => ignored = ignored.saturating_add(1),
-            Some(b'1' | b'2' | b'u' | b'#') => {}
-            _ => return Err(error(LinuxRepositoryErrorKind::ObservationFailed)),
+fn nul_record_count(bytes: &[u8]) -> Result<u32, LinuxRepositoryError> {
+    if !bytes.is_empty() && !bytes.ends_with(&[0]) {
+        return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+    }
+    u32::try_from(
+        bytes
+            .split(|byte| *byte == 0)
+            .filter(|record| !record.is_empty())
+            .count(),
+    )
+    .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))
+}
+
+fn framed_observations(observations: &[(&str, &[u8])]) -> Result<Vec<u8>, LinuxRepositoryError> {
+    let mut framed = Vec::new();
+    for (label, bytes) in observations {
+        let length = u64::try_from(bytes.len())
+            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+        framed.extend_from_slice(&(label.len() as u64).to_be_bytes());
+        framed.extend_from_slice(label.as_bytes());
+        framed.extend_from_slice(&length.to_be_bytes());
+        framed.extend_from_slice(bytes);
+        if framed.len() > MAX_OBSERVATION_BYTES {
+            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
         }
     }
-    Ok((untracked, ignored))
+    Ok(framed)
 }
 
 fn read_optional_bounded(path: &Path) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
@@ -1538,6 +1560,69 @@ fn hash_metadata_tree(
             if metadata.is_dir() && !metadata.file_type().is_symlink() {
                 pending.push(child);
             }
+            if records.len() > MAX_METADATA_ENTRIES {
+                return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+            }
+        }
+    }
+    records.sort();
+    Ok(records.concat())
+}
+
+fn hash_worktree_tree(path: &Path) -> Result<Vec<u8>, LinuxRepositoryError> {
+    let mut pending = vec![path.to_path_buf()];
+    let mut records = Vec::new();
+    let mut total_bytes = 0_u64;
+    while let Some(current) = pending.pop() {
+        for entry in fs::read_dir(&current)
+            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?
+        {
+            let entry = entry.map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+            let child = entry.path();
+            let relative = child
+                .strip_prefix(path)
+                .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+            if relative == Path::new(".git") {
+                continue;
+            }
+            let metadata = fs::symlink_metadata(&child)
+                .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+            let mut record = Vec::new();
+            record.extend_from_slice(relative.as_os_str().as_bytes());
+            record.extend_from_slice(&metadata.mode().to_be_bytes());
+            record.extend_from_slice(&metadata.len().to_be_bytes());
+            record.extend_from_slice(&metadata.mtime().to_be_bytes());
+            if metadata.is_dir() && !metadata.file_type().is_symlink() {
+                record.push(b'd');
+                pending.push(child);
+            } else if metadata.is_file() {
+                if metadata.len() > MAX_HASHED_FILE_BYTES {
+                    return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+                }
+                total_bytes = total_bytes
+                    .checked_add(metadata.len())
+                    .filter(|total| *total <= MAX_HASHED_FILE_BYTES)
+                    .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+                record.push(b'f');
+                record.extend_from_slice(
+                    hash(
+                        &fs::read(&child)
+                            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?,
+                    )
+                    .as_bytes(),
+                );
+            } else if metadata.file_type().is_symlink() {
+                record.push(b'l');
+                record.extend_from_slice(
+                    fs::read_link(&child)
+                        .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?
+                        .as_os_str()
+                        .as_bytes(),
+                );
+            } else {
+                record.push(b's');
+            }
+            records.push(record);
             if records.len() > MAX_METADATA_ENTRIES {
                 return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
             }
@@ -1932,7 +2017,7 @@ mod tests {
             .set_nonblocking(true)
             .expect("listener becomes nonblocking");
         let port = listener.local_addr().expect("listener address").port();
-        let canaries = ["hook", "pager", "diff", "credential", "alias"]
+        let canaries = ["hook", "pager", "diff", "credential", "alias", "filter"]
             .map(|name| fixture.root.join(format!("{name}-executed")));
         let hook = fixture.git_directory.join("hooks/post-index-change");
         fs::write(
@@ -1944,7 +2029,7 @@ mod tests {
             .expect("hostile hook becomes executable");
         fs::write(
             fixture.repository.join(".gitattributes"),
-            "*.md diff=hostile\n",
+            "*.md diff=hostile filter=hostile\n",
         )
         .expect("hostile attributes write");
         for arguments in [
@@ -1967,6 +2052,16 @@ mod tests {
                 "config".to_owned(),
                 "alias.inspect".to_owned(),
                 format!("!touch {}", canaries[4].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "filter.hostile.smudge".to_owned(),
+                format!("touch {}", canaries[5].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "filter.hostile.clean".to_owned(),
+                format!("touch {}", canaries[5].display()),
             ],
             vec![
                 "remote".to_owned(),
@@ -2046,7 +2141,15 @@ mod tests {
             assert!(result.descendants_terminated, "{operation:?}: {result:?}");
         }
 
-        assert!(canaries.iter().all(|path| !path.exists()));
+        let executed_canaries = canaries
+            .iter()
+            .filter(|path| path.exists())
+            .map(|path| path.file_name().expect("canary name").to_owned())
+            .collect::<Vec<_>>();
+        assert!(
+            executed_canaries.is_empty(),
+            "hostile Git canaries executed: {executed_canaries:?}"
+        );
         assert!(matches!(
             listener.accept(),
             Err(error) if error.kind() == std::io::ErrorKind::WouldBlock

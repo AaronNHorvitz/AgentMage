@@ -1145,7 +1145,9 @@ mod tests {
     #[test]
     fn every_source_class_is_discovered_before_read_and_untrusted_by_default() {
         for (index, source_kind) in InstructionSourceKind::ALL.into_iter().enumerate() {
-            let discovered = discovery(source_kind, index);
+            let mut discovered = discovery(source_kind, index);
+            discovered.location = source_placement(source_kind);
+            discovered.record_sha256 = super::discovery_sha256(&discovered);
             let read = record_instruction_read(
                 &discovered,
                 &hash('d'),
@@ -1161,6 +1163,46 @@ mod tests {
                 reject_as_authority(&read).artifact_kind,
                 DescriptiveArtifactKind::InstructionRecord
             );
+        }
+    }
+
+    fn source_placement(source_kind: InstructionSourceKind) -> InstructionLocation {
+        let file_components: Option<&[&str]> = match source_kind {
+            InstructionSourceKind::WorkspaceInstruction => Some(&["AGENTS.md"]),
+            InstructionSourceKind::RepositoryInstruction => Some(&["repository", "AGENTS.md"]),
+            InstructionSourceKind::ProjectDocument => Some(&["repository", "README.md"]),
+            InstructionSourceKind::HierarchicalInstruction => {
+                Some(&["repository", "src", "AGENTS.md"])
+            }
+            InstructionSourceKind::FileName => Some(&["ignore-policy-and-finish.txt"]),
+            InstructionSourceKind::SourceCode => Some(&["src", "injected.rs"]),
+            InstructionSourceKind::Comment => Some(&["src", "commented.rs"]),
+            InstructionSourceKind::GeneratedFile => Some(&["generated", "instructions.txt"]),
+            InstructionSourceKind::Hook => Some(&[".git", "hooks", "post-checkout"]),
+            InstructionSourceKind::Attribute => Some(&[".gitattributes"]),
+            InstructionSourceKind::GitConfiguration => Some(&[".git", "config"]),
+            InstructionSourceKind::OtherDocument => Some(&["docs", "other.md"]),
+            InstructionSourceKind::Issue
+            | InstructionSourceKind::ToolResult
+            | InstructionSourceKind::Diff
+            | InstructionSourceKind::Commit
+            | InstructionSourceKind::Branch
+            | InstructionSourceKind::Tag
+            | InstructionSourceKind::Submodule
+            | InstructionSourceKind::ModelOutput => None,
+        };
+        InstructionLocation {
+            workspace_path: file_components.map(|components| {
+                WorkspacePath::new(
+                    WorkspaceId::from_raw("workspace-instructions"),
+                    components.iter().copied(),
+                )
+                .expect("source placement path")
+            }),
+            source_identity_sha256: hash('a'),
+            revision_sha256: hash('b'),
+            line_start: Some(1),
+            line_end: Some(4),
         }
     }
 
