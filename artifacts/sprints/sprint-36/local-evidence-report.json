@@ -5,10 +5,6 @@
       "owner": "35.1"
     },
     {
-      "code": "SPRINT-36-NATIVE-FILESYSTEM-DRIVER-ABSENT",
-      "owner": "36.1.2.3"
-    },
-    {
       "code": "SPRINT-36-ST01-NATIVE-RACE-MATRIX-INCOMPLETE",
       "owner": "36.1.3.3"
     },
@@ -34,7 +30,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-transaction-tests",
-      "output_sha256": "fe034c9f07609f14b382850f669c3178bc7e8c9bc64d662500f7f115d13e9723"
+      "output_sha256": "34238f1a7200d3a1a5c019e1767f874cfea2f66e6fe9a80b7ed156ef477478cc"
     },
     {
       "argv": [
@@ -47,7 +43,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "ba69790fbc391adfb1d127b882e4cb5d3079db4958d9bb3129dec973517c583e"
+      "output_sha256": "4e1c4f936091f0b0edd6936a3371bacd0bcdb1145ee05635a833e6be8ab7a98f"
     },
     {
       "argv": [
@@ -64,7 +60,38 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-clippy",
-      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+      "output_sha256": "c65b2bf1b138c141daa5837a3df8a3266a97ff8490a3041238180916f01e43f8"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "write_transaction",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "linux-write-transaction-tests",
+      "output_sha256": "5603d642ec0ee0ce7bc082437c497c8d599775823d19168aa7424536075c564f"
+    },
+    {
+      "argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-platform-linux",
+        "--all-targets",
+        "--locked",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "blocking_skip_count": null,
+      "exit_code": 0,
+      "id": "linux-platform-clippy",
+      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd"
     },
     {
       "argv": [
@@ -77,7 +104,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "contract-tests",
-      "output_sha256": "7bc711babc8823b098894cb5fb94310c9b81f4312c0b87ad250becca49f51097"
+      "output_sha256": "4bca463a58ff39eca8cd2c4c090885a332918a1ca28a87463c7d8baf90da4906"
     },
     {
       "argv": [
@@ -88,7 +115,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "36d81f28f617d97385f2254e637d2395cb033098249d36f78796a58eb2915ba1"
+      "output_sha256": "e351612b9395c05f209ad5833f4e6b96d0609f08002aa17c540b296fc7f786cc"
     },
     {
       "argv": [
@@ -99,7 +126,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "8be6bdf59e585386339c76f727c25e40b5009206e28e5944939e621a100e9542"
+      "output_sha256": "55a3e21d102324562319a956c6695c8830a088e77eb2bc9fd51542e2c72f0416"
     },
     {
       "argv": [
@@ -171,7 +198,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "evidence-tests",
-      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0"
     }
   ],
   "environment": {
@@ -196,11 +223,14 @@
     "known_partial_preimage_restoration": true,
     "later_user_change_rollback_refusal": true,
     "native_atomicity_proven": false,
-    "native_filesystem_driver": false,
+    "native_filesystem_driver": true,
+    "native_linux_atomic_exchange_and_restore": true,
+    "native_linux_descriptor_race_fixtures": true,
     "native_race_matrix_complete": false,
     "network_access": false,
     "opaque_effect_authorization": true,
     "ordered_apply_and_restore_report_contract": true,
+    "post_preview_mutation_matrix": true,
     "post_write_command_execution": false,
     "separately_granted_post_write_commands": true,
     "uncertain_terminal_outcome": true
@@ -222,21 +252,22 @@
     "SR-TST-011",
     "SR-TST-012"
   ],
-  "source_revision": "ce13c394d87fad924827192198eb0efe6d700f38",
+  "source_revision": "21739092b077753a4597f24de1a48e07f0561f16",
   "source_sha256": {
-    "docs/architecture/atomic-write-transaction-and-rollback.md": "15507e1e6f98ce44cc76c529f35f405b9df108d4902d14c3090f18ed5a17c117",
-    "docs/verification/sprint-36-local-results.md": "6a01c971d862a8887036d026c8089e5b888317cd4cd4677fd3d08ff76f19a22c",
-    "kernel/engine/src/grants.rs": "6768d4e40a2497de0153ca0739b39e395f732e5ea92ea4cc486b36df887ef98c",
-    "kernel/engine/src/lib.rs": "afd606360cc277cd20e6b132c619e1a44fcd2fcdb78a14e9d80603cad0978a8e",
-    "kernel/engine/src/write_approval.rs": "e3dca8673d1dac8168e1f7a303256b90e4565b49461b6fe754db41e556e90753",
-    "kernel/engine/src/write_transaction.rs": "04dffceb1b66f49b8506bd53c5196045e3ff4834a0d6fdc86c35b4cec4177373",
-    "scripts/sprint_36_evidence.py": "c2e8782bf7c25462ea81e39e410f05663279d3618d9ded2e723bb4f6d3674255",
-    "tests/test_sprint_36_evidence.py": "ce91024a7d8b64b889c5e1e68c7b295827d724be37d5f1d34f201cd28b4aea64"
+    "docs/architecture/atomic-write-transaction-and-rollback.md": "0f02148077afd38ef9f0234cc7e5aa9da8f4db85bd77910a2cfd7128fdb0e347",
+    "docs/verification/sprint-36-local-results.md": "3d2ff2fefb3fc1a6908b12c465cdeb516bc1997c40b86f4deae2448940d48ace",
+    "kernel/engine/src/grants.rs": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291",
+    "kernel/engine/src/lib.rs": "ba0fc7331c014a86772c22cd1713a3a147d84511d6f30e844b2a87b9bf9d7136",
+    "kernel/engine/src/write_approval.rs": "3aec5c24b53f5ab5e0476c03c13422a737a59d2932ba1649b15d2e50306e67e0",
+    "kernel/engine/src/write_transaction.rs": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03",
+    "platforms/linux/src/write_transaction.rs": "862afe43fe0d1aba341c705b3210580f595e2245efbd1c8b98c8a0422aad717b",
+    "scripts/sprint_36_evidence.py": "ba1f465fd3a525462a6df36ea97ea3721e18ceedf7f5889510848f9c48df703e",
+    "tests/test_sprint_36_evidence.py": "ee39c057ca48210bfe767cb64b20c4e924507b4d4b458f2f1e453f60d531af44"
   },
   "summary": {
     "independent_review_passed": false,
     "local_atomic_transaction_contract_passed": true,
-    "native_filesystem_driver_proven": false,
+    "native_filesystem_driver_proven": true,
     "native_race_and_crash_evidence_passed": false,
     "network_access_enabled": false,
     "release_approval": false,
@@ -248,8 +279,12 @@
     "crash_durability_matrix": false,
     "focused_blocking_skip_count": 0,
     "independent_transaction_review": false,
-    "native_filesystem_driver_evidence": false,
+    "native_filesystem_driver_evidence": true,
+    "native_linux_atomic_exchange_and_restore": true,
+    "native_linux_descriptor_race_fixtures": true,
+    "native_mount_change_matrix": false,
     "native_race_matrix": false,
+    "post_preview_mutation_matrix": true,
     "receipt_integrity_and_rollback_suite": true,
     "transaction_and_restoration_fixture_suite": true,
     "upstream_sprint_35_gate": false
