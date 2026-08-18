@@ -78,6 +78,34 @@ class EffectBoundaryTests(unittest.TestCase):
         failures = validate_effect_boundary()
         self.assertNotIn(f"{relative} contains direct process launch", failures)
 
+    def test_exact_feature_gated_lifecycle_fixture_is_not_product_code(self) -> None:
+        relative = Path(
+            "capabilities/read-only/src/bin/agentmage-read-only-lifecycle-fixture.rs"
+        )
+        failures = validate_effect_boundary()
+
+        self.assertNotIn(f"{relative} contains direct filesystem mutation", failures)
+
+    def test_lifecycle_fixture_without_required_feature_is_product_code(self) -> None:
+        manifest = Path("capabilities/read-only/Cargo.toml")
+        source = self.source(str(manifest)).replace(
+            'required-features = ["lifecycle-fixture"]\n', "", 1
+        )
+        failures = validate_effect_boundary(overrides={manifest: source})
+
+        self.assertIn(
+            "capabilities/read-only/src/bin/agentmage-read-only-lifecycle-fixture.rs "
+            "contains direct filesystem mutation",
+            failures,
+        )
+
+    def test_neighboring_capability_binary_does_not_inherit_fixture_exemption(self) -> None:
+        relative = Path("capabilities/read-only/src/bin/agentmage-read-only-worker.rs")
+        source = self.source(str(relative)) + '\nfn mutate() { std::fs::write("x", b"x").unwrap(); }\n'
+        failures = validate_effect_boundary(overrides={relative: source})
+
+        self.assertIn(f"{relative} contains direct filesystem mutation", failures)
+
     def test_early_test_attribute_cannot_hide_later_product_process_authority(self) -> None:
         relative = Path("shells/host/src/main.rs")
         source = self.source(str(relative)).replace(

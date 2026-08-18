@@ -61,6 +61,14 @@ EXPECTED_INTERNAL_IMPORTS = {
     },
 }
 
+TEST_ONLY_BINARIES = {
+    Path("capabilities/read-only/src/bin/agentmage-read-only-lifecycle-fixture.rs"): (
+        Path("capabilities/read-only/Cargo.toml"),
+        "agentmage-read-only-lifecycle-fixture",
+        "lifecycle-fixture",
+    ),
+}
+
 
 def _read(
     relative: Path,
@@ -104,6 +112,34 @@ def _production_source(source: str) -> str:
     return source[: test_modules[-1].start()] if test_modules else source
 
 
+def _verified_test_only_binaries(
+    root: Path,
+    overrides: dict[Path, str],
+) -> set[Path]:
+    """Return exact binary paths whose required test feature remains sealed."""
+
+    verified: set[Path] = set()
+    for source_path, (manifest_path, binary_name, feature_name) in TEST_ONLY_BINARIES.items():
+        manifest = tomllib.loads(_read(manifest_path, root, overrides))
+        features = manifest.get("features", {})
+        targets = manifest.get("bin", [])
+        if not isinstance(features, dict) or feature_name not in features:
+            continue
+        if not isinstance(targets, list):
+            continue
+        for target in targets:
+            if not isinstance(target, dict):
+                continue
+            if (
+                target.get("name") == binary_name
+                and target.get("path") == source_path.relative_to(manifest_path.parent).as_posix()
+                and target.get("required-features") == [feature_name]
+            ):
+                verified.add(source_path)
+                break
+    return verified
+
+
 def validate_effect_boundary(
     root: Path = ROOT,
     overrides: dict[Path, str] | None = None,
@@ -120,6 +156,7 @@ def validate_effect_boundary(
     linux_sandbox = _read(LINUX_SANDBOX, root, replacements)
     linux_secrets = _read(LINUX_SECRETS, root, replacements)
     linux_ipc = _read(LINUX_IPC, root, replacements)
+    test_only_binaries = _verified_test_only_binaries(root, replacements)
 
     if "pub struct EffectAuthorization<'transaction>" not in engine:
         failures.append("kernel effect authorization type is missing")
@@ -192,6 +229,8 @@ def validate_effect_boundary(
     for base in (Path("shells"), Path("capabilities")):
         for path in sorted((root / base).rglob("*.rs")):
             relative = path.relative_to(root)
+            if relative in test_only_binaries:
+                continue
             source = _production_source(_read(relative, root, replacements))
             for pattern, label in (
                 (
