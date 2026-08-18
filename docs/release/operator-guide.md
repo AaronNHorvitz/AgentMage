@@ -39,9 +39,11 @@ Current bounded commands are:
 - `read <workspace-relative-path>` for one approved bounded local read; and
 - `handoff` for review and local rendering of a packet that the user may transfer manually.
 
-The production host does not yet load a signed profile catalog, route prompts to a model, or compose
-a current handoff draft. A first run is therefore expected to show unavailable components and no
-ordinary model profile. That is a truthful refusal, not a setup success.
+The Linux production bootstrap loads the exact profile catalog only after the catalog and host have
+both been verified as signed package payloads. It does not yet join current activation and runtime
+observations, route prompts to a model, or compose a current handoff draft. A first run is therefore
+expected to show unavailable components and no ordinary model profile. That is a truthful refusal,
+not a setup success.
 
 ## Model Installation and Selection
 
@@ -185,7 +187,7 @@ cannot be repaired by selecting a cloud model or bypassing the host.
 ## Limitations
 
 No v0.1 release is approved. Production model inference, complete native Chat workflow, signed
-catalog integration, canonical handoff composition, complete progress and status indicators,
+catalog activation/runtime-state integration, canonical handoff composition, complete progress and status indicators,
 exact model token counting, installed accessibility evidence, complete Fedora/Ubuntu/macOS clean
 installation, production signing, notarization, Windows release packaging, and independent release
 review remain open.

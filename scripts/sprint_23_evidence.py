@@ -24,7 +24,13 @@ SOURCE_PATHS: Final = (
     "docs/verification/sprint-23-local-results.md",
     "kernel/contracts/src/model_discovery.rs",
     "kernel/engine/src/model_discovery.rs",
+    "model-profiles/exact-profile-catalog.json",
+    "scripts/package_candidate.py",
+    "shells/host/src/linux_bootstrap.rs",
     "shells/host/src/linux_read.rs",
+    "shells/host/src/main.rs",
+    "shells/host/src/model_catalog_bootstrap.rs",
+    "shells/host/src/package_verify.rs",
     "shells/host/src/protocol.rs",
     "shells/vscode/src/model_discovery.ts",
     "shells/vscode/src/provider.ts",
@@ -37,6 +43,8 @@ COMMANDS: Final = (
     ("model-discovery-tests", ("cargo", "test", "-p", "agentmage-kernel-engine",
                                "model_discovery", "--locked")),
     ("host-tests", ("cargo", "test", "-p", "agentmage-host", "--locked")),
+    ("signed-catalog-bootstrap-tests", ("cargo", "test", "-p", "agentmage-host",
+                                          "--bin", "agentmage-host", "--locked")),
     ("vscode-tests", ("npm", "run", "test", "--workspace", "@agentmage/vscode-shell")),
     ("vscode-lint", ("npm", "run", "lint", "--workspace", "@agentmage/vscode-shell")),
     ("product-gate", ("npm", "run", "product:check")),
@@ -50,7 +58,7 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-CIV-006", "SR-CIV-007", "SR-CIV-008", "SR-CIV-009", "SR-TST-008",
 ]
 BLOCKERS: Final = [
-    {"code": "SIGNED-CATALOG-PRODUCTION-INTEGRATION-ABSENT", "owner": "23.3.1.1"},
+    {"code": "CURRENT-ACTIVATION-AND-NATIVE-EXPOSURE-ABSENT", "owner": "23.3.1.1"},
     {"code": "PRODUCTION-MODEL-ROUTE-ABSENT", "owner": "23.1.1.3"},
     {"code": "MODEL-TOKEN-STREAM-AND-EXACT-COUNT-ABSENT", "owner": "23.1.1.4"},
     {"code": "COMPLETE-NATIVE-INDICATORS-ABSENT", "owner": "23.1.1.5"},
@@ -70,6 +78,7 @@ IMPLEMENTED: Final = {
     "automatic_model_substitution": False,
     "structured_final_chat_parts": True,
     "validated_local_display_links": True,
+    "signed_catalog_production_bootstrap": True,
     "production_model_inference": False,
     "model_token_streaming": False,
     "exact_tokenizer_counting": False,
@@ -153,7 +162,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "structured_chat_output": local_pass,
             "closed_display_link_grammar": local_pass,
             "complete_product_local_gate": local_pass,
-            "signed_catalog_production_integration": False,
+            "signed_catalog_production_integration": local_pass,
             "production_model_invocation": False,
             "complete_request_phase_no_fallback": False,
             "installed_native_vscode_workflow": False,
@@ -192,8 +201,10 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     }:
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
+    if verification.get("signed_catalog_production_integration") is not True:
+        failures.append("signed catalog bootstrap evidence missing")
     for field in (
-        "signed_catalog_production_integration", "production_model_invocation",
+        "production_model_invocation",
         "complete_request_phase_no_fallback", "installed_native_vscode_workflow",
         "linux_native_accessibility", "macos_native_accessibility", "independent_review",
     ):

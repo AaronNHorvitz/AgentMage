@@ -38,7 +38,7 @@ class Sprint23EvidenceTests(unittest.TestCase):
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update(
-                {"signed_catalog_production_integration": True}),
+                {"signed_catalog_production_integration": False}),
             lambda value: value["verification_evidence"].update(
                 {"production_model_invocation": True}),
             lambda value: value["verification_evidence"].update(

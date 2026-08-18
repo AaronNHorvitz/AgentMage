@@ -28,9 +28,13 @@ flowchart LR
     R -->|changed, absent, or blocked| X[Visible refusal]
 ```
 
-The current production host bootstrap does not yet install a verified catalog snapshot or connect
-an admitted profile to an inference adapter. Consequently, the production provider truthfully
-discovers zero profiles until that later integration exists.
+The Linux production bootstrap now verifies the detached Ed25519 package manifest, retains a
+descriptor-held package proof, and loads the exact profile catalog only through a manifest-bound
+package path. The catalog is part of the signed payload closure, and a post-verification mutation is
+refused before projection. The current catalog enables no profile, so every entry remains
+management-only and the ordinary provider truthfully discovers zero profiles. Current activation,
+runtime-health, and hardware observations are not yet composed into the installed host, and no
+profile is connected to a production inference adapter.
 
 ## Exact Entry Identity
 

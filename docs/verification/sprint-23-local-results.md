@@ -16,6 +16,10 @@
 - The kernel admits no unsigned catalog projection and exposes only enabled, activated, compatible,
   policy-current, ready, supported profiles with an approved or degraded lifecycle, a passed role,
   and an explicit user decision.
+- The Linux package payload includes the exact profile catalog. Startup retains a descriptor-held
+  Ed25519-verified package proof, re-reads the catalog through that proof, and refuses catalog
+  mutation after package verification. The current zero-enabled catalog projects only
+  management-only entries.
 - Candidate, evaluating, quarantined, rejected, retired, incompatible, stale, blocked, failed,
   inactive, and unsupported profiles remain management-only.
 - Muse, Gemma, and an additional candidate family use the same discovery path without a family
@@ -33,9 +37,11 @@
 
 ## Open Evidence
 
-The production host bootstrap does not yet load a verified signed catalog or connect an admitted
-profile to a model adapter. No production model inference, model-token stream, exact tokenizer count,
-or complete context-manager integration has been exercised through native Chat. Full task, plan,
+The production host does not yet join the signed catalog to current activation, runtime-health, and
+hardware observations or expose that joined snapshot through an installed native session. It also
+does not connect an admitted profile to a model adapter. No production model inference, model-token
+stream, exact tokenizer count, or complete context-manager integration has been exercised through
+native Chat. Full task, plan,
 evidence, and checkpoint preservation has not been tested through selected-profile crash,
 quarantine, exhaustion, and explicit change during every request phase.
 
