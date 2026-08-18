@@ -16,14 +16,14 @@
       "sha256": "df875d09765252dc1947d68fccf9a9e82ee28f3c81db27f542f88f20fd21787a"
     },
     {
-      "bytes": 7491,
+      "bytes": 7794,
       "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json",
-      "sha256": "12036cba05724b0589be67ea6ec214a023cbbb9fe9929436cc3c7bd8580eab96"
+      "sha256": "4619abf3d69998e156b5e8ca067532ff4324f8966649b4778929959a5fa4083f"
     },
     {
-      "bytes": 10965,
+      "bytes": 10852,
       "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.log",
-      "sha256": "15da933feeaa11cab762025feb222a73824dbaa61b7aadd270ab9a4328c83682"
+      "sha256": "d648e3c6930b43a2cc782d1a162604396329d9a3bceea135d071cde390a2317d"
     },
     {
       "bytes": 3301,
@@ -56,9 +56,9 @@
       "sha256": "339454b3b8af518900bf4b983d7a47927cb507abf7c9dad14a9d88c258393ffb"
     },
     {
-      "bytes": 23801,
+      "bytes": 24295,
       "path": "docs/architecture/runtime-artifact-lifecycle.md",
-      "sha256": "07c8cd0f87102205ce5f926344d41f754a2d38440843b3b0ab1a2c9c2a981798"
+      "sha256": "d845958b5c7b02d8899a0420a47d1712a33ec8ed64632e079e90e09700439443"
     },
     {
       "bytes": 6786,
@@ -96,9 +96,9 @@
       "sha256": "ddaa5ab31f1c0ca55fe48b3d816c612b268fc1e47cd6a9a37e41151bdcac5be3"
     },
     {
-      "bytes": 87286,
+      "bytes": 95541,
       "path": "platforms/linux/src/runtime_artifact_store.rs",
-      "sha256": "e6d99a3359db663956dfdd585fbf0d323d85f6b8a68b707b3c42e5985c94f1ca"
+      "sha256": "71044d33fb4ef2603e8e30de1685319502ff4835edaa46053cbd82a349481dd7"
     },
     {
       "bytes": 1011,
@@ -146,9 +146,9 @@
       "sha256": "0896d2839803944862bff8b65e6316603e51cee8ee8ac31c0e8b310ff33af954"
     },
     {
-      "bytes": 16334,
+      "bytes": 16643,
       "path": "scripts/story_22_2_artifact_integrity_evidence.py",
-      "sha256": "39faf8b79d84278fa00e66de8b868e2f8c86094cacd4dae9e540c06ed7dbb3cf"
+      "sha256": "9eebaef9c69ca4298acf5d2dd45a12ba79ed91270f631698320de2f2744b95c0"
     },
     {
       "bytes": 14048,
@@ -161,9 +161,9 @@
       "sha256": "a63e68e801f34bff58bb134e6fb5ad584bcf8a5933338c410d20a0ecbadfe15d"
     },
     {
-      "bytes": 20593,
+      "bytes": 20689,
       "path": "scripts/story_22_2_evidence_index.py",
-      "sha256": "6b4aef6d1bc5d45f15eb862fb18789c02e3bd8c61820d82f47ff3c4adea80b57"
+      "sha256": "df5124f99510912845d4daa742e7447e57e732260dabce5901968aa6c4e34078"
     },
     {
       "bytes": 17578,
@@ -213,7 +213,7 @@
     {
       "bytes": 3419,
       "path": "tests/test_story_22_2_evidence_index.py",
-      "sha256": "e8a0899f4339cef7f701a3e3853e77fa07708322d977daabb211147e49539b29"
+      "sha256": "23c1913a1afa7ae7b0b04fe4438d060bc805b87d40dc0780354e9ad941c00bb6"
     },
     {
       "bytes": 2413,
@@ -227,7 +227,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "5305e6596544dbbc66cee8c6059ac5a47934935e37b281d1bcf8c7debfedd7a9",
+  "index_sha256": "db5b7275490dcdb150512712ee714896adb964d0db56af29d060c4a0a00eeafe",
   "limitations": [
     "Stops inside filesystem or SQLite syscalls and physical storage-fault campaigns remain open.",
     "Quarantined-payload operator recovery, long mixed-artifact sessions, and concurrent collection campaigns remain open.",
@@ -426,7 +426,7 @@
       "evidence": [
         "docs/architecture/runtime-artifact-lifecycle.md"
       ],
-      "statement_sha256": "1ba79b0da67ba4fad3fcd8d4bb6ae94bcdcc9801be5c859a978aff479af484c6",
+      "statement_sha256": "48dbcf5e9156ded1692ccfaaaf69f9aca71b6b520a0972c53f75684e252665a3",
       "status": "complete",
       "task_id": "22.2.2.4",
       "tests": [
@@ -492,7 +492,7 @@
       ]
     },
     {
-      "checked": false,
+      "checked": true,
       "code": [
         "kernel/engine/src/runtime_artifact.rs",
         "platforms/linux/src/runtime_artifact_store.rs"
@@ -500,11 +500,12 @@
       "evidence": [
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json"
       ],
-      "statement_sha256": "78dbdad7eee2d6ac0b100db0ffbb079f80dfde4ff2c901dd611c1fd4b37d7440",
-      "status": "partial",
+      "statement_sha256": "aaaddb98cd33c1a8e09d57ec6c9fd01ba94ae1aa53981070a3f6eb1ddf1b2df6",
+      "status": "complete",
       "task_id": "22.2.3.4",
       "tests": [
         "fixed_namespace_substitution_fails_before_the_next_store_effect",
+        "concurrent_file_races_deduplicate_or_fail_closed_without_deletion_or_disclosure",
         "story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
         "repository_evidence_namespace_is_never_private_artifact_authority"
       ]
@@ -553,13 +554,13 @@
   ],
   "record_type": "story_22_2_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "90462a5230c43fcfdfdf09c2ba29db3714d16140",
+  "source_revision": "2a6ad2b1a8e1862952ec73df0e507b992db6c216",
   "story_id": "22.2",
   "summary": {
-    "complete_count": 13,
+    "complete_count": 14,
     "mapping_count": 17,
     "open_count": 0,
-    "partial_count": 4,
+    "partial_count": 3,
     "release_approved": false,
     "sprint_complete": false,
     "story_complete": false

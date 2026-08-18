@@ -3,7 +3,7 @@
   "commands": [
     {
       "command_id": "ab1fb3e5f0cd8a3009aa746feadd0faa83b91ab295409f3e5e24c7f5cf14da08",
-      "elapsed_ms": 959,
+      "elapsed_ms": 965,
       "exit_code": 0,
       "expected_summary": "22 passed; 0 failed; 0 ignored",
       "id": "kernel-contracts",
@@ -23,9 +23,9 @@
     },
     {
       "command_id": "b4b0b8f446dabb8739a1f2ceb086d3741a2ea979f6f7cb26e0adadd8b96a0d73",
-      "elapsed_ms": 4647,
+      "elapsed_ms": 1109,
       "exit_code": 0,
-      "expected_summary": "9 passed; 0 failed; 2 ignored",
+      "expected_summary": "10 passed; 0 failed; 2 ignored",
       "id": "linux-native-store",
       "required_tests": [
         "stage_place_read_inventory_and_dedup_are_content_addressed",
@@ -35,13 +35,14 @@
         "invalid_names_symlinks_modes_and_root_drift_fail_closed",
         "corruption_quarantine_and_verified_delete_leave_no_active_object",
         "fixed_namespace_substitution_fails_before_the_next_store_effect",
+        "concurrent_file_races_deduplicate_or_fail_closed_without_deletion_or_disclosure",
         "repository_evidence_namespace_is_never_private_artifact_authority",
         "story_22_2_native_crash_matrix_reconciles_every_artifact_boundary"
       ]
     },
     {
       "command_id": "66f4e9017236c443d3ddc2b139237bc8eb34d947594da4277bde13946ebbe958",
-      "elapsed_ms": 5431,
+      "elapsed_ms": 2379,
       "exit_code": 0,
       "expected_summary": "1 passed; 0 failed; 0 ignored",
       "id": "generated-file-route",
@@ -51,7 +52,7 @@
     },
     {
       "command_id": "40235cbebb517fd5dbce7fd0505d9f47a4193fc1e991f8ed4b8f48f16bc794b4",
-      "elapsed_ms": 435,
+      "elapsed_ms": 422,
       "exit_code": 0,
       "expected_summary": "pass 1",
       "id": "public-schema-contracts",
@@ -94,6 +95,7 @@
     "path-link-namespace-and-public-evidence-separation": [
       "linux-native-store:invalid_names_symlinks_modes_and_root_drift_fail_closed",
       "linux-native-store:fixed_namespace_substitution_fails_before_the_next_store_effect",
+      "linux-native-store:concurrent_file_races_deduplicate_or_fail_closed_without_deletion_or_disclosure",
       "linux-native-store:repository_evidence_namespace_is_never_private_artifact_authority"
     ],
     "schema-lifecycle-and-path-mutations": [
@@ -107,7 +109,7 @@
   },
   "limitations": [
     "This campaign proves the named unit, native Linux source, generated-file route, and public-schema contracts; it is not installed-package or cross-platform evidence.",
-    "The namespace-substitution tests are deterministic boundary attacks, not a concurrent file-level race campaign.",
+    "The deterministic concurrent campaign covers identical publication, namespace replacement during read, and object substitution during delete; kernel or filesystem-internal races remain outside this source campaign.",
     "Physical power loss, disk-full, device latency, controller failure, and filesystem corruption are not claimed.",
     "Windows and macOS native artifact-store evidence and independent cryptographic review remain open.",
     "Large command, test, and model artifact session reconstruction remains separate resume-campaign work.",
@@ -115,30 +117,30 @@
   ],
   "private_user_data_used": false,
   "raw_trace": {
-    "bytes": 10965,
+    "bytes": 10852,
     "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.log",
     "redactions": [
       "repository-root"
     ],
-    "sha256": "15da933feeaa11cab762025feb222a73824dbaa61b7aadd270ab9a4328c83682"
+    "sha256": "d648e3c6930b43a2cc782d1a162604396329d9a3bceea135d071cde390a2317d"
   },
   "schema_version": 1,
-  "source_revision": "956e280c9e1041dee448a9b39bb1794b54fc3ceb",
+  "source_revision": "d9251683373530e531c59ce54bb790a99a262c73",
   "sources": [
     {
-      "bytes": 165236,
+      "bytes": 165968,
       "path": "kernel/engine/src/runtime_artifact.rs",
-      "sha256": "528d21136c8aaa4400ccf30d3221ee1ea337b8b0ad17b0e51229fe7abb8625b6"
+      "sha256": "193b8402fdcd452bc248bd39c4888dd12579906dfc579348eab978602d44287d"
     },
     {
-      "bytes": 84332,
+      "bytes": 95541,
       "path": "platforms/linux/src/runtime_artifact_store.rs",
-      "sha256": "1ad92f84b3a125d500f7695baf4b6dba14f53ce12e6c92f8da3433c8a8f6a78e"
+      "sha256": "71044d33fb4ef2603e8e30de1685319502ff4835edaa46053cbd82a349481dd7"
     },
     {
-      "bytes": 255862,
+      "bytes": 272938,
       "path": "shells/host/src/linux_coding_runtime.rs",
-      "sha256": "1bef771b69b837e9fe1402a73a1aae50650ba8239834853011e6c986b821bf40"
+      "sha256": "5472347c33847bb99de2504cf12c0d0b2eb4364c537c99509a5683984fe6fff5"
     },
     {
       "bytes": 67296,
@@ -146,9 +148,9 @@
       "sha256": "af74d590af0eb8eb3cda538133f879dcb13eea0b8e3250c9b4e46f850c58b919"
     },
     {
-      "bytes": 16334,
+      "bytes": 16643,
       "path": "scripts/story_22_2_artifact_integrity_evidence.py",
-      "sha256": "39faf8b79d84278fa00e66de8b868e2f8c86094cacd4dae9e540c06ed7dbb3cf"
+      "sha256": "9eebaef9c69ca4298acf5d2dd45a12ba79ed91270f631698320de2f2744b95c0"
     },
     {
       "bytes": 2829,
