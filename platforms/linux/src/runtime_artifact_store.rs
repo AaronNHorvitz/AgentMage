@@ -114,9 +114,21 @@ impl LinuxRuntimeArtifactPayloadStore {
 
     fn revalidate(&self) -> Result<(), RuntimeArtifactPayloadError> {
         verify_directory(&self.root, &self.root_snapshot, None)?;
+        verify_named_directory(
+            &self.root,
+            STORE_DIRECTORY,
+            &self.store_snapshot,
+            Some(self.root_snapshot.device),
+        )?;
         verify_directory(
             &self.store,
             &self.store_snapshot,
+            Some(self.root_snapshot.device),
+        )?;
+        verify_named_directory(
+            &self.store,
+            STAGING_DIRECTORY,
+            &self.staging_snapshot,
             Some(self.root_snapshot.device),
         )?;
         verify_directory(
@@ -124,9 +136,21 @@ impl LinuxRuntimeArtifactPayloadStore {
             &self.staging_snapshot,
             Some(self.root_snapshot.device),
         )?;
+        verify_named_directory(
+            &self.store,
+            OBJECT_DIRECTORY,
+            &self.objects_snapshot,
+            Some(self.root_snapshot.device),
+        )?;
         verify_directory(
             &self.objects,
             &self.objects_snapshot,
+            Some(self.root_snapshot.device),
+        )?;
+        verify_named_directory(
+            &self.store,
+            QUARANTINE_DIRECTORY,
+            &self.quarantine_snapshot,
             Some(self.root_snapshot.device),
         )?;
         verify_directory(
@@ -567,6 +591,22 @@ fn verify_directory(
     }
 }
 
+fn verify_named_directory(
+    parent: &OwnedFd,
+    name: &str,
+    expected: &DirectorySnapshot,
+    expected_device: Option<u64>,
+) -> Result<(), RuntimeArtifactPayloadError> {
+    let descriptor = openat(
+        parent,
+        name,
+        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+        Mode::empty(),
+    )
+    .map_err(|_| RuntimeArtifactPayloadError::UnsafeRoot)?;
+    verify_directory(&descriptor, expected, expected_device)
+}
+
 fn open_regular(directory: &OwnedFd, name: &str) -> Result<OwnedFd, RuntimeArtifactPayloadError> {
     openat(
         directory,
@@ -749,14 +789,15 @@ mod tests {
         DurableAuthorityRuntime, OperationalStoreKeyError, OperationalStoreKeyProvider,
     };
     use agentmage_kernel_engine::runtime_artifact::{
-        RuntimeArtifactPayloadError, RuntimeArtifactPayloadInventoryIntegrity,
-        RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadStore, runtime_artifact_ref,
-        runtime_payload_reference, seal_runtime_artifact_manifest, seal_runtime_resume_binding,
+        RuntimeArtifactPayloadError, RuntimeArtifactPayloadInventoryEntry,
+        RuntimeArtifactPayloadInventoryIntegrity, RuntimeArtifactPayloadObservation,
+        RuntimeArtifactPayloadStore, runtime_artifact_ref, runtime_payload_reference,
+        seal_runtime_artifact_manifest, seal_runtime_resume_binding,
     };
     use agentmage_kernel_engine::runtime_event::seal_runtime_event;
     use sha2::{Digest, Sha256};
 
-    use super::{OBJECT_DIRECTORY, STAGING_DIRECTORY, STORE_DIRECTORY};
+    use super::{OBJECT_DIRECTORY, QUARANTINE_DIRECTORY, STAGING_DIRECTORY, STORE_DIRECTORY};
     use crate::runtime_artifact_crypto::derive_artifact_payload_key;
     use crate::{LinuxRuntimeArtifactPayloadStore, LinuxStrictLocalRootInspector};
 
@@ -878,6 +919,14 @@ mod tests {
 
         fn staging(&self) -> PathBuf {
             self.0.join(STORE_DIRECTORY).join(STAGING_DIRECTORY)
+        }
+
+        fn namespace(&self) -> PathBuf {
+            self.0.join(STORE_DIRECTORY)
+        }
+
+        fn quarantine(&self) -> PathBuf {
+            self.0.join(STORE_DIRECTORY).join(QUARANTINE_DIRECTORY)
         }
     }
 
@@ -1459,6 +1508,15 @@ mod tests {
             store.verify(&observation),
             Err(RuntimeArtifactPayloadError::UnsafeRoot)
         );
+        fs::set_permissions(
+            root.objects().join(&observation.payload_sha256),
+            fs::Permissions::from_mode(0o700),
+        )
+        .expect("object becomes executable");
+        assert_eq!(
+            store.verify(&observation),
+            Err(RuntimeArtifactPayloadError::UnsafeRoot)
+        );
 
         fs::set_permissions(root.path(), fs::Permissions::from_mode(0o755))
             .expect("root mode changes");
@@ -1500,6 +1558,116 @@ mod tests {
             store.verify(&deleted),
             Err(RuntimeArtifactPayloadError::Missing)
         );
+    }
+
+    #[test]
+    fn fixed_namespace_substitution_fails_before_the_next_store_effect() {
+        for namespace in ["store", "staging", "objects", "quarantine"] {
+            let root = TestRoot::new(namespace);
+            let mut store = root.store();
+            let mut staged = None;
+            let mut retained = None;
+            if namespace == "objects" {
+                let (candidate, observation) = store
+                    .stage(
+                        &artifact_id("artifact-objects-race"),
+                        &mut Cursor::new(b"objects-race"),
+                        12,
+                    )
+                    .expect("race payload stages");
+                staged = Some((candidate, observation));
+            } else if namespace == "quarantine" {
+                retained = Some(stage_and_place(
+                    &mut store,
+                    "artifact-quarantine-race",
+                    b"quarantine-race",
+                ));
+            }
+
+            let target = match namespace {
+                "store" => root.namespace(),
+                "staging" => root.staging(),
+                "objects" => root.objects(),
+                "quarantine" => root.quarantine(),
+                _ => unreachable!("closed namespace fixture"),
+            };
+            let displaced = target.with_extension("displaced");
+            fs::rename(&target, &displaced).expect("held namespace displaces");
+            fs::create_dir(&target).expect("substitute namespace creates");
+            fs::set_permissions(&target, fs::Permissions::from_mode(0o700))
+                .expect("substitute namespace is private");
+
+            let result = match namespace {
+                "store" => store.inventory().map(|_| ()),
+                "staging" => store
+                    .stage(
+                        &artifact_id("artifact-staging-race"),
+                        &mut Cursor::new(b"staging-race"),
+                        12,
+                    )
+                    .map(|_| ()),
+                "objects" => {
+                    let (candidate, observation) = staged.take().expect("staged race fixture");
+                    store.place(candidate, &observation).map(|_| ())
+                }
+                "quarantine" => store
+                    .delete(retained.as_ref().expect("retained race fixture"))
+                    .map(|_| ()),
+                _ => unreachable!("closed namespace fixture"),
+            };
+            assert_eq!(result, Err(RuntimeArtifactPayloadError::UnsafeRoot));
+            assert!(
+                target
+                    .read_dir()
+                    .expect("substitute namespace lists")
+                    .next()
+                    .is_none(),
+                "{namespace} substitution received a store effect"
+            );
+        }
+    }
+
+    #[test]
+    fn repository_evidence_namespace_is_never_private_artifact_authority() {
+        let root = TestRoot::new("repository-evidence-confusion");
+        let mut store = root.store();
+        let private = b"private-runtime-payload";
+        let observation = stage_and_place(&mut store, "artifact-private", private);
+        let repository_evidence = root.path().join("artifacts/sprints/sprint-22");
+        fs::create_dir_all(&repository_evidence).expect("repository evidence directory creates");
+        fs::set_permissions(
+            root.path().join("artifacts"),
+            fs::Permissions::from_mode(0o700),
+        )
+        .expect("repository artifacts directory is private");
+        fs::set_permissions(
+            root.path().join("artifacts/sprints"),
+            fs::Permissions::from_mode(0o700),
+        )
+        .expect("repository sprints directory is private");
+        fs::set_permissions(&repository_evidence, fs::Permissions::from_mode(0o700))
+            .expect("repository evidence directory is private");
+        let confusing = repository_evidence.join(&observation.payload_sha256);
+        fs::write(&confusing, b"executable repository evidence")
+            .expect("repository evidence writes");
+        fs::set_permissions(&confusing, fs::Permissions::from_mode(0o700))
+            .expect("repository evidence becomes executable");
+
+        assert_eq!(
+            store.inventory().expect("private inventory remains exact"),
+            [RuntimeArtifactPayloadInventoryEntry {
+                payload_sha256: observation.payload_sha256.clone(),
+                byte_size: private.len() as u64,
+                integrity: RuntimeArtifactPayloadInventoryIntegrity::Verified,
+            }]
+        );
+        assert_eq!(
+            store
+                .read_complete(&observation, private.len() as u64)
+                .expect("private payload reads"),
+            private
+        );
+        assert!(confusing.exists());
     }
 
     #[test]
