@@ -29,6 +29,12 @@ use crate::authority_transaction::{
     EffectDriver,
 };
 use crate::context_management::{CheckpointError, verify_checkpoint};
+use crate::evidence_reconciliation::{
+    AnswerClaimLedger, ReceiptIntegrityKey, TamperEvidentReceiptLedger,
+};
+use crate::evidence_store::{
+    EvidenceStoreError, ReceiptIntegrityCheckpoint, verify_all as verify_evidence_store,
+};
 use crate::filesystem_control::{
     ControlledFilesystemDriver, FilesystemApprovalDecision, FilesystemApprovalPreview,
     FilesystemApprovalReceipt, FilesystemGrantRequest, FilesystemPlan, FilesystemPlanError,
@@ -67,7 +73,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 8;
+const SCHEMA_VERSION: i64 = 9;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -148,6 +154,8 @@ const MIGRATION_7_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0007-runtime-artifacts.sql");
 const MIGRATION_8_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0008-repository-map-cache.sql");
+const MIGRATION_9_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0009-evidence-integrity.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -980,6 +988,7 @@ impl OperationalStore {
         verify_runtime_journal(self).map_err(|_| OperationalStoreError::IntegrityFailure)?;
         verify_runtime_artifacts(self).map_err(|_| OperationalStoreError::IntegrityFailure)?;
         verify_repository_cache(self)?;
+        verify_evidence_store(self)?;
         let generation: i64 = self
             .connection
             .query_row(
@@ -1286,6 +1295,8 @@ pub enum DurableAuthorityError {
     RuntimeJournal(RuntimeJournalError),
     /// Runtime artifact metadata, payload storage, ownership, or integrity failed.
     RuntimeArtifact(RuntimeArtifactStoreError),
+    /// Answer-ledger or receipt-integrity persistence failed.
+    Evidence(EvidenceStoreError),
 }
 
 impl DurableAuthorityRuntime {
@@ -2359,6 +2370,55 @@ impl DurableAuthorityRuntime {
             .map_err(DurableAuthorityError::Store)
     }
 
+    /// Persists one complete verified answer-claim ledger in encrypted local state.
+    pub fn put_answer_claim_ledger(
+        &self,
+        ledger: &AnswerClaimLedger,
+        created_at_epoch_ms: u64,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .put_answer_claim_ledger(ledger, created_at_epoch_ms)
+            .map_err(DurableAuthorityError::Evidence)
+    }
+
+    /// Reads one exact encrypted answer-claim ledger and re-verifies its complete digest.
+    pub fn answer_claim_ledger(
+        &self,
+        ledger_sha256: &str,
+    ) -> Result<Option<AnswerClaimLedger>, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .answer_claim_ledger(ledger_sha256)
+            .map_err(DurableAuthorityError::Evidence)
+    }
+
+    /// Commits one receipt ledger and external keyed anchor under a stable local scope.
+    pub fn checkpoint_receipt_integrity(
+        &self,
+        scope_id: &str,
+        ledger: &TamperEvidentReceiptLedger,
+        key: &ReceiptIntegrityKey,
+        observed_at_epoch_ms: u64,
+    ) -> Result<ReceiptIntegrityCheckpoint, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .checkpoint_receipt_integrity(scope_id, ledger, key, observed_at_epoch_ms)
+            .map_err(DurableAuthorityError::Evidence)
+    }
+
+    /// Re-verifies every retained receipt anchor with the separately brokered key.
+    pub fn verify_receipt_integrity(
+        &self,
+        scope_id: &str,
+        key: &ReceiptIntegrityKey,
+    ) -> Result<ReceiptIntegrityCheckpoint, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .verify_receipt_integrity(scope_id, key)
+            .map_err(DurableAuthorityError::Evidence)
+    }
+
     fn recover_interrupted(
         &mut self,
         occurred_at_epoch_ms: u64,
@@ -2772,6 +2832,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 8_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 8;
+    }
+    if version == 8 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_9_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (9, ?1)",
+                [sha256_hex(MIGRATION_9_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -2800,6 +2881,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (6, sha256_hex(MIGRATION_6_SCHEMA_SQL.as_bytes())),
             (7, sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())),
             (8, sha256_hex(MIGRATION_8_SCHEMA_SQL.as_bytes())),
+            (9, sha256_hex(MIGRATION_9_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -4374,11 +4456,11 @@ mod tests {
         DurableAuthorityError, DurableAuthorityRuntime, MIGRATION_1_SCHEMA_SQL,
         MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, MIGRATION_4_SCHEMA_SQL,
         MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, MIGRATION_7_SCHEMA_SQL,
-        MIGRATION_8_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
-        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
-        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
-        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
-        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        MIGRATION_8_SCHEMA_SQL, MIGRATION_9_SCHEMA_SQL, OperationalStore, OperationalStoreError,
+        OperationalStoreKeyError, OperationalStoreKeyLifecycle, OperationalStoreKeyProvider,
+        RetentionAssignment, RetentionDisposition, RetentionHoldKind, RetentionRecordFamily,
+        RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path,
+        open_connection, prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
         verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
@@ -5770,7 +5852,7 @@ mod tests {
     }
 
     #[test]
-    fn version_eight_schema_is_normalized_closed_and_relational() {
+    fn version_nine_schema_is_normalized_closed_and_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
@@ -5792,6 +5874,7 @@ mod tests {
             tables,
             [
                 "actions",
+                "answer_claim_ledgers",
                 "checkpoints",
                 "conversation_compactions",
                 "conversation_tags",
@@ -5811,6 +5894,8 @@ mod tests {
                 "grant_revisions",
                 "objectives",
                 "plans",
+                "receipt_integrity_anchors",
+                "receipt_integrity_ledgers",
                 "receipts",
                 "repository_map_cache",
                 "retention",
@@ -6245,7 +6330,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_eight_with_exact_history() {
+    fn version_one_upgrades_through_nine_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -6276,6 +6361,7 @@ mod tests {
                 (6, sha256_hex(MIGRATION_6_SCHEMA_SQL.as_bytes())),
                 (7, sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())),
                 (8, sha256_hex(MIGRATION_8_SCHEMA_SQL.as_bytes())),
+                (9, sha256_hex(MIGRATION_9_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -6943,7 +7029,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 8));
+                assert_eq!((version, history), (SCHEMA_VERSION, 9));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))

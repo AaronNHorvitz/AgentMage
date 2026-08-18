@@ -43,6 +43,7 @@ pub mod evidence_bundle;
 pub mod evidence_reconciliation;
 /// Deterministic assignment of explicit evidence states to material claims.
 pub mod evidence_state;
+pub mod evidence_store;
 /// Deterministic executive-assistant views, ranking, drafting, and local triage.
 pub mod executive_assistant;
 /// Authority-free controlled filesystem plans, structured patches, and exact previews.
