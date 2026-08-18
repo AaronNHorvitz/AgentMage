@@ -870,8 +870,7 @@ mod tests {
         .expect("optional item is omitted");
         assert_eq!(packet.items.len(), 1);
         assert!(packet.accounting.iter().any(|entry| {
-            entry.item_id == "supporting"
-                && entry.omission == Some(ContextOmissionReason::Budget)
+            entry.item_id == "supporting" && entry.omission == Some(ContextOmissionReason::Budget)
         }));
 
         let mut second_required = item(

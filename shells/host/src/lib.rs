@@ -76,8 +76,6 @@ pub mod linux_read;
 /// Stable component identity used by diagnostics and build verification.
 pub const COMPONENT_ID: &str = "shell-host";
 
-#[cfg(test)]
-mod runtime_read_tests;
 #[cfg(all(
     test,
     feature = "interactive-cli",
@@ -85,3 +83,5 @@ mod runtime_read_tests;
     feature = "workflow-caller"
 ))]
 mod runtime_parity_tests;
+#[cfg(test)]
+mod runtime_read_tests;

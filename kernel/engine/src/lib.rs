@@ -61,12 +61,12 @@ pub mod handoff;
 pub mod instruction_provenance;
 /// Exact candidate-tree, signer, manual approval, and signed local commit contracts.
 pub mod local_commit;
-/// Authority-free meeting preparation, source-preserving minutes, and continuity.
-pub mod meeting_continuity;
 /// Stateful read-only MCP request mediation, response validation, and receipts.
 pub mod mcp_gateway;
 /// Read-only MCP manifest admission, identity binding, and optional tool adaptation.
 pub mod mcp_registry;
+/// Authority-free meeting preparation, source-preserving minutes, and continuity.
+pub mod meeting_continuity;
 /// Exact non-activating evaluation gate for alternate local model runtimes.
 pub mod model_adapter_evaluation;
 pub mod model_codec;
@@ -135,14 +135,14 @@ pub mod validation_result;
 pub mod validation_template;
 /// Bounded work-packet validation, revision history, and plan adaptation.
 pub mod work_packet;
+/// Narrowing-only authority intersection for future workflow callers.
+pub mod workflow_authority;
 /// Exact-preimage shadow changes, review previews, and bounded write grants.
 pub mod write_approval;
 /// Content-free write checkpoints, privacy gates, recovery decisions, and audit receipts.
 pub mod write_recovery;
 /// Grant-consuming atomic write coordination, receipts, restoration, and rollback proposals.
 pub mod write_transaction;
-/// Narrowing-only authority intersection for future workflow callers.
-pub mod workflow_authority;
 
 #[cfg(test)]
 mod s012_it01;

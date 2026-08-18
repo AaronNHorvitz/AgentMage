@@ -66,9 +66,7 @@ pub use repository_safety::{
     LinuxRepositoryError, LinuxRepositoryErrorKind, LinuxRepositoryExecutor, LinuxRepositoryScope,
     linux_repository_path_sha256,
 };
-pub use runtime_artifact_store::{
-    LinuxRuntimeArtifactPayloadStore, LinuxRuntimeArtifactStaged,
-};
+pub use runtime_artifact_store::{LinuxRuntimeArtifactPayloadStore, LinuxRuntimeArtifactStaged};
 pub use sandbox::{
     LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxEffectDriver,
     LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,

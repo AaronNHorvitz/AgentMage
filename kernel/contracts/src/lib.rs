@@ -24,8 +24,8 @@ mod frontier_import;
 mod grant;
 mod handoff;
 mod ids;
-mod meeting;
 mod mcp;
+mod meeting;
 mod model;
 mod model_discovery;
 mod network;
@@ -146,6 +146,12 @@ pub use ids::{
     ToolCatalogId, ToolId, VerifierId, VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId,
     WorkspaceId,
 };
+pub use mcp::{
+    McpCancellation, McpConnection, McpDisconnect, McpDiscovery, McpError, McpLimits, McpManifest,
+    McpPromptManifest, McpReceipt, McpReceiptKind, McpRequest, McpRequestKind, McpResourceManifest,
+    McpResponse, McpResponseClass, McpTerminalState, McpToolManifest, McpTransport,
+    McpTransportKind,
+};
 pub use meeting::{
     MeetingAttendanceState, MeetingAttendee, MeetingCloseout, MeetingContinuityItem,
     MeetingContinuityRecord, MeetingContinuityState, MeetingContinuityUpdate, MeetingDraftKind,
@@ -153,12 +159,6 @@ pub use meeting::{
     MeetingMinutesItemKind, MeetingPlanDraft, MeetingPlanItem, MeetingProjectionPrecondition,
     MeetingTextSourceKind, MeetingTranscriptCleanup, MeetingTranscriptSegment,
     MeetingUnclearMarker,
-};
-pub use mcp::{
-    McpCancellation, McpConnection, McpDisconnect, McpDiscovery, McpError, McpLimits,
-    McpManifest, McpPromptManifest, McpReceipt, McpReceiptKind, McpRequest, McpRequestKind,
-    McpResourceManifest, McpResponse, McpResponseClass, McpTerminalState, McpToolManifest,
-    McpTransport, McpTransportKind,
 };
 pub use model::{
     ClosedModelProposal, ContextBudget, DecodingProfile, EncodedModelContext, ExactModelProfile,
