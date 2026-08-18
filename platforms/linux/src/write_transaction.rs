@@ -596,7 +596,7 @@ fn stable_replacement_identity(expected: &LinuxStatSnapshot, observed: &LinuxSta
         && expected.size == observed.size
 }
 
-fn parent_is_current(
+pub(super) fn parent_is_current(
     workspace: &LinuxAuthorizedWorkspace,
     components: &[agentmage_kernel_contracts::WorkspacePathComponent],
     held_directory: &OwnedFd,
@@ -609,7 +609,7 @@ fn parent_is_current(
     })
 }
 
-fn held_file_matches(
+pub(super) fn held_file_matches(
     directory: &OwnedFd,
     name: &str,
     expected_snapshot: &LinuxStatSnapshot,

@@ -14,8 +14,8 @@ use rustix::fs::{AtFlags, Dir, RenameFlags, fstat, fsync, renameat_with, unlinka
 use crate::{
     LinuxAuthorizedWorkspace, LinuxPathAdapter,
     write_transaction::{
-        LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits, ReplaceOutcome, open_parent,
-        read_held_bytes, remove_staged, stage_file, temporary_name,
+        LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits, ReplaceOutcome, held_file_matches,
+        open_parent, parent_is_current, read_held_bytes, remove_staged, stage_file, temporary_name,
     },
 };
 
@@ -54,6 +54,8 @@ impl Default for LinuxFilesystemDriverLimits {
 pub struct LinuxControlledFilesystemDriver<'workspace> {
     workspace: &'workspace LinuxAuthorizedWorkspace,
     limits: LinuxFilesystemDriverLimits,
+    #[cfg(test)]
+    race_hook: Option<Box<dyn FnMut(FilesystemLifecycleEvent)>>,
 }
 
 impl std::fmt::Debug for LinuxControlledFilesystemDriver<'_> {
@@ -72,7 +74,12 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
         workspace: &'workspace LinuxAuthorizedWorkspace,
         limits: LinuxFilesystemDriverLimits,
     ) -> Self {
-        Self { workspace, limits }
+        Self {
+            workspace,
+            limits,
+            #[cfg(test)]
+            race_hook: None,
+        }
     }
 
     fn adapter(&self) -> LinuxPathAdapter {
@@ -253,7 +260,7 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
     }
 
     fn apply_operation(
-        &self,
+        &mut self,
         transaction_id: &str,
         index: usize,
         operation: &FilesystemOperation,
@@ -292,7 +299,7 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
     }
 
     fn create_exact(
-        &self,
+        &mut self,
         transaction_id: &str,
         index: usize,
         operation: &FilesystemOperation,
@@ -311,17 +318,47 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
         if !self.destination_parent_is_exact(expected_parent) {
             return EffectOutcome::NoChange;
         }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterInitialObservation);
         let (directory, name) = match open_parent(self.workspace, destination.components()) {
             Ok(value) => value,
             Err(_) => return EffectOutcome::NoChange,
         };
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterParentOpened);
+        if !self.held_destination_parent_is_current(expected_parent, &destination, &directory) {
+            return EffectOutcome::NoChange;
+        }
         let temporary = temporary_name(transaction_id, index, purpose, operation.postimage_bytes());
         let mode = operation.destination_mode().unwrap_or(u32::MAX);
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::BeforeStaging);
+        if !self.held_destination_parent_is_current(expected_parent, &destination, &directory) {
+            return EffectOutcome::NoChange;
+        }
         let staged = match stage_file(&directory, &temporary, operation.postimage_bytes(), mode) {
             Ok(value) => value,
             Err(_) => return EffectOutcome::NoChange,
         };
+        let staged_snapshot = match crate::snapshot(&staged, None) {
+            Ok(value) => value,
+            Err(_) => {
+                drop(staged);
+                let _ = remove_staged(&directory, &temporary);
+                return EffectOutcome::NoChange;
+            }
+        };
         drop(staged);
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterStaging);
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::BeforeCommit);
+        if !self.held_destination_parent_is_current(expected_parent, &destination, &directory)
+            || self.observe_optional_file(&destination).ok() != Some(None)
+        {
+            let _ = remove_staged(&directory, &temporary);
+            return EffectOutcome::NoChange;
+        }
         if renameat_with(
             &directory,
             temporary.as_str(),
@@ -334,13 +371,46 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
             let _ = remove_staged(&directory, &temporary);
             return EffectOutcome::NoChange;
         }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterCommit);
+        if !parent_is_current(self.workspace, destination.components(), &directory) {
+            return remove_created_entry(
+                &directory,
+                &name,
+                &staged_snapshot,
+                operation.postimage_bytes(),
+                self.limits.maximum_file_bytes,
+            );
+        }
         if fsync(&directory).is_err() {
             return EffectOutcome::Uncertain;
         }
-        if self.entry_matches(&destination, operation.postimage_bytes(), mode) {
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterCommitDurable);
+        if !parent_is_current(self.workspace, destination.components(), &directory) {
+            return remove_created_entry(
+                &directory,
+                &name,
+                &staged_snapshot,
+                operation.postimage_bytes(),
+                self.limits.maximum_file_bytes,
+            );
+        }
+        if !self.entry_matches(&destination, operation.postimage_bytes(), mode) {
+            return EffectOutcome::Uncertain;
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterVerification);
+        if parent_is_current(self.workspace, destination.components(), &directory) {
             EffectOutcome::Applied
         } else {
-            EffectOutcome::Uncertain
+            remove_created_entry(
+                &directory,
+                &name,
+                &staged_snapshot,
+                operation.postimage_bytes(),
+                self.limits.maximum_file_bytes,
+            )
         }
     }
 
@@ -454,6 +524,16 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
         }
     }
 
+    fn held_destination_parent_is_current(
+        &self,
+        expected: &GrantTarget,
+        destination: &WorkspacePath,
+        held_directory: &rustix::fd::OwnedFd,
+    ) -> bool {
+        self.destination_parent_is_exact(expected)
+            && parent_is_current(self.workspace, destination.components(), held_directory)
+    }
+
     fn entry_matches(&self, path: &WorkspacePath, expected: &[u8], mode: u32) -> bool {
         self.observe_optional_file(path)
             .ok()
@@ -488,7 +568,7 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
     }
 
     fn restore_operation(
-        &self,
+        &mut self,
         transaction_id: &str,
         index: usize,
         operation: &FilesystemOperation,
@@ -520,6 +600,22 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
             FilesystemOperationKind::Move | FilesystemOperationKind::TrashDelete => {
                 self.move_exact(operation, true)
             }
+        }
+    }
+
+    #[cfg(test)]
+    fn with_race_hook(mut self, hook: impl FnMut(FilesystemLifecycleEvent) + 'static) -> Self {
+        self.race_hook = Some(Box::new(hook));
+        self
+    }
+
+    #[cfg(test)]
+    fn run_race_hook(&mut self, purpose: &str, boundary: FilesystemRaceBoundary) {
+        if let Some(hook) = self.race_hook.as_mut() {
+            hook(FilesystemLifecycleEvent {
+                purpose: purpose.to_owned(),
+                boundary,
+            });
         }
     }
 }
@@ -607,6 +703,62 @@ enum EffectOutcome {
     Uncertain,
 }
 
+fn remove_created_entry(
+    directory: &rustix::fd::OwnedFd,
+    name: &str,
+    expected_snapshot: &crate::LinuxStatSnapshot,
+    expected_bytes: &[u8],
+    maximum_bytes: u64,
+) -> EffectOutcome {
+    if !held_file_matches(
+        directory,
+        name,
+        expected_snapshot,
+        expected_bytes,
+        maximum_bytes,
+    ) {
+        return EffectOutcome::Uncertain;
+    }
+    if unlinkat(directory, name, AtFlags::empty()).is_err() || fsync(directory).is_err() {
+        return EffectOutcome::Uncertain;
+    }
+    EffectOutcome::NoChange
+}
+
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FilesystemRaceBoundary {
+    AfterInitialObservation,
+    AfterParentOpened,
+    BeforeStaging,
+    AfterStaging,
+    BeforeCommit,
+    AfterCommit,
+    AfterCommitDurable,
+    AfterVerification,
+}
+
+#[cfg(test)]
+impl FilesystemRaceBoundary {
+    const CREATE_ALL: [Self; 8] = [
+        Self::AfterInitialObservation,
+        Self::AfterParentOpened,
+        Self::BeforeStaging,
+        Self::AfterStaging,
+        Self::BeforeCommit,
+        Self::AfterCommit,
+        Self::AfterCommitDurable,
+        Self::AfterVerification,
+    ];
+}
+
+#[cfg(test)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct FilesystemLifecycleEvent {
+    purpose: String,
+    boundary: FilesystemRaceBoundary,
+}
+
 fn destination_path(
     operation: &FilesystemOperation,
 ) -> Result<WorkspacePath, FilesystemDriverError> {
@@ -663,11 +815,13 @@ fn uncertain_restore() -> FilesystemRestoreReport {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::Cell;
     use std::collections::BTreeSet;
     use std::fs;
     use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
     use std::os::unix::net::UnixListener;
     use std::path::{Path, PathBuf};
+    use std::rc::Rc;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
@@ -692,7 +846,10 @@ mod tests {
     use rustix::fs::{CWD, Mode, mkfifoat};
     use sha2::{Digest, Sha256};
 
-    use super::{LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits, temporary_name};
+    use super::{
+        FilesystemLifecycleEvent, FilesystemRaceBoundary, LinuxControlledFilesystemDriver,
+        LinuxFilesystemDriverLimits, temporary_name,
+    };
     use crate::{LinuxAuthorizedWorkspace, LinuxPathAdapter, authorize_workspace_root};
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -1434,6 +1591,83 @@ mod tests {
                 "FIFO destination {destination}"
             );
             assert!(destination_path.exists());
+        }
+    }
+
+    #[test]
+    fn s_030_st01_copy_parent_rename_at_every_boundary_preserves_both_owners() {
+        for boundary in FilesystemRaceBoundary::CREATE_ALL {
+            let mut fixture = fixture(false);
+            let canonical_parent = fixture.root.path().join("copies");
+            let authorized_parent = fixture.root.path().join("copies-authorized");
+            let fired = Rc::new(Cell::new(false));
+            let hook_fired = Rc::clone(&fired);
+            let hook_canonical = canonical_parent.clone();
+            let hook_authorized = authorized_parent.clone();
+            let mut driver = LinuxControlledFilesystemDriver::new(
+                &fixture.workspace,
+                LinuxFilesystemDriverLimits {
+                    maximum_file_bytes: 1024 * 1024,
+                    maximum_transaction_bytes: 4 * 1024 * 1024,
+                    ..LinuxFilesystemDriverLimits::default()
+                },
+            )
+            .with_race_hook(move |event: FilesystemLifecycleEvent| {
+                if event.purpose == "copy"
+                    && event.boundary == boundary
+                    && !hook_fired.replace(true)
+                {
+                    fs::rename(&hook_canonical, &hook_authorized)
+                        .expect("rename authorized copy parent");
+                    fs::create_dir(&hook_canonical).expect("create replacement copy parent");
+                    fs::write(hook_canonical.join("owner.txt"), b"competing owner\n")
+                        .expect("write competing owner");
+                }
+            });
+            let outcome = execute_filesystem_transaction(
+                &mut fixture.issuer,
+                &fixture.policy,
+                &fixture.plan,
+                &fixture.approval,
+                FilesystemTransactionRequest {
+                    transaction_id: TRANSACTION_ID.to_owned(),
+                    now_epoch_ms: 4_000,
+                    cancelled_before_consume: false,
+                },
+                &mut driver,
+            )
+            .map(|result| result.outcome);
+
+            assert!(fired.get(), "hook did not fire at {boundary:?}");
+            assert!(
+                matches!(
+                    outcome,
+                    Ok(FilesystemTransactionOutcome::Restored)
+                        | Ok(FilesystemTransactionOutcome::Uncertain)
+                ),
+                "unexpected transaction outcome at {boundary:?}: {outcome:?}"
+            );
+            assert_eq!(
+                fs::read(canonical_parent.join("owner.txt")).expect("competing owner preserved"),
+                b"competing owner\n",
+                "canonical replacement changed at {boundary:?}"
+            );
+            assert_eq!(
+                fs::read_dir(&authorized_parent)
+                    .expect("authorized parent listing")
+                    .count(),
+                0,
+                "authorized parent retained an effect at {boundary:?}"
+            );
+            assert_eq!(
+                fs::read(fixture.root.path().join("src/copy.txt")).expect("copy source"),
+                b"copy\n"
+            );
+            assert!(!fixture.root.path().join("created.txt").exists());
+            assert_eq!(
+                fs::read(fixture.root.path().join("src/patch.txt")).expect("patch restored"),
+                b"alpha\nbeta\ngamma\n"
+            );
         }
     }
 }
