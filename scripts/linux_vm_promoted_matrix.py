@@ -138,7 +138,8 @@ sudo install -d -m 0755 /opt/node /opt/cargo /opt/rustup
 curl --fail --location --silent --show-error https://nodejs.org/dist/v24.15.0/node-v24.15.0-linux-x64.tar.xz -o /tmp/node.tar.xz
 echo '{NODE_SHA256}  /tmp/node.tar.xz' | sha256sum --check --strict
 sudo tar -xJf /tmp/node.tar.xz -C /opt/node --strip-components=1
-sudo /opt/node/bin/npm install --global --ignore-scripts --no-audit --no-fund npm@11.12.1 >/dev/null
+sudo env PATH=/opt/node/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+  /opt/node/bin/npm install --global --ignore-scripts --no-audit --no-fund npm@11.12.1 >/dev/null
 curl --fail --location --silent --show-error https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init -o /tmp/rustup-init
 echo '{RUSTUP_SHA256}  /tmp/rustup-init' | sha256sum --check --strict
 chmod 0755 /tmp/rustup-init

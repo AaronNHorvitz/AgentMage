@@ -5,7 +5,7 @@ import unittest
 
 from scripts import linux_docker_kvm_evidence as docker_vm
 from scripts.linux_vm_promoted_guest import LANE_ORDER
-from scripts.linux_vm_promoted_matrix import validate_report
+from scripts.linux_vm_promoted_matrix import install_script, validate_report
 
 
 def valid_report() -> dict:
@@ -76,6 +76,15 @@ def valid_report() -> dict:
 
 
 class PromotedLinuxVmMatrixTests(unittest.TestCase):
+    def test_bootstrap_gives_npm_its_pinned_node_path(self) -> None:
+        for target in docker_vm.TARGETS:
+            script = install_script(target)
+            self.assertIn(
+                "sudo env PATH=/opt/node/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                script,
+            )
+            self.assertIn("/opt/node/bin/npm install --global", script)
+
     def test_exact_independent_matrix_passes(self) -> None:
         self.assertEqual(validate_report(valid_report()), [])
 
