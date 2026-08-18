@@ -14,13 +14,13 @@ use agentmage_kernel_contracts::{
     ModelRunRequest, ModelRunResult, ModelRunTerminalState, ModelRuntimeFailure, ModelStreamId,
     ModelToolCallCandidate, OperationBinding, OperationOutcome, PlanId, PlanStepId, PolicyId,
     PostconditionResult, ReceiptId, RepositorySnapshotId, RequiredGrantTemplate, RollbackPlan,
-    RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeArtifactManifest,
-    RuntimeArtifactRef, RuntimeEvent, RuntimeEventKind, RuntimeEventRetentionKind,
-    RuntimeOperationId, RuntimeOutput, RuntimeResourceUsage, RuntimeResumeBinding, RuntimeRunId,
-    RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, SchemaId, SchemaReference,
-    SessionCheckpoint, SessionCheckpointId, SessionId, StateChange, StopCondition,
-    StopConditionKind, StorageFilesystemClass, StrictLocalStorageObservation, Task, TaskId,
-    TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
+    RuntimeApprovalDisposition, RuntimeApprovalResponse, RuntimeArtifactKind,
+    RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent, RuntimeEventKind,
+    RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutput, RuntimeResourceUsage,
+    RuntimeResumeBinding, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode,
+    SchemaId, SchemaReference, SessionCheckpoint, SessionCheckpointId, SessionId, StateChange,
+    StopCondition, StopConditionKind, StorageFilesystemClass, StrictLocalStorageObservation, Task,
+    TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
     VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
     WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
 };
@@ -31,9 +31,10 @@ use super::{
     RuntimeCheckpointCommit, RuntimeCheckpointPort, RuntimeCheckpointPublication, RuntimeClock,
     RuntimeContextPort, RuntimeCoordinatorStep, RuntimeCorrectnessTransactionPort,
     RuntimeJournalPort, RuntimeLoopError, RuntimeModelPort, RuntimePermissionEvaluation,
-    RuntimePortFailure, RuntimeResumeSnapshot, RuntimeToolBoundary, RuntimeToolCorrectnessCommit,
-    RuntimeToolExecution, RuntimeVerificationInput, RuntimeVerifierPort, derived_id,
-    runtime_action_id, runtime_event_cursor, runtime_tool_references,
+    RuntimePortFailure, RuntimeResumeSnapshot, RuntimeToolArtifactCandidate, RuntimeToolBoundary,
+    RuntimeToolCorrectnessCommit, RuntimeToolExecution, RuntimeVerificationInput,
+    RuntimeVerifierPort, derived_id, runtime_action_id, runtime_event_cursor,
+    runtime_tool_references,
 };
 use crate::context_management::finalize_checkpoint;
 use crate::model_codec::{proposal_digest, tests_support::profile};
@@ -519,6 +520,8 @@ struct FakeToolBoundary {
     outcome: OperationOutcome,
     state_change: StateChange,
     tool_output_bytes: usize,
+    tool_output_kind: Option<RuntimeArtifactKind>,
+    artifact_candidates: Vec<RuntimeToolArtifactCandidate>,
     journal: Arc<Mutex<Vec<RuntimeEvent>>>,
     journal_flushes: Arc<AtomicUsize>,
     artifacts: PublishedArtifacts,
@@ -661,10 +664,13 @@ impl RuntimeToolBoundary for FakeToolBoundary {
             )
             .as_bytes(),
         );
+        let result_output_kind = result.output.as_ref().and(self.tool_output_kind);
         Ok(RuntimeToolExecution {
             receipt_id,
             receipt_sha256,
             result,
+            result_output_kind,
+            artifact_candidates: self.artifact_candidates.clone(),
         })
     }
 }
@@ -1085,6 +1091,8 @@ fn coordinator_with_request_mutation(
                 StateChange::NotChanged
             },
             tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
             journal: Arc::new(Mutex::new(Vec::new())),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts: Arc::new(Mutex::new(Vec::new())),
@@ -1681,6 +1689,8 @@ fn durable_mode_persists_ordered_session_events_before_terminal_return() {
             outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
             journal: Arc::clone(&journal),
             journal_flushes: Arc::clone(&flushes),
             artifacts: Arc::new(Mutex::new(Vec::new())),
@@ -1736,6 +1746,8 @@ fn durable_large_model_output_is_artifact_backed_and_event_referenced() {
             outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
             journal: Arc::clone(&journal),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts: Arc::clone(&artifacts),
@@ -1809,6 +1821,8 @@ fn durable_tool_receipt_commits_before_its_bound_large_artifact() {
             outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
             journal: Arc::clone(&journal),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts: Arc::clone(&artifacts),
@@ -1863,6 +1877,242 @@ fn durable_tool_receipt_commits_before_its_bound_large_artifact() {
 }
 
 #[test]
+fn durable_tool_outputs_use_only_the_declared_closed_artifact_kind() {
+    let kinds = [
+        RuntimeArtifactKind::Patch,
+        RuntimeArtifactKind::StandardOutput,
+        RuntimeArtifactKind::StandardError,
+        RuntimeArtifactKind::TestLog,
+        RuntimeArtifactKind::GeneratedFile,
+        RuntimeArtifactKind::Report,
+    ];
+
+    for (index, kind) in kinds.into_iter().enumerate() {
+        let profile = profile(&format!("runtime-loop-tool-kind-{index}"));
+        let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+        let mut request = request(profile.clone(), &registry);
+        request.mode = RuntimeSessionMode::DurableReadOnly;
+        request.limits.max_output_bytes = (MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1) as u64;
+        request.request_sha256 = "0".repeat(64);
+        let request = seal_runtime_run_request(request).expect("artifact request seals");
+        let artifacts = Arc::new(Mutex::new(Vec::new()));
+        let mut coordinator = ReusableRuntimeCoordinator::new_with_persistence(
+            request,
+            FakeModel::new(profile, [ModelScript::Tool, ModelScript::Completion]),
+            FakeContext,
+            registry,
+            FakeToolBoundary {
+                script: PermissionScript::Allow,
+                executions: Arc::new(AtomicUsize::new(0)),
+                emit_evidence: true,
+                outcome: OperationOutcome::Succeeded,
+                state_change: StateChange::NotChanged,
+                tool_output_bytes: MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1,
+                tool_output_kind: Some(kind),
+                artifact_candidates: Vec::new(),
+                journal: Arc::new(Mutex::new(Vec::new())),
+                journal_flushes: Arc::new(AtomicUsize::new(0)),
+                artifacts: Arc::clone(&artifacts),
+                checkpoint: Arc::new(Mutex::new(None)),
+            },
+            FakeVerifier {
+                verifier_id: VerifierId::from_raw(format!("verifier-tool-kind-{index}")),
+                source: VerifierSource::DeterministicPostcondition,
+            },
+            FakeClock { now: 5_100 },
+        )
+        .expect("typed artifact coordinator builds");
+
+        let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+            .run_until_boundary(None, None)
+            .expect("typed artifact run completes")
+        else {
+            panic!("allowed fixture cannot pause");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Success);
+        let retained = artifacts
+            .lock()
+            .expect("artifact fixture remains available");
+        assert_eq!(retained.len(), 1);
+        assert_eq!(retained[0].0.kind, kind);
+    }
+}
+
+#[test]
+fn durable_tool_stream_candidates_preserve_large_stdout_and_stderr_separately() {
+    let profile = profile("runtime-loop-tool-streams");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let mut request = request(profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.limits.max_output_bytes = (4 * MAX_RUNTIME_INLINE_OUTPUT_BYTES) as u64;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("stream artifact request seals");
+    let artifacts = Arc::new(Mutex::new(Vec::new()));
+    let mut coordinator = ReusableRuntimeCoordinator::new_with_persistence(
+        request,
+        FakeModel::new(profile, [ModelScript::Tool, ModelScript::Completion]),
+        FakeContext,
+        registry,
+        FakeToolBoundary {
+            script: PermissionScript::Allow,
+            executions: Arc::new(AtomicUsize::new(0)),
+            emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
+            state_change: StateChange::NotChanged,
+            tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: vec![
+                RuntimeToolArtifactCandidate {
+                    kind: RuntimeArtifactKind::StandardOutput,
+                    media_type: "text/plain".to_owned(),
+                    bytes: vec![b'o'; MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1],
+                },
+                RuntimeToolArtifactCandidate {
+                    kind: RuntimeArtifactKind::StandardError,
+                    media_type: "text/plain".to_owned(),
+                    bytes: vec![b'e'; MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1],
+                },
+            ],
+            journal: Arc::new(Mutex::new(Vec::new())),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::clone(&artifacts),
+            checkpoint: Arc::new(Mutex::new(None)),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-tool-streams-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 5_200 },
+    )
+    .expect("stream artifact coordinator builds");
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("stream artifact run completes")
+    else {
+        panic!("allowed fixture cannot pause");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(coordinator.artifact_references().len(), 2);
+    let retained = artifacts
+        .lock()
+        .expect("artifact fixture remains available");
+    assert_eq!(retained.len(), 2);
+    assert_eq!(retained[0].0.kind, RuntimeArtifactKind::StandardOutput);
+    assert_eq!(retained[1].0.kind, RuntimeArtifactKind::StandardError);
+    assert_ne!(retained[0].0.payload_sha256, retained[1].0.payload_sha256);
+}
+
+#[test]
+fn failed_tool_preserves_large_stderr_artifact_before_terminal_completion() {
+    let profile = profile("runtime-loop-failed-tool-stderr");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let mut request = request(profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.limits.max_output_bytes = (2 * MAX_RUNTIME_INLINE_OUTPUT_BYTES) as u64;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("failed stream request seals");
+    let artifacts = Arc::new(Mutex::new(Vec::new()));
+    let mut coordinator = ReusableRuntimeCoordinator::new_with_persistence(
+        request,
+        FakeModel::new(profile, [ModelScript::Tool]),
+        FakeContext,
+        registry,
+        FakeToolBoundary {
+            script: PermissionScript::Allow,
+            executions: Arc::new(AtomicUsize::new(0)),
+            emit_evidence: false,
+            outcome: OperationOutcome::Failed,
+            state_change: StateChange::NotChanged,
+            tool_output_bytes: 0,
+            tool_output_kind: None,
+            artifact_candidates: vec![RuntimeToolArtifactCandidate {
+                kind: RuntimeArtifactKind::StandardError,
+                media_type: "text/plain".to_owned(),
+                bytes: vec![b'e'; MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1],
+            }],
+            journal: Arc::new(Mutex::new(Vec::new())),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::clone(&artifacts),
+            checkpoint: Arc::new(Mutex::new(None)),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-failed-stderr-0001"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 5_250 },
+    )
+    .expect("failed stream coordinator builds");
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("failed tool closes visibly")
+    else {
+        panic!("allowed fixture cannot pause");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Failed);
+    assert_eq!(outcome.unresolved_codes, ["runtime.tool.failed"]);
+    assert_eq!(coordinator.artifact_references().len(), 1);
+    let retained = artifacts.lock().expect("stderr artifact remains available");
+    assert_eq!(retained.len(), 1);
+    assert_eq!(retained[0].0.kind, RuntimeArtifactKind::StandardError);
+    assert_eq!(retained[0].1.len(), MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1);
+}
+
+#[test]
+fn tool_output_kind_must_match_payload_and_cannot_claim_model_output() {
+    let cases = [
+        (None, Vec::new()),
+        (Some(RuntimeArtifactKind::ModelOutput), Vec::new()),
+        (
+            Some(RuntimeArtifactKind::Report),
+            vec![RuntimeToolArtifactCandidate {
+                kind: RuntimeArtifactKind::ModelOutput,
+                media_type: "text/plain".to_owned(),
+                bytes: b"tool cannot claim model output".to_vec(),
+            }],
+        ),
+    ];
+    for (index, (kind, artifact_candidates)) in cases.into_iter().enumerate() {
+        let profile = profile(&format!("runtime-loop-invalid-tool-kind-{index}"));
+        let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+        let request = request(profile.clone(), &registry);
+        let mut coordinator = ReusableRuntimeCoordinator::new(
+            request,
+            FakeModel::new(profile, [ModelScript::Tool]),
+            FakeContext,
+            registry,
+            FakeToolBoundary {
+                script: PermissionScript::Allow,
+                executions: Arc::new(AtomicUsize::new(0)),
+                emit_evidence: true,
+                outcome: OperationOutcome::Succeeded,
+                state_change: StateChange::NotChanged,
+                tool_output_bytes: 0,
+                tool_output_kind: kind,
+                artifact_candidates,
+                journal: Arc::new(Mutex::new(Vec::new())),
+                journal_flushes: Arc::new(AtomicUsize::new(0)),
+                artifacts: Arc::new(Mutex::new(Vec::new())),
+                checkpoint: Arc::new(Mutex::new(None)),
+            },
+            FakeVerifier {
+                verifier_id: VerifierId::from_raw(format!("verifier-invalid-kind-{index}")),
+                source: VerifierSource::DeterministicPostcondition,
+            },
+            FakeClock { now: 5_300 },
+        )
+        .expect("invalid-kind fixture coordinator builds");
+
+        assert!(matches!(
+            coordinator.run_until_boundary(None, None),
+            Err(RuntimeLoopError::InvalidBoundaryResult)
+        ));
+        assert!(coordinator.artifact_references().is_empty());
+    }
+}
+
+#[test]
 fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
     let profile = profile("runtime-loop-resume");
     let registry = registry_for_operation(GrantOperation::WorkspaceRead);
@@ -1886,6 +2136,8 @@ fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
             outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
             journal: Arc::clone(&journal),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts: Arc::clone(&artifacts),
@@ -1942,6 +2194,8 @@ fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
             outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
             journal: Arc::clone(&journal),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts,
@@ -1994,6 +2248,8 @@ fn ephemeral_mode_cannot_accidentally_attach_a_durable_journal() {
             outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
             journal: Arc::clone(&journal),
             journal_flushes: Arc::new(AtomicUsize::new(0)),
             artifacts: Arc::new(Mutex::new(Vec::new())),

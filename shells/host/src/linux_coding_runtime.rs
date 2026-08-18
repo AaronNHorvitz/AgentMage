@@ -13,10 +13,10 @@ use agentmage_kernel_contracts::{
     AuthorizedWorkspaceHandle, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind,
     EvidenceReference, GrantId, GrantNonce, GrantOperation, OperationAttemptId, OperationOutcome,
     PlanStepId, ReceiptId, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent,
-    RuntimeEventKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId, RuntimeRunRequest,
-    RuntimeSessionMode, SessionCheckpoint, SessionCheckpointId, SessionId, StateChange, ToolCall,
-    ToolDefinition, ToolResult, to_canonical_json,
+    RuntimeApprovalResponse, RuntimeArtifactKind, RuntimeArtifactManifest, RuntimeArtifactRef,
+    RuntimeEvent, RuntimeEventKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId,
+    RuntimeRunRequest, RuntimeSessionMode, SessionCheckpoint, SessionCheckpointId, SessionId,
+    StateChange, ToolCall, ToolDefinition, ToolResult, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     authority_transaction::AuthorityTransactionRequest,
@@ -54,7 +54,8 @@ use agentmage_kernel_engine::{
         RuntimeArtifactPort, RuntimeCheckpointCommit, RuntimeCheckpointPort,
         RuntimeCheckpointPublication, RuntimeCorrectnessTransactionPort, RuntimeJournalPort,
         RuntimePermissionEvaluation, RuntimePortFailure, RuntimeResumeSnapshot,
-        RuntimeToolBoundary, RuntimeToolCorrectnessCommit, RuntimeToolExecution,
+        RuntimeToolArtifactCandidate, RuntimeToolBoundary, RuntimeToolCorrectnessCommit,
+        RuntimeToolExecution,
     },
     validation_result::{
         ValidationObservation, ValidationOutputClassification, ValidationReceipt, ValidationStatus,
@@ -1029,6 +1030,8 @@ where
                     elapsed_ms: 0,
                     state_change: StateChange::NotChanged,
                 },
+                result_output_kind: None,
+                artifact_candidates: Vec::new(),
             };
             return self.finish_effect_execution(execution, event_context, pending);
         }
@@ -1082,6 +1085,8 @@ where
                 elapsed_ms: 0,
                 state_change: StateChange::NotChanged,
             },
+            result_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
         };
         self.finish_effect_execution(execution, event_context, pending)
     }
@@ -1221,6 +1226,8 @@ where
                         StateChange::Uncertain
                     },
                 },
+                result_output_kind: None,
+                artifact_candidates: Vec::new(),
             };
             return self.finish_effect_execution(execution, event_context, pending);
         }
@@ -1291,6 +1298,8 @@ where
                 elapsed_ms,
                 state_change: StateChange::NotChanged,
             },
+            result_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
         })
     }
 
@@ -1365,6 +1374,11 @@ where
         {
             return Err(RuntimePortFailure::Uncertain);
         }
+        let artifact_candidates = captured_output_artifact_candidates(
+            &output,
+            RuntimeArtifactKind::TestLog,
+            RuntimeArtifactKind::TestLog,
+        );
         let validation_receipt = normalize_validation_result(
             &template,
             &prepared,
@@ -1389,8 +1403,14 @@ where
         if !verify_validation_receipt(&template, &prepared, &command_receipt, &validation_receipt) {
             return Err(RuntimePortFailure::Uncertain);
         }
-        let execution =
-            self.validation_execution(request, definition, call, receipt, validation_receipt)?;
+        let execution = self.validation_execution(
+            request,
+            definition,
+            call,
+            receipt,
+            validation_receipt,
+            artifact_candidates,
+        )?;
         self.finish_effect_execution(execution, event_context, pending)
     }
 
@@ -1401,6 +1421,7 @@ where
         call: &ToolCall,
         receipt: agentmage_kernel_contracts::Receipt,
         validation_receipt: ValidationReceipt,
+        artifact_candidates: Vec<RuntimeToolArtifactCandidate>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
         let output_bytes =
             serde_json::to_vec(&validation_receipt).map_err(|_| RuntimePortFailure::Invalid)?;
@@ -1438,6 +1459,8 @@ where
                 elapsed_ms: validation_receipt.duration_ms,
                 state_change: StateChange::NotChanged,
             },
+            result_output_kind: Some(RuntimeArtifactKind::TestLog),
+            artifact_candidates,
         })
     }
 
@@ -1458,6 +1481,11 @@ where
         if output_bytes.len() as u64 > request.limits.max_output_bytes {
             return Err(RuntimePortFailure::ResourceExhausted);
         }
+        let artifact_candidates = captured_output_artifact_candidates(
+            &output,
+            RuntimeArtifactKind::StandardOutput,
+            RuntimeArtifactKind::StandardError,
+        );
         let evidence = vec![EvidenceReference {
             schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
             evidence_id: EvidenceId::from_raw(self.next_id("evidence")?),
@@ -1488,6 +1516,8 @@ where
                 elapsed_ms: command_receipt.elapsed_ms,
                 state_change: StateChange::NotChanged,
             },
+            result_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates,
         })
     }
 
@@ -1744,6 +1774,8 @@ where
                 elapsed_ms: 0,
                 state_change,
             },
+            result_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
         })
     }
 
@@ -2554,8 +2586,41 @@ const fn read_outcome(outcome: ReadOnlyOutcome) -> OperationOutcome {
 fn captured_output_matches(output: &CommandCapturedOutput, receipt: &CommandReceipt) -> bool {
     output.stdout().len() as u64 == receipt.stdout_retained_bytes
         && output.stderr().len() as u64 == receipt.stderr_retained_bytes
-        && sha256(output.stdout()) == receipt.stdout_sha256
-        && sha256(output.stderr()) == receipt.stderr_sha256
+        && if receipt.stdout_truncated {
+            receipt.stdout_total_bytes > receipt.stdout_retained_bytes
+        } else {
+            receipt.stdout_total_bytes == receipt.stdout_retained_bytes
+                && sha256(output.stdout()) == receipt.stdout_sha256
+        }
+        && if receipt.stderr_truncated {
+            receipt.stderr_total_bytes > receipt.stderr_retained_bytes
+        } else {
+            receipt.stderr_total_bytes == receipt.stderr_retained_bytes
+                && sha256(output.stderr()) == receipt.stderr_sha256
+        }
+}
+
+fn captured_output_artifact_candidates(
+    output: &CommandCapturedOutput,
+    stdout_kind: RuntimeArtifactKind,
+    stderr_kind: RuntimeArtifactKind,
+) -> Vec<RuntimeToolArtifactCandidate> {
+    let mut candidates = Vec::with_capacity(2);
+    if !output.stdout().is_empty() {
+        candidates.push(RuntimeToolArtifactCandidate {
+            kind: stdout_kind,
+            media_type: "application/octet-stream".to_owned(),
+            bytes: output.stdout().to_vec(),
+        });
+    }
+    if !output.stderr().is_empty() {
+        candidates.push(RuntimeToolArtifactCandidate {
+            kind: stderr_kind,
+            media_type: "application/octet-stream".to_owned(),
+            bytes: output.stderr().to_vec(),
+        });
+    }
+    candidates
 }
 
 fn prepare_kernel_git_inspection(
@@ -4551,6 +4616,16 @@ mod tests {
             .expect("bounded command execution");
 
         assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        assert_eq!(
+            execution.result_output_kind,
+            Some(RuntimeArtifactKind::Report)
+        );
+        assert_eq!(execution.artifact_candidates.len(), 1);
+        assert_eq!(
+            execution.artifact_candidates[0].kind,
+            RuntimeArtifactKind::StandardOutput
+        );
+        assert_eq!(execution.artifact_candidates[0].bytes, b"command-ok\n");
         let command_receipt: CommandReceipt =
             serde_json::from_slice(&execution.result.output.expect("command output").bytes)
                 .expect("command receipt payload");
@@ -4829,6 +4904,15 @@ mod tests {
             .expect("targeted validation execution");
 
         assert_eq!(execution.result.outcome, OperationOutcome::Succeeded);
+        assert_eq!(
+            execution.result_output_kind,
+            Some(RuntimeArtifactKind::TestLog)
+        );
+        assert_eq!(execution.artifact_candidates.len(), 1);
+        assert_eq!(
+            execution.artifact_candidates[0].kind,
+            RuntimeArtifactKind::TestLog
+        );
         let validation_receipt: ValidationReceipt =
             serde_json::from_slice(&execution.result.output.expect("validation output").bytes)
                 .expect("validation receipt payload");

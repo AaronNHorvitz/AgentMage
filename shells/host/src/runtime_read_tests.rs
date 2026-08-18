@@ -15,8 +15,8 @@ use agentmage_kernel_contracts::{
     ModelMessageId, ModelMessageRole, ModelProposalKind, ModelResourceReport, ModelRunRequest,
     ModelRunResult, ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate, OperationOutcome,
     PlanId, PolicyId, PostconditionResult, ReceiptId, RepositorySnapshotId, RollbackPlan,
-    RuntimeEvent, RuntimeOperationId, RuntimeOutcome, RuntimeRunId, RuntimeRunLimits,
-    RuntimeRunRequest, RuntimeSessionMode, SessionId, StateChange, StopCondition,
+    RuntimeArtifactKind, RuntimeEvent, RuntimeOperationId, RuntimeOutcome, RuntimeRunId,
+    RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, SessionId, StateChange, StopCondition,
     StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId,
     ToolResult, VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId,
     VerifierSource, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
@@ -319,6 +319,8 @@ impl RuntimeToolBoundary for SnapshotReadBoundary {
                 format!("native-read-receipt-{:04}", self.executions).as_bytes(),
             ),
             result: tool_result,
+            result_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
         })
     }
 }

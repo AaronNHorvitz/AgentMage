@@ -53,6 +53,7 @@ const MIN_RUNTIME_EVENTS: u32 = 6;
 const SHA256_BYTES: usize = 64;
 /// Maximum terminal or tool payload retained inline once a runtime artifact port is active.
 pub const MAX_RUNTIME_INLINE_OUTPUT_BYTES: usize = 64 * 1024;
+const MAX_RUNTIME_TOOL_ARTIFACT_CANDIDATES: usize = 64;
 
 /// Closed dependency failure observed by the coordinator.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -187,6 +188,17 @@ pub enum RuntimePermissionEvaluation {
     },
 }
 
+/// One separately captured output eligible for runtime artifact publication.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RuntimeToolArtifactCandidate {
+    /// Closed semantic family retained in the immutable artifact manifest.
+    pub kind: RuntimeArtifactKind,
+    /// Closed or policy-approved media type for the exact retained bytes.
+    pub media_type: String,
+    /// Bounded bytes observed by the trusted tool boundary.
+    pub bytes: Vec<u8>,
+}
+
 /// One terminal tool execution returned after exact authority consumption.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeToolExecution {
@@ -196,6 +208,15 @@ pub struct RuntimeToolExecution {
     pub receipt_sha256: String,
     /// Exact terminal tool result.
     pub result: ToolResult,
+    /// Closed semantic kind for `result.output`; absent exactly when the result has no output.
+    ///
+    /// This runtime-local discriminator avoids changing the frozen schema-v2 `ToolResult` wire
+    /// contract while preventing the coordinator from inferring artifact meaning from a tool name,
+    /// grant operation, media type, or payload text.
+    pub result_output_kind: Option<RuntimeArtifactKind>,
+    /// Separately captured outputs that become immutable artifacts when they exceed the inline
+    /// ceiling, such as command standard output and standard error.
+    pub artifact_candidates: Vec<RuntimeToolArtifactCandidate>,
 }
 
 /// Trusted grant, policy, and worker boundary used only after registry validation.
@@ -1888,22 +1909,35 @@ where
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
         let prior_evidence = self.evidence.len();
+        let mut output_exhausted = false;
+        if let (Some(payload), Some(artifact_kind)) = (
+            execution.result.output.clone(),
+            execution.result_output_kind,
+        ) {
+            output_exhausted = self
+                .route_runtime_output(
+                    payload,
+                    artifact_kind,
+                    &turn_id,
+                    Some(&operation_id),
+                    Some(&execution.receipt_id),
+                )?
+                .is_none();
+        }
+        for candidate in &execution.artifact_candidates {
+            if !self.route_runtime_artifact_candidate(
+                candidate,
+                &turn_id,
+                &operation_id,
+                &execution.receipt_id,
+            )? {
+                output_exhausted = true;
+                break;
+            }
+        }
         match execution.result.outcome {
             OperationOutcome::Succeeded => {
                 let result_sha256 = contract_sha256(&execution.result)?;
-                let mut output_exhausted = false;
-                if let Some(payload) = execution.result.output.clone() {
-                    let artifact_kind = tool_artifact_kind(&definition, &payload.media_type);
-                    output_exhausted = self
-                        .route_runtime_output(
-                            payload,
-                            artifact_kind,
-                            &turn_id,
-                            Some(&operation_id),
-                            Some(&execution.receipt_id),
-                        )?
-                        .is_none();
-                }
                 if !terminal_event_emitted {
                     self.emit(
                         RuntimeEventKind::ToolCompleted {
@@ -1972,6 +2006,7 @@ where
                 AgentStateKind::Failed,
                 "runtime.tool.denied_after_launch",
                 terminal_event_emitted,
+                output_exhausted,
             ),
             OperationOutcome::Cancelled => self.finish_tool_non_success(
                 execution,
@@ -1981,6 +2016,7 @@ where
                 AgentStateKind::Cancelled,
                 "runtime.tool.cancelled",
                 terminal_event_emitted,
+                output_exhausted,
             ),
             OperationOutcome::TimedOut => self.finish_tool_non_success(
                 execution,
@@ -1990,6 +2026,7 @@ where
                 AgentStateKind::Exhausted,
                 "runtime.tool.timed_out",
                 terminal_event_emitted,
+                output_exhausted,
             ),
             OperationOutcome::Failed => self.finish_tool_non_success(
                 execution,
@@ -1999,6 +2036,7 @@ where
                 AgentStateKind::Failed,
                 "runtime.tool.failed",
                 terminal_event_emitted,
+                output_exhausted,
             ),
             OperationOutcome::Uncertain => self.finish_tool_non_success(
                 execution,
@@ -2008,6 +2046,7 @@ where
                 AgentStateKind::Uncertain,
                 "runtime.tool.uncertain",
                 terminal_event_emitted,
+                output_exhausted,
             ),
         }
     }
@@ -2263,6 +2302,7 @@ where
         terminal: AgentStateKind,
         code: &str,
         terminal_event_emitted: bool,
+        output_exhausted: bool,
     ) -> Result<(), RuntimeLoopError> {
         if !terminal_event_emitted {
             self.emit(
@@ -2278,7 +2318,11 @@ where
         self.receipt_ids.push(execution.receipt_id);
         self.transition_terminal(terminal)?;
         self.close_turn(&turn_id, execution.receipt_sha256)?;
-        self.finish_terminal(terminal, vec![code.to_owned()], None)
+        let mut unresolved_codes = vec![code.to_owned()];
+        if output_exhausted {
+            unresolved_codes.push("runtime.budget.exhausted".to_owned());
+        }
+        self.finish_terminal(terminal, unresolved_codes, None)
     }
 
     fn finish_invalid_proposal(&mut self, turn_id: &RuntimeTurnId) -> Result<(), RuntimeLoopError> {
@@ -2601,6 +2645,40 @@ where
         Ok(Some(RuntimeOutput::Artifact {
             reference: payload_reference,
         }))
+    }
+
+    fn route_runtime_artifact_candidate(
+        &mut self,
+        candidate: &RuntimeToolArtifactCandidate,
+        turn_id: &RuntimeTurnId,
+        operation_id: &RuntimeOperationId,
+        receipt_id: &ReceiptId,
+    ) -> Result<bool, RuntimeLoopError> {
+        let payload_bytes = u64::try_from(candidate.bytes.len())
+            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        if self
+            .resources
+            .consume(BudgetResource::OutputBytes, payload_bytes)
+            .is_err()
+        {
+            return Ok(false);
+        }
+        if candidate.bytes.len() <= MAX_RUNTIME_INLINE_OUTPUT_BYTES || self.artifact.is_none() {
+            return Ok(true);
+        }
+        if self.resources.admit_artifact(payload_bytes).is_err() {
+            return Ok(false);
+        }
+        self.publish_artifact_bytes(
+            &candidate.bytes,
+            &candidate.media_type,
+            candidate.kind,
+            Some(turn_id),
+            Some(operation_id),
+            Some(receipt_id),
+            true,
+        )?;
+        Ok(true)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -3080,21 +3158,6 @@ fn validate_runtime_resume_snapshot(
     Ok(())
 }
 
-fn tool_artifact_kind(definition: &ToolDefinition, media_type: &str) -> RuntimeArtifactKind {
-    if definition.tool_id.as_str().contains("validation") {
-        RuntimeArtifactKind::TestLog
-    } else {
-        match definition.required_grant.operation.operation() {
-            GrantOperation::CommandExecute => RuntimeArtifactKind::StandardOutput,
-            GrantOperation::WorkspaceWrite if media_type == "text/x-diff" => {
-                RuntimeArtifactKind::Patch
-            }
-            GrantOperation::WorkspaceWrite => RuntimeArtifactKind::Report,
-            _ => RuntimeArtifactKind::Report,
-        }
-    }
-}
-
 fn runtime_artifact_preview(bytes: &[u8]) -> Option<RuntimeArtifactPreview> {
     let text = std::str::from_utf8(bytes).ok()?;
     let mut end = text.len().min(MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES);
@@ -3344,6 +3407,18 @@ fn valid_tool_execution(
             result.outcome,
             result.state_change,
         )
+        && match (&result.output, execution.result_output_kind) {
+            (None, None) => true,
+            (Some(_), Some(kind)) => kind != RuntimeArtifactKind::ModelOutput,
+            (None, Some(_)) | (Some(_), None) => false,
+        }
+        && execution.artifact_candidates.len() <= MAX_RUNTIME_TOOL_ARTIFACT_CANDIDATES
+        && execution.artifact_candidates.iter().all(|candidate| {
+            candidate.kind != RuntimeArtifactKind::ModelOutput
+                && valid_media_type(&candidate.media_type)
+                && u64::try_from(candidate.bytes.len())
+                    .is_ok_and(|bytes| bytes > 0 && bytes <= request.limits.max_output_bytes)
+        })
         && result
             .output
             .as_ref()

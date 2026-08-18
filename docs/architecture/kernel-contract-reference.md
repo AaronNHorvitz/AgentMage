@@ -231,7 +231,10 @@ does not expose an execute callback.
 `ToolCall` binds `ToolCallId`, `CorrelationId`, `ActionId`, exact tool identity
 and version, and schema-bound arguments. `ToolResult` closes that attempt with
 `OperationOutcome`, optional output, validation issues, evidence, optional
-error, elapsed milliseconds, and `StateChange`.
+error, elapsed milliseconds, and `StateChange`. The reusable runtime pairs that
+frozen schema-v2 result with a runtime-local closed artifact kind and optional
+bounded artifact candidates; this metadata is not part of the public
+`ToolResult` wire contract and grants no authority.
 
 In the current dispatcher, a malformed or unregistered call fails and a valid
 call is denied with `tool.dispatch.grant_required`. Both paths report

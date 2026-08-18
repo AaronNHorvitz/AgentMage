@@ -136,12 +136,32 @@ durable output is published as a runtime artifact and returns only its path-free
 reference. An unavailable artifact port cannot be silently invented; ephemeral
 mode may retain bounded inline output under its separate request ceiling.
 
-The implemented routing recognizes model output, command standard output,
-validation logs, patch payloads, and generic reports. The artifact kind enum
-also closes standard error and generated-file identities. Complete production
-routing for separately represented standard error and generated-file outputs
-remains open because the current `ToolResult` carries one opaque output payload
-without a closed output-kind discriminator.
+The coordinator never infers tool-output meaning from a tool name, grant
+operation, media type, or payload text. Each trusted `RuntimeToolExecution`
+pairs its optional schema-v2 `ToolResult.output` with one explicit closed
+`RuntimeArtifactKind`; a missing kind, a kind without a payload, or a tool claim
+of `model_output` fails before terminal-result acceptance or artifact
+publication. This runtime-local pairing preserves the frozen schema-v2
+`ToolResult` wire contract. The durable artifact manifest retains the declared
+semantic kind.
+
+One execution may also carry at most 64 bounded, non-empty
+`RuntimeToolArtifactCandidate` values. These candidates have only a closed kind,
+validated media type, and trusted retained bytes; they carry no path or
+authority. The Linux command boundary emits standard output and standard error
+as separate candidates. The validation boundary emits captured validation
+streams as `test_log` candidates. Candidates above the 64 KiB inline ceiling
+are independently published and receipt-bound; smaller candidates remain
+covered by their canonical command or validation receipt and are not separately
+persisted. Patch, generated-file, and report producers use the same explicit
+primary or candidate path. Large model output remains owned by the separate
+model-output route.
+
+Command and validation receipts preserve complete stream SHA-256 values, total
+and retained byte counts, and explicit truncation flags. An artifact contains
+only the trusted retained bytes. Its receipt therefore distinguishes a complete
+stream artifact from a bounded prefix without pretending that truncated bytes
+are the complete process stream.
 
 Complete reads require exact session, task, current policy digest, reference,
 trusted time, and caller byte ceiling. Preview paging additionally binds an
@@ -294,18 +314,25 @@ Current automated coverage includes:
   projection.
 - Durable continuation publication, event ordering, checkpoint binding, reopen,
   and shared Chat/CLI/workflow-caller artifact-reference parity.
+- Closed primary tool-output classification for patch, standard output,
+  standard error, test-log, generated-file, and report artifacts, with
+  fail-closed missing/mismatched/model-output tests.
+- Separate bounded Linux command stdout/stderr and validation-log candidates,
+  including independent large-stream artifact publication and native producer
+  assertions.
 - Fedora journal and artifact pressure measurements retained by Story 50.2.
 
 Still open before Story 22.2 can pass:
 
 - Independent review of the encrypted-file construction and root/file-key
   lifecycle, plus deferred manual fuzzing of its parser and state transitions.
-- A closed tool-output discriminator for standard error and generated-file
-  routing.
 - Full crash injection around every placement, metadata, event, checkpoint,
   release, and collection edge using the native Linux store.
 - Native path-race, disk-full, device-latency, high-volume retention, and
   complete durable-resume campaigns.
 - Windows native artifact-store implementation and evidence; retained macOS work
   remains outside the current GA dependency lane.
+- End-to-end production evidence for a tool that emits generated-file bytes;
+  the closed candidate route and kind are implemented, but the current native
+  tool catalog has no generated-file producer.
 - Online key rotation and any future released-format migration protocol.

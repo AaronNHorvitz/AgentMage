@@ -258,6 +258,7 @@ enum ToolPhase {
     Requested,
     Started,
     Completed,
+    Failed,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -404,7 +405,7 @@ impl RuntimeEventSequence {
                     || self
                         .tools
                         .values()
-                        .any(|tool| tool.phase != ToolPhase::Completed)
+                        .any(|tool| !matches!(tool.phase, ToolPhase::Completed | ToolPhase::Failed))
                     || !self.permissions.is_empty()
                 {
                     return Err(RuntimeEventError::IllegalTransition);
@@ -479,13 +480,13 @@ impl RuntimeEventSequence {
             RuntimeEventKind::ToolFailed { tool_call_id, .. } => {
                 self.require_active_turn(event)?;
                 let operation_id = required_operation(event)?;
-                let Some(tool) = self.tools.get(tool_call_id.as_str()) else {
+                let Some(tool) = self.tools.get_mut(tool_call_id.as_str()) else {
                     return Err(RuntimeEventError::IllegalTransition);
                 };
                 if tool.phase != ToolPhase::Started || tool.operation_id != operation_id {
                     return Err(RuntimeEventError::IllegalTransition);
                 }
-                self.tools.remove(tool_call_id.as_str());
+                tool.phase = ToolPhase::Failed;
                 Ok(())
             }
             RuntimeEventKind::PermissionRequested { approval_id, .. } => {
@@ -623,8 +624,10 @@ impl RuntimeEventSequence {
         self.require_active_turn(event)?;
         let operation_id = required_operation(event)?;
         if !self.tools.values().any(|tool| {
-            matches!(tool.phase, ToolPhase::Started | ToolPhase::Completed)
-                && tool.operation_id.as_str() == operation_id
+            matches!(
+                tool.phase,
+                ToolPhase::Started | ToolPhase::Completed | ToolPhase::Failed
+            ) && tool.operation_id.as_str() == operation_id
         }) {
             return Err(RuntimeEventError::IllegalTransition);
         }
