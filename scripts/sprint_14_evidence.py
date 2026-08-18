@@ -35,7 +35,9 @@ SOURCE_PATHS: Final = (
     "platforms/linux-inference/src/lib.rs",
     "platforms/linux-inference/tests/process_boundary.rs",
     "shells/vscode/src/model_discovery.ts",
+    "shells/vscode/src/provider.ts",
     "shells/vscode/test/model_discovery.test.ts",
+    "shells/vscode/test/provider.test.ts",
     "scripts/package_candidate.py",
     "scripts/package_lifecycle.py",
     "scripts/model_candidate_inventory.py",
@@ -121,11 +123,6 @@ BLOCKERS: Final = (
             "preflight over standard input; local import, bounded download, activation, "
             "rollback, and cleanup are not yet wired to a closed end-user process protocol."
         ),
-    },
-    {
-        "code": "MODEL-REVIEW-UI-NOT-IMPLEMENTED",
-        "owner": "14.1",
-        "reason": "Exact review data exists, but no preflight and license-review screen exists.",
     },
     {
         "code": "PRODUCTION-SIGNING-NOT-AVAILABLE",
@@ -285,7 +282,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
                 "acquisition_review_facts_displayed": local_contract_pass,
                 "preflight_process_protocol_active": local_contract_pass,
                 "end_user_effect_process_protocol_active": False,
-                "review_ui_implemented": False,
+                "review_ui_implemented": local_contract_pass,
                 "production_package_signed": False,
                 "live_acquisition_capture": False,
                 "macos_evidence": False,
@@ -333,6 +330,7 @@ def validate_report(report: dict[str, Any], *, verify_current: bool = True) -> l
         len(stories) != 2
         or stories[0].get("preflight_process_protocol_active") is not True
         or stories[0].get("end_user_effect_process_protocol_active") is not False
+        or stories[0].get("review_ui_implemented") is not True
     ):
         failures.append("Sprint 14 installer process state changed or was overstated")
     if len(stories) != 2 or stories[1].get("exact_artifact_profiles_admitted") is not False:

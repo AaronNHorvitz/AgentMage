@@ -58,15 +58,17 @@ class Sprint14EvidenceTests(unittest.TestCase):
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertTrue(value["summary"]["local_contract_passed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
-        self.assertEqual(len(value["blockers"]), 6)
+        self.assertEqual(len(value["blockers"]), 5)
         self.assertTrue(value["stories"][0]["acquisition_review_facts_displayed"])
         self.assertTrue(value["stories"][0]["preflight_process_protocol_active"])
         self.assertFalse(value["stories"][0]["end_user_effect_process_protocol_active"])
+        self.assertTrue(value["stories"][0]["review_ui_implemented"])
 
     def test_process_artifact_platform_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["stories"][0].update({"preflight_process_protocol_active": False}),
             lambda value: value["stories"][0].update({"end_user_effect_process_protocol_active": True}),
+            lambda value: value["stories"][0].update({"review_ui_implemented": False}),
             lambda value: value["stories"][1].update({"exact_artifact_profiles_admitted": True}),
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"product_activation": True}),

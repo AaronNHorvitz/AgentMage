@@ -1342,7 +1342,7 @@ claims.
 
 - [ ] **Task 14.1.2 - Produce reviewable artifacts**
   - [ ] **Sub-task 14.1.2.1:** Signed installer/importer packages.
-  - [ ] **Sub-task 14.1.2.2:** Preflight and license-review screens.
+  - [x] **Sub-task 14.1.2.2:** Preflight and license-review screens. Evidence: source commit `b1e37a4b` adds an exact `review model <profile-id>` path to the native Visual Studio Code Chat controller. It renders separate preflight and license sections solely from the digest-verified current snapshot: exact profile/catalog, compatibility, platform, architecture, runtime tuple, artifact identity/size/hash, context, hardware evidence, limitations, publisher control, lineage, SPDX license, reviewed-terms digest, source revision, and explicit acceptance requirement. The screen states that it opened no source, changed no destination, started no acquisition, and cannot import, download, activate, roll back, or substitute a model. Missing and malformed profile identities fail closed with no workspace preview or fallback. TypeScript parser, renderer, and controller tests pass in the complete 54-test shell suite.
   - [x] **Sub-task 14.1.2.3:** Staging, quarantine, activation, rollback, and cleanup receipts.
   - [x] **Sub-task 14.1.2.4:** Complete lifecycle fixture results.
 
@@ -1402,7 +1402,7 @@ claims.
 
 **Gate decision:** Sprint 14 is PASS only when Stories 14.1 and 14.2, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-MDL-003`, `AM-MDL-005`, `AT-MODEL-002`, the inventory/preflight portion of `AT-MODEL-004`, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-**Current gate result:** BLOCKED with the locally executable Linux library, packaged non-acquiring preflight, package, and source-inventory work complete. The retained [`local-evidence-report.json`](artifacts/sprints/sprint-14/local-evidence-report.json) reconciles 416 frozen first-party repository revisions with zero authorized acquisition or activation and verifies the packaged installer, preflight, import, download, quarantine, activation, rollback, cleanup, role, intake, and mutation contracts. Remaining blockers are the inactive end-user effect protocol for import/download/activation/rollback/cleanup, preflight/license UI, approved production signing, live product-acquisition packet capture, exact artifact/profile machine-fit admission, and native macOS evidence.
+**Current gate result:** BLOCKED with the locally executable Linux library, packaged non-acquiring preflight, native Chat preflight/license review, package, and source-inventory work complete. The retained [`local-evidence-report.json`](artifacts/sprints/sprint-14/local-evidence-report.json) reconciles 416 frozen first-party repository revisions with zero authorized acquisition or activation and verifies the packaged installer, preflight, import, download, quarantine, activation, rollback, cleanup, role, intake, and mutation contracts. Remaining blockers are the inactive end-user effect protocol for import/download/activation/rollback/cleanup, approved production signing, live product-acquisition packet capture, exact artifact/profile machine-fit admission, and native macOS evidence.
 ### [ ] Sprint 15 - Diagnostics, Manual Model Selection, and Resource Control
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
