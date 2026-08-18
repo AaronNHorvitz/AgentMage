@@ -12,6 +12,8 @@ use agentmage_kernel_contracts::{
 };
 use sha2::{Digest, Sha256};
 
+use crate::model_selection::{ModelResourceGovernor, ModelResourceObservation, ResourceDecision};
+
 const MAX_TEXT_BYTES: usize = 256;
 const MAX_LINEAGE: usize = 32;
 const MAX_TRANSFORMATIONS: usize = 32;
@@ -382,6 +384,31 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             return Err(ModelRuntimeGateError::RuntimeMismatch);
         }
         Ok(report)
+    }
+
+    /// Applies one exact resource observation and unloads this profile on the first breach.
+    pub fn enforce_resource_limits(
+        &mut self,
+        governor: &mut ModelResourceGovernor,
+        cpu_time_ms: u64,
+        gpu_time_ms: u64,
+        inference_slots: u16,
+        disk_bytes: u64,
+        process_count: u32,
+    ) -> Result<ResourceDecision, ModelRuntimeGateError> {
+        let report = self.resources()?;
+        let decision = governor.observe(ModelResourceObservation::from_runtime(
+            &report,
+            cpu_time_ms,
+            gpu_time_ms,
+            inference_slots,
+            disk_bytes,
+            process_count,
+        ));
+        if matches!(decision, ResourceDecision::Stop { .. }) {
+            self.unload()?;
+        }
+        Ok(decision)
     }
 
     /// Unloads exactly the selected tuple and leaves no alternate selected profile.
@@ -803,6 +830,7 @@ mod tests {
         manifest_drift: bool,
         isolation_drift: bool,
         scenario: FakeScenario,
+        resident_memory_bytes: u64,
     }
 
     impl FakeRuntime {
@@ -814,6 +842,7 @@ mod tests {
                 manifest_drift: false,
                 isolation_drift: false,
                 scenario: FakeScenario::Happy,
+                resident_memory_bytes: 1,
             }
         }
     }
@@ -1004,7 +1033,7 @@ mod tests {
                 adapter_id: self.identity.adapter_id.clone(),
                 profile_id: self.loaded.clone().expect("loaded fixture"),
                 model_run_id: None,
-                resident_memory_bytes: 1,
+                resident_memory_bytes: self.resident_memory_bytes,
                 accelerator_memory_bytes: 0,
                 input_tokens: 0,
                 output_tokens: 0,
@@ -1209,6 +1238,52 @@ mod tests {
         );
         assert!(controller.unload().expect("unload").empty);
         assert_eq!(controller.health(), Err(ModelRuntimeGateError::NotLoaded));
+    }
+
+    #[test]
+    fn resource_breach_unloads_only_the_exact_active_profile() {
+        let profile = profile();
+        let admitted = ModelAdmissionCatalog::new(vec![profile.clone()])
+            .expect("catalog")
+            .admit(&profile, ModelUsePurpose::ContractTest)
+            .expect("admitted");
+        let mut runtime = FakeRuntime::new(&profile);
+        runtime.resident_memory_bytes = 11;
+        let mut controller = LocalModelController::new(
+            runtime,
+            ClosedJsonFamilyCodec::new(profile.codec.clone()),
+            admitted,
+        )
+        .expect("controller");
+        controller.load().expect("load");
+        let mut governor = crate::model_selection::ModelResourceGovernor::new(
+            crate::model_selection::ModelResourceLimits {
+                resident_memory_bytes: 10,
+                accelerator_memory_bytes: 10,
+                cpu_time_ms: 10,
+                gpu_time_ms: 10,
+                context_tokens: 10,
+                output_tokens: 10,
+                inference_slots: 1,
+                disk_bytes: 10,
+                process_count: 1,
+            },
+        )
+        .expect("governor");
+
+        assert_eq!(
+            controller
+                .enforce_resource_limits(&mut governor, 1, 1, 1, 1, 1)
+                .expect("pressure decision"),
+            crate::model_selection::ResourceDecision::Stop {
+                resource: crate::model_selection::ModelResourceKind::ResidentMemory,
+            }
+        );
+        assert_eq!(controller.health(), Err(ModelRuntimeGateError::NotLoaded));
+        assert_eq!(
+            controller.enforce_resource_limits(&mut governor, 1, 1, 1, 1, 1),
+            Err(ModelRuntimeGateError::NotLoaded)
+        );
     }
 
     #[test]
