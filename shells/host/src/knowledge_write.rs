@@ -451,9 +451,11 @@ mod tests {
 #[cfg(all(test, target_os = "linux"))]
 mod linux_tests {
     use std::collections::BTreeSet;
+    use std::env;
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
     use std::path::{Path, PathBuf};
+    use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_capability_knowledge::{
@@ -487,6 +489,7 @@ mod linux_tests {
     use super::{KnowledgeFilesystemContext, compose_knowledge_update, sha256};
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
+    const KNOWLEDGE_CRASH_CHILD_EXIT: i32 = 88;
 
     struct TestDirectory(PathBuf);
 
@@ -534,7 +537,14 @@ mod linux_tests {
     }
 
     fn native_fixture() -> NativeKnowledgeFixture {
-        let root = TestDirectory::new();
+        native_fixture_in(TestDirectory::new())
+    }
+
+    fn native_fixture_at(path: PathBuf) -> NativeKnowledgeFixture {
+        native_fixture_in(TestDirectory(path))
+    }
+
+    fn native_fixture_in(root: TestDirectory) -> NativeKnowledgeFixture {
         let source_path = root.path().join("notes/decision.md");
         let source_bytes = concat!(
             "---\n",
@@ -740,6 +750,110 @@ mod linux_tests {
         .expect("native vault snapshot")
     }
 
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum KnowledgeCrashBoundary {
+        BeforeSourceExecution,
+        AfterSourceExecution,
+        BeforeIndexPublication,
+        AfterIndexPublication,
+    }
+
+    impl KnowledgeCrashBoundary {
+        const ALL: [Self; 4] = [
+            Self::BeforeSourceExecution,
+            Self::AfterSourceExecution,
+            Self::BeforeIndexPublication,
+            Self::AfterIndexPublication,
+        ];
+
+        const fn code(self) -> &'static str {
+            match self {
+                Self::BeforeSourceExecution => "before-source-execution",
+                Self::AfterSourceExecution => "after-source-execution",
+                Self::BeforeIndexPublication => "before-index-publication",
+                Self::AfterIndexPublication => "after-index-publication",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            Self::ALL
+                .into_iter()
+                .find(|boundary| boundary.code() == code)
+                .unwrap_or_else(|| panic!("undeclared knowledge crash boundary: {code}"))
+        }
+
+        const fn source_committed(self) -> bool {
+            !matches!(self, Self::BeforeSourceExecution)
+        }
+    }
+
+    fn run_knowledge_crash_child() {
+        let root = PathBuf::from(
+            env::var_os("AGENTMAGE_KNOWLEDGE_CRASH_ROOT").expect("knowledge crash root"),
+        );
+        let boundary = KnowledgeCrashBoundary::from_code(
+            &env::var("AGENTMAGE_KNOWLEDGE_CRASH_BOUNDARY").expect("knowledge crash boundary"),
+        );
+        let mut fixture = native_fixture_at(root);
+        let selection = vault_selection(fixture.workspace_path.workspace_id());
+        let initial_snapshot = vault_snapshot(
+            &selection,
+            fixture.workspace_path.clone(),
+            &fixture.source_bytes,
+        );
+        let mut index = ObsidianVaultIndex::in_memory().expect("crash child index");
+        let initial = index
+            .rebuild(&initial_snapshot)
+            .expect("crash child rebuild");
+        if boundary == KnowledgeCrashBoundary::BeforeSourceExecution {
+            std::process::exit(KNOWLEDGE_CRASH_CHILD_EXIT);
+        }
+        assert_eq!(
+            execute_native(&mut fixture),
+            Ok(FilesystemTransactionOutcome::Committed)
+        );
+        if boundary == KnowledgeCrashBoundary::AfterSourceExecution {
+            std::process::exit(KNOWLEDGE_CRASH_CHILD_EXIT);
+        }
+        let post_snapshot = vault_snapshot(
+            &selection,
+            fixture.workspace_path.clone(),
+            &fixture.postimage_bytes,
+        );
+        let publication = decide_index_publication(
+            fixture.mutation,
+            CanonicalMarkdownWriteOutcome::Committed,
+            Some(sha256(&fixture.postimage_bytes)),
+        );
+        if boundary == KnowledgeCrashBoundary::BeforeIndexPublication {
+            std::process::exit(KNOWLEDGE_CRASH_CHILD_EXIT);
+        }
+        index
+            .publish_after_canonical_write(initial.report.revision, &publication, &post_snapshot)
+            .expect("crash child publication");
+        std::process::exit(KNOWLEDGE_CRASH_CHILD_EXIT);
+    }
+
+    fn launch_knowledge_crash_child(root: &Path, boundary: KnowledgeCrashBoundary) {
+        let output = Command::new(env::current_exe().expect("current test executable"))
+            .args([
+                "--exact",
+                "knowledge_write::linux_tests::native_knowledge_crash_boundary_child",
+                "--nocapture",
+            ])
+            .env("AGENTMAGE_KNOWLEDGE_CRASH_CHILD", "1")
+            .env("AGENTMAGE_KNOWLEDGE_CRASH_ROOT", root)
+            .env("AGENTMAGE_KNOWLEDGE_CRASH_BOUNDARY", boundary.code())
+            .output()
+            .expect("knowledge crash child launches");
+        assert_eq!(
+            output.status.code(),
+            Some(KNOWLEDGE_CRASH_CHILD_EXIT),
+            "{boundary:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
     fn execute_native(
         fixture: &mut NativeKnowledgeFixture,
     ) -> Result<FilesystemTransactionOutcome, FilesystemTransactionError> {
@@ -871,5 +985,65 @@ mod linux_tests {
             blocked_publication.state,
             KnowledgeIndexPublicationState::RebuildRequired
         );
+    }
+
+    #[test]
+    fn native_knowledge_crash_boundary_child() {
+        if env::var_os("AGENTMAGE_KNOWLEDGE_CRASH_CHILD").is_some() {
+            run_knowledge_crash_child();
+        }
+    }
+
+    #[test]
+    fn native_process_stops_rebuild_index_only_from_canonical_markdown() {
+        let workspace_id = WorkspaceId::from_raw("workspace-native-knowledge");
+        let workspace_path = WorkspacePath::new(workspace_id.clone(), ["notes", "decision.md"])
+            .expect("recovery path");
+        let selection = vault_selection(&workspace_id);
+        for boundary in KnowledgeCrashBoundary::ALL {
+            let root = TestDirectory::new();
+            launch_knowledge_crash_child(root.path(), boundary);
+            let source_path = root.path().join("notes/decision.md");
+            let canonical = fs::read(&source_path).expect("canonical Markdown after stop");
+            let document = MarkdownDocument::parse(workspace_path.clone(), canonical.clone())
+                .expect("canonical Markdown remains parseable");
+            let decision = document
+                .elements()
+                .iter()
+                .find(|element| element.label == "Decision")
+                .expect("Decision heading remains present");
+            assert_eq!(decision.heading_level, Some(2));
+            if boundary.source_committed() {
+                assert!(
+                    std::str::from_utf8(&canonical)
+                        .expect("canonical UTF-8")
+                        .contains("Revised through the native boundary.")
+                );
+            } else {
+                assert!(
+                    std::str::from_utf8(&canonical)
+                        .expect("canonical UTF-8")
+                        .contains("Original decision.")
+                );
+            }
+            let snapshot = vault_snapshot(&selection, workspace_path.clone(), &canonical);
+            let mut rebuilt = ObsidianVaultIndex::in_memory().expect("fresh recovery index");
+            rebuilt.rebuild(&snapshot).expect("rebuild from canonical");
+            assert_eq!(
+                rebuilt.freshness(&snapshot).expect("recovery freshness"),
+                ObsidianVaultFreshness::Current,
+                "{boundary:?}"
+            );
+            assert!(
+                fs::read_dir(root.path().join("notes"))
+                    .expect("knowledge parent listing")
+                    .all(|entry| !entry
+                        .expect("knowledge entry")
+                        .file_name()
+                        .to_string_lossy()
+                        .starts_with(".agentmage-write-")),
+                "{boundary:?}"
+            );
+        }
     }
 }
