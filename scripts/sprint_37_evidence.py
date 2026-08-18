@@ -85,8 +85,8 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-36-BLOCKED", "owner": "36.1"},
-    {"code": "SPRINT-37-NATIVE-RACE-MATRIX-INCOMPLETE", "owner": "37.1.3.3"},
-    {"code": "SPRINT-37-DISKFULL-PROCESS-DEATH-MATRIX-INCOMPLETE", "owner": "37.1.3.4"},
+    {"code": "SPRINT-37-ALIAS-MOUNT-TARGET-RACE-MATRIX-INCOMPLETE", "owner": "37.1.3.3"},
+    {"code": "SPRINT-37-DISKFULL-FAULT-RECOVERY-MATRIX-INCOMPLETE", "owner": "37.1.3.4"},
     {"code": "SPRINT-37-NON-FEDORA-NATIVE-EVIDENCE-ABSENT", "owner": "37.1.AC2"},
     {"code": "SPRINT-37-ISOLATED-WRITE-WORKER-PROOF-ABSENT", "owner": "37.AC5"},
     {"code": "INDEPENDENT-SPRINT-37-REVIEW-ABSENT", "owner": "37.1.3.5"},
@@ -112,6 +112,9 @@ IMPLEMENTED: Final = {
     "exact_resource_boundary_matrix": True,
     "missing_and_wrong_type_matrix": True,
     "closed_metadata_mode_matrix": True,
+    "socket_fifo_special_kind_matrix": True,
+    "descriptor_parent_rename_matrix": True,
+    "native_process_stop_matrix": True,
     "ubuntu_native_fixture_evidence": False,
     "macos_native_driver": False,
     "windows_native_driver": False,
@@ -214,6 +217,9 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "exact_resource_boundary_matrix": local_pass,
             "missing_and_wrong_type_matrix": local_pass,
             "closed_metadata_mode_matrix": local_pass,
+            "socket_fifo_special_kind_matrix": local_pass,
+            "descriptor_parent_rename_matrix": local_pass,
+            "native_process_stop_matrix": local_pass,
             "focused_blocking_skip_count": 0 if local_pass else None,
             "upstream_sprint_36_gate": False,
             "complete_native_race_matrix": False,
@@ -293,6 +299,9 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "exact_resource_boundary_matrix",
         "missing_and_wrong_type_matrix",
         "closed_metadata_mode_matrix",
+        "socket_fifo_special_kind_matrix",
+        "descriptor_parent_rename_matrix",
+        "native_process_stop_matrix",
     ):
         if verification.get(field) is not True:
             failures.append(f"missing local verification: {field}")

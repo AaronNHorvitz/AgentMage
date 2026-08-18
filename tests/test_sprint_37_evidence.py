@@ -70,6 +70,9 @@ class Sprint37EvidenceTests(unittest.TestCase):
         self.assertTrue(value["verification_evidence"]["exact_resource_boundary_matrix"])
         self.assertTrue(value["verification_evidence"]["missing_and_wrong_type_matrix"])
         self.assertTrue(value["verification_evidence"]["closed_metadata_mode_matrix"])
+        self.assertTrue(value["verification_evidence"]["socket_fifo_special_kind_matrix"])
+        self.assertTrue(value["verification_evidence"]["descriptor_parent_rename_matrix"])
+        self.assertTrue(value["verification_evidence"]["native_process_stop_matrix"])
         self.assertFalse(value["summary"]["cross_platform_evidence_passed"])
 
     def test_dependency_platform_race_crash_worker_review_fuzz_and_release_overclaims_fail(self) -> None:
@@ -103,6 +106,9 @@ class Sprint37EvidenceTests(unittest.TestCase):
             lambda value: value["commands"][0].update({"exit_code": 1}),
             lambda value: value["commands"][0].update({"blocking_skip_count": 1}),
             lambda value: value["commands"].pop(),
+            lambda value: value["verification_evidence"].update({
+                "native_process_stop_matrix": False
+            }),
             lambda value: value["security_requirement_ids"].pop(),
             lambda value: value["environment"].pop("rustc"),
             lambda value: value["source_sha256"].pop(next(iter(value["source_sha256"]))),

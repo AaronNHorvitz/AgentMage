@@ -99,26 +99,33 @@ revalidated through exact adapter targets.
 
 | Operation | Linux primitive | Collision behavior | Restoration |
 |---|---|---|---|
-| Create | Exclusive same-directory staging, file `fsync`, `RENAME_NOREPLACE`, directory `fsync` | Refuse | Remove only the exact approved new postimage |
+| Create | Exclusive same-directory staging, file `fsync`, `RENAME_NOREPLACE`, directory `fsync` | Refuse; reconcile a renamed held parent without touching its replacement | Rename the exact postimage to a same-directory tombstone, verify, then unlink and `fsync` |
 | Exact patch | Exclusive staging and `RENAME_EXCHANGE`; verify displaced exact preimage before removal | Exact target required | Fresh exchange from exact postimage to retained preimage |
-| Copy | Fresh exact source plus create sequence | Refuse | Remove only exact copied postimage; source remains |
-| Move | Same-device `RENAME_NOREPLACE` and both parent `fsync` calls | Refuse | Reverse no-replace rename only from exact postimage |
-| Trash delete | Same move primitive into an exact approved existing trash parent | Refuse; never unlink as the requested effect | Reverse no-replace rename only from exact trash postimage |
+| Copy | Fresh exact source plus create sequence | Refuse; preserve a competing parent owner | Tombstone and remove only the exact copied inode; source remains |
+| Move | Same-device `RENAME_NOREPLACE`, native-identity verification, and both parent `fsync` calls | Refuse; reconcile either renamed held parent | Reverse no-replace rename only from the exact moved inode |
+| Trash delete | Same move primitive into an exact approved existing trash parent | Refuse; never unlink as the requested effect | Reverse no-replace rename only from the exact trash inode |
 
 A multi-operation plan is not presented as one filesystem-wide atomic primitive. Each rename is an
 atomic namespace operation where Linux supports it; a later known failure triggers exact reverse
 operations for the applied prefix. Failure after an effect when durability or state cannot be
 proven is visible as `Uncertain`, never guessed into success or restoration.
 
+Fedora tests schedule parent replacement at every declared create/copy, move/trash, and
+create/copy-restoration lifecycle boundary. Thirty subprocess-stop fixtures terminate without
+destructors across apply, restoration, and verification boundaries and prove that canonical paths
+reopen only as exact reviewed prestates or poststates. These tests do not yet constitute complete
+crash recovery: an exit between staging and cleanup can retain an exact named staging or tombstone
+artifact, and startup discovery/reconciliation is still required before the recovery gate can pass.
+
 ## Cross-Platform Status
 
 | Platform | Implementation | Current evidence | Status |
 |---|---|---|---|
-| Fedora Linux | Native descriptor-relative driver | Local create/patch/copy/move/trash, collision, link, limit, and restoration tests | Implemented locally |
+| Fedora Linux | Native descriptor-relative driver | Local operation, collision, special-kind, limit, parent-race, restoration, and process-stop tests | Implemented locally |
 | Ubuntu Linux | Same Rust/Linux code path | No current native Ubuntu execution for Sprint 37 | Compatible design; evidence blocked |
 | macOS | No Sprint 37 native driver | No Apple hardware execution | Blocked |
 | Windows 11 | No Sprint 37 native driver | No native Windows execution | Blocked |
 
-No Fedora result substitutes for another platform. Cross-platform parity, a complete race campaign,
-disk-full and process-death recovery, write-worker operating-system isolation, and independent
+No Fedora result substitutes for another platform. Cross-platform parity, complete alias/mount and
+target-writer campaigns, disk-full and startup artifact recovery, write-worker isolation, and independent
 review remain open release evidence.

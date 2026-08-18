@@ -2959,8 +2959,8 @@ both story criteria, Sprint AC 36.AC3, the story, and the sprint therefore remai
 - [ ] **Task 37.1.3 - Verify and close the story**
   - [x] **Sub-task 37.1.3.1:** `S-030-UT01` covers create, exact patch, copy, move, and delete with empty, nominal, maximum, existing, missing, wrong-type, case/Unicode collision, and metadata variants; assert documented bytes and metadata only. Evidence: commits `7dd0bdd1` and `e5537e96` add exact-ceiling/one-over tests for 128 operations, 8 MiB files, 32 MiB transactions, 64 path components, and 4,096 siblings; native missing and wrong-type cases across all five primitives; and exact zero-through-`0777` mode bindings with undeclared-bit refusal. Existing nominal, empty, collision, Unicode, link, hash, and permission-preservation fixtures remain passing.
   - [x] **Sub-task 37.1.3.2:** `S-030-UT02` verifies operation-specific previews against canonical serialized actions; alter one source/destination/hunk/delete target/metadata field and assert approval invalidation.
-  - [ ] **Sub-task 37.1.3.3:** `S-030-ST01` targets repository control files, application state, secrets, sockets/devices, out-of-root paths, links, aliases, hard links, and files changed concurrently; assert protected-path denial and zero collateral effect. Partial local evidence: protected and excluded paths, unrelated dirty work, stale sources, destination collisions, symlinks, and hard links fail closed; sockets/devices, alias variants, and the complete concurrent race matrix remain open.
-  - [ ] **Sub-task 37.1.3.4:** `S-030-RT01` injects disk-full, permission, interruption, process death, verification mismatch, and restoration failure on each operation; assert atomic outcome or visible blocked recovery state. Partial local evidence: deterministic no-change, partial failure, verification mismatch, restoration failure, cancellation, and uncertain outcomes pass; disk-full and process-death injection across every native operation remain open.
+  - [ ] **Sub-task 37.1.3.3:** `S-030-ST01` targets repository control files, application state, secrets, sockets/devices, out-of-root paths, links, aliases, hard links, and files changed concurrently; assert protected-path denial and zero collateral effect. Partial local evidence: protected and excluded paths, unrelated dirty work, stale sources, destination collisions, symlinks, hard links, Unix sockets, and FIFOs fail closed. Commits `2a9bf39f`, `e7fe1605`, `4dab9ec0`, and `97fd251f` add descriptor-held parent-rename matrices for create/copy, move/trash, and create/copy restoration; every exercised boundary preserves the authorized object and a competing canonical owner. Privileged device nodes, alias variants, mount replacement, and the complete concurrent target/writer schedule remain open.
+  - [ ] **Sub-task 37.1.3.4:** `S-030-RT01` injects disk-full, permission, interruption, process death, verification mismatch, and restoration failure on each operation; assert atomic outcome or visible blocked recovery state. Partial local evidence: deterministic no-change, partial failure, verification mismatch, restoration failure, cancellation, and uncertain outcomes pass. Commit `290e5b79` executes 30 real child-process stops across copy/create, move/trash, copy restoration, and before/after commit/restoration verification; every canonical path reopens as an exact reviewed prestate or poststate. Exact-patch process stops are covered by Sprint 36. Disk-full, permission-loss, durability-failure, move-restoration process stops, and startup reconciliation of interrupted staging/tombstone artifacts remain open.
   - [ ] **Sub-task 37.1.3.5 - Product security evidence:** Map `SR-PLT-004`, `SR-ACC-002` through `SR-ACC-006`, `SR-OPS-001`, `SR-TST-004`/`SR-TST-005`; retain operation matrix, preview digests, filesystem snapshots, collision corpus, recovery traces, and platform comparison. Partial local evidence: the retained source-bound report maps every named requirement and retains the local/Fedora operation matrix, exact digests, collision corpus, recovery results, and truthful platform comparison; independent review, other-platform native results, complete race/crash evidence, and deferred manual fuzzing remain open.
 
 ##### Story Acceptance Criteria
@@ -2984,8 +2984,10 @@ revalidation, create/patch/copy/move/trash execution, restoration, terminal unce
 cancellation before consumption, protected-path denial, and the Fedora native driver are
 implemented through `85eac2c`; approval-field mutation coverage is expanded in `60f452e`.
 Commits `7dd0bdd1` and `e5537e96` complete the named `S-030-UT01` operation, resource,
-missing/wrong-type, collision, and metadata matrix without changing the open native race and
-recovery claims.
+missing/wrong-type, collision, and metadata matrix. Commits `2a9bf39f`, `e7fe1605`, `4dab9ec0`,
+`97fd251f`, and `290e5b79` add socket/FIFO refusal, descriptor-held parent reconciliation, exact
+rollback cleanup, and 30 child-process stop cases without overstating the still-open privileged,
+startup-reconciliation, and complete fault-injection requirements.
 Architecture, platform limitations, collision corpus, and the source-bound evidence runner
 are recorded in `6333dc9`. The retained
 [Sprint 37 evidence report](artifacts/sprints/sprint-37/local-evidence-report.json) records
@@ -2993,7 +2995,7 @@ passing focused kernel and Fedora suites with zero blocking skips plus passing f
 kernel/Linux, strict lint, product, documentation, architecture, dependency,
 effect-boundary, build-contract, strict-local, supply-chain, and evidence-unit gates. Sprint
 37 remains **BLOCKED** because Sprint 36 is not a passing upstream dependency, complete
-native race/crash and non-Fedora platform evidence is absent, operating-system worker
+native race/fault/recovery and non-Fedora platform evidence is absent, operating-system worker
 isolation is not proven, independent review is absent, and manual fuzzing remains deferred.
 Task 37.1.3, its open verification sub-tasks, both story criteria, Sprint AC 37.AC1 and
 37.AC5, the story, and the sprint therefore remain open.
