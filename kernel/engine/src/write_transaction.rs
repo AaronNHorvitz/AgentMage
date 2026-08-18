@@ -1000,18 +1000,27 @@ mod tests {
     }
 
     fn target(path: &[String], bytes: &[u8]) -> GrantTarget {
+        target_with_identity(path, bytes, "workspace-0001", 1)
+    }
+
+    fn target_with_identity(
+        path: &[String],
+        bytes: &[u8],
+        workspace_id: &str,
+        mount_identity: u8,
+    ) -> GrantTarget {
         let content: [u8; 32] = Sha256::digest(bytes).into();
         let object: [u8; 32] = Sha256::digest(path.join("/").as_bytes()).into();
         serde_json::from_value(serde_json::json!({
             "target_kind": "held_object",
-            "path": {"workspace_id": "workspace-0001", "components": path},
+            "path": {"workspace_id": workspace_id, "components": path},
             "authorization_id": "authorization-0001",
             "adapter_instance_id": "adapter-0001",
             "platform": "deterministic_fake",
             "object_kind": "regular_file",
             "object_identity": {
                 "platform": "deterministic_fake",
-                "mount_identity_sha256": vec![1_u8; 32],
+                "mount_identity_sha256": vec![mount_identity; 32],
                 "object_identity_sha256": object
             },
             "preimage": {"byte_len": bytes.len(), "content_sha256": content}
@@ -1489,6 +1498,89 @@ mod tests {
                 .map(|grant| grant.status),
             Some(GrantStatus::Invalidated)
         );
+    }
+
+    #[test]
+    fn s_029_ut02_every_post_preview_binding_mutation_is_inert() {
+        #[derive(Clone, Copy)]
+        enum Mutation {
+            Target,
+            Arguments,
+            Bytes,
+            Preimage,
+            Metadata,
+            Preview,
+            Policy,
+            Grant,
+            Workspace,
+            ExpectedSideEffects,
+        }
+
+        for mutation in [
+            Mutation::Target,
+            Mutation::Arguments,
+            Mutation::Bytes,
+            Mutation::Preimage,
+            Mutation::Metadata,
+            Mutation::Preview,
+            Mutation::Policy,
+            Mutation::Grant,
+            Mutation::Workspace,
+            Mutation::ExpectedSideEffects,
+        ] {
+            let mut fixture = fixture(2);
+            let mut driver = MemoryDriver::new(&fixture.change_set, DriverMode::Success);
+            match mutation {
+                Mutation::Target => driver.paths[0][1] = "different-target.json".to_owned(),
+                Mutation::Arguments => fixture.approval.grant.argument_sha256 = "9".repeat(64),
+                Mutation::Bytes => driver.bytes[0].push(b' '),
+                Mutation::Preimage => {
+                    fixture.approval.grant.preimages.pop();
+                }
+                Mutation::Metadata => {
+                    fixture.approval.grant.targets[0] = target_with_identity(
+                        &driver.paths[0],
+                        &driver.bytes[0],
+                        "workspace-0001",
+                        9,
+                    );
+                }
+                Mutation::Preview => fixture.approval.preview_sha256 = "9".repeat(64),
+                Mutation::Policy => fixture.approval.grant.policy_sha256 = "9".repeat(64),
+                Mutation::Grant => {
+                    fixture.approval.grant.nonce = GrantNonce::from_raw("nonce-substituted")
+                }
+                Mutation::Workspace => {
+                    fixture.approval.grant.targets[0] = target_with_identity(
+                        &driver.paths[0],
+                        &driver.bytes[0],
+                        "workspace-substituted",
+                        1,
+                    );
+                }
+                Mutation::ExpectedSideEffects => {
+                    fixture.approval.grant.expected_side_effects.clear();
+                }
+            }
+            let before = driver.bytes.clone();
+            assert_eq!(
+                execute_write_transaction(
+                    &mut fixture.issuer,
+                    &fixture.policy,
+                    &fixture.change_set,
+                    &fixture.approval,
+                    WriteTransactionRequest {
+                        transaction_id: "write-transaction-mutated".to_owned(),
+                        now_epoch_ms: 4_000,
+                    },
+                    &mut driver,
+                ),
+                Err(WriteTransactionError::PreapplyDenied)
+            );
+            assert_eq!(driver.apply_calls, 0);
+            assert_eq!(driver.restore_calls, 0);
+            assert_eq!(driver.bytes, before);
+        }
     }
 
     #[test]
