@@ -8,7 +8,7 @@
 | Deterministic restart decision matrix | Pass locally |
 | Staging attribution and single-use cleanup receipts | Pass locally |
 | Redacted human-readable audit | Pass locally |
-| Native end-to-end recovery wiring | Absent |
+| Native file/checkpoint recovery wiring | Pass locally on Fedora |
 | Complete native crash and concurrency matrix | Incomplete |
 | Complete durable and temporary root scan | Absent |
 | Full host binary under trusted package launcher | Environment blocked |
@@ -38,6 +38,13 @@
   validation, failures, and rollback status. Secret-like fields are replaced before serialization.
 - The runtime JSON Schema, valid fixture, strict-schema mutation tests, architecture description,
   12-case public-synthetic recovery corpus, and redacted audit fixture are reviewable without Rust.
+- Operational-store schema version 10 retains immutable write-checkpoint rows and verified heads.
+  Native structured-patch and controlled-create paths publish `BeforeTransaction`, atomically bind
+  `GrantConsumed` to authority consumption, retain receipt phases, and bind successful completion
+  to the exact next runtime checkpoint.
+- A four-boundary real-process matrix stops before/after terminal receipt persistence and
+  before/after session-checkpoint persistence. Reopen sees only `GrantConsumed`,
+  `ReceiptPersisted`, or `Complete`, preserves the exact committed file, and never replays it.
 
 ## Requirement Mapping
 
@@ -56,17 +63,18 @@
 | `SR-OPS-005` | Checkpoint sequences preserve deterministic event order | Wall/monotonic clock-change and sleep/resume evidence |
 | `SR-OPS-006` | Uncertain, conflict, moved-root, and lost-store cases have containment instructions | Complete incident tabletop and runbook exercise |
 | `SR-OPS-007` | Unknown and quarantined staging is preserved rather than silently removed | Incident-hold authority and protected evidence-store enforcement |
-| `SR-TST-005` | Synthetic failure/restart conditions prove no replay in the coordinator | At least 100 native crash resumes around every durable transition |
+| `SR-TST-005` | Synthetic recovery conditions plus four native process-stop boundaries prove no replay across terminal receipt and session-checkpoint publication | Expanded native repetitions and internal staging, application, index, rollback, disk, and concurrency boundaries |
 
 Every mapping is a Sprint 39 local contribution, not a product-completion claim.
 
 ## Open Evidence
 
-Sprint 38 remains blocked, so Sprint 39's declared dependency is not satisfied. The new coordinator
-is platform-neutral and authority-free; no current host path executes a complete native file and
-index transaction through it. The focused matrix uses public-synthetic metadata and does not inject
-native process termination, disk exhaustion, filesystem permission races, moved mount points, or
-simultaneous external editor writes at every production boundary.
+Sprint 38 remains blocked, so Sprint 39's declared dependency is not satisfied. The coordinator is
+platform-neutral and authority-free, while the Linux host now executes and checkpoints complete
+native file transactions through it. Native derived-index phase publication remains absent. The
+four-boundary process matrix does not yet inject disk exhaustion, filesystem permission races,
+moved mount points, simultaneous external editor writes, or process termination inside every
+staging, application, index, and rollback boundary.
 
 The current root inventory is synthetic and does not scan every live durable, temporary, backup,
 diagnostic, export, and crash-artifact location. The trusted packaged-launcher environment,

@@ -7,10 +7,11 @@ content-free recovery and audit layer. The layer classifies data before every wr
 boundary, records hash-chained metadata checkpoints, chooses a deterministic restart instruction,
 diagnoses temporary staging objects, and produces a sanitized human-readable audit summary.
 
-It is not a write engine. It exposes no path opener, file driver, index driver, grant issuer, grant
-consumer, shell, network client, or cleanup effect. File and index changes still require the exact
-preimage, preview, approval, revalidation, and single-use authority paths owned by the earlier
-controlled-write stories.
+The platform-neutral coordinator is not a write engine and exposes no path opener, file driver,
+index driver, grant issuer, grant consumer, shell, network client, or cleanup effect. The Linux
+host now composes that contract with the existing exact preimage, preview, approval, revalidation,
+single-use authority, and native filesystem paths. Derived-index changes still remain a separate
+declared publication boundary.
 
 ## Boundary Composition
 
@@ -98,8 +99,14 @@ stateDiagram-v2
 
 ## Atomicity And Recovery
 
-The operational store already publishes authority state, grant consumption, the terminal authority
-receipt, and the next metadata-only `SessionCheckpoint` in one immediate SQLCipher transaction.
+Operational-store schema version 10 retains immutable write checkpoints and one verified head per
+transaction. `BeforeTransaction` is durable before native launch. `GrantConsumed` shares the same
+immediate SQLCipher transaction as single-use grant consumption and the `ToolStarted` event.
+After exact native verification, receipt phases share the `ToolCompleted` commit. For a successful
+write, `Complete` shares one SQLCipher transaction with the terminal action state, consumed grant,
+specialized file-receipt head, action evidence-set digest, runtime cursor/artifact binding, and the
+exact next metadata-only `SessionCheckpoint`.
+
 That is the strongest atomic unit available inside one store. A canonical user file, an external
 derived index, and the SQLCipher store cannot honestly be described as one atomic transaction.
 
@@ -151,8 +158,13 @@ retained public-synthetic example is
 
 ## Evidence Boundary
 
-Current local evidence exercises platform-neutral contracts and existing Linux write/store tests.
-It does not claim power-loss durability, torn-sector behavior, exhaustive native fault injection at
-every staging and index boundary, a trusted packaged-launcher run, non-Fedora native execution,
-independent review, release approval, or deferred manual fuzzing. Those remain explicit gate
-dependencies rather than being inferred from unit or synthetic integration coverage.
+Current local evidence exercises the platform-neutral contracts, the schema-v10 encrypted journal,
+real Fedora structured-patch and create transactions, exact session-checkpoint completion binding,
+and real process termination before/after terminal receipt and session-checkpoint publication. At
+restart, the retained head is exactly `GrantConsumed`, `ReceiptPersisted`, or `Complete`; the exact
+file remains committed once and consumed authority is never replayed.
+
+This evidence does not claim power-loss durability, torn-sector behavior, exhaustive native fault
+injection at every staging, application, index, and rollback boundary, a complete live-root scan, a
+trusted packaged-launcher run, non-Fedora native execution, independent review, release approval,
+or deferred manual fuzzing. Those remain explicit gate dependencies.
