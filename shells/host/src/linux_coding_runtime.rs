@@ -5740,6 +5740,33 @@ mod tests {
             let mut key = TestKey([51; 32]);
             let authority = open_test_linux_authority(&state_root, &mut key, 66_000)
                 .expect("authority reconciles continuation loss");
+            let operator_view = authority
+                .runtime_artifact_operator_view(&continuation_artifact)
+                .expect("quarantined continuation remains operator-visible");
+            assert_eq!(
+                operator_view.lifecycle,
+                agentmage_kernel_contracts::RuntimeArtifactLifecycleState::Quarantined
+            );
+            assert_eq!(
+                operator_view.cleanup,
+                agentmage_kernel_contracts::RuntimeArtifactCleanupState::Blocked
+            );
+            assert_eq!(
+                operator_view.integrity,
+                if corrupt_payload {
+                    agentmage_kernel_contracts::RuntimeArtifactIntegrityState::Corrupt
+                } else {
+                    agentmage_kernel_contracts::RuntimeArtifactIntegrityState::Missing
+                }
+            );
+            assert_eq!(
+                operator_view.reason_code,
+                if corrupt_payload {
+                    "artifact.payload_corrupt"
+                } else {
+                    "artifact.payload_missing"
+                }
+            );
             let resumed_boundary =
                 LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
                     workspace,
@@ -5786,6 +5813,12 @@ mod tests {
                 "active_continuation_objects_after_reconcile": 0,
                 "cases": ["missing", "corrupt"],
                 "cases_blocked": 2,
+                "operator_cleanup": "blocked",
+                "operator_integrity_by_case": {
+                    "corrupt": "corrupt",
+                    "missing": "missing"
+                },
+                "operator_lifecycle": "quarantined",
                 "post_failure_total_tool_executions_per_case": 1,
                 "pre_restart_tool_executions_per_case": 1,
                 "scenario": "continuation-integrity-loss"

@@ -34,6 +34,12 @@ class Story222ArtifactResumeEvidenceTests(unittest.TestCase):
         self.assertEqual(exact["post_resume_total_tool_executions"], 1)
         self.assertEqual(lost["cases"], ["missing", "corrupt"])
         self.assertEqual(lost["cases_blocked"], 2)
+        self.assertEqual(lost["operator_lifecycle"], "quarantined")
+        self.assertEqual(lost["operator_cleanup"], "blocked")
+        self.assertEqual(
+            lost["operator_integrity_by_case"],
+            {"corrupt": "corrupt", "missing": "missing"},
+        )
         self.assertEqual(lost["post_failure_total_tool_executions_per_case"], 1)
         self.assertEqual(
             command_and_test["artifact_kinds"], ["standard_output", "test_log"]

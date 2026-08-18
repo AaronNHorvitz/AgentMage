@@ -65,6 +65,12 @@ def expected_metrics() -> dict[str, dict[str, Any]]:
             "active_continuation_objects_after_reconcile": 0,
             "cases": ["missing", "corrupt"],
             "cases_blocked": 2,
+            "operator_cleanup": "blocked",
+            "operator_integrity_by_case": {
+                "corrupt": "corrupt",
+                "missing": "missing",
+            },
+            "operator_lifecycle": "quarantined",
             "post_failure_total_tool_executions_per_case": 1,
             "pre_restart_tool_executions_per_case": 1,
             "scenario": "continuation-integrity-loss",
@@ -229,7 +235,7 @@ def build_report(revision: str, output: str, elapsed_ms: int) -> dict[str, Any]:
         "limitations": [
             "The campaign uses the production coordinator and native encrypted Linux authority with a deterministic fake model and instrumented Git executor; it is not installed-package or real-model evidence.",
             "Exact continuation and artifact sets resume after protected Git, large command, and large validation operations; large terminal model output is recovered exactly after restart without being represented as resumable work.",
-            "Missing and corrupt continuation payloads are reconciled at startup and block explicitly; quarantined-payload operator recovery, long/concurrent collection, and physical storage failure are not claimed.",
+            "Missing and corrupt continuation payloads are reconciled at startup, remain visible through a path-free quarantined/blocked operator view, and block resume explicitly; long/concurrent collection and physical storage failure are not claimed.",
             "This current-host Linux source campaign is not Windows, macOS, release, or independent-review evidence.",
             "The four focused tests are not the separate one-hundred-run native tool-terminal campaign owned by Story 22.1.",
             "Manual fuzzing remains deferred and was not executed by this campaign.",
