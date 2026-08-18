@@ -233,11 +233,7 @@ def run_target(
                 timeout=300,
                 stage="offline-startup",
             )
-            denied = vm_support.run(
-                [*vm_support.ssh_argv(offline), "python3", "-c", "import socket; raise SystemExit(socket.socket().connect_ex(('1.1.1.1',443)) == 0)"],
-                timeout=30,
-            )
-            if denied.returncode != 0:
+            if not docker_vm.external_network_denied(offline):
                 raise LinuxVmPhaseError("strict-offline guest reached an external peer")
             vm_support.ssh_script(
                 offline,
