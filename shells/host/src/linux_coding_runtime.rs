@@ -2896,8 +2896,8 @@ mod tests {
         },
     };
     use agentmage_platform_linux::{
-        LinuxBoundedRepositoryInspectionExecutor, LinuxGitArtifact, LinuxSandboxLimits,
-        LinuxSandboxManifest, LinuxSandboxRunner, linux_repository_path_sha256,
+        LinuxBoundedRepositoryInspectionExecutor, LinuxRepositoryInspectionManifest,
+        LinuxSandboxLimits, LinuxSandboxManifest, LinuxSandboxRunner, linux_repository_path_sha256,
         open_test_linux_authority, resolve_test_linux_workspace_object,
     };
 
@@ -6418,9 +6418,18 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
     fn story_48_2_linux_git_adapter_runs_the_approved_plan_without_a_shell() {
-        let git = LinuxGitArtifact::verify("/usr/bin/git").expect("verified system Git");
-        let mut fixture = fixture_with_git(LinuxBoundedRepositoryInspectionExecutor::new(git));
+        let manifest = LinuxRepositoryInspectionManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            "/usr/bin/git",
+        )
+        .expect("verified Git worker manifest");
+        let executor = LinuxBoundedRepositoryInspectionExecutor::new(manifest)
+            .expect("verified Git worker executor");
+        let mut fixture = fixture_with_git(executor);
         let initialized = Command::new("/usr/bin/git")
             .env_clear()
             .env("HOME", "/nonexistent")

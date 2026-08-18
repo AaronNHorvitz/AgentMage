@@ -3,11 +3,10 @@
 use std::fmt;
 use std::fmt::Write as _;
 use std::fs;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::os::fd::AsRawFd as _;
 use std::os::unix::ffi::OsStrExt as _;
 use std::os::unix::fs::MetadataExt as _;
-use std::os::unix::process::CommandExt as _;
 use std::path::{Component, Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::thread;
@@ -25,10 +24,16 @@ use agentmage_kernel_engine::repository_safety::{
     RepositoryPreservationManifest,
 };
 use rustix::fd::OwnedFd;
-use rustix::fs::{FileType, Mode, OFlags, fchmod, fstat, open};
-use rustix::io::pread;
-use rustix::process::{Pid, Signal, getuid, kill_process_group, test_kill_process_group};
+use rustix::fs::{
+    FileType, MemfdFlags, Mode, OFlags, SealFlags, SeekFrom, fchmod, fcntl_add_seals, fstat,
+    memfd_create, open, seek,
+};
+use rustix::io::{pread, write as rustix_write};
+use rustix::process::getuid;
+use rustix::rand::{GetRandomFlags, getrandom};
 use sha2::{Digest, Sha256};
+
+use crate::sandbox::compile_seccomp_policy;
 
 const HASH_BUFFER_BYTES: usize = 64 * 1024;
 const MAX_OBSERVATION_BYTES: usize = 4 * 1024 * 1024;
@@ -37,7 +42,8 @@ const MAX_METADATA_ENTRIES: usize = 16_384;
 const PROCESS_TIMEOUT: Duration = Duration::from_secs(30);
 const INSPECTION_PROCESS_TIMEOUT: Duration = Duration::from_secs(15);
 const POLL_INTERVAL: Duration = Duration::from_millis(10);
-const PROCESS_GROUP_GRACE: Duration = Duration::from_millis(250);
+const INSPECTION_UNIT_GRACE: Duration = Duration::from_secs(3);
+const GUEST_GIT_EXECUTABLE: &str = "/app/git";
 
 /// Stable failure class at the Linux repository boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -122,6 +128,49 @@ impl fmt::Debug for LinuxGitArtifact {
             .field("launch_path", &self.launch_path)
             .field("sha256", &self.sha256)
             .finish_non_exhaustive()
+    }
+}
+
+/// Descriptor-held launchers for one isolated read-only Git worker.
+pub struct LinuxRepositoryInspectionManifest {
+    systemd_run: LinuxGitArtifact,
+    systemctl: LinuxGitArtifact,
+    bubblewrap: LinuxGitArtifact,
+    git: LinuxGitArtifact,
+}
+
+impl LinuxRepositoryInspectionManifest {
+    /// Verifies and holds the exact systemd, Bubblewrap, and Git executables.
+    pub fn verify(
+        systemd_run: impl AsRef<Path>,
+        systemctl: impl AsRef<Path>,
+        bubblewrap: impl AsRef<Path>,
+        git: impl AsRef<Path>,
+    ) -> Result<Self, LinuxRepositoryError> {
+        Ok(Self {
+            systemd_run: LinuxGitArtifact::verify(systemd_run)?,
+            systemctl: LinuxGitArtifact::verify(systemctl)?,
+            bubblewrap: LinuxGitArtifact::verify(bubblewrap)?,
+            git: LinuxGitArtifact::verify(git)?,
+        })
+    }
+
+    /// Returns the exact verified Git executable digest.
+    #[must_use]
+    pub fn git_sha256(&self) -> &str {
+        self.git.sha256()
+    }
+}
+
+impl fmt::Debug for LinuxRepositoryInspectionManifest {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxRepositoryInspectionManifest")
+            .field("systemd_run", &self.systemd_run)
+            .field("systemctl", &self.systemctl)
+            .field("bubblewrap", &self.bubblewrap)
+            .field("git", &self.git)
+            .finish()
     }
 }
 
@@ -434,42 +483,134 @@ impl LinuxRepositoryCollector {
 /// Pinned offline executor for one kernel-validated read-only Git inspection.
 #[derive(Debug)]
 pub struct LinuxBoundedRepositoryInspectionExecutor {
-    git: LinuxGitArtifact,
+    manifest: LinuxRepositoryInspectionManifest,
+    seccomp_descriptor: OwnedFd,
 }
 
 impl LinuxBoundedRepositoryInspectionExecutor {
-    /// Creates an inert executor around one descriptor-held Git artifact.
-    #[must_use]
-    pub const fn new(git: LinuxGitArtifact) -> Self {
-        Self { git }
+    /// Creates an inert executor around a verified offline worker manifest.
+    pub fn new(manifest: LinuxRepositoryInspectionManifest) -> Result<Self, LinuxRepositoryError> {
+        let seccomp = compile_seccomp_policy()
+            .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
+        Ok(Self {
+            manifest,
+            seccomp_descriptor: sealed_inspection_seccomp(&seccomp)?,
+        })
     }
 
     fn run(
         &self,
-        permit: RepositoryInspectionLaunchPermit<'_>,
+        prepared: &agentmage_kernel_engine::repository_inspection::PreparedRepositoryInspection,
         working_directory: &crate::LinuxAuthorizedWorkspace,
         cancellation: &CancellationToken,
     ) -> RepositoryInspectionPlatformResult {
-        let prepared = permit.prepared();
-        if revalidate_git_artifact(&self.git).is_err() || working_directory.revalidate().is_err() {
+        if revalidate_git_artifact(&self.manifest.systemd_run).is_err()
+            || revalidate_git_artifact(&self.manifest.systemctl).is_err()
+            || revalidate_git_artifact(&self.manifest.bubblewrap).is_err()
+            || revalidate_git_artifact(&self.manifest.git).is_err()
+            || working_directory.revalidate().is_err()
+            || !prepared.stdin().is_empty()
+        {
             return failed_inspection("linux.git-inspection.preflight.failed");
         }
         let Ok(root) = working_directory.reopen_root_directory() else {
             return failed_inspection("linux.git-inspection.root.failed");
         };
-        let root_path = format!("/proc/self/fd/{}", root.as_raw_fd());
-        let mut command = Command::new(&self.git.launch_path);
+        let Ok(unit_stem) = random_inspection_unit() else {
+            return failed_inspection("linux.git-inspection.unit.failed");
+        };
+        let unit = format!("{unit_stem}.service");
+        let parent_pid = std::process::id();
+        let git_descriptor = format!(
+            "/proc/{parent_pid}/fd/{}",
+            self.manifest.git.descriptor.as_raw_fd()
+        );
+        let seccomp_descriptor = format!(
+            "/proc/{parent_pid}/fd/{}",
+            self.seccomp_descriptor.as_raw_fd()
+        );
+        let worktree_descriptor = format!("/proc/{parent_pid}/fd/{}", root.as_raw_fd());
+        let runtime_directory = format!("/run/user/{}", getuid().as_raw());
+        let session_bus = format!("unix:path={runtime_directory}/bus");
+        let mut command = Command::new(&self.manifest.systemd_run.launch_path);
         command
             .env_clear()
-            .envs(prepared.environment().iter())
+            .env("XDG_RUNTIME_DIR", &runtime_directory)
+            .env("DBUS_SESSION_BUS_ADDRESS", &session_bus)
+            .args([
+                "--user",
+                "--wait",
+                "--quiet",
+                "--pipe",
+                "--collect",
+                "--expand-environment=no",
+            ])
+            .arg(format!("--unit={unit}"))
+            .arg("--property=NoNewPrivileges=yes")
+            .arg("--property=RestrictSUIDSGID=yes")
+            .arg("--property=LockPersonality=yes")
+            .arg("--property=RestrictAddressFamilies=AF_UNIX AF_NETLINK")
+            .arg("--property=MemorySwapMax=0")
+            .arg("--property=MemoryMax=268435456")
+            .arg("--property=TasksMax=16")
+            .arg("--property=CPUQuota=100%")
+            .arg("--property=RuntimeMaxSec=16s")
+            .arg("--property=KillMode=control-group")
+            .arg("--property=SendSIGKILL=yes")
+            .arg("--property=TimeoutStopSec=2s")
+            .arg(format!(
+                "--property=OpenFile={git_descriptor}:git:read-only"
+            ))
+            .arg(format!(
+                "--property=OpenFile={seccomp_descriptor}:seccomp:read-only"
+            ))
+            .arg(format!(
+                "--property=OpenFile={worktree_descriptor}:worktree:read-only"
+            ))
+            .arg(&self.manifest.bubblewrap.launch_path)
+            .args([
+                "--unshare-all",
+                "--unshare-user",
+                "--disable-userns",
+                "--new-session",
+                "--die-with-parent",
+                "--clearenv",
+            ]);
+        for (name, value) in prepared.environment() {
+            command.arg("--setenv").arg(name).arg(value);
+        }
+        command.args([
+            "--cap-drop",
+            "ALL",
+            "--proc",
+            "/proc",
+            "--dev",
+            "/dev",
+            "--tmpfs",
+            "/tmp",
+            "--dir",
+            "/app",
+            "--dir",
+            "/work",
+            "--dir",
+            "/usr",
+            "--dir",
+            "/etc",
+        ]);
+        add_inspection_runtime_mounts(&mut command);
+        command
+            .args(["--ro-bind-fd", "3", GUEST_GIT_EXECUTABLE])
+            .args(["--ro-bind-fd", "5", "/work"])
+            .args([
+                "--chdir",
+                "/work",
+                "--seccomp",
+                "4",
+                "--",
+                GUEST_GIT_EXECUTABLE,
+            ])
             .args(prepared.arguments())
-            .current_dir(root_path)
-            .process_group(0)
-            .stdin(if prepared.stdin().is_empty() {
-                Stdio::null()
-            } else {
-                Stdio::piped()
-            })
+            .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
 
@@ -477,27 +618,14 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         let Ok(mut child) = command.spawn() else {
             return failed_inspection("linux.git-inspection.launch.failed");
         };
-        let Some(process_group) = i32::try_from(child.id()).ok().and_then(Pid::from_raw) else {
-            let _ = child.kill();
-            let _ = child.wait();
-            return failed_inspection("linux.git-inspection.process-group.failed");
-        };
-        if !prepared.stdin().is_empty() {
-            let wrote_input = child
-                .stdin
-                .take()
-                .is_some_and(|mut input| input.write_all(prepared.stdin()).is_ok());
-            if !wrote_input {
-                let cleanup = terminate_inspection_group(&mut child, process_group);
-                return failed_inspection_with_cleanup(
-                    "linux.git-inspection.stdin.failed",
-                    cleanup,
-                    started.elapsed(),
-                );
-            }
-        }
         let Some(stdout) = child.stdout.take() else {
-            let cleanup = terminate_inspection_group(&mut child, process_group);
+            let cleanup = terminate_inspection_unit(
+                &self.manifest,
+                &unit,
+                &runtime_directory,
+                &session_bus,
+                &mut child,
+            );
             return failed_inspection_with_cleanup(
                 "linux.git-inspection.stdout.failed",
                 cleanup,
@@ -505,7 +633,13 @@ impl LinuxBoundedRepositoryInspectionExecutor {
             );
         };
         let Some(stderr) = child.stderr.take() else {
-            let cleanup = terminate_inspection_group(&mut child, process_group);
+            let cleanup = terminate_inspection_unit(
+                &self.manifest,
+                &unit,
+                &runtime_directory,
+                &session_bus,
+                &mut child,
+            );
             return failed_inspection_with_cleanup(
                 "linux.git-inspection.stderr.failed",
                 cleanup,
@@ -518,7 +652,12 @@ impl LinuxBoundedRepositoryInspectionExecutor {
         let (mut termination, mut exit_code, mut cleanup_verified, platform_code) = loop {
             match child.try_wait() {
                 Ok(Some(status)) => {
-                    let cleanup = reconcile_inspection_group(process_group);
+                    let cleanup = cleanup_inspection_unit(
+                        &self.manifest,
+                        &unit,
+                        &runtime_directory,
+                        &session_bus,
+                    );
                     let Some(code) = status.code() else {
                         break (
                             RepositoryInspectionTermination::LaunchFailed,
@@ -535,7 +674,13 @@ impl LinuxBoundedRepositoryInspectionExecutor {
                     );
                 }
                 Ok(None) if cancellation.is_cancelled() => {
-                    let cleanup = terminate_inspection_group(&mut child, process_group);
+                    let cleanup = terminate_inspection_unit(
+                        &self.manifest,
+                        &unit,
+                        &runtime_directory,
+                        &session_bus,
+                        &mut child,
+                    );
                     break (
                         RepositoryInspectionTermination::Cancelled,
                         None,
@@ -544,7 +689,13 @@ impl LinuxBoundedRepositoryInspectionExecutor {
                     );
                 }
                 Ok(None) if Instant::now() >= deadline => {
-                    let cleanup = terminate_inspection_group(&mut child, process_group);
+                    let cleanup = terminate_inspection_unit(
+                        &self.manifest,
+                        &unit,
+                        &runtime_directory,
+                        &session_bus,
+                        &mut child,
+                    );
                     break (
                         RepositoryInspectionTermination::TimedOut,
                         None,
@@ -554,7 +705,13 @@ impl LinuxBoundedRepositoryInspectionExecutor {
                 }
                 Ok(None) => thread::sleep(POLL_INTERVAL),
                 Err(_) => {
-                    let cleanup = terminate_inspection_group(&mut child, process_group);
+                    let cleanup = terminate_inspection_unit(
+                        &self.manifest,
+                        &unit,
+                        &runtime_directory,
+                        &session_bus,
+                        &mut child,
+                    );
                     break (
                         RepositoryInspectionTermination::LaunchFailed,
                         None,
@@ -614,7 +771,7 @@ impl BoundedRepositoryInspectionExecutor for LinuxBoundedRepositoryInspectionExe
         working_directory: &Self::WorkingDirectory,
         cancellation: &CancellationToken,
     ) -> RepositoryInspectionPlatformResult {
-        self.run(permit, working_directory, cancellation)
+        self.run(permit.prepared(), working_directory, cancellation)
     }
 }
 
@@ -647,36 +804,146 @@ fn read_inspection_output(mut input: impl Read) -> Result<InspectionOutput, ()> 
     })
 }
 
-fn terminate_inspection_group(child: &mut Child, process_group: Pid) -> bool {
-    let _ = kill_process_group(process_group, Signal::TERM);
-    let deadline = Instant::now() + PROCESS_GROUP_GRACE;
-    loop {
-        match child.try_wait() {
-            Ok(Some(_)) => break,
-            Ok(None) if Instant::now() < deadline => thread::sleep(POLL_INTERVAL),
-            Ok(None) | Err(_) => {
-                let _ = kill_process_group(process_group, Signal::KILL);
-                let _ = child.wait();
-                break;
-            }
-        }
+fn sealed_inspection_seccomp(bytes: &[u8]) -> Result<OwnedFd, LinuxRepositoryError> {
+    if bytes.is_empty() {
+        return Err(error(LinuxRepositoryErrorKind::InvalidGitArtifact));
     }
-    reconcile_inspection_group(process_group)
+    let descriptor = memfd_create(
+        "agentmage-git-seccomp",
+        MemfdFlags::CLOEXEC | MemfdFlags::ALLOW_SEALING,
+    )
+    .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
+    let mut remaining = bytes;
+    while !remaining.is_empty() {
+        let count = rustix_write(&descriptor, remaining)
+            .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
+        if count == 0 {
+            return Err(error(LinuxRepositoryErrorKind::InvalidGitArtifact));
+        }
+        remaining = &remaining[count..];
+    }
+    seek(&descriptor, SeekFrom::Start(0))
+        .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
+    fcntl_add_seals(
+        &descriptor,
+        SealFlags::SEAL | SealFlags::SHRINK | SealFlags::GROW | SealFlags::WRITE,
+    )
+    .map_err(|_| error(LinuxRepositoryErrorKind::InvalidGitArtifact))?;
+    Ok(descriptor)
 }
 
-fn reconcile_inspection_group(process_group: Pid) -> bool {
-    match test_kill_process_group(process_group) {
-        Err(rustix::io::Errno::SRCH) => true,
-        Ok(()) => {
-            let _ = kill_process_group(process_group, Signal::KILL);
-            thread::sleep(POLL_INTERVAL);
-            matches!(
-                test_kill_process_group(process_group),
-                Err(rustix::io::Errno::SRCH)
-            )
+fn add_inspection_runtime_mounts(command: &mut Command) {
+    for path in ["/usr/lib", "/usr/lib64", "/usr/libexec", "/lib", "/lib64"] {
+        if Path::new(path).exists() {
+            command.args(["--ro-bind", path, path]);
         }
-        Err(_) => false,
     }
+    if Path::new("/etc/ld.so.cache").is_file() {
+        command.args(["--ro-bind", "/etc/ld.so.cache", "/etc/ld.so.cache"]);
+    }
+}
+
+fn random_inspection_unit() -> Result<String, LinuxRepositoryError> {
+    let mut random = [0_u8; 12];
+    getrandom(&mut random, GetRandomFlags::empty())
+        .map_err(|_| error(LinuxRepositoryErrorKind::ExecutionFailed))?;
+    Ok(format!("agentmage-git-inspection-{}", hex(&random)))
+}
+
+fn terminate_inspection_unit(
+    manifest: &LinuxRepositoryInspectionManifest,
+    unit: &str,
+    runtime_directory: &str,
+    session_bus: &str,
+    child: &mut Child,
+) -> bool {
+    let _ = inspection_systemctl(
+        manifest,
+        runtime_directory,
+        session_bus,
+        ["kill", "--signal=KILL", "--kill-whom=all", unit],
+    );
+    let _ = inspection_systemctl(
+        manifest,
+        runtime_directory,
+        session_bus,
+        ["stop", unit, "--no-block", "--no-ask-password"],
+    );
+    let deadline = Instant::now() + INSPECTION_UNIT_GRACE;
+    let waited = loop {
+        match child.try_wait() {
+            Ok(Some(_)) => break true,
+            Ok(None) if Instant::now() < deadline => thread::sleep(POLL_INTERVAL),
+            Ok(None) | Err(_) => {
+                let _ = child.kill();
+                break child.wait().is_ok();
+            }
+        }
+    };
+    let inactive = inspection_unit_is_inactive(manifest, unit, runtime_directory, session_bus);
+    let _ = cleanup_inspection_unit(manifest, unit, runtime_directory, session_bus);
+    waited && inactive
+}
+
+fn cleanup_inspection_unit(
+    manifest: &LinuxRepositoryInspectionManifest,
+    unit: &str,
+    runtime_directory: &str,
+    session_bus: &str,
+) -> bool {
+    let inactive = inspection_unit_is_inactive(manifest, unit, runtime_directory, session_bus);
+    let _ = inspection_systemctl(
+        manifest,
+        runtime_directory,
+        session_bus,
+        ["reset-failed", unit, "--no-ask-password"],
+    );
+    inactive
+}
+
+fn inspection_unit_is_inactive(
+    manifest: &LinuxRepositoryInspectionManifest,
+    unit: &str,
+    runtime_directory: &str,
+    session_bus: &str,
+) -> bool {
+    if revalidate_git_artifact(&manifest.systemctl).is_err() {
+        return false;
+    }
+    Command::new(&manifest.systemctl.launch_path)
+        .env_clear()
+        .env("XDG_RUNTIME_DIR", runtime_directory)
+        .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
+        .args(["--user", "is-active", "--quiet", unit])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .ok()
+        .and_then(|status| status.code())
+        .is_some_and(|code| matches!(code, 3 | 4))
+}
+
+fn inspection_systemctl<const N: usize>(
+    manifest: &LinuxRepositoryInspectionManifest,
+    runtime_directory: &str,
+    session_bus: &str,
+    arguments: [&str; N],
+) -> bool {
+    if revalidate_git_artifact(&manifest.systemctl).is_err() {
+        return false;
+    }
+    Command::new(&manifest.systemctl.launch_path)
+        .env_clear()
+        .env("XDG_RUNTIME_DIR", runtime_directory)
+        .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
+        .arg("--user")
+        .args(arguments)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .is_ok_and(|status| status.success())
 }
 
 fn failed_inspection(code: &str) -> RepositoryInspectionPlatformResult {
@@ -1442,12 +1709,19 @@ const fn error(kind: LinuxRepositoryErrorKind) -> LinuxRepositoryError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use agentmage_kernel_contracts::{BoundaryKind, CorrelationId, TaskId};
+    use agentmage_kernel_contracts::{
+        AdapterInstanceId, BoundaryKind, CorrelationId, TaskId, WorkspaceAuthorizationId,
+        WorkspaceId,
+    };
     use agentmage_kernel_engine::propagation::CancellationToken;
+    use agentmage_kernel_engine::repository_inspection::{
+        RepositoryInspectionOperation, RepositoryInspectionRequest, prepare_repository_inspection,
+    };
     use agentmage_kernel_engine::repository_safety::{
         OwnedWorktreeRecord, WorktreeDisposition, plan_branch_fast_forward, plan_worktree_create,
         plan_worktree_remove, reconcile_operation,
     };
+    use std::net::TcpListener;
     use std::os::unix::fs::PermissionsExt as _;
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -1550,6 +1824,240 @@ mod tests {
             TaskId::from_raw(format!("task-{label}")),
             CorrelationId::from_raw(format!("correlation-{label}")),
         )
+    }
+
+    #[test]
+    fn inspection_manifest_rejects_untrusted_executable_paths() {
+        let fixture = Fixture::new();
+        let untrusted = fixture.root.join("systemd-run");
+        fs::write(&untrusted, b"#!/bin/sh\nexit 0\n").expect("fixture executable writes");
+        fs::set_permissions(&untrusted, fs::Permissions::from_mode(0o755))
+            .expect("fixture executable becomes executable");
+
+        let error = LinuxRepositoryInspectionManifest::verify(
+            &untrusted,
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            "/usr/bin/git",
+        )
+        .expect_err("a user-owned launcher must fail closed");
+        assert_eq!(error.kind(), LinuxRepositoryErrorKind::InvalidGitArtifact);
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_read_only_git_inspection_runs_inside_the_offline_worker() {
+        let fixture = Fixture::new();
+        let before = fixture
+            .collector()
+            .collect(&fixture.scope())
+            .expect("pre-inspection manifest");
+        let head = object(&fixture.repository, "HEAD");
+        let workspace = crate::authorize_workspace_root(
+            &fixture.repository,
+            WorkspaceId::from_raw("workspace-linux-git-inspection-0001"),
+            WorkspaceAuthorizationId::from_raw("authorization-linux-git-inspection-0001"),
+            AdapterInstanceId::from_raw("adapter-linux-git-inspection-0001"),
+        )
+        .expect("workspace root authorizes");
+        let manifest = LinuxRepositoryInspectionManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            "/usr/bin/git",
+        )
+        .expect("Git worker manifest verifies");
+        let executor = LinuxBoundedRepositoryInspectionExecutor::new(manifest)
+            .expect("Git worker executor constructs");
+        for (index, operation) in RepositoryInspectionOperation::ALL.into_iter().enumerate() {
+            let prepared = prepare_repository_inspection(
+                RepositoryInspectionRequest {
+                    schema_version: 1,
+                    operation,
+                    revision: matches!(
+                        operation,
+                        RepositoryInspectionOperation::Show | RepositoryInspectionOperation::Ref
+                    )
+                    .then(|| "HEAD".to_owned()),
+                    object_id: (operation == RepositoryInspectionOperation::Object)
+                        .then(|| head.clone()),
+                    pathspecs: Vec::new(),
+                    max_records: 32,
+                    max_output_bytes: 4_096,
+                },
+                "a".repeat(64),
+                hash(format!("operation-{index}").as_bytes()),
+            )
+            .expect("Git inspection prepares");
+            let result = executor.run(
+                &prepared,
+                &workspace,
+                &cancellation(&format!("live-git-inspection-{index}")),
+            );
+
+            assert_eq!(
+                result.termination,
+                RepositoryInspectionTermination::Exited,
+                "{operation:?}: {result:?}"
+            );
+            if operation == RepositoryInspectionOperation::Upstream {
+                assert!(
+                    matches!(result.exit_code, Some(1 | 128)),
+                    "{operation:?}: {result:?}"
+                );
+            } else {
+                assert_eq!(result.exit_code, Some(0), "{operation:?}: {result:?}");
+            }
+            assert!(result.descendants_terminated, "{operation:?}: {result:?}");
+            if operation == RepositoryInspectionOperation::Object {
+                assert_eq!(result.stdout, b"commit\n", "{result:?}");
+            }
+        }
+        assert_eq!(
+            fixture
+                .collector()
+                .collect(&fixture.scope())
+                .expect("post-inspection manifest"),
+            before
+        );
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_hostile_git_configuration_cannot_execute_or_contact_loopback() {
+        let fixture = Fixture::new();
+        let listener =
+            TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).expect("loopback listener binds");
+        listener
+            .set_nonblocking(true)
+            .expect("listener becomes nonblocking");
+        let port = listener.local_addr().expect("listener address").port();
+        let canaries = ["hook", "pager", "diff", "credential", "alias"]
+            .map(|name| fixture.root.join(format!("{name}-executed")));
+        let hook = fixture.git_directory.join("hooks/post-index-change");
+        fs::write(
+            &hook,
+            format!("#!/bin/sh\ntouch {}\n", canaries[0].display()),
+        )
+        .expect("hostile hook writes");
+        fs::set_permissions(&hook, fs::Permissions::from_mode(0o755))
+            .expect("hostile hook becomes executable");
+        fs::write(
+            fixture.repository.join(".gitattributes"),
+            "*.md diff=hostile\n",
+        )
+        .expect("hostile attributes write");
+        for arguments in [
+            vec![
+                "config".to_owned(),
+                "core.pager".to_owned(),
+                format!("touch {}", canaries[1].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "diff.hostile.command".to_owned(),
+                format!("touch {}", canaries[2].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "credential.helper".to_owned(),
+                format!("!touch {}", canaries[3].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "alias.inspect".to_owned(),
+                format!("!touch {}", canaries[4].display()),
+            ],
+            vec![
+                "remote".to_owned(),
+                "add".to_owned(),
+                "origin".to_owned(),
+                format!("ssh://127.0.0.1:{port}/repository"),
+            ],
+        ] {
+            let borrowed = arguments.iter().map(String::as_str).collect::<Vec<_>>();
+            run_fixture(&fixture.repository, &borrowed);
+        }
+        run_fixture(
+            &fixture.repository,
+            &[
+                "update-ref",
+                "refs/replace/0000000000000000000000000000000000000000",
+                "HEAD",
+            ],
+        );
+        let before = fixture
+            .collector()
+            .collect(&fixture.scope())
+            .expect("hostile pre-inspection manifest");
+        assert!(before.hazardous_configuration);
+
+        let workspace = crate::authorize_workspace_root(
+            &fixture.repository,
+            WorkspaceId::from_raw("workspace-linux-hostile-git-0001"),
+            WorkspaceAuthorizationId::from_raw("authorization-linux-hostile-git-0001"),
+            AdapterInstanceId::from_raw("adapter-linux-hostile-git-0001"),
+        )
+        .expect("workspace root authorizes");
+        let manifest = LinuxRepositoryInspectionManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            "/usr/bin/git",
+        )
+        .expect("Git worker manifest verifies");
+        let executor = LinuxBoundedRepositoryInspectionExecutor::new(manifest)
+            .expect("Git worker executor constructs");
+        for (index, operation) in [
+            RepositoryInspectionOperation::Status,
+            RepositoryInspectionOperation::Diff,
+            RepositoryInspectionOperation::Log,
+            RepositoryInspectionOperation::Show,
+            RepositoryInspectionOperation::Upstream,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let prepared = prepare_repository_inspection(
+                RepositoryInspectionRequest {
+                    schema_version: 1,
+                    operation,
+                    revision: (operation == RepositoryInspectionOperation::Show)
+                        .then(|| "HEAD".to_owned()),
+                    object_id: None,
+                    pathspecs: Vec::new(),
+                    max_records: 32,
+                    max_output_bytes: 4_096,
+                },
+                "c".repeat(64),
+                hash(format!("hostile-operation-{index}").as_bytes()),
+            )
+            .expect("hostile Git inspection prepares");
+            let result = executor.run(
+                &prepared,
+                &workspace,
+                &cancellation(&format!("hostile-git-{index}")),
+            );
+            assert_eq!(
+                result.termination,
+                RepositoryInspectionTermination::Exited,
+                "{operation:?}: {result:?}"
+            );
+            assert!(result.descendants_terminated, "{operation:?}: {result:?}");
+        }
+
+        assert!(canaries.iter().all(|path| !path.exists()));
+        assert!(matches!(
+            listener.accept(),
+            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock
+        ));
+        assert_eq!(
+            fixture
+                .collector()
+                .collect(&fixture.scope())
+                .expect("hostile post-inspection manifest"),
+            before
+        );
     }
 
     fn eligible_record(path_sha256: String, source_object: String) -> OwnedWorktreeRecord {

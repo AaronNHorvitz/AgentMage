@@ -65,8 +65,8 @@ pub use platform::{
 };
 pub use repository_safety::{
     LinuxBoundedRepositoryInspectionExecutor, LinuxGitArtifact, LinuxRepositoryCollector,
-    LinuxRepositoryError, LinuxRepositoryErrorKind, LinuxRepositoryExecutor, LinuxRepositoryScope,
-    linux_repository_path_sha256,
+    LinuxRepositoryError, LinuxRepositoryErrorKind, LinuxRepositoryExecutor,
+    LinuxRepositoryInspectionManifest, LinuxRepositoryScope, linux_repository_path_sha256,
 };
 pub use runtime_artifact_store::{LinuxRuntimeArtifactPayloadStore, LinuxRuntimeArtifactStaged};
 pub use sandbox::{

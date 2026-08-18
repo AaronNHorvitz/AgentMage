@@ -85,7 +85,7 @@ pub enum GitInspectionOperation {
     Show,
     /// Registered worktree list.
     WorktreeList,
-    /// Exact object type and size.
+    /// Exact object type.
     Object,
     /// Exact ref resolution.
     Ref,
@@ -279,7 +279,7 @@ pub fn plan_git_inspection(
         "-c".to_owned(),
         "diff.trustExitCode=false".to_owned(),
     ];
-    let mut stdin = Vec::new();
+    let stdin = Vec::new();
     match request.operation {
         GitInspectionOperation::Status | GitInspectionOperation::DirtyTree => argv.extend(
             [
@@ -353,21 +353,14 @@ pub fn plan_git_inspection(
             argv.extend(["worktree", "list", "--porcelain", "-z"].map(str::to_owned))
         }
         GitInspectionOperation::Object => {
-            argv.extend(
-                [
-                    "cat-file",
-                    "--batch-check=%(objectname)%00%(objecttype)%00%(objectsize)%00",
-                ]
-                .map(str::to_owned),
-            );
-            stdin.extend_from_slice(
+            argv.extend(["cat-file", "-t"].map(str::to_owned));
+            argv.push(
                 request
                     .object_id
                     .as_deref()
                     .expect("validated object")
-                    .as_bytes(),
+                    .to_owned(),
             );
-            stdin.push(b'\n');
         }
         GitInspectionOperation::Ref => {
             argv.extend(["rev-parse", "--verify", "--end-of-options"].map(str::to_owned));

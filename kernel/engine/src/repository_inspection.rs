@@ -73,7 +73,7 @@ pub enum RepositoryInspectionOperation {
     Show,
     /// Registered worktree list.
     WorktreeList,
-    /// Exact object type and size.
+    /// Exact object type.
     Object,
     /// Exact ref resolution.
     Ref,
@@ -81,6 +81,25 @@ pub enum RepositoryInspectionOperation {
     DirtyTree,
     /// Untracked path inspection.
     UntrackedFiles,
+}
+
+impl RepositoryInspectionOperation {
+    /// Complete fixed operation inventory admitted by the kernel.
+    pub const ALL: [Self; 13] = [
+        Self::Status,
+        Self::CurrentBranch,
+        Self::Upstream,
+        Self::BranchList,
+        Self::Log,
+        Self::Diff,
+        Self::StagedDiff,
+        Self::Show,
+        Self::WorktreeList,
+        Self::Object,
+        Self::Ref,
+        Self::DirtyTree,
+        Self::UntrackedFiles,
+    ];
 }
 
 /// Typed authority-free input from which the kernel reconstructs one Git invocation.
@@ -198,7 +217,7 @@ pub fn prepare_repository_inspection(
         return Err(RepositoryInspectionError::InvalidPlan);
     }
     let mut arguments = hardened_prefix();
-    let mut stdin = Vec::new();
+    let stdin = Vec::new();
     match request.operation {
         RepositoryInspectionOperation::Status | RepositoryInspectionOperation::DirtyTree => {
             arguments.extend(
@@ -274,21 +293,14 @@ pub fn prepare_repository_inspection(
             arguments.extend(["worktree", "list", "--porcelain", "-z"].map(str::to_owned))
         }
         RepositoryInspectionOperation::Object => {
-            arguments.extend(
-                [
-                    "cat-file",
-                    "--batch-check=%(objectname)%00%(objecttype)%00%(objectsize)%00",
-                ]
-                .map(str::to_owned),
-            );
-            stdin.extend_from_slice(
+            arguments.extend(["cat-file", "-t"].map(str::to_owned));
+            arguments.push(
                 request
                     .object_id
                     .as_deref()
                     .expect("validated object identity")
-                    .as_bytes(),
+                    .to_owned(),
             );
-            stdin.push(b'\n');
         }
         RepositoryInspectionOperation::Ref => {
             arguments.extend(["rev-parse", "--verify", "--end-of-options"].map(str::to_owned));

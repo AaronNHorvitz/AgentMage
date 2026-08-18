@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Platform-neutral Git and instruction contracts implemented; packaged platform execution remains open |
+| Status | Linux sandboxed Git worker and platform-neutral contracts implemented; packaged/native evidence remains open |
 | Requirements | `AM-GIT-001`, `AM-INS-001` |
 | Acceptance | `AT-GIT-001`, `AT-INJ-001`, `AT-INS-001` |
 | Task gate | Sprint 17 |
@@ -31,17 +31,25 @@ flowchart LR
     A --> E
 ```
 
-The current platform-neutral engine and disposable Git fixture adapter pass
-locally. Production activation is still denied because the packaged Linux
-worker does not yet receive a sealed read-only repository projection and a
-separately verified Git executable/runtime. Native macOS worker evidence is
-also absent. No direct host-process Git execution is promoted as production
-behavior.
+The platform-neutral engine, disposable Git fixture adapter, and Linux worker
+pass locally. The Linux worker receives a descriptor-held read-only repository
+projection and verified Git executable, then executes the fixed plan inside an
+offline Bubblewrap namespace owned by a bounded user-systemd unit. It has no
+direct host-process fallback. Production activation remains denied pending
+installed-package evidence on the supported Linux distributions. Native macOS
+worker evidence is also absent.
+
+The Linux worker binds the repository root itself. Linked worktrees whose
+`.git` file resolves outside that root fail closed until a separately held Git
+directory projection is implemented. Dynamic loader trees and Git subprogram
+directories are mounted read-only from the verified operating-system image;
+their package identities belong in native package evidence rather than the Git
+executable digest.
 
 ## Fixed Git Operations
 
 The closed operation set is status, current branch, upstream, branch list, log,
-worktree diff, staged diff, show, worktree list, object type and size, ref
+worktree diff, staged diff, show, worktree list, exact object type, ref
 resolution, dirty-tree determination, and untracked-file listing. Planning
 rejects arbitrary commands, shell fragments, mutation verbs, unsupported
 request fields, unsafe revisions, noncanonical paths, invalid object IDs, and
@@ -95,7 +103,7 @@ source classes, and 200 generated direct and indirect instruction attacks. The
 complete kernel suite proves that instruction records remain part of the sealed
 non-authoritative artifact family.
 
-Sprint 17 remains blocked on production platform Git projection and execution,
-the full live network observation interval, native macOS evidence, deferred
-manual parser fuzzing, and independent review. Those open items cannot be
-replaced by the passing local contract tests.
+Sprint 17 remains blocked on retained installed-package Fedora and Ubuntu
+evidence, the full live network observation interval, native macOS evidence,
+deferred manual parser fuzzing, and independent review. Those open items cannot
+be replaced by the passing local contract and source-tree Linux worker tests.
