@@ -43,6 +43,7 @@ EXPECTED_EXTERNAL_CARGO = {
     "seccompiler",
     "serde",
     "serde_json",
+    "sha1",
     "sha2",
     "tree-sitter",
     "tree-sitter-javascript",

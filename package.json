@@ -58,6 +58,8 @@
     "evidence:sprint0:check": "python3 scripts/sprint0_evidence.py",
     "evidence:sprint17:build": "python3 scripts/sprint_17_evidence.py --write --source-revision HEAD",
     "evidence:sprint17:check": "python3 scripts/sprint_17_evidence.py",
+    "evidence:sprint18:build": "python3 scripts/sprint_18_evidence.py --write --source-revision HEAD",
+    "evidence:sprint18:check": "python3 scripts/sprint_18_evidence.py",
     "evidence:story17.1-security:build": "python3 scripts/story_17_1_security_evidence.py --write --source-revision HEAD",
     "evidence:story17.1-security:check": "python3 scripts/story_17_1_security_evidence.py",
     "evidence:story0.2:build": "python3 scripts/story_0_2_evidence.py --write --source-revision HEAD",

@@ -124,7 +124,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "ba934bd4cffc9c37ccb700befcc00f267fb7e586cd3fe953326e27eff6d20064"
+          "content": "1193dc929baa7a370c1269190db1d02c1b0b438b044478bb2b7528bd1f41962d"
         }
       ],
       "licenses": [
@@ -155,7 +155,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "d925df862a42b74b01bd9b43dd7feb00eb7a1e0cc27542b6fec6e7f556fd0804"
+          "content": "26aa13e2542aae3316f7c5f388e45cd7588ebeca084ff802d53aee138626c0f0"
         }
       ],
       "licenses": [
@@ -186,7 +186,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "3c2a8fff04bdeb49acdfdc40dde19ec41e46a4765a0b52dd3acf6cd5d8954356"
+          "content": "bebe7070ecb8a90bdcee98ed0ebf58c673fa44b083c046a303189664697d0d14"
         }
       ],
       "licenses": [
@@ -217,7 +217,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "f75055130feaba379ab6849e11c3c2834f3b98c9d6dd87b08ba4eedaa521a503"
+          "content": "44b80b94968102e0aa5bd60558720a0ae20931c46bf12d5be5b677a78c3d2f34"
         }
       ],
       "licenses": [
@@ -248,7 +248,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "646e9b2aa1b94e42dba599003e73e800c36ed50386a0b240fce9fee4f443be01"
+          "content": "4a9f991e4439ddf66f30e81c8ef0e700b5288ac93976718e9176b0ea163db6e6"
         }
       ],
       "licenses": [
@@ -279,7 +279,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "b217d25eda4046a17802d0e98cdabdd96ee0ab141f1ab4a43f137408d879eff7"
+          "content": "858943b1bb33e85465e19dbc4cb20dd8bb9881b9ed9a9efee5e7eb7b30ac04a0"
         }
       ],
       "licenses": [
@@ -310,7 +310,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "49deeedaca2ed2e1dfc2e60eccb395e5e48cd20fc589fe8ec43e541736e294ec"
+          "content": "292c06fe5d6f942932a97bab74946f076818eb0db3df16a643865ad00fd8be6c"
         }
       ],
       "licenses": [
@@ -455,6 +455,35 @@
       "scope": "required",
       "type": "library",
       "version": "2.13.1"
+    },
+    {
+      "bom-ref": "cargo:block-buffer@0.10.4",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "block-buffer",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/block-buffer@0.10.4",
+      "scope": "required",
+      "type": "library",
+      "version": "0.10.4"
     },
     {
       "bom-ref": "cargo:block-buffer@0.12.1",
@@ -776,6 +805,35 @@
       "version": "0.1.1"
     },
     {
+      "bom-ref": "cargo:cpufeatures@0.2.17",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "cpufeatures",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/cpufeatures@0.2.17",
+      "scope": "required",
+      "type": "library",
+      "version": "0.2.17"
+    },
+    {
       "bom-ref": "cargo:cpufeatures@0.3.0",
       "hashes": [
         {
@@ -832,6 +890,35 @@
       "scope": "required",
       "type": "library",
       "version": "1.5.0"
+    },
+    {
+      "bom-ref": "cargo:crypto-common@0.1.7",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "crypto-common",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/crypto-common@0.1.7",
+      "scope": "required",
+      "type": "library",
+      "version": "0.1.7"
     },
     {
       "bom-ref": "cargo:crypto-common@0.2.2",
@@ -950,6 +1037,35 @@
       "scope": "required",
       "type": "library",
       "version": "5.0.0"
+    },
+    {
+      "bom-ref": "cargo:digest@0.10.7",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "digest",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/digest@0.10.7",
+      "scope": "required",
+      "type": "library",
+      "version": "0.10.7"
     },
     {
       "bom-ref": "cargo:digest@0.11.3",
@@ -1302,6 +1418,37 @@
       "scope": "required",
       "type": "library",
       "version": "1.1.9"
+    },
+    {
+      "bom-ref": "cargo:generic-array@0.14.7",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
+        }
+      ],
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "name": "generic-array",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/generic-array@0.14.7",
+      "scope": "required",
+      "type": "library",
+      "version": "0.14.7"
     },
     {
       "bom-ref": "cargo:getrandom@0.4.3",
@@ -2414,6 +2561,35 @@
       "version": "1.0.151"
     },
     {
+      "bom-ref": "cargo:sha1@0.10.6",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT OR Apache-2.0"
+        }
+      ],
+      "name": "sha1",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/sha1@0.10.6",
+      "scope": "required",
+      "type": "library",
+      "version": "0.10.6"
+    },
+    {
       "bom-ref": "cargo:sha2@0.11.0",
       "hashes": [
         {
@@ -3273,6 +3449,35 @@
       "version": "0.2.15"
     },
     {
+      "bom-ref": "cargo:version_check@0.9.5",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+        }
+      ],
+      "licenses": [
+        {
+          "expression": "MIT/Apache-2.0"
+        }
+      ],
+      "name": "version_check",
+      "properties": [
+        {
+          "name": "agentmage:dependency-class",
+          "value": "production"
+        },
+        {
+          "name": "agentmage:ecosystem",
+          "value": "cargo"
+        }
+      ],
+      "purl": "pkg:cargo/version_check@0.9.5",
+      "scope": "required",
+      "type": "library",
+      "version": "0.9.5"
+    },
+    {
       "bom-ref": "cargo:weezl@0.2.1",
       "hashes": [
         {
@@ -3486,7 +3691,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "207289a1c20a6aa30144fe356d4a3de4957e6fbb454ee599637ebaba5c493bb1"
+          "content": "b4abaafb7b494160d2d3636f7dd6bb7432e16ade2f99a9a2e3ae724903440c8c"
         }
       ],
       "licenses": [
@@ -3517,7 +3722,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81"
+          "content": "248dbbe008d2a6e6f5a1fa1aa225f8d1fa4972e0d3420d73985293a9beba84f9"
         }
       ],
       "licenses": [
@@ -15157,6 +15362,7 @@
         "cargo:seccompiler@0.5.0",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
+        "cargo:sha1@0.10.6",
         "cargo:sha2@0.11.0",
         "cargo:zeroize@1.9.0"
       ],
@@ -15187,6 +15393,12 @@
     {
       "dependsOn": [],
       "ref": "cargo:bitflags@2.13.1"
+    },
+    {
+      "dependsOn": [
+        "cargo:generic-array@0.14.7"
+      ],
+      "ref": "cargo:block-buffer@0.10.4"
     },
     {
       "dependsOn": [
@@ -15261,6 +15473,12 @@
       "dependsOn": [
         "cargo:libc@0.2.189"
       ],
+      "ref": "cargo:cpufeatures@0.2.17"
+    },
+    {
+      "dependsOn": [
+        "cargo:libc@0.2.189"
+      ],
       "ref": "cargo:cpufeatures@0.3.0"
     },
     {
@@ -15268,6 +15486,13 @@
         "cargo:cfg-if@1.0.4"
       ],
       "ref": "cargo:crc32fast@1.5.0"
+    },
+    {
+      "dependsOn": [
+        "cargo:generic-array@0.14.7",
+        "cargo:typenum@1.20.1"
+      ],
+      "ref": "cargo:crypto-common@0.1.7"
     },
     {
       "dependsOn": [
@@ -15301,6 +15526,13 @@
         "cargo:zeroize@1.9.0"
       ],
       "ref": "cargo:curve25519-dalek@5.0.0"
+    },
+    {
+      "dependsOn": [
+        "cargo:block-buffer@0.10.4",
+        "cargo:crypto-common@0.1.7"
+      ],
+      "ref": "cargo:digest@0.10.7"
     },
     {
       "dependsOn": [
@@ -15374,6 +15606,13 @@
         "cargo:zlib-rs@0.6.7"
       ],
       "ref": "cargo:flate2@1.1.9"
+    },
+    {
+      "dependsOn": [
+        "cargo:typenum@1.20.1",
+        "cargo:version_check@0.9.5"
+      ],
+      "ref": "cargo:generic-array@0.14.7"
     },
     {
       "dependsOn": [
@@ -15634,6 +15873,14 @@
     {
       "dependsOn": [
         "cargo:cfg-if@1.0.4",
+        "cargo:cpufeatures@0.2.17",
+        "cargo:digest@0.10.7"
+      ],
+      "ref": "cargo:sha1@0.10.6"
+    },
+    {
+      "dependsOn": [
+        "cargo:cfg-if@1.0.4",
         "cargo:cpufeatures@0.3.0",
         "cargo:digest@0.11.3"
       ],
@@ -15797,6 +16044,10 @@
     {
       "dependsOn": [],
       "ref": "cargo:vcpkg@0.2.15"
+    },
+    {
+      "dependsOn": [],
+      "ref": "cargo:version_check@0.9.5"
     },
     {
       "dependsOn": [],
@@ -18161,7 +18412,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:55bde1eb-06ce-522a-876b-24eb85bb277e",
+  "serialNumber": "urn:uuid:90926599-d6c1-500b-87aa-c92ec5e247d9",
   "specVersion": "1.6",
   "version": 1
 }

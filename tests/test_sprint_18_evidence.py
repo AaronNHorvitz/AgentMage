@@ -41,21 +41,23 @@ def report() -> dict[str, object]:
 
 
 class Sprint18EvidenceTests(unittest.TestCase):
-    def test_local_core_passes_without_platform_or_release_overclaim(self) -> None:
+    def test_local_core_and_linux_projection_pass_without_cross_platform_overclaim(self) -> None:
         value = report()
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertTrue(value["summary"]["local_contract_passed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertEqual(value["implemented_contracts"]["supported_language_dialects"], 6)
         self.assertFalse(value["implemented_contracts"]["network_authority"])
+        self.assertTrue(value["platform_evidence"]["linux_held_object_projection"])
+        self.assertTrue(value["platform_evidence"]["linux_encrypted_persistent_cache"])
 
     def test_platform_fuzz_review_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
-            lambda value: value["platform_evidence"].update({"linux_packaged_worker": True}),
             lambda value: value["platform_evidence"].update(
-                {"linux_encrypted_persistent_cache": True}
+                {"linux_encrypted_persistent_cache": False}
             ),
+            lambda value: value["platform_evidence"].update({"ubuntu_native_map": True}),
             lambda value: value["platform_evidence"].update({"macos_native_map": True}),
             lambda value: value["platform_evidence"].update({"windows_native_map": True}),
             lambda value: value["verification_evidence"].update(

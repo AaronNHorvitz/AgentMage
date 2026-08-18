@@ -1642,44 +1642,46 @@ claims.
 
 **Dependencies:** Sprint 17; legacy dependency record: Sprint 11 (legacy S-011), Sprint 16 (legacy S-016), Sprint 17 (legacy S-017).
 
-#### [ ] Story 18.1 - Pinned Repository Structure
+#### [x] Story 18.1 - Pinned Repository Structure
 
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need pinned repository structure so that AgentMage delivers the following bounded outcome: Build a bounded, Git-aware structural map with exact parser evidence and visible coverage limits.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 18.1.1 - Implement the bounded story**
+- [x] **Task 18.1.1 - Implement the bounded story**
   - [x] **Sub-task 18.1.1.1** (legacy `S-018-I01`): Declare and pin the v0.1 Tree-sitter language and grammar set.
-  - [ ] **Sub-task 18.1.1.2** (legacy `S-018-I02`): Build policy-aware and `.gitignore`-aware inventory with tracked state, language, type, size, content hash, branch, and commit identity. Partial platform-neutral core: the immutable input and deterministic map retain Git state, supported language, size, content hash, branch or detached state, commit, policy, freshness, and visible exclusion states; the approved host does not yet collect and hold the complete live `.gitignore` and product-policy projection.
+  - [x] **Sub-task 18.1.1.2** (legacy `S-018-I02`): Build policy-aware and `.gitignore`-aware inventory with tracked state, language, type, size, content hash, branch, and commit identity. Evidence: the native Fedora collector retains bounded tracked, staged, conflicted, untracked, ignored, regular-file, symbolic-link, and Gitlink state; the host projects admitted regular files through held descriptors, preserves links without following them, and binds exact repository, worktree, branch or detached state, commit, policy, size, content, and Git-blob hashes.
   - [x] **Sub-task 18.1.1.3** (legacy `S-018-I03`): Extract parser-backed modules, symbols, definitions, imports, and only reliable relationship edges.
-  - [ ] **Sub-task 18.1.1.4** (legacy `S-018-I04`): Store an incremental cache keyed by workspace, path, content hash, Git identity, grammar, parser, and policy versions. Partial platform-neutral core: a disposable in-memory SQLite cache binds all declared validity dimensions through the workspace-bound path and exact key; encrypted operational-store persistence, migration, retention, and host lifecycle integration remain open.
-  - [ ] **Sub-task 18.1.1.5** (legacy `S-018-I05`): Invalidate changed records before retrieval or citation. Partial platform-neutral core: exact-key misses, integrity verification, and atomic `invalidate_except` behavior pass locally; production host orchestration does not yet prove invalidation before every retrieval and citation.
+  - [x] **Sub-task 18.1.1.4** (legacy `S-018-I04`): Store an incremental cache keyed by workspace, path, content hash, Git identity, grammar, parser, and policy versions. Evidence: operational-store schema version 8 stores encrypted derivative records with exact key and payload digests, 100,000-entry per-scope and 250,000-entry global limits, bounded encoded values, at most 30 days of retention, startup verification, and tamper rejection; the pure capability retains its authority-free in-memory cache for deterministic contract tests.
+  - [x] **Sub-task 18.1.1.5** (legacy `S-018-I05`): Invalidate changed records before retrieval or citation. Evidence: the Linux host reconciles the encrypted cache against the complete current key set before returning a consuming one-use synchronization permit; only that permit can render or resolve, and restart, expiry, stale-key, integrity, and one-use tests pass.
 
 - [x] **Task 18.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 18.1.2.1:** Produce implementation and contract changes for only the numbered sub-tasks in this story.
   - [x] **Sub-task 18.1.2.2:** Produce requirement-to-code-to-test traceability and a hashed evidence index for this story.
 
-- [ ] **Task 18.1.3 - Verify and close the story**
-  - [ ] **Sub-task 18.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 18.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims.
-  - [ ] **Sub-task 18.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
-  - [ ] **Sub-task 18.1.3.4 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`, `SR-AI-007`, `SR-AI-010`, `SR-TST-002`, `SR-TST-004`, and `SR-OPS-001`; retain parser BOM, map hashes, invalidation traces, coverage ledger, and source-resolution results.
+- [x] **Task 18.1.3 - Verify and close the story**
+  - [x] **Sub-task 18.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks. Evidence: pure-core, native inventory, host projection, encrypted-cache, cancellation, timeout, restart, tamper, expiry, capacity, reconciliation, and one-use permit cases pass locally.
+  - [x] **Sub-task 18.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Evidence: hostile filters remain inert, foreign repositories fail before projection, links are not followed, excluded content is not admitted, the map remains authority-free, and the evidence validator rejects cross-platform or release overclaims.
+  - [x] **Sub-task 18.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check. Evidence: the source-bound Sprint 18 generator reruns the exact command inventory, grammar BOM, source digests, contract values, and blocker list and deterministically retains `BLOCKED` with release approval false.
+  - [x] **Sub-task 18.1.3.4 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`, `SR-AI-007`, `SR-AI-010`, `SR-TST-002`, `SR-TST-004`, and `SR-OPS-001`; retain parser BOM, map hashes, invalidation traces, coverage ledger, and source-resolution results. Evidence: [`task-18-1-3-4-product-security-evidence.md`](docs/verification/task-18-1-3-4-product-security-evidence.md) maps all seven controls to retained proof and preserves every absent platform, fuzz, review, interface, and release claim.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 18.1.AC1:** Given the approved dependencies and source requirements for `S-018-I01`, `S-018-I02`, `S-018-I03`, `S-018-I04`, and `S-018-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 18.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-018-I01`, `S-018-I02`, `S-018-I03`, `S-018-I04`, and `S-018-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
-- [ ] **Story AC 18.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
+- [x] **Story AC 18.1.AC1:** Given the approved dependencies and source requirements for `S-018-I01`, `S-018-I02`, `S-018-I03`, `S-018-I04`, and `S-018-I05`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
+- [x] **Story AC 18.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-018-I01`, `S-018-I02`, `S-018-I03`, `S-018-I04`, and `S-018-I05`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
+- [x] **Story AC 18.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 18.AC1:** Every numbered implementation sub-task in Story 18.1 is complete and linked to its legacy requirement or issue identity.
+- [x] **Sprint AC 18.AC1:** Every numbered implementation sub-task in Story 18.1 is complete and linked to its legacy requirement or issue identity.
 - [ ] **Sprint AC 18.AC2:** All applicable positive, negative, boundary, error/cancellation, side-effect, integration, adversarial, and recovery checks pass with raw evidence.
 - [x] **Sprint AC 18.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 18.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [x] **Sprint AC 18.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
 
 **Gate decision:** Sprint 18 is PASS only when Story 18.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current gate result:** BLOCKED with the platform-neutral repository-map core, native Fedora bounded Git inventory and held-object projection, encrypted derivative cache, mandatory pre-citation reconciliation, one-use synchronization permit, cancellation and timeout handling, hostile-filter isolation, cross-repository denial, cache restart and tamper rejection, and source-bound evidence passing. Remaining blockers are native Ubuntu, macOS, and Windows repository-map evidence, the deliberately deferred manual parser fuzz campaign, and independent review. Fedora evidence does not substitute for those gates or establish release approval.
 ### [ ] Sprint 19 - Repository Map Coverage and Source Resolution
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

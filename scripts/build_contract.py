@@ -95,6 +95,7 @@ EXPECTED_CARGO_PACKAGES = {
             "rustix",
             "seccompiler",
             "serde_json",
+            "sha1",
             "sha2",
             "zeroize",
         },

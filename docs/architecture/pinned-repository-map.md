@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Platform-neutral map, coverage, resolution, and renderer core implemented; production host and persistence integration remain open |
+| Status | Platform-neutral core plus native Fedora held-object projection and encrypted derivative cache implemented; other native-platform evidence remains open |
 | Requirement | `AM-REP-001` |
 | Acceptance | `AT-REP-001` |
 | Task gate | Sprint 18 |
@@ -13,7 +13,8 @@ The repository-map capability is a pure, bounded consumer of immutable evidence.
 
 ```mermaid
 flowchart LR
-    H[Approved held repository evidence] --> P[Git and product policy projection]
+    G[Hardened bounded Git inventory] --> H[Approved held repository objects]
+    H --> P[Git and product policy projection]
     P --> I[Bounded immutable inventory input]
     I --> V{Validate paths, sizes, hashes, and exclusions}
     V -->|Denied| D[Content-free failure]
@@ -22,7 +23,9 @@ flowchart LR
     T --> M[Definitions, imports, and reliable syntax edges]
     C --> R[Hash-bound repository map]
     M --> R
-    R --> X[Disposable exact-key cache]
+    R --> X[Encrypted exact-key derivative cache]
+    X --> F[One-use synchronized map permit]
+    F --> Y[Render or resolve]
 ```
 
 Excluded, generated, vendored, and Git-ignored paths must arrive without content. A supported path whose bytes were not authorized is `content_not_read`; it is never mislabeled as an unsupported language. Regular files, symbolic links, and Gitlinks have distinct closed object kinds. Symbolic links and Gitlinks remain visible `Unknown/Blocked` inventory facts, but are never followed, entered, parsed, or lexically searched. Unsupported, binary, oversized, failed, syntax-error, and truncated states remain visible rather than disappearing from coverage.
@@ -76,14 +79,22 @@ A retained context verifies only by deterministic re-render from the exact curre
 
 ## Cache And Invalidation
 
-The implemented cache is an in-memory SQLite derivative keyed by workspace-relative path, content hash, Git identity, grammar identity, parser version, and policy revision. Repository, worktree, branch, commit, and policy identities are retained by each file record so insertion recomputes and enforces the only exact key. Reads require an exact complete key and recompute nested record integrity. `invalidate_except` atomically removes records absent from the current complete key set before later retrieval or citation. Multi-entry tests change each validity dimension independently and prove that the changed record is removed while an unrelated record remains byte-identical and retrievable.
+The pure capability retains a disposable in-memory SQLite derivative for deterministic contract tests. The Linux host additionally stores the same exact-key records in the encrypted operational store under schema version 8. Both forms key records by workspace-relative path, content hash, Git identity, grammar identity, parser version, and policy revision. Repository, worktree, branch, commit, and policy identities are retained by each file record so insertion recomputes and enforces the only exact key. Reads require an exact complete key and recompute nested record integrity.
 
-This cache is intentionally disposable. It is not canonical operational state and has no path-opening authority. Integration with the encrypted operational store, persistent migrations, host freshness orchestration, and citation invalidation remains open and blocks Sprint 18 completion.
+The production derivative cache permits at most 100,000 entries per repository scope and 250,000 total, 64 KiB encoded keys, 4 MiB encoded records, and 30 days of retention. Startup verification and every read validate the key digest, payload digest, exact nested map integrity, scope binding, and expiry. Tampered, malformed, stale, or over-limit records fail closed. The cache is non-canonical and has no filesystem, process, model, network, citation, or mutation authority.
+
+Before rendering or source resolution, the host reconciles the cache against the complete current key set and writes current verified records in one transaction. The resulting synchronized map permit owns the only map value exposed to those operations and is consumed by exactly one render or resolve call. A caller therefore cannot retrieve or cite through the host adapter before current-key invalidation or reuse a stale synchronization permit.
+
+## Native Linux Projection
+
+The Fedora implementation obtains repository identity and tracked, untracked, ignored, staged, conflicted, regular-file, symbolic-link, and Gitlink state through bounded NUL-framed Git output. Git runs with a cleared environment, disabled credentials, hooks, filters, pagers, aliases, replacement objects, optional locks, and network protocols. Each invocation is capped at 32 MiB and 100,000 inventory entries, has a 30-second deadline, and supports cooperative cancellation; interrupted children are killed and reaped.
+
+The host verifies the requested repository and worktree identity before projection. Admitted regular files are opened relative to an already held workspace directory, hashed as exact Git blobs, and retained through held descriptors. Symbolic links are represented by held-link evidence and exact target-byte hashes but are never followed. Gitlinks remain metadata-only. Excluded or unsupported content is never read merely to populate the map.
 
 ## Verification Truth
 
 Local tests prove deterministic ordering, exact grammar identity, parser extraction across all six language or dialect entries, reliable import relationships, exclusion without content, non-following symlink and Gitlink visibility, complete coverage outcomes, unsupported and unread visibility, malformed and hostile encoding behavior, size and item ceilings, duplicate-path and duplicate-symbol handling, source-injection isolation, foreign-workspace rejection, exact source resolution, fixed priority tiers, conservative context truncation, golden map and context identities, forged-hash rejection, exact cache-key misses, selective invalidation, corruption rejection, and transactional capacity rollback.
 
-A test-only disposable Git repository verifies one real ignore rule and recursive-link exclusion, then snapshots every path, byte, mode, symlink target, Git index, ref, and object before and after two complete maps. The snapshots and maps are identical. The fixture's setup effects live only in the terminal Rust test module and are absent from product-effect surfaces.
+A test-only disposable Git repository verifies real ignore rules, tracked and untracked state, a symbolic link, a Gitlink, and hostile filter configuration through the native Fedora collector and host projection. The hostile filter canary remains absent. Cross-repository projection fails before content opening. Cancellation and timeout tests prove child termination and reaping. Encrypted-cache restart, expiry, tamper, capacity, exact-key reconciliation, and one-use synchronization tests pass.
 
-Production activation remains blocked on the packaged repository worker and Git-aware projection, real `.gitignore` and policy collection through held objects, encrypted persistent cache integration, full host cancellation and dependency-failure cases, native platform evidence, the deferred manual parser fuzz campaign, and independent review. Passing pure-core tests cannot substitute for those controls.
+Sprint closure remains blocked on native Ubuntu, macOS, and Windows repository-map campaigns, the deferred manual parser fuzz campaign, and independent review. Fedora evidence and passing pure-core tests do not substitute for those controls or establish release approval.

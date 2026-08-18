@@ -87,7 +87,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "ba934bd4cffc9c37ccb700befcc00f267fb7e586cd3fe953326e27eff6d20064"
+          "content": "1193dc929baa7a370c1269190db1d02c1b0b438b044478bb2b7528bd1f41962d"
         }
       ],
       "integrity": null,
@@ -107,7 +107,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "d925df862a42b74b01bd9b43dd7feb00eb7a1e0cc27542b6fec6e7f556fd0804"
+          "content": "26aa13e2542aae3316f7c5f388e45cd7588ebeca084ff802d53aee138626c0f0"
         }
       ],
       "integrity": null,
@@ -127,7 +127,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "3c2a8fff04bdeb49acdfdc40dde19ec41e46a4765a0b52dd3acf6cd5d8954356"
+          "content": "bebe7070ecb8a90bdcee98ed0ebf58c673fa44b083c046a303189664697d0d14"
         }
       ],
       "integrity": null,
@@ -147,7 +147,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "f75055130feaba379ab6849e11c3c2834f3b98c9d6dd87b08ba4eedaa521a503"
+          "content": "44b80b94968102e0aa5bd60558720a0ae20931c46bf12d5be5b677a78c3d2f34"
         }
       ],
       "integrity": null,
@@ -167,7 +167,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "646e9b2aa1b94e42dba599003e73e800c36ed50386a0b240fce9fee4f443be01"
+          "content": "4a9f991e4439ddf66f30e81c8ef0e700b5288ac93976718e9176b0ea163db6e6"
         }
       ],
       "integrity": null,
@@ -187,7 +187,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "b217d25eda4046a17802d0e98cdabdd96ee0ab141f1ab4a43f137408d879eff7"
+          "content": "858943b1bb33e85465e19dbc4cb20dd8bb9881b9ed9a9efee5e7eb7b30ac04a0"
         }
       ],
       "integrity": null,
@@ -207,7 +207,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "49deeedaca2ed2e1dfc2e60eccb395e5e48cd20fc589fe8ec43e541736e294ec"
+          "content": "292c06fe5d6f942932a97bab74946f076818eb0db3df16a643865ad00fd8be6c"
         }
       ],
       "integrity": null,
@@ -299,6 +299,26 @@
         "url": "https://crates.io/crates/bitflags/2.13.1"
       },
       "version": "2.13.1"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:block-buffer@0.10.4",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
+        }
+      ],
+      "integrity": "sha256:3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71",
+      "license": "MIT OR Apache-2.0",
+      "name": "block-buffer",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/block-buffer/0.10.4"
+      },
+      "version": "0.10.4"
     },
     {
       "classification": "production",
@@ -522,6 +542,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:cpufeatures@0.2.17",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
+        }
+      ],
+      "integrity": "sha256:59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280",
+      "license": "MIT OR Apache-2.0",
+      "name": "cpufeatures",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/cpufeatures/0.2.17"
+      },
+      "version": "0.2.17"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:cpufeatures@0.3.0",
       "ecosystem": "cargo",
       "hashes": [
@@ -559,6 +599,26 @@
         "url": "https://crates.io/crates/crc32fast/1.5.0"
       },
       "version": "1.5.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:crypto-common@0.1.7",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
+        }
+      ],
+      "integrity": "sha256:78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a",
+      "license": "MIT OR Apache-2.0",
+      "name": "crypto-common",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/crypto-common/0.1.7"
+      },
+      "version": "0.1.7"
     },
     {
       "classification": "production",
@@ -639,6 +699,26 @@
         "url": "https://crates.io/crates/curve25519-dalek/5.0.0"
       },
       "version": "5.0.0"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:digest@0.10.7",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
+        }
+      ],
+      "integrity": "sha256:9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292",
+      "license": "MIT OR Apache-2.0",
+      "name": "digest",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/digest/0.10.7"
+      },
+      "version": "0.10.7"
     },
     {
       "classification": "production",
@@ -879,6 +959,26 @@
         "url": "https://crates.io/crates/flate2/1.1.9"
       },
       "version": "1.1.9"
+    },
+    {
+      "classification": "production",
+      "component_id": "cargo:generic-array@0.14.7",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
+        }
+      ],
+      "integrity": "sha256:85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a",
+      "license": "MIT",
+      "name": "generic-array",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/generic-array/0.14.7"
+      },
+      "version": "0.14.7"
     },
     {
       "classification": "production",
@@ -1642,6 +1742,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:sha1@0.10.6",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba"
+        }
+      ],
+      "integrity": "sha256:e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba",
+      "license": "MIT OR Apache-2.0",
+      "name": "sha1",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/sha1/0.10.6"
+      },
+      "version": "0.10.6"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:sha2@0.11.0",
       "ecosystem": "cargo",
       "hashes": [
@@ -2222,6 +2342,26 @@
     },
     {
       "classification": "production",
+      "component_id": "cargo:version_check@0.9.5",
+      "ecosystem": "cargo",
+      "hashes": [
+        {
+          "algorithm": "SHA-256",
+          "content": "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+        }
+      ],
+      "integrity": "sha256:0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a",
+      "license": "MIT/Apache-2.0",
+      "name": "version_check",
+      "scope": "required",
+      "source": {
+        "type": "registry",
+        "url": "https://crates.io/crates/version_check/0.9.5"
+      },
+      "version": "0.9.5"
+    },
+    {
+      "classification": "production",
       "component_id": "cargo:weezl@0.2.1",
       "ecosystem": "cargo",
       "hashes": [
@@ -2367,7 +2507,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "207289a1c20a6aa30144fe356d4a3de4957e6fbb454ee599637ebaba5c493bb1"
+          "content": "b4abaafb7b494160d2d3636f7dd6bb7432e16ade2f99a9a2e3ae724903440c8c"
         }
       ],
       "integrity": null,
@@ -2387,7 +2527,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81"
+          "content": "248dbbe008d2a6e6f5a1fa1aa225f8d1fa4972e0d3420d73985293a9beba84f9"
         }
       ],
       "integrity": null,
@@ -9939,6 +10079,7 @@
         "cargo:seccompiler@0.5.0",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
+        "cargo:sha1@0.10.6",
         "cargo:sha2@0.11.0",
         "cargo:zeroize@1.9.0"
       ]
@@ -9968,6 +10109,12 @@
     {
       "component_id": "cargo:bitflags@2.13.1",
       "depends_on": []
+    },
+    {
+      "component_id": "cargo:block-buffer@0.10.4",
+      "depends_on": [
+        "cargo:generic-array@0.14.7"
+      ]
     },
     {
       "component_id": "cargo:block-buffer@0.12.1",
@@ -10039,6 +10186,12 @@
       "depends_on": []
     },
     {
+      "component_id": "cargo:cpufeatures@0.2.17",
+      "depends_on": [
+        "cargo:libc@0.2.189"
+      ]
+    },
+    {
       "component_id": "cargo:cpufeatures@0.3.0",
       "depends_on": [
         "cargo:libc@0.2.189"
@@ -10048,6 +10201,13 @@
       "component_id": "cargo:crc32fast@1.5.0",
       "depends_on": [
         "cargo:cfg-if@1.0.4"
+      ]
+    },
+    {
+      "component_id": "cargo:crypto-common@0.1.7",
+      "depends_on": [
+        "cargo:generic-array@0.14.7",
+        "cargo:typenum@1.20.1"
       ]
     },
     {
@@ -10081,6 +10241,13 @@
         "cargo:rustc_version@0.4.1",
         "cargo:subtle@2.6.1",
         "cargo:zeroize@1.9.0"
+      ]
+    },
+    {
+      "component_id": "cargo:digest@0.10.7",
+      "depends_on": [
+        "cargo:block-buffer@0.10.4",
+        "cargo:crypto-common@0.1.7"
       ]
     },
     {
@@ -10154,6 +10321,13 @@
         "cargo:crc32fast@1.5.0",
         "cargo:miniz_oxide@0.8.9",
         "cargo:zlib-rs@0.6.7"
+      ]
+    },
+    {
+      "component_id": "cargo:generic-array@0.14.7",
+      "depends_on": [
+        "cargo:typenum@1.20.1",
+        "cargo:version_check@0.9.5"
       ]
     },
     {
@@ -10413,6 +10587,14 @@
       ]
     },
     {
+      "component_id": "cargo:sha1@0.10.6",
+      "depends_on": [
+        "cargo:cfg-if@1.0.4",
+        "cargo:cpufeatures@0.2.17",
+        "cargo:digest@0.10.7"
+      ]
+    },
+    {
       "component_id": "cargo:sha2@0.11.0",
       "depends_on": [
         "cargo:cfg-if@1.0.4",
@@ -10577,6 +10759,10 @@
     },
     {
       "component_id": "cargo:vcpkg@0.2.15",
+      "depends_on": []
+    },
+    {
+      "component_id": "cargo:version_check@0.9.5",
       "depends_on": []
     },
     {
@@ -12923,15 +13109,15 @@
   ],
   "document_id": "agentmage-dependency-provenance",
   "generated_from": {
-    "Cargo.lock": "62921f4c19f5c73ad4a348954ff211d46c58fe1debf254ef0c74f3d24595b79f",
-    "Cargo.toml": "3f7cc376e76edb6ad4a3fd5f99489a0231843496d9edd664da8621064dc02786",
+    "Cargo.lock": "8494aa918096201f2aa6d1525f64d2429a67bfc23d5ecfcc19ba905847a48605",
+    "Cargo.toml": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "86670baa069bb9cf35d6642752ef443c7fcfa048338d8892fb857c2963289f81",
+    "package.json": "248dbbe008d2a6e6f5a1fa1aa225f8d1fa4972e0d3420d73985293a9beba84f9",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
     "shells/vscode/package.json": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16",
-    "supply-chain/cargo-external-catalog.json": "961b8f03dc9f4ec8d6881906c34421c50388bff9e7626e769a0237201d4a8eb0"
+    "supply-chain/cargo-external-catalog.json": "73339375071827cc539fc7a6753faae9b920a7e313da52131b0f597cdf9d8adc"
   },
   "platform_status": {
     "macos": "blocked-macos",

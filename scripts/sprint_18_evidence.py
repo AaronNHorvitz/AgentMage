@@ -17,6 +17,7 @@ OUTPUT: Final = ROOT / "artifacts/sprints/sprint-18/local-evidence-report.json"
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 SOURCE_PATHS: Final = (
+    "TASKS.md",
     "capabilities/repository-map/Cargo.toml",
     "capabilities/repository-map/examples/grammar_bom.rs",
     "capabilities/repository-map/src/cache.rs",
@@ -24,7 +25,15 @@ SOURCE_PATHS: Final = (
     "capabilities/repository-map/src/inventory.rs",
     "capabilities/repository-map/src/lib.rs",
     "capabilities/repository-map/src/parser.rs",
+    "kernel/engine/migrations/operational-store/0008-repository-map-cache.sql",
+    "kernel/engine/src/operational_store.rs",
+    "kernel/engine/src/repository_cache.rs",
+    "platforms/linux/src/lib.rs",
+    "platforms/linux/src/repository_inventory.rs",
+    "platforms/linux/src/repository_safety.rs",
+    "shells/host/src/linux_repository_map.rs",
     "docs/architecture/pinned-repository-map.md",
+    "docs/verification/task-18-1-3-4-product-security-evidence.md",
     "docs/verification/sprint-18-local-results.md",
     "scripts/sprint_18_evidence.py",
     "tests/test_sprint_18_evidence.py",
@@ -42,12 +51,51 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "linux-repository-inventory-tests",
+        (
+            "cargo",
+            "test",
+            "-p",
+            "agentmage-platform-linux",
+            "repository_inventory",
+            "--locked",
+        ),
+    ),
+    (
+        "linux-repository-host-tests",
+        (
+            "cargo",
+            "test",
+            "-p",
+            "agentmage-host",
+            "linux_repository_map",
+            "--locked",
+        ),
+    ),
+    (
+        "repository-cache-tests",
+        (
+            "cargo",
+            "test",
+            "-p",
+            "agentmage-kernel-engine",
+            "repository_cache",
+            "--locked",
+        ),
+    ),
+    (
         "repository-map-clippy",
         (
             "cargo",
             "clippy",
             "-p",
             "agentmage-capability-repository-map",
+            "-p",
+            "agentmage-platform-linux",
+            "-p",
+            "agentmage-kernel-engine",
+            "-p",
+            "agentmage-host",
             "--all-targets",
             "--locked",
             "--",
@@ -81,11 +129,9 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-TST-004",
 ]
 BLOCKERS: Final = [
-    {"code": "PACKAGED-REPOSITORY-MAP-WORKER-NOT-INTEGRATED", "owner": "18.1.1.2"},
-    {"code": "LIVE-GITIGNORE-POLICY-PROJECTION-NOT-INTEGRATED", "owner": "18.1.1.2"},
-    {"code": "ENCRYPTED-PERSISTENT-MAP-CACHE-NOT-INTEGRATED", "owner": "18.1.1.4"},
-    {"code": "HOST-CANCELLATION-AND-FAILURE-MATRIX-INCOMPLETE", "owner": "18.1.3.1"},
-    {"code": "NATIVE-PLATFORM-MAP-EVIDENCE-INCOMPLETE", "owner": "18.1.3.2"},
+    {"code": "NATIVE-UBUNTU-MAP-EVIDENCE-INCOMPLETE", "owner": "18.1.3.2"},
+    {"code": "NATIVE-MACOS-MAP-EVIDENCE-INCOMPLETE", "owner": "18.1.3.2"},
+    {"code": "NATIVE-WINDOWS-MAP-EVIDENCE-INCOMPLETE", "owner": "18.1.3.2"},
     {"code": "MANUAL-PARSER-FUZZING-DEFERRED", "owner": "18.1.3.3"},
     {"code": "INDEPENDENT-SPRINT-18-REVIEW-NOT-RETAINED", "owner": "18.1.3.3"},
 ]
@@ -171,6 +217,10 @@ def build_report(
             "maximum_structural_items": 10_000,
             "reliable_relationship_kinds": 1,
             "cache_key_dimensions": 6,
+            "encrypted_cache_schema_version": 8,
+            "cache_retention_days_maximum": 30,
+            "inventory_entry_maximum": 100_000,
+            "inventory_output_bytes_maximum": 32 * 1024 * 1024,
             "filesystem_authority": False,
             "process_authority": False,
             "network_authority": False,
@@ -178,8 +228,12 @@ def build_report(
         },
         "platform_evidence": {
             "local_pure_core": local_pass,
-            "linux_packaged_worker": False,
-            "linux_encrypted_persistent_cache": False,
+            "linux_hardened_git_inventory": local_pass,
+            "linux_held_object_projection": local_pass,
+            "linux_encrypted_persistent_cache": local_pass,
+            "linux_one_use_freshness_permit": local_pass,
+            "fedora_native_local": local_pass,
+            "ubuntu_native_map": False,
             "macos_native_map": False,
             "windows_native_map": False,
         },
@@ -188,6 +242,11 @@ def build_report(
             "deterministic_inventory": local_pass,
             "parser_range_and_hash_integrity": local_pass,
             "exact_cache_invalidation": local_pass,
+            "inventory_cancellation": local_pass,
+            "inventory_timeout_kill_and_reap": local_pass,
+            "hostile_git_filter_inert": local_pass,
+            "cross_repository_projection_denied": local_pass,
+            "encrypted_cache_restart_and_tamper": local_pass,
             "manual_parser_fuzzing": False,
             "independent_review": False,
         },
@@ -265,6 +324,10 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "maximum_structural_items": 10_000,
         "reliable_relationship_kinds": 1,
         "cache_key_dimensions": 6,
+        "encrypted_cache_schema_version": 8,
+        "cache_retention_days_maximum": 30,
+        "inventory_entry_maximum": 100_000,
+        "inventory_output_bytes_maximum": 32 * 1024 * 1024,
         "filesystem_authority": False,
         "process_authority": False,
         "network_authority": False,
@@ -281,13 +344,35 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     platform = report.get("platform_evidence", {})
     verification = report.get("verification_evidence", {})
     for field in (
-        "linux_packaged_worker",
-        "linux_encrypted_persistent_cache",
+        "ubuntu_native_map",
         "macos_native_map",
         "windows_native_map",
     ):
         if platform.get(field) is not False:
             failures.append(f"platform overclaim: {field}")
+    for field in (
+        "local_pure_core",
+        "linux_hardened_git_inventory",
+        "linux_held_object_projection",
+        "linux_encrypted_persistent_cache",
+        "linux_one_use_freshness_permit",
+        "fedora_native_local",
+    ):
+        if platform.get(field) is not True:
+            failures.append(f"missing local platform evidence: {field}")
+    for field in (
+        "grammar_identity",
+        "deterministic_inventory",
+        "parser_range_and_hash_integrity",
+        "exact_cache_invalidation",
+        "inventory_cancellation",
+        "inventory_timeout_kill_and_reap",
+        "hostile_git_filter_inert",
+        "cross_repository_projection_denied",
+        "encrypted_cache_restart_and_tamper",
+    ):
+        if verification.get(field) is not True:
+            failures.append(f"missing local verification evidence: {field}")
     for field in ("manual_parser_fuzzing", "independent_review"):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
