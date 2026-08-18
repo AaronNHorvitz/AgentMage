@@ -711,26 +711,122 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
             .is_some_and(|entry| entry.bytes == expected && entry.mode == mode)
     }
 
-    fn remove_exact_destination(&self, operation: &FilesystemOperation) -> EffectOutcome {
+    fn remove_exact_destination(
+        &mut self,
+        transaction_id: &str,
+        index: usize,
+        operation: &FilesystemOperation,
+        purpose: &str,
+    ) -> EffectOutcome {
         let destination = match destination_path(operation) {
             Ok(value) => value,
             Err(_) => return EffectOutcome::NoChange,
         };
         let mode = operation.destination_mode().unwrap_or(u32::MAX);
-        if !self.entry_matches(&destination, operation.postimage_bytes(), mode) {
+        let held = match self.adapter().resolve(
+            self.workspace,
+            &destination,
+            PathResolutionIntent::ReadFile,
+        ) {
+            Ok(value) => value,
+            Err(_) => return EffectOutcome::NoChange,
+        };
+        let held_snapshot = match crate::snapshot(&held.object_descriptor, None) {
+            Ok(value) => value,
+            Err(_) => return EffectOutcome::NoChange,
+        };
+        if read_held_bytes(&held, self.limits.maximum_file_bytes).as_deref()
+            != Ok(operation.postimage_bytes())
+            || fstat(&held.object_descriptor).map(|value| value.st_mode & 0o777) != Ok(mode)
+        {
             return EffectOutcome::NoChange;
         }
+        let Some(parent_target) = self.current_parent_target(&destination) else {
+            return EffectOutcome::NoChange;
+        };
         let (directory, name) = match open_parent(self.workspace, destination.components()) {
             Ok(value) => value,
             Err(_) => return EffectOutcome::NoChange,
         };
-        if unlinkat(&directory, name.as_str(), AtFlags::empty()).is_err() {
+        if !self.held_parent_is_current(&parent_target, &destination, &directory)
+            || !held_file_matches(
+                &directory,
+                &name,
+                &held_snapshot,
+                operation.postimage_bytes(),
+                self.limits.maximum_file_bytes,
+            )
+        {
             return EffectOutcome::NoChange;
         }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterInitialObservation);
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterParentOpened);
+        let tombstone = temporary_name(transaction_id, index, purpose, operation.postimage_bytes());
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::BeforeCommit);
+        if !held_file_matches(
+            &directory,
+            &name,
+            &held_snapshot,
+            operation.postimage_bytes(),
+            self.limits.maximum_file_bytes,
+        ) || !held_entry_absent(&directory, &tombstone)
+        {
+            return EffectOutcome::NoChange;
+        }
+        if renameat_with(
+            &directory,
+            name.as_str(),
+            &directory,
+            tombstone.as_str(),
+            RenameFlags::NOREPLACE,
+        )
+        .is_err()
+        {
+            return EffectOutcome::NoChange;
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterCommit);
         if fsync(&directory).is_err() {
             return EffectOutcome::Uncertain;
         }
-        if self.observe_optional_file(&destination).ok() == Some(None) {
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterCommitDurable);
+        if !held_entry_absent(&directory, &name)
+            || !held_file_matches(
+                &directory,
+                &tombstone,
+                &held_snapshot,
+                operation.postimage_bytes(),
+                self.limits.maximum_file_bytes,
+            )
+        {
+            return EffectOutcome::Uncertain;
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterVerification);
+        if !held_entry_absent(&directory, &name)
+            || !held_file_matches(
+                &directory,
+                &tombstone,
+                &held_snapshot,
+                operation.postimage_bytes(),
+                self.limits.maximum_file_bytes,
+            )
+            || unlinkat(&directory, tombstone.as_str(), AtFlags::empty()).is_err()
+        {
+            return EffectOutcome::Uncertain;
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterCleanup);
+        if fsync(&directory).is_err() {
+            return EffectOutcome::Uncertain;
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, FilesystemRaceBoundary::AfterCleanupDurable);
+        if held_entry_absent(&directory, &name) && held_entry_absent(&directory, &tombstone) {
             EffectOutcome::Applied
         } else {
             EffectOutcome::Uncertain
@@ -745,7 +841,12 @@ impl<'workspace> LinuxControlledFilesystemDriver<'workspace> {
     ) -> EffectOutcome {
         match operation.kind() {
             FilesystemOperationKind::Create | FilesystemOperationKind::Copy => {
-                self.remove_exact_destination(operation)
+                let purpose = if operation.kind() == FilesystemOperationKind::Create {
+                    "restore-create"
+                } else {
+                    "restore-copy"
+                };
+                self.remove_exact_destination(transaction_id, index, operation, purpose)
             }
             FilesystemOperationKind::ExactPatch => {
                 let Some(path) = operation.source().and_then(GrantTarget::workspace_path) else {
@@ -959,6 +1060,8 @@ enum FilesystemRaceBoundary {
     AfterCommit,
     AfterCommitDurable,
     AfterVerification,
+    AfterCleanup,
+    AfterCleanupDurable,
 }
 
 #[cfg(test)]
@@ -981,6 +1084,17 @@ impl FilesystemRaceBoundary {
         Self::AfterCommit,
         Self::AfterCommitDurable,
         Self::AfterVerification,
+    ];
+
+    const REMOVE_ALL: [Self; 8] = [
+        Self::AfterInitialObservation,
+        Self::AfterParentOpened,
+        Self::BeforeCommit,
+        Self::AfterCommit,
+        Self::AfterCommitDurable,
+        Self::AfterVerification,
+        Self::AfterCleanup,
+        Self::AfterCleanupDurable,
     ];
 }
 
@@ -1987,6 +2101,101 @@ mod tests {
                     "authorized destination retained an effect for {parent} at {boundary:?}"
                 );
             }
+        }
+    }
+
+    #[test]
+    fn s_030_rt01_copy_restore_parent_renames_leave_no_transaction_effect() {
+        for boundary in FilesystemRaceBoundary::REMOVE_ALL {
+            let mut fixture = fixture(false);
+            let canonical_parent = fixture.root.path().join("copies");
+            let authorized_parent = fixture.root.path().join("copies-authorized");
+            let failure_fired = Rc::new(Cell::new(false));
+            let race_fired = Rc::new(Cell::new(false));
+            let hook_failure_fired = Rc::clone(&failure_fired);
+            let hook_race_fired = Rc::clone(&race_fired);
+            let hook_canonical = canonical_parent.clone();
+            let hook_authorized = authorized_parent.clone();
+            let move_collision = fixture.root.path().join("moved/move.txt");
+            let mut driver = LinuxControlledFilesystemDriver::new(
+                &fixture.workspace,
+                LinuxFilesystemDriverLimits {
+                    maximum_file_bytes: 1024 * 1024,
+                    maximum_transaction_bytes: 4 * 1024 * 1024,
+                    ..LinuxFilesystemDriverLimits::default()
+                },
+            )
+            .with_race_hook(move |event: FilesystemLifecycleEvent| {
+                if event.purpose == "move"
+                    && event.boundary == FilesystemRaceBoundary::AfterInitialObservation
+                    && !hook_failure_fired.replace(true)
+                {
+                    fs::write(&move_collision, b"external move owner\n")
+                        .expect("create later-operation collision");
+                }
+                if event.purpose == "restore-copy"
+                    && event.boundary == boundary
+                    && !hook_race_fired.replace(true)
+                {
+                    fs::rename(&hook_canonical, &hook_authorized)
+                        .expect("rename authorized restore parent");
+                    fs::create_dir(&hook_canonical).expect("create replacement restore parent");
+                    fs::write(hook_canonical.join("owner.txt"), b"competing owner\n")
+                        .expect("write competing restore owner");
+                }
+            });
+            let outcome = execute_filesystem_transaction(
+                &mut fixture.issuer,
+                &fixture.policy,
+                &fixture.plan,
+                &fixture.approval,
+                FilesystemTransactionRequest {
+                    transaction_id: TRANSACTION_ID.to_owned(),
+                    now_epoch_ms: 4_000,
+                    cancelled_before_consume: false,
+                },
+                &mut driver,
+            )
+            .map(|result| result.outcome);
+
+            assert!(failure_fired.get(), "failure hook did not fire");
+            assert!(
+                race_fired.get(),
+                "restore hook did not fire at {boundary:?}"
+            );
+            assert!(
+                matches!(
+                    outcome,
+                    Ok(FilesystemTransactionOutcome::Restored)
+                        | Ok(FilesystemTransactionOutcome::Uncertain)
+                ),
+                "unexpected restore outcome at {boundary:?}: {outcome:?}"
+            );
+            assert_eq!(
+                fs::read(canonical_parent.join("owner.txt")).expect("competing owner preserved"),
+                b"competing owner\n"
+            );
+            assert_eq!(
+                fs::read_dir(&authorized_parent)
+                    .expect("authorized restore parent listing")
+                    .count(),
+                0,
+                "restore residue at {boundary:?}"
+            );
+            assert_eq!(
+                fs::read(fixture.root.path().join("src/copy.txt")).expect("copy source"),
+                b"copy\n"
+            );
+            assert_eq!(
+                fs::read(fixture.root.path().join("src/patch.txt")).expect("patch restored"),
+                b"alpha\nbeta\ngamma\n"
+            );
+            assert!(!fixture.root.path().join("created.txt").exists());
+            assert_eq!(
+                fs::read(fixture.root.path().join("moved/move.txt"))
+                    .expect("external collision preserved"),
+                b"external move owner\n"
+            );
         }
     }
 }
