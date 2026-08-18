@@ -7,7 +7,7 @@
     },
     {
       "id": "cross-adapter-live-parity",
-      "status": "BLOCKED-DOCKER-AND-MACOS-EVIDENCE",
+      "status": "BLOCKED-MACOS-AND-QUALITY",
       "substitution": false
     },
     {
@@ -27,7 +27,7 @@
       ],
       "exit_code": 0,
       "id": "model-contracts",
-      "output_sha256": "c1f306d5519219ad7436afe3b75310b9e812cd7d43f408391885916ef406ed68",
+      "output_sha256": "efc7834955f431618a67943aa7495a6cc509df24e01680406a0bd26028609794",
       "story_id": "13.1"
     },
     {
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "model-engine",
-      "output_sha256": "0be9eec951385b4fbdda9433372a1854332e91c86e4f39eb5310f71191f6ddc2",
+      "output_sha256": "28a2c6d5077cc1d80c00c7b57f276a2226f6f0ccb4ad41fcf132e7b78a4d151f",
       "story_id": "13.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "linux-native-adapter",
-      "output_sha256": "e03069584a175f8fe20c7e2b2d18d0cae8c197a0263435d4342c25dc14cdd264",
+      "output_sha256": "69cdad5b044b7bc2a0c3d860ecf6946f65c5277f9f3fdaadcf00952402a6acb5",
       "story_id": "13.1"
     },
     {
@@ -65,7 +65,7 @@
       ],
       "exit_code": 0,
       "id": "model-json-contracts",
-      "output_sha256": "a46264fd330017ea12819392f83cebc23e02c1a734e1951dc8698e84c7e94820",
+      "output_sha256": "602863b36883e161f19a6564ea0a04f61eb5c2b76a4a76bea28d760b85889fed",
       "story_id": "13.1"
     },
     {
@@ -84,12 +84,13 @@
       ],
       "exit_code": 0,
       "id": "model-policy-evidence",
-      "output_sha256": "088907028886cf97260039c5e7c1265b5dc1dff125127d46320899c06f4ddcc9",
+      "output_sha256": "60eabc45f6fc8f07dbaebd4d8b3a501b54c275191e92b07415a3dd8edea1d778",
       "story_id": "13.2"
     }
   ],
   "evidence_sha256": {
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json": "9c4980f2167f052c4da1a063f470bb1d5852b616247d3b6dc507910eddedaf19",
+    "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json": "6733691ce2a645dec00fc7dfec22403d82d1daf00bf1970d69b8ff3752ce1503",
     "artifacts/sprints/sprint-13/story-13.3/d027-s13-muse-codec.json": "d3073ed89b2ce7467dd031181d91a4ab70a164c20b8487b82b584cc7d09f54c1",
     "artifacts/sprints/sprint-13/story-13.3/muse-live-install.json": "91826d99f497a212ab32f87176a5b034a8b7e1fe510c9a12a05d95fc38a8dd18",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
@@ -103,6 +104,9 @@
     "codec_contract": "PASS-CONTRACT",
     "gemma_12b_disposition": "REJECTED",
     "gemma_e4b_disposition": "REJECTED",
+    "linux_parity_status": "COMPLETE-NEGATIVE-BLOCKED-QUALITY",
+    "linux_parity_thresholds_passed": false,
+    "linux_parity_trials_complete": true,
     "live_inference": "SANDBOXED-LIVE-INFERENCE-PASS",
     "live_lifecycle": "ISOLATED-LIFECYCLE-PASS",
     "muse_disposition": "REJECTED",
@@ -112,7 +116,7 @@
     "repeatability_trial_count": 5
   },
   "limitations": [
-    "Local contract completion does not substitute for macOS, Docker, or packet-capture evidence.",
+    "Complete negative Linux parity does not substitute for macOS or packet-capture evidence and does not satisfy quality thresholds.",
     "The rejected Muse profile remains disabled; another profile requires independent admission.",
     "No model output or prompt is retained in this report."
   ],
@@ -163,19 +167,21 @@
       "SR-MGM-004"
     ]
   },
-  "source_revision": "379d0cc80f1e699370bba808a2825050f486e664",
+  "source_revision": "7e16acb76d0835d87dba9cda5fb5a4529fe6d668",
   "source_sha256": {
     "kernel/contracts/src/model.rs": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3",
     "kernel/engine/src/model_codec.rs": "46afc648d5e538c370cba40bb4963474b64581faec9551361610e89591683741",
     "kernel/engine/src/model_response.rs": "d678d842734355c398115e3638c88d57c06cf1eb2ebb218a4a02522ca0da093d",
-    "kernel/engine/src/model_runtime.rs": "d4e2c6d51a4351830efd6e5abf0c4affb34e31014e71711b87d0fc35acd373fb",
-    "model-profiles/exact-profile-catalog.json": "749a9a64338914444edf918d29d8527a8595116695e3a3e662d4a18b9dc6e6b2",
+    "kernel/engine/src/model_runtime.rs": "6da5daa2e0423c469aaa84c2795c796d5021ff08223797b8f142c2f962d73f5c",
+    "model-profiles/exact-profile-catalog.json": "bf10ed028860ffc97a903545edd82d0ea6273282e08d7d2e8458b87ae0a040bc",
     "platforms/linux-inference/src/llama_server_driver.rs": "94f8a0c6d8466f90f342cfd06a7363588566e46e645935f4c068cc4ff702eb5c",
     "platforms/linux-inference/src/muse_atem_codec.rs": "c4a177fb449ba8590dd901ce19ebecd82d55fb21207f641362cc0c231fc47982",
     "platforms/linux-inference/src/native_model_adapter.rs": "b9d19739d1b1bdbc54069c3a9f591ce8f4e266190f5c51b78ed5269ea858a7dc",
     "platforms/linux-inference/tests/muse_live_evaluation.rs": "f81aeef927c0a61dc95f66975c84c237ac47d819aa9999de5c07489ae26a825e",
-    "scripts/sprint_13_evidence.py": "091ba075f258a7645c82d7dfa1dfb12bbd6148d737d23e565520aa20ae8307af",
-    "tests/test_sprint_13_evidence.py": "b55c92ade565cc8c01b1a51a810b647b12082a813f1ea77ec54ea4128cfeb2db"
+    "scripts/sprint_13_cross_adapter_parity.py": "e73e90243e2717f049e28ab0f72cb8817d45f2e0f4cd68fb4bc28aec07220c12",
+    "scripts/sprint_13_evidence.py": "ab921f03a99e15fa0b9e24ef57436f6b66a8759e34e95bc2dc728f4286342ff3",
+    "tests/test_sprint_13_cross_adapter_parity.py": "a654425e2a7ac8fc0a48e3ed2d83fd6cd0ddc3d4111325cf916b7c533635bc50",
+    "tests/test_sprint_13_evidence.py": "8023d4cc1f5c1a87ea4dc91d93da61fe723e34a72dc5dffc089579b9beac52f2"
   },
   "stories": [
     {
@@ -186,11 +192,12 @@
       "story_id": "13.1"
     },
     {
-      "docker_live_parity_evidence": false,
+      "all_linux_adapters_meet_thresholds": false,
+      "docker_live_parity_evidence": true,
       "linux_native_live_evidence": true,
       "macos_live_parity_evidence": false,
       "no_fallback_passed": true,
-      "status": "PASS-FAIL-CLOSED-BLOCKED-LIVE-PARITY",
+      "status": "COMPLETE-NEGATIVE-LINUX-PARITY-BLOCKED-MACOS",
       "story_id": "13.2"
     },
     {
