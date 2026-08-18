@@ -76,7 +76,7 @@ COMMANDS: Final = (
             "--",
             "--nocapture",
         ),
-        "summary": "9 passed; 0 failed; 2 ignored",
+        "summary": "10 passed; 0 failed; 2 ignored",
         "tests": (
             "stage_place_read_inventory_and_dedup_are_content_addressed",
             "staging_and_objects_are_encrypted_randomized_and_key_bound",
@@ -85,6 +85,7 @@ COMMANDS: Final = (
             "invalid_names_symlinks_modes_and_root_drift_fail_closed",
             "corruption_quarantine_and_verified_delete_leave_no_active_object",
             "fixed_namespace_substitution_fails_before_the_next_store_effect",
+            "concurrent_file_races_deduplicate_or_fail_closed_without_deletion_or_disclosure",
             "repository_evidence_namespace_is_never_private_artifact_authority",
             "story_22_2_native_crash_matrix_reconciles_every_artifact_boundary",
         ),
@@ -151,6 +152,7 @@ COVERAGE: Final = {
     "path-link-namespace-and-public-evidence-separation": [
         "linux-native-store:invalid_names_symlinks_modes_and_root_drift_fail_closed",
         "linux-native-store:fixed_namespace_substitution_fails_before_the_next_store_effect",
+        "linux-native-store:concurrent_file_races_deduplicate_or_fail_closed_without_deletion_or_disclosure",
         "linux-native-store:repository_evidence_namespace_is_never_private_artifact_authority",
     ],
     "operator-projection-and-generated-file-route": [
@@ -285,7 +287,7 @@ def build_report(
         "private_user_data_used": False,
         "limitations": [
             "This campaign proves the named unit, native Linux source, generated-file route, and public-schema contracts; it is not installed-package or cross-platform evidence.",
-            "The namespace-substitution tests are deterministic boundary attacks, not a concurrent file-level race campaign.",
+            "The deterministic concurrent campaign covers identical publication, namespace replacement during read, and object substitution during delete; kernel or filesystem-internal races remain outside this source campaign.",
             "Physical power loss, disk-full, device latency, controller failure, and filesystem corruption are not claimed.",
             "Windows and macOS native artifact-store evidence and independent cryptographic review remain open.",
             "Large command, test, and model artifact session reconstruction remains separate resume-campaign work.",

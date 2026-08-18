@@ -3,6 +3,8 @@
 use std::fmt;
 use std::fs::File;
 use std::io::Read;
+#[cfg(test)]
+use std::sync::Arc;
 
 use agentmage_kernel_contracts::RuntimeArtifactId;
 use agentmage_kernel_engine::runtime_artifact::{
@@ -34,6 +36,14 @@ const MAX_ACTIVE_OBJECTS: usize = 65_536;
 const MAX_STAGING_OBJECTS: usize = 4_096;
 const MAX_QUARANTINE_ATTEMPTS: usize = 1_024;
 
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ArtifactRacePoint {
+    PlaceBeforeRename,
+    ReadCompleteAfterRevalidate,
+    IsolateBeforeRename,
+}
+
 /// One opaque, one-use staged Linux payload handle.
 pub struct LinuxRuntimeArtifactStaged {
     name: String,
@@ -64,6 +74,8 @@ pub struct LinuxRuntimeArtifactPayloadStore {
     quarantine_snapshot: DirectorySnapshot,
     quarantine_sequence: u64,
     encryption_key: ArtifactPayloadEncryptionKey,
+    #[cfg(test)]
+    race_hook: Option<Arc<dyn Fn(ArtifactRacePoint) + Send + Sync>>,
 }
 
 impl fmt::Debug for LinuxRuntimeArtifactPayloadStore {
@@ -109,7 +121,21 @@ impl LinuxRuntimeArtifactPayloadStore {
             quarantine_snapshot,
             quarantine_sequence: 0,
             encryption_key,
+            #[cfg(test)]
+            race_hook: None,
         })
+    }
+
+    #[cfg(test)]
+    fn set_race_hook(&mut self, hook: Arc<dyn Fn(ArtifactRacePoint) + Send + Sync>) {
+        self.race_hook = Some(hook);
+    }
+
+    #[cfg(test)]
+    fn reach_race_point(&self, point: ArtifactRacePoint) {
+        if let Some(hook) = &self.race_hook {
+            hook(point);
+        }
     }
 
     fn revalidate(&self) -> Result<(), RuntimeArtifactPayloadError> {
@@ -210,6 +236,8 @@ impl LinuxRuntimeArtifactPayloadStore {
                 "{purpose}-{payload_sha256}-{:016x}",
                 self.quarantine_sequence
             );
+            #[cfg(test)]
+            self.reach_race_point(ArtifactRacePoint::IsolateBeforeRename);
             match renameat_with(
                 &self.objects,
                 payload_sha256,
@@ -335,6 +363,8 @@ impl RuntimeArtifactPayloadStore for LinuxRuntimeArtifactPayloadStore {
         validate_observation(expected)?;
         self.revalidate()?;
         self.verify_staged(&staged, expected)?;
+        #[cfg(test)]
+        self.reach_race_point(ArtifactRacePoint::PlaceBeforeRename);
         match renameat_with(
             &self.staging,
             staged.name.as_str(),
@@ -383,6 +413,8 @@ impl RuntimeArtifactPayloadStore for LinuxRuntimeArtifactPayloadStore {
             return Err(RuntimeArtifactPayloadError::ResourceLimit);
         }
         self.revalidate()?;
+        #[cfg(test)]
+        self.reach_race_point(ArtifactRacePoint::ReadCompleteAfterRevalidate);
         let (bytes, _, observed) = observe_named_payload(
             &self.objects,
             &expected.payload_sha256,
@@ -774,6 +806,7 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::{Arc, Barrier};
     use std::time::Instant;
 
     use agentmage_kernel_contracts::{
@@ -799,7 +832,10 @@ mod tests {
     use agentmage_kernel_engine::runtime_event::seal_runtime_event;
     use sha2::{Digest, Sha256};
 
-    use super::{OBJECT_DIRECTORY, QUARANTINE_DIRECTORY, STAGING_DIRECTORY, STORE_DIRECTORY};
+    use super::{
+        ArtifactRacePoint, OBJECT_DIRECTORY, QUARANTINE_DIRECTORY, STAGING_DIRECTORY,
+        STORE_DIRECTORY,
+    };
     use crate::runtime_artifact_crypto::derive_artifact_payload_key;
     use crate::{LinuxRuntimeArtifactPayloadStore, LinuxStrictLocalRootInspector};
 
@@ -1698,6 +1734,178 @@ mod tests {
                 "{namespace} substitution received a store effect"
             );
         }
+    }
+
+    #[test]
+    fn concurrent_file_races_deduplicate_or_fail_closed_without_deletion_or_disclosure() {
+        let publication_root = TestRoot::new("concurrent-publication");
+        let payload = b"concurrent-identical-private-payload";
+        let mut first = publication_root.store();
+        let mut second = publication_root.store();
+        let (first_staged, observation) = first
+            .stage(
+                &artifact_id("artifact-concurrent-first"),
+                &mut Cursor::new(payload),
+                payload.len() as u64,
+            )
+            .expect("first concurrent payload stages");
+        let (second_staged, second_observation) = second
+            .stage(
+                &artifact_id("artifact-concurrent-second"),
+                &mut Cursor::new(payload),
+                payload.len() as u64,
+            )
+            .expect("second concurrent payload stages");
+        assert_eq!(observation, second_observation);
+
+        let placement_barrier = Arc::new(Barrier::new(2));
+        for store in [&mut first, &mut second] {
+            let barrier = Arc::clone(&placement_barrier);
+            store.set_race_hook(Arc::new(move |point| {
+                if point == ArtifactRacePoint::PlaceBeforeRename {
+                    barrier.wait();
+                }
+            }));
+        }
+        let first_thread = std::thread::spawn(move || first.place(first_staged, &observation));
+        let second_expected = second_observation.clone();
+        let second_thread =
+            std::thread::spawn(move || second.place(second_staged, &second_expected));
+        let first_placement = first_thread
+            .join()
+            .expect("first placement thread joins")
+            .expect("first concurrent placement resolves");
+        let second_placement = second_thread
+            .join()
+            .expect("second placement thread joins")
+            .expect("second concurrent placement resolves");
+        assert_ne!(first_placement.deduplicated, second_placement.deduplicated);
+        let verifier = publication_root.store();
+        assert_eq!(
+            verifier
+                .read_complete(&first_placement.observation, payload.len() as u64)
+                .expect("concurrent object reads exactly"),
+            payload
+        );
+        assert_eq!(
+            publication_root
+                .objects()
+                .read_dir()
+                .expect("concurrent objects list")
+                .count(),
+            1
+        );
+        assert_eq!(
+            publication_root
+                .staging()
+                .read_dir()
+                .expect("concurrent staging lists")
+                .count(),
+            0
+        );
+
+        let read_root = TestRoot::new("concurrent-read-namespace");
+        let mut reader = read_root.store();
+        let read_payload = b"authorized-read-must-not-escape";
+        let read_observation =
+            stage_and_place(&mut reader, "artifact-concurrent-read", read_payload);
+        let read_target = read_root.objects();
+        let read_displaced = read_target.with_extension("concurrent-displaced");
+        let read_reached = Arc::new(Barrier::new(2));
+        let read_changed = Arc::new(Barrier::new(2));
+        let hook_reached = Arc::clone(&read_reached);
+        let hook_changed = Arc::clone(&read_changed);
+        reader.set_race_hook(Arc::new(move |point| {
+            if point == ArtifactRacePoint::ReadCompleteAfterRevalidate {
+                hook_reached.wait();
+                hook_changed.wait();
+            }
+        }));
+        let attacker = std::thread::spawn(move || {
+            read_reached.wait();
+            fs::rename(&read_target, &read_displaced)
+                .expect("read namespace displaces concurrently");
+            fs::create_dir(&read_target).expect("read substitute namespace creates");
+            fs::set_permissions(&read_target, fs::Permissions::from_mode(0o700))
+                .expect("read substitute namespace is private");
+            read_changed.wait();
+            read_displaced
+        });
+        assert_eq!(
+            reader.read_complete(&read_observation, read_payload.len() as u64),
+            Err(RuntimeArtifactPayloadError::UnsafeRoot)
+        );
+        let read_displaced = attacker.join().expect("read attacker joins");
+        assert!(
+            read_displaced
+                .join(&read_observation.payload_sha256)
+                .is_file(),
+            "the authorized encrypted object remains in the held displaced namespace"
+        );
+        assert_eq!(
+            read_root
+                .objects()
+                .read_dir()
+                .expect("read substitute lists")
+                .count(),
+            0,
+            "the substitute namespace receives no payload effect"
+        );
+
+        let delete_root = TestRoot::new("concurrent-delete-object");
+        let mut deleter = delete_root.store();
+        let delete_observation = stage_and_place(
+            &mut deleter,
+            "artifact-concurrent-delete",
+            b"authorized-delete-target",
+        );
+        let delete_target = delete_root
+            .objects()
+            .join(&delete_observation.payload_sha256);
+        let delete_displaced = delete_root.path().join("authorized-object-displaced");
+        let substitute = b"untrusted-substitute-must-not-be-deleted".to_vec();
+        let delete_reached = Arc::new(Barrier::new(2));
+        let delete_changed = Arc::new(Barrier::new(2));
+        let hook_reached = Arc::clone(&delete_reached);
+        let hook_changed = Arc::clone(&delete_changed);
+        deleter.set_race_hook(Arc::new(move |point| {
+            if point == ArtifactRacePoint::IsolateBeforeRename {
+                hook_reached.wait();
+                hook_changed.wait();
+            }
+        }));
+        let attacker_substitute = substitute.clone();
+        let attacker = std::thread::spawn(move || {
+            delete_reached.wait();
+            fs::rename(&delete_target, &delete_displaced)
+                .expect("authorized object displaces concurrently");
+            fs::write(&delete_target, &attacker_substitute).expect("substitute object creates");
+            fs::set_permissions(&delete_target, fs::Permissions::from_mode(0o600))
+                .expect("substitute object is private");
+            delete_changed.wait();
+            delete_displaced
+        });
+        assert_eq!(
+            deleter.delete(&delete_observation),
+            Err(RuntimeArtifactPayloadError::Conflict)
+        );
+        let delete_displaced = attacker.join().expect("delete attacker joins");
+        assert!(
+            delete_displaced.is_file(),
+            "authorized ciphertext is not deleted"
+        );
+        let quarantined = delete_root
+            .quarantine()
+            .read_dir()
+            .expect("quarantine lists")
+            .map(|entry| entry.expect("quarantine entry reads").path())
+            .collect::<Vec<_>>();
+        assert_eq!(quarantined.len(), 1);
+        assert_eq!(
+            fs::read(&quarantined[0]).expect("substitute remains recoverable"),
+            substitute,
+            "the conflicting substitute is contained rather than deleted"
+        );
     }
 
     #[test]
