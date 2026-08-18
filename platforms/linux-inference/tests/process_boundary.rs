@@ -3,6 +3,7 @@
 use std::process::{Command, Stdio};
 
 use agentmage_platform_linux_inference::{BOUNDARY_DESCRIPTION, MODEL_INSTALLER_SELF_CHECK};
+use serde_json::{Value, json};
 
 const DOCKER_GUARD_SELF_CHECK: &[u8] = b"{\"accepted_operations\":[\"serve-one-session\",\"self-check\"],\"authority\":\"guarded-inference-transport-only\",\"component_id\":\"agentmage-docker-guard\",\"docker_control\":false,\"enabled\":false,\"network_egress\":false,\"protocol_version\":1,\"raw_target\":\"private-namespace-loopback-only\",\"sessions\":1}\n";
 const DOCKER_COLLECTOR_SELF_CHECK: &[u8] = b"{\"accepted_operations\":[\"observe\",\"self-check\",\"validate-observation-stdin\"],\"authority\":\"docker-topology-observation-only\",\"component_id\":\"agentmage-docker-topology-collector\",\"docker_mutation\":false,\"enabled\":false,\"network_egress\":false,\"preflight_contract_version\":3,\"protocol_version\":2}\n";
@@ -58,6 +59,66 @@ fn packaged_model_installer_is_one_shot_inactive_and_content_free() {
             .windows(15)
             .any(|value| value == b"must-not-appear")
     );
+}
+
+#[test]
+fn packaged_model_installer_preflight_is_exact_and_non_acquiring() {
+    let catalog: Value = serde_json::from_str(include_str!(
+        "../../../model-profiles/exact-profile-catalog.json"
+    ))
+    .expect("catalog");
+    let profile = catalog["profiles"]
+        .as_array()
+        .expect("profiles")
+        .iter()
+        .find(|value| {
+            value["profile_id"] == "muse-glimmer-30b-q4-k-m-text-8k-fedora-diagnostic-repeatability"
+        })
+        .expect("profile")
+        .clone();
+    let envelope = profile["hardware"]
+        .as_array()
+        .expect("hardware")
+        .iter()
+        .find(|value| {
+            value["platform"] == profile["runtime"]["platform"]
+                && value["architecture"] == profile["runtime"]["architecture"]
+        })
+        .expect("hardware envelope");
+    let artifact_bytes = profile["artifact"]["bytes"]
+        .as_u64()
+        .expect("artifact bytes");
+    let request = json!({
+        "schema_version": 1,
+        "host": {
+            "platform": profile["runtime"]["platform"],
+            "architecture": profile["runtime"]["architecture"],
+            "system_memory_bytes": envelope["minimum_system_memory_bytes"],
+            "accelerator_memory_bytes": envelope["minimum_accelerator_memory_bytes"],
+            "model_store_available_bytes": artifact_bytes.saturating_mul(2).saturating_add(1 << 30),
+            "requested_context_tokens": 8_192,
+            "runtime": profile["runtime"],
+        },
+        "profile": profile,
+    });
+    let mut child = Command::new(env!("CARGO_BIN_EXE_agentmage-model-installer"))
+        .arg("--preflight-stdin")
+        .env_clear()
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("installer starts");
+    serde_json::to_writer(child.stdin.as_mut().expect("stdin"), &request).expect("request");
+    drop(child.stdin.take());
+    let output = child.wait_with_output().expect("installer exits");
+    assert!(output.status.success());
+    assert!(output.stderr.is_empty());
+    let response: Value = serde_json::from_slice(&output.stdout).expect("response");
+    assert_eq!(response["operation"], "preflight");
+    assert_eq!(response["preflight"]["disposition"], "eligible");
+    assert_eq!(response["preflight"]["source_opened"], false);
+    assert_eq!(response["preflight"]["destination_changed"], false);
 }
 
 #[test]

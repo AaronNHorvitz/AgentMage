@@ -17,7 +17,8 @@ const MAX_ARTIFACT_BYTES: u64 = 64 * GIB;
 const INSTALL_RESERVE_BYTES: u64 = GIB;
 
 /// Exact host facts used before any model source is opened.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ModelAcquisitionHost {
     /// Observed platform family.
     pub platform: PlatformFamily,
@@ -36,7 +37,10 @@ pub struct ModelAcquisitionHost {
 }
 
 /// Stable reason an exact candidate cannot begin acquisition.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum ModelAcquisitionBlocker {
     /// Candidate profile structure or lifecycle is not installable.
     ProfilePolicy,
@@ -77,7 +81,8 @@ impl ModelAcquisitionBlocker {
 }
 
 /// Exact non-acquiring preflight disposition.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ModelAcquisitionDisposition {
     /// Every policy and machine-fit prerequisite passed.
     Eligible,
@@ -88,7 +93,8 @@ pub enum ModelAcquisitionDisposition {
 }
 
 /// Review record rendered before a source or destination can be selected.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ModelAcquisitionReview {
     /// Exact candidate profile.
     pub profile_id: ModelProfileId,
@@ -129,7 +135,8 @@ pub struct ModelAcquisitionReview {
 }
 
 /// Complete non-acquiring result with ordered reasons and review material.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(deny_unknown_fields)]
 pub struct ModelAcquisitionPreflight {
     /// Exact review material displayed before acquisition.
     pub review: ModelAcquisitionReview,

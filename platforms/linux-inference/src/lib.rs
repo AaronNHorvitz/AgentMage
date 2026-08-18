@@ -82,6 +82,7 @@ pub use model_install_lifecycle::{
 pub use model_install_verifier::NativeModelInstallVerifier;
 pub use model_installer_process::{
     MODEL_INSTALLER_SELF_CHECK, ModelInstallerProcessError, evaluate_model_installer_arguments,
+    execute_model_installer,
 };
 pub use muse_atem_codec::MuseAtemFamilyCodec;
 pub use native_model_adapter::{LinuxNativeModelAdapter, NativeModelDriver};
