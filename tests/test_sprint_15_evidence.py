@@ -47,13 +47,17 @@ class Sprint15EvidenceTests(unittest.TestCase):
             self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertTrue(value["summary"]["local_contract_passed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
-        self.assertEqual(len(value["blockers"]), 6)
+        self.assertEqual(len(value["blockers"]), 5)
+        self.assertTrue(value["stories"][0]["kernel_resource_stop_unloads_model"])
+        self.assertTrue(value["stories"][0]["chat_model_selection"])
 
     def test_product_resource_accessibility_and_model_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"product_model_available": True}),
             lambda value: value["stories"][0].update({"os_worker_resource_enforcement": True}),
+            lambda value: value["stories"][0].update({"kernel_resource_stop_unloads_model": False}),
+            lambda value: value["stories"][0].update({"chat_model_selection": False}),
             lambda value: value["stories"][1].update({"full_surface_canary_sweep": True}),
             lambda value: value["stories"][2].update({"exact_gemma_trials_complete": True}),
             lambda value: value["blockers"].pop(),

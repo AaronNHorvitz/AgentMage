@@ -25,6 +25,7 @@ SOURCE_PATHS: Final = (
     "shells/host/src/linux_read.rs",
     "shells/host/src/protocol.rs",
     "shells/vscode/src/provider.ts",
+    "shells/vscode/src/model_discovery.ts",
     "shells/vscode/src/host_bridge.ts",
     "shells/vscode/src/extension.ts",
     "scripts/benchmark_contract.py",
@@ -104,7 +105,6 @@ SECURITY_MAP: Final = {
 }
 BLOCKERS: Final = [
     {"code": "NO-ADMITTED-PRODUCT-MODEL", "owner": "15.1/15.3"},
-    {"code": "CHAT-MODEL-SELECTION-NOT-WIRED", "owner": "15.1"},
     {"code": "RESOURCE-STOP-NOT-WIRED-TO-OS-WORKER", "owner": "15.1"},
     {"code": "FULL-DURABLE-SURFACE-CANARY-SWEEP-MISSING", "owner": "15.2"},
     {"code": "NATIVE-ACCESSIBILITY-AND-MACOS-EVIDENCE-MISSING", "owner": "15.2/15.3"},
@@ -207,13 +207,14 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
         "stories": [
             {
                 "story_id": "15.1",
-                "status": "PASS-LOCAL-CONTRACTS-BLOCKED-PRODUCT-WIRING",
+                "status": "PASS-LOCAL-WIRING-BLOCKED-PRODUCT-AND-OS",
                 "doctor_provider": local_pass,
                 "manual_selection": local_pass,
                 "deterministic_first": local_pass,
                 "resource_governor": local_pass,
+                "kernel_resource_stop_unloads_model": local_pass,
                 "os_worker_resource_enforcement": False,
-                "chat_model_selection": False,
+                "chat_model_selection": local_pass,
             },
             {
                 "story_id": "15.2",
@@ -268,6 +269,10 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     stories = {item.get("story_id"): item for item in report.get("stories", [])}
     if stories.get("15.1", {}).get("os_worker_resource_enforcement") is not False:
         failures.append("resource enforcement overclaim")
+    if stories.get("15.1", {}).get("kernel_resource_stop_unloads_model") is not True:
+        failures.append("kernel resource-stop state changed")
+    if stories.get("15.1", {}).get("chat_model_selection") is not True:
+        failures.append("native Chat model-selection state changed")
     if stories.get("15.2", {}).get("full_surface_canary_sweep") is not False:
         failures.append("canary overclaim")
     if stories.get("15.3", {}).get("exact_gemma_trials_complete") is not False:
