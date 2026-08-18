@@ -6,13 +6,14 @@ use agentmage_kernel_contracts::{
     HeldWorkspaceObject, PathAdapterError, PathAdapterErrorKind, PathResolutionIntent,
 };
 use agentmage_kernel_engine::evidence_reconciliation::{
-    CitationFileIdentity, CitationResolution, EvidenceReconciliationError, SourceCitation,
-    resolve_citation,
+    CitationFileIdentity, CitationFreshness, CitationResolution, EvidenceReconciliationError,
+    SourceCitation, resolve_citation,
 };
 use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
 use agentmage_platform_linux::{
     LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPlatformAdapter, resolve_linux_workspace_object,
 };
+use sha2::Digest as _;
 
 /// Stable content-free failure produced while resolving one held Linux citation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -41,6 +42,19 @@ pub struct HeldLinuxCitationResolution {
     pub resolution: CitationResolution,
     /// Exact current bytes, absent only when the exact cited path is missing.
     pub current_bytes: Option<Vec<u8>>,
+}
+
+/// Recomputes the complete current identity from held bytes before evidence reuse.
+#[must_use]
+pub fn verify_held_citation_bytes(value: &HeldLinuxCitationResolution) -> bool {
+    let (Some(bytes), Some(current)) = (&value.current_bytes, &value.resolution.current_file)
+    else {
+        return false;
+    };
+    value.resolution.freshness == CitationFreshness::Current
+        && u64::try_from(bytes.len()).ok() == Some(current.byte_len)
+        && hex(&sha2::Sha256::digest(bytes)) == current.content_sha256
+        && current == &value.resolution.citation.observed_file
 }
 
 /// Resolves one citation through the verified production Linux path adapter.
@@ -141,7 +155,9 @@ mod tests {
     };
     use sha2::{Digest, Sha256};
 
-    use super::{LinuxCitationResolutionError, hex, resolve_test_linux_citation};
+    use super::{
+        LinuxCitationResolutionError, hex, resolve_test_linux_citation, verify_held_citation_bytes,
+    };
 
     static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -244,6 +260,7 @@ mod tests {
             current.current_bytes.as_deref(),
             Some(&b"exact cited bytes\n"[..])
         );
+        assert!(verify_held_citation_bytes(&current));
 
         let revision_drift = resolve_test_linux_citation(
             fixture.adapter_id.clone(),
@@ -256,6 +273,7 @@ mod tests {
             revision_drift.resolution.freshness,
             CitationFreshness::Stale
         );
+        assert!(!verify_held_citation_bytes(&revision_drift));
 
         fs::write(fixture.root.join("notes/δelta.md"), "changed preimage\n")
             .expect("source changes");
@@ -275,6 +293,7 @@ mod tests {
                 .map(|identity| identity.content_sha256.as_str()),
             Some(hex(&Sha256::digest(b"changed preimage\n")).as_str())
         );
+        assert!(!verify_held_citation_bytes(&content_drift));
 
         fs::rename(
             fixture.root.join("notes/δelta.md"),
@@ -290,6 +309,7 @@ mod tests {
         .expect("missing resolves");
         assert_eq!(missing.resolution.freshness, CitationFreshness::Missing);
         assert!(missing.current_bytes.is_none());
+        assert!(!verify_held_citation_bytes(&missing));
     }
 
     #[test]

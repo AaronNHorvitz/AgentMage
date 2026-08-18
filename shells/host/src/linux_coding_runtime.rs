@@ -26,6 +26,7 @@ use agentmage_kernel_engine::{
         RegisteredCommandWrapperBinding, verify_command_receipt,
     },
     context_management::finalize_checkpoint,
+    evidence_store::EvidenceStoreError,
     filesystem_control::{
         FileClassification, FilesystemApprovalDecision, FilesystemApprovalPreview,
         FilesystemApprovalReceipt, FilesystemGrantRequest, FilesystemOperationDraft,
@@ -2510,6 +2511,11 @@ fn map_journal_failure(error: DurableAuthorityError) -> RuntimePortFailure {
         }
         DurableAuthorityError::RuntimeJournal(_)
         | DurableAuthorityError::Store(_)
+        | DurableAuthorityError::Evidence(
+            EvidenceStoreError::Persistence
+            | EvidenceStoreError::Integrity
+            | EvidenceStoreError::Poisoned,
+        )
         | DurableAuthorityError::Poisoned => RuntimePortFailure::Uncertain,
         DurableAuthorityError::RuntimeArtifact(error) if error.poisons_runtime() => {
             RuntimePortFailure::Uncertain
@@ -2521,6 +2527,7 @@ fn map_journal_failure(error: DurableAuthorityError) -> RuntimePortFailure {
         | DurableAuthorityError::FilesystemApproval(_)
         | DurableAuthorityError::WriteTransaction(_)
         | DurableAuthorityError::FilesystemTransaction(_)
+        | DurableAuthorityError::Evidence(_)
         | DurableAuthorityError::RuntimeArtifact(_) => RuntimePortFailure::Invalid,
     }
 }
