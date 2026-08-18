@@ -39,7 +39,7 @@ COMMAND: Final = (
     "agentmage-host",
     "--lib",
     "--locked",
-    "story_22_1_native_tool_terminal_resume_matrix_never_replays_or_invents_state",
+    "linux_coding_runtime::tests::story_22_1_native_tool_terminal_resume_matrix_never_replays_or_invents_state",
     "--",
     "--exact",
     "--ignored",
