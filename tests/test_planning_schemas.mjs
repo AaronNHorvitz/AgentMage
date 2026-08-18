@@ -357,6 +357,10 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "single-agent-state-machine",
     "agent-progress-event",
     "runtime-event",
+    "runtime-artifact-reference",
+    "runtime-artifact-manifest",
+    "runtime-artifact-operator-view",
+    "runtime-resume-binding",
     "session-environment-capture",
     "write-aware-checkpoint",
     "command-preview",
@@ -425,6 +429,88 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
   assert.deepEqual(
     results.map((result) => result.valid),
     Array(RUNTIME_RECORD_TYPES.length).fill(true),
+  );
+});
+
+test("runtime artifact schemas reject path authority and lifecycle drift", () => {
+  const load = (recordType) =>
+    JSON.parse(
+      fs.readFileSync(
+        path.join(
+          ROOT,
+          `schemas/runtime/examples/${recordType}.valid.json`,
+        ),
+        "utf8",
+      ),
+    );
+
+  const pathBearingReference = load("runtime-artifact-reference");
+  pathBearingReference.path = "/private/runtime/payload";
+  assert.equal(
+    validateRuntimeRecord(
+      "runtime-artifact-reference",
+      pathBearingReference,
+      runtimeValidators,
+    ).valid,
+    false,
+  );
+
+  const expiredManifest = load("runtime-artifact-manifest");
+  expiredManifest.retention = {
+    kind: "until_expiration",
+    expires_at_epoch_ms: expiredManifest.created_at_epoch_ms,
+  };
+  assert.equal(
+    validateRuntimeRecord(
+      "runtime-artifact-manifest",
+      expiredManifest,
+      runtimeValidators,
+    ).valid,
+    false,
+  );
+  const alteredPreview = load("runtime-artifact-manifest");
+  alteredPreview.preview.text = "substituted";
+  assert.equal(
+    validateRuntimeRecord(
+      "runtime-artifact-manifest",
+      alteredPreview,
+      runtimeValidators,
+    ).valid,
+    false,
+  );
+
+  const forgedCleanup = load("runtime-artifact-operator-view");
+  forgedCleanup.cleanup = "completed";
+  assert.equal(
+    validateRuntimeRecord(
+      "runtime-artifact-operator-view",
+      forgedCleanup,
+      runtimeValidators,
+    ).valid,
+    false,
+  );
+
+  const driftedCursor = load("runtime-resume-binding");
+  driftedCursor.event_cursor.run_id = "run-substituted";
+  assert.equal(
+    validateRuntimeRecord(
+      "runtime-resume-binding",
+      driftedCursor,
+      runtimeValidators,
+    ).valid,
+    false,
+  );
+  const duplicateArtifact = load("runtime-resume-binding");
+  duplicateArtifact.artifacts.push(
+    structuredClone(duplicateArtifact.artifacts[0]),
+  );
+  assert.equal(
+    validateRuntimeRecord(
+      "runtime-resume-binding",
+      duplicateArtifact,
+      runtimeValidators,
+    ).valid,
+    false,
   );
 });
 

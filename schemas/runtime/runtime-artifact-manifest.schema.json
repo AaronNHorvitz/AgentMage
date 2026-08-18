@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/runtime-artifact-manifest.schema.json",
+  "title": "AgentMage Runtime Artifact Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "kind",
+    "payload_sha256",
+    "byte_size",
+    "media_type",
+    "sensitivity",
+    "retention",
+    "session_id",
+    "task_id",
+    "producer_run_id",
+    "producer_turn_id",
+    "producer_operation_id",
+    "receipt_id",
+    "policy_id",
+    "policy_sha256",
+    "created_at_epoch_ms",
+    "integrity",
+    "preview",
+    "manifest_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "artifact_id": { "$ref": "#/$defs/identifier" },
+    "kind": {
+      "enum": [
+        "patch",
+        "standard_output",
+        "standard_error",
+        "test_log",
+        "generated_file",
+        "report",
+        "model_output"
+      ]
+    },
+    "payload_sha256": { "$ref": "#/$defs/sha256" },
+    "byte_size": { "type": "integer", "minimum": 1, "maximum": 67108864 },
+    "media_type": { "$ref": "#/$defs/mediaType" },
+    "sensitivity": {
+      "enum": ["public", "internal", "private", "restricted"]
+    },
+    "retention": { "$ref": "#/$defs/retention" },
+    "session_id": { "$ref": "#/$defs/identifier" },
+    "task_id": { "$ref": "#/$defs/identifier" },
+    "producer_run_id": { "$ref": "#/$defs/identifier" },
+    "producer_turn_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "producer_operation_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "receipt_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "policy_id": { "$ref": "#/$defs/identifier" },
+    "policy_sha256": { "$ref": "#/$defs/sha256" },
+    "created_at_epoch_ms": { "type": "integer", "minimum": 1 },
+    "integrity": { "const": "verified" },
+    "preview": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/preview" }]
+    },
+    "manifest_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "receipt_id": { "$ref": "#/$defs/identifier" } },
+        "required": ["receipt_id"]
+      },
+      "then": {
+        "properties": {
+          "producer_operation_id": { "$ref": "#/$defs/identifier" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "producer_operation_id": { "$ref": "#/$defs/identifier" }
+        },
+        "required": ["producer_operation_id"]
+      },
+      "then": {
+        "properties": { "producer_turn_id": { "$ref": "#/$defs/identifier" } }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "optionalIdentifier": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "mediaType": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9.+-]*/[a-z0-9][a-z0-9.+-]*$"
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "expires_at_epoch_ms"],
+      "properties": {
+        "kind": { "enum": ["session", "until_expiration", "user_hold"] },
+        "expires_at_epoch_ms": {
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "const": "until_expiration" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "expires_at_epoch_ms": { "type": "integer", "minimum": 1 }
+            }
+          },
+          "else": {
+            "properties": { "expires_at_epoch_ms": { "type": "null" } }
+          }
+        }
+      ]
+    },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "byte_size", "truncated", "sha256"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1, "maxLength": 4096 },
+        "byte_size": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "truncated": { "type": "boolean" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/runtime-artifact-operator-view.schema.json",
+  "title": "AgentMage Runtime Artifact Operator View",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "reference",
+    "kind",
+    "sensitivity",
+    "retention",
+    "session_id",
+    "task_id",
+    "producer_run_id",
+    "producer_turn_id",
+    "producer_operation_id",
+    "receipt_id",
+    "policy_id",
+    "created_at_epoch_ms",
+    "lifecycle",
+    "integrity",
+    "lifecycle_revision",
+    "reason_code",
+    "updated_at_epoch_ms",
+    "checkpoint_reference_count",
+    "shared_active_reference_count",
+    "cleanup"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "reference": {
+      "$ref": "https://agentmage.dev/schemas/runtime/runtime-artifact-reference.schema.json"
+    },
+    "kind": {
+      "enum": [
+        "patch",
+        "standard_output",
+        "standard_error",
+        "test_log",
+        "generated_file",
+        "report",
+        "model_output"
+      ]
+    },
+    "sensitivity": {
+      "enum": ["public", "internal", "private", "restricted"]
+    },
+    "retention": { "$ref": "#/$defs/retention" },
+    "session_id": { "$ref": "#/$defs/identifier" },
+    "task_id": { "$ref": "#/$defs/identifier" },
+    "producer_run_id": { "$ref": "#/$defs/identifier" },
+    "producer_turn_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "producer_operation_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "receipt_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "policy_id": { "$ref": "#/$defs/identifier" },
+    "created_at_epoch_ms": { "type": "integer", "minimum": 1 },
+    "lifecycle": { "enum": ["active", "quarantined", "released", "deleted"] },
+    "integrity": {
+      "enum": ["verified", "quarantined", "missing", "corrupt", "deleted"]
+    },
+    "lifecycle_revision": { "type": "integer", "minimum": 1 },
+    "reason_code": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$"
+    },
+    "updated_at_epoch_ms": { "type": "integer", "minimum": 1 },
+    "checkpoint_reference_count": { "type": "integer", "minimum": 0 },
+    "shared_active_reference_count": { "type": "integer", "minimum": 0 },
+    "cleanup": { "enum": ["retained", "eligible", "blocked", "completed"] }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "optionalIdentifier": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "expires_at_epoch_ms"],
+      "properties": {
+        "kind": { "enum": ["session", "until_expiration", "user_hold"] },
+        "expires_at_epoch_ms": {
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "const": "until_expiration" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "expires_at_epoch_ms": { "type": "integer", "minimum": 1 }
+            }
+          },
+          "else": {
+            "properties": { "expires_at_epoch_ms": { "type": "null" } }
+          }
+        }
+      ]
+    }
+  }
+}

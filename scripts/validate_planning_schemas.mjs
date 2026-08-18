@@ -54,6 +54,10 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "single-agent-state-machine",
   "agent-progress-event",
   "runtime-event",
+  "runtime-artifact-reference",
+  "runtime-artifact-manifest",
+  "runtime-artifact-operator-view",
+  "runtime-resume-binding",
   "session-environment-capture",
   "write-aware-checkpoint",
   "command-preview",
@@ -751,7 +755,76 @@ function localReviewPacketSemanticErrors(data) {
 
 function runtimeSemanticErrors(recordType, data) {
   const errors = [];
-  if (recordType === "change-intent-record") {
+  if (recordType === "runtime-artifact-manifest") {
+    const preview = data.preview;
+    if (preview !== null && preview !== undefined) {
+      const previewBytes = Buffer.byteLength(preview.text ?? "", "utf8");
+      if (preview.byte_size !== previewBytes) {
+        errors.push("preview byte_size must equal the UTF-8 byte count");
+      }
+      if (preview.sha256 !== sha256String(preview.text ?? "")) {
+        errors.push("preview sha256 must bind the exact UTF-8 bytes");
+      }
+      if (preview.truncated !== (previewBytes < data.byte_size)) {
+        errors.push("preview truncation must match the complete payload size");
+      }
+    }
+    if (
+      data.retention?.kind === "until_expiration" &&
+      data.retention.expires_at_epoch_ms <= data.created_at_epoch_ms
+    ) {
+      errors.push("artifact expiration must be later than creation");
+    }
+    const permittedMedia = {
+      patch: ["text/plain", "text/x-diff"],
+      standard_output: ["text/plain", "application/json", "application/x-ndjson"],
+      standard_error: ["text/plain", "application/json", "application/x-ndjson"],
+      test_log: ["text/plain", "application/json", "application/x-ndjson"],
+      model_output: ["text/plain", "application/json", "application/x-ndjson"],
+    }[data.kind];
+    if (permittedMedia && !permittedMedia.includes(data.media_type)) {
+      errors.push("artifact kind and media type are incompatible");
+    }
+  } else if (recordType === "runtime-artifact-operator-view") {
+    const expected = {
+      active: { cleanup: "retained", integrity: ["verified"] },
+      quarantined: {
+        cleanup: "blocked",
+        integrity: ["quarantined", "missing", "corrupt"],
+      },
+      released: { cleanup: "eligible", integrity: ["verified"] },
+      deleted: { cleanup: "completed", integrity: ["deleted"] },
+    }[data.lifecycle];
+    if (
+      expected &&
+      (data.cleanup !== expected.cleanup ||
+        !expected.integrity.includes(data.integrity))
+    ) {
+      errors.push("operator cleanup and integrity must match lifecycle state");
+    }
+    if (data.updated_at_epoch_ms < data.created_at_epoch_ms) {
+      errors.push("operator update time cannot precede creation");
+    }
+    if (data.lifecycle === "active" && data.shared_active_reference_count < 1) {
+      errors.push("an active artifact requires one active payload reference");
+    }
+    if (
+      data.lifecycle !== "active" &&
+      data.checkpoint_reference_count !== 0
+    ) {
+      errors.push("a non-active artifact cannot remain in the current checkpoint");
+    }
+  } else if (recordType === "runtime-resume-binding") {
+    if (data.event_cursor?.run_id !== data.run_id) {
+      errors.push("resume cursor must bind the same run");
+    }
+    const artifactIds = (data.artifacts ?? []).map(
+      (artifact) => artifact.artifact_id,
+    );
+    if (!isStrictlySorted(artifactIds)) {
+      errors.push("resume artifact identities must be strictly sorted");
+    }
+  } else if (recordType === "change-intent-record") {
     for (const field of [
       "current_behavior_fact_ids",
       "target_fact_ids",

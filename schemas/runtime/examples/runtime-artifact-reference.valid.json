@@ -1,0 +1,8 @@
+{
+  "schema_version": 2,
+  "artifact_id": "runtime-artifact-example-1",
+  "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "payload_sha256": "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882",
+  "byte_size": 10,
+  "media_type": "text/plain"
+}

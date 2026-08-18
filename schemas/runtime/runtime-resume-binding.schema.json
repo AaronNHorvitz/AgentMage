@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/runtime-resume-binding.schema.json",
+  "title": "AgentMage Runtime Resume Binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "checkpoint_id",
+    "checkpoint_sha256",
+    "session_id",
+    "task_id",
+    "run_id",
+    "event_cursor",
+    "artifacts",
+    "binding_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "checkpoint_id": { "$ref": "#/$defs/identifier" },
+    "checkpoint_sha256": { "$ref": "#/$defs/sha256" },
+    "session_id": { "$ref": "#/$defs/identifier" },
+    "task_id": { "$ref": "#/$defs/identifier" },
+    "run_id": { "$ref": "#/$defs/identifier" },
+    "event_cursor": { "$ref": "#/$defs/eventCursor" },
+    "artifacts": {
+      "type": "array",
+      "maxItems": 1024,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "https://agentmage.dev/schemas/runtime/runtime-artifact-reference.schema.json"
+      }
+    },
+    "binding_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "eventCursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "event_id", "sequence", "event_sha256"],
+      "properties": {
+        "run_id": { "$ref": "#/$defs/identifier" },
+        "event_id": { "$ref": "#/$defs/identifier" },
+        "sequence": { "type": "integer", "minimum": 0 },
+        "event_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}
