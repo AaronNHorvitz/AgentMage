@@ -1,0 +1,499 @@
+{
+  "attack_cases": [
+    "hook",
+    "filter",
+    "pager",
+    "alias",
+    "credential_helper",
+    "unsafe_link",
+    "replacement_object",
+    "remote_url",
+    "loopback_contact"
+  ],
+  "cross_platform_matrix_complete": false,
+  "fixture_states": [
+    "clean",
+    "dirty",
+    "staged",
+    "renamed",
+    "detached",
+    "untracked",
+    "malformed"
+  ],
+  "git_operations": [
+    "status",
+    "current_branch",
+    "upstream",
+    "branch_list",
+    "log",
+    "diff",
+    "staged_diff",
+    "show",
+    "worktree_list",
+    "object",
+    "ref",
+    "dirty_tree",
+    "untracked_files"
+  ],
+  "independent_review_complete": false,
+  "instruction_classes": [
+    "workspace_instruction",
+    "repository_instruction",
+    "project_document",
+    "hierarchical_instruction"
+  ],
+  "linux_git_matrix_complete": true,
+  "linux_instruction_discovery_complete": true,
+  "linux_live_network_observation_complete": true,
+  "macos_evidence_substituted": false,
+  "manual_parser_fuzzing_complete": false,
+  "private_host_data_used": false,
+  "qemu": {
+    "launcher_class": "fedora-toolbox",
+    "sha256": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+    "version": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)"
+  },
+  "record_type": "sprint-17-installed-linux-git-matrix",
+  "release_claim": false,
+  "repository_credentials_injected": false,
+  "schema_version": 1,
+  "source_revision": "52f0feb80d199cbd0e24cfa5ee6904bd19dac221",
+  "sources": [
+    {
+      "bytes": 42732,
+      "path": "capabilities/read-only/src/git.rs",
+      "sha256": "10d6aadaf81653689794666d12a66613d11e7cec3cdd184c05494b48ec1d570b"
+    },
+    {
+      "bytes": 6906,
+      "path": "docs/architecture/read-only-git-and-instruction-trust.md",
+      "sha256": "681d2ac535df699074b56f315665d07834d25be0eb1d0f0a38087906092267e8"
+    },
+    {
+      "bytes": 49474,
+      "path": "kernel/engine/src/instruction_provenance.rs",
+      "sha256": "b9eacc36875fd98b3f71cb77c773d4fe7b52ce4e36ef421b8883589f6c315a65"
+    },
+    {
+      "bytes": 26363,
+      "path": "kernel/engine/src/repository_inspection.rs",
+      "sha256": "cb0066e061da3e07a6a2a1a4535d0b36e7214bca5d4a6f537443f772b91f2426"
+    },
+    {
+      "bytes": 1346,
+      "path": "packaging/linux/agentmage.spec.in",
+      "sha256": "e8e18b4dbbe68130700571fa3b0052b326ea0c19fb1b4cce086cc8173b9de3da"
+    },
+    {
+      "bytes": 423,
+      "path": "packaging/linux/debian-control.in",
+      "sha256": "ffd459b3912d6bba47f5d30ffd9ddeb15598abc2b1f81181f43c15aa6e149575"
+    },
+    {
+      "bytes": 27666,
+      "path": "platforms/linux/src/instruction_discovery.rs",
+      "sha256": "5a0506cb8d813cdffd82c69b18553008872e741a61172daf2411b394ec16fb8a"
+    },
+    {
+      "bytes": 83352,
+      "path": "platforms/linux/src/repository_safety.rs",
+      "sha256": "393b9da7963a62cf3e5ea4ae95a9aa63f593fcee2dca72d06c948f2ea913d71f"
+    },
+    {
+      "bytes": 20034,
+      "path": "scripts/sprint_16_linux_worker_evidence.py",
+      "sha256": "7cdb64099130ea09b9fc15bde65d45cedc059c000dba22c6ba2d0c7f56c8c0d4"
+    },
+    {
+      "bytes": 17818,
+      "path": "scripts/sprint_17_linux_git_evidence.py",
+      "sha256": "ab2986cec08350292697191dea1155e19e4f435379fb2b2a56fb82d1c5702ba9"
+    },
+    {
+      "bytes": 8627,
+      "path": "scripts/sprint_17_linux_git_guest.py",
+      "sha256": "a08d65d4241be613caecb85121f2e037db8641b6fed36e94889f35985be86a86"
+    },
+    {
+      "bytes": 280071,
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "58f0dc49f9b56f9a9879af68629245b8a0de1028968d44fee5d5e2609781b4d3"
+    },
+    {
+      "bytes": 6165,
+      "path": "tests/test_sprint_17_linux_git_evidence.py",
+      "sha256": "587499d124c81ff9c92768d374049c8b9e76a310812df8373053be6141a12915"
+    }
+  ],
+  "status": "pass-installed-linux-git-and-instruction-matrix",
+  "targets": [
+    {
+      "cleanup": {
+        "connected": {
+          "loopback_ssh_listener_absent": true,
+          "qemu_process_absent": true
+        },
+        "credential_material_absent": true,
+        "offline": {
+          "loopback_ssh_listener_absent": true,
+          "qemu_process_absent": true
+        },
+        "overlay_absent": true,
+        "transient_source_absent": true
+      },
+      "guest_result": {
+        "attack_cases": [
+          "hook",
+          "filter",
+          "pager",
+          "alias",
+          "credential_helper",
+          "unsafe_link",
+          "replacement_object",
+          "remote_url",
+          "loopback_contact"
+        ],
+        "canary_execution_count": 0,
+        "commands": [
+          {
+            "executable": "npm",
+            "exit_code": 0,
+            "id": "guest-command-1",
+            "output_bytes": 70,
+            "output_sha256": "1ea8516eedc6f4f8c0796096bff9abd640232cfd15dc8c129b015d545a9e6d46"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-2",
+            "output_bytes": 3850,
+            "output_sha256": "64e1d1f9618b2dcb92a513d14367cb39a9f001e5707e2b6c8429d925702c3d04"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-3",
+            "output_bytes": 504,
+            "output_sha256": "f7855e1638bfe6ce0d13eb7d01661f6db34a7dd0864f3a09613bae12d13f46b1"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-4",
+            "output_bytes": 153,
+            "output_sha256": "b0d5bc99fbb9866408bb86e3015e0fdcb7e7e34be976bee0a93f07a0d9bbb424"
+          },
+          {
+            "executable": "python3",
+            "exit_code": 0,
+            "id": "guest-command-5",
+            "output_bytes": 214,
+            "output_sha256": "73670abd00df2f9138c9da25f1e7c752db37fa987ce95ea99e297620d6b16fa5"
+          },
+          {
+            "executable": "sudo",
+            "exit_code": 0,
+            "id": "guest-command-6",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "executable": "agentmage-host",
+            "exit_code": 0,
+            "id": "guest-command-7",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-8",
+            "output_bytes": 1495,
+            "output_sha256": "da91e4898289158f7185a74d1d8bc826fcd38bbbb68ac467602b3d4c9cbca159"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-9",
+            "output_bytes": 2354,
+            "output_sha256": "52be3f1cbbd5c85137142a629b7fe3045d338c0ab5f258da88465c5d6171a477"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-10",
+            "output_bytes": 716,
+            "output_sha256": "45e10940584af21df7bf1483b1c4f2513276cc146dab0ec82d0c2156cd909d21"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-11",
+            "output_bytes": 3310,
+            "output_sha256": "a9a433ae9899cef42f7899de73cfb2fcea10c81afdbdcda41b77971a7d10882f"
+          },
+          {
+            "executable": "systemctl",
+            "exit_code": 0,
+            "id": "guest-command-12",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "executable": "sudo",
+            "exit_code": 0,
+            "id": "guest-command-13",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "distribution": "fedora",
+        "fixture_states": [
+          "clean",
+          "dirty",
+          "staged",
+          "renamed",
+          "detached",
+          "untracked",
+          "malformed"
+        ],
+        "git_operations": [
+          "status",
+          "current_branch",
+          "upstream",
+          "branch_list",
+          "log",
+          "diff",
+          "staged_diff",
+          "show",
+          "worktree_list",
+          "object",
+          "ref",
+          "dirty_tree",
+          "untracked_files"
+        ],
+        "host_sha256": "f9bc4fd99a90247ce780839c03df3628393b7a370a6c1f745123d8556ebffb10",
+        "instruction_classes": [
+          "workspace_instruction",
+          "repository_instruction",
+          "project_document",
+          "hierarchical_instruction"
+        ],
+        "loopback_contact_observed": false,
+        "network_used_during_execution": false,
+        "package_residue": false,
+        "package_sha256": "4221f3ec839ae88b96c5c8b5150a41a0b4e4b0295c1ceba47e8a943016fb9bd7",
+        "private_data_used": false,
+        "record_type": "sprint-17-installed-linux-git-guest-result",
+        "runtime_sha256": {
+          "bubblewrap": "139bf12775025adf5c8523d119c5ad2950281335573708fd839c60181a3886dc",
+          "git": "86c21d0ccccfb45c107c213b693d1132413959f71c6b0a4165f07c5072d47b34",
+          "systemctl": "ff08482b390de8adec4bb716290f8069bfa9e353481fd896218b369850de9719",
+          "systemd_run": "5e247245f1cdf45c07cbf9c14254d436bad569ce13e545f6107ff325266da416"
+        },
+        "schema_version": 1,
+        "source_content_in_discovery_records": false,
+        "status": "pass",
+        "strict_offline": true,
+        "transient_unit_residue": false,
+        "workspace_invariant": true
+      },
+      "observation_sha256": {
+        "processes": "99f5652ee260001ed3e7b68878597e42a429f0232f493a0a9d9d340b1258db72",
+        "sockets": "4847530a38987545831ef929754a59a8d86fbc3f2435ecfb6e0713236214fdea"
+      },
+      "prepared_base_sha256": "6338412bba54ac99f9e7c3c619b0ab60b4880a5eadb723a1d3d41acc10183938",
+      "source_bundle_sha256": "5ec8e00d6e820d951d301f95aa4a6630362094bd24e334d8f42cbde19132ef02",
+      "source_revision": "52f0feb80d199cbd0e24cfa5ee6904bd19dac221",
+      "strict_offline": true,
+      "target_id": "fedora-44-x86_64"
+    },
+    {
+      "cleanup": {
+        "connected": {
+          "loopback_ssh_listener_absent": true,
+          "qemu_process_absent": true
+        },
+        "credential_material_absent": true,
+        "offline": {
+          "loopback_ssh_listener_absent": true,
+          "qemu_process_absent": true
+        },
+        "overlay_absent": true,
+        "transient_source_absent": true
+      },
+      "guest_result": {
+        "attack_cases": [
+          "hook",
+          "filter",
+          "pager",
+          "alias",
+          "credential_helper",
+          "unsafe_link",
+          "replacement_object",
+          "remote_url",
+          "loopback_contact"
+        ],
+        "canary_execution_count": 0,
+        "commands": [
+          {
+            "executable": "npm",
+            "exit_code": 0,
+            "id": "guest-command-1",
+            "output_bytes": 70,
+            "output_sha256": "1ea8516eedc6f4f8c0796096bff9abd640232cfd15dc8c129b015d545a9e6d46"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-2",
+            "output_bytes": 3850,
+            "output_sha256": "add671ee4b9c1c7381c54f99ff50433ac9da8422517cec758a9e7c26a2f777e3"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-3",
+            "output_bytes": 504,
+            "output_sha256": "0bcd2d24a839fac9ef7b107f490fcc85b18c7374f7e410aa5aaeeae8c56105b5"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-4",
+            "output_bytes": 153,
+            "output_sha256": "b0d5bc99fbb9866408bb86e3015e0fdcb7e7e34be976bee0a93f07a0d9bbb424"
+          },
+          {
+            "executable": "python3",
+            "exit_code": 0,
+            "id": "guest-command-5",
+            "output_bytes": 209,
+            "output_sha256": "5d2268a3d280d828c6927f6834ee2fc8eed6bb5d51f183bb87aea78a9db256c2"
+          },
+          {
+            "executable": "sudo",
+            "exit_code": 0,
+            "id": "guest-command-6",
+            "output_bytes": 242,
+            "output_sha256": "5ab083118a43a121961cf5c15a50a455c11debafcdf3edfd0bcd2851f3982f5e"
+          },
+          {
+            "executable": "agentmage-host",
+            "exit_code": 0,
+            "id": "guest-command-7",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-8",
+            "output_bytes": 1495,
+            "output_sha256": "755053a703c4dfe42de801a9e9068d1f6707827b3fd8eec629f7e1b7ecbc73cf"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-9",
+            "output_bytes": 2354,
+            "output_sha256": "f71f6e857920df0cc7bc3086882ab86e7788452d58bf1b4257a92bf8cab0758d"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-10",
+            "output_bytes": 715,
+            "output_sha256": "0a67cd7d8d026eee5d9c85b18abb51b011ef4747046b5187fbb1be8c96a458ed"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-11",
+            "output_bytes": 3310,
+            "output_sha256": "51b606c5d87a19a236f78f60807458aac1681377af2952090cb8c69424f8813d"
+          },
+          {
+            "executable": "systemctl",
+            "exit_code": 0,
+            "id": "guest-command-12",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "executable": "sudo",
+            "exit_code": 0,
+            "id": "guest-command-13",
+            "output_bytes": 103,
+            "output_sha256": "4f5ae061b74194922bb03f1606d28836ea5cded8267b34678528ae821e39a178"
+          }
+        ],
+        "distribution": "ubuntu",
+        "fixture_states": [
+          "clean",
+          "dirty",
+          "staged",
+          "renamed",
+          "detached",
+          "untracked",
+          "malformed"
+        ],
+        "git_operations": [
+          "status",
+          "current_branch",
+          "upstream",
+          "branch_list",
+          "log",
+          "diff",
+          "staged_diff",
+          "show",
+          "worktree_list",
+          "object",
+          "ref",
+          "dirty_tree",
+          "untracked_files"
+        ],
+        "host_sha256": "b1e0bec9618f4c18423332c60e6a0f26fc8d30e19d29bd3b8e45836d66d8908b",
+        "instruction_classes": [
+          "workspace_instruction",
+          "repository_instruction",
+          "project_document",
+          "hierarchical_instruction"
+        ],
+        "loopback_contact_observed": false,
+        "network_used_during_execution": false,
+        "package_residue": false,
+        "package_sha256": "a0af6d3335e93ddec19cbfa8109583488e52424dae95bd2accc07f66bb185979",
+        "private_data_used": false,
+        "record_type": "sprint-17-installed-linux-git-guest-result",
+        "runtime_sha256": {
+          "bubblewrap": "0abea81db798ebf6b4742ac0664802d97521547a353c2a0dbdc21d76cbbfd2c0",
+          "git": "5516c9f362c29376ab9a499a33082f9f611941d8c75930c880e30ad109e39c9a",
+          "systemctl": "6394f5e8df92878184de9d4dfb7ac242471cb09daf89d23be4e81ae17e9c03b2",
+          "systemd_run": "03a68bafb0ebc0f5eff41cbdf3cbbdf126a3bb87e21140f9147bf78edce36d88"
+        },
+        "schema_version": 1,
+        "source_content_in_discovery_records": false,
+        "status": "pass",
+        "strict_offline": true,
+        "transient_unit_residue": false,
+        "workspace_invariant": true
+      },
+      "observation_sha256": {
+        "processes": "12a6bfaf9aede29d14ce4da12ee8658ef823fa2946b4aaa10be528431d464c29",
+        "sockets": "8adda09549164a3cf2467a7394ec7914c571954f79b52b6bba3df3d5d7ab7f37"
+      },
+      "prepared_base_sha256": "e9924f3d542065e8184ff5c6be0853167ea5e4d63984d9f71b5ee4d667104154",
+      "source_bundle_sha256": "5ec8e00d6e820d951d301f95aa4a6630362094bd24e334d8f42cbde19132ef02",
+      "source_revision": "52f0feb80d199cbd0e24cfa5ee6904bd19dac221",
+      "strict_offline": true,
+      "target_id": "ubuntu-26.04-x86_64"
+    }
+  ],
+  "task_ids": [
+    "17.1.1.2",
+    "17.1.1.3",
+    "17.1.3.1",
+    "17.1.3.3"
+  ]
+}
