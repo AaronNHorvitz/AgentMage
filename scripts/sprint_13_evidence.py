@@ -26,7 +26,9 @@ SOURCE_PATHS: Final = (
     "platforms/linux-inference/tests/muse_live_evaluation.rs",
     "model-profiles/exact-profile-catalog.json",
     "scripts/sprint_13_evidence.py",
+    "scripts/sprint_13_cross_adapter_parity.py",
     "tests/test_sprint_13_evidence.py",
+    "tests/test_sprint_13_cross_adapter_parity.py",
 )
 EVIDENCE_PATHS: Final = (
     "artifacts/sprints/sprint-13/story-13.1/muse-native-adapter-contract-v2.json",
@@ -37,6 +39,7 @@ EVIDENCE_PATHS: Final = (
     "model-profiles/candidates/muse-glimmer-30b-text-8k/early-evaluation-disposition.json",
     "model-profiles/candidates/gemma-4-e4b/feasibility-disposition.json",
     "model-profiles/candidates/gemma-4-12b-unified/feasibility-disposition.json",
+    "artifacts/sprints/sprint-13/story-13.2/linux-cross-adapter-parity.json",
 )
 COMMANDS: Final = (
     (
@@ -193,6 +196,13 @@ def evidence_state() -> dict[str, Any]:
         "repeatability_trial_count": values[EVIDENCE_PATHS[4]][
             "diagnostic_repeatability"
         ]["trial_count"],
+        "linux_parity_status": values[EVIDENCE_PATHS[8]]["disposition"]["status"],
+        "linux_parity_trials_complete": values[EVIDENCE_PATHS[8]]["disposition"][
+            "matched_linux_trials_complete"
+        ],
+        "linux_parity_thresholds_passed": values[EVIDENCE_PATHS[8]]["disposition"][
+            "all_adapters_meet_thresholds"
+        ],
     }
 
 
@@ -212,6 +222,9 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
         "packet_capture_executed": False,
         "quality_trial_count": 12,
         "repeatability_trial_count": 5,
+        "linux_parity_status": "COMPLETE-NEGATIVE-BLOCKED-QUALITY",
+        "linux_parity_trials_complete": True,
+        "linux_parity_thresholds_passed": False,
     }
     local_contract_pass = command_pass and not references and state == expected_state
     return {
@@ -241,13 +254,14 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             {
                 "story_id": "13.2",
                 "status": (
-                    "PASS-FAIL-CLOSED-BLOCKED-LIVE-PARITY"
+                    "COMPLETE-NEGATIVE-LINUX-PARITY-BLOCKED-MACOS"
                     if local_contract_pass
                     else "BLOCKED"
                 ),
                 "no_fallback_passed": local_contract_pass,
                 "linux_native_live_evidence": local_contract_pass,
-                "docker_live_parity_evidence": False,
+                "docker_live_parity_evidence": True,
+                "all_linux_adapters_meet_thresholds": False,
                 "macos_live_parity_evidence": False,
             },
             {
@@ -271,7 +285,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             },
             {
                 "id": "cross-adapter-live-parity",
-                "status": "BLOCKED-DOCKER-AND-MACOS-EVIDENCE",
+                "status": "BLOCKED-MACOS-AND-QUALITY",
                 "substitution": False,
             },
             {
@@ -290,7 +304,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             "sprint_status": "BLOCKED",
         },
         "limitations": [
-            "Local contract completion does not substitute for macOS, Docker, or packet-capture evidence.",
+            "Complete negative Linux parity does not substitute for macOS or packet-capture evidence and does not satisfy quality thresholds.",
             "The rejected Muse profile remains disabled; another profile requires independent admission.",
             "No model output or prompt is retained in this report.",
         ],
@@ -350,7 +364,8 @@ def validate_report(report: Any, *, verify_current: bool = True) -> list[str]:
         len(stories) != 3
         or [item.get("story_id") for item in stories] != ["13.1", "13.2", "13.3"]
         or stories[0].get("macos_adapter_implemented") is not False
-        or stories[1].get("docker_live_parity_evidence") is not False
+        or stories[1].get("docker_live_parity_evidence") is not True
+        or stories[1].get("all_linux_adapters_meet_thresholds") is not False
         or stories[2].get("profile_enabled") is not False
     ):
         failures.append("Sprint 13 story truth changed")

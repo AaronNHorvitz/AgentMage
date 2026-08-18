@@ -40,6 +40,9 @@ def report() -> dict[str, object]:
                 "packet_capture_executed": False,
                 "quality_trial_count": 12,
                 "repeatability_trial_count": 5,
+                "linux_parity_status": "COMPLETE-NEGATIVE-BLOCKED-QUALITY",
+                "linux_parity_trials_complete": True,
+                "linux_parity_thresholds_passed": False,
             },
         ),
     ):
@@ -63,7 +66,7 @@ class Sprint13EvidenceTests(unittest.TestCase):
                 {"family": "muse"}
             ),
             lambda item: item["stories"][0].update({"macos_adapter_implemented": True}),
-            lambda item: item["stories"][1].update({"docker_live_parity_evidence": True}),
+            lambda item: item["stories"][1].update({"all_linux_adapters_meet_thresholds": True}),
             lambda item: item["stories"][2].update({"profile_enabled": True}),
             lambda item: item["blockers"].pop(),
             lambda item: item["summary"].update({"automatic_fallback": True}),
