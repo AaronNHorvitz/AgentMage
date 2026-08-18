@@ -1,26 +1,6 @@
 {
   "blockers": [
     {
-      "code": "PRODUCTION-ANSWER-LEDGER-NOT-INTEGRATED",
-      "owner": "21.1.3.4"
-    },
-    {
-      "code": "PRODUCTION-HELD-FILE-RESOLUTION-NOT-INTEGRATED",
-      "owner": "21.1.3.2"
-    },
-    {
-      "code": "ENCRYPTED-DURABLE-ANCHOR-STORAGE-NOT-INTEGRATED",
-      "owner": "21.1.3.5"
-    },
-    {
-      "code": "CLOCK-ANOMALY-EVENT-EVIDENCE-NOT-IMPLEMENTED",
-      "owner": "21.1.3.5"
-    },
-    {
-      "code": "NATIVE-PLATFORM-EVIDENCE-NOT-RETAINED",
-      "owner": "21.1.3.5"
-    },
-    {
       "code": "INDEPENDENT-SPRINT-21-REVIEW-NOT-RETAINED",
       "owner": "21.1.3.5"
     }
@@ -37,7 +17,46 @@
       ],
       "exit_code": 0,
       "id": "reconciliation-tests",
-      "output_sha256": "3a1a6ba86dcc2761913367b00660537678029019e895c70cb6535ebdf4479a9a"
+      "output_sha256": "e14475800d77c3e70e97dad450f4fb0244f3c80c8583f4983d2de8518d8818fa"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "linux_evidence_reconciliation",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "held-linux-citation-tests",
+      "output_sha256": "f51cc583b54f8bff4d9f7d98233b81ff8e4bf33d5a386aaa81b9e76cdde19354"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "evidence_store",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "encrypted-evidence-store-tests",
+      "output_sha256": "09368f049583bf0e0edb104abd40e73ff0966386fc1ac8358cd51751fc4b994c"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "runtime-answer-ledger-test",
+      "output_sha256": "2a83670c7802fa1e5ad3a9961050befd04a303a33d5ce4732c81063d2c19aa4f"
     },
     {
       "argv": [
@@ -45,6 +64,8 @@
         "clippy",
         "-p",
         "agentmage-kernel-engine",
+        "-p",
+        "agentmage-host",
         "--all-targets",
         "--locked",
         "--",
@@ -52,8 +73,8 @@
         "warnings"
       ],
       "exit_code": 0,
-      "id": "reconciliation-clippy",
-      "output_sha256": "8490ad012c56874917033b5323b645384c5b690449290c132b6650da793efbd0"
+      "id": "evidence-host-clippy",
+      "output_sha256": "e17796635192d70db245e9f961553f5ef497310b6310eda678661ca9f2a22c73"
     },
     {
       "argv": [
@@ -64,7 +85,7 @@
       ],
       "exit_code": 0,
       "id": "evidence-tests",
-      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
     },
     {
       "argv": [
@@ -96,15 +117,22 @@
   ],
   "implemented_contracts": {
     "ambient_filesystem_access": false,
+    "authority_owned_receipt_checkpoint": true,
     "citation_freshness_states": 3,
     "claim_level_audit_rendering": true,
+    "clock_regression_rejected": true,
     "complete_answer_claim_coverage": true,
     "completion_authority": false,
+    "encrypted_answer_ledger_restart": true,
+    "encrypted_durable_anchor_history": true,
     "exact_source_identity_dimensions": 6,
     "external_hmac_sha256_anchor": true,
+    "held_linux_citation_resolution": true,
+    "held_source_byte_recomputation": true,
     "integrity_key_stored_in_ledger": false,
     "network_authority": false,
     "receipt_chain": true,
+    "runtime_answer_ledger_composition": true,
     "safe_content_free_projection": true
   },
   "record_type": "sprint_21_local_evidence",
@@ -121,16 +149,21 @@
     "SR-OPS-005",
     "SR-TST-010"
   ],
-  "source_revision": "8c92757fc5651c3e2d73226b35c63f8b286d5d36",
+  "source_revision": "aaf3e2065d261bbf3ea1fb8314eb96205a5f5373",
   "source_sha256": {
-    "docs/architecture/citation-and-receipt-integrity.md": "afe00f7c9a7f4e299764f90f0776ed06e2fce4ec37e95f80f712338167b6337c",
-    "docs/verification/sprint-21-local-results.md": "b023789f08b794cf13bd5c1d96c5a26ea046d45c5623a0d0d71da3dcde8da4e9",
-    "kernel/engine/src/authority.rs": "23a23c378f7ae4dbdd3ecc0949679bb4b472b3fb13efb51d9bc7b9bed8071fc1",
+    "docs/architecture/citation-and-receipt-integrity.md": "b01e4bc10afee7294fd2e85d0f74fa7d84ad2569aec63075ef2d0b039e1d9ba4",
+    "docs/verification/sprint-21-local-results.md": "163d75f16c0dc61e8c16611fd76bfe7ae3b28ec7dd89a26ef0a129fced3a8f02",
+    "kernel/engine/migrations/operational-store/0009-evidence-integrity.sql": "5eb6d2b0a312addaaa6c59ace373ba0e9bf9e8551e38ed82ce2f4fcdbccb5cd8",
+    "kernel/engine/src/authority.rs": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8",
     "kernel/engine/src/evidence_reconciliation.rs": "25e0f0af506aeb3da4dce2b87369b2c2cad6f6da90b9793360f1edbad4519b3a",
-    "kernel/engine/src/evidence_state.rs": "1fa2a47b565162b21dcee24b30f96b06bbbd29ef9cacb9997bc9064b6c2ed6c0",
-    "kernel/engine/src/lib.rs": "3b36e039b67a030a35cebf5b8d74d32fe14067c33cb945885e0d1c1317ca451f",
-    "scripts/sprint_21_evidence.py": "b70d55d69a167813eb211f951daeae15bc53d0c208beae0808c049251481d5c7",
-    "tests/test_sprint_21_evidence.py": "fa3e45f1747c68fcc21680687f144b368fe4daf31e4b320c3536b93622548267"
+    "kernel/engine/src/evidence_state.rs": "7a56808bc1280472f5b7bda0ccefa3a6fd115a62788e4d4e2cf0b66254e6cc7b",
+    "kernel/engine/src/evidence_store.rs": "949cfe181d54e2a8e9399b382e81aec9b2fcfd6fe9fc336bc8769f562fb49d24",
+    "kernel/engine/src/lib.rs": "ba0fc7331c014a86772c22cd1713a3a147d84511d6f30e844b2a87b9bf9d7136",
+    "kernel/engine/src/operational_store.rs": "b80d873c2148aa3ae7338f48e5f3a2574db2e3cfbbed4a74ae384f6bf794700b",
+    "kernel/engine/src/runtime_answer.rs": "98755d23179131575511c90ae811240ab5bf841136f36cf45d827abeb8bb5657",
+    "scripts/sprint_21_evidence.py": "c2e4a3e1edac3b0836b5060f9fbb534e4cf4ecc447a8591d904bbdd28db91fe0",
+    "shells/host/src/linux_evidence_reconciliation.rs": "0ab8b503eca2034b072eca3551fba8bf3e57f4f682bc32d29bb979a9b908b39a",
+    "tests/test_sprint_21_evidence.py": "f707b2eab70eda70d4637a3437931f39b6d423ecaa6f352d6bbed039e8023568"
   },
   "summary": {
     "local_contract_passed": true,
@@ -140,11 +173,13 @@
   "verification_evidence": {
     "answer_ledger_matrix": true,
     "citation_resolution_matrix": true,
-    "clock_anomaly_matrix": false,
-    "durable_anchor_integration": false,
+    "clock_anomaly_matrix": true,
+    "durable_anchor_integration": true,
     "independent_review": false,
-    "production_held_file_integration": false,
+    "native_linux_source_execution": true,
+    "production_held_file_integration": true,
     "receipt_tamper_matrix": true,
+    "runtime_answer_integration": true,
     "safe_projection_scan": true
   }
 }
