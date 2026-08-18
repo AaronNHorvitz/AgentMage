@@ -1,0 +1,72 @@
+===== context-admission =====
+
+running 1 test
+test context_management::tests::s020_ut01_denied_stale_and_secret_canary_never_enter_packet_content ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 627 filtered out; finished in 0.00s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+===== persistence-policy =====
+
+running 1 test
+test persistence::tests::synthetic_canary_campaign_covers_every_family_and_field_boundary ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 627 filtered out; finished in 0.00s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+===== encrypted-store-export =====
+
+running 1 test
+test operational_store::tests::synthetic_canary_is_absent_from_encrypted_and_derived_artifacts ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 627 filtered out; finished in 0.08s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+===== runtime-projections =====
+
+running 1 test
+test runtime_projection::tests::story_21_2_sensitive_canaries_are_excluded_or_restricted_in_every_projection ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 627 filtered out; finished in 0.01s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+===== runtime-artifacts =====
+
+running 1 test
+test runtime_artifact::tests::story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 627 filtered out; finished in 0.04s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+===== runtime-model-tool-events =====
+
+running 1 test
+test runtime_loop::tests::story_23_4_runtime_events_exclude_raw_model_and_tool_canaries ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 627 filtered out; finished in 0.01s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+===== native-encrypted-payloads =====
+
+running 1 test
+test runtime_artifact_store::tests::staging_and_objects_are_encrypted_randomized_and_key_bound ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 133 filtered out; finished in 0.00s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_platform_linux-1ab47cf45413f501)
+
+===== strict-local-telemetry =====
+Strict-local source audit passed with zero undeclared network paths.

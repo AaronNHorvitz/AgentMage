@@ -34,6 +34,10 @@
   receipts, checkpoints, and continuation artifacts. Seven repository, policy, workspace,
   configuration, and exact-model drift classes block before action; exact state completes without
   another worker launch and preserves objective and history counts.
+- The current product canary sweep composes eight passing source-bound checks across context input,
+  persistence policy, encrypted store/export/crash diagnostics, runtime projections, owner-bound
+  artifact reads, model/tool events, native payload ciphertext, and external-telemetry closure. Its
+  report and repository-root-redacted raw trace contain no private user data or raw canary value.
 - A failed terminal checkpoint after worker completion poisons the runtime; restart reconciles one
   receipt, and replay launches no worker.
 - The full local product gate passes with all pre-existing ignored live, native-platform, and
@@ -44,9 +48,10 @@
 The production VS Code Chat path does not yet compose all model context through this manager or
 present its debug view. The native campaigns use deterministic model execution and exact runtime
 records on the current Linux source tree; Ubuntu clean-image, Windows, macOS, installed real-model,
-installed-package, and independent Sprint 22 review evidence are not retained. The product-wide
-secret-canary campaign has not yet exercised every production input and persistence path through
-this new checkpoint flow.
+installed-package, process-memory, swap, SSD-remanence, filesystem-snapshot, external host
+instrumentation, and independent Sprint 22 review evidence are not retained. The current
+source-surface canary campaign must also be extended whenever a new content-bearing source becomes
+reachable.
 
 Sprint 22 therefore remains blocked despite the complete platform-neutral context and encrypted
 checkpoint core. The machine-readable record is retained at

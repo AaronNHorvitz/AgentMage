@@ -111,6 +111,23 @@ worker launch. Its source-bound report and redacted trace are retained beside th
 matrix. The deterministic model and exact model/runtime records do not substitute for installed
 real-model, clean-image, cross-platform, or independent-review evidence.
 
+## Current Product Canary Boundary
+
+The Story 22.1 canary campaign composes eight existing checks across every currently named source
+surface that can carry or derive session content: context admission, persistence minimization,
+encrypted store/export/crash diagnostics, transcript/event/diagnostic/metric projections,
+owner-bound private artifact reads, model/tool runtime events, native staging/object ciphertext, and
+the strict-local external-telemetry audit. Its source-bound report and repository-root-redacted raw
+trace are retained as `current-product-canary-sweep.json` and `.log` under the Story 22.1 evidence
+directory.
+
+This is a current Linux source-surface boundary, not a forensic or release claim. Exact authorized
+private-artifact reads remain an intentional content-returning boundary. The campaign does not
+inspect process memory, swap, SSD remanence, filesystem snapshots, external host instrumentation,
+an installed real model, an installed package, another supported platform, or an independently
+reviewed build. A new content-bearing source surface invalidates this coverage until the campaign
+is extended and rerun.
+
 ## Traceability
 
 | Requirement | Implementation | Local verification |
@@ -121,3 +138,4 @@ real-model, clean-image, cross-platform, or independent-review evidence.
 | `S-020-I06` | Operational-store migration 4 and terminal checkpoint execution path | Atomic rollback, terminal receipt binding, reopen, and replay tests |
 | `S-020-I07`, `S-020-I08` | `revalidate_resume`, explicit drift decisions | Every drift dimension and all three decisions |
 | `AT-CRASH-001`, `AT-RESUME-001` | Platform-neutral store campaign, native Linux crash and long-session campaigns, and deterministic revalidation | 126 store-boundary exits, 100 native tool-terminal/checkpoint exits, seven-checkpoint exact resume with seven drift classes, and 100 repeated no-drift comparisons |
+| `SR-DAT-002`, `SR-DAT-003`, `SR-AI-008`, `SR-AI-010`, `SR-OPS-003` | Current source-surface canary composition | Eight hash-bound Linux checks spanning context, persistence, encrypted and projected artifacts, model/tool events, native ciphertext, and telemetry closure |

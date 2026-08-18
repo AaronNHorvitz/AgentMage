@@ -1,0 +1,177 @@
+{
+  "artifact_id": "story-22.1-current-product-canary-sweep",
+  "commands": [
+    {
+      "command_id": "6147400fb3af627c2fe95ac302b598f86454145964d69b8fe78fee7600f8cb28",
+      "elapsed_ms": 46,
+      "exit_code": 0,
+      "expected_marker": "1 passed; 0 failed",
+      "id": "context-admission",
+      "required_test": "s020_ut01_denied_stale_and_secret_canary_never_enter_packet_content"
+    },
+    {
+      "command_id": "5e565890568892ad049a51415396b0640f96f2c1128570e8d1ef659f42a85f12",
+      "elapsed_ms": 47,
+      "exit_code": 0,
+      "expected_marker": "1 passed; 0 failed",
+      "id": "persistence-policy",
+      "required_test": "synthetic_canary_campaign_covers_every_family_and_field_boundary"
+    },
+    {
+      "command_id": "90774bc47105a422d76a6c89ce3311073fe7c59046a92a6dc4ad2141e110e1ec",
+      "elapsed_ms": 128,
+      "exit_code": 0,
+      "expected_marker": "1 passed; 0 failed",
+      "id": "encrypted-store-export",
+      "required_test": "synthetic_canary_is_absent_from_encrypted_and_derived_artifacts"
+    },
+    {
+      "command_id": "b31f43f832074fcea18c54b1d516795db859469549ea42080a56133d3df50cc2",
+      "elapsed_ms": 55,
+      "exit_code": 0,
+      "expected_marker": "1 passed; 0 failed",
+      "id": "runtime-projections",
+      "required_test": "story_21_2_sensitive_canaries_are_excluded_or_restricted_in_every_projection"
+    },
+    {
+      "command_id": "097bb636caa2450918164a00a0f65b6bf7f7974edd913b4443e94092b3adba4d",
+      "elapsed_ms": 86,
+      "exit_code": 0,
+      "expected_marker": "1 passed; 0 failed",
+      "id": "runtime-artifacts",
+      "required_test": "story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read"
+    },
+    {
+      "command_id": "039d53ce1e540bf7e08bc90d21db4fb8638272c6e5cbcc4bef0f48ae21e71943",
+      "elapsed_ms": 49,
+      "exit_code": 0,
+      "expected_marker": "1 passed; 0 failed",
+      "id": "runtime-model-tool-events",
+      "required_test": "story_23_4_runtime_events_exclude_raw_model_and_tool_canaries"
+    },
+    {
+      "command_id": "9d01542265a1ffd3d0a08de8f89f062e93d01990c9f3e61b03e79bc1fb9c9755",
+      "elapsed_ms": 78,
+      "exit_code": 0,
+      "expected_marker": "1 passed; 0 failed",
+      "id": "native-encrypted-payloads",
+      "required_test": "staging_and_objects_are_encrypted_randomized_and_key_bound"
+    },
+    {
+      "command_id": "6c1a95258b657afcf0ec844de7801c3201df63aad821576097181e4eb1b8920d",
+      "elapsed_ms": 492,
+      "exit_code": 0,
+      "expected_marker": "zero undeclared network paths",
+      "id": "strict-local-telemetry",
+      "required_test": "strict local source audit"
+    }
+  ],
+  "coverage": {
+    "classification-minimization-and-secret-detection": [
+      "persistence-policy"
+    ],
+    "context-and-checkpoint-input": [
+      "context-admission"
+    ],
+    "external-telemetry-dependency": [
+      "strict-local-telemetry"
+    ],
+    "model-and-tool-event-content": [
+      "runtime-model-tool-events"
+    ],
+    "native-staging-and-object-ciphertext": [
+      "native-encrypted-payloads"
+    ],
+    "owner-bound-private-artifact-content": [
+      "runtime-artifacts"
+    ],
+    "sqlcipher-backup-export-and-crash-diagnostics": [
+      "encrypted-store-export"
+    ],
+    "transcript-event-diagnostic-and-metric-projections": [
+      "runtime-projections"
+    ]
+  },
+  "external_network_used": false,
+  "limitations": [
+    "This sweep composes every currently reachable named context, persistence, runtime projection, artifact, event, native payload, and telemetry source check; future surfaces invalidate it until extended.",
+    "Authorized private artifact reads may return exact payload content; the test proves path-free metadata and cross-owner denial, not blanket content deletion.",
+    "Deterministic source and byte scans are not process-memory-dump, swap, SSD-remanence, filesystem-snapshot, or external host-instrumentation evidence.",
+    "The deterministic fake-model runtime path is active, but an installed real local model and package-level workflow are not exercised here.",
+    "Windows, macOS, clean-image Linux, release, and independent-review evidence are not claimed.",
+    "Manual fuzzing remains deferred and was not executed by this campaign."
+  ],
+  "private_user_data_used": false,
+  "raw_canary_values_retained_in_report": 0,
+  "raw_trace": {
+    "bytes": 3047,
+    "path": "artifacts/sprints/sprint-22/story-22.1/current-product-canary-sweep.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "bded7b0a25fb3df04653e436ded99b8cafc09d168c004d968887aa91c807ac2a"
+  },
+  "schema_version": 1,
+  "source_revision": "50f527b4b7de4403579ad8f6938a9ab3e9d9f715",
+  "sources": [
+    {
+      "bytes": 43165,
+      "path": "kernel/engine/src/context_management.rs",
+      "sha256": "bc6a562f4573364bc82a3972aae64d93e24b976303c52ce9227018717516c077"
+    },
+    {
+      "bytes": 45680,
+      "path": "kernel/engine/src/persistence.rs",
+      "sha256": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540"
+    },
+    {
+      "bytes": 274189,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "a80de50a46f86df5bfdd5d937674972f7270203347629be10d8fca084b39cf11"
+    },
+    {
+      "bytes": 60943,
+      "path": "kernel/engine/src/runtime_projection.rs",
+      "sha256": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d"
+    },
+    {
+      "bytes": 162202,
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "40fba8bed9bb8f4ae60ae5f20af6afb984cbb85f4ef8583896d7632c1ad5cbff"
+    },
+    {
+      "bytes": 118065,
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "aff2deb18697d9f8dcaa8d83d314bd38e15a8820aee082a74d07e46603b99f71"
+    },
+    {
+      "bytes": 84332,
+      "path": "platforms/linux/src/runtime_artifact_store.rs",
+      "sha256": "1ad92f84b3a125d500f7695baf4b6dba14f53ce12e6c92f8da3433c8a8f6a78e"
+    },
+    {
+      "bytes": 18510,
+      "path": "scripts/strict_local_source_audit.py",
+      "sha256": "f0ba6b0414a97e68df276ed463611f9f1e6b4637085bb6b74ba3297d81102701"
+    },
+    {
+      "bytes": 13520,
+      "path": "scripts/story_22_1_canary_evidence.py",
+      "sha256": "e1e00e88bb39cfddd1689b12ee5ce06540d08456228025444f5b668a1e8ea9e4"
+    },
+    {
+      "bytes": 2675,
+      "path": "tests/test_story_22_1_canary_evidence.py",
+      "sha256": "0aec421735605077f38c148c71ab002a8cd3b535a47f8016f46b60c2dc3b7a6e"
+    }
+  ],
+  "status": "pass-current-linux-source-surface-boundary",
+  "task_ids": [
+    "22.1.3.5",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-AI-008",
+    "SR-AI-010",
+    "SR-OPS-003"
+  ]
+}

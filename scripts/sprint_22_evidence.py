@@ -26,9 +26,11 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/operational_store.rs",
     "shells/host/src/linux_coding_runtime.rs",
     "scripts/sprint_22_evidence.py",
+    "scripts/story_22_1_canary_evidence.py",
     "scripts/story_22_1_long_resume_evidence.py",
     "scripts/story_22_1_native_resume_evidence.py",
     "tests/test_sprint_22_evidence.py",
+    "tests/test_story_22_1_canary_evidence.py",
     "tests/test_story_22_1_long_resume_evidence.py",
     "tests/test_story_22_1_native_resume_evidence.py",
 )
@@ -42,6 +44,7 @@ COMMANDS: Final = (
                         "--locked")),
     ("native-resume-evidence", ("python3", "scripts/story_22_1_native_resume_evidence.py")),
     ("long-resume-evidence", ("python3", "scripts/story_22_1_long_resume_evidence.py")),
+    ("current-product-canary-evidence", ("python3", "scripts/story_22_1_canary_evidence.py")),
     ("engine-clippy", ("cargo", "clippy", "-p", "agentmage-kernel-engine",
                        "--all-targets", "--locked", "--", "-D", "warnings")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_22_evidence")),
@@ -55,7 +58,8 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "PRODUCTION-CONTEXT-PIPELINE-NOT-INTEGRATED", "owner": "22.1.3.1"},
-    {"code": "PRODUCT-WIDE-CANARY-SWEEP-NOT-RETAINED", "owner": "22.1.3.5"},
+    {"code": "INSTALLED-CROSS-PLATFORM-CANARY-EVIDENCE-NOT-RETAINED", "owner": "22.1.3.5"},
+    {"code": "MEMORY-AND-STORAGE-REMANENCE-EVIDENCE-NOT-RETAINED", "owner": "22.1.3.5"},
     {"code": "INDEPENDENT-SPRINT-22-REVIEW-NOT-RETAINED", "owner": "22.1.3.5"},
 ]
 IMPLEMENTED: Final = {
@@ -66,6 +70,7 @@ IMPLEMENTED: Final = {
     "native_tool_terminal_resume_runs": 100,
     "native_long_session_checkpoints": 7,
     "native_long_session_drift_classes": 7,
+    "current_canary_surface_families": 8,
     "authoritative_evidence_first_dedupe": True,
     "complete_content_free_accounting": True,
     "checked_summary_source_separation": True,
@@ -132,7 +137,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "production_context_integration": False,
             "native_platform_crash_matrix": local_pass,
             "native_long_session_resume": local_pass,
-            "product_wide_canary_sweep": False,
+            "current_linux_source_surface_canary_sweep": local_pass,
             "independent_review": False,
         },
         "blockers": BLOCKERS,
@@ -167,7 +172,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
     for field in (
-        "production_context_integration", "product_wide_canary_sweep", "independent_review",
+        "production_context_integration", "independent_review",
     ):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
@@ -175,6 +180,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("native platform crash matrix missing")
     if verification.get("native_long_session_resume") is not True:
         failures.append("native long-session resume missing")
+    if verification.get("current_linux_source_surface_canary_sweep") is not True:
+        failures.append("current Linux source-surface canary sweep missing")
     for field in (
         "ephemeral_checkpoint_persistence", "ambient_filesystem_access",
         "network_authority", "resume_authority",
