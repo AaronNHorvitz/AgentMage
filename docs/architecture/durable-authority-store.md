@@ -331,13 +331,16 @@ or modifying the derivative has no effect on SQLite, and the encrypted-store
 startup path rejects JSON Lines. No JSON Lines parser or import authority is
 implemented; any future import requires a separate explicit validated contract.
 
-Cryptographic erasure is implemented only at the complete SQLCipher key scope.
+Cryptographic erasure is implemented only at the complete operational-key scope.
 The live store is consumed and closed before the platform adapter destroys the
 exact operational-store key and verifies that lookup returns absent. Known
-database, WAL, and shared-memory ciphertext files are then removed. A failed
+database, WAL, and shared-memory ciphertext files are then removed. The same
+key is the HKDF root for the separately labeled Linux runtime artifact payload
+key, so verified key absence also prevents retained payload-file keys from
+being rederived even when storage media retains ciphertext. A failed
 key-destruction attempt preserves ciphertext. This operation does not erase a
-separately keyed backup, does not claim per-record cryptographic erasure inside
-the shared-key database, and makes no physical-overwrite promise for SSD or
+separately keyed backup, does not claim independently keyed per-record or
+per-payload erasure, and makes no physical-overwrite promise for SSD or
 copy-on-write storage.
 
 ## Recovery Invariants

@@ -14,6 +14,8 @@ test-support = []
 [dependencies]
 agentmage-kernel-contracts.workspace = true
 agentmage-kernel-engine.workspace = true
+chacha20poly1305.workspace = true
+hkdf.workspace = true
 rustix.workspace = true
 seccompiler.workspace = true
 serde_json.workspace = true

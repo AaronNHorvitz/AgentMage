@@ -14,7 +14,8 @@ use agentmage_kernel_contracts::{
     WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
 };
 use agentmage_kernel_engine::operational_store::{
-    DurableAuthorityError, DurableAuthorityRuntime, OperationalStoreKeyProvider,
+    DurableAuthorityError, DurableAuthorityRuntime, OperationalStoreError,
+    OperationalStoreKeyError, OperationalStoreKeyProvider,
 };
 use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
 use agentmage_kernel_engine::runtime_artifact::{
@@ -24,6 +25,7 @@ use agentmage_kernel_engine::runtime_artifact::{
 };
 use sha2::{Digest, Sha256};
 
+use crate::runtime_artifact_crypto::derive_artifact_payload_key;
 use crate::security_controls::{LinuxSecurityControl, LinuxSecurityControls};
 use crate::{
     DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxHostIpcEndpoint,
@@ -426,11 +428,28 @@ fn open_linux_authority_in_root<P: OperationalStoreKeyProvider>(
 ) -> Result<LinuxAuthorityRuntime, LinuxAuthorityOpenError> {
     let database = root.authority_database_path();
     root.revalidate().map_err(LinuxAuthorityOpenError::Root)?;
-    let mut artifact_store = LinuxRuntimeArtifactPayloadStore::open(&root)
-        .map_err(LinuxAuthorityOpenError::ArtifactPayload)?;
-    let mut runtime =
-        DurableAuthorityRuntime::open(&database, root.observation(), provider, recovery_epoch_ms)
+    let opened = provider
+        .with_key(|root_key| {
+            let artifact_key = derive_artifact_payload_key(root_key)
+                .map_err(LinuxAuthorityOpenError::ArtifactPayload)?;
+            let artifact_store = LinuxRuntimeArtifactPayloadStore::open(&root, artifact_key)
+                .map_err(LinuxAuthorityOpenError::ArtifactPayload)?;
+            let mut borrowed = BorrowedOperationalStoreKey(root_key);
+            let runtime = DurableAuthorityRuntime::open(
+                &database,
+                root.observation(),
+                &mut borrowed,
+                recovery_epoch_ms,
+            )
             .map_err(LinuxAuthorityOpenError::Authority)?;
+            Ok((artifact_store, runtime))
+        })
+        .map_err(|_| {
+            LinuxAuthorityOpenError::Authority(DurableAuthorityError::Store(
+                OperationalStoreError::KeyUnavailable,
+            ))
+        })?;
+    let (mut artifact_store, mut runtime) = opened?;
     runtime
         .reconcile_runtime_artifacts(&mut artifact_store, recovery_epoch_ms)
         .map_err(LinuxAuthorityOpenError::Authority)?;
@@ -440,6 +459,17 @@ fn open_linux_authority_in_root<P: OperationalStoreKeyProvider>(
         runtime,
         artifact_store,
     })
+}
+
+struct BorrowedOperationalStoreKey<'a>(&'a [u8]);
+
+impl OperationalStoreKeyProvider for BorrowedOperationalStoreKey<'_> {
+    fn with_key<T>(
+        &mut self,
+        operation: impl FnOnce(&[u8]) -> T,
+    ) -> Result<T, OperationalStoreKeyError> {
+        Ok(operation(self.0))
+    }
 }
 
 /// Opens a private Linux authority root for isolated test harnesses only.

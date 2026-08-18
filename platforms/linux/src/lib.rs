@@ -11,6 +11,7 @@ mod lifecycle;
 mod local_commit;
 mod platform;
 mod repository_safety;
+mod runtime_artifact_crypto;
 mod runtime_artifact_store;
 mod sandbox;
 mod secret_service;

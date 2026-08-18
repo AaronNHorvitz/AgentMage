@@ -30,7 +30,9 @@ agentmage-kernel-engine = { path = "kernel/engine" }
 agentmage-platform-linux-inference = { path = "platforms/linux-inference" }
 agentmage-platform-linux = { path = "platforms/linux" }
 agentmage-platform-windows = { path = "platforms/windows" }
+chacha20poly1305 = { version = "=0.11.0", default-features = false, features = ["zeroize"] }
 ed25519-dalek = { version = "=3.0.0", default-features = false, features = ["fast", "signature", "zeroize"] }
+hkdf = { version = "=0.13.0", default-features = false }
 lopdf = { version = "=0.44.0", default-features = false }
 quick-xml = { version = "=0.41.0", default-features = false }
 serde = { version = "=1.0.229", features = ["derive"] }

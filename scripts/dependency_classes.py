@@ -33,7 +33,9 @@ EXPECTED_INTERNAL_CARGO = {
     "agentmage-platform-linux",
 }
 EXPECTED_EXTERNAL_CARGO = {
+    "chacha20poly1305",
     "ed25519-dalek",
+    "hkdf",
     "lopdf",
     "quick-xml",
     "rusqlite",

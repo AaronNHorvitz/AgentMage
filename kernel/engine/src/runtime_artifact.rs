@@ -104,8 +104,19 @@ pub struct RuntimeArtifactPayloadPlacement {
 pub struct RuntimeArtifactPayloadInventoryEntry {
     /// Lowercase SHA-256 object identity.
     pub payload_sha256: String,
-    /// Exact observed byte size.
+    /// Exact plaintext byte size for a verified object, otherwise zero.
     pub byte_size: u64,
+    /// Whether complete authenticated verification succeeded during inventory.
+    pub integrity: RuntimeArtifactPayloadInventoryIntegrity,
+}
+
+/// Closed integrity result for one path-free private payload inventory entry.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RuntimeArtifactPayloadInventoryIntegrity {
+    /// The complete authenticated payload matched its content-addressed name.
+    Verified,
+    /// The named object exists but its encrypted representation cannot be trusted.
+    Corrupt,
 }
 
 /// Platform-owned private payload effects consumed only by the trusted runtime boundary.
@@ -1000,11 +1011,20 @@ pub(crate) fn reconcile_runtime_artifacts<S: RuntimeArtifactPayloadStore>(
             },
             "active" => {
                 delete_payload_metadata(store, &retained.payload_sha256, now_epoch_ms)?;
-                match payloads.delete(&expected) {
-                    Ok(()) | Err(RuntimeArtifactPayloadError::Missing) => {}
-                    Err(error) => return Err(error.into()),
+                match inventory_by_digest.get(retained.payload_sha256.as_str()) {
+                    Some(entry)
+                        if entry.integrity == RuntimeArtifactPayloadInventoryIntegrity::Corrupt =>
+                    {
+                        payloads.quarantine(&expected)?;
+                        report.quarantined_payloads += 1;
+                    }
+                    _ => match payloads.delete(&expected) {
+                        Ok(()) | Err(RuntimeArtifactPayloadError::Missing) => {
+                            report.deleted_orphans += 1;
+                        }
+                        Err(error) => return Err(error.into()),
+                    },
                 }
-                report.deleted_orphans += 1;
             }
             "quarantined" => {
                 if inventory_by_digest.contains_key(retained.payload_sha256.as_str()) {
@@ -1012,9 +1032,14 @@ pub(crate) fn reconcile_runtime_artifacts<S: RuntimeArtifactPayloadStore>(
                 }
             }
             "deleted" => {
-                if inventory_by_digest.contains_key(retained.payload_sha256.as_str()) {
-                    payloads.delete(&expected)?;
-                    report.deleted_orphans += 1;
+                if let Some(entry) = inventory_by_digest.get(retained.payload_sha256.as_str()) {
+                    if entry.integrity == RuntimeArtifactPayloadInventoryIntegrity::Corrupt {
+                        payloads.quarantine(&expected)?;
+                        report.quarantined_payloads += 1;
+                    } else {
+                        payloads.delete(&expected)?;
+                        report.deleted_orphans += 1;
+                    }
                 }
             }
             _ => return Err(RuntimeArtifactStoreError::Integrity),
@@ -1026,11 +1051,17 @@ pub(crate) fn reconcile_runtime_artifacts<S: RuntimeArtifactPayloadStore>(
         .collect::<BTreeSet<_>>();
     for orphan in inventory {
         if !retained_identities.contains(orphan.payload_sha256.as_str()) {
-            payloads.delete(&RuntimeArtifactPayloadObservation {
+            let expected = RuntimeArtifactPayloadObservation {
                 payload_sha256: orphan.payload_sha256,
-                byte_size: orphan.byte_size,
-            })?;
-            report.deleted_orphans += 1;
+                byte_size: orphan.byte_size.max(1),
+            };
+            if orphan.integrity == RuntimeArtifactPayloadInventoryIntegrity::Corrupt {
+                payloads.quarantine(&expected)?;
+                report.quarantined_payloads += 1;
+            } else {
+                payloads.delete(&expected)?;
+                report.deleted_orphans += 1;
+            }
         }
     }
     verify_all(store)?;
@@ -1267,8 +1298,12 @@ fn validate_payload_inventory(
     let mut prior: Option<&str> = None;
     for entry in inventory {
         if !valid_sha256(&entry.payload_sha256)
-            || entry.byte_size == 0
-            || entry.byte_size > MAX_RUNTIME_ARTIFACT_BYTES
+            || match entry.integrity {
+                RuntimeArtifactPayloadInventoryIntegrity::Verified => {
+                    entry.byte_size == 0 || entry.byte_size > MAX_RUNTIME_ARTIFACT_BYTES
+                }
+                RuntimeArtifactPayloadInventoryIntegrity::Corrupt => entry.byte_size != 0,
+            }
             || prior.is_some_and(|value| value >= entry.payload_sha256.as_str())
         {
             return Err(RuntimeArtifactStoreError::Payload(
@@ -2576,10 +2611,11 @@ mod tests {
     use super::{
         MAX_RUNTIME_ARTIFACT_BYTES, RuntimeArtifactError, RuntimeArtifactPageRequest,
         RuntimeArtifactPayloadError, RuntimeArtifactPayloadInventoryEntry,
-        RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadPlacement,
-        RuntimeArtifactPayloadStore, RuntimeArtifactReadRequest, RuntimeArtifactStoreError,
-        decode_runtime_continuation_state, encode_runtime_continuation_state, runtime_artifact_ref,
-        runtime_payload_reference, seal_runtime_artifact_manifest, seal_runtime_continuation_state,
+        RuntimeArtifactPayloadInventoryIntegrity, RuntimeArtifactPayloadObservation,
+        RuntimeArtifactPayloadPlacement, RuntimeArtifactPayloadStore, RuntimeArtifactReadRequest,
+        RuntimeArtifactStoreError, decode_runtime_continuation_state,
+        encode_runtime_continuation_state, runtime_artifact_ref, runtime_payload_reference,
+        seal_runtime_artifact_manifest, seal_runtime_continuation_state,
         seal_runtime_resume_binding, verify_runtime_artifact_manifest, verify_runtime_artifact_ref,
         verify_runtime_continuation_state, verify_runtime_resume_binding,
     };
@@ -2783,12 +2819,20 @@ mod tests {
             Ok(self
                 .objects
                 .iter()
-                .map(
-                    |(payload_sha256, bytes)| RuntimeArtifactPayloadInventoryEntry {
+                .map(|(payload_sha256, bytes)| {
+                    let verified = !bytes.is_empty()
+                        && bytes.len() as u64 <= MAX_RUNTIME_ARTIFACT_BYTES
+                        && super::sha256(bytes) == *payload_sha256;
+                    RuntimeArtifactPayloadInventoryEntry {
                         payload_sha256: payload_sha256.clone(),
-                        byte_size: bytes.len() as u64,
-                    },
-                )
+                        byte_size: if verified { bytes.len() as u64 } else { 0 },
+                        integrity: if verified {
+                            RuntimeArtifactPayloadInventoryIntegrity::Verified
+                        } else {
+                            RuntimeArtifactPayloadInventoryIntegrity::Corrupt
+                        },
+                    }
+                })
                 .collect())
         }
 
@@ -3665,6 +3709,29 @@ mod tests {
             drop(runtime);
             fs::remove_dir_all(directory).expect("cleanup");
         }
+    }
+
+    #[test]
+    fn corrupt_unreferenced_inventory_is_quarantined_without_trusting_size() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+        let object_name = digest('d');
+        payloads
+            .objects
+            .insert(object_name.clone(), b"not-the-addressed-payload".to_vec());
+
+        let report = runtime
+            .reconcile_runtime_artifacts(&mut payloads, 2)
+            .expect("corrupt orphan reconciles");
+        assert_eq!(report.quarantined_payloads, 1);
+        assert_eq!(report.deleted_orphans, 0);
+        assert!(payloads.objects.is_empty());
+        assert!(payloads.quarantined.contains_key(&object_name));
+
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
     }
 
     #[test]

@@ -90,6 +90,8 @@ EXPECTED_CARGO_PACKAGES = {
         {
             "agentmage-kernel-contracts",
             "agentmage-kernel-engine",
+            "chacha20poly1305",
+            "hkdf",
             "rustix",
             "seccompiler",
             "serde_json",

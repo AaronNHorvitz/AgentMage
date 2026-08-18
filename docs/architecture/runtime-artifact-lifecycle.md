@@ -1,7 +1,7 @@
 # Content-Addressed Runtime Artifact Lifecycle
 
-**Status:** Implemented platform-neutral contracts and Linux lifecycle with
-explicitly open encryption, cross-platform, and campaign evidence
+**Status:** Implemented platform-neutral contracts and authenticated Linux
+lifecycle with explicitly open cross-platform, campaign, and independent-review evidence
 **Contract schema:** 2
 **Canonical operational-store schema:** 7
 **Owning roadmap story:** 22.2
@@ -70,13 +70,21 @@ native names.
 | Staging | `staging` | `0700` | One-use, no-follow, exclusive publication candidates |
 | Active objects | `objects` | `0700` | Immutable files named by lowercase payload SHA-256 |
 | Quarantine | `quarantine` | `0700` | Isolated corrupt, uncertain, or delete-transition objects |
-| Payload files | Opaque staging name or SHA-256 | `0600` | Regular, owner-only, single-link objects on the held device |
+| Payload files | Opaque staging name or SHA-256 | `0600` | Authenticated encrypted, owner-only, single-link objects on the held device |
 
 Every directory must remain a same-owner, mode-exact directory on the held
 device. Every payload must remain a same-owner regular file with mode `0600`,
 one link, a bounded size, and stable device, inode, timestamps, and size across
 observation. Symlinks, special files, hard links, cross-device substitution,
 mode drift, root replacement, and invalid names fail closed.
+
+Staging and active objects use encrypted file-format version 1. The fixed
+48-byte header declares the format and 64 KiB plaintext chunk size and carries
+a fresh 256-bit per-file salt. Each data record carries a closed type, monotonic
+record index, bounded plaintext length, ciphertext, and 128-bit authentication
+tag. A final authenticated record binds the complete plaintext byte size and
+SHA-256. The maximum 64 MiB plaintext therefore has a separately bounded
+ciphertext size that includes all headers and tags.
 
 The repository `artifacts/` tree contains checked-in verification evidence. It
 is never searched, opened, collected, or treated as the private runtime payload
@@ -96,7 +104,7 @@ sequenceDiagram
 
     C->>C: Seal manifest and charge output/artifact budget
     C->>P: Stream into exclusive private staging
-    P->>P: Compute complete SHA-256 and byte size
+    P->>P: Encrypt chunks while computing complete SHA-256 and byte size
     P-->>C: Staged handle and observation
     C->>P: Compare expected digest and size
     P->>P: Rename with no replacement or verify exact deduplicated object
@@ -165,7 +173,11 @@ reference remains in the canonical current checkpoint.
 
 Physical overwrite is never claimed for SSD or copy-on-write storage.
 Reference-aware logical deletion and synchronized unlink are implemented.
-Per-payload cryptographic deletion is not yet implemented.
+Destroying and verifying absence of the shared operational-store key makes both
+SQLCipher state and every derived payload key unavailable. Individual
+reference collection unlinks verified ciphertext but does not claim independent
+per-payload cryptographic erasure because deduplicated payloads share references
+and the first format derives file keys from one store-scoped root.
 
 ## Checkpoint and Resume
 
@@ -236,18 +248,28 @@ user-facing diagnostics command remains separate integration work.
 ## Encryption Truth
 
 SQLCipher encrypts all artifact metadata, references, lifecycle events, and
-resume bindings with the platform-provided operational-store key. Linux payload
-files are currently owner-only, descriptor-relative private files but are not
-yet independently encrypted. Therefore:
+resume bindings with the platform-provided operational-store key. The Linux
+adapter retrieves that key once inside the bounded provider callback and uses
+HKDF-SHA-256 with fixed versioned domain labels to derive a distinct zeroizing
+payload-store key. The SQLCipher key is not retained by the payload adapter.
 
-- The PRD diagram target named `Content-addressed encrypted payloads` is not yet
-  satisfied.
-- `SR-DAT-004` has not passed for protected artifact-payload persistence.
-- Whole-store key destruction cryptographically erases SQLCipher metadata but
-  does not establish cryptographic erasure of retained payload files.
-- Story 22.2 and any release gate depending on encrypted runtime payloads remain
-  blocked until a reviewed platform key and authenticated-encryption design,
-  migration, canary scan, failure campaign, and deletion evidence are complete.
+Every staged file receives a fresh 256-bit salt. A second HKDF-SHA-256
+derivation produces its file key, and XChaCha20-Poly1305 authenticates each
+64 KiB chunk independently. A fixed 128-bit nonce domain plus monotonic 64-bit
+record index is unique under that per-file key. Associated data binds the exact
+format header, record type, index, and declared length. The authenticated final
+record binds the complete plaintext size and SHA-256, so truncation, append,
+reordering, wrong-key access, header changes, ciphertext changes, and tag
+changes fail before plaintext is returned.
+
+The PRD target named `Content-addressed encrypted payloads` is implemented for
+the Linux adapter. Whole-store key destruction cryptographically erases both
+metadata and retained payloads, subject to the existing truthful limitation
+that physical ciphertext removal or overwrite is not guaranteed on SSD and
+copy-on-write media. The current implementation does not claim independently
+keyed per-object deletion, online key rotation, or a released plaintext-format
+migration. This pre-release repository has no supported plaintext payload-store
+format.
 
 No documentation or test may represent private permissions as encryption.
 
@@ -260,9 +282,14 @@ Current automated coverage includes:
   cleanup, cursor, duplicate, and preview mutation tests.
 - Bounded streaming staging, no-replace placement, exact deduplication, complete
   reads, bounded pages, inventory, quarantine, deletion, and staging cleanup.
+- HKDF domain separation, randomized encrypted staging and objects, complete and
+  range decryption, wrong-key refusal, raw-disk plaintext-canary exclusion, and
+  authenticated header, payload, tag, truncation, and append failures.
 - Symlink, mode, invalid-name, root-drift, payload corruption, owner, policy,
   digest, byte-size, checkpoint, metadata-tamper, and transaction-rollback
   failures.
+- Hard-link refusal, encrypted open-handle collection, and corrupt inventory
+  quarantine without trusting an unavailable plaintext size.
 - Current-checkpoint retention-root enforcement and privacy-safe operator
   projection.
 - Durable continuation publication, event ordering, checkpoint binding, reopen,
@@ -271,13 +298,14 @@ Current automated coverage includes:
 
 Still open before Story 22.2 can pass:
 
-- Authenticated encryption and cryptographic deletion for payload bytes.
+- Independent review of the encrypted-file construction and root/file-key
+  lifecycle, plus deferred manual fuzzing of its parser and state transitions.
 - A closed tool-output discriminator for standard error and generated-file
   routing.
 - Full crash injection around every placement, metadata, event, checkpoint,
   release, and collection edge using the native Linux store.
-- Native path-race, open-handle collection, disk-full, device-latency, high-volume
-  retention, and complete durable-resume campaigns.
+- Native path-race, disk-full, device-latency, high-volume retention, and
+  complete durable-resume campaigns.
 - Windows native artifact-store implementation and evidence; retained macOS work
   remains outside the current GA dependency lane.
-- Independent artifact-boundary review and deferred manual fuzzing.
+- Online key rotation and any future released-format migration protocol.

@@ -2,13 +2,13 @@
 
 use std::fmt;
 use std::fs::File;
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::Read;
 
 use agentmage_kernel_contracts::RuntimeArtifactId;
 use agentmage_kernel_engine::runtime_artifact::{
     MAX_RUNTIME_ARTIFACT_BYTES, RuntimeArtifactPayloadError, RuntimeArtifactPayloadInventoryEntry,
-    RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadPlacement,
-    RuntimeArtifactPayloadStore,
+    RuntimeArtifactPayloadInventoryIntegrity, RuntimeArtifactPayloadObservation,
+    RuntimeArtifactPayloadPlacement, RuntimeArtifactPayloadStore,
 };
 use rustix::fd::OwnedFd;
 use rustix::fs::{
@@ -20,13 +20,16 @@ use rustix::process::getuid;
 use sha2::{Digest, Sha256};
 
 use crate::LinuxStrictLocalRoot;
+use crate::runtime_artifact_crypto::{
+    ArtifactPayloadEncryptionKey, MAX_ENCRYPTED_PAYLOAD_BYTES, encrypt_payload, observe_payload,
+    read_complete_payload, read_payload_range,
+};
 
 const STORE_DIRECTORY: &str = ".agentmage-runtime-payloads-v1";
 const STAGING_DIRECTORY: &str = "staging";
 const OBJECT_DIRECTORY: &str = "objects";
 const QUARANTINE_DIRECTORY: &str = "quarantine";
 const STAGING_PREFIX: &str = "stage-";
-const HASH_BUFFER_BYTES: usize = 64 * 1024;
 const MAX_ACTIVE_OBJECTS: usize = 65_536;
 const MAX_STAGING_OBJECTS: usize = 4_096;
 const MAX_QUARANTINE_ATTEMPTS: usize = 1_024;
@@ -60,6 +63,7 @@ pub struct LinuxRuntimeArtifactPayloadStore {
     quarantine: OwnedFd,
     quarantine_snapshot: DirectorySnapshot,
     quarantine_sequence: u64,
+    encryption_key: ArtifactPayloadEncryptionKey,
 }
 
 impl fmt::Debug for LinuxRuntimeArtifactPayloadStore {
@@ -72,7 +76,10 @@ impl fmt::Debug for LinuxRuntimeArtifactPayloadStore {
 }
 
 impl LinuxRuntimeArtifactPayloadStore {
-    pub(crate) fn open(root: &LinuxStrictLocalRoot) -> Result<Self, RuntimeArtifactPayloadError> {
+    pub(crate) fn open(
+        root: &LinuxStrictLocalRoot,
+        encryption_key: ArtifactPayloadEncryptionKey,
+    ) -> Result<Self, RuntimeArtifactPayloadError> {
         root.revalidate()
             .map_err(|_| RuntimeArtifactPayloadError::UnsafeRoot)?;
         let root_descriptor = root
@@ -101,6 +108,7 @@ impl LinuxRuntimeArtifactPayloadStore {
             quarantine,
             quarantine_snapshot,
             quarantine_sequence: 0,
+            encryption_key,
         })
     }
 
@@ -137,7 +145,7 @@ impl LinuxRuntimeArtifactPayloadStore {
             return Err(RuntimeArtifactPayloadError::Invalid);
         }
         let (_, snapshot, observed) =
-            observe_named_payload(&self.staging, &staged.name, Some(expected.byte_size), false)?;
+            observe_named_payload(&self.staging, &staged.name, &self.encryption_key, false)?;
         if !snapshot.same_object(&staged.snapshot) || observed != *expected {
             return Err(RuntimeArtifactPayloadError::Conflict);
         }
@@ -153,7 +161,7 @@ impl LinuxRuntimeArtifactPayloadStore {
         let (_, snapshot, observed) = observe_named_payload(
             &self.objects,
             &expected.payload_sha256,
-            Some(expected.byte_size),
+            &self.encryption_key,
             false,
         )?;
         self.revalidate()?;
@@ -240,53 +248,14 @@ impl RuntimeArtifactPayloadStore for LinuxRuntimeArtifactPayloadStore {
             );
         }
         let mut file = File::from(descriptor);
-        let mut digest = Sha256::new();
-        let mut byte_size = 0_u64;
-        let mut buffer = [0_u8; HASH_BUFFER_BYTES];
-        loop {
-            let count = match source.read(&mut buffer) {
-                Ok(count) => count,
-                Err(_) => {
+        let observation =
+            match encrypt_payload(source, &mut file, &self.encryption_key, maximum_bytes) {
+                Ok(observation) => observation,
+                Err(error) => {
                     drop(file);
-                    return cleanup_failed_stage(
-                        &self.staging,
-                        &name,
-                        RuntimeArtifactPayloadError::Durability,
-                    );
+                    return cleanup_failed_stage(&self.staging, &name, error);
                 }
             };
-            if count == 0 {
-                break;
-            }
-            byte_size = match byte_size.checked_add(count as u64) {
-                Some(total) if total <= maximum_bytes => total,
-                _ => {
-                    drop(file);
-                    return cleanup_failed_stage(
-                        &self.staging,
-                        &name,
-                        RuntimeArtifactPayloadError::ResourceLimit,
-                    );
-                }
-            };
-            if file.write_all(&buffer[..count]).is_err() {
-                drop(file);
-                return cleanup_failed_stage(
-                    &self.staging,
-                    &name,
-                    RuntimeArtifactPayloadError::Durability,
-                );
-            }
-            digest.update(&buffer[..count]);
-        }
-        if byte_size == 0 {
-            drop(file);
-            return cleanup_failed_stage(
-                &self.staging,
-                &name,
-                RuntimeArtifactPayloadError::Invalid,
-            );
-        }
         if file.sync_all().is_err() {
             drop(file);
             return cleanup_failed_stage(
@@ -297,9 +266,12 @@ impl RuntimeArtifactPayloadStore for LinuxRuntimeArtifactPayloadStore {
         }
         drop(file);
         fsync(&self.staging).map_err(|_| RuntimeArtifactPayloadError::Durability)?;
-        let descriptor = open_regular(&self.staging, &name)?;
-        let snapshot = file_snapshot(&self.staging, &descriptor)?;
-        if snapshot.size != byte_size {
+        let verified = observe_named_payload(&self.staging, &name, &self.encryption_key, false);
+        let (_, snapshot, verified) = match verified {
+            Ok(verified) => verified,
+            Err(error) => return cleanup_failed_stage(&self.staging, &name, error),
+        };
+        if verified != observation {
             return cleanup_failed_stage(
                 &self.staging,
                 &name,
@@ -307,10 +279,6 @@ impl RuntimeArtifactPayloadStore for LinuxRuntimeArtifactPayloadStore {
             );
         }
         self.revalidate()?;
-        let observation = RuntimeArtifactPayloadObservation {
-            payload_sha256: hex_digest(digest.finalize()),
-            byte_size,
-        };
         Ok((
             LinuxRuntimeArtifactStaged {
                 name,
@@ -394,7 +362,7 @@ impl RuntimeArtifactPayloadStore for LinuxRuntimeArtifactPayloadStore {
         let (bytes, _, observed) = observe_named_payload(
             &self.objects,
             &expected.payload_sha256,
-            Some(expected.byte_size),
+            &self.encryption_key,
             true,
         )?;
         self.revalidate()?;
@@ -417,31 +385,26 @@ impl RuntimeArtifactPayloadStore for LinuxRuntimeArtifactPayloadStore {
         {
             return Err(RuntimeArtifactPayloadError::ResourceLimit);
         }
-        let verified = self.verify_active(expected)?;
         self.revalidate()?;
         let descriptor = open_regular(&self.objects, &expected.payload_sha256)?;
         let before = file_snapshot(&self.objects, &descriptor)?;
-        if before != verified {
-            return Err(RuntimeArtifactPayloadError::Conflict);
-        }
         let read_descriptor = descriptor
             .try_clone()
             .map_err(|_| RuntimeArtifactPayloadError::Durability)?;
         let mut file = File::from(read_descriptor);
-        file.seek(SeekFrom::Start(offset))
-            .map_err(|_| RuntimeArtifactPayloadError::Durability)?;
-        let byte_count = maximum_bytes.min(expected.byte_size - offset);
-        let mut bytes = vec![
-            0;
-            usize::try_from(byte_count)
-                .map_err(|_| RuntimeArtifactPayloadError::ResourceLimit)?
-        ];
-        file.read_exact(&mut bytes)
-            .map_err(|_| RuntimeArtifactPayloadError::Corrupt)?;
+        let (bytes, observed) = read_payload_range(
+            &mut file,
+            &self.encryption_key,
+            offset,
+            maximum_bytes.min(expected.byte_size - offset),
+        )?;
         let after = file_snapshot(&self.objects, &descriptor)?;
         self.revalidate()?;
         if before != after {
             return Err(RuntimeArtifactPayloadError::Conflict);
+        }
+        if observed != *expected {
+            return Err(RuntimeArtifactPayloadError::Corrupt);
         }
         Ok(bytes)
     }
@@ -475,12 +438,23 @@ impl RuntimeArtifactPayloadStore for LinuxRuntimeArtifactPayloadStore {
         let names = inventory_names(&self.objects, MAX_ACTIVE_OBJECTS, valid_sha256)?;
         let mut inventory = Vec::with_capacity(names.len());
         for name in names {
-            let descriptor = open_regular(&self.objects, &name)?;
-            let snapshot = file_snapshot(&self.objects, &descriptor)?;
-            inventory.push(RuntimeArtifactPayloadInventoryEntry {
-                payload_sha256: name,
-                byte_size: snapshot.size,
-            });
+            match observe_named_payload(&self.objects, &name, &self.encryption_key, false) {
+                Ok((_, _, observed)) if observed.payload_sha256 == name => {
+                    inventory.push(RuntimeArtifactPayloadInventoryEntry {
+                        payload_sha256: name,
+                        byte_size: observed.byte_size,
+                        integrity: RuntimeArtifactPayloadInventoryIntegrity::Verified,
+                    });
+                }
+                Ok(_) | Err(RuntimeArtifactPayloadError::Corrupt) => {
+                    inventory.push(RuntimeArtifactPayloadInventoryEntry {
+                        payload_sha256: name,
+                        byte_size: 0,
+                        integrity: RuntimeArtifactPayloadInventoryIntegrity::Corrupt,
+                    });
+                }
+                Err(error) => return Err(error),
+            }
         }
         self.revalidate()?;
         Ok(inventory)
@@ -621,7 +595,7 @@ fn file_snapshot(
         || stat.st_uid != getuid().as_raw()
         || stat.st_mode & 0o777 != 0o600
         || stat.st_nlink != 1
-        || size > MAX_RUNTIME_ARTIFACT_BYTES
+        || size > MAX_ENCRYPTED_PAYLOAD_BYTES
     {
         return Err(RuntimeArtifactPayloadError::UnsafeRoot);
     }
@@ -642,56 +616,26 @@ fn file_snapshot(
 fn observe_named_payload(
     directory: &OwnedFd,
     name: &str,
-    expected_size: Option<u64>,
+    encryption_key: &ArtifactPayloadEncryptionKey,
     retain_bytes: bool,
 ) -> Result<(Vec<u8>, FileSnapshot, RuntimeArtifactPayloadObservation), RuntimeArtifactPayloadError>
 {
     let descriptor = open_regular(directory, name)?;
     let before = file_snapshot(directory, &descriptor)?;
-    if expected_size.is_some_and(|size| before.size != size) {
-        return Err(RuntimeArtifactPayloadError::Corrupt);
-    }
     let read_descriptor = descriptor
         .try_clone()
         .map_err(|_| RuntimeArtifactPayloadError::Durability)?;
     let mut file = File::from(read_descriptor);
-    let capacity = if retain_bytes {
-        usize::try_from(before.size).map_err(|_| RuntimeArtifactPayloadError::ResourceLimit)?
+    let (bytes, observation) = if retain_bytes {
+        read_complete_payload(&mut file, encryption_key)?
     } else {
-        0
+        (Vec::new(), observe_payload(&mut file, encryption_key)?)
     };
-    let mut bytes = Vec::with_capacity(capacity);
-    let mut digest = Sha256::new();
-    let mut byte_size = 0_u64;
-    let mut buffer = [0_u8; HASH_BUFFER_BYTES];
-    loop {
-        let count = file
-            .read(&mut buffer)
-            .map_err(|_| RuntimeArtifactPayloadError::Durability)?;
-        if count == 0 {
-            break;
-        }
-        byte_size = byte_size
-            .checked_add(count as u64)
-            .filter(|size| *size <= MAX_RUNTIME_ARTIFACT_BYTES)
-            .ok_or(RuntimeArtifactPayloadError::Corrupt)?;
-        digest.update(&buffer[..count]);
-        if retain_bytes {
-            bytes.extend_from_slice(&buffer[..count]);
-        }
-    }
     let after = file_snapshot(directory, &descriptor)?;
-    if before != after || byte_size != before.size {
+    if before != after {
         return Err(RuntimeArtifactPayloadError::Conflict);
     }
-    Ok((
-        bytes,
-        before,
-        RuntimeArtifactPayloadObservation {
-            payload_sha256: hex_digest(digest.finalize()),
-            byte_size,
-        },
-    ))
+    Ok((bytes, before, observation))
 }
 
 fn inventory_names(
@@ -783,18 +727,20 @@ fn hex_digest(digest: impl AsRef<[u8]>) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use std::io::Cursor;
+    use std::fs::{self, File};
+    use std::io::{Cursor, Read};
     use std::os::unix::fs::{PermissionsExt, symlink};
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::RuntimeArtifactId;
     use agentmage_kernel_engine::runtime_artifact::{
-        RuntimeArtifactPayloadError, RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadStore,
+        RuntimeArtifactPayloadError, RuntimeArtifactPayloadInventoryIntegrity,
+        RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadStore,
     };
 
     use super::{OBJECT_DIRECTORY, STAGING_DIRECTORY, STORE_DIRECTORY};
+    use crate::runtime_artifact_crypto::derive_artifact_payload_key;
     use crate::{LinuxRuntimeArtifactPayloadStore, LinuxStrictLocalRootInspector};
 
     static NEXT_ROOT: AtomicU64 = AtomicU64::new(1);
@@ -814,8 +760,16 @@ mod tests {
         }
 
         fn store(&self) -> LinuxRuntimeArtifactPayloadStore {
+            self.store_with_key(0x5a)
+        }
+
+        fn store_with_key(&self, key_byte: u8) -> LinuxRuntimeArtifactPayloadStore {
             let root = LinuxStrictLocalRootInspector::inspect(&self.0).expect("root inspects");
-            LinuxRuntimeArtifactPayloadStore::open(&root).expect("store opens")
+            LinuxRuntimeArtifactPayloadStore::open(
+                &root,
+                derive_artifact_payload_key(&[key_byte; 32]).expect("artifact key derives"),
+            )
+            .expect("store opens")
         }
 
         fn path(&self) -> &Path {
@@ -889,6 +843,7 @@ mod tests {
                 agentmage_kernel_engine::runtime_artifact::RuntimeArtifactPayloadInventoryEntry {
                     payload_sha256: observation.payload_sha256.clone(),
                     byte_size: bytes.len() as u64,
+                    integrity: RuntimeArtifactPayloadInventoryIntegrity::Verified,
                 }
             ]
         );
@@ -901,11 +856,18 @@ mod tests {
             )
             .expect("duplicate stages");
         assert_eq!(duplicate, observation);
+        let retained_ciphertext = fs::read(root.objects().join(&observation.payload_sha256))
+            .expect("retained ciphertext reads");
         assert!(
             store
                 .place(staged, &observation)
                 .expect("duplicate places")
                 .deduplicated
+        );
+        assert_eq!(
+            fs::read(root.objects().join(&observation.payload_sha256))
+                .expect("deduplicated ciphertext reads"),
+            retained_ciphertext
         );
         assert!(
             root.staging()
@@ -913,6 +875,93 @@ mod tests {
                 .expect("staging lists")
                 .next()
                 .is_none()
+        );
+    }
+
+    #[test]
+    fn staging_and_objects_are_encrypted_randomized_and_key_bound() {
+        let root = TestRoot::new("encrypted-at-rest");
+        let mut store = root.store();
+        let canary = b"AGENTMAGE-PLAINTEXT-CANARY-MUST-NOT-REACH-DISK";
+        let (staged, observation) = store
+            .stage(
+                &artifact_id("artifact-encrypted"),
+                &mut Cursor::new(canary),
+                canary.len() as u64,
+            )
+            .expect("payload stages encrypted");
+        let staged_bytes = fs::read(
+            root.staging()
+                .read_dir()
+                .expect("staging lists")
+                .next()
+                .expect("staging entry exists")
+                .expect("staging entry reads")
+                .path(),
+        )
+        .expect("staged ciphertext reads");
+        assert!(
+            !staged_bytes
+                .windows(canary.len())
+                .any(|window| window == canary)
+        );
+
+        store.place(staged, &observation).expect("payload places");
+        let object_bytes = fs::read(root.objects().join(&observation.payload_sha256))
+            .expect("object ciphertext reads");
+        assert!(
+            !object_bytes
+                .windows(canary.len())
+                .any(|window| window == canary)
+        );
+        assert_eq!(
+            store
+                .read_complete(&observation, canary.len() as u64)
+                .expect("correct key decrypts"),
+            canary
+        );
+        drop(store);
+
+        let correct = root.store();
+        assert_eq!(
+            correct
+                .read_complete(&observation, canary.len() as u64)
+                .expect("same derived key reopens"),
+            canary
+        );
+        drop(correct);
+        let wrong = root.store_with_key(0x5b);
+        assert_eq!(
+            wrong.verify(&observation),
+            Err(RuntimeArtifactPayloadError::Corrupt)
+        );
+    }
+
+    #[test]
+    fn hard_links_and_open_handle_collection_do_not_disclose_plaintext() {
+        let root = TestRoot::new("open-handle");
+        let mut store = root.store();
+        let canary = b"open-handle-secret-canary";
+        let observation = stage_and_place(&mut store, "artifact-open", canary);
+        let object = root.objects().join(&observation.payload_sha256);
+        let link = root.objects().join("b".repeat(64));
+        fs::hard_link(&object, &link).expect("hard link creates");
+        assert_eq!(
+            store.verify(&observation),
+            Err(RuntimeArtifactPayloadError::UnsafeRoot)
+        );
+        fs::remove_file(&link).expect("hard link removes");
+
+        let mut held = File::open(&object).expect("ciphertext handle opens");
+        store.delete(&observation).expect("payload deletes");
+        assert!(!object.exists());
+        let mut retained_ciphertext = Vec::new();
+        held.read_to_end(&mut retained_ciphertext)
+            .expect("unlinked handle remains readable");
+        assert!(
+            !retained_ciphertext
+                .windows(canary.len())
+                .any(|window| window == canary)
         );
     }
 
@@ -994,6 +1043,18 @@ mod tests {
         let corrupt = stage_and_place(&mut store, "artifact-corrupt", b"before");
         fs::write(root.objects().join(&corrupt.payload_sha256), b"after!")
             .expect("payload corrupts");
+        assert_eq!(
+            store
+                .inventory()
+                .expect("corrupt inventory remains visible"),
+            [
+                agentmage_kernel_engine::runtime_artifact::RuntimeArtifactPayloadInventoryEntry {
+                    payload_sha256: corrupt.payload_sha256.clone(),
+                    byte_size: 0,
+                    integrity: RuntimeArtifactPayloadInventoryIntegrity::Corrupt,
+                }
+            ]
+        );
         assert_eq!(
             store.verify(&corrupt),
             Err(RuntimeArtifactPayloadError::Corrupt)
