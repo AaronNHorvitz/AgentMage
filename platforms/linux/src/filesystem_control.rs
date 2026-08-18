@@ -666,6 +666,7 @@ mod tests {
     use std::collections::BTreeSet;
     use std::fs;
     use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
+    use std::os::unix::net::UnixListener;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -688,6 +689,7 @@ mod tests {
         PolicyDocument, PolicyEngine, ScopeRules, ToolPolicyBinding,
     };
     use agentmage_kernel_engine::write_approval::WriteReviewNarrative;
+    use rustix::fs::{CWD, Mode, mkfifoat};
     use sha2::{Digest, Sha256};
 
     use super::{LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits, temporary_name};
@@ -1354,5 +1356,84 @@ mod tests {
                 .join("src/obsolete.txt")
                 .exists()
         );
+    }
+
+    #[test]
+    fn s_030_st01_socket_and_fifo_substitutions_are_refused_and_preserved() {
+        for source in ["patch.txt", "copy.txt", "move.txt"] {
+            let mut socket_fixture = fixture(false);
+            let source_path = socket_fixture.root.path().join("src").join(source);
+            fs::remove_file(&source_path).expect("remove regular source");
+            let socket = UnixListener::bind(&source_path).expect("bind source socket");
+            assert_eq!(
+                execute(&mut socket_fixture),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "socket source {source}"
+            );
+            assert!(source_path.exists());
+            assert!(!socket_fixture.root.path().join("created.txt").exists());
+            drop(socket);
+
+            let mut fifo_fixture = fixture(false);
+            let source_path = fifo_fixture.root.path().join("src").join(source);
+            fs::remove_file(&source_path).expect("remove regular source");
+            mkfifoat(CWD, &source_path, Mode::RUSR | Mode::WUSR).expect("create source FIFO");
+            assert_eq!(
+                execute(&mut fifo_fixture),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "FIFO source {source}"
+            );
+            assert!(source_path.exists());
+            assert!(!fifo_fixture.root.path().join("created.txt").exists());
+        }
+
+        for parent in ["copies", "moved"] {
+            let mut socket_fixture = fixture(false);
+            let parent_path = socket_fixture.root.path().join(parent);
+            fs::remove_dir(&parent_path).expect("remove directory parent");
+            let socket = UnixListener::bind(&parent_path).expect("bind parent socket");
+            assert_eq!(
+                execute(&mut socket_fixture),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "socket parent {parent}"
+            );
+            assert!(parent_path.exists());
+            drop(socket);
+
+            let mut fifo_fixture = fixture(false);
+            let parent_path = fifo_fixture.root.path().join(parent);
+            fs::remove_dir(&parent_path).expect("remove directory parent");
+            mkfifoat(CWD, &parent_path, Mode::RUSR | Mode::WUSR).expect("create parent FIFO");
+            assert_eq!(
+                execute(&mut fifo_fixture),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "FIFO parent {parent}"
+            );
+            assert!(parent_path.exists());
+        }
+
+        for destination in ["created.txt", "copies/copy.txt", "moved/move.txt"] {
+            let mut socket_fixture = fixture(false);
+            let destination_path = socket_fixture.root.path().join(destination);
+            let socket = UnixListener::bind(&destination_path).expect("bind destination socket");
+            assert_eq!(
+                execute(&mut socket_fixture),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "socket destination {destination}"
+            );
+            assert!(destination_path.exists());
+            drop(socket);
+
+            let mut fifo_fixture = fixture(false);
+            let destination_path = fifo_fixture.root.path().join(destination);
+            mkfifoat(CWD, &destination_path, Mode::RUSR | Mode::WUSR)
+                .expect("create destination FIFO");
+            assert_eq!(
+                execute(&mut fifo_fixture),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "FIFO destination {destination}"
+            );
+            assert!(destination_path.exists());
+        }
     }
 }
