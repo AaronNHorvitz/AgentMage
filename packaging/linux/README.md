@@ -2,10 +2,13 @@
 
 This module defines Fedora RPM and Ubuntu DEB candidates containing the native
 host, the isolated inactive native-inference adapter, the separate one-shot
-model installer, the Visual Studio Code VSIX, the Apache-2.0 license, and an
-exact payload manifest. Normal operation is
-non-administrator; package-manager installation may follow the host
-distribution's administrative policy.
+model installer, Docker guard and topology collector, the stateless read-only
+worker, the Visual Studio Code VSIX, the Apache-2.0 license, and an exact
+payload manifest. The read-only worker is root-owned and non-writable after
+package-manager installation, but still requires host manifest verification,
+kernel authority, and the platform sandbox before it can execute. Normal
+operation is non-administrator; package-manager installation may follow the
+host distribution's administrative policy.
 
 The host verifies regular-file identity, size, mode, and SHA-256 before package
 activation. Unsigned candidates are accepted only by the explicit candidate

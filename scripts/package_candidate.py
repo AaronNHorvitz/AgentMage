@@ -29,10 +29,11 @@ PAYLOAD_FILES: Final = (
     PurePosixPath("usr/libexec/agentmage/agentmage-model-installer"),
     PurePosixPath("usr/libexec/agentmage/agentmage-docker-guard"),
     PurePosixPath("usr/libexec/agentmage/agentmage-docker-topology-collector"),
+    PurePosixPath("usr/libexec/agentmage/agentmage-read-only-worker"),
     PurePosixPath("usr/share/agentmage/agentmage.vsix"),
     PurePosixPath("usr/share/licenses/agentmage/LICENSE"),
 )
-EXECUTABLE_PAYLOAD_FILES: Final = frozenset(PAYLOAD_FILES[:5])
+EXECUTABLE_PAYLOAD_FILES: Final = frozenset(PAYLOAD_FILES[:6])
 
 
 class PackageCandidateError(ValueError):
@@ -145,6 +146,7 @@ def build_payload(
     model_installer: Path,
     docker_guard: Path,
     docker_collector: Path,
+    read_only_worker: Path,
     vsix: Path,
     license_path: Path,
     root: Path,
@@ -156,6 +158,7 @@ def build_payload(
         model_installer,
         docker_guard,
         docker_collector,
+        read_only_worker,
         vsix,
         license_path,
         root,
@@ -171,6 +174,7 @@ def build_release_payload(
     model_installer: Path,
     docker_guard: Path,
     docker_collector: Path,
+    read_only_worker: Path,
     vsix: Path,
     license_path: Path,
     root: Path,
@@ -185,6 +189,7 @@ def build_release_payload(
         model_installer,
         docker_guard,
         docker_collector,
+        read_only_worker,
         vsix,
         license_path,
         root,
@@ -200,6 +205,7 @@ def build_payload_class(
     model_installer: Path,
     docker_guard: Path,
     docker_collector: Path,
+    read_only_worker: Path,
     vsix: Path,
     license_path: Path,
     root: Path,
@@ -214,6 +220,7 @@ def build_payload_class(
         model_installer,
         docker_guard,
         docker_collector,
+        read_only_worker,
         vsix,
         license_path,
     ):
@@ -224,8 +231,9 @@ def build_payload_class(
         PAYLOAD_FILES[2]: model_installer,
         PAYLOAD_FILES[3]: docker_guard,
         PAYLOAD_FILES[4]: docker_collector,
-        PAYLOAD_FILES[5]: vsix,
-        PAYLOAD_FILES[6]: license_path,
+        PAYLOAD_FILES[5]: read_only_worker,
+        PAYLOAD_FILES[6]: vsix,
+        PAYLOAD_FILES[7]: license_path,
     }
     records = []
     for relative, source in destinations.items():
@@ -415,6 +423,7 @@ def build_all(output: Path, version: str = VERSION) -> dict[str, Path]:
     model_installer = ROOT / "target/release/agentmage-model-installer"
     docker_guard = ROOT / "target/release/agentmage-docker-guard"
     docker_collector = ROOT / "target/release/agentmage-docker-topology-collector"
+    read_only_worker = ROOT / "target/release/agentmage-read-only-worker"
     extension = ROOT / "shells/vscode"
     license_path = ROOT / "LICENSE"
     output.mkdir(parents=True, exist_ok=True)
@@ -428,6 +437,7 @@ def build_all(output: Path, version: str = VERSION) -> dict[str, Path]:
             model_installer,
             docker_guard,
             docker_collector,
+            read_only_worker,
             vsix,
             license_path,
             payload_root,
@@ -454,6 +464,7 @@ def build_release_bundle(
     model_installer = ROOT / "target/release/agentmage-model-installer"
     docker_guard = ROOT / "target/release/agentmage-docker-guard"
     docker_collector = ROOT / "target/release/agentmage-docker-topology-collector"
+    read_only_worker = ROOT / "target/release/agentmage-read-only-worker"
     extension = ROOT / "shells/vscode"
     license_path = ROOT / "LICENSE"
     output.mkdir(parents=True, exist_ok=True)
@@ -467,6 +478,7 @@ def build_release_bundle(
             model_installer,
             docker_guard,
             docker_collector,
+            read_only_worker,
             vsix,
             license_path,
             payload_root,

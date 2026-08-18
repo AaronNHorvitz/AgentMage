@@ -24,16 +24,41 @@ SOURCE_PATHS: Final = (
     "kernel/contracts/src/workspace_snapshot.rs",
     "kernel/engine/src/tooling.rs",
     "kernel/engine/src/authority_transaction.rs",
+    "packaging/README.md",
+    "packaging/linux/README.md",
+    "packaging/linux/agentmage.spec.in",
+    "packaging/linux/agentmage-release.spec.in",
     "platforms/linux/src/sandbox.rs",
+    "scripts/package_candidate.py",
+    "scripts/package_lifecycle.py",
+    "scripts/linux_package_lifecycle_evidence.py",
+    "scripts/linux_docker_prerequisite_evidence.py",
     "shells/host/src/linux_coding_runtime.rs",
     "shells/host/src/linux_read.rs",
+    "shells/host/src/package_verify.rs",
     "shells/host/src/protocol.rs",
     "docs/architecture/read-only-tool-protocol.md",
     "docs/verification/sprint-16-local-results.md",
     "scripts/sprint_16_evidence.py",
+    "tests/test_package_candidate.py",
+    "tests/test_package_lifecycle.py",
+    "tests/test_linux_package_lifecycle_evidence.py",
+    "tests/test_linux_docker_prerequisite_evidence.py",
     "tests/test_sprint_16_evidence.py",
 )
 COMMANDS: Final = (
+    (
+        "package-worker-payload",
+        (
+            "python",
+            "-m",
+            "unittest",
+            "tests.test_package_candidate",
+            "tests.test_package_lifecycle",
+            "tests.test_linux_package_lifecycle_evidence",
+            "tests.test_linux_docker_prerequisite_evidence",
+        ),
+    ),
     (
         "closed-tool-pack",
         (
@@ -151,6 +176,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             "repeat_and_call_depth_guard": True,
             "one_receipt_per_launched_attempt": True,
             "sensitive_output_withheld_before_model_context": True,
+            "packaged_worker_payload_declared": True,
         },
         "platform_evidence": {
             "linux_contract_tests": local_pass,
@@ -207,6 +233,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "repeat_and_call_depth_guard": True,
         "one_receipt_per_launched_attempt": True,
         "sensitive_output_withheld_before_model_context": True,
+        "packaged_worker_payload_declared": True,
     }:
         failures.append("implemented-contract inventory drift")
     expected_summary = {

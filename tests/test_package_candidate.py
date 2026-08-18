@@ -50,6 +50,9 @@ class PackageCandidateTests(unittest.TestCase):
         self.docker_collector = self.root / "agentmage-docker-topology-collector"
         self.docker_collector.write_bytes(b"synthetic-docker-collector")
         self.docker_collector.chmod(0o755)
+        self.read_only_worker = self.root / "agentmage-read-only-worker"
+        self.read_only_worker.write_bytes(b"synthetic-read-only-worker")
+        self.read_only_worker.chmod(0o755)
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
@@ -81,6 +84,7 @@ class PackageCandidateTests(unittest.TestCase):
             self.model_installer,
             self.docker_guard,
             self.docker_collector,
+            self.read_only_worker,
             vsix,
             self.license,
             payload,
@@ -114,6 +118,7 @@ class PackageCandidateTests(unittest.TestCase):
             self.model_installer,
             self.docker_guard,
             self.docker_collector,
+            self.read_only_worker,
             vsix,
             self.license,
             payload,
@@ -141,6 +146,7 @@ class PackageCandidateTests(unittest.TestCase):
             self.model_installer,
             self.docker_guard,
             self.docker_collector,
+            self.read_only_worker,
             vsix,
             self.license,
             payload,
@@ -180,6 +186,14 @@ class PackageCandidateTests(unittest.TestCase):
             ),
             0o755,
         )
+        self.assertEqual(
+            stat.S_IMODE(
+                (
+                    payload / "usr/libexec/agentmage/agentmage-read-only-worker"
+                ).stat().st_mode
+            ),
+            0o755,
+        )
         self.assertEqual(stat.S_IMODE((payload / MANIFEST_PATH).stat().st_mode), 0o644)
 
     def test_release_payload_is_distinct_and_requires_a_positive_sequence(self) -> None:
@@ -192,6 +206,7 @@ class PackageCandidateTests(unittest.TestCase):
             self.model_installer,
             self.docker_guard,
             self.docker_collector,
+            self.read_only_worker,
             vsix,
             self.license,
             payload,
@@ -215,6 +230,7 @@ class PackageCandidateTests(unittest.TestCase):
                 self.model_installer,
                 self.docker_guard,
                 self.docker_collector,
+                self.read_only_worker,
                 vsix,
                 self.license,
                 self.root / "invalid-release",
@@ -235,6 +251,7 @@ class PackageCandidateTests(unittest.TestCase):
             self.model_installer,
             self.docker_guard,
             self.docker_collector,
+            self.read_only_worker,
             vsix,
             self.license,
             payload,

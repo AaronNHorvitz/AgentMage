@@ -841,6 +841,7 @@ def run_target(target: Target, package: Path, package_root: Path) -> dict[str, A
                     "/usr/libexec/agentmage/agentmage-native-inference",
                     "/usr/libexec/agentmage/agentmage-docker-guard",
                     "/usr/libexec/agentmage/agentmage-docker-topology-collector",
+                    "/usr/libexec/agentmage/agentmage-read-only-worker",
                     "/usr/share/agentmage/agentmage.vsix",
                     "/usr/share/agentmage/package-manifest.json",
                 )

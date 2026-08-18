@@ -27,15 +27,19 @@
 - Credential fields, private keys, bearer credentials, provider tokens, cloud
   access keys, and credentials embedded in URIs are withheld before verified
   tool output can enter model context, runtime events, or artifacts.
+- Deterministic RPM and DEB candidates include the read-only worker as a
+  verifier-required executable; extraction, exact manifest comparison,
+  mutation refusal, and deterministic rebuild pass locally.
 - Existing Linux namespace, network-syscall, path, descriptor, and workspace
   invariance contract tests pass.
 
 ## Open Evidence
 
 The production Linux manifest correctly rejected the user-owned development
-worker binary during a live attempt. A packaged root-owned, non-writable,
-hash-verified worker must be installed before production live execution can be
-claimed. The full live attack and worker cancellation/timeout/kill/crash
+worker binary during a live attempt. Although the worker is now present in the
+candidate package payload, that package has not been installed and exercised as
+a root-owned, non-writable, hash-verified live worker. The full live attack and
+worker cancellation/timeout/kill/crash
 campaigns, independent worker review, and native macOS XPC evidence remain
 open. Model-context disclosure handling is locally verified. The remaining live
 campaigns and platform evidence are blockers, not waived or substituted by the

@@ -16,12 +16,13 @@ const RELEASE_SIGNATURE_DOMAIN: &[u8] = b"agentmage.package-manifest.v2\0";
 const MAX_MANIFEST_BYTES: u64 = 1024 * 1024;
 const MAX_FILE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_FILES: usize = 32;
-const REQUIRED_FILES: [&str; 7] = [
+const REQUIRED_FILES: [&str; 8] = [
     "usr/libexec/agentmage/agentmage-docker-guard",
     "usr/libexec/agentmage/agentmage-docker-topology-collector",
     "usr/libexec/agentmage/agentmage-host",
     "usr/libexec/agentmage/agentmage-model-installer",
     "usr/libexec/agentmage/agentmage-native-inference",
+    "usr/libexec/agentmage/agentmage-read-only-worker",
     "usr/share/agentmage/agentmage.vsix",
     "usr/share/licenses/agentmage/LICENSE",
 ];
@@ -499,6 +500,28 @@ mod tests {
     }
 
     #[test]
+    fn candidate_manifest_cannot_omit_the_read_only_worker_boundary() {
+        let root = complete_fixture_root("unsigned-candidate");
+        let manifest = root.join(super::MANIFEST_PATH);
+        let mut value: Value =
+            serde_json::from_slice(&fs::read(&manifest).expect("manifest")).expect("manifest json");
+        value["files"]
+            .as_array_mut()
+            .expect("files")
+            .retain(|record| record["path"] != "usr/libexec/agentmage/agentmage-read-only-worker");
+        fs::write(
+            &manifest,
+            serde_json::to_vec(&value).expect("mutated manifest"),
+        )
+        .expect("manifest mutation");
+        assert_eq!(
+            verify_package_candidate_root(root.as_os_str()),
+            Err(PackageVerificationError::ManifestInvalid)
+        );
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
     fn symlinked_payload_parent_fails_closed() {
         let root = complete_fixture_root("unsigned-candidate");
         let outside = fixture_root();
@@ -542,6 +565,11 @@ mod tests {
             (
                 "usr/libexec/agentmage/agentmage-native-inference",
                 b"inference-adapter".as_slice(),
+                0o755,
+            ),
+            (
+                "usr/libexec/agentmage/agentmage-read-only-worker",
+                b"read-only-worker".as_slice(),
                 0o755,
             ),
             (

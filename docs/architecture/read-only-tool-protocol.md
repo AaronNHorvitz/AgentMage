@@ -111,6 +111,13 @@ under a bounded user cgroup. Launch artifacts must be root-owned, non-writable,
 hash-verified regular files. This deliberately prevents a user-owned development
 binary from being treated as a packaged production worker.
 
+Both unsigned candidate and signable Linux payloads include
+`/usr/libexec/agentmage/agentmage-read-only-worker` as an exact executable
+manifest entry. Candidate construction, deterministic rebuild, RPM/DEB
+extraction, complete-payload verification, and mutation refusal pass locally.
+This proves package composition, not package-manager installation or live
+sandbox execution on the installed root-owned identity.
+
 The platform-neutral tool engine, Linux mediation contract, host approval flow,
 golden results, malformed-input matrix, and non-live sandbox attacks are locally
 verified. Sprint 16 remains blocked until a packaged root-owned worker is tested

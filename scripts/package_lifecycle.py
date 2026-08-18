@@ -1022,6 +1022,19 @@ def main(argv: list[str] | None = None) -> int:
                 "cargo",
                 "build",
                 "-p",
+                "agentmage-capability-read-only",
+                "--bin",
+                "agentmage-read-only-worker",
+                "--release",
+                "--locked",
+            ],
+            cwd=ROOT,
+        )
+        command(
+            [
+                "cargo",
+                "build",
+                "-p",
                 "agentmage-platform-linux-inference",
                 "--bins",
                 "--release",

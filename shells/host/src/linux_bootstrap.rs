@@ -425,6 +425,11 @@ mod tests {
                 0o755,
             ),
             (
+                "usr/libexec/agentmage/agentmage-read-only-worker",
+                b"read-only-worker".as_slice(),
+                0o755,
+            ),
+            (
                 "usr/share/agentmage/agentmage.vsix",
                 b"vsix".as_slice(),
                 0o644,

@@ -177,8 +177,8 @@ class PackageLifecycleTests(unittest.TestCase):
         )
         self.assertEqual(set(lifecycle.INSTALLED_FILES) - set(deb), set())
         self.assertNotIn("/", deb)
-        self.assertEqual(len(rpm), 11)
-        self.assertEqual(len(deb), 15)
+        self.assertEqual(len(rpm), 12)
+        self.assertEqual(len(deb), 16)
 
     def test_expected_lifecycle_is_valid(self) -> None:
         self.assertEqual(lifecycle.validate_container_lifecycle(self.valid_lifecycle()), [])

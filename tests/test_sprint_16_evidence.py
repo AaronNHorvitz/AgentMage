@@ -27,6 +27,7 @@ class Sprint16EvidenceTests(unittest.TestCase):
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertEqual(value["implemented_contracts"]["catalog_tools"], 10)
         self.assertEqual(value["implemented_contracts"]["write_capable_tools"], 0)
+        self.assertTrue(value["implemented_contracts"]["packaged_worker_payload_declared"])
 
     def test_platform_cleanup_disclosure_and_review_claim_drift_fails(self) -> None:
         mutations = (

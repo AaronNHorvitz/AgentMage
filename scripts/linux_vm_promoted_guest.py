@@ -42,6 +42,7 @@ MANAGED_PATHS: Final = (
     "/usr/libexec/agentmage/agentmage-model-installer",
     "/usr/libexec/agentmage/agentmage-docker-guard",
     "/usr/libexec/agentmage/agentmage-docker-topology-collector",
+    "/usr/libexec/agentmage/agentmage-read-only-worker",
     "/usr/share/agentmage/agentmage.vsix",
     "/usr/share/agentmage/package-manifest.json",
     "/usr/share/licenses/agentmage/LICENSE",
