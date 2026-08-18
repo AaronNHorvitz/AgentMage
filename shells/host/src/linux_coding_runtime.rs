@@ -2867,6 +2867,7 @@ mod tests {
     }
 
     const CHECKPOINT_CLOCK_UNARMED: usize = usize::MAX;
+    const ARTIFACT_RESUME_METRIC_PREFIX: &str = "AGENTMAGE_ARTIFACT_RESUME=";
 
     struct TestIdentities {
         next: u64,
@@ -4533,6 +4534,21 @@ mod tests {
                 ..
             })
         ));
+        println!(
+            "{ARTIFACT_RESUME_METRIC_PREFIX}{}",
+            serde_json::json!({
+                "artifact_set": "exact",
+                "model_runtime_drift": "blocked",
+                "policy_drift": "blocked",
+                "post_resume_receipts": 1,
+                "post_resume_total_tool_executions": 1,
+                "pre_restart_receipts": 1,
+                "pre_restart_tool_executions": 1,
+                "repository_drift": "blocked",
+                "scenario": "exact-checkpoint-resume",
+                "terminal_state": "no_op"
+            })
+        );
     }
 
     #[test]
@@ -4688,6 +4704,17 @@ mod tests {
             assert_eq!(shared_launches.load(Ordering::SeqCst), 1);
             assert!(!continuation_path.exists());
         }
+        println!(
+            "{ARTIFACT_RESUME_METRIC_PREFIX}{}",
+            serde_json::json!({
+                "active_continuation_objects_after_reconcile": 0,
+                "cases": ["missing", "corrupt"],
+                "cases_blocked": 2,
+                "post_failure_total_tool_executions_per_case": 1,
+                "pre_restart_tool_executions_per_case": 1,
+                "scenario": "continuation-integrity-loss"
+            })
+        );
     }
 
     #[test]
