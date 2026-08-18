@@ -995,6 +995,10 @@ mod tests {
             let owned = root.join("owned");
             fs::create_dir_all(checkout.join("src")).expect("checkout");
             fs::create_dir_all(&owned).expect("owned");
+            fs::set_permissions(&checkout, fs::Permissions::from_mode(0o700))
+                .expect("private checkout");
+            fs::set_permissions(&owned, fs::Permissions::from_mode(0o700))
+                .expect("private owned root");
             fs::write(checkout.join("src/lib.rs"), b"old\n").expect("fixture source");
             run_fixture(&checkout, &["init", "--initial-branch=main"]);
             run_fixture(&checkout, &["add", "--", "src/lib.rs"]);
@@ -1011,6 +1015,8 @@ mod tests {
                     "initial",
                 ],
             );
+            fs::set_permissions(checkout.join(".git"), fs::Permissions::from_mode(0o700))
+                .expect("private Git directory");
             Self {
                 root,
                 checkout,

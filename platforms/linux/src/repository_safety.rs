@@ -25,7 +25,7 @@ use agentmage_kernel_engine::repository_safety::{
     RepositoryPreservationManifest,
 };
 use rustix::fd::OwnedFd;
-use rustix::fs::{FileType, Mode, OFlags, fstat, open};
+use rustix::fs::{FileType, Mode, OFlags, fchmod, fstat, open};
 use rustix::io::pread;
 use rustix::process::{Pid, Signal, getuid, kill_process_group, test_kill_process_group};
 use sha2::{Digest, Sha256};
@@ -779,6 +779,21 @@ impl LinuxRepositoryExecutor {
                     platform_code: status.code().to_owned(),
                 };
             }
+            if invocation.kind == GitInvocationKind::WorktreeCreate
+                && !make_created_worktree_private(&self.scope.worktree_path())
+            {
+                let after = self
+                    .collector
+                    .collect(&self.scope)
+                    .unwrap_or_else(|_| current.clone());
+                return RepositoryPlatformResult {
+                    outcome: OperationOutcome::Uncertain,
+                    before: current,
+                    after,
+                    cleanup_verified: false,
+                    platform_code: "linux.git.worktree.permissions".to_owned(),
+                };
+            }
         }
         match self.collector.collect(&self.scope) {
             Ok(after) => RepositoryPlatformResult {
@@ -826,6 +841,32 @@ impl LinuxRepositoryExecutor {
         };
         wait_bounded(&mut child, cancellation)
     }
+}
+
+fn make_created_worktree_private(path: &Path) -> bool {
+    let Ok(descriptor) = open(
+        path,
+        OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+        Mode::empty(),
+    ) else {
+        return false;
+    };
+    let Ok(before) = fstat(&descriptor) else {
+        return false;
+    };
+    if FileType::from_raw_mode(before.st_mode) != FileType::Directory
+        || before.st_uid != getuid().as_raw()
+    {
+        return false;
+    }
+    if fchmod(&descriptor, Mode::from_raw_mode(0o700)).is_err() {
+        return false;
+    }
+    fstat(&descriptor).is_ok_and(|after| {
+        FileType::from_raw_mode(after.st_mode) == FileType::Directory
+            && after.st_uid == getuid().as_raw()
+            && after.st_mode & 0o777 == 0o700
+    })
 }
 
 impl BoundedRepositoryExecutor for LinuxRepositoryExecutor {
@@ -1407,6 +1448,7 @@ mod tests {
         OwnedWorktreeRecord, WorktreeDisposition, plan_branch_fast_forward, plan_worktree_create,
         plan_worktree_remove, reconcile_operation,
     };
+    use std::os::unix::fs::PermissionsExt as _;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     static NEXT_ID: AtomicU64 = AtomicU64::new(1);
@@ -1429,6 +1471,10 @@ mod tests {
             let owned = root.join("owned");
             fs::create_dir_all(&repository).expect("repository directory");
             fs::create_dir_all(&owned).expect("owned directory");
+            fs::set_permissions(&repository, fs::Permissions::from_mode(0o700))
+                .expect("private repository directory");
+            fs::set_permissions(&owned, fs::Permissions::from_mode(0o700))
+                .expect("private owned directory");
             run_fixture(&repository, &["init", "--initial-branch=main"]);
             fs::write(repository.join("README.md"), b"fixture\n").expect("fixture write");
             run_fixture(&repository, &["add", "README.md"]);
@@ -1445,6 +1491,8 @@ mod tests {
                 ],
             );
             let git_directory = repository.join(".git");
+            fs::set_permissions(&git_directory, fs::Permissions::from_mode(0o700))
+                .expect("private Git directory");
             Self {
                 root,
                 repository,
@@ -1594,6 +1642,14 @@ mod tests {
             active_index
         );
         assert!(worktree_path.join("README.md").is_file());
+        assert_eq!(
+            fs::metadata(&worktree_path)
+                .expect("worktree metadata")
+                .permissions()
+                .mode()
+                & 0o777,
+            0o700
+        );
 
         let before_remove = executor.collector.collect(&scope).expect("before remove");
         let record = eligible_record(
