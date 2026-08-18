@@ -727,23 +727,119 @@ fn hex_digest(digest: impl AsRef<[u8]>) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::env;
     use std::fs::{self, File};
     use std::io::{Cursor, Read};
     use std::os::unix::fs::{PermissionsExt, symlink};
     use std::path::{Path, PathBuf};
+    use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
-    use agentmage_kernel_contracts::RuntimeArtifactId;
+    use agentmage_kernel_contracts::{
+        CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity, ContextSensitivity, CorrelationId,
+        EvidenceId, ModelProfileId, PlanId, PlanStepId, PolicyId, RepositorySnapshotId,
+        RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
+        RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeEvent, RuntimeEventId,
+        RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
+        RuntimeEventRetentionKind, RuntimeResumeBinding, RuntimeRunId, SessionCheckpoint,
+        SessionCheckpointId, SessionId, TaskId, WorkspaceId,
+    };
+    use agentmage_kernel_engine::context_management::finalize_checkpoint;
+    use agentmage_kernel_engine::operational_store::{
+        DurableAuthorityRuntime, OperationalStoreKeyError, OperationalStoreKeyProvider,
+    };
     use agentmage_kernel_engine::runtime_artifact::{
         RuntimeArtifactPayloadError, RuntimeArtifactPayloadInventoryIntegrity,
-        RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadStore,
+        RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadStore, runtime_artifact_ref,
+        runtime_payload_reference, seal_runtime_artifact_manifest, seal_runtime_resume_binding,
     };
+    use agentmage_kernel_engine::runtime_event::seal_runtime_event;
+    use sha2::{Digest, Sha256};
 
     use super::{OBJECT_DIRECTORY, STAGING_DIRECTORY, STORE_DIRECTORY};
     use crate::runtime_artifact_crypto::derive_artifact_payload_key;
     use crate::{LinuxRuntimeArtifactPayloadStore, LinuxStrictLocalRootInspector};
 
     static NEXT_ROOT: AtomicU64 = AtomicU64::new(1);
+    const ARTIFACT_CRASH_CHILD_EXIT: i32 = 89;
+    const ARTIFACT_CRASH_PAYLOAD: &[u8] = b"native encrypted artifact crash payload";
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ArtifactCrashBoundary {
+        Staging,
+        Placement,
+        MetadataCommit,
+        EventCommit,
+        CheckpointCommit,
+        ReferenceRelease,
+        Collection,
+    }
+
+    impl ArtifactCrashBoundary {
+        const ALL: [Self; 7] = [
+            Self::Staging,
+            Self::Placement,
+            Self::MetadataCommit,
+            Self::EventCommit,
+            Self::CheckpointCommit,
+            Self::ReferenceRelease,
+            Self::Collection,
+        ];
+
+        const fn code(self) -> &'static str {
+            match self {
+                Self::Staging => "staging",
+                Self::Placement => "placement",
+                Self::MetadataCommit => "metadata-commit",
+                Self::EventCommit => "event-commit",
+                Self::CheckpointCommit => "checkpoint-commit",
+                Self::ReferenceRelease => "reference-release",
+                Self::Collection => "collection",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            Self::ALL
+                .into_iter()
+                .find(|boundary| boundary.code() == code)
+                .expect("declared artifact crash boundary")
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ArtifactCrashPosition {
+        Before,
+        After,
+    }
+
+    impl ArtifactCrashPosition {
+        const ALL: [Self; 2] = [Self::Before, Self::After];
+
+        const fn code(self) -> &'static str {
+            match self {
+                Self::Before => "before",
+                Self::After => "after",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            Self::ALL
+                .into_iter()
+                .find(|position| position.code() == code)
+                .expect("declared artifact crash position")
+        }
+    }
+
+    struct ArtifactCrashKey;
+
+    impl OperationalStoreKeyProvider for ArtifactCrashKey {
+        fn with_key<T>(
+            &mut self,
+            operation: impl FnOnce(&[u8]) -> T,
+        ) -> Result<T, OperationalStoreKeyError> {
+            Ok(operation(&[0x4a; 32]))
+        }
+    }
 
     struct TestRoot(PathBuf);
 
@@ -809,6 +905,342 @@ mod tests {
             .expect("payload stages");
         store.place(staged, &observation).expect("payload places");
         observation
+    }
+
+    fn repeated_digest(value: char) -> String {
+        value.to_string().repeat(64)
+    }
+
+    fn open_artifact_crash_components(
+        path: &Path,
+        recovery_epoch_ms: u64,
+    ) -> (DurableAuthorityRuntime, LinuxRuntimeArtifactPayloadStore) {
+        let root = LinuxStrictLocalRootInspector::inspect(path).expect("crash root inspects");
+        let artifact_store = LinuxRuntimeArtifactPayloadStore::open(
+            &root,
+            derive_artifact_payload_key(&[0x4a; 32]).expect("crash artifact key derives"),
+        )
+        .expect("crash artifact store opens");
+        let runtime = DurableAuthorityRuntime::open(
+            &root.authority_database_path(),
+            root.observation(),
+            &mut ArtifactCrashKey,
+            recovery_epoch_ms,
+        )
+        .expect("crash authority opens");
+        (runtime, artifact_store)
+    }
+
+    fn artifact_crash_manifest() -> RuntimeArtifactManifest {
+        seal_runtime_artifact_manifest(RuntimeArtifactManifest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            artifact_id: RuntimeArtifactId::from_raw("artifact-crash-native-22-2"),
+            kind: RuntimeArtifactKind::TestLog,
+            payload_sha256: super::hex_digest(Sha256::digest(ARTIFACT_CRASH_PAYLOAD)),
+            byte_size: ARTIFACT_CRASH_PAYLOAD.len() as u64,
+            media_type: "text/plain".to_owned(),
+            sensitivity: ContextSensitivity::Private,
+            retention: RuntimeEventRetention {
+                kind: RuntimeEventRetentionKind::Session,
+                expires_at_epoch_ms: None,
+            },
+            session_id: SessionId::from_raw("session-crash-native-22-2"),
+            task_id: TaskId::from_raw("task-crash-native-22-2"),
+            producer_run_id: RuntimeRunId::from_raw("run-crash-native-22-2"),
+            producer_turn_id: None,
+            producer_operation_id: None,
+            receipt_id: None,
+            policy_id: PolicyId::from_raw("policy-crash-native-22-2"),
+            policy_sha256: repeated_digest('b'),
+            created_at_epoch_ms: 2,
+            integrity: RuntimeArtifactIntegrityState::Verified,
+            preview: None,
+            manifest_sha256: repeated_digest('0'),
+        })
+        .expect("crash manifest seals")
+    }
+
+    fn artifact_crash_run_start() -> RuntimeEvent {
+        seal_runtime_event(RuntimeEvent {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            event_id: RuntimeEventId::from_raw("event-crash-native-start-22-2"),
+            run_id: RuntimeRunId::from_raw("run-crash-native-22-2"),
+            session_id: SessionId::from_raw("session-crash-native-22-2"),
+            task_id: TaskId::from_raw("task-crash-native-22-2"),
+            turn_id: None,
+            operation_id: None,
+            correlation_id: CorrelationId::from_raw("correlation-crash-native-22-2"),
+            causation_event_id: None,
+            sequence: 0,
+            occurred_at_epoch_ms: 1,
+            sensitivity: ContextSensitivity::Private,
+            retention: RuntimeEventRetention {
+                kind: RuntimeEventRetentionKind::Session,
+                expires_at_epoch_ms: None,
+            },
+            persistence: RuntimeEventPersistenceClass::Correctness,
+            policy_id: PolicyId::from_raw("policy-crash-native-22-2"),
+            payload_reference: None,
+            kind: RuntimeEventKind::RunStarted {
+                request_sha256: repeated_digest('a'),
+            },
+            previous_event_sha256: repeated_digest('0'),
+            event_sha256: repeated_digest('0'),
+        })
+        .expect("crash run start seals")
+    }
+
+    fn artifact_crash_created_event(
+        runtime: &DurableAuthorityRuntime,
+        manifest: &RuntimeArtifactManifest,
+    ) -> RuntimeEvent {
+        let cursor = runtime
+            .runtime_event_cursor(&manifest.producer_run_id)
+            .expect("crash cursor loads")
+            .expect("crash cursor exists");
+        seal_runtime_event(RuntimeEvent {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            event_id: RuntimeEventId::from_raw("event-crash-native-artifact-22-2"),
+            run_id: manifest.producer_run_id.clone(),
+            session_id: manifest.session_id.clone(),
+            task_id: manifest.task_id.clone(),
+            turn_id: None,
+            operation_id: None,
+            correlation_id: CorrelationId::from_raw("correlation-crash-native-22-2"),
+            causation_event_id: Some(cursor.event_id),
+            sequence: cursor.sequence + 1,
+            occurred_at_epoch_ms: 3,
+            sensitivity: manifest.sensitivity,
+            retention: manifest.retention.clone(),
+            persistence: RuntimeEventPersistenceClass::Correctness,
+            policy_id: manifest.policy_id.clone(),
+            payload_reference: Some(
+                runtime_payload_reference(manifest).expect("crash event payload reference"),
+            ),
+            kind: RuntimeEventKind::ArtifactCreated {
+                artifact_id: manifest.artifact_id.clone(),
+                manifest_sha256: manifest.manifest_sha256.clone(),
+            },
+            previous_event_sha256: cursor.event_sha256,
+            event_sha256: repeated_digest('0'),
+        })
+        .expect("crash artifact event seals")
+    }
+
+    fn artifact_crash_checkpoint() -> SessionCheckpoint {
+        finalize_checkpoint(SessionCheckpoint {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: SessionCheckpointId::from_raw("checkpoint-crash-native-22-2"),
+            session_id: SessionId::from_raw("session-crash-native-22-2"),
+            task_id: TaskId::from_raw("task-crash-native-22-2"),
+            objective_sha256: repeated_digest('1'),
+            plan_id: PlanId::from_raw("plan-crash-native-22-2"),
+            plan_revision: 1,
+            plan_step_id: PlanStepId::from_raw("step-crash-native-22-2"),
+            next_action_sha256: repeated_digest('2'),
+            workspace_id: WorkspaceId::from_raw("workspace-crash-native-22-2"),
+            workspace_state_sha256: repeated_digest('3'),
+            repository_snapshot_id: RepositorySnapshotId::from_raw("snapshot-crash-native-22-2"),
+            repository_branch: "main".to_owned(),
+            repository_map_sha256: repeated_digest('4'),
+            files: vec![CheckpointFileIdentity {
+                object_id: "object-crash-native-22-2".to_owned(),
+                content_sha256: repeated_digest('5'),
+                observed_revision: "revision-crash-native-22-2".to_owned(),
+            }],
+            instruction_sha256: repeated_digest('6'),
+            permission_profile_id: "permission-crash-native-22-2".to_owned(),
+            permission_profile_sha256: repeated_digest('7'),
+            policy_id: PolicyId::from_raw("policy-crash-native-22-2"),
+            policy_sha256: repeated_digest('b'),
+            model_profile_id: ModelProfileId::from_raw("model-crash-native-22-2"),
+            model_manifest_sha256: repeated_digest('8'),
+            model_runtime_sha256: repeated_digest('9'),
+            evidence_ids: vec![EvidenceId::from_raw("evidence-crash-native-22-2")],
+            citation_set_sha256: repeated_digest('c'),
+            blockers: Vec::new(),
+            context_packet_sha256: repeated_digest('d'),
+            action_id: None,
+            action_state: None,
+            consumed_grant_id: None,
+            receipt_id: None,
+            receipt_sha256: None,
+            ephemeral: false,
+            checkpoint_sha256: repeated_digest('0'),
+        })
+        .expect("crash checkpoint finalizes")
+    }
+
+    fn artifact_crash_binding(
+        runtime: &DurableAuthorityRuntime,
+        manifest: &RuntimeArtifactManifest,
+    ) -> RuntimeResumeBinding {
+        let checkpoint = artifact_crash_checkpoint();
+        seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256,
+            session_id: checkpoint.session_id,
+            task_id: checkpoint.task_id,
+            run_id: manifest.producer_run_id.clone(),
+            event_cursor: runtime
+                .runtime_event_cursor(&manifest.producer_run_id)
+                .expect("binding cursor loads")
+                .expect("binding cursor exists"),
+            artifacts: vec![runtime_artifact_ref(manifest).expect("crash artifact reference")],
+            binding_sha256: repeated_digest('0'),
+        })
+        .expect("crash binding seals")
+    }
+
+    fn prepare_artifact_crash_fixture(path: &Path) {
+        let (mut runtime, payloads) = open_artifact_crash_components(path, 1);
+        runtime
+            .record_runtime_event(artifact_crash_run_start())
+            .expect("crash run start persists");
+        drop(payloads);
+        drop(runtime);
+    }
+
+    fn artifact_crash_stop() -> ! {
+        std::process::exit(ARTIFACT_CRASH_CHILD_EXIT)
+    }
+
+    fn stop_at(
+        boundary: ArtifactCrashBoundary,
+        position: ArtifactCrashPosition,
+        expected_boundary: ArtifactCrashBoundary,
+        expected_position: ArtifactCrashPosition,
+    ) {
+        if boundary == expected_boundary && position == expected_position {
+            artifact_crash_stop();
+        }
+    }
+
+    fn run_artifact_crash_child(
+        path: &Path,
+        boundary: ArtifactCrashBoundary,
+        position: ArtifactCrashPosition,
+    ) -> ! {
+        let (mut runtime, mut payloads) = open_artifact_crash_components(path, 2);
+        let manifest = artifact_crash_manifest();
+        let reference = runtime_artifact_ref(&manifest).expect("crash reference projects");
+
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::Staging,
+            ArtifactCrashPosition::Before,
+        );
+        let (staged, observation) = payloads
+            .stage(
+                &manifest.artifact_id,
+                &mut Cursor::new(ARTIFACT_CRASH_PAYLOAD),
+                ARTIFACT_CRASH_PAYLOAD.len() as u64,
+            )
+            .expect("crash payload stages");
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::Staging,
+            ArtifactCrashPosition::After,
+        );
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::Placement,
+            ArtifactCrashPosition::Before,
+        );
+        payloads
+            .place(staged, &observation)
+            .expect("crash payload places");
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::Placement,
+            ArtifactCrashPosition::After,
+        );
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::MetadataCommit,
+            ArtifactCrashPosition::Before,
+        );
+        runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                manifest.clone(),
+                &mut Cursor::new(ARTIFACT_CRASH_PAYLOAD),
+            )
+            .expect("crash metadata publishes through canonical path");
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::MetadataCommit,
+            ArtifactCrashPosition::After,
+        );
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::EventCommit,
+            ArtifactCrashPosition::Before,
+        );
+        runtime
+            .record_runtime_event(artifact_crash_created_event(&runtime, &manifest))
+            .expect("crash artifact event commits");
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::EventCommit,
+            ArtifactCrashPosition::After,
+        );
+
+        if boundary == ArtifactCrashBoundary::CheckpointCommit {
+            stop_at(
+                boundary,
+                position,
+                ArtifactCrashBoundary::CheckpointCommit,
+                ArtifactCrashPosition::Before,
+            );
+            let checkpoint = artifact_crash_checkpoint();
+            let binding = artifact_crash_binding(&runtime, &manifest);
+            runtime
+                .checkpoint_runtime_session(&checkpoint, &binding)
+                .expect("crash checkpoint commits");
+            artifact_crash_stop();
+        }
+
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::ReferenceRelease,
+            ArtifactCrashPosition::Before,
+        );
+        runtime
+            .release_runtime_artifact(
+                &manifest.session_id,
+                &manifest.task_id,
+                &manifest.policy_sha256,
+                &reference,
+                4,
+            )
+            .expect("crash reference releases");
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::ReferenceRelease,
+            ArtifactCrashPosition::After,
+        );
+        stop_at(
+            boundary,
+            position,
+            ArtifactCrashBoundary::Collection,
+            ArtifactCrashPosition::Before,
+        );
+        runtime
+            .reconcile_runtime_artifacts(&mut payloads, 5)
+            .expect("crash collection reconciles");
+        artifact_crash_stop();
     }
 
     #[test]
@@ -1067,6 +1499,189 @@ mod tests {
         assert_eq!(
             store.verify(&deleted),
             Err(RuntimeArtifactPayloadError::Missing)
+        );
+    }
+
+    #[test]
+    #[ignore = "subprocess stop target; invoked only by the Story 22.2 artifact crash matrix"]
+    fn story_22_2_native_artifact_crash_boundary_child() {
+        if env::var_os("AGENTMAGE_ARTIFACT_CRASH_CHILD").is_none() {
+            return;
+        }
+        let path = PathBuf::from(
+            env::var_os("AGENTMAGE_ARTIFACT_CRASH_ROOT").expect("artifact crash root"),
+        );
+        let boundary = ArtifactCrashBoundary::from_code(
+            &env::var("AGENTMAGE_ARTIFACT_CRASH_BOUNDARY").expect("artifact crash boundary"),
+        );
+        let position = ArtifactCrashPosition::from_code(
+            &env::var("AGENTMAGE_ARTIFACT_CRASH_POSITION").expect("artifact crash position"),
+        );
+        run_artifact_crash_child(&path, boundary, position);
+    }
+
+    #[test]
+    fn story_22_2_native_crash_matrix_reconciles_every_artifact_boundary() {
+        let manifest = artifact_crash_manifest();
+        let reference = runtime_artifact_ref(&manifest).expect("matrix reference projects");
+        let mut cases = Vec::new();
+
+        for boundary in ArtifactCrashBoundary::ALL {
+            for position in ArtifactCrashPosition::ALL {
+                let root = TestRoot::new("crash-matrix");
+                prepare_artifact_crash_fixture(root.path());
+                let output = Command::new(env::current_exe().expect("current test executable"))
+                    .args([
+                        "--exact",
+                        "runtime_artifact_store::tests::story_22_2_native_artifact_crash_boundary_child",
+                        "--ignored",
+                        "--nocapture",
+                    ])
+                    .env("AGENTMAGE_ARTIFACT_CRASH_CHILD", "1")
+                    .env("AGENTMAGE_ARTIFACT_CRASH_ROOT", root.path())
+                    .env("AGENTMAGE_ARTIFACT_CRASH_BOUNDARY", boundary.code())
+                    .env("AGENTMAGE_ARTIFACT_CRASH_POSITION", position.code())
+                    .output()
+                    .expect("artifact crash child launches");
+                assert_eq!(
+                    output.status.code(),
+                    Some(ARTIFACT_CRASH_CHILD_EXIT),
+                    "{boundary:?} {position:?}: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+
+                let staged_before_recovery = fs::read_dir(root.staging())
+                    .expect("staging lists before recovery")
+                    .count();
+                let (mut runtime, mut payloads) = open_artifact_crash_components(root.path(), 6);
+                let inventory_before_recovery =
+                    payloads.inventory().expect("pre-recovery inventory").len();
+                let report = runtime
+                    .reconcile_runtime_artifacts(&mut payloads, 7)
+                    .expect("artifact recovery reconciles");
+                let inventory_after_recovery =
+                    payloads.inventory().expect("post-recovery inventory").len();
+                let state = runtime.runtime_artifact_state(&reference).ok();
+                let events = runtime
+                    .runtime_events(&manifest.producer_run_id)
+                    .expect("recovered events load");
+                let artifact_event_count = events
+                    .iter()
+                    .filter(|event| matches!(event.kind, RuntimeEventKind::ArtifactCreated { .. }))
+                    .count();
+                let false_terminal_count = events
+                    .iter()
+                    .filter(|event| matches!(event.kind, RuntimeEventKind::RunTerminal { .. }))
+                    .count();
+                let resume_binding = runtime
+                    .current_runtime_resume_binding()
+                    .expect("resume binding projects");
+
+                let metadata_expected = !matches!(
+                    (boundary, position),
+                    (ArtifactCrashBoundary::Staging, _)
+                        | (ArtifactCrashBoundary::Placement, _)
+                        | (
+                            ArtifactCrashBoundary::MetadataCommit,
+                            ArtifactCrashPosition::Before
+                        )
+                );
+                let deleted_expected = matches!(
+                    (boundary, position),
+                    (
+                        ArtifactCrashBoundary::ReferenceRelease,
+                        ArtifactCrashPosition::After
+                    ) | (ArtifactCrashBoundary::Collection, _)
+                );
+                let active_expected = metadata_expected && !deleted_expected;
+                let artifact_event_expected = matches!(
+                    (boundary, position),
+                    (
+                        ArtifactCrashBoundary::EventCommit,
+                        ArtifactCrashPosition::After
+                    ) | (ArtifactCrashBoundary::CheckpointCommit, _)
+                        | (ArtifactCrashBoundary::ReferenceRelease, _)
+                        | (ArtifactCrashBoundary::Collection, _)
+                );
+                let checkpoint_expected = matches!(
+                    (boundary, position),
+                    (
+                        ArtifactCrashBoundary::CheckpointCommit,
+                        ArtifactCrashPosition::After
+                    )
+                );
+                let staged_expected = matches!(
+                    (boundary, position),
+                    (ArtifactCrashBoundary::Staging, ArtifactCrashPosition::After)
+                        | (
+                            ArtifactCrashBoundary::Placement,
+                            ArtifactCrashPosition::Before
+                        )
+                );
+
+                assert_eq!(staged_before_recovery, usize::from(staged_expected));
+                assert_eq!(report.cleaned_staging, u64::from(staged_expected));
+                assert_eq!(artifact_event_count, usize::from(artifact_event_expected));
+                assert_eq!(false_terminal_count, 0);
+                assert_eq!(resume_binding.is_some(), checkpoint_expected);
+                if let Some(binding) = &resume_binding {
+                    assert_eq!(
+                        binding.artifacts.as_slice(),
+                        std::slice::from_ref(&reference)
+                    );
+                    assert_eq!(binding.event_cursor.run_id, manifest.producer_run_id);
+                }
+                match state {
+                    Some(state) if active_expected => {
+                        assert_eq!(state.lifecycle, RuntimeArtifactLifecycleState::Active);
+                        assert_eq!(state.integrity, RuntimeArtifactIntegrityState::Verified);
+                        assert_eq!(inventory_after_recovery, 1);
+                    }
+                    Some(state) if deleted_expected => {
+                        assert_eq!(state.lifecycle, RuntimeArtifactLifecycleState::Deleted);
+                        assert_eq!(state.integrity, RuntimeArtifactIntegrityState::Deleted);
+                        assert_eq!(inventory_after_recovery, 0);
+                    }
+                    None if !metadata_expected => {
+                        assert_eq!(inventory_after_recovery, 0);
+                    }
+                    unexpected => panic!(
+                        "unexpected recovered state for {boundary:?} {position:?}: {unexpected:?}"
+                    ),
+                }
+
+                cases.push(serde_json::json!({
+                    "boundary": boundary.code(),
+                    "position": position.code(),
+                    "staged_before_recovery": staged_before_recovery,
+                    "inventory_before_recovery": inventory_before_recovery,
+                    "inventory_after_recovery": inventory_after_recovery,
+                    "recovery_cleaned_staging": report.cleaned_staging,
+                    "recovery_verified_payloads": report.verified_payloads,
+                    "recovery_quarantined_payloads": report.quarantined_payloads,
+                    "recovery_deleted_orphans": report.deleted_orphans,
+                    "artifact_event_count": artifact_event_count,
+                    "checkpoint_bound": resume_binding.is_some(),
+                    "metadata_expected": metadata_expected,
+                    "active_expected": active_expected,
+                    "deleted_expected": deleted_expected,
+                    "false_terminal_count": false_terminal_count,
+                }));
+            }
+        }
+
+        assert_eq!(cases.len(), 14);
+        println!(
+            "AGENTMAGE_ARTIFACT_CRASH_MATRIX={}",
+            serde_json::json!({
+                "boundary_count": ArtifactCrashBoundary::ALL.len(),
+                "position_count": ArtifactCrashPosition::ALL.len(),
+                "case_count": cases.len(),
+                "cases": cases,
+                "external_network_used": false,
+                "false_terminal_count": 0,
+                "manual_fuzzing_executed": false,
+            })
         );
     }
 }
