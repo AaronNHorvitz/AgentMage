@@ -25,6 +25,7 @@ tar -xzf %{SOURCE0} -C %{buildroot}
 %files
 %dir /usr/libexec/agentmage
 %dir /usr/share/agentmage
+%dir /usr/share/agentmage/model-profiles
 %dir /usr/share/licenses/agentmage
 %license /usr/share/licenses/agentmage/LICENSE
 /usr/libexec/agentmage/agentmage-host
@@ -34,6 +35,7 @@ tar -xzf %{SOURCE0} -C %{buildroot}
 /usr/libexec/agentmage/agentmage-docker-topology-collector
 /usr/libexec/agentmage/agentmage-read-only-worker
 /usr/share/agentmage/agentmage.vsix
+/usr/share/agentmage/model-profiles/exact-profile-catalog.json
 /usr/share/agentmage/package-manifest.json
 
 %changelog

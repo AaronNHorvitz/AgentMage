@@ -89,6 +89,7 @@ impl<'path> LinuxBootstrapPaths<'path> {
 
 /// Package-verified endpoint and one-use launch material.
 pub struct VerifiedLinuxBootstrap {
+    package: package_verify::VerifiedPackageRoot,
     endpoint: LinuxHostIpcEndpoint,
     authenticator: LinuxIpcAuthenticator,
     credentials: LinuxLaunchCredentials,
@@ -106,6 +107,11 @@ impl fmt::Debug for VerifiedLinuxBootstrap {
 }
 
 impl VerifiedLinuxBootstrap {
+    /// Returns the continuously held signed-package proof for startup composition.
+    pub(crate) fn verified_package(&self) -> &package_verify::VerifiedPackageRoot {
+        &self.package
+    }
+
     /// Writes one bounded binary frame directly to the inherited standard-output pipe.
     ///
     /// No secret-bearing `String`, argument, environment variable, file, or log
@@ -152,7 +158,7 @@ pub fn bootstrap_for_peer(
     paths: &LinuxBootstrapPaths<'_>,
     peer_pid: i32,
 ) -> Result<VerifiedLinuxBootstrap, LinuxBootstrapError> {
-    package_verify::verify_signed_package_root(
+    let package = package_verify::verify_signed_package_root_with_evidence(
         paths.package_root,
         paths.signature,
         paths.public_key,
@@ -171,6 +177,7 @@ pub fn bootstrap_for_peer(
     let (authenticator, credentials) = LinuxIpcAuthenticator::generate(peer.clone())
         .map_err(|_| LinuxBootstrapError::TransportDenied)?;
     Ok(VerifiedLinuxBootstrap {
+        package,
         endpoint,
         authenticator,
         credentials,
@@ -432,6 +439,11 @@ mod tests {
             (
                 "usr/share/agentmage/agentmage.vsix",
                 b"vsix".as_slice(),
+                0o644,
+            ),
+            (
+                "usr/share/agentmage/model-profiles/exact-profile-catalog.json",
+                include_bytes!("../../../model-profiles/exact-profile-catalog.json").as_slice(),
                 0o644,
             ),
             (

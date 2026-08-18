@@ -31,6 +31,7 @@ PAYLOAD_FILES: Final = (
     PurePosixPath("usr/libexec/agentmage/agentmage-docker-topology-collector"),
     PurePosixPath("usr/libexec/agentmage/agentmage-read-only-worker"),
     PurePosixPath("usr/share/agentmage/agentmage.vsix"),
+    PurePosixPath("usr/share/agentmage/model-profiles/exact-profile-catalog.json"),
     PurePosixPath("usr/share/licenses/agentmage/LICENSE"),
 )
 EXECUTABLE_PAYLOAD_FILES: Final = frozenset(PAYLOAD_FILES[:6])
@@ -40,6 +41,7 @@ PAYLOAD_DIRECTORIES: Final = (
     PurePosixPath("usr/libexec/agentmage"),
     PurePosixPath("usr/share"),
     PurePosixPath("usr/share/agentmage"),
+    PurePosixPath("usr/share/agentmage/model-profiles"),
     PurePosixPath("usr/share/licenses"),
     PurePosixPath("usr/share/licenses/agentmage"),
 )
@@ -223,6 +225,7 @@ def build_payload_class(
     status: str,
     release_sequence: int | None,
 ) -> dict[str, Any]:
+    profile_catalog = ROOT / "model-profiles/exact-profile-catalog.json"
     for path in (
         host,
         inference_adapter,
@@ -231,6 +234,7 @@ def build_payload_class(
         docker_collector,
         read_only_worker,
         vsix,
+        profile_catalog,
         license_path,
     ):
         require_regular(path)
@@ -246,7 +250,8 @@ def build_payload_class(
         PAYLOAD_FILES[4]: docker_collector,
         PAYLOAD_FILES[5]: read_only_worker,
         PAYLOAD_FILES[6]: vsix,
-        PAYLOAD_FILES[7]: license_path,
+        PAYLOAD_FILES[7]: profile_catalog,
+        PAYLOAD_FILES[8]: license_path,
     }
     records = []
     for relative, source in destinations.items():

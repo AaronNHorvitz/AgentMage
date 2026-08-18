@@ -4,6 +4,8 @@ mod package_verify;
 
 #[cfg(target_os = "linux")]
 mod linux_bootstrap;
+#[cfg(target_os = "linux")]
+mod model_catalog_bootstrap;
 
 struct HostExit(&'static str);
 
@@ -77,6 +79,17 @@ fn bootstrap_linux() -> Result<(), HostExit> {
     let parent = linux_bootstrap::parent_process_id().map_err(|error| HostExit(error.code()))?;
     let bootstrap = linux_bootstrap::bootstrap_for_peer(&paths, parent)
         .map_err(|error| HostExit(error.code()))?;
+    let observed_at_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .and_then(|duration| u64::try_from(duration.as_millis()).ok())
+        .filter(|value| *value > 0)
+        .ok_or(HostExit("agentmage.model-catalog.clock-unavailable"))?;
+    let _model_picker = model_catalog_bootstrap::load_signed_model_picker_snapshot(
+        bootstrap.verified_package(),
+        observed_at_ms,
+    )
+    .map_err(|error| HostExit(error.code()))?;
     bootstrap
         .write_launch_envelope(&mut std::io::stdout().lock())
         .map_err(|error| HostExit(error.code()))?;

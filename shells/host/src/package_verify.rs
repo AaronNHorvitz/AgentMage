@@ -16,7 +16,7 @@ const RELEASE_SIGNATURE_DOMAIN: &[u8] = b"agentmage.package-manifest.v2\0";
 const MAX_MANIFEST_BYTES: u64 = 1024 * 1024;
 const MAX_FILE_BYTES: u64 = 512 * 1024 * 1024;
 const MAX_FILES: usize = 32;
-const REQUIRED_FILES: [&str; 8] = [
+const REQUIRED_FILES: [&str; 9] = [
     "usr/libexec/agentmage/agentmage-docker-guard",
     "usr/libexec/agentmage/agentmage-docker-topology-collector",
     "usr/libexec/agentmage/agentmage-host",
@@ -24,6 +24,7 @@ const REQUIRED_FILES: [&str; 8] = [
     "usr/libexec/agentmage/agentmage-native-inference",
     "usr/libexec/agentmage/agentmage-read-only-worker",
     "usr/share/agentmage/agentmage.vsix",
+    "usr/share/agentmage/model-profiles/exact-profile-catalog.json",
     "usr/share/licenses/agentmage/LICENSE",
 ];
 
@@ -73,13 +74,56 @@ struct PackageManifest {
     files: Vec<PackageFile>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct PackageFile {
     path: String,
     sha256: String,
     size: u64,
     mode: u32,
+}
+
+/// Descriptor-held proof that one exact signed package root and every declared payload verified.
+pub(crate) struct VerifiedPackageRoot {
+    root: OwnedFd,
+    files: Vec<PackageFile>,
+    manifest_sha256: String,
+}
+
+impl VerifiedPackageRoot {
+    /// Re-reads one manifest-bound payload beneath the continuously held package root.
+    pub(crate) fn read_verified_file(
+        &self,
+        relative: &str,
+        limit: u64,
+    ) -> Result<Vec<u8>, PackageVerificationError> {
+        let record = self
+            .files
+            .iter()
+            .find(|record| record.path == relative)
+            .ok_or(PackageVerificationError::FileDenied)?;
+        if record.size > limit {
+            return Err(PackageVerificationError::FileDenied);
+        }
+        let path =
+            normalized_relative_path(relative).ok_or(PackageVerificationError::ManifestInvalid)?;
+        let (bytes, metadata) = read_bounded_beneath_with_metadata(&self.root, &path, limit)
+            .map_err(|_| PackageVerificationError::FileDenied)?;
+        if metadata.st_size < 0
+            || metadata.st_size as u64 != record.size
+            || metadata.st_mode & 0o777 != record.mode
+            || metadata.st_nlink != 1
+            || lowercase_hex(&Sha256::digest(&bytes)) != record.sha256
+        {
+            return Err(PackageVerificationError::FileMismatch);
+        }
+        Ok(bytes)
+    }
+
+    /// Digest of the exact signed package manifest bytes.
+    pub(crate) fn manifest_sha256(&self) -> &str {
+        &self.manifest_sha256
+    }
 }
 
 pub fn verify_package_candidate_root(
@@ -107,6 +151,15 @@ pub fn verify_signed_package_root(
     signature_path: &std::ffi::OsStr,
     public_key_path: &std::ffi::OsStr,
 ) -> Result<(), PackageVerificationError> {
+    verify_signed_package_root_with_evidence(root, signature_path, public_key_path).map(|_| ())
+}
+
+/// Verifies a signed release and retains the descriptor-held proof for trusted composition.
+pub(crate) fn verify_signed_package_root_with_evidence(
+    root: &std::ffi::OsStr,
+    signature_path: &std::ffi::OsStr,
+    public_key_path: &std::ffi::OsStr,
+) -> Result<VerifiedPackageRoot, PackageVerificationError> {
     let root = open(
         Path::new(root),
         OFlags::RDONLY | OFlags::DIRECTORY | OFlags::NOFOLLOW | OFlags::CLOEXEC,
@@ -139,7 +192,11 @@ pub fn verify_signed_package_root(
     for record in &manifest.files {
         verify_file(&root, record)?;
     }
-    Ok(())
+    Ok(VerifiedPackageRoot {
+        root,
+        files: manifest.files,
+        manifest_sha256: lowercase_hex(&Sha256::digest(&manifest_bytes)),
+    })
 }
 
 fn validate_manifest(
@@ -396,6 +453,38 @@ mod tests {
     }
 
     #[test]
+    fn signed_release_proof_loads_the_exact_management_only_model_catalog() {
+        let root = complete_fixture_root("signed-release");
+        let (signature, public_key) = sign_fixture(&root, [17; 32]);
+        let package = super::verify_signed_package_root_with_evidence(
+            root.as_os_str(),
+            signature.as_os_str(),
+            public_key.as_os_str(),
+        )
+        .expect("signed package proof");
+        let snapshot =
+            crate::model_catalog_bootstrap::load_signed_model_picker_snapshot(&package, 1_000)
+                .expect("signed catalog projection");
+        assert!(!snapshot.entries.is_empty());
+        assert!(snapshot.catalog_signature_verified);
+        assert!(snapshot.entries.iter().all(|entry| {
+            entry.disposition == agentmage_kernel_contracts::ModelPickerDisposition::ManagementOnly
+        }));
+        fs::write(
+            root.join("usr/share/agentmage/model-profiles/exact-profile-catalog.json"),
+            b"{}",
+        )
+        .expect("mutate catalog after package verification");
+        assert_eq!(
+            crate::model_catalog_bootstrap::load_signed_model_picker_snapshot(&package, 1_001),
+            Err(crate::model_catalog_bootstrap::ModelCatalogBootstrapError::PackageBinding)
+        );
+        fs::remove_dir_all(root).expect("cleanup root");
+        fs::remove_file(signature).expect("cleanup signature");
+        fs::remove_file(public_key).expect("cleanup key");
+    }
+
+    #[test]
     fn signed_release_rejects_manifest_mutation_and_wrong_trust_root() {
         let root = complete_fixture_root("signed-release");
         let (signature, public_key) = sign_fixture(&root, [8; 32]);
@@ -575,6 +664,11 @@ mod tests {
             (
                 "usr/share/agentmage/agentmage.vsix",
                 b"vsix".as_slice(),
+                0o644,
+            ),
+            (
+                "usr/share/agentmage/model-profiles/exact-profile-catalog.json",
+                include_bytes!("../../../model-profiles/exact-profile-catalog.json").as_slice(),
                 0o644,
             ),
             (
