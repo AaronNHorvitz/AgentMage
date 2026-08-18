@@ -24,7 +24,13 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/schema.rs",
     "capabilities/knowledge/src/lifecycle.rs",
     "capabilities/knowledge/README.md",
+    "shells/host/src/headless.rs",
+    "shells/host/src/cli.rs",
+    "shells/host/src/knowledge_workflow_runtime.rs",
+    "schemas/runtime/thin-client-request.schema.json",
     "docs/architecture/knowledge-tasks-and-declarative-skills.md",
+    "docs/architecture/thin-client-boundary.md",
+    "docs/guides/local-command-line-interface.md",
     "docs/guides/knowledge.md",
     "docs/guides/vault.md",
     "docs/guides/memory.md",
@@ -52,6 +58,14 @@ COMMANDS: Final = (
             "--locked", "--", "-D", "warnings",
         ),
     ),
+    ("host-tests", ("cargo", "test", "-p", "agentmage-host", "--all-features", "--locked")),
+    (
+        "host-clippy",
+        (
+            "cargo", "clippy", "-p", "agentmage-host", "--all-targets", "--all-features",
+            "--locked", "--", "-D", "warnings",
+        ),
+    ),
     ("kernel-tests", ("cargo", "test", "-p", "agentmage-kernel-engine", "--locked")),
     ("contract-tests", ("cargo", "test", "-p", "agentmage-kernel-contracts", "--locked")),
     ("product-gate", ("npm", "run", "product:check")),
@@ -71,7 +85,6 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-33-BLOCKED", "owner": "33.1"},
-    {"code": "SPRINT-34-NATIVE-CHAT-CLI-INTEGRATION-ABSENT", "owner": "34.1.3.3"},
     {"code": "SPRINT-34-PLATFORM-MIGRATION-ROLLBACK-ABSENT", "owner": "34.1.3.4"},
     {"code": "INDEPENDENT-SIGNED-V0.2-REVIEW-ABSENT", "owner": "34.1.3.5"},
 ]
@@ -84,6 +97,9 @@ IMPLEMENTED: Final = {
     "visible_precedence_conflicts_and_influence_receipts": True,
     "eight_builtin_read_only_workflows": True,
     "lexical_and_approved_semantic_evidence_parity": True,
+    "s_028_it01_native_chat_contract_integration": True,
+    "s_028_it01_cli_contract_integration": True,
+    "s_028_it01_source_file_invariance": True,
     "plain_and_obsidian_canonical_parity": True,
     "v0_2_guides_and_draft_release_bundle": True,
     "task_write_apply": False,
@@ -165,7 +181,8 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "task_and_declarative_skill_suite": local_pass,
             "read_only_workflow_parity_suite": local_pass,
             "complete_local_product_and_docs_gates": local_pass,
-            "native_chat_and_cli_end_to_end": False,
+            "s_028_it01_native_chat_and_cli_contract_matrix": local_pass,
+            "installed_native_chat_and_cli_end_to_end": False,
             "supported_platform_migration_and_rollback": False,
             "upstream_sprint_33_gate": False,
             "independent_signed_release_review": False,
@@ -174,7 +191,8 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
         "summary": {
             "local_knowledge_task_skill_contract_passed": local_pass,
             "sprint_status": "BLOCKED",
-            "native_interface_evidence_passed": False,
+            "native_interface_contract_evidence_passed": local_pass,
+            "installed_native_interface_evidence_passed": False,
             "platform_migration_evidence_passed": False,
             "upstream_dependency_passed": False,
             "independent_signed_review_passed": False,
@@ -207,7 +225,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     expected_summary = {
         "local_knowledge_task_skill_contract_passed": True,
         "sprint_status": "BLOCKED",
-        "native_interface_evidence_passed": False,
+        "native_interface_contract_evidence_passed": True,
+        "installed_native_interface_evidence_passed": False,
         "platform_migration_evidence_passed": False,
         "upstream_dependency_passed": False,
         "independent_signed_review_passed": False,
@@ -218,11 +237,13 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
     for field in (
-        "native_chat_and_cli_end_to_end", "supported_platform_migration_and_rollback",
+        "installed_native_chat_and_cli_end_to_end", "supported_platform_migration_and_rollback",
         "upstream_sprint_33_gate", "independent_signed_release_review",
     ):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
+    if verification.get("s_028_it01_native_chat_and_cli_contract_matrix") is not True:
+        failures.append("S-028-IT01 contract evidence missing")
     for field in (
         "task_write_apply", "native_chat_product_integration", "cli_product_integration",
         "supported_platform_migration_and_rollback", "signed_v0_2_release",

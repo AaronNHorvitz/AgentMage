@@ -2751,7 +2751,7 @@ proved. Sprint AC 33.AC5 and the sprint therefore remain open.
 - [ ] **Task 34.1.3 - Verify and close the story**
   - [x] **Sub-task 34.1.3.1:** `S-028-UT01` validates task and declarative-skill schemas with unknown capabilities, hidden instructions, executable content, unbounded inputs, vague completion, and unsupported versions; assert disabled status.
   - [x] **Sub-task 34.1.3.2:** `S-028-ST01` attempts skill-based grant creation, tool registration, network access, code execution, workspace expansion, memory promotion, and write behavior; assert declarative skills remain authority-free.
-  - [ ] **Sub-task 34.1.3.3:** `S-028-IT01` completes every promoted knowledge workflow through native Chat and CLI-compatible kernel contracts using lexical and approved optional semantic paths; assert evidence parity and source-file invariance.
+  - [x] **Sub-task 34.1.3.3:** `S-028-IT01` completes every promoted knowledge workflow through native Chat and CLI-compatible kernel contracts using lexical and approved optional semantic paths; assert evidence parity and source-file invariance. Evidence: commit `0a643b57` adds one closed knowledge command and host transport, parses every workflow through the CLI, and runs all eight workflows across native Chat and interactive CLI under lexical and approved local-semantic retrieval. The 32-path matrix verifies identical cross-interface projections, source/task/citation parity between retrieval paths, hash-chained receipts and terminal results, explicit semantic selection, retrieval-substitution denial, and unchanged canonical input records.
   - [ ] **Sub-task 34.1.3.4:** `S-028-AT01` upgrades v0.1 data, runs clean/offline/privacy/recovery/accessibility suites on each platform, then downgrades or rolls back; assert no canonical knowledge loss or hidden capability.
   - [ ] **Sub-task 34.1.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-DAT-*`, `SR-AI-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain skill manifests, workflow traces, cross-interface comparisons, migration/rollback results, and signed release decision.
 
@@ -2770,18 +2770,19 @@ proved. Sprint AC 33.AC5 and the sprint therefore remain open.
 
 **Gate decision:** Sprint 34 is PASS only when Story 34.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-**Local evidence status (2026-08-14):** Canonical task projections, evidence-required
+**Local evidence status (2026-08-18):** Canonical task projections, evidence-required
 unapplied transition previews, authority-free declarative skills, eight built-in read-only
 workflows, and the v0.2 guide and draft release-document set are implemented in commits
 `9030915`, `9614159`, `760f6f8`, and `7603898`. The retained
 [Sprint 34 evidence report](artifacts/sprints/sprint-34/local-evidence-report.json) in
 `c7f496d` records passing local capability, hostile-fixture, product, documentation,
-strict-local, dependency, and supply-chain gates. Sprint 34 remains **BLOCKED** because
-Sprint 33 is not yet a passing upstream dependency, native Chat and CLI end-to-end
-acceptance is absent, supported-platform v0.1 migration and rollback evidence is absent,
-and no independent signed v0.2 release decision exists. Task 34.1.3, its three open
-sub-tasks, both story criteria, Sprint AC 34.AC5, the story, and the sprint therefore
-remain open.
+strict-local, dependency, and supply-chain gates. Commit `0a643b57` completes the source-level
+`S-028-IT01` native Chat and CLI contract matrix without claiming installed-client acceptance.
+Sprint 34 remains **BLOCKED** because Sprint 33 is not yet a passing upstream dependency,
+installed native Chat and CLI acceptance is absent, supported-platform v0.1 migration and rollback
+evidence is absent, and no independent signed v0.2 release decision exists. Task 34.1.3, its two
+open sub-tasks, both story criteria, Sprint AC 34.AC5, the story, and the sprint therefore remain
+open.
 
 ## [ ] Epic 3 - v0.3 - Controlled Writes
 

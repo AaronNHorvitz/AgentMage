@@ -59,6 +59,14 @@ agent vault note show ID
 agent vault links ID
 agent vault backlinks ID
 agent vault tasks
+agent knowledge run daily-setup
+agent knowledge run daily-briefing [--semantic]
+agent knowledge run issue-intake [--semantic]
+agent knowledge run handoff [--semantic]
+agent knowledge run meeting-cleanup [--semantic]
+agent knowledge run repository-learning [--semantic]
+agent knowledge run plain-workspace-steward [--semantic]
+agent knowledge run obsidian-vault-steward [--semantic]
 agent checkpoint
 agent handoff
 agent audit
@@ -74,6 +82,12 @@ Arguments are shell tokenized before AgentMage sees them. The parser rejects
 unknown commands, duplicate global switches, NUL bytes, reversed date ranges,
 invalid identifiers, invalid digests, missing values, excessive arguments, and
 excessive aggregate input.
+
+Knowledge workflows are read-only. Lexical retrieval is the default, and approved local semantic
+retrieval is selected only by the explicit `--semantic` argument. The current source-level host
+transport proves the same hash-bound result through native Chat and interactive CLI contracts;
+the pre-alpha binary still lacks the authenticated product transport needed to run these commands
+from an installed package.
 
 ## Human And Machine Output
 

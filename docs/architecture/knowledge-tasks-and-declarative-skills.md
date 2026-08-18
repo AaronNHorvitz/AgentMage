@@ -15,6 +15,9 @@ flowchart LR
     S["Hash-bound declarative skill package"] --> R["Trust-gated registry"]
     R --> C["Bounded conflict-free context"]
     C --> W["Read-only workflow result"]
+    W --> H["Hash-chained host client stream"]
+    H --> N["Native Chat contract"]
+    H --> L["Interactive CLI contract"]
     W -. "zero writes" .-> M
 ```
 
@@ -61,6 +64,14 @@ record and citation identities. Lexical and approved optional local-semantic pat
 same source/task evidence shape. Plain-folder and Obsidian stewardship share identical canonical
 record semantics.
 
+The host exposes those workflows through one closed `KnowledgeClientCommand`. Native Chat and the
+interactive CLI bind the same surface-independent kernel-operation digest and receive the same
+content-minimized projection, citation identities, receipt digest, and terminal result. The
+retrieval mode is explicit; `--semantic` is the only CLI path to approved local semantic
+retrieval. `S-028-IT01` runs all eight workflows through both client surfaces under lexical and
+approved semantic retrieval, compares their exact projections, and snapshots the input records to
+prove source-file invariance.
+
 The later v0.4 source candidate reuses the same permanent authority ceiling for nine coding-skill
 packages. Those packages are defined separately in the
 [coding-skill architecture](./coding-skills-and-release-boundary.md); their presence does not
@@ -68,6 +79,7 @@ broaden the v0.2 knowledge workflow or release boundary.
 
 ## Open Release Boundary
 
-Local capability tests do not establish native Chat integration, a public CLI, supported-platform
-upgrade/downgrade evidence, accessibility acceptance, package signing, or independent review. The
-v0.2 release gate remains blocked until those separate facts exist.
+The source-level host contract does not establish installed VS Code rendering, installed CLI
+packaging, supported-platform upgrade/downgrade evidence, accessibility acceptance, package
+signing, or independent review. The v0.2 release gate remains blocked until those separate facts
+exist.

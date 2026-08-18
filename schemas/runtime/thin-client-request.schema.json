@@ -207,6 +207,29 @@
         }
       ]
     },
+    "knowledgeAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "workflow", "retrieval_mode"],
+      "properties": {
+        "action": { "const": "run" },
+        "workflow": {
+          "enum": [
+            "daily_setup",
+            "daily_briefing",
+            "issue_intake",
+            "handoff",
+            "meeting_cleanup",
+            "repository_learning",
+            "plain_workspace_steward",
+            "obsidian_vault_steward"
+          ]
+        },
+        "retrieval_mode": {
+          "enum": ["lexical", "approved_local_semantic"]
+        }
+      }
+    },
     "operationalAction": {
       "oneOf": [
         {
@@ -287,6 +310,15 @@
           "properties": {
             "command": { "const": "vault" },
             "action": { "$ref": "#/$defs/vaultAction" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["command", "action"],
+          "properties": {
+            "command": { "const": "knowledge" },
+            "action": { "$ref": "#/$defs/knowledgeAction" }
           }
         },
         {

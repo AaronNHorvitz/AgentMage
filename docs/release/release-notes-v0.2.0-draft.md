@@ -14,7 +14,9 @@ Declarative skills cannot create grants, register tools, execute code, access fi
 secrets, networks, connectors, or approvals, expand workspaces, promote memory, or write. User-file
 writes remain excluded until a later exact-preimage approval milestone.
 
-This candidate is blocked by upstream sprint gates, incomplete archive interruption/concurrency
-evidence, native Chat and compatible CLI workflow integration, complete canary review,
+The source-level native Chat and compatible CLI contract matrix now passes for all eight workflows
+under lexical and approved local-semantic retrieval. This is not installed-client acceptance.
+
+This candidate remains blocked by upstream sprint gates, installed native Chat and CLI acceptance,
 supported-platform migration and rollback, accessibility evidence, signed packaging, and
 independent release review. No local test result should be represented as a supported release.

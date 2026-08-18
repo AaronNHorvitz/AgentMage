@@ -103,9 +103,11 @@ A request carries:
 - per-event and cumulative-output ceilings; and
 - an optional hash-bound resume cursor for an existing stream.
 
-The command taxonomy is closed over chat, conversations, approved local
-Markdown knowledge, checkpoint, handoff, audit, memory, transfer, and
-diagnostics operations. Unknown fields and command variants are rejected.
+The command taxonomy is closed over chat, conversations, approved local Markdown knowledge,
+promoted read-only knowledge workflows, checkpoint, handoff, audit, memory, transfer, and
+diagnostics operations. Unknown fields and command variants are rejected. Promoted workflows name
+one of eight closed workflow identities and either lexical or explicitly approved local-semantic
+retrieval; both modes require only `WorkspaceRead` authority.
 
 ## Authority
 

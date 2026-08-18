@@ -32,21 +32,30 @@ class Sprint34EvidenceTests(unittest.TestCase):
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertTrue(value["implemented_contracts"]["authority_free_skill_contract"])
-        self.assertFalse(value["summary"]["native_interface_evidence_passed"])
+        self.assertTrue(value["summary"]["native_interface_contract_evidence_passed"])
+        self.assertFalse(value["summary"]["installed_native_interface_evidence_passed"])
 
     def test_interface_platform_dependency_review_network_write_and_release_overclaims_fail(
         self,
     ) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
-            lambda value: value["summary"].update({"native_interface_evidence_passed": True}),
+            lambda value: value["summary"].update({
+                "native_interface_contract_evidence_passed": False
+            }),
+            lambda value: value["summary"].update({
+                "installed_native_interface_evidence_passed": True
+            }),
             lambda value: value["summary"].update({"platform_migration_evidence_passed": True}),
             lambda value: value["summary"].update({"upstream_dependency_passed": True}),
             lambda value: value["summary"].update({"independent_signed_review_passed": True}),
             lambda value: value["summary"].update({"network_access_enabled": True}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update({
-                "native_chat_and_cli_end_to_end": True
+                "installed_native_chat_and_cli_end_to_end": True
+            }),
+            lambda value: value["verification_evidence"].update({
+                "s_028_it01_native_chat_and_cli_contract_matrix": False
             }),
             lambda value: value["implemented_contracts"].update({"task_write_apply": True}),
             lambda value: value["implemented_contracts"].update({"network_access": True}),
