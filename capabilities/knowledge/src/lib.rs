@@ -32,6 +32,7 @@ mod presentation_generation;
 mod presentation_ooxml;
 mod reconciliation_workbook;
 mod retrieval;
+mod retrieval_integration;
 mod schema;
 mod semantic;
 mod semantic_benchmark;
@@ -124,8 +125,9 @@ pub use obsidian_index::{
     ObsidianAccessKind, ObsidianAccessReceipt, ObsidianFileChangePreview, ObsidianIndexConflict,
     ObsidianIndexConflictKind, ObsidianIndexElementKind, ObsidianIndexError, ObsidianIndexHit,
     ObsidianIndexReport, ObsidianIndexUpdate, ObsidianPostWriteIndexResult, ObsidianPreviewResult,
-    ObsidianQueryResult, ObsidianTemporalClass, ObsidianTraversalResult, ObsidianVaultFreshness,
-    ObsidianVaultIndex, ObsidianWatchEvent, ObsidianWatchEventKind,
+    ObsidianQueryResult, ObsidianRetrievalDocuments, ObsidianTemporalClass,
+    ObsidianTraversalResult, ObsidianVaultFreshness, ObsidianVaultIndex, ObsidianWatchEvent,
+    ObsidianWatchEventKind, retrieval_documents_from_snapshot,
 };
 pub use operations::{
     KnowledgeDashboard, KnowledgeDuplicate, KnowledgeDuplicateReason, KnowledgeExport,
@@ -194,6 +196,10 @@ pub use retrieval::{
     KnowledgeSourceAuthority, KnowledgeSourceDocument, KnowledgeSourceFragment,
     KnowledgeSourceFragmentKind, KnowledgeSynthesisEnvelope, prepare_knowledge_synthesis,
     render_knowledge_answer, retrieve_knowledge,
+};
+pub use retrieval_integration::{
+    ObsidianQuestionParityReport, ObsidianRetrievalIntegrationError,
+    evaluate_obsidian_question_parity,
 };
 pub use schema::{
     KnowledgeRecordSchema, knowledge_schema, knowledge_schemas, verify_schema_registry,

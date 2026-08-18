@@ -3,14 +3,15 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fmt::Write;
 
-use agentmage_kernel_contracts::WorkspacePath;
+use agentmage_kernel_contracts::{WorkspacePath, WorkspaceScopePath};
 use rusqlite::{Connection, Transaction, params};
 use sha2::{Digest, Sha256};
 
 use crate::{
-    KnowledgeIndexPublication, KnowledgeIndexPublicationState, MarkdownDocument,
-    OBSIDIAN_PARSER_VERSION, ObsidianFrontmatterValue, ObsidianParsedNote, ObsidianSourceRange,
-    ObsidianVaultSnapshot,
+    KnowledgeFileType, KnowledgeIndexPublication, KnowledgeIndexPublicationState,
+    KnowledgeSourceAuthority, KnowledgeSourceDocument, KnowledgeSourceFragment,
+    KnowledgeSourceFragmentKind, MarkdownDocument, OBSIDIAN_PARSER_VERSION,
+    ObsidianFrontmatterValue, ObsidianParsedNote, ObsidianSourceRange, ObsidianVaultSnapshot,
 };
 
 const MAX_QUERY_BYTES: usize = 512;
@@ -18,6 +19,7 @@ const MAX_QUERY_RESULTS: u32 = 1_000;
 const MAX_TRAVERSAL_DEPTH: u32 = 32;
 const MAX_WATCH_EVENTS: usize = 10_000;
 const MAX_REPLACEMENT_BYTES: usize = 1024 * 1024;
+const MAX_RETRIEVAL_ELEMENTS: usize = 100_000;
 
 /// Current or explicitly historical note classification.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -194,6 +196,15 @@ pub struct ObsidianQueryResult {
     /// Stable ordered hits.
     pub hits: Vec<ObsidianIndexHit>,
     /// Content-free access receipt.
+    pub receipt: ObsidianAccessReceipt,
+}
+
+/// Complete bounded retrieval projection read from the disposable index.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ObsidianRetrievalDocuments {
+    /// Source-traceable derived documents in canonical path order.
+    pub documents: Vec<KnowledgeSourceDocument>,
+    /// Content-free proof of the local derived-index read.
     pub receipt: ObsidianAccessReceipt,
 }
 
@@ -432,6 +443,108 @@ impl ObsidianVaultIndex {
                 ObsidianVaultFreshness::Stale
             },
         )
+    }
+
+    /// Reads a bounded source-traceable retrieval projection back from derived SQLite rows.
+    pub fn retrieval_documents(
+        &mut self,
+        root: &WorkspaceScopePath,
+        verified_on: &str,
+        default_source_date: &str,
+    ) -> Result<ObsidianRetrievalDocuments, ObsidianIndexError> {
+        self.verify_integrity()?;
+        let mut statement = self
+            .connection
+            .prepare(
+                "SELECT n.path_key, n.path_json, n.temporal_class, n.note_kind,
+                        n.content_sha256, e.kind, e.text, e.start_line, e.start_column,
+                        e.end_line, e.end_column
+                 FROM vault_notes n JOIN vault_elements e ON e.path_key=n.path_key
+                 ORDER BY n.path_key, e.ordinal",
+            )
+            .map_err(|_| ObsidianIndexError::StorageFailed)?;
+        let rows = statement
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, Vec<u8>>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, Option<String>>(3)?,
+                    row.get::<_, String>(4)?,
+                    row.get::<_, String>(5)?,
+                    row.get::<_, String>(6)?,
+                    row.get::<_, i64>(7)?,
+                    row.get::<_, i64>(8)?,
+                    row.get::<_, i64>(9)?,
+                    row.get::<_, i64>(10)?,
+                ))
+            })
+            .map_err(|_| ObsidianIndexError::StorageFailed)?;
+        let mut documents = BTreeMap::<String, KnowledgeSourceDocument>::new();
+        let mut element_count = 0_usize;
+        for row in rows {
+            let (key, path_json, temporal, note_kind, content_sha256, kind, text, sl, sc, el, ec) =
+                row.map_err(|_| ObsidianIndexError::CorruptIndex)?;
+            element_count = element_count
+                .checked_add(1)
+                .ok_or(ObsidianIndexError::InvalidInput)?;
+            if element_count > MAX_RETRIEVAL_ELEMENTS {
+                return Err(ObsidianIndexError::InvalidInput);
+            }
+            let path: WorkspacePath =
+                serde_json::from_slice(&path_json).map_err(|_| ObsidianIndexError::CorruptIndex)?;
+            if !root.contains_path(&path) {
+                return Err(ObsidianIndexError::CorruptIndex);
+            }
+            let historical = match parse_temporal(&temporal) {
+                Some(ObsidianTemporalClass::Current) => false,
+                Some(ObsidianTemporalClass::Historical) => true,
+                None => return Err(ObsidianIndexError::CorruptIndex),
+            };
+            let element_kind = parse_element(&kind).ok_or(ObsidianIndexError::CorruptIndex)?;
+            let fragment = KnowledgeSourceFragment {
+                kind: retrieval_fragment_kind(element_kind),
+                text,
+                source_range: range_from_sql(sl, sc, el, ec)?,
+                fact_key: None,
+            };
+            let expected_path = path.clone();
+            let expected_note_kind = note_kind.clone();
+            let document = documents
+                .entry(key)
+                .or_insert_with(|| KnowledgeSourceDocument {
+                    root: root.clone(),
+                    path,
+                    file_type: KnowledgeFileType::Markdown,
+                    authority: KnowledgeSourceAuthority::DerivedProjection,
+                    content_sha256: content_sha256.clone(),
+                    current_content_sha256: content_sha256.clone(),
+                    verified_on: verified_on.to_owned(),
+                    source_date: default_source_date.to_owned(),
+                    note_kind,
+                    historical,
+                    denied: false,
+                    fragments: Vec::new(),
+                });
+            if document.content_sha256 != content_sha256
+                || document.historical != historical
+                || document.path != expected_path
+                || document.note_kind != expected_note_kind
+                || document.fragments.len() >= MAX_RETRIEVAL_ELEMENTS
+            {
+                return Err(ObsidianIndexError::CorruptIndex);
+            }
+            document.fragments.push(fragment);
+        }
+        drop(statement);
+        let documents = documents.into_values().collect::<Vec<_>>();
+        let report = self.current_report()?;
+        let paths = documents
+            .iter()
+            .map(|document| &document.path)
+            .collect::<Vec<_>>();
+        let receipt = self.receipt(ObsidianAccessKind::Query, &report, paths)?;
+        Ok(ObsidianRetrievalDocuments { documents, receipt })
     }
 
     /// Performs bounded deterministic lexical search over indexed elements.
@@ -1100,6 +1213,47 @@ impl ObsidianVaultIndex {
     }
 }
 
+/// Projects one immutable canonical snapshot into bounded deterministic retrieval documents.
+pub fn retrieval_documents_from_snapshot(
+    snapshot: &ObsidianVaultSnapshot,
+    root: &WorkspaceScopePath,
+    verified_on: &str,
+    default_source_date: &str,
+) -> Result<Vec<KnowledgeSourceDocument>, ObsidianIndexError> {
+    snapshot
+        .notes()
+        .iter()
+        .map(|note| {
+            if !root.contains_path(&note.path) {
+                return Err(ObsidianIndexError::InvalidInput);
+            }
+            let fragments = index_elements(note)
+                .into_iter()
+                .map(|element| KnowledgeSourceFragment {
+                    kind: retrieval_fragment_kind(element.kind),
+                    text: element.text,
+                    source_range: element.range,
+                    fact_key: None,
+                })
+                .collect::<Vec<_>>();
+            Ok(KnowledgeSourceDocument {
+                root: root.clone(),
+                path: note.path.clone(),
+                file_type: KnowledgeFileType::Markdown,
+                authority: KnowledgeSourceAuthority::CanonicalMarkdown,
+                content_sha256: note.content_sha256.clone(),
+                current_content_sha256: note.content_sha256.clone(),
+                verified_on: verified_on.to_owned(),
+                source_date: default_source_date.to_owned(),
+                note_kind: note_kind(note),
+                historical: temporal_class(note) == ObsidianTemporalClass::Historical,
+                denied: false,
+                fragments,
+            })
+        })
+        .collect()
+}
+
 #[derive(Clone)]
 struct IndexElement {
     kind: ObsidianIndexElementKind,
@@ -1243,6 +1397,21 @@ fn index_elements(note: &ObsidianParsedNote) -> Vec<IndexElement> {
     }));
     values.retain(|element| !crate::domain::secret_candidate(&element.text));
     values
+}
+
+const fn retrieval_fragment_kind(kind: ObsidianIndexElementKind) -> KnowledgeSourceFragmentKind {
+    match kind {
+        ObsidianIndexElementKind::Title => KnowledgeSourceFragmentKind::Title,
+        ObsidianIndexElementKind::Property => KnowledgeSourceFragmentKind::Field,
+        ObsidianIndexElementKind::Heading => KnowledgeSourceFragmentKind::Heading,
+        ObsidianIndexElementKind::Task => KnowledgeSourceFragmentKind::Task,
+        ObsidianIndexElementKind::Tag => KnowledgeSourceFragmentKind::Tag,
+        ObsidianIndexElementKind::Timestamp => KnowledgeSourceFragmentKind::Date,
+        ObsidianIndexElementKind::Embed => KnowledgeSourceFragmentKind::Link,
+        ObsidianIndexElementKind::Callout | ObsidianIndexElementKind::Block => {
+            KnowledgeSourceFragmentKind::Metadata
+        }
+    }
 }
 
 fn conflicts(
