@@ -1,0 +1,183 @@
+{
+  "artifact_id": "story-23.4-coordinator-boundary-review",
+  "checks": [
+    {
+      "check_id": "coordinator-client-independent",
+      "detail": "Kernel coordinator has no first-party client dependency.",
+      "passed": true
+    },
+    {
+      "check_id": "coordinator-transport-independent",
+      "detail": "Kernel coordinator has no UI, host-envelope, or ACP transport dependency.",
+      "passed": true
+    },
+    {
+      "check_id": "coordinator-no-direct-native-effect",
+      "detail": "Coordinator contains no process, filesystem, or socket effect API.",
+      "passed": true
+    },
+    {
+      "check_id": "coordinator-no-direct-storage",
+      "detail": "Coordinator reaches persistence only through injected narrow ports.",
+      "passed": true
+    },
+    {
+      "check_id": "coordinator-no-mcp-shortcut",
+      "detail": "Coordinator, client, and engine manifest contain no MCP shortcut.",
+      "passed": true
+    },
+    {
+      "check_id": "model-proposal-is-inert",
+      "detail": "Model port returns an inert result before registry dispatch.",
+      "passed": true
+    },
+    {
+      "check_id": "tool-dispatch-is-grant-gated",
+      "detail": "Dispatch requires the grant boundary and coordinator cannot mint grants or policy.",
+      "passed": true
+    },
+    {
+      "check_id": "shell-is-presentation-only",
+      "detail": "Client sources expose presentation, approval, and coordinator ports only.",
+      "passed": true
+    },
+    {
+      "check_id": "capability-pack-has-no-platform-edge",
+      "detail": "Read-only pack depends only on contracts and has no platform edge.",
+      "passed": true
+    },
+    {
+      "check_id": "exact-profile-has-no-hidden-fallback",
+      "detail": "Runtime, host, and client bind the exact profile and deny substitution.",
+      "passed": true
+    },
+    {
+      "check_id": "client-cannot-certify-success",
+      "detail": "Verifier-owned completion is identical across clients; client code cannot mint success.",
+      "passed": true
+    },
+    {
+      "check_id": "bypass-campaign-is-retained",
+      "detail": "Hash-bound source campaign retains confusion, authority, and mediation denials.",
+      "passed": true
+    }
+  ],
+  "independent_human_review_performed": false,
+  "installed_runtime_observed": false,
+  "limitations": [
+    "This is an independent automated source-boundary review, not an independent human review.",
+    "The review proves declared source structure and retained deterministic fixtures, not an installed native client or model runtime.",
+    "Dynamic loader, operating-system process, and post-package observations remain installed-platform evidence.",
+    "Persistent crash/restart and physical dependency-fault evidence remain owned by later durable campaigns.",
+    "Manual fuzzing remains deferred and was not executed.",
+    "No release approval, model enablement, platform support, or deployment authority follows from this review."
+  ],
+  "manual_fuzzing_executed": false,
+  "release_approved": false,
+  "report_sha256": "ce00c3163330cdf2d9a21ca154553c2cf65a117a7a96eed44702c14078b7af1d",
+  "schema_version": 1,
+  "source_revision": "0805b98cae9a5883b781a48748072d3a1e88152a",
+  "sources": [
+    {
+      "bytes": 137104,
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "3a3067d8d1f72fe7ff2ec0f783feec3f9d9f81401e4a863dbc11f8c99c1ec4c0"
+    },
+    {
+      "bytes": 7481,
+      "path": "shells/host/src/coding_client.rs",
+      "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
+    },
+    {
+      "bytes": 43101,
+      "path": "shells/host/src/cli_runtime.rs",
+      "sha256": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e"
+    },
+    {
+      "bytes": 38334,
+      "path": "shells/host/src/native_chat_runtime.rs",
+      "sha256": "e59a54ea04d1482bff2392cbf8e310332ea42de4a2029889a55792d8ddcc5b43"
+    },
+    {
+      "bytes": 22184,
+      "path": "shells/host/src/runtime_parity_tests.rs",
+      "sha256": "c7e26f72647a853c5dc09c3d316903409b60e1f1e223fb41623e0715f2890592"
+    },
+    {
+      "bytes": 29664,
+      "path": "shells/host/src/runtime_read_tests.rs",
+      "sha256": "d970a7147532e3d8e62b5d3b7ec41e5bb3b2e5103294d5cce7130eb8b6986202"
+    },
+    {
+      "bytes": 53979,
+      "path": "shells/vscode/src/provider.ts",
+      "sha256": "481d3f0fa8ada22800381ceebad9cb72f668e960832fa5a4caafada8664533ec"
+    },
+    {
+      "bytes": 37746,
+      "path": "shells/vscode/src/runtime_transport.ts",
+      "sha256": "1e11e9d7354512b76b68f97dc2151a4c31ace0175d36f6171b6404b444068fd1"
+    },
+    {
+      "bytes": 569,
+      "path": "kernel/engine/Cargo.toml",
+      "sha256": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e"
+    },
+    {
+      "bytes": 427,
+      "path": "capabilities/read-only/Cargo.toml",
+      "sha256": "7c13504dd4c895e5f5ada4c2cc5bc2d639b1c61b91c14c246fe177c19785b906"
+    },
+    {
+      "bytes": 4769,
+      "path": "architecture/dependency-rules.json",
+      "sha256": "8c172b72aed797bb76fde19f3612c6c83e3877295a58dd18e11c421dfa07d6ad"
+    },
+    {
+      "bytes": 5476,
+      "path": "architecture/module-inventory.json",
+      "sha256": "985e5b1c27d70dfc01e04f2f2ec02b7dbb3a5639a9f9cc9603b3d13add33fa43"
+    },
+    {
+      "bytes": 11584,
+      "path": "docs/architecture/reusable-runtime-coordinator.md",
+      "sha256": "af37ec63a8ade0a7842794d793576e3b44459934b2efe878036fa1217ec39e36"
+    },
+    {
+      "bytes": 9026,
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+      "sha256": "3d0cc82dd531e818fcd4d63b9800d74040cde90bf08b6a33adea57a125c1b144"
+    },
+    {
+      "bytes": 5890,
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
+      "sha256": "4f600b8ad884fabbe858b51db7e1165d8c7d3a07ad0b7278905caeced4c8188b"
+    },
+    {
+      "bytes": 10704,
+      "path": "scripts/dependency_rules.py",
+      "sha256": "27dee0562b2ae46a07f92be265c4c464b54a0ef799f236244738413c9afc812d"
+    },
+    {
+      "bytes": 9446,
+      "path": "scripts/effect_boundary.py",
+      "sha256": "d000f01a67aa42af5ecdf7d74926c99d9b01c9a0ea92ce5f59f901e5f32956bd"
+    },
+    {
+      "bytes": 16105,
+      "path": "scripts/runtime_coordinator_boundary_review.py",
+      "sha256": "7f992c505977a40470824abf7fdad6bf4254d352f64c1469fd8c9305ddf96d64"
+    },
+    {
+      "bytes": 3818,
+      "path": "tests/test_runtime_coordinator_boundary_review.py",
+      "sha256": "c344f7b213801c6aa15acdb0e59e026e9c1af7bd5e1ecf000d55c14fea961dce"
+    }
+  ],
+  "status": "pass-independent-automated-source-boundary-review",
+  "task_ids": [
+    "23.4.3.2",
+    "RV-05",
+    "RV-18"
+  ]
+}
