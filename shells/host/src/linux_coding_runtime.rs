@@ -3328,6 +3328,8 @@ mod tests {
         let state_root = root.join("state");
         if initialize {
             fs::create_dir_all(worktree_root.join("src")).expect("worktree tree");
+            fs::set_permissions(&worktree_root, fs::Permissions::from_mode(0o700))
+                .expect("private worktree root");
             fs::create_dir(&state_root).expect("state root");
             fs::set_permissions(&state_root, fs::Permissions::from_mode(0o700))
                 .expect("private state root");
