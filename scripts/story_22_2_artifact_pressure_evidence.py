@@ -47,6 +47,9 @@ COMMAND: Final = (
 FIXED_METRICS: Final = {
     "maximum_payload_bytes": 64 * 1024 * 1024,
     "page_bytes": 4 * 1024,
+    "mixed_object_count": 64,
+    "mixed_total_payload_bytes": sum(index * 1024 for index in range(1, 65)),
+    "mixed_final_active_object_count": 0,
     "checkpoint_reference_count": 1_024,
     "overflow_reference_count_rejected": 1_025,
     "deduplicated_reference_count": 1_023,
@@ -62,6 +65,8 @@ FIXED_METRICS: Final = {
 }
 ELAPSED_FIELDS: Final = (
     "maximum_elapsed_ms",
+    "mixed_publish_elapsed_ms",
+    "mixed_collection_elapsed_ms",
     "reference_elapsed_ms",
     "reopen_elapsed_ms",
     "collection_elapsed_ms",
@@ -69,6 +74,7 @@ ELAPSED_FIELDS: Final = (
 )
 DISK_FIELDS: Final = (
     "maximum_disk_bytes",
+    "mixed_disk_bytes",
     "reference_disk_bytes",
     "final_disk_bytes",
 )
@@ -238,7 +244,7 @@ def build_report(revision: str, output: str, command_elapsed_ms: int) -> dict[st
         "limitations": [
             "Measurements describe one current Fedora x86-64 source-test process and are not a cross-platform or installed-package performance guarantee.",
             "The campaign uses a debug test binary and deliberately re-verifies the complete 64 MiB encrypted object for each bounded page read.",
-            "The 1,024 logical references deduplicate one small payload; unique-object and mixed-size populations remain separate capacity work.",
+            "The campaign covers 64 mixed-size unique objects and 1,024 logical references deduplicated onto one small payload; larger unique populations and installed-package capacity remain open.",
             "Physical disk-full, device-latency, power-loss, controller-failure, and filesystem-corruption injection are not claimed.",
             "Windows and macOS native artifact-store evidence and independent review remain open.",
             "Manual fuzzing remains deferred and was not executed by this campaign.",

@@ -1747,6 +1747,7 @@ mod tests {
     #[ignore = "explicit Story 22.2 native maximum-payload and checkpoint-ceiling campaign"]
     fn story_22_2_native_artifact_pressure_reaches_declared_ceilings() {
         const PAGE_BYTES: u32 = 4 * 1024;
+        const MIXED_OBJECT_COUNT: usize = 64;
         const MAX_CAMPAIGN_MS: u64 = 300_000;
         const MAX_RESIDENT_DELTA_KIB: u64 = 512 * 1024;
         const MAX_RETAINED_DISK_BYTES: u64 = 128 * 1024 * 1024;
@@ -1825,6 +1826,60 @@ mod tests {
             1
         );
         drop(maximum_payload);
+
+        let mixed_started = Instant::now();
+        let mut mixed_references = Vec::with_capacity(MIXED_OBJECT_COUNT);
+        let mut mixed_total_payload_bytes = 0_u64;
+        for index in 0..MIXED_OBJECT_COUNT {
+            let byte_size = (index + 1) * 1024;
+            let payload = vec![(index + 1) as u8; byte_size];
+            mixed_total_payload_bytes += byte_size as u64;
+            let manifest = artifact_pressure_manifest(
+                &format!("artifact-pressure-22-2-mixed-{index:03}"),
+                &payload,
+            );
+            let publication = runtime
+                .publish_runtime_artifact(
+                    &mut payloads,
+                    manifest,
+                    &mut Cursor::new(payload.as_slice()),
+                )
+                .expect("mixed unique payload publishes");
+            assert!(!publication.payload_deduplicated);
+            mixed_references.push(publication.reference);
+        }
+        assert_eq!(
+            payloads.inventory().expect("mixed inventory reads").len(),
+            MIXED_OBJECT_COUNT
+        );
+        let mixed_publish_elapsed_ms = elapsed_ms(mixed_started);
+        let mixed_disk_bytes = recursive_directory_bytes(root.path());
+        let resident_after_mixed_kib = resident_memory_kib();
+
+        let mixed_collection_started = Instant::now();
+        for reference in &mixed_references {
+            runtime
+                .release_runtime_artifact(
+                    &maximum_manifest.session_id,
+                    &maximum_manifest.task_id,
+                    &maximum_manifest.policy_sha256,
+                    reference,
+                    5,
+                )
+                .expect("mixed unique reference releases");
+        }
+        let mixed_collection = runtime
+            .reconcile_runtime_artifacts(&mut payloads, 5)
+            .expect("mixed unique payloads collect");
+        assert_eq!(mixed_collection.deleted_orphans, MIXED_OBJECT_COUNT as u64);
+        assert_eq!(mixed_collection.quarantined_payloads, 0);
+        assert!(
+            payloads
+                .inventory()
+                .expect("post-mixed inventory reads")
+                .is_empty()
+        );
+        let mixed_collection_elapsed_ms = elapsed_ms(mixed_collection_started);
 
         let shared_payload = b"deduplicated-pressure-payload";
         let reference_started = Instant::now();
@@ -1947,17 +2002,22 @@ mod tests {
             Some(empty_binding)
         );
         let final_disk_bytes = recursive_directory_bytes(root.path());
-        let resident_peak_kib = resident_after_maximum_kib.max(resident_after_references_kib);
+        let resident_peak_kib = resident_after_maximum_kib
+            .max(resident_after_mixed_kib)
+            .max(resident_after_references_kib);
         let resident_delta_kib = resident_peak_kib.saturating_sub(resident_start_kib);
         let total_elapsed_ms = elapsed_ms(total_started);
 
         assert!(maximum_elapsed_ms <= MAX_CAMPAIGN_MS);
+        assert!(mixed_publish_elapsed_ms <= MAX_CAMPAIGN_MS);
+        assert!(mixed_collection_elapsed_ms <= MAX_CAMPAIGN_MS);
         assert!(reference_elapsed_ms <= MAX_CAMPAIGN_MS);
         assert!(reopen_elapsed_ms <= MAX_CAMPAIGN_MS);
         assert!(collection_elapsed_ms <= MAX_CAMPAIGN_MS);
         assert!(total_elapsed_ms <= MAX_CAMPAIGN_MS);
         assert!(resident_delta_kib <= MAX_RESIDENT_DELTA_KIB);
         assert!(maximum_disk_bytes <= MAX_RETAINED_DISK_BYTES);
+        assert!(mixed_disk_bytes <= MAX_RETAINED_DISK_BYTES);
         assert!(reference_disk_bytes <= MAX_RETAINED_DISK_BYTES);
         assert!(final_disk_bytes <= MAX_RETAINED_DISK_BYTES);
 
@@ -1966,6 +2026,12 @@ mod tests {
             serde_json::json!({
                 "maximum_payload_bytes": MAX_RUNTIME_ARTIFACT_BYTES,
                 "page_bytes": PAGE_BYTES,
+                "mixed_object_count": MIXED_OBJECT_COUNT,
+                "mixed_total_payload_bytes": mixed_total_payload_bytes,
+                "mixed_publish_elapsed_ms": mixed_publish_elapsed_ms,
+                "mixed_collection_elapsed_ms": mixed_collection_elapsed_ms,
+                "mixed_disk_bytes": mixed_disk_bytes,
+                "mixed_final_active_object_count": 0,
                 "checkpoint_reference_count": references.len(),
                 "overflow_reference_count_rejected": references.len() + 1,
                 "deduplicated_reference_count": deduplicated,
