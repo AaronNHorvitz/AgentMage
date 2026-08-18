@@ -95,7 +95,7 @@
   "allowed_first_party_build_scripts": [],
   "approved_cargo_manifests": {
     "Cargo.toml": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b",
-    "capabilities/knowledge/Cargo.toml": "b7f36b6898ddcce5c3a8a03a148366a819bfa0d67d7af5fb7480c5a94207a76b",
+    "capabilities/knowledge/Cargo.toml": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de",
     "capabilities/read-only/Cargo.toml": "0779ae133a0b654cbd5686ffbde501f72ed333b271592467af87bba02379d25e",
     "capabilities/repository-map/Cargo.toml": "6893bed2643ac73332862345c84f6062bedb6ff506ba7bd3a4036921e6242de6",
     "kernel/contracts/Cargo.toml": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
