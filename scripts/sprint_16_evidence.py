@@ -71,7 +71,7 @@ COMMANDS: Final = (
         ),
     ),
     (
-        "installed-linux-worker-subset",
+        "installed-linux-worker-operation-matrix",
         ("python", "scripts/sprint_16_linux_worker_evidence.py"),
     ),
     (
@@ -221,11 +221,11 @@ def build_report(
             "one_receipt_per_launched_attempt": True,
             "sensitive_output_withheld_before_model_context": True,
             "packaged_worker_payload_declared": True,
-            "installed_linux_worker_subset": installed_worker,
+            "installed_linux_worker_operation_matrix": installed_worker,
         },
         "platform_evidence": {
             "linux_contract_tests": local_pass,
-            "linux_packaged_live_worker_subset": True,
+            "linux_packaged_live_worker": True,
             "linux_complete_operation_matrix": True,
             "linux_live_attack_matrix": False,
             "macos_xpc_worker": False,
@@ -280,13 +280,15 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "one_receipt_per_launched_attempt": True,
         "sensitive_output_withheld_before_model_context": True,
         "packaged_worker_payload_declared": True,
-        "installed_linux_worker_subset": report.get("implemented_contracts", {}).get(
-            "installed_linux_worker_subset"
+        "installed_linux_worker_operation_matrix": report.get(
+            "implemented_contracts", {}
+        ).get(
+            "installed_linux_worker_operation_matrix"
         ),
     }:
         failures.append("implemented-contract inventory drift")
     installed_worker = report.get("implemented_contracts", {}).get(
-        "installed_linux_worker_subset", {}
+        "installed_linux_worker_operation_matrix", {}
     )
     if (
         installed_worker.get("artifact")
@@ -298,7 +300,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         or installed_worker.get("verified_operations")
         != worker_evidence.VERIFIED_OPERATIONS
     ):
-        failures.append("installed worker subset evidence drift")
+        failures.append("installed worker operation-matrix evidence drift")
     expected_summary = {
         "local_contract_passed": True,
         "sprint_status": "BLOCKED",
@@ -308,8 +310,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("summary overclaim or local failure")
     platform = report.get("platform_evidence", {})
     verification = report.get("verification_evidence", {})
-    if platform.get("linux_packaged_live_worker_subset") is not True:
-        failures.append("installed Linux worker subset evidence drift")
+    if platform.get("linux_packaged_live_worker") is not True:
+        failures.append("installed Linux worker evidence drift")
     if platform.get("linux_complete_operation_matrix") is not True:
         failures.append("installed Linux complete operation matrix drift")
     for field in ("linux_live_attack_matrix", "macos_xpc_worker"):

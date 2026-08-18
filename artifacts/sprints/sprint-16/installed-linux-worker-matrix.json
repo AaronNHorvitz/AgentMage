@@ -1,7 +1,7 @@
 {
   "attack_matrix_complete": false,
   "cleanup_campaign_complete": false,
-  "complete_ten_tool_matrix": false,
+  "complete_ten_tool_matrix": true,
   "macos_evidence_substituted": false,
   "private_host_data_used": false,
   "qemu": {
@@ -13,7 +13,7 @@
   "release_claim": false,
   "repository_credentials_injected": false,
   "schema_version": 1,
-  "source_revision": "a715c450ebb3687e484143a7a94542ef47fca53d",
+  "source_revision": "6d6769122c84f1e22640077656447408b3f47a69",
   "sources": [
     {
       "bytes": 1800,
@@ -21,9 +21,9 @@
       "sha256": "1adbae4446e6e686fe6c6b2e061d1027fc335d36d7c77636751dd36e078ed7f3"
     },
     {
-      "bytes": 6526,
+      "bytes": 7185,
       "path": "docs/architecture/read-only-tool-protocol.md",
-      "sha256": "9b71321e8a6872191a1114e65ccc94c11678bcce853e78a802ae76fce6260f71"
+      "sha256": "1d0dec8577f08c86c15fc502c6cb9cd3b96caf2cc87d9db873d503ad19f0ffbb"
     },
     {
       "bytes": 1315,
@@ -41,19 +41,19 @@
       "sha256": "ff9d7f65db6dfcd4355d92aa91efcf46e4721216622cf22135590e09f28f8692"
     },
     {
-      "bytes": 18048,
+      "bytes": 18576,
       "path": "scripts/sprint_16_linux_worker_evidence.py",
-      "sha256": "131f9718ead4793500069e9541af21eddc2e5e044a7283bfc740867ebcc1ebf4"
+      "sha256": "624612e682b0c5a498575e8dd8b2e186de3ad2445131fa16dae514065c88244f"
     },
     {
-      "bytes": 7129,
+      "bytes": 7576,
       "path": "scripts/sprint_16_linux_worker_guest.py",
-      "sha256": "1719d209dc13346b8a990e634928da217ac213a21f4e905107eed203858345ab"
+      "sha256": "dc8b0788206f87718acf6da5e4c3ae1f3a4164417729afdf93a7d8fd34c70310"
     },
     {
-      "bytes": 123068,
+      "bytes": 127928,
       "path": "shells/host/src/linux_read.rs",
-      "sha256": "bc64b9fc4a02b82537c73f940332f463021befa28080fbb65aa296ab86b150c9"
+      "sha256": "87774074fe2d00df237a4d438ee0709a57ba3202c7ffa25eac963789004fa6e4"
     },
     {
       "bytes": 25209,
@@ -61,12 +61,12 @@
       "sha256": "a3be641131ef9737feb09e8de6bd666564ed7338de35339afb1f0127d92d0a6b"
     },
     {
-      "bytes": 4996,
+      "bytes": 5149,
       "path": "tests/test_sprint_16_linux_worker_evidence.py",
-      "sha256": "d543ffcf973368066f17436cede76a82283c4d83925586abf57ac6074e231af7"
+      "sha256": "3298f653f8f4409535f76f13b15f4c52649399043a580b97722a818be4595892"
     }
   ],
-  "status": "pass-installed-linux-worker-subset",
+  "status": "pass-installed-linux-worker-operation-matrix",
   "targets": [
     {
       "cleanup": {
@@ -96,14 +96,14 @@
             "exit_code": 0,
             "id": "guest-command-2",
             "output_bytes": 3850,
-            "output_sha256": "8c3b025e2e9126705102d6c444a103fce2f0343740e13f25cce7c6ba4db23794"
+            "output_sha256": "1766321bc47da5e37011f87688a748ba491453f07f0e5fe5bec104f449844665"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-3",
-            "output_bytes": 503,
-            "output_sha256": "261ab373cc4ad7fa3c8f956f020dc96ca7ed635785ea02fca79c127470206219"
+            "output_bytes": 504,
+            "output_sha256": "21037a6ed81e59232dcc6e3385ad1987d11458af30e064ec4f12dcdf5f22dc72"
           },
           {
             "executable": "cargo",
@@ -137,8 +137,8 @@
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-8",
-            "output_bytes": 4775,
-            "output_sha256": "5477823d35db68edfbed9c5bf059bcf9bc40da275a7ac090ae2a57d0b88be77e"
+            "output_bytes": 4781,
+            "output_sha256": "7e70afd66c3e96214195a6b2e4b2e366493393bb6ffb3aa2038ed920850add18"
           },
           {
             "executable": "systemctl",
@@ -160,13 +160,24 @@
         "package_residue": false,
         "package_sha256": "d5c73ba7aaacfce8469c7d67188451390b2357dc19869e3f9c9a0df67f36f993",
         "private_data_used": false,
-        "receipt_count": 1,
+        "receipt_count": 10,
         "record_type": "sprint-16-installed-worker-guest-result",
         "schema_version": 1,
         "status": "pass",
         "strict_offline": true,
         "transient_unit_residue": false,
-        "verified_operation": "agentmage.workspace.search-text",
+        "verified_operations": [
+          "agentmage.workspace.list-directory",
+          "agentmage.workspace.directory-tree",
+          "agentmage.workspace.read-file",
+          "agentmage.workspace.read-multiple",
+          "agentmage.workspace.search-filenames",
+          "agentmage.workspace.search-text",
+          "agentmage.workspace.metadata",
+          "agentmage.workspace.hash-file",
+          "agentmage.workspace.hash-tree",
+          "agentmage.workspace.binary-metadata"
+        ],
         "worker": {
           "mode": "0755",
           "path_class": "root-owned-package-libexec",
@@ -176,12 +187,12 @@
         "workspace_invariant": true
       },
       "observation_sha256": {
-        "processes": "4793a6f53abdb77b811b44327ff806e893c14bbced3c66d9731d4767b1aa0697",
-        "sockets": "9490bf60825a1a79fdc4a9bfd855bde541d16eea65a8529b0bcd511e3051fc96"
+        "processes": "0211ea5cc06a4b7249d704108e4c1f059038e5100fff41bbd81d61d4b510d2ba",
+        "sockets": "e44e354486596cf538de8728904cbf85c8db5525cb902f956b19b6a7f801a9b4"
       },
       "prepared_base_sha256": "6338412bba54ac99f9e7c3c619b0ab60b4880a5eadb723a1d3d41acc10183938",
-      "source_bundle_sha256": "08a46df4679e1d621c1c147860fb960a157032e6c32c9d00a26dfab00550aa6b",
-      "source_revision": "a715c450ebb3687e484143a7a94542ef47fca53d",
+      "source_bundle_sha256": "06dae5b9d521e292a2aedd82b95838412fc8d730ab204c9ea2963ce6c4fe3895",
+      "source_revision": "6d6769122c84f1e22640077656447408b3f47a69",
       "strict_offline": true,
       "target_id": "fedora-44-x86_64"
     },
@@ -213,21 +224,21 @@
             "exit_code": 0,
             "id": "guest-command-2",
             "output_bytes": 3850,
-            "output_sha256": "70fe284c21e72804b0cbca68b7db74b28428eca35d121ff285fe8c02f8f1a1c4"
+            "output_sha256": "e6c0d37155c703697eb730f848e8a2edba7e6afc4fe183500bc682538138418e"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-3",
             "output_bytes": 504,
-            "output_sha256": "e742178ac2497dfcf00fbee3c5a7fa34098ed103f2552c3aaa7638f3f101e313"
+            "output_sha256": "22c2385e7a96ea9112ef4eb75cdcf889989dfc650f107cbf04a54f3bd47686f7"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-4",
             "output_bytes": 153,
-            "output_sha256": "22c018fbb8a1b3c44f8aa924d89fb6ec56d3a0c60d7b0fad263ddb54233d9afc"
+            "output_sha256": "b0d5bc99fbb9866408bb86e3015e0fdcb7e7e34be976bee0a93f07a0d9bbb424"
           },
           {
             "executable": "python3",
@@ -254,8 +265,8 @@
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-8",
-            "output_bytes": 4775,
-            "output_sha256": "c97e31a3f68f8a2a73e25a08ff1b75a86e0ed18a573992e61fb847df26a915d2"
+            "output_bytes": 4781,
+            "output_sha256": "cd608ff19724d89a05b9af0ccb911f1fb9811bf222619966fc650ee2f12d1361"
           },
           {
             "executable": "systemctl",
@@ -277,13 +288,24 @@
         "package_residue": false,
         "package_sha256": "ce5a110a106e3351f2c6aba9c466bd30ce17a7438b01493c9be2d3b37304b521",
         "private_data_used": false,
-        "receipt_count": 1,
+        "receipt_count": 10,
         "record_type": "sprint-16-installed-worker-guest-result",
         "schema_version": 1,
         "status": "pass",
         "strict_offline": true,
         "transient_unit_residue": false,
-        "verified_operation": "agentmage.workspace.search-text",
+        "verified_operations": [
+          "agentmage.workspace.list-directory",
+          "agentmage.workspace.directory-tree",
+          "agentmage.workspace.read-file",
+          "agentmage.workspace.read-multiple",
+          "agentmage.workspace.search-filenames",
+          "agentmage.workspace.search-text",
+          "agentmage.workspace.metadata",
+          "agentmage.workspace.hash-file",
+          "agentmage.workspace.hash-tree",
+          "agentmage.workspace.binary-metadata"
+        ],
         "worker": {
           "mode": "0755",
           "path_class": "root-owned-package-libexec",
@@ -293,12 +315,12 @@
         "workspace_invariant": true
       },
       "observation_sha256": {
-        "processes": "009523d54746ba5510cb7de30df9531bae1ec80bcb2ab5f74d0fed3c2b2c6c9c",
-        "sockets": "757a7c4e6e373cfc86daff2dcc44ef8b0bf9e0a9550c48b5004856912d100e5d"
+        "processes": "a1f1b1dacfa176631be2353d4d75f926b1185c500ed1499e12ee3c4c02fa3d32",
+        "sockets": "89168c88c8fea7cc62f8980607d5dd8b01251269160b652a23a856cc4b153af3"
       },
       "prepared_base_sha256": "e9924f3d542065e8184ff5c6be0853167ea5e4d63984d9f71b5ee4d667104154",
-      "source_bundle_sha256": "08a46df4679e1d621c1c147860fb960a157032e6c32c9d00a26dfab00550aa6b",
-      "source_revision": "a715c450ebb3687e484143a7a94542ef47fca53d",
+      "source_bundle_sha256": "06dae5b9d521e292a2aedd82b95838412fc8d730ab204c9ea2963ce6c4fe3895",
+      "source_revision": "6d6769122c84f1e22640077656447408b3f47a69",
       "strict_offline": true,
       "target_id": "ubuntu-26.04-x86_64"
     }
@@ -308,6 +330,15 @@
     "16.1.2.3"
   ],
   "verified_operations": [
-    "agentmage.workspace.search-text"
+    "agentmage.workspace.list-directory",
+    "agentmage.workspace.directory-tree",
+    "agentmage.workspace.read-file",
+    "agentmage.workspace.read-multiple",
+    "agentmage.workspace.search-filenames",
+    "agentmage.workspace.search-text",
+    "agentmage.workspace.metadata",
+    "agentmage.workspace.hash-file",
+    "agentmage.workspace.hash-tree",
+    "agentmage.workspace.binary-metadata"
   ]
 }

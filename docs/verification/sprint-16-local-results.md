@@ -31,10 +31,11 @@
   verifier-required executable; extraction, exact manifest comparison,
   mutation refusal, and deterministic rebuild pass locally.
 - Native Fedora 44 and Ubuntu 26.04 KVM guests install those candidates and run
-  `agentmage.workspace.search-text` through the root-owned mode-`0755` worker
-  under strict-offline Bubblewrap/systemd isolation. Each target retains one
-  receipt, preserves the workspace, removes the package, and leaves no worker,
-  unit, listener, overlay, transient source, or credential residue.
+  all ten catalog operations through separate root-owned mode-`0755` worker
+  launches under strict-offline Bubblewrap/systemd isolation. Each target
+  retains ten receipts, preserves complete path/type/mode/owner/group/size/mtime
+  workspace observations, removes the package, and leaves no worker, unit,
+  listener, overlay, transient source, or credential residue.
 - Candidate construction normalizes every archived payload directory to mode
   `0755`; a regression test proves a group-writable staging parent cannot enter
   the DEB or RPM payload.
@@ -44,13 +45,12 @@
 ## Open Evidence
 
 The production Linux manifest correctly rejects a user-owned development
-worker. The installed root-owned worker now has current native evidence for one
-SearchText operation on Fedora and Ubuntu. The other nine production
-operations, full live attack matrix, worker cancellation/timeout/kill/crash
-campaigns, independent worker review, and native macOS XPC evidence remain
-open. Model-context disclosure handling is locally verified. The remaining live
-campaigns and platform evidence are blockers, not waived or substituted by the
-passing installed subset.
+worker. The installed root-owned worker now has current native evidence for all
+ten operations on Fedora and Ubuntu. The full live attack matrix, worker
+cancellation/timeout/kill/crash campaigns, independent worker review, and native
+macOS XPC evidence remain open. Model-context disclosure handling is locally
+verified. The remaining live campaigns and platform evidence are blockers, not
+waived or substituted by the passing Linux operation matrix.
 
 The machine-readable records are
 [`local-evidence-report.json`](../../artifacts/sprints/sprint-16/local-evidence-report.json)

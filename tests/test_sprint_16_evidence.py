@@ -38,13 +38,13 @@ class Sprint16EvidenceTests(unittest.TestCase):
         self.assertEqual(value["implemented_contracts"]["catalog_tools"], 10)
         self.assertEqual(value["implemented_contracts"]["write_capable_tools"], 0)
         self.assertTrue(value["implemented_contracts"]["packaged_worker_payload_declared"])
-        self.assertTrue(value["platform_evidence"]["linux_packaged_live_worker_subset"])
+        self.assertTrue(value["platform_evidence"]["linux_packaged_live_worker"])
 
     def test_platform_cleanup_disclosure_and_review_claim_drift_fails(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["platform_evidence"].update(
-                {"linux_packaged_live_worker_subset": False}
+                {"linux_packaged_live_worker": False}
             ),
             lambda value: value["platform_evidence"].update(
                 {"linux_complete_operation_matrix": False}

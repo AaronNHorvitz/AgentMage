@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Implemented platform-neutral contracts and one installed Linux operation; complete Linux and macOS worker evidence remains open |
+| Status | Implemented platform-neutral contracts and complete installed Linux catalog; macOS and adversarial worker evidence remain open |
 | Requirement | `AM-TOL-001` |
 | Acceptance | `AT-TOOL-001` |
 | Task gate | Sprint 16 |
@@ -116,19 +116,19 @@ Both unsigned candidate and signable Linux payloads include
 manifest entry. Candidate construction, deterministic rebuild, RPM/DEB
 extraction, complete-payload verification, and mutation refusal pass locally.
 Disposable native KVM guests additionally install the resulting RPM on Fedora
-44 and DEB on Ubuntu 26.04, verify the exact root-owned mode-`0755` worker,
-execute `agentmage.workspace.search-text` through Bubblewrap and a transient
-systemd user unit with external networking denied, retain one operation
-receipt, prove workspace invariance, remove the package, and prove process,
-unit, source, credential, listener, and overlay cleanup. Package construction
+44 and DEB on Ubuntu 26.04, verify the exact root-owned mode-`0755` worker, and
+execute all ten catalog operations through separate Bubblewrap and transient
+systemd user-unit launches with external networking denied. Each target retains
+ten operation receipts, proves complete path/type/mode/owner/group/size/mtime
+workspace invariance, removes the package, and proves process, unit, source,
+credential, listener, and overlay cleanup. Package construction
 sets every archived payload directory to mode `0755`; this prevents a mutable
 staging umask from making an installed executable parent group-writable.
 
 The platform-neutral tool engine, Linux mediation contract, host approval flow,
 golden results, malformed-input matrix, and non-live sandbox attacks are locally
-verified. The installed matrix currently covers one of ten operations on Linux;
-it does not substitute for the complete operation or attack matrices. Sprint 16
-remains blocked until all ten operations are exercised through the installed
-worker, cancellation/timeout/kill/crash cleanup evidence is retained, the
+verified. The installed Linux operation matrix is complete, but it does not
+substitute for the live attack or forced-lifecycle campaigns. Sprint 16 remains
+blocked until cancellation/timeout/kill/crash cleanup evidence is retained, the
 complete attack matrix passes, an independent worker review is retained, and
 the required macOS XPC evidence is produced on eligible hardware.
