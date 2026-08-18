@@ -339,6 +339,14 @@ Current automated coverage includes:
   release, collects after an empty successor checkpoint, and verifies a final
   reopen. Its hash-bound report retains measured elapsed time, resident memory,
   disk bytes, and stated host-local limitations.
+- One native durable-resume campaign stops deterministically immediately after
+  a committed safe-boundary checkpoint, destroys the coordinator, reopens the
+  encrypted Linux authority, and restores the exact event cursor, continuation,
+  artifact set, receipt, and terminal no-op outcome without replaying the
+  protected Git operation. Repository, policy, and model-runtime drift fail
+  closed. Missing and corrupt continuation payloads reconcile to an explicit
+  blocked restore with no second execution. The hash-bound report and redacted
+  raw trace are retained under `artifacts/sprints/sprint-22/story-22.2/`.
 - Fedora journal and artifact pressure measurements retained by Story 50.2.
 
 Still open before Story 22.2 can pass:
@@ -350,9 +358,11 @@ Still open before Story 22.2 can pass:
   native matrix stops immediately before and after each declared transaction
   edge without unwinding; it does not claim those physical-fault conditions.
 - Physical disk-full and device-latency injection, mixed-size unique-object
-  pressure, and the complete production durable-resume campaign. The current
-  path-substitution matrix and deduplicated ceiling campaign do not substitute
-  for those remaining classes.
+  pressure, and the complete durable-resume campaign for large command, test,
+  and model artifacts, long sessions, concurrent collection, quarantined
+  payload operator recovery, installed interfaces, and a real local model. The
+  current path-substitution, deduplicated ceiling, and focused fake-model
+  resume campaigns do not substitute for those remaining classes.
 - Windows native artifact-store implementation and evidence; retained macOS work
   remains outside the current GA dependency lane.
 - End-to-end production evidence for a tool that emits generated-file bytes;

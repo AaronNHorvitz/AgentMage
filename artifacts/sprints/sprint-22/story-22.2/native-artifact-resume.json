@@ -1,0 +1,84 @@
+{
+  "artifact_id": "story-22.2-native-runtime-artifact-resume",
+  "external_network_used": false,
+  "host": {
+    "machine": "x86_64",
+    "system": "Linux"
+  },
+  "limitations": [
+    "The campaign uses the production coordinator and native encrypted Linux authority with a deterministic fake model and instrumented Git executor; it is not installed-package or real-model evidence.",
+    "The exact continuation and its artifact set resume after one protected operation, but large command, test, and model artifact reconstruction remains open.",
+    "Missing and corrupt continuation payloads are reconciled at startup and block explicitly; concurrent collection and physical storage failure are not claimed.",
+    "This current-host Linux source campaign is not Windows, macOS, release, or independent-review evidence.",
+    "The two focused tests are not the separate one-hundred-run native tool-terminal campaign owned by Story 22.1.",
+    "Manual fuzzing remains deferred and was not executed by this campaign."
+  ],
+  "metrics": {
+    "continuation-integrity-loss": {
+      "active_continuation_objects_after_reconcile": 0,
+      "cases": [
+        "missing",
+        "corrupt"
+      ],
+      "cases_blocked": 2,
+      "post_failure_total_tool_executions_per_case": 1,
+      "pre_restart_tool_executions_per_case": 1,
+      "scenario": "continuation-integrity-loss"
+    },
+    "exact-checkpoint-resume": {
+      "artifact_set": "exact",
+      "model_runtime_drift": "blocked",
+      "policy_drift": "blocked",
+      "post_resume_receipts": 1,
+      "post_resume_total_tool_executions": 1,
+      "pre_restart_receipts": 1,
+      "pre_restart_tool_executions": 1,
+      "repository_drift": "blocked",
+      "scenario": "exact-checkpoint-resume",
+      "terminal_state": "no_op"
+    }
+  },
+  "private_user_data_used": false,
+  "raw_trace": {
+    "bytes": 1079,
+    "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "79b934c532a9511215d5a103c0948519f845c37f473c165bfb099ba1100998ef"
+  },
+  "schema_version": 1,
+  "source_revision": "5ed46e7d38713717dcde020d794d00bf907fc6fc",
+  "sources": [
+    {
+      "bytes": 227979,
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "25bcb4c808432df243684ad102d5db33d17dca7a91bd0f4df8fdf4d6e57bfe64"
+    },
+    {
+      "bytes": 12400,
+      "path": "scripts/story_22_2_artifact_resume_evidence.py",
+      "sha256": "235fda042817e82b2b9bf03eeb81ab2f77a2444a44455eb595c069fc78f92d2f"
+    },
+    {
+      "bytes": 2686,
+      "path": "tests/test_story_22_2_artifact_resume_evidence.py",
+      "sha256": "27b2db7cbeffe043f25276439aa17949998ca5b2c313b79baeaeefa101b8fe05"
+    }
+  ],
+  "status": "partial-pass-current-linux-native-source-boundary",
+  "task_ids": [
+    "22.2.3.3",
+    "RV-17",
+    "RV-18"
+  ],
+  "tests": [
+    "story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool",
+    "story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool"
+  ],
+  "verification": {
+    "command_id": "3eefd173a9764cb52f0961c375119204bd108eae41fc7f5b66b638ace19a7cdb",
+    "elapsed_ms": 1401,
+    "exit_code": 0
+  }
+}
