@@ -347,6 +347,16 @@ Current automated coverage includes:
   closed. Missing and corrupt continuation payloads reconcile to an explicit
   blocked restore with no second execution. The hash-bound report and redacted
   raw trace are retained under `artifacts/sprints/sprint-22/story-22.2/`.
+- One combined artifact-integrity campaign source-binds 21 kernel contracts,
+  nine native Linux payload-store and adversarial tests, one production
+  generated-file publication and checkpoint test, and one public-schema
+  mutation test. Its coverage matrix includes digest, size, media, preview,
+  retention, identity, reference, ownership, encryption, plaintext exclusion,
+  missing/corrupt quarantine, duplicate and colliding publication, partial and
+  oversized input, expiration, unknown versions, path/link/namespace attacks,
+  public-evidence separation, and path-free operator projection. The hash-bound
+  report and redacted raw trace are retained under
+  `artifacts/sprints/sprint-22/story-22.2/`.
 - Fedora journal and artifact pressure measurements retained by Story 50.2.
 
 Still open before Story 22.2 can pass:
@@ -365,7 +375,8 @@ Still open before Story 22.2 can pass:
   resume campaigns do not substitute for those remaining classes.
 - Windows native artifact-store implementation and evidence; retained macOS work
   remains outside the current GA dependency lane.
-- End-to-end production evidence for a tool that emits generated-file bytes;
-  the closed candidate route and kind are implemented, but the current native
-  tool catalog has no generated-file producer.
+- Complete large model-output routing and the remaining installed-interface,
+  long-session, and cross-platform producer evidence. Controlled file creation
+  now supplies an end-to-end native generated-file producer above the inline
+  ceiling and binds its reference into durable resume state.
 - Online key rotation and any future released-format migration protocol.

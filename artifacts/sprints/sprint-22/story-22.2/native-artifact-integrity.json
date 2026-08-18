@@ -1,0 +1,163 @@
+{
+  "artifact_id": "story-22.2-native-runtime-artifact-integrity",
+  "commands": [
+    {
+      "command_id": "ab1fb3e5f0cd8a3009aa746feadd0faa83b91ab295409f3e5e24c7f5cf14da08",
+      "elapsed_ms": 3253,
+      "exit_code": 0,
+      "expected_summary": "21 passed; 0 failed; 0 ignored",
+      "id": "kernel-contracts",
+      "required_tests": [
+        "manifest_digest_or_reference_drift_fails_closed",
+        "size_media_retention_and_preview_bounds_are_closed",
+        "unknown_versions_and_expired_artifacts_fail_closed",
+        "partial_and_identifier_colliding_publications_preserve_canonical_state",
+        "story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
+        "current_checkpoint_reference_prevents_release_and_collection",
+        "missing_and_corrupt_payloads_quarantine_every_active_reference",
+        "operator_view_is_path_free_complete_and_tracks_cleanup_state",
+        "publication_deduplicates_without_broadening_owner_or_reference_state",
+        "checkpoint_cursor_and_artifact_set_publish_atomically_and_reopen"
+      ]
+    },
+    {
+      "command_id": "b4b0b8f446dabb8739a1f2ceb086d3741a2ea979f6f7cb26e0adadd8b96a0d73",
+      "elapsed_ms": 1106,
+      "exit_code": 0,
+      "expected_summary": "9 passed; 0 failed; 2 ignored",
+      "id": "linux-native-store",
+      "required_tests": [
+        "stage_place_read_inventory_and_dedup_are_content_addressed",
+        "staging_and_objects_are_encrypted_randomized_and_key_bound",
+        "hard_links_and_open_handle_collection_do_not_disclose_plaintext",
+        "staging_is_bounded_and_interrupted_objects_are_cleaned",
+        "invalid_names_symlinks_modes_and_root_drift_fail_closed",
+        "corruption_quarantine_and_verified_delete_leave_no_active_object",
+        "fixed_namespace_substitution_fails_before_the_next_store_effect",
+        "repository_evidence_namespace_is_never_private_artifact_authority",
+        "story_22_2_native_crash_matrix_reconciles_every_artifact_boundary"
+      ]
+    },
+    {
+      "command_id": "66f4e9017236c443d3ddc2b139237bc8eb34d947594da4277bde13946ebbe958",
+      "elapsed_ms": 861,
+      "exit_code": 0,
+      "expected_summary": "1 passed; 0 failed; 0 ignored",
+      "id": "generated-file-route",
+      "required_tests": [
+        "story_22_2_linux_generated_file_is_published_and_checkpoint_bound"
+      ]
+    },
+    {
+      "command_id": "40235cbebb517fd5dbce7fd0505d9f47a4193fc1e991f8ed4b8f48f16bc794b4",
+      "elapsed_ms": 422,
+      "exit_code": 0,
+      "expected_summary": "pass 1",
+      "id": "public-schema-contracts",
+      "required_tests": [
+        "runtime artifact schemas reject path authority and lifecycle drift"
+      ]
+    }
+  ],
+  "coverage": {
+    "digest-size-media-preview-retention": [
+      "kernel-contracts:size_media_retention_and_preview_bounds_are_closed",
+      "kernel-contracts:manifest_digest_or_reference_drift_fails_closed"
+    ],
+    "duplicate-collision-partial-and-oversized": [
+      "kernel-contracts:partial_and_identifier_colliding_publications_preserve_canonical_state",
+      "linux-native-store:stage_place_read_inventory_and_dedup_are_content_addressed",
+      "linux-native-store:staging_is_bounded_and_interrupted_objects_are_cleaned"
+    ],
+    "encryption-key-binding-and-plaintext-exclusion": [
+      "linux-native-store:staging_and_objects_are_encrypted_randomized_and_key_bound",
+      "linux-native-store:hard_links_and_open_handle_collection_do_not_disclose_plaintext"
+    ],
+    "expired-stale-and-unknown-version": [
+      "kernel-contracts:unknown_versions_and_expired_artifacts_fail_closed",
+      "kernel-contracts:current_checkpoint_reference_prevents_release_and_collection"
+    ],
+    "identity-reference-owner-checkpoint": [
+      "kernel-contracts:story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
+      "kernel-contracts:checkpoint_cursor_and_artifact_set_publish_atomically_and_reopen"
+    ],
+    "missing-corrupt-quarantine-and-cleanup": [
+      "kernel-contracts:missing_and_corrupt_payloads_quarantine_every_active_reference",
+      "linux-native-store:corruption_quarantine_and_verified_delete_leave_no_active_object"
+    ],
+    "operator-projection-and-generated-file-route": [
+      "kernel-contracts:operator_view_is_path_free_complete_and_tracks_cleanup_state",
+      "generated-file-route:story_22_2_linux_generated_file_is_published_and_checkpoint_bound"
+    ],
+    "path-link-namespace-and-public-evidence-separation": [
+      "linux-native-store:invalid_names_symlinks_modes_and_root_drift_fail_closed",
+      "linux-native-store:fixed_namespace_substitution_fails_before_the_next_store_effect",
+      "linux-native-store:repository_evidence_namespace_is_never_private_artifact_authority"
+    ],
+    "schema-lifecycle-and-path-mutations": [
+      "public-schema-contracts:runtime artifact schemas reject path authority and lifecycle drift"
+    ]
+  },
+  "external_network_used": false,
+  "host": {
+    "machine": "x86_64",
+    "system": "Linux"
+  },
+  "limitations": [
+    "This campaign proves the named unit, native Linux source, generated-file route, and public-schema contracts; it is not installed-package or cross-platform evidence.",
+    "The namespace-substitution tests are deterministic boundary attacks, not a concurrent file-level race campaign.",
+    "Physical power loss, disk-full, device latency, controller failure, and filesystem corruption are not claimed.",
+    "Windows and macOS native artifact-store evidence and independent cryptographic review remain open.",
+    "Large command, test, and model artifact session reconstruction remains separate resume-campaign work.",
+    "Manual fuzzing remains deferred and was not executed by this campaign."
+  ],
+  "private_user_data_used": false,
+  "raw_trace": {
+    "bytes": 10556,
+    "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "a081459b81005fb4a136b45a00b4069726afd3187687326f9422929b59f19552"
+  },
+  "schema_version": 1,
+  "source_revision": "59d5ed92fd581e3065ec9b5508c0a7450946cd85",
+  "sources": [
+    {
+      "bytes": 162202,
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "40fba8bed9bb8f4ae60ae5f20af6afb984cbb85f4ef8583896d7632c1ad5cbff"
+    },
+    {
+      "bytes": 84332,
+      "path": "platforms/linux/src/runtime_artifact_store.rs",
+      "sha256": "1ad92f84b3a125d500f7695baf4b6dba14f53ce12e6c92f8da3433c8a8f6a78e"
+    },
+    {
+      "bytes": 233265,
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "37229d536e290164af956967993b20506556460e42f6698a51d95e56cacc6926"
+    },
+    {
+      "bytes": 67296,
+      "path": "tests/test_planning_schemas.mjs",
+      "sha256": "af74d590af0eb8eb3cda538133f879dcb13eea0b8e3250c9b4e46f850c58b919"
+    },
+    {
+      "bytes": 16137,
+      "path": "scripts/story_22_2_artifact_integrity_evidence.py",
+      "sha256": "86b871bad0cd4405a3922f965cb58991220a42604ee6554657407c08a70801aa"
+    },
+    {
+      "bytes": 2682,
+      "path": "tests/test_story_22_2_artifact_integrity_evidence.py",
+      "sha256": "b0dea6ed797418209f09d39c3ec0189e19ff04e40f9df4940906225486c118ad"
+    }
+  ],
+  "status": "pass-current-linux-source-boundary",
+  "task_ids": [
+    "22.2.3.1",
+    "RV-17",
+    "RV-18"
+  ]
+}

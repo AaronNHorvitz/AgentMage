@@ -1,0 +1,72 @@
+===== kernel-contracts =====
+
+running 21 tests
+test runtime_artifact::tests::manifest_digest_or_reference_drift_fails_closed ... ok
+test runtime_artifact::tests::manifest_reference_and_event_projection_reconcile_exactly ... ok
+test runtime_artifact::tests::resume_binding_rejects_run_drift_and_duplicate_references ... ok
+test runtime_artifact::tests::continuation_rejects_unsafe_or_inconsistent_state ... ok
+test runtime_artifact::tests::continuation_digest_binds_cursor_and_collected_state ... ok
+test runtime_artifact::tests::size_media_retention_and_preview_bounds_are_closed ... ok
+test runtime_artifact::tests::resume_binding_binds_cursor_and_sorted_exact_artifact_set ... ok
+test runtime_artifact::tests::continuation_round_trips_one_exact_safe_boundary ... ok
+test runtime_artifact::tests::continuation_codec_supports_verified_payloads_above_shared_json_limit ... ok
+test runtime_artifact::tests::corrupt_unreferenced_inventory_is_quarantined_without_trusting_size ... ok
+test runtime_artifact::tests::current_checkpoint_reference_prevents_release_and_collection ... ok
+test runtime_artifact::tests::story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read ... ok
+test runtime_artifact::tests::unknown_versions_and_expired_artifacts_fail_closed ... ok
+test runtime_artifact::tests::story_50_2_artifact_pages_are_owner_bound_bounded_and_exact ... ok
+test runtime_artifact::tests::operator_view_is_path_free_complete_and_tracks_cleanup_state ... ok
+test runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state ... ok
+test runtime_artifact::tests::partial_and_identifier_colliding_publications_preserve_canonical_state ... ok
+test runtime_artifact::tests::checkpoint_cursor_and_artifact_set_publish_atomically_and_reopen ... ok
+test runtime_artifact::tests::metadata_projection_tampering_blocks_durable_restart ... ok
+test runtime_artifact::tests::failed_resume_binding_rolls_back_the_checkpoint_and_requires_reopen ... ok
+test runtime_artifact::tests::missing_and_corrupt_payloads_quarantine_every_active_reference ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 607 filtered out; finished in 0.88s
+
+   Compiling agentmage-kernel-engine v0.0.0 (<repository-root>/kernel/engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.34s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+===== linux-native-store =====
+
+running 11 tests
+test runtime_artifact_store::tests::story_22_2_native_artifact_crash_boundary_child ... ignored, subprocess stop target; invoked only by the Story 22.2 artifact crash matrix
+test runtime_artifact_store::tests::story_22_2_native_artifact_pressure_reaches_declared_ceilings ... ignored, explicit Story 22.2 native maximum-payload and checkpoint-ceiling campaign
+test runtime_artifact_store::tests::invalid_names_symlinks_modes_and_root_drift_fail_closed ... ok
+test runtime_artifact_store::tests::hard_links_and_open_handle_collection_do_not_disclose_plaintext ... ok
+test runtime_artifact_store::tests::repository_evidence_namespace_is_never_private_artifact_authority ... ok
+test runtime_artifact_store::tests::staging_is_bounded_and_interrupted_objects_are_cleaned ... ok
+test runtime_artifact_store::tests::fixed_namespace_substitution_fails_before_the_next_store_effect ... ok
+test runtime_artifact_store::tests::corruption_quarantine_and_verified_delete_leave_no_active_object ... ok
+test runtime_artifact_store::tests::staging_and_objects_are_encrypted_randomized_and_key_bound ... ok
+test runtime_artifact_store::tests::stage_place_read_inventory_and_dedup_are_content_addressed ... ok
+AGENTMAGE_ARTIFACT_CRASH_MATRIX={"boundary_count":7,"case_count":14,"cases":[{"active_expected":false,"artifact_event_count":0,"boundary":"staging","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":0,"inventory_before_recovery":0,"metadata_expected":false,"position":"before","recovery_cleaned_staging":0,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":0,"staged_before_recovery":0},{"active_expected":false,"artifact_event_count":0,"boundary":"staging","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":0,"inventory_before_recovery":0,"metadata_expected":false,"position":"after","recovery_cleaned_staging":1,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":0,"staged_before_recovery":1},{"active_expected":false,"artifact_event_count":0,"boundary":"placement","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":0,"inventory_before_recovery":0,"metadata_expected":false,"position":"before","recovery_cleaned_staging":1,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":0,"staged_before_recovery":1},{"active_expected":false,"artifact_event_count":0,"boundary":"placement","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":0,"inventory_before_recovery":1,"metadata_expected":false,"position":"after","recovery_cleaned_staging":0,"recovery_deleted_orphans":1,"recovery_quarantined_payloads":0,"recovery_verified_payloads":0,"staged_before_recovery":0},{"active_expected":false,"artifact_event_count":0,"boundary":"metadata-commit","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":0,"inventory_before_recovery":1,"metadata_expected":false,"position":"before","recovery_cleaned_staging":0,"recovery_deleted_orphans":1,"recovery_quarantined_payloads":0,"recovery_verified_payloads":0,"staged_before_recovery":0},{"active_expected":true,"artifact_event_count":0,"boundary":"metadata-commit","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":1,"inventory_before_recovery":1,"metadata_expected":true,"position":"after","recovery_cleaned_staging":0,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":1,"staged_before_recovery":0},{"active_expected":true,"artifact_event_count":0,"boundary":"event-commit","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":1,"inventory_before_recovery":1,"metadata_expected":true,"position":"before","recovery_cleaned_staging":0,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":1,"staged_before_recovery":0},{"active_expected":true,"artifact_event_count":1,"boundary":"event-commit","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":1,"inventory_before_recovery":1,"metadata_expected":true,"position":"after","recovery_cleaned_staging":0,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":1,"staged_before_recovery":0},{"active_expected":true,"artifact_event_count":1,"boundary":"checkpoint-commit","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":1,"inventory_before_recovery":1,"metadata_expected":true,"position":"before","recovery_cleaned_staging":0,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":1,"staged_before_recovery":0},{"active_expected":true,"artifact_event_count":1,"boundary":"checkpoint-commit","checkpoint_bound":true,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":1,"inventory_before_recovery":1,"metadata_expected":true,"position":"after","recovery_cleaned_staging":0,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":1,"staged_before_recovery":0},{"active_expected":true,"artifact_event_count":1,"boundary":"reference-release","checkpoint_bound":false,"deleted_expected":false,"false_terminal_count":0,"inventory_after_recovery":1,"inventory_before_recovery":1,"metadata_expected":true,"position":"before","recovery_cleaned_staging":0,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":1,"staged_before_recovery":0},{"active_expected":false,"artifact_event_count":1,"boundary":"reference-release","checkpoint_bound":false,"deleted_expected":true,"false_terminal_count":0,"inventory_after_recovery":0,"inventory_before_recovery":1,"metadata_expected":true,"position":"after","recovery_cleaned_staging":0,"recovery_deleted_orphans":1,"recovery_quarantined_payloads":0,"recovery_verified_payloads":0,"staged_before_recovery":0},{"active_expected":false,"artifact_event_count":1,"boundary":"collection","checkpoint_bound":false,"deleted_expected":true,"false_terminal_count":0,"inventory_after_recovery":0,"inventory_before_recovery":1,"metadata_expected":true,"position":"before","recovery_cleaned_staging":0,"recovery_deleted_orphans":1,"recovery_quarantined_payloads":0,"recovery_verified_payloads":0,"staged_before_recovery":0},{"active_expected":false,"artifact_event_count":1,"boundary":"collection","checkpoint_bound":false,"deleted_expected":true,"false_terminal_count":0,"inventory_after_recovery":0,"inventory_before_recovery":0,"metadata_expected":true,"position":"after","recovery_cleaned_staging":0,"recovery_deleted_orphans":0,"recovery_quarantined_payloads":0,"recovery_verified_payloads":0,"staged_before_recovery":0}],"external_network_used":false,"false_terminal_count":0,"manual_fuzzing_executed":false,"position_count":2}
+test runtime_artifact_store::tests::story_22_2_native_crash_matrix_reconciles_every_artifact_boundary ... ok
+
+test result: ok. 9 passed; 0 failed; 2 ignored; 0 measured; 123 filtered out; finished in 1.06s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_platform_linux-1ab47cf45413f501)
+
+===== generated-file-route =====
+
+running 1 test
+test linux_coding_runtime::tests::story_22_2_linux_generated_file_is_published_and_checkpoint_bound ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 127 filtered out; finished in 0.81s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-606dfe028916acd7)
+
+===== public-schema-contracts =====
+✔ runtime artifact schemas reject path authority and lifecycle drift (4.201849ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 398.809574
