@@ -17,10 +17,6 @@
       "owner": "16.1.3.4"
     },
     {
-      "code": "MODEL-CONTEXT-DISCLOSURE-REDACTION-NOT-WIRED",
-      "owner": "16.1.1.7"
-    },
-    {
       "code": "INDEPENDENT-WORKER-REVIEW-NOT-RETAINED",
       "owner": "16.1.3.5"
     }
@@ -37,7 +33,7 @@
       ],
       "exit_code": 0,
       "id": "closed-tool-pack",
-      "output_sha256": "312afad08be65830337d821759f745416d3e93b534e11fc5127ecb90871517bb"
+      "output_sha256": "73eeff5e094c7fc9c647926640eb683c77a42c6aaf6f83e9179f19a64f5ce743"
     },
     {
       "argv": [
@@ -49,7 +45,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-tool-authority",
-      "output_sha256": "967ce9b0b391fc9afe8927bc550a81dda12d8642c14f48ab86c7d296f676ecf3"
+      "output_sha256": "6fef8bb393701e35bd83bb29eb2058ed1435a401d19b843a6273fee4af424ae8"
     },
     {
       "argv": [
@@ -61,7 +57,7 @@
       ],
       "exit_code": 0,
       "id": "linux-sandbox-contract",
-      "output_sha256": "9004052edfc9e1f9e3f0251c592c0a6874cb89aa0392b454e8f602de619a32aa"
+      "output_sha256": "9b33d54871803accec79eaf0e3c2c50e64b1ff0eb97d95edba4e6823ccc8b182"
     },
     {
       "argv": [
@@ -73,7 +69,7 @@
       ],
       "exit_code": 0,
       "id": "authenticated-host-flow",
-      "output_sha256": "18503f61ceabd4ef92dea48918a106e4afa94483750b7dea2d26887029eeb3d9"
+      "output_sha256": "ae965cfb229afde9e0dc88a61cf9f21bb3ab6d25c045fdd481fc1810d50e28ad"
     },
     {
       "argv": [
@@ -92,9 +88,11 @@
     "hard_limit_classes": 6,
     "hash_verified_result": true,
     "linux_fixed_input_mounts": 2,
+    "one_receipt_per_launched_attempt": true,
     "one_use_workspace_read_grant": true,
     "repeat_and_call_depth_guard": true,
     "result_outcomes": 8,
+    "sensitive_output_withheld_before_model_context": true,
     "write_capable_tools": 0
   },
   "platform_evidence": {
@@ -121,22 +119,23 @@
     "RV-03",
     "RV-04"
   ],
-  "source_revision": "0a6e54c6d5e4adf68a823b96fb8f6940dc4f8231",
+  "source_revision": "7bf068fe72c9c0a26f5578ff5f3d339699ac6662",
   "source_sha256": {
     "capabilities/read-only/src/bin/agentmage-read-only-worker.rs": "1adbae4446e6e686fe6c6b2e061d1027fc335d36d7c77636751dd36e078ed7f3",
     "capabilities/read-only/src/catalog.rs": "b4e0a778bbad28052d207f1a874420a5cb0266bc1db2e9b53ca5fab7ed8d2d2e",
     "capabilities/read-only/src/protocol.rs": "f93e3d30cc39d1912d64f157b60aa5c74c0251e7265816e9a622dd5d720c1e63",
     "capabilities/read-only/src/worker.rs": "f1494a0daece8751a57e5956a549c9f93e761faa2fb14ac96a0d85a88af72e91",
-    "docs/architecture/read-only-tool-protocol.md": "401097a1b1c3f1c899d685eba4c83552ee6bfebb918e4ea691c57237d4330b2a",
-    "docs/verification/sprint-16-local-results.md": "f8bc211928705bbe7ffe2786a939f76e4e1466f67de38cfb20a5d707150a9e2e",
+    "docs/architecture/read-only-tool-protocol.md": "097f33f7b2eb8ddb749435f9618c2429641672ead5c6823f0faa11ec5ebab149",
+    "docs/verification/sprint-16-local-results.md": "5b907d3a4ed5a7d9105145b160c62872d94c26c75cd7c6c848210d485477c938",
     "kernel/contracts/src/workspace_snapshot.rs": "136e67fd70c721d856a8a005a024f1bd13d7160a7f3f69a76b05e8571a140a09",
-    "kernel/engine/src/authority_transaction.rs": "abe542e4945cdc6f2b2beac5bc35cd6981d9832598c248d4a94036a47035ab76",
-    "kernel/engine/src/tooling.rs": "7c7366c0006b7c9f11b089786b41f23b388a43b16a8889f65f149d29de5c2c4b",
-    "platforms/linux/src/sandbox.rs": "9b818ab155743ecaac1ee351a34a96052c8eb0d1dd6d39845d56c01d2d98b830",
-    "scripts/sprint_16_evidence.py": "d48d54725b2bcbab7ca0cefa92157dc31bc486b75b419bfac22c98bcbd25c80d",
-    "shells/host/src/linux_read.rs": "9aa7a5df72cd7800a16bc43dd2ab758cfeb20d42171b876e8cb48b1c78fbcc81",
-    "shells/host/src/protocol.rs": "013f23f03ae926e965d0a982761c8c61f0c14f42cd1566bdacc1a00e0f7e4d5b",
-    "tests/test_sprint_16_evidence.py": "49fdb507a13154aa4f36101b9aa13228e78bacbcb1cfc390274b916054b67b49"
+    "kernel/engine/src/authority_transaction.rs": "cf12332a555bf9a5849857aba6c7273226bb3056c012211299ca81cb436b92a2",
+    "kernel/engine/src/tooling.rs": "1ef5e74b2d8ab2cdfb18b60856870146bb5cff4b37ee43ef1596923c3327f2fa",
+    "platforms/linux/src/sandbox.rs": "6fc3288ae0aa20cdf9e0915efe9c5c09d970f51be4cfaf202b0e1e9f2be8b132",
+    "scripts/sprint_16_evidence.py": "9f11150d3dd22bc4604d172b2e02fb2fe9a94696ebc251f3ccd7bd8422b7c282",
+    "shells/host/src/linux_coding_runtime.rs": "8865a699314921f80db31bba4dca18997e07bc643f024a77286514564cd82fb2",
+    "shells/host/src/linux_read.rs": "fdb17b47f8006375dfccc59db0099efb310fdf2b8f1c7d996c2251cceab08c4a",
+    "shells/host/src/protocol.rs": "a48a7d8ed8f43727bba23f14fb70acf73ce298ad9abfa96eab2a51d574579c43",
+    "tests/test_sprint_16_evidence.py": "3fa39b6c9209d4bd2eca2dea0736cde6731b4f6d0ce4e7cd9b07323c05293d60"
   },
   "summary": {
     "local_contract_passed": true,
@@ -149,7 +148,7 @@
     "host_preview_and_cancellation": true,
     "independent_review": false,
     "live_cleanup_campaign": false,
-    "model_context_disclosure_redaction": false,
+    "model_context_disclosure_redaction": true,
     "sealed_projection_tests": true
   }
 }
