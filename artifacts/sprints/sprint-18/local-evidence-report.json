@@ -1,23 +1,15 @@
 {
   "blockers": [
     {
-      "code": "PACKAGED-REPOSITORY-MAP-WORKER-NOT-INTEGRATED",
-      "owner": "18.1.1.2"
+      "code": "NATIVE-UBUNTU-MAP-EVIDENCE-INCOMPLETE",
+      "owner": "18.1.3.2"
     },
     {
-      "code": "LIVE-GITIGNORE-POLICY-PROJECTION-NOT-INTEGRATED",
-      "owner": "18.1.1.2"
+      "code": "NATIVE-MACOS-MAP-EVIDENCE-INCOMPLETE",
+      "owner": "18.1.3.2"
     },
     {
-      "code": "ENCRYPTED-PERSISTENT-MAP-CACHE-NOT-INTEGRATED",
-      "owner": "18.1.1.4"
-    },
-    {
-      "code": "HOST-CANCELLATION-AND-FAILURE-MATRIX-INCOMPLETE",
-      "owner": "18.1.3.1"
-    },
-    {
-      "code": "NATIVE-PLATFORM-MAP-EVIDENCE-INCOMPLETE",
+      "code": "NATIVE-WINDOWS-MAP-EVIDENCE-INCOMPLETE",
       "owner": "18.1.3.2"
     },
     {
@@ -41,7 +33,46 @@
       ],
       "exit_code": 0,
       "id": "repository-map-tests",
-      "output_sha256": "614a2f4d6d97981525a98701987e2061cc9db53c231ddce3bc0c22462e7faed3"
+      "output_sha256": "d2bbd31c2deb3e68b7892c41499561e31e97057bb1350ab1e9dae3327eb9dd99"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "repository_inventory",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "linux-repository-inventory-tests",
+      "output_sha256": "a3756277cacd2056723e703966d98fa73c2d0c84feb133edd9bdc95c30f5c237"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "linux_repository_map",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "linux-repository-host-tests",
+      "output_sha256": "72251106f04b48ff43b37129bb763b8a0a165dec2a0063a1e66e12b56a288988"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "repository_cache",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "repository-cache-tests",
+      "output_sha256": "9bffc292794444dcd668caa527ca46934cb975e8f2bb09f806eee19c4a9fd950"
     },
     {
       "argv": [
@@ -49,6 +80,12 @@
         "clippy",
         "-p",
         "agentmage-capability-repository-map",
+        "-p",
+        "agentmage-platform-linux",
+        "-p",
+        "agentmage-kernel-engine",
+        "-p",
+        "agentmage-host",
         "--all-targets",
         "--locked",
         "--",
@@ -57,7 +94,7 @@
       ],
       "exit_code": 0,
       "id": "repository-map-clippy",
-      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+      "output_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6"
     },
     {
       "argv": [
@@ -173,8 +210,12 @@
   },
   "implemented_contracts": {
     "cache_key_dimensions": 6,
+    "cache_retention_days_maximum": 30,
+    "encrypted_cache_schema_version": 8,
     "excluded_content_admitted": false,
     "filesystem_authority": false,
+    "inventory_entry_maximum": 100000,
+    "inventory_output_bytes_maximum": 33554432,
     "maximum_source_bytes": 4194304,
     "maximum_structural_items": 10000,
     "network_authority": false,
@@ -184,10 +225,14 @@
     "supported_language_dialects": 6
   },
   "platform_evidence": {
-    "linux_encrypted_persistent_cache": false,
-    "linux_packaged_worker": false,
+    "fedora_native_local": true,
+    "linux_encrypted_persistent_cache": true,
+    "linux_hardened_git_inventory": true,
+    "linux_held_object_projection": true,
+    "linux_one_use_freshness_permit": true,
     "local_pure_core": true,
     "macos_native_map": false,
+    "ubuntu_native_map": false,
     "windows_native_map": false
   },
   "record_type": "sprint_18_local_evidence",
@@ -201,19 +246,28 @@
     "SR-TST-002",
     "SR-TST-004"
   ],
-  "source_revision": "6fdad0ba37d77d53005c137f3b65bea4acc473f2",
+  "source_revision": "30968d874fc5fafd02cd6332c987c909e43783ef",
   "source_sha256": {
+    "TASKS.md": "c07f4995ae8487d424907868b8a5dc96ec780c09981a1abd8e5df92b4c964a01",
     "capabilities/repository-map/Cargo.toml": "6893bed2643ac73332862345c84f6062bedb6ff506ba7bd3a4036921e6242de6",
     "capabilities/repository-map/examples/grammar_bom.rs": "123202ad7a9892fa807b0f9f42e4245d212c0672c8fd24278fb51c13ffe1bf51",
-    "capabilities/repository-map/src/cache.rs": "ca8bd64c3bf82fd39f86e7bb983e0fd4f539e67de0cc43a51af05aa0208168ea",
+    "capabilities/repository-map/src/cache.rs": "b84eebabd67a7c7a8bdb8fe64bdef5d289acb5dfe1fa9234321248588b6c6f78",
     "capabilities/repository-map/src/grammar.rs": "e8df63ec31d02e9caa64c70c6352fa93d219cba2302d1bca41285e853d1b0ea0",
-    "capabilities/repository-map/src/inventory.rs": "c8371da532129cb57442d4a8d8f9eecf40a52a875ddd5d21768017a821d04ab7",
-    "capabilities/repository-map/src/lib.rs": "cfbf84874b510749c1509b38a97ceb1b1590b1328ff855d7e96c05eab8e8698e",
+    "capabilities/repository-map/src/inventory.rs": "1e310590ceda0eadb9d4a307199bb4d2190c766896a2e18dd4efb5e51f42a950",
+    "capabilities/repository-map/src/lib.rs": "54e03cbb0e8fcae2037a31962e8b48c730acdba41d308ead95ce828590f91ccc",
     "capabilities/repository-map/src/parser.rs": "631efb016760264876747c38578e2bf07409534011f45bbaad53d76a16bcac84",
-    "docs/architecture/pinned-repository-map.md": "12a6a3644980b122904b1c7ace848309bd6d9de9c58b39a597d3c99485ada20a",
-    "docs/verification/sprint-18-local-results.md": "10f18b6c99663d63c1a2021f73bce6e98cc3175ea4812a654561149a3b571cb7",
-    "scripts/sprint_18_evidence.py": "321d61c611c6860cd512e0bd98b9d1f642b47e9e4aba74bca0c53eb6eb404a39",
-    "tests/test_sprint_18_evidence.py": "e973878de402070ae7378606277a97a35594258cc7cdbe356028a3581562057c"
+    "docs/architecture/pinned-repository-map.md": "9be6b6aa537b5a0931d7b43fd39527009f43d9befa7256f48511ce3c1d46f822",
+    "docs/verification/sprint-18-local-results.md": "075a600373148adb2fd782f97fdaf44d44887bca6cc01bdf17246979b2892447",
+    "docs/verification/task-18-1-3-4-product-security-evidence.md": "ff42826e706cc76e5ec353daca2a51cc0766dd426cc655f56f2e560b31cb434e",
+    "kernel/engine/migrations/operational-store/0008-repository-map-cache.sql": "19700923fefef5eddf8112984d38caec8b81ea5b463860db866ab9116915f2f5",
+    "kernel/engine/src/operational_store.rs": "c30452f10f823219820e017632c68949710ba4c387ecd464e6126f10075356a0",
+    "kernel/engine/src/repository_cache.rs": "e881a56cb60e44e1d79aae76d5e5a6f10aec25416bf8276ebde169aa31754796",
+    "platforms/linux/src/lib.rs": "94990d8983919ca062a2f6713ce6fafeb86bff4cba2857b6faae2308fb2ee359",
+    "platforms/linux/src/repository_inventory.rs": "a182d0de8cf4f35959642601a6e7b8f183c607b26e20961dae33677a9c02ef27",
+    "platforms/linux/src/repository_safety.rs": "dae90a3285b7eef962dfec34f42c44788cf466a0bde501e23bfa089a737e14cb",
+    "scripts/sprint_18_evidence.py": "5979d8e1ffbd8cd53023fb083b70d674e9559bc6027d9ba42bad4f30801b24dc",
+    "shells/host/src/linux_repository_map.rs": "aca570bb137255f10ba5a6ea278fa0929cd5590a36bf5c8937c5d2b45bedd7f4",
+    "tests/test_sprint_18_evidence.py": "6cf304f9f4874070f3bc1388592215e633eeb68795db2ae1678a55f7318de8c1"
   },
   "summary": {
     "local_contract_passed": true,
@@ -221,10 +275,15 @@
     "sprint_status": "BLOCKED"
   },
   "verification_evidence": {
+    "cross_repository_projection_denied": true,
     "deterministic_inventory": true,
+    "encrypted_cache_restart_and_tamper": true,
     "exact_cache_invalidation": true,
     "grammar_identity": true,
+    "hostile_git_filter_inert": true,
     "independent_review": false,
+    "inventory_cancellation": true,
+    "inventory_timeout_kill_and_reap": true,
     "manual_parser_fuzzing": false,
     "parser_range_and_hash_integrity": true
   }
