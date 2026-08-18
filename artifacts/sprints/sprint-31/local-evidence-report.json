@@ -5,10 +5,6 @@
       "owner": "30.1"
     },
     {
-      "code": "ENCRYPTED-MEMORY-EXPORT-IMPORT-ABSENT",
-      "owner": "31.1.1.7"
-    },
-    {
       "code": "PROTECTED-MEMORY-FILE-RECOVERY-ABSENT",
       "owner": "31.1.1.8"
     },
@@ -28,7 +24,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-tests",
-      "output_sha256": "f5b1d67085b996ee276b911b252293f046a1f24283b7213e7080c78dac09d7a7"
+      "output_sha256": "8a6a612570fdbf55b2b5b5e5dc1a4ebddfb54f635b72f77c48df0b60596ef285"
     },
     {
       "argv": [
@@ -44,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-clippy",
-      "output_sha256": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157"
+      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd"
     },
     {
       "argv": [
@@ -54,7 +50,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "c5e2ee180606e38aeaf6f089e34ff21dc0cf16d000430d5ff4a06e1597619317"
+      "output_sha256": "e9701546287cefaa7bf5355d4a20049fe66ca6921935a32ffe391ad3604f1ed8"
     },
     {
       "argv": [
@@ -64,7 +60,7 @@
       ],
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "0714c5989027f65eb30eaee0a02a9c40179249e28ae7636ed96ff3a5c71e5133"
+      "output_sha256": "4bb469ce709da49e68344eb25ccca3aa4d091094be6496c5e596b97e96cff5ce"
     },
     {
       "argv": [
@@ -138,11 +134,13 @@
     "bounded_complete_working_markdown_preview": true,
     "closed_memory_types_and_namespaces": true,
     "compaction_to_review_candidates_only": true,
+    "complete_catalog_digest_binding": true,
     "contradiction_preservation_and_no_automatic_promotion": true,
     "durable_memory_file_write": false,
-    "encrypted_versioned_export_import": false,
+    "encrypted_versioned_export_import": true,
     "explicit_human_approve_reject_decisions": true,
     "installed_file_recovery_and_machine_migration": false,
+    "portable_identity_and_secret_exclusion": true,
     "portable_memory_and_topic_markdown_previews": true,
     "secret_restricted_and_inferred_sensitive_denial": true,
     "selective_scoped_explainable_loading": true,
@@ -165,21 +163,22 @@
     "SR-CIV-004",
     "SR-CIV-005"
   ],
-  "source_revision": "d11c8e6372765f4be96fe7d1091867d39bfb1c60",
+  "source_revision": "7afb5fed91d84bf9563b89521ea98b4087c35aa3",
   "source_sha256": {
-    "capabilities/knowledge/src/lib.rs": "0059046289744deecd2e77806e1c2a3ede3ec185d4395d00ee7c65110aa6a760",
+    "capabilities/knowledge/src/lib.rs": "15223be7728da054fafaf380ae66b06a61b193df43b09ad7c00c7d3ce5cef0ae",
     "capabilities/knowledge/src/memory.rs": "f880bf3998de8d97cb8e6e0484126985173f186c52da900f82da46f7b8ae8c92",
-    "capabilities/knowledge/src/memory_lifecycle.rs": "92dfbea45ccdd359a11dd94a6ff4e79ae43d457fe4ce2ddac5cf900ff6b4898d",
+    "capabilities/knowledge/src/memory_lifecycle.rs": "c9ad2cbbd3c23eb60e7e87cdfae77aa41ce7ba3a56c126b5005088398be8472c",
+    "capabilities/knowledge/src/memory_portable.rs": "762a814815442a3435e5d3813882264624887b53427cc988f6863fe8cee3c26a",
     "capabilities/knowledge/src/memory_working.rs": "6d2c6a50a157d38fb56805796ddbc6ce650ce26cc08a4434a49c3e750d68ebf7",
-    "docs/architecture/source-backed-memory-boundary.md": "301100082c867ea194b8f7daf3a3097fdbe96de08c478b266fa2feaecb6bfd78",
-    "docs/verification/sprint-31-local-results.md": "e56ca1fa2bf1a235bd23437f7c370b9607805de99d0b05f835574ba4d6949e51",
-    "scripts/sprint_31_evidence.py": "8a1ce8ba1682510e335c302ce87933e2580ee7059f92e8032463eb35439cabd2",
-    "tests/test_sprint_31_evidence.py": "952ddfe8a60c32cc4c8aa71141df072d5d68360fb5db8028eb8b2954cd0a8ba8"
+    "docs/architecture/source-backed-memory-boundary.md": "b7a73e886a2d9a00c94199034c547073066a308dc9542bd0f6f3cd07c2d9984e",
+    "docs/verification/sprint-31-local-results.md": "e2f7091a5c71c935d1b2afbd2d0a19366f91be850e4b7f3f8f11714f269eafc2",
+    "scripts/sprint_31_evidence.py": "4ac024bde75da8d6051c2da52cbc061432f1e7f1b03fea49ef783abbc5429e16",
+    "tests/test_sprint_31_evidence.py": "d1de2aa76a664e052f1548c7e72b39d662e09e4177ebea49adf90c49f7d4acf2"
   },
   "summary": {
     "automatic_memory_promotion": false,
     "durable_file_write_enabled": false,
-    "encrypted_export_import_available": false,
+    "encrypted_export_import_available": true,
     "local_memory_contract_passed": true,
     "release_approval": false,
     "sprint_status": "BLOCKED"
@@ -187,11 +186,13 @@
   "verification_evidence": {
     "candidate_policy_and_lifecycle_suite": true,
     "complete_local_product_and_docs_gates": true,
-    "encrypted_memory_export_import": false,
+    "encrypted_memory_export_import": true,
     "independent_review": false,
+    "portable_identity_and_secret_exclusion": true,
     "portable_no_write_markdown_preview_suite": true,
     "protected_file_recovery_and_migration": false,
     "upstream_sprint_30_gate": false,
-    "working_compaction_and_selective_loading_suite": true
+    "working_compaction_and_selective_loading_suite": true,
+    "wrong_key_tamper_truncation_and_version_refusal": true
   }
 }
