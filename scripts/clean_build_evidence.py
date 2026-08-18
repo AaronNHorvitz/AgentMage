@@ -364,6 +364,10 @@ def validate_policy(policy: Any) -> list[str]:
         failures.append("clean-build execution user is not fixed and unprivileged")
     if policy.get("toolchains", {}).get("git") != "platform-packaged":
         failures.append("clean-build Git runtime dependency is not declared")
+    if policy.get("runtime_dependencies") != {
+        "platform_packaged": ["bubblewrap", "git", "systemd-run"]
+    }:
+        failures.append("clean-build platform runtime dependencies drifted")
     if policy.get("platform_status") != {
         "fedora": "executable",
         "macos": "blocked-macos",

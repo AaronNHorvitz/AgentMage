@@ -188,8 +188,10 @@ class CleanBuildEvidenceTests(unittest.TestCase):
 
     def test_container_bootstrap_and_runtime_permission_order_is_fixed(self) -> None:
         recipe = (ROOT / "release/clean-build/Containerfile.linux").read_text()
-        self.assertIn("dnf install -y ca-certificates curl gcc git ", recipe)
-        self.assertIn("build-essential ca-certificates curl git ", recipe)
+        self.assertIn("dnf install -y bubblewrap ca-certificates curl gcc git ", recipe)
+        self.assertIn("bubblewrap build-essential ca-certificates curl git ", recipe)
+        self.assertIn("python3 shadow-utils systemd xz", recipe)
+        self.assertIn("passwd python3 systemd xz-utils", recipe)
         ownership = recipe.index("chown -R 10001:10001 /opt/cargo")
         unprivileged_bootstrap = recipe.index("USER 10001:10001", ownership)
         source_verification = recipe.index("--verify-source-content", unprivileged_bootstrap)
@@ -207,6 +209,18 @@ class CleanBuildEvidenceTests(unittest.TestCase):
         mutated["toolchains"].pop("git")
         self.assertIn(
             "clean-build Git runtime dependency is not declared",
+            validate_policy(mutated),
+        )
+
+    def test_linux_security_runtime_dependencies_are_closed(self) -> None:
+        self.assertEqual(
+            self.policy["runtime_dependencies"],
+            {"platform_packaged": ["bubblewrap", "git", "systemd-run"]},
+        )
+        mutated = copy.deepcopy(self.policy)
+        mutated["runtime_dependencies"]["platform_packaged"].remove("bubblewrap")
+        self.assertIn(
+            "clean-build platform runtime dependencies drifted",
             validate_policy(mutated),
         )
 
