@@ -1,0 +1,185 @@
+{
+  "adapter_results": [
+    {
+      "adapter_id": "linux-native-vulkan",
+      "eligible": false,
+      "failed_thresholds": [
+        "citation_recall",
+        "tool_call_valid_rate"
+      ],
+      "result_sha256": "5b8cf4b03b989a3bbb71aaeb697359209fd7b03582c18d061d9e19c2430c7982",
+      "source_revision": "f625222446a60c8aea9d3c6c0f456fdcdd099d5b",
+      "status": "FAIL",
+      "trial_count": 82
+    },
+    {
+      "adapter_id": "linux-docker-model-runner-cuda",
+      "eligible": false,
+      "failed_thresholds": [
+        "citation_precision",
+        "repository_fact_accuracy",
+        "schema_valid_rate",
+        "tool_call_valid_rate",
+        "unsupported_action_rate"
+      ],
+      "result_sha256": "eed164ba7f646fa107fd2aede98a37482408942fa66ea499c338f789f35e3fa5",
+      "source_revision": "f625222446a60c8aea9d3c6c0f456fdcdd099d5b",
+      "status": "FAIL",
+      "trial_count": 82
+    }
+  ],
+  "comparison_tuple": {
+    "docker": {
+      "adapter_id": "linux-docker-model-runner-cuda",
+      "model_manifest_sha256": "50b48bb3c9659db6d9615fe9ec91b6d2e6da64f333135987ea12e6965dbd84f6",
+      "runtime_sha256": "sha256:bd94095bbc1ddc4266c3a88f582a92562c6b63eceb175572c9a60045663727c9",
+      "runtime_source_revision": "72874f559c598b8f89fbb24864868337cf5afb4c"
+    },
+    "native": {
+      "adapter_id": "linux-native-vulkan",
+      "runtime_sha256": "1d374fdb717832ec01d4829eff9feb46dfc83b7ccbb9d867c15315dbd8aa4bbe",
+      "runtime_source_revision": "08659901c43b51de735740f1cf61bb82fbe0c4e4"
+    },
+    "shared": {
+      "context_tokens": 8192,
+      "decoding": {
+        "max_output_tokens": 512,
+        "operational_context_tokens": 8192,
+        "seed": 4242,
+        "temperature": 0.0,
+        "top_k": 1,
+        "top_p": 1.0
+      },
+      "model_sha256": "90fd944d227e9d9b68e7e2c7d5b57b79d4c66ed521b0919fbbd932cf834f6f8e",
+      "projector_sha256": "91f086971e56d7a7d8d39e271873fccdb49541bd259d6e02c401a4f1cb7a219e",
+      "template_sha256": "832db9a4bd7affb09777c72e1f91d2a4384282635965f86b73bdfda3aab79978"
+    }
+  },
+  "corpus": {
+    "id": "agentmage-gemma4-feasibility-v1",
+    "sha256": "32d569140326b72981688c7430ce182c2d25310cff3817eedd06ffb5d43954ac",
+    "version": "1.0.0"
+  },
+  "data_classification": "public-synthetic-only",
+  "disposition": {
+    "all_adapters_meet_thresholds": false,
+    "automatic_fallback": false,
+    "eligible_for_merge": false,
+    "matched_linux_trials_complete": true,
+    "one_field_quarantine_complete": true,
+    "profile_enabled": false,
+    "status": "COMPLETE-NEGATIVE-BLOCKED-QUALITY"
+  },
+  "input_sha256": {
+    "artifacts/sprints/sprint-0/story-0.3-fallback/dmr-linux-result.json": "eed164ba7f646fa107fd2aede98a37482408942fa66ea499c338f789f35e3fa5",
+    "artifacts/sprints/sprint-0/story-0.3-fallback/native-linux-result.json": "5b8cf4b03b989a3bbb71aaeb697359209fd7b03582c18d061d9e19c2430c7982",
+    "model-profiles/candidates/gemma-4-12b-unified/artifact-admission.json": "71315db207c65dede599d8e4691f04b47f12c3fe65acfa85a78e38fb66333bed",
+    "model-profiles/evaluation/corpus-v1.json": "32d569140326b72981688c7430ce182c2d25310cff3817eedd06ffb5d43954ac"
+  },
+  "limitations": [
+    "The retained Linux trials are real prior runs; this verifier does not rerun inference.",
+    "Docker Model Runner ran through rootless Podman compatibility, not Docker Engine.",
+    "Both Linux adapters failed one or more published quality thresholds.",
+    "No macOS adapter result, independent review, activation, or release approval is claimed."
+  ],
+  "mutation_results": [
+    {
+      "changed_field_count": 1,
+      "changed_paths": [
+        "shared.model_sha256"
+      ],
+      "disposition": "QUARANTINED-INCOMPARABLE",
+      "enabled": false,
+      "id": "model-hash",
+      "merged": false,
+      "mutated_path": "shared.model_sha256",
+      "passed": true
+    },
+    {
+      "changed_field_count": 1,
+      "changed_paths": [
+        "docker.runtime_sha256"
+      ],
+      "disposition": "QUARANTINED-INCOMPARABLE",
+      "enabled": false,
+      "id": "image-digest",
+      "merged": false,
+      "mutated_path": "docker.runtime_sha256",
+      "passed": true
+    },
+    {
+      "changed_field_count": 1,
+      "changed_paths": [
+        "shared.template_sha256"
+      ],
+      "disposition": "QUARANTINED-INCOMPARABLE",
+      "enabled": false,
+      "id": "template",
+      "merged": false,
+      "mutated_path": "shared.template_sha256",
+      "passed": true
+    },
+    {
+      "changed_field_count": 1,
+      "changed_paths": [
+        "shared.context_tokens"
+      ],
+      "disposition": "QUARANTINED-INCOMPARABLE",
+      "enabled": false,
+      "id": "context-setting",
+      "merged": false,
+      "mutated_path": "shared.context_tokens",
+      "passed": true
+    },
+    {
+      "changed_field_count": 1,
+      "changed_paths": [
+        "shared.decoding.seed"
+      ],
+      "disposition": "QUARANTINED-INCOMPARABLE",
+      "enabled": false,
+      "id": "decoding-setting",
+      "merged": false,
+      "mutated_path": "shared.decoding.seed",
+      "passed": true
+    },
+    {
+      "changed_field_count": 1,
+      "changed_paths": [
+        "native.runtime_sha256"
+      ],
+      "disposition": "QUARANTINED-INCOMPARABLE",
+      "enabled": false,
+      "id": "runtime-build",
+      "merged": false,
+      "mutated_path": "native.runtime_sha256",
+      "passed": true
+    }
+  ],
+  "profile_id": "gemma-4-12b-unified-it",
+  "record_type": "sprint_13_linux_cross_adapter_parity",
+  "review_protocol_ids": [
+    "RV-13",
+    "RV-14"
+  ],
+  "schema_version": 1,
+  "security_requirement_ids": [
+    "SR-SUP-006",
+    "SR-SUP-007",
+    "SR-SUP-008",
+    "SR-AI-006",
+    "SR-AI-010",
+    "SR-AI-011",
+    "SR-AI-012",
+    "SR-AI-013",
+    "SR-AI-014",
+    "SR-AI-015",
+    "SR-AI-016",
+    "SR-TST-006"
+  ],
+  "source_revision": "5ef29e2632b7eebf65c7287803fd833c53cd7567",
+  "source_sha256": {
+    "scripts/sprint_13_cross_adapter_parity.py": "e73e90243e2717f049e28ab0f72cb8817d45f2e0f4cd68fb4bc28aec07220c12",
+    "tests/test_sprint_13_cross_adapter_parity.py": "a654425e2a7ac8fc0a48e3ed2d83fd6cd0ddc3d4111325cf916b7c533635bc50"
+  }
+}
