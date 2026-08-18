@@ -6,7 +6,7 @@ use std::io::Cursor;
 
 use agentmage_capability_read_only::{
     GitCommandPlan, GitInspectionOperation, GitInspectionOutcome, GitInspectionRequest,
-    GitInspectionResult, ReadOnlyOutcome, ReadOnlyResult, parse_git_inspection,
+    GitInspectionResult, ReadOnlyItem, ReadOnlyOutcome, ReadOnlyResult, parse_git_inspection,
 };
 use agentmage_kernel_contracts::{
     ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
@@ -16,7 +16,8 @@ use agentmage_kernel_contracts::{
     RuntimeApprovalResponse, RuntimeArtifactKind, RuntimeArtifactManifest, RuntimeArtifactRef,
     RuntimeEvent, RuntimeEventKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId,
     RuntimeRunRequest, RuntimeSessionMode, SessionCheckpoint, SessionCheckpointId, SessionId,
-    StateChange, ToolCall, ToolDefinition, ToolResult, to_canonical_json,
+    StateChange, ToolCall, ToolDefinition, ToolResult, ValidationIssue, ValidationSeverity,
+    to_canonical_json,
 };
 use agentmage_kernel_engine::{
     authority_transaction::AuthorityTransactionRequest,
@@ -36,6 +37,7 @@ use agentmage_kernel_engine::{
     operational_store::{
         DurableAuthorityError, PendingRuntimeEffectCommit, PendingSpecializedEffectCommit,
     },
+    persistence::detect_secret_classes,
     policy::PolicyEvaluationContext,
     propagation::CancellationToken,
     repository_inspection::{
@@ -1019,40 +1021,41 @@ where
             event_context.as_ref(),
         );
         let worker_result = driver.take_result();
+        let worker_error = driver.take_error();
         self.sandbox = Some(driver.into_runner());
         let (receipt, pending) = receipt_result?;
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
-        let worker_result = worker_result.ok_or(RuntimePortFailure::Uncertain)?;
-        if !worker_result.success() {
-            let execution = RuntimeToolExecution {
-                receipt_id: receipt.receipt_id,
-                receipt_sha256: receipt.receipt_sha256,
-                result: ToolResult {
-                    schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
-                    tool_call_id: call.tool_call_id.clone(),
-                    correlation_id: call.correlation_id.clone(),
-                    outcome: OperationOutcome::Failed,
-                    output: None,
-                    validation_issues: Vec::new(),
-                    evidence: Vec::new(),
-                    error: None,
-                    elapsed_ms: 0,
-                    state_change: StateChange::NotChanged,
-                },
-                result_output_kind: None,
-                artifact_candidates: Vec::new(),
-            };
+        let Some(worker_result) = worker_result else {
+            debug_assert!(worker_error.is_some());
+            let execution = failed_read_projection(&receipt, call, "runtime.tool.worker-failed");
+            return self.finish_effect_execution(execution, event_context, pending);
+        };
+        if worker_error.is_some() || !worker_result.success() {
+            let execution = failed_read_projection(&receipt, call, "runtime.tool.worker-failed");
             return self.finish_effect_execution(execution, event_context, pending);
         }
-        let result = serde_json::from_slice::<ReadOnlyResult>(worker_result.stdout())
+        let result = match serde_json::from_slice::<ReadOnlyResult>(worker_result.stdout())
             .ok()
             .filter(|result| result.verify(kind))
-            .ok_or(RuntimePortFailure::Uncertain)?;
+        {
+            Some(result) => result,
+            None => {
+                let execution =
+                    failed_read_projection(&receipt, call, "runtime.tool.output-invalid");
+                return self.finish_effect_execution(execution, event_context, pending);
+            }
+        };
+        if read_result_contains_sensitive_text(&result) {
+            let execution = failed_read_projection(&receipt, call, "runtime.tool.output-sensitive");
+            return self.finish_effect_execution(execution, event_context, pending);
+        }
         let output_bytes = serde_json::to_vec(&result).map_err(|_| RuntimePortFailure::Invalid)?;
         if output_bytes.len() as u64 > request.limits.max_output_bytes {
-            return Err(RuntimePortFailure::ResourceExhausted);
+            let execution =
+                failed_read_projection(&receipt, call, "runtime.tool.output-limit-exceeded");
+            return self.finish_effect_execution(execution, event_context, pending);
         }
         let output_sha256 = sha256(&output_bytes);
         let outcome = read_outcome(result.outcome);
@@ -2094,6 +2097,57 @@ where
     }
 }
 
+fn failed_read_projection(
+    receipt: &agentmage_kernel_contracts::Receipt,
+    call: &ToolCall,
+    code: &str,
+) -> RuntimeToolExecution {
+    RuntimeToolExecution {
+        receipt_id: receipt.receipt_id.clone(),
+        receipt_sha256: receipt.receipt_sha256.clone(),
+        result: ToolResult {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            tool_call_id: call.tool_call_id.clone(),
+            correlation_id: call.correlation_id.clone(),
+            outcome: OperationOutcome::Failed,
+            output: None,
+            validation_issues: vec![ValidationIssue {
+                code: code.to_owned(),
+                severity: ValidationSeverity::Error,
+                field_path: vec!["output".to_owned()],
+                message: "Read-only tool output was withheld by the trusted runtime boundary"
+                    .to_owned(),
+            }],
+            evidence: Vec::new(),
+            error: None,
+            elapsed_ms: 0,
+            state_change: StateChange::NotChanged,
+        },
+        result_output_kind: None,
+        artifact_candidates: Vec::new(),
+    }
+}
+
+fn read_result_contains_sensitive_text(result: &ReadOnlyResult) -> bool {
+    result.items.iter().any(|item| {
+        let value = match item {
+            ReadOnlyItem::Text { content, .. } => content,
+            ReadOnlyItem::Match { matched, .. } => matched,
+            _ => return false,
+        };
+        if !detect_secret_classes("tool_output", value.as_bytes()).is_empty() {
+            return true;
+        }
+        value.lines().any(|line| {
+            line.split_once('=')
+                .or_else(|| line.split_once(':'))
+                .is_some_and(|(name, candidate)| {
+                    !detect_secret_classes(name.trim(), candidate.trim().as_bytes()).is_empty()
+                })
+        })
+    })
+}
+
 impl<'workspace, 'session, 'platform, I, E, G> RuntimeToolBoundary
     for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
 where
@@ -2786,7 +2840,8 @@ mod tests {
 
     use agentmage_capability_read_only::{
         GIT_INSPECTION_TOOL_ID, GIT_INSPECTION_TOOL_VERSION, GitInspectionOperation,
-        GitInspectionRequest, ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
+        GitInspectionRequest, NeverCancelled, ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest,
+        ReadOnlyToolKind, SnapshotEntry, SnapshotEntryKind, WorkspaceSnapshot, execute_read_only,
         plan_git_inspection,
     };
     use agentmage_capability_repository_map::{
@@ -2865,6 +2920,51 @@ mod tests {
         },
         linux_coding::LinuxCodingWorkspace,
     };
+
+    fn projected_read_result(content: &str) -> ReadOnlyResult {
+        let request = ReadOnlyRequest {
+            schema_version: 1,
+            paths: vec![vec!["fixture.txt".to_owned()]],
+            query: None,
+            byte_offset: None,
+            byte_count: None,
+            encoding: ReadOnlyEncoding::Utf8,
+            limits: ReadOnlyLimits::default(),
+            call_depth: 0,
+        };
+        execute_read_only(
+            ReadOnlyToolKind::ReadText,
+            &serde_json::to_vec(&request).expect("request"),
+            &WorkspaceSnapshot {
+                entries: vec![SnapshotEntry {
+                    path: vec!["fixture.txt".to_owned()],
+                    kind: SnapshotEntryKind::RegularFile,
+                    bytes: content.as_bytes().to_vec(),
+                    executable: false,
+                }],
+            },
+            &NeverCancelled,
+        )
+    }
+
+    #[test]
+    fn read_output_secret_classes_are_withheld_before_model_projection() {
+        assert!(!read_result_contains_sensitive_text(
+            &projected_read_result("ordinary repository text\n")
+        ));
+        for content in [
+            "password=ordinary",
+            "-----BEGIN PRIVATE KEY-----",
+            "Authorization: Bearer example",
+            "ghp_abcdefghijklmnopqrstuvwxyz123456",
+            "AKIAA1A1A1A1A1A1A1A1",
+            "https://user:password@example.invalid/path",
+        ] {
+            let result = projected_read_result(content);
+            assert!(result.verify(ReadOnlyToolKind::ReadText));
+            assert!(read_result_contains_sensitive_text(&result), "{content}");
+        }
+    }
     #[cfg(feature = "workflow-caller")]
     use crate::{
         workflow_assignment::{

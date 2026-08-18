@@ -1223,14 +1223,26 @@ where
             &mut driver,
         );
         let worker_result = driver.take_result();
+        let worker_error = driver.take_error();
         self.sandbox = Some(driver.into_runner());
         let receipt = receipt_result.map_err(|_| LinuxReadError::AuthorityDenied)?;
         self.authority
             .revalidate_root()
             .map_err(|_| LinuxReadError::AuthorityDenied)?;
         let summary = receipt_summary(&receipt);
-        let worker_result = worker_result.ok_or(LinuxReadError::WorkerFailed)?;
-        if !worker_result.success() || receipt.outcome != OperationOutcome::Succeeded {
+        let Some(worker_result) = worker_result else {
+            debug_assert!(worker_error.is_some());
+            return Ok(HostResponse::Denied {
+                schema_version: HOST_PROTOCOL_VERSION,
+                request_id: request_id.to_owned(),
+                code: LinuxReadError::WorkerFailed.code().to_owned(),
+                receipt: Some(summary),
+            });
+        };
+        if worker_error.is_some()
+            || !worker_result.success()
+            || receipt.outcome != OperationOutcome::Succeeded
+        {
             return Ok(HostResponse::Denied {
                 schema_version: HOST_PROTOCOL_VERSION,
                 request_id: request_id.to_owned(),
@@ -1600,14 +1612,26 @@ where
             &mut driver,
         );
         let worker_result = driver.take_result();
+        let worker_error = driver.take_error();
         self.sandbox = Some(driver.into_runner());
         let receipt = receipt_result.map_err(|_| LinuxReadError::AuthorityDenied)?;
         self.authority
             .revalidate_root()
             .map_err(|_| LinuxReadError::AuthorityDenied)?;
         let summary = receipt_summary(&receipt);
-        let worker_result = worker_result.ok_or(LinuxReadError::WorkerFailed)?;
-        if !worker_result.success() || receipt.outcome != OperationOutcome::Succeeded {
+        let Some(worker_result) = worker_result else {
+            debug_assert!(worker_error.is_some());
+            return Ok(HostResponse::Denied {
+                schema_version: HOST_PROTOCOL_VERSION,
+                request_id: request_id.to_owned(),
+                code: LinuxReadError::WorkerFailed.code().to_owned(),
+                receipt: Some(summary),
+            });
+        };
+        if worker_error.is_some()
+            || !worker_result.success()
+            || receipt.outcome != OperationOutcome::Succeeded
+        {
             return Ok(HostResponse::Denied {
                 schema_version: HOST_PROTOCOL_VERSION,
                 request_id: request_id.to_owned(),
@@ -1615,10 +1639,10 @@ where
                 receipt: Some(summary),
             });
         }
-        let result = serde_json::from_slice::<ReadOnlyResult>(worker_result.stdout())
-            .ok()
-            .filter(|result| result.verify(pending.kind))
-            .ok_or(LinuxReadError::OutputDenied)?;
+        let result = match serde_json::from_slice::<ReadOnlyResult>(worker_result.stdout()) {
+            Ok(result) if result.verify(pending.kind) => result,
+            _ => return Ok(output_denial(request_id, summary)),
+        };
         Ok(HostResponse::ToolCompleted {
             schema_version: HOST_PROTOCOL_VERSION,
             request_id: request_id.to_owned(),
