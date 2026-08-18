@@ -219,6 +219,8 @@
     "hostile-network:check": "python3 scripts/hostile_network_injection_gate.py",
     "linux-vm-regression:check": "python3 scripts/linux_vm_regression.py",
     "linux-vm-regression:exercise-overlays": "python3 scripts/linux_vm_regression.py --exercise-overlays --source-revision HEAD",
+    "linux-vm-regression:phases:build": "python3 scripts/linux_vm_regression_phases.py --write --source-revision HEAD",
+    "linux-vm-regression:phases:check": "python3 scripts/linux_vm_regression_phases.py",
     "linux-vm-regression:verify-bases": "python3 scripts/linux_vm_regression.py --verify-bases",
     "traceability:build": "python3 scripts/traceability_report.py",
     "traceability:check": "python3 scripts/traceability_report.py --check",
