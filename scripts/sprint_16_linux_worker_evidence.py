@@ -422,12 +422,36 @@ def execute(revision_value: str) -> dict[str, Any]:
     return report
 
 
+def execute_diagnostic_target(revision_value: str, target_id: str) -> None:
+    revision = promoted.clean_revision(revision_value)
+    tools = vm_support.discover_host_tools("fedora-toolbox-44")
+    matching = [target for target in docker_vm.TARGETS if target.target_id == target_id]
+    if len(matching) != 1:
+        raise WorkerEvidenceError("diagnostic target identity drifted")
+    with tempfile.TemporaryDirectory(prefix="agentmage-sprint16-source-") as name:
+        bundle = Path(name) / "source.bundle"
+        bundle_sha256 = promoted.source_bundle(revision, bundle)
+        run_target(tools, matching[0], revision, bundle, bundle_sha256)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--source-revision", default="HEAD")
+    parser.add_argument(
+        "--diagnostic-target",
+        choices=tuple(target.target_id for target in docker_vm.TARGETS),
+    )
     arguments = parser.parse_args()
     try:
+        if arguments.write and arguments.diagnostic_target:
+            raise WorkerEvidenceError("write and diagnostic modes are mutually exclusive")
+        if arguments.diagnostic_target:
+            execute_diagnostic_target(
+                arguments.source_revision, arguments.diagnostic_target
+            )
+            print("Sprint 16 installed worker diagnostic target passed")
+            return 0
         if arguments.write:
             report = execute(arguments.source_revision)
         else:

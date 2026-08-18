@@ -2138,13 +2138,29 @@ mod tests {
             fs::canonicalize("/usr/bin/systemd-run").expect("canonical systemd-run executable");
         let bubblewrap =
             fs::canonicalize("/usr/bin/bwrap").expect("canonical Bubblewrap executable");
-        let manifest = LinuxSandboxManifest::verify(
-            systemd_run,
-            bubblewrap,
-            &executable,
-            &runtime_files(&executable),
-        )
-        .expect("verified worker manifest");
+        let known_worker = fs::canonicalize("/usr/bin/true").expect("canonical known worker");
+        LinuxSandboxManifest::verify(&systemd_run, &bubblewrap, &known_worker, &[])
+            .expect("verified supervisor manifest");
+        LinuxSandboxManifest::verify(&systemd_run, &bubblewrap, &executable, &[])
+            .expect("verified installed worker manifest");
+        let runtime_files = runtime_files(&executable);
+        for count in 1..=runtime_files.len() {
+            LinuxSandboxManifest::verify(
+                &systemd_run,
+                &bubblewrap,
+                &executable,
+                &runtime_files[..count],
+            )
+            .unwrap_or_else(|error| {
+                panic!(
+                    "verified runtime prefix {count} of {}: {error:?}",
+                    runtime_files.len()
+                )
+            });
+        }
+        let manifest =
+            LinuxSandboxManifest::verify(systemd_run, bubblewrap, &executable, &runtime_files)
+                .expect("verified worker manifest");
         LinuxSandboxRunner::new(manifest, LinuxSandboxLimits::default()).expect("sandbox runner")
     }
 
