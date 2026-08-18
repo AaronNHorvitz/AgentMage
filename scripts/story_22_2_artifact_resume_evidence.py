@@ -33,6 +33,8 @@ SOURCE_PATHS: Final = (
     "tests/test_story_22_2_artifact_resume_evidence.py",
 )
 TEST_NAMES: Final = (
+    "story_22_2_linux_restart_recovers_large_terminal_model_artifact",
+    "story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay",
     "story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool",
     "story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool",
 )
@@ -78,6 +80,27 @@ def expected_metrics() -> dict[str, dict[str, Any]]:
             "repository_drift": "blocked",
             "scenario": "exact-checkpoint-resume",
             "terminal_state": "no_op",
+        },
+        "large-command-test-resume": {
+            "artifact_kinds": ["standard_output", "test_log"],
+            "artifact_payload_bytes_each": 70 * 1024,
+            "exact_artifact_set_restored": True,
+            "external_network_used": False,
+            "manual_fuzzing_executed": False,
+            "post_resume_command_executions": 2,
+            "pre_restart_command_executions": 2,
+            "scenario": "large-command-test-resume",
+            "terminal_state": "no_op",
+            "tool_call_count": 3,
+        },
+        "large-model-terminal-restart": {
+            "artifact_kind": "model_output",
+            "artifact_payload_bytes": 70 * 1024,
+            "external_network_used": False,
+            "manual_fuzzing_executed": False,
+            "payload_recovered_exactly": True,
+            "scenario": "large-model-terminal-restart",
+            "terminal_state": "blocked",
         },
     }
 
@@ -165,7 +188,7 @@ def run_campaign() -> tuple[str, int]:
         },
     )
     output = (result.stdout + result.stderr).replace(str(ROOT), "<repository-root>")
-    if result.returncode or "2 passed; 0 failed" not in output:
+    if result.returncode or "4 passed; 0 failed" not in output:
         raise ArtifactResumeEvidenceError("runtime.artifact_resume.command_failed")
     for test_name in TEST_NAMES:
         if f"{test_name} ... ok" not in output:
@@ -205,10 +228,10 @@ def build_report(revision: str, output: str, elapsed_ms: int) -> dict[str, Any]:
         "private_user_data_used": False,
         "limitations": [
             "The campaign uses the production coordinator and native encrypted Linux authority with a deterministic fake model and instrumented Git executor; it is not installed-package or real-model evidence.",
-            "The exact continuation and its artifact set resume after one protected operation, but large command, test, and model artifact reconstruction remains open.",
-            "Missing and corrupt continuation payloads are reconciled at startup and block explicitly; concurrent collection and physical storage failure are not claimed.",
+            "Exact continuation and artifact sets resume after protected Git, large command, and large validation operations; large terminal model output is recovered exactly after restart without being represented as resumable work.",
+            "Missing and corrupt continuation payloads are reconciled at startup and block explicitly; quarantined-payload operator recovery, long/concurrent collection, and physical storage failure are not claimed.",
             "This current-host Linux source campaign is not Windows, macOS, release, or independent-review evidence.",
-            "The two focused tests are not the separate one-hundred-run native tool-terminal campaign owned by Story 22.1.",
+            "The four focused tests are not the separate one-hundred-run native tool-terminal campaign owned by Story 22.1.",
             "Manual fuzzing remains deferred and was not executed by this campaign.",
         ],
     }

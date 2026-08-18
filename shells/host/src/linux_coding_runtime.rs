@@ -2971,6 +2971,7 @@ mod tests {
     enum ScriptedCodingStep {
         Tool(ModelToolCallCandidate),
         Complete(ContractPayload),
+        Blocked(ContractPayload),
     }
 
     struct ScriptedCodingModel {
@@ -3005,6 +3006,9 @@ mod tests {
                 ScriptedCodingStep::Tool(call) => (ModelProposalKind::ToolCall, None, Some(call)),
                 ScriptedCodingStep::Complete(payload) => {
                     (ModelProposalKind::CompletionCandidate, Some(payload), None)
+                }
+                ScriptedCodingStep::Blocked(payload) => {
+                    (ModelProposalKind::Blocked, Some(payload), None)
                 }
             };
             let mut proposal = ClosedModelProposal {
@@ -3113,6 +3117,7 @@ mod tests {
         stdout: Vec<u8>,
         stderr: Vec<u8>,
         exit_code: i32,
+        shared_launches: Option<Arc<AtomicUsize>>,
     }
 
     impl Default for FakeCommandExecutor {
@@ -3122,6 +3127,7 @@ mod tests {
                 stdout: b"command-ok\n".to_vec(),
                 stderr: Vec::new(),
                 exit_code: 0,
+                shared_launches: None,
             }
         }
     }
@@ -3136,6 +3142,9 @@ mod tests {
             cancellation: &CancellationToken,
         ) -> CommandPlatformResult {
             self.launches += 1;
+            if let Some(shared_launches) = &self.shared_launches {
+                shared_launches.fetch_add(1, Ordering::SeqCst);
+            }
             assert!(working_directory.revalidate().is_ok());
             assert!(!cancellation.is_cancelled());
             let stdout = self.stdout.clone();
@@ -3904,6 +3913,45 @@ mod tests {
             "initial_failure_sha256": null
         }))
         .expect("validation output");
+    }
+
+    fn configure_bounded_command<G>(fixture: &mut Fixture<G>)
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        let command = fixture
+            .profile_for_test()
+            .commands()
+            .commands()
+            .into_iter()
+            .next()
+            .expect("registered command");
+        let definition = fixture
+            .profile_for_test()
+            .registry()
+            .get_tool(
+                &ToolId::from_raw(crate::coding_tools::BOUNDED_COMMAND_TOOL_ID),
+                crate::coding_tools::BOUNDED_COMMAND_TOOL_VERSION,
+            )
+            .expect("command tool")
+            .clone();
+        let arguments = serde_json::to_vec(&CommandRequest::new("command-attempt-e2e", command))
+            .expect("command request");
+        fixture.call = ToolCall {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            tool_call_id: ToolCallId::from_raw("call-command-e2e"),
+            correlation_id: CorrelationId::from_raw("correlation-coding-runtime"),
+            action_id: runtime_action_id(&fixture.request.run_id, 1),
+            tool_id: definition.tool_id.clone(),
+            tool_version: definition.tool_version.clone(),
+            arguments: ContractPayload {
+                schema: definition.input_schema.clone(),
+                media_type: "application/json".to_owned(),
+                sha256: sha256(&arguments),
+                bytes: arguments,
+            },
+        };
+        fixture.definition = definition;
     }
 
     fn scripted_call(call: &ToolCall) -> ModelToolCallCandidate {
@@ -4970,6 +5018,373 @@ mod tests {
         assert_eq!(
             fs::read(root.join("worktree/src/generated.txt")).expect("generated file reads"),
             generated_content.as_bytes()
+        );
+    }
+
+    #[test]
+    fn story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay() {
+        let checkpoint_clock = Arc::new(AtomicUsize::new(CHECKPOINT_CLOCK_UNARMED));
+        let shared_launches = Arc::new(AtomicUsize::new(0));
+        let mut fixture = fixture_with_git_and_checkpoint_target(
+            FakeGitExecutor::clean(),
+            Arc::clone(&checkpoint_clock),
+            3,
+        );
+        configure_bounded_command(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-large-command-resume-22-2");
+        let command = scripted_call(&fixture.call);
+        configure_targeted_validation(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-large-validation-resume-22-2");
+        let validation = scripted_call(&fixture.call);
+        configure_git_status(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-git-after-large-output-22-2");
+        let git_after = scripted_call(&fixture.call);
+
+        let mut large_validation_output = serde_json::to_vec(&serde_json::json!({
+            "schema_version": 1,
+            "status": "passed",
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0,
+            "duration_ms": 1,
+            "failed_names": [],
+            "artifact_ids": [],
+            "retry_count": 0,
+            "initial_failure_sha256": null
+        }))
+        .expect("large validation output");
+        large_validation_output.resize(70 * 1024, b' ');
+        let executor = fixture
+            .boundary
+            .command_executor
+            .as_mut()
+            .expect("large-output command executor");
+        executor.stdout = large_validation_output.clone();
+        executor.shared_launches = Some(Arc::clone(&shared_launches));
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Validation];
+        fixture.request = seal_runtime_run_request(fixture.request.clone())
+            .expect("large-artifact validation requirement");
+
+        let profile = fixture.profile_for_test();
+        let workspace = fixture.boundary.workspace;
+        let state_root = fixture.root.join("state");
+        let completion = coding_completion_payload(&CodingCompletionCandidate {
+            schema_version: 1,
+            objective_sha256: sha256(fixture.request.task.objective.as_bytes()),
+            terminal_claim: CodingTerminalClaim::NoOp,
+            summary: "Resumed after exact command and validation artifact recovery.".to_owned(),
+            checks_not_run: Vec::new(),
+            residual_risks: Vec::new(),
+        })
+        .expect("large-artifact completion payload");
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [
+                ScriptedCodingStep::Tool(command),
+                ScriptedCodingStep::Tool(validation),
+                ScriptedCodingStep::Tool(git_after),
+                ScriptedCodingStep::Complete(completion.clone()),
+            ]
+            .into_iter()
+            .collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("large-artifact context");
+        let Fixture {
+            root: _root,
+            request,
+            boundary,
+            ..
+        } = fixture;
+        let base_request = request.clone();
+        let mut coordinator = compose_durable_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            StopAfterCheckpointClock {
+                now_epoch_ms: 58_000,
+                checkpoint_clock: Arc::clone(&checkpoint_clock),
+            },
+        )
+        .expect("large-artifact coordinator");
+
+        let RuntimeCoordinatorStep::AwaitingApproval {
+            challenge: command_challenge,
+        } = coordinator
+            .run_until_boundary(None, None)
+            .expect("large command reaches approval")
+        else {
+            panic!("large command must require approval");
+        };
+        let RuntimeCoordinatorStep::AwaitingApproval {
+            challenge: validation_challenge,
+        } = coordinator
+            .run_until_boundary(
+                Some(&response(
+                    &command_challenge,
+                    RuntimeApprovalDisposition::Allow,
+                )),
+                None,
+            )
+            .expect("large validation reaches approval")
+        else {
+            panic!("large validation must require approval");
+        };
+        let RuntimeCoordinatorStep::AwaitingApproval {
+            challenge: git_challenge,
+        } = coordinator
+            .run_until_boundary(
+                Some(&response(
+                    &validation_challenge,
+                    RuntimeApprovalDisposition::Allow,
+                )),
+                None,
+            )
+            .expect("post-validation Git inspection reaches approval")
+        else {
+            panic!("post-validation Git inspection must require approval");
+        };
+        assert!(matches!(
+            coordinator.run_until_boundary(
+                Some(&response(&git_challenge, RuntimeApprovalDisposition::Allow,)),
+                None,
+            ),
+            Err(RuntimeLoopError::Dependency(
+                RuntimePortFailure::Unavailable
+            ))
+        ));
+        assert_eq!(shared_launches.load(Ordering::SeqCst), 2);
+        let checkpoint_event = coordinator
+            .events()
+            .last()
+            .expect("large-artifact checkpoint event");
+        assert!(matches!(
+            checkpoint_event.kind,
+            RuntimeEventKind::CheckpointCommitted { .. }
+        ));
+        let requested_cursor = RuntimeEventCursor {
+            run_id: checkpoint_event.run_id.clone(),
+            event_id: checkpoint_event.event_id.clone(),
+            sequence: checkpoint_event.sequence,
+            event_sha256: checkpoint_event.event_sha256.clone(),
+        };
+        let pre_restart_artifacts = coordinator.artifact_references().to_vec();
+        drop(coordinator);
+
+        let actor_id = ActorId::from_raw("actor-coding-runtime");
+        let task_id = base_request.task.task_id.clone();
+        let run_id = base_request.run_id.clone();
+        let policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
+            actor_id: &actor_id,
+            task_id: &task_id,
+            run_id: &run_id,
+            workspace: workspace.workspace(),
+            profile,
+            excluded_scopes: Vec::new(),
+        })
+        .expect("large-artifact resume policy");
+        let mut key = TestKey([51; 32]);
+        let authority =
+            open_test_linux_authority(&state_root, &mut key, 59_000).expect("authority reopens");
+        let artifact_with_kind = |kind| {
+            pre_restart_artifacts
+                .iter()
+                .find(|reference| {
+                    authority
+                        .runtime_artifact_operator_view(reference)
+                        .is_ok_and(|view| view.kind == kind)
+                })
+                .cloned()
+                .expect("expected large artifact kind")
+        };
+        let command_reference = artifact_with_kind(RuntimeArtifactKind::StandardOutput);
+        let test_reference = artifact_with_kind(RuntimeArtifactKind::TestLog);
+        assert_eq!(
+            command_reference.byte_size,
+            large_validation_output.len() as u64
+        );
+        assert_eq!(
+            test_reference.byte_size,
+            large_validation_output.len() as u64
+        );
+        for reference in [&command_reference, &test_reference] {
+            assert_eq!(
+                authority
+                    .read_runtime_artifact(&RuntimeArtifactReadRequest {
+                        session_id: base_request.session_id.clone(),
+                        task_id: base_request.task.task_id.clone(),
+                        policy_sha256: base_request.policy_sha256.clone(),
+                        reference: reference.clone(),
+                        now_epoch_ms: 59_001,
+                        maximum_bytes: MAX_RUNTIME_ARTIFACT_BYTES,
+                    })
+                    .expect("large artifact reads after restart"),
+                large_validation_output
+            );
+        }
+
+        let mut resumed_boundary =
+            LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
+                workspace,
+                authority,
+                sandbox: sandbox(),
+                command_executor: FakeCommandExecutor {
+                    shared_launches: Some(Arc::clone(&shared_launches)),
+                    ..FakeCommandExecutor::default()
+                },
+                git_executor: FakeGitExecutor::clean(),
+                policy,
+                actor_id,
+                session_id: base_request.session_id.clone(),
+                sensitivity: DataSensitivity::Operational,
+                identities: TestIdentities::new(30_000),
+            })
+            .expect("large-artifact resumed boundary");
+        let mut resumed_request = base_request.clone();
+        resumed_request.event_cursor = Some(requested_cursor);
+        resumed_request =
+            seal_runtime_run_request(resumed_request).expect("large-artifact resume request");
+        let snapshot =
+            RuntimeCheckpointPort::load_runtime_checkpoint(&mut resumed_boundary, &resumed_request)
+                .expect("large-artifact checkpoint reads")
+                .expect("large-artifact checkpoint exists");
+        assert_eq!(snapshot.binding.artifacts, pre_restart_artifacts);
+
+        let resumed_model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [ScriptedCodingStep::Complete(completion)]
+                .into_iter()
+                .collect(),
+            calls: 0,
+        };
+        let resumed_context =
+            CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+                .expect("large-artifact resumed context");
+        let mut resumed = compose_durable_coding_coordinator(
+            profile,
+            resumed_request,
+            resumed_model,
+            resumed_context,
+            resumed_boundary,
+            FixtureClock(60_000),
+        )
+        .expect("large-artifact coordinator restores");
+        let RuntimeCoordinatorStep::Complete { outcome } = resumed
+            .run_until_boundary(None, None)
+            .expect("large-artifact resume completes")
+        else {
+            panic!("large-artifact resume cannot request another approval");
+        };
+        assert_eq!(outcome.state, AgentStateKind::NoOp, "{outcome:#?}");
+        assert_eq!(outcome.tool_call_count, 3);
+        assert_eq!(outcome.receipt_ids.len(), 3);
+        assert_eq!(shared_launches.load(Ordering::SeqCst), 2);
+        assert_eq!(resumed.artifact_references(), pre_restart_artifacts);
+        println!(
+            "{ARTIFACT_RESUME_METRIC_PREFIX}{}",
+            serde_json::json!({
+                "artifact_kinds": ["standard_output", "test_log"],
+                "artifact_payload_bytes_each": large_validation_output.len(),
+                "exact_artifact_set_restored": true,
+                "external_network_used": false,
+                "manual_fuzzing_executed": false,
+                "post_resume_command_executions": 2,
+                "pre_restart_command_executions": 2,
+                "scenario": "large-command-test-resume",
+                "terminal_state": "no_op",
+                "tool_call_count": 3
+            })
+        );
+    }
+
+    #[test]
+    fn story_22_2_linux_restart_recovers_large_terminal_model_artifact() {
+        let fixture = fixture();
+        let profile = fixture.profile_for_test();
+        let state_root = fixture.root.join("state");
+        let large_model_bytes = vec![b'm'; 70 * 1024];
+        let blocked_payload = ContractPayload {
+            schema: fixture.call.arguments.schema.clone(),
+            media_type: "text/plain".to_owned(),
+            sha256: sha256(&large_model_bytes),
+            bytes: large_model_bytes.clone(),
+        };
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [ScriptedCodingStep::Blocked(blocked_payload)]
+                .into_iter()
+                .collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("large-model context");
+        let Fixture {
+            request, boundary, ..
+        } = fixture;
+        let session_id = request.session_id.clone();
+        let task_id = request.task.task_id.clone();
+        let policy_sha256 = request.policy_sha256.clone();
+        let mut coordinator = compose_durable_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(61_000),
+        )
+        .expect("large-model coordinator");
+        let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+            .run_until_boundary(None, None)
+            .expect("large-model terminal boundary")
+        else {
+            panic!("blocked model output cannot request tool approval");
+        };
+        assert_eq!(outcome.state, AgentStateKind::Blocked);
+        let model_reference = coordinator
+            .artifact_references()
+            .iter()
+            .find(|reference| reference.payload_sha256 == sha256(&large_model_bytes))
+            .cloned()
+            .expect("large terminal model output is artifact-backed");
+        drop(coordinator);
+
+        let mut key = TestKey([51; 32]);
+        let authority =
+            open_test_linux_authority(&state_root, &mut key, 62_000).expect("authority reopens");
+        assert_eq!(
+            authority
+                .runtime_artifact_operator_view(&model_reference)
+                .expect("large-model operator view")
+                .kind,
+            RuntimeArtifactKind::ModelOutput
+        );
+        assert_eq!(
+            authority
+                .read_runtime_artifact(&RuntimeArtifactReadRequest {
+                    session_id,
+                    task_id,
+                    policy_sha256,
+                    reference: model_reference,
+                    now_epoch_ms: 62_001,
+                    maximum_bytes: MAX_RUNTIME_ARTIFACT_BYTES,
+                })
+                .expect("large terminal model artifact reads after restart"),
+            large_model_bytes
+        );
+        println!(
+            "{ARTIFACT_RESUME_METRIC_PREFIX}{}",
+            serde_json::json!({
+                "artifact_kind": "model_output",
+                "artifact_payload_bytes": 70 * 1024,
+                "external_network_used": false,
+                "manual_fuzzing_executed": false,
+                "payload_recovered_exactly": true,
+                "scenario": "large-model-terminal-restart",
+                "terminal_state": "blocked"
+            })
         );
     }
 

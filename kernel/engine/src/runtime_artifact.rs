@@ -2564,8 +2564,11 @@ fn valid_kind_media(kind: RuntimeArtifactKind, media_type: &str) -> bool {
         RuntimeArtifactKind::Patch => matches!(media_type, "text/x-diff" | "text/plain"),
         RuntimeArtifactKind::StandardOutput
         | RuntimeArtifactKind::StandardError
-        | RuntimeArtifactKind::TestLog
-        | RuntimeArtifactKind::ModelOutput => matches!(
+        | RuntimeArtifactKind::TestLog => matches!(
+            media_type,
+            "text/plain" | "application/json" | "application/x-ndjson" | "application/octet-stream"
+        ),
+        RuntimeArtifactKind::ModelOutput => matches!(
             media_type,
             "text/plain" | "application/json" | "application/x-ndjson"
         ),
@@ -3171,6 +3174,18 @@ mod tests {
         );
         let mut candidate = manifest();
         candidate.media_type = "TEXT/PLAIN".to_owned();
+        assert_eq!(
+            seal_runtime_artifact_manifest(candidate),
+            Err(RuntimeArtifactError::InvalidManifest)
+        );
+        let mut candidate = manifest();
+        candidate.media_type = "application/octet-stream".to_owned();
+        candidate.manifest_sha256 = digest('0');
+        assert!(seal_runtime_artifact_manifest(candidate).is_ok());
+        let mut candidate = manifest();
+        candidate.kind = RuntimeArtifactKind::ModelOutput;
+        candidate.media_type = "application/octet-stream".to_owned();
+        candidate.manifest_sha256 = digest('0');
         assert_eq!(
             seal_runtime_artifact_manifest(candidate),
             Err(RuntimeArtifactError::InvalidManifest)

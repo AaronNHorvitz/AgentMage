@@ -20,6 +20,8 @@ class Story222ArtifactResumeEvidenceTests(unittest.TestCase):
         metrics = expected_metrics()
         exact = metrics["exact-checkpoint-resume"]
         lost = metrics["continuation-integrity-loss"]
+        command_and_test = metrics["large-command-test-resume"]
+        model = metrics["large-model-terminal-restart"]
         self.assertEqual(
             [
                 exact["repository_drift"],
@@ -33,6 +35,14 @@ class Story222ArtifactResumeEvidenceTests(unittest.TestCase):
         self.assertEqual(lost["cases"], ["missing", "corrupt"])
         self.assertEqual(lost["cases_blocked"], 2)
         self.assertEqual(lost["post_failure_total_tool_executions_per_case"], 1)
+        self.assertEqual(
+            command_and_test["artifact_kinds"], ["standard_output", "test_log"]
+        )
+        self.assertEqual(command_and_test["pre_restart_command_executions"], 2)
+        self.assertEqual(command_and_test["post_resume_command_executions"], 2)
+        self.assertTrue(command_and_test["exact_artifact_set_restored"])
+        self.assertEqual(model["artifact_kind"], "model_output")
+        self.assertTrue(model["payload_recovered_exactly"])
 
     def test_exact_metric_records_parse_in_any_order_and_drift_fails(self) -> None:
         metrics = expected_metrics()

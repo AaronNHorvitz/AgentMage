@@ -101,7 +101,8 @@ one slash and at most 128 bytes. Semantic kind narrows that set as follows:
 | Artifact kind | Admitted media types |
 |---|---|
 | `patch` | `text/x-diff` or `text/plain` |
-| `standard_output`, `standard_error`, `test_log`, `model_output` | `text/plain`, `application/json`, or `application/x-ndjson` |
+| `standard_output`, `standard_error`, `test_log` | `text/plain`, `application/json`, `application/x-ndjson`, or `application/octet-stream` |
+| `model_output` | `text/plain`, `application/json`, or `application/x-ndjson` |
 | `generated_file`, `report` | Any media type that passes the closed lowercase syntax and length check |
 
 The artifact ceiling is 64 MiB, the encrypted metadata preview is at most

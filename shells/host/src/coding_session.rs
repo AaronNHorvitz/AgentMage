@@ -614,7 +614,8 @@ pub(crate) mod tests {
                 ("TZ".to_owned(), "UTC".to_owned()),
             ]),
             CommandRisk::Moderate,
-            CommandBounds::new(30_000, 65_536, 65_536, 256 * 1024 * 1024, 32, 200).expect("bounds"),
+            CommandBounds::new(30_000, 128 * 1024, 128 * 1024, 256 * 1024 * 1024, 32, 200)
+                .expect("bounds"),
         )
         .expect("command")
     }
