@@ -5,14 +5,6 @@
       "owner": "28.1"
     },
     {
-      "code": "RAW-AND-REBUILT-INDEX-INTEGRATION-ABSENT",
-      "owner": "29.1.3.4"
-    },
-    {
-      "code": "APPLICATION-SYNTHESIS-RENDERING-INTEGRATION-ABSENT",
-      "owner": "29.1.3.4"
-    },
-    {
       "code": "INDEPENDENT-SPRINT-29-REVIEW-ABSENT",
       "owner": "29.1.3.5"
     }
@@ -28,7 +20,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-tests",
-      "output_sha256": "ddaf11e1ba994bb6cb006a5016b8b3225cd77a52fe3f9ec3b6694f87e566653e"
+      "output_sha256": "33763bb6b64629c42ee36e18e5f0e5557d6435afdda714c4fa62d94784fe5360"
     },
     {
       "argv": [
@@ -44,7 +36,7 @@
       ],
       "exit_code": 0,
       "id": "knowledge-clippy",
-      "output_sha256": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157"
+      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd"
     },
     {
       "argv": [
@@ -54,7 +46,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "624be81740ce03e942f97b0b0f1fa13757f33b8cad1fb95fdcff0262f30e8994"
+      "output_sha256": "abe058b7be1dadabbb22132f0d56a022adb78f553d44b54081ab26cae7efb9e6"
     },
     {
       "argv": [
@@ -64,7 +56,7 @@
       ],
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "5b947cece44630d2b13ee19118fb73c4e0eebaae856f677c620c8e3b9e278eb7"
+      "output_sha256": "e04e0f5acd3d10079809daf77b8e2aa10a66a568e4e9619088958d3931da68bc"
     },
     {
       "argv": [
@@ -134,7 +126,9 @@
     "system": "Linux"
   },
   "fixture_corpus_metrics": {
+    "absent_expected_evidence_reported": true,
     "expected_citation_set_match": 1.0,
+    "expected_raw_rebuilt_citation_parity": 1.0,
     "expected_top_1_precision": 1.0,
     "expected_top_1_recall": 1.0,
     "fixture_version": 1,
@@ -142,16 +136,17 @@
     "question_count": 3
   },
   "implemented_contracts": {
-    "application_synthesis_and_final_rendering_integration": false,
     "byte_bounded_deduplicated_context": true,
     "conflict_stale_denied_and_unknown_states": true,
     "content_bound_citations": true,
     "evidence_preserving_synthesis_rendering_contract": true,
+    "extractive_synthesis_and_final_rendering_integration": true,
     "filesystem_network_process_or_write_authority": false,
     "fixed_integer_ranking_and_score_trace": true,
+    "labeled_question_parity_and_blind_spot_reporting": true,
     "literal_term_and_phrase_search": true,
     "metadata_and_authority_filters": true,
-    "raw_and_rebuilt_index_integration": false,
+    "raw_and_rebuilt_index_integration": true,
     "secret_and_workspace_canary_exclusion": true,
     "semantic_components_used": false,
     "stable_tie_breaking": true,
@@ -170,15 +165,17 @@
     "SR-AI-011",
     "SR-TST-004"
   ],
-  "source_revision": "9928f911445138a2e93ae849d7327c109f96b769",
+  "source_revision": "151e5ceedfbf471aaa7f3f916da5e21565ec11b0",
   "source_sha256": {
-    "capabilities/knowledge/Cargo.toml": "b8fb44a3d5b253f707ba0168a34f6e16d47588dc23f2d66d25c96f173dbf7628",
-    "capabilities/knowledge/src/lib.rs": "cb20bd9d2780792aae8e1c26f38e5fcedfe87ad53d056752d12ecb0de093634a",
+    "capabilities/knowledge/Cargo.toml": "b7f36b6898ddcce5c3a8a03a148366a819bfa0d67d7af5fb7480c5a94207a76b",
+    "capabilities/knowledge/src/lib.rs": "d2688b85260c25e38e10d12617ebfd65412a79a10f51ef3cbad578fa1eb552ac",
+    "capabilities/knowledge/src/obsidian_index.rs": "da3400f399af82ce641bf2f66df17dabd53a5e22eb0e3bd6c4e79651b4b55ed4",
     "capabilities/knowledge/src/retrieval.rs": "0f6b759ab331e4961180931f75a9f2cb2eb44d349bcd8fabecb80dfab55a6edb",
-    "docs/architecture/deterministic-knowledge-retrieval.md": "33d3077f490544024798e54e95cd6b2f71e5962193dc19b026afa0e6a4d03f07",
-    "docs/verification/sprint-29-local-results.md": "e1b102092bac0c5ab61550b5fac973609c00093afa47df1b35c63baf7bd04331",
-    "scripts/sprint_29_evidence.py": "1ad390f4db59eb87c7e5a76ae54f4401ded9e7f90cbf47dbd9ce2efc82965e5f",
-    "tests/test_sprint_29_evidence.py": "36043988c72d5e07d8fc4acb73c87d2ac9f33651e6715b16a131b49730f3d6de"
+    "capabilities/knowledge/src/retrieval_integration.rs": "f459956c9a733a6fdddcd77d0afb4bd365686555fb827d38ad05e7f6d294f6d9",
+    "docs/architecture/deterministic-knowledge-retrieval.md": "e0924d14797824fbdf833d7141cfd3a58a180c1f7ff75c640d9810f2554ebb15",
+    "docs/verification/sprint-29-local-results.md": "40be6403a4a55c67c12f0a687af2b65102f5f62aa92265ac453af15e3f88616e",
+    "scripts/sprint_29_evidence.py": "79a709a6adbc80d42ffde3261c38bafc99c368b507f3e3601617102feff60e0b",
+    "tests/test_sprint_29_evidence.py": "67752f0c353e64c54497c93168520dc60695ca1612f8fb8b6c28c503d27530e0"
   },
   "summary": {
     "local_retrieval_core_passed": true,
@@ -188,14 +185,15 @@
     "write_authority_enabled": false
   },
   "verification_evidence": {
-    "application_synthesis_and_final_rendering_integration": false,
     "complete_local_product_and_docs_gates": true,
     "conflict_stale_denied_and_unknown_states": true,
     "evidence_preserving_synthesis_rendering_contract": true,
+    "extractive_synthesis_and_final_rendering_integration": true,
     "fixed_ranking_and_citation_corpus": true,
     "independent_review": false,
+    "labeled_question_parity_and_blind_spot_reporting": true,
     "literal_injection_secret_and_workspace_isolation": true,
-    "raw_and_rebuilt_index_integration": false,
+    "raw_and_rebuilt_index_integration": true,
     "upstream_sprint_28_gate": false
   }
 }
