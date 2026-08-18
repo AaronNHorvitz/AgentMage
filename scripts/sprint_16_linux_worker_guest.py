@@ -45,6 +45,12 @@ ATTACK_CASES: Final = [
     "write",
     "secret_canary",
 ]
+LIFECYCLE_CASES: Final = [
+    f"{termination}_{phase}"
+    for termination in ("cancel", "timeout", "kill", "crash")
+    for phase in ("before_result", "during_result", "after_result")
+]
+LIFECYCLE_FIXTURE_ROOT: Final = Path("/usr/libexec/agentmage-lifecycle-fixtures")
 
 
 class GuestWorkerError(ValueError):
@@ -64,6 +70,7 @@ def run(
     receipts: list[dict[str, Any]],
     *,
     timeout: int = 3600,
+    extra_environment: dict[str, str] | None = None,
 ) -> str:
     environment = {
         **os.environ,
@@ -73,6 +80,7 @@ def run(
         "NPM_CONFIG_OFFLINE": "true",
         "NPM_CONFIG_UPDATE_NOTIFIER": "false",
         "RUSTUP_NO_UPDATE_CHECK": "1",
+        **(extra_environment or {}),
     }
     completed = subprocess.run(
         command,
@@ -184,6 +192,42 @@ def execute(distribution: str) -> dict[str, Any]:
     run(
         [
             "cargo",
+            "build",
+            "-p",
+            "agentmage-capability-read-only",
+            "--bin",
+            "agentmage-read-only-lifecycle-fixture",
+            "--features",
+            "lifecycle-fixture",
+            "--locked",
+        ],
+        receipts,
+    )
+    run(
+        ["sudo", "install", "-d", "-o", "root", "-g", "root", "-m", "0755", str(LIFECYCLE_FIXTURE_ROOT)],
+        receipts,
+    )
+    lifecycle_binary = ROOT / "target/debug/agentmage-read-only-lifecycle-fixture"
+    for case in LIFECYCLE_CASES:
+        fixture_name = case.replace("_result", "").replace("_", "-")
+        run(
+            [
+                "sudo",
+                "install",
+                "-o",
+                "root",
+                "-g",
+                "root",
+                "-m",
+                "0755",
+                str(lifecycle_binary),
+                str(LIFECYCLE_FIXTURE_ROOT / f"agentmage-lifecycle-{fixture_name}"),
+            ],
+            receipts,
+        )
+    run(
+        [
+            "cargo",
             "test",
             "-p",
             "agentmage-platform-linux",
@@ -191,10 +235,41 @@ def execute(distribution: str) -> dict[str, Any]:
             "sandbox::tests::",
             "--",
             "--ignored",
+            "--skip",
+            "lifecycle_matrix_cleans_descendants_scratch_and_never_accepts_interrupted_output",
             "--test-threads=1",
         ],
         receipts,
     )
+    lifecycle_environment = {
+        "AGENTMAGE_LIFECYCLE_FIXTURE_ROOT": str(LIFECYCLE_FIXTURE_ROOT)
+    }
+    for package_name, test_name in (
+        (
+            "agentmage-platform-linux",
+            "sandbox::tests::lifecycle_matrix_cleans_descendants_scratch_and_never_accepts_interrupted_output",
+        ),
+        (
+            "agentmage-host",
+            "linux_read::tests::lifecycle_matrix_retains_one_terminal_receipt_and_never_reports_false_completion",
+        ),
+    ):
+        run(
+            [
+                "cargo",
+                "test",
+                "-p",
+                package_name,
+                "--locked",
+                test_name,
+                "--",
+                "--ignored",
+                "--exact",
+                "--test-threads=1",
+            ],
+            receipts,
+            extra_environment=lifecycle_environment,
+        )
     for test_name in (
         "tests::symlink_hard_link_special_kind_and_resource_limit_fail_closed",
         "tests::concurrent_symlink_replacement_never_changes_held_file_authority",
@@ -240,6 +315,9 @@ def execute(distribution: str) -> dict[str, Any]:
     )
     if units.strip() or worker_processes():
         raise GuestWorkerError("worker lifecycle residue remains")
+    run(["sudo", "rm", "-rf", str(LIFECYCLE_FIXTURE_ROOT)], receipts)
+    if LIFECYCLE_FIXTURE_ROOT.exists() or Path("/tmp/agentmage-lifecycle-scratch").exists():
+        raise GuestWorkerError("lifecycle fixture residue remains")
     run(package_command(distribution, "remove"), receipts)
     if WORKER.exists() or WORKER.is_symlink() or HOST.exists() or HOST.is_symlink():
         raise GuestWorkerError("package removal residue remains")
@@ -259,6 +337,10 @@ def execute(distribution: str) -> dict[str, Any]:
         "receipt_count": len(VERIFIED_OPERATIONS),
         "attack_cases": ATTACK_CASES,
         "linux_attack_matrix_complete": True,
+        "lifecycle_cases": LIFECYCLE_CASES,
+        "linux_lifecycle_campaign_complete": True,
+        "terminal_receipts_per_lifecycle_case": 1,
+        "false_completion_cases": 0,
         "workspace_invariant": True,
         "worker_process_residue": False,
         "transient_unit_residue": False,

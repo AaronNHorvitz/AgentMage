@@ -25,6 +25,8 @@ INSTALLED_WORKER_OUTPUT: Final = (
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 SOURCE_PATHS: Final = (
+    "capabilities/read-only/Cargo.toml",
+    "capabilities/read-only/src/bin/agentmage-read-only-lifecycle-fixture.rs",
     "capabilities/read-only/src/catalog.rs",
     "capabilities/read-only/src/protocol.rs",
     "capabilities/read-only/src/worker.rs",
@@ -119,7 +121,7 @@ SECURITY_REQUIREMENTS: Final = [
 BLOCKERS: Final = [
     {"code": "MACOS-XPC-WORKER-EVIDENCE-MISSING", "owner": "16.1.1.5"},
     {"code": "MACOS-LIVE-WORKER-ATTACK-MATRIX-MISSING", "owner": "16.1.3.3"},
-    {"code": "WORKER-CANCEL-TIMEOUT-KILL-CRASH-CAMPAIGN-INCOMPLETE", "owner": "16.1.3.4"},
+    {"code": "MACOS-WORKER-LIFECYCLE-CAMPAIGN-MISSING", "owner": "16.1.3.4"},
     {"code": "INDEPENDENT-WORKER-REVIEW-NOT-RETAINED", "owner": "16.1.3.5"},
 ]
 
@@ -172,15 +174,22 @@ def installed_worker_summary(value: Any, encoded: bytes) -> dict[str, Any]:
         raise ValueError("installed worker matrix must be an object")
     targets = value.get("targets")
     if (
-        value.get("status") != "pass-installed-linux-worker-operation-matrix"
+        value.get("status")
+        != "pass-installed-linux-worker-operation-attack-lifecycle-matrix"
         or not isinstance(targets, list)
         or [target.get("target_id") for target in targets]
         != ["fedora-44-x86_64", "ubuntu-26.04-x86_64"]
         or value.get("verified_operations") != worker_evidence.VERIFIED_OPERATIONS
         or value.get("linux_attack_matrix_complete") is not True
+        or value.get("linux_lifecycle_campaign_complete") is not True
         or any(
             target.get("guest_result", {}).get("attack_cases")
             != worker_evidence.ATTACK_CASES
+            for target in targets
+        )
+        or any(
+            target.get("guest_result", {}).get("lifecycle_cases")
+            != worker_evidence.LIFECYCLE_CASES
             for target in targets
         )
     ):
@@ -192,6 +201,7 @@ def installed_worker_summary(value: Any, encoded: bytes) -> dict[str, Any]:
         "target_ids": [target["target_id"] for target in targets],
         "verified_operations": value["verified_operations"],
         "linux_attack_cases": worker_evidence.ATTACK_CASES,
+        "linux_lifecycle_cases": worker_evidence.LIFECYCLE_CASES,
     }
 
 
@@ -236,6 +246,7 @@ def build_report(
             "linux_packaged_live_worker": True,
             "linux_complete_operation_matrix": True,
             "linux_live_attack_matrix": True,
+            "linux_live_lifecycle_campaign": True,
             "macos_xpc_worker": False,
         },
         "verification_evidence": {
@@ -308,6 +319,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         or installed_worker.get("verified_operations")
         != worker_evidence.VERIFIED_OPERATIONS
         or installed_worker.get("linux_attack_cases") != worker_evidence.ATTACK_CASES
+        or installed_worker.get("linux_lifecycle_cases")
+        != worker_evidence.LIFECYCLE_CASES
     ):
         failures.append("installed worker operation-matrix evidence drift")
     expected_summary = {
@@ -325,6 +338,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("installed Linux complete operation matrix drift")
     if platform.get("linux_live_attack_matrix") is not True:
         failures.append("installed Linux attack matrix drift")
+    if platform.get("linux_live_lifecycle_campaign") is not True:
+        failures.append("installed Linux lifecycle campaign drift")
     for field in ("macos_xpc_worker",):
         if platform.get(field) is not False:
             failures.append(f"platform overclaim: {field}")

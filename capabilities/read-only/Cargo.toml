@@ -14,5 +14,13 @@ serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 
+[features]
+lifecycle-fixture = []
+
+[[bin]]
+name = "agentmage-read-only-lifecycle-fixture"
+path = "src/bin/agentmage-read-only-lifecycle-fixture.rs"
+required-features = ["lifecycle-fixture"]
+
 [lints]
 workspace = true

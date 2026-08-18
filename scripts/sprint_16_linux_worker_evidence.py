@@ -29,6 +29,8 @@ REPORT_PATH: Final = (
     ROOT / "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
 )
 SOURCE_PATHS: Final = (
+    "capabilities/read-only/Cargo.toml",
+    "capabilities/read-only/src/bin/agentmage-read-only-lifecycle-fixture.rs",
     "capabilities/read-only/src/bin/agentmage-read-only-worker.rs",
     "docs/architecture/read-only-tool-protocol.md",
     "packaging/linux/agentmage.spec.in",
@@ -68,6 +70,11 @@ ATTACK_CASES: Final = [
     "process",
     "write",
     "secret_canary",
+]
+LIFECYCLE_CASES: Final = [
+    f"{termination}_{phase}"
+    for termination in ("cancel", "timeout", "kill", "crash")
+    for phase in ("before_result", "during_result", "after_result")
 ]
 
 
@@ -299,9 +306,9 @@ def build_report(
     return {
         "schema_version": 1,
         "record_type": "sprint-16-installed-linux-worker-matrix",
-        "task_ids": ["16.1.1.5", "16.1.2.3"],
+        "task_ids": ["16.1.1.5", "16.1.2.3", "16.1.3.3", "16.1.3.4"],
         "source_revision": revision,
-        "status": "pass-installed-linux-worker-operation-matrix",
+        "status": "pass-installed-linux-worker-operation-attack-lifecycle-matrix",
         "qemu": {
             "launcher_class": tools.launcher_class,
             "version": tools.qemu_version,
@@ -311,6 +318,7 @@ def build_report(
         "verified_operations": VERIFIED_OPERATIONS,
         "complete_ten_tool_matrix": True,
         "linux_attack_matrix_complete": True,
+        "linux_lifecycle_campaign_complete": True,
         "attack_matrix_complete": False,
         "cleanup_campaign_complete": False,
         "macos_evidence_substituted": False,
@@ -328,8 +336,10 @@ def validate_report(value: Any) -> list[str]:
     if (
         value.get("schema_version") != 1
         or value.get("record_type") != "sprint-16-installed-linux-worker-matrix"
-        or value.get("task_ids") != ["16.1.1.5", "16.1.2.3"]
-        or value.get("status") != "pass-installed-linux-worker-operation-matrix"
+        or value.get("task_ids")
+        != ["16.1.1.5", "16.1.2.3", "16.1.3.3", "16.1.3.4"]
+        or value.get("status")
+        != "pass-installed-linux-worker-operation-attack-lifecycle-matrix"
         or REVISION.fullmatch(str(value.get("source_revision", ""))) is None
     ):
         failures.append("installed worker matrix identity drifted")
@@ -369,6 +379,10 @@ def validate_report(value: Any) -> list[str]:
             or guest.get("receipt_count") != len(VERIFIED_OPERATIONS)
             or guest.get("attack_cases") != ATTACK_CASES
             or guest.get("linux_attack_matrix_complete") is not True
+            or guest.get("lifecycle_cases") != LIFECYCLE_CASES
+            or guest.get("linux_lifecycle_campaign_complete") is not True
+            or guest.get("terminal_receipts_per_lifecycle_case") != 1
+            or guest.get("false_completion_cases") != 0
             or guest.get("workspace_invariant") is not True
             or any(
                 guest.get(field) is not False
@@ -422,6 +436,8 @@ def validate_report(value: Any) -> list[str]:
         failures.append("installed worker complete operation matrix drifted")
     if value.get("linux_attack_matrix_complete") is not True:
         failures.append("installed worker Linux attack matrix drifted")
+    if value.get("linux_lifecycle_campaign_complete") is not True:
+        failures.append("installed worker Linux lifecycle campaign drifted")
     sources = value.get("sources")
     if (
         not isinstance(sources, list)

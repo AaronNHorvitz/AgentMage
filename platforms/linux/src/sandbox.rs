@@ -6,7 +6,10 @@ use std::io::{Read, Write};
 use std::os::fd::AsRawFd;
 use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
+use std::time::{Duration, Instant};
 
 use agentmage_kernel_contracts::{
     GrantOperation, GrantTarget, HeldWorkspaceObject, OperationOutcome, PathResolutionIntent,
@@ -39,6 +42,7 @@ const MAX_READ_ONLY_REQUEST_BYTES: usize = 64 * 1024;
 const MAX_READ_ONLY_SNAPSHOT_BYTES: usize = 128 * 1024 * 1024;
 const WORKER_GUEST_ROOT: &str = "/app";
 const PATH_EXECUTOR: &str = "/usr/bin/env";
+const SYSTEMCTL: &str = "/usr/bin/systemctl";
 const SECCOMP_POLICY_ID: &str = "agentmage.linux.worker.deny.v1";
 const DENIED_SYSCALLS: &[&str] = &[
     "accept",
@@ -253,7 +257,7 @@ pub enum LinuxSandboxOperation {
 /// Bounded result returned by a completed worker.
 #[derive(Clone, PartialEq, Eq)]
 pub struct LinuxSandboxResult {
-    success: bool,
+    outcome: OperationOutcome,
     stdout: Vec<u8>,
     stdout_sha256: [u8; 32],
     stderr_sha256: [u8; 32],
@@ -264,7 +268,13 @@ impl LinuxSandboxResult {
     /// Reports whether the worker exited successfully.
     #[must_use]
     pub const fn success(&self) -> bool {
-        self.success
+        matches!(self.outcome, OperationOutcome::Succeeded)
+    }
+
+    /// Returns the exact supervisor-observed terminal outcome.
+    #[must_use]
+    pub const fn outcome(&self) -> OperationOutcome {
+        self.outcome
     }
 
     /// Returns the bounded worker output.
@@ -296,7 +306,7 @@ impl fmt::Debug for LinuxSandboxResult {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("LinuxSandboxResult")
-            .field("success", &self.success)
+            .field("outcome", &self.outcome)
             .field("stdout_bytes", &self.stdout.len())
             .field("stderr_bytes", &self.stderr_bytes)
             .finish_non_exhaustive()
@@ -328,6 +338,7 @@ impl fmt::Debug for VerifiedArtifact {
 /// Verified, descriptor-held Linux sandbox launch manifest.
 pub struct LinuxSandboxManifest {
     systemd_run: VerifiedArtifact,
+    systemctl: VerifiedArtifact,
     path_executor: VerifiedArtifact,
     bubblewrap: VerifiedArtifact,
     worker: VerifiedArtifact,
@@ -348,6 +359,9 @@ impl LinuxSandboxManifest {
         let worker_guest_path =
             Path::new(WORKER_GUEST_ROOT).join(verified_worker_name(worker.as_ref())?);
         let systemd_run = verify_artifact(systemd_run.as_ref(), None, true)?;
+        let systemctl_path = std::fs::canonicalize(SYSTEMCTL)
+            .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
+        let systemctl = verify_artifact(&systemctl_path, None, true)?;
         let path_executor_path = std::fs::canonicalize(PATH_EXECUTOR)
             .map_err(|_| error(LinuxSandboxErrorKind::InvalidManifest))?;
         let path_executor = verify_artifact(&path_executor_path, None, true)?;
@@ -371,6 +385,7 @@ impl LinuxSandboxManifest {
         }
         Ok(Self {
             systemd_run,
+            systemctl,
             path_executor,
             bubblewrap,
             worker,
@@ -384,6 +399,7 @@ impl fmt::Debug for LinuxSandboxManifest {
         formatter
             .debug_struct("LinuxSandboxManifest")
             .field("systemd_run", &self.systemd_run)
+            .field("systemctl", &self.systemctl)
             .field("path_executor", &self.path_executor)
             .field("bubblewrap", &self.bubblewrap)
             .field("worker", &self.worker)
@@ -398,6 +414,23 @@ pub struct LinuxSandboxRunner {
     manifest: LinuxSandboxManifest,
     limits: LinuxSandboxLimits,
     seccomp_bpf: Vec<u8>,
+}
+
+/// Thread-safe cancellation signal for one bounded worker launch.
+#[derive(Clone, Debug, Default)]
+pub struct LinuxSandboxCancellation {
+    cancelled: Arc<AtomicBool>,
+}
+
+impl LinuxSandboxCancellation {
+    /// Requests cancellation. The supervisor confirms whole-unit teardown before returning.
+    pub fn cancel(&self) {
+        self.cancelled.store(true, Ordering::SeqCst);
+    }
+
+    fn is_cancelled(&self) -> bool {
+        self.cancelled.load(Ordering::SeqCst)
+    }
 }
 
 /// Opaque sealed request and workspace projection for one read-only tool worker.
@@ -560,6 +593,19 @@ impl LinuxSandboxRunner {
         projections: &[ProjectionMount<'_>],
         arguments: &[OsString],
     ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
+        self.run_projection_arguments_with_cancellation(
+            projections,
+            arguments,
+            &LinuxSandboxCancellation::default(),
+        )
+    }
+
+    fn run_projection_arguments_with_cancellation(
+        &self,
+        projections: &[ProjectionMount<'_>],
+        arguments: &[OsString],
+        cancellation: &LinuxSandboxCancellation,
+    ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
         if projections.is_empty()
             || projections.len() > 8
             || projections
@@ -572,11 +618,18 @@ impl LinuxSandboxRunner {
         let descriptor_source =
             |descriptor: &OwnedFd| format!("/proc/{parent_pid}/fd/{}", descriptor.as_raw_fd());
         revalidate_launch_artifact(&self.manifest.systemd_run)?;
+        revalidate_launch_artifact(&self.manifest.systemctl)?;
         revalidate_launch_artifact(&self.manifest.path_executor)?;
         revalidate_launch_artifact(&self.manifest.bubblewrap)?;
         let systemd_command = self
             .manifest
             .systemd_run
+            .launch_path
+            .as_deref()
+            .ok_or_else(|| error(LinuxSandboxErrorKind::InvalidManifest))?;
+        let systemctl_command = self
+            .manifest
+            .systemctl
             .launch_path
             .as_deref()
             .ok_or_else(|| error(LinuxSandboxErrorKind::InvalidManifest))?;
@@ -598,8 +651,8 @@ impl LinuxSandboxRunner {
         let mut command = Command::new(systemd_command);
         command
             .env_clear()
-            .env("XDG_RUNTIME_DIR", runtime_directory)
-            .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
+            .env("XDG_RUNTIME_DIR", &runtime_directory)
+            .env("DBUS_SESSION_BUS_ADDRESS", &session_bus)
             .arg("--user")
             .arg("--wait")
             .arg("--collect")
@@ -615,7 +668,7 @@ impl LinuxSandboxRunner {
             .arg(format!("--property=CPUQuota={}%", self.limits.cpu_percent))
             .arg(format!(
                 "--property=RuntimeMaxSec={}s",
-                self.limits.runtime_seconds
+                self.limits.runtime_seconds.saturating_add(1)
             ));
         for (index, projection) in projections.iter().enumerate() {
             command.arg(format!(
@@ -726,9 +779,45 @@ impl LinuxSandboxRunner {
         let output_limit = self.limits.output_bytes;
         let stdout_reader = thread::spawn(move || read_bounded(stdout, output_limit));
         let stderr_reader = thread::spawn(move || read_bounded(stderr, output_limit));
-        let status = child
-            .wait()
-            .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))?;
+        let started = Instant::now();
+        let deadline = Duration::from_secs(u64::from(self.limits.runtime_seconds));
+        let (forced_outcome, status) = loop {
+            if let Some(status) = child
+                .try_wait()
+                .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))?
+            {
+                break (None, status);
+            }
+            let forced_outcome = if cancellation.is_cancelled() {
+                Some(OperationOutcome::Cancelled)
+            } else if started.elapsed() >= deadline {
+                Some(OperationOutcome::TimedOut)
+            } else {
+                None
+            };
+            if let Some(outcome) = forced_outcome {
+                let stop_status = Command::new(systemctl_command)
+                    .env_clear()
+                    .env("XDG_RUNTIME_DIR", &runtime_directory)
+                    .env("DBUS_SESSION_BUS_ADDRESS", &session_bus)
+                    .args(["--user", "stop", unit.as_str()])
+                    .stdin(Stdio::null())
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))?;
+                if !stop_status.success() {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    return Err(error(LinuxSandboxErrorKind::ExecutionFailed));
+                }
+                let status = child
+                    .wait()
+                    .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))?;
+                break (Some(outcome), status);
+            }
+            thread::sleep(Duration::from_millis(10));
+        };
         let stdout = stdout_reader
             .join()
             .map_err(|_| error(LinuxSandboxErrorKind::ExecutionFailed))??;
@@ -739,7 +828,11 @@ impl LinuxSandboxRunner {
             return Err(error(LinuxSandboxErrorKind::OutputLimitExceeded));
         }
         Ok(LinuxSandboxResult {
-            success: status.success(),
+            outcome: forced_outcome.unwrap_or(if status.success() {
+                OperationOutcome::Succeeded
+            } else {
+                OperationOutcome::Failed
+            }),
             stdout_sha256: digest_bytes(&stdout.retained),
             stderr_sha256: stderr.digest,
             stderr_bytes: stderr.total,
@@ -747,16 +840,17 @@ impl LinuxSandboxRunner {
         })
     }
 
-    fn run_read_only_tool(
+    fn run_read_only_tool_with_cancellation(
         &self,
         input: &LinuxReadOnlyToolInput,
+        cancellation: &LinuxSandboxCancellation,
     ) -> Result<LinuxSandboxResult, LinuxSandboxError> {
         for object in &input.held {
             object
                 .revalidate()
                 .map_err(|_| error(LinuxSandboxErrorKind::StaleObject))?;
         }
-        self.run_projection_arguments(
+        self.run_projection_arguments_with_cancellation(
             &[
                 ProjectionMount {
                     descriptor: &input.request,
@@ -771,6 +865,7 @@ impl LinuxSandboxRunner {
                 OsString::from(&input.tool_id),
                 OsString::from(&input.tool_version),
             ],
+            cancellation,
         )
     }
 
@@ -867,11 +962,7 @@ impl EffectDriver for LinuxSandboxEffectDriver {
         ) {
             Ok(result) => {
                 let effect_result = EffectResult::from_redacted_material(
-                    if result.success() {
-                        OperationOutcome::Succeeded
-                    } else {
-                        OperationOutcome::Failed
-                    },
+                    result.outcome(),
                     result.stdout_sha256(),
                     StateChange::NotChanged,
                 );
@@ -897,17 +988,35 @@ pub struct LinuxReadOnlyToolEffectDriver {
     input: LinuxReadOnlyToolInput,
     result: Option<LinuxSandboxResult>,
     error: Option<LinuxSandboxError>,
+    cancellation: LinuxSandboxCancellation,
 }
 
 impl LinuxReadOnlyToolEffectDriver {
     /// Creates an inert driver over sealed input and continuously held objects.
     #[must_use]
-    pub const fn new(runner: LinuxSandboxRunner, input: LinuxReadOnlyToolInput) -> Self {
+    pub fn new(runner: LinuxSandboxRunner, input: LinuxReadOnlyToolInput) -> Self {
         Self {
             runner,
             input,
             result: None,
             error: None,
+            cancellation: LinuxSandboxCancellation::default(),
+        }
+    }
+
+    /// Creates an inert driver bound to an externally observable cancellation signal.
+    #[must_use]
+    pub const fn new_cancellable(
+        runner: LinuxSandboxRunner,
+        input: LinuxReadOnlyToolInput,
+        cancellation: LinuxSandboxCancellation,
+    ) -> Self {
+        Self {
+            runner,
+            input,
+            result: None,
+            error: None,
+            cancellation,
         }
     }
 
@@ -948,14 +1057,13 @@ impl EffectDriver for LinuxReadOnlyToolEffectDriver {
         {
             return EffectLaunch::failed();
         }
-        match self.runner.run_read_only_tool(&self.input) {
+        match self
+            .runner
+            .run_read_only_tool_with_cancellation(&self.input, &self.cancellation)
+        {
             Ok(result) => {
                 let effect = EffectResult::from_redacted_material(
-                    if result.success() {
-                        OperationOutcome::Succeeded
-                    } else {
-                        OperationOutcome::Failed
-                    },
+                    result.outcome(),
                     result.stdout_sha256(),
                     StateChange::NotChanged,
                 );
@@ -1404,25 +1512,27 @@ const fn error(kind: LinuxSandboxErrorKind) -> LinuxSandboxError {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
     use std::ffi::OsString;
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::process::Command;
+    use std::thread;
     use std::time::{Duration, Instant};
 
     use agentmage_kernel_contracts::{
-        AdapterInstanceId, GrantTarget, HeldWorkspaceObject, PathResolutionIntent,
-        PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath,
-        WorkspaceScopePath, WorkspaceSnapshot,
+        AdapterInstanceId, GrantTarget, HeldWorkspaceObject, OperationOutcome,
+        PathResolutionIntent, PlatformPathAdapter, WorkspaceAuthorizationId, WorkspaceId,
+        WorkspacePath, WorkspaceScopePath, WorkspaceSnapshot,
     };
     use rustix::fs::{SealFlags, fcntl_get_seals};
     use rustix::io::{pread, write};
 
     use super::{
-        LinuxReadOnlyToolInput, LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits,
-        LinuxSandboxManifest, LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner,
-        LinuxWorkerRuntimeFile, MAX_READ_ONLY_REQUEST_BYTES, compile_seccomp_policy,
-        directory_projection, file_projection, verified_worker_name,
+        LinuxReadOnlyToolInput, LinuxSandboxCancellation, LinuxSandboxError, LinuxSandboxErrorKind,
+        LinuxSandboxLimits, LinuxSandboxManifest, LinuxSandboxOperation, LinuxSandboxResult,
+        LinuxSandboxRunner, LinuxWorkerRuntimeFile, MAX_READ_ONLY_REQUEST_BYTES,
+        compile_seccomp_policy, directory_projection, file_projection, verified_worker_name,
     };
     use crate::{
         DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPathAdapter,
@@ -1529,6 +1639,82 @@ mod tests {
 
     fn runner() -> LinuxSandboxRunner {
         runner_for("/usr/bin/cat", LinuxSandboxLimits::default())
+    }
+
+    fn lifecycle_fixture(case: &str) -> PathBuf {
+        let root = std::env::var_os("AGENTMAGE_LIFECYCLE_FIXTURE_ROOT")
+            .map(PathBuf::from)
+            .expect("lifecycle fixture root");
+        root.join(format!("agentmage-lifecycle-{case}"))
+    }
+
+    fn lifecycle_units() -> BTreeSet<String> {
+        let output = Command::new("/usr/bin/systemctl")
+            .args([
+                "--user",
+                "list-units",
+                "--all",
+                "--plain",
+                "--no-legend",
+                "agentmage-worker-*",
+            ])
+            .output()
+            .expect("systemctl unit inventory");
+        assert!(output.status.success());
+        String::from_utf8(output.stdout)
+            .expect("unit inventory UTF-8")
+            .lines()
+            .filter_map(|line| line.split_whitespace().next().map(str::to_owned))
+            .collect()
+    }
+
+    fn lifecycle_processes(name: &str) -> Vec<u32> {
+        let mut processes = fs::read_dir("/proc")
+            .expect("proc inventory")
+            .filter_map(Result::ok)
+            .filter_map(|entry| entry.file_name().to_string_lossy().parse::<u32>().ok())
+            .filter(|pid| {
+                fs::read(format!("/proc/{pid}/cmdline")).is_ok_and(|command| {
+                    command
+                        .windows(name.len())
+                        .any(|part| part == name.as_bytes())
+                })
+            })
+            .collect::<Vec<_>>();
+        processes.sort_unstable();
+        processes
+    }
+
+    fn lifecycle_scratch_visible(name: &str) -> bool {
+        lifecycle_processes(name).into_iter().any(|pid| {
+            PathBuf::from(format!("/proc/{pid}/root/tmp/agentmage-lifecycle-scratch")).is_file()
+        })
+    }
+
+    fn wait_for_lifecycle_cleanup(name: &str, baseline_units: &BTreeSet<String>) {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while Instant::now() < deadline {
+            if lifecycle_processes(name).is_empty() && lifecycle_units() == *baseline_units {
+                return;
+            }
+            thread::sleep(Duration::from_millis(25));
+        }
+        panic!("lifecycle process or unit residue remains for {name}");
+    }
+
+    fn lifecycle_input(workspace: &LinuxAuthorizedWorkspace) -> LinuxReadOnlyToolInput {
+        let request = br#"{"schema_version":1,"paths":[["allowed.txt"]],"query":null,"byte_offset":null,"byte_count":null,"encoding":"utf8","limits":{"files":128,"input_bytes":4194304,"depth":16,"matches":256,"output_bytes":1048576},"call_depth":0}"#;
+        LinuxReadOnlyToolInput::seal(
+            "agentmage.workspace.read-file",
+            "1.0.0",
+            request,
+            vec![hold(
+                workspace,
+                "allowed.txt",
+                PathResolutionIntent::ReadFile,
+            )],
+        )
+        .expect("lifecycle input seals")
     }
 
     fn run_held_arguments(
@@ -2042,6 +2228,110 @@ mod tests {
         assert!(!result.success());
         assert!(started.elapsed() < Duration::from_secs(5));
         println!("agentmage-resource-control runtime-limit=enforced");
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    #[ignore = "requires root-owned lifecycle fixtures, a systemd user session, and Bubblewrap"]
+    fn lifecycle_matrix_cleans_descendants_scratch_and_never_accepts_interrupted_output() {
+        let root = temp_directory("lifecycle-matrix");
+        fs::write(root.join("allowed.txt"), b"fixture").expect("fixture");
+        let workspace = authorize(&root);
+        let host_scratch = Path::new("/tmp/agentmage-lifecycle-scratch");
+        assert!(!host_scratch.exists());
+
+        for termination in ["cancel", "timeout", "kill", "crash"] {
+            for phase in ["before", "during", "after"] {
+                let case = format!("{termination}-{phase}");
+                let fixture = lifecycle_fixture(&case);
+                let fixture_name = fixture
+                    .file_name()
+                    .and_then(|value| value.to_str())
+                    .expect("fixture name")
+                    .to_owned();
+                let runtime_seconds = if termination == "timeout" { 1 } else { 5 };
+                let limits = LinuxSandboxLimits::new(
+                    64 * 1024 * 1024,
+                    16,
+                    100,
+                    runtime_seconds,
+                    4 * 1024 * 1024,
+                )
+                .expect("lifecycle limits");
+                let runner = runner_for(fixture.to_str().expect("fixture path"), limits);
+                let input = lifecycle_input(&workspace);
+                let cancellation = LinuxSandboxCancellation::default();
+                let control_cancellation = cancellation.clone();
+                let baseline_units = lifecycle_units();
+                let control_baseline = baseline_units.clone();
+                let control_name = fixture_name.clone();
+                let control_termination = termination.to_owned();
+                let controller = thread::spawn(move || {
+                    let deadline = Instant::now() + Duration::from_secs(5);
+                    let unit = loop {
+                        let units = lifecycle_units()
+                            .difference(&control_baseline)
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        if units.len() == 1
+                            && lifecycle_processes(&control_name).len() >= 2
+                            && lifecycle_scratch_visible(&control_name)
+                        {
+                            break units[0].clone();
+                        }
+                        assert!(
+                            Instant::now() < deadline,
+                            "lifecycle fixture did not become ready"
+                        );
+                        thread::sleep(Duration::from_millis(5));
+                    };
+                    thread::sleep(Duration::from_millis(50));
+                    match control_termination.as_str() {
+                        "cancel" => control_cancellation.cancel(),
+                        "kill" => {
+                            let status = Command::new("/usr/bin/systemctl")
+                                .args([
+                                    "--user",
+                                    "kill",
+                                    "--kill-whom=all",
+                                    "--signal=KILL",
+                                    unit.as_str(),
+                                ])
+                                .status()
+                                .expect("kill lifecycle unit");
+                            assert!(status.success());
+                        }
+                        "timeout" | "crash" => {}
+                        _ => panic!("unknown lifecycle termination"),
+                    }
+                });
+
+                let result = runner
+                    .run_read_only_tool_with_cancellation(&input, &cancellation)
+                    .expect("lifecycle result");
+                controller.join().expect("lifecycle controller");
+                let expected = match termination {
+                    "cancel" => OperationOutcome::Cancelled,
+                    "timeout" => OperationOutcome::TimedOut,
+                    "kill" | "crash" => OperationOutcome::Failed,
+                    _ => unreachable!(),
+                };
+                assert_eq!(result.outcome(), expected, "{case} outcome");
+                assert!(!result.success(), "{case} false completion");
+                match phase {
+                    "before" => assert!(result.stdout().is_empty(), "{case} output"),
+                    "during" => assert_eq!(result.stdout(), b"{", "{case} output"),
+                    "after" => {
+                        let value: serde_json::Value =
+                            serde_json::from_slice(result.stdout()).expect("complete output JSON");
+                        assert_eq!(value["outcome"], "succeeded", "{case} fixture output");
+                    }
+                    _ => unreachable!(),
+                }
+                wait_for_lifecycle_cleanup(&fixture_name, &baseline_units);
+                assert!(!host_scratch.exists(), "{case} host scratch leak");
+            }
+        }
         fs::remove_dir_all(root).expect("cleanup");
     }
 }

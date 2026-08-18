@@ -70,9 +70,10 @@ pub use repository_safety::{
 };
 pub use runtime_artifact_store::{LinuxRuntimeArtifactPayloadStore, LinuxRuntimeArtifactStaged};
 pub use sandbox::{
-    LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxEffectDriver,
-    LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits, LinuxSandboxManifest,
-    LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner, LinuxWorkerRuntimeFile,
+    LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxCancellation,
+    LinuxSandboxEffectDriver, LinuxSandboxError, LinuxSandboxErrorKind, LinuxSandboxLimits,
+    LinuxSandboxManifest, LinuxSandboxOperation, LinuxSandboxResult, LinuxSandboxRunner,
+    LinuxWorkerRuntimeFile,
 };
 pub use secret_service::{
     LinuxOperationalStoreKeyProvider, LinuxSecretEffectDriver, LinuxSecretEffectOutput,

@@ -39,6 +39,10 @@ def target(target_id: str, distribution: str) -> dict[str, object]:
             "receipt_count": len(evidence.VERIFIED_OPERATIONS),
             "attack_cases": evidence.ATTACK_CASES,
             "linux_attack_matrix_complete": True,
+            "lifecycle_cases": evidence.LIFECYCLE_CASES,
+            "linux_lifecycle_campaign_complete": True,
+            "terminal_receipts_per_lifecycle_case": 1,
+            "false_completion_cases": 0,
             "workspace_invariant": True,
             "worker_process_residue": False,
             "transient_unit_residue": False,
@@ -68,9 +72,9 @@ def report() -> dict[str, object]:
     return {
         "schema_version": 1,
         "record_type": "sprint-16-installed-linux-worker-matrix",
-        "task_ids": ["16.1.1.5", "16.1.2.3"],
+        "task_ids": ["16.1.1.5", "16.1.2.3", "16.1.3.3", "16.1.3.4"],
         "source_revision": "b" * 40,
-        "status": "pass-installed-linux-worker-operation-matrix",
+        "status": "pass-installed-linux-worker-operation-attack-lifecycle-matrix",
         "qemu": {
             "launcher_class": "toolbox",
             "version": "qemu-test",
@@ -83,6 +87,7 @@ def report() -> dict[str, object]:
         "verified_operations": evidence.VERIFIED_OPERATIONS,
         "complete_ten_tool_matrix": True,
         "linux_attack_matrix_complete": True,
+        "linux_lifecycle_campaign_complete": True,
         "attack_matrix_complete": False,
         "cleanup_campaign_complete": False,
         "macos_evidence_substituted": False,
@@ -135,6 +140,9 @@ class Sprint16LinuxWorkerEvidenceTests(unittest.TestCase):
         self.assertTrue(evidence.validate_report(changed))
         changed = copy.deepcopy(report())
         changed["linux_attack_matrix_complete"] = False
+        self.assertTrue(evidence.validate_report(changed))
+        changed = copy.deepcopy(report())
+        changed["linux_lifecycle_campaign_complete"] = False
         self.assertTrue(evidence.validate_report(changed))
 
     def test_source_and_qemu_identity_mutations_fail(self) -> None:

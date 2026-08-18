@@ -37,8 +37,8 @@ use agentmage_kernel_engine::policy::{
 use agentmage_kernel_engine::tooling::{Tool, ToolAttemptGuard, ToolRegistry};
 use agentmage_platform_linux::{
     LinuxAuthenticatedIpcSession, LinuxAuthorityRuntime, LinuxHeldObject, LinuxPlatformAdapter,
-    LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxRunner,
-    resolve_linux_workspace_object, select_linux_workspace,
+    LinuxReadOnlyToolEffectDriver, LinuxReadOnlyToolInput, LinuxSandboxCancellation,
+    LinuxSandboxRunner, resolve_linux_workspace_object, select_linux_workspace,
 };
 use rustix::rand::{GetRandomFlags, getrandom};
 use serde::Serialize;
@@ -262,6 +262,7 @@ where
     pending: BTreeMap<String, PendingLinuxRead>,
     pending_tools: BTreeMap<String, PendingLinuxTool>,
     attempt_guard: ToolAttemptGuard,
+    tool_cancellation: LinuxSandboxCancellation,
     diagnostic_exports: DiagnosticExportWorkflow,
     model_picker: Option<ModelPickerSnapshot>,
     handoff_draft: Option<HandoffDraft>,
@@ -298,6 +299,7 @@ where
             pending_tools: BTreeMap::new(),
             attempt_guard: ToolAttemptGuard::new(3, MAX_READ_ONLY_CALL_DEPTH)
                 .map_err(|_| LinuxReadError::AuthorityDenied)?,
+            tool_cancellation: LinuxSandboxCancellation::default(),
             diagnostic_exports: DiagnosticExportWorkflow::new(),
             model_picker: None,
             handoff_draft: None,
@@ -347,6 +349,7 @@ where
             pending_tools: BTreeMap::new(),
             attempt_guard: ToolAttemptGuard::new(3, MAX_READ_ONLY_CALL_DEPTH)
                 .map_err(|_| LinuxReadError::AuthorityDenied)?,
+            tool_cancellation: LinuxSandboxCancellation::default(),
             diagnostic_exports: DiagnosticExportWorkflow::new(),
             model_picker: None,
             handoff_draft: None,
@@ -361,6 +364,12 @@ where
     /// composition supplies it, every runtime request fails closed as unavailable.
     pub fn install_runtime_transport(&mut self, runtime: Box<dyn RuntimeTransportPort>) {
         self.runtime_transport = Some(runtime);
+    }
+
+    /// Returns a signal bound to the next read-only worker launch in this session.
+    #[must_use]
+    pub fn next_tool_cancellation(&self) -> LinuxSandboxCancellation {
+        self.tool_cancellation.clone()
     }
 
     /// Replaces the transport snapshot after trusted activation refreshes it.
@@ -1215,7 +1224,9 @@ where
             .ok_or(LinuxReadError::AuthorityDenied)?
             .clone();
         let runner = self.sandbox.take().ok_or(LinuxReadError::WorkerFailed)?;
-        let mut driver = LinuxReadOnlyToolEffectDriver::new(runner, worker_input);
+        let cancellation = std::mem::take(&mut self.tool_cancellation);
+        let mut driver =
+            LinuxReadOnlyToolEffectDriver::new_cancellable(runner, worker_input, cancellation);
         let receipt_result = self.authority.authority_mut().execute_effect(
             &self.registry,
             &policy,
@@ -1604,7 +1615,9 @@ where
         )
         .map_err(|_| LinuxReadError::AuthorityDenied)?;
         let runner = self.sandbox.take().ok_or(LinuxReadError::WorkerFailed)?;
-        let mut driver = LinuxReadOnlyToolEffectDriver::new(runner, worker_input);
+        let cancellation = std::mem::take(&mut self.tool_cancellation);
+        let mut driver =
+            LinuxReadOnlyToolEffectDriver::new_cancellable(runner, worker_input, cancellation);
         let receipt_result = self.authority.authority_mut().execute_effect(
             &self.registry,
             &policy,
@@ -1955,12 +1968,14 @@ fn civil_from_days(days_since_epoch: i64) -> (i64, i64, i64) {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::VecDeque;
+    use std::collections::{BTreeSet, VecDeque};
     use std::fs;
     use std::os::unix::fs::{MetadataExt, PermissionsExt};
     use std::path::{Path, PathBuf};
     use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::thread;
+    use std::time::{Duration, Instant};
 
     use agentmage_capability_read_only::{
         ReadOnlyEncoding, ReadOnlyItem, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
@@ -2133,6 +2148,13 @@ mod tests {
     }
 
     fn sandbox_for(executable: impl AsRef<Path>) -> LinuxSandboxRunner {
+        sandbox_for_limits(executable, LinuxSandboxLimits::default())
+    }
+
+    fn sandbox_for_limits(
+        executable: impl AsRef<Path>,
+        limits: LinuxSandboxLimits,
+    ) -> LinuxSandboxRunner {
         let executable = fs::canonicalize(executable).expect("canonical worker executable");
         let systemd_run =
             fs::canonicalize("/usr/bin/systemd-run").expect("canonical systemd-run executable");
@@ -2142,7 +2164,68 @@ mod tests {
         let manifest =
             LinuxSandboxManifest::verify(systemd_run, bubblewrap, &executable, &runtime_files)
                 .expect("verified worker manifest");
-        LinuxSandboxRunner::new(manifest, LinuxSandboxLimits::default()).expect("sandbox runner")
+        LinuxSandboxRunner::new(manifest, limits).expect("sandbox runner")
+    }
+
+    fn lifecycle_fixture(case: &str) -> PathBuf {
+        let root = std::env::var_os("AGENTMAGE_LIFECYCLE_FIXTURE_ROOT")
+            .map(PathBuf::from)
+            .expect("lifecycle fixture root");
+        root.join(format!("agentmage-lifecycle-{case}"))
+    }
+
+    fn lifecycle_units() -> BTreeSet<String> {
+        let output = Command::new("/usr/bin/systemctl")
+            .args([
+                "--user",
+                "list-units",
+                "--all",
+                "--plain",
+                "--no-legend",
+                "agentmage-worker-*",
+            ])
+            .output()
+            .expect("systemctl unit inventory");
+        assert!(output.status.success());
+        String::from_utf8(output.stdout)
+            .expect("unit inventory UTF-8")
+            .lines()
+            .filter_map(|line| line.split_whitespace().next().map(str::to_owned))
+            .collect()
+    }
+
+    fn lifecycle_processes(name: &str) -> Vec<u32> {
+        let mut processes = fs::read_dir("/proc")
+            .expect("proc inventory")
+            .filter_map(Result::ok)
+            .filter_map(|entry| entry.file_name().to_string_lossy().parse::<u32>().ok())
+            .filter(|pid| {
+                fs::read(format!("/proc/{pid}/cmdline")).is_ok_and(|command| {
+                    command
+                        .windows(name.len())
+                        .any(|part| part == name.as_bytes())
+                })
+            })
+            .collect::<Vec<_>>();
+        processes.sort_unstable();
+        processes
+    }
+
+    fn lifecycle_scratch_visible(name: &str) -> bool {
+        lifecycle_processes(name).into_iter().any(|pid| {
+            PathBuf::from(format!("/proc/{pid}/root/tmp/agentmage-lifecycle-scratch")).is_file()
+        })
+    }
+
+    fn wait_for_lifecycle_cleanup(name: &str, baseline_units: &BTreeSet<String>) {
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while Instant::now() < deadline {
+            if lifecycle_processes(name).is_empty() && lifecycle_units() == *baseline_units {
+                return;
+            }
+            thread::sleep(Duration::from_millis(25));
+        }
+        panic!("lifecycle process or unit residue remains for {name}");
     }
 
     fn installed_read_only_worker_sandbox() -> LinuxSandboxRunner {
@@ -3055,6 +3138,164 @@ mod tests {
         assert_eq!(workflow.authority.authority().receipts().len(), 10);
         assert_eq!(workspace_observation(&workspace), before);
         fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    #[ignore = "requires root-owned lifecycle fixtures, a systemd user session, and Bubblewrap"]
+    fn lifecycle_matrix_retains_one_terminal_receipt_and_never_reports_false_completion() {
+        for termination in ["cancel", "timeout", "kill", "crash"] {
+            for phase in ["before", "during", "after"] {
+                let case = format!("{termination}-{phase}");
+                let root = temp_root(&format!("lifecycle-{case}"));
+                let workspace = root.join("workspace");
+                let state = root.join("state");
+                fs::create_dir_all(workspace.join("src")).expect("workspace");
+                fs::create_dir(&state).expect("state");
+                fs::set_permissions(&state, fs::Permissions::from_mode(0o700))
+                    .expect("private state");
+                fs::write(
+                    workspace.join("src/alpha.txt"),
+                    b"bounded lifecycle input\n",
+                )
+                .expect("fixture");
+                let before = workspace_observation(&workspace);
+                let fixture = lifecycle_fixture(&case);
+                let fixture_name = fixture
+                    .file_name()
+                    .and_then(|value| value.to_str())
+                    .expect("fixture name")
+                    .to_owned();
+                let limits = LinuxSandboxLimits::new(
+                    64 * 1024 * 1024,
+                    16,
+                    100,
+                    if termination == "timeout" { 1 } else { 5 },
+                    4 * 1024 * 1024,
+                )
+                .expect("lifecycle limits");
+                let mut workflow = workflow_with_sandbox(
+                    &state,
+                    &[100, 200],
+                    sandbox_for_limits(&fixture, limits),
+                );
+                let preview = workflow.handle(generic_tool_request(
+                    &workspace,
+                    &format!("request-lifecycle-preview-{case}"),
+                    ReadOnlyToolKind::ReadText,
+                ));
+                let (preview_id, confirmation_sha256) = match preview {
+                    HostResponse::ToolPreview {
+                        preview_id,
+                        confirmation_sha256,
+                        ..
+                    } => (preview_id, confirmation_sha256),
+                    _ => panic!("expected lifecycle preview"),
+                };
+                let cancellation = workflow.next_tool_cancellation();
+                let baseline_units = lifecycle_units();
+                let control_baseline = baseline_units.clone();
+                let control_name = fixture_name.clone();
+                let control_termination = termination.to_owned();
+                let controller = thread::spawn(move || {
+                    let deadline = Instant::now() + Duration::from_secs(5);
+                    let unit = loop {
+                        let units = lifecycle_units()
+                            .difference(&control_baseline)
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        if units.len() == 1
+                            && lifecycle_processes(&control_name).len() >= 2
+                            && lifecycle_scratch_visible(&control_name)
+                        {
+                            break units[0].clone();
+                        }
+                        assert!(
+                            Instant::now() < deadline,
+                            "lifecycle fixture did not become ready"
+                        );
+                        thread::sleep(Duration::from_millis(5));
+                    };
+                    thread::sleep(Duration::from_millis(50));
+                    match control_termination.as_str() {
+                        "cancel" => cancellation.cancel(),
+                        "kill" => {
+                            let status = Command::new("/usr/bin/systemctl")
+                                .args([
+                                    "--user",
+                                    "kill",
+                                    "--kill-whom=all",
+                                    "--signal=KILL",
+                                    unit.as_str(),
+                                ])
+                                .status()
+                                .expect("kill lifecycle unit");
+                            assert!(status.success());
+                        }
+                        "timeout" | "crash" => {}
+                        _ => panic!("unknown lifecycle termination"),
+                    }
+                });
+                let response = workflow.handle(HostRequest::ApproveTool {
+                    schema_version: HOST_PROTOCOL_VERSION,
+                    request_id: format!("request-lifecycle-approve-{case}"),
+                    preview_id: preview_id.clone(),
+                    confirmation_sha256: confirmation_sha256.clone(),
+                });
+                controller.join().expect("lifecycle controller");
+                let expected = match termination {
+                    "cancel" => "cancelled",
+                    "timeout" => "timed_out",
+                    "kill" | "crash" => "failed",
+                    _ => unreachable!(),
+                };
+                let receipt_sha256 = match response {
+                    HostResponse::Denied {
+                        code,
+                        receipt: Some(receipt),
+                        ..
+                    } => {
+                        assert_eq!(code, LinuxReadError::WorkerFailed.code(), "{case} code");
+                        assert_eq!(receipt.outcome, expected, "{case} receipt outcome");
+                        assert_eq!(receipt.sequence, 1, "{case} receipt sequence");
+                        receipt.receipt_sha256
+                    }
+                    _ => panic!("{case} must not report completion"),
+                };
+                assert_eq!(
+                    workflow.authority.authority().receipts().len(),
+                    1,
+                    "{case} receipt"
+                );
+                let replay = workflow.handle(HostRequest::ApproveTool {
+                    schema_version: HOST_PROTOCOL_VERSION,
+                    request_id: format!("request-lifecycle-replay-{case}"),
+                    preview_id,
+                    confirmation_sha256,
+                });
+                assert!(matches!(
+                    replay,
+                    HostResponse::Denied {
+                        ref code,
+                        receipt: Some(ref receipt),
+                        ..
+                    } if code == "host.tool.replay_denied"
+                        && receipt.receipt_sha256 == receipt_sha256
+                ));
+                assert_eq!(
+                    workflow.authority.authority().receipts().len(),
+                    1,
+                    "{case} replay"
+                );
+                assert_eq!(
+                    workspace_observation(&workspace),
+                    before,
+                    "{case} workspace"
+                );
+                wait_for_lifecycle_cleanup(&fixture_name, &baseline_units);
+                assert!(!Path::new("/tmp/agentmage-lifecycle-scratch").exists());
+                fs::remove_dir_all(root).expect("cleanup");
+            }
+        }
     }
 
     #[test]
