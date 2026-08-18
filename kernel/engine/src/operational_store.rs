@@ -1217,7 +1217,7 @@ impl OperationalStore {
         if self.poisoned {
             return Err(OperationalStoreError::Poisoned);
         }
-        validate_checkpoint_authority_binding(issuer, coordinator, checkpoint)?;
+        validate_checkpoint_authority_binding(issuer, coordinator, checkpoint, &[])?;
         let next_generation = self
             .generation
             .checked_add(1)
@@ -1254,11 +1254,12 @@ impl OperationalStore {
         checkpoint: &SessionCheckpoint,
         binding: &RuntimeResumeBinding,
         runtime_events: &[RuntimeEvent],
+        write_checkpoints: &[WriteAwareCheckpoint],
     ) -> Result<(), OperationalStoreError> {
         if self.poisoned {
             return Err(OperationalStoreError::Poisoned);
         }
-        validate_checkpoint_authority_binding(issuer, coordinator, checkpoint)?;
+        validate_checkpoint_authority_binding(issuer, coordinator, checkpoint, write_checkpoints)?;
         verify_runtime_resume_binding(binding)
             .map_err(|_| OperationalStoreError::CheckpointRejected)?;
         let next_generation = self
@@ -1277,7 +1278,7 @@ impl OperationalStore {
                 session_checkpoint: Some(checkpoint),
                 runtime_resume_binding: Some(binding),
                 runtime_events,
-                ..SnapshotContinuity::default()
+                write_checkpoints,
             },
         );
         match result {
@@ -1740,6 +1741,49 @@ impl DurableAuthorityRuntime {
                 checkpoint,
                 binding,
                 &[],
+                &[],
+            );
+        result.map_err(|error| self.poison(error))
+    }
+
+    /// Atomically publishes a runtime checkpoint and its linked write completion records.
+    pub fn checkpoint_runtime_session_with_write_checkpoints(
+        &mut self,
+        checkpoint: &SessionCheckpoint,
+        binding: &RuntimeResumeBinding,
+        write_checkpoints: &[WriteAwareCheckpoint],
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        if write_checkpoints.is_empty() {
+            return Err(DurableAuthorityError::Checkpoint(
+                CheckpointError::InvalidCheckpoint,
+            ));
+        }
+        verify_runtime_resume_binding(binding)
+            .map_err(|error| DurableAuthorityError::RuntimeArtifact(error.into()))?;
+        self.flush_runtime_events()?;
+        let cursor = {
+            let store = self.lock_store()?;
+            current_cursor(&store, &binding.run_id)
+                .map_err(DurableAuthorityError::RuntimeJournal)?
+                .ok_or(DurableAuthorityError::RuntimeArtifact(
+                    RuntimeArtifactStoreError::NotFound,
+                ))?
+        };
+        if cursor != binding.event_cursor {
+            return Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotAuthorized,
+            ));
+        }
+        let result = self
+            .lock_store()?
+            .persist_authority_with_runtime_checkpoint(
+                &self.issuer,
+                &self.coordinator,
+                checkpoint,
+                binding,
+                &[],
+                write_checkpoints,
             );
         result.map_err(|error| self.poison(error))
     }
@@ -1776,6 +1820,52 @@ impl DurableAuthorityRuntime {
                 checkpoint,
                 binding,
                 std::slice::from_ref(&event),
+                &[],
+            );
+        result.map_err(|error| self.poison(error))?;
+        self.reconcile_runtime_journal()?;
+        Ok(())
+    }
+
+    /// Atomically publishes a runtime checkpoint, correctness event, and write completion.
+    pub fn checkpoint_runtime_session_with_event_and_write_checkpoints(
+        &mut self,
+        checkpoint: &SessionCheckpoint,
+        binding: &RuntimeResumeBinding,
+        event: RuntimeEvent,
+        write_checkpoints: &[WriteAwareCheckpoint],
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        if write_checkpoints.is_empty() {
+            return Err(DurableAuthorityError::Checkpoint(
+                CheckpointError::InvalidCheckpoint,
+            ));
+        }
+        verify_runtime_resume_binding(binding)
+            .map_err(|error| DurableAuthorityError::RuntimeArtifact(error.into()))?;
+        self.flush_runtime_events()?;
+        let cursor = {
+            let store = self.lock_store()?;
+            current_cursor(&store, &binding.run_id)
+                .map_err(DurableAuthorityError::RuntimeJournal)?
+                .ok_or(DurableAuthorityError::RuntimeArtifact(
+                    RuntimeArtifactStoreError::NotFound,
+                ))?
+        };
+        if cursor != binding.event_cursor {
+            return Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotAuthorized,
+            ));
+        }
+        let result = self
+            .lock_store()?
+            .persist_authority_with_runtime_checkpoint(
+                &self.issuer,
+                &self.coordinator,
+                checkpoint,
+                binding,
+                std::slice::from_ref(&event),
+                write_checkpoints,
             );
         result.map_err(|error| self.poison(error))?;
         self.reconcile_runtime_journal()?;
@@ -4071,6 +4161,7 @@ fn validate_checkpoint_authority_binding(
     issuer: &GrantIssuer,
     coordinator: &AuthorityTransactionCoordinator,
     checkpoint: &SessionCheckpoint,
+    write_checkpoints: &[WriteAwareCheckpoint],
 ) -> Result<(), OperationalStoreError> {
     verify_checkpoint(checkpoint).map_err(|_| OperationalStoreError::CheckpointRejected)?;
     if checkpoint.ephemeral {
@@ -4078,15 +4169,21 @@ fn validate_checkpoint_authority_binding(
     }
     let receipt = match (&checkpoint.receipt_id, &checkpoint.receipt_sha256) {
         (None, None) => None,
-        (Some(receipt_id), Some(receipt_sha256)) => Some(
-            coordinator
-                .receipts()
-                .iter()
-                .find(|receipt| {
-                    &receipt.receipt_id == receipt_id && &receipt.receipt_sha256 == receipt_sha256
-                })
-                .ok_or(OperationalStoreError::CheckpointRejected)?,
-        ),
+        (Some(receipt_id), Some(receipt_sha256)) => {
+            let receipt = coordinator.receipts().iter().find(|receipt| {
+                &receipt.receipt_id == receipt_id && &receipt.receipt_sha256 == receipt_sha256
+            });
+            if receipt.is_none() {
+                validate_specialized_checkpoint_binding(
+                    issuer,
+                    checkpoint,
+                    receipt_sha256,
+                    write_checkpoints,
+                )?;
+                return Ok(());
+            }
+            receipt
+        }
         _ => return Err(OperationalStoreError::CheckpointRejected),
     };
     if let Some(receipt) = receipt {
@@ -4110,6 +4207,42 @@ fn validate_checkpoint_authority_binding(
             return Err(OperationalStoreError::CheckpointRejected);
         }
     } else if checkpoint.consumed_grant_id.is_some() {
+        return Err(OperationalStoreError::CheckpointRejected);
+    }
+    Ok(())
+}
+
+fn validate_specialized_checkpoint_binding(
+    issuer: &GrantIssuer,
+    checkpoint: &SessionCheckpoint,
+    receipt_sha256: &str,
+    write_checkpoints: &[WriteAwareCheckpoint],
+) -> Result<(), OperationalStoreError> {
+    let [completion] = write_checkpoints else {
+        return Err(OperationalStoreError::CheckpointRejected);
+    };
+    verify_write_checkpoint(completion).map_err(|_| OperationalStoreError::CheckpointRejected)?;
+    let grant_id = completion
+        .consumed_grant_id
+        .as_deref()
+        .map(GrantId::from_raw)
+        .ok_or(OperationalStoreError::CheckpointRejected)?;
+    let grant = issuer
+        .current(&grant_id)
+        .ok_or(OperationalStoreError::CheckpointRejected)?;
+    if completion.phase != crate::write_recovery::WriteCheckpointPhase::Complete
+        || completion.file_receipt_head_sha256.as_deref() != Some(receipt_sha256)
+        || completion.next_session_checkpoint_sha256 != checkpoint.checkpoint_sha256
+        || checkpoint.action_id.as_ref().map(|value| value.as_str())
+            != Some(completion.action_id.as_str())
+        || checkpoint.action_state != Some(ActionState::Succeeded)
+        || checkpoint.consumed_grant_id.as_ref() != Some(&grant_id)
+        || checkpoint.task_id != grant.task_id
+        || checkpoint.session_id != grant.session_id
+        || grant.action_id.as_ref().map(|value| value.as_str())
+            != Some(completion.action_id.as_str())
+        || !matches!(grant.status, GrantStatus::Consumed | GrantStatus::Uncertain)
+    {
         return Err(OperationalStoreError::CheckpointRejected);
     }
     Ok(())

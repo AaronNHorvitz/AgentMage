@@ -9,15 +9,15 @@ use agentmage_capability_read_only::{
     GitInspectionResult, ReadOnlyItem, ReadOnlyOutcome, ReadOnlyResult, parse_git_inspection,
 };
 use agentmage_kernel_contracts::{
-    ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
-    AuthorizedWorkspaceHandle, CapabilityGrant, ContractPayload, DataSensitivity, EvidenceId,
-    EvidenceKind, EvidenceReference, GrantId, GrantNonce, GrantOperation, OperationAttemptId,
-    OperationOutcome, PlanStepId, ReceiptId, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-    RuntimeApprovalResponse, RuntimeArtifactKind, RuntimeArtifactManifest, RuntimeArtifactRef,
-    RuntimeEvent, RuntimeEventKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId,
-    RuntimeRunRequest, RuntimeSessionMode, SessionCheckpoint, SessionCheckpointId, SessionId,
-    StateChange, ToolCall, ToolDefinition, ToolResult, ValidationIssue, ValidationSeverity,
-    to_canonical_json,
+    ActionId, ActionKind, ActionState, ActorId, ApprovalId, ApprovalRequest,
+    AuthorityTransactionId, AuthorizedWorkspaceHandle, CapabilityGrant, ContractPayload,
+    DataSensitivity, EvidenceId, EvidenceKind, EvidenceReference, GrantId, GrantNonce,
+    GrantOperation, OperationAttemptId, OperationOutcome, PlanStepId, ReceiptId,
+    RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
+    RuntimeArtifactKind, RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent,
+    RuntimeEventKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId, RuntimeRunRequest,
+    RuntimeSessionMode, SessionCheckpoint, SessionCheckpointId, SessionId, StateChange, ToolCall,
+    ToolDefinition, ToolResult, ValidationIssue, ValidationSeverity, to_canonical_json,
 };
 use agentmage_kernel_engine::{
     authority_transaction::AuthorityTransactionRequest,
@@ -445,6 +445,18 @@ where
     identities: I,
     pending: BTreeMap<String, PendingCodingOperation<'workspace>>,
     issued: BTreeMap<String, IssuedCodingOperation<'workspace>>,
+    pending_write_completion: Option<PendingWriteCheckpointCompletion>,
+}
+
+#[derive(Clone)]
+struct PendingWriteCheckpointCompletion {
+    head: WriteAwareCheckpoint,
+    action_id: ActionId,
+    action_state: ActionState,
+    consumed_grant_id: GrantId,
+    receipt_id: ReceiptId,
+    receipt_sha256: String,
+    evidence_set_sha256: String,
 }
 
 impl<'workspace, 'session, 'platform, I, E, G>
@@ -508,6 +520,7 @@ where
             identities,
             pending: BTreeMap::new(),
             issued: BTreeMap::new(),
+            pending_write_completion: None,
         })
     }
 
@@ -1926,12 +1939,14 @@ where
         pending: Option<PendingSpecializedEffectCommit>,
         write_checkpoints: &[WriteAwareCheckpoint],
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
+        let completion = self.pending_write_completion(&execution, write_checkpoints)?;
         match (event_context, pending) {
             (None, None) => {
                 self.authority
                     .authority_mut()
                     .checkpoint_write_transaction(write_checkpoints)
                     .map_err(map_journal_failure)?;
+                self.pending_write_completion = Some(completion);
                 Ok((execution, Vec::new()))
             }
             (Some(context), Some(pending)) => {
@@ -1945,6 +1960,7 @@ where
                         write_checkpoints,
                     )
                     .map_err(map_journal_failure)?;
+                self.pending_write_completion = Some(completion);
                 self.authority
                     .revalidate_root()
                     .map_err(|_| RuntimePortFailure::Uncertain)?;
@@ -1952,6 +1968,44 @@ where
             }
             _ => Err(RuntimePortFailure::Invalid),
         }
+    }
+
+    fn pending_write_completion(
+        &self,
+        execution: &RuntimeToolExecution,
+        checkpoints: &[WriteAwareCheckpoint],
+    ) -> Result<PendingWriteCheckpointCompletion, RuntimePortFailure> {
+        if self.pending_write_completion.is_some() {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        let head = checkpoints
+            .last()
+            .cloned()
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let consumed_grant_id = head
+            .consumed_grant_id
+            .as_deref()
+            .map(GrantId::from_raw)
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let mut evidence_ids = execution
+            .result
+            .evidence
+            .iter()
+            .map(|evidence| evidence.evidence_id.clone())
+            .collect::<Vec<_>>();
+        evidence_ids.sort_by(|left, right| left.as_str().cmp(right.as_str()));
+        let evidence_set_sha256 = serde_json::to_vec(&evidence_ids)
+            .map(|bytes| sha256(&bytes))
+            .map_err(|_| RuntimePortFailure::Invalid)?;
+        Ok(PendingWriteCheckpointCompletion {
+            action_id: ActionId::from_raw(head.action_id.clone()),
+            action_state: operation_action_state(execution.result.outcome),
+            consumed_grant_id,
+            receipt_id: execution.receipt_id.clone(),
+            receipt_sha256: execution.receipt_sha256.clone(),
+            evidence_set_sha256,
+            head,
+        })
     }
 
     fn authority_transaction(
@@ -2261,6 +2315,57 @@ where
         Ok(chain)
     }
 
+    fn build_write_completion_checkpoint(
+        &mut self,
+        session_checkpoint: &SessionCheckpoint,
+    ) -> Result<Option<WriteAwareCheckpoint>, RuntimePortFailure> {
+        let Some(pending) = self.pending_write_completion.clone() else {
+            return Ok(None);
+        };
+        if session_checkpoint.action_id.as_ref() != Some(&pending.action_id)
+            || session_checkpoint.action_state != Some(pending.action_state)
+            || session_checkpoint.consumed_grant_id.as_ref() != Some(&pending.consumed_grant_id)
+            || session_checkpoint.receipt_id.as_ref() != Some(&pending.receipt_id)
+            || session_checkpoint.receipt_sha256.as_deref() != Some(&pending.receipt_sha256)
+        {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        if pending.action_state != ActionState::Succeeded {
+            return Ok(None);
+        }
+        if pending.head.phase != WriteCheckpointPhase::ReceiptPersisted {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        build_write_checkpoint(
+            WriteAwareCheckpointInput {
+                checkpoint_id: self.next_id("write-checkpoint")?,
+                transaction_id: pending.head.transaction_id.clone(),
+                action_id: pending.head.action_id.clone(),
+                phase: WriteCheckpointPhase::Complete,
+                consumed_grant_id: Some(pending.consumed_grant_id.as_str().to_owned()),
+                file_receipt_head_sha256: pending.head.file_receipt_head_sha256.clone(),
+                file_receipt_count: pending.head.file_receipt_count,
+                evidence_set_sha256: pending.evidence_set_sha256,
+                index_update_sha256: pending.head.index_update_sha256.clone(),
+                next_session_checkpoint_sha256: session_checkpoint.checkpoint_sha256.clone(),
+                secret_scan_receipt_sha256: pending.head.secret_scan_receipt_sha256.clone(),
+                staging_inventory_sha256: pending.head.staging_inventory_sha256.clone(),
+                staging_item_count: pending.head.staging_item_count,
+                retention_expires_at_epoch_ms: pending.head.retention_expires_at_epoch_ms,
+                canonical_postimages_verified: true,
+                receipt_chain_verified: true,
+                index_verified: pending.head.index_verified,
+                rollback_verified: false,
+                cleanup_state: WriteCleanupState::NotRequired,
+                failure_code: None,
+                occurred_at_epoch_ms: pending.head.occurred_at_epoch_ms,
+            },
+            Some(&pending.head),
+        )
+        .map(Some)
+        .map_err(|_| RuntimePortFailure::Invalid)
+    }
+
     fn build_checkpoint_publication(
         &mut self,
         input: RuntimeCheckpointCommit<'_>,
@@ -2338,11 +2443,26 @@ where
             citation_set_sha256,
             blockers: Vec::new(),
             context_packet_sha256: input.continuation.continuation_sha256.clone(),
-            action_id: None,
-            action_state: None,
-            consumed_grant_id: None,
-            receipt_id: None,
-            receipt_sha256: None,
+            action_id: self
+                .pending_write_completion
+                .as_ref()
+                .map(|pending| pending.action_id.clone()),
+            action_state: self
+                .pending_write_completion
+                .as_ref()
+                .map(|pending| pending.action_state),
+            consumed_grant_id: self
+                .pending_write_completion
+                .as_ref()
+                .map(|pending| pending.consumed_grant_id.clone()),
+            receipt_id: self
+                .pending_write_completion
+                .as_ref()
+                .map(|pending| pending.receipt_id.clone()),
+            receipt_sha256: self
+                .pending_write_completion
+                .as_ref()
+                .map(|pending| pending.receipt_sha256.clone()),
             ephemeral: false,
             checkpoint_sha256: "0".repeat(64),
         })
@@ -2623,16 +2743,33 @@ where
     ) -> Result<(RuntimeCheckpointPublication, RuntimeEvent), RuntimePortFailure> {
         let publication = self.build_checkpoint_publication(input)?;
         let event = build_event(&publication)?;
+        let write_completion = self.build_write_completion_checkpoint(&publication.checkpoint)?;
+        let had_pending_write = self.pending_write_completion.is_some();
         #[cfg(test)]
         story_22_1_crash_at("before-checkpoint-commit");
-        self.authority
-            .authority_mut()
-            .checkpoint_runtime_session_with_event(
-                &publication.checkpoint,
-                &publication.binding,
-                event.clone(),
-            )
-            .map_err(map_journal_failure)?;
+        if let Some(write_completion) = write_completion.as_ref() {
+            self.authority
+                .authority_mut()
+                .checkpoint_runtime_session_with_event_and_write_checkpoints(
+                    &publication.checkpoint,
+                    &publication.binding,
+                    event.clone(),
+                    std::slice::from_ref(write_completion),
+                )
+                .map_err(map_journal_failure)?;
+        } else {
+            self.authority
+                .authority_mut()
+                .checkpoint_runtime_session_with_event(
+                    &publication.checkpoint,
+                    &publication.binding,
+                    event.clone(),
+                )
+                .map_err(map_journal_failure)?;
+        }
+        if had_pending_write {
+            self.pending_write_completion = None;
+        }
         #[cfg(test)]
         story_22_1_crash_at("after-checkpoint-commit");
         self.authority
@@ -2677,9 +2814,24 @@ where
         input: RuntimeCheckpointCommit<'_>,
     ) -> Result<RuntimeCheckpointPublication, RuntimePortFailure> {
         let publication = self.build_checkpoint_publication(input)?;
-        self.authority
-            .checkpoint_runtime_session(&publication.checkpoint, &publication.binding)
-            .map_err(map_journal_failure)?;
+        let write_completion = self.build_write_completion_checkpoint(&publication.checkpoint)?;
+        let had_pending_write = self.pending_write_completion.is_some();
+        if let Some(write_completion) = write_completion.as_ref() {
+            self.authority
+                .checkpoint_runtime_session_with_write_checkpoints(
+                    &publication.checkpoint,
+                    &publication.binding,
+                    std::slice::from_ref(write_completion),
+                )
+                .map_err(map_journal_failure)?;
+        } else {
+            self.authority
+                .checkpoint_runtime_session(&publication.checkpoint, &publication.binding)
+                .map_err(map_journal_failure)?;
+        }
+        if had_pending_write {
+            self.pending_write_completion = None;
+        }
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
@@ -2869,6 +3021,17 @@ enum TerminalWriteDisposition {
     FailedNoChange,
     Restored,
     Uncertain,
+}
+
+const fn operation_action_state(outcome: OperationOutcome) -> ActionState {
+    match outcome {
+        OperationOutcome::Succeeded => ActionState::Succeeded,
+        OperationOutcome::Denied => ActionState::Denied,
+        OperationOutcome::Failed => ActionState::Failed,
+        OperationOutcome::Cancelled => ActionState::Cancelled,
+        OperationOutcome::TimedOut => ActionState::TimedOut,
+        OperationOutcome::Uncertain => ActionState::Uncertain,
+    }
 }
 
 const fn write_transaction_outcome(
@@ -5430,6 +5593,42 @@ mod tests {
             .expect("resume binding reads")
             .expect("resume binding exists");
         assert!(binding.artifacts.contains(&generated_reference));
+        let session_checkpoint = authority
+            .authority()
+            .current_session_checkpoint()
+            .expect("session checkpoint reads")
+            .expect("session checkpoint exists");
+        let transaction_ids = authority
+            .authority()
+            .write_checkpoint_transaction_ids()
+            .expect("write transaction identities");
+        assert_eq!(transaction_ids.len(), 1);
+        let write_checkpoints = authority
+            .authority()
+            .write_checkpoint_chain(&transaction_ids[0])
+            .expect("completed write checkpoint chain");
+        let completion = write_checkpoints.last().expect("write completion");
+        assert_eq!(completion.phase, WriteCheckpointPhase::Complete);
+        assert_eq!(
+            completion.next_session_checkpoint_sha256,
+            session_checkpoint.checkpoint_sha256
+        );
+        assert_eq!(
+            completion.file_receipt_head_sha256.as_deref(),
+            session_checkpoint.receipt_sha256.as_deref()
+        );
+        assert_eq!(
+            completion.consumed_grant_id.as_deref(),
+            session_checkpoint
+                .consumed_grant_id
+                .as_ref()
+                .map(GrantId::as_str)
+        );
+        assert_eq!(
+            Some(completion.action_id.as_str()),
+            session_checkpoint.action_id.as_ref().map(ActionId::as_str)
+        );
+        assert_ne!(completion.evidence_set_sha256, "0".repeat(64));
         assert_eq!(
             fs::read(root.join("worktree/src/generated.txt")).expect("generated file reads"),
             generated_content.as_bytes()

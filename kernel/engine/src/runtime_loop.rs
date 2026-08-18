@@ -3052,11 +3052,7 @@ fn validate_runtime_checkpoint_publication(
         || checkpoint.model_runtime_sha256 != request.model_profile.runtime.runtime_sha256
         || checkpoint.evidence_ids != evidence_ids
         || checkpoint.context_packet_sha256 != continuation.continuation_sha256
-        || checkpoint.action_id.is_some()
-        || checkpoint.action_state.is_some()
-        || checkpoint.consumed_grant_id.is_some()
-        || checkpoint.receipt_id.is_some()
-        || checkpoint.receipt_sha256.is_some()
+        || !valid_runtime_checkpoint_action_binding(checkpoint)
         || binding.checkpoint_id != checkpoint.checkpoint_id
         || binding.checkpoint_sha256 != checkpoint.checkpoint_sha256
         || binding.session_id != request.session_id
@@ -3067,6 +3063,32 @@ fn validate_runtime_checkpoint_publication(
         return Err(RuntimeLoopError::InvalidBoundaryResult);
     }
     Ok(())
+}
+
+fn valid_runtime_checkpoint_action_binding(checkpoint: &SessionCheckpoint) -> bool {
+    match (
+        &checkpoint.action_id,
+        checkpoint.action_state,
+        &checkpoint.consumed_grant_id,
+        &checkpoint.receipt_id,
+        &checkpoint.receipt_sha256,
+    ) {
+        (None, None, None, None, None) => true,
+        (Some(_), Some(state), Some(_), Some(_), Some(receipt_sha256)) => {
+            matches!(
+                state,
+                agentmage_kernel_contracts::ActionState::Succeeded
+                    | agentmage_kernel_contracts::ActionState::Failed
+                    | agentmage_kernel_contracts::ActionState::Cancelled
+                    | agentmage_kernel_contracts::ActionState::TimedOut
+                    | agentmage_kernel_contracts::ActionState::Uncertain
+            ) && receipt_sha256.len() == 64
+                && receipt_sha256
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        }
+        _ => false,
+    }
 }
 
 fn validate_runtime_resume_snapshot(

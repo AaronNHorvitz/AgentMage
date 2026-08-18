@@ -23,6 +23,7 @@ use agentmage_kernel_engine::runtime_artifact::{
     RuntimeArtifactPublication, RuntimeArtifactReadRequest, RuntimeArtifactReconciliation,
     RuntimeArtifactState, RuntimeArtifactStoreError,
 };
+use agentmage_kernel_engine::write_recovery::WriteAwareCheckpoint;
 use sha2::{Digest, Sha256};
 
 use crate::runtime_artifact_crypto::derive_artifact_payload_key;
@@ -418,6 +419,33 @@ impl LinuxAuthorityRuntime {
                 .map_err(artifact_payload_error)?;
         }
         let result = self.runtime.checkpoint_runtime_session(checkpoint, binding);
+        self.ensure_artifact_root()?;
+        result
+    }
+
+    /// Atomically checkpoints a runtime and linked write completion after payload verification.
+    pub fn checkpoint_runtime_session_with_write_checkpoints(
+        &mut self,
+        checkpoint: &SessionCheckpoint,
+        binding: &RuntimeResumeBinding,
+        write_checkpoints: &[WriteAwareCheckpoint],
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_artifact_root()?;
+        for reference in &binding.artifacts {
+            self.artifact_store
+                .verify(&RuntimeArtifactPayloadObservation {
+                    payload_sha256: reference.payload_sha256.clone(),
+                    byte_size: reference.byte_size,
+                })
+                .map_err(artifact_payload_error)?;
+        }
+        let result = self
+            .runtime
+            .checkpoint_runtime_session_with_write_checkpoints(
+                checkpoint,
+                binding,
+                write_checkpoints,
+            );
         self.ensure_artifact_root()?;
         result
     }
