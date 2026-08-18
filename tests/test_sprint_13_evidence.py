@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -50,6 +51,16 @@ def report() -> dict[str, object]:
 
 
 class Sprint13EvidenceTests(unittest.TestCase):
+    def test_symbolic_revision_resolves_to_an_exact_commit(self) -> None:
+        revision = evidence.resolve_revision("HEAD")
+        self.assertRegex(revision, r"^[0-9a-f]{40}$")
+
+        with patch.object(subprocess, "run") as run:
+            run.return_value.returncode = 1
+            run.return_value.stdout = ""
+            with self.assertRaisesRegex(ValueError, "revision is unavailable"):
+                evidence.resolve_revision("missing")
+
     def test_local_contract_pass_preserves_all_external_blockers(self) -> None:
         value = report()
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])

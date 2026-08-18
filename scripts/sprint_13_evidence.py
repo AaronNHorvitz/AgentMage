@@ -129,6 +129,20 @@ def git_file(revision: str, relative: str) -> bytes:
     return result.stdout
 
 
+def resolve_revision(revision: str) -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", f"{revision}^{{commit}}"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    if result.returncode != 0 or not REVISION.fullmatch(result.stdout.strip()):
+        raise ValueError("Sprint 13 source revision is unavailable")
+    return result.stdout.strip()
+
+
 def run_commands() -> list[dict[str, Any]]:
     results = []
     for identifier, argv, story in COMMANDS:
@@ -399,7 +413,7 @@ def main() -> int:
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()
     commands = run_commands()
-    report = build_report(args.source_revision, commands)
+    report = build_report(resolve_revision(args.source_revision), commands)
     failures = validate_report(report)
     if failures:
         for failure in failures:
