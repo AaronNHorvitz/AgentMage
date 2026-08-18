@@ -86,6 +86,10 @@ impl LinuxRepositoryError {
     pub const fn kind(self) -> LinuxRepositoryErrorKind {
         self.kind
     }
+
+    pub(crate) const fn from_kind(kind: LinuxRepositoryErrorKind) -> Self {
+        Self { kind }
+    }
 }
 
 impl fmt::Display for LinuxRepositoryError {
@@ -478,6 +482,57 @@ impl LinuxRepositoryCollector {
         if output.stdout.len() > MAX_OBSERVATION_BYTES
             || output.stderr.len() > MAX_OBSERVATION_BYTES
         {
+            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+        }
+        if output.status.success() {
+            Ok(Some(output.stdout))
+        } else if matches!(output.status.code(), Some(1 | 128)) {
+            Ok(None)
+        } else {
+            Err(error(LinuxRepositoryErrorKind::ObservationFailed))
+        }
+    }
+
+    pub(crate) fn observe_inventory(
+        &self,
+        scope: &LinuxRepositoryScope,
+        arguments: &[&str],
+        maximum_bytes: usize,
+    ) -> Result<Vec<u8>, LinuxRepositoryError> {
+        self.observe_inventory_optional(scope, arguments, maximum_bytes)?
+            .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))
+    }
+
+    pub(crate) fn observe_inventory_optional(
+        &self,
+        scope: &LinuxRepositoryScope,
+        arguments: &[&str],
+        maximum_bytes: usize,
+    ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
+        if maximum_bytes == 0 || maximum_bytes > 32 * 1024 * 1024 {
+            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+        }
+        revalidate_git_artifact(&self.git)?;
+        let output = Command::new(&self.git.launch_path)
+            .env_clear()
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_TERMINAL_PROMPT", "0")
+            .env("GIT_OPTIONAL_LOCKS", "0")
+            .env("GIT_LFS_SKIP_SMUDGE", "1")
+            .env("GCM_INTERACTIVE", "Never")
+            .env("HOME", "/nonexistent")
+            .env("XDG_CONFIG_HOME", "/nonexistent")
+            .env("LANG", "C")
+            .env("LC_ALL", "C")
+            .args(hardened_observation_prefix())
+            .arg(format!("--git-dir={}", scope.git_directory.display()))
+            .arg(format!("--work-tree={}", scope.checkout_root.display()))
+            .args(arguments)
+            .stdin(Stdio::null())
+            .output()
+            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+        if output.stdout.len() > maximum_bytes || output.stderr.len() > MAX_OBSERVATION_BYTES {
             return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
         }
         if output.status.success() {
@@ -2214,6 +2269,94 @@ mod tests {
                 .expect("hazard manifest")
                 .hazardous_configuration
         );
+    }
+
+    #[test]
+    fn repository_inventory_preserves_exact_git_states_and_nonregular_hints() {
+        let fixture = Fixture::new();
+        fs::write(fixture.repository.join(".gitignore"), "ignored.log\n")
+            .expect("ignore rule writes");
+        fs::write(fixture.repository.join("tracked.rs"), "fn tracked() {}\n")
+            .expect("tracked source writes");
+        std::os::unix::fs::symlink("tracked.rs", fixture.repository.join("tracked-link"))
+            .expect("tracked symlink writes");
+        run_fixture(
+            &fixture.repository,
+            &["add", ".gitignore", "tracked.rs", "tracked-link"],
+        );
+        let head = object(&fixture.repository, "HEAD");
+        run_fixture(
+            &fixture.repository,
+            &[
+                "update-index",
+                "--add",
+                "--cacheinfo",
+                &format!("160000,{head},vendor/dependency"),
+            ],
+        );
+        run_fixture(
+            &fixture.repository,
+            &[
+                "-c",
+                "user.name=AgentMage Fixture",
+                "-c",
+                "user.email=fixture@example.test",
+                "commit",
+                "-m",
+                "inventory fixture",
+            ],
+        );
+        fs::write(fixture.repository.join("staged.rs"), "fn staged() {}\n")
+            .expect("staged source writes");
+        run_fixture(&fixture.repository, &["add", "staged.rs"]);
+        fs::write(fixture.repository.join("untracked.txt"), "untracked\n")
+            .expect("untracked source writes");
+        fs::write(fixture.repository.join("ignored.log"), "ignored\n")
+            .expect("ignored source writes");
+
+        let collector = fixture.collector();
+        let first = collector
+            .collect_inventory(&fixture.scope())
+            .expect("live inventory");
+        let second = collector
+            .collect_inventory(&fixture.scope())
+            .expect("stable live inventory");
+        assert_eq!(first, second);
+        assert_eq!(first.object_format, "sha1");
+        assert_eq!(first.branch.as_deref(), Some("refs/heads/main"));
+        assert_eq!(first.entries.len(), 8);
+
+        let entry = |path: &str| {
+            first
+                .entries
+                .iter()
+                .find(|entry| entry.path.join("/") == path)
+                .expect("inventory path")
+        };
+        assert_eq!(
+            entry("tracked-link").object_hint,
+            crate::LinuxRepositoryObjectHint::SymbolicLink
+        );
+        assert_eq!(
+            entry("vendor/dependency").object_hint,
+            crate::LinuxRepositoryObjectHint::Gitlink
+        );
+        assert!(matches!(
+            entry("staged.rs").state,
+            crate::LinuxRepositoryInventoryState::Tracked {
+                staged_changed: true,
+                conflicted: false,
+                ..
+            }
+        ));
+        assert!(matches!(
+            entry("untracked.txt").state,
+            crate::LinuxRepositoryInventoryState::Untracked
+        ));
+        assert!(matches!(
+            entry("ignored.log").state,
+            crate::LinuxRepositoryInventoryState::Ignored
+        ));
     }
 
     #[test]
