@@ -75,6 +75,10 @@ pub mod linux_coding_runtime;
 pub mod linux_repository_map;
 
 #[cfg(target_os = "linux")]
+/// Held-object Linux citation resolution for evidence reconciliation.
+pub mod linux_evidence_reconciliation;
+
+#[cfg(target_os = "linux")]
 pub mod linux_read;
 
 /// Stable component identity used by diagnostics and build verification.
