@@ -1,7 +1,7 @@
 {
   "blockers": [
     {
-      "code": "SIGNED-CATALOG-PRODUCTION-INTEGRATION-ABSENT",
+      "code": "CURRENT-ACTIVATION-AND-NATIVE-EXPOSURE-ABSENT",
       "owner": "23.3.1.1"
     },
     {
@@ -53,7 +53,7 @@
       ],
       "exit_code": 0,
       "id": "model-discovery-tests",
-      "output_sha256": "d9d32b05ae64158133713008b1fd00d87d68e35da50b41e23f82b5f148f7528c"
+      "output_sha256": "4f68da85e8cf36ce8ce82c29d477d95623287b1f7d7450c313889954c590e155"
     },
     {
       "argv": [
@@ -65,7 +65,21 @@
       ],
       "exit_code": 0,
       "id": "host-tests",
-      "output_sha256": "3db760ed635cf465a8e17bd70957ebf2b7e05c314bf8e8931bde3cc80ca7daa9"
+      "output_sha256": "f202348857db3e7b27de22f36ec85d719386b709c2fa476e4c9e3fd4eb3f1e5d"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--bin",
+        "agentmage-host",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "signed-catalog-bootstrap-tests",
+      "output_sha256": "8c1aa98afbe254b7e2c0f0c89d109ab67e25584b1b1e4098bc3b180ef6738850"
     },
     {
       "argv": [
@@ -77,7 +91,7 @@
       ],
       "exit_code": 0,
       "id": "vscode-tests",
-      "output_sha256": "0646a8d986617ee985baa9e24c8c0c4aeb230d57d2948bfe549bd616b0ee70c4"
+      "output_sha256": "f2fb9c88f0b2c0b3b537c48946fe769cc38990062897a94cee08a13ef16aa425"
     },
     {
       "argv": [
@@ -99,7 +113,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "f4f8bb73dda6a249377095587deb795b10d153f5d6bf08b3ee5d05321ed0e498"
+      "output_sha256": "ae37f1e7134ce184d5944fb42a1a948a83969e78add279b3bf0f7fc454b599b3"
     },
     {
       "argv": [
@@ -110,7 +124,7 @@
       ],
       "exit_code": 0,
       "id": "evidence-tests",
-      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
+      "output_sha256": "2c37d50a88147ca2ebd5197d74ee37d462dab650d793512e849814c28d5a38f0"
     },
     {
       "argv": [
@@ -151,6 +165,7 @@
     "native_accessibility_conformance": false,
     "production_model_inference": false,
     "profile_family_prerequisite": false,
+    "signed_catalog_production_bootstrap": true,
     "stable_vscode_provider_registration": true,
     "structured_final_chat_parts": true,
     "validated_local_display_links": true
@@ -174,22 +189,28 @@
     "SR-CIV-009",
     "SR-TST-008"
   ],
-  "source_revision": "fcdfa460cf3f22698210f6ae06ddae66c9a9eeb3",
+  "source_revision": "f8c8f8468f18b7cf337589b20b76c3a9f60f6f1d",
   "source_sha256": {
     "docs/architecture/native-chat-accessibility.md": "36695abde2ad2634c437858e8ad905b21ea732ab8c18d980883695e0d56d3f1b",
-    "docs/architecture/native-chat-model-discovery.md": "6942ddbd142a5cb2fc8968d94e65fb70251c777aaf7c4c8c902151454ebbdc96",
+    "docs/architecture/native-chat-model-discovery.md": "e5373de86dafa205b002a1db5e9307560fc0ef34244fecc4e1bcdac45a9cf3f6",
     "docs/verification/native-chat-accessibility-conformance-v0.1.md": "3cf7dd2fb5017772e336bbbe283b6f0d032ca8999e82d9968a245f18c7427996",
-    "docs/verification/sprint-23-local-results.md": "90c330512124a1091cc6a1ed2fbc62ea102c0ee61510ff844e1dde8086bf1698",
-    "kernel/contracts/src/model_discovery.rs": "2616395783e369e1f0a14c6a673b47a48c7cbe7bdfa00554aabac2488d7b83c2",
-    "kernel/engine/src/model_discovery.rs": "a218e0c31b59fe5a1b0d7eb8525a8eb8eaf5404c2c2328cb3ffe37644c4561fe",
-    "scripts/sprint_23_evidence.py": "38d3247ef2d92315907721deac707788bfb68ecb8a2119aaf586181562a9cc64",
-    "shells/host/src/linux_read.rs": "38eff75347b9ed03088965b8b9d26c643d0ceb29aaa93c6b6634c2668dd56b9e",
-    "shells/host/src/protocol.rs": "b2760ace0a7c0d765a16dce41e783e44dc86b90f195485502cf6d7e64a488c55",
-    "shells/vscode/src/model_discovery.ts": "69f13fa74ab0d26f784434d15f90054eed06d8e880b6141a37862fe6a5d0c5b2",
-    "shells/vscode/src/provider.ts": "4ee7f1933df137c9e2a1b6da68d9a5b1e7fe828dd15d87a97f707d7b065da08c",
-    "shells/vscode/test/model_discovery.test.ts": "386c5389ba31beb09c99241d0038f847ae76c7e039d772268f8dfd6464b5b930",
-    "shells/vscode/test/provider.test.ts": "3a7614f9472209baad59894d6ce33f29b5a6842ef11dc365e3e4c06834422365",
-    "tests/test_sprint_23_evidence.py": "e311c6346b214c49da4e3e2d801cb288316d6c7b8e8c9f5a5ccb7c1dd1bd96a4"
+    "docs/verification/sprint-23-local-results.md": "6bcf5bc1a4870017d569c6eaecb35adb09840a7449b683c8d96e13db704f5877",
+    "kernel/contracts/src/model_discovery.rs": "a5b3f600a3e7af159c1e4beff860db1f1164fd1e35376823728b791248cee1c0",
+    "kernel/engine/src/model_discovery.rs": "e905afeeefbc58b634cbf7f07f242e4cf0642f1b744831a4e377b8c04dfcfb81",
+    "model-profiles/exact-profile-catalog.json": "07c6ae09f2b42d1fd5a0485bc35910a320a5889ef1a51173aeef70f0c7fa1cae",
+    "scripts/package_candidate.py": "c68133f34c86a9ac91adb3319a793fee284fa2488bb7eaf79a0b1144e6bd2151",
+    "scripts/sprint_23_evidence.py": "d05aced4445a081af271ecf063a8c7ed4e78b1fbada104785ac5a2b10f14946d",
+    "shells/host/src/linux_bootstrap.rs": "261e0b71634441e893d9babfbbd05a8bc836da9dc702ac3bfd815677fd2b1b97",
+    "shells/host/src/linux_read.rs": "845f9688620759d37914add60c7020ba3e1d7c4c42ac5ce687e3ebfb63d123bc",
+    "shells/host/src/main.rs": "791ed4078c62e0bf05620e98fdfc7fd3ea91208df3cb6f1742acce4ae6e0fd45",
+    "shells/host/src/model_catalog_bootstrap.rs": "c272792bd469f75640e0fa85dfe0dd3ca8f8539d460a5f95acac31d8bd55cbef",
+    "shells/host/src/package_verify.rs": "d28c6736dcaa2165c70ffcd6844623aed9405ac55cbdeb57c3801e119fdaee5f",
+    "shells/host/src/protocol.rs": "a48a7d8ed8f43727bba23f14fb70acf73ce298ad9abfa96eab2a51d574579c43",
+    "shells/vscode/src/model_discovery.ts": "560e9e4cf8d7f50494a6b8eda98b803fed65e8d57911dec7965dfde0359db540",
+    "shells/vscode/src/provider.ts": "74725f714a4d085dfe52c4f7373b51c484f7e1713b5173e975084274c343e000",
+    "shells/vscode/test/model_discovery.test.ts": "8fff497c0f9a5cb8adb52934cd7a2672741726b83fce28de6afde3c05626e31e",
+    "shells/vscode/test/provider.test.ts": "9259bbd33b20a3abca104c707a26ffffba0856b6e47ade38138416492ab3e6d4",
+    "tests/test_sprint_23_evidence.py": "6fc678788271b97b9c839ef1e19ff6466fd58bc9180eb5e070ebaf741dda192c"
   },
   "summary": {
     "local_contract_passed": true,
@@ -208,7 +229,7 @@
     "linux_native_accessibility": false,
     "macos_native_accessibility": false,
     "production_model_invocation": false,
-    "signed_catalog_production_integration": false,
+    "signed_catalog_production_integration": true,
     "structured_chat_output": true
   }
 }
