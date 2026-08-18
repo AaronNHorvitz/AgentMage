@@ -2741,7 +2741,8 @@ mod tests {
     use std::os::unix::fs::PermissionsExt as _;
     use std::path::PathBuf;
     use std::process::Command;
-    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 
     use agentmage_capability_read_only::{
         GIT_INSPECTION_TOOL_ID, GIT_INSPECTION_TOOL_VERSION, GitInspectionOperation,
@@ -2762,10 +2763,10 @@ mod tests {
         ModelProposalKind, ModelResourceReport, ModelRunRequest, ModelRunResult,
         ModelRunTerminalState, ModelStreamId, ModelToolCallCandidate, PathResolutionIntent, PlanId,
         ProposalId, RollbackPlan, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-        RuntimeApprovalResponse, RuntimeOperationId, RuntimeRunId, RuntimeRunRequest,
-        RuntimeSessionMode, RuntimeTurnId, SessionId, StopCondition, StopConditionKind, Task,
-        TaskId, TaskStatus, ToolCall, ToolCallId, ToolId, WorkPacket, WorkPacketId,
-        WorkPacketState, WorkspaceAuthorizationId, WorkspacePath,
+        RuntimeApprovalResponse, RuntimeEventCursor, RuntimeOperationId, RuntimeRunId,
+        RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId, SessionId, StopCondition,
+        StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCallId, ToolId, WorkPacket,
+        WorkPacketId, WorkPacketState, WorkspaceAuthorizationId, WorkspacePath,
     };
     #[cfg(feature = "workflow-caller")]
     use agentmage_kernel_engine::workflow_authority::{
@@ -2786,8 +2787,8 @@ mod tests {
         },
         runtime_event::RuntimeEventSequence,
         runtime_loop::{
-            RuntimeClock, RuntimeCoordinatorStep, RuntimeModelPort, RuntimePermissionEvaluation,
-            RuntimeToolBoundary, runtime_action_id,
+            RuntimeClock, RuntimeCoordinatorStep, RuntimeLoopError, RuntimeModelPort,
+            RuntimePermissionEvaluation, RuntimeToolBoundary, runtime_action_id,
         },
     };
     use agentmage_platform_linux::{
@@ -2865,12 +2866,38 @@ mod tests {
         }
     }
 
-    struct TestIdentities(u64);
+    const CHECKPOINT_CLOCK_UNARMED: usize = usize::MAX;
+
+    struct TestIdentities {
+        next: u64,
+        checkpoint_clock: Option<Arc<AtomicUsize>>,
+    }
+
+    impl TestIdentities {
+        fn new(next: u64) -> Self {
+            Self {
+                next,
+                checkpoint_clock: None,
+            }
+        }
+
+        fn stop_after_checkpoint(next: u64, checkpoint_clock: Arc<AtomicUsize>) -> Self {
+            Self {
+                next,
+                checkpoint_clock: Some(checkpoint_clock),
+            }
+        }
+    }
 
     impl CodingIdentitySource for TestIdentities {
         fn next(&mut self, prefix: &str) -> Result<String, LinuxCodingRuntimeError> {
-            self.0 += 1;
-            Ok(format!("{prefix}-{:032x}", self.0))
+            self.next += 1;
+            if prefix == "checkpoint"
+                && let Some(checkpoint_clock) = &self.checkpoint_clock
+            {
+                checkpoint_clock.store(1, Ordering::SeqCst);
+            }
+            Ok(format!("{prefix}-{:032x}", self.next))
         }
     }
 
@@ -2974,6 +3001,25 @@ mod tests {
         }
     }
 
+    struct StopAfterCheckpointClock {
+        now_epoch_ms: u64,
+        checkpoint_clock: Arc<AtomicUsize>,
+    }
+
+    impl RuntimeClock for StopAfterCheckpointClock {
+        fn now_epoch_ms(&mut self) -> Result<u64, RuntimePortFailure> {
+            let remaining = self.checkpoint_clock.load(Ordering::SeqCst);
+            if remaining == 0 {
+                return Err(RuntimePortFailure::Unavailable);
+            }
+            if remaining != CHECKPOINT_CLOCK_UNARMED {
+                self.checkpoint_clock.fetch_sub(1, Ordering::SeqCst);
+            }
+            self.now_epoch_ms += 1;
+            Ok(self.now_epoch_ms)
+        }
+    }
+
     struct AllowApproval;
 
     impl CodingApprovalPort for AllowApproval {
@@ -3047,6 +3093,7 @@ mod tests {
     struct FakeGitExecutor {
         launches: usize,
         stdout: Vec<u8>,
+        shared_launches: Option<Arc<AtomicUsize>>,
     }
 
     impl Default for FakeGitExecutor {
@@ -3054,6 +3101,7 @@ mod tests {
             Self {
                 launches: 0,
                 stdout: b"# branch.head main\0? src/new.rs\0".to_vec(),
+                shared_launches: None,
             }
         }
     }
@@ -3063,6 +3111,15 @@ mod tests {
             Self {
                 launches: 0,
                 stdout: b"# branch.head main\0".to_vec(),
+                shared_launches: None,
+            }
+        }
+
+        fn clean_with_counter(shared_launches: Arc<AtomicUsize>) -> Self {
+            Self {
+                launches: 0,
+                stdout: b"# branch.head main\0".to_vec(),
+                shared_launches: Some(shared_launches),
             }
         }
     }
@@ -3077,6 +3134,9 @@ mod tests {
             cancellation: &CancellationToken,
         ) -> RepositoryInspectionPlatformResult {
             self.launches += 1;
+            if let Some(shared_launches) = &self.shared_launches {
+                shared_launches.fetch_add(1, Ordering::SeqCst);
+            }
             assert!(working_directory.revalidate().is_ok());
             assert!(!cancellation.is_cancelled());
             assert_eq!(permit.prepared().arguments()[9], "status");
@@ -3120,6 +3180,16 @@ mod tests {
     }
 
     fn fixture_with_git<G>(git_executor: G) -> Fixture<G>
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        fixture_with_git_and_checkpoint_clock(git_executor, None)
+    }
+
+    fn fixture_with_git_and_checkpoint_clock<G>(
+        git_executor: G,
+        checkpoint_clock: Option<Arc<AtomicUsize>>,
+    ) -> Fixture<G>
     where
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
@@ -3229,7 +3299,10 @@ mod tests {
             actor_id,
             session_id,
             sensitivity: DataSensitivity::Operational,
-            identities: TestIdentities(0),
+            identities: checkpoint_clock.map_or_else(
+                || TestIdentities::new(0),
+                |clock| TestIdentities::stop_after_checkpoint(0, clock),
+            ),
         })
         .expect("coding runtime boundary");
         Fixture {
@@ -4236,6 +4309,385 @@ mod tests {
             sequence.push(event).expect("ordered durable runtime event");
         }
         assert!(sequence.is_terminal());
+    }
+
+    #[test]
+    fn story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool() {
+        let checkpoint_clock = Arc::new(AtomicUsize::new(CHECKPOINT_CLOCK_UNARMED));
+        let shared_launches = Arc::new(AtomicUsize::new(0));
+        let mut fixture = fixture_with_git_and_checkpoint_clock(
+            FakeGitExecutor::clean_with_counter(Arc::clone(&shared_launches)),
+            Some(Arc::clone(&checkpoint_clock)),
+        );
+        configure_git_status(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-git-resume-22-2");
+        let clean_git = scripted_call(&fixture.call);
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Observation];
+        fixture.request =
+            seal_runtime_run_request(fixture.request.clone()).expect("resume evidence requirement");
+
+        let profile = fixture.profile_for_test();
+        let workspace = fixture.boundary.workspace;
+        let state_root = fixture.root.join("state");
+        let completion = coding_completion_payload(&CodingCompletionCandidate {
+            schema_version: 1,
+            objective_sha256: sha256(fixture.request.task.objective.as_bytes()),
+            terminal_claim: CodingTerminalClaim::NoOp,
+            summary: "Resumed the verified inspection without repeating it.".to_owned(),
+            checks_not_run: vec!["No mutation-dependent validation was needed.".to_owned()],
+            residual_risks: Vec::new(),
+        })
+        .expect("resume completion payload");
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [
+                ScriptedCodingStep::Tool(clean_git),
+                ScriptedCodingStep::Complete(completion.clone()),
+            ]
+            .into_iter()
+            .collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("resume context");
+        let Fixture {
+            root: _root,
+            request,
+            boundary,
+            ..
+        } = fixture;
+        let base_request = request.clone();
+        let mut coordinator = compose_durable_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            StopAfterCheckpointClock {
+                now_epoch_ms: 55_000,
+                checkpoint_clock: Arc::clone(&checkpoint_clock),
+            },
+        )
+        .expect("pre-restart coordinator");
+
+        let RuntimeCoordinatorStep::AwaitingApproval { challenge } = coordinator
+            .run_until_boundary(None, None)
+            .expect("Git inspection reaches approval")
+        else {
+            panic!("Git inspection must require an explicit decision");
+        };
+        assert!(matches!(
+            coordinator.run_until_boundary(
+                Some(&response(&challenge, RuntimeApprovalDisposition::Allow)),
+                None,
+            ),
+            Err(RuntimeLoopError::Dependency(
+                RuntimePortFailure::Unavailable
+            ))
+        ));
+        assert_eq!(checkpoint_clock.load(Ordering::SeqCst), 0);
+        assert_eq!(shared_launches.load(Ordering::SeqCst), 1);
+        let checkpoint_event = coordinator
+            .events()
+            .last()
+            .expect("checkpoint is the final pre-restart event");
+        assert!(matches!(
+            checkpoint_event.kind,
+            RuntimeEventKind::CheckpointCommitted { .. }
+        ));
+        let requested_cursor = RuntimeEventCursor {
+            run_id: checkpoint_event.run_id.clone(),
+            event_id: checkpoint_event.event_id.clone(),
+            sequence: checkpoint_event.sequence,
+            event_sha256: checkpoint_event.event_sha256.clone(),
+        };
+        let pre_restart_artifacts = coordinator.artifact_references().to_vec();
+        assert!(
+            pre_restart_artifacts
+                .iter()
+                .any(|reference| reference.media_type == RUNTIME_CONTINUATION_MEDIA_TYPE)
+        );
+        let pre_restart_receipts = coordinator
+            .events()
+            .iter()
+            .filter(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+            .count();
+        assert_eq!(pre_restart_receipts, 1);
+        drop(coordinator);
+
+        let actor_id = ActorId::from_raw("actor-coding-runtime");
+        let task_id = base_request.task.task_id.clone();
+        let run_id = base_request.run_id.clone();
+        let policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
+            actor_id: &actor_id,
+            task_id: &task_id,
+            run_id: &run_id,
+            workspace: workspace.workspace(),
+            profile,
+            excluded_scopes: Vec::new(),
+        })
+        .expect("resume policy rebuilds exactly");
+        let mut key = TestKey([51; 32]);
+        let authority =
+            open_test_linux_authority(&state_root, &mut key, 56_000).expect("authority reopens");
+        let mut resumed_boundary =
+            LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
+                workspace,
+                authority,
+                sandbox: sandbox(),
+                command_executor: FakeCommandExecutor::default(),
+                git_executor: FakeGitExecutor::clean_with_counter(Arc::clone(&shared_launches)),
+                policy,
+                actor_id,
+                session_id: base_request.session_id.clone(),
+                sensitivity: DataSensitivity::Operational,
+                identities: TestIdentities::new(10_000),
+            })
+            .expect("resumed Linux boundary");
+        let mut resumed_request = base_request.clone();
+        resumed_request.event_cursor = Some(requested_cursor);
+        resumed_request =
+            seal_runtime_run_request(resumed_request).expect("resume request reseals");
+
+        let mut repository_drift = resumed_request.clone();
+        repository_drift.repository_snapshot_sha256 = "f".repeat(64);
+        repository_drift =
+            seal_runtime_run_request(repository_drift).expect("repository drift reseals");
+        assert!(matches!(
+            RuntimeCheckpointPort::load_runtime_checkpoint(
+                &mut resumed_boundary,
+                &repository_drift,
+            ),
+            Err(RuntimePortFailure::Invalid)
+        ));
+        let mut policy_drift = resumed_request.clone();
+        policy_drift.policy_sha256 = "f".repeat(64);
+        policy_drift = seal_runtime_run_request(policy_drift).expect("policy drift reseals");
+        assert!(matches!(
+            RuntimeCheckpointPort::load_runtime_checkpoint(&mut resumed_boundary, &policy_drift),
+            Err(RuntimePortFailure::Invalid)
+        ));
+        let mut model_drift = resumed_request.clone();
+        model_drift.model_profile.runtime.runtime_sha256 = "f".repeat(64);
+        model_drift = seal_runtime_run_request(model_drift).expect("model drift reseals");
+        assert!(matches!(
+            RuntimeCheckpointPort::load_runtime_checkpoint(&mut resumed_boundary, &model_drift),
+            Err(RuntimePortFailure::Invalid)
+        ));
+        let snapshot =
+            RuntimeCheckpointPort::load_runtime_checkpoint(&mut resumed_boundary, &resumed_request)
+                .expect("exact resume snapshot loads")
+                .expect("exact resume snapshot exists");
+        assert_eq!(snapshot.binding.artifacts, pre_restart_artifacts);
+        assert_eq!(snapshot.binding.event_cursor.run_id, resumed_request.run_id);
+
+        let resumed_model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [ScriptedCodingStep::Complete(completion)]
+                .into_iter()
+                .collect(),
+            calls: 0,
+        };
+        let resumed_context =
+            CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+                .expect("resumed context");
+        let mut resumed = compose_durable_coding_coordinator(
+            profile,
+            resumed_request,
+            resumed_model,
+            resumed_context,
+            resumed_boundary,
+            FixtureClock(57_000),
+        )
+        .expect("coordinator restores from exact checkpoint");
+        let RuntimeCoordinatorStep::Complete { outcome } = resumed
+            .run_until_boundary(None, None)
+            .expect("resumed coordinator completes")
+        else {
+            panic!("resumed completion must not request another tool approval");
+        };
+        assert_eq!(outcome.state, AgentStateKind::NoOp);
+        assert_eq!(shared_launches.load(Ordering::SeqCst), 1);
+        assert_eq!(outcome.receipt_ids.len(), 1);
+        assert_eq!(resumed.artifact_references(), pre_restart_artifacts);
+        assert_eq!(
+            resumed
+                .events()
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::ToolStarted { .. }))
+                .count(),
+            1
+        );
+        assert_eq!(
+            resumed
+                .events()
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+                .count(),
+            1
+        );
+        assert!(matches!(
+            resumed.events().last().map(|event| &event.kind),
+            Some(RuntimeEventKind::RunTerminal {
+                state: AgentStateKind::NoOp,
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool() {
+        for corrupt_payload in [false, true] {
+            let checkpoint_clock = Arc::new(AtomicUsize::new(CHECKPOINT_CLOCK_UNARMED));
+            let shared_launches = Arc::new(AtomicUsize::new(0));
+            let mut fixture = fixture_with_git_and_checkpoint_clock(
+                FakeGitExecutor::clean_with_counter(Arc::clone(&shared_launches)),
+                Some(Arc::clone(&checkpoint_clock)),
+            );
+            configure_git_status(&mut fixture);
+            fixture.call.tool_call_id = ToolCallId::from_raw(format!(
+                "call-git-lost-continuation-{}",
+                if corrupt_payload {
+                    "corrupt"
+                } else {
+                    "missing"
+                }
+            ));
+            let clean_git = scripted_call(&fixture.call);
+            fixture.request.work_packet.required_evidence = vec![EvidenceKind::Observation];
+            fixture.request = seal_runtime_run_request(fixture.request.clone())
+                .expect("lost-continuation evidence requirement");
+
+            let profile = fixture.profile_for_test();
+            let workspace = fixture.boundary.workspace;
+            let state_root = fixture.root.join("state");
+            let model = ScriptedCodingModel {
+                profile: profile.model_profile().clone(),
+                steps: [ScriptedCodingStep::Tool(clean_git)].into_iter().collect(),
+                calls: 0,
+            };
+            let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+                .expect("lost-continuation context");
+            let Fixture {
+                root: _root,
+                request,
+                boundary,
+                ..
+            } = fixture;
+            let base_request = request.clone();
+            let mut coordinator = compose_durable_coding_coordinator(
+                profile,
+                request,
+                model,
+                context,
+                boundary,
+                StopAfterCheckpointClock {
+                    now_epoch_ms: 65_000,
+                    checkpoint_clock: Arc::clone(&checkpoint_clock),
+                },
+            )
+            .expect("lost-continuation coordinator");
+
+            let RuntimeCoordinatorStep::AwaitingApproval { challenge } = coordinator
+                .run_until_boundary(None, None)
+                .expect("Git inspection reaches approval")
+            else {
+                panic!("Git inspection must require an explicit decision");
+            };
+            assert!(matches!(
+                coordinator.run_until_boundary(
+                    Some(&response(&challenge, RuntimeApprovalDisposition::Allow)),
+                    None,
+                ),
+                Err(RuntimeLoopError::Dependency(
+                    RuntimePortFailure::Unavailable
+                ))
+            ));
+            assert_eq!(shared_launches.load(Ordering::SeqCst), 1);
+            let checkpoint_event = coordinator
+                .events()
+                .last()
+                .expect("checkpoint is the final pre-restart event");
+            let requested_cursor = RuntimeEventCursor {
+                run_id: checkpoint_event.run_id.clone(),
+                event_id: checkpoint_event.event_id.clone(),
+                sequence: checkpoint_event.sequence,
+                event_sha256: checkpoint_event.event_sha256.clone(),
+            };
+            let continuation_artifact = coordinator
+                .artifact_references()
+                .iter()
+                .find(|reference| reference.media_type == RUNTIME_CONTINUATION_MEDIA_TYPE)
+                .cloned()
+                .expect("checkpoint continuation artifact");
+            drop(coordinator);
+
+            let continuation_path = state_root
+                .join(".agentmage-runtime-payloads-v1")
+                .join("objects")
+                .join(&continuation_artifact.payload_sha256);
+            if corrupt_payload {
+                fs::write(&continuation_path, b"corrupt encrypted continuation")
+                    .expect("continuation payload corrupts");
+            } else {
+                fs::remove_file(&continuation_path).expect("continuation payload disappears");
+            }
+
+            let actor_id = ActorId::from_raw("actor-coding-runtime");
+            let task_id = base_request.task.task_id.clone();
+            let run_id = base_request.run_id.clone();
+            let policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
+                actor_id: &actor_id,
+                task_id: &task_id,
+                run_id: &run_id,
+                workspace: workspace.workspace(),
+                profile,
+                excluded_scopes: Vec::new(),
+            })
+            .expect("lost-continuation policy rebuilds exactly");
+            let mut key = TestKey([51; 32]);
+            let authority = open_test_linux_authority(&state_root, &mut key, 66_000)
+                .expect("authority reconciles continuation loss");
+            let resumed_boundary =
+                LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
+                    workspace,
+                    authority,
+                    sandbox: sandbox(),
+                    command_executor: FakeCommandExecutor::default(),
+                    git_executor: FakeGitExecutor::clean_with_counter(Arc::clone(&shared_launches)),
+                    policy,
+                    actor_id,
+                    session_id: base_request.session_id.clone(),
+                    sensitivity: DataSensitivity::Operational,
+                    identities: TestIdentities::new(20_000),
+                })
+                .expect("lost-continuation Linux boundary");
+            let mut resumed_request = base_request.clone();
+            resumed_request.event_cursor = Some(requested_cursor);
+            resumed_request =
+                seal_runtime_run_request(resumed_request).expect("lost-continuation request");
+            let resumed_model = ScriptedCodingModel {
+                profile: profile.model_profile().clone(),
+                steps: VecDeque::new(),
+                calls: 0,
+            };
+            let resumed_context =
+                CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+                    .expect("lost-continuation resumed context");
+            assert!(matches!(
+                compose_durable_coding_coordinator(
+                    profile,
+                    resumed_request,
+                    resumed_model,
+                    resumed_context,
+                    resumed_boundary,
+                    FixtureClock(67_000),
+                ),
+                Err(RuntimeLoopError::Dependency(RuntimePortFailure::Invalid))
+            ));
+            assert_eq!(shared_launches.load(Ordering::SeqCst), 1);
+            assert!(!continuation_path.exists());
+        }
     }
 
     #[test]
