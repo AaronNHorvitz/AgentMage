@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import unittest
+from pathlib import Path
 
 from scripts import linux_docker_kvm_evidence as docker_vm
 from scripts.linux_vm_promoted_guest import LANE_ORDER
@@ -91,6 +92,12 @@ class PromotedLinuxVmMatrixTests(unittest.TestCase):
                 script,
             )
             self.assertIn("/opt/node/bin/npm install --global", script)
+
+    def test_guest_checkout_is_fail_fast_and_detached(self) -> None:
+        source = Path("scripts/linux_vm_promoted_matrix.py").read_text(encoding="utf-8")
+        self.assertIn('"set -eu\\n"', source)
+        self.assertIn("checkout --quiet --detach FETCH_HEAD", source)
+        self.assertNotIn("git clone --quiet /home/agentmage/source.bundle", source)
 
     def test_exact_independent_matrix_passes(self) -> None:
         self.assertEqual(validate_report(valid_report()), [])

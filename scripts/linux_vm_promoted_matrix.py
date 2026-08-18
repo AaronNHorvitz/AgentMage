@@ -237,10 +237,13 @@ def run_target(
             vm_support.scp_to_guest(connected, native_archive, "/home/agentmage/native-runtime.tar.gz")
             acquisition_script(
                 connected,
+                "set -eu\n"
                 f"test \"$(sha256sum /home/agentmage/source.bundle | cut -d' ' -f1)\" = {bundle_sha256}\n"
                 f"test \"$(sha256sum /home/agentmage/native-runtime.tar.gz | cut -d' ' -f1)\" = {sha256_file(native_archive)}\n"
-                "git clone --quiet /home/agentmage/source.bundle /home/agentmage/source\n"
-                f"git -C /home/agentmage/source checkout --quiet --detach {revision}\n"
+                "mkdir /home/agentmage/source\n"
+                "git -C /home/agentmage/source init --quiet\n"
+                "git -C /home/agentmage/source fetch --quiet /home/agentmage/source.bundle HEAD\n"
+                "git -C /home/agentmage/source checkout --quiet --detach FETCH_HEAD\n"
                 f"test \"$(git -C /home/agentmage/source rev-parse HEAD)\" = {revision}\n"
                 "test -z \"$(git -C /home/agentmage/source status --porcelain --untracked-files=all)\"\n"
                 + install_script(target),
