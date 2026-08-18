@@ -48,6 +48,13 @@
   are never expanded. Both guests preserve the complete workspace observation
   and leave no process, unit, package, VM, listener, source, overlay, or
   credential residue.
+- A feature-gated fault fixture that is absent from product packages drives the
+  same Linux supervisor and host authority flow through cancellation, timeout,
+  kill, and crash before, during, and after result production. All 12 cases on
+  both distributions retain exactly one terminal receipt, reject replay without
+  relaunch, reject false completion even after complete output, preserve full
+  workspace metadata, and clean owned tasks, transient units, isolated scratch,
+  packages, fixtures, listeners, overlays, source, and credentials.
 
 ## Open Evidence
 
@@ -55,11 +62,12 @@ The production Linux manifest correctly rejects a user-owned development
 worker. The installed root-owned worker now has current native evidence for all
 ten operations and all eleven Linux attack classes on Fedora and Ubuntu. The
 cross-platform attack matrix remains incomplete because native macOS XPC attack
-evidence is absent. Worker cancellation/timeout/kill/crash campaigns,
-independent worker review, and native macOS XPC operation evidence also remain
-open. Model-context disclosure handling is locally verified. The remaining
-live campaigns and platform evidence are blockers, not waived or substituted
-by the passing Linux matrices.
+evidence is absent. The Linux lifecycle campaign is complete, but equivalent
+native macOS cancellation/timeout/kill/crash evidence is also absent.
+Independent worker review and native macOS XPC operation evidence remain open.
+Model-context disclosure handling is locally verified. The remaining platform
+and review evidence is blocked, not waived or substituted by the passing Linux
+matrices.
 
 The machine-readable records are
 [`local-evidence-report.json`](../../artifacts/sprints/sprint-16/local-evidence-report.json)

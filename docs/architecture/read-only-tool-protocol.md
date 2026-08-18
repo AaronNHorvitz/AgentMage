@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Implemented platform-neutral contracts plus complete installed Linux catalog and attack matrix; macOS and lifecycle evidence remain open |
+| Status | Implemented platform-neutral contracts plus complete installed Linux catalog, attack, and lifecycle matrices; macOS evidence remains open |
 | Requirement | `AM-TOL-001` |
 | Acceptance | `AT-TOOL-001` |
 | Task gate | Sprint 16 |
@@ -132,11 +132,20 @@ writes, and a secret canary. Archive-like ZIP bytes enter only the fixed-magic
 binary-metadata path and are never expanded. Both guests retain zero prohibited
 effect and the same complete teardown proof as the operation matrix.
 
+Linux worker supervision uses a fresh cancellation signal per launch and a
+supervisor-side monotonic deadline backed by the transient unit runtime limit.
+Cancellation or timeout stops the complete verified unit before the call
+returns. A feature-gated fixture excluded from every product package exercises
+cancel, timeout, kill, and crash before, during, and after output. Each of the 12
+cases retains one terminal host receipt, rejects replay, treats even complete
+pre-interruption output as non-success, preserves full workspace metadata, and
+proves owned task, unit, isolated scratch, package, fixture, and guest cleanup on
+Fedora and Ubuntu.
+
 The platform-neutral tool engine, Linux mediation contract, host approval flow,
 golden results, malformed-input matrix, and live Linux sandbox attacks are
 locally verified. The installed Linux operation and attack matrices are
-complete, but they do not substitute for the forced-lifecycle campaign or
-native macOS evidence. Sprint 16 remains blocked until
-cancellation/timeout/kill/crash cleanup evidence is retained, an independent
-worker review is retained, and the required macOS XPC operation and attack
-evidence is produced on eligible hardware.
+complete, as is the Linux forced-lifecycle campaign, but they do not substitute
+for native macOS evidence. Sprint 16 remains blocked until an independent
+worker review is retained and the required macOS XPC operation, attack, and
+lifecycle evidence is produced on eligible hardware.
