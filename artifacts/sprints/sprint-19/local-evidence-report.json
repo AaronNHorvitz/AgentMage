@@ -1,19 +1,15 @@
 {
   "blockers": [
     {
-      "code": "PRODUCTION-HELD-REPOSITORY-PROJECTION-NOT-INTEGRATED",
-      "owner": "19.1.3.1"
+      "code": "NATIVE-UBUNTU-REPOSITORY-MAP-EVIDENCE-INCOMPLETE",
+      "owner": "19.1.3.4"
     },
     {
-      "code": "PRODUCTION-CITATION-INVALIDATION-NOT-INTEGRATED",
-      "owner": "19.1.3.2"
+      "code": "NATIVE-MACOS-REPOSITORY-MAP-EVIDENCE-INCOMPLETE",
+      "owner": "19.1.3.4"
     },
     {
-      "code": "PACKAGED-WORKER-CANCELLATION-AND-PARSER-FAILURE-MATRIX-INCOMPLETE",
-      "owner": "19.1.3.3"
-    },
-    {
-      "code": "NATIVE-PLATFORM-REPOSITORY-MAP-EVIDENCE-INCOMPLETE",
+      "code": "NATIVE-WINDOWS-REPOSITORY-MAP-EVIDENCE-INCOMPLETE",
       "owner": "19.1.3.4"
     },
     {
@@ -37,7 +33,7 @@
       ],
       "exit_code": 0,
       "id": "repository-map-tests",
-      "output_sha256": "6fccc60e9e69936f3dfde2bca1dd4b4d806fe62eddb34ddbd0514081f3d8bc36"
+      "output_sha256": "2e2fd2a772c8dd82c4b4dd71c9706b6d07b107d4a6e4e8e2b4ef1cf0ff4b3705"
     },
     {
       "argv": [
@@ -53,7 +49,42 @@
       ],
       "exit_code": 0,
       "id": "repository-map-clippy",
-      "output_sha256": "9982c9fa976c589fb742d20e8b761206db9d1862bd3e0c9b9daa77cefa4dae74"
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "linux_repository_map",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "linux-repository-host-tests",
+      "output_sha256": "816fcd04c5ab901d01c32e0116ebaf1e8567c94fe396a8a9d788483364f09f17"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "repository_cache",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "repository-cache-tests",
+      "output_sha256": "6cb4ed0ba75356957def9ce0fe059e5f84656aed4beb583b8e7fad55c7652dc1"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/sprint_18_evidence.py"
+      ],
+      "exit_code": 0,
+      "id": "sprint-18-evidence",
+      "output_sha256": "ce8970160d7335ac9f6253546e6874ba7a19219e3829d4f65b241b634e07aafd"
     },
     {
       "argv": [
@@ -151,6 +182,7 @@
   },
   "implemented_contracts": {
     "cache_key_dimensions": 7,
+    "cooperative_parser_cancellation": true,
     "coverage_file_states": 10,
     "coverage_fixed_budgets": 5,
     "filesystem_authority": false,
@@ -160,14 +192,18 @@
     "maximum_lexical_matches_per_file": 32,
     "minimum_context_tokens": 512,
     "network_authority": false,
+    "partial_parser_results_emitted": false,
     "process_authority": false,
     "render_priority_tiers": 6,
+    "rust_panic_containment": true,
     "unknown_blocked_fallback": true
   },
   "platform_evidence": {
-    "linux_packaged_worker": false,
+    "fedora_encrypted_derivative_cache": true,
+    "fedora_held_repository_projection": true,
     "local_pure_core": true,
     "macos_native_map": false,
+    "ubuntu_native_map": false,
     "windows_native_map": false
   },
   "record_type": "sprint_19_local_evidence",
@@ -181,18 +217,21 @@
     "SR-TST-002",
     "SR-TST-004"
   ],
-  "source_revision": "f6a62f594ad3b37e0b8cebd386fe651686a4b304",
+  "source_revision": "68c50419b90c875e1848714dcafe4553efcb6315",
   "source_sha256": {
-    "capabilities/repository-map/src/cache.rs": "82b3ff7ea210e4b203573c7ff98e178f1b04ebf46f5efb7b6e378d32780aebf0",
-    "capabilities/repository-map/src/invariance_tests.rs": "57c07973279e7783832ced22f54c684a3d1ee90795fec9eeb8f9fab7f74d3693",
-    "capabilities/repository-map/src/inventory.rs": "ff18c63a7f19c5dfd564e39398233d9a1ff9764bb74fff48ef5e3d10776b4107",
-    "capabilities/repository-map/src/lib.rs": "e45fdba8a3335c749c2f03f77c4693a5c935a145cdb9b4179f6455f687f3f1c2",
-    "capabilities/repository-map/src/renderer.rs": "1b85417ac4b8cae5739b939b47e3c3cca30ecaad9b6c3856f48fb106535ffa33",
-    "capabilities/repository-map/src/resolution.rs": "97c641a8767e7c1fac53251cbc67c2b32e7a8afbb50273b431b48c3fc32c09d5",
-    "docs/architecture/pinned-repository-map.md": "198d879fbfa0a539630910c8fb2d0a9557e949d97bc09492c68e2f9ba47cfda3",
-    "docs/verification/sprint-19-local-results.md": "110b44f379192d687cb5f267ec41e784394c36c83c3f315b296b2e4b31737d09",
-    "scripts/sprint_19_evidence.py": "cc7e6623278ef8e8d7917c192e823553cfcfb78e4fcab57a11f0286ec246a13b",
-    "tests/test_sprint_19_evidence.py": "d729feae77a6b135e56d91fae9b2deb03785bbde2b22ddf6a0e8545d397e0689"
+    "TASKS.md": "1ee97fce0b608a887af8611b7d7930cfbfc5509d0b22efa20683497bc0752610",
+    "capabilities/repository-map/src/cache.rs": "b84eebabd67a7c7a8bdb8fe64bdef5d289acb5dfe1fa9234321248588b6c6f78",
+    "capabilities/repository-map/src/invariance_tests.rs": "db4bca9d05bd077e757548e9e8b351ea5c0eec1e8bed9c0c973db0be7371df23",
+    "capabilities/repository-map/src/inventory.rs": "1e310590ceda0eadb9d4a307199bb4d2190c766896a2e18dd4efb5e51f42a950",
+    "capabilities/repository-map/src/lib.rs": "d3abacd835bed3d0abbeef7d564b78d7a2bf7d9503eae85f15d1c141e1ec3370",
+    "capabilities/repository-map/src/parser.rs": "2567e161aa7030cd35158ab45fbd0e2b5780c28dd392306590d69a42a49dd567",
+    "capabilities/repository-map/src/renderer.rs": "b4f01f1a2ecb0675223e8d5431ff11591bda20fbe109e53fdcbed69e294c1c13",
+    "capabilities/repository-map/src/resolution.rs": "9aa2b1326d7ef26e3f74cc124820deef01598fe1b9e4316982f321fb12624420",
+    "docs/architecture/pinned-repository-map.md": "baccabb346891a65341f4940aef502ed443f84c23fdb7a19539a3a67bbaa1ae0",
+    "docs/verification/sprint-19-local-results.md": "69b6f7a8a731cbd29611a932c5dc3d4d5e23a2c38db471d3fb20595bec7a45bc",
+    "docs/verification/task-19-1-3-5-product-security-evidence.md": "2eb8ef684c0230fd0059176c41865a7de301e5d43376380eff2f87c036b747f7",
+    "scripts/sprint_19_evidence.py": "96a751a35990b99dc70943171a256661f81a566e17813a593aaaef9d8d43ede2",
+    "tests/test_sprint_19_evidence.py": "57767d5e1450225285330c5f73d4b4c566f23fa7837d5da8ba8a87b777418311"
   },
   "summary": {
     "local_contract_passed": true,
@@ -206,6 +245,10 @@
     "independent_review": false,
     "lexical_fallback_unknown_blocked": true,
     "manual_parser_fuzzing": false,
+    "one_use_freshness_permit": true,
+    "parser_cancellation": true,
+    "pre_citation_cache_reconciliation": true,
+    "rust_parser_panic_containment": true,
     "selective_invalidation": true,
     "source_resolution": true
   }
