@@ -77,6 +77,7 @@ def expected_metrics() -> dict[str, dict[str, Any]]:
         },
         "exact-checkpoint-resume": {
             "artifact_set": "exact",
+            "model_profile_drift": "blocked",
             "model_runtime_drift": "blocked",
             "policy_drift": "blocked",
             "post_resume_receipts": 1,

@@ -5544,6 +5544,18 @@ mod tests {
             RuntimeCheckpointPort::load_runtime_checkpoint(&mut resumed_boundary, &policy_drift),
             Err(RuntimePortFailure::Invalid)
         ));
+        let mut model_profile_drift = resumed_request.clone();
+        model_profile_drift.model_profile.profile_id =
+            agentmage_kernel_contracts::ModelProfileId::from_raw("model-profile-drift-resume-22-2");
+        model_profile_drift =
+            seal_runtime_run_request(model_profile_drift).expect("model profile drift reseals");
+        assert!(matches!(
+            RuntimeCheckpointPort::load_runtime_checkpoint(
+                &mut resumed_boundary,
+                &model_profile_drift,
+            ),
+            Err(RuntimePortFailure::Invalid)
+        ));
         let mut model_drift = resumed_request.clone();
         model_drift.model_profile.runtime.runtime_sha256 = "f".repeat(64);
         model_drift = seal_runtime_run_request(model_drift).expect("model drift reseals");
@@ -5614,6 +5626,7 @@ mod tests {
             "{ARTIFACT_RESUME_METRIC_PREFIX}{}",
             serde_json::json!({
                 "artifact_set": "exact",
+                "model_profile_drift": "blocked",
                 "model_runtime_drift": "blocked",
                 "policy_drift": "blocked",
                 "post_resume_receipts": 1,

@@ -26,9 +26,10 @@ class Story222ArtifactResumeEvidenceTests(unittest.TestCase):
             [
                 exact["repository_drift"],
                 exact["policy_drift"],
+                exact["model_profile_drift"],
                 exact["model_runtime_drift"],
             ],
-            ["blocked", "blocked", "blocked"],
+            ["blocked", "blocked", "blocked", "blocked"],
         )
         self.assertEqual(exact["pre_restart_tool_executions"], 1)
         self.assertEqual(exact["post_resume_total_tool_executions"], 1)
