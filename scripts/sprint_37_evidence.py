@@ -108,6 +108,10 @@ IMPLEMENTED: Final = {
     "protected_path_and_unrelated_work_denial": True,
     "linux_native_driver": True,
     "fedora_native_fixture_evidence": True,
+    "s_030_ut01_complete": True,
+    "exact_resource_boundary_matrix": True,
+    "missing_and_wrong_type_matrix": True,
+    "closed_metadata_mode_matrix": True,
     "ubuntu_native_fixture_evidence": False,
     "macos_native_driver": False,
     "windows_native_driver": False,
@@ -206,6 +210,10 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
         "verification_evidence": {
             "kernel_operation_matrix": local_pass,
             "fedora_native_operation_matrix": local_pass,
+            "s_030_ut01_complete": local_pass,
+            "exact_resource_boundary_matrix": local_pass,
+            "missing_and_wrong_type_matrix": local_pass,
+            "closed_metadata_mode_matrix": local_pass,
             "focused_blocking_skip_count": 0 if local_pass else None,
             "upstream_sprint_36_gate": False,
             "complete_native_race_matrix": False,
@@ -280,6 +288,14 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     verification = report.get("verification_evidence", {})
     if verification.get("focused_blocking_skip_count") != 0:
         failures.append("focused blocking skip summary invalid")
+    for field in (
+        "s_030_ut01_complete",
+        "exact_resource_boundary_matrix",
+        "missing_and_wrong_type_matrix",
+        "closed_metadata_mode_matrix",
+    ):
+        if verification.get(field) is not True:
+            failures.append(f"missing local verification: {field}")
     for field in (
         "upstream_sprint_36_gate",
         "complete_native_race_matrix",

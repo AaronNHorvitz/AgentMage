@@ -66,6 +66,10 @@ class Sprint37EvidenceTests(unittest.TestCase):
         self.assertEqual(self.validate(value), [])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertTrue(value["implemented_contracts"]["linux_native_driver"])
+        self.assertTrue(value["verification_evidence"]["s_030_ut01_complete"])
+        self.assertTrue(value["verification_evidence"]["exact_resource_boundary_matrix"])
+        self.assertTrue(value["verification_evidence"]["missing_and_wrong_type_matrix"])
+        self.assertTrue(value["verification_evidence"]["closed_metadata_mode_matrix"])
         self.assertFalse(value["summary"]["cross_platform_evidence_passed"])
 
     def test_dependency_platform_race_crash_worker_review_fuzz_and_release_overclaims_fail(self) -> None:

@@ -8,6 +8,7 @@
 | Grant-consuming transaction and receipt matrix | Pass locally |
 | Fedora native create, patch, copy, move, and trash operations | Pass locally |
 | Native collision, symlink, hard-link, limits, and restoration fixtures | Pass locally |
+| Complete `S-030-UT01` operation and boundary matrix | Pass locally |
 | Full disk/process-death/race matrix | Incomplete |
 | Ubuntu, macOS, and Windows native evidence | Absent |
 | Isolated native write-worker proof | Absent |
@@ -32,6 +33,10 @@
   case-folded collision, symlink, hard-link, and tight-limit cases; and restores an earlier create
   after a later staging collision.
 - Empty-file creation and Unicode case-collision behavior are deterministic.
+- All five primitives cover nominal, existing, missing, and wrong-object-type states. Exact
+  operation-count, file-byte, aggregate-byte, path-depth, and sibling-count ceilings pass while
+  one-over inputs fail before authority; zero through `0777` permission variants remain exact and
+  undeclared mode bits are refused.
 - No filesystem transaction executes a command, accesses a network, changes Git, creates parent
   directories, overwrites a destination, expands a wildcard, recursively deletes, or permanently
   deletes as its requested effect.

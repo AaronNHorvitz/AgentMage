@@ -42,6 +42,11 @@ child path, and a bounded sibling snapshot. The planner rejects:
 - mixed trash and non-trash transactions; and
 - file, aggregate-byte, path-depth, operation-count, patch, review, and directory-list overflows.
 
+The fixed unit matrix exercises each exact resource ceiling and its one-over refusal, every
+operation's nominal and missing/wrong-type state, case and Unicode collisions, empty content, and
+permission variants from zero through `0777`. Inputs with undeclared mode bits fail before a plan
+or grant exists.
+
 Structured patches are closed JSON objects with ordered, one-based exact-old-line hunks. Unknown
 fields, stale lines, overlaps, no-op results, malformed UTF-8, and a caller-supplied result hash that
 does not match the complete computed postimage are rejected. Patch syntax never contains a path or
