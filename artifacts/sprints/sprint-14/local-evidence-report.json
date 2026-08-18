@@ -37,12 +37,37 @@
         "cargo",
         "test",
         "-p",
+        "agentmage-kernel-engine",
+        "model_discovery",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "acquisition-review-contracts",
+      "output_sha256": "83f5a0abb26f2d15abfff39ab1b6c0e16d4e41d1bbfe1aae49f0bcd720871f01"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "test",
+        "--workspace",
+        "@agentmage/vscode-shell"
+      ],
+      "exit_code": 0,
+      "id": "acquisition-review-vscode",
+      "output_sha256": "139367d910e39381d6dae4aeb6a049e9b18730aaf82dbfa2ecdd1d2f4b300d3d"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
         "agentmage-platform-linux-inference",
         "--locked"
       ],
       "exit_code": 0,
       "id": "installer-runtime-contracts",
-      "output_sha256": "068e6c0f036f3c649b0b56eb666e5830406c8cb5641afab6c13a8841a22e0560"
+      "output_sha256": "0607b8f6b9c974270a84d44e20841a100a7ade03630842ebbe4ee1e3797f94f5"
     },
     {
       "argv": [
@@ -56,7 +81,7 @@
       ],
       "exit_code": 0,
       "id": "installer-package-contracts",
-      "output_sha256": "ea57a1768c572b4d377004773000e3b70e0c490da94bd4dfc3ff6b13b006904b"
+      "output_sha256": "35f763aaab15b61f72ccaf56c9f201c32d3938548e9e613df77c85670eca7ce8"
     },
     {
       "argv": [
@@ -67,7 +92,7 @@
       ],
       "exit_code": 0,
       "id": "candidate-inventory-contracts",
-      "output_sha256": "667e20b3716b92a1c5684b7d1a271ffd03eab25311d0e7214ae1bb94527c184b"
+      "output_sha256": "6f8a987ff9d3dcb6541362dcfb63b18ec406e6a8b06eb1797ce44daef9fbd18f"
     },
     {
       "argv": [
@@ -132,8 +157,10 @@
       "RV-41"
     ]
   },
-  "source_revision": "56b8fb586dedff10120cba0829e7be26c201c32f",
+  "source_revision": "a2d67f0d1948df0a1616223c12f6ea79a0491f1e",
   "source_sha256": {
+    "kernel/contracts/src/model_discovery.rs": "a5b3f600a3e7af159c1e4beff860db1f1164fd1e35376823728b791248cee1c0",
+    "kernel/engine/src/model_discovery.rs": "e905afeeefbc58b634cbf7f07f242e4cf0642f1b744831a4e377b8c04dfcfb81",
     "platforms/linux-inference/src/model_acquisition.rs": "43f5b04075f722975a1462c1911dd9a53d211dc81c5577a4440deef8956c68c2",
     "platforms/linux-inference/src/model_download.rs": "a5dc4aa5cf40aa43483ef1234f7a78728014e90d474ad2f29d643ef8a379a3ee",
     "platforms/linux-inference/src/model_install_lifecycle.rs": "2e4aa2349dd53bf7d4d793d6236ddc46773c7cdfe96575c67c8fabf97d1c8c2e",
@@ -143,12 +170,15 @@
     "scripts/model_candidate_inventory.py": "b96087dc12d4ff7d63ed3a65b29b1e1131b3a81428e4065d429e51ad2f912370",
     "scripts/package_candidate.py": "69f61c12e29b06260b3c60d19c7780572f59c56ee3110a550c284550840243ac",
     "scripts/package_lifecycle.py": "c5c257192b0bea2a6671457725a757e6b7637fd178dce83e6f785a4aa84e4de8",
-    "scripts/sprint_14_evidence.py": "661d347607fdeff3d5bf5346c205ca395e16fc9a5c5a6b4f4ddb3ea2873ff95a",
+    "scripts/sprint_14_evidence.py": "6bb9498a04dd25a1a82112aa0f2a9d8082b482b497d26d84816acc707147e135",
+    "shells/vscode/src/model_discovery.ts": "28dc8aff8a9944554ecaf8e74d59c41932c8631618ce7532596cee905b15a521",
+    "shells/vscode/test/model_discovery.test.ts": "d965ab510e3178e78c893365e8447cc2671e5d29cd1f277e3716f9d0f3faac9f",
     "tests/test_model_candidate_inventory.py": "2f6f242717606512d646b0713a71dd153dc43704978ae4b255660c52a047606f",
-    "tests/test_sprint_14_evidence.py": "51a76280df267eb82d7838cbef9257938a032b0f83257a4a0d30cc68f9045fde"
+    "tests/test_sprint_14_evidence.py": "292803e35a4e04af40d2bd0dff7d08500e0c3bb5505c0e20205cc3951e7de312"
   },
   "stories": [
     {
+      "acquisition_review_facts_displayed": true,
       "atomic_lifecycle_contract_implemented": true,
       "bounded_download_contract_implemented": true,
       "end_user_process_protocol_active": false,
