@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 const MAX_INSTRUCTION_RECORDS: usize = 4_096;
+const MAX_EXPLICIT_DISCOVERY_PATHS: usize = 256;
+const MAX_HIERARCHICAL_DISCOVERY_ROOTS: usize = 64;
 const MAX_CONSTRAINTS_PER_DECISION: usize = 64;
 const MAX_ID_BYTES: usize = 128;
 const MAX_TARGET_BYTES: usize = 512;
@@ -56,6 +58,86 @@ pub enum InstructionSourceKind {
     ModelOutput,
     /// Other document content not represented by a narrower class.
     OtherDocument,
+}
+
+/// Exact metadata-only request for workspace instruction discovery.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InstructionDiscoveryRequest {
+    /// Workspace whose held platform root may be inspected.
+    pub workspace_id: WorkspaceId,
+    /// Exact workspace-manifest identity current before discovery.
+    pub workspace_manifest_sha256: String,
+    /// Explicit workspace-level instruction candidates.
+    pub workspace_instruction_paths: Vec<WorkspacePath>,
+    /// Explicit repository-level instruction candidates.
+    pub repository_instruction_paths: Vec<WorkspacePath>,
+    /// Explicitly approved project-document candidates.
+    pub project_document_paths: Vec<WorkspacePath>,
+    /// Exact roots below which nested `AGENTS.md` metadata may be discovered.
+    pub hierarchical_roots: Vec<WorkspaceScopePath>,
+}
+
+/// One exact candidate admitted by a validated discovery plan.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct InstructionDiscoveryCandidate {
+    source_kind: InstructionSourceKind,
+    path: WorkspacePath,
+}
+
+impl InstructionDiscoveryCandidate {
+    /// Returns the closed untrusted source class.
+    #[must_use]
+    pub const fn source_kind(&self) -> InstructionSourceKind {
+        self.source_kind
+    }
+
+    /// Returns the exact workspace-relative candidate path.
+    #[must_use]
+    pub const fn path(&self) -> &WorkspacePath {
+        &self.path
+    }
+}
+
+/// Deterministic authority-free plan consumed by a platform metadata scanner.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InstructionDiscoveryPlan {
+    workspace_id: WorkspaceId,
+    workspace_manifest_sha256: String,
+    candidates: Vec<InstructionDiscoveryCandidate>,
+    hierarchical_roots: Vec<WorkspaceScopePath>,
+    plan_sha256: String,
+}
+
+impl InstructionDiscoveryPlan {
+    /// Returns the exact workspace identity.
+    #[must_use]
+    pub const fn workspace_id(&self) -> &WorkspaceId {
+        &self.workspace_id
+    }
+
+    /// Returns the exact pre-discovery workspace-manifest identity.
+    #[must_use]
+    pub fn workspace_manifest_sha256(&self) -> &str {
+        &self.workspace_manifest_sha256
+    }
+
+    /// Returns the sorted explicit candidate set.
+    #[must_use]
+    pub fn candidates(&self) -> &[InstructionDiscoveryCandidate] {
+        &self.candidates
+    }
+
+    /// Returns the sorted exact roots for nested `AGENTS.md` discovery.
+    #[must_use]
+    pub fn hierarchical_roots(&self) -> &[WorkspaceScopePath] {
+        &self.hierarchical_roots
+    }
+
+    /// Returns the digest over every preceding plan field.
+    #[must_use]
+    pub fn plan_sha256(&self) -> &str {
+        &self.plan_sha256
+    }
 }
 
 impl InstructionSourceKind {
@@ -333,6 +415,119 @@ impl InstructionProvenanceError {
             Self::GuidanceUnavailable => "instruction.guidance.unavailable",
         }
     }
+}
+
+/// Validates and seals one bounded metadata-only instruction-discovery plan.
+pub fn plan_instruction_discovery(
+    request: InstructionDiscoveryRequest,
+) -> Result<InstructionDiscoveryPlan, InstructionProvenanceError> {
+    let explicit_count = request
+        .workspace_instruction_paths
+        .len()
+        .checked_add(request.repository_instruction_paths.len())
+        .and_then(|count| count.checked_add(request.project_document_paths.len()))
+        .ok_or(InstructionProvenanceError::InvalidRecord)?;
+    if !valid_workspace_id(&request.workspace_id)
+        || !is_sha256(&request.workspace_manifest_sha256)
+        || explicit_count > MAX_EXPLICIT_DISCOVERY_PATHS
+        || request.hierarchical_roots.len() > MAX_HIERARCHICAL_DISCOVERY_ROOTS
+    {
+        return Err(InstructionProvenanceError::InvalidRecord);
+    }
+
+    let mut candidates = Vec::with_capacity(explicit_count);
+    for (source_kind, paths) in [
+        (
+            InstructionSourceKind::WorkspaceInstruction,
+            request.workspace_instruction_paths,
+        ),
+        (
+            InstructionSourceKind::RepositoryInstruction,
+            request.repository_instruction_paths,
+        ),
+        (
+            InstructionSourceKind::ProjectDocument,
+            request.project_document_paths,
+        ),
+    ] {
+        candidates.extend(
+            paths
+                .into_iter()
+                .map(|path| InstructionDiscoveryCandidate { source_kind, path }),
+        );
+    }
+    if candidates
+        .iter()
+        .any(|candidate| candidate.path.workspace_id() != &request.workspace_id)
+        || request
+            .hierarchical_roots
+            .iter()
+            .any(|scope| scope.workspace_id() != &request.workspace_id)
+    {
+        return Err(InstructionProvenanceError::InvalidRecord);
+    }
+    candidates.sort_by(|left, right| left.path.cmp(&right.path));
+    if candidates
+        .windows(2)
+        .any(|pair| pair[0].path == pair[1].path)
+    {
+        return Err(InstructionProvenanceError::DuplicateIdentity);
+    }
+    let mut hierarchical_roots = request.hierarchical_roots;
+    hierarchical_roots.sort();
+    if hierarchical_roots.iter().enumerate().any(|(index, root)| {
+        hierarchical_roots
+            .iter()
+            .skip(index + 1)
+            .any(|candidate| root.contains_scope(candidate))
+    }) {
+        return Err(InstructionProvenanceError::DuplicateIdentity);
+    }
+    let mut plan = InstructionDiscoveryPlan {
+        workspace_id: request.workspace_id,
+        workspace_manifest_sha256: request.workspace_manifest_sha256,
+        candidates,
+        hierarchical_roots,
+        plan_sha256: String::new(),
+    };
+    plan.plan_sha256 = instruction_discovery_plan_sha256(&plan);
+    Ok(plan)
+}
+
+/// Verifies that a discovery plan still has its exact validated shape and digest.
+#[must_use]
+pub fn verify_instruction_discovery_plan(plan: &InstructionDiscoveryPlan) -> bool {
+    plan.candidates.len() <= MAX_EXPLICIT_DISCOVERY_PATHS
+        && plan.hierarchical_roots.len() <= MAX_HIERARCHICAL_DISCOVERY_ROOTS
+        && valid_workspace_id(&plan.workspace_id)
+        && is_sha256(&plan.workspace_manifest_sha256)
+        && plan
+            .candidates
+            .iter()
+            .all(|candidate| candidate.path.workspace_id() == &plan.workspace_id)
+        && plan
+            .candidates
+            .windows(2)
+            .all(|pair| pair[0].path < pair[1].path)
+        && plan
+            .hierarchical_roots
+            .iter()
+            .all(|scope| scope.workspace_id() == &plan.workspace_id)
+        && plan
+            .hierarchical_roots
+            .windows(2)
+            .all(|pair| pair[0] < pair[1])
+        && !plan
+            .hierarchical_roots
+            .iter()
+            .enumerate()
+            .any(|(index, root)| {
+                plan.hierarchical_roots
+                    .iter()
+                    .skip(index + 1)
+                    .any(|candidate| root.contains_scope(candidate))
+            })
+        && plan.plan_sha256 == instruction_discovery_plan_sha256(plan)
 }
 
 /// Creates one metadata-only instruction discovery record.
@@ -667,6 +862,10 @@ fn valid_scope(scope: &InstructionScope) -> bool {
     scope.path.workspace_id() == &scope.workspace_id
 }
 
+fn valid_workspace_id(workspace_id: &WorkspaceId) -> bool {
+    WorkspaceScopePath::new(workspace_id.clone(), std::iter::empty::<String>()).is_ok()
+}
+
 fn valid_id(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= MAX_ID_BYTES
@@ -689,6 +888,16 @@ fn discovery_sha256(record: &InstructionDiscoveryRecord) -> String {
         record.state,
         &record.workspace_manifest_sha256,
         &record.freshness_sha256,
+    ))
+}
+
+fn instruction_discovery_plan_sha256(plan: &InstructionDiscoveryPlan) -> String {
+    digest(&(
+        1_u16,
+        &plan.workspace_id,
+        &plan.workspace_manifest_sha256,
+        &plan.candidates,
+        &plan.hierarchical_roots,
     ))
 }
 
@@ -775,11 +984,12 @@ mod tests {
     use agentmage_kernel_contracts::{WorkspaceId, WorkspacePath, WorkspaceScopePath};
 
     use super::{
-        GuidanceConstraint, GuidanceConstraintKind, InstructionDiscoveryInput, InstructionLocation,
-        InstructionProvenanceError, InstructionScope, InstructionSourceKind,
-        InstructionTrustDisposition, build_instruction_ledger, effective_guidance,
+        GuidanceConstraint, GuidanceConstraintKind, InstructionDiscoveryInput,
+        InstructionDiscoveryRequest, InstructionLocation, InstructionProvenanceError,
+        InstructionScope, InstructionSourceKind, InstructionTrustDisposition,
+        build_instruction_ledger, effective_guidance, plan_instruction_discovery,
         record_instruction_discovery, record_instruction_read, record_instruction_trust_decision,
-        verify_instruction_ledger,
+        verify_instruction_discovery_plan, verify_instruction_ledger,
     };
     use crate::authority::{DescriptiveArtifactKind, reject_as_authority};
 
@@ -821,6 +1031,115 @@ mod tests {
             )
             .expect("canonical scope"),
         }
+    }
+
+    #[test]
+    fn discovery_plan_is_sorted_bounded_hash_bound_and_authority_free() {
+        let workspace_id = WorkspaceId::from_raw("workspace-instructions");
+        let plan = plan_instruction_discovery(InstructionDiscoveryRequest {
+            workspace_id: workspace_id.clone(),
+            workspace_manifest_sha256: hash('a'),
+            workspace_instruction_paths: vec![
+                WorkspacePath::new(workspace_id.clone(), ["WORKSPACE.md"]).expect("workspace path"),
+            ],
+            repository_instruction_paths: vec![
+                WorkspacePath::new(workspace_id.clone(), ["repository", "AGENTS.md"])
+                    .expect("repository path"),
+            ],
+            project_document_paths: vec![
+                WorkspacePath::new(workspace_id.clone(), ["repository", "README.md"])
+                    .expect("project path"),
+            ],
+            hierarchical_roots: vec![
+                WorkspaceScopePath::new(workspace_id, ["repository"]).expect("hierarchical root"),
+            ],
+        })
+        .expect("discovery plan");
+
+        assert!(verify_instruction_discovery_plan(&plan));
+        assert_eq!(plan.candidates().len(), 3);
+        assert_eq!(plan.hierarchical_roots().len(), 1);
+        assert_eq!(plan.workspace_manifest_sha256(), hash('a'));
+        assert_eq!(plan.plan_sha256().len(), 64);
+        assert_eq!(
+            plan.candidates()
+                .iter()
+                .map(|candidate| candidate.source_kind())
+                .collect::<Vec<_>>(),
+            vec![
+                InstructionSourceKind::WorkspaceInstruction,
+                InstructionSourceKind::RepositoryInstruction,
+                InstructionSourceKind::ProjectDocument,
+            ]
+        );
+
+        let mut mutated = plan;
+        mutated.plan_sha256.clear();
+        assert!(!verify_instruction_discovery_plan(&mutated));
+    }
+
+    #[test]
+    fn discovery_plan_rejects_cross_workspace_duplicate_and_oversized_inputs() {
+        let workspace_id = WorkspaceId::from_raw("workspace-instructions");
+        let path = WorkspacePath::new(workspace_id.clone(), ["AGENTS.md"]).expect("path");
+        let duplicate = plan_instruction_discovery(InstructionDiscoveryRequest {
+            workspace_id: workspace_id.clone(),
+            workspace_manifest_sha256: hash('a'),
+            workspace_instruction_paths: vec![path.clone()],
+            repository_instruction_paths: vec![path],
+            project_document_paths: Vec::new(),
+            hierarchical_roots: Vec::new(),
+        });
+        assert_eq!(
+            duplicate,
+            Err(InstructionProvenanceError::DuplicateIdentity)
+        );
+
+        let foreign = plan_instruction_discovery(InstructionDiscoveryRequest {
+            workspace_id: workspace_id.clone(),
+            workspace_manifest_sha256: hash('a'),
+            workspace_instruction_paths: vec![
+                WorkspacePath::new(WorkspaceId::from_raw("foreign-workspace"), ["AGENTS.md"])
+                    .expect("foreign path"),
+            ],
+            repository_instruction_paths: Vec::new(),
+            project_document_paths: Vec::new(),
+            hierarchical_roots: Vec::new(),
+        });
+        assert_eq!(foreign, Err(InstructionProvenanceError::InvalidRecord));
+
+        let overlapping = plan_instruction_discovery(InstructionDiscoveryRequest {
+            workspace_id: workspace_id.clone(),
+            workspace_manifest_sha256: hash('a'),
+            workspace_instruction_paths: Vec::new(),
+            repository_instruction_paths: Vec::new(),
+            project_document_paths: Vec::new(),
+            hierarchical_roots: vec![
+                WorkspaceScopePath::new(workspace_id.clone(), std::iter::empty::<String>())
+                    .expect("workspace root"),
+                WorkspaceScopePath::new(workspace_id.clone(), ["repository"])
+                    .expect("repository root"),
+            ],
+        });
+        assert_eq!(
+            overlapping,
+            Err(InstructionProvenanceError::DuplicateIdentity)
+        );
+
+        let oversized = plan_instruction_discovery(InstructionDiscoveryRequest {
+            workspace_id: workspace_id.clone(),
+            workspace_manifest_sha256: hash('a'),
+            workspace_instruction_paths: (0..=super::MAX_EXPLICIT_DISCOVERY_PATHS)
+                .map(|index| {
+                    WorkspacePath::new(workspace_id.clone(), [format!("instruction-{index}.md")])
+                        .expect("bounded path")
+                })
+                .collect(),
+            repository_instruction_paths: Vec::new(),
+            project_document_paths: Vec::new(),
+            hierarchical_roots: Vec::new(),
+        });
+        assert_eq!(oversized, Err(InstructionProvenanceError::InvalidRecord));
     }
 
     #[test]
