@@ -1047,11 +1047,13 @@ where
                 return self.finish_effect_execution(execution, event_context, pending);
             }
         };
-        if read_result_contains_sensitive_text(&result) {
-            let execution = failed_read_projection(&receipt, call, "runtime.tool.output-sensitive");
-            return self.finish_effect_execution(execution, event_context, pending);
-        }
-        let output_bytes = serde_json::to_vec(&result).map_err(|_| RuntimePortFailure::Invalid)?;
+        let output_bytes = match serialize_read_result_for_model(&result) {
+            Ok(bytes) => bytes,
+            Err(code) => {
+                let execution = failed_read_projection(&receipt, call, code);
+                return self.finish_effect_execution(execution, event_context, pending);
+            }
+        };
         if output_bytes.len() as u64 > request.limits.max_output_bytes {
             let execution =
                 failed_read_projection(&receipt, call, "runtime.tool.output-limit-exceeded");
@@ -2148,6 +2150,13 @@ fn read_result_contains_sensitive_text(result: &ReadOnlyResult) -> bool {
     })
 }
 
+fn serialize_read_result_for_model(result: &ReadOnlyResult) -> Result<Vec<u8>, &'static str> {
+    if read_result_contains_sensitive_text(result) {
+        return Err("runtime.tool.output-sensitive");
+    }
+    serde_json::to_vec(result).map_err(|_| "runtime.tool.output-invalid")
+}
+
 impl<'workspace, 'session, 'platform, I, E, G> RuntimeToolBoundary
     for LinuxCodingRuntimeBoundary<'workspace, 'session, 'platform, I, E, G>
 where
@@ -2949,9 +2958,9 @@ mod tests {
 
     #[test]
     fn read_output_secret_classes_are_withheld_before_model_projection() {
-        assert!(!read_result_contains_sensitive_text(
-            &projected_read_result("ordinary repository text\n")
-        ));
+        let ordinary = projected_read_result("ordinary repository text\n");
+        assert!(!read_result_contains_sensitive_text(&ordinary));
+        assert!(serialize_read_result_for_model(&ordinary).is_ok());
         for content in [
             "password=ordinary",
             "-----BEGIN PRIVATE KEY-----",
@@ -2963,6 +2972,10 @@ mod tests {
             let result = projected_read_result(content);
             assert!(result.verify(ReadOnlyToolKind::ReadText));
             assert!(read_result_contains_sensitive_text(&result), "{content}");
+            let error = serialize_read_result_for_model(&result)
+                .expect_err("sensitive output must not be serialized for model context");
+            assert_eq!(error, "runtime.tool.output-sensitive");
+            assert!(!error.contains(content));
         }
     }
     #[cfg(feature = "workflow-caller")]
