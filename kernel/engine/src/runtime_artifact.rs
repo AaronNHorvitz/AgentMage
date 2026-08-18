@@ -3158,6 +3158,152 @@ mod tests {
     }
 
     #[test]
+    fn unknown_versions_and_expired_artifacts_fail_closed() {
+        let mut unknown_manifest = manifest();
+        unknown_manifest.schema_version += 1;
+        assert_eq!(
+            verify_runtime_artifact_manifest(&unknown_manifest),
+            Err(RuntimeArtifactError::InvalidManifest)
+        );
+        let mut unknown_reference = runtime_artifact_ref(&manifest()).expect("reference");
+        unknown_reference.schema_version += 1;
+        assert_eq!(
+            verify_runtime_artifact_ref(&unknown_reference, &manifest()),
+            Err(RuntimeArtifactError::ReferenceMismatch)
+        );
+        let mut unknown_continuation = continuation();
+        unknown_continuation.schema_version += 1;
+        assert_eq!(
+            verify_runtime_continuation_state(&unknown_continuation),
+            Err(RuntimeArtifactError::InvalidContinuation)
+        );
+
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+        let mut expiring = manifest_with_id("runtime-artifact-expiring-1");
+        expiring.retention = RuntimeEventRetention {
+            kind: RuntimeEventRetentionKind::UntilExpiration,
+            expires_at_epoch_ms: Some(3),
+        };
+        expiring.manifest_sha256 = digest('0');
+        let expiring = seal_runtime_artifact_manifest(expiring).expect("expiring manifest seals");
+        let publication = runtime
+            .publish_runtime_artifact(&mut payloads, expiring, &mut Cursor::new(b"0123456789"))
+            .expect("expiring artifact publishes");
+        let read_request = |now_epoch_ms| RuntimeArtifactReadRequest {
+            session_id: SessionId::from_raw("session-1"),
+            task_id: TaskId::from_raw("task-1"),
+            policy_sha256: digest('b'),
+            reference: publication.reference.clone(),
+            now_epoch_ms,
+            maximum_bytes: 10,
+        };
+        assert_eq!(
+            runtime
+                .read_runtime_artifact(&payloads, &read_request(2))
+                .expect("artifact reads before expiration"),
+            b"0123456789"
+        );
+        assert_eq!(
+            runtime.read_runtime_artifact(&payloads, &read_request(3)),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotAuthorized
+            ))
+        );
+        let report = runtime
+            .reconcile_runtime_artifacts(&mut payloads, 3)
+            .expect("expiration reconciles");
+        assert_eq!(report.deleted_orphans, 1);
+        let expired = runtime
+            .runtime_artifact_operator_view(&publication.reference)
+            .expect("expired operator view");
+        assert_eq!(expired.lifecycle, RuntimeArtifactLifecycleState::Deleted);
+        assert_eq!(expired.integrity, RuntimeArtifactIntegrityState::Deleted);
+        assert_eq!(expired.cleanup, RuntimeArtifactCleanupState::Completed);
+        assert!(payloads.objects.is_empty());
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn partial_and_identifier_colliding_publications_preserve_canonical_state() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+
+        assert_eq!(
+            runtime.publish_runtime_artifact(
+                &mut payloads,
+                manifest_with_id("runtime-artifact-partial-1"),
+                &mut Cursor::new(b"short"),
+            ),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::Payload(RuntimeArtifactPayloadError::Invalid)
+            ))
+        );
+        assert!(payloads.objects.is_empty());
+
+        let original = runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                manifest_with_id("runtime-artifact-collision-1"),
+                &mut Cursor::new(b"0123456789"),
+            )
+            .expect("original artifact publishes");
+        let colliding_bytes = b"abcdefghij";
+        let mut colliding = original.manifest.clone();
+        colliding.payload_sha256 = super::sha256(colliding_bytes);
+        colliding.preview = Some(RuntimeArtifactPreview {
+            text: "abcdefghij".to_owned(),
+            byte_size: 10,
+            truncated: false,
+            sha256: super::sha256(colliding_bytes),
+        });
+        colliding.manifest_sha256 = digest('0');
+        let colliding = seal_runtime_artifact_manifest(colliding).expect("collision seals");
+        assert!(matches!(
+            runtime.publish_runtime_artifact(
+                &mut payloads,
+                colliding,
+                &mut Cursor::new(colliding_bytes),
+            ),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::Integrity
+            ))
+        ));
+        drop(runtime);
+
+        let mut runtime = DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey, 2)
+            .expect("canonical authority reopens");
+        let report = runtime
+            .reconcile_runtime_artifacts(&mut payloads, 2)
+            .expect("colliding orphan reconciles");
+        assert_eq!(report.deleted_orphans, 1);
+        assert_eq!(payloads.objects.len(), 1);
+        assert_eq!(
+            runtime
+                .read_runtime_artifact(
+                    &payloads,
+                    &RuntimeArtifactReadRequest {
+                        session_id: SessionId::from_raw("session-1"),
+                        task_id: TaskId::from_raw("task-1"),
+                        policy_sha256: digest('b'),
+                        reference: original.reference,
+                        now_epoch_ms: 2,
+                        maximum_bytes: 10,
+                    },
+                )
+                .expect("original remains readable"),
+            b"0123456789"
+        );
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
     fn resume_binding_binds_cursor_and_sorted_exact_artifact_set() {
         let reference = runtime_artifact_ref(&manifest()).unwrap();
         let binding = seal_runtime_resume_binding(RuntimeResumeBinding {
