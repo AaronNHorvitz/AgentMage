@@ -38,7 +38,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-contracts",
-      "output_sha256": "29043828ed33862709628758b26d14d5d3e0131e850dff8eff78ca6d579ff170"
+      "output_sha256": "83f5a0abb26f2d15abfff39ab1b6c0e16d4e41d1bbfe1aae49f0bcd720871f01"
     },
     {
       "argv": [
@@ -50,7 +50,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-vscode",
-      "output_sha256": "a635776e574782dcbfb418ee06636be2c722c2545abe5d716daacde0b6c3b056"
+      "output_sha256": "78731a7950c6d8c1b10632493060841f88eeff9f2a2d1cfedce98f16acb061f5"
     },
     {
       "argv": [
@@ -62,7 +62,7 @@
       ],
       "exit_code": 0,
       "id": "installer-runtime-contracts",
-      "output_sha256": "2e658afad6fb5fac75e3b486ef47b91f13f942b1ee988173bf9d0c0073da1138"
+      "output_sha256": "502e1b78ce5a9aad7b8330f4c2c989382707f44440daec68ec85b5bab220d559"
     },
     {
       "argv": [
@@ -76,7 +76,7 @@
       ],
       "exit_code": 0,
       "id": "installer-package-contracts",
-      "output_sha256": "d8349dde2edd72fdf89b67ea35363fa9e473e024e9f7665c599c192ddd9a2325"
+      "output_sha256": "74252a207a000678ca7f29a6f5da23a49d41036cf86a353c0811debd2b48793b"
     },
     {
       "argv": [
@@ -87,7 +87,7 @@
       ],
       "exit_code": 0,
       "id": "candidate-inventory-contracts",
-      "output_sha256": "6046464914a5f03cbd2b8b3ff7085e6c53dd1065f0dffca2ea04abcc5009ee61"
+      "output_sha256": "6f8a987ff9d3dcb6541362dcfb63b18ec406e6a8b06eb1797ce44daef9fbd18f"
     },
     {
       "argv": [
@@ -152,7 +152,7 @@
       "RV-41"
     ]
   },
-  "source_revision": "42d4884471f5eb7edf57edf634c1119ddd37713a",
+  "source_revision": "6ddc21051873669d9410eb19b1f9f8f02528d518",
   "source_sha256": {
     "kernel/contracts/src/model_discovery.rs": "a5b3f600a3e7af159c1e4beff860db1f1164fd1e35376823728b791248cee1c0",
     "kernel/engine/src/model_discovery.rs": "e905afeeefbc58b634cbf7f07f242e4cf0642f1b744831a4e377b8c04dfcfb81",
@@ -168,10 +168,10 @@
     "scripts/package_candidate.py": "69f61c12e29b06260b3c60d19c7780572f59c56ee3110a550c284550840243ac",
     "scripts/package_lifecycle.py": "228cce404328ce93738b6d226bb564bad69fe2e92ac52f2a68c320b0557096a2",
     "scripts/sprint_14_evidence.py": "93a78e6096e88c86fd946f4cd638334bbae7ffb97f44521f4e69885d3e70d729",
-    "shells/vscode/src/model_discovery.ts": "42ac5fd2a929b3f39afdb504744672d643bed89e44a11bc887caf827616807d9",
-    "shells/vscode/src/provider.ts": "0c527c68007a7c279ef0958896caeca42b024c5ac94d3138fbdcc1b95da7fcc0",
+    "shells/vscode/src/model_discovery.ts": "b91246b419af178f730d8807ea73ca6f386fad083344004f05dc4eb73d9b9113",
+    "shells/vscode/src/provider.ts": "211b05b5dcfb52c45756a7c3632f359995160c0a46440a45895433158ecabb58",
     "shells/vscode/test/model_discovery.test.ts": "2f7c54e46cac921d8af0bc6b0748be39f64be79afe992fda67c38db55f87e417",
-    "shells/vscode/test/provider.test.ts": "c60c52bd609ca8254f8ad35d09acc8b391b0bf6d06cdb5787847d2c09af8a509",
+    "shells/vscode/test/provider.test.ts": "74614b6deb26e4ba5f17ece25b6c58a202f93447bc33f20ab44d0c802b89236a",
     "tests/test_model_candidate_inventory.py": "2f6f242717606512d646b0713a71dd153dc43704978ae4b255660c52a047606f",
     "tests/test_sprint_14_evidence.py": "794134fcd57fbea6f0a3e9ce2214d0fe64c217a005b9edae5e5e7e5a76e51c48"
   },
