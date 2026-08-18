@@ -53,6 +53,8 @@ impl Default for LinuxAtomicWriteDriverLimits {
 pub struct LinuxAtomicWriteDriver<'workspace> {
     workspace: &'workspace LinuxAuthorizedWorkspace,
     limits: LinuxAtomicWriteDriverLimits,
+    #[cfg(test)]
+    race_hook: Option<Box<dyn FnMut(WriteRaceBoundary)>>,
 }
 
 impl std::fmt::Debug for LinuxAtomicWriteDriver<'_> {
@@ -71,7 +73,12 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
         workspace: &'workspace LinuxAuthorizedWorkspace,
         limits: LinuxAtomicWriteDriverLimits,
     ) -> Self {
-        Self { workspace, limits }
+        Self {
+            workspace,
+            limits,
+            #[cfg(test)]
+            race_hook: None,
+        }
     }
 
     fn adapter(&self) -> LinuxPathAdapter {
@@ -137,7 +144,7 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
     }
 
     pub(super) fn replace_exact(
-        &self,
+        &mut self,
         transaction_id: &str,
         index: usize,
         target: &GrantTarget,
@@ -168,11 +175,15 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
         if &current_target != target || current != expected {
             return ReplaceOutcome::NoChange;
         }
+        #[cfg(test)]
+        self.run_race_hook(WriteRaceBoundary::AfterInitialObservation);
 
         let (directory, target_name) = match open_parent(self.workspace, path.components()) {
             Ok(value) => value,
             Err(_) => return ReplaceOutcome::NoChange,
         };
+        #[cfg(test)]
+        self.run_race_hook(WriteRaceBoundary::AfterParentOpened);
         let original_snapshot = match snapshot(&held.object_descriptor, None) {
             Ok(value) => value,
             Err(_) => return ReplaceOutcome::NoChange,
@@ -188,6 +199,8 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
             Err(_) => return ReplaceOutcome::NoChange,
         };
         drop(staged);
+        #[cfg(test)]
+        self.run_race_hook(WriteRaceBoundary::AfterStaging);
 
         let fresh = adapter.resolve(
             self.workspace,
@@ -201,6 +214,8 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
             let _ = remove_staged(&directory, &temporary);
             return ReplaceOutcome::NoChange;
         }
+        #[cfg(test)]
+        self.run_race_hook(WriteRaceBoundary::BeforeExchange);
 
         if renameat_with(
             &directory,
@@ -214,6 +229,8 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
             let _ = remove_staged(&directory, &temporary);
             return ReplaceOutcome::NoChange;
         }
+        #[cfg(test)]
+        self.run_race_hook(WriteRaceBoundary::AfterExchange);
 
         let displaced_matches = open_regular(&directory, &temporary).is_ok_and(|displaced| {
             snapshot(&displaced, None)
@@ -236,6 +253,29 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
         }
         ReplaceOutcome::Applied
     }
+
+    #[cfg(test)]
+    fn with_race_hook(mut self, hook: impl FnMut(WriteRaceBoundary) + 'static) -> Self {
+        self.race_hook = Some(Box::new(hook));
+        self
+    }
+
+    #[cfg(test)]
+    fn run_race_hook(&mut self, boundary: WriteRaceBoundary) {
+        if let Some(hook) = self.race_hook.as_mut() {
+            hook(boundary);
+        }
+    }
+}
+
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WriteRaceBoundary {
+    AfterInitialObservation,
+    AfterParentOpened,
+    AfterStaging,
+    BeforeExchange,
+    AfterExchange,
 }
 
 impl AtomicWriteDriver for LinuxAtomicWriteDriver<'_> {
@@ -605,7 +645,9 @@ mod tests {
     };
     use sha2::{Digest, Sha256};
 
-    use super::{LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits, temporary_name};
+    use super::{
+        LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits, WriteRaceBoundary, temporary_name,
+    };
     use crate::{LinuxAuthorizedWorkspace, LinuxPathAdapter, authorize_workspace_root};
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -859,6 +901,41 @@ mod tests {
         .map(|result| result.outcome)
     }
 
+    fn execute_with_race(
+        fixture: &mut Fixture,
+        boundary: WriteRaceBoundary,
+        action: impl FnOnce() + 'static,
+    ) -> Result<WriteTransactionOutcome, WriteTransactionError> {
+        let mut action = Some(action);
+        let mut driver = LinuxAtomicWriteDriver::new(
+            &fixture.workspace,
+            LinuxAtomicWriteDriverLimits {
+                maximum_file_bytes: 1024 * 1024,
+                maximum_transaction_bytes: 4 * 1024 * 1024,
+                ..LinuxAtomicWriteDriverLimits::default()
+            },
+        )
+        .with_race_hook(move |observed| {
+            if observed == boundary
+                && let Some(action) = action.take()
+            {
+                action();
+            }
+        });
+        execute_write_transaction(
+            &mut fixture.issuer,
+            &fixture.policy,
+            &fixture.change_set,
+            &fixture.approval,
+            WriteTransactionRequest {
+                transaction_id: TRANSACTION_ID.to_owned(),
+                now_epoch_ms: 4_000,
+            },
+            &mut driver,
+        )
+        .map(|result| result.outcome)
+    }
+
     #[test]
     fn one_file_exchange_commits_exact_bytes_and_preserves_mode() {
         let mut fixture = fixture(1);
@@ -994,6 +1071,103 @@ mod tests {
                 .expect("hardlink metadata")
                 .nlink(),
             2
+        );
+    }
+
+    #[test]
+    fn s_029_st01_native_descriptor_races_preserve_competing_state() {
+        let mut replaced = fixture(1);
+        let replaced_path = replaced.paths[0].clone();
+        let replacement = replaced._root.path().join("replacement.json");
+        fs::write(&replacement, b"replacement owner\n").expect("replacement fixture");
+        assert_eq!(
+            execute_with_race(
+                &mut replaced,
+                WriteRaceBoundary::AfterInitialObservation,
+                move || fs::rename(&replacement, &replaced_path).expect("replace target"),
+            ),
+            Ok(WriteTransactionOutcome::FailedNoChange)
+        );
+        assert_eq!(
+            fs::read(&replaced.paths[0]).expect("replacement retained"),
+            b"replacement owner\n"
+        );
+
+        let mut symlinked = fixture(1);
+        let symlink_path = symlinked.paths[0].clone();
+        let symlink_backup = symlinked._root.path().join("symlink-owner.json");
+        assert_eq!(
+            execute_with_race(
+                &mut symlinked,
+                WriteRaceBoundary::AfterParentOpened,
+                move || {
+                    fs::rename(&symlink_path, &symlink_backup).expect("retain original");
+                    symlink(&symlink_backup, &symlink_path).expect("swap symlink");
+                },
+            ),
+            Ok(WriteTransactionOutcome::FailedNoChange)
+        );
+        assert!(
+            fs::symlink_metadata(&symlinked.paths[0])
+                .expect("symlink retained")
+                .file_type()
+                .is_symlink()
+        );
+
+        let mut renamed = fixture(1);
+        let source_directory = renamed._root.path().join("src");
+        let old_directory = renamed._root.path().join("src-before-race");
+        let new_target = renamed.paths[0].clone();
+        assert_eq!(
+            execute_with_race(&mut renamed, WriteRaceBoundary::AfterStaging, move || {
+                fs::rename(&source_directory, &old_directory).expect("rename source directory");
+                fs::create_dir(&source_directory).expect("replacement source directory");
+                fs::write(&new_target, b"renamed directory owner\n").expect("replacement target");
+            },),
+            Ok(WriteTransactionOutcome::FailedNoChange)
+        );
+        assert_eq!(
+            fs::read(&renamed.paths[0]).expect("directory replacement retained"),
+            b"renamed directory owner\n"
+        );
+
+        let mut before_exchange = fixture(1);
+        let before_exchange_path = before_exchange.paths[0].clone();
+        assert_eq!(
+            execute_with_race(
+                &mut before_exchange,
+                WriteRaceBoundary::BeforeExchange,
+                move || {
+                    fs::write(
+                        &before_exchange_path,
+                        b"concurrent writer before exchange\n",
+                    )
+                    .expect("concurrent write");
+                },
+            ),
+            Ok(WriteTransactionOutcome::FailedNoChange)
+        );
+        assert_eq!(
+            fs::read(&before_exchange.paths[0]).expect("writer retained"),
+            b"concurrent writer before exchange\n"
+        );
+
+        let mut after_exchange = fixture(1);
+        let after_exchange_path = after_exchange.paths[0].clone();
+        assert_eq!(
+            execute_with_race(
+                &mut after_exchange,
+                WriteRaceBoundary::AfterExchange,
+                move || {
+                    fs::write(&after_exchange_path, b"concurrent writer after exchange\n")
+                        .expect("concurrent write");
+                },
+            ),
+            Ok(WriteTransactionOutcome::Uncertain)
+        );
+        assert_eq!(
+            fs::read(&after_exchange.paths[0]).expect("later writer retained"),
+            b"concurrent writer after exchange\n"
         );
     }
 }

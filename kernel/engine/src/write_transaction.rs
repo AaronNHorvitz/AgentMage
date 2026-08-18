@@ -1584,6 +1584,42 @@ mod tests {
     }
 
     #[test]
+    fn s_029_st01_consumed_grant_and_approval_replay_never_reapply() {
+        let mut fixture = fixture(1);
+        let mut driver = MemoryDriver::new(&fixture.change_set, DriverMode::Success);
+        let first = execute(&mut fixture, &mut driver);
+        assert_eq!(first.outcome, WriteTransactionOutcome::Committed);
+        assert_eq!(driver.apply_calls, 1);
+
+        driver.bytes[0] = fixture.change_set.operations()[0].preimage_bytes().to_vec();
+        let replay_start = driver.bytes.clone();
+        assert_eq!(
+            execute_write_transaction(
+                &mut fixture.issuer,
+                &fixture.policy,
+                &fixture.change_set,
+                &fixture.approval,
+                WriteTransactionRequest {
+                    transaction_id: "write-transaction-replay".to_owned(),
+                    now_epoch_ms: 4_001,
+                },
+                &mut driver,
+            ),
+            Err(WriteTransactionError::PreapplyDenied)
+        );
+        assert_eq!(driver.apply_calls, 1);
+        assert_eq!(driver.restore_calls, 0);
+        assert_eq!(driver.bytes, replay_start);
+        assert_eq!(
+            fixture
+                .issuer
+                .current(&fixture.approval.grant.grant_id)
+                .map(|grant| grant.status),
+            Some(GrantStatus::Consumed)
+        );
+    }
+
+    #[test]
     fn rollback_is_a_fresh_reversed_request_and_later_user_change_refuses_it() {
         let fixture = fixture(2);
         let mut driver = MemoryDriver::new(&fixture.change_set, DriverMode::Success);
