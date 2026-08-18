@@ -1,0 +1,494 @@
+{
+  "artifacts": [
+    {
+      "bytes": 3287,
+      "path": "artifacts/sprints/sprint-21/story-21.2/pressure-report.json",
+      "sha256": "18d839f8199de094e136645aeac87773fb6cfb18e44b4f4a70f637e6efebac33"
+    },
+    {
+      "bytes": 6618,
+      "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
+      "sha256": "c5cb423c381257e59bcac8b6969509499b19f0084c6558be874d95c9675ab72e"
+    },
+    {
+      "bytes": 9026,
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+      "sha256": "3d0cc82dd531e818fcd4d63b9800d74040cde90bf08b6a33adea57a125c1b144"
+    },
+    {
+      "bytes": 5890,
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
+      "sha256": "4f600b8ad884fabbe858b51db7e1165d8c7d3a07ad0b7278905caeced4c8188b"
+    },
+    {
+      "bytes": 21564,
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
+      "sha256": "f5d2adfec2867f6691106ed0df32b93c0cdda7041ef7003292ecf5a63e2bd00e"
+    },
+    {
+      "bytes": 4094,
+      "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
+      "sha256": "16cc4ad84e85eeaa4faa5d97f007379723c6004ac057f254f363f197c3af7c4d"
+    },
+    {
+      "bytes": 9977,
+      "path": "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
+      "sha256": "d42c2bfc3e59824786333b3e6ef30e1aa08ebf84740f8739a40b0dd78e50ed95"
+    },
+    {
+      "bytes": 12882,
+      "path": "docs/architecture/reusable-runtime-coordinator.md",
+      "sha256": "d6029d8710d67d4d2e0890edfcadc5d901e9dd5313398b36392f2705c62e5f58"
+    },
+    {
+      "bytes": 5487,
+      "path": "docs/verification/story-23-4-local-results.md",
+      "sha256": "5b4a25b0fcd812e866da4edef5d823826c1300d61949f81351854b0180d8dd1c"
+    },
+    {
+      "bytes": 11161,
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "63a01ee7674916b9710cff5a326a75a3b95746bf0e45b704ded02d5cd9b3fd1e"
+    },
+    {
+      "bytes": 9733,
+      "path": "kernel/contracts/src/runtime_run.rs",
+      "sha256": "b1a13946d1d6f7968cfc7a3b03e2f2dd09457163ccc6cdc43da3083dc56b6935"
+    },
+    {
+      "bytes": 33354,
+      "path": "kernel/engine/src/runtime_coordinator.rs",
+      "sha256": "fb4a0cc5247911df5c86c6b555777ee5823623f442b408f2e48c7d5424803282"
+    },
+    {
+      "bytes": 137104,
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "3a3067d8d1f72fe7ff2ec0f783feec3f9d9f81401e4a863dbc11f8c99c1ec4c0"
+    },
+    {
+      "bytes": 105716,
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "5acb210fc32c94def5802fbdcee74965ef5aeb8b55705affbf065a817dc3e2a3"
+    },
+    {
+      "bytes": 10704,
+      "path": "scripts/dependency_rules.py",
+      "sha256": "27dee0562b2ae46a07f92be265c4c464b54a0ef799f236244738413c9afc812d"
+    },
+    {
+      "bytes": 9446,
+      "path": "scripts/effect_boundary.py",
+      "sha256": "d000f01a67aa42af5ecdf7d74926c99d9b01c9a0ea92ce5f59f901e5f32956bd"
+    },
+    {
+      "bytes": 16105,
+      "path": "scripts/runtime_coordinator_boundary_review.py",
+      "sha256": "7f992c505977a40470824abf7fdad6bf4254d352f64c1469fd8c9305ddf96d64"
+    },
+    {
+      "bytes": 16978,
+      "path": "scripts/story_23_4_evidence_index.py",
+      "sha256": "c2fb267ae02e4afb126cf0c9c0cede27be844a8a32f6712881103fe795fbf9cd"
+    },
+    {
+      "bytes": 19413,
+      "path": "scripts/story_23_4_runtime_evidence.py",
+      "sha256": "b0ff690ff53b4aee5051996bb703d19b45af3a6c9bc52f97cfd1212e2a8e4f16"
+    },
+    {
+      "bytes": 25634,
+      "path": "scripts/story_23_4_security_evidence.py",
+      "sha256": "ad0cd36434e3212b711a1da0c060e2cb51c9c305158fc94884939c5f99303480"
+    },
+    {
+      "bytes": 7481,
+      "path": "shells/host/src/coding_client.rs",
+      "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
+    },
+    {
+      "bytes": 43101,
+      "path": "shells/host/src/cli_runtime.rs",
+      "sha256": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e"
+    },
+    {
+      "bytes": 38334,
+      "path": "shells/host/src/native_chat_runtime.rs",
+      "sha256": "e59a54ea04d1482bff2392cbf8e310332ea42de4a2029889a55792d8ddcc5b43"
+    },
+    {
+      "bytes": 22184,
+      "path": "shells/host/src/runtime_parity_tests.rs",
+      "sha256": "c7e26f72647a853c5dc09c3d316903409b60e1f1e223fb41623e0715f2890592"
+    },
+    {
+      "bytes": 29664,
+      "path": "shells/host/src/runtime_read_tests.rs",
+      "sha256": "d970a7147532e3d8e62b5d3b7ec41e5bb3b2e5103294d5cce7130eb8b6986202"
+    },
+    {
+      "bytes": 10024,
+      "path": "shells/host/src/runtime_tools.rs",
+      "sha256": "1c6b88402b80b3fc8162146c79efcab6c47535c6cd575b9b5e4f438ea20fc4e0"
+    },
+    {
+      "bytes": 53979,
+      "path": "shells/vscode/src/provider.ts",
+      "sha256": "481d3f0fa8ada22800381ceebad9cb72f668e960832fa5a4caafada8664533ec"
+    },
+    {
+      "bytes": 37746,
+      "path": "shells/vscode/src/runtime_transport.ts",
+      "sha256": "1e11e9d7354512b76b68f97dc2151a4c31ace0175d36f6171b6404b444068fd1"
+    },
+    {
+      "bytes": 19350,
+      "path": "shells/vscode/test/host_bridge.test.ts",
+      "sha256": "cf696f19dba6289a3de8048e32efb24c070a6ad42907fc22849fa81c14a9b47b"
+    },
+    {
+      "bytes": 40098,
+      "path": "shells/vscode/test/provider.test.ts",
+      "sha256": "4d00bbffe9901888d69bc5c151f6af41c3fec4f1f4c1b2b1ef814d76d867c7c5"
+    },
+    {
+      "bytes": 13418,
+      "path": "shells/vscode/test/runtime_transport.test.ts",
+      "sha256": "019d48d63f66764830f9d316cee5bf81d8c60aea5bbe878de7195bf9816c64c1"
+    },
+    {
+      "bytes": 3818,
+      "path": "tests/test_runtime_coordinator_boundary_review.py",
+      "sha256": "c344f7b213801c6aa15acdb0e59e026e9c1af7bd5e1ecf000d55c14fea961dce"
+    },
+    {
+      "bytes": 3052,
+      "path": "tests/test_story_23_4_evidence_index.py",
+      "sha256": "179ecfcda75c585086ca3fc67da96ac42861d5c68f2fb2e0bc92c29b6fcc5c7c"
+    },
+    {
+      "bytes": 4041,
+      "path": "tests/test_story_23_4_runtime_evidence.py",
+      "sha256": "518a7f02a7d23c4e9741cefb02c2439206550610ea829e6848bd1c713cd67c48"
+    },
+    {
+      "bytes": 2814,
+      "path": "tests/test_story_23_4_security_evidence.py",
+      "sha256": "961f22c6f2add7b061651b9e8e730c060364e930ec075f755a7c6a2326386d9d"
+    }
+  ],
+  "disposition": "partial-local-evidence",
+  "index_sha256": "19c012144bfb194297017a8c2fad44ad84b503d55df4d08995498536aba3ba87",
+  "limitations": [
+    "The installed host still lacks a production runtime factory and admitted local model.",
+    "The complete boundary-by-boundary ephemeral failure injection matrix remains open.",
+    "Independent coordinator and installed accessibility review evidence remains open.",
+    "Persistent crash/restart and physical dependency faults remain owned by later durable campaigns.",
+    "Manual fuzzing remains deliberately deferred and open.",
+    "No supported-platform, release, or deployment approval follows from this index."
+  ],
+  "mappings": [
+    {
+      "checked": true,
+      "code": [
+        "kernel/contracts/src/runtime_run.rs",
+        "kernel/engine/src/runtime_coordinator.rs"
+      ],
+      "evidence": [
+        "docs/architecture/reusable-runtime-coordinator.md"
+      ],
+      "statement_sha256": "6a5777baa11feaf2aedd661a8e63cdbde7a8ab6ee8ede46107f25b1b56994720",
+      "status": "complete",
+      "task_id": "23.4.1.1",
+      "tests": [
+        "story_23_4_request_and_outcome_are_closed_hash_bound_contracts",
+        "story_23_4_request_rejects_binding_catalog_context_cursor_and_limit_drift"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_loop.rs"
+      ],
+      "evidence": [
+        "docs/architecture/reusable-runtime-coordinator.md"
+      ],
+      "statement_sha256": "ab511694716c1d60a4665f7f92f3d69f4fbc631055914c05f7c6449b12e8c224",
+      "status": "complete",
+      "task_id": "23.4.1.2",
+      "tests": [
+        "story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_loop.rs"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "statement_sha256": "42afb7915fd52a80c0447f247926d6fca5496491ba05865666022787f0f24915",
+      "status": "complete",
+      "task_id": "23.4.1.3",
+      "tests": [
+        "story_23_4_ask_pauses_before_effect_and_exact_allow_resumes_once",
+        "story_23_4_deny_closes_without_launching_the_tool"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_loop.rs",
+        "kernel/engine/src/runtime_loop_tests.rs"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "statement_sha256": "c455b76cf878e65726f1240979f702ac88b5244200a9e043bc9442ee992bcde4",
+      "status": "complete",
+      "task_id": "23.4.1.4",
+      "tests": [
+        "story_23_4_repeat_no_progress_and_turn_budgets_stop_truthfully"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_loop.rs"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
+        "docs/architecture/reusable-runtime-coordinator.md"
+      ],
+      "statement_sha256": "966d1ad0d00f655b5a4624ebbad30c0afd5a896c72653ded6516d4b740ea1d7b",
+      "status": "complete",
+      "task_id": "23.4.1.5",
+      "tests": [
+        "test_representative_shortcuts_fail_their_named_boundary"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "shells/host/src/runtime_read_tests.rs",
+        "shells/host/src/runtime_tools.rs"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "statement_sha256": "f834b8cea76f07502c3efbdbdd228011f817c126581ab7d0000421fca171d052",
+      "status": "complete",
+      "task_id": "23.4.1.6",
+      "tests": [
+        "story_23_4_fake_model_uses_existing_native_read_tool_then_verifies_completion",
+        "story_23_4_fake_model_composes_multiple_reads_search_and_read_only_git"
+      ]
+    },
+    {
+      "checked": false,
+      "code": [
+        "shells/host/src/native_chat_runtime.rs",
+        "shells/vscode/src/provider.ts",
+        "shells/vscode/src/runtime_transport.ts"
+      ],
+      "evidence": [
+        "docs/verification/story-23-4-local-results.md"
+      ],
+      "statement_sha256": "ee5d76437bd2f70edfd8ec82ce9abf859cdf3be8ff899f3d012cf0fb3de21e75",
+      "status": "partial",
+      "task_id": "23.4.1.7",
+      "tests": [
+        "completed_shared_runtime_is_prepared_started_and_replayed_by_exact_cursor",
+        "native Chat renders one complete shared-runtime stream and outcome",
+        "stream substitution reordering and payload mutation fail closed"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_loop.rs"
+      ],
+      "evidence": [
+        "docs/architecture/reusable-runtime-coordinator.md"
+      ],
+      "statement_sha256": "6a2de9ced1b86d8c76dfa7e88a9df86c207c00a0491a58d3a41ac6438b3c49d4",
+      "status": "complete",
+      "task_id": "23.4.2.1",
+      "tests": [
+        "test_current_committed_boundary_passes_every_automated_check"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "shells/host/src/coding_client.rs",
+        "shells/host/src/runtime_read_tests.rs"
+      ],
+      "evidence": [
+        "docs/architecture/reusable-runtime-coordinator.md"
+      ],
+      "statement_sha256": "2a6088787642e2b49518ec0ee77e8616cb3abdd27d35ab72ace93d35ce61241a",
+      "status": "complete",
+      "task_id": "23.4.2.2",
+      "tests": [
+        "story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "scripts/runtime_coordinator_boundary_review.py"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
+        "docs/architecture/reusable-runtime-coordinator.md"
+      ],
+      "statement_sha256": "b020c4d4c2a12b65b6b5b8bdc10fbba9319ca75620e7cd66017a9cc954ed3614",
+      "status": "complete",
+      "task_id": "23.4.2.3",
+      "tests": [
+        "test_current_committed_boundary_passes_every_automated_check"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "scripts/story_23_4_evidence_index.py"
+      ],
+      "evidence": [
+        "docs/verification/story-23-4-local-results.md"
+      ],
+      "statement_sha256": "e66d348049457719f670fda2809f032f95365c3e12769c2e042a86a83c79471d",
+      "status": "complete",
+      "task_id": "23.4.2.4",
+      "tests": [
+        "test_current_index_is_exact_and_hash_bound"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "shells/host/src/runtime_read_tests.rs"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log"
+      ],
+      "statement_sha256": "c3af4e945b2fef29e203bad479baef56550325c2071fe884aaf655002c1ab04a",
+      "status": "complete",
+      "task_id": "23.4.3.1",
+      "tests": [
+        "story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order",
+        "story_23_4_fake_model_composes_multiple_reads_search_and_read_only_git",
+        "story_23_4_model_dependency_failures_close_without_effect_or_retry"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "scripts/dependency_rules.py",
+        "scripts/effect_boundary.py",
+        "scripts/runtime_coordinator_boundary_review.py"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json"
+      ],
+      "statement_sha256": "fa612a56b1e9027f40089f4c7df077b5fcbfef5245de43d8dbd02cf84fd7f9fc",
+      "status": "complete",
+      "task_id": "23.4.3.2",
+      "tests": [
+        "test_representative_shortcuts_fail_their_named_boundary",
+        "story_50_2_confusion_and_interface_bypasses_never_present_or_complete",
+        "story_50_2_narrow_workflow_authority_rejects_every_broadening_without_execution"
+      ]
+    },
+    {
+      "checked": false,
+      "code": [
+        "kernel/engine/src/runtime_loop.rs",
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "shells/host/src/native_chat_runtime.rs"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "docs/verification/story-23-4-local-results.md"
+      ],
+      "statement_sha256": "10113aa7c66ab23e32879df85204d4f9dbafd465d8d664bf22fcb95416159883",
+      "status": "partial",
+      "task_id": "23.4.3.3",
+      "tests": [
+        "story_23_4_model_dependency_failures_close_without_effect_or_retry",
+        "story_23_4_terminal_tool_failures_have_one_receipt_and_no_hidden_retry",
+        "protected_approval_and_cancellation_preserve_exact_runtime_identity"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "shells/host/src/coding_client.rs",
+        "shells/host/src/cli_runtime.rs",
+        "shells/host/src/runtime_parity_tests.rs"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "statement_sha256": "795fa64a273f29d8f31b5d8d3732aea6d85bb2227c56c2bb20e0eee1ff56a0e0",
+      "status": "complete",
+      "task_id": "23.4.3.4",
+      "tests": [
+        "story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers"
+      ]
+    },
+    {
+      "checked": true,
+      "code": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "scripts/story_23_4_runtime_evidence.py"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-21/story-21.2/pressure-report.json",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json"
+      ],
+      "statement_sha256": "12211660f6a515c87a8266d5b6b497421bce4fb3f7dc781d39a42a91960de7e2",
+      "status": "complete",
+      "task_id": "23.4.3.5",
+      "tests": [
+        "story_23_4_ephemeral_runtime_profile_is_bounded",
+        "test_current_report_and_raw_trace_are_hash_bound"
+      ]
+    },
+    {
+      "checked": false,
+      "code": [
+        "scripts/story_23_4_security_evidence.py"
+      ],
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/security-evidence-map.json",
+        "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
+        "docs/verification/story-23-4-local-results.md"
+      ],
+      "statement_sha256": "873849f32ee61d8340882569a408216705a178982c0d0d687e51ec55583847dc",
+      "status": "partial",
+      "task_id": "23.4.3.6",
+      "tests": [
+        "test_mapping_is_closed_complete_for_declared_scope_and_path_bound",
+        "story_23_4_runtime_events_exclude_raw_model_and_tool_canaries"
+      ]
+    }
+  ],
+  "record_type": "story_23_4_requirement_code_test_evidence_index",
+  "schema_version": 1,
+  "source_revision": "0a6ffa5deafc2670cfddfe9d76b6525ccafa094f",
+  "story_id": "23.4",
+  "summary": {
+    "complete_count": 14,
+    "mapping_count": 17,
+    "open_count": 0,
+    "partial_count": 3,
+    "release_approved": false,
+    "sprint_complete": false,
+    "story_complete": false
+  }
+}
