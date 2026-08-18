@@ -32,19 +32,20 @@ class Sprint29EvidenceTests(unittest.TestCase):
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertTrue(value["implemented_contracts"]["literal_term_and_phrase_search"])
+        self.assertTrue(value["implemented_contracts"]["raw_and_rebuilt_index_integration"])
         self.assertFalse(value["implemented_contracts"]["semantic_components_used"])
 
-    def test_dependency_integration_review_write_and_release_overclaims_fail(self) -> None:
+    def test_dependency_review_write_release_and_integration_regressions_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"write_authority_enabled": True}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update({"upstream_sprint_28_gate": True}),
             lambda value: value["verification_evidence"].update(
-                {"raw_and_rebuilt_index_integration": True}
+                {"raw_and_rebuilt_index_integration": False}
             ),
             lambda value: value["verification_evidence"].update(
-                {"application_synthesis_and_final_rendering_integration": True}
+                {"extractive_synthesis_and_final_rendering_integration": False}
             ),
             lambda value: value["verification_evidence"].update({"independent_review": True}),
             lambda value: value["implemented_contracts"].update({"semantic_components_used": True}),

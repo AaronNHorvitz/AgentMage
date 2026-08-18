@@ -20,7 +20,9 @@ SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 SOURCE_PATHS: Final = (
     "capabilities/knowledge/Cargo.toml",
     "capabilities/knowledge/src/lib.rs",
+    "capabilities/knowledge/src/obsidian_index.rs",
     "capabilities/knowledge/src/retrieval.rs",
+    "capabilities/knowledge/src/retrieval_integration.rs",
     "docs/architecture/deterministic-knowledge-retrieval.md",
     "docs/verification/sprint-29-local-results.md",
     "scripts/sprint_29_evidence.py",
@@ -50,8 +52,6 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-28-BLOCKED", "owner": "28.1"},
-    {"code": "RAW-AND-REBUILT-INDEX-INTEGRATION-ABSENT", "owner": "29.1.3.4"},
-    {"code": "APPLICATION-SYNTHESIS-RENDERING-INTEGRATION-ABSENT", "owner": "29.1.3.4"},
     {"code": "INDEPENDENT-SPRINT-29-REVIEW-ABSENT", "owner": "29.1.3.5"},
 ]
 IMPLEMENTED: Final = {
@@ -68,8 +68,9 @@ IMPLEMENTED: Final = {
     "secret_and_workspace_canary_exclusion": True,
     "semantic_components_used": False,
     "filesystem_network_process_or_write_authority": False,
-    "raw_and_rebuilt_index_integration": False,
-    "application_synthesis_and_final_rendering_integration": False,
+    "raw_and_rebuilt_index_integration": True,
+    "labeled_question_parity_and_blind_spot_reporting": True,
+    "extractive_synthesis_and_final_rendering_integration": True,
 }
 CORPUS_METRICS: Final = {
     "fixture_version": 1,
@@ -77,6 +78,8 @@ CORPUS_METRICS: Final = {
     "expected_top_1_precision": 1.0,
     "expected_top_1_recall": 1.0,
     "expected_citation_set_match": 1.0,
+    "expected_raw_rebuilt_citation_parity": 1.0,
+    "absent_expected_evidence_reported": True,
     "production_quality_claim": False,
 }
 
@@ -153,9 +156,10 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "literal_injection_secret_and_workspace_isolation": local_pass,
             "complete_local_product_and_docs_gates": local_pass,
             "upstream_sprint_28_gate": False,
-            "raw_and_rebuilt_index_integration": False,
+            "raw_and_rebuilt_index_integration": local_pass,
+            "labeled_question_parity_and_blind_spot_reporting": local_pass,
             "evidence_preserving_synthesis_rendering_contract": local_pass,
-            "application_synthesis_and_final_rendering_integration": False,
+            "extractive_synthesis_and_final_rendering_integration": local_pass,
             "independent_review": False,
         },
         "blockers": BLOCKERS,
@@ -200,16 +204,18 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     }:
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
-    for field in (
-        "upstream_sprint_28_gate", "raw_and_rebuilt_index_integration",
-        "application_synthesis_and_final_rendering_integration", "independent_review",
-    ):
+    for field in ("upstream_sprint_28_gate", "independent_review"):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
     for field in (
-        "semantic_components_used", "filesystem_network_process_or_write_authority",
         "raw_and_rebuilt_index_integration",
-        "application_synthesis_and_final_rendering_integration",
+        "labeled_question_parity_and_blind_spot_reporting",
+        "extractive_synthesis_and_final_rendering_integration",
+    ):
+        if verification.get(field) is not True:
+            failures.append(f"verification missing: {field}")
+    for field in (
+        "semantic_components_used", "filesystem_network_process_or_write_authority",
     ):
         if report.get("implemented_contracts", {}).get(field) is not False:
             failures.append(f"implementation overclaim: {field}")

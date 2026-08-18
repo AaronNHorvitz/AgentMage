@@ -28,14 +28,21 @@
   are explicit and covered.
 - The versioned three-question fixture corpus has exact expected top-one paths and citation sets.
   This is a contract fixture, not a claim of production retrieval quality.
+- Canonical parsed snapshots and integrity-checked rebuilt SQLite rows now feed the same labeled
+  retrieval evaluator. All three fixture questions produce the same citations, evidence states,
+  and extractive rendered answers through both paths.
+- Missing expected evidence is retained as an explicit citation-set blind spot. Stale indexes,
+  malformed expected citations, and duplicate expected citations fail closed before an answer.
+- Rebuilt-index projection reads emit content-free receipts with false source-mutation,
+  external-process, and network-effect markers.
 - All semantic-component flags remain false, and the strict-local audit finds no undeclared
   network path.
 
 ## Open Evidence
 
-Sprint 28 remains blocked. The local retrieval core is not yet connected to both raw source stores
-and rebuilt indexes through one conformance path, and the application does not yet invoke the
-completed synthesis/final-rendering contract. Independent Sprint 29 review is also absent.
+Sprint 28 remains blocked, and independent Sprint 29 review is absent. The retained parity path is
+deterministic and extractive; it does not claim native-interface execution, model-generated
+synthesis, production retrieval quality, or a release gate.
 
 Sprint 29 therefore remains blocked despite passing its locally executable deterministic
 retrieval scope. The machine-readable record is retained at

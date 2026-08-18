@@ -19,6 +19,9 @@ flowchart LR
     R --> C["Byte-bounded deduplicated context"]
     C --> E["Observed, Stale, Conflicting, or Unknown/Blocked"]
     E --> P["Content-bound source citations"]
+    S["Canonical parsed snapshot"] --> X["Raw/index parity evaluator"]
+    I["Verified disposable SQLite rows"] --> X
+    X --> A["Extractive cited answer and exact blind-spot diff"]
     M["Semantic components"] -. "absent" .-> L
     W["Filesystem, network, process, writes"] -. "no authority" .-> V
 ```
@@ -82,13 +85,21 @@ The synthesis envelope copies the exact evidence state, bounded context, admissi
 and conflict keys. Deterministic rendering rejects a draft that changes the state, uses missing or
 duplicate citations, contains control characters, exceeds the answer bound, supplies an uncited
 nonblocked answer, or supplies any proposed answer for `UnknownBlocked`. The latter renders only a
-fixed no-evidence response. This is an enforceable boundary for later synthesis, not a model or a
-claim that application wiring already exists.
+fixed no-evidence response.
+
+The raw/index parity evaluator now composes this boundary end to end for labeled fixtures. It
+projects the same bounded elements first from immutable parsed Markdown and then independently
+from integrity-checked SQLite rows, runs authority-specific copies of the same query, renders the
+top exact context entry as a cited extractive answer, and compares expected, missing, unexpected,
+raw-only, and index-only citation sets. It refuses stale indexes and malformed or duplicate
+expected citation identities. The index read emits a content-free access receipt proving no source
+write, external process, or network effect. This is deterministic extractive integration, not a
+model-generated synthesis or native-interface claim.
 
 ## Current Boundary
 
 The engine accepts complete adapter-owned source documents and returns a source-traceable result.
-It does not yet bridge raw canonical/Obsidian stores and rebuilt indexes into that contract, nor
-does the application yet invoke the completed synthesis/final-rendering contract. Those
-integrations, upstream Sprint 28 closure, and independent Sprint 29 review remain required before
-the sprint can pass. Optional semantic retrieval remains entirely deferred to Sprint 30.
+Raw canonical Obsidian snapshots and rebuilt disposable indexes now share one exact conformance
+path through deterministic answer rendering. Upstream Sprint 28 closure and independent Sprint 29
+review remain required before the sprint can pass. Native UI and model-generated synthesis are not
+claimed here. Optional semantic retrieval remains entirely deferred to Sprint 30.
