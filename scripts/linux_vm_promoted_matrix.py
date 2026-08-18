@@ -111,6 +111,26 @@ def scp_from_guest(vm: vm_support.VmHandle, source: str, destination: Path) -> N
     )
 
 
+def bounded_diagnostic(output: str) -> str:
+    sanitized = output.replace("/home/agentmage/source", "<GUEST_SOURCE>")
+    sanitized = sanitized.replace("/home/agentmage", "<GUEST_HOME>")
+    lines = [line[-240:] for line in sanitized.splitlines()[-12:]]
+    return " | ".join(lines)[:2400] or "no-output"
+
+
+def acquisition_script(vm: vm_support.VmHandle, script: str) -> None:
+    completed = vm_support.run(
+        [*vm_support.ssh_argv(vm), "/usr/bin/bash", "-s"],
+        timeout=7200,
+        input_value=script,
+    )
+    if completed.returncode != 0:
+        raise PromotedMatrixError(
+            "promoted dependency acquisition failed: "
+            + bounded_diagnostic(completed.stdout + "\n" + completed.stderr)
+        )
+
+
 def install_script(target: docker_vm.Target) -> str:
     if target.distribution == "fedora":
         packages = (
@@ -215,7 +235,7 @@ def run_target(
             )
             vm_support.scp_to_guest(connected, bundle, "/home/agentmage/source.bundle")
             vm_support.scp_to_guest(connected, native_archive, "/home/agentmage/native-runtime.tar.gz")
-            vm_support.ssh_script(
+            acquisition_script(
                 connected,
                 f"test \"$(sha256sum /home/agentmage/source.bundle | cut -d' ' -f1)\" = {bundle_sha256}\n"
                 f"test \"$(sha256sum /home/agentmage/native-runtime.tar.gz | cut -d' ' -f1)\" = {sha256_file(native_archive)}\n"
@@ -224,8 +244,6 @@ def run_target(
                 f"test \"$(git -C /home/agentmage/source rev-parse HEAD)\" = {revision}\n"
                 "test -z \"$(git -C /home/agentmage/source status --porcelain --untracked-files=all)\"\n"
                 + install_script(target),
-                timeout=7200,
-                stage="matrix-dependency-acquisition",
             )
             connected_cleanup = shutdown(connected)
         finally:

@@ -5,7 +5,7 @@ import unittest
 
 from scripts import linux_docker_kvm_evidence as docker_vm
 from scripts.linux_vm_promoted_guest import LANE_ORDER
-from scripts.linux_vm_promoted_matrix import install_script, validate_report
+from scripts.linux_vm_promoted_matrix import bounded_diagnostic, install_script, validate_report
 
 
 def valid_report() -> dict:
@@ -76,6 +76,13 @@ def valid_report() -> dict:
 
 
 class PromotedLinuxVmMatrixTests(unittest.TestCase):
+    def test_acquisition_diagnostic_is_bounded_and_path_redacted(self) -> None:
+        output = "\n".join(["/home/agentmage/source/private"] * 20)
+        diagnostic = bounded_diagnostic(output)
+        self.assertNotIn("/home/agentmage", diagnostic)
+        self.assertLessEqual(len(diagnostic), 2400)
+        self.assertEqual(diagnostic.count("<GUEST_SOURCE>"), 12)
+
     def test_bootstrap_gives_npm_its_pinned_node_path(self) -> None:
         for target in docker_vm.TARGETS:
             script = install_script(target)
