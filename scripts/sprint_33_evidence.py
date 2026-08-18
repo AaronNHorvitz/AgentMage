@@ -54,8 +54,8 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-32-BLOCKED", "owner": "32.1"},
-    {"code": "SPRINT-33-RT01-MATRIX-INCOMPLETE", "owner": "33.1.3.4"},
     {"code": "INDEPENDENT-SPRINT-33-REVIEW-ABSENT", "owner": "33.1.3.5"},
+    {"code": "SHELL-CONVERSATION-INTEGRATION-ABSENT", "owner": "33.AC5"},
 ]
 IMPLEMENTED: Final = {
     "separately_keyed_sqlcipher_archive": True,
@@ -67,6 +67,10 @@ IMPLEMENTED: Final = {
     "derived_citation_receipt_and_source_sets": True,
     "secret_hidden_unrelated_and_unapproved_exclusion": True,
     "private_atomic_local_publication": True,
+    "bounded_evidence_state_and_ancestry_search": True,
+    "every_turn_role_branch_corpus": True,
+    "disclosure_canary_corpus": True,
+    "process_stop_and_concurrent_access_matrix": True,
     "bundle_import_authority": False,
     "network_access": False,
     "external_delivery": False,
@@ -142,15 +146,19 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "archive_lifecycle_suite": local_pass,
             "evidence_disclosure_and_redaction_suite": local_pass,
             "complete_local_product_and_docs_gates": local_pass,
-            "complete_rt01_crash_and_simultaneous_access_matrix": False,
+            "complete_ut01_search_matrix": local_pass,
+            "complete_ut02_every_turn_role_branch_matrix": local_pass,
+            "complete_st01_disclosure_canary_matrix": local_pass,
+            "complete_rt01_crash_and_simultaneous_access_matrix": local_pass,
             "upstream_sprint_32_gate": False,
             "independent_review": False,
+            "shell_integration": False,
         },
         "blockers": BLOCKERS,
         "summary": {
             "local_archive_and_bundle_contract_passed": local_pass,
             "sprint_status": "BLOCKED",
-            "rt01_matrix_complete": False,
+            "rt01_matrix_complete": local_pass,
             "upstream_dependency_passed": False,
             "independent_review_passed": False,
             "network_access_enabled": False,
@@ -182,7 +190,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     if report.get("summary") != {
         "local_archive_and_bundle_contract_passed": True,
         "sprint_status": "BLOCKED",
-        "rt01_matrix_complete": False,
+        "rt01_matrix_complete": True,
         "upstream_dependency_passed": False,
         "independent_review_passed": False,
         "network_access_enabled": False,
@@ -190,12 +198,20 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     }:
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
-    for field in (
-        "complete_rt01_crash_and_simultaneous_access_matrix",
-        "upstream_sprint_32_gate", "independent_review",
-    ):
+    for field in ("upstream_sprint_32_gate", "independent_review", "shell_integration"):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
+    for field in (
+        "archive_lifecycle_suite",
+        "evidence_disclosure_and_redaction_suite",
+        "complete_local_product_and_docs_gates",
+        "complete_ut01_search_matrix",
+        "complete_ut02_every_turn_role_branch_matrix",
+        "complete_st01_disclosure_canary_matrix",
+        "complete_rt01_crash_and_simultaneous_access_matrix",
+    ):
+        if verification.get(field) is not True:
+            failures.append(f"verification missing: {field}")
     for field in ("bundle_import_authority", "network_access", "external_delivery"):
         if report.get("implemented_contracts", {}).get(field) is not False:
             failures.append(f"capability overclaim: {field}")

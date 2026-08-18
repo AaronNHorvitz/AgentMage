@@ -86,8 +86,14 @@ There is no bundle-import path and no network worker.
 
 The local implementation verifies SQLCipher archive corruption, wrong keys, stale inventories,
 fresh restore, retention holds, approval-bound deletion, occupied destinations, stale source
-history, and exact evidence publication. The broader interruption matrix requested by
-`S-027-RT01` still needs dedicated mid-operation crash and simultaneous-access evidence for every
-archive, branch, export, deletion, and restore phase. That remaining evidence is visible in the
-Sprint 33 report and keeps the sprint gate blocked rather than being inferred from ordinary unit
-tests.
+history, and exact evidence publication. `S-027-RT01` runs each archive, branch, export, deletion,
+and restore operation in a subprocess stopped immediately before or after the effect boundary.
+The parent then reopens encrypted canonical state and accepts only the complete old or complete new
+state. The same matrix refuses a simultaneous writer while the recovered store is held. This is
+local source-level evidence; installed shell integration and independent review remain separate
+Sprint 33 blockers.
+
+Conversation search also exposes closed evidence-reference filters for unreferenced, cited,
+receipted, checkpointed, and compacted turns. An exact ancestor filter walks only verified parent
+identities with cycle and traversal bounds. Search hits return stable matching turn identities so a
+caller can reopen the canonical messages instead of treating snippets as authority.

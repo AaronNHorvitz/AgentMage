@@ -2675,23 +2675,23 @@ absent; therefore Story 32.1, Sprint AC 32.AC5, and the sprint remain open.
   - [x] **Sub-task 33.1.1.2** (legacy `S-027-I07`): Implement redacted evidence bundles with claims, states, citations, methods, receipts, manifests, constraints, and user-selected excerpts.
   - [x] **Sub-task 33.1.1.3** (legacy `S-027-I08`): Show an exact disclosure preview and exclude secrets, unrelated private text, hidden prompts, and unapproved content.
 
-- [ ] **Task 33.1.2 - Produce reviewable artifacts**
+- [x] **Task 33.1.2 - Produce reviewable artifacts**
   - [x] **Sub-task 33.1.2.1:** Conversation search and branching APIs.
   - [x] **Sub-task 33.1.2.2:** Encrypted archive and evidence-bundle formats.
   - [x] **Sub-task 33.1.2.3:** Disclosure preview and redaction report.
-  - [ ] **Sub-task 33.1.2.4:** Resume, corruption, simultaneous-access, and deletion test results.
+  - [x] **Sub-task 33.1.2.4:** Resume, corruption, simultaneous-access, and deletion test results. Evidence: commit `7cf5a28b` adds the named search, every-turn-role branch, disclosure-canary, and subprocess stop/reopen matrices. The retained Sprint 33 report binds their complete kernel execution.
 
-- [ ] **Task 33.1.3 - Verify and close the story**
-  - [ ] **Sub-task 33.1.3.1:** `S-027-UT01` searches exact text, metadata, date, project, evidence state, and branch ancestry over empty/large/corrupt archives; assert deterministic bounded results and resolvable message identities.
-  - [ ] **Sub-task 33.1.3.2:** `S-027-UT02` branches at every event type and compares parent/child histories; assert immutable shared prefix, independent continuation, and no duplicated side effects or grants.
-  - [ ] **Sub-task 33.1.3.3:** `S-027-ST01` exports bundles containing secret, private, stale, denied, copyrighted, and unrelated canaries; assert disclosure preview, policy redaction, explicit omissions, and no hidden metadata leakage.
-  - [ ] **Sub-task 33.1.3.4:** `S-027-RT01` crashes during archive, branch, simultaneous access, export, deletion, and restore; assert encryption, canonical ordering, atomic state, retention consistency, and no orphaned content.
+- [x] **Task 33.1.3 - Verify and close the story**
+  - [x] **Sub-task 33.1.3.1:** `S-027-UT01` searches exact text, metadata, date, project, evidence state, and branch ancestry over empty/large/corrupt archives; assert deterministic bounded results and resolvable message identities. Evidence: the checked kernel corpus searches 1,024 records twice, enforces a 37-result bound, returns immutable matching-turn identities, resolves two-level ancestry, accepts the empty archive, and rejects a corrupted normalized row.
+  - [x] **Sub-task 33.1.3.2:** `S-027-UT02` branches at every event type and compares parent/child histories; assert immutable shared prefix, independent continuation, and no duplicated side effects or grants. Evidence: the checked kernel corpus previews and applies branches from system, user, assistant, and tool turns, then compares the unchanged source history and empty-evidence child continuations.
+  - [x] **Sub-task 33.1.3.3:** `S-027-ST01` exports bundles containing secret, private, stale, denied, copyrighted, and unrelated canaries; assert disclosure preview, policy redaction, explicit omissions, and no hidden metadata leakage. Evidence: the checked disclosure corpus covers exact inclusion, secret and copyright redaction, restricted/system denial, unrelated durable-data omission, stale history, hidden turn identities, hidden source hashes, and fixed no-execution/no-delivery markers.
+  - [x] **Sub-task 33.1.3.4:** `S-027-RT01` crashes during archive, branch, simultaneous access, export, deletion, and restore; assert encryption, canonical ordering, atomic state, retention consistency, and no orphaned content. Evidence: ten subprocess stop/reopen cases cover the before/after boundary for all five operations; every restart accepts only a complete old or new state, and the concurrent-writer probe is denied.
   - [x] **Sub-task 33.1.3.5 - Product security evidence:** Map `SR-DAT-001` through `SR-DAT-004`, `SR-DAT-007`, `SR-DAT-010` through `SR-DAT-012`, `SR-CIV-003` through `SR-CIV-005`, `SR-OPS-003`; retain archive integrity tests, branch graphs, disclosure previews, canary reports, and deletion/recovery evidence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 33.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every conversation event and branch has stable identity, provenance, retention, encryption, and deletion behavior; searches and exports never become operational authority.
-- [ ] **Story AC 33.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then evidence bundles are reproducible from selected content, disclose exactly what leaves the local boundary, and exclude all unapproved data after independent canary scanning.
+- [x] **Story AC 33.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every conversation event and branch has stable identity, provenance, retention, encryption, and deletion behavior; searches and exports never become operational authority.
+- [x] **Story AC 33.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then evidence bundles are reproducible from selected content, disclose exactly what leaves the local boundary, and exclude all unapproved data after independent canary scanning.
 
 #### Sprint Acceptance Criteria
 
@@ -2710,10 +2710,10 @@ their architecture, verification boundary, and retained evidence are recorded by
 records passing local implementation and product gates with network access, bundle
 import authority, external delivery, and release approval disabled. Sprint 33 remains
 **BLOCKED** because Sprint 32 is not yet a passing upstream dependency, the complete
-`S-027-RT01` crash/simultaneous-access matrix and every-event branch corpus remain
-unfinished, independent Sprint 33 review is absent, and no shell integration is yet
-proved. The story, incomplete artifact/verification items, both story criteria, Sprint
-AC 33.AC5, and the sprint therefore remain open.
+named `S-027-UT01`, `S-027-UT02`, `S-027-ST01`, and `S-027-RT01` corpora are complete
+in commit `7cf5a28b`, including ten real subprocess stop/reopen boundaries and a
+concurrent-writer denial. Independent Sprint 33 review is absent and no shell integration is yet
+proved. Sprint AC 33.AC5 and the sprint therefore remain open.
 ### [ ] Sprint 34 - Knowledge Tasks, Declarative Skills, and v0.2 Release
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

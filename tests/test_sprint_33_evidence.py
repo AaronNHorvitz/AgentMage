@@ -27,24 +27,25 @@ def report() -> dict[str, object]:
 
 
 class Sprint33EvidenceTests(unittest.TestCase):
-    def test_local_contract_passes_without_rt01_dependency_or_review_overclaim(self) -> None:
+    def test_local_contract_passes_with_rt01_but_without_dependency_or_review_overclaim(self) -> None:
         value = report()
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertTrue(value["implemented_contracts"]["redacted_portable_evidence_bundle"])
-        self.assertFalse(value["summary"]["rt01_matrix_complete"])
+        self.assertTrue(value["summary"]["rt01_matrix_complete"])
 
-    def test_rt01_dependency_review_network_import_delivery_and_release_overclaims_fail(self) -> None:
+    def test_missing_rt01_dependency_review_shell_and_capability_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
-            lambda value: value["summary"].update({"rt01_matrix_complete": True}),
+            lambda value: value["summary"].update({"rt01_matrix_complete": False}),
             lambda value: value["summary"].update({"upstream_dependency_passed": True}),
             lambda value: value["summary"].update({"independent_review_passed": True}),
             lambda value: value["summary"].update({"network_access_enabled": True}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update({
-                "complete_rt01_crash_and_simultaneous_access_matrix": True
+                "complete_rt01_crash_and_simultaneous_access_matrix": False
             }),
+            lambda value: value["verification_evidence"].update({"shell_integration": True}),
             lambda value: value["implemented_contracts"].update({"network_access": True}),
             lambda value: value["implemented_contracts"].update({"external_delivery": True}),
             lambda value: value["implemented_contracts"].update({"bundle_import_authority": True}),
