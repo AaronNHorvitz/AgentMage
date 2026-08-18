@@ -1,0 +1,192 @@
+{
+  "artifact_id": "story-16-1-local-product-security-evidence-map",
+  "external_network_used": false,
+  "independent_review_complete": false,
+  "limitations": [
+    "Native macOS worker evidence and independent human review remain blockers.",
+    "Manual fuzzing remains deferred; no release or supported-platform claim is made."
+  ],
+  "mappings": [
+    {
+      "contribution": "blocked-macos",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Native App Sandbox and XPC evidence.",
+      "requirement_id": "SR-PLT-003"
+    },
+    {
+      "contribution": "partial-linux-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Native bookmark and path parity.",
+      "requirement_id": "SR-PLT-004"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Independent and macOS review.",
+      "requirement_id": "SR-ACC-001"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Complete grant-field mutations.",
+      "requirement_id": "SR-ACC-002"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Supported-platform review.",
+      "requirement_id": "SR-ACC-003"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Full path corpus and macOS parity.",
+      "requirement_id": "SR-ACC-004"
+    },
+    {
+      "contribution": "demonstrated-linux-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Native macOS race campaign.",
+      "requirement_id": "SR-ACC-005"
+    },
+    {
+      "contribution": "demonstrated-linux-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Native macOS ambient campaign.",
+      "requirement_id": "SR-ACC-006"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Complete labeled injection corpus.",
+      "requirement_id": "SR-AI-005"
+    },
+    {
+      "contribution": "deferred-manual-fuzzing",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Final manual fuzz campaign.",
+      "requirement_id": "SR-TST-002"
+    },
+    {
+      "contribution": "demonstrated-linux-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "macOS and independent review.",
+      "requirement_id": "SR-TST-004"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Cross-platform resource campaign.",
+      "requirement_id": "SR-TST-006"
+    },
+    {
+      "contribution": "demonstrated-linux-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "macOS and independent review.",
+      "requirement_id": "RV-03"
+    },
+    {
+      "contribution": "demonstrated-linux-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-16/local-evidence-report.json",
+        "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+      ],
+      "remaining": "Native macOS path campaign.",
+      "requirement_id": "RV-04"
+    }
+  ],
+  "private_user_data_used": false,
+  "requirement_ids": [
+    "SR-PLT-003",
+    "SR-PLT-004",
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-AI-005",
+    "SR-TST-002",
+    "SR-TST-004",
+    "SR-TST-006",
+    "RV-03",
+    "RV-04"
+  ],
+  "schema_version": 1,
+  "source_revision": "bc1afa9f4fa1afc1c5e359756287f6a70e3d6ead",
+  "sources": [
+    {
+      "bytes": 4640,
+      "path": "docs/verification/task-16-1-3-5-product-security-evidence.md",
+      "sha256": "c8419a03777799cfd579e6a4b2e47814198f612da3f8979d46eaf45c07788088"
+    },
+    {
+      "bytes": 136944,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+    },
+    {
+      "bytes": 10586,
+      "path": "scripts/story_16_1_security_evidence.py",
+      "sha256": "61714234f4679abc9cec8f292e9b815433097cca076f52eb70fcc3a3364b86f5"
+    },
+    {
+      "bytes": 3591,
+      "path": "tests/test_story_16_1_security_evidence.py",
+      "sha256": "6e6459a43de3deafcd7e6f41d2fd2d80fd374d98312fea673c6eb8c9724af7f1"
+    },
+    {
+      "bytes": 9587,
+      "path": "artifacts/sprints/sprint-16/local-evidence-report.json",
+      "sha256": "148d36ed0aa62b135f298906a2f80e329342a76c87534968e945b411c385171d"
+    },
+    {
+      "bytes": 25314,
+      "path": "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json",
+      "sha256": "b5820f1107f783430f87552b7e6ca24bf3be7758e6105e4e132a594704be85f2"
+    }
+  ],
+  "status": "pass-local-mapping-with-external-blockers",
+  "task_ids": [
+    "16.1.3.5"
+  ]
+}
