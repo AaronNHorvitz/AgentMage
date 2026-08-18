@@ -339,6 +339,38 @@ impl MemoryCatalog {
         self.items.values().cloned().collect()
     }
 
+    pub(crate) fn from_portable_parts(
+        revision: u64,
+        items: Vec<MemoryItem>,
+        expected_catalog_sha256: &str,
+    ) -> Result<Self, MemoryError> {
+        let item_count = u64::try_from(items.len()).map_err(|_| MemoryError::ResourceLimit)?;
+        if !valid_sha256(expected_catalog_sha256)
+            || (items.is_empty() && revision != 0)
+            || (!items.is_empty() && revision == 0)
+            || revision < item_count
+            || items.len() > MAX_ITEMS
+        {
+            return Err(MemoryError::InvalidInput);
+        }
+        let mut by_identity = BTreeMap::new();
+        for item in items {
+            if by_identity.insert(item.memory_id.clone(), item).is_some() {
+                return Err(MemoryError::DuplicateIdentity);
+            }
+        }
+        validate_catalog(&by_identity)?;
+        let catalog_sha256 = catalog_digest(&by_identity)?;
+        if catalog_sha256 != expected_catalog_sha256 {
+            return Err(MemoryError::DecisionDrift);
+        }
+        Ok(Self {
+            revision,
+            items: by_identity,
+            catalog_sha256,
+        })
+    }
+
     /// Renders portable deterministic Markdown previews without applying them.
     pub fn preview_markdown(&self) -> Result<MemoryMarkdownBundle, MemoryError> {
         let mut topics = Vec::new();
@@ -509,7 +541,19 @@ fn validate_item(item: &MemoryItem) -> Result<(), MemoryError> {
             item.status,
             MemoryItemStatus::Approved | MemoryItemStatus::Hold
         ) && item.content.is_none()
-        || item.status == MemoryItemStatus::Deleted && item.content.is_some()
+        || matches!(
+            item.status,
+            MemoryItemStatus::Rejected | MemoryItemStatus::Deleted
+        ) && item.content.is_some()
+        || item.status == MemoryItemStatus::Candidate
+        || item.status == MemoryItemStatus::Superseded && item.superseded_by.is_none()
+        || matches!(
+            item.status,
+            MemoryItemStatus::Approved
+                | MemoryItemStatus::Rejected
+                | MemoryItemStatus::Expired
+                | MemoryItemStatus::Hold
+        ) && item.superseded_by.is_some()
     {
         return Err(MemoryError::InvalidInput);
     }
@@ -589,21 +633,56 @@ fn catalog_digest(items: &BTreeMap<MemoryId, MemoryItem>) -> Result<String, Memo
     let values = items
         .values()
         .map(|item| {
-            serde_json::to_vec(&(
-                item.memory_id.as_str(),
-                memory_type_id(item.memory_type),
-                status_id(item.status),
-                item.content.as_deref(),
-                item.fact_key.as_deref(),
-                item.confidence_bps,
-                &item.candidate_sha256,
-                &item.decision_sha256,
-                item.superseded_by.as_ref().map(MemoryId::as_str),
-            ))
+            serde_json::to_vec(&CatalogDigestItem {
+                memory_id: item.memory_id.as_str(),
+                memory_type: memory_type_id(item.memory_type),
+                status: status_id(item.status),
+                workspace_id: item.scope.workspace_id.as_str(),
+                project_id: item.scope.project_id.as_deref(),
+                conversation_id: item.scope.conversation_id.as_deref(),
+                content: item.content.as_deref(),
+                fact_key: item.fact_key.as_deref(),
+                tags: &item.tags,
+                links: item.links.iter().map(MemoryId::as_str).collect(),
+                evidence: &item.evidence,
+                sensitivity: item.sensitivity,
+                confidence_bps: item.confidence_bps,
+                created_at: &item.created_at,
+                decided_at: &item.decided_at,
+                last_verified_at: &item.last_verified_at,
+                expires_at: item.expires_at.as_deref(),
+                candidate_sha256: &item.candidate_sha256,
+                decision_sha256: &item.decision_sha256,
+                superseded_by: item.superseded_by.as_ref().map(MemoryId::as_str),
+            })
             .map_err(|_| MemoryError::ResourceLimit)
         })
         .collect::<Result<Vec<_>, _>>()?;
     Ok(sha256(&values.concat()))
+}
+
+#[derive(serde::Serialize)]
+struct CatalogDigestItem<'item> {
+    memory_id: &'item str,
+    memory_type: &'static str,
+    status: &'static str,
+    workspace_id: &'item str,
+    project_id: Option<&'item str>,
+    conversation_id: Option<&'item str>,
+    content: Option<&'item str>,
+    fact_key: Option<&'item str>,
+    tags: &'item [String],
+    links: Vec<&'item str>,
+    evidence: &'item [agentmage_kernel_contracts::EvidenceReference],
+    sensitivity: agentmage_kernel_contracts::DataSensitivity,
+    confidence_bps: u32,
+    created_at: &'item str,
+    decided_at: &'item str,
+    last_verified_at: &'item str,
+    expires_at: Option<&'item str>,
+    candidate_sha256: &'item str,
+    decision_sha256: &'item str,
+    superseded_by: Option<&'item str>,
 }
 
 fn digest_bundle(index: &MemoryMarkdownFile, topics: &[MemoryMarkdownFile]) -> String {

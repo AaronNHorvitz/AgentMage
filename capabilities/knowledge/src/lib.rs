@@ -17,6 +17,7 @@ mod markdown_write;
 mod meeting_skills;
 mod memory;
 mod memory_lifecycle;
+mod memory_portable;
 mod memory_working;
 mod obsidian;
 mod obsidian_index;
@@ -108,6 +109,10 @@ pub use memory::{
 pub use memory_lifecycle::{
     MemoryCatalog, MemoryCatalogSummary, MemoryLifecycleReceipt, MemoryMarkdownBundle,
     MemoryMarkdownFile, MemoryTransitionKind,
+};
+pub use memory_portable::{
+    EncryptedMemoryExport, MemoryExportEntropy, MemoryPortableError, MemoryPortableKey,
+    MemoryPortableReceipt, export_memory_catalog, import_memory_catalog,
 };
 pub use memory_working::{
     MemoryLoadHit, MemoryLoadQuery, MemoryLoadReason, MemoryLoadResult, WorkingCompactionPreview,
