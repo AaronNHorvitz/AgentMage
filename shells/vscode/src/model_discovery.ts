@@ -36,6 +36,15 @@ export interface ModelPickerEntry {
   readonly family: string;
   readonly manifest_sha256: string;
   readonly artifact_sha256: string;
+  readonly publisher: string;
+  readonly publisher_control: string;
+  readonly lineage: readonly string[];
+  readonly license_spdx: string;
+  readonly license_terms_sha256: string;
+  readonly source_revision: string;
+  readonly artifact_format: string;
+  readonly artifact_bytes: number;
+  readonly quantization: string;
   readonly codec_id: string;
   readonly codec_sha256: string;
   readonly tokenizer_sha256: string;
@@ -271,6 +280,12 @@ export function renderModelManagementReport(
       `- Selection: ${selection}; explicit user decision ${entry.requires_user_decision ? "required" : "not required"}`,
       `- Exact profile: \`${entry.profile_id}\``,
       `- Manifest: \`${entry.manifest_sha256}\``,
+      `- Publisher: ${escapeMarkdown(entry.publisher)} (${escapeMarkdown(entry.publisher_control)})`,
+      `- Lineage: ${entry.lineage.map((item) => escapeMarkdown(item)).join(" -> ")}`,
+      `- License: \`${entry.license_spdx}\` (terms ${entry.license_terms_sha256})`,
+      `- Artifact: ${escapeMarkdown(entry.artifact_format)}, ${entry.artifact_bytes.toLocaleString("en-US")} bytes, \`${entry.artifact_sha256}\``,
+      `- Source revision: \`${entry.source_revision}\``,
+      `- Quantization: ${escapeMarkdown(entry.quantization)}`,
       `- Runtime: \`${entry.runtime_adapter_id}\` contract ${entry.runtime_contract_version.toString()} (${label(entry.runtime_kind)}, ${entry.platform}/${entry.architecture}, ${entry.runtime_sha256})`,
       `- State: lifecycle ${label(entry.lifecycle)}; health ${label(entry.runtime_health)}; activation ${label(entry.activation)}; compatibility ${label(entry.compatibility)}; support ${label(entry.support)}`,
       `- Limits: ${entry.max_context_tokens.toLocaleString("en-US")} context tokens; ${entry.max_output_tokens.toLocaleString("en-US")} output tokens; ${entry.max_messages.toString()} messages`,
@@ -290,6 +305,15 @@ function parseEntry(candidate: unknown): ModelPickerEntry {
     "activation",
     "architecture",
     "artifact_sha256",
+    "publisher",
+    "publisher_control",
+    "lineage",
+    "license_spdx",
+    "license_terms_sha256",
+    "source_revision",
+    "artifact_format",
+    "artifact_bytes",
+    "quantization",
     "capabilities",
     "codec_id",
     "codec_sha256",
@@ -325,6 +349,7 @@ function parseEntry(candidate: unknown): ModelPickerEntry {
     "tool_calling",
   ]);
   const capabilities = array(value.capabilities).map(parseCapability);
+  const lineage = textArray(value.lineage);
   const limitations = codeArray(value.limitations);
   const modalities = enumArray(value.modalities, [
     "text",
@@ -338,6 +363,16 @@ function parseEntry(candidate: unknown): ModelPickerEntry {
     !text(value.family) ||
     !sha(value.manifest_sha256) ||
     !sha(value.artifact_sha256) ||
+    !text(value.publisher) ||
+    !text(value.publisher_control) ||
+    lineage.length === 0 ||
+    new Set(lineage).size !== lineage.length ||
+    !text(value.license_spdx) ||
+    !sha(value.license_terms_sha256) ||
+    !text(value.source_revision) ||
+    !text(value.artifact_format) ||
+    !positiveInteger(value.artifact_bytes) ||
+    !text(value.quantization) ||
     !identifier(value.codec_id) ||
     !sha(value.codec_sha256) ||
     !sha(value.tokenizer_sha256) ||
@@ -400,6 +435,7 @@ function parseEntry(candidate: unknown): ModelPickerEntry {
     ...value,
     capabilities,
     limitations,
+    lineage,
     modalities,
   } as unknown as ModelPickerEntry;
   const toolCalling = capabilities.some(
@@ -450,6 +486,9 @@ function tooltip(entry: ModelPickerEntry): string {
     `Exact profile: ${entry.profile_id}`,
     `Runtime: ${entry.runtime_adapter_id} contract ${entry.runtime_contract_version.toString()} (${entry.runtime_kind}, ${entry.runtime_sha256})`,
     `Manifest: ${entry.manifest_sha256}`,
+    `Publisher: ${entry.publisher} (${entry.publisher_control}); license: ${entry.license_spdx}`,
+    `Artifact: ${entry.artifact_format} ${entry.artifact_bytes.toString()} bytes; ${entry.artifact_sha256}`,
+    `Source: ${entry.source_revision}; quantization: ${entry.quantization}`,
     `Bound evidence: context ${entry.context_sha256}; decoding ${entry.decoding_sha256}; hardware ${entry.hardware_sha256}; policy ${entry.policy_sha256}`,
     `Roles: ${roles || "none"}`,
     `Limits: ${entry.max_context_tokens.toString()} context / ${entry.max_output_tokens.toString()} output tokens`,
@@ -496,6 +535,14 @@ function codeArray(value: unknown): readonly string[] {
   const values = array(value);
   if (!values.every(code)) {
     throw new Error("model.discovery.code-invalid");
+  }
+  return values;
+}
+
+function textArray(value: unknown): readonly string[] {
+  const values = array(value);
+  if (!values.every(text) || values.length > 32) {
+    throw new Error("model.discovery.text-array-invalid");
   }
   return values;
 }

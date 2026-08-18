@@ -39,6 +39,17 @@ void test("Muse, Gemma, and additional admitted families map without prerequisit
   assert.ok(
     models.every((model) => model.tooltip.includes("never substitutes")),
   );
+  const report = renderModelManagementReport(parsed);
+  for (const expected of [
+    "Fixture Publisher",
+    "fixture\\-source@revision -> fixture\\-artifact\\.gguf",
+    "Apache-2.0",
+    "GGUF, 1,048,576 bytes",
+    "fixture-source-revision",
+    "Q4\\_K\\_M",
+  ]) {
+    assert.ok(report.includes(expected), expected);
+  }
 });
 
 void test("every unavailable lifecycle remains visible only in management output", () => {
@@ -73,6 +84,15 @@ void test("identity mutation and digest tampering fail before picker display", (
     "family",
     "display_name",
     "artifact_sha256",
+    "publisher",
+    "publisher_control",
+    "lineage",
+    "license_spdx",
+    "license_terms_sha256",
+    "source_revision",
+    "artifact_format",
+    "artifact_bytes",
+    "quantization",
     "tokenizer_sha256",
     "template_sha256",
     "codec_sha256",
@@ -126,6 +146,15 @@ function entry(
     family,
     manifest_sha256: SHA,
     artifact_sha256: SHA,
+    publisher: "Fixture Publisher",
+    publisher_control: "fixture-policy",
+    lineage: ["fixture-source@revision", "fixture-artifact.gguf"],
+    license_spdx: "Apache-2.0",
+    license_terms_sha256: SHA,
+    source_revision: "fixture-source-revision",
+    artifact_format: "GGUF",
+    artifact_bytes: 1_048_576,
+    quantization: "Q4_K_M",
     codec_id: `${id}-codec`,
     codec_sha256: SHA,
     tokenizer_sha256: SHA,

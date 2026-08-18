@@ -83,6 +83,24 @@ pub struct ModelPickerEntry {
     pub manifest_sha256: String,
     /// Exact artifact digest.
     pub artifact_sha256: String,
+    /// Publisher of the exact artifact.
+    pub publisher: String,
+    /// Publisher-control jurisdiction or policy label.
+    pub publisher_control: String,
+    /// Ordered source-to-artifact lineage.
+    pub lineage: Vec<String>,
+    /// Exact SPDX license expression.
+    pub license_spdx: String,
+    /// Digest of the reviewed license and use terms.
+    pub license_terms_sha256: String,
+    /// Immutable source revision for the exact artifact.
+    pub source_revision: String,
+    /// Exact artifact container format.
+    pub artifact_format: String,
+    /// Exact artifact byte count.
+    pub artifact_bytes: u64,
+    /// Exact quantization label.
+    pub quantization: String,
     /// Exact codec identity.
     pub codec_id: String,
     /// Exact codec digest.

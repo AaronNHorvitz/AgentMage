@@ -284,6 +284,15 @@ fn project_candidate(
         family: profile.family,
         manifest_sha256: profile.manifest_sha256,
         artifact_sha256: profile.artifact.sha256,
+        publisher: profile.artifact.publisher,
+        publisher_control: profile.publisher_control,
+        lineage: profile.lineage,
+        license_spdx: profile.license_spdx,
+        license_terms_sha256: profile.license_terms_sha256,
+        source_revision: profile.artifact.source_revision,
+        artifact_format: profile.artifact.format,
+        artifact_bytes: profile.artifact.bytes,
+        quantization: profile.quantization,
         codec_id: profile.codec.codec_id.as_str().to_owned(),
         codec_sha256: profile.codec.codec_sha256,
         tokenizer_sha256: profile.codec.tokenizer_sha256,
@@ -336,6 +345,15 @@ fn entry_digest(entry: &ModelPickerEntry) -> Result<String, ModelDiscoveryError>
         family: &'a str,
         manifest_sha256: &'a str,
         artifact_sha256: &'a str,
+        publisher: &'a str,
+        publisher_control: &'a str,
+        lineage: &'a [String],
+        license_spdx: &'a str,
+        license_terms_sha256: &'a str,
+        source_revision: &'a str,
+        artifact_format: &'a str,
+        artifact_bytes: u64,
+        quantization: &'a str,
         codec_id: &'a str,
         codec_sha256: &'a str,
         tokenizer_sha256: &'a str,
@@ -373,6 +391,15 @@ fn entry_digest(entry: &ModelPickerEntry) -> Result<String, ModelDiscoveryError>
         family: &entry.family,
         manifest_sha256: &entry.manifest_sha256,
         artifact_sha256: &entry.artifact_sha256,
+        publisher: &entry.publisher,
+        publisher_control: &entry.publisher_control,
+        lineage: &entry.lineage,
+        license_spdx: &entry.license_spdx,
+        license_terms_sha256: &entry.license_terms_sha256,
+        source_revision: &entry.source_revision,
+        artifact_format: &entry.artifact_format,
+        artifact_bytes: entry.artifact_bytes,
+        quantization: &entry.quantization,
         codec_id: &entry.codec_id,
         codec_sha256: &entry.codec_sha256,
         tokenizer_sha256: &entry.tokenizer_sha256,
@@ -457,6 +484,7 @@ fn valid_sha256(value: &str) -> bool {
 fn valid_entry(entry: &ModelPickerEntry) -> bool {
     let mut modalities = BTreeSet::new();
     let mut roles = BTreeSet::new();
+    let mut lineage = BTreeSet::new();
     let limitations_sorted = entry.limitations.windows(2).all(|pair| pair[0] < pair[1]);
     let has_passed_role = entry
         .capabilities
@@ -484,6 +512,20 @@ fn valid_entry(entry: &ModelPickerEntry) -> bool {
         && valid_text(&entry.family)
         && valid_sha256(&entry.manifest_sha256)
         && valid_sha256(&entry.artifact_sha256)
+        && valid_text(&entry.publisher)
+        && valid_text(&entry.publisher_control)
+        && !entry.lineage.is_empty()
+        && entry.lineage.len() <= 32
+        && entry
+            .lineage
+            .iter()
+            .all(|item| valid_text(item) && lineage.insert(item.as_str()))
+        && valid_text(&entry.license_spdx)
+        && valid_sha256(&entry.license_terms_sha256)
+        && valid_text(&entry.source_revision)
+        && valid_text(&entry.artifact_format)
+        && entry.artifact_bytes > 0
+        && valid_text(&entry.quantization)
         && valid_identifier(&entry.codec_id)
         && valid_sha256(&entry.codec_sha256)
         && valid_sha256(&entry.tokenizer_sha256)
@@ -758,6 +800,15 @@ mod tests {
             Box::new(|value| value.profile.family = "changed-family".to_owned()),
             Box::new(|value| value.profile.display_name = "Changed profile".to_owned()),
             Box::new(|value| value.profile.artifact.sha256 = "b".repeat(64)),
+            Box::new(|value| value.profile.artifact.publisher = "Changed publisher".to_owned()),
+            Box::new(|value| value.profile.publisher_control = "changed-control".to_owned()),
+            Box::new(|value| value.profile.lineage.push("changed-lineage".to_owned())),
+            Box::new(|value| value.profile.license_spdx = "MIT".to_owned()),
+            Box::new(|value| value.profile.license_terms_sha256 = "b".repeat(64)),
+            Box::new(|value| value.profile.artifact.source_revision = "changed".to_owned()),
+            Box::new(|value| value.profile.artifact.format = "changed".to_owned()),
+            Box::new(|value| value.profile.artifact.bytes += 1),
+            Box::new(|value| value.profile.quantization = "changed".to_owned()),
             Box::new(|value| value.profile.codec.tokenizer_sha256 = "b".repeat(64)),
             Box::new(|value| value.profile.codec.template_sha256 = "b".repeat(64)),
             Box::new(|value| value.profile.codec.codec_sha256 = "b".repeat(64)),
