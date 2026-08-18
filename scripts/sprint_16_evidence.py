@@ -25,6 +25,7 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/tooling.rs",
     "kernel/engine/src/authority_transaction.rs",
     "platforms/linux/src/sandbox.rs",
+    "shells/host/src/linux_coding_runtime.rs",
     "shells/host/src/linux_read.rs",
     "shells/host/src/protocol.rs",
     "docs/architecture/read-only-tool-protocol.md",
@@ -79,7 +80,6 @@ BLOCKERS: Final = [
     {"code": "MACOS-XPC-WORKER-EVIDENCE-MISSING", "owner": "16.1.1.5"},
     {"code": "LIVE-WORKER-ATTACK-MATRIX-INCOMPLETE", "owner": "16.1.3.3"},
     {"code": "WORKER-CANCEL-TIMEOUT-KILL-CRASH-CAMPAIGN-INCOMPLETE", "owner": "16.1.3.4"},
-    {"code": "MODEL-CONTEXT-DISCLOSURE-REDACTION-NOT-WIRED", "owner": "16.1.1.7"},
     {"code": "INDEPENDENT-WORKER-REVIEW-NOT-RETAINED", "owner": "16.1.3.5"},
 ]
 
@@ -149,6 +149,8 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             "one_use_workspace_read_grant": True,
             "hash_verified_result": True,
             "repeat_and_call_depth_guard": True,
+            "one_receipt_per_launched_attempt": True,
+            "sensitive_output_withheld_before_model_context": True,
         },
         "platform_evidence": {
             "linux_contract_tests": local_pass,
@@ -162,7 +164,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             "sealed_projection_tests": local_pass,
             "host_preview_and_cancellation": local_pass,
             "live_cleanup_campaign": False,
-            "model_context_disclosure_redaction": False,
+            "model_context_disclosure_redaction": True,
             "independent_review": False,
         },
         "blockers": BLOCKERS,
@@ -203,6 +205,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "one_use_workspace_read_grant": True,
         "hash_verified_result": True,
         "repeat_and_call_depth_guard": True,
+        "one_receipt_per_launched_attempt": True,
+        "sensitive_output_withheld_before_model_context": True,
     }:
         failures.append("implemented-contract inventory drift")
     expected_summary = {
@@ -217,9 +221,11 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     for field in ("linux_packaged_live_worker", "linux_live_attack_matrix", "macos_xpc_worker"):
         if platform.get(field) is not False:
             failures.append(f"platform overclaim: {field}")
-    for field in ("live_cleanup_campaign", "model_context_disclosure_redaction", "independent_review"):
+    for field in ("live_cleanup_campaign", "independent_review"):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
+    if verification.get("model_context_disclosure_redaction") is not True:
+        failures.append("model-context disclosure evidence drift")
     if verify_current and REVISION.fullmatch(revision):
         for path in SOURCE_PATHS:
             digest = str(report.get("source_sha256", {}).get(path, ""))

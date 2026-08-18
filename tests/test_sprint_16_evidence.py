@@ -28,14 +28,14 @@ class Sprint16EvidenceTests(unittest.TestCase):
         self.assertEqual(value["implemented_contracts"]["catalog_tools"], 10)
         self.assertEqual(value["implemented_contracts"]["write_capable_tools"], 0)
 
-    def test_platform_cleanup_disclosure_and_review_overclaims_fail(self) -> None:
+    def test_platform_cleanup_disclosure_and_review_claim_drift_fails(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["platform_evidence"].update({"linux_packaged_live_worker": True}),
             lambda value: value["platform_evidence"].update({"macos_xpc_worker": True}),
             lambda value: value["verification_evidence"].update({"live_cleanup_campaign": True}),
             lambda value: value["verification_evidence"].update(
-                {"model_context_disclosure_redaction": True}
+                {"model_context_disclosure_redaction": False}
             ),
             lambda value: value["verification_evidence"].update({"independent_review": True}),
             lambda value: value["blockers"].pop(),

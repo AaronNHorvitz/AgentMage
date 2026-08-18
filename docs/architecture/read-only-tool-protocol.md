@@ -88,6 +88,20 @@ bounds, and digest before returning a typed response. Worker diagnostics are
 never returned as content; receipts retain only stable identities, outcomes,
 sequences, and digests.
 
+Every launched read-only attempt crosses the kernel authority transaction and
+retains its resulting durable receipt, including worker failure, absent or
+malformed output, sensitive-output refusal, and output-limit failure. Preview
+rejection and cancellation before launch correctly produce no operation
+receipt because no effect attempt occurred.
+
+Before a verified result can become model-visible runtime output, the host
+checks text and match payloads for credential fields, private keys, bearer
+credentials, provider tokens, cloud access keys, and credentials embedded in
+URIs. A match fails closed as `runtime.tool.output-sensitive`: the model,
+runtime event stream, artifact candidate, and error surface receive no result
+content. This is withholding at the model-context boundary, not an assertion
+that an approved human-facing read response has been rewritten in place.
+
 ## Platform Truth
 
 Linux uses two sealed memfd projections mounted at fixed paths
@@ -101,5 +115,5 @@ The platform-neutral tool engine, Linux mediation contract, host approval flow,
 golden results, malformed-input matrix, and non-live sandbox attacks are locally
 verified. Sprint 16 remains blocked until a packaged root-owned worker is tested
 live, cancellation/timeout/kill/crash cleanup evidence is retained, the complete
-attack matrix passes, disclosure handling before model context is integrated,
-and the required macOS XPC evidence is produced on eligible hardware.
+attack matrix passes, an independent worker review is retained, and the required
+macOS XPC evidence is produced on eligible hardware.

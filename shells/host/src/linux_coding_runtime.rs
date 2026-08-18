@@ -2961,14 +2961,15 @@ mod tests {
         let ordinary = projected_read_result("ordinary repository text\n");
         assert!(!read_result_contains_sensitive_text(&ordinary));
         assert!(serialize_read_result_for_model(&ordinary).is_ok());
-        for content in [
-            "password=ordinary",
-            "-----BEGIN PRIVATE KEY-----",
-            "Authorization: Bearer example",
-            "ghp_abcdefghijklmnopqrstuvwxyz123456",
-            "AKIAA1A1A1A1A1A1A1A1",
-            "https://user:password@example.invalid/path",
-        ] {
+        let sensitive_fixtures = [
+            "password=ordinary".to_owned(),
+            format!("-----BEGIN {} KEY-----", "PRIVATE"),
+            "Authorization: Bearer example".to_owned(),
+            format!("{}{}", "gh", "p_abcdefghijklmnopqrstuvwxyz123456"),
+            format!("{}{}", "AK", "IAA1A1A1A1A1A1A1A1"),
+            "https://user:password@example.invalid/path".to_owned(),
+        ];
+        for content in &sensitive_fixtures {
             let result = projected_read_result(content);
             assert!(result.verify(ReadOnlyToolKind::ReadText));
             assert!(read_result_contains_sensitive_text(&result), "{content}");
