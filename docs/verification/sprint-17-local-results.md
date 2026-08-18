@@ -43,4 +43,6 @@ contracts, local adversarial corpus, and native Linux campaign pass.
 The machine-readable source-bound record is
 [`local-evidence-report.json`](../../artifacts/sprints/sprint-17/local-evidence-report.json).
 The native matrix is retained in
-[`installed-linux-git-matrix.json`](../../artifacts/sprints/sprint-17/installed-linux-git-matrix.json).
+[`installed-linux-git-matrix.json`](../../artifacts/sprints/sprint-17/installed-linux-git-matrix.json),
+and the exact control mapping is retained in
+[`security-evidence-map.json`](../../artifacts/sprints/sprint-17/security-evidence-map.json).
