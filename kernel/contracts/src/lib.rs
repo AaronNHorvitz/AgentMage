@@ -208,9 +208,10 @@ pub use reasoning::{
     IndependentVerificationResult, ProblemFact, ProblemFrame, VerificationDisposition,
 };
 pub use runtime_artifact::{
-    RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactLifecycleState,
-    RuntimeArtifactManifest, RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeContinuationState,
-    RuntimeResourceUsage, RuntimeResumeBinding, RuntimeToolAttemptState,
+    RuntimeArtifactCleanupState, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
+    RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeArtifactOperatorView,
+    RuntimeArtifactPreview, RuntimeArtifactRef, RuntimeContinuationState, RuntimeResourceUsage,
+    RuntimeResumeBinding, RuntimeToolAttemptState,
 };
 pub use runtime_event::{
     RuntimeEvent, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,

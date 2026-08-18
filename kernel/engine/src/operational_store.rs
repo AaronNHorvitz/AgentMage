@@ -45,7 +45,8 @@ use crate::runtime_artifact::{
     RuntimeArtifactState, RuntimeArtifactStoreError, current_runtime_resume_binding,
     persist_runtime_resume_binding, publish_runtime_artifact, read_runtime_artifact,
     read_runtime_artifact_page, reconcile_runtime_artifacts, release_runtime_artifact,
-    runtime_artifact_state, verify_all as verify_runtime_artifacts, verify_runtime_resume_binding,
+    runtime_artifact_operator_view, runtime_artifact_state, verify_all as verify_runtime_artifacts,
+    verify_runtime_resume_binding,
 };
 use crate::runtime_journal::{
     RuntimeJournalAppend, RuntimeJournalError, RuntimeJournalLimits, RuntimeJournalWorker,
@@ -1480,6 +1481,18 @@ impl DurableAuthorityRuntime {
         self.ensure_usable()?;
         let store = self.lock_store()?;
         runtime_artifact_state(&store, reference).map_err(DurableAuthorityError::RuntimeArtifact)
+    }
+
+    /// Returns the complete content-free operator view for one exact artifact reference.
+    pub fn runtime_artifact_operator_view(
+        &self,
+        reference: &agentmage_kernel_contracts::RuntimeArtifactRef,
+    ) -> Result<agentmage_kernel_contracts::RuntimeArtifactOperatorView, DurableAuthorityError>
+    {
+        self.ensure_usable()?;
+        let store = self.lock_store()?;
+        runtime_artifact_operator_view(&store, reference)
+            .map_err(DurableAuthorityError::RuntimeArtifact)
     }
 
     /// Reads complete verified bytes only for their exact session, task, policy, and ceiling.

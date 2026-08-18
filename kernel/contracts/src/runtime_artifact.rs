@@ -56,6 +56,20 @@ pub enum RuntimeArtifactLifecycleState {
     Deleted,
 }
 
+/// Content-free cleanup disposition derived from canonical artifact state.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RuntimeArtifactCleanupState {
+    /// The artifact is still referenced and must remain retained.
+    Retained,
+    /// The artifact has no active logical reference and is eligible for collection.
+    Eligible,
+    /// Integrity loss requires operator review before cleanup can be trusted.
+    Blocked,
+    /// Canonical metadata records completed payload deletion.
+    Completed,
+}
+
 /// Bounded user-visible text derived from the beginning of an artifact.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -136,6 +150,57 @@ pub struct RuntimeArtifactManifest {
     pub preview: Option<RuntimeArtifactPreview>,
     /// Digest of this canonical manifest with this field set to all zeroes.
     pub manifest_sha256: String,
+}
+
+/// Privacy-safe current operator projection for one runtime artifact.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeArtifactOperatorView {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Exact path-free immutable reference.
+    pub reference: RuntimeArtifactRef,
+    /// Semantic payload family.
+    pub kind: RuntimeArtifactKind,
+    /// Sensitivity assigned before publication.
+    pub sensitivity: ContextSensitivity,
+    /// Exact canonical retention assignment.
+    pub retention: RuntimeEventRetention,
+    /// Owning local session; this identity is not read authority.
+    pub session_id: SessionId,
+    /// Owning task.
+    pub task_id: TaskId,
+    /// Runtime run that produced the payload.
+    pub producer_run_id: RuntimeRunId,
+    /// Producing turn, when applicable.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub producer_turn_id: Option<RuntimeTurnId>,
+    /// Producing operation, when applicable.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub producer_operation_id: Option<RuntimeOperationId>,
+    /// Terminal effect receipt, when applicable.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub receipt_id: Option<ReceiptId>,
+    /// Governing deterministic policy identity.
+    pub policy_id: PolicyId,
+    /// Trusted creation time in Unix epoch milliseconds.
+    pub created_at_epoch_ms: u64,
+    /// Current metadata lifecycle state.
+    pub lifecycle: RuntimeArtifactLifecycleState,
+    /// Current payload integrity state.
+    pub integrity: RuntimeArtifactIntegrityState,
+    /// Monotonic lifecycle revision.
+    pub lifecycle_revision: u64,
+    /// Stable content-free reason for the current state.
+    pub reason_code: String,
+    /// Last trusted lifecycle-transition time.
+    pub updated_at_epoch_ms: u64,
+    /// Number of durable checkpoints that currently name this exact reference.
+    pub checkpoint_reference_count: u32,
+    /// Number of active logical references sharing the same immutable payload.
+    pub shared_active_reference_count: u32,
+    /// Content-free cleanup disposition derived from lifecycle and integrity.
+    pub cleanup: RuntimeArtifactCleanupState,
 }
 
 /// Exact durable linkage between one safe checkpoint and runtime persistence.

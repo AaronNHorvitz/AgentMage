@@ -4,11 +4,12 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
 
 use agentmage_kernel_contracts::{
-    AgentStateKind, CONTRACT_SCHEMA_VERSION, ContextSensitivity, RuntimeArtifactId,
-    RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactLifecycleState,
-    RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeContinuationState,
-    RuntimeEventRetentionKind, RuntimePayloadReference, RuntimeResumeBinding, SessionCheckpoint,
-    SessionId, TaskId, from_json, to_canonical_json,
+    AgentStateKind, CONTRACT_SCHEMA_VERSION, ContextSensitivity, RuntimeArtifactCleanupState,
+    RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
+    RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeArtifactOperatorView,
+    RuntimeArtifactRef, RuntimeContinuationState, RuntimeEventRetentionKind,
+    RuntimePayloadReference, RuntimeResumeBinding, SessionCheckpoint, SessionId, TaskId, from_json,
+    to_canonical_json,
 };
 use rusqlite::{OptionalExtension, Transaction, TransactionBehavior, params};
 use sha2::{Digest, Sha256};
@@ -705,6 +706,66 @@ pub(crate) fn runtime_artifact_state(
     load_artifact_state(store, reference)
 }
 
+/// Returns the complete privacy-safe operator projection for one exact reference.
+pub(crate) fn runtime_artifact_operator_view(
+    store: &OperationalStore,
+    reference: &RuntimeArtifactRef,
+) -> Result<RuntimeArtifactOperatorView, RuntimeArtifactStoreError> {
+    let manifest = load_artifact_manifest(store, &reference.artifact_id)?;
+    verify_runtime_artifact_ref(reference, &manifest)?;
+    let state = load_artifact_state(store, reference)?;
+    let checkpoint_reference_count = store
+        .connection
+        .query_row(
+            "SELECT COUNT(*)
+             FROM runtime_resume_artifacts r
+             JOIN store_metadata m ON m.session_checkpoint_sha256 = r.checkpoint_sha256
+             WHERE m.singleton = 1 AND r.artifact_id = ?1 AND r.manifest_sha256 = ?2",
+            params![reference.artifact_id.as_str(), &reference.manifest_sha256],
+            |row| row.get::<_, i64>(0),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)
+        .and_then(|count| u32::try_from(count).map_err(|_| RuntimeArtifactStoreError::Integrity))?;
+    let shared_active_reference_count = store
+        .connection
+        .query_row(
+            "SELECT active_reference_count FROM runtime_payloads WHERE payload_sha256 = ?1",
+            [&reference.payload_sha256],
+            |row| row.get::<_, i64>(0),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)
+        .and_then(|count| u32::try_from(count).map_err(|_| RuntimeArtifactStoreError::Integrity))?;
+    let cleanup = match state.lifecycle {
+        RuntimeArtifactLifecycleState::Active => RuntimeArtifactCleanupState::Retained,
+        RuntimeArtifactLifecycleState::Released => RuntimeArtifactCleanupState::Eligible,
+        RuntimeArtifactLifecycleState::Quarantined => RuntimeArtifactCleanupState::Blocked,
+        RuntimeArtifactLifecycleState::Deleted => RuntimeArtifactCleanupState::Completed,
+    };
+    Ok(RuntimeArtifactOperatorView {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        reference: reference.clone(),
+        kind: manifest.kind,
+        sensitivity: manifest.sensitivity,
+        retention: manifest.retention,
+        session_id: manifest.session_id,
+        task_id: manifest.task_id,
+        producer_run_id: manifest.producer_run_id,
+        producer_turn_id: manifest.producer_turn_id,
+        producer_operation_id: manifest.producer_operation_id,
+        receipt_id: manifest.receipt_id,
+        policy_id: manifest.policy_id,
+        created_at_epoch_ms: manifest.created_at_epoch_ms,
+        lifecycle: state.lifecycle,
+        integrity: state.integrity,
+        lifecycle_revision: state.revision,
+        reason_code: state.reason_code,
+        updated_at_epoch_ms: state.updated_at_epoch_ms,
+        checkpoint_reference_count,
+        shared_active_reference_count,
+        cleanup,
+    })
+}
+
 /// Opens complete verified bytes only for the exact owning session, task, and policy revision.
 pub(crate) fn read_runtime_artifact<S: RuntimeArtifactPayloadStore>(
     store: &OperationalStore,
@@ -830,6 +891,20 @@ pub(crate) fn release_runtime_artifact(
         || &manifest.task_id != task_id
         || manifest.policy_sha256 != policy_sha256
     {
+        return Err(RuntimeArtifactStoreError::NotAuthorized);
+    }
+    let current_checkpoint_references: i64 = store
+        .connection
+        .query_row(
+            "SELECT COUNT(*)
+             FROM runtime_resume_artifacts r
+             JOIN store_metadata m ON m.session_checkpoint_sha256 = r.checkpoint_sha256
+             WHERE m.singleton = 1 AND r.artifact_id = ?1 AND r.manifest_sha256 = ?2",
+            params![reference.artifact_id.as_str(), &reference.manifest_sha256],
+            |row| row.get(0),
+        )
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    if current_checkpoint_references != 0 {
         return Err(RuntimeArtifactStoreError::NotAuthorized);
     }
     transition_artifact(
@@ -2489,13 +2564,13 @@ mod tests {
     use agentmage_kernel_contracts::{
         AgentStateKind, AgentStateTransition, CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity,
         ContextSensitivity, CorrelationId, EvidenceId, ModelProfileId, PlanId, PlanStepId,
-        PolicyId, RepositorySnapshotId, RuntimeArtifactId, RuntimeArtifactIntegrityState,
-        RuntimeArtifactKind, RuntimeArtifactLifecycleState, RuntimeArtifactManifest,
-        RuntimeArtifactPreview, RuntimeContinuationState, RuntimeEvent, RuntimeEventCursor,
-        RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
-        RuntimeEventRetentionKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId,
-        RuntimeTurnId, SessionCheckpoint, SessionCheckpointId, SessionId, StorageFilesystemClass,
-        StrictLocalStorageObservation, TaskId, WorkspaceId,
+        PolicyId, RepositorySnapshotId, RuntimeArtifactCleanupState, RuntimeArtifactId,
+        RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactLifecycleState,
+        RuntimeArtifactManifest, RuntimeArtifactPreview, RuntimeContinuationState, RuntimeEvent,
+        RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass,
+        RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeOperationId, RuntimeResumeBinding,
+        RuntimeRunId, RuntimeTurnId, SessionCheckpoint, SessionCheckpointId, SessionId,
+        StorageFilesystemClass, StrictLocalStorageObservation, TaskId, WorkspaceId,
     };
 
     use super::{
@@ -3399,6 +3474,136 @@ mod tests {
                 .lifecycle,
             RuntimeArtifactLifecycleState::Deleted
         );
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn operator_view_is_path_free_complete_and_tracks_cleanup_state() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+        let publication = runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                manifest_with_id("runtime-artifact-operator-1"),
+                &mut Cursor::new(b"0123456789"),
+            )
+            .expect("artifact publishes");
+
+        let active = runtime
+            .runtime_artifact_operator_view(&publication.reference)
+            .expect("operator view");
+        assert_eq!(active.reference, publication.reference);
+        assert_eq!(active.kind, RuntimeArtifactKind::TestLog);
+        assert_eq!(active.sensitivity, ContextSensitivity::Private);
+        assert_eq!(active.producer_run_id, RuntimeRunId::from_raw("run-1"));
+        assert_eq!(active.lifecycle, RuntimeArtifactLifecycleState::Active);
+        assert_eq!(active.integrity, RuntimeArtifactIntegrityState::Verified);
+        assert_eq!(active.lifecycle_revision, 1);
+        assert_eq!(active.checkpoint_reference_count, 0);
+        assert_eq!(active.shared_active_reference_count, 1);
+        assert_eq!(active.cleanup, RuntimeArtifactCleanupState::Retained);
+        let serialized = serde_json::to_vec(&active).expect("operator view serializes");
+        assert!(!serialized.windows(10).any(|window| window == b"0123456789"));
+        assert!(
+            !serialized
+                .windows(10)
+                .any(|window| window == b"authority.db")
+        );
+
+        runtime
+            .release_runtime_artifact(
+                &SessionId::from_raw("session-1"),
+                &TaskId::from_raw("task-1"),
+                &digest('b'),
+                &publication.reference,
+                2,
+            )
+            .expect("unbound artifact releases");
+        let eligible = runtime
+            .runtime_artifact_operator_view(&publication.reference)
+            .expect("released view");
+        assert_eq!(eligible.cleanup, RuntimeArtifactCleanupState::Eligible);
+        assert_eq!(eligible.shared_active_reference_count, 0);
+
+        runtime
+            .reconcile_runtime_artifacts(&mut payloads, 3)
+            .expect("eligible payload collects");
+        let completed = runtime
+            .runtime_artifact_operator_view(&publication.reference)
+            .expect("deleted view");
+        assert_eq!(completed.cleanup, RuntimeArtifactCleanupState::Completed);
+        assert_eq!(completed.lifecycle, RuntimeArtifactLifecycleState::Deleted);
+        assert_eq!(completed.integrity, RuntimeArtifactIntegrityState::Deleted);
+        assert!(payloads.objects.is_empty());
+
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn current_checkpoint_reference_prevents_release_and_collection() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+        let publication = runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                manifest_with_id("runtime-artifact-checkpoint-root-1"),
+                &mut Cursor::new(b"0123456789"),
+            )
+            .expect("artifact publishes");
+        let cursor = runtime
+            .runtime_event_cursor(&RuntimeRunId::from_raw("run-1"))
+            .expect("cursor loads")
+            .expect("cursor exists");
+        let checkpoint = checkpoint();
+        let binding = seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            run_id: RuntimeRunId::from_raw("run-1"),
+            event_cursor: cursor,
+            artifacts: vec![publication.reference.clone()],
+            binding_sha256: digest('0'),
+        })
+        .expect("binding");
+        runtime
+            .checkpoint_runtime_session(&checkpoint, &binding)
+            .expect("checkpoint binds artifact");
+
+        let retained = runtime
+            .runtime_artifact_operator_view(&publication.reference)
+            .expect("operator view");
+        assert_eq!(retained.checkpoint_reference_count, 1);
+        assert_eq!(retained.cleanup, RuntimeArtifactCleanupState::Retained);
+        assert_eq!(
+            runtime.release_runtime_artifact(
+                &SessionId::from_raw("session-1"),
+                &TaskId::from_raw("task-1"),
+                &digest('b'),
+                &publication.reference,
+                2,
+            ),
+            Err(DurableAuthorityError::RuntimeArtifact(
+                RuntimeArtifactStoreError::NotAuthorized
+            ))
+        );
+        let report = runtime
+            .reconcile_runtime_artifacts(&mut payloads, 3)
+            .expect("checkpoint-rooted payload verifies");
+        assert_eq!(report.verified_payloads, 1);
+        assert!(
+            payloads
+                .objects
+                .contains_key(&publication.reference.payload_sha256)
+        );
+
         drop(runtime);
         fs::remove_dir_all(directory).expect("cleanup");
     }

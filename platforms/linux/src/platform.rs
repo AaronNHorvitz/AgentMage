@@ -333,6 +333,16 @@ impl LinuxAuthorityRuntime {
         self.runtime.runtime_artifact_state(reference)
     }
 
+    /// Returns the path-free operator projection without opening payload bytes.
+    pub fn runtime_artifact_operator_view(
+        &self,
+        reference: &RuntimeArtifactRef,
+    ) -> Result<agentmage_kernel_contracts::RuntimeArtifactOperatorView, DurableAuthorityError>
+    {
+        self.ensure_artifact_root()?;
+        self.runtime.runtime_artifact_operator_view(reference)
+    }
+
     /// Releases one owned artifact reference while retaining shared payloads until collection.
     pub fn release_runtime_artifact(
         &mut self,
