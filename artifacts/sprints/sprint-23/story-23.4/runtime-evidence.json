@@ -1,0 +1,297 @@
+{
+  "artifact_id": "story-23.4-source-runtime-campaign",
+  "commands": [
+    {
+      "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
+      "command_id": "engine-session-matrix",
+      "elapsed_ms": 72,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 1048576,
+      "peak_rss_kib": 38820,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 598,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 16
+      }
+    },
+    {
+      "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
+      "command_id": "native-read-matrix",
+      "elapsed_ms": 72,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 1048576,
+      "peak_rss_kib": 45884,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 119,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 6
+      }
+    },
+    {
+      "argv_sha256": "dfe8124eee6fbf3abfde662ff05627ee295973fb06018fc558fa4c1ff65ae353",
+      "command_id": "native-chat-transport",
+      "elapsed_ms": 320,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 1048576,
+      "peak_rss_kib": 46104,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 122,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 3
+      }
+    },
+    {
+      "argv_sha256": "6bd11bbd4996b6e78ff6e621938b77f2c0a339f3b44af3f4d2c09976540d6891",
+      "command_id": "three-client-parity",
+      "elapsed_ms": 340,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 1048576,
+      "peak_rss_kib": 45328,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 124,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 1
+      }
+    },
+    {
+      "argv_sha256": "dcbd95278f6e59895a67a6092b1c2ffc167a47b68d41b501a1dcc0acf578656f",
+      "command_id": "client-confusion-bypass",
+      "elapsed_ms": 70,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 1048576,
+      "peak_rss_kib": 45796,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 124,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 1
+      }
+    },
+    {
+      "argv_sha256": "52f0dcaa22117142bfade3bdb039d530e2264557b36bbc50db671925b010c307",
+      "command_id": "workflow-authority-bypass",
+      "elapsed_ms": 319,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 1048576,
+      "peak_rss_kib": 46168,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 124,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 1
+      }
+    },
+    {
+      "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
+      "command_id": "dependency-direction",
+      "elapsed_ms": 22,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 1048576,
+      "peak_rss_kib": 12316,
+      "test_result": null
+    },
+    {
+      "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
+      "command_id": "effect-mediation",
+      "elapsed_ms": 116,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "maximum_rss_kib": 1048576,
+      "peak_rss_kib": 13868,
+      "test_result": null
+    }
+  ],
+  "coverage": {
+    "approval_wait_and_exact_allow": true,
+    "bounded_cancellation": true,
+    "budget_exhaustion": true,
+    "client_confusion_denied": true,
+    "dependency_failure_safe_stop": true,
+    "direct_answer": true,
+    "effect_mediation_structure": true,
+    "malformed_proposal": true,
+    "maximum_ephemeral_workload": true,
+    "model_claim_cannot_mint_success": true,
+    "multiple_native_reads": true,
+    "native_chat_replay_and_cancellation": true,
+    "no_progress": true,
+    "one_native_read": true,
+    "read_only_git": true,
+    "repeated_call": true,
+    "search": true,
+    "terminal_tool_failure_no_retry": true,
+    "three_client_parity": true,
+    "verified_completion": true,
+    "workflow_authority_broadening_denied": true
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The campaign uses deterministic fake-model fixtures and does not claim an installed admitted model or production native Chat runtime factory.",
+    "The performance values describe current-host Linux source fixtures and are not supported-platform, release, or end-user latency guarantees.",
+    "The optional durable journal, artifact, and checkpoint costs remain measured by their owning Story 21.2, Story 22, and Story 50.2 campaigns.",
+    "Persistent crash and restart reconstruction, physical dependency faults, and installed-client disconnects are not claimed by this ephemeral campaign.",
+    "Manual fuzzing remains deferred and was not executed by this campaign.",
+    "The retained trace replaces the absolute checkout root with the literal <repository-root>; test results and metrics are unchanged."
+  ],
+  "manual_fuzzing_executed": false,
+  "performance": {
+    "cancellation": {
+      "elapsed_us": 609,
+      "event_count": 4,
+      "model_calls": 0,
+      "output_bytes": 0,
+      "state": "cancelled",
+      "tool_calls": 0,
+      "turns": 0
+    },
+    "direct": {
+      "elapsed_us": 1950,
+      "event_count": 6,
+      "model_calls": 1,
+      "output_bytes": 23,
+      "state": "success",
+      "tool_calls": 0,
+      "turns": 1
+    },
+    "maximum": {
+      "elapsed_us": 4787,
+      "event_count": 33,
+      "model_calls": 4,
+      "output_bytes": 23,
+      "state": "success",
+      "tool_calls": 3,
+      "turns": 4
+    },
+    "maximum_scenario_us": 250000,
+    "nominal": {
+      "elapsed_us": 4135,
+      "event_count": 15,
+      "model_calls": 2,
+      "output_bytes": 23,
+      "state": "success",
+      "tool_calls": 1,
+      "turns": 2
+    },
+    "over_limit": {
+      "elapsed_us": 4751,
+      "event_count": 33,
+      "model_calls": 4,
+      "output_bytes": 0,
+      "state": "exhausted",
+      "tool_calls": 3,
+      "turns": 4
+    },
+    "schema_version": 1
+  },
+  "private_user_data_used": false,
+  "raw_trace": {
+    "bytes": 5795,
+    "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "dccba76a372d127d41d36b5b301895543f032a0c90927884f0e00c7268df3d19"
+  },
+  "schema_version": 1,
+  "source_revision": "90069c6c835c6647ba32b222b389fef76fcb03e0",
+  "sources": [
+    {
+      "bytes": 9733,
+      "path": "kernel/contracts/src/runtime_run.rs",
+      "sha256": "b1a13946d1d6f7968cfc7a3b03e2f2dd09457163ccc6cdc43da3083dc56b6935"
+    },
+    {
+      "bytes": 33354,
+      "path": "kernel/engine/src/runtime_coordinator.rs",
+      "sha256": "fb4a0cc5247911df5c86c6b555777ee5823623f442b408f2e48c7d5424803282"
+    },
+    {
+      "bytes": 137104,
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "3a3067d8d1f72fe7ff2ec0f783feec3f9d9f81401e4a863dbc11f8c99c1ec4c0"
+    },
+    {
+      "bytes": 104546,
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "dc56efc3fb9f5b5d318395388464937e51634ce20b2792461668d01a89b02279"
+    },
+    {
+      "bytes": 7481,
+      "path": "shells/host/src/coding_client.rs",
+      "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
+    },
+    {
+      "bytes": 43101,
+      "path": "shells/host/src/cli_runtime.rs",
+      "sha256": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e"
+    },
+    {
+      "bytes": 38334,
+      "path": "shells/host/src/native_chat_runtime.rs",
+      "sha256": "e59a54ea04d1482bff2392cbf8e310332ea42de4a2029889a55792d8ddcc5b43"
+    },
+    {
+      "bytes": 22184,
+      "path": "shells/host/src/runtime_parity_tests.rs",
+      "sha256": "c7e26f72647a853c5dc09c3d316903409b60e1f1e223fb41623e0715f2890592"
+    },
+    {
+      "bytes": 29664,
+      "path": "shells/host/src/runtime_read_tests.rs",
+      "sha256": "d970a7147532e3d8e62b5d3b7ec41e5bb3b2e5103294d5cce7130eb8b6986202"
+    },
+    {
+      "bytes": 10024,
+      "path": "shells/host/src/runtime_tools.rs",
+      "sha256": "1c6b88402b80b3fc8162146c79efcab6c47535c6cd575b9b5e4f438ea20fc4e0"
+    },
+    {
+      "bytes": 10704,
+      "path": "scripts/dependency_rules.py",
+      "sha256": "27dee0562b2ae46a07f92be265c4c464b54a0ef799f236244738413c9afc812d"
+    },
+    {
+      "bytes": 9446,
+      "path": "scripts/effect_boundary.py",
+      "sha256": "d000f01a67aa42af5ecdf7d74926c99d9b01c9a0ea92ce5f59f901e5f32956bd"
+    },
+    {
+      "bytes": 19413,
+      "path": "scripts/story_23_4_runtime_evidence.py",
+      "sha256": "b0ff690ff53b4aee5051996bb703d19b45af3a6c9bc52f97cfd1212e2a8e4f16"
+    },
+    {
+      "bytes": 4041,
+      "path": "tests/test_story_23_4_runtime_evidence.py",
+      "sha256": "518a7f02a7d23c4e9741cefb02c2439206550610ea829e6848bd1c713cd67c48"
+    }
+  ],
+  "status": "pass-current-linux-source-runtime",
+  "task_ids": [
+    "23.4.3.1",
+    "23.4.3.2",
+    "23.4.3.3",
+    "23.4.3.4",
+    "23.4.3.5",
+    "RV-05",
+    "RV-17",
+    "RV-18"
+  ]
+}
