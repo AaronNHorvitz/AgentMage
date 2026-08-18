@@ -30,7 +30,9 @@ SOURCE_PATHS: Final = (
     "platforms/linux-inference/src/model_download.rs",
     "platforms/linux-inference/src/model_install_lifecycle.rs",
     "platforms/linux-inference/src/model_install_verifier.rs",
+    "platforms/linux-inference/src/model_installer_main.rs",
     "platforms/linux-inference/src/model_installer_process.rs",
+    "platforms/linux-inference/src/lib.rs",
     "platforms/linux-inference/tests/process_boundary.rs",
     "shells/vscode/src/model_discovery.ts",
     "shells/vscode/test/model_discovery.test.ts",
@@ -112,12 +114,12 @@ SECURITY_MAP: Final = {
 }
 BLOCKERS: Final = (
     {
-        "code": "INSTALLER-PROCESS-PROTOCOL-INACTIVE",
+        "code": "INSTALLER-EFFECT-PROTOCOL-INACTIVE",
         "owner": "14.1",
         "reason": (
-            "The packaged one-shot process accepts only --self-check; local import, "
-            "bounded download, activation, rollback, and cleanup are not yet wired to "
-            "a closed end-user process protocol."
+            "The packaged one-shot process supports self-check and a strict, non-acquiring "
+            "preflight over standard input; local import, bounded download, activation, "
+            "rollback, and cleanup are not yet wired to a closed end-user process protocol."
         ),
     },
     {
@@ -272,7 +274,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
         "stories": [
             {
                 "story_id": "14.1",
-                "status": "PASS-LOCAL-LIBRARY-BLOCKED-PROCESS-AND-PLATFORMS"
+                "status": "PASS-LOCAL-PREFLIGHT-BLOCKED-EFFECTS-AND-PLATFORMS"
                 if local_contract_pass
                 else "BLOCKED",
                 "preflight_contract_implemented": local_contract_pass,
@@ -281,7 +283,8 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
                 "atomic_lifecycle_contract_implemented": local_contract_pass,
                 "installer_packaged": local_contract_pass,
                 "acquisition_review_facts_displayed": local_contract_pass,
-                "end_user_process_protocol_active": False,
+                "preflight_process_protocol_active": local_contract_pass,
+                "end_user_effect_process_protocol_active": False,
                 "review_ui_implemented": False,
                 "production_package_signed": False,
                 "live_acquisition_capture": False,
@@ -326,8 +329,12 @@ def validate_report(report: dict[str, Any], *, verify_current: bool = True) -> l
     if report.get("blockers") != list(BLOCKERS):
         failures.append("Sprint 14 blocker ledger changed")
     stories = report.get("stories", [])
-    if len(stories) != 2 or stories[0].get("end_user_process_protocol_active") is not False:
-        failures.append("Sprint 14 installer process state was overstated")
+    if (
+        len(stories) != 2
+        or stories[0].get("preflight_process_protocol_active") is not True
+        or stories[0].get("end_user_effect_process_protocol_active") is not False
+    ):
+        failures.append("Sprint 14 installer process state changed or was overstated")
     if len(stories) != 2 or stories[1].get("exact_artifact_profiles_admitted") is not False:
         failures.append("Sprint 14 exact artifact state was overstated")
     summary = report.get("summary", {})
