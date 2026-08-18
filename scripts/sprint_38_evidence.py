@@ -85,7 +85,6 @@ CORPUS_CLASSES: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-37-BLOCKED", "owner": "38.1"},
-    {"code": "SPRINT-38-NATIVE-KNOWLEDGE-TRANSACTION-ABSENT", "owner": "38.1.3.4"},
     {"code": "SPRINT-38-CRASH-RACE-MATRIX-INCOMPLETE", "owner": "38.1.3.4"},
     {"code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT", "owner": "38.1.3.5"},
     {"code": "SPRINT-38-NON-FEDORA-EVIDENCE-ABSENT", "owner": "38.1.3.5"},
@@ -107,7 +106,7 @@ IMPLEMENTED: Final = {
     "namespace_compare_and_swap": True,
     "canonical_first_index_publication": True,
     "plain_folder_obsidian_domain_parity": True,
-    "native_end_to_end_knowledge_transaction": False,
+    "native_end_to_end_knowledge_transaction": True,
     "complete_native_crash_and_race_matrix": False,
     "trusted_package_launcher_test_environment": False,
     "non_fedora_native_evidence": False,
@@ -204,7 +203,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "focused_contracts": local_pass,
             "focused_blocking_skip_count": 0 if local_pass else None,
             "upstream_sprint_37_gate": False,
-            "native_end_to_end_knowledge_transaction": False,
+            "native_end_to_end_knowledge_transaction": local_pass,
             "complete_native_crash_and_race_matrix": False,
             "trusted_package_launcher_test_environment": False,
             "non_fedora_native_evidence": False,
@@ -216,7 +215,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "local_markdown_knowledge_contract_passed": local_pass,
             "sprint_status": "BLOCKED",
             "upstream_dependency_passed": False,
-            "native_end_to_end_passed": False,
+            "native_end_to_end_passed": local_pass,
             "crash_and_race_matrix_passed": False,
             "trusted_launcher_environment_passed": False,
             "cross_platform_evidence_passed": False,
@@ -262,7 +261,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "local_markdown_knowledge_contract_passed": True,
         "sprint_status": "BLOCKED",
         "upstream_dependency_passed": False,
-        "native_end_to_end_passed": False,
+        "native_end_to_end_passed": True,
         "crash_and_race_matrix_passed": False,
         "trusted_launcher_environment_passed": False,
         "cross_platform_evidence_passed": False,
@@ -278,9 +277,10 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("focused contract failure")
     if verification.get("focused_blocking_skip_count") != 0:
         failures.append("focused blocking skip summary invalid")
+    if verification.get("native_end_to_end_knowledge_transaction") is not True:
+        failures.append("native end-to-end evidence missing")
     for field in (
         "upstream_sprint_37_gate",
-        "native_end_to_end_knowledge_transaction",
         "complete_native_crash_and_race_matrix",
         "trusted_package_launcher_test_environment",
         "non_fedora_native_evidence",
@@ -289,8 +289,11 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     ):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
+    if report.get("implemented_contracts", {}).get(
+        "native_end_to_end_knowledge_transaction"
+    ) is not True:
+        failures.append("native end-to-end implementation missing")
     for field in (
-        "native_end_to_end_knowledge_transaction",
         "complete_native_crash_and_race_matrix",
         "trusted_package_launcher_test_environment",
         "non_fedora_native_evidence",

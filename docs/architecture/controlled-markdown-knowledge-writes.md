@@ -107,6 +107,10 @@ malformed and ambiguous input, protected raw notes, hidden metadata refusal, nam
 link validation, all seven creation workflows, high-risk structural previews, canonical-first
 index publication, stale context, unrelated work, and exact kernel patch application.
 
-Complete native crash and external-edit race injection, an end-to-end native knowledge-write
-worker, non-Fedora execution, independent review, and deferred manual fuzzing are not yet proven.
-Sprint 38 remains blocked until those dependencies and evidence are complete.
+A Fedora integration fixture now carries a verified Markdown update through host composition,
+kernel plan and approval, single-use grant consumption, the native exact-patch driver, postimage
+verification, and one canonical-first index publication. A stale external edit is preserved before
+grant consumption, leaves the prior projection visibly stale, and requires rebuild. Complete native
+source/index crash and external-edit scheduling, execution inside the final isolated worker,
+non-Fedora execution, independent review, and deferred manual fuzzing are not yet proven. Sprint 38
+remains blocked until those dependencies and evidence are complete.

@@ -8,7 +8,7 @@
 | Host-to-kernel draft composition | Pass locally |
 | Canonical-first index publication | Pass locally |
 | Plain-folder and Obsidian domain parity | Pass locally |
-| Native end-to-end knowledge write | Absent |
+| Fedora native canonical write and index publication | Pass locally |
 | Complete crash and external-edit race matrix | Incomplete |
 | Full host binary under trusted package launcher | Environment blocked |
 | Ubuntu, macOS, and Windows native evidence | Absent |
@@ -35,6 +35,10 @@
 - A derived Obsidian index publishes only after an exact canonical commit. Known no-change failure
   preserves the prior projection; mismatch or uncertainty makes it visibly stale for rebuild.
 - Plain-folder and Obsidian canonical stores delegate to the same authority-free preview contract.
+- A Fedora integration fixture composes a verified Markdown update into one exact kernel patch,
+  consumes its approved grant through the native driver, verifies the postimage and mode, and then
+  publishes exactly that canonical snapshot to the disposable index. A newer external edit denies
+  the stale plan, remains byte-exact, leaves the prior projection stale, and requires rebuild.
 
 ## Requirement Mapping
 
@@ -42,7 +46,7 @@
 |---|---|---|
 | `SR-ACC-004` | Previews bind exact paths, identities, hashes, bytes, warnings, and namespace state | Complete cross-feature grant audit |
 | `SR-ACC-005` | Host composition rejects stale held bytes, paths, ownership, namespace, and index revision | Native race campaign at every boundary |
-| `SR-ACC-006` | Uncertain canonical outcomes require rebuild and cannot be reported as committed | Native crash and durability matrix |
+| `SR-ACC-006` | Verified Fedora commits publish once; stale external edits require rebuild and cannot be reported as committed | Complete native crash and durability matrix |
 | `SR-ACC-007` | Structural changes are separate high-risk single-file previews | End-to-end approval UI and independent review |
 | `SR-ACC-008` | Bulk reorganization and unapproved delete are not representable | Complete product capability inventory audit |
 | `SR-DAT-001` | Canonical Markdown stays user-owned and indexes remain disposable | Complete lifecycle and backup integration |
@@ -58,8 +62,9 @@ Every mapping is a Sprint 38 contribution, not a product-completion claim.
 ## Open Evidence
 
 Sprint 37 remains blocked, so Sprint 38's declared upstream dependency is not satisfied. The local
-suite proves authority-free writer behavior and host composition, but it does not execute a complete
-knowledge mutation through the final isolated native worker. The full host binary's packaged-parent
+suite proves authority-free writer behavior, host composition, and one complete Fedora native
+canonical-write/index path, but it does not execute that path through the final isolated worker.
+The full host binary's packaged-parent
 tests cannot pass from the current development shell because the trusted launcher relationship is
 intentionally absent; that control is not weakened for test convenience.
 

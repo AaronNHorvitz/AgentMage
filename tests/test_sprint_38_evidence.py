@@ -78,13 +78,12 @@ class Sprint38EvidenceTests(unittest.TestCase):
         self.assertTrue(value["summary"]["local_markdown_knowledge_contract_passed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertTrue(value["implemented_contracts"]["namespace_compare_and_swap"])
-        self.assertFalse(value["summary"]["native_end_to_end_passed"])
+        self.assertTrue(value["summary"]["native_end_to_end_passed"])
 
     def test_dependency_native_race_launcher_platform_review_fuzz_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"upstream_dependency_passed": True}),
-            lambda value: value["summary"].update({"native_end_to_end_passed": True}),
             lambda value: value["summary"].update({"crash_and_race_matrix_passed": True}),
             lambda value: value["summary"].update({"trusted_launcher_environment_passed": True}),
             lambda value: value["summary"].update({"cross_platform_evidence_passed": True}),
@@ -94,9 +93,6 @@ class Sprint38EvidenceTests(unittest.TestCase):
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update({
                 "complete_native_crash_and_race_matrix": True
-            }),
-            lambda value: value["implemented_contracts"].update({
-                "native_end_to_end_knowledge_transaction": True
             }),
             lambda value: value["blockers"].pop(),
         )
@@ -110,6 +106,10 @@ class Sprint38EvidenceTests(unittest.TestCase):
             lambda value: value["commands"][0].update({"exit_code": 1}),
             lambda value: value["commands"][0].update({"blocking_skip_count": 1}),
             lambda value: value["commands"].pop(),
+            lambda value: value["summary"].update({"native_end_to_end_passed": False}),
+            lambda value: value["implemented_contracts"].update({
+                "native_end_to_end_knowledge_transaction": False
+            }),
             lambda value: value["security_requirement_ids"].pop(),
             lambda value: value["environment"].pop("rustc"),
             lambda value: value["source_sha256"].pop(next(iter(value["source_sha256"]))),

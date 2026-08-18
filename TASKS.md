@@ -3047,8 +3047,8 @@ the host adapter alone composes verified previews into Sprint 37 filesystem draf
   - [x] **Sub-task 38.1.3.1:** `S-031-UT01` updates frontmatter, heading, block, list, task, table, link, and bounded text regions across formatting variants; assert exact requested semantic change and byte preservation elsewhere.
   - [x] **Sub-task 38.1.3.2:** `S-031-UT02` processes malformed Markdown, duplicate headings/keys, aliases, comments, raw notes, line endings, encodings, case/Unicode collisions, and unsupported constructs; assert safe refusal or explicit fidelity warning.
   - [x] **Sub-task 38.1.3.3:** `S-031-ST01` attempts bulk reorganization, hidden metadata insertion, source erasure, link expansion outside scope, prompt-driven memory promotion, and automatic Obsidian action; assert denial or exact additional approval.
-  - [ ] **Sub-task 38.1.3.4:** `S-031-RT01` crashes during source write/index update and races external note edits; assert source remains canonical, conflicts are preserved, and indexes rebuild to current bytes. Partial local evidence: canonical commit, exact no-change, uncertainty, interrupted index rebuild, stale watcher input, and host stale-source refusal pass; exhaustive native source-write crash and external-edit schedules remain open.
-  - [ ] **Sub-task 38.1.3.5 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-DAT-001` through `SR-DAT-003`, `SR-CIV-003`/`SR-CIV-004`, `SR-TST-004`/`SR-TST-005`; retain parser/writer round trips, scoped diffs, collision results, index hashes, and recovery evidence. Partial local evidence: all 12 identifiers map to passing retained local contracts; native end-to-end, complete crash/race, non-Fedora, trusted-launcher, independent-review, and manual-fuzzing evidence remain open.
+  - [ ] **Sub-task 38.1.3.4:** `S-031-RT01` crashes during source write/index update and races external note edits; assert source remains canonical, conflicts are preserved, and indexes rebuild to current bytes. Partial local evidence: canonical commit, exact no-change, uncertainty, interrupted index rebuild, stale watcher input, and host stale-source refusal pass. Commits `1008e667` and `6af2176a` execute a verified Markdown preview through a real Fedora filesystem grant and exact-patch driver, publish the exact committed postimage to the disposable index once, and prove that a newer external edit is preserved while the prior index becomes visibly stale with `RebuildRequired`. Exhaustive native source/index crash and external-edit schedules remain open.
+  - [ ] **Sub-task 38.1.3.5 - Product security evidence:** Map `SR-ACC-004` through `SR-ACC-008`, `SR-DAT-001` through `SR-DAT-003`, `SR-CIV-003`/`SR-CIV-004`, `SR-TST-004`/`SR-TST-005`; retain parser/writer round trips, scoped diffs, collision results, index hashes, and recovery evidence. Partial local evidence: all 12 identifiers map to passing retained local contracts and the Fedora native canonical-write/index path passes; complete crash/race, non-Fedora, trusted-launcher, independent-review, and manual-fuzzing evidence remain open.
 
 ##### Story Acceptance Criteria
 
@@ -3067,7 +3067,7 @@ Retained local evidence: source revision `421dd7a3f4ea82d1b620be5f7cce811c57b04d
 [`local-evidence-report.json`](artifacts/sprints/sprint-38/local-evidence-report.json), SHA-256
 `0d2f5a10bbbc1ced20388ef29d4c56464fee7da4cb927e792b5fe65d96604480`. All 12 recorded commands
 exit zero, both focused suites report zero blocking skips, and no network or release claim is made.
-Sprint 38 remains **BLOCKED** because Sprint 37 is blocked; native end-to-end, complete crash/race,
+Sprint 38 remains **BLOCKED** because Sprint 37 is blocked; complete crash/race,
 trusted-package-launcher, non-Fedora, independent-review, and deferred manual-fuzzing evidence is
 absent. Task 38.1.3, its two open sub-tasks, the story, and the sprint therefore remain open.
 
