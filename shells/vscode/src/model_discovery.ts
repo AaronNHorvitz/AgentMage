@@ -299,6 +299,50 @@ export function renderModelManagementReport(
   return lines.join("\n");
 }
 
+/** Renders one exact review-only acquisition preflight and license screen. */
+export function renderModelAcquisitionReview(
+  snapshot: ModelPickerSnapshot,
+  profileId: string,
+): string | undefined {
+  if (!identifier(profileId)) {
+    return undefined;
+  }
+  const entry = snapshot.entries.find((candidate) => candidate.profile_id === profileId);
+  if (entry === undefined) {
+    return undefined;
+  }
+  return [
+    "# Model Acquisition Review",
+    "",
+    `Exact profile: \`${entry.profile_id}\``,
+    `Catalog: verified (${shortHash(snapshot.catalog_sha256)})`,
+    "",
+    "## Preflight Review",
+    "",
+    `- Compatibility: ${label(entry.compatibility)}`,
+    `- Platform: ${entry.platform}/${entry.architecture}`,
+    `- Runtime: \`${entry.runtime_adapter_id}\` contract ${entry.runtime_contract_version.toString()} (${entry.runtime_sha256})`,
+    `- Artifact: ${escapeMarkdown(entry.artifact_format)}, ${entry.artifact_bytes.toLocaleString("en-US")} bytes, \`${entry.artifact_sha256}\``,
+    `- Context limit: ${entry.max_context_tokens.toLocaleString("en-US")} tokens`,
+    `- Hardware evidence: \`${entry.hardware_sha256}\``,
+    `- Limitations: ${entry.limitations.length === 0 ? "none" : entry.limitations.map((item) => `\`${item}\``).join(", ")}`,
+    "- Source opened: no",
+    "- Destination changed: no",
+    "- Acquisition started: no",
+    "",
+    "## License Review",
+    "",
+    `- Publisher: ${escapeMarkdown(entry.publisher)} (${escapeMarkdown(entry.publisher_control)})`,
+    `- Lineage: ${entry.lineage.map((item) => escapeMarkdown(item)).join(" -> ")}`,
+    `- License: \`${entry.license_spdx}\``,
+    `- Reviewed terms digest: \`${entry.license_terms_sha256}\``,
+    `- Source revision: \`${entry.source_revision}\``,
+    `- Acceptance: ${entry.requires_user_decision ? "required before any acquisition" : "not available through this review"}`,
+    "",
+    "This screen is review-only. Import, download, activation, rollback, and model substitution are unavailable here.",
+  ].join("\n");
+}
+
 function parseEntry(candidate: unknown): ModelPickerEntry {
   const value = record(candidate);
   requireKeys(value, [

@@ -4,6 +4,7 @@ import test from "node:test";
 
 import {
   parseModelPickerSnapshot,
+  renderModelAcquisitionReview,
   renderModelManagementReport,
   selectableModelInformation,
 } from "../src/model_discovery.js";
@@ -19,6 +20,22 @@ void test("zero-profile discovery is valid and yields no native picker entry", (
     renderModelManagementReport(parsed),
     /No exact local model profile/,
   );
+});
+
+void test("acquisition review separates preflight and license without effects", () => {
+  const parsed = parseModelPickerSnapshot(
+    signedSnapshot([entry("muse-review-1", "muse")]),
+  );
+  const review = renderModelAcquisitionReview(parsed, "muse-review-1");
+  assert.match(review ?? "", /## Preflight Review/);
+  assert.match(review ?? "", /## License Review/);
+  assert.match(review ?? "", /Source opened: no/);
+  assert.match(review ?? "", /Destination changed: no/);
+  assert.match(review ?? "", /Acquisition started: no/);
+  assert.match(review ?? "", /required before any acquisition/);
+  assert.match(review ?? "", /Import, download, activation, rollback/);
+  assert.equal(renderModelAcquisitionReview(parsed, "missing-profile"), undefined);
+  assert.equal(renderModelAcquisitionReview(parsed, "../invalid"), undefined);
 });
 
 void test("Muse, Gemma, and additional admitted families map without prerequisites", () => {

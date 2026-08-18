@@ -3,6 +3,7 @@
 import {
   parseModelPickerSnapshot,
   parseModelSelectionRevalidation,
+  renderModelAcquisitionReview,
   renderModelManagementReport,
   type ModelPickerSnapshot,
 } from "./model_discovery.js";
@@ -669,6 +670,18 @@ export class SecureReadController {
           )
         : result(renderModelManagementReport(snapshot));
     }
+    const modelReviewProfile = parseModelReviewCommand(prompt);
+    if (modelReviewProfile !== undefined) {
+      const snapshot = await this.discoverModels(cancellation);
+      const review = snapshot === undefined
+        ? undefined
+        : renderModelAcquisitionReview(snapshot, modelReviewProfile);
+      return review === undefined
+        ? result(
+            `# Model Acquisition Review\n\nThe exact requested profile is unavailable. AgentMage did not select or substitute another model.\n\n- Exact profile: \`${modelReviewProfile}\`\n- Status: unavailable\n- Code: \`vscode.model.review-unavailable\``,
+          )
+        : result(review);
+    }
     if (prompt === "doctor") {
       if (cancellation.isCancellationRequested) {
         return cancelledResult();
@@ -1306,6 +1319,11 @@ export class SecureReadController {
       preview_id: previewId,
     });
   }
+}
+
+function parseModelReviewCommand(prompt: string): string | undefined {
+  const match = /^review model ([A-Za-z0-9][A-Za-z0-9._:-]{0,127})$/.exec(prompt);
+  return match?.[1];
 }
 
 function renderHandoffTerminal(

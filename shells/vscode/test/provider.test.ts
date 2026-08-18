@@ -561,6 +561,21 @@ void test("model management reports an exact empty snapshot without inventing a 
   );
 });
 
+void test("exact model review refuses an absent profile without substitution", async () => {
+  const { controller, bridge, signal } = fixture();
+  bridge.discoveryResponse = {
+    kind: "models_discovered",
+    schema_version: 1,
+    request_id: "request-0001",
+    snapshot: emptyModelSnapshot(),
+  };
+  const response = await controller.respond("review model absent-profile", signal);
+  assert.match(response.text, /# Model Acquisition Review/);
+  assert.match(response.text, /did not select or substitute another model/);
+  assert.match(response.text, /vscode\.model\.review-unavailable/);
+  assert.equal(bridge.previewCalls, 0);
+});
+
 void test("selected model is revalidated exactly and refusal names no fallback", async () => {
   const { controller, bridge, signal } = fixture();
   bridge.revalidationResponse = {
