@@ -1,0 +1,73 @@
+{
+  "artifact_id": "story-22.1-native-long-session-resume",
+  "external_network_used": false,
+  "host": {
+    "machine": "x86_64",
+    "system": "Linux"
+  },
+  "limitations": [
+    "The campaign uses the production Linux coordinator and encrypted authority with a deterministic fake model and bounded Git executor; it is not installed real-model evidence.",
+    "Seven tool/checkpoint pairs are the longest safely resumable prefix under the unchanged fixture profile's turn and plan-step ceilings.",
+    "Repository, policy, workspace, configuration, and exact model profile, manifest, and runtime records are changed deterministically; no external runtime installation is mutated.",
+    "The exact continuation, canonical artifact set, receipts, objective, and history resume; broader product-context input integration remains separate work.",
+    "Windows, macOS, clean-image Linux, release, and independent-review evidence are not claimed.",
+    "Manual fuzzing remains deferred and was not executed by this campaign."
+  ],
+  "metrics": {
+    "blocked_drift_classes": [
+      "configuration",
+      "model-manifest",
+      "model-profile",
+      "model-runtime",
+      "policy",
+      "repository",
+      "workspace"
+    ],
+    "checkpoint_count": 7,
+    "exact_artifact_set_restored": true,
+    "external_network_used": false,
+    "intent_preserved": true,
+    "manual_fuzzing_executed": false,
+    "post_resume_total_worker_launches": 7,
+    "receipt_count": 7,
+    "tool_turn_count": 7
+  },
+  "private_user_data_used": false,
+  "raw_trace": {
+    "bytes": 764,
+    "path": "artifacts/sprints/sprint-22/story-22.1/native-long-session-resume.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "4b55617c08c89d752519bc1c32de7419776d53b85bbcf857d25e8bbaea421300"
+  },
+  "schema_version": 1,
+  "source_revision": "8d3407171033efe5cf6267cd603ca0cbd43f5d1f",
+  "sources": [
+    {
+      "bytes": 255862,
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "1bef771b69b837e9fe1402a73a1aae50650ba8239834853011e6c986b821bf40"
+    },
+    {
+      "bytes": 10759,
+      "path": "scripts/story_22_1_long_resume_evidence.py",
+      "sha256": "ac1c692db0a338ab8441d91d15f04f7f21307b93830f2f7841ea8102d85b84e9"
+    },
+    {
+      "bytes": 2076,
+      "path": "tests/test_story_22_1_long_resume_evidence.py",
+      "sha256": "4224f0c7c9ae87183739484f9694044a4b00a3e516946a1a0dfeb79b5ce1d8ea"
+    }
+  ],
+  "status": "pass-current-linux-native-source-boundary",
+  "task_ids": [
+    "22.1.3.4",
+    "AT-RESUME-001"
+  ],
+  "verification": {
+    "command_id": "337a8d5e1851b987d531ebe079eb29245c9976fd6ab804dd1d2550a4cd13dc3f",
+    "elapsed_ms": 1632,
+    "exit_code": 0
+  }
+}

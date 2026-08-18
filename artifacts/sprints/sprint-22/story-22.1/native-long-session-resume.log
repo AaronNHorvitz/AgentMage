@@ -1,0 +1,9 @@
+
+running 1 test
+AGENTMAGE_STORY_22_1_LONG_RESUME={"blocked_drift_classes":["configuration","model-manifest","model-profile","model-runtime","policy","repository","workspace"],"checkpoint_count":7,"exact_artifact_set_restored":true,"external_network_used":false,"intent_preserved":true,"manual_fuzzing_executed":false,"post_resume_total_worker_launches":7,"receipt_count":7,"tool_turn_count":7}
+test linux_coding_runtime::tests::story_22_1_long_native_session_blocks_drift_and_preserves_exact_history ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 130 filtered out; finished in 1.54s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-606dfe028916acd7)

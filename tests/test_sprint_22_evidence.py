@@ -25,7 +25,10 @@ class Sprint22EvidenceTests(unittest.TestCase):
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertEqual(value["implemented_contracts"]["subprocess_crash_runs"], 126)
         self.assertEqual(value["implemented_contracts"]["native_tool_terminal_resume_runs"], 100)
+        self.assertEqual(value["implemented_contracts"]["native_long_session_checkpoints"], 7)
+        self.assertEqual(value["implemented_contracts"]["native_long_session_drift_classes"], 7)
         self.assertTrue(value["verification_evidence"]["native_platform_crash_matrix"])
+        self.assertTrue(value["verification_evidence"]["native_long_session_resume"])
         self.assertFalse(value["implemented_contracts"]["resume_authority"])
 
     def test_integration_native_canary_review_and_release_overclaims_fail(self) -> None:
@@ -36,6 +39,8 @@ class Sprint22EvidenceTests(unittest.TestCase):
                 {"production_context_integration": True}),
             lambda value: value["verification_evidence"].update(
                 {"native_platform_crash_matrix": False}),
+            lambda value: value["verification_evidence"].update(
+                {"native_long_session_resume": False}),
             lambda value: value["verification_evidence"].update(
                 {"product_wide_canary_sweep": True}),
             lambda value: value["verification_evidence"].update({"independent_review": True}),

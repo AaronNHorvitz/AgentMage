@@ -102,6 +102,15 @@ transaction commits. The source-bound report and redacted trace are retained und
 `artifacts/sprints/sprint-22/story-22.1/`. This does not claim a stop inside a filesystem or SQLite
 syscall, physical power loss, installed-package behavior, another platform, or independent review.
 
+The native long-session campaign runs the production coordinator to the longest safe-boundary
+prefix admitted by its unchanged fixture profile: seven read-only tool turns, receipts, checkpoints,
+and continuation artifacts. Reopen rejects repository, policy, workspace, configuration,
+model-profile, model-manifest, and model-runtime changes before action. Exact state restores the
+canonical artifact set, objective, and receipt/history counts and completes without an eighth
+worker launch. Its source-bound report and redacted trace are retained beside the native crash
+matrix. The deterministic model and exact model/runtime records do not substitute for installed
+real-model, clean-image, cross-platform, or independent-review evidence.
+
 ## Traceability
 
 | Requirement | Implementation | Local verification |
@@ -111,4 +120,4 @@ syscall, physical power loss, installed-package behavior, another platform, or i
 | `S-020-I05` | `SessionCheckpoint`, `finalize_checkpoint`, `verify_checkpoint` | Valid, corrupt, future-version, mismatched-field, and tamper fixtures |
 | `S-020-I06` | Operational-store migration 4 and terminal checkpoint execution path | Atomic rollback, terminal receipt binding, reopen, and replay tests |
 | `S-020-I07`, `S-020-I08` | `revalidate_resume`, explicit drift decisions | Every drift dimension and all three decisions |
-| `AT-CRASH-001`, `AT-RESUME-001` | Platform-neutral store campaign, native Linux coordinator campaign, and deterministic revalidation | 126 store-boundary exits, 100 native tool-terminal/checkpoint exits, and 100 repeated no-drift comparisons |
+| `AT-CRASH-001`, `AT-RESUME-001` | Platform-neutral store campaign, native Linux crash and long-session campaigns, and deterministic revalidation | 126 store-boundary exits, 100 native tool-terminal/checkpoint exits, seven-checkpoint exact resume with seven drift classes, and 100 repeated no-drift comparisons |
