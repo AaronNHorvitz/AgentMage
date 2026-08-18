@@ -211,6 +211,51 @@ pub enum VaultClientCommand {
     Tasks,
 }
 
+/// Closed promoted knowledge-workflow family available through first-party clients.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum KnowledgeWorkflowClient {
+    /// Review current tasks, blockers, priorities, and next actions.
+    DailySetup,
+    /// Produce a source-backed briefing from current selected records.
+    DailyBriefing,
+    /// Classify one supplied issue without creating or changing a task.
+    IssueIntake,
+    /// Assemble a source-backed continuation view without exporting or writing it.
+    Handoff,
+    /// Extract review candidates from an existing meeting record without changing notes.
+    MeetingCleanup,
+    /// Summarize source-backed repository knowledge without repository mutation.
+    RepositoryLearning,
+    /// Review canonical plain-workspace health without changing user files.
+    PlainWorkspaceSteward,
+    /// Review canonical Obsidian-vault health without changing vault files.
+    ObsidianVaultSteward,
+}
+
+/// Closed retrieval path requested for a promoted knowledge workflow.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum KnowledgeRetrievalClientMode {
+    /// Deterministic lexical and metadata retrieval only.
+    Lexical,
+    /// Explicitly approved local semantic retrieval.
+    ApprovedLocalSemantic,
+}
+
+/// Closed read-only knowledge workflow command family.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
+pub enum KnowledgeClientCommand {
+    /// Run one promoted workflow over evidence selected by the trusted local host.
+    Run {
+        /// Exact promoted workflow.
+        workflow: KnowledgeWorkflowClient,
+        /// Exact retrieval path; semantic retrieval is never selected implicitly.
+        retrieval_mode: KnowledgeRetrievalClientMode,
+    },
+}
+
 /// Closed operational command family exposed by terminal and headless clients.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
@@ -266,6 +311,11 @@ pub enum ClientCommand {
         /// Exact vault action.
         action: VaultClientCommand,
     },
+    /// Run an authority-free promoted workflow over approved local knowledge.
+    Knowledge {
+        /// Exact read-only workflow action.
+        action: KnowledgeClientCommand,
+    },
     /// Access checkpoint, handoff, audit, memory, transfer, or diagnostic operations.
     Operations {
         /// Exact operational action.
@@ -288,6 +338,7 @@ impl ClientCommand {
                 | ConversationClientCommand::Show { .. } => GrantOperation::DatabaseRead,
             },
             Self::Vault { .. } => GrantOperation::WorkspaceRead,
+            Self::Knowledge { .. } => GrantOperation::WorkspaceRead,
             Self::Operations { action } => match action {
                 OperationalClientCommand::MemoryCorrect { .. }
                 | OperationalClientCommand::Export { .. }
@@ -340,6 +391,9 @@ impl ClientCommand {
                 | VaultClientCommand::Backlinks { note_id } => valid_identifier(note_id),
                 VaultClientCommand::Tasks => true,
             },
+            Self::Knowledge {
+                action: KnowledgeClientCommand::Run { .. },
+            } => true,
             Self::Operations { action } => match action {
                 OperationalClientCommand::MemoryInspect { memory_id } => {
                     memory_id.as_deref().is_none_or(valid_identifier)
@@ -1390,6 +1444,12 @@ mod tests {
             ClientCommand::Vault {
                 action: VaultClientCommand::Backlinks {
                     note_id: "note-0001".to_owned(),
+                },
+            },
+            ClientCommand::Knowledge {
+                action: KnowledgeClientCommand::Run {
+                    workflow: KnowledgeWorkflowClient::DailySetup,
+                    retrieval_mode: KnowledgeRetrievalClientMode::Lexical,
                 },
             },
             ClientCommand::Operations {

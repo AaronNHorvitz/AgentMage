@@ -13,6 +13,7 @@ use agentmage_kernel_engine::{
 
 use crate::headless::{
     ClientCommand, ClientContentChannel, ClientExitCode, ClientSurface, ConversationClientCommand,
+    KnowledgeClientCommand, KnowledgeRetrievalClientMode, KnowledgeWorkflowClient,
     OperationalClientCommand, ThinClientError, ThinClientEvent, ThinClientEventKind,
     VaultClientCommand,
 };
@@ -156,6 +157,7 @@ fn parse_command(arguments: &[String]) -> Result<ClientCommand, ThinClientError>
         "conversations" => parse_conversations(&arguments[1..]),
         "resume" => parse_exact_branch(&arguments[1..]),
         "vault" => parse_vault(&arguments[1..]),
+        "knowledge" => parse_knowledge(&arguments[1..]),
         "checkpoint" if arguments.len() == 1 => operation(OperationalClientCommand::Checkpoint),
         "handoff" if arguments.len() == 1 => operation(OperationalClientCommand::Handoff),
         "audit" if arguments.len() == 1 => operation(OperationalClientCommand::Audit),
@@ -247,6 +249,37 @@ fn parse_vault(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
         _ => return Err(ThinClientError::InvalidValue),
     };
     Ok(ClientCommand::Vault { action })
+}
+
+fn parse_knowledge(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
+    let [run, workflow, tail @ ..] = arguments else {
+        return Err(ThinClientError::InvalidValue);
+    };
+    if run != "run" || tail.len() > 1 || tail.first().is_some_and(|value| value != "--semantic") {
+        return Err(ThinClientError::InvalidValue);
+    }
+    let workflow = match workflow.as_str() {
+        "daily-setup" => KnowledgeWorkflowClient::DailySetup,
+        "daily-briefing" => KnowledgeWorkflowClient::DailyBriefing,
+        "issue-intake" => KnowledgeWorkflowClient::IssueIntake,
+        "handoff" => KnowledgeWorkflowClient::Handoff,
+        "meeting-cleanup" => KnowledgeWorkflowClient::MeetingCleanup,
+        "repository-learning" => KnowledgeWorkflowClient::RepositoryLearning,
+        "plain-workspace-steward" => KnowledgeWorkflowClient::PlainWorkspaceSteward,
+        "obsidian-vault-steward" => KnowledgeWorkflowClient::ObsidianVaultSteward,
+        _ => return Err(ThinClientError::InvalidValue),
+    };
+    let retrieval_mode = if tail.is_empty() {
+        KnowledgeRetrievalClientMode::Lexical
+    } else {
+        KnowledgeRetrievalClientMode::ApprovedLocalSemantic
+    };
+    Ok(ClientCommand::Knowledge {
+        action: KnowledgeClientCommand::Run {
+            workflow,
+            retrieval_mode,
+        },
+    })
 }
 
 fn parse_memory(arguments: &[String]) -> Result<ClientCommand, ThinClientError> {
@@ -497,6 +530,7 @@ Commands:\n\
   vault note show ID\n\
   vault links|backlinks ID\n\
   vault tasks\n\
+  knowledge run WORKFLOW [--semantic]\n\
   checkpoint | handoff | audit | doctor | diagnostics\n\
   memory inspect [ID]\n\
   memory correct ID REPLACEMENT\n\
@@ -512,13 +546,13 @@ Headless surfaces require an exact predeclared, bounded, unexpired grant.\n"
 pub const fn shell_completion(shell: CompletionShell) -> &'static str {
     match shell {
         CompletionShell::Bash => {
-            "complete -W 'code chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion' agentmage\n"
+            "complete -W 'code chat conversations resume vault knowledge checkpoint handoff audit memory export import doctor diagnostics completion' agentmage\n"
         }
         CompletionShell::Zsh => {
-            "compdef '_arguments 1:command:(code chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion)' agentmage\n"
+            "compdef '_arguments 1:command:(code chat conversations resume vault knowledge checkpoint handoff audit memory export import doctor diagnostics completion)' agentmage\n"
         }
         CompletionShell::Fish => {
-            "complete -c agentmage -f -a 'code chat conversations resume vault checkpoint handoff audit memory export import doctor diagnostics completion'\n"
+            "complete -c agentmage -f -a 'code chat conversations resume vault knowledge checkpoint handoff audit memory export import doctor diagnostics completion'\n"
         }
     }
 }
@@ -555,7 +589,7 @@ mod tests {
 
     #[test]
     fn every_required_command_family_parses_to_one_closed_command() {
-        let cases = [
+        let mut cases = vec![
             strings(&["chat", "hello", "world"]),
             strings(&[
                 "conversations",
@@ -575,6 +609,8 @@ mod tests {
             strings(&["vault", "links", "note-01"]),
             strings(&["vault", "backlinks", "note-01"]),
             strings(&["vault", "tasks"]),
+            strings(&["knowledge", "run", "daily-setup"]),
+            strings(&["knowledge", "run", "obsidian-vault-steward", "--semantic"]),
             strings(&["checkpoint"]),
             strings(&["handoff"]),
             strings(&["audit"]),
@@ -586,6 +622,19 @@ mod tests {
             strings(&["doctor"]),
             strings(&["diagnostics"]),
         ];
+        for workflow in [
+            "daily-setup",
+            "daily-briefing",
+            "issue-intake",
+            "handoff",
+            "meeting-cleanup",
+            "repository-learning",
+            "plain-workspace-steward",
+            "obsidian-vault-steward",
+        ] {
+            cases.push(strings(&["knowledge", "run", workflow]));
+            cases.push(strings(&["knowledge", "run", workflow, "--semantic"]));
+        }
         for arguments in cases {
             assert!(
                 matches!(
@@ -651,6 +700,8 @@ mod tests {
             ]),
             strings(&["resume", "conversation-01", "--wrong", "turn-01"]),
             strings(&["vault", "note", "note-01"]),
+            strings(&["knowledge", "run", "unknown"]),
+            strings(&["knowledge", "run", "daily-setup", "--unknown"]),
             strings(&["memory", "correct", "memory-01"]),
             strings(&["--surface", "acp", "vault", "tasks"]),
             strings(&["completion", "powershell"]),

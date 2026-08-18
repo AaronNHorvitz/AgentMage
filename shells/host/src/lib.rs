@@ -31,6 +31,8 @@ pub mod coding_verifier;
 /// One-use reviewed local diagnostic export workflow.
 pub mod diagnostic_export;
 
+/// Verified read-only knowledge workflows over the shared thin-client contract.
+pub mod knowledge_workflow_runtime;
 /// Authority-free knowledge-preview composition into kernel filesystem drafts.
 pub mod knowledge_write;
 
