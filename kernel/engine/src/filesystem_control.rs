@@ -3520,6 +3520,53 @@ mod tests {
     }
 
     #[test]
+    fn s_030_ut01_metadata_variants_are_exact_and_closed() {
+        for mode in [0, 0o400, 0o600, 0o640, 0o755, 0o777] {
+            let operation = FilesystemOperationDraft::Create {
+                operation_id: format!("operation-mode-{mode:o}"),
+                destination: destination(&["new"], &format!("mode-{mode:o}.txt"), &[]),
+                content: b"mode fixture\n".to_vec(),
+                mode,
+                classification: FileClassification::Data,
+            };
+            let plan = build_filesystem_plan(&parent(), request(vec![operation]))
+                .expect("declared mode accepted");
+            let preview = render_filesystem_preview(&plan).expect("mode preview");
+            assert_eq!(plan.operations()[0].destination_mode(), Some(mode));
+            assert_eq!(preview.operations[0].destination_mode, Some(mode));
+
+            let mut source = source(
+                &["src", &format!("mode-{mode:o}.txt")],
+                b"source mode\n",
+                ExistingWorkDisposition::Clean,
+            );
+            source.mode = mode;
+            let copy = FilesystemOperationDraft::Copy {
+                operation_id: format!("operation-copy-mode-{mode:o}"),
+                source,
+                destination: destination(&["copies"], &format!("mode-{mode:o}.txt"), &[]),
+                classification: FileClassification::Data,
+            };
+            let copy_plan = build_filesystem_plan(&parent(), request(vec![copy]))
+                .expect("source mode accepted");
+            assert_eq!(copy_plan.operations()[0].source_mode(), Some(mode));
+            assert_eq!(copy_plan.operations()[0].destination_mode(), Some(mode));
+        }
+
+        let invalid = FilesystemOperationDraft::Create {
+            operation_id: "operation-mode-invalid".to_owned(),
+            destination: destination(&["new"], "invalid-mode.txt", &[]),
+            content: b"invalid mode\n".to_vec(),
+            mode: 0o1000,
+            classification: FileClassification::Data,
+        };
+        assert_eq!(
+            build_filesystem_plan(&parent(), request(vec![invalid])),
+            Err(FilesystemPlanError::InvalidInput)
+        );
+    }
+
+    #[test]
     fn preview_rejects_plan_and_operation_digest_tampering() {
         let operation = FilesystemOperationDraft::Create {
             operation_id: "operation-create".to_owned(),
