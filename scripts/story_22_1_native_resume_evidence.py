@@ -74,9 +74,9 @@ def sha256_bytes(value: bytes) -> str:
 
 def parse_metric(output: str) -> dict[str, Any]:
     records = [
-        line.removeprefix(METRIC_PREFIX)
+        line.split(METRIC_PREFIX, 1)[1]
         for line in output.splitlines()
-        if line.startswith(METRIC_PREFIX)
+        if METRIC_PREFIX in line
     ]
     if len(records) != 1:
         raise NativeResumeEvidenceError("runtime.native_resume.metric_count")

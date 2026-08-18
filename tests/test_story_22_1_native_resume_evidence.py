@@ -27,6 +27,7 @@ class Story221NativeResumeEvidenceTests(unittest.TestCase):
     def test_metric_parser_rejects_missing_duplicate_malformed_and_drift(self) -> None:
         encoded = f"{METRIC_PREFIX}{json.dumps(EXPECTED_METRIC, sort_keys=True)}"
         self.assertEqual(parse_metric(encoded), EXPECTED_METRIC)
+        self.assertEqual(parse_metric(f"test case ... {encoded}"), EXPECTED_METRIC)
         for changed in (
             "",
             f"{encoded}\n{encoded}",
