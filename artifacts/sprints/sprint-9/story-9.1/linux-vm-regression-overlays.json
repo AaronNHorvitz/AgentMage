@@ -1,0 +1,41 @@
+{
+  "guest_started": false,
+  "network_used": false,
+  "private_user_data_used": false,
+  "qemu": {
+    "kvm_accessible": true,
+    "launcher_class": "fedora-toolbox",
+    "sha256": "27cd395848940fc6482256d85096fc64bc4fe3f3e909824d51c202f8314cd9e9",
+    "version": "QEMU emulator version 10.2.2 (qemu-10.2.2-1.fc44)"
+  },
+  "record_type": "linux-vm-regression-overlay-evidence",
+  "release_claim": false,
+  "repository_credentials_injected": false,
+  "schema_version": 1,
+  "source_revision": "109cd61c47a8d804a9c6b48dadf64a73551330bb",
+  "status": "pass-local-overlay-lifecycle",
+  "targets": [
+    {
+      "backing_format": "qcow2",
+      "base_bytes": 583729152,
+      "base_sha256": "28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f",
+      "overlay_cleanup_verified": true,
+      "overlay_created": true,
+      "overlay_format": "qcow2",
+      "target_id": "fedora-44-x86_64"
+    },
+    {
+      "backing_format": "qcow2",
+      "base_bytes": 860447744,
+      "base_sha256": "9dc7c5363c0146a08ba0c9aa834d82c2c6dfbb1c471ad9a2f0aba1189e21be05",
+      "overlay_cleanup_verified": true,
+      "overlay_created": true,
+      "overlay_format": "qcow2",
+      "target_id": "ubuntu-26.04-x86_64"
+    }
+  ],
+  "task_ids": [
+    "9.1.4.1",
+    "9.1.4.2"
+  ]
+}
