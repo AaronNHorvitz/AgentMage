@@ -79,7 +79,7 @@ pub use package_scaffold::{
 pub use parser::{
     ParseDisposition, RepositoryParseError, SourceRange, StructuralItem, StructuralItemKind,
     StructuralParseResult, StructuralRelationship, StructuralRelationshipKind, parse_structure,
-    verify_structural_parse_result,
+    parse_structure_with_cancellation, verify_structural_parse_result,
 };
 pub use renderer::{
     LexicalSourceMatch, RenderedRepositoryContext, RenderedRepositoryFile,

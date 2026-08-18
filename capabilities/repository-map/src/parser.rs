@@ -1,10 +1,12 @@
 //! Bounded parser-backed structural facts with exact source ranges.
 
 use std::fmt::Write;
+use std::ops::ControlFlow;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use tree_sitter::{Node, Parser};
+use tree_sitter::{Node, ParseOptions, Parser};
 
 use crate::grammar::{RepositoryLanguage, grammar_descriptor, language};
 
@@ -141,6 +143,10 @@ pub enum RepositoryParseError {
     GrammarUnavailable,
     /// Tree-sitter returned no syntax tree.
     ParseFailed,
+    /// The caller cancelled parsing before a complete result was available.
+    Cancelled,
+    /// The guarded parser boundary caught an internal or control-probe panic.
+    ParserPanicked,
 }
 
 impl RepositoryParseError {
@@ -151,6 +157,8 @@ impl RepositoryParseError {
             Self::SourceDenied => "repository.parse.source_denied",
             Self::GrammarUnavailable => "repository.parse.grammar_unavailable",
             Self::ParseFailed => "repository.parse.failed",
+            Self::Cancelled => "repository.parse.cancelled",
+            Self::ParserPanicked => "repository.parse.panicked",
         }
     }
 }
@@ -161,6 +169,41 @@ pub fn parse_structure(
     module_name: &str,
     source: &[u8],
 ) -> Result<StructuralParseResult, RepositoryParseError> {
+    parse_structure_with_cancellation(language_id, module_name, source, || false)
+}
+
+/// Parses one exact source while polling a caller-owned cancellation or deadline probe.
+///
+/// A cancellation or panic returns no partial structure. The probe carries no authority and
+/// should return `true` when the caller's existing cancellation or deadline state has fired.
+pub fn parse_structure_with_cancellation<F>(
+    language_id: RepositoryLanguage,
+    module_name: &str,
+    source: &[u8],
+    mut cancellation_requested: F,
+) -> Result<StructuralParseResult, RepositoryParseError>
+where
+    F: FnMut() -> bool,
+{
+    guard_parser_boundary(|| {
+        parse_structure_inner(
+            language_id,
+            module_name,
+            source,
+            &mut cancellation_requested,
+        )
+    })
+}
+
+fn parse_structure_inner<F>(
+    language_id: RepositoryLanguage,
+    module_name: &str,
+    source: &[u8],
+    cancellation_requested: &mut F,
+) -> Result<StructuralParseResult, RepositoryParseError>
+where
+    F: FnMut() -> bool,
+{
     if source.is_empty()
         || source.len() > MAX_SOURCE_BYTES
         || module_name.is_empty()
@@ -170,13 +213,33 @@ pub fn parse_structure(
     {
         return Err(RepositoryParseError::SourceDenied);
     }
+    if observe_cancellation(cancellation_requested)? {
+        return Err(RepositoryParseError::Cancelled);
+    }
     let mut parser = Parser::new();
     parser
         .set_language(&language(language_id))
         .map_err(|_| RepositoryParseError::GrammarUnavailable)?;
-    let tree = parser
-        .parse(source, None)
-        .ok_or(RepositoryParseError::ParseFailed)?;
+    let mut terminal = None;
+    let mut progress =
+        |_state: &tree_sitter::ParseState| match observe_cancellation(cancellation_requested) {
+            Ok(false) => ControlFlow::Continue(()),
+            Ok(true) => {
+                terminal = Some(RepositoryParseError::Cancelled);
+                ControlFlow::Break(())
+            }
+            Err(failure) => {
+                terminal = Some(failure);
+                ControlFlow::Break(())
+            }
+        };
+    let options = ParseOptions::new().progress_callback(&mut progress);
+    let mut read = |offset: usize, _position| source.get(offset..).unwrap_or_default();
+    let tree = parser.parse_with_options(&mut read, None, Some(options));
+    if let Some(failure) = terminal {
+        return Err(failure);
+    }
+    let tree = tree.ok_or(RepositoryParseError::ParseFailed)?;
     let root = tree.root_node();
     let mut items = vec![StructuralItem {
         kind: StructuralItemKind::Module,
@@ -188,6 +251,9 @@ pub fn parse_structure(
     stack.reverse();
     let mut truncated = false;
     while let Some(node) = stack.pop() {
+        if observe_cancellation(cancellation_requested)? {
+            return Err(RepositoryParseError::Cancelled);
+        }
         if items.len() >= MAX_STRUCTURAL_ITEMS {
             truncated = true;
             break;
@@ -238,6 +304,20 @@ pub fn parse_structure(
     };
     result.result_sha256 = result_digest(&result);
     Ok(result)
+}
+
+fn observe_cancellation<F>(probe: &mut F) -> Result<bool, RepositoryParseError>
+where
+    F: FnMut() -> bool,
+{
+    catch_unwind(AssertUnwindSafe(probe)).map_err(|_| RepositoryParseError::ParserPanicked)
+}
+
+fn guard_parser_boundary<T, F>(operation: F) -> Result<T, RepositoryParseError>
+where
+    F: FnOnce() -> Result<T, RepositoryParseError>,
+{
+    catch_unwind(AssertUnwindSafe(operation)).unwrap_or(Err(RepositoryParseError::ParserPanicked))
 }
 
 /// Verifies all bounds, hashes, ranges, and ordering in one parser result.
@@ -443,7 +523,8 @@ fn is_sha256(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::{
-        ParseDisposition, StructuralItemKind, StructuralRelationshipKind, parse_structure,
+        ParseDisposition, RepositoryParseError, StructuralItemKind, StructuralRelationshipKind,
+        guard_parser_boundary, parse_structure, parse_structure_with_cancellation,
         verify_structural_parse_result,
     };
     use crate::RepositoryLanguage;
@@ -554,6 +635,51 @@ mod tests {
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn parser_cancellation_returns_no_partial_structure() {
+        assert_eq!(
+            parse_structure_with_cancellation(
+                RepositoryLanguage::Rust,
+                "cancelled",
+                b"fn run() {}\n",
+                || true,
+            ),
+            Err(RepositoryParseError::Cancelled)
+        );
+
+        let source = "fn bounded_work() {}\n".repeat(50_000);
+        let mut observations = 0_u32;
+        let failure = parse_structure_with_cancellation(
+            RepositoryLanguage::Rust,
+            "mid-parse",
+            source.as_bytes(),
+            || {
+                observations += 1;
+                observations >= 2
+            },
+        )
+        .expect_err("progress cancellation must stop parsing");
+        assert_eq!(failure, RepositoryParseError::Cancelled);
+        assert!(observations >= 2);
+    }
+
+    #[test]
+    fn parser_panics_are_content_free_failures() {
+        let failure = guard_parser_boundary::<(), _>(|| panic!("synthetic parser panic"))
+            .expect_err("panic must remain inside the parser boundary");
+        assert_eq!(failure, RepositoryParseError::ParserPanicked);
+        assert_eq!(failure.code(), "repository.parse.panicked");
+
+        let probe_failure = parse_structure_with_cancellation(
+            RepositoryLanguage::Rust,
+            "probe-panic",
+            b"fn run() {}\n",
+            || panic!("synthetic cancellation probe panic"),
+        )
+        .expect_err("probe panic must remain inside the parser boundary");
+        assert_eq!(probe_failure, RepositoryParseError::ParserPanicked);
     }
 
     #[test]
