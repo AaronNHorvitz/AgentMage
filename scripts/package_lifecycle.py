@@ -71,14 +71,14 @@ EXPECTED_DOCKER_GUARD_DESCRIPTOR: Final = {
     "sessions": 1,
 }
 EXPECTED_MODEL_INSTALLER_DESCRIPTOR: Final = {
-    "accepted_operation": "self-check-only",
+    "accepted_operations": ["preflight-stdin", "self-check"],
     "activation_authority": False,
     "component_id": "agentmage-model-installer",
     "inference_authority": False,
     "network_authority": False,
     "normal_operation": False,
     "one_shot": True,
-    "protocol_version": 1,
+    "protocol_version": 2,
     "session_authority": False,
     "tool_authority": False,
     "workspace_authority": False,
