@@ -11,63 +11,73 @@
   ],
   "metrics": {
     "active_object_count_at_checkpoint": 1,
+    "checkpoint_artifact_rows": 1089,
+    "checkpoint_lifecycle_event_rows": 1219,
+    "checkpoint_payload_rows": 66,
     "checkpoint_reference_count": 1024,
     "checkpoint_release_blocked": true,
-    "collection_elapsed_ms": 1524,
+    "checkpoint_resume_artifact_rows": 1024,
+    "checkpoint_resume_binding_rows": 1,
+    "collection_elapsed_ms": 1518,
     "deduplicated_reference_count": 1023,
     "external_network_used": false,
     "final_active_object_count": 0,
+    "final_artifact_rows": 1089,
     "final_disk_bytes": 5099520,
+    "final_lifecycle_event_rows": 3267,
+    "final_payload_rows": 66,
     "final_reopen_verified": true,
+    "final_resume_artifact_rows": 1024,
+    "final_resume_binding_rows": 2,
     "latency_ceiling_ms": 300000,
     "manual_fuzzing_executed": false,
     "maximum_disk_bytes": 67782117,
-    "maximum_elapsed_ms": 92772,
+    "maximum_elapsed_ms": 94336,
     "maximum_payload_bytes": 67108864,
-    "mixed_collection_elapsed_ms": 777,
+    "mixed_collection_elapsed_ms": 771,
     "mixed_disk_bytes": 2987648,
     "mixed_final_active_object_count": 0,
     "mixed_object_count": 64,
-    "mixed_publish_elapsed_ms": 2139,
+    "mixed_publish_elapsed_ms": 2144,
     "mixed_total_payload_bytes": 2129920,
     "overflow_reference_count_rejected": 1025,
     "page_bytes": 4096,
     "reference_disk_bytes": 4928375,
-    "reference_elapsed_ms": 2402,
-    "reopen_elapsed_ms": 1595,
+    "reference_elapsed_ms": 2387,
+    "reopen_elapsed_ms": 1594,
     "resident_delta_ceiling_kib": 524288,
-    "resident_delta_kib": 67084,
-    "resident_peak_kib": 85344,
-    "resident_start_kib": 18260,
+    "resident_delta_kib": 66704,
+    "resident_peak_kib": 85392,
+    "resident_start_kib": 18688,
     "retained_disk_ceiling_bytes": 134217728,
-    "total_elapsed_ms": 124133
+    "total_elapsed_ms": 125970
   },
   "private_user_data_used": false,
   "raw_trace": {
-    "bytes": 1506,
+    "bytes": 1829,
     "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log",
     "redactions": [
       "repository-root"
     ],
-    "sha256": "5c589612653fbbd44e32bbfdf8ab0b1e21a8cf0d5702e47f7baa928dddcb6dfb"
+    "sha256": "cd5cfb546b42d48b33cfe41e1a63f1bb953e347735c36c83e6bcf30715c49aed"
   },
   "schema_version": 1,
-  "source_revision": "6f52b0e98505ea56476922aee50a4ebcea13a0d6",
+  "source_revision": "25ca7a2f0f7f9fd1b735db75e684157448b66001",
   "sources": [
     {
-      "bytes": 87286,
+      "bytes": 97078,
       "path": "platforms/linux/src/runtime_artifact_store.rs",
-      "sha256": "e6d99a3359db663956dfdd585fbf0d323d85f6b8a68b707b3c42e5985c94f1ca"
+      "sha256": "78716ba084428a77c5ebc077266ebec059c3d83e1254a50fedab1b5bbcdebf19"
     },
     {
-      "bytes": 14048,
+      "bytes": 14437,
       "path": "scripts/story_22_2_artifact_pressure_evidence.py",
-      "sha256": "6e98b5c458e009d1cbb3cbdf24358ea959009eba98e3cfaa9c7ce4a62689b94d"
+      "sha256": "29ecdec002f9e0dbd6debbdd5ea3fe8c88afee962e20a13358982dadd1f8b7ee"
     },
     {
-      "bytes": 3960,
+      "bytes": 4522,
       "path": "tests/test_story_22_2_artifact_pressure_evidence.py",
-      "sha256": "c88361f305cf1c33f4fc90cfb5c9308a3333d521646da9b3746db60089b9c38a"
+      "sha256": "03a6116a2ea88fdfcf4c11d2635dab3cc26c129e54ce243716663218bd07a2be"
     }
   ],
   "status": "pass-current-linux-native-reference-host",
@@ -78,7 +88,7 @@
     "RV-18"
   ],
   "verification": {
-    "command_elapsed_ms": 124222,
+    "command_elapsed_ms": 126095,
     "command_id": "f4cfaba19f87bbb0be280354ec01e12ef57e1f67232ccb6d39a75bcfe960e5e1",
     "exit_code": 0
   }

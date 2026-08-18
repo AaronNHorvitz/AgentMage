@@ -26,14 +26,14 @@
       "sha256": "d648e3c6930b43a2cc782d1a162604396329d9a3bceea135d071cde390a2317d"
     },
     {
-      "bytes": 3301,
+      "bytes": 3684,
       "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
-      "sha256": "8b5c17448f06dd4047bc502798cb3c3f1a08b0988b81f4ad1f2338b1446142ef"
+      "sha256": "6cf4ee7fea95dd2bc63cb9571d31c4393eacaebc0002bbc14409e0760aaa129c"
     },
     {
-      "bytes": 1506,
+      "bytes": 1829,
       "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log",
-      "sha256": "5c589612653fbbd44e32bbfdf8ab0b1e21a8cf0d5702e47f7baa928dddcb6dfb"
+      "sha256": "cd5cfb546b42d48b33cfe41e1a63f1bb953e347735c36c83e6bcf30715c49aed"
     },
     {
       "bytes": 4529,
@@ -56,9 +56,9 @@
       "sha256": "339454b3b8af518900bf4b983d7a47927cb507abf7c9dad14a9d88c258393ffb"
     },
     {
-      "bytes": 24466,
+      "bytes": 24782,
       "path": "docs/architecture/runtime-artifact-lifecycle.md",
-      "sha256": "5fbc04d14fa3fb1693e636105f25074d5af818a6ba84dd7513633d52f0f76e17"
+      "sha256": "a87ac47b7b1068b99617fe7fcae88b4764dad43a4e8b354b082283125e9cf7f9"
     },
     {
       "bytes": 6786,
@@ -71,14 +71,14 @@
       "sha256": "8fdb490ec397bb2e7975876e03d196e78c2e3abad2ee3ea27983184be8b3ebb4"
     },
     {
-      "bytes": 274189,
+      "bytes": 274619,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "a80de50a46f86df5bfdd5d937674972f7270203347629be10d8fca084b39cf11"
+      "sha256": "8776d872261d59d39eccd79c70756bd8ced7edd32a384863a80b2d47500125c7"
     },
     {
-      "bytes": 165968,
+      "bytes": 167619,
       "path": "kernel/engine/src/runtime_artifact.rs",
-      "sha256": "193b8402fdcd452bc248bd39c4888dd12579906dfc579348eab978602d44287d"
+      "sha256": "ada53b5465df220357397e5951ed940bfee38c53d373fcce40fdc82ca6202efc"
     },
     {
       "bytes": 141074,
@@ -96,9 +96,9 @@
       "sha256": "ddaa5ab31f1c0ca55fe48b3d816c612b268fc1e47cd6a9a37e41151bdcac5be3"
     },
     {
-      "bytes": 95541,
+      "bytes": 97078,
       "path": "platforms/linux/src/runtime_artifact_store.rs",
-      "sha256": "71044d33fb4ef2603e8e30de1685319502ff4835edaa46053cbd82a349481dd7"
+      "sha256": "78716ba084428a77c5ebc077266ebec059c3d83e1254a50fedab1b5bbcdebf19"
     },
     {
       "bytes": 1011,
@@ -151,9 +151,9 @@
       "sha256": "9eebaef9c69ca4298acf5d2dd45a12ba79ed91270f631698320de2f2744b95c0"
     },
     {
-      "bytes": 14048,
+      "bytes": 14437,
       "path": "scripts/story_22_2_artifact_pressure_evidence.py",
-      "sha256": "6e98b5c458e009d1cbb3cbdf24358ea959009eba98e3cfaa9c7ce4a62689b94d"
+      "sha256": "29ecdec002f9e0dbd6debbdd5ea3fe8c88afee962e20a13358982dadd1f8b7ee"
     },
     {
       "bytes": 13878,
@@ -161,9 +161,9 @@
       "sha256": "b08517629a9216edc45deeb9e414090fc10c2065b6618e421102b72952007232"
     },
     {
-      "bytes": 20690,
+      "bytes": 20652,
       "path": "scripts/story_22_2_evidence_index.py",
-      "sha256": "4ad70b7c650620a817db7395eab005b9642cebcaaffc700ace055f6ebc4b04fd"
+      "sha256": "565778f3e374610e3f2bfb2f7c0b96234084e0233661457ccbafa45c7410ba2d"
     },
     {
       "bytes": 17578,
@@ -201,9 +201,9 @@
       "sha256": "80a0118ea44b64dc3ee17dc21af34fda6c5054395826bff89b499169ed9e098d"
     },
     {
-      "bytes": 3960,
+      "bytes": 4522,
       "path": "tests/test_story_22_2_artifact_pressure_evidence.py",
-      "sha256": "c88361f305cf1c33f4fc90cfb5c9308a3333d521646da9b3746db60089b9c38a"
+      "sha256": "03a6116a2ea88fdfcf4c11d2635dab3cc26c129e54ce243716663218bd07a2be"
     },
     {
       "bytes": 3609,
@@ -213,7 +213,7 @@
     {
       "bytes": 3419,
       "path": "tests/test_story_22_2_evidence_index.py",
-      "sha256": "1dd1bf9ac686068aef81fba4f0e28117a3716e74d3bd30d96f9231824784214b"
+      "sha256": "0d5ea635f3ba6b854a051c872955bbd6561c32a199a36ea325c8d399dcc47b4e"
     },
     {
       "bytes": 2413,
@@ -227,10 +227,10 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "87cef1983487890edb4450df5aacc8dc78caabfae88ff4a1ebadea8f5a8a1107",
+  "index_sha256": "977282dce8151217c072a323bbdc77367336cb4e3bf16164afb2e62946623f41",
   "limitations": [
     "Stops inside filesystem or SQLite syscalls and physical storage-fault campaigns remain open.",
-    "Quarantined-payload operator recovery, long mixed-artifact sessions, and concurrent collection campaigns remain open.",
+    "Long mixed-artifact sessions and concurrent collection campaigns remain open.",
     "Larger unique-object and installed-interface pressure evidence remains open.",
     "Windows native artifact storage and supported-platform package evidence remains open.",
     "Independent automated artifact-boundary review passes; independent human and cryptographic review remains open.",
@@ -426,7 +426,7 @@
       "evidence": [
         "docs/architecture/runtime-artifact-lifecycle.md"
       ],
-      "statement_sha256": "cc881c200c64699f97745092f9a9e590a0ae196297f1c62dd594763ca9556e3c",
+      "statement_sha256": "e814d6aa53bb3783b777f07ffd6761582e5c649077380cb81e0d0bf5e256d650",
       "status": "complete",
       "task_id": "22.2.2.4",
       "tests": [
@@ -453,7 +453,7 @@
       ]
     },
     {
-      "checked": false,
+      "checked": true,
       "code": [
         "platforms/linux/src/runtime_artifact_store.rs",
         "scripts/story_22_2_artifact_crash_evidence.py"
@@ -462,8 +462,8 @@
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.log"
       ],
-      "statement_sha256": "994ec1110ac959505b74eca465d8d97c38d138eed5da4b049b32b62a13929d0c",
-      "status": "partial",
+      "statement_sha256": "c1a95b5bb897ef8d033705916455a45524a7a7b69f3d56d4763fa01b6281ca14",
+      "status": "complete",
       "task_id": "22.2.3.2",
       "tests": [
         "story_22_2_native_crash_matrix_reconciles_every_artifact_boundary",
@@ -511,7 +511,7 @@
       ]
     },
     {
-      "checked": false,
+      "checked": true,
       "code": [
         "platforms/linux/src/runtime_artifact_store.rs",
         "scripts/story_22_2_artifact_pressure_evidence.py"
@@ -520,8 +520,8 @@
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log"
       ],
-      "statement_sha256": "12bc9a644d2028b830f66d5f384a7697121428c97e630278783100d729d5bbbb",
-      "status": "partial",
+      "statement_sha256": "a3f1967c2600639abb28e992bf4ca0758bb73e41bff53020155ec1ec8c6685f7",
+      "status": "complete",
       "task_id": "22.2.3.5",
       "tests": [
         "story_22_2_native_artifact_pressure_reaches_declared_ceilings",
@@ -554,13 +554,13 @@
   ],
   "record_type": "story_22_2_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "b820af9c71020b3a06260a9311839a9c275668a3",
+  "source_revision": "886f7a76421e531bcdbacce515473be4ef686ed5",
   "story_id": "22.2",
   "summary": {
-    "complete_count": 15,
+    "complete_count": 17,
     "mapping_count": 17,
     "open_count": 0,
-    "partial_count": 2,
+    "partial_count": 0,
     "release_approved": false,
     "sprint_complete": false,
     "story_complete": false
