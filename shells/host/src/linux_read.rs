@@ -1101,13 +1101,13 @@ where
         preview_id: &str,
         confirmation_sha256: &str,
     ) -> Result<HostResponse, LinuxReadError> {
-        let now = self.clock.now()?;
         let Some(pending) = self.pending.remove(preview_id) else {
             return Ok(replay_denial(
                 request_id,
                 self.receipt_for_preview(preview_id),
             ));
         };
+        let now = self.clock.now()?;
         if pending.approval.expires_at_epoch_ms <= now.epoch_ms
             || pending.approval.confirmation_sha256 != confirmation_sha256
             || verify_approval_request(&self.registry, &pending.approval).is_err()
@@ -1505,13 +1505,13 @@ where
         preview_id: &str,
         confirmation_sha256: &str,
     ) -> Result<HostResponse, LinuxReadError> {
-        let now = self.clock.now()?;
         let Some(pending) = self.pending_tools.remove(preview_id) else {
             return Ok(tool_replay_denial(
                 request_id,
                 self.receipt_for_preview(preview_id),
             ));
         };
+        let now = self.clock.now()?;
         if pending.approval.expires_at_epoch_ms <= now.epoch_ms
             || pending.approval.confirmation_sha256 != confirmation_sha256
             || verify_approval_request(&self.registry, &pending.approval).is_err()
@@ -2758,6 +2758,47 @@ mod tests {
         });
         assert!(matches!(cancelled, HostResponse::Cancelled { .. }));
         assert!(workflow.authority.authority().receipts().is_empty());
+        fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn absent_read_and_tool_approvals_do_not_require_a_clock_sample() {
+        let root = temp_root("approval-replay-clock");
+        let state = root.join("state");
+        fs::create_dir(&state).expect("state");
+        fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
+        let mut workflow = workflow(&state, &[]);
+        let preview_id = "preview-00000000000000000000000000000001".to_owned();
+
+        let read = workflow.handle(HostRequest::ApproveRead {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-missing-read".to_owned(),
+            preview_id: preview_id.clone(),
+            confirmation_sha256: "a".repeat(64),
+        });
+        assert!(matches!(
+            read,
+            HostResponse::Denied {
+                ref code,
+                receipt: None,
+                ..
+            } if code == "host.read.preview_missing"
+        ));
+
+        let tool = workflow.handle(HostRequest::ApproveTool {
+            schema_version: HOST_PROTOCOL_VERSION,
+            request_id: "request-missing-tool".to_owned(),
+            preview_id,
+            confirmation_sha256: "b".repeat(64),
+        });
+        assert!(matches!(
+            tool,
+            HostResponse::Denied {
+                ref code,
+                receipt: None,
+                ..
+            } if code == "host.tool.preview_missing"
+        ));
         fs::remove_dir_all(root).expect("cleanup");
     }
 
