@@ -12,10 +12,16 @@ import tempfile
 from pathlib import Path
 from typing import Any, Final
 
-from scripts import linux_docker_kvm_evidence as docker_vm
-from scripts import linux_native_ubuntu_control_evidence as vm_support
-from scripts import linux_vm_promoted_matrix as promoted
-from scripts.linux_vm_regression import write_atomic
+try:
+    from scripts import linux_docker_kvm_evidence as docker_vm
+    from scripts import linux_native_ubuntu_control_evidence as vm_support
+    from scripts import linux_vm_promoted_matrix as promoted
+    from scripts.linux_vm_regression import write_atomic
+except ModuleNotFoundError:
+    import linux_docker_kvm_evidence as docker_vm
+    import linux_native_ubuntu_control_evidence as vm_support
+    import linux_vm_promoted_matrix as promoted
+    from linux_vm_regression import write_atomic
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
