@@ -149,10 +149,13 @@ The Story 23.4 host fixture composes the real shared coordinator with:
 6. an exact receipt and current repository-snapshot citation; and
 7. a deterministic verifier that alone admits the success outcome.
 
-The fixture reaches two turns, two model calls, one tool call, one receipt,
-grounded evidence, a terminal hash-chained event stream, and a verified success
-outcome. It requires no durable journal, artifact store, checkpoint, MCP,
-network, write, command, process, or client-specific execution branch.
+The one-read fixture reaches two turns, two model calls, one tool call, one
+receipt, grounded evidence, a terminal hash-chained event stream, and a verified
+success outcome. A second fixture composes `read_multiple`, text search, and
+fixed read-only Git inspection over four turns, producing three unique receipts
+and three evidence records before the verifier admits completion. Neither path
+requires a durable journal, artifact store, checkpoint, MCP, network, write,
+command, process, or client-specific execution branch.
 
 ## Component Parity Matrix
 
@@ -190,8 +193,26 @@ The same driver is exercised by current terminal/headless source-level tests.
 Native Chat now has a transport-neutral host adapter and a TypeScript thin
 client that submit the exact request, stream verified events, relay a protected
 response, cancel by exact identity, release completed state, and render the
-outcome. The installed host must still compose that adapter with a production
-runtime factory and admitted profile; cross-interface parity also remains open.
+outcome. Source-level parity now compares native Chat, interactive CLI, and a
+workflow caller against identical read-only and controlled-write packets. The
+installed host must still compose that adapter with a production runtime factory
+and admitted profile.
+
+## Retained Local Evidence
+
+- `runtime-evidence.json` and its raw log retain 17 engine tests, six native-read
+  tests, native transport, three-client parity, client-confusion denial,
+  workflow-authority denial, dependency direction, effect mediation, process
+  RSS, and five bounded coordinator workload profiles.
+- `coordinator-boundary-review.json` hashes 19 committed inputs and passes 12
+  independently computed source-boundary checks. It is an automated review and
+  explicitly records that no independent human review occurred.
+- `security-evidence-map.json` maps 40 applicable or explicitly scoped-out
+  controls and retains eight command results. It fixes installed runtime,
+  independent review, manual fuzzing, and release approval to false.
+- `evidence-index.json` maps all 17 subtasks to code, tests, and evidence. It
+  records 14 complete and three partial subtasks without completing the story,
+  sprint, or release.
 
 ## Data Flow
 
@@ -209,18 +230,17 @@ runtime factory and admitted profile; cross-interface parity also remains open.
 ## Current Verification and Open Work
 
 Implemented source-level tests cover request and outcome closure, profile and
-catalog drift, direct verified completion, read-only mode restrictions,
-`ALLOW`/`ASK`/`DENY`, cancellation over approval, expired approval, malformed
-model output, false model-certified success, native registry validation,
-duplicate registration refusal, and the native fake-read vertical slice.
+catalog drift, direct verified completion, one and multiple native reads,
+search, read-only Git, read-only mode restrictions, `ALLOW`/`ASK`/`DENY`,
+cancellation over approval, expired approval, malformed model output, model and
+worker dependency failures, repeat/no-progress/budget ceilings, event payload
+canaries, false model-certified success, native registry validation, duplicate
+registration refusal, three-client parity, and authority/confusion bypasses.
 
 Still open:
 
 - installed-host runtime-factory and admitted-model composition;
-- complete direct-answer, multi-read, search, Git, repeat, no-progress, budget,
-  disconnect, and injected-failure fixture matrix;
-- native Chat versus CLI parity;
-- coordinator and optional-port performance ceilings;
-- complete canary and bypass campaign;
+- complete injection at every post-receipt, event-publication,
+  terminal-publication, and installed-process disconnect boundary;
 - installed platform evidence and independent review; and
 - deferred manual fuzzing.
