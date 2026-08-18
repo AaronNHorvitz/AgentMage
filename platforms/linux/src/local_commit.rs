@@ -968,13 +968,15 @@ fn error(kind: LinuxLocalCommitErrorKind) -> LinuxLocalCommitError {
 mod tests {
     use super::*;
     use std::os::unix::fs::PermissionsExt as _;
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{BoundaryKind, CorrelationId, TaskId};
     use agentmage_kernel_engine::local_commit::{
         CommitIdentity, LocalCommitPlan, ManualCommitApprovalDecision, reconcile_candidate_tree,
         reconcile_local_commit, record_manual_commit_approval,
     };
+
+    static TEMP_ID: AtomicU64 = AtomicU64::new(1);
 
     struct Fixture {
         root: PathBuf,
@@ -984,10 +986,7 @@ mod tests {
 
     impl Fixture {
         fn new() -> Self {
-            let nonce = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .expect("clock")
-                .as_nanos();
+            let nonce = TEMP_ID.fetch_add(1, Ordering::Relaxed);
             let root = std::env::temp_dir().join(format!(
                 "agentmage-local-commit-{}-{nonce}",
                 std::process::id()
