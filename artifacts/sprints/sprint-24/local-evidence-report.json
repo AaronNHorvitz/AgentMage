@@ -1,8 +1,8 @@
 {
   "blockers": [
     {
-      "code": "CANONICAL-SESSION-HANDOFF-COMPOSITION-ABSENT",
-      "owner": "24.1.1.1"
+      "code": "PRODUCTION-HOST-HANDOFF-ACTIVATION-ABSENT",
+      "owner": "24.1.3.2"
     },
     {
       "code": "INSTALLED-VSCODE-HANDOFF-EVIDENCE-ABSENT",
@@ -41,7 +41,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-handoff-tests",
-      "output_sha256": "762c7fb49ff0843a40b37fbffb08b24ca804cafc9d4737df30fc394b0bc0df2a"
+      "output_sha256": "40c32b39e71b598e4763bbedb1911646f381b16f1bc52be668a1dcfee53799ed"
     },
     {
       "argv": [
@@ -54,7 +54,7 @@
       ],
       "exit_code": 0,
       "id": "host-handoff-tests",
-      "output_sha256": "67ecfe6ad94d469dee09dcc0e5b1c3f4d629b30b734d433670234f1392bfad80"
+      "output_sha256": "d5aaff55f1758bdd7122d8f5dcfa66cbfa67474f23817d8d86ac2f48ea33c66e"
     },
     {
       "argv": [
@@ -66,7 +66,7 @@
       ],
       "exit_code": 0,
       "id": "vscode-tests",
-      "output_sha256": "a7dd5effc642eb0e0187befb209a2bbf6ae51872fe29463da385f7bb67331f34"
+      "output_sha256": "e14b4f4e952e57025287f557677c67aa46168456b3bac71574e7c82befb6ee7b"
     },
     {
       "argv": [
@@ -88,7 +88,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "18e2889408a903ee372ea7a08213fb8f8431d6f2c2f0423dd71aba678eb8f6e4"
+      "output_sha256": "f7dfbcd5cc669a21a441c1048837c9a3ae323292094d8f76b88425dea333703c"
     },
     {
       "argv": [
@@ -142,14 +142,15 @@
   "implemented_contracts": {
     "authenticated_local_transport": true,
     "automatic_external_delivery": false,
+    "canonical_session_composition_contract": true,
     "clipboard_or_interface_control": false,
     "codex_invocation": false,
     "complete_disclosure_schema": true,
     "content_addressed_packet_contract": true,
     "explicit_non_public_acknowledgment": true,
     "independent_extension_digest_verification": true,
+    "installed_production_session_activation": false,
     "pre_render_source_policy_redaction_revalidation": true,
-    "production_session_composition": false,
     "prohibited_action_local_receipts": true,
     "secret_hidden_unrelated_content_denial": true
   },
@@ -170,26 +171,27 @@
     "SR-CIV-004",
     "SR-CIV-009"
   ],
-  "source_revision": "f77028930cab3a66a96e70964936fb00187a153c",
+  "source_revision": "b6b08b8a9e79e0eaceee058d4c15337202f133a1",
   "source_sha256": {
-    "docs/architecture/local-codex-handoff-boundary.md": "1f2febcc71b1fe46dbd2fc7e3f22ea4fece28c862a4208148455785c5e970433",
-    "docs/verification/sprint-24-local-results.md": "10e71585f027f7ccbcac861d78f5c9c31c44b08c4cb5b5de630e073151527255",
-    "kernel/contracts/src/handoff.rs": "fd01abf54a47a5bbcd65159546255328c8dbe9bd3abdd048f471c39d5add3d2d",
-    "kernel/engine/src/handoff.rs": "b20008e507719c2c42d348636f2ae8579d1dbad38e40031d86c83dc01d2c53b8",
-    "kernel/engine/src/lib.rs": "691b54d6a112234fe69fd3889e66a7580b667dc1968fdd2acac368c89ff096bd",
-    "scripts/sprint_24_evidence.py": "22f6a91c35a2f7c06a2af2b963655855c1d4f6fa9f97e09420b70c28962ffa76",
-    "security/strict-local-source-policy.json": "b7a5046c9d433547b7226861d2566854ce3b454d19f4f61ce276b58f1c498053",
-    "shells/host/src/linux_read.rs": "69cd5f43256ea49ed1b822033cf95b818a70bd9c3a5d8dd8efa4b0de19bf37b3",
-    "shells/host/src/protocol.rs": "06ea5e0fe9ae3f67b559ce05b7ca57c9a76eeb0a3d16af9df9a254ed99a7ae3c",
-    "shells/vscode/src/extension.ts": "bdf2f2e33dcafe86646871664dfec6252ab652be9202f338a59140727417877a",
-    "shells/vscode/src/handoff.ts": "b34dd83e815c4aa45c0ebbe86872babcdf5489dd828cae0124093f54ebba363f",
-    "shells/vscode/src/host_bootstrap.ts": "b9ed58dc7fc0a0f3a015e899f6b9d1df315c1f20ed27db2ba27a6b20c5e00ced",
-    "shells/vscode/src/host_bridge.ts": "18890ccf77db9a6ea477676021697a38d6433fbdd88b76aba89880032ca44bbb",
-    "shells/vscode/src/provider.ts": "5ed8347a15ee80deb137f981724d099fcf3d62c3fbd37a43c773bc64d49749eb",
+    "docs/architecture/local-codex-handoff-boundary.md": "e0c8e8286bfde441da1bf4719e4a22ad1490ab154ddba4e0964b2a84b3b7c7f6",
+    "docs/verification/sprint-24-local-results.md": "b5ede6e605055952b52e89adbb7fd10f958b434687fd1b76a6f4897f4c0e6ff3",
+    "kernel/contracts/src/handoff.rs": "ef1cb45bd60fd2a3ac42dc42386ef133d8b28e0ead6fb0ac285abcebd2c1a8a0",
+    "kernel/engine/src/context_management.rs": "bc6a562f4573364bc82a3972aae64d93e24b976303c52ce9227018717516c077",
+    "kernel/engine/src/handoff.rs": "84b4ad4ae0381e0a0cf22735082c302deadca9df52c38cd78ebb926f097cf0f2",
+    "kernel/engine/src/lib.rs": "375e9a88e64c717a91d4c3b7e787801b327a34902cf3f789c38bc1d9b2b8a11d",
+    "scripts/sprint_24_evidence.py": "27139cc9047cd71121f16c26c4718bfe4c4b765a94fc31636bf98197aba54767",
+    "security/strict-local-source-policy.json": "db6421fa04932c123789389f42489ba4da41c60e9455f20954d515fca4b30677",
+    "shells/host/src/linux_read.rs": "b27d053b6dfdd8868e247b94dabb0e7611ffbcf91997b492b75a83763fbff95a",
+    "shells/host/src/protocol.rs": "a48a7d8ed8f43727bba23f14fb70acf73ce298ad9abfa96eab2a51d574579c43",
+    "shells/vscode/src/extension.ts": "c252adbe10b0a8f448260789a917a0fc698adab4ba4973d24d4b5e749b116a5d",
+    "shells/vscode/src/handoff.ts": "f784df9ac32b6c3a67eed04a404b78503722edad9372aa4bba89547fdccd4da3",
+    "shells/vscode/src/host_bootstrap.ts": "b0dd2377ea72c94437e923e5d985e67fde7261daf6022ebd77863e1e82d405ad",
+    "shells/vscode/src/host_bridge.ts": "049efd0066de16c6dca0cc8203a9b6ff7cc3e9c43e639e9250c9406c5379efa1",
+    "shells/vscode/src/provider.ts": "481d3f0fa8ada22800381ceebad9cb72f668e960832fa5a4caafada8664533ec",
     "shells/vscode/test/handoff.test.ts": "0e3c9a9ae9ce75d46618a89037c081ac608ae632b01620271dc752ff6b4728d8",
-    "shells/vscode/test/host_bridge.test.ts": "2502a3249e0a34c94690de2f8c9e5bbcc1d4327e89e583cd598b1095e98c6406",
-    "shells/vscode/test/provider.test.ts": "81e769b4231d2ae3298c7c42a35d8de074229dbd345333b145242ea8abeb0920",
-    "tests/test_sprint_24_evidence.py": "4a78b7d6b0cc758d2fe02ad942d01bd89141fb1b6731a473ba1b34d538ce9c88"
+    "shells/vscode/test/host_bridge.test.ts": "cf696f19dba6289a3de8048e32efb24c070a6ad42907fc22849fa81c14a9b47b",
+    "shells/vscode/test/provider.test.ts": "4d00bbffe9901888d69bc5c151f6af41c3fec4f1f4c1b2b1ef814d76d867c7c5",
+    "tests/test_sprint_24_evidence.py": "97e1fa6c452f0efff0735807b7f633cacbaaa6ad1ac3bc63b1495590b7b14901"
   },
   "summary": {
     "local_contract_passed": true,
@@ -198,12 +200,13 @@
   },
   "verification_evidence": {
     "authenticated_host_transport": true,
-    "canonical_production_session_composition": false,
+    "canonical_session_composition_contract": true,
     "complete_product_local_gate": true,
     "exact_disclosure_and_packet_matrix": true,
     "independent_extension_digest_checks": true,
     "independent_review": false,
     "installed_native_vscode_workflow": false,
+    "installed_production_session_activation": false,
     "linux_native_accessibility": false,
     "live_handoff_zero_egress_observation": false,
     "macos_native_accessibility": false,
