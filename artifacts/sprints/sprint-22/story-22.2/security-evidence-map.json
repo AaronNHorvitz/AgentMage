@@ -1,0 +1,524 @@
+{
+  "artifact_id": "story-22.2-product-security-evidence-map",
+  "external_network_used": false,
+  "independent_automated_review_performed": true,
+  "independent_cryptographic_review_performed": false,
+  "independent_human_review_performed": false,
+  "limitations": [
+    "This closes local Story 22.2 security-evidence organization, not any product or release security requirement.",
+    "The independent reviewer is an automated implementation with separate rules, not an independent human or cryptographic review.",
+    "Physical storage faults, syscall interruption, installed clients, Windows storage, and real-model sessions are not exercised.",
+    "Quarantined-payload operator recovery, concurrent collection, and larger unique-object populations remain open.",
+    "Manual fuzzing remains deferred and was not executed.",
+    "No model, interface, platform, package, deployment, or release is enabled or approved by this evidence.",
+    "Raw command output replaces the absolute checkout root with the literal <repository-root>."
+  ],
+  "manual_fuzzing_executed": false,
+  "mappings": [
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "schemas/runtime/runtime-artifact-reference.schema.json",
+        "schemas/runtime/runtime-artifact-manifest.schema.json",
+        "schemas/runtime/runtime-artifact-operator-view.schema.json",
+        "schemas/runtime/runtime-resume-binding.schema.json",
+        "kernel/engine/migrations/operational-store/0007-runtime-artifacts.sql"
+      ],
+      "remaining": "Product-wide runtime inventory comparison.",
+      "requirement_id": "SR-DAT-001"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "kernel/contracts/src/runtime_artifact.rs",
+        "kernel/engine/src/runtime_artifact.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json"
+      ],
+      "remaining": "Installed-client observation and complete policy composition.",
+      "requirement_id": "SR-DAT-002"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "kernel/contracts/src/runtime_artifact.rs",
+        "platforms/linux/src/runtime_artifact_store.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json"
+      ],
+      "remaining": "Product-wide memory, swap, crash, export, and OS telemetry scan.",
+      "requirement_id": "SR-DAT-003"
+    },
+    {
+      "contribution": "demonstrated-linux-story-scope",
+      "evidence": [
+        "kernel/engine/src/runtime_artifact.rs",
+        "platforms/linux/src/runtime_artifact_store.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json"
+      ],
+      "remaining": "Supported-platform key-store failure campaigns.",
+      "requirement_id": "SR-DAT-004"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "docs/architecture/runtime-artifact-lifecycle.md",
+        "platforms/linux/src/runtime_artifact_store.rs",
+        "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json"
+      ],
+      "remaining": "Independent cryptographic provider and construction review.",
+      "requirement_id": "SR-DAT-005"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "docs/architecture/runtime-artifact-lifecycle.md",
+        "docs/verification/task-22-2-3-6-product-security-evidence.md",
+        "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json"
+      ],
+      "remaining": "Release documentation and diagnostics claim scan.",
+      "requirement_id": "SR-DAT-006"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "kernel/contracts/src/runtime_artifact.rs",
+        "kernel/engine/src/runtime_artifact.rs",
+        "platforms/linux/src/runtime_artifact_store.rs"
+      ],
+      "remaining": "Live platform key-service and process instrumentation evidence.",
+      "requirement_id": "SR-DAT-007"
+    },
+    {
+      "contribution": "partial-inherited-evidence",
+      "evidence": [
+        "docs/architecture/runtime-artifact-lifecycle.md",
+        "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json"
+      ],
+      "remaining": "Release package and runtime CBOM reconciliation.",
+      "requirement_id": "SR-DAT-008"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "docs/architecture/runtime-artifact-lifecycle.md",
+        "platforms/linux/src/runtime_artifact_store.rs"
+      ],
+      "remaining": "Provider substitution, rotation, migration, and rollback campaign.",
+      "requirement_id": "SR-DAT-009"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "kernel/contracts/src/runtime_artifact.rs",
+        "kernel/engine/src/runtime_artifact.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json"
+      ],
+      "remaining": "Export, backup, restore, and installed retention lifecycle.",
+      "requirement_id": "SR-DAT-010"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "docs/architecture/runtime-artifact-lifecycle.md",
+        "platforms/linux/src/runtime_artifact_store.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json"
+      ],
+      "remaining": "Live key destruction and physical-media verification.",
+      "requirement_id": "SR-DAT-011"
+    },
+    {
+      "contribution": "owned-by-later-gate",
+      "evidence": [
+        "docs/architecture/runtime-artifact-lifecycle.md",
+        "platforms/linux/src/runtime_artifact_store.rs"
+      ],
+      "remaining": "Installed uninstall and residue campaign on every supported platform.",
+      "requirement_id": "SR-DAT-012"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "kernel/contracts/src/runtime_artifact.rs",
+        "kernel/engine/src/runtime_artifact.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json"
+      ],
+      "remaining": "CapabilityGrant-mediated product operation composition.",
+      "requirement_id": "SR-ACC-001"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "kernel/contracts/src/runtime_artifact.rs",
+        "kernel/engine/src/runtime_artifact.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json"
+      ],
+      "remaining": "Complete signed grant field mutation campaign.",
+      "requirement_id": "SR-ACC-002"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "kernel/engine/src/runtime_artifact.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json"
+      ],
+      "remaining": "Atomic one-use grant consumption at every artifact effect.",
+      "requirement_id": "SR-ACC-003"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "schemas/runtime/runtime-artifact-reference.schema.json",
+        "schemas/runtime/runtime-artifact-manifest.schema.json",
+        "schemas/runtime/runtime-artifact-operator-view.schema.json",
+        "schemas/runtime/runtime-resume-binding.schema.json",
+        "kernel/contracts/src/runtime_artifact.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json"
+      ],
+      "remaining": "Product-wide typed-path integration.",
+      "requirement_id": "SR-ACC-004"
+    },
+    {
+      "contribution": "demonstrated-linux-story-scope",
+      "evidence": [
+        "platforms/linux/src/runtime_artifact_store.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json",
+        "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json"
+      ],
+      "remaining": "Concurrent rename, link, and mount campaign on installed platforms.",
+      "requirement_id": "SR-ACC-005"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "platforms/linux/src/runtime_artifact_store.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json",
+        "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json"
+      ],
+      "remaining": "Complete ambient and adjacent-root canary campaign.",
+      "requirement_id": "SR-ACC-006"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "kernel/engine/src/runtime_artifact.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json"
+      ],
+      "remaining": "Installed user approval, cancellation, diagnostics, and recovery interaction.",
+      "requirement_id": "SR-ACC-007"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "docs/architecture/runtime-artifact-lifecycle.md",
+        "platforms/linux/src/runtime_artifact_store.rs",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json"
+      ],
+      "remaining": "Product-wide prompt-injection corpus and interface composition.",
+      "requirement_id": "SR-ACC-008"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.log",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.log",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.log"
+      ],
+      "remaining": "Product-wide memory, crash, export, and OS telemetry scan.",
+      "requirement_id": "SR-OPS-003"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.log",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json"
+      ],
+      "remaining": "One hundred integrated artifact resumes plus power and device faults.",
+      "requirement_id": "SR-TST-005"
+    },
+    {
+      "contribution": "partial-story-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json"
+      ],
+      "remaining": "Physical latency, larger populations, installed interfaces, and manual fuzzing.",
+      "requirement_id": "SR-TST-006"
+    },
+    {
+      "contribution": "demonstrated-local-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json"
+      ],
+      "remaining": "Full product transition set and physical-fault campaign.",
+      "requirement_id": "RV-17"
+    },
+    {
+      "contribution": "demonstrated-local-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json",
+        "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json"
+      ],
+      "remaining": "Product-wide event coverage and independent human review.",
+      "requirement_id": "RV-18"
+    }
+  ],
+  "private_user_data_used": false,
+  "raw_trace": {
+    "bytes": 1532,
+    "path": "artifacts/sprints/sprint-22/story-22.2/security-evidence.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "339454b3b8af518900bf4b983d7a47927cb507abf7c9dad14a9d88c258393ffb"
+  },
+  "release_approved": false,
+  "report_sha256": "05c4918ac1b8df9a1e26c4b4319b08ec66905c42bb71d9e6acf8aafc0511fefc",
+  "requirement_ids": [
+    "SR-DAT-001",
+    "SR-DAT-002",
+    "SR-DAT-003",
+    "SR-DAT-004",
+    "SR-DAT-005",
+    "SR-DAT-006",
+    "SR-DAT-007",
+    "SR-DAT-008",
+    "SR-DAT-009",
+    "SR-DAT-010",
+    "SR-DAT-011",
+    "SR-DAT-012",
+    "SR-ACC-001",
+    "SR-ACC-002",
+    "SR-ACC-003",
+    "SR-ACC-004",
+    "SR-ACC-005",
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-OPS-003",
+    "SR-TST-005",
+    "SR-TST-006",
+    "RV-17",
+    "RV-18"
+  ],
+  "schema_version": 1,
+  "source_revision": "289197a446b0c1ec042a0fe63d53c5e36ec77e1e",
+  "sources": [
+    {
+      "bytes": 6786,
+      "path": "docs/verification/task-22-2-3-6-product-security-evidence.md",
+      "sha256": "6df995843c37e8d73e8441a1dd1a7bed34dbf33d4dace29f848f24855920368f"
+    },
+    {
+      "bytes": 136944,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+    },
+    {
+      "bytes": 23801,
+      "path": "docs/architecture/runtime-artifact-lifecycle.md",
+      "sha256": "07c8cd0f87102205ce5f926344d41f754a2d38440843b3b0ab1a2c9c2a981798"
+    },
+    {
+      "bytes": 1504069,
+      "path": "TASKS.md",
+      "sha256": "6ee83b88763f799b1a4a91ac9183e2ca3d2eb4f3b7f2357e779e236cef99903f"
+    },
+    {
+      "bytes": 14525,
+      "path": "kernel/contracts/src/runtime_artifact.rs",
+      "sha256": "8fdb490ec397bb2e7975876e03d196e78c2e3abad2ee3ea27983184be8b3ebb4"
+    },
+    {
+      "bytes": 165968,
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "193b8402fdcd452bc248bd39c4888dd12579906dfc579348eab978602d44287d"
+    },
+    {
+      "bytes": 5502,
+      "path": "kernel/engine/migrations/operational-store/0007-runtime-artifacts.sql",
+      "sha256": "266f7eba307f96257baae58cc31b9df9c9a8ff40492f5ac274b9d4171e3883a0"
+    },
+    {
+      "bytes": 87286,
+      "path": "platforms/linux/src/runtime_artifact_store.rs",
+      "sha256": "e6d99a3359db663956dfdd585fbf0d323d85f6b8a68b707b3c42e5985c94f1ca"
+    },
+    {
+      "bytes": 1106,
+      "path": "schemas/runtime/runtime-artifact-reference.schema.json",
+      "sha256": "c58b50916ef1b1b791228d1fdcac5953b8027bbb455e3a33c19163351732d42d"
+    },
+    {
+      "bytes": 4266,
+      "path": "schemas/runtime/runtime-artifact-manifest.schema.json",
+      "sha256": "164cf90f8a4b6a422ea1f7f7ec323df1e444a813084cd15c8fe5cfb62471edb6"
+    },
+    {
+      "bytes": 3379,
+      "path": "schemas/runtime/runtime-artifact-operator-view.schema.json",
+      "sha256": "3a85e3b14f6a183060d68c76ebe252e821993164eba7916a2f61977541d8b47b"
+    },
+    {
+      "bytes": 1699,
+      "path": "schemas/runtime/runtime-resume-binding.schema.json",
+      "sha256": "b0472f287bf79c71a16706ccbc90761c9a44e3b919065d6f579c1a826b10587e"
+    },
+    {
+      "bytes": 17578,
+      "path": "scripts/runtime_artifact_boundary_review.py",
+      "sha256": "9d3de259310bcadda32d8e32b75f094ece35cc75153ea407976743381c931a8b"
+    },
+    {
+      "bytes": 2413,
+      "path": "tests/test_runtime_artifact_boundary_review.py",
+      "sha256": "8f5655952dbf4581ba5c1abc0241c48a6c2a0541388b50b4b0a9c61afea87e7d"
+    },
+    {
+      "bytes": 13387,
+      "path": "scripts/story_22_2_artifact_crash_evidence.py",
+      "sha256": "0896d2839803944862bff8b65e6316603e51cee8ee8ac31c0e8b310ff33af954"
+    },
+    {
+      "bytes": 16334,
+      "path": "scripts/story_22_2_artifact_integrity_evidence.py",
+      "sha256": "39faf8b79d84278fa00e66de8b868e2f8c86094cacd4dae9e540c06ed7dbb3cf"
+    },
+    {
+      "bytes": 14048,
+      "path": "scripts/story_22_2_artifact_pressure_evidence.py",
+      "sha256": "6e98b5c458e009d1cbb3cbdf24358ea959009eba98e3cfaa9c7ce4a62689b94d"
+    },
+    {
+      "bytes": 13583,
+      "path": "scripts/story_22_2_artifact_resume_evidence.py",
+      "sha256": "a63e68e801f34bff58bb134e6fb5ad584bcf8a5933338c410d20a0ecbadfe15d"
+    },
+    {
+      "bytes": 24436,
+      "path": "scripts/story_22_2_security_evidence.py",
+      "sha256": "564ca63bdbf83dde5a025f4494f7f27122760de8245b0324244b8c60467ee655"
+    },
+    {
+      "bytes": 4420,
+      "path": "tests/test_story_22_2_security_evidence.py",
+      "sha256": "fab4b0226c5cb9d68cd6697081504e2a2703a2c60bb817899f083c951648ef56"
+    },
+    {
+      "bytes": 10561,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
+      "sha256": "5f04691bc6a2452b9ec0d5e4792251eff2c46c880119f6a259752281091eac13"
+    },
+    {
+      "bytes": 6336,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.log",
+      "sha256": "df875d09765252dc1947d68fccf9a9e82ee28f3c81db27f542f88f20fd21787a"
+    },
+    {
+      "bytes": 7491,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json",
+      "sha256": "12036cba05724b0589be67ea6ec214a023cbbb9fe9929436cc3c7bd8580eab96"
+    },
+    {
+      "bytes": 10965,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.log",
+      "sha256": "15da933feeaa11cab762025feb222a73824dbaa61b7aadd270ab9a4328c83682"
+    },
+    {
+      "bytes": 3301,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
+      "sha256": "8b5c17448f06dd4047bc502798cb3c3f1a08b0988b81f4ad1f2338b1446142ef"
+    },
+    {
+      "bytes": 1506,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log",
+      "sha256": "5c589612653fbbd44e32bbfdf8ab0b1e21a8cf0d5702e47f7baa928dddcb6dfb"
+    },
+    {
+      "bytes": 4273,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json",
+      "sha256": "f3004a750ed6e69b8309a0bce271b34b5a00f8a7a5813b4bfba4641dfa54a97f"
+    },
+    {
+      "bytes": 1924,
+      "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.log",
+      "sha256": "9740c28ae7d3aa6ddd4c03bda09a3a2ccf4a1e912a1a1697bd506bd0cf960e6a"
+    },
+    {
+      "bytes": 7813,
+      "path": "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json",
+      "sha256": "afbf3808463ce501fd07e81d6785a7340705bd849ae0ffffcfcae166ab3c8dd3"
+    }
+  ],
+  "status": "pass-local-story-security-evidence",
+  "task_ids": [
+    "22.2.3.6",
+    "RV-17",
+    "RV-18"
+  ],
+  "verification_commands": [
+    {
+      "argv_sha256": "ec0af55007f5e566f75951c4b886a438ef3025d70c23830daa356dfdd19b70b8",
+      "command_id": "crash-evidence",
+      "elapsed_ms": 38,
+      "exit_code": 0,
+      "expected_marker_sha256": "375ac3cbba7da924cc4d012794e107dfc59713cd3af176e23904b183c9d4e23b",
+      "status": "pass"
+    },
+    {
+      "argv_sha256": "286a4b17b9237c26d2a731e7dcf47d1d2706407c08efb8700919763a168753ca",
+      "command_id": "integrity-evidence",
+      "elapsed_ms": 48,
+      "exit_code": 0,
+      "expected_marker_sha256": "d5af8cdb1ebfdc00ddce5eb0aa59226d9ba15b054767f7599e245f2345e060b4",
+      "status": "pass"
+    },
+    {
+      "argv_sha256": "93d142eccf1d3691e4927d949c3dfb07558569576f86bb61ebd23effc0a0ca74",
+      "command_id": "resume-evidence",
+      "elapsed_ms": 52,
+      "exit_code": 0,
+      "expected_marker_sha256": "8dc660ab1a0209593eec529ff0d059f2f71581b69d2560dde925a168dee8271b",
+      "status": "pass"
+    },
+    {
+      "argv_sha256": "e8b831cc9937694c6b99afc9e6f6ed78627ea8dfcc6681ebf1b7abcb23b5684f",
+      "command_id": "pressure-evidence",
+      "elapsed_ms": 42,
+      "exit_code": 0,
+      "expected_marker_sha256": "c404b6fb7bf96ab8384a179be1e24efc8f8f9b81428e84f85b16c38f9325e6d5",
+      "status": "pass"
+    },
+    {
+      "argv_sha256": "978e40eda07dd541f8ed225005e76a1a3cedbbbeb19e41ff51793ae5aa1fbdc1",
+      "command_id": "independent-boundary-review",
+      "elapsed_ms": 97,
+      "exit_code": 0,
+      "expected_marker_sha256": "07bccfa455f018dac68948180d5bd0e6597580413f30e8b30606e1d711a6b4d0",
+      "status": "pass"
+    },
+    {
+      "argv_sha256": "a7a026c00733338fc49ea1fa6d4b50d94ddcb4aaea0c7f24af77b06a152482c1",
+      "command_id": "security-evidence-tests",
+      "elapsed_ms": 757,
+      "exit_code": 0,
+      "expected_marker_sha256": "565339bc4d33d72817b583024112eb7f5cdf3e5eef0252d6ec1b9c9a94e12bb3",
+      "status": "pass"
+    },
+    {
+      "argv_sha256": "5812e7987fcbdb9ef74b1c8fae52cf857ba13a565ec3f842c9e3eb3bad3a43db",
+      "command_id": "artifact-canaries",
+      "elapsed_ms": 105,
+      "exit_code": 0,
+      "expected_marker_sha256": "dc02654fda37d300b3238dcdbe8560731d5eff8d1ac74f55e58f3a627f09e2fb",
+      "status": "pass"
+    }
+  ]
+}

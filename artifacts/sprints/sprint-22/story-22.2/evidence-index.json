@@ -1,6 +1,11 @@
 {
   "artifacts": [
     {
+      "bytes": 7813,
+      "path": "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json",
+      "sha256": "afbf3808463ce501fd07e81d6785a7340705bd849ae0ffffcfcae166ab3c8dd3"
+    },
+    {
       "bytes": 10561,
       "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
       "sha256": "5f04691bc6a2452b9ec0d5e4792251eff2c46c880119f6a259752281091eac13"
@@ -41,9 +46,24 @@
       "sha256": "9740c28ae7d3aa6ddd4c03bda09a3a2ccf4a1e912a1a1697bd506bd0cf960e6a"
     },
     {
-      "bytes": 23269,
+      "bytes": 20469,
+      "path": "artifacts/sprints/sprint-22/story-22.2/security-evidence-map.json",
+      "sha256": "772dfcc91ed3c98e249a7464a598b57a963dc734a126b1e27bfb49f944dfd2d7"
+    },
+    {
+      "bytes": 1532,
+      "path": "artifacts/sprints/sprint-22/story-22.2/security-evidence.log",
+      "sha256": "339454b3b8af518900bf4b983d7a47927cb507abf7c9dad14a9d88c258393ffb"
+    },
+    {
+      "bytes": 23801,
       "path": "docs/architecture/runtime-artifact-lifecycle.md",
-      "sha256": "d908f5bf7636c17a55a3bea70c77de26f55a88597533efe56b6d35f24dc80140"
+      "sha256": "07c8cd0f87102205ce5f926344d41f754a2d38440843b3b0ab1a2c9c2a981798"
+    },
+    {
+      "bytes": 6786,
+      "path": "docs/verification/task-22-2-3-6-product-security-evidence.md",
+      "sha256": "6df995843c37e8d73e8441a1dd1a7bed34dbf33d4dace29f848f24855920368f"
     },
     {
       "bytes": 14525,
@@ -141,9 +161,19 @@
       "sha256": "a63e68e801f34bff58bb134e6fb5ad584bcf8a5933338c410d20a0ecbadfe15d"
     },
     {
-      "bytes": 19960,
+      "bytes": 20593,
       "path": "scripts/story_22_2_evidence_index.py",
-      "sha256": "5d80124d1b462755d4e777a5f01c7ba224a1f3716d8fba249acd66b8efa7342a"
+      "sha256": "6b4aef6d1bc5d45f15eb862fb18789c02e3bd8c61820d82f47ff3c4adea80b57"
+    },
+    {
+      "bytes": 17578,
+      "path": "scripts/runtime_artifact_boundary_review.py",
+      "sha256": "9d3de259310bcadda32d8e32b75f094ece35cc75153ea407976743381c931a8b"
+    },
+    {
+      "bytes": 24436,
+      "path": "scripts/story_22_2_security_evidence.py",
+      "sha256": "564ca63bdbf83dde5a025f4494f7f27122760de8245b0324244b8c60467ee655"
     },
     {
       "bytes": 38371,
@@ -183,17 +213,27 @@
     {
       "bytes": 3419,
       "path": "tests/test_story_22_2_evidence_index.py",
-      "sha256": "a65bcca37cf58365aae8e41b3657a06bd12f4d9a707c2af785b5134d827decfb"
+      "sha256": "e8a0899f4339cef7f701a3e3853e77fa07708322d977daabb211147e49539b29"
+    },
+    {
+      "bytes": 2413,
+      "path": "tests/test_runtime_artifact_boundary_review.py",
+      "sha256": "8f5655952dbf4581ba5c1abc0241c48a6c2a0541388b50b4b0a9c61afea87e7d"
+    },
+    {
+      "bytes": 4420,
+      "path": "tests/test_story_22_2_security_evidence.py",
+      "sha256": "fab4b0226c5cb9d68cd6697081504e2a2703a2c60bb817899f083c951648ef56"
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "9a0c9a952468dea49b0e0443411633f7eb47fc4a2af73c02d47f0e8246649c40",
+  "index_sha256": "5305e6596544dbbc66cee8c6059ac5a47934935e37b281d1bcf8c7debfedd7a9",
   "limitations": [
     "Stops inside filesystem or SQLite syscalls and physical storage-fault campaigns remain open.",
     "Quarantined-payload operator recovery, long mixed-artifact sessions, and concurrent collection campaigns remain open.",
     "Larger unique-object and installed-interface pressure evidence remains open.",
     "Windows native artifact storage and supported-platform package evidence remains open.",
-    "Independent artifact-boundary and cryptographic review remains open.",
+    "Independent automated artifact-boundary review passes; independent human and cryptographic review remains open.",
     "Manual fuzzing remains deliberately deferred and open."
   ],
   "mappings": [
@@ -386,7 +426,7 @@
       "evidence": [
         "docs/architecture/runtime-artifact-lifecycle.md"
       ],
-      "statement_sha256": "faff269571a8048de981a067334af420b1f481a04ca16fc8266f506ee383478c",
+      "statement_sha256": "1ba79b0da67ba4fad3fcd8d4bb6ae94bcdcc9801be5c859a978aff479af484c6",
       "status": "complete",
       "task_id": "22.2.2.4",
       "tests": [
@@ -488,36 +528,37 @@
       ]
     },
     {
-      "checked": false,
+      "checked": true,
       "code": [
-        "scripts/story_22_2_artifact_crash_evidence.py",
-        "scripts/story_22_2_artifact_integrity_evidence.py",
-        "scripts/story_22_2_artifact_pressure_evidence.py",
-        "scripts/story_22_2_artifact_resume_evidence.py"
+        "scripts/runtime_artifact_boundary_review.py",
+        "scripts/story_22_2_security_evidence.py"
       ],
       "evidence": [
+        "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json",
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json",
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
-        "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json"
+        "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json",
+        "artifacts/sprints/sprint-22/story-22.2/security-evidence-map.json",
+        "artifacts/sprints/sprint-22/story-22.2/security-evidence.log"
       ],
-      "statement_sha256": "8ed15d728743c0c7fa68e0284a65d69cf5aa9f2ceb2011a58aac4759e1faac10",
-      "status": "open",
+      "statement_sha256": "b5324daae765adbfa02c136218f8dd587be9393df4f2eff5e861937a32b453e3",
+      "status": "complete",
       "task_id": "22.2.3.6",
       "tests": [
-        "test_current_report_and_raw_trace_are_hash_bound",
-        "test_every_fixed_claim_and_resource_relationship_fails_closed"
+        "test_current_committed_boundary_passes_every_independent_check",
+        "test_retained_report_and_log_are_hash_bound"
       ]
     }
   ],
   "record_type": "story_22_2_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "6f52b0e98505ea56476922aee50a4ebcea13a0d6",
+  "source_revision": "90462a5230c43fcfdfdf09c2ba29db3714d16140",
   "story_id": "22.2",
   "summary": {
-    "complete_count": 12,
+    "complete_count": 13,
     "mapping_count": 17,
-    "open_count": 1,
+    "open_count": 0,
     "partial_count": 4,
     "release_approved": false,
     "sprint_complete": false,

@@ -1,0 +1,38 @@
+=== crash-evidence ===
+$ python3 scripts/story_22_2_artifact_crash_evidence.py
+Story 22.2 native artifact crash evidence: pass
+
+=== integrity-evidence ===
+$ python3 scripts/story_22_2_artifact_integrity_evidence.py
+Story 22.2 native artifact integrity evidence: pass
+
+=== resume-evidence ===
+$ python3 scripts/story_22_2_artifact_resume_evidence.py
+Story 22.2 native artifact resume evidence: pass
+
+=== pressure-evidence ===
+$ python3 scripts/story_22_2_artifact_pressure_evidence.py
+Story 22.2 native artifact pressure evidence: pass
+
+=== independent-boundary-review ===
+$ python3 scripts/runtime_artifact_boundary_review.py
+Story 22.2 independent automated artifact review: pass
+
+=== security-evidence-tests ===
+$ python3 -m unittest tests.test_story_22_2_security_evidence tests.test_runtime_artifact_boundary_review
+..s.......
+----------------------------------------------------------------------
+Ran 10 tests in 0.692s
+
+OK (skipped=1)
+
+=== artifact-canaries ===
+$ cargo test -p agentmage-kernel-engine --lib --locked runtime_artifact::tests::story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read -- --exact --nocapture
+
+running 1 test
+test runtime_artifact::tests::story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 628 filtered out; finished in 0.04s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
