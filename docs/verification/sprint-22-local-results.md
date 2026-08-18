@@ -27,6 +27,9 @@
   explicit Continue, Restart, or Cancel decision boundary.
 - The 126-run subprocess campaign covers before and after each of nine persistence boundaries;
   session-checkpoint recovery retains exactly one record and repeats no completed transition.
+- The 100-run native Linux coordinator campaign exits without unwinding 25 times on each side of
+  the tool-terminal event and checkpoint transactions; every reopen retains one worker launch,
+  exposes no pre-commit terminal or checkpoint state, and repeats no completed effect.
 - A failed terminal checkpoint after worker completion poisons the runtime; restart reconciles one
   receipt, and replay launches no worker.
 - The full local product gate passes with all pre-existing ignored live, native-platform, and
@@ -36,10 +39,10 @@
 
 The production VS Code Chat path does not yet compose all model context through this manager or
 present its debug view. Long production fixture sessions have not yet been resumed through actual
-model, runtime, configuration, and repository changes. Native Fedora, Ubuntu, Windows, and macOS
-crash evidence and independent Sprint 22 review are not retained. The product-wide secret-canary
-campaign has not yet exercised every production input and persistence path through this new
-checkpoint flow.
+model, runtime, configuration, and repository changes. The native campaign is current-host Linux
+source evidence; Ubuntu clean-image, Windows, macOS, installed-package, and independent Sprint 22
+review evidence are not retained. The product-wide secret-canary campaign has not yet exercised
+every production input and persistence path through this new checkpoint flow.
 
 Sprint 22 therefore remains blocked despite the complete platform-neutral context and encrypted
 checkpoint core. The machine-readable record is retained at

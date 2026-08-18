@@ -1,0 +1,71 @@
+{
+  "artifact_id": "story-22.1-native-tool-terminal-resume",
+  "external_network_used": false,
+  "host": {
+    "machine": "x86_64",
+    "system": "Linux"
+  },
+  "limitations": [
+    "The campaign uses the production Linux coordinator and encrypted authority with a deterministic fake model and Git executor; it is not real-model or installed-package evidence.",
+    "No-unwind exits occur immediately before and after the declared tool-terminal event and checkpoint transactions, not inside a filesystem or SQLite syscall.",
+    "The durable launch counter proves one worker execution in every case; the campaign does not claim physical power-loss or storage-controller fault coverage.",
+    "Long-session model/runtime/configuration/repository drift remains separate Story 22.1 integration work.",
+    "Windows, macOS, release, and independent-review evidence are not claimed.",
+    "Manual fuzzing remains deferred and was not executed by this campaign."
+  ],
+  "metrics": {
+    "boundaries": [
+      "before-tool-terminal-commit",
+      "after-tool-terminal-commit",
+      "before-checkpoint-commit",
+      "after-checkpoint-commit"
+    ],
+    "case_count": 100,
+    "checkpoint_after_commit_cases": 25,
+    "external_network_used": false,
+    "false_checkpoint_count": 0,
+    "false_terminal_count": 0,
+    "manual_fuzzing_executed": false,
+    "repetitions_per_boundary": 25,
+    "total_worker_launches_per_case": 1
+  },
+  "private_user_data_used": false,
+  "raw_trace": {
+    "bytes": 781,
+    "path": "artifacts/sprints/sprint-22/story-22.1/native-tool-terminal-resume.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "eb490d1af394cb298143a32c5608be8cb54b5576c91f49453cadae3b24d69b56"
+  },
+  "schema_version": 1,
+  "source_revision": "d36b51c9c71a215c26b13dbd93bd4cd5011171e7",
+  "sources": [
+    {
+      "bytes": 242565,
+      "path": "shells/host/src/linux_coding_runtime.rs",
+      "sha256": "feac9fae8fe78313bbdae00fb5fe6c68475cf8ab68c9fb557d1a6ccdd561843d"
+    },
+    {
+      "bytes": 10892,
+      "path": "scripts/story_22_1_native_resume_evidence.py",
+      "sha256": "02af4229ecf6430d1558fedf56c042daf4b1d939c9c7ef18793b267f189aa27a"
+    },
+    {
+      "bytes": 2163,
+      "path": "tests/test_story_22_1_native_resume_evidence.py",
+      "sha256": "7c1611dd8876e0e7a9abbafa2a3c711bba5522d17d9d2952601e94d5ad5577f9"
+    }
+  ],
+  "status": "pass-current-linux-native-source-boundary",
+  "task_ids": [
+    "22.1.3.3",
+    "AT-CRASH-001",
+    "AT-RESUME-001"
+  ],
+  "verification": {
+    "command_id": "4b5a448b9604e1dadb0018348d23b35bd678f18e85db1a534b7f0580e1c8aa97",
+    "elapsed_ms": 114307,
+    "exit_code": 0
+  }
+}

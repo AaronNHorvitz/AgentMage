@@ -1,0 +1,9 @@
+
+running 1 test
+test linux_coding_runtime::tests::story_22_1_native_tool_terminal_resume_matrix_never_replays_or_invents_state ... AGENTMAGE_STORY_22_1_RESUME={"boundaries":["before-tool-terminal-commit","after-tool-terminal-commit","before-checkpoint-commit","after-checkpoint-commit"],"case_count":100,"checkpoint_after_commit_cases":25,"external_network_used":false,"false_checkpoint_count":0,"false_terminal_count":0,"manual_fuzzing_executed":false,"repetitions_per_boundary":25,"total_worker_launches_per_case":1}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 129 filtered out; finished in 114.25s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-606dfe028916acd7)

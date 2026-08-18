@@ -94,6 +94,14 @@ checkpoint whether termination occurred before or after publication. Existing au
 also cover every effect transition. A malformed terminal checkpoint after worker completion poisons
 the runtime; restart terminalizes from durable reconciliation state and replay starts no worker.
 
+The native Linux coordinator campaign adds 100 no-unwind restarts: 25 each immediately before and
+after the durable tool-terminal event commit and immediately before and after the checkpoint commit.
+Every encrypted-authority reopen retains one terminal receipt and one durable worker launch. A
+terminal event appears only after its transaction commits, and a checkpoint appears only after its
+transaction commits. The source-bound report and redacted trace are retained under
+`artifacts/sprints/sprint-22/story-22.1/`. This does not claim a stop inside a filesystem or SQLite
+syscall, physical power loss, installed-package behavior, another platform, or independent review.
+
 ## Traceability
 
 | Requirement | Implementation | Local verification |
@@ -103,4 +111,4 @@ the runtime; restart terminalizes from durable reconciliation state and replay s
 | `S-020-I05` | `SessionCheckpoint`, `finalize_checkpoint`, `verify_checkpoint` | Valid, corrupt, future-version, mismatched-field, and tamper fixtures |
 | `S-020-I06` | Operational-store migration 4 and terminal checkpoint execution path | Atomic rollback, terminal receipt binding, reopen, and replay tests |
 | `S-020-I07`, `S-020-I08` | `revalidate_resume`, explicit drift decisions | Every drift dimension and all three decisions |
-| `AT-CRASH-001`, `AT-RESUME-001` | Subprocess crash campaign plus deterministic revalidation | 126 forced exits and 100 repeated no-drift comparisons |
+| `AT-CRASH-001`, `AT-RESUME-001` | Platform-neutral store campaign, native Linux coordinator campaign, and deterministic revalidation | 126 store-boundary exits, 100 native tool-terminal/checkpoint exits, and 100 repeated no-drift comparisons |

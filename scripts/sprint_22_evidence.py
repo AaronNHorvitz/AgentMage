@@ -24,8 +24,11 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/authority_transaction.rs",
     "kernel/engine/src/context_management.rs",
     "kernel/engine/src/operational_store.rs",
+    "shells/host/src/linux_coding_runtime.rs",
     "scripts/sprint_22_evidence.py",
+    "scripts/story_22_1_native_resume_evidence.py",
     "tests/test_sprint_22_evidence.py",
+    "tests/test_story_22_1_native_resume_evidence.py",
 )
 COMMANDS: Final = (
     ("context-tests", ("cargo", "test", "-p", "agentmage-kernel-engine",
@@ -35,6 +38,7 @@ COMMANDS: Final = (
     ("crash-campaign", ("cargo", "test", "-p", "agentmage-kernel-engine",
                         "seeded_crash_recovery_campaign_never_repeats_a_completed_transition",
                         "--locked")),
+    ("native-resume-evidence", ("python3", "scripts/story_22_1_native_resume_evidence.py")),
     ("engine-clippy", ("cargo", "clippy", "-p", "agentmage-kernel-engine",
                        "--all-targets", "--locked", "--", "-D", "warnings")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_22_evidence")),
@@ -50,7 +54,6 @@ BLOCKERS: Final = [
     {"code": "PRODUCTION-CONTEXT-PIPELINE-NOT-INTEGRATED", "owner": "22.1.3.1"},
     {"code": "LONG-PRODUCTION-RESUME-MATRIX-NOT-RETAINED", "owner": "22.1.3.4"},
     {"code": "PRODUCT-WIDE-CANARY-SWEEP-NOT-RETAINED", "owner": "22.1.3.5"},
-    {"code": "NATIVE-PLATFORM-CRASH-EVIDENCE-NOT-RETAINED", "owner": "22.1.3.5"},
     {"code": "INDEPENDENT-SPRINT-22-REVIEW-NOT-RETAINED", "owner": "22.1.3.5"},
 ]
 IMPLEMENTED: Final = {
@@ -58,6 +61,7 @@ IMPLEMENTED: Final = {
     "resume_drift_dimensions": 9,
     "explicit_drift_decisions": 3,
     "subprocess_crash_runs": 126,
+    "native_tool_terminal_resume_runs": 100,
     "authoritative_evidence_first_dedupe": True,
     "complete_content_free_accounting": True,
     "checked_summary_source_separation": True,
@@ -122,7 +126,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "drift_decision_matrix": local_pass,
             "ephemeral_no_persistence": local_pass,
             "production_context_integration": False,
-            "native_platform_crash_matrix": False,
+            "native_platform_crash_matrix": local_pass,
             "product_wide_canary_sweep": False,
             "independent_review": False,
         },
@@ -158,11 +162,12 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
     for field in (
-        "production_context_integration", "native_platform_crash_matrix",
-        "product_wide_canary_sweep", "independent_review",
+        "production_context_integration", "product_wide_canary_sweep", "independent_review",
     ):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
+    if verification.get("native_platform_crash_matrix") is not True:
+        failures.append("native platform crash matrix missing")
     for field in (
         "ephemeral_checkpoint_persistence", "ambient_filesystem_access",
         "network_authority", "resume_authority",
@@ -204,4 +209,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
