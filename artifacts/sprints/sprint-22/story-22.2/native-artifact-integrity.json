@@ -3,15 +3,16 @@
   "commands": [
     {
       "command_id": "ab1fb3e5f0cd8a3009aa746feadd0faa83b91ab295409f3e5e24c7f5cf14da08",
-      "elapsed_ms": 3253,
+      "elapsed_ms": 959,
       "exit_code": 0,
-      "expected_summary": "21 passed; 0 failed; 0 ignored",
+      "expected_summary": "22 passed; 0 failed; 0 ignored",
       "id": "kernel-contracts",
       "required_tests": [
         "manifest_digest_or_reference_drift_fails_closed",
         "size_media_retention_and_preview_bounds_are_closed",
         "unknown_versions_and_expired_artifacts_fail_closed",
         "partial_and_identifier_colliding_publications_preserve_canonical_state",
+        "publication_rejects_mismatched_producer_authority_before_staging",
         "story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
         "current_checkpoint_reference_prevents_release_and_collection",
         "missing_and_corrupt_payloads_quarantine_every_active_reference",
@@ -22,7 +23,7 @@
     },
     {
       "command_id": "b4b0b8f446dabb8739a1f2ceb086d3741a2ea979f6f7cb26e0adadd8b96a0d73",
-      "elapsed_ms": 1106,
+      "elapsed_ms": 4647,
       "exit_code": 0,
       "expected_summary": "9 passed; 0 failed; 2 ignored",
       "id": "linux-native-store",
@@ -40,7 +41,7 @@
     },
     {
       "command_id": "66f4e9017236c443d3ddc2b139237bc8eb34d947594da4277bde13946ebbe958",
-      "elapsed_ms": 861,
+      "elapsed_ms": 5431,
       "exit_code": 0,
       "expected_summary": "1 passed; 0 failed; 0 ignored",
       "id": "generated-file-route",
@@ -50,7 +51,7 @@
     },
     {
       "command_id": "40235cbebb517fd5dbce7fd0505d9f47a4193fc1e991f8ed4b8f48f16bc794b4",
-      "elapsed_ms": 422,
+      "elapsed_ms": 435,
       "exit_code": 0,
       "expected_summary": "pass 1",
       "id": "public-schema-contracts",
@@ -79,6 +80,7 @@
     ],
     "identity-reference-owner-checkpoint": [
       "kernel-contracts:story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
+      "kernel-contracts:publication_rejects_mismatched_producer_authority_before_staging",
       "kernel-contracts:checkpoint_cursor_and_artifact_set_publish_atomically_and_reopen"
     ],
     "missing-corrupt-quarantine-and-cleanup": [
@@ -113,20 +115,20 @@
   ],
   "private_user_data_used": false,
   "raw_trace": {
-    "bytes": 10556,
+    "bytes": 10965,
     "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.log",
     "redactions": [
       "repository-root"
     ],
-    "sha256": "a081459b81005fb4a136b45a00b4069726afd3187687326f9422929b59f19552"
+    "sha256": "15da933feeaa11cab762025feb222a73824dbaa61b7aadd270ab9a4328c83682"
   },
   "schema_version": 1,
-  "source_revision": "59d5ed92fd581e3065ec9b5508c0a7450946cd85",
+  "source_revision": "956e280c9e1041dee448a9b39bb1794b54fc3ceb",
   "sources": [
     {
-      "bytes": 162202,
+      "bytes": 165236,
       "path": "kernel/engine/src/runtime_artifact.rs",
-      "sha256": "40fba8bed9bb8f4ae60ae5f20af6afb984cbb85f4ef8583896d7632c1ad5cbff"
+      "sha256": "528d21136c8aaa4400ccf30d3221ee1ea337b8b0ad17b0e51229fe7abb8625b6"
     },
     {
       "bytes": 84332,
@@ -134,9 +136,9 @@
       "sha256": "1ad92f84b3a125d500f7695baf4b6dba14f53ce12e6c92f8da3433c8a8f6a78e"
     },
     {
-      "bytes": 233265,
+      "bytes": 255862,
       "path": "shells/host/src/linux_coding_runtime.rs",
-      "sha256": "37229d536e290164af956967993b20506556460e42f6698a51d95e56cacc6926"
+      "sha256": "1bef771b69b837e9fe1402a73a1aae50650ba8239834853011e6c986b821bf40"
     },
     {
       "bytes": 67296,
@@ -144,18 +146,19 @@
       "sha256": "af74d590af0eb8eb3cda538133f879dcb13eea0b8e3250c9b4e46f850c58b919"
     },
     {
-      "bytes": 16137,
+      "bytes": 16334,
       "path": "scripts/story_22_2_artifact_integrity_evidence.py",
-      "sha256": "86b871bad0cd4405a3922f965cb58991220a42604ee6554657407c08a70801aa"
+      "sha256": "39faf8b79d84278fa00e66de8b868e2f8c86094cacd4dae9e540c06ed7dbb3cf"
     },
     {
-      "bytes": 2682,
+      "bytes": 2829,
       "path": "tests/test_story_22_2_artifact_integrity_evidence.py",
-      "sha256": "b0dea6ed797418209f09d39c3ec0189e19ff04e40f9df4940906225486c118ad"
+      "sha256": "80a0118ea44b64dc3ee17dc21af34fda6c5054395826bff89b499169ed9e098d"
     }
   ],
   "status": "pass-current-linux-source-boundary",
   "task_ids": [
+    "22.2.1.3",
     "22.2.3.1",
     "RV-17",
     "RV-18"
