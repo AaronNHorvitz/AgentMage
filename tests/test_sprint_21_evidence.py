@@ -26,15 +26,19 @@ class Sprint21EvidenceTests(unittest.TestCase):
         self.assertTrue(value["implemented_contracts"]["receipt_chain"])
         self.assertFalse(value["implemented_contracts"]["integrity_key_stored_in_ledger"])
 
-    def test_integration_review_clock_and_release_overclaims_fail(self) -> None:
+    def test_integration_downgrade_review_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update(
-                {"production_held_file_integration": True}),
+                {"production_held_file_integration": False}),
             lambda value: value["verification_evidence"].update(
-                {"durable_anchor_integration": True}),
-            lambda value: value["verification_evidence"].update({"clock_anomaly_matrix": True}),
+                {"durable_anchor_integration": False}),
+            lambda value: value["verification_evidence"].update({"clock_anomaly_matrix": False}),
+            lambda value: value["verification_evidence"].update(
+                {"native_linux_source_execution": False}),
+            lambda value: value["verification_evidence"].update(
+                {"runtime_answer_integration": False}),
             lambda value: value["verification_evidence"].update({"independent_review": True}),
             lambda value: value["blockers"].pop(),
         )
@@ -61,4 +65,3 @@ class Sprint21EvidenceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

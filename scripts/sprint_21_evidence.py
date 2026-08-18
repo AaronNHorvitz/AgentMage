@@ -21,8 +21,13 @@ SOURCE_PATHS: Final = (
     "docs/verification/sprint-21-local-results.md",
     "kernel/engine/src/authority.rs",
     "kernel/engine/src/evidence_reconciliation.rs",
+    "kernel/engine/src/evidence_store.rs",
     "kernel/engine/src/evidence_state.rs",
     "kernel/engine/src/lib.rs",
+    "kernel/engine/src/operational_store.rs",
+    "kernel/engine/src/runtime_answer.rs",
+    "kernel/engine/migrations/operational-store/0009-evidence-integrity.sql",
+    "shells/host/src/linux_evidence_reconciliation.rs",
     "scripts/sprint_21_evidence.py",
     "tests/test_sprint_21_evidence.py",
 )
@@ -39,12 +44,36 @@ COMMANDS: Final = (
         ),
     ),
     (
-        "reconciliation-clippy",
+        "held-linux-citation-tests",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "linux_evidence_reconciliation", "--locked",
+        ),
+    ),
+    (
+        "encrypted-evidence-store-tests",
+        (
+            "cargo", "test", "-p", "agentmage-kernel-engine",
+            "evidence_store", "--locked",
+        ),
+    ),
+    (
+        "runtime-answer-ledger-test",
+        (
+            "cargo", "test", "-p", "agentmage-kernel-engine",
+            "story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order",
+            "--locked",
+        ),
+    ),
+    (
+        "evidence-host-clippy",
         (
             "cargo",
             "clippy",
             "-p",
             "agentmage-kernel-engine",
+            "-p",
+            "agentmage-host",
             "--all-targets",
             "--locked",
             "--",
@@ -63,11 +92,6 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-TST-010",
 ]
 BLOCKERS: Final = [
-    {"code": "PRODUCTION-ANSWER-LEDGER-NOT-INTEGRATED", "owner": "21.1.3.4"},
-    {"code": "PRODUCTION-HELD-FILE-RESOLUTION-NOT-INTEGRATED", "owner": "21.1.3.2"},
-    {"code": "ENCRYPTED-DURABLE-ANCHOR-STORAGE-NOT-INTEGRATED", "owner": "21.1.3.5"},
-    {"code": "CLOCK-ANOMALY-EVENT-EVIDENCE-NOT-IMPLEMENTED", "owner": "21.1.3.5"},
-    {"code": "NATIVE-PLATFORM-EVIDENCE-NOT-RETAINED", "owner": "21.1.3.5"},
     {"code": "INDEPENDENT-SPRINT-21-REVIEW-NOT-RETAINED", "owner": "21.1.3.5"},
 ]
 IMPLEMENTED: Final = {
@@ -78,6 +102,13 @@ IMPLEMENTED: Final = {
     "claim_level_audit_rendering": True,
     "receipt_chain": True,
     "external_hmac_sha256_anchor": True,
+    "authority_owned_receipt_checkpoint": True,
+    "encrypted_answer_ledger_restart": True,
+    "encrypted_durable_anchor_history": True,
+    "held_linux_citation_resolution": True,
+    "held_source_byte_recomputation": True,
+    "runtime_answer_ledger_composition": True,
+    "clock_regression_rejected": True,
     "integrity_key_stored_in_ledger": False,
     "ambient_filesystem_access": False,
     "network_authority": False,
@@ -133,9 +164,11 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "answer_ledger_matrix": local_pass,
             "receipt_tamper_matrix": local_pass,
             "safe_projection_scan": local_pass,
-            "production_held_file_integration": False,
-            "durable_anchor_integration": False,
-            "clock_anomaly_matrix": False,
+            "production_held_file_integration": local_pass,
+            "durable_anchor_integration": local_pass,
+            "clock_anomaly_matrix": local_pass,
+            "native_linux_source_execution": local_pass,
+            "runtime_answer_integration": local_pass,
             "independent_review": False,
         },
         "blockers": BLOCKERS,
@@ -171,10 +204,13 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     verification = report.get("verification_evidence", {})
     for field in (
         "production_held_file_integration", "durable_anchor_integration",
-        "clock_anomaly_matrix", "independent_review",
+        "clock_anomaly_matrix", "native_linux_source_execution",
+        "runtime_answer_integration",
     ):
-        if verification.get(field) is not False:
-            failures.append(f"verification overclaim: {field}")
+        if verification.get(field) is not True:
+            failures.append(f"verified integration drift: {field}")
+    if verification.get("independent_review") is not False:
+        failures.append("verification overclaim: independent_review")
     for field in (
         "integrity_key_stored_in_ledger", "ambient_filesystem_access",
         "network_authority", "completion_authority",
@@ -216,4 +252,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
