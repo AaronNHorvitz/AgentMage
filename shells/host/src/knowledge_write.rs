@@ -447,3 +447,315 @@ mod tests {
         );
     }
 }
+
+#[cfg(all(test, target_os = "linux"))]
+mod linux_tests {
+    use std::collections::BTreeSet;
+    use std::fs;
+    use std::os::unix::fs::PermissionsExt;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    use agentmage_capability_knowledge::{
+        MarkdownDocument, MarkdownEdit, MarkdownUpdateRequest, preview_markdown_update,
+    };
+    use agentmage_kernel_contracts::{
+        ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, DataSensitivity, GrantId,
+        GrantNonce, GrantOperation, GrantTarget, OperationBinding, PathResolutionIntent,
+        PlatformPathAdapter, SessionId, TaskId, ToolId, WorkspaceAuthorizationId, WorkspaceId,
+        WorkspacePath, WorkspaceScopePath,
+    };
+    use agentmage_kernel_engine::filesystem_control::{
+        FilesystemApprovalDecision, FilesystemGrantRequest, FilesystemOperationDraft,
+        FilesystemPlan, FilesystemPlanRequest, FilesystemTransactionError,
+        FilesystemTransactionOutcome, FilesystemTransactionRequest, build_filesystem_plan,
+        execute_filesystem_transaction, issue_filesystem_grant, render_filesystem_preview,
+    };
+    use agentmage_kernel_engine::grants::{GrantIssuer, SessionReadGrantRequest};
+    use agentmage_kernel_engine::policy::{
+        PolicyDocument, PolicyEngine, ScopeRules, ToolPolicyBinding,
+    };
+    use agentmage_kernel_engine::write_approval::WriteReviewNarrative;
+    use agentmage_platform_linux::{
+        LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits, LinuxPathAdapter,
+        select_test_linux_workspace,
+    };
+
+    use super::{KnowledgeFilesystemContext, compose_knowledge_update};
+
+    static TEMP_ID: AtomicU64 = AtomicU64::new(1);
+
+    struct TestDirectory(PathBuf);
+
+    impl TestDirectory {
+        fn new() -> Self {
+            let id = TEMP_ID.fetch_add(1, Ordering::SeqCst);
+            let path = std::env::temp_dir().join(format!(
+                "agentmage-host-knowledge-native-{}-{id}",
+                std::process::id()
+            ));
+            fs::create_dir_all(path.join("notes")).expect("native knowledge fixture");
+            Self(path)
+        }
+
+        fn path(&self) -> &Path {
+            &self.0
+        }
+    }
+
+    impl Drop for TestDirectory {
+        fn drop(&mut self) {
+            fs::remove_dir_all(&self.0).expect("native knowledge fixture removed");
+        }
+    }
+
+    struct NativeKnowledgeFixture {
+        _root: TestDirectory,
+        workspace: agentmage_platform_linux::LinuxAuthorizedWorkspace,
+        issuer: GrantIssuer,
+        policy: PolicyEngine,
+        plan: FilesystemPlan,
+        approval: agentmage_kernel_engine::filesystem_control::FilesystemApprovalReceipt,
+        source_path: PathBuf,
+        source_bytes: Vec<u8>,
+        postimage_bytes: Vec<u8>,
+    }
+
+    fn rules<T: Ord>(values: impl IntoIterator<Item = T>) -> ScopeRules<T> {
+        ScopeRules {
+            allowed: values.into_iter().collect(),
+            denied: BTreeSet::new(),
+        }
+    }
+
+    fn native_fixture() -> NativeKnowledgeFixture {
+        let root = TestDirectory::new();
+        let source_path = root.path().join("notes/decision.md");
+        let source_bytes = concat!(
+            "---\n",
+            "agentmage_id: knowledge-decision-native-001\n",
+            "type: decision\n",
+            "---\n",
+            "# Native Decision\n",
+            "## Decision\n",
+            "Original decision.\n",
+            "## Evidence\n",
+            "Synthetic evidence.\n",
+        )
+        .as_bytes()
+        .to_vec();
+        fs::write(&source_path, &source_bytes).expect("native Markdown source");
+        fs::set_permissions(&source_path, fs::Permissions::from_mode(0o640))
+            .expect("native Markdown mode");
+
+        let workspace_id = WorkspaceId::from_raw("workspace-native-knowledge");
+        let adapter_id = AdapterInstanceId::from_raw("adapter-native-knowledge");
+        let workspace = select_test_linux_workspace(
+            root.path(),
+            workspace_id.clone(),
+            WorkspaceAuthorizationId::from_raw("authorization-native-knowledge"),
+            adapter_id.clone(),
+        )
+        .expect("native knowledge workspace");
+        let workspace_path = WorkspacePath::new(workspace_id.clone(), ["notes", "decision.md"])
+            .expect("native knowledge path");
+        let document = MarkdownDocument::parse(workspace_path.clone(), source_bytes.clone())
+            .expect("native Markdown document");
+        let preview = preview_markdown_update(
+            &document,
+            MarkdownUpdateRequest {
+                expected_source_sha256: document.source_sha256().to_owned(),
+                expected_stable_id: document.stable_id().expect("stable identity").clone(),
+                edit: MarkdownEdit::ReplaceHeadingBody {
+                    heading: "Decision".to_owned(),
+                    level: 2,
+                    replacement: "Revised through the native boundary.".to_owned(),
+                },
+            },
+        )
+        .expect("native update preview");
+        let adapter = LinuxPathAdapter::new(adapter_id, 1024 * 1024);
+        let held = adapter
+            .resolve(&workspace, &workspace_path, PathResolutionIntent::ReadFile)
+            .expect("held native Markdown source");
+        let source_target = GrantTarget::held_object(&held).expect("native source target");
+        let draft = compose_knowledge_update(
+            "operation-native-knowledge-update".to_owned(),
+            &preview,
+            KnowledgeFilesystemContext::Update {
+                source_target: source_target.clone(),
+                observed_source_bytes: source_bytes.clone(),
+                mode: 0o640,
+                work_disposition:
+                    agentmage_kernel_engine::filesystem_control::ExistingWorkDisposition::Clean,
+            },
+        )
+        .expect("native filesystem draft");
+        assert!(matches!(draft, FilesystemOperationDraft::ExactPatch { .. }));
+
+        let operation = OperationBinding::new(GrantOperation::WorkspaceWrite);
+        let action_id = ActionId::from_raw("action-native-knowledge");
+        let tool_id = ToolId::from_raw("workspace.native-knowledge");
+        let policy = PolicyEngine::new(PolicyDocument {
+            schema_version: 1,
+            revision: 1,
+            actors: rules([ActorId::from_raw("actor-local")]),
+            tasks: rules([TaskId::from_raw("task-native-knowledge")]),
+            actions: rules([action_id.clone()]),
+            tools: rules([ToolPolicyBinding {
+                tool_id: tool_id.clone(),
+                tool_version: "1.0.0".to_owned(),
+            }]),
+            operations: rules([operation]),
+            targets: rules([source_target]),
+            denied_argument_sha256s: BTreeSet::new(),
+            denied_preimage_sha256s: BTreeSet::new(),
+            network_scopes: ScopeRules::deny_all(),
+            credential_scopes: ScopeRules::deny_all(),
+            publication_scopes: ScopeRules::deny_all(),
+        })
+        .expect("native knowledge policy");
+        let mut issuer = GrantIssuer::new();
+        let parent = issuer
+            .issue_session_read(SessionReadGrantRequest {
+                grant_id: GrantId::from_raw("grant-parent-native-knowledge"),
+                actor_id: ActorId::from_raw("actor-local"),
+                session_id: SessionId::from_raw("session-native-knowledge"),
+                task_id: TaskId::from_raw("task-native-knowledge"),
+                targets: vec![
+                    GrantTarget::workspace_scope(
+                        &workspace,
+                        WorkspaceScopePath::new(workspace_id, Vec::<String>::new())
+                            .expect("native root scope"),
+                    )
+                    .expect("native root target"),
+                ],
+                excluded_targets: Vec::new(),
+                sensitivity: DataSensitivity::Restricted,
+                issued_at_epoch_ms: 1_000,
+                expires_at_epoch_ms: 100_000,
+                nonce: GrantNonce::from_raw("nonce-parent-native-knowledge"),
+                maximum_derived_operations: 2,
+                preview_sha256: "a".repeat(64),
+                policy_sha256: policy.policy_sha256().to_owned(),
+            })
+            .expect("native parent grant");
+        let plan = build_filesystem_plan(
+            &parent,
+            FilesystemPlanRequest {
+                plan_id: "plan-native-knowledge".to_owned(),
+                observed_at_epoch_ms: 2_000,
+                operations: vec![draft],
+                review: WriteReviewNarrative {
+                    rationale: "Apply one exact Markdown preview".to_owned(),
+                    behavior_change: "Only the reviewed Decision body changes".to_owned(),
+                    verification_plan: vec!["native-knowledge-test".to_owned()],
+                    risks: vec!["The source may change before consumption".to_owned()],
+                    rollback: "Restore the exact Markdown preimage".to_owned(),
+                    unverified_assumptions: vec!["No external reader was inspected".to_owned()],
+                },
+                permitted_verification: vec!["native-knowledge-test".to_owned()],
+            },
+        )
+        .expect("native filesystem plan");
+        let rendered = render_filesystem_preview(&plan).expect("native filesystem preview");
+        let approval = issue_filesystem_grant(
+            &mut issuer,
+            &plan,
+            &rendered,
+            &FilesystemApprovalDecision {
+                approval_id: ApprovalId::from_raw("approval-native-knowledge"),
+                approved_plan_sha256: rendered.plan_sha256.clone(),
+                approved_preview_sha256: rendered.preview_sha256.clone(),
+                approved_at_epoch_ms: 3_000,
+                expires_at_epoch_ms: 30_000,
+                permitted_verification: rendered.permitted_verification.clone(),
+                user_confirmed: true,
+                high_risk_delete_confirmed: false,
+            },
+            FilesystemGrantRequest {
+                parent_grant_id: parent.grant_id,
+                grant_id: GrantId::from_raw("grant-native-knowledge"),
+                action_id,
+                action_kind: ActionKind::DeterministicTool,
+                tool_id,
+                tool_version: "1.0.0".to_owned(),
+                nonce: GrantNonce::from_raw("nonce-native-knowledge"),
+                policy_sha256: policy.policy_sha256().to_owned(),
+            },
+        )
+        .expect("native knowledge approval");
+
+        NativeKnowledgeFixture {
+            _root: root,
+            workspace,
+            issuer,
+            policy,
+            plan,
+            approval,
+            source_path,
+            source_bytes,
+            postimage_bytes: preview.proposed_markdown().to_vec(),
+        }
+    }
+
+    fn execute_native(
+        fixture: &mut NativeKnowledgeFixture,
+    ) -> Result<FilesystemTransactionOutcome, FilesystemTransactionError> {
+        let mut driver = LinuxControlledFilesystemDriver::new(
+            &fixture.workspace,
+            LinuxFilesystemDriverLimits {
+                maximum_file_bytes: 1024 * 1024,
+                maximum_transaction_bytes: 4 * 1024 * 1024,
+                ..LinuxFilesystemDriverLimits::default()
+            },
+        );
+        execute_filesystem_transaction(
+            &mut fixture.issuer,
+            &fixture.policy,
+            &fixture.plan,
+            &fixture.approval,
+            FilesystemTransactionRequest {
+                transaction_id: "transaction-native-knowledge".to_owned(),
+                now_epoch_ms: 4_000,
+                cancelled_before_consume: false,
+            },
+            &mut driver,
+        )
+        .map(|result| result.outcome)
+    }
+
+    #[test]
+    fn native_markdown_preview_commits_and_external_edit_fails_closed() {
+        let mut committed = native_fixture();
+        assert_eq!(
+            execute_native(&mut committed),
+            Ok(FilesystemTransactionOutcome::Committed)
+        );
+        assert_eq!(
+            fs::read(&committed.source_path).expect("native Markdown postimage"),
+            committed.postimage_bytes
+        );
+        assert_eq!(
+            fs::metadata(&committed.source_path)
+                .expect("native Markdown metadata")
+                .permissions()
+                .mode()
+                & 0o777,
+            0o640
+        );
+
+        let mut stale = native_fixture();
+        let external = b"external user edit\n";
+        fs::write(&stale.source_path, external).expect("external Markdown edit");
+        assert_eq!(
+            execute_native(&mut stale),
+            Err(FilesystemTransactionError::PreapplyDenied)
+        );
+        assert_eq!(
+            fs::read(&stale.source_path).expect("external edit preserved"),
+            external
+        );
+        assert_ne!(stale.source_bytes, external);
+    }
+}
