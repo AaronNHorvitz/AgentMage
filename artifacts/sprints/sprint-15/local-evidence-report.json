@@ -9,10 +9,6 @@
       "owner": "15.1"
     },
     {
-      "code": "FULL-DURABLE-SURFACE-CANARY-SWEEP-MISSING",
-      "owner": "15.2"
-    },
-    {
       "code": "NATIVE-ACCESSIBILITY-AND-MACOS-EVIDENCE-MISSING",
       "owner": "15.2/15.3"
     },
@@ -32,7 +28,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-diagnostics-selection-resource",
-      "output_sha256": "0a1536d3741288fadb477dcdfa53fa3d43cbc8e803ef5e40f6c9e3fdf3de4827"
+      "output_sha256": "5ebda4df0fb11fb3b9d92574e6379adc9a08dfeb92dc8936047aec5f75c6edb6"
     },
     {
       "argv": [
@@ -44,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "host-doctor-export",
-      "output_sha256": "d33d8de9b1d88520694c418d71b2ee060cefa148fa5b596b0a0e590652892ffe"
+      "output_sha256": "63503c963900cbc1219ccd4cb4ef76a9b28a9dbdb402f195e6b7c40fde42b73a"
     },
     {
       "argv": [
@@ -55,7 +51,17 @@
       ],
       "exit_code": 0,
       "id": "native-chat",
-      "output_sha256": "61b2c0b2f2dc663a4b1e2084970774315fa197b6f83a9fdc4aaf3495a17d8787"
+      "output_sha256": "351b7880702b9250156fb3ffda986b8287908717d459121e3e0f7dd354b9700c"
+    },
+    {
+      "argv": [
+        "python",
+        "scripts/sprint_15_diagnostic_canary_evidence.py",
+        "--check"
+      ],
+      "exit_code": 0,
+      "id": "diagnostic-canary-matrix",
+      "output_sha256": "2cde8e3cd5907adbde1ffcb19dd369c16931436a09c5d17b0ab240b7e0442b91"
     },
     {
       "argv": [
@@ -67,7 +73,7 @@
       ],
       "exit_code": 0,
       "id": "evaluation-contracts",
-      "output_sha256": "b7e489f3d2da0fa5267da6fb24f540b5f2821cf0f867761c4a2d6b1948e2e8df"
+      "output_sha256": "20b7b644cef5ed8566dd47b14f5c32f8917c5bf87062c78b72c4e37b80890a18"
     },
     {
       "argv": [
@@ -82,6 +88,7 @@
   ],
   "evidence_sha256": {
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json": "88f560db0a1486f39a1004a0cd88e699948d194bf9221ee6e1a6d037c2e5b670",
+    "artifacts/sprints/sprint-15/story-15.2/diagnostic-canary-matrix.json": "611ed7f68a6c2ace861c858114f9adea80fc863491d5b7372e3d0e47e3458fa2",
     "artifacts/sprints/sprint-15/story-15.3/candidate-role-evaluation-matrix.json": "022abb833c37ce275f516b9a6c7af3672df3e84589e5867ee14a4ad6d5fafc57",
     "model-profiles/evaluation/benchmark-record-schema-v1.json": "ba830922eccdb88ee30faf3847c6d35caac3e167d7b55f1620b60272decda9c3",
     "model-profiles/evaluation/role-suite-corpus-v1.json": "a8969433a4a07127dc5d9690d9157505c05fb739624a251869957e61e4009639"
@@ -93,6 +100,8 @@
       "BLOCKED": 415,
       "INELIGIBLE": 1
     },
+    "diagnostic_canary_disclosures": 0,
+    "diagnostic_canary_source_families": 9,
     "doctor_component_count": 13,
     "doctor_fixture_count": 100,
     "enabled_model_count": 0,
@@ -144,26 +153,29 @@
       "RV-41"
     ]
   },
-  "source_revision": "cbed06c60901b596b576339dea7f296369af6c80",
+  "source_revision": "766fba6fc74fd9dbc93b874baf9ee879434595f4",
   "source_sha256": {
-    "docs/verification/sprint-15-local-results.md": "c1284728ba09155599c9ed412be96917ab3dbd60ce63a329accfb615a965c901",
+    "docs/verification/sprint-15-diagnostic-canary-matrix.md": "8098437b137ad4ca5fe393aaedb6d4034a5eab81239f869c6d964449345bfb79",
+    "docs/verification/sprint-15-local-results.md": "ab3321c38270c38f940e3722c440bebaaf4d4e21d7bc78f580c3a785f3b8bd0e",
     "kernel/contracts/src/diagnostics.rs": "08260d209729487869a19f43e72e5c836ee567c7aaa551c31779cae9aee31d8d",
-    "kernel/engine/src/diagnostics.rs": "28d1a788c7a4c6f665474744e2f5e34e9700411c950f13318102f2ec6f8b6635",
+    "kernel/engine/src/diagnostics.rs": "656880cedd38341360d4ee122bc611627a1b1b9b0bdcc2e4d0a2a2a211aa06f0",
     "kernel/engine/src/model_runtime.rs": "9156ad6edb94adab29e22376431052f735c5c556028eb3a79fc744e6baa9e5a9",
     "kernel/engine/src/model_selection.rs": "43a6c7e5ef8d87689bb6157e65eaf3ab7b4a7fdc3cabd5bb9c6614bc3bb4bb8c",
     "scripts/benchmark_contract.py": "f58631cfe90f7ed75aca1a2983c075c118fbfb74100597aac7431b05fea32889",
     "scripts/model_role_evaluation_matrix.py": "def8fcdb7f89616738089d8229697f5ab9aca5de17c36d5decf9776cf702446e",
-    "scripts/sprint_15_evidence.py": "f304efd9848ece84fb715b758b79459d2e733defcf6a63a60832514dac7fabfa",
-    "shells/host/src/diagnostic_export.rs": "126fa76d6410d7b27739aa2b9b834a2352b26ea96a8873b9fa07a4bc92e46d60",
+    "scripts/sprint_15_diagnostic_canary_evidence.py": "60c3a354e578a29bea0a7ee9a65bcdfa1d00e48da5d0ef05afe51b77a60b2aab",
+    "scripts/sprint_15_evidence.py": "7059cb3d70895af9b083243303cc899a6c18282ec62956c0e10cb99c8e9f1ee0",
+    "shells/host/src/diagnostic_export.rs": "8b838a86293ef8fdf874014c300d7887c9970f82e47eae7ba1edc39b4cbc9fcb",
     "shells/host/src/linux_read.rs": "9117a892933913fc37b2c5d38805d3adf6d90cdf5d92ae8df127b69a0b7366b5",
     "shells/host/src/protocol.rs": "a48a7d8ed8f43727bba23f14fb70acf73ce298ad9abfa96eab2a51d574579c43",
     "shells/vscode/src/extension.ts": "cf1f80be77157ddaa8b61c5cca3e3c6fe02acc026a045e64d351ec3bc6b71751",
     "shells/vscode/src/host_bridge.ts": "049efd0066de16c6dca0cc8203a9b6ff7cc3e9c43e639e9250c9406c5379efa1",
     "shells/vscode/src/model_discovery.ts": "b91246b419af178f730d8807ea73ca6f386fad083344004f05dc4eb73d9b9113",
-    "shells/vscode/src/provider.ts": "211b05b5dcfb52c45756a7c3632f359995160c0a46440a45895433158ecabb58",
+    "shells/vscode/src/provider.ts": "caa0d0aa120cdf1108c4d9bff647d9e1f7d7dcdf4f64bf3f7a2209b85e61f2a2",
     "tests/test_benchmark_contract.py": "9a2998f0dd3b5cb1d0df88acd6fba10759cfc53e21a0b6526d3450e7de46d1b4",
     "tests/test_model_role_evaluation_matrix.py": "1fb7835b7a389d83ae2323af81819fc1900e8988aafed2f054163de6652cc993",
-    "tests/test_sprint_15_evidence.py": "f46ecf83d4437e4983e7231c627edc5df8a8b2425dc13da18522baab28a1fac9"
+    "tests/test_sprint_15_diagnostic_canary_evidence.py": "ced962e81f8708570c0d16f454f44455bc37391c00ca51d87a4957daf2bf75be",
+    "tests/test_sprint_15_evidence.py": "e235bdda00fd01e760aefa5d97d918f9deb412f51ac792823b649b6620779d03"
   },
   "stories": [
     {
@@ -178,7 +190,7 @@
       "story_id": "15.1"
     },
     {
-      "full_surface_canary_sweep": false,
+      "full_surface_canary_sweep": true,
       "native_accessibility_evidence": false,
       "native_chat_doctor": true,
       "network_health_probe": false,
