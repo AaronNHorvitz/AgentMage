@@ -1,0 +1,143 @@
+{
+  "artifact_id": "story-17-1-local-product-security-evidence-map",
+  "independent_review_complete": false,
+  "limitations": [
+    "Native macOS evidence and independent human review remain blockers.",
+    "Manual Git parser fuzzing remains deferred; no release claim is made.",
+    "Network closure is demonstrated only during native Linux subject execution."
+  ],
+  "mappings": [
+    {
+      "contribution": "demonstrated-linux-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-17/local-evidence-report.json",
+        "artifacts/sprints/sprint-17/installed-linux-git-matrix.json"
+      ],
+      "remaining": "Native macOS ambient-access campaign.",
+      "requirement_id": "SR-ACC-006"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-17/local-evidence-report.json",
+        "artifacts/sprints/sprint-17/installed-linux-git-matrix.json"
+      ],
+      "remaining": "Independent and supported-platform review.",
+      "requirement_id": "SR-ACC-007"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-17/local-evidence-report.json",
+        "artifacts/sprints/sprint-17/installed-linux-git-matrix.json"
+      ],
+      "remaining": "Independent review and native macOS parity.",
+      "requirement_id": "SR-ACC-008"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-17/local-evidence-report.json",
+        "artifacts/sprints/sprint-17/installed-linux-git-matrix.json"
+      ],
+      "remaining": "Later product-wide injection surfaces.",
+      "requirement_id": "SR-AI-005"
+    },
+    {
+      "contribution": "demonstrated-linux-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-17/local-evidence-report.json",
+        "artifacts/sprints/sprint-17/installed-linux-git-matrix.json"
+      ],
+      "remaining": "Native macOS and integrated model-context campaign.",
+      "requirement_id": "SR-AI-008"
+    },
+    {
+      "contribution": "partial-linux-evidence",
+      "evidence": [
+        "artifacts/sprints/sprint-17/local-evidence-report.json",
+        "artifacts/sprints/sprint-17/installed-linux-git-matrix.json"
+      ],
+      "remaining": "Required observation interval on every supported platform.",
+      "requirement_id": "SR-NET-001"
+    },
+    {
+      "contribution": "deferred-manual-fuzzing",
+      "evidence": [
+        "artifacts/sprints/sprint-17/local-evidence-report.json",
+        "artifacts/sprints/sprint-17/installed-linux-git-matrix.json"
+      ],
+      "remaining": "Final manual Git parser fuzz campaign.",
+      "requirement_id": "SR-TST-002"
+    },
+    {
+      "contribution": "demonstrated-linux-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-17/local-evidence-report.json",
+        "artifacts/sprints/sprint-17/installed-linux-git-matrix.json"
+      ],
+      "remaining": "Native macOS campaign and independent review.",
+      "requirement_id": "SR-TST-004"
+    },
+    {
+      "contribution": "demonstrated-story-scope",
+      "evidence": [
+        "artifacts/sprints/sprint-17/local-evidence-report.json",
+        "artifacts/sprints/sprint-17/installed-linux-git-matrix.json"
+      ],
+      "remaining": "Re-execution for later untrusted-content surfaces.",
+      "requirement_id": "RV-11"
+    }
+  ],
+  "network_used_during_subject_execution": false,
+  "private_user_data_used": false,
+  "requirement_ids": [
+    "SR-ACC-006",
+    "SR-ACC-007",
+    "SR-ACC-008",
+    "SR-AI-005",
+    "SR-AI-008",
+    "SR-NET-001",
+    "SR-TST-002",
+    "SR-TST-004",
+    "RV-11"
+  ],
+  "schema_version": 1,
+  "source_revision": "088a5ed233fb9e41defcaf9c8b9dee3aca1cbed5",
+  "sources": [
+    {
+      "bytes": 4148,
+      "path": "docs/verification/task-17-1-3-5-product-security-evidence.md",
+      "sha256": "fbc9ee1c7ac4006bf002fce972ae42deecca2b4e62e74a44bcd907319d5979d7"
+    },
+    {
+      "bytes": 136944,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+    },
+    {
+      "bytes": 10238,
+      "path": "scripts/story_17_1_security_evidence.py",
+      "sha256": "77e74490454942cd1c68f55e43a4be05fddc482edfaaf674c00384440b554119"
+    },
+    {
+      "bytes": 3517,
+      "path": "tests/test_story_17_1_security_evidence.py",
+      "sha256": "e722919927b699eee815d1420593e0f008ea62036df554d66d393bd27cf97fa6"
+    },
+    {
+      "bytes": 7746,
+      "path": "artifacts/sprints/sprint-17/local-evidence-report.json",
+      "sha256": "6932422a9eb9c9ae05ed26fab01c071779f863a939f5cad326e5de2ab28cbac4"
+    },
+    {
+      "bytes": 16686,
+      "path": "artifacts/sprints/sprint-17/installed-linux-git-matrix.json",
+      "sha256": "308670035ced51a48d790d2750ebe67a38182a4191a413810a47c63407388385"
+    }
+  ],
+  "status": "pass-local-mapping-with-external-blockers",
+  "task_ids": [
+    "17.1.3.5"
+  ]
+}
