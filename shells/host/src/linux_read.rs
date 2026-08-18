@@ -2217,6 +2217,19 @@ mod tests {
         })
     }
 
+    fn lifecycle_unit_tasks(unit: &str) -> u32 {
+        let output = Command::new("/usr/bin/systemctl")
+            .args(["--user", "show", "--property=TasksCurrent", "--value", unit])
+            .output()
+            .expect("systemctl task inventory");
+        assert!(output.status.success());
+        String::from_utf8(output.stdout)
+            .expect("task inventory UTF-8")
+            .trim()
+            .parse()
+            .unwrap_or(0)
+    }
+
     fn wait_for_lifecycle_cleanup(name: &str, baseline_units: &BTreeSet<String>) {
         let deadline = Instant::now() + Duration::from_secs(5);
         while Instant::now() < deadline {
@@ -3204,7 +3217,8 @@ mod tests {
                             .cloned()
                             .collect::<Vec<_>>();
                         if units.len() == 1
-                            && lifecycle_processes(&control_name).len() >= 2
+                            && !lifecycle_processes(&control_name).is_empty()
+                            && lifecycle_unit_tasks(&units[0]) >= 2
                             && lifecycle_scratch_visible(&control_name)
                         {
                             break units[0].clone();

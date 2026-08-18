@@ -4,7 +4,6 @@
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
-use std::process::Command;
 use std::thread;
 use std::time::Duration;
 
@@ -16,14 +15,6 @@ const MAX_SNAPSHOT_BYTES: u64 = 128 * 1024 * 1024;
 
 fn main() -> Result<(), FixtureExit> {
     let arguments = std::env::args().collect::<Vec<_>>();
-    if arguments
-        .get(1)
-        .is_some_and(|value| value == "--descendant")
-    {
-        loop {
-            thread::sleep(Duration::from_secs(1));
-        }
-    }
     let executable = Path::new(arguments.first().ok_or(FixtureExit)?);
     let name = executable
         .file_name()
@@ -37,10 +28,6 @@ fn main() -> Result<(), FixtureExit> {
     }
 
     std::fs::write(SCRATCH_PATH, b"bounded lifecycle scratch").map_err(|_| FixtureExit)?;
-    let _descendant = Command::new(std::env::current_exe().map_err(|_| FixtureExit)?)
-        .arg("--descendant")
-        .spawn()
-        .map_err(|_| FixtureExit)?;
 
     match phase {
         "before" => {}
