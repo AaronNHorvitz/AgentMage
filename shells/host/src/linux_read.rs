@@ -2144,14 +2144,8 @@ mod tests {
         LinuxSandboxRunner::new(manifest, LinuxSandboxLimits::default()).expect("sandbox runner")
     }
 
-    fn read_only_worker_sandbox() -> LinuxSandboxRunner {
-        let worker = std::env::current_exe()
-            .expect("current test executable")
-            .parent()
-            .and_then(Path::parent)
-            .expect("target profile directory")
-            .join("agentmage-read-only-worker");
-        sandbox_for(worker)
+    fn installed_read_only_worker_sandbox() -> LinuxSandboxRunner {
+        sandbox_for("/usr/libexec/agentmage/agentmage-read-only-worker")
     }
 
     fn workflow(
@@ -2813,7 +2807,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "requires the Fedora or Ubuntu systemd user session, Bubblewrap, and built read-only worker"]
+    #[ignore = "requires an installed root-owned package worker, systemd user session, and Bubblewrap"]
     fn generic_tool_worker_returns_verified_result_one_receipt_and_no_workspace_mutation() {
         let root = temp_root("generic-live");
         let workspace = root.join("workspace");
@@ -2825,7 +2819,8 @@ mod tests {
         fs::write(workspace.join("src/zeta.txt"), b"needle last\n").expect("zeta");
         let before_alpha = fs::read(workspace.join("src/alpha.txt")).expect("before alpha");
         let before_zeta = fs::read(workspace.join("src/zeta.txt")).expect("before zeta");
-        let mut workflow = workflow_with_sandbox(&state, &[100, 200], read_only_worker_sandbox());
+        let mut workflow =
+            workflow_with_sandbox(&state, &[100, 200], installed_read_only_worker_sandbox());
 
         let preview = workflow.handle(generic_search_request(&workspace, "request-live-preview"));
         let (preview_id, confirmation_sha256) = match preview {
