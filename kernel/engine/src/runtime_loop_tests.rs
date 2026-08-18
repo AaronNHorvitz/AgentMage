@@ -2498,6 +2498,38 @@ fn story_23_4_ephemeral_runtime_profile_is_bounded() {
     );
 }
 
+#[test]
+fn story_23_4_runtime_events_exclude_raw_model_and_tool_canaries() {
+    const MODEL_CANARY: &[u8] = b"verified fixture answer";
+    const TOOL_CANARY: &[u8] = b"fixture contents";
+
+    let (mut coordinator, executions) = coordinator(
+        [ModelScript::Tool, ModelScript::Completion],
+        PermissionScript::Allow,
+        true,
+    );
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("canary fixture completes")
+    else {
+        panic!("pre-authorized canary fixture cannot pause");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    assert_eq!(inline_output_bytes(&outcome), MODEL_CANARY.len());
+    assert_valid_terminal_stream(&coordinator);
+
+    let event_bytes = serde_json::to_vec(coordinator.events()).expect("events serialize");
+    assert!(!contains_bytes(&event_bytes, MODEL_CANARY));
+    assert!(!contains_bytes(&event_bytes, TOOL_CANARY));
+}
+
+fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
+    haystack
+        .windows(needle.len())
+        .any(|candidate| candidate == needle)
+}
+
 fn profile_metrics(
     coordinator: &FixtureCoordinator,
     outcome: &agentmage_kernel_contracts::RuntimeOutcome,
