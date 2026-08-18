@@ -1,10 +1,6 @@
 {
   "blockers": [
     {
-      "code": "PRODUCTION-ANSWER-CLAIM-COMPOSITION-NOT-INTEGRATED",
-      "owner": "20.1.3.2"
-    },
-    {
       "code": "LIVE-CITATION-RESOLUTION-NOT-IMPLEMENTED",
       "owner": "20.1.3.4"
     },
@@ -37,7 +33,31 @@
       ],
       "exit_code": 0,
       "id": "evidence-state-tests",
-      "output_sha256": "a5fcb9006615dfefb075e65a90a3286cf6a3f96ebf215949c4fcd93bff464b29"
+      "output_sha256": "c02e36c95ef921d4466e188f1515d489175d699bcb0357b1c659a9869475aaca"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "story_20_successful_answers_require_exact_kernel_assigned_inference_provenance",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "runtime-answer-integration-tests",
+      "output_sha256": "16e94dbc00a0baf48e8c0d56988656de493256a5f89a1f158f150a1f6bce1307"
+    },
+    {
+      "argv": [
+        "npm",
+        "--prefix",
+        "shells/vscode",
+        "test"
+      ],
+      "exit_code": 0,
+      "id": "vscode-answer-evidence-tests",
+      "output_sha256": "3f0e1ee2ed491538d1c6457a07e88d2e8186575ec8badee5542883ef07d10350"
     },
     {
       "argv": [
@@ -53,7 +73,7 @@
       ],
       "exit_code": 0,
       "id": "evidence-state-clippy",
-      "output_sha256": "32153ed39d2ab431334d8bd6b9efb7cd4ed6b0a1a000e2e6411dac7956f87beb"
+      "output_sha256": "1bb484ac6765e31a1b183974aee8c964f80d48b1b7aaca16a5b0420c87846523"
     },
     {
       "argv": [
@@ -64,7 +84,7 @@
       ],
       "exit_code": 0,
       "id": "evidence-script-tests",
-      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
     },
     {
       "argv": [
@@ -108,6 +128,9 @@
     "observed_requires_authorized_observe_receipt": true,
     "observed_requires_exact_source_identity": true,
     "process_authority": false,
+    "successful_answer_assignment_granularity": "complete_rendered_answer",
+    "successful_answer_assignment_state": "inferred",
+    "successful_answer_requires_evidence_assignment": true,
     "unknown_blocked_reason_count": 8
   },
   "record_type": "sprint_20_local_evidence",
@@ -124,18 +147,30 @@
     "SR-OPS-005",
     "SR-TST-010"
   ],
-  "source_revision": "fad6ff7578294c52ae692fbc1badea8f089a6ead",
+  "source_revision": "7179aa27441c6ac838301467b52849ffe4206dfe",
   "source_sha256": {
-    "docs/architecture/evidence-state-assignment.md": "3f3c771cb86076d813dd440c3c00c9eaa0d89630c0bfc98499577a718d98cb4e",
-    "docs/verification/sprint-20-local-results.md": "eab578b2c1c2b9d46f49944cccc4bcc114a187c12067ddbe899d3f0cb287d9c4",
+    "TASKS.md": "6ab082753f615c676433f6f001f5fd2059a7c51f321de3a82ebb02a45bdb158d",
+    "docs/architecture/evidence-state-assignment.md": "e2bf5ff4c4a79b43c15ac4f875890270b84628c89a07fc7d4843778d8e6e504d",
+    "docs/architecture/kernel-contract-reference.md": "7c7664dd0eb35e8bc4818aaebd26652bb8c3965a6aef11e2103a88e01b050291",
+    "docs/architecture/reusable-runtime-coordinator.md": "0bf1bce8b6636d662042dc78ad39b321c340f818583dbf202e1e9ed7324feaf9",
+    "docs/verification/sprint-20-local-results.md": "43cf17ccd4cd3686b157a9a629747ee6fca0356e90369d26d1371c0fd42c8c53",
     "kernel/contracts/src/claim.rs": "8ac9b5f8b4c5e2a53e7e6059abf0e39cb11727aba0ab692f32f52bbcb2ecb6e2",
-    "kernel/contracts/src/lib.rs": "d35c7e1ed523d47aff0161a84bc630111bc02d984de22968e652834623dec783",
-    "kernel/contracts/src/serialization.rs": "d6cca6f3ea9978451cc8ce3f3e1b263cacf490e245d8abf7afd1b36d6c9b3d44",
-    "kernel/engine/src/authority.rs": "6fb142404571cc6479705cb13f4e5b777e46a1b5cbcf61fc38af79b6e28f2de6",
-    "kernel/engine/src/evidence_state.rs": "6f28d7e657259096db187119644d9fc6f22b8b0f8de42c5d4c850b7be2cfd7f2",
-    "kernel/engine/src/lib.rs": "0b10df7f3b662f2392aa4fa275c0b1cfd20e78a4507bb5397fc4e3c16462bb78",
-    "scripts/sprint_20_evidence.py": "3b9e50239d16acd8c3b8516495da7dd786b7b5aa74ab24e5c014898f280920cd",
-    "tests/test_sprint_20_evidence.py": "890f270cdad813ced8fa4dafc70140824460058ade30947042934399f68532b3"
+    "kernel/contracts/src/lib.rs": "625a03a25e8b7e5d515ef95c082d2a90c5a803f8238b07aef540410cffe3c6e1",
+    "kernel/contracts/src/runtime_run.rs": "6265a34a5400e91741d926a96f6abb8de7ecc41766604215ca7e08bb2d2119c0",
+    "kernel/contracts/src/serialization.rs": "7b63d2dd15beb8d4bd05e742a63ad32cf6af0741e607eb537878658f61b56b35",
+    "kernel/engine/src/authority.rs": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8",
+    "kernel/engine/src/evidence_state.rs": "7a56808bc1280472f5b7bda0ccefa3a6fd115a62788e4d4e2cf0b66254e6cc7b",
+    "kernel/engine/src/lib.rs": "e271b7751d53d4eb2a98f6f80ee0d5a93652628efb814fd9b1b293b1992f3545",
+    "kernel/engine/src/runtime_answer.rs": "47edc86a3a73ae790d34bc85cac703ef4bbea99e2772761c027257af4ccaf875",
+    "kernel/engine/src/runtime_coordinator.rs": "f295e43900f91d48fc2ba29ba7a2c44fd4759915970571ea2a8164d7f954db62",
+    "kernel/engine/src/runtime_loop.rs": "2685ddfd44df4e08d9bdabde92e3be134e084ddfc852e862dae53b141c3287fc",
+    "kernel/engine/src/runtime_loop_tests.rs": "b9b92121ca19c81ab83def45b37982b84a6462ba3d0717d2f52c0041001da543",
+    "scripts/sprint_20_evidence.py": "72d03b0dcac9055ea40f1e406c140238e2c0d5497136b866087e1d814c3ceeb0",
+    "shells/host/src/cli.rs": "fb8f903bbfec01d2d31e652d239825b7983713ce8ac9f51815f0825ef0171fe5",
+    "shells/vscode/src/runtime_transport.ts": "2e88de28536f4bda0202a780e64074e67f69dc38a08c1d984bd3083b5e640b4a",
+    "shells/vscode/test/provider.test.ts": "1208a5a5be23e6855b5f43d89789a1f649ae47be465e29ee9bb75dd2264a9d28",
+    "shells/vscode/test/runtime_transport.test.ts": "4140f8d10b8bccec77aaec8bd0fade299c23534508181bc1f46076c925133f08",
+    "tests/test_sprint_20_evidence.py": "17fb0a5298afbc4e2fc8fd1d9af342fd8ef057d83c0a7026540acb35a9c6f065"
   },
   "summary": {
     "local_contract_passed": true,
@@ -150,6 +185,7 @@
     "invalid_prohibited_boundary_matrix": true,
     "model_confidence_injection_rejected": true,
     "positive_state_matrix": true,
+    "production_answer_assignment_integration": true,
     "receipt_chain_verification": false
   }
 }
