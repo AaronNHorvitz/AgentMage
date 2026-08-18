@@ -4,13 +4,19 @@ use std::fmt;
 use std::fmt::Write as _;
 
 use agentmage_capability_repository_map::{
-    GitTrackedState, RepositoryFileInput, RepositoryMap, RepositoryMapInput, RepositoryObjectKind,
-    build_repository_map, verify_repository_map,
+    GitTrackedState, RenderedRepositoryContext, RepositoryContextRequest, RepositoryContextSource,
+    RepositoryFileInput, RepositoryMap, RepositoryMapCacheKey, RepositoryMapInput,
+    RepositoryObjectKind, RepositoryRenderError, StructuralSourceResolution, build_repository_map,
+    render_repository_context, resolve_structural_records, verify_repository_file_record,
+    verify_repository_map,
 };
 use agentmage_kernel_contracts::{
     AuthorizedWorkspaceHandle, HeldWorkspaceObject, PathResolutionIntent, WorkspacePath,
 };
 use agentmage_kernel_engine::platform_startup::VerifiedPlatformAdapter;
+use agentmage_kernel_engine::{
+    operational_store::DurableAuthorityRuntime, repository_cache::RepositoryCacheRecord,
+};
 use agentmage_platform_linux::{
     LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxPlatformAdapter, LinuxRepositoryInventory,
     LinuxRepositoryInventoryEntry, LinuxRepositoryInventoryState, LinuxRepositoryObjectHint,
@@ -128,6 +134,8 @@ pub enum LinuxRepositoryMapProjectionError {
     ObjectUnavailable,
     /// The pure map rejected or failed to verify the projected evidence.
     MapRejected,
+    /// Encrypted cache synchronization failed before retrieval authority was exposed.
+    CacheUnavailable,
 }
 
 impl LinuxRepositoryMapProjectionError {
@@ -139,6 +147,7 @@ impl LinuxRepositoryMapProjectionError {
             Self::InvalidInventory => "repository-map.linux.inventory-invalid",
             Self::ObjectUnavailable => "repository-map.linux.object-unavailable",
             Self::MapRejected => "repository-map.linux.map-rejected",
+            Self::CacheUnavailable => "repository-map.linux.cache-unavailable",
         }
     }
 }
@@ -151,13 +160,117 @@ impl fmt::Display for LinuxRepositoryMapProjectionError {
 
 impl std::error::Error for LinuxRepositoryMapProjectionError {}
 
+/// Uncached live projection that exposes no retrieval or citation operation.
+#[derive(Debug)]
+pub struct PendingLinuxRepositoryMap {
+    map: RepositoryMap,
+}
+
+impl PendingLinuxRepositoryMap {
+    /// Reconciles stale keys, verifies exact hits, and persists current encrypted derivatives.
+    pub fn synchronize(
+        self,
+        authority: &DurableAuthorityRuntime,
+        now_epoch_ms: u64,
+        expires_at_epoch_ms: u64,
+    ) -> Result<SynchronizedLinuxRepositoryMap, LinuxRepositoryMapProjectionError> {
+        if now_epoch_ms == 0 || expires_at_epoch_ms < now_epoch_ms {
+            return Err(LinuxRepositoryMapProjectionError::CacheUnavailable);
+        }
+        let scope_sha256 = digest(&(
+            self.map.workspace_id.as_str(),
+            self.map.repository_sha256.as_str(),
+        ))?;
+        let entries = self
+            .map
+            .files
+            .iter()
+            .map(|record| {
+                let key = RepositoryMapCacheKey::for_record(record)
+                    .map_err(|_| LinuxRepositoryMapProjectionError::CacheUnavailable)?;
+                let key_json = key
+                    .canonical_json()
+                    .map_err(|_| LinuxRepositoryMapProjectionError::CacheUnavailable)?;
+                let key_sha256 = key
+                    .key_sha256()
+                    .map_err(|_| LinuxRepositoryMapProjectionError::CacheUnavailable)?;
+                let record_json = serde_json::to_vec(record)
+                    .map_err(|_| LinuxRepositoryMapProjectionError::CacheUnavailable)?;
+                let persisted = RepositoryCacheRecord::new(
+                    scope_sha256.clone(),
+                    key_json,
+                    record.record_sha256.clone(),
+                    record_json,
+                    now_epoch_ms,
+                    expires_at_epoch_ms,
+                )
+                .map_err(|_| LinuxRepositoryMapProjectionError::CacheUnavailable)?;
+                if persisted.key_sha256() != key_sha256 {
+                    return Err(LinuxRepositoryMapProjectionError::CacheUnavailable);
+                }
+                Ok((key_sha256, persisted, record))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let current_keys = entries
+            .iter()
+            .map(|(key, _, _)| key.clone())
+            .collect::<Vec<_>>();
+        authority
+            .reconcile_repository_cache(&scope_sha256, &current_keys, now_epoch_ms)
+            .map_err(|_| LinuxRepositoryMapProjectionError::CacheUnavailable)?;
+        for (key_sha256, persisted, current_record) in &entries {
+            if let Some(hit) = authority
+                .repository_cache_record(&scope_sha256, key_sha256, now_epoch_ms)
+                .map_err(|_| LinuxRepositoryMapProjectionError::CacheUnavailable)?
+            {
+                let decoded: agentmage_capability_repository_map::RepositoryFileRecord =
+                    serde_json::from_slice(&hit.record_json)
+                        .map_err(|_| LinuxRepositoryMapProjectionError::CacheUnavailable)?;
+                if hit.record_sha256 != decoded.record_sha256
+                    || !verify_repository_file_record(&decoded)
+                    || decoded != **current_record
+                {
+                    return Err(LinuxRepositoryMapProjectionError::CacheUnavailable);
+                }
+            }
+            authority
+                .put_repository_cache_record(persisted)
+                .map_err(|_| LinuxRepositoryMapProjectionError::CacheUnavailable)?;
+        }
+        Ok(SynchronizedLinuxRepositoryMap { map: self.map })
+    }
+}
+
+/// One-use current-map permit produced only after exact encrypted-cache reconciliation.
+#[derive(Debug)]
+pub struct SynchronizedLinuxRepositoryMap {
+    map: RepositoryMap,
+}
+
+impl SynchronizedLinuxRepositoryMap {
+    /// Consumes current-map freshness to render one bounded repository context.
+    pub fn render(
+        self,
+        request: &RepositoryContextRequest,
+        sources: &[RepositoryContextSource],
+    ) -> Result<RenderedRepositoryContext, RepositoryRenderError> {
+        render_repository_context(&self.map, request, sources)
+    }
+
+    /// Consumes current-map freshness to resolve all parser-backed source citations.
+    #[must_use]
+    pub fn resolve(self) -> Vec<StructuralSourceResolution> {
+        resolve_structural_records(&self.map)
+    }
+}
+
 /// Projects one complete Git inventory through verified, continuously held Linux objects.
 pub fn build_linux_repository_map(
     platform: &VerifiedPlatformAdapter<LinuxPlatformAdapter>,
     workspace: &LinuxAuthorizedWorkspace,
     inventory: LinuxRepositoryInventory,
     policy: &LinuxRepositoryMapPolicy,
-) -> Result<RepositoryMap, LinuxRepositoryMapProjectionError> {
+) -> Result<PendingLinuxRepositoryMap, LinuxRepositoryMapProjectionError> {
     project(
         workspace,
         inventory,
@@ -165,6 +278,7 @@ pub fn build_linux_repository_map(
         |path, intent| resolve_linux_workspace_object(platform, workspace, path, intent),
         |path| observe_linux_workspace_symbolic_link(platform, workspace, path),
     )
+    .map(|map| PendingLinuxRepositoryMap { map })
 }
 
 fn project(
@@ -430,14 +544,30 @@ mod tests {
         GitTrackedState, RepositoryEntryDisposition, RepositoryObjectKind,
     };
     use agentmage_kernel_contracts::{AdapterInstanceId, WorkspaceAuthorizationId, WorkspaceId};
+    use agentmage_kernel_engine::operational_store::{
+        OperationalStoreKeyError, OperationalStoreKeyProvider,
+    };
     use agentmage_platform_linux::{
         LinuxGitArtifact, LinuxRepositoryCollector, LinuxRepositoryScope,
-        select_test_linux_workspace,
+        open_test_linux_authority, select_test_linux_workspace,
     };
 
-    use super::{LinuxRepositoryMapPolicy, build_test_linux_repository_map};
+    use super::{
+        LinuxRepositoryMapPolicy, PendingLinuxRepositoryMap, build_test_linux_repository_map,
+    };
 
     static NEXT_ID: AtomicU64 = AtomicU64::new(1);
+
+    struct TestKey([u8; 32]);
+
+    impl OperationalStoreKeyProvider for TestKey {
+        fn with_key<T>(
+            &mut self,
+            operation: impl FnOnce(&[u8]) -> T,
+        ) -> Result<T, OperationalStoreKeyError> {
+            Ok(operation(&self.0))
+        }
+    }
 
     struct Fixture {
         root: PathBuf,
@@ -670,6 +800,18 @@ mod tests {
                 .expect("post-map inventory"),
             inventory_before
         );
+
+        let state_root = fixture.root.join("state");
+        fs::create_dir(&state_root).expect("state root creates");
+        fs::set_permissions(&state_root, fs::Permissions::from_mode(0o700))
+            .expect("state root permissions");
+        let authority = open_test_linux_authority(&state_root, &mut TestKey([91; 32]), 1)
+            .expect("encrypted authority opens");
+        let resolutions = PendingLinuxRepositoryMap { map }
+            .synchronize(authority.authority(), 1_000, 2_000)
+            .expect("cache synchronization")
+            .resolve();
+        assert!(!resolutions.is_empty());
     }
 
     #[test]

@@ -3,7 +3,7 @@
 **Status:** Implemented platform-neutral contracts and authenticated Linux
 lifecycle with explicitly open cross-platform, campaign, and independent-review evidence
 **Contract schema:** 2
-**Canonical operational-store schema:** 7
+**Canonical operational-store schema:** 8
 **Owning roadmap story:** 22.2
 
 This record defines the runtime artifact boundary used for large model output,

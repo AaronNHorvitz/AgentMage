@@ -39,6 +39,10 @@ use crate::grants::{
     DerivedOperationGrantRequest, GrantIssueError, GrantIssuer, SessionReadGrantRequest,
 };
 use crate::policy::PolicyEngine;
+use crate::repository_cache::{
+    RepositoryCacheHit, RepositoryCacheReconciliation, RepositoryCacheRecord,
+    verify_all as verify_repository_cache,
+};
 use crate::runtime_artifact::{
     RuntimeArtifactPage, RuntimeArtifactPageRequest, RuntimeArtifactPayloadStore,
     RuntimeArtifactPublication, RuntimeArtifactReadRequest, RuntimeArtifactReconciliation,
@@ -63,7 +67,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 7;
+const SCHEMA_VERSION: i64 = 8;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -142,6 +146,8 @@ const MIGRATION_6_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0006-runtime-journal.sql");
 const MIGRATION_7_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0007-runtime-artifacts.sql");
+const MIGRATION_8_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0008-repository-map-cache.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -475,7 +481,7 @@ pub struct OperationalStore {
     pub(crate) connection: Connection,
     path: PathBuf,
     generation: u64,
-    poisoned: bool,
+    pub(crate) poisoned: bool,
 }
 
 impl fmt::Debug for OperationalStore {
@@ -973,6 +979,7 @@ impl OperationalStore {
         verify_integrity(&self.connection)?;
         verify_runtime_journal(self).map_err(|_| OperationalStoreError::IntegrityFailure)?;
         verify_runtime_artifacts(self).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        verify_repository_cache(self)?;
         let generation: i64 = self
             .connection
             .query_row(
@@ -2315,6 +2322,43 @@ impl DurableAuthorityRuntime {
             .map_err(DurableAuthorityError::Store)
     }
 
+    /// Persists one encrypted derivative repository-map record.
+    pub fn put_repository_cache_record(
+        &self,
+        record: &RepositoryCacheRecord,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .put_repository_cache_record(record)
+            .map_err(DurableAuthorityError::Store)
+    }
+
+    /// Reads one exact verified and unexpired derivative repository-map record.
+    pub fn repository_cache_record(
+        &self,
+        scope_sha256: &str,
+        key_sha256: &str,
+        now_epoch_ms: u64,
+    ) -> Result<Option<RepositoryCacheHit>, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .repository_cache_record(scope_sha256, key_sha256, now_epoch_ms)
+            .map_err(DurableAuthorityError::Store)
+    }
+
+    /// Reconciles one derivative scope before any later retrieval or citation.
+    pub fn reconcile_repository_cache(
+        &self,
+        scope_sha256: &str,
+        current_key_sha256: &[String],
+        now_epoch_ms: u64,
+    ) -> Result<RepositoryCacheReconciliation, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .reconcile_repository_cache(scope_sha256, current_key_sha256, now_epoch_ms)
+            .map_err(DurableAuthorityError::Store)
+    }
+
     fn recover_interrupted(
         &mut self,
         occurred_at_epoch_ms: u64,
@@ -2707,6 +2751,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 7_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 7;
+    }
+    if version == 7 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_8_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (8, ?1)",
+                [sha256_hex(MIGRATION_8_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -2734,6 +2799,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (5, sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())),
             (6, sha256_hex(MIGRATION_6_SCHEMA_SQL.as_bytes())),
             (7, sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())),
+            (8, sha256_hex(MIGRATION_8_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -4307,16 +4373,18 @@ mod tests {
     use super::{
         DurableAuthorityError, DurableAuthorityRuntime, MIGRATION_1_SCHEMA_SQL,
         MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, MIGRATION_4_SCHEMA_SQL,
-        MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, MIGRATION_7_SCHEMA_SQL, OperationalStore,
-        OperationalStoreError, OperationalStoreKeyError, OperationalStoreKeyLifecycle,
-        OperationalStoreKeyProvider, RetentionAssignment, RetentionDisposition, RetentionHoldKind,
-        RetentionRecordFamily, RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256,
-        is_linux_held_descriptor_path, open_connection, prepare_new_store_file, sha256_file,
-        sha256_hex, sqlite_artifact_paths, verify_runtime_configuration,
+        MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, MIGRATION_7_SCHEMA_SQL,
+        MIGRATION_8_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
+        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
+        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
+        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
+        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::context_management::finalize_checkpoint;
     use crate::grants::{GrantIssuer, SessionReadGrantRequest};
+    use crate::repository_cache::RepositoryCacheRecord;
     use crate::runtime_event::seal_runtime_event;
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -4982,7 +5050,7 @@ mod tests {
         let backup_receipt = store
             .backup(&backup, &observation(), &mut TestKey([9; 32]))
             .expect("encrypted backup");
-        assert_eq!(backup_receipt.schema_version, 7);
+        assert_eq!(backup_receipt.schema_version, SCHEMA_VERSION as u32);
         assert_eq!(backup_receipt.generation, 0);
         assert_eq!(backup_receipt.encrypted_file_sha256.len(), 64);
         assert_eq!(
@@ -5702,7 +5770,7 @@ mod tests {
     }
 
     #[test]
-    fn version_seven_schema_is_normalized_closed_and_relational() {
+    fn version_eight_schema_is_normalized_closed_and_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
@@ -5744,6 +5812,7 @@ mod tests {
                 "objectives",
                 "plans",
                 "receipts",
+                "repository_map_cache",
                 "retention",
                 "retention_events",
                 "runtime_artifact_events",
@@ -5949,6 +6018,102 @@ mod tests {
     }
 
     #[test]
+    fn encrypted_repository_cache_is_exact_bounded_and_noncanonical() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([81; 32]))
+            .expect("encrypted store");
+        let first = RepositoryCacheRecord::new(
+            hash('a'),
+            br#"{"path":["src","lib.rs"],"content":"one"}"#.to_vec(),
+            hash('b'),
+            br#"{"record":"one"}"#.to_vec(),
+            1_000,
+            2_000,
+        )
+        .expect("first derivative row");
+        let second = RepositoryCacheRecord::new(
+            hash('a'),
+            br#"{"path":["src","main.rs"],"content":"two"}"#.to_vec(),
+            hash('c'),
+            br#"{"record":"two"}"#.to_vec(),
+            1_000,
+            2_000,
+        )
+        .expect("second derivative row");
+        let generation = store.generation();
+        store
+            .put_repository_cache_record(&first)
+            .expect("first row persists");
+        store
+            .put_repository_cache_record(&second)
+            .expect("second row persists");
+        assert_eq!(store.generation(), generation);
+        let hit = store
+            .repository_cache_record(first.scope_sha256(), first.key_sha256(), 1_500)
+            .expect("exact lookup")
+            .expect("exact hit");
+        assert_eq!(hit.record_sha256, hash('b'));
+        assert_eq!(hit.record_json, br#"{"record":"one"}"#);
+        assert!(
+            store
+                .repository_cache_record(first.scope_sha256(), &hash('f'), 1_500)
+                .expect("exact miss")
+                .is_none()
+        );
+        let reconciliation = store
+            .reconcile_repository_cache(
+                first.scope_sha256(),
+                &[second.key_sha256().to_owned()],
+                1_500,
+            )
+            .expect("scope reconciles");
+        assert_eq!(reconciliation.retained, 1);
+        assert_eq!(reconciliation.removed, 1);
+        assert!(
+            store
+                .repository_cache_record(first.scope_sha256(), first.key_sha256(), 1_500)
+                .expect("stale miss")
+                .is_none()
+        );
+        drop(store);
+        OperationalStore::open(&path, &observation(), &mut TestKey([81; 32]))
+            .expect("verified restart");
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn repository_cache_tamper_blocks_verified_restart() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([82; 32]))
+            .expect("encrypted store");
+        let record = RepositoryCacheRecord::new(
+            hash('d'),
+            br#"{"key":"exact"}"#.to_vec(),
+            hash('e'),
+            br#"{"record":"exact"}"#.to_vec(),
+            1_000,
+            2_000,
+        )
+        .expect("derivative row");
+        store
+            .put_repository_cache_record(&record)
+            .expect("row persists");
+        store
+            .connection
+            .execute("UPDATE repository_map_cache SET record_json = X'7B7D'", [])
+            .expect("tamper injects");
+        drop(store);
+        assert_eq!(
+            OperationalStore::open(&path, &observation(), &mut TestKey([82; 32]))
+                .expect_err("cache tamper blocks open"),
+            OperationalStoreError::IntegrityFailure
+        );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
     fn session_checkpoint_is_atomic_hash_verified_and_current() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
@@ -6080,7 +6245,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_seven_with_exact_history() {
+    fn version_one_upgrades_through_eight_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -6110,6 +6275,7 @@ mod tests {
                 (5, sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())),
                 (6, sha256_hex(MIGRATION_6_SCHEMA_SQL.as_bytes())),
                 (7, sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())),
+                (8, sha256_hex(MIGRATION_8_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -6777,7 +6943,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 7));
+                assert_eq!((version, history), (SCHEMA_VERSION, 8));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))

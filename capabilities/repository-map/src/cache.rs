@@ -53,6 +53,17 @@ impl RepositoryMapCacheKey {
             policy_sha256: record.policy_sha256.clone(),
         })
     }
+
+    /// Returns canonical JSON bytes for encrypted derivative persistence.
+    pub fn canonical_json(&self) -> Result<Vec<u8>, RepositoryMapCacheError> {
+        validate_key(self)?;
+        serde_json::to_vec(self).map_err(|_| RepositoryMapCacheError::InvalidInput)
+    }
+
+    /// Returns SHA-256 of the complete canonical key representation.
+    pub fn key_sha256(&self) -> Result<String, RepositoryMapCacheError> {
+        key_sha256(self)
+    }
 }
 
 /// Disposable in-process SQLite repository-map cache.
