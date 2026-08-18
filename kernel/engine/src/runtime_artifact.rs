@@ -337,6 +337,21 @@ pub struct RuntimeArtifactReconciliation {
     pub cleaned_staging: u64,
 }
 
+/// Content-free canonical row counts for artifact storage governance.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RuntimeArtifactRowCounts {
+    /// Distinct retained payload metadata rows, including deleted history.
+    pub payloads: u64,
+    /// Immutable logical artifact manifest rows.
+    pub artifacts: u64,
+    /// Append-only artifact lifecycle event rows.
+    pub lifecycle_events: u64,
+    /// Retained runtime resume binding rows.
+    pub resume_bindings: u64,
+    /// Artifact-reference rows across retained resume bindings.
+    pub resume_artifacts: u64,
+}
+
 impl RuntimeArtifactError {
     /// Returns a stable content-free diagnostic code.
     #[must_use]
@@ -1067,6 +1082,27 @@ pub(crate) fn reconcile_runtime_artifacts<S: RuntimeArtifactPayloadStore>(
     }
     verify_all(store)?;
     Ok(report)
+}
+
+/// Returns content-free canonical table counts without exposing payload or record content.
+pub(crate) fn runtime_artifact_row_counts(
+    store: &OperationalStore,
+) -> Result<RuntimeArtifactRowCounts, RuntimeArtifactStoreError> {
+    fn count(store: &OperationalStore, statement: &str) -> Result<u64, RuntimeArtifactStoreError> {
+        let value = store
+            .connection
+            .query_row(statement, [], |row| row.get::<_, i64>(0))
+            .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+        u64::try_from(value).map_err(|_| RuntimeArtifactStoreError::Integrity)
+    }
+
+    Ok(RuntimeArtifactRowCounts {
+        payloads: count(store, "SELECT COUNT(*) FROM runtime_payloads")?,
+        artifacts: count(store, "SELECT COUNT(*) FROM runtime_artifacts")?,
+        lifecycle_events: count(store, "SELECT COUNT(*) FROM runtime_artifact_events")?,
+        resume_bindings: count(store, "SELECT COUNT(*) FROM runtime_resume_bindings")?,
+        resume_artifacts: count(store, "SELECT COUNT(*) FROM runtime_resume_artifacts")?,
+    })
 }
 
 /// Verifies every immutable manifest, lifecycle chain, payload count, and resume projection.

@@ -1,3 +1,4 @@
+#![recursion_limit = "256"]
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
 //! Fedora and Ubuntu platform path adapter.

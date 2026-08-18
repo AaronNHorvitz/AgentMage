@@ -2127,6 +2127,14 @@ mod tests {
         runtime
             .checkpoint_runtime_session(&checkpoint, &binding)
             .expect("ceiling checkpoint commits");
+        let checkpoint_rows = runtime
+            .runtime_artifact_row_counts()
+            .expect("checkpoint artifact rows count");
+        assert_eq!(checkpoint_rows.payloads, 66);
+        assert_eq!(checkpoint_rows.artifacts, 1_089);
+        assert_eq!(checkpoint_rows.lifecycle_events, 1_219);
+        assert_eq!(checkpoint_rows.resume_bindings, 1);
+        assert_eq!(checkpoint_rows.resume_artifacts, 1_024);
         let reference_elapsed_ms = elapsed_ms(reference_started);
         let reference_disk_bytes = recursive_directory_bytes(root.path());
         let resident_after_references_kib = resident_memory_kib();
@@ -2209,6 +2217,14 @@ mod tests {
                 .expect("empty binding remains current"),
             Some(empty_binding)
         );
+        let final_rows = runtime
+            .runtime_artifact_row_counts()
+            .expect("final artifact rows count");
+        assert_eq!(final_rows.payloads, 66);
+        assert_eq!(final_rows.artifacts, 1_089);
+        assert_eq!(final_rows.lifecycle_events, 3_267);
+        assert_eq!(final_rows.resume_bindings, 2);
+        assert_eq!(final_rows.resume_artifacts, 1_024);
         let final_disk_bytes = recursive_directory_bytes(root.path());
         let resident_peak_kib = resident_after_maximum_kib
             .max(resident_after_mixed_kib)
@@ -2241,10 +2257,20 @@ mod tests {
                 "mixed_disk_bytes": mixed_disk_bytes,
                 "mixed_final_active_object_count": 0,
                 "checkpoint_reference_count": references.len(),
+                "checkpoint_payload_rows": checkpoint_rows.payloads,
+                "checkpoint_artifact_rows": checkpoint_rows.artifacts,
+                "checkpoint_lifecycle_event_rows": checkpoint_rows.lifecycle_events,
+                "checkpoint_resume_binding_rows": checkpoint_rows.resume_bindings,
+                "checkpoint_resume_artifact_rows": checkpoint_rows.resume_artifacts,
                 "overflow_reference_count_rejected": references.len() + 1,
                 "deduplicated_reference_count": deduplicated,
                 "active_object_count_at_checkpoint": 1,
                 "final_active_object_count": 0,
+                "final_payload_rows": final_rows.payloads,
+                "final_artifact_rows": final_rows.artifacts,
+                "final_lifecycle_event_rows": final_rows.lifecycle_events,
+                "final_resume_binding_rows": final_rows.resume_bindings,
+                "final_resume_artifact_rows": final_rows.resume_artifacts,
                 "maximum_elapsed_ms": maximum_elapsed_ms,
                 "reference_elapsed_ms": reference_elapsed_ms,
                 "reopen_elapsed_ms": reopen_elapsed_ms,

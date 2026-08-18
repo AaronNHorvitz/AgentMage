@@ -42,11 +42,11 @@ use crate::policy::PolicyEngine;
 use crate::runtime_artifact::{
     RuntimeArtifactPage, RuntimeArtifactPageRequest, RuntimeArtifactPayloadStore,
     RuntimeArtifactPublication, RuntimeArtifactReadRequest, RuntimeArtifactReconciliation,
-    RuntimeArtifactState, RuntimeArtifactStoreError, current_runtime_resume_binding,
-    persist_runtime_resume_binding, publish_runtime_artifact, read_runtime_artifact,
-    read_runtime_artifact_page, reconcile_runtime_artifacts, release_runtime_artifact,
-    runtime_artifact_operator_view, runtime_artifact_state, verify_all as verify_runtime_artifacts,
-    verify_runtime_resume_binding,
+    RuntimeArtifactRowCounts, RuntimeArtifactState, RuntimeArtifactStoreError,
+    current_runtime_resume_binding, persist_runtime_resume_binding, publish_runtime_artifact,
+    read_runtime_artifact, read_runtime_artifact_page, reconcile_runtime_artifacts,
+    release_runtime_artifact, runtime_artifact_operator_view, runtime_artifact_row_counts,
+    runtime_artifact_state, verify_all as verify_runtime_artifacts, verify_runtime_resume_binding,
 };
 use crate::runtime_journal::{
     RuntimeJournalAppend, RuntimeJournalError, RuntimeJournalLimits, RuntimeJournalWorker,
@@ -1493,6 +1493,15 @@ impl DurableAuthorityRuntime {
         let store = self.lock_store()?;
         runtime_artifact_operator_view(&store, reference)
             .map_err(DurableAuthorityError::RuntimeArtifact)
+    }
+
+    /// Returns content-free canonical row counts for artifact storage governance.
+    pub fn runtime_artifact_row_counts(
+        &self,
+    ) -> Result<RuntimeArtifactRowCounts, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let store = self.lock_store()?;
+        runtime_artifact_row_counts(&store).map_err(DurableAuthorityError::RuntimeArtifact)
     }
 
     /// Reads complete verified bytes only for their exact session, task, policy, and ceiling.
