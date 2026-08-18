@@ -1239,4 +1239,120 @@ mod tests {
             b"unrelated temp owner\n"
         );
     }
+
+    #[test]
+    fn s_030_ut01_missing_and_wrong_type_matrix_fails_before_effect() {
+        for source in ["patch.txt", "copy.txt", "move.txt"] {
+            let mut missing = fixture(false);
+            fs::remove_file(missing.root.path().join("src").join(source))
+                .expect("remove source fixture");
+            assert_eq!(
+                execute(&mut missing),
+                Err(FilesystemTransactionError::PreapplyDenied),
+                "missing {source}"
+            );
+            assert!(!missing.root.path().join("created.txt").exists());
+
+            let mut wrong_type = fixture(false);
+            let source_path = wrong_type.root.path().join("src").join(source);
+            fs::remove_file(&source_path).expect("remove regular source");
+            fs::create_dir(&source_path).expect("replace source with directory");
+            assert_eq!(
+                execute(&mut wrong_type),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "wrong-type {source}"
+            );
+            assert!(source_path.is_dir());
+            assert!(!wrong_type.root.path().join("created.txt").exists());
+        }
+
+        for parent in ["copies", "moved"] {
+            let mut missing = fixture(false);
+            fs::remove_dir(missing.root.path().join(parent)).expect("remove destination parent");
+            assert_eq!(
+                execute(&mut missing),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "missing parent {parent}"
+            );
+            assert!(!missing.root.path().join("created.txt").exists());
+
+            let mut wrong_type = fixture(false);
+            let parent_path = wrong_type.root.path().join(parent);
+            fs::remove_dir(&parent_path).expect("remove directory parent");
+            fs::write(&parent_path, b"wrong parent type\n").expect("write parent file");
+            assert_eq!(
+                execute(&mut wrong_type),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "wrong-type parent {parent}"
+            );
+            assert_eq!(
+                fs::read(parent_path).expect("wrong parent preserved"),
+                b"wrong parent type\n"
+            );
+        }
+
+        for destination in ["created.txt", "copies/copy.txt", "moved/move.txt"] {
+            let mut wrong_type = fixture(false);
+            let destination_path = wrong_type.root.path().join(destination);
+            fs::create_dir(&destination_path).expect("create directory destination");
+            assert_eq!(
+                execute(&mut wrong_type),
+                Err(FilesystemTransactionError::ObservationFailed),
+                "wrong-type destination {destination}"
+            );
+            assert!(destination_path.is_dir());
+        }
+
+        let mut missing_delete = fixture(true);
+        fs::remove_file(missing_delete.root.path().join("src/obsolete.txt"))
+            .expect("remove delete source");
+        assert_eq!(
+            execute(&mut missing_delete),
+            Err(FilesystemTransactionError::PreapplyDenied)
+        );
+        assert!(
+            !missing_delete
+                .root
+                .path()
+                .join("trash/obsolete.txt")
+                .exists()
+        );
+
+        let mut wrong_delete_source = fixture(true);
+        let delete_source = wrong_delete_source.root.path().join("src/obsolete.txt");
+        fs::remove_file(&delete_source).expect("remove delete source file");
+        fs::create_dir(&delete_source).expect("replace delete source with directory");
+        assert_eq!(
+            execute(&mut wrong_delete_source),
+            Err(FilesystemTransactionError::ObservationFailed)
+        );
+        assert!(delete_source.is_dir());
+
+        let mut missing_trash = fixture(true);
+        fs::remove_dir(missing_trash.root.path().join("trash")).expect("remove trash parent");
+        assert_eq!(
+            execute(&mut missing_trash),
+            Err(FilesystemTransactionError::ObservationFailed)
+        );
+        assert!(missing_trash.root.path().join("src/obsolete.txt").exists());
+
+        let mut wrong_trash_destination = fixture(true);
+        let trash_destination = wrong_trash_destination
+            .root
+            .path()
+            .join("trash/obsolete.txt");
+        fs::create_dir(&trash_destination).expect("create directory trash destination");
+        assert_eq!(
+            execute(&mut wrong_trash_destination),
+            Err(FilesystemTransactionError::ObservationFailed)
+        );
+        assert!(trash_destination.is_dir());
+        assert!(
+            wrong_trash_destination
+                .root
+                .path()
+                .join("src/obsolete.txt")
+                .exists()
+        );
+    }
 }

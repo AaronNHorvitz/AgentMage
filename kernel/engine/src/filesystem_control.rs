@@ -2536,7 +2536,8 @@ mod tests {
         FilesystemOperationObservation, FilesystemOperationStatus, FilesystemPlan,
         FilesystemPlanError, FilesystemPlanRequest, FilesystemRestoreAuthorization,
         FilesystemRestoreReport, FilesystemTransactionError, FilesystemTransactionOutcome,
-        FilesystemTransactionRequest, NewDestinationDraft, ObservedFilesystemEntry,
+        FilesystemTransactionRequest, MAX_FILE_BYTES, MAX_OPERATIONS, MAX_PATH_DEPTH,
+        MAX_SIBLING_NAMES, MAX_TRANSACTION_BYTES, NewDestinationDraft, ObservedFilesystemEntry,
         StructuredPatch, StructuredPatchHunk, apply_structured_patch, build_filesystem_plan,
         execute_filesystem_transaction, execute_filesystem_transaction_with_checkpoint,
         filesystem_indexes, hex_sha256, issue_filesystem_grant, parse_structured_patch_json,
@@ -3404,6 +3405,117 @@ mod tests {
         assert_eq!(
             preview.operations[0].complete_content_preview.as_deref(),
             Some("\"\"")
+        );
+    }
+
+    #[test]
+    fn s_030_ut01_exact_resource_boundaries_pass_and_one_over_fails() {
+        let create = |index: usize, bytes: Vec<u8>| FilesystemOperationDraft::Create {
+            operation_id: format!("operation-boundary-{index}"),
+            destination: destination(&["bounded"], &format!("file-{index}.bin"), &[]),
+            content: bytes,
+            mode: 0o600,
+            classification: FileClassification::Data,
+        };
+
+        let maximum_operations = (0..MAX_OPERATIONS)
+            .map(|index| create(index, vec![b'x']))
+            .collect();
+        assert!(build_filesystem_plan(&parent(), request(maximum_operations)).is_ok());
+        let too_many_operations = (0..=MAX_OPERATIONS)
+            .map(|index| create(index, vec![b'x']))
+            .collect();
+        assert_eq!(
+            build_filesystem_plan(&parent(), request(too_many_operations)),
+            Err(FilesystemPlanError::ParentUnavailable)
+        );
+
+        assert!(
+            build_filesystem_plan(
+                &parent(),
+                request(vec![create(0, vec![b'x'; MAX_FILE_BYTES])]),
+            )
+            .is_ok()
+        );
+        assert_eq!(
+            build_filesystem_plan(
+                &parent(),
+                request(vec![create(0, vec![b'x'; MAX_FILE_BYTES + 1])]),
+            ),
+            Err(FilesystemPlanError::InvalidInput)
+        );
+
+        let exact_transaction = (0..(MAX_TRANSACTION_BYTES / MAX_FILE_BYTES))
+            .map(|index| create(index, vec![b'x'; MAX_FILE_BYTES]))
+            .collect();
+        assert!(build_filesystem_plan(&parent(), request(exact_transaction)).is_ok());
+        let mut oversized_transaction = (0..(MAX_TRANSACTION_BYTES / MAX_FILE_BYTES))
+            .map(|index| create(index, vec![b'x'; MAX_FILE_BYTES]))
+            .collect::<Vec<_>>();
+        oversized_transaction.push(create(MAX_OPERATIONS, vec![b'x']));
+        assert_eq!(
+            build_filesystem_plan(&parent(), request(oversized_transaction)),
+            Err(FilesystemPlanError::InvalidInput)
+        );
+
+        let exact_parent = (0..(MAX_PATH_DEPTH - 1))
+            .map(|index| format!("depth-{index}"))
+            .collect::<Vec<_>>();
+        let exact_parent_refs = exact_parent.iter().map(String::as_str).collect::<Vec<_>>();
+        let exact_depth = FilesystemOperationDraft::Create {
+            operation_id: "operation-depth-exact".to_owned(),
+            destination: destination(&exact_parent_refs, "leaf", &[]),
+            content: b"exact depth\n".to_vec(),
+            mode: 0o600,
+            classification: FileClassification::Data,
+        };
+        assert!(build_filesystem_plan(&parent(), request(vec![exact_depth])).is_ok());
+        let mut excessive_parent = exact_parent;
+        excessive_parent.push("depth-over".to_owned());
+        let excessive_parent_refs = excessive_parent
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>();
+        let excessive_depth = FilesystemOperationDraft::Create {
+            operation_id: "operation-depth-over".to_owned(),
+            destination: destination(&excessive_parent_refs, "leaf", &[]),
+            content: b"too deep\n".to_vec(),
+            mode: 0o600,
+            classification: FileClassification::Data,
+        };
+        assert_eq!(
+            build_filesystem_plan(&parent(), request(vec![excessive_depth])),
+            Err(FilesystemPlanError::InvalidInput)
+        );
+
+        let siblings = (0..MAX_SIBLING_NAMES)
+            .map(|index| format!("sibling-{index:04}"))
+            .collect::<Vec<_>>();
+        let sibling_refs = siblings.iter().map(String::as_str).collect::<Vec<_>>();
+        let exact_siblings = FilesystemOperationDraft::Create {
+            operation_id: "operation-siblings-exact".to_owned(),
+            destination: destination(&["new"], "candidate.txt", &sibling_refs),
+            content: b"exact siblings\n".to_vec(),
+            mode: 0o600,
+            classification: FileClassification::Data,
+        };
+        assert!(build_filesystem_plan(&parent(), request(vec![exact_siblings])).is_ok());
+        let mut excessive_siblings = siblings;
+        excessive_siblings.push("sibling-over".to_owned());
+        let excessive_sibling_refs = excessive_siblings
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>();
+        let too_many_siblings = FilesystemOperationDraft::Create {
+            operation_id: "operation-siblings-over".to_owned(),
+            destination: destination(&["new"], "candidate.txt", &excessive_sibling_refs),
+            content: b"too many siblings\n".to_vec(),
+            mode: 0o600,
+            classification: FileClassification::Data,
+        };
+        assert_eq!(
+            build_filesystem_plan(&parent(), request(vec![too_many_siblings])),
+            Err(FilesystemPlanError::InvalidInput)
         );
     }
 
