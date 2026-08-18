@@ -774,13 +774,14 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::Instant;
 
     use agentmage_kernel_contracts::{
         CONTRACT_SCHEMA_VERSION, CheckpointFileIdentity, ContextSensitivity, CorrelationId,
         EvidenceId, ModelProfileId, PlanId, PlanStepId, PolicyId, RepositorySnapshotId,
         RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
-        RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeEvent, RuntimeEventId,
-        RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
+        RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeArtifactRef, RuntimeEvent,
+        RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
         RuntimeEventRetentionKind, RuntimeResumeBinding, RuntimeRunId, SessionCheckpoint,
         SessionCheckpointId, SessionId, TaskId, WorkspaceId,
     };
@@ -789,10 +790,11 @@ mod tests {
         DurableAuthorityRuntime, OperationalStoreKeyError, OperationalStoreKeyProvider,
     };
     use agentmage_kernel_engine::runtime_artifact::{
-        RuntimeArtifactPayloadError, RuntimeArtifactPayloadInventoryEntry,
-        RuntimeArtifactPayloadInventoryIntegrity, RuntimeArtifactPayloadObservation,
-        RuntimeArtifactPayloadStore, runtime_artifact_ref, runtime_payload_reference,
-        seal_runtime_artifact_manifest, seal_runtime_resume_binding,
+        MAX_RUNTIME_ARTIFACT_BYTES, MAX_RUNTIME_ARTIFACTS_PER_CHECKPOINT, RuntimeArtifactError,
+        RuntimeArtifactPageRequest, RuntimeArtifactPayloadError,
+        RuntimeArtifactPayloadInventoryEntry, RuntimeArtifactPayloadInventoryIntegrity,
+        RuntimeArtifactPayloadObservation, RuntimeArtifactPayloadStore, runtime_artifact_ref,
+        runtime_payload_reference, seal_runtime_artifact_manifest, seal_runtime_resume_binding,
     };
     use agentmage_kernel_engine::runtime_event::seal_runtime_event;
     use sha2::{Digest, Sha256};
@@ -1140,6 +1142,77 @@ mod tests {
             binding_sha256: repeated_digest('0'),
         })
         .expect("crash binding seals")
+    }
+
+    fn artifact_pressure_manifest(id: &str, bytes: &[u8]) -> RuntimeArtifactManifest {
+        let mut manifest = artifact_crash_manifest();
+        manifest.artifact_id = RuntimeArtifactId::from_raw(id);
+        manifest.payload_sha256 = super::hex_digest(Sha256::digest(bytes));
+        manifest.byte_size = bytes.len() as u64;
+        manifest.manifest_sha256 = repeated_digest('0');
+        seal_runtime_artifact_manifest(manifest).expect("pressure manifest seals")
+    }
+
+    fn artifact_pressure_checkpoint(id: &str) -> SessionCheckpoint {
+        let mut checkpoint = artifact_crash_checkpoint();
+        checkpoint.checkpoint_id = SessionCheckpointId::from_raw(id);
+        checkpoint.checkpoint_sha256 = repeated_digest('0');
+        finalize_checkpoint(checkpoint).expect("pressure checkpoint finalizes")
+    }
+
+    fn artifact_pressure_binding(
+        runtime: &DurableAuthorityRuntime,
+        checkpoint: &SessionCheckpoint,
+        artifacts: Vec<RuntimeArtifactRef>,
+    ) -> RuntimeResumeBinding {
+        seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            run_id: RuntimeRunId::from_raw("run-crash-native-22-2"),
+            event_cursor: runtime
+                .runtime_event_cursor(&RuntimeRunId::from_raw("run-crash-native-22-2"))
+                .expect("pressure cursor loads")
+                .expect("pressure cursor exists"),
+            artifacts,
+            binding_sha256: repeated_digest('0'),
+        })
+        .expect("pressure binding seals")
+    }
+
+    fn resident_memory_kib() -> u64 {
+        fs::read_to_string("/proc/self/status")
+            .expect("Linux resident-memory status reads")
+            .lines()
+            .find_map(|line| {
+                line.strip_prefix("VmRSS:")?
+                    .split_whitespace()
+                    .next()?
+                    .parse::<u64>()
+                    .ok()
+            })
+            .expect("VmRSS is present")
+    }
+
+    fn recursive_directory_bytes(path: &Path) -> u64 {
+        fs::read_dir(path)
+            .expect("pressure directory lists")
+            .map(|entry| {
+                let entry = entry.expect("pressure entry reads");
+                let metadata = entry.metadata().expect("pressure metadata reads");
+                if metadata.is_dir() {
+                    recursive_directory_bytes(&entry.path())
+                } else {
+                    metadata.len()
+                }
+            })
+            .sum()
+    }
+
+    fn elapsed_ms(started: Instant) -> u64 {
+        u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX)
     }
 
     fn prepare_artifact_crash_fixture(path: &Path) {
@@ -1668,6 +1741,256 @@ mod tests {
             private
         );
         assert!(confusing.exists());
+    }
+
+    #[test]
+    #[ignore = "explicit Story 22.2 native maximum-payload and checkpoint-ceiling campaign"]
+    fn story_22_2_native_artifact_pressure_reaches_declared_ceilings() {
+        const PAGE_BYTES: u32 = 4 * 1024;
+        const MAX_CAMPAIGN_MS: u64 = 300_000;
+        const MAX_RESIDENT_DELTA_KIB: u64 = 512 * 1024;
+        const MAX_RETAINED_DISK_BYTES: u64 = 128 * 1024 * 1024;
+
+        let root = TestRoot::new("pressure-ceilings");
+        prepare_artifact_crash_fixture(root.path());
+        let resident_start_kib = resident_memory_kib();
+        let total_started = Instant::now();
+        let (mut runtime, mut payloads) = open_artifact_crash_components(root.path(), 2);
+
+        let maximum_payload = vec![0xa5; MAX_RUNTIME_ARTIFACT_BYTES as usize];
+        let maximum_manifest = artifact_pressure_manifest(
+            "artifact-pressure-22-2-maximum",
+            maximum_payload.as_slice(),
+        );
+        let maximum_started = Instant::now();
+        let maximum_publication = runtime
+            .publish_runtime_artifact(
+                &mut payloads,
+                maximum_manifest.clone(),
+                &mut Cursor::new(maximum_payload.as_slice()),
+            )
+            .expect("maximum payload publishes");
+        let first_page = runtime
+            .read_runtime_artifact_page(
+                &payloads,
+                &RuntimeArtifactPageRequest {
+                    session_id: maximum_manifest.session_id.clone(),
+                    task_id: maximum_manifest.task_id.clone(),
+                    policy_sha256: maximum_manifest.policy_sha256.clone(),
+                    reference: maximum_publication.reference.clone(),
+                    now_epoch_ms: 3,
+                    offset: 0,
+                    maximum_bytes: PAGE_BYTES,
+                },
+            )
+            .expect("maximum first page reads");
+        let final_offset = MAX_RUNTIME_ARTIFACT_BYTES - u64::from(PAGE_BYTES);
+        let final_page = runtime
+            .read_runtime_artifact_page(
+                &payloads,
+                &RuntimeArtifactPageRequest {
+                    session_id: maximum_manifest.session_id.clone(),
+                    task_id: maximum_manifest.task_id.clone(),
+                    policy_sha256: maximum_manifest.policy_sha256.clone(),
+                    reference: maximum_publication.reference.clone(),
+                    now_epoch_ms: 3,
+                    offset: final_offset,
+                    maximum_bytes: PAGE_BYTES,
+                },
+            )
+            .expect("maximum final page reads");
+        assert_eq!(first_page.bytes, vec![0xa5; PAGE_BYTES as usize]);
+        assert_eq!(first_page.next_offset, Some(u64::from(PAGE_BYTES)));
+        assert!(!first_page.complete);
+        assert_eq!(final_page.bytes, vec![0xa5; PAGE_BYTES as usize]);
+        assert_eq!(final_page.next_offset, None);
+        assert!(final_page.complete);
+        let maximum_elapsed_ms = elapsed_ms(maximum_started);
+        let maximum_disk_bytes = recursive_directory_bytes(root.path());
+        let resident_after_maximum_kib = resident_memory_kib();
+        runtime
+            .release_runtime_artifact(
+                &maximum_manifest.session_id,
+                &maximum_manifest.task_id,
+                &maximum_manifest.policy_sha256,
+                &maximum_publication.reference,
+                4,
+            )
+            .expect("maximum reference releases");
+        assert_eq!(
+            runtime
+                .reconcile_runtime_artifacts(&mut payloads, 4)
+                .expect("maximum payload collects")
+                .deleted_orphans,
+            1
+        );
+        drop(maximum_payload);
+
+        let shared_payload = b"deduplicated-pressure-payload";
+        let reference_started = Instant::now();
+        let mut references = Vec::with_capacity(MAX_RUNTIME_ARTIFACTS_PER_CHECKPOINT);
+        let mut deduplicated = 0_usize;
+        for index in 0..MAX_RUNTIME_ARTIFACTS_PER_CHECKPOINT {
+            let manifest = artifact_pressure_manifest(
+                &format!("artifact-pressure-22-2-{index:04}"),
+                shared_payload,
+            );
+            let publication = runtime
+                .publish_runtime_artifact(&mut payloads, manifest, &mut Cursor::new(shared_payload))
+                .expect("pressure reference publishes");
+            deduplicated += usize::from(publication.payload_deduplicated);
+            references.push(publication.reference);
+        }
+        assert_eq!(deduplicated, MAX_RUNTIME_ARTIFACTS_PER_CHECKPOINT - 1);
+        assert_eq!(
+            payloads.inventory().expect("deduplicated inventory").len(),
+            1
+        );
+        let checkpoint = artifact_pressure_checkpoint("checkpoint-pressure-22-2-full");
+        let binding = artifact_pressure_binding(&runtime, &checkpoint, references.clone());
+        let mut overflow = binding.clone();
+        overflow.artifacts.push(
+            runtime_artifact_ref(&artifact_pressure_manifest(
+                "artifact-pressure-22-2-1024",
+                shared_payload,
+            ))
+            .expect("overflow reference projects"),
+        );
+        overflow.binding_sha256 = repeated_digest('0');
+        assert_eq!(
+            seal_runtime_resume_binding(overflow),
+            Err(RuntimeArtifactError::InvalidResumeBinding)
+        );
+        runtime
+            .checkpoint_runtime_session(&checkpoint, &binding)
+            .expect("ceiling checkpoint commits");
+        let reference_elapsed_ms = elapsed_ms(reference_started);
+        let reference_disk_bytes = recursive_directory_bytes(root.path());
+        let resident_after_references_kib = resident_memory_kib();
+        drop(payloads);
+        drop(runtime);
+
+        let reopen_started = Instant::now();
+        let (mut runtime, mut payloads) = open_artifact_crash_components(root.path(), 5);
+        assert_eq!(
+            runtime
+                .reconcile_runtime_artifacts(&mut payloads, 5)
+                .expect("ceiling checkpoint reopens")
+                .verified_payloads,
+            1
+        );
+        assert_eq!(
+            runtime
+                .current_runtime_resume_binding()
+                .expect("ceiling binding loads"),
+            Some(binding)
+        );
+        assert!(
+            runtime
+                .release_runtime_artifact(
+                    &maximum_manifest.session_id,
+                    &maximum_manifest.task_id,
+                    &maximum_manifest.policy_sha256,
+                    &references[0],
+                    6,
+                )
+                .is_err(),
+            "a current checkpoint root must prevent release"
+        );
+        let empty_checkpoint = artifact_pressure_checkpoint("checkpoint-pressure-22-2-empty");
+        let empty_binding = artifact_pressure_binding(&runtime, &empty_checkpoint, Vec::new());
+        runtime
+            .checkpoint_runtime_session(&empty_checkpoint, &empty_binding)
+            .expect("empty successor checkpoint commits");
+        let reopen_elapsed_ms = elapsed_ms(reopen_started);
+
+        let collection_started = Instant::now();
+        for reference in &references {
+            runtime
+                .release_runtime_artifact(
+                    &maximum_manifest.session_id,
+                    &maximum_manifest.task_id,
+                    &maximum_manifest.policy_sha256,
+                    reference,
+                    7,
+                )
+                .expect("pressure reference releases");
+        }
+        let collection = runtime
+            .reconcile_runtime_artifacts(&mut payloads, 8)
+            .expect("pressure payload collects");
+        assert_eq!(collection.deleted_orphans, 1);
+        assert_eq!(collection.quarantined_payloads, 0);
+        assert!(payloads.inventory().expect("final inventory").is_empty());
+        for reference in [&references[0], references.last().expect("last reference")] {
+            let state = runtime
+                .runtime_artifact_state(reference)
+                .expect("collected reference state");
+            assert_eq!(state.lifecycle, RuntimeArtifactLifecycleState::Deleted);
+            assert_eq!(state.integrity, RuntimeArtifactIntegrityState::Deleted);
+        }
+        let collection_elapsed_ms = elapsed_ms(collection_started);
+        drop(payloads);
+        drop(runtime);
+
+        let (mut runtime, mut payloads) = open_artifact_crash_components(root.path(), 9);
+        assert_eq!(
+            runtime
+                .reconcile_runtime_artifacts(&mut payloads, 9)
+                .expect("final reopen is idempotent"),
+            Default::default()
+        );
+        assert_eq!(
+            runtime
+                .current_runtime_resume_binding()
+                .expect("empty binding remains current"),
+            Some(empty_binding)
+        );
+        let final_disk_bytes = recursive_directory_bytes(root.path());
+        let resident_peak_kib = resident_after_maximum_kib.max(resident_after_references_kib);
+        let resident_delta_kib = resident_peak_kib.saturating_sub(resident_start_kib);
+        let total_elapsed_ms = elapsed_ms(total_started);
+
+        assert!(maximum_elapsed_ms <= MAX_CAMPAIGN_MS);
+        assert!(reference_elapsed_ms <= MAX_CAMPAIGN_MS);
+        assert!(reopen_elapsed_ms <= MAX_CAMPAIGN_MS);
+        assert!(collection_elapsed_ms <= MAX_CAMPAIGN_MS);
+        assert!(total_elapsed_ms <= MAX_CAMPAIGN_MS);
+        assert!(resident_delta_kib <= MAX_RESIDENT_DELTA_KIB);
+        assert!(maximum_disk_bytes <= MAX_RETAINED_DISK_BYTES);
+        assert!(reference_disk_bytes <= MAX_RETAINED_DISK_BYTES);
+        assert!(final_disk_bytes <= MAX_RETAINED_DISK_BYTES);
+
+        println!(
+            "AGENTMAGE_ARTIFACT_PRESSURE={}",
+            serde_json::json!({
+                "maximum_payload_bytes": MAX_RUNTIME_ARTIFACT_BYTES,
+                "page_bytes": PAGE_BYTES,
+                "checkpoint_reference_count": references.len(),
+                "overflow_reference_count_rejected": references.len() + 1,
+                "deduplicated_reference_count": deduplicated,
+                "active_object_count_at_checkpoint": 1,
+                "final_active_object_count": 0,
+                "maximum_elapsed_ms": maximum_elapsed_ms,
+                "reference_elapsed_ms": reference_elapsed_ms,
+                "reopen_elapsed_ms": reopen_elapsed_ms,
+                "collection_elapsed_ms": collection_elapsed_ms,
+                "total_elapsed_ms": total_elapsed_ms,
+                "resident_start_kib": resident_start_kib,
+                "resident_peak_kib": resident_peak_kib,
+                "resident_delta_kib": resident_delta_kib,
+                "maximum_disk_bytes": maximum_disk_bytes,
+                "reference_disk_bytes": reference_disk_bytes,
+                "final_disk_bytes": final_disk_bytes,
+                "latency_ceiling_ms": MAX_CAMPAIGN_MS,
+                "resident_delta_ceiling_kib": MAX_RESIDENT_DELTA_KIB,
+                "retained_disk_ceiling_bytes": MAX_RETAINED_DISK_BYTES,
+                "checkpoint_release_blocked": true,
+                "final_reopen_verified": true,
+                "external_network_used": false,
+                "manual_fuzzing_executed": false,
+            })
+        );
     }
 
     #[test]
