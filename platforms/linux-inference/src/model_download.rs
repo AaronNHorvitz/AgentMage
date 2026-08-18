@@ -463,6 +463,7 @@ fn map_retain_error(error: ModelImportError) -> ModelDownloadError {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::Cell;
     use std::fs;
     use std::os::unix::fs::PermissionsExt;
     use std::path::PathBuf;
@@ -510,6 +511,8 @@ mod tests {
 
     struct MemorySource {
         identity: ModelDownloadIdentity,
+        identity_after_read: Option<ModelDownloadIdentity>,
+        identity_observations: Cell<u8>,
         bytes: Vec<u8>,
         transient_failures: u8,
         permanent: bool,
@@ -517,7 +520,17 @@ mod tests {
 
     impl BoundedModelDownloadSource for MemorySource {
         fn identity(&self) -> ModelDownloadIdentity {
-            self.identity.clone()
+            let observation = self.identity_observations.get();
+            self.identity_observations
+                .set(observation.saturating_add(1));
+            if observation > 0 {
+                self.identity_after_read
+                    .as_ref()
+                    .unwrap_or(&self.identity)
+                    .clone()
+            } else {
+                self.identity.clone()
+            }
         }
 
         fn read_at(
@@ -597,6 +610,8 @@ mod tests {
         (
             MemorySource {
                 identity: identity.clone(),
+                identity_after_read: None,
+                identity_observations: Cell::new(0),
                 bytes: bytes.to_vec(),
                 transient_failures: 0,
                 permanent: false,
@@ -719,6 +734,34 @@ mod tests {
                 .as_deref()
                 .is_some_and(|name| name.starts_with(".quarantine-download-"))
         );
+    }
+
+    #[test]
+    fn redirected_or_substituted_transport_is_quarantined_without_activation() {
+        let directory = TestDirectory::new();
+        let store = directory.store();
+        let bytes = b"GGUFredirect-substitution-fixture";
+        let profile = profile(bytes);
+        let (mut source, authorization) = source_and_authorization(&profile, bytes);
+        let mut changed = source.identity.clone();
+        changed.source_uri = "https://redirected.invalid/model.gguf".to_owned();
+        source.identity_after_read = Some(changed);
+
+        let receipt = download_model_artifact(
+            &profile,
+            &preflight(&profile),
+            &authorization,
+            &mut source,
+            &store,
+            || false,
+        )
+        .expect("identity drift is retained as quarantine evidence");
+
+        assert_eq!(receipt.disposition, ModelDownloadDisposition::Quarantined);
+        let retained = receipt.retained_name.expect("quarantine name");
+        assert!(retained.starts_with(".quarantine-download-"));
+        assert_eq!(fs::read_dir(&store).expect("one quarantine").count(), 1);
+        assert!(!store.join("active-model.json").exists());
     }
 
     #[test]
