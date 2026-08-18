@@ -6,11 +6,6 @@
       "reason": "The packaged one-shot process supports self-check and a strict, non-acquiring preflight over standard input; local import, bounded download, activation, rollback, and cleanup are not yet wired to a closed end-user process protocol."
     },
     {
-      "code": "MODEL-REVIEW-UI-NOT-IMPLEMENTED",
-      "owner": "14.1",
-      "reason": "Exact review data exists, but no preflight and license-review screen exists."
-    },
-    {
       "code": "PRODUCTION-SIGNING-NOT-AVAILABLE",
       "owner": "14.1",
       "reason": "Deterministic signable packages exist; no approved external production signing identity exists."
@@ -43,7 +38,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-contracts",
-      "output_sha256": "be7f834965fd8df2d2555f1333875e259f493eb15b782a3938948aa92ff08484"
+      "output_sha256": "0dcb6dcc45eda3d764427a0d04ac7d55cb57b31beba5662e11cba5a2b7517c7b"
     },
     {
       "argv": [
@@ -55,7 +50,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-vscode",
-      "output_sha256": "8bcb1a88dfab312770fb02e88592ae5a04ce4a8cb60b0afebc517b7d966d2e80"
+      "output_sha256": "f082864d809dd57ef4e7e28d7cab09fb138563b28e2f52b4e85010f02fa92956"
     },
     {
       "argv": [
@@ -67,7 +62,7 @@
       ],
       "exit_code": 0,
       "id": "installer-runtime-contracts",
-      "output_sha256": "0294d15ece3f4e67274e20b9c3dc5c1137e2f94fc1545e15ede7f55262ba42d1"
+      "output_sha256": "4094b3a6e2fc529d2cb4de96fc720b1d110224f19579b04747ab14fb5f77e38f"
     },
     {
       "argv": [
@@ -81,7 +76,7 @@
       ],
       "exit_code": 0,
       "id": "installer-package-contracts",
-      "output_sha256": "ea57a1768c572b4d377004773000e3b70e0c490da94bd4dfc3ff6b13b006904b"
+      "output_sha256": "74252a207a000678ca7f29a6f5da23a49d41036cf86a353c0811debd2b48793b"
     },
     {
       "argv": [
@@ -157,7 +152,7 @@
       "RV-41"
     ]
   },
-  "source_revision": "24464fd218ff22ad432697ec1d0785ea34036e71",
+  "source_revision": "ea99ca1b445de10e02e7897a8f6021608432d06b",
   "source_sha256": {
     "kernel/contracts/src/model_discovery.rs": "a5b3f600a3e7af159c1e4beff860db1f1164fd1e35376823728b791248cee1c0",
     "kernel/engine/src/model_discovery.rs": "e905afeeefbc58b634cbf7f07f242e4cf0642f1b744831a4e377b8c04dfcfb81",
@@ -172,11 +167,13 @@
     "scripts/model_candidate_inventory.py": "b96087dc12d4ff7d63ed3a65b29b1e1131b3a81428e4065d429e51ad2f912370",
     "scripts/package_candidate.py": "69f61c12e29b06260b3c60d19c7780572f59c56ee3110a550c284550840243ac",
     "scripts/package_lifecycle.py": "228cce404328ce93738b6d226bb564bad69fe2e92ac52f2a68c320b0557096a2",
-    "scripts/sprint_14_evidence.py": "88f736e9134baa8a101298d62bfa7ebeecb117a1a5d0fcdb79786699cbe4bc5c",
-    "shells/vscode/src/model_discovery.ts": "28dc8aff8a9944554ecaf8e74d59c41932c8631618ce7532596cee905b15a521",
-    "shells/vscode/test/model_discovery.test.ts": "d965ab510e3178e78c893365e8447cc2671e5d29cd1f277e3716f9d0f3faac9f",
+    "scripts/sprint_14_evidence.py": "93a78e6096e88c86fd946f4cd638334bbae7ffb97f44521f4e69885d3e70d729",
+    "shells/vscode/src/model_discovery.ts": "42ac5fd2a929b3f39afdb504744672d643bed89e44a11bc887caf827616807d9",
+    "shells/vscode/src/provider.ts": "0c527c68007a7c279ef0958896caeca42b024c5ac94d3138fbdcc1b95da7fcc0",
+    "shells/vscode/test/model_discovery.test.ts": "2f7c54e46cac921d8af0bc6b0748be39f64be79afe992fda67c38db55f87e417",
+    "shells/vscode/test/provider.test.ts": "c60c52bd609ca8254f8ad35d09acc8b391b0bf6d06cdb5787847d2c09af8a509",
     "tests/test_model_candidate_inventory.py": "2f6f242717606512d646b0713a71dd153dc43704978ae4b255660c52a047606f",
-    "tests/test_sprint_14_evidence.py": "b544ffb1401ec379941c158eaca8b19d77ab7b7257d43c521d9ce5c27b098ada"
+    "tests/test_sprint_14_evidence.py": "794134fcd57fbea6f0a3e9ce2214d0fe64c217a005b9edae5e5e7e5a76e51c48"
   },
   "stories": [
     {
@@ -191,7 +188,7 @@
       "preflight_contract_implemented": true,
       "preflight_process_protocol_active": true,
       "production_package_signed": false,
-      "review_ui_implemented": false,
+      "review_ui_implemented": true,
       "status": "PASS-LOCAL-PREFLIGHT-BLOCKED-EFFECTS-AND-PLATFORMS",
       "story_id": "14.1"
     },
