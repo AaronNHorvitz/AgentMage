@@ -147,7 +147,114 @@ pub fn compose_context(
         packet_sha256: ZERO_SHA256.to_owned(),
     };
     packet.packet_sha256 = packet_digest(&packet)?;
+    verify_composed_context(&packet)?;
     Ok(packet)
+}
+
+/// Verifies a composed packet's canonical digest, bounds, ordering, and complete accounting.
+pub fn verify_composed_context(
+    packet: &ComposedContextPacket,
+) -> Result<(), ContextCompositionError> {
+    if packet.schema_version != CONTRACT_SCHEMA_VERSION
+        || !valid_id(packet.context_packet_id.as_str())
+        || packet.max_bytes == 0
+        || packet.max_tokens == 0
+        || !bounded_text(&packet.token_counter_id)
+        || packet.items.len() > MAX_CONTEXT_ITEMS
+        || packet.accounting.len() > MAX_CONTEXT_ITEMS
+        || packet.items.len() > packet.accounting.len()
+        || packet.used_bytes > packet.max_bytes
+        || packet.used_tokens > packet.max_tokens
+        || !valid_sha256(&packet.packet_sha256)
+    {
+        return Err(ContextCompositionError::InvalidInput);
+    }
+
+    validate_composition_input(
+        &packet.context_packet_id,
+        &ContextCompositionBudget {
+            max_bytes: packet.max_bytes,
+            max_tokens: packet.max_tokens,
+            max_items: MAX_CONTEXT_ITEMS as u32,
+            token_counter_id: packet.token_counter_id.clone(),
+        },
+        &packet.items,
+    )?;
+
+    if packet
+        .items
+        .windows(2)
+        .any(|pair| context_order_key(&pair[0]) > context_order_key(&pair[1]))
+        || packet
+            .accounting
+            .windows(2)
+            .any(|pair| pair[0].item_id >= pair[1].item_id)
+    {
+        return Err(ContextCompositionError::InvalidInput);
+    }
+
+    let items = packet
+        .items
+        .iter()
+        .map(|item| (item.item_id.as_str(), item))
+        .collect::<BTreeMap<_, _>>();
+    let mut included = 0_usize;
+    let mut used_bytes = 0_u64;
+    let mut used_tokens = 0_u32;
+    for accounting in &packet.accounting {
+        if !valid_id(&accounting.item_id)
+            || !bounded_text(&accounting.source_id)
+            || !bounded_text(&accounting.source_revision)
+            || !valid_sha256(&accounting.content_sha256)
+            || accounting.byte_count > MAX_EXCERPT_BYTES as u64
+            || (accounting.byte_count == 0) != (accounting.token_count == 0)
+            || accounting.included == accounting.omission.is_some()
+        {
+            return Err(ContextCompositionError::InvalidInput);
+        }
+        if accounting.included {
+            let item = items
+                .get(accounting.item_id.as_str())
+                .ok_or(ContextCompositionError::InvalidInput)?;
+            if item.kind != accounting.kind
+                || item.sensitivity != accounting.sensitivity
+                || item.source_id != accounting.source_id
+                || item.source_revision != accounting.source_revision
+                || item.content_sha256 != accounting.content_sha256
+                || item.bounded_excerpt.len() as u64 != accounting.byte_count
+                || item.token_count != accounting.token_count
+                || item.admission != ContextAdmission::Eligible
+            {
+                return Err(ContextCompositionError::InvalidInput);
+            }
+            included += 1;
+            used_bytes = used_bytes
+                .checked_add(accounting.byte_count)
+                .ok_or(ContextCompositionError::InvalidInput)?;
+            used_tokens = used_tokens
+                .checked_add(accounting.token_count)
+                .ok_or(ContextCompositionError::InvalidInput)?;
+        } else if items.contains_key(accounting.item_id.as_str()) {
+            return Err(ContextCompositionError::InvalidInput);
+        }
+    }
+    if included != packet.items.len()
+        || used_bytes != packet.used_bytes
+        || used_tokens != packet.used_tokens
+        || packet.packet_sha256 != packet_digest(packet)?
+    {
+        return Err(ContextCompositionError::InvalidInput);
+    }
+    Ok(())
+}
+
+fn context_order_key(candidate: &ContextItemCandidate) -> (bool, bool, u8, &str) {
+    (
+        !candidate.authoritative_evidence,
+        !candidate.essential,
+        priority(candidate.kind),
+        candidate.item_id.as_str(),
+    )
 }
 
 fn validate_composition_input(
@@ -552,19 +659,21 @@ fn hex(bytes: &[u8]) -> String {
 mod tests {
     use agentmage_kernel_contracts::{
         ActionId, ActionState, CONTRACT_SCHEMA_VERSION, CheckedContextSummary, CheckedSummaryState,
-        CheckpointFileIdentity, ContextAdmission, ContextItemCandidate, ContextItemKind,
-        ContextOmissionReason, ContextPacketId, ContextSensitivity, ContextSummaryId, EvidenceId,
-        GrantId, ModelProfileId, PlanId, PlanStepId, PolicyId, ReceiptId, RepositorySnapshotId,
-        ResumeDriftDecision, ResumeDriftDimension, SessionCheckpoint, SessionCheckpointId,
-        SessionId, TaskId, WorkspaceId,
+        CheckpointFileIdentity, ComposedContextPacket, ContextAdmission, ContextItemCandidate,
+        ContextItemKind, ContextOmissionReason, ContextPacketId, ContextSensitivity,
+        ContextSummaryId, EvidenceId, GrantId, ModelProfileId, PlanId, PlanStepId, PolicyId,
+        ReceiptId, RepositorySnapshotId, ResumeDriftDecision, ResumeDriftDimension,
+        SessionCheckpoint, SessionCheckpointId, SessionId, TaskId, WorkspaceId,
     };
 
     use super::{
         CheckedSummaryError, CheckpointError, ContextCompositionBudget, ContextCompositionError,
         DriftDecisionOutcome, ResumeDirective, ResumeObservation, SummaryUseDecision,
         apply_drift_decision, compose_context, evaluate_checked_summary, finalize_checkpoint,
-        revalidate_resume, verify_checkpoint,
+        revalidate_resume, verify_checkpoint, verify_composed_context,
     };
+
+    type ContextMutation = Box<dyn Fn(&mut ComposedContextPacket)>;
 
     fn hash(byte: char) -> String {
         byte.to_string().repeat(64)
@@ -638,6 +747,34 @@ mod tests {
                 && !entry.included
                 && entry.omission == Some(agentmage_kernel_contracts::ContextOmissionReason::Budget)
         }));
+        verify_composed_context(&first).expect("canonical context verifies");
+    }
+
+    #[test]
+    fn canonical_context_verifier_rejects_content_accounting_order_and_digest_drift() {
+        let packet = compose_context(
+            ContextPacketId::from_raw("context-verified"),
+            &budget(64, 16),
+            vec![
+                item("request", ContextItemKind::NewestRequest, "do this", 2),
+                item("evidence", ContextItemKind::Evidence, "observed", 2),
+            ],
+        )
+        .expect("valid packet");
+        let mutations: Vec<ContextMutation> = vec![
+            Box::new(|value| value.items[0].bounded_excerpt.push_str(" changed")),
+            Box::new(|value| value.accounting[0].byte_count += 1),
+            Box::new(|value| value.items.swap(0, 1)),
+            Box::new(|value| value.packet_sha256 = hash('f')),
+        ];
+        for mutate in mutations {
+            let mut changed = packet.clone();
+            mutate(&mut changed);
+            assert_eq!(
+                verify_composed_context(&changed),
+                Err(ContextCompositionError::InvalidInput)
+            );
+        }
     }
 
     #[test]

@@ -24,7 +24,8 @@ use agentmage_kernel_engine::authority_transaction::AuthorityTransactionRequest;
 use agentmage_kernel_engine::diagnostics::build_doctor_report;
 use agentmage_kernel_engine::grants::{DerivedOperationGrantRequest, SessionReadGrantRequest};
 use agentmage_kernel_engine::handoff::{
-    build_handoff_review, cancel_handoff, deny_handoff_action, render_reviewed_handoff,
+    SessionHandoffInput, build_handoff_review, cancel_handoff, compose_session_handoff_draft,
+    deny_handoff_action, render_reviewed_handoff,
 };
 use agentmage_kernel_engine::model_discovery::{
     revalidate_model_selection, verify_model_picker_snapshot,
@@ -373,8 +374,22 @@ where
         Ok(())
     }
 
-    /// Replaces the local-only handoff source after trusted session composition refreshes it.
-    pub fn replace_handoff_draft(&mut self, draft: HandoffDraft) -> Result<(), LinuxReadError> {
+    /// Replaces the local-only handoff source from exact verified current-session material.
+    pub fn replace_handoff_session(
+        &mut self,
+        input: SessionHandoffInput<'_>,
+    ) -> Result<(), LinuxReadError> {
+        let draft =
+            compose_session_handoff_draft(input).map_err(|_| LinuxReadError::HandoffInvalid)?;
+        self.install_handoff_draft(draft)
+    }
+
+    #[cfg(test)]
+    fn replace_handoff_draft(&mut self, draft: HandoffDraft) -> Result<(), LinuxReadError> {
+        self.install_handoff_draft(draft)
+    }
+
+    fn install_handoff_draft(&mut self, draft: HandoffDraft) -> Result<(), LinuxReadError> {
         build_handoff_review(&draft, "handoff-validation".to_owned(), 1)
             .map_err(|_| LinuxReadError::HandoffInvalid)?;
         self.pending_handoffs.clear();
@@ -1927,13 +1942,21 @@ mod tests {
         ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
     };
     use agentmage_kernel_contracts::{
-        ActorId, CONTRACT_SCHEMA_VERSION, HandoffDestinationClass, HandoffDisclosureEntry,
-        HandoffDraft, HandoffEntryDisposition, HandoffEntryKind, HandoffProhibitedAction,
-        HandoffSensitivity, LocalHandoffOutcome, RuntimeApprovalResponse, RuntimeEventCursor,
-        RuntimeRunId, RuntimeRunRequest, SessionId,
+        ActorId, CONTRACT_SCHEMA_VERSION, CheckedContextSummary, CheckedSummaryState,
+        ComposedContextPacket, ContextAdmission, ContextItemCandidate, ContextItemKind,
+        ContextPacketId, ContextSensitivity, ContextSummaryId, EvidenceId, HandoffDestinationClass,
+        HandoffDisclosureEntry, HandoffDraft, HandoffEntryDisposition, HandoffEntryKind,
+        HandoffProhibitedAction, HandoffSensitivity, LocalHandoffOutcome, ModelProfileId, PlanId,
+        PlanStepId, PolicyId, RepositorySnapshotId, RuntimeApprovalResponse, RuntimeEventCursor,
+        RuntimeRunId, RuntimeRunRequest, SessionCheckpoint, SessionCheckpointId, SessionId, Task,
+        TaskId, TaskStatus, WorkspaceId,
+    };
+    use agentmage_kernel_engine::context_management::{
+        ContextCompositionBudget, compose_context, finalize_checkpoint,
     };
     use agentmage_kernel_engine::handoff::{
-        build_handoff_review, seal_handoff_entry, validate_handoff_draft,
+        SessionHandoffInput, SessionHandoffSelection, build_handoff_review, seal_handoff_entry,
+        validate_handoff_draft,
     };
     use agentmage_kernel_engine::model_discovery::build_model_picker_snapshot;
     use agentmage_kernel_engine::operational_store::{
@@ -1946,8 +1969,8 @@ mod tests {
 
     use super::{
         HOST_PROTOCOL_VERSION, HostProjectionKind, HostProjectionPath, HostRequest, HostResponse,
-        LinuxReadError, LinuxReadWorkflow, ReadClock, ReadIdentitySource, ReadInstant, format_utc,
-        preview_suffix, read_only_registry,
+        LinuxReadError, LinuxReadWorkflow, ReadClock, ReadIdentitySource, ReadInstant, digest,
+        format_utc, preview_suffix, read_only_registry,
     };
     use crate::runtime_transport::{
         RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
@@ -2145,6 +2168,101 @@ mod tests {
             unresolved_questions: vec!["Is native evidence retained?".to_owned()],
             destination: HandoffDestinationClass::ManualCodexInterface,
         }
+    }
+
+    fn canonical_handoff_material() -> (
+        Task,
+        SessionCheckpoint,
+        ComposedContextPacket,
+        CheckedContextSummary,
+    ) {
+        let task = Task {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            task_id: TaskId::from_raw("task-host-handoff-0001"),
+            session_id: SessionId::from_raw("session-host-handoff-0001"),
+            objective: "Review the current local boundary".to_owned(),
+            acceptance_criteria: vec!["Report exact findings".to_owned()],
+            constraints: vec!["Do not modify files".to_owned()],
+            status: TaskStatus::Ready,
+        };
+        let excerpt = "pub fn bounded() {}";
+        let context = compose_context(
+            ContextPacketId::from_raw("context-host-handoff-0001"),
+            &ContextCompositionBudget {
+                max_bytes: 1_024,
+                max_tokens: 256,
+                max_items: 8,
+                token_counter_id: "counter-host-handoff-v1".to_owned(),
+            },
+            vec![ContextItemCandidate {
+                item_id: "host-source".to_owned(),
+                kind: ContextItemKind::NewestRequest,
+                sensitivity: ContextSensitivity::Private,
+                admission: ContextAdmission::Eligible,
+                authoritative_evidence: false,
+                essential: true,
+                source_id: "src/lib.rs".to_owned(),
+                source_revision: "lines:1-10".to_owned(),
+                content_sha256: digest(excerpt.as_bytes()),
+                bounded_excerpt: excerpt.to_owned(),
+                token_count: 5,
+            }],
+        )
+        .expect("host handoff context");
+        let checkpoint = finalize_checkpoint(SessionCheckpoint {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: SessionCheckpointId::from_raw("checkpoint-host-handoff-0001"),
+            session_id: task.session_id.clone(),
+            task_id: task.task_id.clone(),
+            objective_sha256: digest(task.objective.as_bytes()),
+            plan_id: PlanId::from_raw("plan-host-handoff-0001"),
+            plan_revision: 1,
+            plan_step_id: PlanStepId::from_raw("step-host-handoff-0001"),
+            next_action_sha256: "1".repeat(64),
+            workspace_id: WorkspaceId::from_raw("workspace-host-handoff-0001"),
+            workspace_state_sha256: "2".repeat(64),
+            repository_snapshot_id: RepositorySnapshotId::from_raw("repository-host-handoff-0001"),
+            repository_branch: "main".to_owned(),
+            repository_map_sha256: "3".repeat(64),
+            files: Vec::new(),
+            instruction_sha256: "4".repeat(64),
+            permission_profile_id: "permission-host-handoff-0001".to_owned(),
+            permission_profile_sha256: "5".repeat(64),
+            policy_id: PolicyId::from_raw("policy-host-handoff-0001"),
+            policy_sha256: "6".repeat(64),
+            model_profile_id: ModelProfileId::from_raw("model-host-handoff-0001"),
+            model_manifest_sha256: "7".repeat(64),
+            model_runtime_sha256: "8".repeat(64),
+            evidence_ids: vec![EvidenceId::from_raw("evidence-host-handoff-0001")],
+            citation_set_sha256: "9".repeat(64),
+            blockers: Vec::new(),
+            context_packet_sha256: context.packet_sha256.clone(),
+            action_id: None,
+            action_state: None,
+            consumed_grant_id: None,
+            receipt_id: None,
+            receipt_sha256: None,
+            ephemeral: true,
+            checkpoint_sha256: "0".repeat(64),
+        })
+        .expect("host handoff checkpoint");
+        let summary = CheckedContextSummary {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            summary_id: ContextSummaryId::from_raw("summary-host-handoff-0001"),
+            state: CheckedSummaryState::Current,
+            summary: "Current bounded host session".to_owned(),
+            paths: vec!["src/lib.rs".to_owned()],
+            errors: Vec::new(),
+            identifiers: vec!["task-host-handoff-0001".to_owned()],
+            commands: Vec::new(),
+            decisions: vec!["Manual transfer only".to_owned()],
+            unresolved_questions: vec!["Is native evidence retained?".to_owned()],
+            evidence_ids: vec![EvidenceId::from_raw("evidence-host-handoff-0001")],
+            citation_ids: vec!["citation-host-handoff-0001".to_owned()],
+            receipt_ids: Vec::new(),
+            source_set_sha256: "a".repeat(64),
+        };
+        (task, checkpoint, context, summary)
     }
 
     fn workflow_with_sandbox(
@@ -2385,18 +2503,26 @@ mod tests {
             HostResponse::Denied { ref code, .. } if code == "host.handoff.unavailable"
         ));
 
-        let draft = handoff_draft();
-        validate_handoff_draft(&draft).expect("valid host handoff draft");
-        build_handoff_review(&draft, "host-validation".to_owned(), 1)
-            .expect("valid host handoff fixture");
+        let (task, checkpoint, context, summary) = canonical_handoff_material();
         workflow
-            .replace_handoff_draft(draft.clone())
-            .expect("trusted handoff draft");
+            .replace_handoff_session(SessionHandoffInput {
+                task: &task,
+                checkpoint: &checkpoint,
+                context: &context,
+                summary: Some(&summary),
+                redaction_policy_sha256: "b".repeat(64),
+                selections: vec![SessionHandoffSelection {
+                    context_item_id: "host-source".to_owned(),
+                    redactions: Vec::new(),
+                }],
+                exclusions: vec!["Credentials".to_owned()],
+            })
+            .expect("canonical current-session handoff");
         let preview = workflow.handle(HostRequest::PreviewHandoff {
             schema_version: HOST_PROTOCOL_VERSION,
             request_id: "handoff-preview-request".to_owned(),
         });
-        let (preview_id, confirmation_sha256, packet_sha256) = match preview {
+        let (preview_id, confirmation_sha256, packet_sha256, handoff_id) = match preview {
             HostResponse::HandoffPreview { review, .. } => {
                 assert!(review.manifest.acknowledgment_required);
                 assert!(!review.manifest.delivered);
@@ -2404,6 +2530,7 @@ mod tests {
                     review.preview_id,
                     review.confirmation_sha256,
                     review.manifest.packet_sha256,
+                    review.manifest.handoff_id,
                 )
             }
             _ => panic!("expected handoff preview"),
@@ -2426,7 +2553,7 @@ mod tests {
         let denied = workflow.handle(HostRequest::DenyHandoffAction {
             schema_version: HOST_PROTOCOL_VERSION,
             request_id: "handoff-denial-request".to_owned(),
-            handoff_id: Some(draft.handoff_id),
+            handoff_id: Some(handoff_id),
             action: HandoffProhibitedAction::NetworkCall,
         });
         assert!(matches!(
