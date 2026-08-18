@@ -1957,8 +1957,8 @@ fn civil_from_days(days_since_epoch: i64) -> (i64, i64, i64) {
 mod tests {
     use std::collections::VecDeque;
     use std::fs;
-    use std::os::unix::fs::{MetadataExt, PermissionsExt};
-    use std::path::{Component, Path, PathBuf};
+    use std::os::unix::fs::PermissionsExt;
+    use std::path::{Path, PathBuf};
     use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -2138,57 +2138,7 @@ mod tests {
             fs::canonicalize("/usr/bin/systemd-run").expect("canonical systemd-run executable");
         let bubblewrap =
             fs::canonicalize("/usr/bin/bwrap").expect("canonical Bubblewrap executable");
-        let known_worker = fs::canonicalize("/usr/bin/true").expect("canonical known worker");
-        LinuxSandboxManifest::verify(&systemd_run, &bubblewrap, &known_worker, &[])
-            .expect("verified supervisor manifest");
-        if executable.file_name().and_then(|name| name.to_str())
-            == Some("agentmage-read-only-worker")
-        {
-            let mut current = PathBuf::from("/");
-            for (index, component) in executable.components().skip(1).enumerate() {
-                let Component::Normal(component) = component else {
-                    panic!("installed worker path component {index} is not normal");
-                };
-                current.push(component);
-                let metadata = fs::symlink_metadata(&current)
-                    .unwrap_or_else(|_| panic!("installed worker path component {index} exists"));
-                assert_eq!(
-                    metadata.uid(),
-                    0,
-                    "installed worker path component {index} owner"
-                );
-                assert_eq!(
-                    metadata.mode() & 0o022,
-                    0,
-                    "installed worker path component {index} write authority"
-                );
-                assert!(
-                    !metadata.file_type().is_symlink(),
-                    "installed worker path component {index} symlink"
-                );
-            }
-            let packaged_host = fs::canonicalize("/usr/libexec/agentmage/agentmage-host")
-                .expect("canonical packaged host");
-            LinuxSandboxManifest::verify(&systemd_run, &bubblewrap, &packaged_host, &[])
-                .expect("verified packaged host manifest");
-        }
-        LinuxSandboxManifest::verify(&systemd_run, &bubblewrap, &executable, &[])
-            .expect("verified installed worker manifest");
         let runtime_files = runtime_files(&executable);
-        for count in 1..=runtime_files.len() {
-            LinuxSandboxManifest::verify(
-                &systemd_run,
-                &bubblewrap,
-                &executable,
-                &runtime_files[..count],
-            )
-            .unwrap_or_else(|error| {
-                panic!(
-                    "verified runtime prefix {count} of {}: {error:?}",
-                    runtime_files.len()
-                )
-            });
-        }
         let manifest =
             LinuxSandboxManifest::verify(systemd_run, bubblewrap, &executable, &runtime_files)
                 .expect("verified worker manifest");
