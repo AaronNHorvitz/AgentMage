@@ -38,7 +38,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-contracts",
-      "output_sha256": "0dcb6dcc45eda3d764427a0d04ac7d55cb57b31beba5662e11cba5a2b7517c7b"
+      "output_sha256": "29043828ed33862709628758b26d14d5d3e0131e850dff8eff78ca6d579ff170"
     },
     {
       "argv": [
@@ -50,7 +50,7 @@
       ],
       "exit_code": 0,
       "id": "acquisition-review-vscode",
-      "output_sha256": "f082864d809dd57ef4e7e28d7cab09fb138563b28e2f52b4e85010f02fa92956"
+      "output_sha256": "a635776e574782dcbfb418ee06636be2c722c2545abe5d716daacde0b6c3b056"
     },
     {
       "argv": [
@@ -62,7 +62,7 @@
       ],
       "exit_code": 0,
       "id": "installer-runtime-contracts",
-      "output_sha256": "4094b3a6e2fc529d2cb4de96fc720b1d110224f19579b04747ab14fb5f77e38f"
+      "output_sha256": "2e658afad6fb5fac75e3b486ef47b91f13f942b1ee988173bf9d0c0073da1138"
     },
     {
       "argv": [
@@ -76,7 +76,7 @@
       ],
       "exit_code": 0,
       "id": "installer-package-contracts",
-      "output_sha256": "74252a207a000678ca7f29a6f5da23a49d41036cf86a353c0811debd2b48793b"
+      "output_sha256": "d8349dde2edd72fdf89b67ea35363fa9e473e024e9f7665c599c192ddd9a2325"
     },
     {
       "argv": [
@@ -152,14 +152,14 @@
       "RV-41"
     ]
   },
-  "source_revision": "ea99ca1b445de10e02e7897a8f6021608432d06b",
+  "source_revision": "42d4884471f5eb7edf57edf634c1119ddd37713a",
   "source_sha256": {
     "kernel/contracts/src/model_discovery.rs": "a5b3f600a3e7af159c1e4beff860db1f1164fd1e35376823728b791248cee1c0",
     "kernel/engine/src/model_discovery.rs": "e905afeeefbc58b634cbf7f07f242e4cf0642f1b744831a4e377b8c04dfcfb81",
-    "platforms/linux-inference/src/lib.rs": "500d93c898d4932883d72569719a16fd237a041d684ed54e09eb8cb3d0a3ffd6",
+    "platforms/linux-inference/src/lib.rs": "efa4f393990cc0caf8115897c2c2818d2a903646cb21b7c867708d59031eb977",
     "platforms/linux-inference/src/model_acquisition.rs": "45412c0f2d8e234368a9ff2ae81ae2129a83eeb5a26aec65390d6f2fcc519ecd",
     "platforms/linux-inference/src/model_download.rs": "332042dd6addb7fc9a313e9152da8b5ca5b25d5e18ec7a0b4cd79d713b09e754",
-    "platforms/linux-inference/src/model_install_lifecycle.rs": "2e4aa2349dd53bf7d4d793d6236ddc46773c7cdfe96575c67c8fabf97d1c8c2e",
+    "platforms/linux-inference/src/model_install_lifecycle.rs": "50b339662935303743255cf07f090bd6c68ea5b7c2eb2026637240099474b7b7",
     "platforms/linux-inference/src/model_install_verifier.rs": "d1b2d61af29c3865e34c0913edc941c5f9c7fed4041ca74be6076d3de717553a",
     "platforms/linux-inference/src/model_installer_main.rs": "20df8976328a1d2d2ab90d35916559afbeb93924aba45fd43e389240280f5e98",
     "platforms/linux-inference/src/model_installer_process.rs": "788e74cfbea178027079422b3331b80690edadee05f0f92c4de74407c3872757",
