@@ -18,8 +18,20 @@ WORKER: Final = Path("/usr/libexec/agentmage/agentmage-read-only-worker")
 HOST: Final = Path("/usr/libexec/agentmage/agentmage-host")
 TEST_NAME: Final = (
     "linux_read::tests::"
-    "generic_tool_worker_returns_verified_result_one_receipt_and_no_workspace_mutation"
+    "every_generic_tool_worker_returns_verified_result_one_receipt_and_no_workspace_mutation"
 )
+VERIFIED_OPERATIONS: Final = [
+    "agentmage.workspace.list-directory",
+    "agentmage.workspace.directory-tree",
+    "agentmage.workspace.read-file",
+    "agentmage.workspace.read-multiple",
+    "agentmage.workspace.search-filenames",
+    "agentmage.workspace.search-text",
+    "agentmage.workspace.metadata",
+    "agentmage.workspace.hash-file",
+    "agentmage.workspace.hash-tree",
+    "agentmage.workspace.binary-metadata",
+]
 
 
 class GuestWorkerError(ValueError):
@@ -199,8 +211,8 @@ def execute(distribution: str) -> dict[str, Any]:
             "mode": "0755",
             "sha256": worker_sha256,
         },
-        "verified_operation": "agentmage.workspace.search-text",
-        "receipt_count": 1,
+        "verified_operations": VERIFIED_OPERATIONS,
+        "receipt_count": len(VERIFIED_OPERATIONS),
         "workspace_invariant": True,
         "worker_process_residue": False,
         "transient_unit_residue": False,

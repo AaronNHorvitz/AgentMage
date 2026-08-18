@@ -35,8 +35,8 @@ def target(target_id: str, distribution: str) -> dict[str, object]:
                 "mode": "0755",
                 "sha256": "f" * 64,
             },
-            "verified_operation": "agentmage.workspace.search-text",
-            "receipt_count": 1,
+            "verified_operations": evidence.VERIFIED_OPERATIONS,
+            "receipt_count": len(evidence.VERIFIED_OPERATIONS),
             "workspace_invariant": True,
             "worker_process_residue": False,
             "transient_unit_residue": False,
@@ -68,7 +68,7 @@ def report() -> dict[str, object]:
         "record_type": "sprint-16-installed-linux-worker-matrix",
         "task_ids": ["16.1.1.5", "16.1.2.3"],
         "source_revision": "b" * 40,
-        "status": "pass-installed-linux-worker-subset",
+        "status": "pass-installed-linux-worker-operation-matrix",
         "qemu": {
             "launcher_class": "toolbox",
             "version": "qemu-test",
@@ -78,8 +78,8 @@ def report() -> dict[str, object]:
             target("fedora-44-x86_64", "fedora"),
             target("ubuntu-26.04-x86_64", "ubuntu"),
         ],
-        "verified_operations": ["agentmage.workspace.search-text"],
-        "complete_ten_tool_matrix": False,
+        "verified_operations": evidence.VERIFIED_OPERATIONS,
+        "complete_ten_tool_matrix": True,
         "attack_matrix_complete": False,
         "cleanup_campaign_complete": False,
         "macos_evidence_substituted": False,
@@ -94,13 +94,13 @@ def report() -> dict[str, object]:
 
 
 class Sprint16LinuxWorkerEvidenceTests(unittest.TestCase):
-    def test_exact_subset_report_is_valid(self) -> None:
+    def test_exact_operation_matrix_report_is_valid(self) -> None:
         self.assertEqual(evidence.validate_report(report()), [])
 
     def test_target_receipt_and_cleanup_mutations_fail(self) -> None:
         mutations = (
             lambda value: value["targets"].pop(),
-            lambda value: value["targets"][0]["guest_result"].update({"receipt_count": 2}),
+            lambda value: value["targets"][0]["guest_result"].update({"receipt_count": 9}),
             lambda value: value["targets"][0]["guest_result"]["commands"][0].update(
                 {"exit_code": 1}
             ),
@@ -116,7 +116,6 @@ class Sprint16LinuxWorkerEvidenceTests(unittest.TestCase):
 
     def test_platform_privacy_and_completion_overclaims_fail(self) -> None:
         fields = (
-            "complete_ten_tool_matrix",
             "attack_matrix_complete",
             "cleanup_campaign_complete",
             "macos_evidence_substituted",
@@ -128,6 +127,9 @@ class Sprint16LinuxWorkerEvidenceTests(unittest.TestCase):
             changed = copy.deepcopy(report())
             changed[field] = True
             self.assertTrue(evidence.validate_report(changed))
+        changed = copy.deepcopy(report())
+        changed["complete_ten_tool_matrix"] = False
+        self.assertTrue(evidence.validate_report(changed))
 
     def test_source_and_qemu_identity_mutations_fail(self) -> None:
         changed = copy.deepcopy(report())

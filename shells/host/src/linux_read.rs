@@ -1957,7 +1957,7 @@ fn civil_from_days(days_since_epoch: i64) -> (i64, i64, i64) {
 mod tests {
     use std::collections::VecDeque;
     use std::fs;
-    use std::os::unix::fs::PermissionsExt;
+    use std::os::unix::fs::{MetadataExt, PermissionsExt};
     use std::path::{Path, PathBuf};
     use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -2325,13 +2325,97 @@ mod tests {
     }
 
     fn generic_search_request(workspace: &Path, request_id: &str) -> HostRequest {
+        generic_tool_request(workspace, request_id, ReadOnlyToolKind::SearchText)
+    }
+
+    fn generic_tool_request(
+        workspace: &Path,
+        request_id: &str,
+        kind: ReadOnlyToolKind,
+    ) -> HostRequest {
+        let src = vec!["src".to_owned()];
+        let alpha = vec!["src".to_owned(), "alpha.txt".to_owned()];
+        let zeta = vec!["src".to_owned(), "zeta.txt".to_owned()];
+        let binary = vec!["src".to_owned(), "sample.bin".to_owned()];
+        let (paths, query, encoding, projection) = match kind {
+            ReadOnlyToolKind::ListDirectory
+            | ReadOnlyToolKind::DirectoryTree
+            | ReadOnlyToolKind::HashTree => (
+                vec![src.clone()],
+                None,
+                ReadOnlyEncoding::Binary,
+                vec![
+                    (src, HostProjectionKind::Directory),
+                    (alpha, HostProjectionKind::RegularFile),
+                    (zeta, HostProjectionKind::RegularFile),
+                    (binary, HostProjectionKind::RegularFile),
+                ],
+            ),
+            ReadOnlyToolKind::SearchFilenames => (
+                vec![src.clone()],
+                Some("alpha".to_owned()),
+                ReadOnlyEncoding::Binary,
+                vec![
+                    (src, HostProjectionKind::Directory),
+                    (alpha, HostProjectionKind::RegularFile),
+                    (zeta, HostProjectionKind::RegularFile),
+                    (binary, HostProjectionKind::RegularFile),
+                ],
+            ),
+            ReadOnlyToolKind::SearchText => (
+                vec![src.clone()],
+                Some("needle".to_owned()),
+                ReadOnlyEncoding::Utf8,
+                vec![
+                    (src, HostProjectionKind::Directory),
+                    (alpha, HostProjectionKind::RegularFile),
+                    (zeta, HostProjectionKind::RegularFile),
+                ],
+            ),
+            ReadOnlyToolKind::ReadText => (
+                vec![alpha.clone()],
+                None,
+                ReadOnlyEncoding::Utf8,
+                vec![(alpha, HostProjectionKind::RegularFile)],
+            ),
+            ReadOnlyToolKind::ReadMultiple => (
+                vec![alpha.clone(), zeta.clone()],
+                None,
+                ReadOnlyEncoding::Utf8,
+                vec![
+                    (alpha, HostProjectionKind::RegularFile),
+                    (zeta, HostProjectionKind::RegularFile),
+                ],
+            ),
+            ReadOnlyToolKind::Metadata => (
+                vec![alpha.clone(), zeta.clone()],
+                None,
+                ReadOnlyEncoding::Binary,
+                vec![
+                    (alpha, HostProjectionKind::RegularFile),
+                    (zeta, HostProjectionKind::RegularFile),
+                ],
+            ),
+            ReadOnlyToolKind::HashFile => (
+                vec![alpha.clone()],
+                None,
+                ReadOnlyEncoding::Binary,
+                vec![(alpha, HostProjectionKind::RegularFile)],
+            ),
+            ReadOnlyToolKind::BinaryMetadata => (
+                vec![binary.clone()],
+                None,
+                ReadOnlyEncoding::Binary,
+                vec![(binary, HostProjectionKind::RegularFile)],
+            ),
+        };
         let arguments = serde_json::to_string(&ReadOnlyRequest {
             schema_version: 1,
-            paths: vec![vec!["src".to_owned()]],
-            query: Some("needle".to_owned()),
+            paths,
+            query,
             byte_offset: None,
             byte_count: None,
-            encoding: ReadOnlyEncoding::Utf8,
+            encoding,
             limits: ReadOnlyLimits::default(),
             call_depth: 0,
         })
@@ -2341,24 +2425,52 @@ mod tests {
             request_id: request_id.to_owned(),
             workspace_id: "workspace-tool-test".to_owned(),
             workspace_root: workspace.to_str().expect("UTF-8 test root").to_owned(),
-            tool_id: ReadOnlyToolKind::SearchText.id().to_owned(),
+            tool_id: kind.id().to_owned(),
             tool_version: "1.0.0".to_owned(),
             arguments_json: arguments,
-            projection: vec![
-                HostProjectionPath {
-                    components: vec!["src".to_owned()],
-                    object_kind: HostProjectionKind::Directory,
-                },
-                HostProjectionPath {
-                    components: vec!["src".to_owned(), "alpha.txt".to_owned()],
-                    object_kind: HostProjectionKind::RegularFile,
-                },
-                HostProjectionPath {
-                    components: vec!["src".to_owned(), "zeta.txt".to_owned()],
-                    object_kind: HostProjectionKind::RegularFile,
-                },
-            ],
+            projection: projection
+                .into_iter()
+                .map(|(components, object_kind)| HostProjectionPath {
+                    components,
+                    object_kind,
+                })
+                .collect(),
         }
+    }
+
+    fn workspace_observation(root: &Path) -> Vec<(PathBuf, u32, u32, u32, u64, i64, i64)> {
+        fn visit(
+            root: &Path,
+            path: &Path,
+            records: &mut Vec<(PathBuf, u32, u32, u32, u64, i64, i64)>,
+        ) {
+            let metadata = fs::symlink_metadata(path).expect("workspace metadata");
+            records.push((
+                path.strip_prefix(root)
+                    .expect("relative workspace path")
+                    .to_path_buf(),
+                metadata.mode(),
+                metadata.uid(),
+                metadata.gid(),
+                metadata.size(),
+                metadata.mtime(),
+                metadata.mtime_nsec(),
+            ));
+            if metadata.is_dir() {
+                let mut children = fs::read_dir(path)
+                    .expect("workspace directory")
+                    .map(|entry| entry.expect("workspace entry").path())
+                    .collect::<Vec<_>>();
+                children.sort();
+                for child in children {
+                    visit(root, &child, records);
+                }
+            }
+        }
+
+        let mut records = Vec::new();
+        visit(root, root, &mut records);
+        records
     }
 
     #[test]
@@ -2850,7 +2962,7 @@ mod tests {
 
     #[test]
     #[ignore = "requires an installed root-owned package worker, systemd user session, and Bubblewrap"]
-    fn generic_tool_worker_returns_verified_result_one_receipt_and_no_workspace_mutation() {
+    fn every_generic_tool_worker_returns_verified_result_one_receipt_and_no_workspace_mutation() {
         let root = temp_root("generic-live");
         let workspace = root.join("workspace");
         let state = root.join("state");
@@ -2859,41 +2971,61 @@ mod tests {
         fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
         fs::write(workspace.join("src/alpha.txt"), b"needle first\n").expect("alpha");
         fs::write(workspace.join("src/zeta.txt"), b"needle last\n").expect("zeta");
-        let before_alpha = fs::read(workspace.join("src/alpha.txt")).expect("before alpha");
-        let before_zeta = fs::read(workspace.join("src/zeta.txt")).expect("before zeta");
+        fs::write(workspace.join("src/sample.bin"), b"\x7fELF\x02\x01fixture").expect("binary");
+        let before = workspace_observation(&workspace);
+        let times = (1..=ReadOnlyToolKind::ALL.len() * 2)
+            .map(|index| index as u64 * 100)
+            .collect::<Vec<_>>();
         let mut workflow =
-            workflow_with_sandbox(&state, &[100, 200], installed_read_only_worker_sandbox());
+            workflow_with_sandbox(&state, &times, installed_read_only_worker_sandbox());
+        let mut final_preview = None;
 
-        let preview = workflow.handle(generic_search_request(&workspace, "request-live-preview"));
-        let (preview_id, confirmation_sha256) = match preview {
-            HostResponse::ToolPreview {
-                preview_id,
-                confirmation_sha256,
-                ..
-            } => (preview_id, confirmation_sha256),
-            _ => panic!("expected generic preview"),
-        };
-        let completed = workflow.handle(HostRequest::ApproveTool {
-            schema_version: HOST_PROTOCOL_VERSION,
-            request_id: "request-live-approve".to_owned(),
-            preview_id: preview_id.clone(),
-            confirmation_sha256: confirmation_sha256.clone(),
-        });
-        let receipt_sha256 = match completed {
-            HostResponse::ToolCompleted {
-                result, receipt, ..
-            } => {
-                assert_eq!(
-                    result.outcome,
-                    agentmage_capability_read_only::ReadOnlyOutcome::Succeeded
-                );
-                assert!(result.verify(ReadOnlyToolKind::SearchText));
-                assert_eq!(result.items.len(), 2);
-                assert_eq!(receipt.sequence, 1);
-                receipt.receipt_sha256
-            }
-            _ => panic!("expected completed generic tool"),
-        };
+        for (index, kind) in ReadOnlyToolKind::ALL.into_iter().enumerate() {
+            let preview = workflow.handle(generic_tool_request(
+                &workspace,
+                &format!("request-live-preview-{index}"),
+                kind,
+            ));
+            let (preview_id, confirmation_sha256) = match preview {
+                HostResponse::ToolPreview {
+                    preview_id,
+                    confirmation_sha256,
+                    tool_id,
+                    ..
+                } => {
+                    assert_eq!(tool_id, kind.id());
+                    (preview_id, confirmation_sha256)
+                }
+                _ => panic!("expected generic preview for {}", kind.id()),
+            };
+            let completed = workflow.handle(HostRequest::ApproveTool {
+                schema_version: HOST_PROTOCOL_VERSION,
+                request_id: format!("request-live-approve-{index}"),
+                preview_id: preview_id.clone(),
+                confirmation_sha256: confirmation_sha256.clone(),
+            });
+            let receipt_sha256 = match completed {
+                HostResponse::ToolCompleted {
+                    result, receipt, ..
+                } => {
+                    assert_eq!(
+                        result.outcome,
+                        agentmage_capability_read_only::ReadOnlyOutcome::Succeeded,
+                        "{} outcome",
+                        kind.id()
+                    );
+                    assert!(result.verify(kind), "{} result", kind.id());
+                    assert!(!result.items.is_empty(), "{} items", kind.id());
+                    assert_eq!(receipt.sequence, index as u64 + 1);
+                    receipt.receipt_sha256
+                }
+                _ => panic!("expected completed generic tool for {}", kind.id()),
+            };
+            final_preview = Some((preview_id, confirmation_sha256, receipt_sha256));
+        }
+
+        let (preview_id, confirmation_sha256, receipt_sha256) =
+            final_preview.expect("complete tool matrix");
         let replay = workflow.handle(HostRequest::ApproveTool {
             schema_version: HOST_PROTOCOL_VERSION,
             request_id: "request-live-replay".to_owned(),
@@ -2909,14 +3041,8 @@ mod tests {
             } if code == "host.tool.replay_denied"
                 && retained.receipt_sha256 == receipt_sha256
         ));
-        assert_eq!(
-            fs::read(workspace.join("src/alpha.txt")).expect("after alpha"),
-            before_alpha
-        );
-        assert_eq!(
-            fs::read(workspace.join("src/zeta.txt")).expect("after zeta"),
-            before_zeta
-        );
+        assert_eq!(workflow.authority.authority().receipts().len(), 10);
+        assert_eq!(workspace_observation(&workspace), before);
         fs::remove_dir_all(root).expect("cleanup");
     }
 

@@ -42,6 +42,18 @@ SOURCE_PATHS: Final = (
 )
 SHA256: Final = promoted.SHA256
 REVISION: Final = promoted.REVISION
+VERIFIED_OPERATIONS: Final = [
+    "agentmage.workspace.list-directory",
+    "agentmage.workspace.directory-tree",
+    "agentmage.workspace.read-file",
+    "agentmage.workspace.read-multiple",
+    "agentmage.workspace.search-filenames",
+    "agentmage.workspace.search-text",
+    "agentmage.workspace.metadata",
+    "agentmage.workspace.hash-file",
+    "agentmage.workspace.hash-tree",
+    "agentmage.workspace.binary-metadata",
+]
 
 
 class WorkerEvidenceError(ValueError):
@@ -274,15 +286,15 @@ def build_report(
         "record_type": "sprint-16-installed-linux-worker-matrix",
         "task_ids": ["16.1.1.5", "16.1.2.3"],
         "source_revision": revision,
-        "status": "pass-installed-linux-worker-subset",
+        "status": "pass-installed-linux-worker-operation-matrix",
         "qemu": {
             "launcher_class": tools.launcher_class,
             "version": tools.qemu_version,
             "sha256": tools.qemu_sha256,
         },
         "targets": targets,
-        "verified_operations": ["agentmage.workspace.search-text"],
-        "complete_ten_tool_matrix": False,
+        "verified_operations": VERIFIED_OPERATIONS,
+        "complete_ten_tool_matrix": True,
         "attack_matrix_complete": False,
         "cleanup_campaign_complete": False,
         "macos_evidence_substituted": False,
@@ -301,7 +313,7 @@ def validate_report(value: Any) -> list[str]:
         value.get("schema_version") != 1
         or value.get("record_type") != "sprint-16-installed-linux-worker-matrix"
         or value.get("task_ids") != ["16.1.1.5", "16.1.2.3"]
-        or value.get("status") != "pass-installed-linux-worker-subset"
+        or value.get("status") != "pass-installed-linux-worker-operation-matrix"
         or REVISION.fullmatch(str(value.get("source_revision", ""))) is None
     ):
         failures.append("installed worker matrix identity drifted")
@@ -337,8 +349,8 @@ def validate_report(value: Any) -> list[str]:
             )
             or guest.get("status") != "pass"
             or guest.get("strict_offline") is not True
-            or guest.get("verified_operation") != "agentmage.workspace.search-text"
-            or guest.get("receipt_count") != 1
+            or guest.get("verified_operations") != VERIFIED_OPERATIONS
+            or guest.get("receipt_count") != len(VERIFIED_OPERATIONS)
             or guest.get("workspace_invariant") is not True
             or any(
                 guest.get(field) is not False
@@ -376,10 +388,9 @@ def validate_report(value: Any) -> list[str]:
             )
         ):
             failures.append(f"installed worker cleanup drifted: {target.get('target_id')}")
-    if value.get("verified_operations") != ["agentmage.workspace.search-text"]:
+    if value.get("verified_operations") != VERIFIED_OPERATIONS:
         failures.append("installed worker operation claim drifted")
     for field in (
-        "complete_ten_tool_matrix",
         "attack_matrix_complete",
         "cleanup_campaign_complete",
         "macos_evidence_substituted",
@@ -389,6 +400,8 @@ def validate_report(value: Any) -> list[str]:
     ):
         if value.get(field) is not False:
             failures.append(f"installed worker prohibited claim changed: {field}")
+    if value.get("complete_ten_tool_matrix") is not True:
+        failures.append("installed worker complete operation matrix drifted")
     sources = value.get("sources")
     if (
         not isinstance(sources, list)

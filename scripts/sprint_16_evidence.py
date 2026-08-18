@@ -12,6 +12,11 @@ import subprocess
 from pathlib import Path
 from typing import Any, Final
 
+try:
+    from scripts import sprint_16_linux_worker_evidence as worker_evidence
+except ModuleNotFoundError:
+    import sprint_16_linux_worker_evidence as worker_evidence
+
 ROOT: Final = Path(__file__).resolve().parents[1]
 OUTPUT: Final = ROOT / "artifacts/sprints/sprint-16/local-evidence-report.json"
 INSTALLED_WORKER_OUTPUT: Final = (
@@ -111,7 +116,6 @@ SECURITY_REQUIREMENTS: Final = [
     "RV-04",
 ]
 BLOCKERS: Final = [
-    {"code": "COMPLETE-LINUX-WORKER-OPERATION-MATRIX-INCOMPLETE", "owner": "16.1.1.5"},
     {"code": "MACOS-XPC-WORKER-EVIDENCE-MISSING", "owner": "16.1.1.5"},
     {"code": "LIVE-WORKER-ATTACK-MATRIX-INCOMPLETE", "owner": "16.1.3.3"},
     {"code": "WORKER-CANCEL-TIMEOUT-KILL-CRASH-CAMPAIGN-INCOMPLETE", "owner": "16.1.3.4"},
@@ -167,11 +171,11 @@ def installed_worker_summary(value: Any, encoded: bytes) -> dict[str, Any]:
         raise ValueError("installed worker matrix must be an object")
     targets = value.get("targets")
     if (
-        value.get("status") != "pass-installed-linux-worker-subset"
+        value.get("status") != "pass-installed-linux-worker-operation-matrix"
         or not isinstance(targets, list)
         or [target.get("target_id") for target in targets]
         != ["fedora-44-x86_64", "ubuntu-26.04-x86_64"]
-        or value.get("verified_operations") != ["agentmage.workspace.search-text"]
+        or value.get("verified_operations") != worker_evidence.VERIFIED_OPERATIONS
     ):
         raise ValueError("installed worker matrix is not the admitted subset")
     return {
@@ -222,7 +226,7 @@ def build_report(
         "platform_evidence": {
             "linux_contract_tests": local_pass,
             "linux_packaged_live_worker_subset": True,
-            "linux_complete_operation_matrix": False,
+            "linux_complete_operation_matrix": True,
             "linux_live_attack_matrix": False,
             "macos_xpc_worker": False,
         },
@@ -292,7 +296,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         or installed_worker.get("target_ids")
         != ["fedora-44-x86_64", "ubuntu-26.04-x86_64"]
         or installed_worker.get("verified_operations")
-        != ["agentmage.workspace.search-text"]
+        != worker_evidence.VERIFIED_OPERATIONS
     ):
         failures.append("installed worker subset evidence drift")
     expected_summary = {
@@ -306,11 +310,9 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     verification = report.get("verification_evidence", {})
     if platform.get("linux_packaged_live_worker_subset") is not True:
         failures.append("installed Linux worker subset evidence drift")
-    for field in (
-        "linux_complete_operation_matrix",
-        "linux_live_attack_matrix",
-        "macos_xpc_worker",
-    ):
+    if platform.get("linux_complete_operation_matrix") is not True:
+        failures.append("installed Linux complete operation matrix drift")
+    for field in ("linux_live_attack_matrix", "macos_xpc_worker"):
         if platform.get(field) is not False:
             failures.append(f"platform overclaim: {field}")
     for field in ("live_cleanup_campaign", "independent_review"):

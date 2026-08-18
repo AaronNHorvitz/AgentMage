@@ -24,7 +24,7 @@ def report() -> dict[str, object]:
                 "artifact_sha256": "c" * 64,
                 "source_revision": "d" * 40,
                 "target_ids": ["fedora-44-x86_64", "ubuntu-26.04-x86_64"],
-                "verified_operations": ["agentmage.workspace.search-text"],
+                "verified_operations": evidence.worker_evidence.VERIFIED_OPERATIONS,
             },
         )
 
@@ -47,7 +47,7 @@ class Sprint16EvidenceTests(unittest.TestCase):
                 {"linux_packaged_live_worker_subset": False}
             ),
             lambda value: value["platform_evidence"].update(
-                {"linux_complete_operation_matrix": True}
+                {"linux_complete_operation_matrix": False}
             ),
             lambda value: value["platform_evidence"].update({"macos_xpc_worker": True}),
             lambda value: value["verification_evidence"].update({"live_cleanup_campaign": True}),
