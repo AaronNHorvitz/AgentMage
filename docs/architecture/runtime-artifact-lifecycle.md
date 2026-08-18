@@ -95,6 +95,20 @@ namespace.
 The initial profile permits one non-empty payload up to 64 MiB and at most
 1,024 artifact references in one checkpoint.
 
+The manifest admits one lowercase syntactically valid media type with exactly
+one slash and at most 128 bytes. Semantic kind narrows that set as follows:
+
+| Artifact kind | Admitted media types |
+|---|---|
+| `patch` | `text/x-diff` or `text/plain` |
+| `standard_output`, `standard_error`, `test_log`, `model_output` | `text/plain`, `application/json`, or `application/x-ndjson` |
+| `generated_file`, `report` | Any media type that passes the closed lowercase syntax and length check |
+
+The artifact ceiling is 64 MiB, the encrypted metadata preview is at most
+4,096 UTF-8 bytes, one checkpoint binds at most 1,024 references, and one tool
+execution supplies at most 64 supplemental artifact candidates. These are
+independent ceilings; no valid media declaration expands one of them.
+
 ```mermaid
 sequenceDiagram
     participant C as Coordinator
@@ -347,7 +361,7 @@ Current automated coverage includes:
   closed. Missing and corrupt continuation payloads reconcile to an explicit
   blocked restore with no second execution. The hash-bound report and redacted
   raw trace are retained under `artifacts/sprints/sprint-22/story-22.2/`.
-- One combined artifact-integrity campaign source-binds 21 kernel contracts,
+- One combined artifact-integrity campaign source-binds 22 kernel contracts,
   nine native Linux payload-store and adversarial tests, one production
   generated-file publication and checkpoint test, and one public-schema
   mutation test. Its coverage matrix includes digest, size, media, preview,
@@ -375,8 +389,8 @@ Still open before Story 22.2 can pass:
   resume campaigns do not substitute for those remaining classes.
 - Windows native artifact-store implementation and evidence; retained macOS work
   remains outside the current GA dependency lane.
-- Complete large model-output routing and the remaining installed-interface,
-  long-session, and cross-platform producer evidence. Controlled file creation
-  now supplies an end-to-end native generated-file producer above the inline
-  ceiling and binds its reference into durable resume state.
+- Remaining installed-interface, long-session, and cross-platform producer
+  evidence. Large model output and controlled file creation now route above the
+  inline ceiling; the native generated-file producer binds its reference into
+  durable resume state.
 - Online key rotation and any future released-format migration protocol.
