@@ -2,6 +2,7 @@
   "attack_matrix_complete": false,
   "cleanup_campaign_complete": false,
   "complete_ten_tool_matrix": true,
+  "linux_attack_matrix_complete": true,
   "macos_evidence_substituted": false,
   "private_host_data_used": false,
   "qemu": {
@@ -13,7 +14,7 @@
   "release_claim": false,
   "repository_credentials_injected": false,
   "schema_version": 1,
-  "source_revision": "6d6769122c84f1e22640077656447408b3f47a69",
+  "source_revision": "74b211d8b1ae8e35fecf90ada155e73987eb941b",
   "sources": [
     {
       "bytes": 1800,
@@ -21,9 +22,9 @@
       "sha256": "1adbae4446e6e686fe6c6b2e061d1027fc335d36d7c77636751dd36e078ed7f3"
     },
     {
-      "bytes": 7185,
+      "bytes": 7186,
       "path": "docs/architecture/read-only-tool-protocol.md",
-      "sha256": "1d0dec8577f08c86c15fc502c6cb9cd3b96caf2cc87d9db873d503ad19f0ffbb"
+      "sha256": "2fe266c679f864693c7d344ff2b9575f4e936eac1210c76f283e1b394fe6a6f9"
     },
     {
       "bytes": 1315,
@@ -36,24 +37,34 @@
       "sha256": "b57853263e98357840ddea3489f40b43116fab0a48003fa8e5722db6169934df"
     },
     {
+      "bytes": 63923,
+      "path": "platforms/linux/src/lib.rs",
+      "sha256": "1de445d868f71f422a66b2ec3151e18e9c8d9100cef68c3d1e47b64aa11c8899"
+    },
+    {
+      "bytes": 76579,
+      "path": "platforms/linux/src/sandbox.rs",
+      "sha256": "537e8b84b1ac774e682a2ed5ea64158ad54e020622e1120ce1b16b9fa5a44a16"
+    },
+    {
       "bytes": 19481,
       "path": "scripts/package_candidate.py",
       "sha256": "ff9d7f65db6dfcd4355d92aa91efcf46e4721216622cf22135590e09f28f8692"
     },
     {
-      "bytes": 18576,
+      "bytes": 19170,
       "path": "scripts/sprint_16_linux_worker_evidence.py",
-      "sha256": "624612e682b0c5a498575e8dd8b2e186de3ad2445131fa16dae514065c88244f"
+      "sha256": "f360a44a72de7270cb407d997823f00deea5c500ea93d9e291e9e1059ccc25dc"
     },
     {
-      "bytes": 7576,
+      "bytes": 8646,
       "path": "scripts/sprint_16_linux_worker_guest.py",
-      "sha256": "dc8b0788206f87718acf6da5e4c3ae1f3a4164417729afdf93a7d8fd34c70310"
+      "sha256": "4bac2d813998a4def58de5f8c5541493207526d132730671535e016801feb4e5"
     },
     {
-      "bytes": 127928,
+      "bytes": 128357,
       "path": "shells/host/src/linux_read.rs",
-      "sha256": "87774074fe2d00df237a4d438ee0709a57ba3202c7ffa25eac963789004fa6e4"
+      "sha256": "a49555e7a3952f665f2eca372b10f957280a31ee616685e9b7428c92f54110ba"
     },
     {
       "bytes": 25209,
@@ -61,9 +72,9 @@
       "sha256": "a3be641131ef9737feb09e8de6bd666564ed7338de35339afb1f0127d92d0a6b"
     },
     {
-      "bytes": 5149,
+      "bytes": 5453,
       "path": "tests/test_sprint_16_linux_worker_evidence.py",
-      "sha256": "3298f653f8f4409535f76f13b15f4c52649399043a580b97722a818be4595892"
+      "sha256": "6c2d1c6c4b660bcda81f64b43cf60720d5e58d1f8a94f21f5b598fb3a3f4b0bc"
     }
   ],
   "status": "pass-installed-linux-worker-operation-matrix",
@@ -83,6 +94,19 @@
         "transient_source_absent": true
       },
       "guest_result": {
+        "attack_cases": [
+          "path_escape",
+          "symlink_race",
+          "special_file",
+          "archive_bomb",
+          "device",
+          "socket",
+          "environment",
+          "network",
+          "process",
+          "write",
+          "secret_canary"
+        ],
         "commands": [
           {
             "executable": "npm",
@@ -96,21 +120,21 @@
             "exit_code": 0,
             "id": "guest-command-2",
             "output_bytes": 3850,
-            "output_sha256": "1766321bc47da5e37011f87688a748ba491453f07f0e5fe5bec104f449844665"
+            "output_sha256": "51b3976a9878c8392d7f4eeb352b2b110298ba8b7a6de9d75c5353dd9155eb26"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-3",
             "output_bytes": 504,
-            "output_sha256": "21037a6ed81e59232dcc6e3385ad1987d11458af30e064ec4f12dcdf5f22dc72"
+            "output_sha256": "dd9389791ae4c4921d3260058a05bb19f37660712ea303d471865ec90d635f1a"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-4",
             "output_bytes": 153,
-            "output_sha256": "b03ad86055974897d56f848070623537da5f25adb912137bae801143fba6098c"
+            "output_sha256": "88ef7f663737da71986de535ea938db6f92fa0aef3c1b31c32501eaf603b1403"
           },
           {
             "executable": "python3",
@@ -137,28 +161,50 @@
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-8",
-            "output_bytes": 4781,
-            "output_sha256": "7e70afd66c3e96214195a6b2e4b2e366493393bb6ffb3aa2038ed920850add18"
+            "output_bytes": 3587,
+            "output_sha256": "0dacf4fe22cac64be486d04fac4164dce27359658ec52af18946d062e531d20b"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-9",
+            "output_bytes": 592,
+            "output_sha256": "d5627ecfb14d12eeca13066406a097ebc7b2360e016e5058cc37b7c7a1ab7d5d"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-10",
+            "output_bytes": 595,
+            "output_sha256": "8958a8b0f43f20482bee155c51302e70910d00cd27e0f716d255c72b7df8f9d1"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-11",
+            "output_bytes": 3320,
+            "output_sha256": "1f0d0a600c1a77643e793d53a1c407894190edf941899e51eb50e6b155756eb6"
           },
           {
             "executable": "systemctl",
             "exit_code": 0,
-            "id": "guest-command-9",
+            "id": "guest-command-12",
             "output_bytes": 0,
             "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
           },
           {
             "executable": "sudo",
             "exit_code": 0,
-            "id": "guest-command-10",
+            "id": "guest-command-13",
             "output_bytes": 0,
             "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
           }
         ],
         "distribution": "fedora",
+        "linux_attack_matrix_complete": true,
         "network_used_during_execution": false,
         "package_residue": false,
-        "package_sha256": "d5c73ba7aaacfce8469c7d67188451390b2357dc19869e3f9c9a0df67f36f993",
+        "package_sha256": "82ed44d1b2717fe9ddbf9e55903141e334de78c02671a9b78a813476f3d208f9",
         "private_data_used": false,
         "receipt_count": 10,
         "record_type": "sprint-16-installed-worker-guest-result",
@@ -187,12 +233,12 @@
         "workspace_invariant": true
       },
       "observation_sha256": {
-        "processes": "0211ea5cc06a4b7249d704108e4c1f059038e5100fff41bbd81d61d4b510d2ba",
-        "sockets": "e44e354486596cf538de8728904cbf85c8db5525cb902f956b19b6a7f801a9b4"
+        "processes": "a111a3db3f9e582c1fdde407e34ad84cf709a53c12a2169397b373a74f8c0c46",
+        "sockets": "cb9fbeefd7a95acfe505785e4365f1b22b211321f4149db4c0adbeffdcabbe96"
       },
       "prepared_base_sha256": "6338412bba54ac99f9e7c3c619b0ab60b4880a5eadb723a1d3d41acc10183938",
-      "source_bundle_sha256": "06dae5b9d521e292a2aedd82b95838412fc8d730ab204c9ea2963ce6c4fe3895",
-      "source_revision": "6d6769122c84f1e22640077656447408b3f47a69",
+      "source_bundle_sha256": "4846db40bde2aa670b34aad75425500417fd28f9f2b562ec8167f20a3ec2ae50",
+      "source_revision": "74b211d8b1ae8e35fecf90ada155e73987eb941b",
       "strict_offline": true,
       "target_id": "fedora-44-x86_64"
     },
@@ -211,6 +257,19 @@
         "transient_source_absent": true
       },
       "guest_result": {
+        "attack_cases": [
+          "path_escape",
+          "symlink_race",
+          "special_file",
+          "archive_bomb",
+          "device",
+          "socket",
+          "environment",
+          "network",
+          "process",
+          "write",
+          "secret_canary"
+        ],
         "commands": [
           {
             "executable": "npm",
@@ -224,21 +283,21 @@
             "exit_code": 0,
             "id": "guest-command-2",
             "output_bytes": 3850,
-            "output_sha256": "e6c0d37155c703697eb730f848e8a2edba7e6afc4fe183500bc682538138418e"
+            "output_sha256": "db3c25be19ad576f5dde3788f448ad58a1c563f5ae0c90c7510bdd079359add6"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-3",
             "output_bytes": 504,
-            "output_sha256": "22c2385e7a96ea9112ef4eb75cdcf889989dfc650f107cbf04a54f3bd47686f7"
+            "output_sha256": "02fa6af469e37203349780f74c525b39eec6d385dd5bae81ac14a716a869eec1"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-4",
             "output_bytes": 153,
-            "output_sha256": "b0d5bc99fbb9866408bb86e3015e0fdcb7e7e34be976bee0a93f07a0d9bbb424"
+            "output_sha256": "cd56f166bf5bcf1f6854b79af87fe28ba57e3fb37dc273c49a8a358c54c2c24d"
           },
           {
             "executable": "python3",
@@ -265,28 +324,50 @@
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-8",
-            "output_bytes": 4781,
-            "output_sha256": "cd608ff19724d89a05b9af0ccb911f1fb9811bf222619966fc650ee2f12d1361"
+            "output_bytes": 3587,
+            "output_sha256": "97056bfd1f06fa83a5eb51fea7ddd11d098b3a777c4624872461e1731ce44fc2"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-9",
+            "output_bytes": 592,
+            "output_sha256": "d5627ecfb14d12eeca13066406a097ebc7b2360e016e5058cc37b7c7a1ab7d5d"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-10",
+            "output_bytes": 595,
+            "output_sha256": "8958a8b0f43f20482bee155c51302e70910d00cd27e0f716d255c72b7df8f9d1"
+          },
+          {
+            "executable": "cargo",
+            "exit_code": 0,
+            "id": "guest-command-11",
+            "output_bytes": 3320,
+            "output_sha256": "4812673fe6ea0f102722caa7302cf8b1b179836691e611978152e1a02a6128da"
           },
           {
             "executable": "systemctl",
             "exit_code": 0,
-            "id": "guest-command-9",
+            "id": "guest-command-12",
             "output_bytes": 0,
             "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
           },
           {
             "executable": "sudo",
             "exit_code": 0,
-            "id": "guest-command-10",
+            "id": "guest-command-13",
             "output_bytes": 103,
             "output_sha256": "4f5ae061b74194922bb03f1606d28836ea5cded8267b34678528ae821e39a178"
           }
         ],
         "distribution": "ubuntu",
+        "linux_attack_matrix_complete": true,
         "network_used_during_execution": false,
         "package_residue": false,
-        "package_sha256": "ce5a110a106e3351f2c6aba9c466bd30ce17a7438b01493c9be2d3b37304b521",
+        "package_sha256": "3445eb8f425ca217eaf9a0be19e3332793431aea4bf5e4c54030f8e75d468082",
         "private_data_used": false,
         "receipt_count": 10,
         "record_type": "sprint-16-installed-worker-guest-result",
@@ -315,12 +396,12 @@
         "workspace_invariant": true
       },
       "observation_sha256": {
-        "processes": "a1f1b1dacfa176631be2353d4d75f926b1185c500ed1499e12ee3c4c02fa3d32",
-        "sockets": "89168c88c8fea7cc62f8980607d5dd8b01251269160b652a23a856cc4b153af3"
+        "processes": "93d7db6105095ae554b43beeb9e2498d4bb082a38bed12e92b74a86a68a6352a",
+        "sockets": "593e6387e3514b07a4261dbbf5b28549a31e0a77c08fd2830981a9ce6c060dd6"
       },
       "prepared_base_sha256": "e9924f3d542065e8184ff5c6be0853167ea5e4d63984d9f71b5ee4d667104154",
-      "source_bundle_sha256": "06dae5b9d521e292a2aedd82b95838412fc8d730ab204c9ea2963ce6c4fe3895",
-      "source_revision": "6d6769122c84f1e22640077656447408b3f47a69",
+      "source_bundle_sha256": "4846db40bde2aa670b34aad75425500417fd28f9f2b562ec8167f20a3ec2ae50",
+      "source_revision": "74b211d8b1ae8e35fecf90ada155e73987eb941b",
       "strict_offline": true,
       "target_id": "ubuntu-26.04-x86_64"
     }

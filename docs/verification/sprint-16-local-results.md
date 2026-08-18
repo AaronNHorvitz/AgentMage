@@ -41,16 +41,25 @@
   the DEB or RPM payload.
 - Existing Linux namespace, network-syscall, path, descriptor, and workspace
   invariance contract tests pass.
+- The same installed Fedora and Ubuntu workers pass the eleven-case live Linux
+  attack corpus: path escape, symlink race, special file, archive-like input,
+  device, socket, environment, network, process, write, and secret-canary
+  attacks. ZIP-like bytes are classified through bounded binary metadata and
+  are never expanded. Both guests preserve the complete workspace observation
+  and leave no process, unit, package, VM, listener, source, overlay, or
+  credential residue.
 
 ## Open Evidence
 
 The production Linux manifest correctly rejects a user-owned development
 worker. The installed root-owned worker now has current native evidence for all
-ten operations on Fedora and Ubuntu. The full live attack matrix, worker
-cancellation/timeout/kill/crash campaigns, independent worker review, and native
-macOS XPC evidence remain open. Model-context disclosure handling is locally
-verified. The remaining live campaigns and platform evidence are blockers, not
-waived or substituted by the passing Linux operation matrix.
+ten operations and all eleven Linux attack classes on Fedora and Ubuntu. The
+cross-platform attack matrix remains incomplete because native macOS XPC attack
+evidence is absent. Worker cancellation/timeout/kill/crash campaigns,
+independent worker review, and native macOS XPC operation evidence also remain
+open. Model-context disclosure handling is locally verified. The remaining
+live campaigns and platform evidence are blockers, not waived or substituted
+by the passing Linux matrices.
 
 The machine-readable records are
 [`local-evidence-report.json`](../../artifacts/sprints/sprint-16/local-evidence-report.json)

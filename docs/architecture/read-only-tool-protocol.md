@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Implemented platform-neutral contracts and complete installed Linux catalog; macOS and adversarial worker evidence remain open |
+| Status | Implemented platform-neutral contracts plus complete installed Linux catalog and attack matrix; macOS and lifecycle evidence remain open |
 | Requirement | `AM-TOL-001` |
 | Acceptance | `AT-TOOL-001` |
 | Task gate | Sprint 16 |
@@ -125,10 +125,18 @@ credential, listener, and overlay cleanup. Package construction
 sets every archived payload directory to mode `0755`; this prevents a mutable
 staging umask from making an installed executable parent group-writable.
 
+The same installed workers execute the eleven-case Linux attack corpus for path
+escape, concurrent symlink replacement, special files, archive-like input,
+devices, sockets, environment leakage, network access, process visibility,
+writes, and a secret canary. Archive-like ZIP bytes enter only the fixed-magic
+binary-metadata path and are never expanded. Both guests retain zero prohibited
+effect and the same complete teardown proof as the operation matrix.
+
 The platform-neutral tool engine, Linux mediation contract, host approval flow,
-golden results, malformed-input matrix, and non-live sandbox attacks are locally
-verified. The installed Linux operation matrix is complete, but it does not
-substitute for the live attack or forced-lifecycle campaigns. Sprint 16 remains
-blocked until cancellation/timeout/kill/crash cleanup evidence is retained, the
-complete attack matrix passes, an independent worker review is retained, and
-the required macOS XPC evidence is produced on eligible hardware.
+golden results, malformed-input matrix, and live Linux sandbox attacks are
+locally verified. The installed Linux operation and attack matrices are
+complete, but they do not substitute for the forced-lifecycle campaign or
+native macOS evidence. Sprint 16 remains blocked until
+cancellation/timeout/kill/crash cleanup evidence is retained, an independent
+worker review is retained, and the required macOS XPC operation and attack
+evidence is produced on eligible hardware.
