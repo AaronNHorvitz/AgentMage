@@ -1,0 +1,582 @@
+{
+  "artifact_id": "story-23.4-source-security-evidence-map",
+  "commands": [
+    {
+      "argv_sha256": "cc4a25de1ec491c408fa47a4f724d34dcac8cc52040cbae67f7a080b1c283b74",
+      "command_id": "retained-runtime-evidence",
+      "elapsed_ms": 57,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "test_result": null
+    },
+    {
+      "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
+      "command_id": "engine-security-matrix",
+      "elapsed_ms": 111,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 598,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 17
+      }
+    },
+    {
+      "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
+      "command_id": "native-read-security-matrix",
+      "elapsed_ms": 73,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "test_result": {
+        "failed": 0,
+        "filtered_out": 119,
+        "ignored": 0,
+        "measured": 0,
+        "passed": 6
+      }
+    },
+    {
+      "argv_sha256": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
+      "command_id": "engine-strict-clippy",
+      "elapsed_ms": 86,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "test_result": null
+    },
+    {
+      "argv_sha256": "65e69937c136fc6ddff76a8bd81a066958fed2f9858f8642f8e36f08b08ee814",
+      "command_id": "host-strict-clippy",
+      "elapsed_ms": 71,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "test_result": null
+    },
+    {
+      "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
+      "command_id": "dependency-direction",
+      "elapsed_ms": 16,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "test_result": null
+    },
+    {
+      "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
+      "command_id": "effect-mediation",
+      "elapsed_ms": 115,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "test_result": null
+    }
+  ],
+  "external_network_used": false,
+  "independent_review_complete": false,
+  "installed_runtime_complete": false,
+  "limitations": [
+    "This map reports Story 23.4 source evidence only and is not an installed-product, supported-platform, release, or approval result.",
+    "The installed host has no production runtime factory or admitted local model, so native end-to-end evidence remains blocked.",
+    "Independent coordinator and accessibility review evidence is absent.",
+    "Persistent crash/restart, complete pressure, and optional-port evidence remain owned by Stories 21.2, 22, and 50.2.",
+    "Product-wide injection counts, static analysis, secret scanning, and platform security evidence remain separate gates.",
+    "Manual fuzzing remains deferred and was not executed."
+  ],
+  "manual_fuzzing_executed": false,
+  "mappings": [
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Product-wide authority review remains separately gated.",
+      "requirement_id": "SR-ACC-001",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/contracts/src/runtime_run.rs",
+        "kernel/engine/src/runtime_loop_tests.rs"
+      ],
+      "remaining": "The product-wide 500-case grant-field mutation corpus remains outside this story.",
+      "requirement_id": "SR-ACC-002",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Persistent effect replay remains owned by Stories 21.2, 22, and 50.2.",
+      "requirement_id": "SR-ACC-003",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "shells/host/src/runtime_read_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Installed-process ambient-home and credential canary inspection remains open.",
+      "requirement_id": "SR-ACC-006",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "shells/host/src/runtime_parity_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Installed-client human-flow observation remains open.",
+      "requirement_id": "SR-ACC-007",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "shells/host/src/cli_runtime.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "The complete repository-content prompt-injection corpus remains a later campaign.",
+      "requirement_id": "SR-ACC-008",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop.rs",
+        "kernel/engine/src/runtime_loop_tests.rs"
+      ],
+      "remaining": "Installed-model presentation evidence remains open.",
+      "requirement_id": "SR-AI-003",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/contracts/src/runtime_run.rs",
+        "kernel/engine/src/runtime_loop_tests.rs"
+      ],
+      "remaining": "Controlled-write modes retain their own later approval gates.",
+      "requirement_id": "SR-AI-004",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "shells/host/src/cli_runtime.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "The complete labeled direct and indirect injection corpus is not claimed.",
+      "requirement_id": "SR-AI-005",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "shells/host/src/runtime_read_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Admitted-model repeated-trial quality evidence is unavailable.",
+      "requirement_id": "SR-AI-006",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop.rs",
+        "kernel/engine/src/runtime_loop_tests.rs"
+      ],
+      "remaining": "Installed-client accessibility review of these states remains open.",
+      "requirement_id": "SR-AI-007",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Raw event canaries pass; installed ambient-file and model-context canaries remain open.",
+      "requirement_id": "SR-AI-008",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/contracts/src/runtime_run.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Installed runtime CPU, GPU, and model-memory ceilings remain open.",
+      "requirement_id": "SR-AI-009",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/contracts/src/runtime_run.rs",
+        "kernel/contracts/src/runtime_event.rs"
+      ],
+      "remaining": "Release-wide provenance reconciliation remains separately gated.",
+      "requirement_id": "SR-AI-010",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "shells/host/src/native_chat_runtime.rs",
+        "shells/host/src/cli_runtime.rs"
+      ],
+      "remaining": "Installed model artifact substitution remains open.",
+      "requirement_id": "SR-AI-013",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "The full malformed, stale, oversized, and family-codec corpus remains separately owned.",
+      "requirement_id": "SR-AI-015",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Fixture repeatability is measured; cross-device model determinism is not claimed.",
+      "requirement_id": "SR-AI-016",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop.rs",
+        "shells/host/src/runtime_parity_tests.rs"
+      ],
+      "remaining": "The required full policy and learned-classifier fixture counts remain open.",
+      "requirement_id": "SR-AI-017",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Persistent restart reconciliation remains owned by later durable campaigns.",
+      "requirement_id": "SR-AI-018",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/contracts/src/runtime_run.rs",
+        "kernel/contracts/src/runtime_event.rs",
+        "docs/architecture/reusable-runtime-coordinator.md"
+      ],
+      "remaining": "The product-wide data dictionary remains separately gated.",
+      "requirement_id": "SR-DAT-001",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/contracts/src/runtime_run.rs",
+        "docs/architecture/reusable-runtime-coordinator.md"
+      ],
+      "remaining": "This campaign is ephemeral; durable pre-persistence policy belongs to optional ports.",
+      "requirement_id": "SR-DAT-002",
+      "status": "not-applicable-ephemeral-scope"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log"
+      ],
+      "remaining": "Installed crash, telemetry, and export scans remain open.",
+      "requirement_id": "SR-DAT-003",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/contracts/src/runtime_run.rs",
+        "docs/architecture/reusable-runtime-coordinator.md"
+      ],
+      "remaining": "No durable store is admitted in this ephemeral slice.",
+      "requirement_id": "SR-DAT-004",
+      "status": "not-applicable-ephemeral-scope"
+    },
+    {
+      "evidence": [
+        "docs/verification/story-23-4-local-results.md",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Release-wide claim scanning remains separately gated.",
+      "requirement_id": "SR-DAT-006",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/contracts/src/runtime_event.rs",
+        "kernel/engine/src/runtime_event.rs"
+      ],
+      "remaining": "Product-wide event-family coverage remains separate.",
+      "requirement_id": "SR-OPS-001",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Only Story 23.4 coordinator event families are demonstrated.",
+      "requirement_id": "SR-OPS-002",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log"
+      ],
+      "remaining": "Installed logs and crash outputs remain open.",
+      "requirement_id": "SR-OPS-003",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/contracts/src/runtime_event.rs",
+        "kernel/engine/src/runtime_event.rs"
+      ],
+      "remaining": "External collector export is outside this source-local story.",
+      "requirement_id": "SR-OPS-004",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_event.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Installed wall-clock anomaly and sleep-resume observation remains open.",
+      "requirement_id": "SR-OPS-005",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "tests/test_story_23_4_runtime_evidence.py"
+      ],
+      "remaining": "Installed end-to-end, platform, and deferred fuzz layers remain open.",
+      "requirement_id": "SR-TST-001",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "scripts/dependency_rules.py",
+        "scripts/effect_boundary.py"
+      ],
+      "remaining": "Release SAST, dependency, secret, and platform-security scans remain separate.",
+      "requirement_id": "SR-TST-003",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "shells/host/src/cli_runtime.rs"
+      ],
+      "remaining": "Product-wide hostile-input closure remains separately gated.",
+      "requirement_id": "SR-TST-004",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Persistent crash consistency and 100 restart cycles are intentionally deferred.",
+      "requirement_id": "SR-TST-005",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Installed model and accelerator resource governance remains open.",
+      "requirement_id": "SR-TST-006",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log"
+      ],
+      "remaining": "Release-wide evidence aggregation remains separately gated.",
+      "requirement_id": "SR-TST-010",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "docs/architecture/reusable-runtime-coordinator.md",
+        "docs/verification/story-23-4-local-results.md"
+      ],
+      "remaining": "Independent coordinator review has not occurred.",
+      "requirement_id": "SR-TST-011",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "shells/host/src/native_chat_runtime.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Source replay and identity tests pass; installed IPC observation remains open.",
+      "requirement_id": "RV-05",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+      ],
+      "remaining": "Ephemeral safe stops pass; durable crash/restart evidence remains elsewhere.",
+      "requirement_id": "RV-17",
+      "status": "partial-story-evidence"
+    },
+    {
+      "evidence": [
+        "kernel/engine/src/runtime_loop_tests.rs",
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log"
+      ],
+      "remaining": "Story-local event closure and redaction pass; product-wide audit remains separate.",
+      "requirement_id": "RV-18",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "evidence": [
+        "docs/verification/story-23-4-local-results.md",
+        "shells/host/src/coding_client.rs"
+      ],
+      "remaining": "Installed assistive-technology and independent human review evidence is absent.",
+      "requirement_id": "RV-20",
+      "status": "partial-story-evidence"
+    }
+  ],
+  "private_user_data_used": false,
+  "raw_trace": {
+    "bytes": 4012,
+    "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
+    "redactions": [
+      "repository-root"
+    ],
+    "sha256": "0c5d7ba2e14e66dd3ef53f1761651bfe147c61d5dd5364853c320b60cc6c3117"
+  },
+  "schema_version": 1,
+  "source_revision": "4a49f38167c724e957de35b6a69b611467dc7b8a",
+  "sources": [
+    {
+      "bytes": 136944,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+    },
+    {
+      "bytes": 11584,
+      "path": "docs/architecture/reusable-runtime-coordinator.md",
+      "sha256": "af37ec63a8ade0a7842794d793576e3b44459934b2efe878036fa1217ec39e36"
+    },
+    {
+      "bytes": 3922,
+      "path": "docs/verification/story-23-4-local-results.md",
+      "sha256": "7fc7cae1cca4488ae7cc906274341d8db9178ed6e5729d59587878a785ac45f5"
+    },
+    {
+      "bytes": 9026,
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+      "sha256": "3d0cc82dd531e818fcd4d63b9800d74040cde90bf08b6a33adea57a125c1b144"
+    },
+    {
+      "bytes": 5890,
+      "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
+      "sha256": "4f600b8ad884fabbe858b51db7e1165d8c7d3a07ad0b7278905caeced4c8188b"
+    },
+    {
+      "bytes": 11161,
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "63a01ee7674916b9710cff5a326a75a3b95746bf0e45b704ded02d5cd9b3fd1e"
+    },
+    {
+      "bytes": 9733,
+      "path": "kernel/contracts/src/runtime_run.rs",
+      "sha256": "b1a13946d1d6f7968cfc7a3b03e2f2dd09457163ccc6cdc43da3083dc56b6935"
+    },
+    {
+      "bytes": 33354,
+      "path": "kernel/engine/src/runtime_coordinator.rs",
+      "sha256": "fb4a0cc5247911df5c86c6b555777ee5823623f442b408f2e48c7d5424803282"
+    },
+    {
+      "bytes": 97875,
+      "path": "kernel/engine/src/runtime_event.rs",
+      "sha256": "cc3095ea122644047a47c3fecd5c7a100676cf8eca0bd3a22d0445d533f0ed32"
+    },
+    {
+      "bytes": 137104,
+      "path": "kernel/engine/src/runtime_loop.rs",
+      "sha256": "3a3067d8d1f72fe7ff2ec0f783feec3f9d9f81401e4a863dbc11f8c99c1ec4c0"
+    },
+    {
+      "bytes": 105716,
+      "path": "kernel/engine/src/runtime_loop_tests.rs",
+      "sha256": "5acb210fc32c94def5802fbdcee74965ef5aeb8b55705affbf065a817dc3e2a3"
+    },
+    {
+      "bytes": 7481,
+      "path": "shells/host/src/coding_client.rs",
+      "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
+    },
+    {
+      "bytes": 43101,
+      "path": "shells/host/src/cli_runtime.rs",
+      "sha256": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e"
+    },
+    {
+      "bytes": 38334,
+      "path": "shells/host/src/native_chat_runtime.rs",
+      "sha256": "e59a54ea04d1482bff2392cbf8e310332ea42de4a2029889a55792d8ddcc5b43"
+    },
+    {
+      "bytes": 22184,
+      "path": "shells/host/src/runtime_parity_tests.rs",
+      "sha256": "c7e26f72647a853c5dc09c3d316903409b60e1f1e223fb41623e0715f2890592"
+    },
+    {
+      "bytes": 29664,
+      "path": "shells/host/src/runtime_read_tests.rs",
+      "sha256": "d970a7147532e3d8e62b5d3b7ec41e5bb3b2e5103294d5cce7130eb8b6986202"
+    },
+    {
+      "bytes": 10704,
+      "path": "scripts/dependency_rules.py",
+      "sha256": "27dee0562b2ae46a07f92be265c4c464b54a0ef799f236244738413c9afc812d"
+    },
+    {
+      "bytes": 9446,
+      "path": "scripts/effect_boundary.py",
+      "sha256": "d000f01a67aa42af5ecdf7d74926c99d9b01c9a0ea92ce5f59f901e5f32956bd"
+    },
+    {
+      "bytes": 19413,
+      "path": "scripts/story_23_4_runtime_evidence.py",
+      "sha256": "b0ff690ff53b4aee5051996bb703d19b45af3a6c9bc52f97cfd1212e2a8e4f16"
+    },
+    {
+      "bytes": 25134,
+      "path": "scripts/story_23_4_security_evidence.py",
+      "sha256": "36d22b85db590f52093fd87e61a336e20a1588f8ec193d7791c8ff4f6be47069"
+    },
+    {
+      "bytes": 4041,
+      "path": "tests/test_story_23_4_runtime_evidence.py",
+      "sha256": "518a7f02a7d23c4e9741cefb02c2439206550610ea829e6848bd1c713cd67c48"
+    },
+    {
+      "bytes": 2814,
+      "path": "tests/test_story_23_4_security_evidence.py",
+      "sha256": "04311d891a5fec2ce52ff8d30421d93ddf0d0ad4f0648b5c49f7c78c3e25cf98"
+    }
+  ],
+  "status": "pass-current-linux-source-security-map",
+  "summary": {
+    "complete_story_security_evidence": false,
+    "demonstrated_count": 20,
+    "not_applicable_count": 2,
+    "partial_count": 18
+  },
+  "task_ids": [
+    "23.4.3.2",
+    "23.4.3.3",
+    "23.4.3.6"
+  ]
+}
