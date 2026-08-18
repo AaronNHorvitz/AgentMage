@@ -10,9 +10,9 @@ use agentmage_capability_read_only::{
 };
 use agentmage_kernel_contracts::{
     ActionKind, ActorId, ApprovalId, ApprovalRequest, AuthorityTransactionId,
-    AuthorizedWorkspaceHandle, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind,
-    EvidenceReference, GrantId, GrantNonce, GrantOperation, OperationAttemptId, OperationOutcome,
-    PlanStepId, ReceiptId, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
+    AuthorizedWorkspaceHandle, CapabilityGrant, ContractPayload, DataSensitivity, EvidenceId,
+    EvidenceKind, EvidenceReference, GrantId, GrantNonce, GrantOperation, OperationAttemptId,
+    OperationOutcome, PlanStepId, ReceiptId, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
     RuntimeApprovalResponse, RuntimeArtifactKind, RuntimeArtifactManifest, RuntimeArtifactRef,
     RuntimeEvent, RuntimeEventKind, RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId,
     RuntimeRunRequest, RuntimeSessionMode, SessionCheckpoint, SessionCheckpointId, SessionId,
@@ -68,6 +68,11 @@ use agentmage_kernel_engine::{
     write_approval::{
         ShadowChangeSet, WriteApprovalDecision, WriteApprovalPreview, WriteApprovalReceipt,
         WriteChangeScope, WriteGrantRequest, WriteReviewNarrative, render_write_preview,
+    },
+    write_recovery::{
+        WriteAwareCheckpoint, WriteAwareCheckpointInput, WriteBoundaryField, WriteCheckpointPhase,
+        WriteCleanupState, WriteFieldSensitivity, WritePrivacyBoundary, build_write_checkpoint,
+        sanitize_write_boundary,
     },
     write_transaction::{WriteTransactionOutcome, WriteTransactionRequest, verify_write_receipts},
 };
@@ -1583,6 +1588,11 @@ where
             return Err(RuntimePortFailure::Invalid);
         }
         let transaction_id = self.next_id("write-transaction")?;
+        let (before_checkpoint, consumed_checkpoint) = self.build_write_checkpoint_start(
+            &transaction_id,
+            &approval.grant,
+            resolved_at_epoch_ms,
+        )?;
         let mut driver =
             LinuxAtomicWriteDriver::new(workspace, LinuxAtomicWriteDriverLimits::default());
         let policy = self.policy.engine().clone();
@@ -1601,6 +1611,8 @@ where
                     write_request,
                     &mut driver,
                     context.started_event.clone(),
+                    &before_checkpoint,
+                    &consumed_checkpoint,
                 )
                 .map_err(map_journal_failure)?;
             (result, Some(pending))
@@ -1614,6 +1626,8 @@ where
                         &approval,
                         write_request,
                         &mut driver,
+                        &before_checkpoint,
+                        &consumed_checkpoint,
                     )
                     .map_err(|_| RuntimePortFailure::Uncertain)?,
                 None,
@@ -1627,6 +1641,14 @@ where
             .receipts
             .last()
             .ok_or(RuntimePortFailure::Uncertain)?;
+        let write_checkpoints = self.build_terminal_write_checkpoints(
+            &consumed_checkpoint,
+            result.outcome,
+            &receipt.receipt_sha256,
+            u32::try_from(result.receipts.len()).map_err(|_| RuntimePortFailure::Invalid)?,
+            receipt.failure_code.as_deref(),
+            resolved_at_epoch_ms,
+        )?;
         let (outcome, state_change) = write_transaction_outcome(result.outcome);
         let execution = self.controlled_change_execution(
             request,
@@ -1644,7 +1666,7 @@ where
             },
             state_change,
         )?;
-        self.finish_specialized_effect_event(execution, event_context, pending)
+        self.finish_specialized_effect_event(execution, event_context, pending, &write_checkpoints)
     }
 
     fn execute_prepared_controlled_create(
@@ -1688,6 +1710,11 @@ where
             return Err(RuntimePortFailure::Invalid);
         }
         let transaction_id = self.next_id("filesystem-transaction")?;
+        let (before_checkpoint, consumed_checkpoint) = self.build_write_checkpoint_start(
+            &transaction_id,
+            &approval.grant,
+            resolved_at_epoch_ms,
+        )?;
         let mut driver =
             LinuxControlledFilesystemDriver::new(workspace, LinuxFilesystemDriverLimits::default());
         let policy = self.policy.engine().clone();
@@ -1707,6 +1734,8 @@ where
                     filesystem_request,
                     &mut driver,
                     context.started_event.clone(),
+                    &before_checkpoint,
+                    &consumed_checkpoint,
                 )
                 .map_err(map_journal_failure)?;
             (result, Some(pending))
@@ -1720,6 +1749,8 @@ where
                         &approval,
                         filesystem_request,
                         &mut driver,
+                        &before_checkpoint,
+                        &consumed_checkpoint,
                     )
                     .map_err(|_| RuntimePortFailure::Uncertain)?,
                 None,
@@ -1733,6 +1764,14 @@ where
             .receipts
             .last()
             .ok_or(RuntimePortFailure::Uncertain)?;
+        let write_checkpoints = self.build_terminal_filesystem_checkpoints(
+            &consumed_checkpoint,
+            result.outcome,
+            &receipt.receipt_sha256,
+            u32::try_from(result.receipts.len()).map_err(|_| RuntimePortFailure::Invalid)?,
+            receipt.failure_code.as_deref(),
+            resolved_at_epoch_ms,
+        )?;
         let destination = receipt
             .destination_path
             .as_deref()
@@ -1765,7 +1804,7 @@ where
                     bytes,
                 });
         }
-        self.finish_specialized_effect_event(execution, event_context, pending)
+        self.finish_specialized_effect_event(execution, event_context, pending, &write_checkpoints)
     }
 
     fn controlled_change_execution(
@@ -1885,15 +1924,26 @@ where
         execution: RuntimeToolExecution,
         event_context: Option<RuntimeEffectEventContext<'_>>,
         pending: Option<PendingSpecializedEffectCommit>,
+        write_checkpoints: &[WriteAwareCheckpoint],
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         match (event_context, pending) {
-            (None, None) => Ok((execution, Vec::new())),
+            (None, None) => {
+                self.authority
+                    .authority_mut()
+                    .checkpoint_write_transaction(write_checkpoints)
+                    .map_err(map_journal_failure)?;
+                Ok((execution, Vec::new()))
+            }
             (Some(context), Some(pending)) => {
                 let terminal = (context.build_terminal_event)(&execution)?;
                 let events = self
                     .authority
                     .authority_mut()
-                    .finish_specialized_effect_with_runtime_event(pending, terminal)
+                    .finish_specialized_effect_with_runtime_event(
+                        pending,
+                        terminal,
+                        write_checkpoints,
+                    )
                     .map_err(map_journal_failure)?;
                 self.authority
                     .revalidate_root()
@@ -1987,6 +2037,228 @@ where
                 .registry()
                 .validate_arguments(call)
                 .is_ok()
+    }
+
+    fn build_write_checkpoint_start(
+        &mut self,
+        transaction_id: &str,
+        grant: &CapabilityGrant,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<(WriteAwareCheckpoint, WriteAwareCheckpoint), RuntimePortFailure> {
+        let action_id = grant
+            .action_id
+            .as_ref()
+            .ok_or(RuntimePortFailure::Invalid)?
+            .as_str();
+        let scan = sanitize_write_boundary(
+            WritePrivacyBoundary::Checkpoint,
+            &[
+                WriteBoundaryField {
+                    name: "transaction_id",
+                    value: transaction_id.as_bytes(),
+                    sensitivity: WriteFieldSensitivity::PublicMetadata,
+                },
+                WriteBoundaryField {
+                    name: "action_id",
+                    value: action_id.as_bytes(),
+                    sensitivity: WriteFieldSensitivity::PublicMetadata,
+                },
+                WriteBoundaryField {
+                    name: "grant_id",
+                    value: grant.grant_id.as_str().as_bytes(),
+                    sensitivity: WriteFieldSensitivity::PublicMetadata,
+                },
+            ],
+        )
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        let before = build_write_checkpoint(
+            WriteAwareCheckpointInput {
+                checkpoint_id: self.next_id("write-checkpoint")?,
+                transaction_id: transaction_id.to_owned(),
+                action_id: action_id.to_owned(),
+                phase: WriteCheckpointPhase::BeforeTransaction,
+                consumed_grant_id: None,
+                file_receipt_head_sha256: None,
+                file_receipt_count: 0,
+                evidence_set_sha256: sha256(b"[]"),
+                index_update_sha256: None,
+                next_session_checkpoint_sha256: "0".repeat(64),
+                secret_scan_receipt_sha256: scan.receipt.receipt_sha256,
+                staging_inventory_sha256: sha256(b"[]"),
+                staging_item_count: 0,
+                retention_expires_at_epoch_ms: 0,
+                canonical_postimages_verified: false,
+                receipt_chain_verified: false,
+                index_verified: false,
+                rollback_verified: false,
+                cleanup_state: WriteCleanupState::NotRequired,
+                failure_code: None,
+                occurred_at_epoch_ms,
+            },
+            None,
+        )
+        .map_err(|_| RuntimePortFailure::Invalid)?;
+        let consumed = self.advance_write_checkpoint(
+            &before,
+            WriteCheckpointPhase::GrantConsumed,
+            Some(grant.grant_id.as_str()),
+            None,
+            0,
+            false,
+            false,
+            false,
+            None,
+            occurred_at_epoch_ms,
+        )?;
+        Ok((before, consumed))
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn advance_write_checkpoint(
+        &mut self,
+        previous: &WriteAwareCheckpoint,
+        phase: WriteCheckpointPhase,
+        consumed_grant_id: Option<&str>,
+        file_receipt_head_sha256: Option<&str>,
+        file_receipt_count: u32,
+        canonical_postimages_verified: bool,
+        receipt_chain_verified: bool,
+        rollback_verified: bool,
+        failure_code: Option<&str>,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<WriteAwareCheckpoint, RuntimePortFailure> {
+        build_write_checkpoint(
+            WriteAwareCheckpointInput {
+                checkpoint_id: self.next_id("write-checkpoint")?,
+                transaction_id: previous.transaction_id.clone(),
+                action_id: previous.action_id.clone(),
+                phase,
+                consumed_grant_id: consumed_grant_id.map(str::to_owned),
+                file_receipt_head_sha256: file_receipt_head_sha256.map(str::to_owned),
+                file_receipt_count,
+                evidence_set_sha256: previous.evidence_set_sha256.clone(),
+                index_update_sha256: previous.index_update_sha256.clone(),
+                next_session_checkpoint_sha256: previous.next_session_checkpoint_sha256.clone(),
+                secret_scan_receipt_sha256: previous.secret_scan_receipt_sha256.clone(),
+                staging_inventory_sha256: previous.staging_inventory_sha256.clone(),
+                staging_item_count: previous.staging_item_count,
+                retention_expires_at_epoch_ms: previous.retention_expires_at_epoch_ms,
+                canonical_postimages_verified,
+                receipt_chain_verified,
+                index_verified: previous.index_verified,
+                rollback_verified,
+                cleanup_state: previous.cleanup_state,
+                failure_code: failure_code.map(str::to_owned),
+                occurred_at_epoch_ms,
+            },
+            Some(previous),
+        )
+        .map_err(|_| RuntimePortFailure::Invalid)
+    }
+
+    fn build_terminal_write_checkpoints(
+        &mut self,
+        consumed: &WriteAwareCheckpoint,
+        outcome: WriteTransactionOutcome,
+        receipt_head_sha256: &str,
+        receipt_count: u32,
+        failure_code: Option<&str>,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<Vec<WriteAwareCheckpoint>, RuntimePortFailure> {
+        self.build_terminal_checkpoint_chain(
+            consumed,
+            match outcome {
+                WriteTransactionOutcome::Committed => TerminalWriteDisposition::Committed,
+                WriteTransactionOutcome::FailedNoChange => TerminalWriteDisposition::FailedNoChange,
+                WriteTransactionOutcome::Restored => TerminalWriteDisposition::Restored,
+                WriteTransactionOutcome::Uncertain => TerminalWriteDisposition::Uncertain,
+            },
+            receipt_head_sha256,
+            receipt_count,
+            failure_code,
+            occurred_at_epoch_ms,
+        )
+    }
+
+    fn build_terminal_filesystem_checkpoints(
+        &mut self,
+        consumed: &WriteAwareCheckpoint,
+        outcome: FilesystemTransactionOutcome,
+        receipt_head_sha256: &str,
+        receipt_count: u32,
+        failure_code: Option<&str>,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<Vec<WriteAwareCheckpoint>, RuntimePortFailure> {
+        self.build_terminal_checkpoint_chain(
+            consumed,
+            match outcome {
+                FilesystemTransactionOutcome::Committed => TerminalWriteDisposition::Committed,
+                FilesystemTransactionOutcome::FailedNoChange => {
+                    TerminalWriteDisposition::FailedNoChange
+                }
+                FilesystemTransactionOutcome::Restored => TerminalWriteDisposition::Restored,
+                FilesystemTransactionOutcome::Uncertain => TerminalWriteDisposition::Uncertain,
+            },
+            receipt_head_sha256,
+            receipt_count,
+            failure_code,
+            occurred_at_epoch_ms,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn build_terminal_checkpoint_chain(
+        &mut self,
+        consumed: &WriteAwareCheckpoint,
+        disposition: TerminalWriteDisposition,
+        receipt_head_sha256: &str,
+        receipt_count: u32,
+        failure_code: Option<&str>,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<Vec<WriteAwareCheckpoint>, RuntimePortFailure> {
+        let grant_id = consumed
+            .consumed_grant_id
+            .as_deref()
+            .ok_or(RuntimePortFailure::Invalid)?;
+        let mut chain = Vec::new();
+        let mut head = consumed.clone();
+        let phases: &[(WriteCheckpointPhase, bool, bool, bool)] = match disposition {
+            TerminalWriteDisposition::Committed => &[
+                (WriteCheckpointPhase::Applying, false, false, false),
+                (WriteCheckpointPhase::CanonicalVerified, true, false, false),
+                (WriteCheckpointPhase::ReceiptPersisting, true, false, false),
+                (WriteCheckpointPhase::ReceiptPersisted, true, true, false),
+            ],
+            TerminalWriteDisposition::FailedNoChange => {
+                &[(WriteCheckpointPhase::FailedNoChange, false, true, false)]
+            }
+            TerminalWriteDisposition::Restored => &[
+                (WriteCheckpointPhase::Applying, false, false, false),
+                (WriteCheckpointPhase::RollbackPending, false, false, false),
+                (WriteCheckpointPhase::Restored, false, true, true),
+            ],
+            TerminalWriteDisposition::Uncertain => &[
+                (WriteCheckpointPhase::Applying, false, false, false),
+                (WriteCheckpointPhase::Uncertain, false, false, false),
+            ],
+        };
+        for (phase, canonical_verified, receipt_verified, rollback_verified) in phases {
+            let checkpoint = self.advance_write_checkpoint(
+                &head,
+                *phase,
+                Some(grant_id),
+                Some(receipt_head_sha256),
+                receipt_count,
+                *canonical_verified,
+                *receipt_verified,
+                *rollback_verified,
+                failure_code,
+                occurred_at_epoch_ms,
+            )?;
+            head = checkpoint.clone();
+            chain.push(checkpoint);
+        }
+        Ok(chain)
     }
 
     fn build_checkpoint_publication(
@@ -2589,6 +2861,14 @@ fn coding_write_review(
 
 fn coding_write_verification() -> Vec<String> {
     vec!["postwrite.exact-observation".to_owned()]
+}
+
+#[derive(Clone, Copy)]
+enum TerminalWriteDisposition {
+    Committed,
+    FailedNoChange,
+    Restored,
+    Uncertain,
 }
 
 const fn write_transaction_outcome(
@@ -5094,15 +5374,26 @@ mod tests {
         else {
             panic!("generated-file creation must require an explicit decision");
         };
-        assert!(matches!(
-            coordinator.run_until_boundary(
-                Some(&response(&challenge, RuntimeApprovalDisposition::Allow)),
-                None,
+        let stopped = coordinator.run_until_boundary(
+            Some(&response(&challenge, RuntimeApprovalDisposition::Allow)),
+            None,
+        );
+        assert!(
+            matches!(
+                stopped,
+                Err(RuntimeLoopError::Dependency(
+                    RuntimePortFailure::Unavailable
+                ))
             ),
-            Err(RuntimeLoopError::Dependency(
-                RuntimePortFailure::Unavailable
-            ))
-        ));
+            "unexpected checkpoint stop result: {stopped:?}; clock={}; events={:?}; artifacts={}",
+            checkpoint_clock.load(Ordering::SeqCst),
+            coordinator
+                .events()
+                .iter()
+                .map(|event| &event.kind)
+                .collect::<Vec<_>>(),
+            coordinator.artifact_references().len(),
+        );
         let generated_sha256 = sha256(generated_content.as_bytes());
         let generated_reference = coordinator
             .artifact_references()
@@ -6713,6 +7004,34 @@ mod tests {
                 .status,
             GrantStatus::Consumed
         );
+        let authority = fixture.boundary.authority.authority();
+        let transaction_ids = authority
+            .write_checkpoint_transaction_ids()
+            .expect("write checkpoint identities");
+        assert_eq!(transaction_ids.len(), 1);
+        let checkpoints = authority
+            .write_checkpoint_chain(&transaction_ids[0])
+            .expect("native write checkpoint chain");
+        assert_eq!(
+            checkpoints
+                .iter()
+                .map(|checkpoint| checkpoint.phase)
+                .collect::<Vec<_>>(),
+            [
+                WriteCheckpointPhase::BeforeTransaction,
+                WriteCheckpointPhase::GrantConsumed,
+                WriteCheckpointPhase::Applying,
+                WriteCheckpointPhase::CanonicalVerified,
+                WriteCheckpointPhase::ReceiptPersisting,
+                WriteCheckpointPhase::ReceiptPersisted,
+            ]
+        );
+        assert_eq!(
+            checkpoints
+                .last()
+                .and_then(|checkpoint| checkpoint.consumed_grant_id.as_deref()),
+            Some(grant_id.as_str())
+        );
     }
 
     #[test]
@@ -6765,6 +7084,34 @@ mod tests {
                 .expect("durable filesystem grant")
                 .status,
             GrantStatus::Consumed
+        );
+        let authority = fixture.boundary.authority.authority();
+        let transaction_ids = authority
+            .write_checkpoint_transaction_ids()
+            .expect("filesystem checkpoint identities");
+        assert_eq!(transaction_ids.len(), 1);
+        let checkpoints = authority
+            .write_checkpoint_chain(&transaction_ids[0])
+            .expect("native filesystem checkpoint chain");
+        assert_eq!(
+            checkpoints
+                .iter()
+                .map(|checkpoint| checkpoint.phase)
+                .collect::<Vec<_>>(),
+            [
+                WriteCheckpointPhase::BeforeTransaction,
+                WriteCheckpointPhase::GrantConsumed,
+                WriteCheckpointPhase::Applying,
+                WriteCheckpointPhase::CanonicalVerified,
+                WriteCheckpointPhase::ReceiptPersisting,
+                WriteCheckpointPhase::ReceiptPersisted,
+            ]
+        );
+        assert_eq!(
+            checkpoints
+                .last()
+                .and_then(|checkpoint| checkpoint.consumed_grant_id.as_deref()),
+            Some(grant_id.as_str())
         );
     }
 

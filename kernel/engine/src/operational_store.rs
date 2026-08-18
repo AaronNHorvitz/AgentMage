@@ -68,7 +68,9 @@ use crate::write_approval::{
     ShadowChangeSet, WriteApprovalDecision, WriteApprovalError, WriteApprovalPreview,
     WriteApprovalReceipt, WriteGrantRequest, issue_write_grant,
 };
-use crate::write_recovery::{WriteAwareCheckpoint, verify_write_checkpoint_chain};
+use crate::write_recovery::{
+    WriteAwareCheckpoint, verify_write_checkpoint, verify_write_checkpoint_chain,
+};
 use crate::write_transaction::{
     AtomicWriteDriver, WriteTransactionError, WriteTransactionRequest, WriteTransactionResult,
     execute_write_transaction_with_checkpoint,
@@ -1081,6 +1083,11 @@ impl OperationalStore {
         load_write_checkpoint_chain(&self.connection, transaction_id)
     }
 
+    /// Lists retained write transaction identities after verifying the complete journal.
+    pub fn write_checkpoint_transaction_ids(&self) -> Result<Vec<String>, OperationalStoreError> {
+        write_checkpoint_transaction_ids(&self.connection)
+    }
+
     pub(crate) fn persist_authority(
         &mut self,
         issuer: &GrantIssuer,
@@ -1311,6 +1318,7 @@ pub struct PendingRuntimeEffectCommit {
 pub struct PendingSpecializedEffectCommit {
     operation_id: String,
     started_event: RuntimeEvent,
+    write_checkpoint_head: WriteAwareCheckpoint,
 }
 
 impl fmt::Debug for DurableAuthorityRuntime {
@@ -1442,6 +1450,13 @@ impl DurableAuthorityRuntime {
     ) -> Result<Vec<WriteAwareCheckpoint>, DurableAuthorityError> {
         self.lock_store()?
             .write_checkpoint_chain(transaction_id)
+            .map_err(DurableAuthorityError::Store)
+    }
+
+    /// Lists retained write transaction identities after verifying the complete journal.
+    pub fn write_checkpoint_transaction_ids(&self) -> Result<Vec<String>, DurableAuthorityError> {
+        self.lock_store()?
+            .write_checkpoint_transaction_ids()
             .map_err(DurableAuthorityError::Store)
     }
 
@@ -1928,6 +1943,7 @@ impl DurableAuthorityRuntime {
     }
 
     /// Executes an exact controlled write after durably checkpointing consumed authority.
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_controlled_write<D: AtomicWriteDriver>(
         &mut self,
         policy: &PolicyEngine,
@@ -1935,8 +1951,17 @@ impl DurableAuthorityRuntime {
         approval: &WriteApprovalReceipt,
         request: WriteTransactionRequest,
         driver: &mut D,
+        before_checkpoint: &WriteAwareCheckpoint,
+        consumed_checkpoint: &WriteAwareCheckpoint,
     ) -> Result<WriteTransactionResult, DurableAuthorityError> {
         self.ensure_usable()?;
+        validate_write_checkpoint_start(
+            before_checkpoint,
+            consumed_checkpoint,
+            &request.transaction_id,
+            &approval.grant,
+        )?;
+        self.checkpoint_write_transaction(std::slice::from_ref(before_checkpoint))?;
         let mut store_error = None;
         let result = {
             let shared_store = Arc::clone(&self.store);
@@ -1951,7 +1976,12 @@ impl DurableAuthorityRuntime {
                 driver,
                 &mut |issuer| {
                     store
-                        .persist_authority(issuer, coordinator)
+                        .persist_authority_with_write_checkpoints(
+                            issuer,
+                            coordinator,
+                            &[],
+                            std::slice::from_ref(consumed_checkpoint),
+                        )
                         .map_err(|error| {
                             store_error = Some(error);
                         })
@@ -1966,6 +1996,7 @@ impl DurableAuthorityRuntime {
     }
 
     /// Executes one controlled write with its start event in the authority-consumption commit.
+    #[allow(clippy::too_many_arguments)]
     pub fn begin_controlled_write_with_runtime_event<D: AtomicWriteDriver>(
         &mut self,
         policy: &PolicyEngine,
@@ -1974,10 +2005,19 @@ impl DurableAuthorityRuntime {
         request: WriteTransactionRequest,
         driver: &mut D,
         started_event: RuntimeEvent,
+        before_checkpoint: &WriteAwareCheckpoint,
+        consumed_checkpoint: &WriteAwareCheckpoint,
     ) -> Result<(WriteTransactionResult, PendingSpecializedEffectCommit), DurableAuthorityError>
     {
         self.ensure_usable()?;
+        validate_write_checkpoint_start(
+            before_checkpoint,
+            consumed_checkpoint,
+            &request.transaction_id,
+            &approval.grant,
+        )?;
         self.flush_runtime_events()?;
+        self.checkpoint_write_transaction(std::slice::from_ref(before_checkpoint))?;
         let operation_id = request.transaction_id.clone();
         let mut store_error = None;
         let mut started_committed = false;
@@ -1996,10 +2036,11 @@ impl DurableAuthorityRuntime {
                     let persisted = if started_committed {
                         store.persist_authority(issuer, coordinator)
                     } else {
-                        store.persist_authority_with_runtime_events(
+                        store.persist_authority_with_write_checkpoints(
                             issuer,
                             coordinator,
                             std::slice::from_ref(&started_event),
+                            std::slice::from_ref(consumed_checkpoint),
                         )
                     };
                     persisted
@@ -2033,11 +2074,13 @@ impl DurableAuthorityRuntime {
             PendingSpecializedEffectCommit {
                 operation_id,
                 started_event,
+                write_checkpoint_head: consumed_checkpoint.clone(),
             },
         ))
     }
 
     /// Executes an exact filesystem operation after durably checkpointing consumed authority.
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_controlled_filesystem<D: ControlledFilesystemDriver>(
         &mut self,
         policy: &PolicyEngine,
@@ -2045,8 +2088,17 @@ impl DurableAuthorityRuntime {
         approval: &FilesystemApprovalReceipt,
         request: FilesystemTransactionRequest,
         driver: &mut D,
+        before_checkpoint: &WriteAwareCheckpoint,
+        consumed_checkpoint: &WriteAwareCheckpoint,
     ) -> Result<FilesystemTransactionResult, DurableAuthorityError> {
         self.ensure_usable()?;
+        validate_write_checkpoint_start(
+            before_checkpoint,
+            consumed_checkpoint,
+            &request.transaction_id,
+            &approval.grant,
+        )?;
+        self.checkpoint_write_transaction(std::slice::from_ref(before_checkpoint))?;
         let mut store_error = None;
         let result = {
             let shared_store = Arc::clone(&self.store);
@@ -2061,7 +2113,12 @@ impl DurableAuthorityRuntime {
                 driver,
                 &mut |issuer| {
                     store
-                        .persist_authority(issuer, coordinator)
+                        .persist_authority_with_write_checkpoints(
+                            issuer,
+                            coordinator,
+                            &[],
+                            std::slice::from_ref(consumed_checkpoint),
+                        )
                         .map_err(|error| {
                             store_error = Some(error);
                         })
@@ -2076,6 +2133,7 @@ impl DurableAuthorityRuntime {
     }
 
     /// Executes one filesystem effect with its start event in the authority-consumption commit.
+    #[allow(clippy::too_many_arguments)]
     pub fn begin_controlled_filesystem_with_runtime_event<D: ControlledFilesystemDriver>(
         &mut self,
         policy: &PolicyEngine,
@@ -2084,10 +2142,19 @@ impl DurableAuthorityRuntime {
         request: FilesystemTransactionRequest,
         driver: &mut D,
         started_event: RuntimeEvent,
+        before_checkpoint: &WriteAwareCheckpoint,
+        consumed_checkpoint: &WriteAwareCheckpoint,
     ) -> Result<(FilesystemTransactionResult, PendingSpecializedEffectCommit), DurableAuthorityError>
     {
         self.ensure_usable()?;
+        validate_write_checkpoint_start(
+            before_checkpoint,
+            consumed_checkpoint,
+            &request.transaction_id,
+            &approval.grant,
+        )?;
         self.flush_runtime_events()?;
+        self.checkpoint_write_transaction(std::slice::from_ref(before_checkpoint))?;
         let operation_id = request.transaction_id.clone();
         let mut store_error = None;
         let mut started_committed = false;
@@ -2106,10 +2173,11 @@ impl DurableAuthorityRuntime {
                     let persisted = if started_committed {
                         store.persist_authority(issuer, coordinator)
                     } else {
-                        store.persist_authority_with_runtime_events(
+                        store.persist_authority_with_write_checkpoints(
                             issuer,
                             coordinator,
                             std::slice::from_ref(&started_event),
+                            std::slice::from_ref(consumed_checkpoint),
                         )
                     };
                     persisted
@@ -2143,6 +2211,7 @@ impl DurableAuthorityRuntime {
             PendingSpecializedEffectCommit {
                 operation_id,
                 started_event,
+                write_checkpoint_head: consumed_checkpoint.clone(),
             },
         ))
     }
@@ -2152,17 +2221,43 @@ impl DurableAuthorityRuntime {
         &mut self,
         pending: PendingSpecializedEffectCommit,
         terminal_event: RuntimeEvent,
+        write_checkpoints: &[WriteAwareCheckpoint],
     ) -> Result<[RuntimeEvent; 2], DurableAuthorityError> {
         if self.poisoned
             || self.pending_specialized_effect.as_deref() != Some(&pending.operation_id)
+            || write_checkpoints.is_empty()
         {
             self.poisoned = true;
             return Err(DurableAuthorityError::Poisoned);
         }
-        let result = self.lock_store()?.persist_authority_with_runtime_events(
+        let append_is_linked = write_checkpoints.first().is_some_and(|checkpoint| {
+            checkpoint.sequence == pending.write_checkpoint_head.sequence + 1
+                && checkpoint.previous_checkpoint_sha256
+                    == pending.write_checkpoint_head.checkpoint_sha256
+                && checkpoint.action_id == pending.write_checkpoint_head.action_id
+        }) && write_checkpoints.iter().all(|checkpoint| {
+            verify_write_checkpoint(checkpoint).is_ok()
+                && checkpoint.transaction_id == pending.operation_id
+        }) && write_checkpoints.windows(2).all(|pair| {
+            pair[1].sequence == pair[0].sequence + 1
+                && pair[1].previous_checkpoint_sha256 == pair[0].checkpoint_sha256
+                && pair[1].action_id == pair[0].action_id
+        });
+        if !append_is_linked
+            || write_checkpoints
+                .iter()
+                .any(|checkpoint| checkpoint.transaction_id != pending.operation_id)
+        {
+            self.poisoned = true;
+            return Err(DurableAuthorityError::Checkpoint(
+                CheckpointError::InvalidCheckpoint,
+            ));
+        }
+        let result = self.lock_store()?.persist_authority_with_write_checkpoints(
             &self.issuer,
             &self.coordinator,
             std::slice::from_ref(&terminal_event),
+            write_checkpoints,
         );
         result.map_err(|error| self.poison(error))?;
         self.pending_specialized_effect = None;
@@ -2596,6 +2691,31 @@ fn lock_shared_store(
     store: &Arc<Mutex<OperationalStore>>,
 ) -> Result<MutexGuard<'_, OperationalStore>, DurableAuthorityError> {
     store.lock().map_err(|_| DurableAuthorityError::Poisoned)
+}
+
+fn validate_write_checkpoint_start(
+    before: &WriteAwareCheckpoint,
+    consumed: &WriteAwareCheckpoint,
+    transaction_id: &str,
+    grant: &CapabilityGrant,
+) -> Result<(), DurableAuthorityError> {
+    let Some(action_id) = grant.action_id.as_ref() else {
+        return Err(DurableAuthorityError::Checkpoint(
+            CheckpointError::InvalidCheckpoint,
+        ));
+    };
+    if verify_write_checkpoint_chain(&[before.clone(), consumed.clone()]).is_err()
+        || before.transaction_id != transaction_id
+        || consumed.transaction_id != transaction_id
+        || before.action_id != action_id.as_str()
+        || consumed.action_id != action_id.as_str()
+        || consumed.consumed_grant_id.as_deref() != Some(grant.grant_id.as_str())
+    {
+        return Err(DurableAuthorityError::Checkpoint(
+            CheckpointError::InvalidCheckpoint,
+        ));
+    }
+    Ok(())
 }
 
 fn open_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalStoreError> {
@@ -3235,14 +3355,7 @@ fn verify_write_checkpoint_history(
     connection: &Connection,
     current_generation: u64,
 ) -> Result<(), OperationalStoreError> {
-    let transaction_ids = connection
-        .prepare("SELECT DISTINCT transaction_id FROM write_checkpoints ORDER BY transaction_id")
-        .and_then(|mut statement| {
-            statement
-                .query_map([], |row| row.get::<_, String>(0))?
-                .collect::<Result<Vec<_>, _>>()
-        })
-        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    let transaction_ids = write_checkpoint_transaction_ids(connection)?;
     let head_count: i64 = connection
         .query_row("SELECT COUNT(*) FROM write_checkpoint_heads", [], |row| {
             row.get(0)
@@ -3291,6 +3404,19 @@ fn verify_write_checkpoint_history(
         }
     }
     Ok(())
+}
+
+fn write_checkpoint_transaction_ids(
+    connection: &Connection,
+) -> Result<Vec<String>, OperationalStoreError> {
+    connection
+        .prepare("SELECT DISTINCT transaction_id FROM write_checkpoints ORDER BY transaction_id")
+        .and_then(|mut statement| {
+            statement
+                .query_map([], |row| row.get::<_, String>(0))?
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .map_err(|_| OperationalStoreError::IntegrityFailure)
 }
 
 const fn write_checkpoint_phase_code(
