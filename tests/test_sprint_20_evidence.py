@@ -42,15 +42,15 @@ class Sprint20EvidenceTests(unittest.TestCase):
         )
         self.assertFalse(value["implemented_contracts"]["assignment_authority"])
 
-    def test_sprint_chain_citation_review_and_release_overclaims_fail(self) -> None:
+    def test_sprint_review_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"release_approval": True}),
             lambda value: value["verification_evidence"].update(
-                {"receipt_chain_verification": True}
+                {"sprint_21_receipt_integrity_owned_downstream": False}
             ),
             lambda value: value["verification_evidence"].update(
-                {"citation_resolver_output": True}
+                {"sprint_21_citation_freshness_owned_downstream": False}
             ),
             lambda value: value["verification_evidence"].update({"independent_review": True}),
             lambda value: value["blockers"].pop(),

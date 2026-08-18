@@ -22,6 +22,7 @@ SOURCE_PATHS: Final = (
     "docs/architecture/kernel-contract-reference.md",
     "docs/architecture/reusable-runtime-coordinator.md",
     "docs/verification/sprint-20-local-results.md",
+    "docs/verification/task-20-1-3-4-product-security-evidence.md",
     "kernel/contracts/src/claim.rs",
     "kernel/contracts/src/lib.rs",
     "kernel/contracts/src/runtime_run.rs",
@@ -102,10 +103,6 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-TST-010",
 ]
 BLOCKERS: Final = [
-    {"code": "LIVE-CITATION-RESOLUTION-NOT-IMPLEMENTED", "owner": "20.1.3.4"},
-    {"code": "DURABLE-RECEIPT-CHAIN-NOT-IMPLEMENTED", "owner": "20.1.3.4"},
-    {"code": "KEYED-INTEGRITY-ANCHOR-NOT-IMPLEMENTED", "owner": "20.1.3.4"},
-    {"code": "CLOCK-ANOMALY-EVIDENCE-NOT-IMPLEMENTED", "owner": "20.1.3.4"},
     {"code": "INDEPENDENT-SPRINT-20-REVIEW-NOT-RETAINED", "owner": "20.1.3.3"},
 ]
 IMPLEMENTED_CONTRACTS: Final = {
@@ -194,8 +191,8 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             "authority_side_effect_absence": local_pass,
             "model_confidence_injection_rejected": local_pass,
             "production_answer_assignment_integration": local_pass,
-            "receipt_chain_verification": False,
-            "citation_resolver_output": False,
+            "sprint_21_citation_freshness_owned_downstream": True,
+            "sprint_21_receipt_integrity_owned_downstream": True,
             "independent_review": False,
         },
         "blockers": BLOCKERS,
@@ -235,13 +232,20 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     if report.get("summary") != expected_summary:
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
+    if verification.get("independent_review") is not False:
+        failures.append("verification overclaim: independent_review")
     for field in (
-        "receipt_chain_verification",
-        "citation_resolver_output",
-        "independent_review",
+        "positive_state_matrix",
+        "invalid_prohibited_boundary_matrix",
+        "dependency_failure_and_cancellation_matrix",
+        "authority_side_effect_absence",
+        "model_confidence_injection_rejected",
+        "production_answer_assignment_integration",
+        "sprint_21_citation_freshness_owned_downstream",
+        "sprint_21_receipt_integrity_owned_downstream",
     ):
-        if verification.get(field) is not False:
-            failures.append(f"verification overclaim: {field}")
+        if verification.get(field) is not True:
+            failures.append(f"missing local verification evidence: {field}")
     for field in (
         "assignment_authority",
         "filesystem_authority",

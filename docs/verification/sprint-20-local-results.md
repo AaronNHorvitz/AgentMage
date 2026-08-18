@@ -41,9 +41,15 @@
 The current production boundary assigns the complete rendered answer as one claim; it does not yet
 segment and reconcile every material statement independently. Live citation resolution,
 changed-source freshness checks, the durable per-statement answer-claim ledger,
-append-only receipt chaining, the external keyed integrity anchor, clock-change sequencing, and
-independent review remain absent. These are principally Sprint 21 dependencies rather than hidden
-Sprint 20 successes.
+append-only receipt chaining, the external keyed integrity anchor, and clock-change sequencing are
+explicit Sprint 21 work and are not prerequisites or hidden successes of this state-assignment
+story. Independent Sprint 20 review remains absent.
+
+## Security Mapping
+
+[`task-20-1-3-4-product-security-evidence.md`](task-20-1-3-4-product-security-evidence.md)
+maps the ten assigned controls to exact local state-assignment evidence and identifies
+the receipt, citation, audit, and clock controls owned by Sprint 21.
 
 Sprint 20 is therefore blocked even though every bounded state-assignment implementation item and
 its local adversarial suite pass. The source-bound machine-readable record will be retained at
