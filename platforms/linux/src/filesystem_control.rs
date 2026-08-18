@@ -1096,6 +1096,50 @@ impl FilesystemRaceBoundary {
         Self::AfterCleanup,
         Self::AfterCleanupDurable,
     ];
+
+    const fn code(self) -> &'static str {
+        match self {
+            Self::AfterInitialObservation => "after-initial-observation",
+            Self::AfterParentOpened => "after-parent-opened",
+            Self::BeforeStaging => "before-staging",
+            Self::AfterStaging => "after-staging",
+            Self::BeforeCommit => "before-commit",
+            Self::AfterCommit => "after-commit",
+            Self::AfterCommitDurable => "after-commit-durable",
+            Self::AfterVerification => "after-verification",
+            Self::AfterCleanup => "after-cleanup",
+            Self::AfterCleanupDurable => "after-cleanup-durable",
+        }
+    }
+
+    fn from_code(code: &str) -> Self {
+        [
+            Self::AfterInitialObservation,
+            Self::AfterParentOpened,
+            Self::BeforeStaging,
+            Self::AfterStaging,
+            Self::BeforeCommit,
+            Self::AfterCommit,
+            Self::AfterCommitDurable,
+            Self::AfterVerification,
+            Self::AfterCleanup,
+            Self::AfterCleanupDurable,
+        ]
+        .into_iter()
+        .find(|boundary| boundary.code() == code)
+        .unwrap_or_else(|| panic!("undeclared filesystem race boundary: {code}"))
+    }
+
+    const fn committed(self) -> bool {
+        matches!(
+            self,
+            Self::AfterCommit
+                | Self::AfterCommitDurable
+                | Self::AfterVerification
+                | Self::AfterCleanup
+                | Self::AfterCleanupDurable
+        )
+    }
 }
 
 #[cfg(test)]
@@ -1163,10 +1207,12 @@ fn uncertain_restore() -> FilesystemRestoreReport {
 mod tests {
     use std::cell::Cell;
     use std::collections::BTreeSet;
+    use std::env;
     use std::fs;
     use std::os::unix::fs::{MetadataExt, PermissionsExt, symlink};
     use std::os::unix::net::UnixListener;
     use std::path::{Path, PathBuf};
+    use std::process::Command;
     use std::rc::Rc;
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -1178,8 +1224,10 @@ mod tests {
     };
     use agentmage_kernel_engine::filesystem_control::{
         ControlledFilesystemDriver, ExistingSourceDraft, ExistingWorkDisposition,
-        FileClassification, FilesystemApprovalDecision, FilesystemApprovalReceipt,
-        FilesystemGrantRequest, FilesystemOperationDraft, FilesystemPlan, FilesystemPlanRequest,
+        FileClassification, FilesystemApplyAuthorization, FilesystemApplyReport,
+        FilesystemApprovalDecision, FilesystemApprovalReceipt, FilesystemGrantRequest,
+        FilesystemOperationDraft, FilesystemOperationObservation, FilesystemPlan,
+        FilesystemPlanRequest, FilesystemRestoreAuthorization, FilesystemRestoreReport,
         FilesystemTransactionError, FilesystemTransactionOutcome, FilesystemTransactionRequest,
         NewDestinationDraft, StructuredPatch, StructuredPatchHunk, build_filesystem_plan,
         execute_filesystem_transaction, issue_filesystem_grant, render_filesystem_preview,
@@ -1200,6 +1248,7 @@ mod tests {
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
     const TRANSACTION_ID: &str = "linux-filesystem-transaction-0001";
+    const FILESYSTEM_CRASH_CHILD_EXIT: i32 = 87;
 
     struct TestDirectory(PathBuf);
 
@@ -1362,7 +1411,14 @@ mod tests {
     }
 
     fn fixture(delete: bool) -> Fixture {
-        let root = TestDirectory::new();
+        fixture_in(TestDirectory::new(), delete)
+    }
+
+    fn fixture_at(path: PathBuf, delete: bool) -> Fixture {
+        fixture_in(TestDirectory(path), delete)
+    }
+
+    fn fixture_in(root: TestDirectory, delete: bool) -> Fixture {
         for directory in ["src", "new", "copies", "moved", "trash"] {
             fs::create_dir(root.path().join(directory)).expect("fixture directory");
         }
@@ -1612,6 +1668,244 @@ mod tests {
             &mut driver,
         )
         .map(|result| result.outcome)
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum FilesystemCrashScenario {
+        Copy,
+        Trash,
+        RestoreCopy,
+        ApplyVerification,
+        RestoreVerification,
+    }
+
+    impl FilesystemCrashScenario {
+        const fn code(self) -> &'static str {
+            match self {
+                Self::Copy => "copy",
+                Self::Trash => "trash",
+                Self::RestoreCopy => "restore-copy",
+                Self::ApplyVerification => "apply-verification",
+                Self::RestoreVerification => "restore-verification",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            match code {
+                "copy" => Self::Copy,
+                "trash" => Self::Trash,
+                "restore-copy" => Self::RestoreCopy,
+                "apply-verification" => Self::ApplyVerification,
+                "restore-verification" => Self::RestoreVerification,
+                _ => panic!("undeclared filesystem crash scenario: {code}"),
+            }
+        }
+
+        const fn purpose(self) -> Option<&'static str> {
+            match self {
+                Self::Copy => Some("copy"),
+                Self::Trash => Some("trash"),
+                Self::RestoreCopy => Some("restore-copy"),
+                Self::ApplyVerification | Self::RestoreVerification => None,
+            }
+        }
+
+        const fn requires_restore(self) -> bool {
+            matches!(self, Self::RestoreCopy | Self::RestoreVerification)
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum VerificationCrashPosition {
+        Before,
+        After,
+    }
+
+    impl VerificationCrashPosition {
+        const ALL: [Self; 2] = [Self::Before, Self::After];
+
+        const fn code(self) -> &'static str {
+            match self {
+                Self::Before => "before",
+                Self::After => "after",
+            }
+        }
+
+        fn from_code(code: &str) -> Self {
+            match code {
+                "before" => Self::Before,
+                "after" => Self::After,
+                _ => panic!("undeclared filesystem verification position: {code}"),
+            }
+        }
+    }
+
+    struct VerificationCrashDriver<'workspace> {
+        inner: LinuxControlledFilesystemDriver<'workspace>,
+        position: Option<VerificationCrashPosition>,
+        observations: usize,
+    }
+
+    impl ControlledFilesystemDriver for VerificationCrashDriver<'_> {
+        fn observe(
+            &mut self,
+            plan: &FilesystemPlan,
+        ) -> Result<
+            Vec<FilesystemOperationObservation>,
+            agentmage_kernel_engine::filesystem_control::FilesystemDriverError,
+        > {
+            self.observations += 1;
+            if self.observations == 2 && self.position == Some(VerificationCrashPosition::Before) {
+                std::process::exit(FILESYSTEM_CRASH_CHILD_EXIT);
+            }
+            let result = self.inner.observe(plan);
+            if self.observations == 2 && self.position == Some(VerificationCrashPosition::After) {
+                std::process::exit(FILESYSTEM_CRASH_CHILD_EXIT);
+            }
+            result
+        }
+
+        fn apply(
+            &mut self,
+            authorization: FilesystemApplyAuthorization<'_>,
+        ) -> FilesystemApplyReport {
+            self.inner.apply(authorization)
+        }
+
+        fn restore(
+            &mut self,
+            authorization: FilesystemRestoreAuthorization<'_>,
+        ) -> FilesystemRestoreReport {
+            self.inner.restore(authorization)
+        }
+    }
+
+    fn run_filesystem_crash_child() {
+        let root = PathBuf::from(
+            env::var_os("AGENTMAGE_FILESYSTEM_CRASH_ROOT").expect("filesystem crash root"),
+        );
+        let scenario = FilesystemCrashScenario::from_code(
+            &env::var("AGENTMAGE_FILESYSTEM_CRASH_SCENARIO").expect("filesystem crash scenario"),
+        );
+        let selected_boundary = env::var("AGENTMAGE_FILESYSTEM_CRASH_BOUNDARY")
+            .ok()
+            .map(|value| FilesystemRaceBoundary::from_code(&value));
+        let verification = env::var("AGENTMAGE_FILESYSTEM_CRASH_VERIFICATION")
+            .ok()
+            .map(|value| VerificationCrashPosition::from_code(&value));
+        let mut fixture = fixture_at(root, scenario == FilesystemCrashScenario::Trash);
+        let failure_path = fixture.root.path().join("moved/move.txt");
+        let mut failure_written = false;
+        let purpose = scenario.purpose();
+        let inner = LinuxControlledFilesystemDriver::new(
+            &fixture.workspace,
+            LinuxFilesystemDriverLimits {
+                maximum_file_bytes: 1024 * 1024,
+                maximum_transaction_bytes: 4 * 1024 * 1024,
+                ..LinuxFilesystemDriverLimits::default()
+            },
+        )
+        .with_race_hook(move |event| {
+            if scenario.requires_restore()
+                && event.purpose == "move"
+                && event.boundary == FilesystemRaceBoundary::AfterInitialObservation
+                && !failure_written
+            {
+                fs::write(&failure_path, b"external move owner\n")
+                    .expect("restore trigger collision");
+                failure_written = true;
+            }
+            if purpose == Some(event.purpose.as_str()) && Some(event.boundary) == selected_boundary
+            {
+                std::process::exit(FILESYSTEM_CRASH_CHILD_EXIT);
+            }
+        });
+        let mut driver = VerificationCrashDriver {
+            inner,
+            position: verification,
+            observations: 0,
+        };
+        let _ = execute_filesystem_transaction(
+            &mut fixture.issuer,
+            &fixture.policy,
+            &fixture.plan,
+            &fixture.approval,
+            FilesystemTransactionRequest {
+                transaction_id: TRANSACTION_ID.to_owned(),
+                now_epoch_ms: 4_000,
+                cancelled_before_consume: false,
+            },
+            &mut driver,
+        );
+        panic!("filesystem crash child did not stop at its declared boundary");
+    }
+
+    fn launch_filesystem_crash_child(
+        root: &Path,
+        scenario: FilesystemCrashScenario,
+        boundary: Option<FilesystemRaceBoundary>,
+        verification: Option<VerificationCrashPosition>,
+    ) {
+        let mut command = Command::new(env::current_exe().expect("current test executable"));
+        command
+            .args([
+                "--exact",
+                "filesystem_control::tests::s_030_rt01_filesystem_crash_boundary_child",
+                "--nocapture",
+            ])
+            .env("AGENTMAGE_FILESYSTEM_CRASH_CHILD", "1")
+            .env("AGENTMAGE_FILESYSTEM_CRASH_ROOT", root)
+            .env("AGENTMAGE_FILESYSTEM_CRASH_SCENARIO", scenario.code());
+        if let Some(boundary) = boundary {
+            command.env("AGENTMAGE_FILESYSTEM_CRASH_BOUNDARY", boundary.code());
+        }
+        if let Some(position) = verification {
+            command.env("AGENTMAGE_FILESYSTEM_CRASH_VERIFICATION", position.code());
+        }
+        let output = command.output().expect("filesystem crash child launches");
+        assert_eq!(
+            output.status.code(),
+            Some(FILESYSTEM_CRASH_CHILD_EXIT),
+            "{scenario:?} {boundary:?} {verification:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    fn assert_regular_poststate(root: &Path) {
+        assert_eq!(
+            fs::read(root.join("created.txt")).expect("created postimage"),
+            b"created\n"
+        );
+        assert_eq!(
+            fs::read(root.join("src/patch.txt")).expect("patch postimage"),
+            b"alpha\nchanged\ngamma\n"
+        );
+        assert_eq!(
+            fs::read(root.join("copies/copy.txt")).expect("copy postimage"),
+            b"copy\n"
+        );
+        assert!(!root.join("src/move.txt").exists());
+        assert_eq!(
+            fs::read(root.join("moved/move.txt")).expect("move postimage"),
+            b"move\n"
+        );
+    }
+
+    fn assert_regular_prestate_after_restore(root: &Path) {
+        assert!(!root.join("created.txt").exists());
+        assert_eq!(
+            fs::read(root.join("src/patch.txt")).expect("patch preimage"),
+            b"alpha\nbeta\ngamma\n"
+        );
+        assert!(!root.join("copies/copy.txt").exists());
+        assert_eq!(
+            fs::read(root.join("src/move.txt")).expect("move preimage"),
+            b"move\n"
+        );
+        assert_eq!(
+            fs::read(root.join("moved/move.txt")).expect("external move owner"),
+            b"external move owner\n"
+        );
     }
 
     #[test]
@@ -2196,6 +2490,134 @@ mod tests {
                     .expect("external collision preserved"),
                 b"external move owner\n"
             );
+        }
+    }
+
+    #[test]
+    fn s_030_rt01_filesystem_crash_boundary_child() {
+        if env::var_os("AGENTMAGE_FILESYSTEM_CRASH_CHILD").is_some() {
+            run_filesystem_crash_child();
+        }
+    }
+
+    #[test]
+    fn s_030_rt01_process_stops_leave_only_prestate_or_poststate_paths() {
+        for boundary in FilesystemRaceBoundary::CREATE_ALL {
+            let root = TestDirectory::new();
+            launch_filesystem_crash_child(
+                root.path(),
+                FilesystemCrashScenario::Copy,
+                Some(boundary),
+                None,
+            );
+            assert_eq!(
+                fs::read(root.path().join("created.txt")).expect("earlier create postimage"),
+                b"created\n",
+                "copy {boundary:?}"
+            );
+            assert_eq!(
+                fs::read(root.path().join("src/patch.txt")).expect("earlier patch postimage"),
+                b"alpha\nchanged\ngamma\n",
+                "copy {boundary:?}"
+            );
+            assert_eq!(
+                fs::read(root.path().join("src/copy.txt")).expect("copy source"),
+                b"copy\n"
+            );
+            let destination = root.path().join("copies/copy.txt");
+            if boundary.committed() {
+                assert_eq!(
+                    fs::read(destination).expect("copy destination postimage"),
+                    b"copy\n",
+                    "copy {boundary:?}"
+                );
+            } else {
+                assert!(!destination.exists(), "copy {boundary:?}");
+            }
+            assert_eq!(
+                fs::read(root.path().join("src/move.txt")).expect("later move preimage"),
+                b"move\n"
+            );
+        }
+
+        for boundary in FilesystemRaceBoundary::MOVE_ALL {
+            let root = TestDirectory::new();
+            launch_filesystem_crash_child(
+                root.path(),
+                FilesystemCrashScenario::Trash,
+                Some(boundary),
+                None,
+            );
+            let source = root.path().join("src/obsolete.txt");
+            let destination = root.path().join("trash/obsolete.txt");
+            if boundary.committed() {
+                assert!(!source.exists(), "trash {boundary:?}");
+                assert_eq!(
+                    fs::read(destination).expect("trash postimage"),
+                    b"obsolete\n",
+                    "trash {boundary:?}"
+                );
+            } else {
+                assert_eq!(
+                    fs::read(source).expect("trash preimage"),
+                    b"obsolete\n",
+                    "trash {boundary:?}"
+                );
+                assert!(!destination.exists(), "trash {boundary:?}");
+            }
+        }
+
+        for boundary in FilesystemRaceBoundary::REMOVE_ALL {
+            let root = TestDirectory::new();
+            launch_filesystem_crash_child(
+                root.path(),
+                FilesystemCrashScenario::RestoreCopy,
+                Some(boundary),
+                None,
+            );
+            assert!(!root.path().join("created.txt").exists());
+            assert_eq!(
+                fs::read(root.path().join("src/patch.txt")).expect("restored patch"),
+                b"alpha\nbeta\ngamma\n"
+            );
+            assert_eq!(
+                fs::read(root.path().join("src/copy.txt")).expect("copy source"),
+                b"copy\n"
+            );
+            let destination = root.path().join("copies/copy.txt");
+            if boundary.committed() {
+                assert!(!destination.exists(), "restore-copy {boundary:?}");
+            } else {
+                assert_eq!(
+                    fs::read(destination).expect("copy remains before restore commit"),
+                    b"copy\n",
+                    "restore-copy {boundary:?}"
+                );
+            }
+            assert_eq!(
+                fs::read(root.path().join("moved/move.txt")).expect("restore trigger collision"),
+                b"external move owner\n"
+            );
+        }
+
+        for position in VerificationCrashPosition::ALL {
+            let root = TestDirectory::new();
+            launch_filesystem_crash_child(
+                root.path(),
+                FilesystemCrashScenario::ApplyVerification,
+                None,
+                Some(position),
+            );
+            assert_regular_poststate(root.path());
+
+            let root = TestDirectory::new();
+            launch_filesystem_crash_child(
+                root.path(),
+                FilesystemCrashScenario::RestoreVerification,
+                None,
+                Some(position),
+            );
+            assert_regular_prestate_after_restore(root.path());
         }
     }
 }
