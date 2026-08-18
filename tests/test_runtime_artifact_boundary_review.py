@@ -50,7 +50,7 @@ class RuntimeArtifactBoundaryReviewTests(unittest.TestCase):
     def test_limitations_preserve_unavailable_review_boundaries(self) -> None:
         combined = " ".join(LIMITATIONS)
         self.assertIn("not an independent human or cryptographic review", combined)
-        self.assertIn("Physical", combined)
+        self.assertIn("physical storage faults", combined)
         self.assertIn("Manual fuzzing", combined)
         self.assertIn("No release approval", combined)
 
