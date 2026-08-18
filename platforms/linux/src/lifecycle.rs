@@ -155,7 +155,7 @@ pub fn rotate_linux_operational_key(
 
 fn acquire_lifecycle_lock(
     root: &LinuxStrictLocalRoot,
-) -> Result<OwnedFd, LinuxOperationalKeyLifecycleError> {
+) -> Result<LinuxLifecycleLock, LinuxOperationalKeyLifecycleError> {
     let directory = root
         .duplicate_io_descriptor()
         .map_err(|_| lifecycle_error(LinuxOperationalKeyLifecycleErrorKind::UnsafeRoot))?;
@@ -178,7 +178,16 @@ fn acquire_lifecycle_lock(
     fsync(&lock)
         .and_then(|()| fsync(&directory))
         .map_err(|_| lifecycle_error(LinuxOperationalKeyLifecycleErrorKind::UnsafeStateObject))?;
-    Ok(lock)
+    Ok(LinuxLifecycleLock(lock))
+}
+
+#[derive(Debug)]
+struct LinuxLifecycleLock(OwnedFd);
+
+impl Drop for LinuxLifecycleLock {
+    fn drop(&mut self) {
+        let _ = flock(&self.0, FlockOperation::Unlock);
+    }
 }
 
 fn authority_database_exists(
