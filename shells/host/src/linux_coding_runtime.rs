@@ -26,10 +26,11 @@ use agentmage_kernel_engine::{
     },
     context_management::finalize_checkpoint,
     filesystem_control::{
-        FilesystemApprovalDecision, FilesystemApprovalPreview, FilesystemApprovalReceipt,
-        FilesystemGrantRequest, FilesystemPlan, FilesystemPlanRequest,
-        FilesystemTransactionOutcome, FilesystemTransactionRequest, build_filesystem_plan,
-        render_filesystem_preview, verify_filesystem_receipts,
+        FileClassification, FilesystemApprovalDecision, FilesystemApprovalPreview,
+        FilesystemApprovalReceipt, FilesystemGrantRequest, FilesystemOperationDraft,
+        FilesystemPlan, FilesystemPlanRequest, FilesystemTransactionOutcome,
+        FilesystemTransactionRequest, build_filesystem_plan, render_filesystem_preview,
+        verify_filesystem_receipts,
     },
     grants::SessionReadGrantRequest,
     operational_store::{
@@ -1648,8 +1649,17 @@ where
             return Err(RuntimePortFailure::Invalid);
         };
         let (operation, binding, write_draft, workspace) = prepared.into_parts();
-        let Some(LinuxCodingWriteDraft::ControlledCreate(_)) = write_draft else {
+        let Some(LinuxCodingWriteDraft::ControlledCreate(create_draft)) = write_draft else {
             return Err(RuntimePortFailure::Invalid);
+        };
+        let generated_bytes = match &create_draft {
+            FilesystemOperationDraft::Create {
+                content,
+                classification: FileClassification::Generated,
+                ..
+            } => Some(content.clone()),
+            FilesystemOperationDraft::Create { .. } => None,
+            _ => return Err(RuntimePortFailure::Invalid),
         };
         if !matches!(binding, LinuxCodingTargetBinding::DestinationParent { .. })
             || !matches!(
@@ -1712,7 +1722,7 @@ where
             .as_deref()
             .ok_or(RuntimePortFailure::Uncertain)?;
         let (outcome, state_change) = filesystem_transaction_outcome(result.outcome);
-        let execution = self.controlled_change_execution(
+        let mut execution = self.controlled_change_execution(
             request,
             definition,
             call,
@@ -1728,6 +1738,17 @@ where
             },
             state_change,
         )?;
+        if state_change == StateChange::Changed
+            && let Some(bytes) = generated_bytes
+        {
+            execution
+                .artifact_candidates
+                .push(RuntimeToolArtifactCandidate {
+                    kind: RuntimeArtifactKind::GeneratedFile,
+                    media_type: "text/plain".to_owned(),
+                    bytes,
+                });
+        }
         self.finish_specialized_effect_event(execution, event_context, pending)
     }
 
@@ -3657,6 +3678,22 @@ mod tests {
     where
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
+        configure_controlled_create_with(
+            fixture,
+            "new.rs",
+            "pub fn newly_created() {}\n".to_owned(),
+            ControlledFileClassification::SourceCode,
+        );
+    }
+
+    fn configure_controlled_create_with<G>(
+        fixture: &mut Fixture<G>,
+        file_name: &str,
+        content: String,
+        classification: ControlledFileClassification,
+    ) where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
         let intent_sha256 = fixture
             .profile_for_test()
             .change_plan()
@@ -3691,10 +3728,10 @@ mod tests {
             &ControlledFileCreationProposal {
                 schema_version: 1,
                 creation_id: "creation-runtime".to_owned(),
-                path: vec!["src".to_owned(), "new.rs".to_owned()],
-                content: "pub fn newly_created() {}\n".to_owned(),
+                path: vec!["src".to_owned(), file_name.to_owned()],
+                content,
                 mode: 0o644,
-                classification: ControlledFileClassification::SourceCode,
+                classification,
                 intent_sha256,
                 change_plan_sha256,
                 expected_parent_sha256,
@@ -4310,6 +4347,107 @@ mod tests {
             sequence.push(event).expect("ordered durable runtime event");
         }
         assert!(sequence.is_terminal());
+    }
+
+    #[test]
+    fn story_22_2_linux_generated_file_is_published_and_checkpoint_bound() {
+        let checkpoint_clock = Arc::new(AtomicUsize::new(CHECKPOINT_CLOCK_UNARMED));
+        let mut fixture = fixture_with_git_and_checkpoint_clock(
+            FakeGitExecutor::default(),
+            Some(Arc::clone(&checkpoint_clock)),
+        );
+        let generated_content = "generated-line\n".repeat(5_200);
+        assert!(generated_content.len() > 64 * 1024);
+        configure_controlled_create_with(
+            &mut fixture,
+            "generated.txt",
+            generated_content.clone(),
+            ControlledFileClassification::Generated,
+        );
+        let create = scripted_call(&fixture.call);
+        let profile = fixture.profile_for_test();
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [ScriptedCodingStep::Tool(create)].into_iter().collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("generated-file context");
+        let state_root = fixture.root.join("state");
+        let Fixture {
+            root,
+            request,
+            boundary,
+            ..
+        } = fixture;
+        let mut coordinator = compose_durable_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            StopAfterCheckpointClock {
+                now_epoch_ms: 45_000,
+                checkpoint_clock: Arc::clone(&checkpoint_clock),
+            },
+        )
+        .expect("generated-file coordinator");
+
+        let RuntimeCoordinatorStep::AwaitingApproval { challenge } = coordinator
+            .run_until_boundary(None, None)
+            .expect("generated-file creation reaches approval")
+        else {
+            panic!("generated-file creation must require an explicit decision");
+        };
+        assert!(matches!(
+            coordinator.run_until_boundary(
+                Some(&response(&challenge, RuntimeApprovalDisposition::Allow)),
+                None,
+            ),
+            Err(RuntimeLoopError::Dependency(
+                RuntimePortFailure::Unavailable
+            ))
+        ));
+        let generated_sha256 = sha256(generated_content.as_bytes());
+        let generated_reference = coordinator
+            .artifact_references()
+            .iter()
+            .find(|reference| reference.payload_sha256 == generated_sha256)
+            .cloned()
+            .expect("large generated file publishes as an artifact");
+        assert_eq!(
+            generated_reference.byte_size,
+            generated_content.len() as u64
+        );
+        assert_eq!(generated_reference.media_type, "text/plain");
+        assert!(matches!(
+            coordinator.events().last().map(|event| &event.kind),
+            Some(RuntimeEventKind::CheckpointCommitted { .. })
+        ));
+        drop(coordinator);
+
+        let mut key = TestKey([51; 32]);
+        let authority =
+            open_test_linux_authority(&state_root, &mut key, 46_000).expect("authority reopens");
+        let operator_view = authority
+            .runtime_artifact_operator_view(&generated_reference)
+            .expect("generated-file operator view");
+        assert_eq!(operator_view.kind, RuntimeArtifactKind::GeneratedFile);
+        assert_eq!(operator_view.checkpoint_reference_count, 1);
+        assert_eq!(
+            operator_view.lifecycle,
+            agentmage_kernel_contracts::RuntimeArtifactLifecycleState::Active
+        );
+        let binding = authority
+            .authority()
+            .current_runtime_resume_binding()
+            .expect("resume binding reads")
+            .expect("resume binding exists");
+        assert!(binding.artifacts.contains(&generated_reference));
+        assert_eq!(
+            fs::read(root.join("worktree/src/generated.txt")).expect("generated file reads"),
+            generated_content.as_bytes()
+        );
     }
 
     #[test]
