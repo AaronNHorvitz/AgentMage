@@ -3,9 +3,10 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use agentmage_capability_read_only::{
+    GIT_INSPECTION_TOOL_ID, GitInspectionOperation, GitInspectionOutcome, GitInspectionRequest,
     NeverCancelled, ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyOutcome, ReadOnlyRequest,
     ReadOnlyToolKind, SnapshotEntry, SnapshotEntryKind, WorkspaceSnapshot, execute_read_only,
-    read_only_tool_kind,
+    parse_git_inspection, read_only_tool_kind, validate_git_inspection_request,
 };
 use agentmage_kernel_contracts::{
     AgentStateKind, ApprovalId, AuthorityClass, BudgetLimit, BudgetResource,
@@ -45,9 +46,16 @@ struct TestProfileCatalog {
 
 struct NativeReadFakeModel {
     profile: ExactModelProfile,
-    scripts: VecDeque<ModelProposalKind>,
-    arguments: ContractPayload,
+    scripts: VecDeque<NativeReadModelStep>,
     calls: u32,
+}
+
+enum NativeReadModelStep {
+    Tool {
+        tool_id: ToolId,
+        arguments: ContractPayload,
+    },
+    Completion,
 }
 
 impl RuntimeModelPort for NativeReadFakeModel {
@@ -61,31 +69,33 @@ impl RuntimeModelPort for NativeReadFakeModel {
         _context: &ModelContextPacket,
         _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
     ) -> Result<ModelRunResult, RuntimePortFailure> {
-        let kind = self
+        let step = self
             .scripts
             .pop_front()
             .ok_or(RuntimePortFailure::ResourceExhausted)?;
         self.calls += 1;
-        let (payload, tool_call) = if kind == ModelProposalKind::ToolCall {
-            (
+        let (kind, payload, tool_call) = match step {
+            NativeReadModelStep::Tool { tool_id, arguments } => (
+                ModelProposalKind::ToolCall,
                 None,
                 Some(ModelToolCallCandidate {
-                    tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw(
-                        "native-read-call-0001",
-                    ),
-                    tool_id: ToolId::from_raw(ReadOnlyToolKind::ReadText.id()),
+                    tool_call_id: agentmage_kernel_contracts::ToolCallId::from_raw(format!(
+                        "native-read-call-{}",
+                        self.calls
+                    )),
+                    tool_id,
                     tool_version: "1.0.0".to_owned(),
-                    arguments: self.arguments.clone(),
+                    arguments,
                 }),
-            )
-        } else {
-            (
+            ),
+            NativeReadModelStep::Completion => (
+                ModelProposalKind::CompletionCandidate,
                 Some(payload(
                     "runtime.native-read.answer",
                     b"lib.rs contains the fixture function",
                 )),
                 None,
-            )
+            ),
         };
         let mut proposal = agentmage_kernel_contracts::ClosedModelProposal {
             schema_version: CONTRACT_SCHEMA_VERSION,
@@ -187,6 +197,7 @@ impl RuntimeClock for TestClock {
 
 struct SnapshotReadBoundary {
     snapshot: WorkspaceSnapshot,
+    executions: u32,
 }
 
 impl RuntimeToolBoundary for SnapshotReadBoundary {
@@ -228,21 +239,60 @@ impl RuntimeToolBoundary for SnapshotReadBoundary {
         call: &ToolCall,
         _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
-        let kind = read_only_tool_kind(&call.tool_id, &call.tool_version)
-            .ok_or(RuntimePortFailure::Invalid)?;
-        let result =
-            execute_read_only(kind, &call.arguments.bytes, &self.snapshot, &NeverCancelled);
-        if !result.verify(kind) || result.outcome != ReadOnlyOutcome::Succeeded {
-            return Err(RuntimePortFailure::Invalid);
-        }
-        let bytes = serde_json::to_vec(&result).map_err(|_| RuntimePortFailure::Invalid)?;
+        self.executions = self
+            .executions
+            .checked_add(1)
+            .ok_or(RuntimePortFailure::ResourceExhausted)?;
+        let (bytes, source_id, object_id) =
+            if let Some(kind) = read_only_tool_kind(&call.tool_id, &call.tool_version) {
+                let result =
+                    execute_read_only(kind, &call.arguments.bytes, &self.snapshot, &NeverCancelled);
+                if !result.verify(kind)
+                    || !matches!(
+                        result.outcome,
+                        ReadOnlyOutcome::Succeeded | ReadOnlyOutcome::NoResult
+                    )
+                {
+                    return Err(RuntimePortFailure::Invalid);
+                }
+                (
+                    serde_json::to_vec(&result).map_err(|_| RuntimePortFailure::Invalid)?,
+                    kind.id().to_owned(),
+                    "workspace-projection".to_owned(),
+                )
+            } else if call.tool_id.as_str() == GIT_INSPECTION_TOOL_ID {
+                let git_request = validate_git_inspection_request(&call.arguments.bytes)
+                    .map_err(|_| RuntimePortFailure::Invalid)?;
+                let result = parse_git_inspection(
+                    &git_request,
+                    &"e".repeat(64),
+                    &"f".repeat(64),
+                    &request.repository_snapshot_sha256,
+                    true,
+                    b"## main\n M src/lib.rs\n",
+                )
+                .map_err(|_| RuntimePortFailure::Invalid)?;
+                if !result.verify() || result.outcome == GitInspectionOutcome::Failed {
+                    return Err(RuntimePortFailure::Invalid);
+                }
+                (
+                    serde_json::to_vec(&result).map_err(|_| RuntimePortFailure::Invalid)?,
+                    GIT_INSPECTION_TOOL_ID.to_owned(),
+                    "repository-status".to_owned(),
+                )
+            } else {
+                return Err(RuntimePortFailure::Invalid);
+            };
         let evidence = EvidenceReference {
             schema_version: CONTRACT_SCHEMA_VERSION,
-            evidence_id: EvidenceId::from_raw("native-read-evidence-0001"),
+            evidence_id: EvidenceId::from_raw(format!(
+                "native-read-evidence-{:04}",
+                self.executions
+            )),
             kind: EvidenceKind::ToolOutput,
-            source_id: kind.id().to_owned(),
-            object_id: "src/lib.rs".to_owned(),
-            fragment: Some("bytes:0-64".to_owned()),
+            source_id,
+            object_id,
+            fragment: Some(format!("result:{}", self.executions)),
             content_sha256: sha256(&bytes),
             observed_revision: Some(request.repository_snapshot_id.as_str().to_owned()),
         };
@@ -264,8 +314,10 @@ impl RuntimeToolBoundary for SnapshotReadBoundary {
             state_change: StateChange::NotChanged,
         };
         Ok(RuntimeToolExecution {
-            receipt_id: ReceiptId::from_raw("native-read-receipt-0001"),
-            receipt_sha256: sha256(b"native-read-receipt-0001"),
+            receipt_id: ReceiptId::from_raw(format!("native-read-receipt-{:04}", self.executions)),
+            receipt_sha256: sha256(
+                format!("native-read-receipt-{:04}", self.executions).as_bytes(),
+            ),
             result: tool_result,
         })
     }
@@ -335,6 +387,116 @@ fn story_23_4_fake_model_uses_existing_native_read_tool_then_verifies_completion
     assert!(sequence.is_terminal());
 }
 
+#[test]
+fn story_23_4_fake_model_composes_multiple_reads_search_and_read_only_git() {
+    let registry = read_only_runtime_registry().expect("native read registry");
+    let profile = deterministic_profile();
+    let multiple = read_model_step(
+        &registry,
+        ReadOnlyToolKind::ReadMultiple,
+        ReadOnlyRequest {
+            schema_version: 1,
+            paths: vec![
+                vec!["src".to_owned(), "lib.rs".to_owned()],
+                vec!["src".to_owned(), "other.rs".to_owned()],
+            ],
+            query: None,
+            byte_offset: Some(0),
+            byte_count: Some(256),
+            encoding: ReadOnlyEncoding::Utf8,
+            limits: ReadOnlyLimits::default(),
+            call_depth: 0,
+        },
+    );
+    let search = read_model_step(
+        &registry,
+        ReadOnlyToolKind::SearchText,
+        ReadOnlyRequest {
+            schema_version: 1,
+            paths: vec![vec!["src".to_owned()]],
+            query: Some("fixture".to_owned()),
+            byte_offset: Some(0),
+            byte_count: Some(256),
+            encoding: ReadOnlyEncoding::Utf8,
+            limits: ReadOnlyLimits::default(),
+            call_depth: 0,
+        },
+    );
+    let git = git_model_step(
+        &registry,
+        GitInspectionRequest {
+            schema_version: 1,
+            operation: GitInspectionOperation::Status,
+            revision: None,
+            object_id: None,
+            pathspecs: Vec::new(),
+            max_records: 100,
+            max_output_bytes: 64 * 1024,
+        },
+    );
+    let request = runtime_request(profile.clone(), &registry);
+    let admitted_request = request.clone();
+    let observed_result = Arc::new(AtomicBool::new(false));
+    let mut coordinator = ReusableRuntimeCoordinator::new(
+        request,
+        NativeReadFakeModel {
+            profile,
+            scripts: [multiple, search, git, NativeReadModelStep::Completion]
+                .into_iter()
+                .collect(),
+            calls: 0,
+        },
+        NativeReadContext {
+            observed_result: Arc::clone(&observed_result),
+        },
+        registry,
+        SnapshotReadBoundary {
+            snapshot: native_snapshot(),
+            executions: 0,
+        },
+        NativeReadVerifier(VerifierId::from_raw("native-read-verifier-0001")),
+        TestClock(2_000),
+    )
+    .expect("multi-tool native coordinator composes");
+
+    let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+        .run_until_boundary(None, None)
+        .expect("multi-tool native fixture completes")
+    else {
+        panic!("pre-authorized reads cannot pause");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Success);
+    assert_eq!(outcome.turn_count, 4);
+    assert_eq!(outcome.model_call_count, 4);
+    assert_eq!(outcome.tool_call_count, 3);
+    assert_eq!(outcome.receipt_ids.len(), 3);
+    assert!(observed_result.load(Ordering::SeqCst));
+    assert!(
+        outcome
+            .evidence
+            .iter()
+            .any(|item| { item.source_id == ReadOnlyToolKind::ReadMultiple.id() })
+    );
+    assert!(
+        outcome
+            .evidence
+            .iter()
+            .any(|item| { item.source_id == ReadOnlyToolKind::SearchText.id() })
+    );
+    assert!(
+        outcome
+            .evidence
+            .iter()
+            .any(|item| item.source_id == GIT_INSPECTION_TOOL_ID)
+    );
+    verify_runtime_outcome(&outcome, &admitted_request).expect("outcome verifies");
+    let mut sequence = RuntimeEventSequence::new();
+    for event in coordinator.events() {
+        sequence.push(event).expect("ordered runtime event");
+    }
+    assert!(sequence.is_terminal());
+}
+
 pub(crate) fn completed_native_read_fixture()
 -> (RuntimeRunRequest, Vec<RuntimeEvent>, RuntimeOutcome, bool) {
     let registry = read_only_runtime_registry().expect("native read registry");
@@ -349,16 +511,7 @@ pub(crate) fn completed_native_read_fixture()
         limits: ReadOnlyLimits::default(),
         call_depth: 0,
     };
-    let read_bytes = serde_json::to_vec(&read_request).expect("read request");
-    let read_definition = registry
-        .get_tool(&ToolId::from_raw(ReadOnlyToolKind::ReadText.id()), "1.0.0")
-        .expect("read tool");
-    let arguments = ContractPayload {
-        schema: read_definition.input_schema.clone(),
-        media_type: "application/json".to_owned(),
-        sha256: sha256(&read_bytes),
-        bytes: read_bytes,
-    };
+    let read = read_model_step(&registry, ReadOnlyToolKind::ReadText, read_request);
     let request = runtime_request(profile.clone(), &registry);
     let admitted_request = request.clone();
     let observed_result = Arc::new(AtomicBool::new(false));
@@ -366,13 +519,9 @@ pub(crate) fn completed_native_read_fixture()
         request,
         NativeReadFakeModel {
             profile,
-            scripts: [
-                ModelProposalKind::ToolCall,
-                ModelProposalKind::CompletionCandidate,
-            ]
-            .into_iter()
-            .collect(),
-            arguments,
+            scripts: [read, NativeReadModelStep::Completion]
+                .into_iter()
+                .collect(),
             calls: 0,
         },
         NativeReadContext {
@@ -380,14 +529,8 @@ pub(crate) fn completed_native_read_fixture()
         },
         registry,
         SnapshotReadBoundary {
-            snapshot: WorkspaceSnapshot {
-                entries: vec![SnapshotEntry {
-                    path: vec!["src".to_owned(), "lib.rs".to_owned()],
-                    kind: SnapshotEntryKind::RegularFile,
-                    bytes: b"pub fn fixture() -> u64 { 42 }\n".to_vec(),
-                    executable: false,
-                }],
-            },
+            snapshot: native_snapshot(),
+            executions: 0,
         },
         NativeReadVerifier(VerifierId::from_raw("native-read-verifier-0001")),
         TestClock(1_000),
@@ -412,6 +555,70 @@ pub(crate) fn completed_native_read_fixture()
         outcome,
         observed_result.load(Ordering::SeqCst),
     )
+}
+
+fn read_model_step(
+    registry: &agentmage_kernel_engine::tooling::ToolRegistry,
+    kind: ReadOnlyToolKind,
+    request: ReadOnlyRequest,
+) -> NativeReadModelStep {
+    let definition = registry
+        .get_tool(&ToolId::from_raw(kind.id()), "1.0.0")
+        .expect("read tool");
+    let bytes = serde_json::to_vec(&request).expect("read request");
+    NativeReadModelStep::Tool {
+        tool_id: definition.tool_id.clone(),
+        arguments: ContractPayload {
+            schema: definition.input_schema.clone(),
+            media_type: "application/json".to_owned(),
+            sha256: sha256(&bytes),
+            bytes,
+        },
+    }
+}
+
+fn git_model_step(
+    registry: &agentmage_kernel_engine::tooling::ToolRegistry,
+    request: GitInspectionRequest,
+) -> NativeReadModelStep {
+    let definition = registry
+        .get_tool(&ToolId::from_raw(GIT_INSPECTION_TOOL_ID), "1.0.0")
+        .expect("Git inspection tool");
+    let bytes = serde_json::to_vec(&request).expect("Git request");
+    NativeReadModelStep::Tool {
+        tool_id: definition.tool_id.clone(),
+        arguments: ContractPayload {
+            schema: definition.input_schema.clone(),
+            media_type: "application/json".to_owned(),
+            sha256: sha256(&bytes),
+            bytes,
+        },
+    }
+}
+
+fn native_snapshot() -> WorkspaceSnapshot {
+    WorkspaceSnapshot {
+        entries: vec![
+            SnapshotEntry {
+                path: vec!["src".to_owned()],
+                kind: SnapshotEntryKind::Directory,
+                bytes: Vec::new(),
+                executable: false,
+            },
+            SnapshotEntry {
+                path: vec!["src".to_owned(), "lib.rs".to_owned()],
+                kind: SnapshotEntryKind::RegularFile,
+                bytes: b"pub fn fixture() -> u64 { 42 }\n".to_vec(),
+                executable: false,
+            },
+            SnapshotEntry {
+                path: vec!["src".to_owned(), "other.rs".to_owned()],
+                kind: SnapshotEntryKind::RegularFile,
+                bytes: b"pub fn other_fixture() -> bool { true }\n".to_vec(),
+                executable: false,
+            },
+        ],
+    }
 }
 
 fn deterministic_profile() -> ExactModelProfile {
@@ -462,14 +669,14 @@ fn runtime_request(
         policy_id: PolicyId::from_raw("native-read-policy-0001"),
         policy_sha256: "d".repeat(64),
         limits: RuntimeRunLimits {
-            max_turns: 3,
-            max_model_calls: 3,
-            max_tool_calls: 2,
+            max_turns: 5,
+            max_model_calls: 5,
+            max_tool_calls: 4,
             max_repeated_tool_calls: 2,
             max_tool_call_depth: 1,
             max_no_progress_turns: 2,
-            max_context_refreshes: 3,
-            max_events: 64,
+            max_context_refreshes: 5,
+            max_events: 128,
             max_elapsed_ms: 60_000,
             max_output_bytes: 4_096,
         },
@@ -498,15 +705,15 @@ fn work_packet() -> WorkPacket {
         budgets: vec![
             BudgetLimit {
                 resource: BudgetResource::PlanSteps,
-                limit: 3,
+                limit: 5,
             },
             BudgetLimit {
                 resource: BudgetResource::ModelCalls,
-                limit: 3,
+                limit: 5,
             },
             BudgetLimit {
                 resource: BudgetResource::ToolCalls,
-                limit: 2,
+                limit: 4,
             },
         ],
         stop_conditions: [
