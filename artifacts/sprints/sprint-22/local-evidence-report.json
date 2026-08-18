@@ -5,7 +5,11 @@
       "owner": "22.1.3.1"
     },
     {
-      "code": "PRODUCT-WIDE-CANARY-SWEEP-NOT-RETAINED",
+      "code": "INSTALLED-CROSS-PLATFORM-CANARY-EVIDENCE-NOT-RETAINED",
+      "owner": "22.1.3.5"
+    },
+    {
+      "code": "MEMORY-AND-STORAGE-REMANENCE-EVIDENCE-NOT-RETAINED",
       "owner": "22.1.3.5"
     },
     {
@@ -25,7 +29,7 @@
       ],
       "exit_code": 0,
       "id": "context-tests",
-      "output_sha256": "2d2f5da8ccdbf0bf22d9c38295f09a553c48244fe185b3cb23f7bc4cf83f9732"
+      "output_sha256": "66541263b546fef16db979e9ac61b5bf6f91da9caa3830ce7fc3c8caaac08777"
     },
     {
       "argv": [
@@ -38,7 +42,7 @@
       ],
       "exit_code": 0,
       "id": "checkpoint-tests",
-      "output_sha256": "b914a3034d2c1debbc51acfbf6755b30ccee0ee72f77a75a15426bd0eaf57840"
+      "output_sha256": "1e980bb9640b98c69f096f5c8a6531a4683077e770f2d06e4a00a33ba8c70580"
     },
     {
       "argv": [
@@ -51,7 +55,7 @@
       ],
       "exit_code": 0,
       "id": "crash-campaign",
-      "output_sha256": "8b3cee27dc01193c337241b3dee288d315bb886613686a04f3d776356ac9a42f"
+      "output_sha256": "9e2bc19c2ff6e5fdef2ae9648e27e362ce57b833c54fb6ef650f3c3a1c0e0fd7"
     },
     {
       "argv": [
@@ -73,6 +77,15 @@
     },
     {
       "argv": [
+        "python3",
+        "scripts/story_22_1_canary_evidence.py"
+      ],
+      "exit_code": 0,
+      "id": "current-product-canary-evidence",
+      "output_sha256": "a31c813afcfee033b10bfd8534145ee2ac195eddff97aa56fbd68a588b4c3028"
+    },
+    {
+      "argv": [
         "cargo",
         "clippy",
         "-p",
@@ -85,7 +98,7 @@
       ],
       "exit_code": 0,
       "id": "engine-clippy",
-      "output_sha256": "3649bf8c61865d43966079e2181cc43e6d1e4e0ffec72f58bd44934f34321447"
+      "output_sha256": "a9b3e6a767088b40d91ce9192abc318c1e39b60ce3bc234514a09ab9ebf1545a"
     },
     {
       "argv": [
@@ -96,7 +109,7 @@
       ],
       "exit_code": 0,
       "id": "evidence-tests",
-      "output_sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033"
+      "output_sha256": "edb4e2159c923ea45a32656078835cdf531c3d7b414c670dd786978875cb0678"
     },
     {
       "argv": [
@@ -132,6 +145,7 @@
     "checked_summary_source_separation": true,
     "complete_content_free_accounting": true,
     "context_item_kinds": 11,
+    "current_canary_surface_families": 8,
     "encrypted_atomic_checkpoint_publication": true,
     "ephemeral_checkpoint_persistence": false,
     "explicit_drift_decisions": 3,
@@ -156,20 +170,22 @@
     "SR-TST-005",
     "SR-TST-006"
   ],
-  "source_revision": "5fae34ea114e7df01178fc00d88af77a8bfb29c1",
+  "source_revision": "0a21066f69712fbd8a61d582a88b3c8f72e00bd4",
   "source_sha256": {
-    "docs/architecture/context-and-crash-safe-resume.md": "ea8d38f1e973ec7b06d4a82cb503bdf66a0d940f04fa3ee537dc9ac43e3af1bb",
-    "docs/verification/sprint-22-local-results.md": "d08fe59950102936ac958e744c4d225012d6e1f6e39cc12ffd8adf204917d6d9",
+    "docs/architecture/context-and-crash-safe-resume.md": "40b820e6a9bef2bcaa2d65999a87e1c748293753e0d703d5529947ef44349a3c",
+    "docs/verification/sprint-22-local-results.md": "5ca15e667363a31d76ad466f21e86b9998575dea4f71d8f007ab6bab01772adf",
     "kernel/contracts/src/context.rs": "3fdc7d7f3a0b7b9c0b23bc6c5056bd9720f2d4729839546bdae8015aaf859a97",
     "kernel/engine/migrations/operational-store/0004-session-checkpoints.sql": "2ba8afc6ed5aed817e4b88046e6f28fc1b0b3c7aec98b7479daea34cebb43089",
     "kernel/engine/src/authority_transaction.rs": "cf12332a555bf9a5849857aba6c7273226bb3056c012211299ca81cb436b92a2",
     "kernel/engine/src/context_management.rs": "bc6a562f4573364bc82a3972aae64d93e24b976303c52ce9227018717516c077",
     "kernel/engine/src/operational_store.rs": "a80de50a46f86df5bfdd5d937674972f7270203347629be10d8fca084b39cf11",
-    "scripts/sprint_22_evidence.py": "2c6758514040c693e8304fe6e4832c75e3abb1b6db8ee084b6dbbeb8ea9c61c9",
+    "scripts/sprint_22_evidence.py": "3eb1ea2069cc93a4d949a1e983bf826578ba526d5c2c6a204656fe66da0b1145",
+    "scripts/story_22_1_canary_evidence.py": "e1e00e88bb39cfddd1689b12ee5ce06540d08456228025444f5b668a1e8ea9e4",
     "scripts/story_22_1_long_resume_evidence.py": "ac1c692db0a338ab8441d91d15f04f7f21307b93830f2f7841ea8102d85b84e9",
     "scripts/story_22_1_native_resume_evidence.py": "02af4229ecf6430d1558fedf56c042daf4b1d939c9c7ef18793b267f189aa27a",
     "shells/host/src/linux_coding_runtime.rs": "1bef771b69b837e9fe1402a73a1aae50650ba8239834853011e6c986b821bf40",
-    "tests/test_sprint_22_evidence.py": "d9cfcabf7a816d182b67ae2e14325a8012784b8d6053282c205721d3d092d860",
+    "tests/test_sprint_22_evidence.py": "4d4f2542180988c86ec44cd8aacb6a474f8600a62a6c4997b0435337a80b0908",
+    "tests/test_story_22_1_canary_evidence.py": "0aec421735605077f38c148c71ab002a8cd3b535a47f8016f46b60c2dc3b7a6e",
     "tests/test_story_22_1_long_resume_evidence.py": "4224f0c7c9ae87183739484f9694044a4b00a3e516946a1a0dfeb79b5ce1d8ea",
     "tests/test_story_22_1_native_resume_evidence.py": "7c1611dd8876e0e7a9abbafa2a3c711bba5522d17d9d2952601e94d5ad5577f9"
   },
@@ -183,12 +199,12 @@
     "checked_summary_matrix": true,
     "checkpoint_schema_and_tamper_matrix": true,
     "context_composition_matrix": true,
+    "current_linux_source_surface_canary_sweep": true,
     "drift_decision_matrix": true,
     "ephemeral_no_persistence": true,
     "independent_review": false,
     "native_long_session_resume": true,
     "native_platform_crash_matrix": true,
-    "product_wide_canary_sweep": false,
     "production_context_integration": false,
     "subprocess_crash_campaign": true
   }
