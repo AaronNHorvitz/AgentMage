@@ -2910,6 +2910,7 @@ mod tests {
     const ARTIFACT_RESUME_METRIC_PREFIX: &str = "AGENTMAGE_ARTIFACT_RESUME=";
     const STORY_22_1_CRASH_ROOT_ENVIRONMENT: &str = "AGENTMAGE_STORY_22_1_CRASH_ROOT";
     const STORY_22_1_CRASH_CHILD_EXIT: i32 = 93;
+    const STORY_22_1_LONG_RESUME_METRIC_PREFIX: &str = "AGENTMAGE_STORY_22_1_LONG_RESUME=";
     const STORY_22_1_RESUME_METRIC_PREFIX: &str = "AGENTMAGE_STORY_22_1_RESUME=";
     const STORY_22_1_REPETITIONS_PER_BOUNDARY: usize = 25;
     const STORY_22_1_CRASH_BOUNDARIES: [&str; 4] = [
@@ -2921,21 +2922,33 @@ mod tests {
 
     struct TestIdentities {
         next: u64,
-        checkpoint_clock: Option<Arc<AtomicUsize>>,
+        checkpoint_stop: Option<(Arc<AtomicUsize>, usize)>,
     }
 
     impl TestIdentities {
         fn new(next: u64) -> Self {
             Self {
                 next,
-                checkpoint_clock: None,
+                checkpoint_stop: None,
             }
         }
 
         fn stop_after_checkpoint(next: u64, checkpoint_clock: Arc<AtomicUsize>) -> Self {
             Self {
                 next,
-                checkpoint_clock: Some(checkpoint_clock),
+                checkpoint_stop: Some((checkpoint_clock, 1)),
+            }
+        }
+
+        fn stop_after_checkpoint_count(
+            next: u64,
+            checkpoint_clock: Arc<AtomicUsize>,
+            checkpoint_count: usize,
+        ) -> Self {
+            assert!(checkpoint_count > 0);
+            Self {
+                next,
+                checkpoint_stop: Some((checkpoint_clock, checkpoint_count)),
             }
         }
     }
@@ -2944,9 +2957,12 @@ mod tests {
         fn next(&mut self, prefix: &str) -> Result<String, LinuxCodingRuntimeError> {
             self.next += 1;
             if prefix == "checkpoint"
-                && let Some(checkpoint_clock) = &self.checkpoint_clock
+                && let Some((checkpoint_clock, remaining)) = &mut self.checkpoint_stop
             {
-                checkpoint_clock.store(1, Ordering::SeqCst);
+                *remaining -= 1;
+                if *remaining == 0 {
+                    checkpoint_clock.store(1, Ordering::SeqCst);
+                }
             }
             Ok(format!("{prefix}-{:032x}", self.next))
         }
@@ -3262,6 +3278,20 @@ mod tests {
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
         fixture_with_git_and_checkpoint_clock(git_executor, None)
+    }
+
+    fn fixture_with_git_and_checkpoint_target<G>(
+        git_executor: G,
+        checkpoint_clock: Arc<AtomicUsize>,
+        checkpoint_count: usize,
+    ) -> Fixture<G>
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
+        let mut fixture = fixture_with_git_and_checkpoint_clock(git_executor, None);
+        fixture.boundary.identities =
+            TestIdentities::stop_after_checkpoint_count(0, checkpoint_clock, checkpoint_count);
+        fixture
     }
 
     fn fixture_with_git_and_checkpoint_clock<G>(
@@ -4567,6 +4597,277 @@ mod tests {
                 "manual_fuzzing_executed": false,
                 "repetitions_per_boundary": STORY_22_1_REPETITIONS_PER_BOUNDARY,
                 "total_worker_launches_per_case": 1
+            })
+        );
+    }
+
+    #[test]
+    fn story_22_1_long_native_session_blocks_drift_and_preserves_exact_history() {
+        const TOOL_TURNS: usize = 7;
+        let checkpoint_clock = Arc::new(AtomicUsize::new(CHECKPOINT_CLOCK_UNARMED));
+        let shared_launches = Arc::new(AtomicUsize::new(0));
+        let mut fixture = fixture_with_git_and_checkpoint_target(
+            FakeGitExecutor::clean_with_counter(Arc::clone(&shared_launches)),
+            Arc::clone(&checkpoint_clock),
+            TOOL_TURNS,
+        );
+        configure_git_status(&mut fixture);
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Observation];
+        fixture.request =
+            seal_runtime_run_request(fixture.request.clone()).expect("long-session requirement");
+        let profile = fixture.profile_for_test();
+        let workspace = fixture.boundary.workspace;
+        let state_root = fixture.root.join("state");
+        let base_candidate = scripted_call(&fixture.call);
+        let completion = coding_completion_payload(&CodingCompletionCandidate {
+            schema_version: 1,
+            objective_sha256: sha256(fixture.request.task.objective.as_bytes()),
+            terminal_claim: CodingTerminalClaim::NoOp,
+            summary: "Resumed the complete long-session history without replay.".to_owned(),
+            checks_not_run: vec!["No mutation-dependent validation was needed.".to_owned()],
+            residual_risks: Vec::new(),
+        })
+        .expect("long-session completion payload");
+        let mut steps = (0..TOOL_TURNS)
+            .map(|index| {
+                let mut candidate = base_candidate.clone();
+                candidate.tool_call_id =
+                    ToolCallId::from_raw(format!("call-git-long-session-{index:02}"));
+                let arguments = serde_json::to_vec(&GitInspectionRequest {
+                    schema_version: 1,
+                    operation: GitInspectionOperation::Status,
+                    revision: None,
+                    object_id: None,
+                    pathspecs: Vec::new(),
+                    max_records: 32 + index as u32,
+                    max_output_bytes: 4_096,
+                })
+                .expect("long-session Git request");
+                candidate.arguments.sha256 = sha256(&arguments);
+                candidate.arguments.bytes = arguments;
+                ScriptedCodingStep::Tool(candidate)
+            })
+            .collect::<VecDeque<_>>();
+        steps.push_back(ScriptedCodingStep::Complete(completion.clone()));
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps,
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("long-session context");
+        let Fixture {
+            root: _root,
+            request,
+            boundary,
+            ..
+        } = fixture;
+        let base_request = request.clone();
+        let mut coordinator = compose_durable_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            StopAfterCheckpointClock {
+                now_epoch_ms: 95_000,
+                checkpoint_clock: Arc::clone(&checkpoint_clock),
+            },
+        )
+        .expect("long-session coordinator");
+        let mut next_response = None;
+        loop {
+            match coordinator.run_until_boundary(next_response.as_ref(), None) {
+                Ok(RuntimeCoordinatorStep::AwaitingApproval { challenge }) => {
+                    next_response = Some(response(&challenge, RuntimeApprovalDisposition::Allow));
+                }
+                Err(RuntimeLoopError::Dependency(RuntimePortFailure::Unavailable)) => break,
+                Ok(RuntimeCoordinatorStep::Complete { outcome }) => {
+                    panic!(
+                        "long session must stop at the selected checkpoint: state={:?}, clock={}, events={}",
+                        outcome.state,
+                        checkpoint_clock.load(Ordering::SeqCst),
+                        coordinator.events().len()
+                    )
+                }
+                Err(error) => panic!("unexpected long-session boundary: {error:?}"),
+            }
+        }
+        assert_eq!(checkpoint_clock.load(Ordering::SeqCst), 0);
+        assert_eq!(shared_launches.load(Ordering::SeqCst), TOOL_TURNS);
+        assert_eq!(
+            coordinator
+                .events()
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+                .count(),
+            TOOL_TURNS
+        );
+        assert_eq!(
+            coordinator
+                .events()
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::CheckpointCommitted { .. }))
+                .count(),
+            TOOL_TURNS
+        );
+        let checkpoint_event = coordinator.events().last().expect("final checkpoint event");
+        let requested_cursor = RuntimeEventCursor {
+            run_id: checkpoint_event.run_id.clone(),
+            event_id: checkpoint_event.event_id.clone(),
+            sequence: checkpoint_event.sequence,
+            event_sha256: checkpoint_event.event_sha256.clone(),
+        };
+        let pre_restart_artifacts = coordinator.artifact_references().to_vec();
+        let mut expected_binding_artifacts = pre_restart_artifacts.clone();
+        expected_binding_artifacts
+            .sort_by(|left, right| left.artifact_id.as_str().cmp(right.artifact_id.as_str()));
+        drop(coordinator);
+
+        let actor_id = ActorId::from_raw("actor-coding-runtime");
+        let task_id = base_request.task.task_id.clone();
+        let run_id = base_request.run_id.clone();
+        let policy = build_coding_runtime_policy(CodingRuntimePolicyRequest {
+            actor_id: &actor_id,
+            task_id: &task_id,
+            run_id: &run_id,
+            workspace: workspace.workspace(),
+            profile,
+            excluded_scopes: Vec::new(),
+        })
+        .expect("long-session policy rebuilds exactly");
+        let mut key = TestKey([51; 32]);
+        let authority =
+            open_test_linux_authority(&state_root, &mut key, 96_000).expect("authority reopens");
+        let mut resumed_boundary =
+            LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
+                workspace,
+                authority,
+                sandbox: sandbox(),
+                command_executor: FakeCommandExecutor::default(),
+                git_executor: FakeGitExecutor::clean_with_counter(Arc::clone(&shared_launches)),
+                policy,
+                actor_id,
+                session_id: base_request.session_id.clone(),
+                sensitivity: DataSensitivity::Operational,
+                identities: TestIdentities::new(30_000),
+            })
+            .expect("long-session resumed boundary");
+        let mut resumed_request = base_request.clone();
+        resumed_request.event_cursor = Some(requested_cursor.clone());
+        resumed_request =
+            seal_runtime_run_request(resumed_request).expect("long-session request reseals");
+
+        let mut drift_cases = Vec::new();
+        let mut repository = resumed_request.clone();
+        repository.repository_snapshot_sha256 = "f".repeat(64);
+        drift_cases.push(("repository", repository));
+        let mut policy = resumed_request.clone();
+        policy.policy_sha256 = "f".repeat(64);
+        drift_cases.push(("policy", policy));
+        let mut model_profile = resumed_request.clone();
+        model_profile.model_profile.profile_id =
+            agentmage_kernel_contracts::ModelProfileId::from_raw("profile-drifted");
+        drift_cases.push(("model-profile", model_profile));
+        let mut model_manifest = resumed_request.clone();
+        model_manifest.model_profile.manifest_sha256 = "f".repeat(64);
+        drift_cases.push(("model-manifest", model_manifest));
+        let mut model_runtime = resumed_request.clone();
+        model_runtime.model_profile.runtime.runtime_sha256 = "f".repeat(64);
+        drift_cases.push(("model-runtime", model_runtime));
+        let mut workspace_state = resumed_request.clone();
+        workspace_state.workspace_snapshot_sha256 = "f".repeat(64);
+        drift_cases.push(("workspace", workspace_state));
+        let mut configuration = resumed_request.clone();
+        configuration.tool_catalog_sha256 = "f".repeat(64);
+        drift_cases.push(("configuration", configuration));
+        for (name, mut drifted) in drift_cases {
+            drifted.request_sha256 = "0".repeat(64);
+            match seal_runtime_run_request(drifted) {
+                Ok(drifted) => assert!(
+                    matches!(
+                        RuntimeCheckpointPort::load_runtime_checkpoint(
+                            &mut resumed_boundary,
+                            &drifted,
+                        ),
+                        Err(RuntimePortFailure::Invalid)
+                    ),
+                    "{name} drift must block before another action"
+                ),
+                Err(_) => assert_eq!(
+                    name, "configuration",
+                    "only inconsistent configuration must fail while sealing"
+                ),
+            }
+        }
+        let snapshot =
+            RuntimeCheckpointPort::load_runtime_checkpoint(&mut resumed_boundary, &resumed_request)
+                .expect("exact long-session snapshot loads")
+                .expect("exact long-session snapshot exists");
+        assert_eq!(snapshot.binding.artifacts, expected_binding_artifacts);
+        assert_eq!(
+            snapshot.binding.event_cursor.run_id,
+            requested_cursor.run_id
+        );
+        assert_eq!(
+            snapshot.binding.event_cursor.sequence + 1,
+            requested_cursor.sequence
+        );
+
+        let resumed_model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [ScriptedCodingStep::Complete(completion)]
+                .into_iter()
+                .collect(),
+            calls: 0,
+        };
+        let resumed_context =
+            CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+                .expect("long-session resumed context");
+        let mut resumed = compose_durable_coding_coordinator(
+            profile,
+            resumed_request,
+            resumed_model,
+            resumed_context,
+            resumed_boundary,
+            FixtureClock(97_000),
+        )
+        .expect("long-session coordinator restores");
+        let RuntimeCoordinatorStep::Complete { outcome } = resumed
+            .run_until_boundary(None, None)
+            .expect("long-session resume completes")
+        else {
+            panic!("long-session completion cannot request approval");
+        };
+        assert_eq!(outcome.state, AgentStateKind::NoOp);
+        assert_eq!(outcome.tool_call_count, TOOL_TURNS as u32);
+        assert_eq!(outcome.receipt_ids.len(), TOOL_TURNS);
+        assert_eq!(shared_launches.load(Ordering::SeqCst), TOOL_TURNS);
+        assert_eq!(resumed.artifact_references(), expected_binding_artifacts);
+        assert_eq!(
+            base_request.task.objective,
+            "Inspect the exact current source"
+        );
+        println!(
+            "{STORY_22_1_LONG_RESUME_METRIC_PREFIX}{}",
+            serde_json::json!({
+                "blocked_drift_classes": [
+                    "configuration",
+                    "model-manifest",
+                    "model-profile",
+                    "model-runtime",
+                    "policy",
+                    "repository",
+                    "workspace"
+                ],
+                "checkpoint_count": TOOL_TURNS,
+                "exact_artifact_set_restored": true,
+                "external_network_used": false,
+                "intent_preserved": true,
+                "manual_fuzzing_executed": false,
+                "post_resume_total_worker_launches": TOOL_TURNS,
+                "receipt_count": TOOL_TURNS,
+                "tool_turn_count": TOOL_TURNS
             })
         );
     }
