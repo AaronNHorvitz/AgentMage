@@ -63,6 +63,7 @@ fn source(path: Vec<String>, content: &str) -> RepositoryFileInput {
         size_bytes: content.len() as u64,
         content_sha256: hash(content.as_bytes()),
         content: Some(content.as_bytes().to_vec()),
+        object_kind: agentmage_capability_repository_map::RepositoryObjectKind::RegularFile,
         git_state: GitTrackedState::TrackedClean,
         policy_excluded: false,
         generated: false,

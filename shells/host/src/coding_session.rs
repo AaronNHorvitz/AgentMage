@@ -840,6 +840,7 @@ pub(crate) mod tests {
                 size_bytes: content.len() as u64,
                 content_sha256: sha256_hex(content),
                 content: Some(content.to_vec()),
+                object_kind: agentmage_capability_repository_map::RepositoryObjectKind::RegularFile,
                 git_state: GitTrackedState::TrackedClean,
                 policy_excluded: false,
                 generated: false,

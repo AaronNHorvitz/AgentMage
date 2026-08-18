@@ -25,7 +25,7 @@ flowchart LR
     R --> X[Disposable exact-key cache]
 ```
 
-Excluded, generated, vendored, and Git-ignored paths must arrive without content. A supported path whose bytes were not authorized is `content_not_read`; it is never mislabeled as an unsupported language. Unsupported, binary, oversized, failed, syntax-error, and truncated states remain visible rather than disappearing from coverage.
+Excluded, generated, vendored, and Git-ignored paths must arrive without content. A supported path whose bytes were not authorized is `content_not_read`; it is never mislabeled as an unsupported language. Regular files, symbolic links, and Gitlinks have distinct closed object kinds. Symbolic links and Gitlinks remain visible `Unknown/Blocked` inventory facts, but are never followed, entered, parsed, or lexically searched. Unsupported, binary, oversized, failed, syntax-error, and truncated states remain visible rather than disappearing from coverage.
 
 ## Pinned Grammar Set
 
@@ -82,7 +82,7 @@ This cache is intentionally disposable. It is not canonical operational state an
 
 ## Verification Truth
 
-Local tests prove deterministic ordering, exact grammar identity, parser extraction across all six language or dialect entries, reliable import relationships, exclusion without content, complete coverage outcomes, unsupported and unread visibility, malformed and hostile encoding behavior, size and item ceilings, duplicate-path and duplicate-symbol handling, source-injection isolation, foreign-workspace rejection, exact source resolution, fixed priority tiers, conservative context truncation, golden map and context identities, forged-hash rejection, exact cache-key misses, selective invalidation, corruption rejection, and transactional capacity rollback.
+Local tests prove deterministic ordering, exact grammar identity, parser extraction across all six language or dialect entries, reliable import relationships, exclusion without content, non-following symlink and Gitlink visibility, complete coverage outcomes, unsupported and unread visibility, malformed and hostile encoding behavior, size and item ceilings, duplicate-path and duplicate-symbol handling, source-injection isolation, foreign-workspace rejection, exact source resolution, fixed priority tiers, conservative context truncation, golden map and context identities, forged-hash rejection, exact cache-key misses, selective invalidation, corruption rejection, and transactional capacity rollback.
 
 A test-only disposable Git repository verifies one real ignore rule and recursive-link exclusion, then snapshots every path, byte, mode, symlink target, Git index, ref, and object before and after two complete maps. The snapshots and maps are identical. The fixture's setup effects live only in the terminal Rust test module and are absent from product-effect surfaces.
 

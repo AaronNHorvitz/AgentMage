@@ -61,7 +61,8 @@ pub use grammar::{
 pub use inventory::{
     GitTrackedState, RepositoryCoverage, RepositoryEntryDisposition, RepositoryFileInput,
     RepositoryFileRecord, RepositoryMap, RepositoryMapError, RepositoryMapInput,
-    build_repository_map, verify_repository_file_record, verify_repository_map,
+    RepositoryObjectKind, build_repository_map, verify_repository_file_record,
+    verify_repository_map,
 };
 pub use language_service::{
     LanguageServiceCapability, LanguageServiceDescriptor, LanguageServiceError,

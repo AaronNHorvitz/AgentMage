@@ -265,6 +265,7 @@ mod tests {
             size_bytes: value.len() as u64,
             content_sha256: sha256_bytes(value),
             content: Some(value.to_vec()),
+            object_kind: agentmage_capability_repository_map::RepositoryObjectKind::RegularFile,
             git_state: GitTrackedState::TrackedClean,
             policy_excluded: false,
             generated: false,

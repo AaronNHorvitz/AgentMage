@@ -51,6 +51,10 @@ pub enum RepositoryLimitationCode {
     BinaryInventoryOnly,
     /// Source exceeded the fixed parser byte ceiling.
     ParseLimitExceeded,
+    /// A symbolic link is visible but never followed or parsed.
+    SymbolicLinkInventoryOnly,
+    /// A Gitlink is visible but its submodule is never entered or parsed.
+    GitlinkInventoryOnly,
     /// The pinned parser returned no syntax tree.
     ParseFailed,
     /// The pinned parser returned a tree with syntax errors.
@@ -552,6 +556,12 @@ fn limitation_for(disposition: RepositoryEntryDisposition) -> Option<RepositoryL
         RepositoryEntryDisposition::ParseLimitExceeded => {
             RepositoryLimitationCode::ParseLimitExceeded
         }
+        RepositoryEntryDisposition::SymbolicLinkInventoryOnly => {
+            RepositoryLimitationCode::SymbolicLinkInventoryOnly
+        }
+        RepositoryEntryDisposition::GitlinkInventoryOnly => {
+            RepositoryLimitationCode::GitlinkInventoryOnly
+        }
         RepositoryEntryDisposition::ParseFailed => RepositoryLimitationCode::ParseFailed,
         RepositoryEntryDisposition::ParsedWithErrors => RepositoryLimitationCode::ParsedWithErrors,
         RepositoryEntryDisposition::Truncated => RepositoryLimitationCode::Truncated,
@@ -714,6 +724,7 @@ mod tests {
             size_bytes: content.len() as u64,
             content_sha256: sha256_hex(content),
             content: Some(content.to_vec()),
+            object_kind: crate::RepositoryObjectKind::RegularFile,
             git_state: GitTrackedState::TrackedClean,
             policy_excluded: false,
             generated: false,
@@ -797,7 +808,7 @@ mod tests {
         assert_eq!(first, second);
         assert_eq!(
             first.result_sha256,
-            "e96786f4873c335ae350a98fa6b5d31aaf39d4e4015ed5b5a0f41adbe9cdb0ef"
+            "a0106157e4914cdeb41867ea2819c8f0aee15bd9f4b2b45504adccb0df21b3a5"
         );
         assert_eq!(
             first.entries[0].priority,

@@ -12,8 +12,8 @@ mod tests {
     use sha2::{Digest, Sha256};
 
     use crate::{
-        GitTrackedState, RepositoryFileInput, RepositoryMapInput, build_repository_map,
-        verify_repository_map,
+        GitTrackedState, RepositoryFileInput, RepositoryMapInput, RepositoryObjectKind,
+        build_repository_map, verify_repository_map,
     };
 
     struct Fixture(PathBuf);
@@ -110,11 +110,20 @@ mod tests {
         let content =
             (!policy_excluded && !generated && !vendored && git_state != GitTrackedState::Ignored)
                 .then(|| fs::read(&path).expect("authorized fixture bytes"));
-        let hash_material = content.as_deref().unwrap_or_else(|| {
+        let object_kind = if metadata.file_type().is_symlink() {
+            RepositoryObjectKind::SymbolicLink
+        } else {
+            RepositoryObjectKind::RegularFile
+        };
+        let identity_bytes = content.clone().unwrap_or_else(|| {
             if metadata.file_type().is_symlink() {
-                b"excluded-symlink"
+                fs::read_link(&path)
+                    .expect("link target")
+                    .as_os_str()
+                    .as_encoded_bytes()
+                    .to_vec()
             } else {
-                b"excluded-content"
+                fs::read(&path).expect("excluded file hashes without retaining bytes")
             }
         });
         RepositoryFileInput {
@@ -122,8 +131,9 @@ mod tests {
             size_bytes: content
                 .as_ref()
                 .map_or(metadata.len(), |bytes| bytes.len() as u64),
-            content_sha256: sha256(hash_material),
+            content_sha256: sha256(&identity_bytes),
             content,
+            object_kind,
             git_state,
             policy_excluded,
             generated,

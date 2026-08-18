@@ -32,6 +32,18 @@ pub enum GitTrackedState {
     Ignored,
 }
 
+/// Closed filesystem or Git object kind represented by one inventory entry.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RepositoryObjectKind {
+    /// A regular file whose bytes may be admitted through a separate bounded read.
+    RegularFile,
+    /// A symbolic link retained as inventory evidence without following its target.
+    SymbolicLink,
+    /// A Gitlink retained as inventory evidence without entering the submodule.
+    Gitlink,
+}
+
 /// Visible terminal disposition for one discovered repository path.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -50,6 +62,10 @@ pub enum RepositoryEntryDisposition {
     BinaryInventoryOnly,
     /// File exceeds the parser limit but remains in inventory.
     ParseLimitExceeded,
+    /// A symbolic link remains visible but is never followed or parsed.
+    SymbolicLinkInventoryOnly,
+    /// A Gitlink remains visible but its submodule is never entered or parsed.
+    GitlinkInventoryOnly,
     /// Git ignored the path, so content was not admitted.
     GitIgnored,
     /// Product policy excluded the path, so content was not admitted.
@@ -111,6 +127,8 @@ pub struct RepositoryFileInput {
     pub content_sha256: String,
     /// Optional bytes supplied only after bounded read authorization.
     pub content: Option<Vec<u8>>,
+    /// Exact closed object kind observed without following links or Gitlinks.
+    pub object_kind: RepositoryObjectKind,
     /// Exact Git tracking state.
     pub git_state: GitTrackedState,
     /// Product policy excluded this path.
@@ -158,6 +176,8 @@ pub struct RepositoryFileRecord {
     pub content_sha256: String,
     /// Whether authorized bytes were supplied to this pure capability.
     pub content_read: bool,
+    /// Exact closed object kind retained by this inventory record.
+    pub object_kind: RepositoryObjectKind,
     /// Stable repository identity digest, never a remote URL.
     pub repository_sha256: String,
     /// Exact held worktree identity digest.
@@ -279,6 +299,7 @@ pub fn build_repository_map(
                 content.len() as u64 != file.size_bytes
                     || sha256_hex(content) != file.content_sha256
             })
+            || (file.object_kind != RepositoryObjectKind::RegularFile && file.content.is_some())
             || (file.policy_excluded
                 || file.generated
                 || file.vendored
@@ -363,6 +384,37 @@ pub fn verify_repository_file_record(record: &RepositoryFileRecord) -> bool {
                 && structure.content_sha256 == record.content_sha256
         })
         && matches!(
+            (record.object_kind, record.disposition),
+            (
+                RepositoryObjectKind::RegularFile,
+                RepositoryEntryDisposition::Parsed
+                    | RepositoryEntryDisposition::ParsedWithErrors
+                    | RepositoryEntryDisposition::Truncated
+                    | RepositoryEntryDisposition::ContentNotRead
+                    | RepositoryEntryDisposition::UnsupportedLanguage
+                    | RepositoryEntryDisposition::BinaryInventoryOnly
+                    | RepositoryEntryDisposition::ParseLimitExceeded
+                    | RepositoryEntryDisposition::GitIgnored
+                    | RepositoryEntryDisposition::PolicyExcluded
+                    | RepositoryEntryDisposition::GeneratedExcluded
+                    | RepositoryEntryDisposition::VendoredExcluded
+                    | RepositoryEntryDisposition::ParseFailed
+            ) | (
+                RepositoryObjectKind::SymbolicLink,
+                RepositoryEntryDisposition::SymbolicLinkInventoryOnly
+                    | RepositoryEntryDisposition::GitIgnored
+                    | RepositoryEntryDisposition::PolicyExcluded
+                    | RepositoryEntryDisposition::GeneratedExcluded
+                    | RepositoryEntryDisposition::VendoredExcluded
+            ) | (
+                RepositoryObjectKind::Gitlink,
+                RepositoryEntryDisposition::GitlinkInventoryOnly
+                    | RepositoryEntryDisposition::PolicyExcluded
+                    | RepositoryEntryDisposition::GeneratedExcluded
+                    | RepositoryEntryDisposition::VendoredExcluded
+            )
+        )
+        && matches!(
             (
                 record.disposition,
                 record.structure.is_some(),
@@ -379,6 +431,16 @@ pub fn verify_repository_file_record(record: &RepositoryFileRecord) -> bool {
                 )
                 | (RepositoryEntryDisposition::BinaryInventoryOnly, false, true)
                 | (RepositoryEntryDisposition::ParseLimitExceeded, false, true)
+                | (
+                    RepositoryEntryDisposition::SymbolicLinkInventoryOnly,
+                    false,
+                    false
+                )
+                | (
+                    RepositoryEntryDisposition::GitlinkInventoryOnly,
+                    false,
+                    false
+                )
                 | (RepositoryEntryDisposition::GitIgnored, false, false)
                 | (RepositoryEntryDisposition::PolicyExcluded, false, false)
                 | (RepositoryEntryDisposition::GeneratedExcluded, false, false)
@@ -468,6 +530,10 @@ fn build_file_record(
         (RepositoryEntryDisposition::VendoredExcluded, None)
     } else if file.git_state == GitTrackedState::Ignored {
         (RepositoryEntryDisposition::GitIgnored, None)
+    } else if file.object_kind == RepositoryObjectKind::SymbolicLink {
+        (RepositoryEntryDisposition::SymbolicLinkInventoryOnly, None)
+    } else if file.object_kind == RepositoryObjectKind::Gitlink {
+        (RepositoryEntryDisposition::GitlinkInventoryOnly, None)
     } else {
         match (file.content.as_deref(), language) {
             (Some(_), Some(_)) if file.size_bytes > MAX_PARSE_BYTES => {
@@ -507,6 +573,7 @@ fn build_file_record(
         size_bytes: file.size_bytes,
         content_sha256: file.content_sha256,
         content_read,
+        object_kind: file.object_kind,
         repository_sha256,
         worktree_sha256,
         policy_sha256,
@@ -528,6 +595,7 @@ fn file_digest(record: &RepositoryFileRecord) -> String {
         record.size_bytes,
         &record.content_sha256,
         record.content_read,
+        record.object_kind,
         &record.repository_sha256,
         &record.worktree_sha256,
         &record.policy_sha256,
@@ -573,6 +641,8 @@ fn coverage_for_records(records: &[RepositoryFileRecord]) -> RepositoryCoverage 
                 RepositoryEntryDisposition::ContentNotRead
                     | RepositoryEntryDisposition::BinaryInventoryOnly
                     | RepositoryEntryDisposition::ParseLimitExceeded
+                    | RepositoryEntryDisposition::SymbolicLinkInventoryOnly
+                    | RepositoryEntryDisposition::GitlinkInventoryOnly
             )
         }),
         excluded_files: count(|record| {
@@ -641,7 +711,7 @@ mod tests {
 
     use super::{
         GitTrackedState, RepositoryEntryDisposition, RepositoryFileInput, RepositoryMapInput,
-        build_repository_map, sha256_hex, verify_repository_map,
+        RepositoryObjectKind, build_repository_map, sha256_hex, verify_repository_map,
     };
 
     fn file(path: &[&str], content: Option<&[u8]>) -> RepositoryFileInput {
@@ -651,6 +721,7 @@ mod tests {
             size_bytes: bytes.len() as u64,
             content_sha256: sha256_hex(bytes),
             content: content.map(<[u8]>::to_vec),
+            object_kind: RepositoryObjectKind::RegularFile,
             git_state: GitTrackedState::TrackedClean,
             policy_excluded: false,
             generated: false,
@@ -742,6 +813,38 @@ mod tests {
     }
 
     #[test]
+    fn symbolic_links_and_gitlinks_remain_visible_without_read_or_parse_authority() {
+        let mut symbolic_link = file(&["linked-source"], None);
+        symbolic_link.object_kind = RepositoryObjectKind::SymbolicLink;
+        symbolic_link.size_bytes = b"../outside.rs".len() as u64;
+        symbolic_link.content_sha256 = sha256_hex(b"../outside.rs");
+        let mut gitlink = file(&["vendor", "dependency"], None);
+        gitlink.object_kind = RepositoryObjectKind::Gitlink;
+        gitlink.size_bytes = 0;
+        gitlink.content_sha256 = sha256_hex(b"0123456789012345678901234567890123456789");
+
+        let map = build_repository_map(input(vec![symbolic_link.clone(), gitlink]))
+            .expect("non-regular inventory map");
+        assert!(verify_repository_map(&map));
+        assert_eq!(map.coverage.discovered_files, 2);
+        assert_eq!(map.coverage.read_files, 0);
+        assert_eq!(map.coverage.parsed_files, 0);
+        assert_eq!(map.coverage.skipped_files, 2);
+        assert_eq!(map.coverage.uncertain_files, 2);
+        assert_eq!(
+            map.files[0].disposition,
+            RepositoryEntryDisposition::SymbolicLinkInventoryOnly
+        );
+        assert_eq!(
+            map.files[1].disposition,
+            RepositoryEntryDisposition::GitlinkInventoryOnly
+        );
+
+        symbolic_link.content = Some(b"../outside.rs".to_vec());
+        assert!(build_repository_map(input(vec![symbolic_link])).is_err());
+    }
+
+    #[test]
     fn coverage_ledger_exposes_every_base_map_outcome_and_fixed_budget() {
         let empty = build_repository_map(input(Vec::new())).expect("empty map");
         assert_eq!(empty.coverage.discovered_files, 0);
@@ -784,7 +887,7 @@ mod tests {
         assert!(verify_repository_map(&first));
         assert_eq!(
             first.map_sha256,
-            "296fd3fb3768778f17af5bd6d00879cd922c5c74cbc9a467cc0c290db7bc8106"
+            "28da29cbece5761e756c592d36eb24647d5cbb283b43a897019a9b5ff887025c"
         );
         assert_eq!(first.coverage.discovered_files, 12);
         assert_eq!(first.coverage.read_files, 7);

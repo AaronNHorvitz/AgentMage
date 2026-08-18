@@ -56,6 +56,7 @@ fn corpus_map(corpus: &Corpus) -> RepositoryMap {
                 size_bytes: case.source.len() as u64,
                 content_sha256: hash(case.source.as_bytes()),
                 content: Some(case.source.as_bytes().to_vec()),
+                object_kind: agentmage_capability_repository_map::RepositoryObjectKind::RegularFile,
                 git_state: GitTrackedState::TrackedClean,
                 policy_excluded: false,
                 generated: false,

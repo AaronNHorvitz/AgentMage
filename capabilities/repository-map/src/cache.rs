@@ -378,6 +378,7 @@ mod tests {
                 size_bytes: content.len() as u64,
                 content_sha256: super::sha256_hex(&content),
                 content: Some(content),
+                object_kind: crate::RepositoryObjectKind::RegularFile,
                 git_state: GitTrackedState::TrackedClean,
                 policy_excluded: false,
                 generated: false,
