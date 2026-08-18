@@ -25,6 +25,7 @@ TASK_PATTERN = re.compile(
 )
 
 EVIDENCE_PATHS = (
+    "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json",
     "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
     "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.log",
     "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json",
@@ -33,7 +34,10 @@ EVIDENCE_PATHS = (
     "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log",
     "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json",
     "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.log",
+    "artifacts/sprints/sprint-22/story-22.2/security-evidence-map.json",
+    "artifacts/sprints/sprint-22/story-22.2/security-evidence.log",
     "docs/architecture/runtime-artifact-lifecycle.md",
+    "docs/verification/task-22-2-3-6-product-security-evidence.md",
     "kernel/contracts/src/runtime_artifact.rs",
     "kernel/engine/src/operational_store.rs",
     "kernel/engine/src/runtime_artifact.rs",
@@ -54,6 +58,8 @@ EVIDENCE_PATHS = (
     "scripts/story_22_2_artifact_pressure_evidence.py",
     "scripts/story_22_2_artifact_resume_evidence.py",
     "scripts/story_22_2_evidence_index.py",
+    "scripts/runtime_artifact_boundary_review.py",
+    "scripts/story_22_2_security_evidence.py",
     "shells/host/src/coding_session.rs",
     "shells/host/src/linux_coding_runtime.rs",
     "tests/test_planning_schemas.mjs",
@@ -62,6 +68,8 @@ EVIDENCE_PATHS = (
     "tests/test_story_22_2_artifact_pressure_evidence.py",
     "tests/test_story_22_2_artifact_resume_evidence.py",
     "tests/test_story_22_2_evidence_index.py",
+    "tests/test_runtime_artifact_boundary_review.py",
+    "tests/test_story_22_2_security_evidence.py",
 )
 
 MAPPINGS: tuple[dict[str, Any], ...] = (
@@ -305,22 +313,23 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
     },
     {
         "task_id": "22.2.3.6",
-        "status": "open",
+        "status": "complete",
         "code": [
-            "scripts/story_22_2_artifact_crash_evidence.py",
-            "scripts/story_22_2_artifact_integrity_evidence.py",
-            "scripts/story_22_2_artifact_pressure_evidence.py",
-            "scripts/story_22_2_artifact_resume_evidence.py",
+            "scripts/runtime_artifact_boundary_review.py",
+            "scripts/story_22_2_security_evidence.py",
         ],
         "tests": [
-            "test_current_report_and_raw_trace_are_hash_bound",
-            "test_every_fixed_claim_and_resource_relationship_fails_closed",
+            "test_current_committed_boundary_passes_every_independent_check",
+            "test_retained_report_and_log_are_hash_bound",
         ],
         "evidence": [
+            "artifacts/sprints/sprint-22/story-22.2/artifact-boundary-review.json",
             "artifacts/sprints/sprint-22/story-22.2/native-artifact-crash-matrix.json",
             "artifacts/sprints/sprint-22/story-22.2/native-artifact-integrity.json",
             "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
             "artifacts/sprints/sprint-22/story-22.2/native-artifact-resume.json",
+            "artifacts/sprints/sprint-22/story-22.2/security-evidence-map.json",
+            "artifacts/sprints/sprint-22/story-22.2/security-evidence.log",
         ],
     },
 )
@@ -330,7 +339,7 @@ LIMITATIONS = (
     "Quarantined-payload operator recovery, long mixed-artifact sessions, and concurrent collection campaigns remain open.",
     "Larger unique-object and installed-interface pressure evidence remains open.",
     "Windows native artifact storage and supported-platform package evidence remains open.",
-    "Independent artifact-boundary and cryptographic review remains open.",
+    "Independent automated artifact-boundary review passes; independent human and cryptographic review remains open.",
     "Manual fuzzing remains deliberately deferred and open.",
 )
 

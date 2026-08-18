@@ -383,12 +383,20 @@ Current automated coverage includes:
   drift, unresolved tests, unsafe paths, changed artifacts, and false
   completion. The index retains complete, partial, and open states and does not
   claim story, sprint, or release completion.
+- One independent automated artifact-boundary review rederives fourteen closed
+  schema, owner/policy, transaction, descriptor, encryption-integrity,
+  memory/network closure, namespace-separation, retained-campaign, index, and
+  limitation checks from committed source. The separate product-security map
+  binds all 25 applicable data, access, operations, test, crash-recovery, and
+  audit controls to exact source and retained evidence. Neither record claims
+  independent human or cryptographic review.
 - Fedora journal and artifact pressure measurements retained by Story 50.2.
 
 Still open before Story 22.2 can pass:
 
-- Independent review of the encrypted-file construction and root/file-key
-  lifecycle, plus deferred manual fuzzing of its parser and state transitions.
+- Independent human and cryptographic review of the encrypted-file construction
+  and root/file-key lifecycle, plus deferred manual fuzzing of its parser and
+  state transitions.
 - Stops inside an individual filesystem or SQLite syscall, physical power loss,
   torn-sector/controller failure, and filesystem corruption. The current
   native matrix stops immediately before and after each declared transaction
