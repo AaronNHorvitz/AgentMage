@@ -54,7 +54,7 @@ pub struct LinuxAtomicWriteDriver<'workspace> {
     workspace: &'workspace LinuxAuthorizedWorkspace,
     limits: LinuxAtomicWriteDriverLimits,
     #[cfg(test)]
-    race_hook: Option<Box<dyn FnMut(WriteRaceBoundary)>>,
+    race_hook: Option<Box<dyn FnMut(WriteLifecycleEvent)>>,
 }
 
 impl std::fmt::Debug for LinuxAtomicWriteDriver<'_> {
@@ -176,19 +176,21 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
             return ReplaceOutcome::NoChange;
         }
         #[cfg(test)]
-        self.run_race_hook(WriteRaceBoundary::AfterInitialObservation);
+        self.run_race_hook(purpose, WriteRaceBoundary::AfterInitialObservation);
 
         let (directory, target_name) = match open_parent(self.workspace, path.components()) {
             Ok(value) => value,
             Err(_) => return ReplaceOutcome::NoChange,
         };
         #[cfg(test)]
-        self.run_race_hook(WriteRaceBoundary::AfterParentOpened);
+        self.run_race_hook(purpose, WriteRaceBoundary::AfterParentOpened);
         let original_snapshot = match snapshot(&held.object_descriptor, None) {
             Ok(value) => value,
             Err(_) => return ReplaceOutcome::NoChange,
         };
         let temporary = temporary_name(transaction_id, index, purpose, replacement);
+        #[cfg(test)]
+        self.run_race_hook(purpose, WriteRaceBoundary::BeforeStaging);
         let staged = match stage_file(
             &directory,
             &temporary,
@@ -198,9 +200,17 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
             Ok(value) => value,
             Err(_) => return ReplaceOutcome::NoChange,
         };
+        let staged_snapshot = match snapshot(&staged, None) {
+            Ok(value) => value,
+            Err(_) => {
+                drop(staged);
+                let _ = remove_staged(&directory, &temporary);
+                return ReplaceOutcome::NoChange;
+            }
+        };
         drop(staged);
         #[cfg(test)]
-        self.run_race_hook(WriteRaceBoundary::AfterStaging);
+        self.run_race_hook(purpose, WriteRaceBoundary::AfterStaging);
 
         let fresh = adapter.resolve(
             self.workspace,
@@ -215,7 +225,19 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
             return ReplaceOutcome::NoChange;
         }
         #[cfg(test)]
-        self.run_race_hook(WriteRaceBoundary::BeforeExchange);
+        self.run_race_hook(purpose, WriteRaceBoundary::BeforeExchange);
+        if !parent_is_current(self.workspace, path.components(), &directory)
+            || !held_file_matches(
+                &directory,
+                &target_name,
+                &original_snapshot,
+                expected,
+                self.limits.maximum_file_bytes,
+            )
+        {
+            let _ = remove_staged(&directory, &temporary);
+            return ReplaceOutcome::NoChange;
+        }
 
         if renameat_with(
             &directory,
@@ -230,7 +252,19 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
             return ReplaceOutcome::NoChange;
         }
         #[cfg(test)]
-        self.run_race_hook(WriteRaceBoundary::AfterExchange);
+        self.run_race_hook(purpose, WriteRaceBoundary::AfterExchange);
+        if !parent_is_current(self.workspace, path.components(), &directory) {
+            return rollback_exchange(&directory, &temporary, &target_name);
+        }
+        if !held_file_matches(
+            &directory,
+            &target_name,
+            &staged_snapshot,
+            replacement,
+            self.limits.maximum_file_bytes,
+        ) {
+            return ReplaceOutcome::Uncertain;
+        }
 
         let displaced_matches = open_regular(&directory, &temporary).is_ok_and(|displaced| {
             snapshot(&displaced, None)
@@ -245,25 +279,107 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
                 ReplaceOutcome::Uncertain
             };
         }
-        if fsync(&directory).is_err()
-            || unlinkat(&directory, temporary.as_str(), AtFlags::empty()).is_err()
-            || fsync(&directory).is_err()
-        {
+        #[cfg(test)]
+        self.run_race_hook(purpose, WriteRaceBoundary::AfterDisplacedVerification);
+        if !parent_is_current(self.workspace, path.components(), &directory) {
+            return rollback_exchange(&directory, &temporary, &target_name);
+        }
+        if !held_file_matches(
+            &directory,
+            &target_name,
+            &staged_snapshot,
+            replacement,
+            self.limits.maximum_file_bytes,
+        ) {
+            return ReplaceOutcome::Uncertain;
+        }
+        if fsync(&directory).is_err() {
+            return ReplaceOutcome::Uncertain;
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, WriteRaceBoundary::AfterExchangeDurable);
+        if !parent_is_current(self.workspace, path.components(), &directory) {
+            return rollback_exchange(&directory, &temporary, &target_name);
+        }
+        if !held_file_matches(
+            &directory,
+            &target_name,
+            &staged_snapshot,
+            replacement,
+            self.limits.maximum_file_bytes,
+        ) {
+            return ReplaceOutcome::Uncertain;
+        }
+        if unlinkat(&directory, temporary.as_str(), AtFlags::empty()).is_err() {
+            return ReplaceOutcome::Uncertain;
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, WriteRaceBoundary::AfterStagedRemoval);
+        if !parent_is_current(self.workspace, path.components(), &directory) {
+            return restore_removed_preimage(
+                &directory,
+                transaction_id,
+                index,
+                &target_name,
+                &staged_snapshot,
+                replacement,
+                expected,
+                original_snapshot.mode & 0o7777,
+                self.limits.maximum_file_bytes,
+            );
+        }
+        if !held_file_matches(
+            &directory,
+            &target_name,
+            &staged_snapshot,
+            replacement,
+            self.limits.maximum_file_bytes,
+        ) {
+            return ReplaceOutcome::Uncertain;
+        }
+        if fsync(&directory).is_err() {
+            return ReplaceOutcome::Uncertain;
+        }
+        #[cfg(test)]
+        self.run_race_hook(purpose, WriteRaceBoundary::AfterCleanupDurable);
+        if !parent_is_current(self.workspace, path.components(), &directory) {
+            return restore_removed_preimage(
+                &directory,
+                transaction_id,
+                index,
+                &target_name,
+                &staged_snapshot,
+                replacement,
+                expected,
+                original_snapshot.mode & 0o7777,
+                self.limits.maximum_file_bytes,
+            );
+        }
+        if !held_file_matches(
+            &directory,
+            &target_name,
+            &staged_snapshot,
+            replacement,
+            self.limits.maximum_file_bytes,
+        ) {
             return ReplaceOutcome::Uncertain;
         }
         ReplaceOutcome::Applied
     }
 
     #[cfg(test)]
-    fn with_race_hook(mut self, hook: impl FnMut(WriteRaceBoundary) + 'static) -> Self {
+    fn with_race_hook(mut self, hook: impl FnMut(WriteLifecycleEvent) + 'static) -> Self {
         self.race_hook = Some(Box::new(hook));
         self
     }
 
     #[cfg(test)]
-    fn run_race_hook(&mut self, boundary: WriteRaceBoundary) {
+    fn run_race_hook(&mut self, purpose: &str, boundary: WriteRaceBoundary) {
         if let Some(hook) = self.race_hook.as_mut() {
-            hook(boundary);
+            hook(WriteLifecycleEvent {
+                pass: WritePass::from_purpose(purpose),
+                boundary,
+            });
         }
     }
 }
@@ -273,9 +389,55 @@ impl<'workspace> LinuxAtomicWriteDriver<'workspace> {
 enum WriteRaceBoundary {
     AfterInitialObservation,
     AfterParentOpened,
+    BeforeStaging,
     AfterStaging,
     BeforeExchange,
     AfterExchange,
+    AfterDisplacedVerification,
+    AfterExchangeDurable,
+    AfterStagedRemoval,
+    AfterCleanupDurable,
+}
+
+#[cfg(test)]
+impl WriteRaceBoundary {
+    const ALL: [Self; 10] = [
+        Self::AfterInitialObservation,
+        Self::AfterParentOpened,
+        Self::BeforeStaging,
+        Self::AfterStaging,
+        Self::BeforeExchange,
+        Self::AfterExchange,
+        Self::AfterDisplacedVerification,
+        Self::AfterExchangeDurable,
+        Self::AfterStagedRemoval,
+        Self::AfterCleanupDurable,
+    ];
+}
+
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WritePass {
+    Apply,
+    Restore,
+}
+
+#[cfg(test)]
+impl WritePass {
+    fn from_purpose(purpose: &str) -> Self {
+        match purpose {
+            "apply" => Self::Apply,
+            "restore" => Self::Restore,
+            _ => panic!("undeclared write pass: {purpose}"),
+        }
+    }
+}
+
+#[cfg(test)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct WriteLifecycleEvent {
+    pass: WritePass,
+    boundary: WriteRaceBoundary,
 }
 
 impl AtomicWriteDriver for LinuxAtomicWriteDriver<'_> {
@@ -384,6 +546,89 @@ fn stable_replacement_identity(expected: &LinuxStatSnapshot, observed: &LinuxSta
         && expected.link_count == observed.link_count
         && expected.mode == observed.mode
         && expected.size == observed.size
+}
+
+fn parent_is_current(
+    workspace: &LinuxAuthorizedWorkspace,
+    components: &[agentmage_kernel_contracts::WorkspacePathComponent],
+    held_directory: &OwnedFd,
+) -> bool {
+    let Ok((current, _)) = open_parent(workspace, components) else {
+        return false;
+    };
+    snapshot(held_directory, None).is_ok_and(|expected| {
+        snapshot(&current, None).is_ok_and(|observed| expected.same_object(&observed))
+    })
+}
+
+fn held_file_matches(
+    directory: &OwnedFd,
+    name: &str,
+    expected_snapshot: &LinuxStatSnapshot,
+    expected_bytes: &[u8],
+    maximum_bytes: u64,
+) -> bool {
+    open_regular(directory, name).is_ok_and(|current| {
+        snapshot(&current, None)
+            .is_ok_and(|observed| stable_replacement_identity(expected_snapshot, &observed))
+            && read_descriptor(&current, maximum_bytes).as_deref() == Ok(expected_bytes)
+    })
+}
+
+fn rollback_exchange(directory: &OwnedFd, temporary: &str, target: &str) -> ReplaceOutcome {
+    if exchange_back(directory, temporary, target).is_ok() {
+        ReplaceOutcome::NoChange
+    } else {
+        ReplaceOutcome::Uncertain
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn restore_removed_preimage(
+    directory: &OwnedFd,
+    transaction_id: &str,
+    index: usize,
+    target_name: &str,
+    replacement_snapshot: &LinuxStatSnapshot,
+    replacement: &[u8],
+    preimage: &[u8],
+    raw_mode: u32,
+    maximum_bytes: u64,
+) -> ReplaceOutcome {
+    if !held_file_matches(
+        directory,
+        target_name,
+        replacement_snapshot,
+        replacement,
+        maximum_bytes,
+    ) {
+        return ReplaceOutcome::Uncertain;
+    }
+    let recovery = temporary_name(transaction_id, index, "reconcile", preimage);
+    let staged = match stage_file(directory, &recovery, preimage, raw_mode) {
+        Ok(value) => value,
+        Err(_) => return ReplaceOutcome::Uncertain,
+    };
+    drop(staged);
+    if renameat_with(
+        directory,
+        recovery.as_str(),
+        directory,
+        target_name,
+        RenameFlags::EXCHANGE,
+    )
+    .is_err()
+    {
+        let _ = remove_staged(directory, &recovery);
+        return ReplaceOutcome::Uncertain;
+    }
+    if fsync(directory).is_err()
+        || unlinkat(directory, recovery.as_str(), AtFlags::empty()).is_err()
+        || fsync(directory).is_err()
+    {
+        return ReplaceOutcome::Uncertain;
+    }
+    ReplaceOutcome::NoChange
 }
 
 fn known_failure(index: u32, code: &str) -> WriteApplyReport {
@@ -646,7 +891,8 @@ mod tests {
     use sha2::{Digest, Sha256};
 
     use super::{
-        LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits, WriteRaceBoundary, temporary_name,
+        LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits, WriteLifecycleEvent, WritePass,
+        WriteRaceBoundary, temporary_name,
     };
     use crate::{LinuxAuthorizedWorkspace, LinuxPathAdapter, authorize_workspace_root};
 
@@ -903,6 +1149,7 @@ mod tests {
 
     fn execute_with_race(
         fixture: &mut Fixture,
+        pass: WritePass,
         boundary: WriteRaceBoundary,
         action: impl FnOnce() + 'static,
     ) -> Result<WriteTransactionOutcome, WriteTransactionError> {
@@ -915,8 +1162,9 @@ mod tests {
                 ..LinuxAtomicWriteDriverLimits::default()
             },
         )
-        .with_race_hook(move |observed| {
-            if observed == boundary
+        .with_race_hook(move |observed: WriteLifecycleEvent| {
+            if observed.pass == pass
+                && observed.boundary == boundary
                 && let Some(action) = action.take()
             {
                 action();
@@ -1083,6 +1331,7 @@ mod tests {
         assert_eq!(
             execute_with_race(
                 &mut replaced,
+                WritePass::Apply,
                 WriteRaceBoundary::AfterInitialObservation,
                 move || fs::rename(&replacement, &replaced_path).expect("replace target"),
             ),
@@ -1099,6 +1348,7 @@ mod tests {
         assert_eq!(
             execute_with_race(
                 &mut symlinked,
+                WritePass::Apply,
                 WriteRaceBoundary::AfterParentOpened,
                 move || {
                     fs::rename(&symlink_path, &symlink_backup).expect("retain original");
@@ -1119,11 +1369,17 @@ mod tests {
         let old_directory = renamed._root.path().join("src-before-race");
         let new_target = renamed.paths[0].clone();
         assert_eq!(
-            execute_with_race(&mut renamed, WriteRaceBoundary::AfterStaging, move || {
-                fs::rename(&source_directory, &old_directory).expect("rename source directory");
-                fs::create_dir(&source_directory).expect("replacement source directory");
-                fs::write(&new_target, b"renamed directory owner\n").expect("replacement target");
-            },),
+            execute_with_race(
+                &mut renamed,
+                WritePass::Apply,
+                WriteRaceBoundary::AfterStaging,
+                move || {
+                    fs::rename(&source_directory, &old_directory).expect("rename source directory");
+                    fs::create_dir(&source_directory).expect("replacement source directory");
+                    fs::write(&new_target, b"renamed directory owner\n")
+                        .expect("replacement target");
+                },
+            ),
             Ok(WriteTransactionOutcome::FailedNoChange)
         );
         assert_eq!(
@@ -1136,6 +1392,7 @@ mod tests {
         assert_eq!(
             execute_with_race(
                 &mut before_exchange,
+                WritePass::Apply,
                 WriteRaceBoundary::BeforeExchange,
                 move || {
                     fs::write(
@@ -1157,6 +1414,7 @@ mod tests {
         assert_eq!(
             execute_with_race(
                 &mut after_exchange,
+                WritePass::Apply,
                 WriteRaceBoundary::AfterExchange,
                 move || {
                     fs::write(&after_exchange_path, b"concurrent writer after exchange\n")
@@ -1169,5 +1427,51 @@ mod tests {
             fs::read(&after_exchange.paths[0]).expect("later writer retained"),
             b"concurrent writer after exchange\n"
         );
+    }
+
+    #[test]
+    fn s_029_st01_parent_rename_at_every_boundary_restores_authorized_object() {
+        for boundary in WriteRaceBoundary::ALL {
+            let mut fixture = fixture(1);
+            let source_directory = fixture._root.path().join("src");
+            let moved_directory = fixture._root.path().join("src-moved-during-write");
+            let moved_directory_for_race = moved_directory.clone();
+            let canonical_target = fixture.paths[0].clone();
+            let moved_target = moved_directory.join("fixture-0.json");
+            let preimage = fixture.preimages[0].clone();
+            assert_eq!(
+                execute_with_race(&mut fixture, WritePass::Apply, boundary, move || {
+                    fs::rename(&source_directory, &moved_directory_for_race)
+                        .expect("rename authorized parent");
+                    fs::create_dir(&source_directory).expect("create replacement parent");
+                    fs::write(&canonical_target, b"replacement directory owner\n")
+                        .expect("create competing target");
+                }),
+                Ok(WriteTransactionOutcome::FailedNoChange),
+                "{boundary:?}"
+            );
+            assert_eq!(
+                fs::read(&fixture.paths[0]).expect("competing target remains"),
+                b"replacement directory owner\n",
+                "{boundary:?}"
+            );
+            assert_eq!(
+                fs::read(&moved_target).expect("authorized object remains"),
+                preimage,
+                "{boundary:?}"
+            );
+            for directory in [fixture._root.path().join("src"), moved_directory] {
+                assert!(
+                    fs::read_dir(directory)
+                        .expect("race directory lists")
+                        .all(|entry| !entry
+                            .expect("race entry")
+                            .file_name()
+                            .to_string_lossy()
+                            .starts_with(".agentmage-write-")),
+                    "{boundary:?}"
+                );
+            }
+        }
     }
 }
