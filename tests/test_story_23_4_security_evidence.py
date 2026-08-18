@@ -21,6 +21,7 @@ from scripts.story_23_4_security_evidence import (
 class Story234SecurityEvidenceTests(unittest.TestCase):
     def test_mapping_is_closed_complete_for_declared_scope_and_path_bound(self) -> None:
         self.assertEqual(validate_mapping_shape(), [])
+        self.assertEqual(validate_mapping_shape("HEAD"), [])
         self.assertEqual(len(MAPPINGS), 40)
         self.assertEqual(len(set(MAPPINGS)), len(MAPPINGS))
         self.assertTrue({"RV-05", "RV-17", "RV-18", "RV-20"} <= set(MAPPINGS))

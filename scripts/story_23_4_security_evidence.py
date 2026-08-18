@@ -472,7 +472,7 @@ def run_checks() -> tuple[str, list[dict[str, Any]]]:
 
 def requirement_ids_in_review(revision: str) -> set[str]:
     text = git_blob(revision, SECURITY_REVIEW).decode("utf-8")
-    return set(re.findall(r"\| `(SR-[A-Z]+-\d{3}|RV-\d{2})` \|", text))
+    return set(re.findall(r"`(SR-[A-Z]+-\d{3}|RV-\d{2})`", text))
 
 
 def validate_mapping_shape(revision: str | None = None) -> list[str]:
