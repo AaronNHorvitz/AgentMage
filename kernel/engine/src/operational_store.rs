@@ -2407,6 +2407,25 @@ impl DurableAuthorityRuntime {
             .map_err(DurableAuthorityError::Evidence)
     }
 
+    /// Commits the authority's exact canonical receipt sequence under one external key.
+    pub fn checkpoint_current_receipt_integrity(
+        &self,
+        scope_id: &str,
+        key: &ReceiptIntegrityKey,
+        observed_at_epoch_ms: u64,
+    ) -> Result<ReceiptIntegrityCheckpoint, DurableAuthorityError> {
+        self.ensure_usable()?;
+        let mut ledger = TamperEvidentReceiptLedger::default();
+        for receipt in self.coordinator.receipts() {
+            ledger
+                .append(receipt.clone())
+                .map_err(|_| DurableAuthorityError::Evidence(EvidenceStoreError::Integrity))?;
+        }
+        self.lock_store()?
+            .checkpoint_receipt_integrity(scope_id, &ledger, key, observed_at_epoch_ms)
+            .map_err(DurableAuthorityError::Evidence)
+    }
+
     /// Re-verifies every retained receipt anchor with the separately brokered key.
     pub fn verify_receipt_integrity(
         &self,

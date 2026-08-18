@@ -1,5 +1,6 @@
 //! Hash-bound evidence assignment for successful rendered runtime answers.
 
+use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
 use agentmage_kernel_contracts::{
@@ -9,6 +10,9 @@ use agentmage_kernel_contracts::{
 };
 use sha2::{Digest, Sha256};
 
+use crate::evidence_reconciliation::{
+    AnswerClaimLedger, CitationResolution, build_answer_claim_ledger,
+};
 use crate::evidence_state::{DeterministicMethodRegistry, EvidenceStateAssigner};
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -145,6 +149,56 @@ pub fn verify_runtime_answer_evidence(
         && provenance.runtime.model_run_id == answer.model_run_id
         && provenance.runtime.response_sha256 == answer.response_sha256
         && provenance.runtime.manifest == manifest_observation(request)
+}
+
+/// Revalidates one successful runtime answer and binds it to exact current citations.
+pub fn compose_runtime_answer_claim_ledger(
+    answer: &RuntimeAnswerEvidence,
+    request: &RuntimeRunRequest,
+    output: &RuntimeOutput,
+    citations: Vec<CitationResolution>,
+) -> Result<AnswerClaimLedger, RuntimeAnswerEvidenceError> {
+    let outcome_evidence = citations
+        .iter()
+        .map(|resolution| resolution.citation.evidence.clone())
+        .collect::<Vec<_>>();
+    if !verify_runtime_answer_evidence(answer, request, output, &outcome_evidence) {
+        return Err(RuntimeAnswerEvidenceError::InvalidBinding);
+    }
+    let assignment = answer
+        .assignments
+        .first()
+        .ok_or(RuntimeAnswerEvidenceError::InvalidBinding)?;
+    let MaterialClaimEvidenceState::Inferred(provenance) = &assignment.evidence_state else {
+        return Err(RuntimeAnswerEvidenceError::InvalidBinding);
+    };
+    let mut assigner = EvidenceStateAssigner::new(
+        request.task.task_id.clone(),
+        DeterministicMethodRegistry::empty(),
+    )
+    .map_err(|_| RuntimeAnswerEvidenceError::InvalidBinding)?;
+    let rebuilt = assigner
+        .assign_inferred(
+            assignment.assignment_id.clone(),
+            assignment.claim.clone(),
+            provenance.citations.clone(),
+            provenance.runtime.model_run_id.clone(),
+            provenance.runtime.manifest.clone(),
+            provenance.runtime.response_sha256.clone(),
+        )
+        .map_err(|_| RuntimeAnswerEvidenceError::InvalidBinding)?;
+    if rebuilt != assignment {
+        return Err(RuntimeAnswerEvidenceError::InvalidBinding);
+    }
+    build_answer_claim_ledger(
+        assigner.finalize(),
+        answer.rendered_claim_ids.clone(),
+        BTreeMap::from([(
+            assignment.assignment_id.clone(),
+            (citations, vec!["model.inference".to_owned()]),
+        )]),
+    )
+    .map_err(|_| RuntimeAnswerEvidenceError::InvalidBinding)
 }
 
 fn manifest_observation(request: &RuntimeRunRequest) -> ModelManifestObservation {

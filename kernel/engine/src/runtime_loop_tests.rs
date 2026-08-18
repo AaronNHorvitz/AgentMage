@@ -22,7 +22,7 @@ use agentmage_kernel_contracts::{
     StopCondition, StopConditionKind, StorageFilesystemClass, StrictLocalStorageObservation, Task,
     TaskId, TaskStatus, ToolCall, ToolCatalogId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
     VerifierCandidate, VerifierDisposition, VerifierId, VerifierRecordId, VerifierSource,
-    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, to_canonical_json,
+    WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, WorkspacePath, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -37,10 +37,14 @@ use super::{
     runtime_tool_references,
 };
 use crate::context_management::finalize_checkpoint;
+use crate::evidence_reconciliation::{
+    CitationFileIdentity, CitationSelector, SourceCitation, resolve_citation,
+};
 use crate::model_codec::{proposal_digest, tests_support::profile};
 use crate::operational_store::{
     OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
 };
+use crate::runtime_answer::compose_runtime_answer_claim_ledger;
 use crate::runtime_artifact::{
     runtime_artifact_ref, seal_runtime_resume_binding, verify_runtime_artifact_manifest,
 };
@@ -1341,6 +1345,55 @@ fn story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order() {
     assert_eq!(
         answer_evidence.output_sha256,
         inline_output_sha256(&outcome)
+    );
+    let agentmage_kernel_contracts::MaterialClaimEvidenceState::Inferred(provenance) =
+        &answer_evidence.assignments[0].evidence_state
+    else {
+        panic!("runtime answer must remain inferred");
+    };
+    let citations = provenance
+        .citations
+        .iter()
+        .enumerate()
+        .map(|(index, evidence)| {
+            let identity = CitationFileIdentity {
+                path: WorkspacePath::new(
+                    WorkspaceId::from_raw("workspace-runtime-0001"),
+                    ["evidence", &format!("source-{index}.json")],
+                )
+                .expect("citation path is canonical"),
+                byte_len: 16,
+                content_sha256: evidence.content_sha256.clone(),
+                object_identity_sha256: "b".repeat(64),
+                revision: evidence
+                    .observed_revision
+                    .clone()
+                    .expect("runtime evidence is revision-bound"),
+            };
+            resolve_citation(
+                SourceCitation {
+                    citation_id: format!("runtime.citation.{index}"),
+                    evidence: evidence.clone(),
+                    selector: CitationSelector::ByteRange { start: 0, end: 8 },
+                    observed_at_epoch_ms: 1_000,
+                    observed_file: identity.clone(),
+                },
+                Some(identity),
+            )
+            .expect("runtime citation resolves")
+        })
+        .collect();
+    let claim_ledger = compose_runtime_answer_claim_ledger(
+        answer_evidence,
+        &coordinator.request,
+        outcome.output.as_ref().expect("successful output exists"),
+        citations,
+    )
+    .expect("runtime answer binds to a complete claim ledger");
+    assert_eq!(claim_ledger.entries.len(), 1);
+    assert_eq!(
+        claim_ledger.entries[0].citations.len(),
+        provenance.citations.len()
     );
     assert_eq!(executions.load(Ordering::SeqCst), 0);
     assert_eq!(coordinator.events().len(), 6);
