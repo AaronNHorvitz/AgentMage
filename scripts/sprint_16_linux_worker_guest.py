@@ -32,6 +32,19 @@ VERIFIED_OPERATIONS: Final = [
     "agentmage.workspace.hash-tree",
     "agentmage.workspace.binary-metadata",
 ]
+ATTACK_CASES: Final = [
+    "path_escape",
+    "symlink_race",
+    "special_file",
+    "archive_bomb",
+    "device",
+    "socket",
+    "environment",
+    "network",
+    "process",
+    "write",
+    "secret_canary",
+]
 
 
 class GuestWorkerError(ValueError):
@@ -173,6 +186,37 @@ def execute(distribution: str) -> dict[str, Any]:
             "cargo",
             "test",
             "-p",
+            "agentmage-platform-linux",
+            "--locked",
+            "sandbox::tests::",
+            "--",
+            "--ignored",
+            "--test-threads=1",
+        ],
+        receipts,
+    )
+    for test_name in (
+        "tests::symlink_hard_link_special_kind_and_resource_limit_fail_closed",
+        "tests::concurrent_symlink_replacement_never_changes_held_file_authority",
+    ):
+        run(
+            [
+                "cargo",
+                "test",
+                "-p",
+                "agentmage-platform-linux",
+                "--locked",
+                test_name,
+                "--",
+                "--exact",
+            ],
+            receipts,
+        )
+    run(
+        [
+            "cargo",
+            "test",
+            "-p",
             "agentmage-host",
             "--locked",
             TEST_NAME,
@@ -213,6 +257,8 @@ def execute(distribution: str) -> dict[str, Any]:
         },
         "verified_operations": VERIFIED_OPERATIONS,
         "receipt_count": len(VERIFIED_OPERATIONS),
+        "attack_cases": ATTACK_CASES,
+        "linux_attack_matrix_complete": True,
         "workspace_invariant": True,
         "worker_process_residue": False,
         "transient_unit_residue": False,

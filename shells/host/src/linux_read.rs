@@ -1963,7 +1963,7 @@ mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_capability_read_only::{
-        ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
+        ReadOnlyEncoding, ReadOnlyItem, ReadOnlyLimits, ReadOnlyRequest, ReadOnlyToolKind,
     };
     use agentmage_kernel_contracts::{
         ActorId, CONTRACT_SCHEMA_VERSION, CheckedContextSummary, CheckedSummaryState,
@@ -2971,7 +2971,11 @@ mod tests {
         fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");
         fs::write(workspace.join("src/alpha.txt"), b"needle first\n").expect("alpha");
         fs::write(workspace.join("src/zeta.txt"), b"needle last\n").expect("zeta");
-        fs::write(workspace.join("src/sample.bin"), b"\x7fELF\x02\x01fixture").expect("binary");
+        fs::write(
+            workspace.join("src/sample.bin"),
+            b"PK\x03\x04archive-like-bytes-are-never-expanded",
+        )
+        .expect("binary");
         let before = workspace_observation(&workspace);
         let times = (1..=ReadOnlyToolKind::ALL.len() * 2)
             .map(|index| index as u64 * 100)
@@ -3016,6 +3020,13 @@ mod tests {
                     );
                     assert!(result.verify(kind), "{} result", kind.id());
                     assert!(!result.items.is_empty(), "{} items", kind.id());
+                    if kind == ReadOnlyToolKind::BinaryMetadata {
+                        assert!(matches!(
+                            result.items.as_slice(),
+                            [ReadOnlyItem::BinaryMetadata { format_hint, .. }]
+                                if format_hint == "zip"
+                        ));
+                    }
                     assert_eq!(receipt.sequence, index as u64 + 1);
                     receipt.receipt_sha256
                 }

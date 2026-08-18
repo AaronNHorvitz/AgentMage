@@ -36,6 +36,7 @@ SOURCE_PATHS: Final = (
     "packaging/linux/README.md",
     "packaging/linux/agentmage.spec.in",
     "packaging/linux/agentmage-release.spec.in",
+    "platforms/linux/src/lib.rs",
     "platforms/linux/src/sandbox.rs",
     "scripts/package_candidate.py",
     "scripts/package_lifecycle.py",
@@ -117,7 +118,7 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "MACOS-XPC-WORKER-EVIDENCE-MISSING", "owner": "16.1.1.5"},
-    {"code": "LIVE-WORKER-ATTACK-MATRIX-INCOMPLETE", "owner": "16.1.3.3"},
+    {"code": "MACOS-LIVE-WORKER-ATTACK-MATRIX-MISSING", "owner": "16.1.3.3"},
     {"code": "WORKER-CANCEL-TIMEOUT-KILL-CRASH-CAMPAIGN-INCOMPLETE", "owner": "16.1.3.4"},
     {"code": "INDEPENDENT-WORKER-REVIEW-NOT-RETAINED", "owner": "16.1.3.5"},
 ]
@@ -176,6 +177,12 @@ def installed_worker_summary(value: Any, encoded: bytes) -> dict[str, Any]:
         or [target.get("target_id") for target in targets]
         != ["fedora-44-x86_64", "ubuntu-26.04-x86_64"]
         or value.get("verified_operations") != worker_evidence.VERIFIED_OPERATIONS
+        or value.get("linux_attack_matrix_complete") is not True
+        or any(
+            target.get("guest_result", {}).get("attack_cases")
+            != worker_evidence.ATTACK_CASES
+            for target in targets
+        )
     ):
         raise ValueError("installed worker matrix is not the admitted subset")
     return {
@@ -184,6 +191,7 @@ def installed_worker_summary(value: Any, encoded: bytes) -> dict[str, Any]:
         "source_revision": value.get("source_revision"),
         "target_ids": [target["target_id"] for target in targets],
         "verified_operations": value["verified_operations"],
+        "linux_attack_cases": worker_evidence.ATTACK_CASES,
     }
 
 
@@ -227,7 +235,7 @@ def build_report(
             "linux_contract_tests": local_pass,
             "linux_packaged_live_worker": True,
             "linux_complete_operation_matrix": True,
-            "linux_live_attack_matrix": False,
+            "linux_live_attack_matrix": True,
             "macos_xpc_worker": False,
         },
         "verification_evidence": {
@@ -299,6 +307,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         != ["fedora-44-x86_64", "ubuntu-26.04-x86_64"]
         or installed_worker.get("verified_operations")
         != worker_evidence.VERIFIED_OPERATIONS
+        or installed_worker.get("linux_attack_cases") != worker_evidence.ATTACK_CASES
     ):
         failures.append("installed worker operation-matrix evidence drift")
     expected_summary = {
@@ -314,7 +323,9 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("installed Linux worker evidence drift")
     if platform.get("linux_complete_operation_matrix") is not True:
         failures.append("installed Linux complete operation matrix drift")
-    for field in ("linux_live_attack_matrix", "macos_xpc_worker"):
+    if platform.get("linux_live_attack_matrix") is not True:
+        failures.append("installed Linux attack matrix drift")
+    for field in ("macos_xpc_worker",):
         if platform.get(field) is not False:
             failures.append(f"platform overclaim: {field}")
     for field in ("live_cleanup_campaign", "independent_review"):

@@ -33,6 +33,8 @@ SOURCE_PATHS: Final = (
     "docs/architecture/read-only-tool-protocol.md",
     "packaging/linux/agentmage.spec.in",
     "packaging/linux/debian-control.in",
+    "platforms/linux/src/lib.rs",
+    "platforms/linux/src/sandbox.rs",
     "scripts/package_candidate.py",
     "scripts/sprint_16_linux_worker_evidence.py",
     "scripts/sprint_16_linux_worker_guest.py",
@@ -53,6 +55,19 @@ VERIFIED_OPERATIONS: Final = [
     "agentmage.workspace.hash-file",
     "agentmage.workspace.hash-tree",
     "agentmage.workspace.binary-metadata",
+]
+ATTACK_CASES: Final = [
+    "path_escape",
+    "symlink_race",
+    "special_file",
+    "archive_bomb",
+    "device",
+    "socket",
+    "environment",
+    "network",
+    "process",
+    "write",
+    "secret_canary",
 ]
 
 
@@ -295,6 +310,7 @@ def build_report(
         "targets": targets,
         "verified_operations": VERIFIED_OPERATIONS,
         "complete_ten_tool_matrix": True,
+        "linux_attack_matrix_complete": True,
         "attack_matrix_complete": False,
         "cleanup_campaign_complete": False,
         "macos_evidence_substituted": False,
@@ -351,6 +367,8 @@ def validate_report(value: Any) -> list[str]:
             or guest.get("strict_offline") is not True
             or guest.get("verified_operations") != VERIFIED_OPERATIONS
             or guest.get("receipt_count") != len(VERIFIED_OPERATIONS)
+            or guest.get("attack_cases") != ATTACK_CASES
+            or guest.get("linux_attack_matrix_complete") is not True
             or guest.get("workspace_invariant") is not True
             or any(
                 guest.get(field) is not False
@@ -402,6 +420,8 @@ def validate_report(value: Any) -> list[str]:
             failures.append(f"installed worker prohibited claim changed: {field}")
     if value.get("complete_ten_tool_matrix") is not True:
         failures.append("installed worker complete operation matrix drifted")
+    if value.get("linux_attack_matrix_complete") is not True:
+        failures.append("installed worker Linux attack matrix drifted")
     sources = value.get("sources")
     if (
         not isinstance(sources, list)

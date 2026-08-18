@@ -37,6 +37,8 @@ def target(target_id: str, distribution: str) -> dict[str, object]:
             },
             "verified_operations": evidence.VERIFIED_OPERATIONS,
             "receipt_count": len(evidence.VERIFIED_OPERATIONS),
+            "attack_cases": evidence.ATTACK_CASES,
+            "linux_attack_matrix_complete": True,
             "workspace_invariant": True,
             "worker_process_residue": False,
             "transient_unit_residue": False,
@@ -80,6 +82,7 @@ def report() -> dict[str, object]:
         ],
         "verified_operations": evidence.VERIFIED_OPERATIONS,
         "complete_ten_tool_matrix": True,
+        "linux_attack_matrix_complete": True,
         "attack_matrix_complete": False,
         "cleanup_campaign_complete": False,
         "macos_evidence_substituted": False,
@@ -129,6 +132,9 @@ class Sprint16LinuxWorkerEvidenceTests(unittest.TestCase):
             self.assertTrue(evidence.validate_report(changed))
         changed = copy.deepcopy(report())
         changed["complete_ten_tool_matrix"] = False
+        self.assertTrue(evidence.validate_report(changed))
+        changed = copy.deepcopy(report())
+        changed["linux_attack_matrix_complete"] = False
         self.assertTrue(evidence.validate_report(changed))
 
     def test_source_and_qemu_identity_mutations_fail(self) -> None:

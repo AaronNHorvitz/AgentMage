@@ -1061,6 +1061,7 @@ const fn adapter_error(
 mod tests {
     use std::fs;
     use std::os::unix::fs::symlink;
+    use std::os::unix::net::UnixListener;
     use std::path::{Path, PathBuf};
     use std::process::Command;
     use std::sync::Arc;
@@ -1352,6 +1353,7 @@ mod tests {
         )
         .expect("hard link creates");
         fs::write(root.join("docs/large.txt"), b"too large").expect("large file writes");
+        let _socket = UnixListener::bind(root.join("docs/local.sock")).expect("socket creates");
         let workspace = authorize_for_test(&root);
 
         for (candidate, intent, expected) in [
@@ -1367,6 +1369,11 @@ mod tests {
             ),
             (
                 path(&["docs"]),
+                PathResolutionIntent::ReadFile,
+                PathAdapterErrorKind::ObjectKindMismatch,
+            ),
+            (
+                path(&["docs", "local.sock"]),
                 PathResolutionIntent::ReadFile,
                 PathAdapterErrorKind::ObjectKindMismatch,
             ),

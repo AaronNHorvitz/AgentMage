@@ -25,6 +25,7 @@ def report() -> dict[str, object]:
                 "source_revision": "d" * 40,
                 "target_ids": ["fedora-44-x86_64", "ubuntu-26.04-x86_64"],
                 "verified_operations": evidence.worker_evidence.VERIFIED_OPERATIONS,
+                "linux_attack_cases": evidence.worker_evidence.ATTACK_CASES,
             },
         )
 
@@ -48,6 +49,9 @@ class Sprint16EvidenceTests(unittest.TestCase):
             ),
             lambda value: value["platform_evidence"].update(
                 {"linux_complete_operation_matrix": False}
+            ),
+            lambda value: value["platform_evidence"].update(
+                {"linux_live_attack_matrix": False}
             ),
             lambda value: value["platform_evidence"].update({"macos_xpc_worker": True}),
             lambda value: value["verification_evidence"].update({"live_cleanup_campaign": True}),
