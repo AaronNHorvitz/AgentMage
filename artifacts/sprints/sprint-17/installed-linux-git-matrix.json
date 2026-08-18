@@ -57,12 +57,12 @@
   "release_claim": false,
   "repository_credentials_injected": false,
   "schema_version": 1,
-  "source_revision": "52f0feb80d199cbd0e24cfa5ee6904bd19dac221",
+  "source_revision": "bae429ffa799c4fcee439b2391d720d5bf4ab2cc",
   "sources": [
     {
-      "bytes": 42732,
+      "bytes": 44337,
       "path": "capabilities/read-only/src/git.rs",
-      "sha256": "10d6aadaf81653689794666d12a66613d11e7cec3cdd184c05494b48ec1d570b"
+      "sha256": "2c3ce7dbe6f5e6d077afa2373c4fb0abf8fa57bde34d262a523455a754bc1624"
     },
     {
       "bytes": 6906,
@@ -70,9 +70,9 @@
       "sha256": "681d2ac535df699074b56f315665d07834d25be0eb1d0f0a38087906092267e8"
     },
     {
-      "bytes": 49474,
+      "bytes": 51712,
       "path": "kernel/engine/src/instruction_provenance.rs",
-      "sha256": "b9eacc36875fd98b3f71cb77c773d4fe7b52ce4e36ef421b8883589f6c315a65"
+      "sha256": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94"
     },
     {
       "bytes": 26363,
@@ -95,9 +95,9 @@
       "sha256": "5a0506cb8d813cdffd82c69b18553008872e741a61172daf2411b394ec16fb8a"
     },
     {
-      "bytes": 83352,
+      "bytes": 87873,
       "path": "platforms/linux/src/repository_safety.rs",
-      "sha256": "393b9da7963a62cf3e5ea4ae95a9aa63f593fcee2dca72d06c948f2ea913d71f"
+      "sha256": "97b6df1109aed3df6f9b2eca597bca46f50ec25c32b19f7fe860a9dc45995b2d"
     },
     {
       "bytes": 20034,
@@ -167,21 +167,21 @@
             "exit_code": 0,
             "id": "guest-command-2",
             "output_bytes": 3850,
-            "output_sha256": "64e1d1f9618b2dcb92a513d14367cb39a9f001e5707e2b6c8429d925702c3d04"
+            "output_sha256": "4062568d996103ed4912be95a6c5cf5b5d04887208b00c1e5903f469dad4b9d0"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-3",
             "output_bytes": 504,
-            "output_sha256": "f7855e1638bfe6ce0d13eb7d01661f6db34a7dd0864f3a09613bae12d13f46b1"
+            "output_sha256": "4f073c9a10e8cd30239b35b3a1a389e4405fba2e6179f03a33263d06283cd8f0"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-4",
             "output_bytes": 153,
-            "output_sha256": "b0d5bc99fbb9866408bb86e3015e0fdcb7e7e34be976bee0a93f07a0d9bbb424"
+            "output_sha256": "16aed94090c740615e2fb792c40acf241eaa77f3d3c19b0b3af01e8d81492f3e"
           },
           {
             "executable": "python3",
@@ -209,28 +209,28 @@
             "exit_code": 0,
             "id": "guest-command-8",
             "output_bytes": 1495,
-            "output_sha256": "da91e4898289158f7185a74d1d8bc826fcd38bbbb68ac467602b3d4c9cbca159"
+            "output_sha256": "3cc0037170d9fa0b9aacc51c60b50f660b083ab09f7d08e9894a77bfc59d7310"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-9",
             "output_bytes": 2354,
-            "output_sha256": "52be3f1cbbd5c85137142a629b7fe3045d338c0ab5f258da88465c5d6171a477"
+            "output_sha256": "e6974313a8301d78c2ae77c41c694753cff20cf59feafb59b7b8c7d766c3ca90"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-10",
             "output_bytes": 716,
-            "output_sha256": "45e10940584af21df7bf1483b1c4f2513276cc146dab0ec82d0c2156cd909d21"
+            "output_sha256": "ad5d7c8511b482274dbcab7dd95e0b66ca9a7ba485f096f123e66c9c75dc1c87"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-11",
             "output_bytes": 3310,
-            "output_sha256": "a9a433ae9899cef42f7899de73cfb2fcea10c81afdbdcda41b77971a7d10882f"
+            "output_sha256": "e3ca15150e65c139d56feeb5826ff9abc2528dfb0f6f17dab2b3122597f365f2"
           },
           {
             "executable": "systemctl",
@@ -272,7 +272,7 @@
           "dirty_tree",
           "untracked_files"
         ],
-        "host_sha256": "f9bc4fd99a90247ce780839c03df3628393b7a370a6c1f745123d8556ebffb10",
+        "host_sha256": "65d3c8f276d0686b623491e5fa56dfbc266fece93575cce6252783d64037cce6",
         "instruction_classes": [
           "workspace_instruction",
           "repository_instruction",
@@ -282,7 +282,7 @@
         "loopback_contact_observed": false,
         "network_used_during_execution": false,
         "package_residue": false,
-        "package_sha256": "4221f3ec839ae88b96c5c8b5150a41a0b4e4b0295c1ceba47e8a943016fb9bd7",
+        "package_sha256": "68db9e7d7e1b27b45b9dd11b2a6a7598210152e8207bf1d3754fe0316ae71233",
         "private_data_used": false,
         "record_type": "sprint-17-installed-linux-git-guest-result",
         "runtime_sha256": {
@@ -299,12 +299,12 @@
         "workspace_invariant": true
       },
       "observation_sha256": {
-        "processes": "99f5652ee260001ed3e7b68878597e42a429f0232f493a0a9d9d340b1258db72",
-        "sockets": "4847530a38987545831ef929754a59a8d86fbc3f2435ecfb6e0713236214fdea"
+        "processes": "f2b79612ada53a0e22cd5f208762e7605b7e781755c3ca1cf6119f6ee1be63a8",
+        "sockets": "cbad2783036c50ab314915bc5f6c2033b89df080e84583e39619a77b05a05ad7"
       },
       "prepared_base_sha256": "6338412bba54ac99f9e7c3c619b0ab60b4880a5eadb723a1d3d41acc10183938",
-      "source_bundle_sha256": "5ec8e00d6e820d951d301f95aa4a6630362094bd24e334d8f42cbde19132ef02",
-      "source_revision": "52f0feb80d199cbd0e24cfa5ee6904bd19dac221",
+      "source_bundle_sha256": "a2dca267509eb6497585237b48d373912502b9047147aabbd54adb1e257fd31a",
+      "source_revision": "bae429ffa799c4fcee439b2391d720d5bf4ab2cc",
       "strict_offline": true,
       "target_id": "fedora-44-x86_64"
     },
@@ -348,21 +348,21 @@
             "exit_code": 0,
             "id": "guest-command-2",
             "output_bytes": 3850,
-            "output_sha256": "add671ee4b9c1c7381c54f99ff50433ac9da8422517cec758a9e7c26a2f777e3"
+            "output_sha256": "973bf9e65df01f9baba57032f80d9e0fee542b69354b30481c9bb6e754d857a5"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-3",
             "output_bytes": 504,
-            "output_sha256": "0bcd2d24a839fac9ef7b107f490fcc85b18c7374f7e410aa5aaeeae8c56105b5"
+            "output_sha256": "b1be6184f7b0630fb17cbf38f41ccd6ce94d719e7c855a9b7e897712cf6cf2d2"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-4",
             "output_bytes": 153,
-            "output_sha256": "b0d5bc99fbb9866408bb86e3015e0fdcb7e7e34be976bee0a93f07a0d9bbb424"
+            "output_sha256": "cd56f166bf5bcf1f6854b79af87fe28ba57e3fb37dc273c49a8a358c54c2c24d"
           },
           {
             "executable": "python3",
@@ -390,28 +390,28 @@
             "exit_code": 0,
             "id": "guest-command-8",
             "output_bytes": 1495,
-            "output_sha256": "755053a703c4dfe42de801a9e9068d1f6707827b3fd8eec629f7e1b7ecbc73cf"
+            "output_sha256": "275fe41c779c0c83a2642e99281d25b6f79b3a06eb977b07c6d7ed8a647639f7"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-9",
             "output_bytes": 2354,
-            "output_sha256": "f71f6e857920df0cc7bc3086882ab86e7788452d58bf1b4257a92bf8cab0758d"
+            "output_sha256": "c899d5b866dda3894045d1b09578206d7187628c0f50d34d2450c3a689459401"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-10",
-            "output_bytes": 715,
-            "output_sha256": "0a67cd7d8d026eee5d9c85b18abb51b011ef4747046b5187fbb1be8c96a458ed"
+            "output_bytes": 716,
+            "output_sha256": "8fe981cf2e22d5752a4c60c9b2ef09aaf55a6d7e7aca24de8d481ee62601bd76"
           },
           {
             "executable": "cargo",
             "exit_code": 0,
             "id": "guest-command-11",
             "output_bytes": 3310,
-            "output_sha256": "51b606c5d87a19a236f78f60807458aac1681377af2952090cb8c69424f8813d"
+            "output_sha256": "ec61532ed1abd1933c773b22c923e40beaae258d76fe7c2c87d368a5ef4e6e86"
           },
           {
             "executable": "systemctl",
@@ -453,7 +453,7 @@
           "dirty_tree",
           "untracked_files"
         ],
-        "host_sha256": "b1e0bec9618f4c18423332c60e6a0f26fc8d30e19d29bd3b8e45836d66d8908b",
+        "host_sha256": "669c60c127fba19f1515faf39547c8a47cdf350677f5f5965551600d2310283f",
         "instruction_classes": [
           "workspace_instruction",
           "repository_instruction",
@@ -463,7 +463,7 @@
         "loopback_contact_observed": false,
         "network_used_during_execution": false,
         "package_residue": false,
-        "package_sha256": "a0af6d3335e93ddec19cbfa8109583488e52424dae95bd2accc07f66bb185979",
+        "package_sha256": "9cbee721c762ccf7f41e481dc069ecea948dfe4058031fb38dcd1ec775b8d6b0",
         "private_data_used": false,
         "record_type": "sprint-17-installed-linux-git-guest-result",
         "runtime_sha256": {
@@ -480,12 +480,12 @@
         "workspace_invariant": true
       },
       "observation_sha256": {
-        "processes": "12a6bfaf9aede29d14ce4da12ee8658ef823fa2946b4aaa10be528431d464c29",
-        "sockets": "8adda09549164a3cf2467a7394ec7914c571954f79b52b6bba3df3d5d7ab7f37"
+        "processes": "eb4d84c3d657b386798648e5c78447c79ab941542598b4dadd4725309d76cdac",
+        "sockets": "49c36975241b8ef13dedf8b0015539edb6b681763ee573de4657f608c9935bbf"
       },
       "prepared_base_sha256": "e9924f3d542065e8184ff5c6be0853167ea5e4d63984d9f71b5ee4d667104154",
-      "source_bundle_sha256": "5ec8e00d6e820d951d301f95aa4a6630362094bd24e334d8f42cbde19132ef02",
-      "source_revision": "52f0feb80d199cbd0e24cfa5ee6904bd19dac221",
+      "source_bundle_sha256": "a2dca267509eb6497585237b48d373912502b9047147aabbd54adb1e257fd31a",
+      "source_revision": "bae429ffa799c4fcee439b2391d720d5bf4ab2cc",
       "strict_offline": true,
       "target_id": "ubuntu-26.04-x86_64"
     }
