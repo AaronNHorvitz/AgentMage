@@ -8,7 +8,7 @@ use std::os::fd::AsRawFd as _;
 use std::os::unix::ffi::OsStrExt as _;
 use std::os::unix::fs::MetadataExt as _;
 use std::path::{Component, Path, PathBuf};
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, Command, ExitStatus, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -535,53 +535,9 @@ impl LinuxRepositoryCollector {
             .arg(format!("--git-dir={}", scope.git_directory.display()))
             .arg(format!("--work-tree={}", scope.checkout_root.display()))
             .args(arguments)
-            .stdin(Stdio::null())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped());
-        let mut child = command
-            .spawn()
-            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-        let stdout = child
-            .stdout
-            .take()
-            .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-        let stderr = child
-            .stderr
-            .take()
-            .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-        let stdout_reader = thread::spawn(move || read_inventory_output(stdout, maximum_bytes));
-        let stderr_reader =
-            thread::spawn(move || read_inventory_output(stderr, MAX_OBSERVATION_BYTES));
-        let deadline = Instant::now() + PROCESS_TIMEOUT;
-        let status = loop {
-            match child.try_wait() {
-                Ok(Some(status)) => break Ok(status),
-                Ok(None)
-                    if cancellation.is_some_and(CancellationToken::is_cancelled)
-                        || Instant::now() >= deadline =>
-                {
-                    let _ = child.kill();
-                    let _ = child.wait();
-                    break Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-                }
-                Ok(None) => thread::sleep(POLL_INTERVAL),
-                Err(_) => {
-                    let _ = child.kill();
-                    let _ = child.wait();
-                    break Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-                }
-            }
-        };
-        let stdout = stdout_reader
-            .join()
-            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))??;
-        let stderr = stderr_reader
-            .join()
-            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))??;
-        let status = status?;
-        if stdout.len() > maximum_bytes || stderr.len() > MAX_OBSERVATION_BYTES {
-            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
-        }
+            .stdin(Stdio::null());
+        let (status, stdout) =
+            run_inventory_process(&mut command, maximum_bytes, cancellation, PROCESS_TIMEOUT)?;
         if status.success() {
             Ok(Some(stdout))
         } else if matches!(status.code(), Some(1 | 128)) {
@@ -590,6 +546,61 @@ impl LinuxRepositoryCollector {
             Err(error(LinuxRepositoryErrorKind::ObservationFailed))
         }
     }
+}
+
+fn run_inventory_process(
+    command: &mut Command,
+    maximum_bytes: usize,
+    cancellation: Option<&CancellationToken>,
+    timeout: Duration,
+) -> Result<(ExitStatus, Vec<u8>), LinuxRepositoryError> {
+    command.stdout(Stdio::piped()).stderr(Stdio::piped());
+    let mut child = command
+        .spawn()
+        .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+    let Some(stdout) = child.stdout.take() else {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+    };
+    let Some(stderr) = child.stderr.take() else {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+    };
+    let stdout_reader = thread::spawn(move || read_inventory_output(stdout, maximum_bytes));
+    let stderr_reader = thread::spawn(move || read_inventory_output(stderr, MAX_OBSERVATION_BYTES));
+    let deadline = Instant::now() + timeout;
+    let status = loop {
+        match child.try_wait() {
+            Ok(Some(status)) => break Ok(status),
+            Ok(None)
+                if cancellation.is_some_and(CancellationToken::is_cancelled)
+                    || Instant::now() >= deadline =>
+            {
+                let _ = child.kill();
+                let _ = child.wait();
+                break Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+            }
+            Ok(None) => thread::sleep(POLL_INTERVAL),
+            Err(_) => {
+                let _ = child.kill();
+                let _ = child.wait();
+                break Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+            }
+        }
+    };
+    let stdout = stdout_reader
+        .join()
+        .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))??;
+    let stderr = stderr_reader
+        .join()
+        .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))??;
+    let status = status?;
+    if stdout.len() > maximum_bytes || stderr.len() > MAX_OBSERVATION_BYTES {
+        return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+    }
+    Ok((status, stdout))
 }
 
 fn read_inventory_output(
@@ -2451,6 +2462,17 @@ mod tests {
             .collect_inventory_cancellable(&fixture.scope(), &cancellation)
             .expect_err("pre-cancelled inventory fails closed");
         assert_eq!(error.kind(), LinuxRepositoryErrorKind::ObservationFailed);
+    }
+
+    #[test]
+    fn repository_inventory_timeout_kills_and_reaps_the_stalled_process() {
+        let mut command = Command::new("/usr/bin/sleep");
+        command.arg("10").stdin(Stdio::null());
+        let started = Instant::now();
+        assert!(
+            run_inventory_process(&mut command, 1_024, None, Duration::from_millis(20)).is_err()
+        );
+        assert!(started.elapsed() < Duration::from_secs(2));
     }
 
     #[test]
