@@ -16,7 +16,7 @@
     "rustup_init_linux_x64_sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10"
   },
   "runtime_dependencies": {
-    "platform_packaged": ["bubblewrap", "git", "secret-tool", "systemd-run"]
+    "platform_packaged": ["bash", "bubblewrap", "git", "secret-tool", "systemd-run"]
   },
   "linux_platforms": {
     "fedora-x86_64": {

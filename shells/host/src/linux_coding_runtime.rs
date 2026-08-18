@@ -6751,7 +6751,7 @@ mod tests {
         let manifest = LinuxSandboxManifest::verify(
             "/usr/bin/systemd-run",
             "/usr/bin/bwrap",
-            "/usr/bin/cat",
+            "/usr/bin/bash",
             &[],
         )
         .expect("test sandbox manifest");

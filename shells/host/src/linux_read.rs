@@ -2105,7 +2105,7 @@ mod tests {
     }
 
     fn sandbox() -> LinuxSandboxRunner {
-        sandbox_for("/usr/bin/cat")
+        sandbox_for("/usr/bin/bash")
     }
 
     fn sandbox_for(executable: impl AsRef<Path>) -> LinuxSandboxRunner {

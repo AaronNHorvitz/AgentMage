@@ -188,8 +188,8 @@ class CleanBuildEvidenceTests(unittest.TestCase):
 
     def test_container_bootstrap_and_runtime_permission_order_is_fixed(self) -> None:
         recipe = (ROOT / "release/clean-build/Containerfile.linux").read_text()
-        self.assertIn("dnf install -y bubblewrap ca-certificates curl gcc git ", recipe)
-        self.assertIn("bubblewrap build-essential ca-certificates curl git ", recipe)
+        self.assertIn("dnf install -y bash bubblewrap ca-certificates curl gcc git ", recipe)
+        self.assertIn("bash bubblewrap build-essential ca-certificates curl git ", recipe)
         self.assertIn("glibc-devel libsecret make", recipe)
         self.assertIn("git libsecret-tools libssl-dev", recipe)
         self.assertIn("python3 shadow-utils systemd xz", recipe)
@@ -219,6 +219,7 @@ class CleanBuildEvidenceTests(unittest.TestCase):
             self.policy["runtime_dependencies"],
             {
                 "platform_packaged": [
+                    "bash",
                     "bubblewrap",
                     "git",
                     "secret-tool",
