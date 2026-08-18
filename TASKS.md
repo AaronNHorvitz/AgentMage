@@ -2124,7 +2124,7 @@ claims.
 ##### Tasks and Sub-tasks
 
 - [x] **Task 24.1.1 - Implement the bounded story**
-  - [x] **Sub-task 24.1.1.1** (legacy `S-021-I06`): Build the local Codex handoff packet with objective, acceptance criteria, cited evidence, constraints, disclosure list, and unresolved questions.
+  - [x] **Sub-task 24.1.1.1** (legacy `S-021-I06`): Build the local Codex handoff packet with objective, acceptance criteria, cited evidence, constraints, disclosure list, and unresolved questions. Evidence: the source-level canonical composer binds a verified task, safe-boundary checkpoint, exact checkpoint-bound context packet, current checked summary, redaction-policy digest, and explicit selections; the production host API accepts only this composition while raw-draft injection is test-only.
   - [x] **Sub-task 24.1.1.2** (legacy `S-021-I07`): Enforce zero Codex invocation, tab activation or population, clipboard write, endpoint call, packet transmission, or autonomous delivery.
 
 - [x] **Task 24.1.2 - Produce reviewable artifacts**
@@ -2133,14 +2133,14 @@ claims.
 
 - [ ] **Task 24.1.3 - Verify and close the story**
   - [x] **Sub-task 24.1.3.1:** Run every issue-local positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect case for the assigned implementation sub-tasks.
-  - [ ] **Sub-task 24.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Partial local evidence: authenticated host transport, extension digest verification, the complete product effect boundary, and static zero-network checks pass; canonical production-session composition, an installed native workflow, and live handoff-specific zero-egress observation remain absent.
+  - [ ] **Sub-task 24.1.3.2:** Run integration and adversarial checks proving the partial story cannot broaden authority, data scope, network scope, platform scope, or completion claims. Partial local evidence: canonical source-level session composition, authenticated host transport, extension digest verification, the complete product effect boundary, and static zero-network checks pass; installed production-session activation, an installed native workflow, and live handoff-specific zero-egress observation remain absent.
   - [x] **Sub-task 24.1.3.3:** Recompute the result summary from raw evidence and block on every failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or unreviewed check.
   - [ ] **Sub-task 24.1.3.4 - Product security evidence:** Map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-NET-002`, `SR-AI-004`/`SR-AI-008`, `SR-OPS-001`/`SR-OPS-003`; extend `RV-08`, `RV-11`, and `RV-18`; retain packet hashes, disclosure/redaction results, prohibited-transfer traces, approval receipts, and independent boundary review. Partial local evidence: exact packet, disclosure, redaction, acknowledgement, prohibited-action, receipt, source-digest, command-digest, and blocker records are retained; live native evidence and independent boundary review remain absent.
 
 ##### Story Acceptance Criteria
 
 - [x] **Story AC 24.1.AC1:** Given the approved dependencies and source requirements for `S-021-I06`, and `S-021-I07`, when the story is exercised against its approved fixtures, then every behavior stated by those issue identities is demonstrably satisfied and no undeclared capability is enabled.
-- [ ] **Story AC 24.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I06`, and `S-021-I07`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Partial local evidence: deterministic kernel, host, socket, controller, static effect-boundary, and cancellation cases pass; installed-native and live zero-egress cases remain absent.
+- [ ] **Story AC 24.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-021-I06`, and `S-021-I07`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent. Partial local evidence: deterministic canonical-session, kernel, host, socket, controller, static effect-boundary, and cancellation cases pass; installed production activation, installed-native, and live zero-egress cases remain absent.
 - [x] **Story AC 24.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
 #### [ ] Story 24.2 - Handoff Disclosure and Staleness Warnings

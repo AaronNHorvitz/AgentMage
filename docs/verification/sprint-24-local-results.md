@@ -11,6 +11,11 @@
 
 - A closed kernel contract constructs a content-addressed packet containing the complete declared
   handoff disclosure and no delivery authority.
+- Canonical composition accepts only a verified current task, session checkpoint, checkpoint-bound
+  context packet, optional current checked summary, active redaction-policy digest, and explicit
+  context selections. Context content, accounting, order, limits, and digest are reverified first.
+- The Linux host production API installs only that canonical composition. Arbitrary draft injection
+  is test-only, and stale task, checkpoint, context, summary, or denied-source material fails closed.
 - Hidden, unrelated, prohibited, secret-bearing, unredacted, oversized, malformed, and tampered
   entries fail before review or rendering.
 - User-provided and permitted non-public content requires explicit acknowledgement.
@@ -28,11 +33,11 @@
 
 ## Open Evidence
 
-Production session composition does not yet install a canonical current handoff draft, so the
-installed host truthfully returns unavailable. A live installed Visual Studio Code handoff has not
-been exercised. Linux, Windows, and macOS accessibility evidence is absent. A retained live
-zero-egress observation specific to the handoff path and independent Sprint 24 boundary review are
-also absent.
+The installed production host does not yet activate a complete current session and call the
+canonical composer, so it truthfully returns unavailable. A live installed Visual Studio Code
+handoff has not been exercised. Linux, Windows, and macOS accessibility evidence is absent. A
+retained live zero-egress observation specific to the handoff path and independent Sprint 24
+boundary review are also absent.
 
 Sprint 24 therefore remains blocked despite passing deterministic local contracts. The
 machine-readable record is retained at

@@ -24,9 +24,17 @@ flowchart LR
     L --> N[Local no-delivery receipt]
 ```
 
-The production host currently has no trusted session composer that installs the handoff draft, so
-the native command fails closed as unavailable. Tests install an exact fixture through the explicit
-trusted boundary; ambient prompts and untrusted host requests cannot install or alter a draft.
+The kernel now composes a draft only from an exact task, verified safe-boundary session checkpoint,
+the checkpoint-bound canonical context packet, an optional current checked summary, the active
+redaction-policy digest, and explicit context-item selections. It verifies context ordering,
+accounting, bounds, and the packet digest before deriving source labels, source-versus-inference
+labels, sensitivity, exclusions, and stable identities. The Linux host exposes this canonical
+composition boundary in production code; arbitrary prebuilt-draft installation exists only in the
+test build.
+
+The installed production host does not yet activate a complete current session and call this
+boundary, so the native command still fails closed as unavailable. Ambient prompts and untrusted
+host requests cannot install or alter a draft.
 
 ## Disclosure Contract
 
@@ -65,8 +73,8 @@ The mandatory notice is part of the hashed review:
 
 ## Evidence Limit
 
-Pure Rust and TypeScript tests establish the deterministic local contract, authenticated transport,
-independent digest checks, and absence of a declared transfer surface. They do not establish an
-installed native workflow, canonical production session composition, live zero-egress observation,
-platform accessibility, or independent review. Sprint 24 remains blocked until those artifacts are
-retained.
+Pure Rust and TypeScript tests establish the deterministic canonical-session composer, local packet
+contract, authenticated transport, independent digest checks, and absence of a declared transfer
+surface. They do not establish installed production-session activation, an installed native
+workflow, live zero-egress observation, platform accessibility, or independent review. Sprint 24
+remains blocked until those artifacts are retained.

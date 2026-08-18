@@ -25,7 +25,7 @@
 | VS Code model discovery and revalidation | Integrated locally with zero profiles | Signed catalog bootstrap and installed-native evidence remain open. |
 | VS Code shared-runtime response streaming | Implemented contract | Deterministic fixtures stream verified events and canonical output; no installed production runtime/model route, model-token streaming, or exact tokenizer count. |
 | Diagnostics and reviewed local export | Integrated locally | Supported-platform installed evidence remains open. |
-| Manual Codex handoff packet | Implemented contract | Production session composition and installed-native evidence remain open. |
+| Manual Codex handoff packet | Implemented contract | Canonical source-level session composition passes; installed production activation and installed-native evidence remain open. |
 | Automatic Codex transfer | Excluded | No invocation, tab control, clipboard write, URI, runtime, network, or submission surface. |
 | Network access in normal operation | Excluded | Acquisition is separately bounded; strict-local operation requires zero undeclared egress. |
 | Workspace or repository writes | Excluded | Later grant-bearing milestones own bounded writes. |

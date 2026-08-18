@@ -21,6 +21,7 @@ SOURCE_PATHS: Final = (
     "docs/architecture/local-codex-handoff-boundary.md",
     "docs/verification/sprint-24-local-results.md",
     "kernel/contracts/src/handoff.rs",
+    "kernel/engine/src/context_management.rs",
     "kernel/engine/src/handoff.rs",
     "kernel/engine/src/lib.rs",
     "security/strict-local-source-policy.json",
@@ -54,7 +55,7 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-CIV-003", "SR-CIV-004", "SR-CIV-009",
 ]
 BLOCKERS: Final = [
-    {"code": "CANONICAL-SESSION-HANDOFF-COMPOSITION-ABSENT", "owner": "24.1.1.1"},
+    {"code": "PRODUCTION-HOST-HANDOFF-ACTIVATION-ABSENT", "owner": "24.1.3.2"},
     {"code": "INSTALLED-VSCODE-HANDOFF-EVIDENCE-ABSENT", "owner": "24.2.2.3"},
     {"code": "LINUX-ACCESSIBILITY-EVIDENCE-ABSENT", "owner": "24.2.2.4"},
     {"code": "WINDOWS-ACCESSIBILITY-EVIDENCE-ABSENT", "owner": "24.2.2.4"},
@@ -71,10 +72,11 @@ IMPLEMENTED: Final = {
     "authenticated_local_transport": True,
     "independent_extension_digest_verification": True,
     "prohibited_action_local_receipts": True,
+    "canonical_session_composition_contract": True,
     "automatic_external_delivery": False,
     "codex_invocation": False,
     "clipboard_or_interface_control": False,
-    "production_session_composition": False,
+    "installed_production_session_activation": False,
 }
 
 
@@ -151,7 +153,8 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "authenticated_host_transport": local_pass,
             "independent_extension_digest_checks": local_pass,
             "complete_product_local_gate": local_pass,
-            "canonical_production_session_composition": False,
+            "canonical_session_composition_contract": local_pass,
+            "installed_production_session_activation": False,
             "installed_native_vscode_workflow": False,
             "live_handoff_zero_egress_observation": False,
             "linux_native_accessibility": False,
@@ -191,7 +194,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("summary overclaim or local failure")
     verification = report.get("verification_evidence", {})
     for field in (
-        "canonical_production_session_composition", "installed_native_vscode_workflow",
+        "installed_production_session_activation", "installed_native_vscode_workflow",
         "live_handoff_zero_egress_observation", "linux_native_accessibility",
         "windows_native_accessibility", "macos_native_accessibility", "independent_review",
     ):
@@ -199,10 +202,15 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
             failures.append(f"verification overclaim: {field}")
     for field in (
         "automatic_external_delivery", "codex_invocation", "clipboard_or_interface_control",
-        "production_session_composition",
+        "installed_production_session_activation",
     ):
         if report.get("implemented_contracts", {}).get(field) is not False:
             failures.append(f"implementation overclaim: {field}")
+    if verification.get("canonical_session_composition_contract") is not True:
+        failures.append("canonical session composition evidence missing")
+    if report.get("implemented_contracts", {}).get(
+            "canonical_session_composition_contract") is not True:
+        failures.append("canonical session composition contract missing")
     environment = report.get("environment", {})
     if set(environment) != {"system", "release", "machine", "python", "rustc", "cargo", "node", "npm"}:
         failures.append("environment manifest drift")

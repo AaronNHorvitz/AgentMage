@@ -60,7 +60,7 @@ or package-supplied trust root is permitted.
 
 - production signed-catalog composition and model inference route;
 - model-token streaming, exact tokenizer counting, and complete native indicators;
-- production session composition for local handoff;
+- installed production-session activation for the source-level canonical local handoff composer;
 - installed native VS Code workflow and accessibility evidence;
 - complete clean standard-user package lifecycle on every declared platform;
 - MacBook Pro M5 execution, package signing, and support evidence;
