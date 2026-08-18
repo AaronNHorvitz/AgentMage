@@ -498,8 +498,9 @@ impl LinuxRepositoryCollector {
         scope: &LinuxRepositoryScope,
         arguments: &[&str],
         maximum_bytes: usize,
+        cancellation: Option<&CancellationToken>,
     ) -> Result<Vec<u8>, LinuxRepositoryError> {
-        self.observe_inventory_optional(scope, arguments, maximum_bytes)?
+        self.observe_inventory_optional(scope, arguments, maximum_bytes, cancellation)?
             .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))
     }
 
@@ -508,12 +509,17 @@ impl LinuxRepositoryCollector {
         scope: &LinuxRepositoryScope,
         arguments: &[&str],
         maximum_bytes: usize,
+        cancellation: Option<&CancellationToken>,
     ) -> Result<Option<Vec<u8>>, LinuxRepositoryError> {
         if maximum_bytes == 0 || maximum_bytes > 32 * 1024 * 1024 {
             return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
         }
         revalidate_git_artifact(&self.git)?;
-        let output = Command::new(&self.git.launch_path)
+        if cancellation.is_some_and(CancellationToken::is_cancelled) {
+            return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+        }
+        let mut command = Command::new(&self.git.launch_path);
+        command
             .env_clear()
             .env("GIT_CONFIG_NOSYSTEM", "1")
             .env("GIT_CONFIG_GLOBAL", "/dev/null")
@@ -530,19 +536,79 @@ impl LinuxRepositoryCollector {
             .arg(format!("--work-tree={}", scope.checkout_root.display()))
             .args(arguments)
             .stdin(Stdio::null())
-            .output()
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        let mut child = command
+            .spawn()
             .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
-        if output.stdout.len() > maximum_bytes || output.stderr.len() > MAX_OBSERVATION_BYTES {
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+        let stderr = child
+            .stderr
+            .take()
+            .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+        let stdout_reader = thread::spawn(move || read_inventory_output(stdout, maximum_bytes));
+        let stderr_reader =
+            thread::spawn(move || read_inventory_output(stderr, MAX_OBSERVATION_BYTES));
+        let deadline = Instant::now() + PROCESS_TIMEOUT;
+        let status = loop {
+            match child.try_wait() {
+                Ok(Some(status)) => break Ok(status),
+                Ok(None)
+                    if cancellation.is_some_and(CancellationToken::is_cancelled)
+                        || Instant::now() >= deadline =>
+                {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    break Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+                }
+                Ok(None) => thread::sleep(POLL_INTERVAL),
+                Err(_) => {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    break Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+                }
+            }
+        };
+        let stdout = stdout_reader
+            .join()
+            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))??;
+        let stderr = stderr_reader
+            .join()
+            .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))??;
+        let status = status?;
+        if stdout.len() > maximum_bytes || stderr.len() > MAX_OBSERVATION_BYTES {
             return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
         }
-        if output.status.success() {
-            Ok(Some(output.stdout))
-        } else if matches!(output.status.code(), Some(1 | 128)) {
+        if status.success() {
+            Ok(Some(stdout))
+        } else if matches!(status.code(), Some(1 | 128)) {
             Ok(None)
         } else {
             Err(error(LinuxRepositoryErrorKind::ObservationFailed))
         }
     }
+}
+
+fn read_inventory_output(
+    input: impl Read,
+    maximum_bytes: usize,
+) -> Result<Vec<u8>, LinuxRepositoryError> {
+    let limit = u64::try_from(maximum_bytes)
+        .ok()
+        .and_then(|value| value.checked_add(1))
+        .ok_or_else(|| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+    let mut bytes = Vec::new();
+    input
+        .take(limit)
+        .read_to_end(&mut bytes)
+        .map_err(|_| error(LinuxRepositoryErrorKind::ObservationFailed))?;
+    if bytes.len() > maximum_bytes {
+        return Err(error(LinuxRepositoryErrorKind::ObservationFailed));
+    }
+    Ok(bytes)
 }
 
 /// Pinned offline executor for one kernel-validated read-only Git inspection.
@@ -1850,7 +1916,8 @@ const fn error(kind: LinuxRepositoryErrorKind) -> LinuxRepositoryError {
 mod tests {
     use super::*;
     use agentmage_kernel_contracts::{
-        AdapterInstanceId, BoundaryKind, CorrelationId, TaskId, WorkspaceAuthorizationId,
+        AdapterInstanceId, BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId,
+        CancellationReason, CancellationSignal, CorrelationId, TaskId, WorkspaceAuthorizationId,
         WorkspaceId,
     };
     use agentmage_kernel_engine::propagation::CancellationToken;
@@ -2357,6 +2424,33 @@ mod tests {
             entry("ignored.log").state,
             crate::LinuxRepositoryInventoryState::Ignored
         ));
+    }
+
+    #[test]
+    fn repository_inventory_cancellation_fails_before_git_launch() {
+        let fixture = Fixture::new();
+        let task_id = TaskId::from_raw("task-inventory-cancel-0001");
+        let correlation_id = CorrelationId::from_raw("correlation-inventory-cancel-0001");
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Kernel,
+            task_id.clone(),
+            correlation_id.clone(),
+        );
+        cancellation
+            .cancel(CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw("cancel-inventory-0001"),
+                correlation_id,
+                task_id,
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Kernel,
+            })
+            .expect("inventory cancellation");
+        let error = fixture
+            .collector()
+            .collect_inventory_cancellable(&fixture.scope(), &cancellation)
+            .expect_err("pre-cancelled inventory fails closed");
+        assert_eq!(error.kind(), LinuxRepositoryErrorKind::ObservationFailed);
     }
 
     #[test]

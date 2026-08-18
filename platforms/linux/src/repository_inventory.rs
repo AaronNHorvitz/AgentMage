@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
+use agentmage_kernel_engine::propagation::CancellationToken;
 use sha2::{Digest, Sha256};
 
 use crate::repository_safety::{
@@ -86,10 +87,28 @@ impl LinuxRepositoryCollector {
         &self,
         scope: &LinuxRepositoryScope,
     ) -> Result<LinuxRepositoryInventory, LinuxRepositoryError> {
+        self.collect_inventory_inner(scope, None)
+    }
+
+    /// Collects the same inventory while honoring one propagated cancellation token.
+    pub fn collect_inventory_cancellable(
+        &self,
+        scope: &LinuxRepositoryScope,
+        cancellation: &CancellationToken,
+    ) -> Result<LinuxRepositoryInventory, LinuxRepositoryError> {
+        self.collect_inventory_inner(scope, Some(cancellation))
+    }
+
+    fn collect_inventory_inner(
+        &self,
+        scope: &LinuxRepositoryScope,
+        cancellation: Option<&CancellationToken>,
+    ) -> Result<LinuxRepositoryInventory, LinuxRepositoryError> {
         let object_format = required_text(self.observe_inventory(
             scope,
             &["rev-parse", "--show-object-format"],
             1_024,
+            cancellation,
         )?)?;
         if !matches!(object_format.as_str(), "sha1" | "sha256") {
             return Err(failed());
@@ -98,6 +117,7 @@ impl LinuxRepositoryCollector {
             scope,
             &["rev-parse", "--verify", "HEAD"],
             1_024,
+            cancellation,
         )?)?;
         let expected_object_bytes = if object_format == "sha1" { 40 } else { 64 };
         if commit_id.len() != expected_object_bytes
@@ -106,20 +126,31 @@ impl LinuxRepositoryCollector {
             return Err(failed());
         }
         let branch = self
-            .observe_inventory_optional(scope, &["symbolic-ref", "--quiet", "HEAD"], 1_024)?
+            .observe_inventory_optional(
+                scope,
+                &["symbolic-ref", "--quiet", "HEAD"],
+                1_024,
+                cancellation,
+            )?
             .map(required_text)
             .transpose()?;
-        let index =
-            self.observe_inventory(scope, &["ls-files", "--stage", "-z"], MAX_INVENTORY_BYTES)?;
+        let index = self.observe_inventory(
+            scope,
+            &["ls-files", "--stage", "-z"],
+            MAX_INVENTORY_BYTES,
+            cancellation,
+        )?;
         let head = self.observe_inventory(
             scope,
             &["ls-tree", "-r", "-z", "--full-tree", "HEAD"],
             MAX_INVENTORY_BYTES,
+            cancellation,
         )?;
         let untracked = self.observe_inventory(
             scope,
             &["ls-files", "--others", "--exclude-standard", "-z"],
             MAX_INVENTORY_BYTES,
+            cancellation,
         )?;
         let ignored = self.observe_inventory(
             scope,
@@ -131,6 +162,7 @@ impl LinuxRepositoryCollector {
                 "-z",
             ],
             MAX_INVENTORY_BYTES,
+            cancellation,
         )?;
 
         let head_records = parse_head_records(&head, expected_object_bytes)?;
