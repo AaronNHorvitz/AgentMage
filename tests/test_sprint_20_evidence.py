@@ -26,6 +26,20 @@ class Sprint20EvidenceTests(unittest.TestCase):
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertEqual(value["implemented_contracts"]["material_claim_state_count"], 4)
         self.assertEqual(value["implemented_contracts"]["unknown_blocked_reason_count"], 8)
+        self.assertTrue(
+            value["implemented_contracts"][
+                "successful_answer_requires_evidence_assignment"
+            ]
+        )
+        self.assertTrue(
+            value["verification_evidence"][
+                "production_answer_assignment_integration"
+            ]
+        )
+        self.assertNotIn(
+            "PRODUCTION-ANSWER-CLAIM-COMPOSITION-NOT-INTEGRATED",
+            {item["code"] for item in value["blockers"]},
+        )
         self.assertFalse(value["implemented_contracts"]["assignment_authority"])
 
     def test_sprint_chain_citation_review_and_release_overclaims_fail(self) -> None:
@@ -66,4 +80,3 @@ class Sprint20EvidenceTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

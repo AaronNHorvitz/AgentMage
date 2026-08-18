@@ -11,6 +11,7 @@ use agentmage_kernel_contracts::{
     ToolId,
 };
 use agentmage_kernel_engine::{
+    runtime_answer::compose_inferred_runtime_answer,
     runtime_coordinator::{seal_runtime_outcome, verify_runtime_outcome},
     runtime_event::{RuntimeEventSequence, runtime_event_persistence, seal_runtime_event},
     runtime_loop::RuntimeCoordinatorStep,
@@ -615,6 +616,26 @@ impl FixtureStream {
     }
 
     fn outcome(&self, payload: RuntimePayloadReference) -> RuntimeOutcome {
+        let evidence = vec![EvidenceReference {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            evidence_id: EvidenceId::from_raw("parity-coding-evidence-0001"),
+            kind: EvidenceKind::Validation,
+            source_id: "parity-verifier".to_owned(),
+            object_id: "controlled-write-fixture".to_owned(),
+            fragment: None,
+            content_sha256: "9".repeat(64),
+            observed_revision: Some(self.request.repository_snapshot_id.as_str().to_owned()),
+        }];
+        let answer_evidence = compose_inferred_runtime_answer(
+            &self.request,
+            ModelRunId::from_raw("parity-coding-model-0001"),
+            "c".repeat(64),
+            payload.sha256.clone(),
+            payload.byte_size,
+            payload.media_type.clone(),
+            evidence.clone(),
+        )
+        .expect("parity answer evidence composes");
         seal_runtime_outcome(
             RuntimeOutcome {
                 schema_version: CONTRACT_SCHEMA_VERSION,
@@ -631,21 +652,11 @@ impl FixtureStream {
                     .clone()
                     .expect("checkpoint event exists"),
                 prior_event_sha256: self.previous_sha256.clone(),
-                evidence: vec![EvidenceReference {
-                    schema_version: CONTRACT_SCHEMA_VERSION,
-                    evidence_id: EvidenceId::from_raw("parity-coding-evidence-0001"),
-                    kind: EvidenceKind::Validation,
-                    source_id: "parity-verifier".to_owned(),
-                    object_id: "controlled-write-fixture".to_owned(),
-                    fragment: None,
-                    content_sha256: "9".repeat(64),
-                    observed_revision: Some(
-                        self.request.repository_snapshot_id.as_str().to_owned(),
-                    ),
-                }],
+                evidence,
                 receipt_ids: Vec::new(),
                 unresolved_codes: Vec::new(),
                 output: Some(RuntimeOutput::Artifact { reference: payload }),
+                answer_evidence: Some(Box::new(answer_evidence)),
                 outcome_sha256: ZERO_SHA256.to_owned(),
             },
             &self.request,

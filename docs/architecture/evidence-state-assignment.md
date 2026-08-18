@@ -2,9 +2,11 @@
 
 ## Scope
 
-Sprint 20 adds a platform-neutral, kernel-owned classification boundary for material claims. It
-does not resolve citations against live files, persist an answer ledger, chain audit receipts, or
-grant authority. Those concerns remain in Sprint 21 and later integration work.
+Sprint 20 adds a platform-neutral, kernel-owned classification boundary for material claims and
+requires one hash-bound assignment before a successful rendered model answer can enter a runtime
+outcome. It does not resolve citations against live files, persist a per-statement answer ledger,
+chain audit receipts, or grant authority. Those concerns remain in Sprint 21 and later integration
+work.
 
 The shared contract exposes exactly four user-visible states:
 
@@ -38,6 +40,21 @@ All assignment and provenance contracts reject unknown fields. Identifiers, coll
 digests, and versions have explicit bounds. Duplicate sources, duplicate inputs, cross-task claims,
 non-observe receipts, incomplete manifests, and malformed reason codes fail closed.
 
+## Runtime Composition
+
+`RuntimeAnswerEvidence` binds one complete rendered model answer to its exact task, model run,
+complete response digest, output digest, byte size, media type, evidence set, and exact model and
+runtime manifest. `ReusableRuntimeCoordinator` creates the assignment after deterministic
+postcondition evidence has been reconciled. `seal_runtime_outcome` refuses a successful outcome
+with visible output when the assignment is missing, reclassified, stale relative to the output,
+or bound to substituted task, model, manifest, response, or citation identities.
+
+The current runtime composition labels the complete rendered model answer as one Inferred claim.
+It does not claim that every sentence has already been segmented. Sprint 21 remains responsible
+for one-to-one rendered statement coverage, current citation resolution, and the complete durable
+answer-claim ledger. Native VS Code Chat verifies the closed envelope and displays the Inferred
+state count before rendering the digest-checked output.
+
 ## Authority and Completion
 
 Evidence assignments implement `NonAuthoritativeArtifact` as a sealed Claim Record. Offering one
@@ -45,10 +62,11 @@ as execution authority always returns the existing descriptive-authority denial.
 constructor can issue or consume a grant, start a worker, access a path, contact a network, or mark
 the existing completion ledger verified.
 
-The current implementation intentionally does not attach these assignments to final rendered
-answers. Sprint 21 must add current citation resolution, stale-source detection, the answer-claim
-ledger, reason rendering, append-only receipt chaining, and the external keyed integrity anchor
-before the evidence story can pass its complete gate.
+The runtime assignment cannot satisfy deterministic postconditions, mint a grant, or replace the
+existing verifier-backed success proof. Sprint 21 must still add current citation resolution,
+stale-source detection, per-statement answer-ledger coverage, reason rendering, append-only receipt
+chaining, and the external keyed integrity anchor before the evidence story can pass its complete
+gate.
 
 ## Traceability
 
@@ -61,4 +79,5 @@ before the evidence story can pass its complete gate.
 | `S-019-I05` | `UnknownBlockedReason`, `UnknownBlockedClaimProvenance`, `assign_unknown_blocked` | Every closed reason, malformed detail, duplicate evidence, and empty-evidence cases. |
 | `SR-AI-003`, `SR-AI-007` | Sealed non-authoritative assignment and closed state payload | Authority rejection and unknown-field/model-confidence injection. |
 | `SR-AI-010`, `SR-AI-011` | Exact inference provenance without raw response content | Model/runtime identity mutation and reproducibility checks. |
+| `S-019-IT01`, `AM-EVD-002` | `RuntimeAnswerEvidence`, runtime composer, outcome verifier, host and VS Code rendering | Missing assignment, output, task, model, manifest, citation, revision, response, relabeling, and confidence-injection mutations. |
 | `SR-OPS-001` through `SR-OPS-005`, `SR-TST-010` | Source-bound local evidence report | Hashed committed sources, command-output digests, explicit blockers, and recomputed summary. |

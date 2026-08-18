@@ -2,9 +2,10 @@
 
 use crate::{
     AgentStateKind, ApprovalId, ContextBudget, ContractPayload, EvidenceReference,
-    ExactModelProfile, GrantId, GrantOperation, PolicyId, ReceiptId, RepositorySnapshotId,
-    RuntimeEventId, RuntimeOperationId, RuntimePayloadReference, RuntimeRunId, RuntimeTurnId,
-    SessionId, Task, TaskId, ToolCallId, ToolCatalogId, ToolId, WorkPacket, WorkspaceId,
+    ExactModelProfile, GrantId, GrantOperation, MaterialClaimEvidenceAssignment, ModelRunId,
+    PolicyId, ReceiptId, RepositorySnapshotId, RuntimeEventId, RuntimeOperationId,
+    RuntimePayloadReference, RuntimeRunId, RuntimeTurnId, SessionId, Task, TaskId, ToolCallId,
+    ToolCatalogId, ToolId, WorkPacket, WorkspaceId,
 };
 
 /// Closed persistence and authority mode selected for one runtime run.
@@ -193,6 +194,35 @@ pub enum RuntimeOutput {
     },
 }
 
+/// Kernel-validated evidence-state assignment for one exact rendered model answer.
+///
+/// This record is descriptive only. It binds presentation to provenance but never grants
+/// authority, verifies task completion by itself, or permits access to a cited source.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimeAnswerEvidence {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Exact owning task.
+    pub task_id: TaskId,
+    /// Exact model run that produced the rendered answer.
+    pub model_run_id: ModelRunId,
+    /// Digest of the complete model response observed by the model boundary.
+    pub response_sha256: String,
+    /// Digest of the exact inline or artifact-backed output bytes.
+    pub output_sha256: String,
+    /// Exact output length in bytes.
+    pub output_byte_size: u64,
+    /// Exact output media type.
+    pub output_media_type: String,
+    /// Material claim identities in rendered order.
+    pub rendered_claim_ids: Vec<String>,
+    /// One kernel-validated evidence-state assignment per rendered material claim.
+    pub assignments: Vec<MaterialClaimEvidenceAssignment>,
+    /// Digest of this record with this field set to all zeroes.
+    pub answer_evidence_sha256: String,
+}
+
 /// One canonical terminal result returned to every runtime client.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -228,6 +258,9 @@ pub struct RuntimeOutcome {
     /// Optional bounded inline output or verified artifact reference.
     #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub output: Option<RuntimeOutput>,
+    /// Required evidence-state boundary for every successful rendered model answer.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub answer_evidence: Option<Box<RuntimeAnswerEvidence>>,
     /// Digest of this outcome with this field set to all zeroes.
     pub outcome_sha256: String,
 }

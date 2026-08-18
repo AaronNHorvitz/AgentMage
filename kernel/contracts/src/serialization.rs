@@ -81,6 +81,7 @@ impl_versioned_contract!(
     crate::RuntimeApprovalResponse,
     crate::RuntimeArtifactManifest,
     crate::RuntimeArtifactRef,
+    crate::RuntimeAnswerEvidence,
     crate::RuntimeContinuationState,
     crate::RuntimeOutcome,
     crate::RuntimeResumeBinding,

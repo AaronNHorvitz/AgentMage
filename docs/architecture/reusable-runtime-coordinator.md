@@ -75,7 +75,11 @@ authority, and launches a worker. Only the verifier can admit success.
 
 `RuntimeOutcome` binds the request digest, one terminal agent state, resource
 counts, prior event, evidence, receipts, unresolved reason codes, bounded inline
-or artifact-backed output, and its own canonical digest.
+or artifact-backed output, optional answer evidence, and its own canonical
+digest. Any successful outcome with visible model output requires a
+`RuntimeAnswerEvidence` record that binds the exact output identity to one
+kernel-assigned Inferred claim and the admitted model/runtime manifest. Missing
+or substituted answer evidence fails before a client can render success.
 
 ## State and Loop
 

@@ -409,8 +409,12 @@ pub fn render_runtime_outcome_human(
             reference.sha256
         ),
     };
+    let answer_evidence = outcome.answer_evidence.as_ref().map_or_else(
+        || "none".to_owned(),
+        |answer| format!("inferred:{}", answer.assignments.len()),
+    );
     bounded_render(format!(
-        "state={:?} turns={} model_calls={} tool_calls={} evidence={} receipts={} unresolved={} output={output} outcome={}",
+        "state={:?} turns={} model_calls={} tool_calls={} evidence={} answer_evidence={answer_evidence} receipts={} unresolved={} output={output} outcome={}",
         outcome.state,
         outcome.turn_count,
         outcome.model_call_count,

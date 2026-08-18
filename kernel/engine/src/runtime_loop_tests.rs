@@ -1318,6 +1318,22 @@ fn story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order() {
     assert_eq!(outcome.turn_count, 1);
     assert_eq!(outcome.model_call_count, 1);
     assert_eq!(outcome.tool_call_count, 0);
+    let answer_evidence = outcome
+        .answer_evidence
+        .as_ref()
+        .expect("successful rendered answer requires evidence assignment");
+    assert_eq!(
+        answer_evidence.rendered_claim_ids,
+        ["runtime.answer.content"]
+    );
+    assert!(matches!(
+        answer_evidence.assignments[0].evidence_state,
+        agentmage_kernel_contracts::MaterialClaimEvidenceState::Inferred(_)
+    ));
+    assert_eq!(
+        answer_evidence.output_sha256,
+        inline_output_sha256(&outcome)
+    );
     assert_eq!(executions.load(Ordering::SeqCst), 0);
     assert_eq!(coordinator.events().len(), 6);
     assert!(matches!(
@@ -2551,6 +2567,14 @@ fn inline_output_bytes(outcome: &agentmage_kernel_contracts::RuntimeOutcome) -> 
         Some(RuntimeOutput::Inline { payload }) => payload.bytes.len(),
         Some(RuntimeOutput::Artifact { reference }) => reference.byte_size as usize,
         None => 0,
+    }
+}
+
+fn inline_output_sha256(outcome: &agentmage_kernel_contracts::RuntimeOutcome) -> String {
+    match outcome.output.as_ref() {
+        Some(RuntimeOutput::Inline { payload }) => payload.sha256.clone(),
+        Some(RuntimeOutput::Artifact { reference }) => reference.sha256.clone(),
+        None => String::new(),
     }
 }
 

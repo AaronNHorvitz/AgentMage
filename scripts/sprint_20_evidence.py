@@ -17,15 +17,27 @@ OUTPUT: Final = ROOT / "artifacts/sprints/sprint-20/local-evidence-report.json"
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 SOURCE_PATHS: Final = (
+    "TASKS.md",
     "docs/architecture/evidence-state-assignment.md",
+    "docs/architecture/kernel-contract-reference.md",
+    "docs/architecture/reusable-runtime-coordinator.md",
     "docs/verification/sprint-20-local-results.md",
     "kernel/contracts/src/claim.rs",
     "kernel/contracts/src/lib.rs",
+    "kernel/contracts/src/runtime_run.rs",
     "kernel/contracts/src/serialization.rs",
     "kernel/engine/src/authority.rs",
     "kernel/engine/src/evidence_state.rs",
     "kernel/engine/src/lib.rs",
+    "kernel/engine/src/runtime_answer.rs",
+    "kernel/engine/src/runtime_coordinator.rs",
+    "kernel/engine/src/runtime_loop.rs",
+    "kernel/engine/src/runtime_loop_tests.rs",
     "scripts/sprint_20_evidence.py",
+    "shells/host/src/cli.rs",
+    "shells/vscode/src/runtime_transport.ts",
+    "shells/vscode/test/provider.test.ts",
+    "shells/vscode/test/runtime_transport.test.ts",
     "tests/test_sprint_20_evidence.py",
 )
 COMMANDS: Final = (
@@ -39,6 +51,21 @@ COMMANDS: Final = (
             "evidence_state::tests",
             "--locked",
         ),
+    ),
+    (
+        "runtime-answer-integration-tests",
+        (
+            "cargo",
+            "test",
+            "-p",
+            "agentmage-kernel-engine",
+            "story_20_successful_answers_require_exact_kernel_assigned_inference_provenance",
+            "--locked",
+        ),
+    ),
+    (
+        "vscode-answer-evidence-tests",
+        ("npm", "--prefix", "shells/vscode", "test"),
     ),
     (
         "evidence-state-clippy",
@@ -75,10 +102,6 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-TST-010",
 ]
 BLOCKERS: Final = [
-    {
-        "code": "PRODUCTION-ANSWER-CLAIM-COMPOSITION-NOT-INTEGRATED",
-        "owner": "20.1.3.2",
-    },
     {"code": "LIVE-CITATION-RESOLUTION-NOT-IMPLEMENTED", "owner": "20.1.3.4"},
     {"code": "DURABLE-RECEIPT-CHAIN-NOT-IMPLEMENTED", "owner": "20.1.3.4"},
     {"code": "KEYED-INTEGRITY-ANCHOR-NOT-IMPLEMENTED", "owner": "20.1.3.4"},
@@ -94,6 +117,9 @@ IMPLEMENTED_CONTRACTS: Final = {
     "derived_requires_observed_inputs": True,
     "inferred_requires_citations": True,
     "inferred_requires_exact_model_runtime_manifest": True,
+    "successful_answer_requires_evidence_assignment": True,
+    "successful_answer_assignment_state": "inferred",
+    "successful_answer_assignment_granularity": "complete_rendered_answer",
     "model_confidence_is_evidence_state": False,
     "assignment_authority": False,
     "filesystem_authority": False,
@@ -167,6 +193,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             "dependency_failure_and_cancellation_matrix": local_pass,
             "authority_side_effect_absence": local_pass,
             "model_confidence_injection_rejected": local_pass,
+            "production_answer_assignment_integration": local_pass,
             "receipt_chain_verification": False,
             "citation_resolver_output": False,
             "independent_review": False,

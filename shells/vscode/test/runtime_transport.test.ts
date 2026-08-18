@@ -69,6 +69,7 @@ void test("ordered terminal stream renders only digest-checked canonical output"
   assert.doesNotMatch(rendered, /command:agentmage\.unsafe/u);
   assert.match(rendered, /blocked local link/u);
   assert.match(rendered, /Status: SUCCESS/u);
+  assert.match(rendered, /Evidence states: inferred \(1\)/u);
 
   const replay = parseRuntimeHostResponse({
     ...terminalResponse(),
@@ -121,6 +122,56 @@ void test("stream substitution reordering and payload mutation fail closed", () 
   };
   assert.throws(
     () => renderRuntimeOutcome(mutatedOutcome),
+    RuntimeTransportFailure,
+  );
+});
+
+void test("successful answer evidence is mandatory, closed, and output bound", () => {
+  const missing = terminalResponse();
+  assert.ok(missing.outcome !== null);
+  missing.outcome.answer_evidence = null;
+  assert.throws(
+    () => parseRuntimeHostResponse(missing),
+    RuntimeTransportFailure,
+  );
+
+  const relabeled = terminalResponse();
+  assert.ok(relabeled.outcome !== null);
+  const answer = relabeled.outcome.answer_evidence as Record<string, unknown>;
+  const assignments = answer.assignments as Record<string, unknown>[];
+  const assignment = assignments[0];
+  assert.ok(assignment !== undefined);
+  const evidenceState = assignment.evidence_state as Record<string, unknown>;
+  assignment.evidence_state = { ...evidenceState, state: "observed" };
+  answer.answer_evidence_sha256 = answerEvidenceSha256(answer);
+  assert.throws(
+    () => parseRuntimeHostResponse(relabeled),
+    RuntimeTransportFailure,
+  );
+
+  const injected = terminalResponse();
+  assert.ok(injected.outcome !== null);
+  const injectedAnswer = injected.outcome.answer_evidence as Record<
+    string,
+    unknown
+  >;
+  const injectedAssignments = injectedAnswer.assignments as Record<
+    string,
+    unknown
+  >[];
+  const injectedAssignment = injectedAssignments[0];
+  assert.ok(injectedAssignment !== undefined);
+  const injectedState = injectedAssignment.evidence_state as Record<
+    string,
+    unknown
+  >;
+  injectedAssignment.evidence_state = {
+    ...injectedState,
+    model_confidence: 0.99,
+  };
+  injectedAnswer.answer_evidence_sha256 = answerEvidenceSha256(injectedAnswer);
+  assert.throws(
+    () => parseRuntimeHostResponse(injected),
     RuntimeTransportFailure,
   );
 });
@@ -239,6 +290,7 @@ export function terminalResponse(): MutableRuntimeStep {
   const outputSha256 = createHash("sha256")
     .update(Uint8Array.from(bytes))
     .digest("hex");
+  const evidence = evidenceReference();
   const events = [
     runtimeEvent(0, ZERO_SHA256, null, {
       event: "run_started",
@@ -278,7 +330,7 @@ export function terminalResponse(): MutableRuntimeStep {
       tool_call_count: 0,
       prior_event_id: "event-0002",
       prior_event_sha256: "c".repeat(64),
-      evidence: [evidenceReference()],
+      evidence: [evidence],
       receipt_ids: [],
       unresolved_codes: [],
       output: {
@@ -294,9 +346,90 @@ export function terminalResponse(): MutableRuntimeStep {
           sha256: outputSha256,
         },
       },
+      answer_evidence: runtimeAnswerEvidence(
+        outputSha256,
+        bytes.length,
+        "text/markdown",
+        evidence,
+      ),
       outcome_sha256: "7".repeat(64),
     },
   };
+}
+
+function runtimeAnswerEvidence(
+  outputSha256: string,
+  outputByteSize: number,
+  outputMediaType: string,
+  evidence: Record<string, unknown>,
+): Record<string, unknown> {
+  const answer: Record<string, unknown> = {
+    schema_version: 2,
+    task_id: "task-0001",
+    model_run_id: "model-run-0001",
+    response_sha256: "f".repeat(64),
+    output_sha256: outputSha256,
+    output_byte_size: outputByteSize,
+    output_media_type: outputMediaType,
+    rendered_claim_ids: ["runtime.answer.content"],
+    assignments: [
+      {
+        schema_version: 2,
+        assignment_id: "runtime.answer.assignment",
+        claim: {
+          schema_version: 2,
+          claim_id: "runtime.answer.content",
+          task_id: "task-0001",
+          kind: "read",
+          statement: "Rendered model answer content",
+          subject_id: "runtime.answer",
+          expected_revision: outputSha256,
+          prerequisite_claim_ids: [],
+        },
+        evidence_state: {
+          state: "inferred",
+          provenance: {
+            citations: [evidence],
+            runtime: {
+              model_run_id: "model-run-0001",
+              manifest: {
+                profile_id: "profile-0001",
+                manifest_sha256: "a".repeat(64),
+                artifact_sha256: "b".repeat(64),
+                tokenizer_sha256: "c".repeat(64),
+                template_sha256: "d".repeat(64),
+                codec_sha256: "e".repeat(64),
+                runtime: {
+                  adapter_id: "adapter-0001",
+                  kind: "deterministic_fake",
+                  contract_version: 1,
+                  runtime_build: "runtime-1",
+                  runtime_sha256: "6".repeat(64),
+                  platform: "deterministic_fake",
+                  architecture: "x86_64",
+                },
+              },
+              response_sha256: "f".repeat(64),
+            },
+          },
+        },
+      },
+    ],
+    answer_evidence_sha256: ZERO_SHA256,
+  };
+  answer.answer_evidence_sha256 = answerEvidenceSha256(answer);
+  return answer;
+}
+
+function answerEvidenceSha256(answer: Record<string, unknown>): string {
+  return createHash("sha256")
+    .update(
+      JSON.stringify({
+        ...answer,
+        answer_evidence_sha256: ZERO_SHA256,
+      }),
+    )
+    .digest("hex");
 }
 
 function artifactTerminalResponse(): MutableRuntimeStep {

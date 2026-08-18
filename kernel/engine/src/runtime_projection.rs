@@ -816,10 +816,10 @@ mod tests {
     };
     use agentmage_kernel_contracts::{
         AuthorityClass, BudgetLimit, BudgetResource, ContractPayload, EvidenceId, EvidenceKind,
-        EvidenceReference, GrantId, PlanId, ReceiptId, RepositorySnapshotId, RollbackPlan,
-        RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeRunLimits, RuntimeSessionMode,
-        SchemaId, SchemaReference, StopCondition, StopConditionKind, Task, TaskStatus,
-        ToolCatalogId, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId,
+        EvidenceReference, GrantId, ModelRunId, PlanId, ReceiptId, RepositorySnapshotId,
+        RollbackPlan, RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeRunLimits,
+        RuntimeSessionMode, SchemaId, SchemaReference, StopCondition, StopConditionKind, Task,
+        TaskStatus, ToolCatalogId, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId,
     };
 
     const HASH_A: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -942,6 +942,27 @@ mod tests {
 
     fn outcome(request: &RuntimeRunRequest) -> RuntimeOutcome {
         let bytes = b"Grounded fixture answer".to_vec();
+        let output_sha256 = sha256(&bytes);
+        let evidence = vec![EvidenceReference {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            evidence_id: EvidenceId::from_raw("evidence-0001"),
+            kind: EvidenceKind::Observation,
+            source_id: "fixture".to_owned(),
+            object_id: "fixture/input.txt".to_owned(),
+            fragment: Some("line:1".to_owned()),
+            content_sha256: HASH_A.to_owned(),
+            observed_revision: Some("snapshot-0001".to_owned()),
+        }];
+        let answer_evidence = crate::runtime_answer::compose_inferred_runtime_answer(
+            request,
+            ModelRunId::from_raw("model-run-0002"),
+            "f".repeat(64),
+            output_sha256.clone(),
+            bytes.len() as u64,
+            "text/plain".to_owned(),
+            evidence.clone(),
+        )
+        .expect("answer evidence composes");
         seal_runtime_outcome(
             RuntimeOutcome {
                 schema_version: CONTRACT_SCHEMA_VERSION,
@@ -955,16 +976,7 @@ mod tests {
                 tool_call_count: 1,
                 prior_event_id: RuntimeEventId::from_raw("event-0012"),
                 prior_event_sha256: "d".repeat(64),
-                evidence: vec![EvidenceReference {
-                    schema_version: CONTRACT_SCHEMA_VERSION,
-                    evidence_id: EvidenceId::from_raw("evidence-0001"),
-                    kind: EvidenceKind::Observation,
-                    source_id: "fixture".to_owned(),
-                    object_id: "fixture/input.txt".to_owned(),
-                    fragment: Some("line:1".to_owned()),
-                    content_sha256: HASH_A.to_owned(),
-                    observed_revision: Some("snapshot-0001".to_owned()),
-                }],
+                evidence,
                 receipt_ids: vec![ReceiptId::from_raw("receipt-0001")],
                 unresolved_codes: Vec::new(),
                 output: Some(RuntimeOutput::Inline {
@@ -975,10 +987,11 @@ mod tests {
                             schema_sha256: HASH_A.to_owned(),
                         },
                         media_type: "text/plain".to_owned(),
-                        sha256: sha256(&bytes),
+                        sha256: output_sha256,
                         bytes,
                     },
                 }),
+                answer_evidence: Some(Box::new(answer_evidence)),
                 outcome_sha256: ZERO_SHA256.to_owned(),
             },
             request,
@@ -1288,15 +1301,38 @@ mod tests {
         let request = seal_runtime_run_request(candidate_request).expect("canary request seals");
 
         let mut candidate_outcome = outcome(&request);
-        let RuntimeOutput::Inline { payload } = candidate_outcome
-            .output
-            .as_mut()
-            .expect("inline fixture output")
-        else {
-            panic!("fixture output changed");
+        let (output_sha256, output_byte_size, output_media_type) = {
+            let RuntimeOutput::Inline { payload } = candidate_outcome
+                .output
+                .as_mut()
+                .expect("inline fixture output")
+            else {
+                panic!("fixture output changed");
+            };
+            payload.bytes = canary_text.as_bytes().to_vec();
+            payload.sha256 = sha256(&payload.bytes);
+            (
+                payload.sha256.clone(),
+                payload.bytes.len() as u64,
+                payload.media_type.clone(),
+            )
         };
-        payload.bytes = canary_text.as_bytes().to_vec();
-        payload.sha256 = sha256(&payload.bytes);
+        let prior_answer = candidate_outcome
+            .answer_evidence
+            .as_ref()
+            .expect("fixture answer evidence");
+        candidate_outcome.answer_evidence = Some(Box::new(
+            crate::runtime_answer::compose_inferred_runtime_answer(
+                &request,
+                prior_answer.model_run_id.clone(),
+                prior_answer.response_sha256.clone(),
+                output_sha256,
+                output_byte_size,
+                output_media_type,
+                candidate_outcome.evidence.clone(),
+            )
+            .expect("canary answer evidence composes"),
+        ));
         candidate_outcome.outcome_sha256 = ZERO_SHA256.to_owned();
         let outcome =
             seal_runtime_outcome(candidate_outcome, &request).expect("canary outcome seals");

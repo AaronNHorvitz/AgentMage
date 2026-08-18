@@ -107,6 +107,7 @@ mod sealed {
     impl Sealed for agentmage_kernel_contracts::VerifiedMaterialClaim {}
     impl Sealed for agentmage_kernel_contracts::ClaimBoundFinalResponse {}
     impl Sealed for agentmage_kernel_contracts::MaterialClaimEvidenceAssignment {}
+    impl Sealed for agentmage_kernel_contracts::RuntimeAnswerEvidence {}
     impl Sealed for crate::attachment::AttachmentMetadata {}
     impl Sealed for crate::attachment::ResolvedAttachment {}
     impl Sealed for crate::session_environment::SessionEnvironmentCapture {}
@@ -165,6 +166,7 @@ impl_non_authoritative!(ClaimRecord =>
     VerifiedMaterialClaim,
     ClaimBoundFinalResponse,
     agentmage_kernel_contracts::MaterialClaimEvidenceAssignment,
+    agentmage_kernel_contracts::RuntimeAnswerEvidence,
 );
 impl_non_authoritative!(SessionRecord => crate::session_environment::SessionEnvironmentCapture);
 impl_non_authoritative!(InstructionRecord =>
@@ -362,6 +364,7 @@ mod tests {
         assert_sealed::<agentmage_kernel_contracts::MaterialClaim>();
         assert_sealed::<agentmage_kernel_contracts::VerifiedMaterialClaim>();
         assert_sealed::<agentmage_kernel_contracts::ClaimBoundFinalResponse>();
+        assert_sealed::<agentmage_kernel_contracts::RuntimeAnswerEvidence>();
     }
 
     #[test]

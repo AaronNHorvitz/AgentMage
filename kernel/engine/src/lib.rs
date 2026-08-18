@@ -103,6 +103,8 @@ pub mod repository_safety;
 pub mod review_packet;
 /// Stateful resource budgets and explicit sticky stop conditions.
 pub mod run_control;
+/// Hash-bound evidence assignment required by successful rendered runtime answers.
+pub mod runtime_answer;
 /// Closed runtime artifact manifests, references, and resume bindings.
 pub mod runtime_artifact;
 /// Reusable runtime request admission, outcome verification, and coordinator composition.

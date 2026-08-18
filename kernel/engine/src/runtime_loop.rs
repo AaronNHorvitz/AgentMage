@@ -25,6 +25,7 @@ use crate::agent_state::AgentStateController;
 use crate::agent_verifier::{VerifierContext, VerifierRegistry};
 use crate::context_management::verify_checkpoint;
 use crate::model_runtime::{LocalModelController, ModelRuntimeGateError};
+use crate::runtime_answer::compose_inferred_runtime_answer;
 use crate::runtime_artifact::{
     MAX_RUNTIME_ARTIFACT_PREVIEW_BYTES, RUNTIME_CONTINUATION_MEDIA_TYPE,
     encode_runtime_continuation_state, runtime_artifact_ref, runtime_payload_reference,
@@ -571,6 +572,7 @@ where
     tool_attempts: Vec<RuntimeToolAttemptState>,
     pending: Option<PendingApproval>,
     outcome: Option<RuntimeOutcome>,
+    answer_evidence: Option<Box<agentmage_kernel_contracts::RuntimeAnswerEvidence>>,
     active_turn: Option<RuntimeTurnId>,
     correlation_id: agentmage_kernel_contracts::CorrelationId,
     started_at_epoch_ms: Option<u64>,
@@ -805,6 +807,7 @@ where
             tool_attempts: Vec::new(),
             pending: None,
             outcome: None,
+            answer_evidence: None,
             active_turn: None,
             correlation_id,
             started_at_epoch_ms: None,
@@ -1090,6 +1093,7 @@ where
             return self.finish_model_failure(&turn_id, RuntimePortFailure::ResourceExhausted);
         }
         let result_sha256 = contract_sha256(&result)?;
+        let response_sha256 = result.response_sha256.clone();
         match result.terminal_state {
             ModelRunTerminalState::Proposed => {
                 self.emit(
@@ -1103,7 +1107,7 @@ where
                 let Some(proposal) = result.proposal else {
                     return self.finish_invalid_proposal(&turn_id);
                 };
-                self.process_proposal(turn_id, context, proposal, cancellation)
+                self.process_proposal(turn_id, context, proposal, response_sha256, cancellation)
             }
             ModelRunTerminalState::Cancelled => {
                 self.emit(
@@ -1162,6 +1166,7 @@ where
         turn_id: RuntimeTurnId,
         context: ModelContextPacket,
         proposal: ClosedModelProposal,
+        response_sha256: String,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<(), RuntimeLoopError> {
         let expected = ExpectedProposalContext {
@@ -1201,7 +1206,7 @@ where
 
         match proposal.kind {
             ModelProposalKind::Text | ModelProposalKind::CompletionCandidate => {
-                self.verify_completion(turn_id, proposal)
+                self.verify_completion(turn_id, proposal, response_sha256)
             }
             ModelProposalKind::ToolCall => self.propose_tool(turn_id, proposal, cancellation),
             ModelProposalKind::EvidenceRequest
@@ -1240,6 +1245,7 @@ where
         &mut self,
         turn_id: RuntimeTurnId,
         proposal: ClosedModelProposal,
+        response_sha256: String,
     ) -> Result<(), RuntimeLoopError> {
         let Some(payload) = proposal.payload.clone() else {
             return self.finish_invalid_proposal(&turn_id);
@@ -1303,19 +1309,6 @@ where
                 );
             }
         };
-        let Some(output) = self.route_runtime_output(
-            payload,
-            RuntimeArtifactKind::ModelOutput,
-            &turn_id,
-            None,
-            None,
-        )?
-        else {
-            return self.finish_budget_exhaustion(&turn_id);
-        };
-        self.state
-            .complete(&completion)
-            .map_err(|_| RuntimeLoopError::State)?;
         for item in candidate
             .postconditions
             .iter()
@@ -1331,6 +1324,31 @@ where
         }
         self.evidence
             .sort_by(|left, right| left.evidence_id.as_str().cmp(right.evidence_id.as_str()));
+        let answer_evidence = compose_inferred_runtime_answer(
+            &self.request,
+            proposal.model_run_id.clone(),
+            response_sha256,
+            payload.sha256.clone(),
+            u64::try_from(payload.bytes.len())
+                .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?,
+            payload.media_type.clone(),
+            self.evidence.clone(),
+        )
+        .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let Some(output) = self.route_runtime_output(
+            payload,
+            RuntimeArtifactKind::ModelOutput,
+            &turn_id,
+            None,
+            None,
+        )?
+        else {
+            return self.finish_budget_exhaustion(&turn_id);
+        };
+        self.state
+            .complete(&completion)
+            .map_err(|_| RuntimeLoopError::State)?;
+        self.answer_evidence = Some(Box::new(answer_evidence));
         let terminal = self.state.current();
         self.close_turn(&turn_id, proposal.proposal_sha256)?;
         self.finish_terminal(terminal, Vec::new(), Some(output))
@@ -2392,6 +2410,11 @@ where
             .events
             .last()
             .ok_or(RuntimeLoopError::InvalidBoundaryResult)?;
+        let answer_evidence = if state.is_success() && output.is_some() {
+            self.answer_evidence.take()
+        } else {
+            None
+        };
         let outcome = seal_runtime_outcome(
             RuntimeOutcome {
                 schema_version: CONTRACT_SCHEMA_VERSION,
@@ -2409,6 +2432,7 @@ where
                 receipt_ids: self.receipt_ids.clone(),
                 unresolved_codes,
                 output,
+                answer_evidence,
                 outcome_sha256: ZERO_SHA256.to_owned(),
             },
             &self.request,

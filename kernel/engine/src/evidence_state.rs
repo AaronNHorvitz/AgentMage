@@ -45,6 +45,14 @@ pub struct DeterministicMethodRegistry {
 }
 
 impl DeterministicMethodRegistry {
+    /// Creates an empty registry for assignment sets that contain no Derived claims.
+    #[must_use]
+    pub fn empty() -> Self {
+        Self {
+            methods: BTreeMap::new(),
+        }
+    }
+
     /// Creates an exact registry and rejects malformed or duplicate methods.
     pub fn new(
         methods: Vec<DeterministicMethodIdentity>,

@@ -12,6 +12,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use crate::model_runtime::{ModelAdmissionCatalog, ModelUsePurpose};
+use crate::runtime_answer::verify_runtime_answer_evidence;
 use crate::runtime_hardening::RuntimeHardeningLimits;
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -358,6 +359,18 @@ fn validate_runtime_outcome_shape(
     {
         return Err(RuntimeCoordinatorError::OutcomeDenied);
     }
+    match (&outcome.answer_evidence, &outcome.output) {
+        (Some(answer), Some(output)) if outcome.state.is_success() => {
+            if !verify_runtime_answer_evidence(answer, request, output, &outcome.evidence) {
+                return Err(RuntimeCoordinatorError::OutcomeDenied);
+            }
+        }
+        (None, Some(_)) if outcome.state.is_success() => {
+            return Err(RuntimeCoordinatorError::OutcomeDenied);
+        }
+        (None, _) => {}
+        (Some(_), _) => return Err(RuntimeCoordinatorError::OutcomeDenied),
+    }
     Ok(())
 }
 
@@ -525,13 +538,14 @@ mod tests {
     use agentmage_kernel_contracts::{
         AgentStateKind, ApprovalId, AuthorityClass, BudgetLimit, BudgetResource,
         CONTRACT_SCHEMA_VERSION, ContractPayload, DataSensitivity, EvidenceId, EvidenceKind,
-        EvidenceReference, GrantId, GrantOperation, PlanId, ReceiptId, RepositorySnapshotId,
-        RollbackPlan, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
-        RuntimeApprovalResponse, RuntimeEventCursor, RuntimeEventId, RuntimeOperationId,
-        RuntimeOutcome, RuntimeOutput, RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest,
-        RuntimeSessionMode, RuntimeTurnId, SchemaId, SchemaReference, SessionId, StopCondition,
-        StopConditionKind, Task, TaskId, TaskStatus, ToolCallId, ToolCatalogId, WorkPacket,
-        WorkPacketId, WorkPacketState, WorkspaceId, from_json, to_canonical_json,
+        EvidenceReference, GrantId, GrantOperation, MaterialClaimEvidenceState, ModelRunId, PlanId,
+        ReceiptId, RepositorySnapshotId, RollbackPlan, RuntimeAnswerEvidence,
+        RuntimeApprovalChallenge, RuntimeApprovalDisposition, RuntimeApprovalResponse,
+        RuntimeEventCursor, RuntimeEventId, RuntimeOperationId, RuntimeOutcome, RuntimeOutput,
+        RuntimeRunId, RuntimeRunLimits, RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId,
+        SchemaId, SchemaReference, SessionId, StopCondition, StopConditionKind, Task, TaskId,
+        TaskStatus, ToolCallId, ToolCatalogId, WorkPacket, WorkPacketId, WorkPacketState,
+        WorkspaceId, from_json, to_canonical_json,
     };
 
     const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -681,6 +695,27 @@ mod tests {
     }
 
     fn outcome(request: &RuntimeRunRequest) -> RuntimeOutcome {
+        let output = output();
+        let evidence = vec![evidence()];
+        let answer_evidence = crate::runtime_answer::compose_inferred_runtime_answer(
+            request,
+            ModelRunId::from_raw("model-run-0002"),
+            "f".repeat(64),
+            match &output {
+                RuntimeOutput::Inline { payload } => payload.sha256.clone(),
+                RuntimeOutput::Artifact { reference } => reference.sha256.clone(),
+            },
+            match &output {
+                RuntimeOutput::Inline { payload } => payload.bytes.len() as u64,
+                RuntimeOutput::Artifact { reference } => reference.byte_size,
+            },
+            match &output {
+                RuntimeOutput::Inline { payload } => payload.media_type.clone(),
+                RuntimeOutput::Artifact { reference } => reference.media_type.clone(),
+            },
+            evidence.clone(),
+        )
+        .expect("answer evidence composes");
         RuntimeOutcome {
             schema_version: CONTRACT_SCHEMA_VERSION,
             run_id: request.run_id.clone(),
@@ -693,12 +728,19 @@ mod tests {
             tool_call_count: 1,
             prior_event_id: RuntimeEventId::from_raw("event-0012"),
             prior_event_sha256: "d".repeat(64),
-            evidence: vec![evidence()],
+            evidence,
             receipt_ids: vec![ReceiptId::from_raw("receipt-0001")],
             unresolved_codes: Vec::new(),
-            output: Some(output()),
+            output: Some(output),
+            answer_evidence: Some(Box::new(answer_evidence)),
             outcome_sha256: "0".repeat(64),
         }
+    }
+
+    fn resign_answer_evidence(answer: &mut RuntimeAnswerEvidence) {
+        answer.answer_evidence_sha256 = "0".repeat(64);
+        answer.answer_evidence_sha256 =
+            sha256(&to_canonical_json(answer).expect("answer evidence serializes"));
     }
 
     #[test]
@@ -712,6 +754,77 @@ mod tests {
         verify_runtime_outcome(&outcome, &request).expect("outcome verifies");
         let bytes = to_canonical_json(&outcome).expect("outcome serializes");
         assert_eq!(from_json::<RuntimeOutcome>(&bytes), Ok(outcome));
+    }
+
+    #[test]
+    fn story_20_successful_answers_require_exact_kernel_assigned_inference_provenance() {
+        let request = seal_runtime_run_request(request()).expect("request seals");
+        let baseline = outcome(&request);
+        seal_runtime_outcome(baseline.clone(), &request).expect("grounded outcome seals");
+
+        for mutation in 0..8 {
+            let mut candidate = baseline.clone();
+            match mutation {
+                0 => candidate.answer_evidence = None,
+                1 => {
+                    let Some(RuntimeOutput::Inline { payload }) = candidate.output.as_mut() else {
+                        panic!("fixture output is inline");
+                    };
+                    payload.bytes.push(b'!');
+                    payload.sha256 = sha256(&payload.bytes);
+                }
+                2 => {
+                    let answer = candidate.answer_evidence.as_mut().expect("answer evidence");
+                    answer.task_id = TaskId::from_raw("task-substituted");
+                    resign_answer_evidence(answer);
+                }
+                3 => {
+                    let answer = candidate.answer_evidence.as_mut().expect("answer evidence");
+                    answer.model_run_id = ModelRunId::from_raw("model-run-substituted");
+                    resign_answer_evidence(answer);
+                }
+                4 => {
+                    let answer = candidate.answer_evidence.as_mut().expect("answer evidence");
+                    let MaterialClaimEvidenceState::Inferred(provenance) =
+                        &mut answer.assignments[0].evidence_state
+                    else {
+                        panic!("fixture assignment is inferred");
+                    };
+                    provenance.runtime.manifest.runtime.runtime_sha256 = "e".repeat(64);
+                    resign_answer_evidence(answer);
+                }
+                5 => {
+                    let answer = candidate.answer_evidence.as_mut().expect("answer evidence");
+                    let MaterialClaimEvidenceState::Inferred(provenance) =
+                        &mut answer.assignments[0].evidence_state
+                    else {
+                        panic!("fixture assignment is inferred");
+                    };
+                    provenance.citations.clear();
+                    resign_answer_evidence(answer);
+                }
+                6 => {
+                    let answer = candidate.answer_evidence.as_mut().expect("answer evidence");
+                    answer.assignments[0].claim.expected_revision = "e".repeat(64);
+                    resign_answer_evidence(answer);
+                }
+                _ => {
+                    let answer = candidate.answer_evidence.as_mut().expect("answer evidence");
+                    let MaterialClaimEvidenceState::Inferred(provenance) =
+                        &mut answer.assignments[0].evidence_state
+                    else {
+                        panic!("fixture assignment is inferred");
+                    };
+                    provenance.runtime.response_sha256 = "e".repeat(64);
+                    resign_answer_evidence(answer);
+                }
+            }
+            assert_eq!(
+                seal_runtime_outcome(candidate, &request),
+                Err(RuntimeCoordinatorError::OutcomeDenied),
+                "mutation {mutation} must fail closed"
+            );
+        }
     }
 
     #[test]

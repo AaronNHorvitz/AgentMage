@@ -400,6 +400,7 @@ an implementation can distinguish wire types from helpers and identifiers.
   `ModelProposalWireCandidate`, `ModelResourceReport`, `ModelRole`, `ModelRunId`,
   `ModelRunRequest`, `ModelRunResult`, `ModelRunTerminalState`,
   `ModelRuntimeFailure`, `ModelRuntimeIdentity`, `ModelRuntimeKind`,
+  `RuntimeAnswerEvidence`,
   `ModelStreamId`, `ModelStreamSink`, `ModelToolCallCandidate`,
   `ModelToolCallWireCandidate`, `ModelTransformation`, `ModelUnloadReceipt`,
   `NetworkRequirement`, `OPERATION_TAXONOMY_VERSION`, `OperationAttemptId`,

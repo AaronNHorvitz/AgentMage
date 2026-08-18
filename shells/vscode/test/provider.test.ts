@@ -1046,9 +1046,10 @@ function completedRuntimeStep(requestId: string): HostResponse {
   const outputSha256 = createHash("sha256")
     .update(Uint8Array.from(bytes))
     .digest("hex");
+  const evidence = runtimeEvidence();
   return runtimeStep(requestId, completedEvents(), null, {
     ...runtimeOutcome("SUCCESS", "event-0002", "c".repeat(64)),
-    evidence: [runtimeEvidence()],
+    evidence: [evidence],
     output: {
       storage: "inline",
       payload: {
@@ -1062,6 +1063,12 @@ function completedRuntimeStep(requestId: string): HostResponse {
         sha256: outputSha256,
       },
     },
+    answer_evidence: runtimeAnswerEvidence(
+      outputSha256,
+      bytes.length,
+      "text/markdown",
+      evidence,
+    ),
   });
 }
 
@@ -1247,6 +1254,7 @@ function runtimeOutcome(
     receipt_ids: [],
     unresolved_codes: [],
     output: null,
+    answer_evidence: null,
     outcome_sha256: "e".repeat(64),
   };
 }
@@ -1262,4 +1270,70 @@ function runtimeEvidence(): Record<string, unknown> {
     content_sha256: "d".repeat(64),
     observed_revision: "fixture-revision",
   };
+}
+
+function runtimeAnswerEvidence(
+  outputSha256: string,
+  outputByteSize: number,
+  outputMediaType: string,
+  evidence: Record<string, unknown>,
+): Record<string, unknown> {
+  const answer: Record<string, unknown> = {
+    schema_version: 2,
+    task_id: "task-0001",
+    model_run_id: "model-run-0001",
+    response_sha256: "f".repeat(64),
+    output_sha256: outputSha256,
+    output_byte_size: outputByteSize,
+    output_media_type: outputMediaType,
+    rendered_claim_ids: ["runtime.answer.content"],
+    assignments: [
+      {
+        schema_version: 2,
+        assignment_id: "runtime.answer.assignment",
+        claim: {
+          schema_version: 2,
+          claim_id: "runtime.answer.content",
+          task_id: "task-0001",
+          kind: "read",
+          statement: "Rendered model answer content",
+          subject_id: "runtime.answer",
+          expected_revision: outputSha256,
+          prerequisite_claim_ids: [],
+        },
+        evidence_state: {
+          state: "inferred",
+          provenance: {
+            citations: [evidence],
+            runtime: {
+              model_run_id: "model-run-0001",
+              manifest: {
+                profile_id: "profile-0001",
+                manifest_sha256: "a".repeat(64),
+                artifact_sha256: "b".repeat(64),
+                tokenizer_sha256: "c".repeat(64),
+                template_sha256: "d".repeat(64),
+                codec_sha256: "e".repeat(64),
+                runtime: {
+                  adapter_id: "adapter-0001",
+                  kind: "deterministic_fake",
+                  contract_version: 1,
+                  runtime_build: "runtime-1",
+                  runtime_sha256: "6".repeat(64),
+                  platform: "deterministic_fake",
+                  architecture: "x86_64",
+                },
+              },
+              response_sha256: "f".repeat(64),
+            },
+          },
+        },
+      },
+    ],
+    answer_evidence_sha256: "0".repeat(64),
+  };
+  answer.answer_evidence_sha256 = createHash("sha256")
+    .update(JSON.stringify(answer))
+    .digest("hex");
+  return answer;
 }

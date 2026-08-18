@@ -51,6 +51,7 @@ const RUNTIME_EVENT_KEYS = [
 ] as const;
 
 const RUNTIME_OUTCOME_KEYS = [
+  "answer_evidence",
   "evidence",
   "model_call_count",
   "outcome_sha256",
@@ -225,6 +226,19 @@ interface RuntimeArtifactOutput {
 
 export type RuntimeOutputEnvelope = RuntimeInlineOutput | RuntimeArtifactOutput;
 
+export interface RuntimeAnswerEvidenceEnvelope {
+  readonly schema_version: 2;
+  readonly task_id: string;
+  readonly model_run_id: string;
+  readonly response_sha256: string;
+  readonly output_sha256: string;
+  readonly output_byte_size: number;
+  readonly output_media_type: string;
+  readonly rendered_claim_ids: readonly string[];
+  readonly assignments: readonly Readonly<Record<string, unknown>>[];
+  readonly answer_evidence_sha256: string;
+}
+
 export interface RuntimeArtifactReferenceEnvelope {
   readonly schema_version: 2;
   readonly artifact_id: string;
@@ -250,6 +264,7 @@ export interface RuntimeOutcomeEnvelope {
   readonly receipt_ids: readonly string[];
   readonly unresolved_codes: readonly string[];
   readonly output: RuntimeOutputEnvelope | null;
+  readonly answer_evidence: RuntimeAnswerEvidenceEnvelope | null;
   readonly outcome_sha256: string;
 }
 
@@ -639,6 +654,13 @@ export function renderRuntimeEvent(event: RuntimeEventEnvelope): string {
 }
 
 export function renderRuntimeOutcome(outcome: RuntimeOutcomeEnvelope): string {
+  validateRuntimeAnswerEvidence(
+    outcome.answer_evidence,
+    outcome.output,
+    outcome.task_id,
+    outcome.evidence,
+    outcome.state,
+  );
   const lines = [
     "\n## Result\n",
     `\n- Status: ${outcome.state}`,
@@ -647,6 +669,11 @@ export function renderRuntimeOutcome(outcome: RuntimeOutcomeEnvelope): string {
     `- Tool calls: ${outcome.tool_call_count.toString()}`,
     `- Evidence records: ${outcome.evidence.length.toString()}`,
     `- Receipts: ${outcome.receipt_ids.length.toString()}`,
+    ...(outcome.answer_evidence === null
+      ? []
+      : [
+          `- Evidence states: inferred (${outcome.answer_evidence.assignments.length.toString()})`,
+        ]),
     `- Outcome: \`${outcome.outcome_sha256}\``,
   ];
   const output = outcome.output;
@@ -1006,10 +1033,189 @@ function parseRuntimeOutcome(candidate: unknown): RuntimeOutcomeEnvelope {
     throw new RuntimeTransportFailure();
   }
   const output = parseRuntimeOutput(record.output);
-  return {
-    ...(record as unknown as Omit<RuntimeOutcomeEnvelope, "output">),
+  const answerEvidence = parseRuntimeAnswerEvidence(
+    record.answer_evidence,
     output,
+    String(record.task_id),
+    record.evidence as readonly Readonly<Record<string, unknown>>[],
+    String(record.state),
+  );
+  return {
+    ...(record as unknown as Omit<
+      RuntimeOutcomeEnvelope,
+      "answer_evidence" | "output"
+    >),
+    output,
+    answer_evidence: answerEvidence,
   };
+}
+
+function parseRuntimeAnswerEvidence(
+  candidate: unknown,
+  output: RuntimeOutputEnvelope | null,
+  taskId: string,
+  outcomeEvidence: readonly Readonly<Record<string, unknown>>[],
+  state: string,
+): RuntimeAnswerEvidenceEnvelope | null {
+  if (candidate === null) {
+    validateRuntimeAnswerEvidence(null, output, taskId, outcomeEvidence, state);
+    return null;
+  }
+  const record = requiredRecord(candidate);
+  requireKeys(record, [
+    "answer_evidence_sha256",
+    "assignments",
+    "model_run_id",
+    "output_byte_size",
+    "output_media_type",
+    "output_sha256",
+    "rendered_claim_ids",
+    "response_sha256",
+    "schema_version",
+    "task_id",
+  ]);
+  if (
+    record.schema_version !== RUNTIME_CONTRACT_VERSION ||
+    !validIdentifier(record.task_id) ||
+    !validIdentifier(record.model_run_id) ||
+    !validSha256(record.response_sha256) ||
+    !validSha256(record.output_sha256) ||
+    !positiveSafeInteger(record.output_byte_size) ||
+    !validMediaType(record.output_media_type) ||
+    !Array.isArray(record.rendered_claim_ids) ||
+    !record.rendered_claim_ids.every(validIdentifier) ||
+    !Array.isArray(record.assignments) ||
+    !validSha256(record.answer_evidence_sha256)
+  ) {
+    throw new RuntimeTransportFailure();
+  }
+  const answer = record as unknown as RuntimeAnswerEvidenceEnvelope;
+  validateRuntimeAnswerEvidence(answer, output, taskId, outcomeEvidence, state);
+  return answer;
+}
+
+function validateRuntimeAnswerEvidence(
+  answer: RuntimeAnswerEvidenceEnvelope | null,
+  output: RuntimeOutputEnvelope | null,
+  taskId: string,
+  outcomeEvidence: readonly Readonly<Record<string, unknown>>[],
+  state: string,
+): void {
+  const successfulOutput =
+    (state === "SUCCESS" || state === "NO_OP") && output !== null;
+  if (answer === null) {
+    requireValid(!successfulOutput);
+    return;
+  }
+  if (!successfulOutput || output === null || answer.task_id !== taskId) {
+    throw new RuntimeTransportFailure();
+  }
+  const outputIdentity =
+    output.storage === "inline"
+      ? {
+          sha256: output.payload.sha256,
+          byteSize: output.payload.bytes.length,
+          mediaType: output.payload.media_type,
+        }
+      : {
+          sha256: output.reference.sha256,
+          byteSize: output.reference.byte_size,
+          mediaType: output.reference.media_type,
+        };
+  requireValid(
+    answer.output_sha256 === outputIdentity.sha256 &&
+      answer.output_byte_size === outputIdentity.byteSize &&
+      answer.output_media_type === outputIdentity.mediaType &&
+      answer.rendered_claim_ids.length === 1 &&
+      answer.rendered_claim_ids[0] === "runtime.answer.content" &&
+      answer.assignments.length === 1,
+  );
+  const assignment = requiredRecord(answer.assignments[0]);
+  requireKeys(assignment, [
+    "assignment_id",
+    "claim",
+    "evidence_state",
+    "schema_version",
+  ]);
+  const claim = requiredRecord(assignment.claim);
+  requireKeys(claim, [
+    "claim_id",
+    "expected_revision",
+    "kind",
+    "prerequisite_claim_ids",
+    "schema_version",
+    "statement",
+    "subject_id",
+    "task_id",
+  ]);
+  const evidenceState = requiredRecord(assignment.evidence_state);
+  requireKeys(evidenceState, ["provenance", "state"]);
+  const provenance = requiredRecord(evidenceState.provenance);
+  requireKeys(provenance, ["citations", "runtime"]);
+  const runtime = requiredRecord(provenance.runtime);
+  requireKeys(runtime, ["manifest", "model_run_id", "response_sha256"]);
+  const manifest = requiredRecord(runtime.manifest);
+  requireKeys(manifest, [
+    "artifact_sha256",
+    "codec_sha256",
+    "manifest_sha256",
+    "profile_id",
+    "runtime",
+    "template_sha256",
+    "tokenizer_sha256",
+  ]);
+  const modelRuntime = requiredRecord(manifest.runtime);
+  requireKeys(modelRuntime, [
+    "adapter_id",
+    "architecture",
+    "contract_version",
+    "kind",
+    "platform",
+    "runtime_build",
+    "runtime_sha256",
+  ]);
+  requireValid(
+    assignment.schema_version === RUNTIME_CONTRACT_VERSION &&
+      assignment.assignment_id === "runtime.answer.assignment" &&
+      claim.schema_version === RUNTIME_CONTRACT_VERSION &&
+      claim.claim_id === "runtime.answer.content" &&
+      claim.task_id === taskId &&
+      claim.kind === "read" &&
+      claim.statement === "Rendered model answer content" &&
+      claim.subject_id === "runtime.answer" &&
+      claim.expected_revision === answer.output_sha256 &&
+      Array.isArray(claim.prerequisite_claim_ids) &&
+      claim.prerequisite_claim_ids.length === 0 &&
+      evidenceState.state === "inferred" &&
+      Array.isArray(provenance.citations) &&
+      provenance.citations.length === outcomeEvidence.length &&
+      provenance.citations.every(validEvidenceReference) &&
+      JSON.stringify(provenance.citations) ===
+        JSON.stringify(outcomeEvidence) &&
+      runtime.model_run_id === answer.model_run_id &&
+      runtime.response_sha256 === answer.response_sha256 &&
+      validIdentifier(manifest.profile_id) &&
+      validSha256(manifest.manifest_sha256) &&
+      validSha256(manifest.artifact_sha256) &&
+      validSha256(manifest.tokenizer_sha256) &&
+      validSha256(manifest.template_sha256) &&
+      validSha256(manifest.codec_sha256) &&
+      validIdentifier(modelRuntime.adapter_id) &&
+      typeof modelRuntime.kind === "string" &&
+      positiveSafeInteger(modelRuntime.contract_version) &&
+      validIdentifier(modelRuntime.runtime_build) &&
+      validSha256(modelRuntime.runtime_sha256) &&
+      typeof modelRuntime.platform === "string" &&
+      typeof modelRuntime.architecture === "string",
+  );
+  const preimage = {
+    ...answer,
+    answer_evidence_sha256: "0".repeat(64),
+  };
+  requireValid(
+    createHash("sha256").update(JSON.stringify(preimage)).digest("hex") ===
+      answer.answer_evidence_sha256,
+  );
 }
 
 function parseRuntimeOutput(candidate: unknown): RuntimeOutputEnvelope | null {

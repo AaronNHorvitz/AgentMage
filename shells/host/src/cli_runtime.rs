@@ -1163,6 +1163,7 @@ mod tests {
                     receipt_ids: Vec::new(),
                     unresolved_codes: Vec::new(),
                     output: None,
+                    answer_evidence: None,
                     outcome_sha256: ZERO_SHA256.to_owned(),
                 },
                 &self.request,
