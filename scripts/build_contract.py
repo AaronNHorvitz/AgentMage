@@ -181,8 +181,8 @@ EXPECTED_SCRIPTS = {
         "npm run test --workspace @agentmage/vscode-shell"
     ),
     "product:check": (
-        "npm run product:format-check && npm run product:lint && "
-        "npm run product:build && npm run product:test"
+        "npm run product:format-check && npm run product:build && "
+        "npm run product:lint && npm run product:test"
     ),
     "product:macos:build": "swift build --package-path platforms/macos",
     "product:macos:test": "swift test --package-path platforms/macos",

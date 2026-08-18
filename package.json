@@ -180,7 +180,7 @@
     "resolution:build": "python3 scripts/locked_resolution.py --write",
     "resolution:check": "python3 scripts/locked_resolution.py",
     "product:build": "cargo build --workspace --all-targets --locked && npm run build --workspace @agentmage/vscode-shell",
-    "product:check": "npm run product:format-check && npm run product:lint && npm run product:build && npm run product:test",
+    "product:check": "npm run product:format-check && npm run product:build && npm run product:lint && npm run product:test",
     "product:format": "cargo fmt --all && npm run format --workspace @agentmage/vscode-shell",
     "product:format-check": "cargo fmt --all -- --check && npm run format:check --workspace @agentmage/vscode-shell",
     "product:lint": "cargo clippy --workspace --all-targets --locked -- -D warnings && npm run lint --workspace @agentmage/vscode-shell && npm run strict-local-source:check && npm run hostile-network:check && npm run effect-boundary:check",

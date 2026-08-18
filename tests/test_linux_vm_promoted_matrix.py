@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
 from pathlib import Path
 
@@ -104,6 +105,11 @@ class PromotedLinuxVmMatrixTests(unittest.TestCase):
         self.assertIn('"set -eu\\n"', source)
         self.assertIn("checkout --quiet --detach FETCH_HEAD", source)
         self.assertNotIn("git clone --quiet /home/agentmage/source.bundle", source)
+
+    def test_canonical_product_check_builds_before_source_audit(self) -> None:
+        package = json.loads(Path("package.json").read_text(encoding="utf-8"))
+        command = package["scripts"]["product:check"]
+        self.assertLess(command.index("product:build"), command.index("product:lint"))
 
     def test_exact_independent_matrix_passes(self) -> None:
         self.assertEqual(validate_report(valid_report()), [])
