@@ -52,6 +52,13 @@ class PromotedGuestError(ValueError):
     """Raised when a promoted guest lane does not pass exactly."""
 
 
+def bounded_failure(output: str) -> str:
+    sanitized = output.replace(str(ROOT), "<GUEST_SOURCE>")
+    sanitized = sanitized.replace("/home/agentmage/source", "<GUEST_SOURCE>")
+    sanitized = sanitized.replace("/home/agentmage", "<GUEST_HOME>")
+    return " | ".join(line[-240:] for line in sanitized.splitlines()[-12:])[:2400] or "no-output"
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -102,7 +109,10 @@ def run(
         }
     )
     if success != expected_success:
-        raise PromotedGuestError(f"promoted guest command failed: {lane}:{Path(command[0]).name}")
+        raise PromotedGuestError(
+            f"promoted guest command failed: {lane}:{Path(command[0]).name}:"
+            f"{bounded_failure(completed.stdout)}"
+        )
     return completed.stdout
 
 
