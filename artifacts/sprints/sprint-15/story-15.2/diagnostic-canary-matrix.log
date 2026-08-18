@@ -1,0 +1,178 @@
+===== closed-kernel-harness =====
+
+running 1 test
+test diagnostics::tests::prohibited_raw_sources_are_not_members_of_the_closed_observation_schema ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 629 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+
+===== preview-receipt-export =====
+
+running 1 test
+test diagnostic_export::tests::prohibited_source_canaries_never_reach_preview_receipt_or_export ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 133 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-606dfe028916acd7)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-2884a5da192b2a15)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-d53fb0103dbb2d3b)
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-95d8d80d76d23c05)
+
+===== authenticated-chat-and-renderer =====
+
+> @agentmage/vscode-shell@0.0.0 test
+> npm run build && node --test "dist/test/*.test.js"
+
+
+> @agentmage/vscode-shell@0.0.0 build
+> tsc --project tsconfig.json
+
+✔ exact review, packet, manifest, and local receipt round trip (0.944961ms)
+✔ every review and manifest mutation fails before display (0.391009ms)
+✔ receipt cannot claim delivery, wrong action, or unreviewed packet (0.204489ms)
+✔ verified binary bootstrap names this process and remains supervised (1.631549ms)
+✔ wrong process and trailing bytes fail closed and kill the child (0.440008ms)
+✔ malformed, oversized, silent, and throwing launchers remain unavailable (5.805795ms)
+✔ authenticated bridge sends the exact handshake and bounded request frame (8.281558ms)
+✔ unknown host response fields fail closed without exposing parser detail (0.868912ms)
+✔ authenticated bridge validates the closed diagnostic export preview (0.984738ms)
+✔ authenticated doctor transport rejects every prohibited source field (5.118242ms)
+✔ authenticated bridge verifies model snapshot digests before display (0.800878ms)
+✔ tampered authenticated model snapshot fails closed (0.515664ms)
+✔ authenticated bridge transports one exact local handoff review (0.826716ms)
+✔ delivery claim in authenticated handoff fails closed (0.554197ms)
+✔ authenticated bridge transports one exact host-framed runtime request (0.876008ms)
+✔ authenticated bridge validates runtime events and protected approval (0.9462ms)
+✔ hidden runtime event authority fails closed at authenticated transport (0.79679ms)
+✔ out-of-range launch identity fails before socket access (0.25988ms)
+✔ shell scaffold exposes only declared interface authority (0.650619ms)
+✔ provider registration replacement and deactivation are exact (0.104749ms)
+✔ zero-profile discovery is valid and yields no native picker entry (1.131115ms)
+✔ acquisition review separates preflight and license without effects (8.329345ms)
+✔ Muse, Gemma, and additional admitted families map without prerequisites (0.685816ms)
+✔ every unavailable lifecycle remains visible only in management output (1.087003ms)
+✔ identity mutation and digest tampering fail before picker display (1.015056ms)
+✔ self-consistent blocked entry cannot claim selectable disposition (0.146891ms)
+✔ closed read grammar rejects ambient and traversal paths (1.23278ms)
+✔ model management reports an exact empty snapshot without inventing a profile (0.882091ms)
+✔ exact model review refuses an absent profile without substitution (0.217933ms)
+✔ selected model is revalidated exactly and refusal names no fallback (0.230987ms)
+✔ doctor renders every typed state without workspace approval (0.356137ms)
+✔ doctor rejects prohibited-source fields without canary disclosure (0.321773ms)
+✔ diagnostic export requires destination preview and one approval (0.303514ms)
+✔ cancelled and malformed diagnostic previews never approve (0.239282ms)
+✔ reviewed handoff renders the exact local packet without delivery (0.617857ms)
+✔ handoff cancellation and missing acknowledgement never render (0.27363ms)
+✔ handoff byte mutation fails closed before unreviewed display (0.207927ms)
+✔ one approved read renders bounded content citation and receipt (0.385892ms)
+✔ unsafe display links never become clickable native Chat output (0.310915ms)
+✔ workspace and operation denials start no approved worker (0.142966ms)
+✔ cancellation after preview cancels the exact pending operation (0.107305ms)
+✔ mutated preview identity is denied before approval (0.080506ms)
+✔ mismatched terminal request identity is never rendered (0.087904ms)
+✔ deactivation cancels an unconsumed preview and closes the controller (0.162857ms)
+✔ native Chat renders one complete shared-runtime stream and outcome (10.083062ms)
+✔ native Chat accepts an exact host-framed controlled-write run (0.514728ms)
+✔ native Chat rejects a substituted profile workspace or prompt before start (0.128647ms)
+✔ native Chat rejects every selected session identity mutation before start (0.345596ms)
+✔ native Chat relays one exact protected denial before terminal output (0.957962ms)
+✔ native Chat cancellation uses the exact accepted cursor and starts no approval (0.368308ms)
+✔ deactivation cancels and releases an active native Chat run before IPC closes (0.301659ms)
+✔ closed runtime request and host response reject unknown fields (0.880981ms)
+✔ ordered terminal stream renders only digest-checked canonical output (1.559893ms)
+✔ stream substitution reordering and payload mutation fail closed (1.037715ms)
+✔ successful answer evidence is mandatory, closed, and output bound (0.284352ms)
+✔ artifact references remain complete and event-bound across runtime steps (0.502639ms)
+✔ approval is bound to the exact last permission event and grant (0.580159ms)
+ℹ tests 57
+ℹ suites 0
+ℹ pass 57
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 74.064522

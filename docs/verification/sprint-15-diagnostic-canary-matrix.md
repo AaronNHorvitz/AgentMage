@@ -1,6 +1,6 @@
 # Sprint 15 Diagnostic Canary Matrix
 
-**Status:** Implemented evidence harness; retained execution is generated only from a committed source revision.
+**Status:** Passed for the currently reachable Linux/local diagnostic surfaces; broader Sprint 15 remains blocked.
 
 ## Boundary
 
@@ -17,6 +17,8 @@ The retained matrix executes and binds three boundaries:
 3. The authenticated bridge and Chat renderer reject unknown raw-source fields with one stable content-free denial.
 
 Successful command output is retained as the current diagnostic log surface and scanned for the synthetic prefix. The product path has no diagnostic logger or external telemetry call.
+
+The retained machine-readable result is [`diagnostic-canary-matrix.json`](../../artifacts/sprints/sprint-15/story-15.2/diagnostic-canary-matrix.json), bound to source revision `fa8846c5e01157657a0b2b56e171f7a2146f6f10`. Its private mode-`0600` command trace is retained beside the report and verified by byte count and SHA-256.
 
 ## Limits
 

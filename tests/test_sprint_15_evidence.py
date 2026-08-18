@@ -28,6 +28,8 @@ def state() -> dict[str, object]:
         "enabled_model_count": 0,
         "unsupported_claim_count": 0,
         "reviewed_export": True,
+        "diagnostic_canary_source_families": 9,
+        "diagnostic_canary_disclosures": 0,
     }
 
 
@@ -47,7 +49,7 @@ class Sprint15EvidenceTests(unittest.TestCase):
             self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertTrue(value["summary"]["local_contract_passed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
-        self.assertEqual(len(value["blockers"]), 5)
+        self.assertEqual(len(value["blockers"]), 4)
         self.assertTrue(value["stories"][0]["kernel_resource_stop_unloads_model"])
         self.assertTrue(value["stories"][0]["chat_model_selection"])
 
@@ -58,7 +60,7 @@ class Sprint15EvidenceTests(unittest.TestCase):
             lambda value: value["stories"][0].update({"os_worker_resource_enforcement": True}),
             lambda value: value["stories"][0].update({"kernel_resource_stop_unloads_model": False}),
             lambda value: value["stories"][0].update({"chat_model_selection": False}),
-            lambda value: value["stories"][1].update({"full_surface_canary_sweep": True}),
+            lambda value: value["stories"][1].update({"full_surface_canary_sweep": False}),
             lambda value: value["stories"][2].update({"exact_gemma_trials_complete": True}),
             lambda value: value["blockers"].pop(),
         )

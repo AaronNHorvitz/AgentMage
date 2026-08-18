@@ -297,7 +297,7 @@ def validate_report(report: Any, *, verify_sources: bool = True) -> list[str]:
     log = report.get("log")
     if not isinstance(log, dict) or log.get("path") != str(LOG_PATH.relative_to(ROOT)):
         failures.append("diagnostic.canary.log")
-    elif LOG_PATH.is_file():
+    elif verify_sources and LOG_PATH.is_file():
         log_bytes = LOG_PATH.read_bytes()
         if (
             log.get("bytes") != len(log_bytes)

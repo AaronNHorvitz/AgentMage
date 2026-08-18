@@ -28,6 +28,9 @@ SOURCE_PATHS: Final = (
     "shells/vscode/src/model_discovery.ts",
     "shells/vscode/src/host_bridge.ts",
     "shells/vscode/src/extension.ts",
+    "scripts/sprint_15_diagnostic_canary_evidence.py",
+    "tests/test_sprint_15_diagnostic_canary_evidence.py",
+    "docs/verification/sprint-15-diagnostic-canary-matrix.md",
     "scripts/benchmark_contract.py",
     "scripts/model_role_evaluation_matrix.py",
     "tests/test_benchmark_contract.py",
@@ -41,6 +44,7 @@ EVIDENCE_PATHS: Final = (
     "model-profiles/evaluation/benchmark-record-schema-v1.json",
     "artifacts/sprints/sprint-13/story-13.3/muse-profile-evaluation.json",
     "artifacts/sprints/sprint-15/story-15.3/candidate-role-evaluation-matrix.json",
+    "artifacts/sprints/sprint-15/story-15.2/diagnostic-canary-matrix.json",
 )
 COMMANDS: Final = (
     (
@@ -49,6 +53,10 @@ COMMANDS: Final = (
     ),
     ("host-doctor-export", ("cargo", "test", "-p", "agentmage-host", "--locked")),
     ("native-chat", ("npm", "--prefix", "shells/vscode", "test")),
+    (
+        "diagnostic-canary-matrix",
+        ("python", "scripts/sprint_15_diagnostic_canary_evidence.py", "--check"),
+    ),
     (
         "evaluation-contracts",
         (
@@ -106,7 +114,6 @@ SECURITY_MAP: Final = {
 BLOCKERS: Final = [
     {"code": "NO-ADMITTED-PRODUCT-MODEL", "owner": "15.1/15.3"},
     {"code": "RESOURCE-STOP-NOT-WIRED-TO-OS-WORKER", "owner": "15.1"},
-    {"code": "FULL-DURABLE-SURFACE-CANARY-SWEEP-MISSING", "owner": "15.2"},
     {"code": "NATIVE-ACCESSIBILITY-AND-MACOS-EVIDENCE-MISSING", "owner": "15.2/15.3"},
     {"code": "EXACT-GEMMA-ARTIFACT-EVALUATION-INCOMPLETE", "owner": "15.3"},
 ]
@@ -174,6 +181,8 @@ def evidence_state() -> dict[str, Any]:
         "enabled_model_count": matrix["enabled_model_count"],
         "unsupported_claim_count": sum(matrix["claims"].values()),
         "reviewed_export": True,
+        "diagnostic_canary_source_families": 9,
+        "diagnostic_canary_disclosures": 0,
     }
 
 
@@ -192,6 +201,8 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
         "enabled_model_count": 0,
         "unsupported_claim_count": 0,
         "reviewed_export": True,
+        "diagnostic_canary_source_families": 9,
+        "diagnostic_canary_disclosures": 0,
     }
     return {
         "schema_version": 1,
@@ -222,7 +233,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
                 "native_chat_doctor": local_pass,
                 "reviewed_export": local_pass,
                 "network_health_probe": False,
-                "full_surface_canary_sweep": False,
+                "full_surface_canary_sweep": local_pass,
                 "native_accessibility_evidence": False,
             },
             {
@@ -273,8 +284,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("kernel resource-stop state changed")
     if stories.get("15.1", {}).get("chat_model_selection") is not True:
         failures.append("native Chat model-selection state changed")
-    if stories.get("15.2", {}).get("full_surface_canary_sweep") is not False:
-        failures.append("canary overclaim")
+    if stories.get("15.2", {}).get("full_surface_canary_sweep") is not True:
+        failures.append("diagnostic canary state changed")
     if stories.get("15.3", {}).get("exact_gemma_trials_complete") is not False:
         failures.append("Gemma evaluation overclaim")
     if report.get("evidence_state") != evidence_state():

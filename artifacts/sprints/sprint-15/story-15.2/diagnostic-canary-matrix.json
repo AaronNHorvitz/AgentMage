@@ -1,0 +1,158 @@
+{
+  "artifact_id": "sprint-15-diagnostic-canary-matrix",
+  "canary_prefix_sha256": "9a31707288de0a6a3b41cddd94ddcf2fbc854e542d589a06c2bbd4b0cb7c767f",
+  "commands": [
+    {
+      "canary_match_count": 0,
+      "command_id": "b863fcb77434e99b1116090c1dd8d41d17374adf5ad591954b410eaa33fe84f3",
+      "elapsed_ms": 88,
+      "exit_code": 0,
+      "expected_marker": "1 passed; 0 failed",
+      "id": "closed-kernel-harness",
+      "output_bytes": 2790,
+      "output_sha256": "b513929ac37fd4f32529fc77522655f6d68453c0f8ceab630261744701fc67b8"
+    },
+    {
+      "canary_match_count": 0,
+      "command_id": "61afa6fa1b5789d21277729923e9f2e59914857c565312edc6a48f1d90a19022",
+      "elapsed_ms": 78,
+      "exit_code": 0,
+      "expected_marker": "1 passed; 0 failed",
+      "id": "preview-receipt-export",
+      "output_bytes": 977,
+      "output_sha256": "66cdd1065e0ec9a625ae56bd2f6edab6583a63b3c6538533e548f02997fbe0f0"
+    },
+    {
+      "canary_match_count": 0,
+      "command_id": "d943c2fc72dbf8ad9859155bf08a8afadd4c9cc5eaf3ed01ae1b336273463b39",
+      "elapsed_ms": 1507,
+      "exit_code": 0,
+      "expected_marker": "fail 0",
+      "id": "authenticated-chat-and-renderer",
+      "output_bytes": 4963,
+      "output_sha256": "3e83c77c9348ea9a6b696771acffd0703c34842ef46384155ebff9ec228fc846"
+    }
+  ],
+  "coverage": {
+    "authenticated-host-transport": [
+      "authenticated-chat-and-renderer"
+    ],
+    "command-output-log": [
+      "closed-kernel-harness",
+      "preview-receipt-export",
+      "authenticated-chat-and-renderer"
+    ],
+    "exported-diagnostics": [
+      "preview-receipt-export"
+    ],
+    "internal-harness": [
+      "closed-kernel-harness"
+    ],
+    "native-chat": [
+      "authenticated-chat-and-renderer"
+    ],
+    "preview": [
+      "preview-receipt-export"
+    ],
+    "receipt": [
+      "preview-receipt-export"
+    ]
+  },
+  "external_network_used": false,
+  "limitations": [
+    "The campaign proves the current closed Linux diagnostic schema, internal harness, authenticated host transport, native Chat renderer, command output, preview, receipt, and reviewed export surfaces only.",
+    "The raw prohibited values remain test-owned and cannot enter the production DiagnosticObservation schema; unknown transport fields fail closed rather than being silently retained.",
+    "No production diagnostic logging sink exists in this path; the retained command output is scanned as the currently reachable log surface.",
+    "Native keyboard and screen-reader behavior, macOS, Windows, installed packages, independent review, process-memory inspection, and storage remanence are not claimed.",
+    "Manual fuzzing remains deferred and was not executed."
+  ],
+  "log": {
+    "bytes": 8845,
+    "path": "artifacts/sprints/sprint-15/story-15.2/diagnostic-canary-matrix.log",
+    "repository_path_redacted": true,
+    "sha256": "9bf7ea5b8e055328b79209b5b47121239e1e857382e5c9e35ab6c0ffb0ae44d1"
+  },
+  "private_user_data_used": false,
+  "prohibited_source_families": [
+    "prompt",
+    "file_content",
+    "credential",
+    "private_key",
+    "environment_value",
+    "absolute_path",
+    "hostname",
+    "username",
+    "device_identifier"
+  ],
+  "raw_canary_values_retained_in_report": 0,
+  "schema_version": 1,
+  "semantic_reconciliation": {
+    "chat_disclosure_count": 0,
+    "export_disclosure_count": 0,
+    "exported_report_equal_to_safe_report": true,
+    "harness_disclosure_count": 0,
+    "kernel_report_equal_after_rejection": true,
+    "log_disclosure_count": 0,
+    "preview_disclosure_count": 0,
+    "receipt_disclosure_count": 0,
+    "unknown_transport_fields_fail_closed": true
+  },
+  "source_revision": "fa8846c5e01157657a0b2b56e171f7a2146f6f10",
+  "sources": [
+    {
+      "bytes": 4487,
+      "path": "kernel/contracts/src/diagnostics.rs",
+      "sha256": "08260d209729487869a19f43e72e5c836ee567c7aaa551c31779cae9aee31d8d"
+    },
+    {
+      "bytes": 13744,
+      "path": "kernel/engine/src/diagnostics.rs",
+      "sha256": "656880cedd38341360d4ee122bc611627a1b1b9b0bdcc2e4d0a2a2a211aa06f0"
+    },
+    {
+      "bytes": 22038,
+      "path": "shells/host/src/diagnostic_export.rs",
+      "sha256": "8b838a86293ef8fdf874014c300d7887c9970f82e47eae7ba1edc39b4cbc9fcb"
+    },
+    {
+      "bytes": 22483,
+      "path": "shells/vscode/src/host_bridge.ts",
+      "sha256": "049efd0066de16c6dca0cc8203a9b6ff7cc3e9c43e639e9250c9406c5379efa1"
+    },
+    {
+      "bytes": 57567,
+      "path": "shells/vscode/src/provider.ts",
+      "sha256": "caa0d0aa120cdf1108c4d9bff647d9e1f7d7dcdf4f64bf3f7a2209b85e61f2a2"
+    },
+    {
+      "bytes": 21241,
+      "path": "shells/vscode/test/host_bridge.test.ts",
+      "sha256": "da5eab7d02b10285a98411d439545b4a765fcd43188339212a08a09fa83bd36a"
+    },
+    {
+      "bytes": 46682,
+      "path": "shells/vscode/test/provider.test.ts",
+      "sha256": "c6087e81a5eb4e08fba6e257c081c84766a87c313d5eb1972219d5f5fd2c3a4b"
+    },
+    {
+      "bytes": 13293,
+      "path": "scripts/sprint_15_diagnostic_canary_evidence.py",
+      "sha256": "74ba711b78ccad6fd8d5fca362be6995a87a96157f1ccb093a99225bf793a4ad"
+    },
+    {
+      "bytes": 2860,
+      "path": "tests/test_sprint_15_diagnostic_canary_evidence.py",
+      "sha256": "ced962e81f8708570c0d16f454f44455bc37391c00ca51d87a4957daf2bf75be"
+    },
+    {
+      "bytes": 1817,
+      "path": "docs/verification/sprint-15-diagnostic-canary-matrix.md",
+      "sha256": "c402c9971e5ef9ab3c0c386634b6ba3dd7e7b660c014b213230d89a7bc13b520"
+    }
+  ],
+  "status": "pass-current-linux-diagnostic-surfaces",
+  "task_ids": [
+    "15.2.2.2",
+    "15.2.AC2"
+  ]
+}
