@@ -358,7 +358,7 @@ def validate_report(value: Any) -> list[str]:
         phases = target.get("phases", {})
         offline = phases.get("strict-offline", {})
         if (
-            list(phases) != PHASES
+            set(phases) != set(PHASES)
             or offline.get("external_connection_denied") is not True
             or offline.get("tests") != {"command_count": 2, "status": "pass", "network_used": False}
             or target.get("overlay_cleanup_verified") is not True

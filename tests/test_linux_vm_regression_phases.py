@@ -14,7 +14,7 @@ def valid_report() -> dict:
         "task_id": "9.1.4.3",
         "source_revision": "0" * 40,
         "status": "pass-three-phase-local-kvm",
-        "phase_order": PHASES,
+        "phase_order": list(PHASES),
         "qemu": {"launcher_class": "fedora-toolbox", "version": "QEMU", "sha256": "1" * 64},
         "targets": [
             {
