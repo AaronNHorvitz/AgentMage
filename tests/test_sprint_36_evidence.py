@@ -14,7 +14,13 @@ def commands() -> list[dict[str, object]]:
             "argv": list(argv),
             "exit_code": 0,
             "output_sha256": "a" * 64,
-            "blocking_skip_count": 0 if identifier == "write-transaction-tests" else None,
+            "blocking_skip_count": (
+                0
+                if identifier in {
+                    "write-transaction-tests", "linux-write-transaction-tests"
+                }
+                else None
+            ),
         }
         for identifier, argv in evidence.COMMANDS
     ]
@@ -33,18 +39,20 @@ def report() -> dict[str, object]:
 
 
 class Sprint36EvidenceTests(unittest.TestCase):
-    def test_local_contract_passes_without_native_or_release_overclaim(self) -> None:
+    def test_local_contract_passes_without_complete_race_or_release_overclaim(self) -> None:
         value = report()
         self.assertEqual(evidence.validate_report(value, verify_current=False), [])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertTrue(value["implemented_contracts"]["hash_chained_operation_receipts"])
-        self.assertFalse(value["summary"]["native_filesystem_driver_proven"])
+        self.assertTrue(value["summary"]["native_filesystem_driver_proven"])
+        self.assertTrue(value["verification_evidence"]["post_preview_mutation_matrix"])
+        self.assertTrue(value["verification_evidence"]["native_linux_descriptor_race_fixtures"])
 
     def test_dependency_native_crash_review_network_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"upstream_dependency_passed": True}),
-            lambda value: value["summary"].update({"native_filesystem_driver_proven": True}),
+            lambda value: value["summary"].update({"native_filesystem_driver_proven": False}),
             lambda value: value["summary"].update({
                 "native_race_and_crash_evidence_passed": True
             }),
@@ -54,8 +62,11 @@ class Sprint36EvidenceTests(unittest.TestCase):
             lambda value: value["verification_evidence"].update({
                 "crash_durability_matrix": True
             }),
+            lambda value: value["verification_evidence"].update({
+                "native_mount_change_matrix": True
+            }),
             lambda value: value["implemented_contracts"].update({
-                "native_filesystem_driver": True
+                "native_atomicity_proven": True
             }),
             lambda value: value["implemented_contracts"].update({"generic_shell": True}),
             lambda value: value["blockers"].pop(),

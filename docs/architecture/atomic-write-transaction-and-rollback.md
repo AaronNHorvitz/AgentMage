@@ -5,8 +5,10 @@
 Sprint 36 adds the kernel coordinator that consumes one exact Sprint 35 write grant, delegates the
 bounded effect to a platform driver, verifies fresh postimages, restores known partial changes, and
 emits a complete hash-chained receipt history. It also builds a fresh rollback proposal from retained
-exact preimages. It does not provide a native filesystem driver, run post-write commands, access the
-network, publish through Git, or prove crash durability on any operating system.
+exact preimages. The Fedora implementation delegates one-file replacement and restoration to the
+Linux descriptor-relative atomic exchange driver. It does not run post-write commands, access the
+network, publish through Git, or prove crash durability or equivalent behavior on every supported
+operating system.
 
 ```mermaid
 flowchart LR
@@ -50,7 +52,9 @@ Before any effect delegation, the coordinator:
 
 The opaque apply and restore authorizations cannot be constructed by platform code. A platform
 driver receives only the ordered operations and the appropriate token. This is an authority
-interface, not evidence that a particular native implementation is race-free or crash-durable.
+interface. The Linux implementation additionally holds descriptors, stages in the authorized parent,
+rechecks identity before exchange, and verifies the displaced object. Those controls have local race
+fixtures, but they are not evidence that every mount, kernel, filesystem, or crash boundary is proven.
 
 ## Apply and Restoration Contract
 
@@ -99,7 +103,7 @@ revalidation, and transaction execution again.
 
 This compare-before-propose rule preserves later user work. It does not yet prove native descriptor
 continuity across the comparison and a later apply; that responsibility belongs to the native driver
-and the Sprint 37 race matrix.
+and the complete Sprint 36 race matrix.
 
 ## Separate Verification
 
@@ -110,8 +114,10 @@ shell, process, network, Git, or external-delivery path.
 
 ## Open Gate
 
-The local in-memory driver fixtures prove kernel state transitions and exact restoration logic, but
-they do not prove native atomic replacement, descriptor and symlink race resistance, mount behavior,
-or crash durability. Sprint 35 is also blocked, and independent transaction review is absent. Sprint
-36 remains blocked until those dependencies and the native `S-029-ST01` and `S-029-RT01` evidence are
-current.
+The local in-memory and Fedora native-driver fixtures prove kernel state transitions, exact
+restoration logic, one-file atomic exchange, stale-approval refusal, grant replay refusal, and
+preservation of competing state during selected replacement, symlink, rename, and concurrent-writer
+races. They do not prove real mount replacement, every race boundary on every promised platform, or
+durability across process and machine crashes. Sprint 35 is also blocked, and independent transaction
+review is absent. Sprint 36 remains blocked until those dependencies and the complete native
+`S-029-ST01` and `S-029-RT01` evidence are current.

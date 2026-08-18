@@ -25,6 +25,7 @@ SOURCE_PATHS: Final = (
     "kernel/engine/src/write_approval.rs",
     "kernel/engine/src/grants.rs",
     "kernel/engine/src/lib.rs",
+    "platforms/linux/src/write_transaction.rs",
     "docs/architecture/atomic-write-transaction-and-rollback.md",
     "docs/verification/sprint-36-local-results.md",
     "scripts/sprint_36_evidence.py",
@@ -46,6 +47,20 @@ COMMANDS: Final = (
             "--locked", "--", "-D", "warnings",
         ),
     ),
+    (
+        "linux-write-transaction-tests",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux", "write_transaction",
+            "--locked",
+        ),
+    ),
+    (
+        "linux-platform-clippy",
+        (
+            "cargo", "clippy", "-p", "agentmage-platform-linux", "--all-targets",
+            "--locked", "--", "-D", "warnings",
+        ),
+    ),
     ("contract-tests", ("cargo", "test", "-p", "agentmage-kernel-contracts", "--locked")),
     ("product-gate", ("npm", "run", "product:check")),
     ("documentation-gate", ("npm", "run", "docs:check")),
@@ -64,7 +79,6 @@ SECURITY_REQUIREMENTS: Final = [
 ]
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-35-BLOCKED", "owner": "35.1"},
-    {"code": "SPRINT-36-NATIVE-FILESYSTEM-DRIVER-ABSENT", "owner": "36.1.2.3"},
     {"code": "SPRINT-36-ST01-NATIVE-RACE-MATRIX-INCOMPLETE", "owner": "36.1.3.3"},
     {"code": "SPRINT-36-RT01-CRASH-MATRIX-INCOMPLETE", "owner": "36.1.3.4"},
     {"code": "INDEPENDENT-SPRINT-36-TRANSACTION-REVIEW-ABSENT", "owner": "36.1.3.5"},
@@ -81,7 +95,10 @@ IMPLEMENTED: Final = {
     "fresh_rollback_proposal": True,
     "later_user_change_rollback_refusal": True,
     "in_memory_driver_fixtures": True,
-    "native_filesystem_driver": False,
+    "post_preview_mutation_matrix": True,
+    "native_filesystem_driver": True,
+    "native_linux_atomic_exchange_and_restore": True,
+    "native_linux_descriptor_race_fixtures": True,
     "native_atomicity_proven": False,
     "native_race_matrix_complete": False,
     "crash_durability_matrix_complete": False,
@@ -140,7 +157,7 @@ def run_commands() -> list[dict[str, Any]]:
             )
             code, output = result.returncode, result.stdout + result.stderr
         blocking_skip_count = None
-        if identifier == "write-transaction-tests":
+        if identifier in {"write-transaction-tests", "linux-write-transaction-tests"}:
             matches = IGNORED_TESTS.findall(output)
             blocking_skip_count = sum(int(value) for value in matches) if matches else -1
         records.append({
@@ -151,13 +168,14 @@ def run_commands() -> list[dict[str, Any]]:
 
 
 def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
-    focused = next(
-        (item for item in commands if item["id"] == "write-transaction-tests"), None
-    )
+    focused = [
+        item for item in commands
+        if item["id"] in {"write-transaction-tests", "linux-write-transaction-tests"}
+    ]
     local_pass = (
         all(item["exit_code"] == 0 for item in commands)
-        and focused is not None
-        and focused.get("blocking_skip_count") == 0
+        and len(focused) == 2
+        and all(item.get("blocking_skip_count") == 0 for item in focused)
     )
     return {
         "schema_version": 1,
@@ -174,8 +192,12 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "complete_local_product_and_docs_gates": local_pass,
             "focused_blocking_skip_count": 0 if local_pass else None,
             "upstream_sprint_35_gate": False,
-            "native_filesystem_driver_evidence": False,
+            "post_preview_mutation_matrix": local_pass,
+            "native_filesystem_driver_evidence": local_pass,
+            "native_linux_atomic_exchange_and_restore": local_pass,
+            "native_linux_descriptor_race_fixtures": local_pass,
             "native_race_matrix": False,
+            "native_mount_change_matrix": False,
             "crash_durability_matrix": False,
             "independent_transaction_review": False,
         },
@@ -184,7 +206,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "local_atomic_transaction_contract_passed": local_pass,
             "sprint_status": "BLOCKED",
             "upstream_dependency_passed": False,
-            "native_filesystem_driver_proven": False,
+            "native_filesystem_driver_proven": local_pass,
             "native_race_and_crash_evidence_passed": False,
             "independent_review_passed": False,
             "network_access_enabled": False,
@@ -213,22 +235,25 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         for item in commands
     ):
         failures.append("command result invalid")
-    focused = next(
-        (item for item in commands if item.get("id") == "write-transaction-tests"), None
-    )
-    if focused is None or focused.get("blocking_skip_count") != 0:
+    focused = [
+        item for item in commands
+        if item.get("id") in {"write-transaction-tests", "linux-write-transaction-tests"}
+    ]
+    if len(focused) != 2 or any(
+        item.get("blocking_skip_count") != 0 for item in focused
+    ):
         failures.append("focused skipped, suppressed, or unavailable check")
     if any(
         item.get("blocking_skip_count") is not None
         for item in commands
-        if item.get("id") != "write-transaction-tests"
+        if item.get("id") not in {"write-transaction-tests", "linux-write-transaction-tests"}
     ):
         failures.append("supporting command skip count must remain not-applicable")
     expected_summary = {
         "local_atomic_transaction_contract_passed": True,
         "sprint_status": "BLOCKED",
         "upstream_dependency_passed": False,
-        "native_filesystem_driver_proven": False,
+        "native_filesystem_driver_proven": True,
         "native_race_and_crash_evidence_passed": False,
         "independent_review_passed": False,
         "network_access_enabled": False,
@@ -240,15 +265,20 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
     if verification.get("focused_blocking_skip_count") != 0:
         failures.append("focused blocking skip summary invalid")
     for field in (
-        "upstream_sprint_35_gate", "native_filesystem_driver_evidence",
-        "native_race_matrix", "crash_durability_matrix", "independent_transaction_review",
+        "upstream_sprint_35_gate", "native_race_matrix", "native_mount_change_matrix",
+        "crash_durability_matrix", "independent_transaction_review",
     ):
         if verification.get(field) is not False:
             failures.append(f"verification overclaim: {field}")
     for field in (
-        "native_filesystem_driver", "native_atomicity_proven", "native_race_matrix_complete",
-        "crash_durability_matrix_complete", "post_write_command_execution", "generic_shell",
-        "network_access", "external_delivery",
+        "post_preview_mutation_matrix", "native_filesystem_driver_evidence",
+        "native_linux_atomic_exchange_and_restore", "native_linux_descriptor_race_fixtures",
+    ):
+        if verification.get(field) is not True:
+            failures.append(f"missing local verification: {field}")
+    for field in (
+        "native_atomicity_proven", "native_race_matrix_complete", "crash_durability_matrix_complete",
+        "post_write_command_execution", "generic_shell", "network_access", "external_delivery",
     ):
         if report.get("implemented_contracts", {}).get(field) is not False:
             failures.append(f"capability overclaim: {field}")

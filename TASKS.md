@@ -2883,8 +2883,8 @@ the sprint therefore remain open.
 
 - [ ] **Task 36.1.3 - Verify and close the story**
   - [x] **Sub-task 36.1.3.1:** `S-029-UT01` exercises every legal and illegal write-transaction transition from request through validate/stage/preview/approve/revalidate/apply/verify/commit-or-restore; assert deterministic state and receipt.
-  - [ ] **Sub-task 36.1.3.2:** `S-029-UT02` mutates target, arguments, bytes, preimage, metadata, preview, policy, grant, workspace, and expected side effects after preview; assert stale approval and zero target change.
-  - [ ] **Sub-task 36.1.3.3:** `S-029-ST01` races file replacement, symlink/alias swap, rename, concurrent writer, mount change, grant replay, and approval replay at each boundary; assert descriptor identity and atomic consumption prevent unintended write.
+  - [x] **Sub-task 36.1.3.2:** `S-029-UT02` mutates target, arguments, bytes, preimage, metadata, preview, policy, grant, workspace, and expected side effects after preview; assert stale approval and zero target change. Evidence: commit `05ce09a6` independently mutates every named binding, including the grant nonce and complete expected-side-effect list, and verifies preapply denial, zero apply/restore calls, and byte-for-byte target invariance.
+  - [ ] **Sub-task 36.1.3.3:** `S-029-ST01` races file replacement, symlink/alias swap, rename, concurrent writer, mount change, grant replay, and approval replay at each boundary; assert descriptor identity and atomic consumption prevent unintended write. Partial local evidence: commit `d53f496d` covers Fedora file replacement, symlink substitution, directory rename, concurrent writes immediately before and after exchange, and consumed grant/approval replay while preserving competing state. Real mount replacement, exhaustive boundary coverage, alias variants, and the complete promised-platform matrix remain open.
   - [ ] **Sub-task 36.1.3.4:** `S-029-RT01` crashes before and after every staging, application, verification, restoration, and durable-state transition; assert prior bytes or exact approved bytes, never an unexplained partial state.
   - [ ] **Sub-task 36.1.3.5 - Product security evidence:** Map `SR-ACC-001` through `SR-ACC-007`, `SR-DAT-002`, `SR-OPS-001`/`SR-OPS-002`, `SR-TST-005`/`SR-TST-011`/`SR-TST-012`; retain transition/property results, attack traces, pre/post hashes, restoration proof, and independent transaction review.
 
@@ -2903,7 +2903,7 @@ the sprint therefore remain open.
 
 **Gate decision:** Sprint 36 is PASS only when Story 36.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-**Local evidence status (2026-08-14):** The grant-consuming transaction coordinator,
+**Local evidence status (2026-08-18):** The grant-consuming transaction coordinator,
 opaque driver authorization, deterministic operation state machine, hash-chained receipts,
 known partial restoration, uncertain terminal outcome, separately granted verification
 requirements, and fresh rollback proposal are implemented in `a588a64`. Architecture and
@@ -2913,8 +2913,10 @@ verification boundaries are recorded by `a8e9a02`; the retained
 documentation, strict-local, effect-boundary, dependency, and supply-chain gates. The native
 Linux atomic replacement driver added in `9822295` and the operation-specific Fedora driver
 added in `8cc5372` now provide the atomic application and restoration engine required by
-36.1.2.3. Complete native race, crash/durability, and operation-mutation matrices on every
-promised platform, plus independent transaction review, remain absent. Sprint 36 remains
+36.1.2.3. Commit `05ce09a6` completes the post-preview operation-mutation matrix, and
+`d53f496d` adds local Fedora descriptor-race and consumed-authority replay fixtures without
+claiming real mount-change or cross-platform proof. Complete native race and crash/durability
+matrices on every promised platform, plus independent transaction review, remain absent. Sprint 36 remains
 **BLOCKED** because Sprint 35 is not yet a passing upstream dependency and those verification
 and independent-review proofs are open. Task 36.1.3 and its remaining verification sub-tasks,
 both story criteria, Sprint AC 36.AC3, the story, and the sprint therefore remain open.
