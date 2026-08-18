@@ -21,14 +21,14 @@
       "sha256": "15da933feeaa11cab762025feb222a73824dbaa61b7aadd270ab9a4328c83682"
     },
     {
-      "bytes": 3023,
+      "bytes": 3301,
       "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
-      "sha256": "0e6265b463bc649177969a6b4f9dfd10c29a00b93bded47ce54593c0f8327700"
+      "sha256": "8b5c17448f06dd4047bc502798cb3c3f1a08b0988b81f4ad1f2338b1446142ef"
     },
     {
-      "bytes": 1317,
+      "bytes": 1506,
       "path": "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log",
-      "sha256": "783f232dbca295fd0dfee9c33940ccbb63b80023634d6173512571c4311c8b68"
+      "sha256": "5c589612653fbbd44e32bbfdf8ab0b1e21a8cf0d5702e47f7baa928dddcb6dfb"
     },
     {
       "bytes": 4273,
@@ -41,9 +41,9 @@
       "sha256": "9740c28ae7d3aa6ddd4c03bda09a3a2ccf4a1e912a1a1697bd506bd0cf960e6a"
     },
     {
-      "bytes": 23118,
+      "bytes": 23269,
       "path": "docs/architecture/runtime-artifact-lifecycle.md",
-      "sha256": "00c8458cc3a1af8b6bc14dca747ad00157df971355326483d3c66d39aebe0330"
+      "sha256": "d908f5bf7636c17a55a3bea70c77de26f55a88597533efe56b6d35f24dc80140"
     },
     {
       "bytes": 14525,
@@ -76,9 +76,9 @@
       "sha256": "ddaa5ab31f1c0ca55fe48b3d816c612b268fc1e47cd6a9a37e41151bdcac5be3"
     },
     {
-      "bytes": 84332,
+      "bytes": 87286,
       "path": "platforms/linux/src/runtime_artifact_store.rs",
-      "sha256": "1ad92f84b3a125d500f7695baf4b6dba14f53ce12e6c92f8da3433c8a8f6a78e"
+      "sha256": "e6d99a3359db663956dfdd585fbf0d323d85f6b8a68b707b3c42e5985c94f1ca"
     },
     {
       "bytes": 1011,
@@ -131,9 +131,9 @@
       "sha256": "39faf8b79d84278fa00e66de8b868e2f8c86094cacd4dae9e540c06ed7dbb3cf"
     },
     {
-      "bytes": 13754,
+      "bytes": 14048,
       "path": "scripts/story_22_2_artifact_pressure_evidence.py",
-      "sha256": "e287d3e3a92c45e0324334d81aacfcfd63ab608577bff9374ec50eea2d264b67"
+      "sha256": "6e98b5c458e009d1cbb3cbdf24358ea959009eba98e3cfaa9c7ce4a62689b94d"
     },
     {
       "bytes": 13583,
@@ -141,9 +141,9 @@
       "sha256": "a63e68e801f34bff58bb134e6fb5ad584bcf8a5933338c410d20a0ecbadfe15d"
     },
     {
-      "bytes": 19964,
+      "bytes": 19960,
       "path": "scripts/story_22_2_evidence_index.py",
-      "sha256": "eac68782c56bf2a73ed9a76db32c49ec2ef03382a19af88be139cd175ec288a2"
+      "sha256": "5d80124d1b462755d4e777a5f01c7ba224a1f3716d8fba249acd66b8efa7342a"
     },
     {
       "bytes": 38371,
@@ -171,9 +171,9 @@
       "sha256": "80a0118ea44b64dc3ee17dc21af34fda6c5054395826bff89b499169ed9e098d"
     },
     {
-      "bytes": 3511,
+      "bytes": 3960,
       "path": "tests/test_story_22_2_artifact_pressure_evidence.py",
-      "sha256": "d4a0362ce7774ae864506d0303b39677ed3a8e961082c9bb7d1b7d22e2db316e"
+      "sha256": "c88361f305cf1c33f4fc90cfb5c9308a3333d521646da9b3746db60089b9c38a"
     },
     {
       "bytes": 3280,
@@ -187,11 +187,11 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "ac50b8e8e00ed81d1aaa5e78a77b98ff06cb4d1cde4c2e213491e82d36f687e7",
+  "index_sha256": "9a0c9a952468dea49b0e0443411633f7eb47fc4a2af73c02d47f0e8246649c40",
   "limitations": [
     "Stops inside filesystem or SQLite syscalls and physical storage-fault campaigns remain open.",
     "Quarantined-payload operator recovery, long mixed-artifact sessions, and concurrent collection campaigns remain open.",
-    "Mixed-size unique-object and installed-interface pressure evidence remains open.",
+    "Larger unique-object and installed-interface pressure evidence remains open.",
     "Windows native artifact storage and supported-platform package evidence remains open.",
     "Independent artifact-boundary and cryptographic review remains open.",
     "Manual fuzzing remains deliberately deferred and open."
@@ -479,7 +479,7 @@
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.json",
         "artifacts/sprints/sprint-22/story-22.2/native-artifact-pressure.log"
       ],
-      "statement_sha256": "985d076aab318f827a40298d1faa40db6e624e4641a5fcad4bdb035c53d7a43a",
+      "statement_sha256": "12bc9a644d2028b830f66d5f384a7697121428c97e630278783100d729d5bbbb",
       "status": "partial",
       "task_id": "22.2.3.5",
       "tests": [
@@ -512,7 +512,7 @@
   ],
   "record_type": "story_22_2_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "9b453f8521fadcb4fbb5ae71b887177fb5f2d65b",
+  "source_revision": "6f52b0e98505ea56476922aee50a4ebcea13a0d6",
   "story_id": "22.2",
   "summary": {
     "complete_count": 12,

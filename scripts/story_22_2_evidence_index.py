@@ -328,7 +328,7 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
 LIMITATIONS = (
     "Stops inside filesystem or SQLite syscalls and physical storage-fault campaigns remain open.",
     "Quarantined-payload operator recovery, long mixed-artifact sessions, and concurrent collection campaigns remain open.",
-    "Mixed-size unique-object and installed-interface pressure evidence remains open.",
+    "Larger unique-object and installed-interface pressure evidence remains open.",
     "Windows native artifact storage and supported-platform package evidence remains open.",
     "Independent artifact-boundary and cryptographic review remains open.",
     "Manual fuzzing remains deliberately deferred and open.",

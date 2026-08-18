@@ -349,11 +349,13 @@ Current automated coverage includes:
   The hash-bound report and redacted raw trace are retained under
   `artifacts/sprints/sprint-22/story-22.2/`.
 - One explicit native ceiling campaign publishes and pages a 64 MiB encrypted
-  object, admits exactly 1,024 sorted checkpoint references deduplicated onto
-  one immutable object, rejects reference 1,025, blocks checkpoint-rooted
-  release, collects after an empty successor checkpoint, and verifies a final
-  reopen. Its hash-bound report retains measured elapsed time, resident memory,
-  disk bytes, and stated host-local limitations.
+  object; publishes and collects 64 distinct mixed-size encrypted objects
+  totaling 2,129,920 payload bytes; admits exactly 1,024 sorted checkpoint
+  references deduplicated onto one immutable object; rejects reference 1,025;
+  blocks checkpoint-rooted release; collects after an empty successor
+  checkpoint; and verifies a final reopen. Its hash-bound report retains
+  measured publication, collection, and total elapsed time, resident memory,
+  disk bytes, object counts, and stated host-local limitations.
 - One native durable-resume campaign executes four focused restart paths. It
   restores the exact event cursor, continuation, artifact set, receipt, and
   terminal no-op outcome without replaying a protected Git operation; rejects
@@ -391,8 +393,8 @@ Still open before Story 22.2 can pass:
   torn-sector/controller failure, and filesystem corruption. The current
   native matrix stops immediately before and after each declared transaction
   edge without unwinding; it does not claim those physical-fault conditions.
-- Physical disk-full and device-latency injection, mixed-size unique-object
-  pressure, long sessions with mixed artifacts, concurrent collection,
+- Physical disk-full and device-latency injection, larger unique-object
+  populations, long sessions with mixed artifacts, concurrent collection,
   quarantined-payload operator recovery, installed interfaces, and a real local
   model. The current path-substitution, deduplicated ceiling, and focused
   fake-model resume campaigns do not substitute for those remaining classes.
