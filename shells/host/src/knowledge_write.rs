@@ -457,13 +457,16 @@ mod linux_tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_capability_knowledge::{
-        MarkdownDocument, MarkdownEdit, MarkdownUpdateRequest, preview_markdown_update,
+        CanonicalKnowledgeMutation, CanonicalMarkdownWriteOutcome, KnowledgeIndexPublicationState,
+        MarkdownDocument, MarkdownEdit, MarkdownUpdateRequest, ObsidianEntryKind,
+        ObsidianNoteInput, ObsidianVaultFreshness, ObsidianVaultIndex, ObsidianVaultSelection,
+        ObsidianVaultSnapshot, decide_index_publication, preview_markdown_update,
     };
     use agentmage_kernel_contracts::{
         ActionId, ActionKind, ActorId, AdapterInstanceId, ApprovalId, DataSensitivity, GrantId,
         GrantNonce, GrantOperation, GrantTarget, OperationBinding, PathResolutionIntent,
-        PlatformPathAdapter, SessionId, TaskId, ToolId, WorkspaceAuthorizationId, WorkspaceId,
-        WorkspacePath, WorkspaceScopePath,
+        PlatformPathAdapter, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
+        TaskId, ToolId, WorkspaceAuthorizationId, WorkspaceId, WorkspacePath, WorkspaceScopePath,
     };
     use agentmage_kernel_engine::filesystem_control::{
         FilesystemApprovalDecision, FilesystemGrantRequest, FilesystemOperationDraft,
@@ -481,7 +484,7 @@ mod linux_tests {
         select_test_linux_workspace,
     };
 
-    use super::{KnowledgeFilesystemContext, compose_knowledge_update};
+    use super::{KnowledgeFilesystemContext, compose_knowledge_update, sha256};
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -519,6 +522,8 @@ mod linux_tests {
         source_path: PathBuf,
         source_bytes: Vec<u8>,
         postimage_bytes: Vec<u8>,
+        workspace_path: WorkspacePath,
+        mutation: CanonicalKnowledgeMutation,
     }
 
     fn rules<T: Ord>(values: impl IntoIterator<Item = T>) -> ScopeRules<T> {
@@ -574,6 +579,7 @@ mod linux_tests {
             },
         )
         .expect("native update preview");
+        let mutation = CanonicalKnowledgeMutation::from_update(&preview);
         let adapter = LinuxPathAdapter::new(adapter_id, 1024 * 1024);
         let held = adapter
             .resolve(&workspace, &workspace_path, PathResolutionIntent::ReadFile)
@@ -696,7 +702,42 @@ mod linux_tests {
             source_path,
             source_bytes,
             postimage_bytes: preview.proposed_markdown().to_vec(),
+            workspace_path,
+            mutation,
         }
+    }
+
+    fn vault_selection(workspace_id: &WorkspaceId) -> ObsidianVaultSelection {
+        ObsidianVaultSelection::admit(
+            WorkspaceScopePath::new(workspace_id.clone(), ["notes"]).expect("native vault scope"),
+            StrictLocalStorageObservation {
+                filesystem: StorageFilesystemClass::Local,
+                synchronization_marker: None,
+                root_identity_sha256: [7; 32],
+                symlink_free: true,
+            },
+            Vec::new(),
+        )
+        .expect("native vault selection")
+    }
+
+    fn vault_snapshot(
+        selection: &ObsidianVaultSelection,
+        path: WorkspacePath,
+        bytes: &[u8],
+    ) -> ObsidianVaultSnapshot {
+        ObsidianVaultSnapshot::from_snapshots(
+            selection,
+            vec![ObsidianNoteInput {
+                path,
+                entry_kind: ObsidianEntryKind::RegularFile,
+                hidden: false,
+                cloud_synchronized: false,
+                content_sha256: sha256(bytes),
+                content: bytes.to_vec(),
+            }],
+        )
+        .expect("native vault snapshot")
     }
 
     fn execute_native(
@@ -728,6 +769,14 @@ mod linux_tests {
     #[test]
     fn native_markdown_preview_commits_and_external_edit_fails_closed() {
         let mut committed = native_fixture();
+        let selection = vault_selection(committed.workspace_path.workspace_id());
+        let initial_snapshot = vault_snapshot(
+            &selection,
+            committed.workspace_path.clone(),
+            &committed.source_bytes,
+        );
+        let mut index = ObsidianVaultIndex::in_memory().expect("native derived index");
+        let initial_index = index.rebuild(&initial_snapshot).expect("initial index");
         assert_eq!(
             execute_native(&mut committed),
             Ok(FilesystemTransactionOutcome::Committed)
@@ -744,9 +793,57 @@ mod linux_tests {
                 & 0o777,
             0o640
         );
+        let post_snapshot = vault_snapshot(
+            &selection,
+            committed.workspace_path.clone(),
+            &committed.postimage_bytes,
+        );
+        let publication = decide_index_publication(
+            committed.mutation.clone(),
+            CanonicalMarkdownWriteOutcome::Committed,
+            Some(sha256(&committed.postimage_bytes)),
+        );
+        let published = index
+            .publish_after_canonical_write(
+                initial_index.report.revision,
+                &publication,
+                &post_snapshot,
+            )
+            .expect("publish native postimage");
+        assert_eq!(
+            published.state,
+            KnowledgeIndexPublicationState::ReadyAfterCommit
+        );
+        assert_eq!(
+            index
+                .freshness(&post_snapshot)
+                .expect("postimage freshness"),
+            ObsidianVaultFreshness::Current
+        );
 
         let mut stale = native_fixture();
-        let external = b"external user edit\n";
+        let stale_selection = vault_selection(stale.workspace_path.workspace_id());
+        let stale_initial_snapshot = vault_snapshot(
+            &stale_selection,
+            stale.workspace_path.clone(),
+            &stale.source_bytes,
+        );
+        let mut stale_index = ObsidianVaultIndex::in_memory().expect("stale derived index");
+        stale_index
+            .rebuild(&stale_initial_snapshot)
+            .expect("stale initial index");
+        let external = concat!(
+            "---\n",
+            "agentmage_id: knowledge-decision-native-001\n",
+            "type: decision\n",
+            "---\n",
+            "# Native Decision\n",
+            "## Decision\n",
+            "External user decision.\n",
+            "## Evidence\n",
+            "Synthetic evidence.\n",
+        )
+        .as_bytes();
         fs::write(&stale.source_path, external).expect("external Markdown edit");
         assert_eq!(
             execute_native(&mut stale),
@@ -757,5 +854,22 @@ mod linux_tests {
             external
         );
         assert_ne!(stale.source_bytes, external);
+        let external_snapshot =
+            vault_snapshot(&stale_selection, stale.workspace_path.clone(), external);
+        assert_eq!(
+            stale_index
+                .freshness(&external_snapshot)
+                .expect("external edit freshness"),
+            ObsidianVaultFreshness::Stale
+        );
+        let blocked_publication = decide_index_publication(
+            stale.mutation,
+            CanonicalMarkdownWriteOutcome::FailedNoChange,
+            Some(sha256(external)),
+        );
+        assert_eq!(
+            blocked_publication.state,
+            KnowledgeIndexPublicationState::RebuildRequired
+        );
     }
 }
