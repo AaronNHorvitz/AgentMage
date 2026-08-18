@@ -341,6 +341,13 @@ Current automated coverage includes:
   next effect. Executable payload modes, traversal names, symlinks, hard links,
   and a repository `artifacts/` lookalike also fail or remain outside private
   inventory as required.
+- A deterministic concurrent native race campaign aligns two identical
+  publications at the no-replace edge, replaces the objects namespace during
+  an authorized read, and substitutes an object during deletion. Publication
+  yields one immutable object plus one exact deduplication; namespace drift
+  returns no bytes; and deletion detects the inode conflict while preserving
+  both the authorized ciphertext and contained substitute. Its synchronization
+  hooks exist only in test builds.
 - Fourteen native Linux subprocess-stop cases spanning before and after
   encrypted staging, atomic placement, SQLCipher metadata commit, durable
   artifact-event commit, checkpoint commit, reference release, and collection.
@@ -381,8 +388,8 @@ Current automated coverage includes:
   statement digest, implementation paths, executable test identities, and
   hashed retained files. Its mutation suite rejects omission, reorder, status
   drift, unresolved tests, unsafe paths, changed artifacts, and false
-  completion. The index retains complete, partial, and open states and does not
-  claim story, sprint, or release completion.
+  completion. The index retains 14 complete and three partial states and does
+  not claim story, sprint, or release completion.
 - One independent automated artifact-boundary review rederives fourteen closed
   schema, owner/policy, transaction, descriptor, encryption-integrity,
   memory/network closure, namespace-separation, retained-campaign, index, and

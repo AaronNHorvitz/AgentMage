@@ -281,13 +281,14 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
     },
     {
         "task_id": "22.2.3.4",
-        "status": "partial",
+        "status": "complete",
         "code": [
             "kernel/engine/src/runtime_artifact.rs",
             "platforms/linux/src/runtime_artifact_store.rs",
         ],
         "tests": [
             "fixed_namespace_substitution_fails_before_the_next_store_effect",
+            "concurrent_file_races_deduplicate_or_fail_closed_without_deletion_or_disclosure",
             "story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
             "repository_evidence_namespace_is_never_private_artifact_authority",
         ],
