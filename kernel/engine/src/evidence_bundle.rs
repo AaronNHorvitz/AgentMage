@@ -764,6 +764,8 @@ mod tests {
     const SECRET_TEXT: &str = "authorization: bearer synthetic-private-value";
     const SYSTEM_TEXT: &str = "hidden system instruction must never leave";
     const RESTRICTED_TEXT: &str = "restricted private source text";
+    const COPYRIGHT_TEXT: &str = "copyrighted fixture excerpt selected only for redaction";
+    const UNRELATED_TEXT: &str = "unrelated private fixture must remain undisclosed";
 
     struct TestKey([u8; 32]);
 
@@ -850,6 +852,18 @@ mod tests {
                 ConversationTurnRole::User,
                 DataSensitivity::Restricted,
                 RESTRICTED_TEXT,
+            ),
+            (
+                5,
+                ConversationTurnRole::User,
+                DataSensitivity::Durable,
+                COPYRIGHT_TEXT,
+            ),
+            (
+                6,
+                ConversationTurnRole::User,
+                DataSensitivity::Durable,
+                UNRELATED_TEXT,
             ),
         ] {
             store
@@ -1018,6 +1032,90 @@ mod tests {
     }
 
     #[test]
+    fn s_027_st01_disclosure_canaries_are_redacted_omitted_and_identity_free() {
+        let (directory, mut store, conversation) = fixture();
+        let mut candidate = draft(&store, &conversation);
+        candidate.excerpts.push(EvidenceExcerptSelection {
+            turn_id: ConversationTurnId::from_raw("turn-bundle-5"),
+            start_byte: 0,
+            end_byte: COPYRIGHT_TEXT.len() as u64,
+            disposition: EvidenceExcerptDisposition::Redact,
+            redaction_codes: vec!["copyright.excerpt.removed".to_owned()],
+            user_approved: true,
+            related: true,
+        });
+        candidate
+            .exclusions
+            .push("Unrelated private turn omitted".to_owned());
+        let preview = store
+            .preview_evidence_bundle(&candidate, "preview-s-027-st01".to_owned(), CREATED + 100)
+            .expect("canary preview builds");
+        let visible = String::from_utf8(preview.exact_json.clone()).expect("bundle is UTF-8");
+        assert!(visible.contains(SAFE_TEXT));
+        assert!(visible.contains("credential.removed"));
+        assert!(visible.contains("copyright.excerpt.removed"));
+        assert!(visible.contains("Unrelated private turn omitted"));
+        for prohibited in [
+            SECRET_TEXT,
+            SYSTEM_TEXT,
+            RESTRICTED_TEXT,
+            COPYRIGHT_TEXT,
+            UNRELATED_TEXT,
+            "turn-bundle-3",
+            "turn-bundle-4",
+            "turn-bundle-6",
+            &sha256(SYSTEM_TEXT.as_bytes()),
+            &sha256(RESTRICTED_TEXT.as_bytes()),
+            &sha256(UNRELATED_TEXT.as_bytes()),
+        ] {
+            assert!(!visible.contains(prohibited));
+        }
+        assert_eq!(preview.included_excerpt_count, 1);
+        assert_eq!(preview.redacted_excerpt_count, 2);
+        assert!(!preview.bundle.executable);
+        assert!(!preview.bundle.startup_authority);
+        assert!(!preview.bundle.external_delivery_attempted);
+
+        let mut unrelated = candidate.clone();
+        unrelated.excerpts.push(EvidenceExcerptSelection {
+            turn_id: ConversationTurnId::from_raw("turn-bundle-6"),
+            start_byte: 0,
+            end_byte: UNRELATED_TEXT.len() as u64,
+            disposition: EvidenceExcerptDisposition::Include,
+            redaction_codes: Vec::new(),
+            user_approved: true,
+            related: false,
+        });
+        assert_eq!(
+            store.preview_evidence_bundle(
+                &unrelated,
+                "preview-unrelated-canary".to_owned(),
+                CREATED + 100,
+            ),
+            Err(EvidenceBundleError::ProhibitedContent)
+        );
+
+        store
+            .append_conversation_turn(&turn(
+                7,
+                ConversationTurnRole::Assistant,
+                DataSensitivity::Operational,
+                "later state invalidates the reviewed disclosure",
+            ))
+            .expect("later turn appends");
+        assert_eq!(
+            store.preview_evidence_bundle(
+                &candidate,
+                "preview-stale-canary".to_owned(),
+                CREATED + 100,
+            ),
+            Err(EvidenceBundleError::StaleReview)
+        );
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
     fn secret_hidden_and_restricted_inclusions_fail_closed() {
         let (directory, store, conversation) = fixture();
         let base = draft(&store, &conversation);
@@ -1107,7 +1205,7 @@ mod tests {
             .expect("preview builds");
         store
             .append_conversation_turn(&turn(
-                5,
+                7,
                 ConversationTurnRole::Assistant,
                 DataSensitivity::Operational,
                 "Later canonical state",

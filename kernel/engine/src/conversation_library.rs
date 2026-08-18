@@ -113,6 +113,10 @@ pub struct ConversationQuery {
     pub tag: Option<String>,
     /// Optional pinned-state filter.
     pub pinned: Option<bool>,
+    /// Exact evidence-reference state required on at least one immutable turn.
+    pub evidence_state: Option<ConversationEvidenceState>,
+    /// Exact ancestor whose descendant branch chain must contain each result.
+    pub ancestor_conversation_id: Option<ConversationId>,
     /// Whether archived records may appear without an explicit archived status filter.
     pub include_archived: bool,
     /// Maximum result count.
@@ -140,8 +144,25 @@ pub struct ConversationSearchHit {
     pub pinned: bool,
     /// Number of immutable turns.
     pub turn_count: u64,
+    /// Stable turn identities that matched text or the selected evidence state.
+    pub matching_turn_ids: Vec<ConversationTurnId>,
     /// Bounded matching preview, or none when no text filter was requested.
     pub matching_preview: Option<String>,
+}
+
+/// Closed evidence-reference state used by bounded conversation search.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ConversationEvidenceState {
+    /// The turn contains no citation, receipt, checkpoint, source, or checked compaction reference.
+    Unreferenced,
+    /// The turn carries at least one citation identity.
+    Cited,
+    /// The turn carries at least one terminal receipt identity.
+    Receipted,
+    /// The turn carries one resumable checkpoint identity.
+    Checkpointed,
+    /// A checked compaction includes the turn in its immutable source set.
+    Compacted,
 }
 
 /// Complete read-only immutable timeline for one conversation.
@@ -692,6 +713,20 @@ impl OperationalStore {
                 continue;
             }
             let history = self.conversation_history(&conversation_id)?;
+            if let Some(ancestor) = &query.ancestor_conversation_id
+                && !self.conversation_descends_from(&conversation, ancestor)?
+            {
+                continue;
+            }
+            let matching_turn_ids = matching_turn_ids(
+                &history.turns,
+                &history.compactions,
+                normalized_text.as_deref(),
+                query.evidence_state,
+            );
+            if query.evidence_state.is_some() && matching_turn_ids.is_empty() {
+                continue;
+            }
             let matching_preview = match &normalized_text {
                 Some(text) => {
                     search_preview(&conversation, &history.turns, &history.compactions, text)
@@ -711,6 +746,7 @@ impl OperationalStore {
                 status: conversation.status,
                 pinned: conversation.pinned,
                 turn_count: history.turns.len() as u64,
+                matching_turn_ids,
                 matching_preview,
             });
             if results.len() == query.limit as usize {
@@ -718,6 +754,31 @@ impl OperationalStore {
             }
         }
         Ok(results)
+    }
+
+    fn conversation_descends_from(
+        &self,
+        conversation: &ConversationRecord,
+        ancestor: &ConversationId,
+    ) -> Result<bool, ConversationLibraryError> {
+        let mut current = conversation.parent_conversation_id.clone();
+        let mut visited = BTreeSet::new();
+        for _ in 0..MAX_CONVERSATION_SCAN {
+            let Some(identity) = current else {
+                return Ok(false);
+            };
+            if !visited.insert(identity.clone()) {
+                return Err(ConversationLibraryError::IntegrityFailure);
+            }
+            if &identity == ancestor {
+                return Ok(true);
+            }
+            current = self
+                .conversation(&identity)?
+                .ok_or(ConversationLibraryError::IntegrityFailure)?
+                .parent_conversation_id;
+        }
+        Err(ConversationLibraryError::IntegrityFailure)
     }
 
     /// Loads one complete hash-verified conversation in read-only timeline order.
@@ -1646,6 +1707,10 @@ fn validate_query(query: &ConversationQuery) -> Result<(), ConversationLibraryEr
             .as_ref()
             .is_some_and(|value| !valid_prefixed_id(value.as_str(), "model-"))
         || query
+            .ancestor_conversation_id
+            .as_ref()
+            .is_some_and(|value| !valid_prefixed_id(value.as_str(), "conversation-"))
+        || query
             .tag
             .as_deref()
             .is_some_and(|value| !valid_bounded_text(value, MAX_TAG_BYTES))
@@ -1756,6 +1821,59 @@ fn search_preview(
         }
     }
     None
+}
+
+fn matching_turn_ids(
+    turns: &[ConversationTurn],
+    compactions: &[ConversationCompactionRecord],
+    normalized_text: Option<&str>,
+    evidence_state: Option<ConversationEvidenceState>,
+) -> Vec<ConversationTurnId> {
+    let compacted = compactions
+        .iter()
+        .flat_map(|record| record.source_turn_ids.iter())
+        .collect::<BTreeSet<_>>();
+    turns
+        .iter()
+        .filter(|turn| {
+            let text_matches = normalized_text.is_some_and(|query| {
+                turn.text
+                    .as_ref()
+                    .is_some_and(|text| text.to_lowercase().contains(query))
+                    || turn.attachments.iter().any(|attachment| {
+                        attachment.display_name.to_lowercase().contains(query)
+                            || attachment.media_type.to_lowercase().contains(query)
+                    })
+                    || turn
+                        .citation_ids
+                        .iter()
+                        .map(String::as_str)
+                        .chain(turn.grant_ids.iter().map(|value| value.as_str()))
+                        .chain(turn.receipt_ids.iter().map(|value| value.as_str()))
+                        .any(|identity| identity.to_lowercase().contains(query))
+            });
+            let evidence_matches = evidence_state.is_some_and(|state| match state {
+                ConversationEvidenceState::Unreferenced => {
+                    turn.citation_ids.is_empty()
+                        && turn.receipt_ids.is_empty()
+                        && turn.checkpoint_id.is_none()
+                        && turn.source_sha256.is_empty()
+                        && !compacted.contains(&turn.turn_id)
+                }
+                ConversationEvidenceState::Cited => !turn.citation_ids.is_empty(),
+                ConversationEvidenceState::Receipted => !turn.receipt_ids.is_empty(),
+                ConversationEvidenceState::Checkpointed => turn.checkpoint_id.is_some(),
+                ConversationEvidenceState::Compacted => compacted.contains(&turn.turn_id),
+            });
+            match (normalized_text, evidence_state) {
+                (Some(_), Some(_)) => text_matches && evidence_matches,
+                (Some(_), None) => text_matches,
+                (None, Some(_)) => evidence_matches,
+                (None, None) => false,
+            }
+        })
+        .map(|turn| turn.turn_id.clone())
+        .collect()
 }
 
 fn bounded_preview(value: &str) -> String {
@@ -2257,6 +2375,7 @@ fn sha256(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
     use std::fs;
     use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -2273,8 +2392,8 @@ mod tests {
     };
 
     use super::{
-        ConversationDeletionApproval, ConversationLibraryError, ConversationMetadataChange,
-        ConversationQuery, sha256, source_hash_set_digest,
+        ConversationDeletionApproval, ConversationEvidenceState, ConversationLibraryError,
+        ConversationMetadataChange, ConversationQuery, sha256, source_hash_set_digest,
     };
     use crate::context_management::{ResumeDirective, ResumeObservation, finalize_checkpoint};
     use crate::operational_store::{
@@ -2692,6 +2811,8 @@ mod tests {
             status: Some(ConversationStatus::Active),
             tag: Some("audit".to_owned()),
             pinned: Some(false),
+            evidence_state: Some(ConversationEvidenceState::Cited),
+            ancestor_conversation_id: None,
             include_archived: false,
             limit: 10,
         };
@@ -2711,6 +2832,152 @@ mod tests {
             })
             .expect("default excludes archived");
         assert_eq!(archived_hidden.len(), 1);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn s_027_ut01_searches_evidence_ancestry_empty_large_and_corrupt_archives() {
+        let (directory, _path, mut store) = store();
+        assert!(
+            store
+                .search_conversations(&ConversationQuery {
+                    limit: 10,
+                    ..ConversationQuery::default()
+                })
+                .expect("empty search")
+                .is_empty()
+        );
+
+        let original = conversation(true);
+        let original_turn = turn(1, Some("exact evidence needle"));
+        store
+            .create_conversation(&original)
+            .expect("original creates");
+        store
+            .append_conversation_turn(&original_turn)
+            .expect("original turn creates");
+        let evidence_hits = store
+            .search_conversations(&ConversationQuery {
+                from_local_date: Some("2027-01-15".to_owned()),
+                to_local_date: Some("2027-01-15".to_owned()),
+                text: Some("EVIDENCE NEEDLE".to_owned()),
+                workspace_id: Some(original.workspace_id.clone()),
+                project_id: original.project_id.clone(),
+                model_profile_id: Some(original.model_profile_id.clone()),
+                status: Some(ConversationStatus::Active),
+                tag: Some("audit".to_owned()),
+                pinned: Some(false),
+                evidence_state: Some(ConversationEvidenceState::Cited),
+                ancestor_conversation_id: None,
+                include_archived: false,
+                limit: 10,
+            })
+            .expect("evidence search");
+        assert_eq!(evidence_hits.len(), 1);
+        assert_eq!(evidence_hits[0].conversation_id, original.conversation_id);
+        assert_eq!(
+            evidence_hits[0].matching_turn_ids,
+            vec![original_turn.turn_id.clone()]
+        );
+
+        let mut child = conversation(true);
+        child.conversation_id = ConversationId::from_raw("conversation-child-search");
+        child.title = "Child search".to_owned();
+        child.parent_conversation_id = Some(original.conversation_id.clone());
+        child.branch_from_turn_id = Some(original_turn.turn_id.clone());
+        child.created_at_epoch_ms += 10;
+        child.updated_at_epoch_ms += 10;
+        store.create_conversation(&child).expect("child creates");
+        let child_turn = ConversationTurn {
+            turn_id: ConversationTurnId::from_raw("turn-child-search-1"),
+            conversation_id: child.conversation_id.clone(),
+            created_at_epoch_ms: child.created_at_epoch_ms + 1,
+            attachments: Vec::new(),
+            grant_ids: Vec::new(),
+            receipt_ids: Vec::new(),
+            checkpoint_id: None,
+            citation_ids: Vec::new(),
+            source_sha256: Vec::new(),
+            ..turn(1, Some("independent child continuation"))
+        };
+        store
+            .append_conversation_turn(&child_turn)
+            .expect("child turn creates");
+        let mut grandchild = conversation(true);
+        grandchild.conversation_id = ConversationId::from_raw("conversation-grandchild-search");
+        grandchild.title = "Grandchild search".to_owned();
+        grandchild.parent_conversation_id = Some(child.conversation_id.clone());
+        grandchild.branch_from_turn_id = Some(child_turn.turn_id.clone());
+        grandchild.created_at_epoch_ms += 20;
+        grandchild.updated_at_epoch_ms += 20;
+        store
+            .create_conversation(&grandchild)
+            .expect("grandchild creates");
+        let descendants = store
+            .search_conversations(&ConversationQuery {
+                ancestor_conversation_id: Some(original.conversation_id.clone()),
+                include_archived: true,
+                limit: 10,
+                ..ConversationQuery::default()
+            })
+            .expect("ancestor search");
+        assert_eq!(
+            descendants
+                .iter()
+                .map(|hit| hit.conversation_id.clone())
+                .collect::<BTreeSet<_>>(),
+            BTreeSet::from([
+                child.conversation_id.clone(),
+                grandchild.conversation_id.clone(),
+            ])
+        );
+
+        for index in 0..1_024_u64 {
+            let mut record = conversation(true);
+            record.conversation_id =
+                ConversationId::from_raw(format!("conversation-large-{index:04}"));
+            record.title = format!("Large bounded record {index:04}");
+            record.created_at_epoch_ms += 100 + index;
+            record.updated_at_epoch_ms += 100 + index;
+            store
+                .create_conversation(&record)
+                .expect("large record creates");
+        }
+        let first = store
+            .search_conversations(&ConversationQuery {
+                text: Some("large bounded record".to_owned()),
+                include_archived: true,
+                limit: 37,
+                ..ConversationQuery::default()
+            })
+            .expect("large search");
+        let second = store
+            .search_conversations(&ConversationQuery {
+                text: Some("large bounded record".to_owned()),
+                include_archived: true,
+                limit: 37,
+                ..ConversationQuery::default()
+            })
+            .expect("repeat large search");
+        assert_eq!(first, second);
+        assert_eq!(first.len(), 37);
+
+        store
+            .connection
+            .execute(
+                "UPDATE conversations SET title='corrupt projection' WHERE conversation_id=?1",
+                [original.conversation_id.as_str()],
+            )
+            .expect("projection corruption seeds");
+        assert_eq!(
+            store.search_conversations(&ConversationQuery {
+                text: Some("exact evidence needle".to_owned()),
+                limit: 10,
+                ..ConversationQuery::default()
+            }),
+            Err(ConversationLibraryError::IntegrityFailure)
+        );
+        drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 
@@ -3032,6 +3299,115 @@ mod tests {
             branch_history.conversation.branch_from_turn_id,
             Some(first.turn_id)
         );
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn s_027_ut02_branches_at_every_turn_role_without_replaying_evidence() {
+        let (directory, _path, mut store) = store();
+        let original = conversation(true);
+        store
+            .create_conversation(&original)
+            .expect("original creates");
+        let roles = [
+            ConversationTurnRole::System,
+            ConversationTurnRole::User,
+            ConversationTurnRole::Assistant,
+            ConversationTurnRole::Tool,
+        ];
+        let mut source_turns = Vec::new();
+        for (index, role) in roles.into_iter().enumerate() {
+            let ordinal = index as u64 + 1;
+            let mut source = turn(ordinal, Some(&format!("source role {index}")));
+            source.role = role;
+            source.checkpoint_id = Some(SessionCheckpointId::from_raw("checkpoint-1"));
+            store
+                .append_conversation_turn(&source)
+                .expect("source role appends");
+            source_turns.push(source);
+        }
+        let checkpoint = checkpoint();
+        seed_checkpoint(&store, &checkpoint);
+        let observation = resume_observation(&checkpoint);
+        let original_before = store
+            .conversation_history(&original.conversation_id)
+            .expect("source history before branches");
+
+        for (index, source) in source_turns.iter().enumerate() {
+            let mut branch = conversation(true);
+            branch.conversation_id =
+                ConversationId::from_raw(format!("conversation-role-branch-{index}"));
+            branch.title = format!("Role branch {index}");
+            branch.parent_conversation_id = Some(original.conversation_id.clone());
+            branch.branch_from_turn_id = Some(source.turn_id.clone());
+            branch.created_at_epoch_ms += 100 + index as u64;
+            branch.updated_at_epoch_ms += 100 + index as u64;
+            let preview = store
+                .preview_conversation_branch(
+                    &original.conversation_id,
+                    &source.turn_id,
+                    branch.clone(),
+                    &observation,
+                )
+                .expect("role branch previews");
+            store
+                .apply_conversation_branch(&preview, &observation)
+                .expect("role branch applies");
+            let empty_branch = store
+                .conversation_history(&branch.conversation_id)
+                .expect("new branch history");
+            assert!(empty_branch.turns.is_empty());
+            assert_eq!(
+                empty_branch.conversation.branch_from_turn_id,
+                Some(source.turn_id.clone())
+            );
+
+            let continuation = ConversationTurn {
+                turn_id: ConversationTurnId::from_raw(format!("turn-role-branch-{index}-1")),
+                conversation_id: branch.conversation_id.clone(),
+                ordinal: 1,
+                role: ConversationTurnRole::User,
+                sensitivity: DataSensitivity::Operational,
+                created_at_epoch_ms: branch.created_at_epoch_ms + 1,
+                local_date: branch.local_date.clone(),
+                text: Some(format!("independent continuation {index}")),
+                text_sha256: sha256(format!("independent continuation {index}").as_bytes()),
+                attachments: Vec::new(),
+                grant_ids: Vec::new(),
+                receipt_ids: Vec::new(),
+                checkpoint_id: None,
+                citation_ids: Vec::new(),
+                source_sha256: Vec::new(),
+                schema_version: CONTRACT_SCHEMA_VERSION,
+            };
+            store
+                .append_conversation_turn(&continuation)
+                .expect("independent continuation appends");
+            assert!(
+                store
+                    .conversation_history(&branch.conversation_id)
+                    .expect("continued branch")
+                    .turns[0]
+                    .grant_ids
+                    .is_empty()
+            );
+        }
+
+        assert_eq!(
+            store
+                .conversation_history(&original.conversation_id)
+                .expect("source history after branches"),
+            original_before
+        );
+        assert_eq!(
+            store
+                .conversation_relationships(&original.conversation_id)
+                .expect("source relationships")
+                .child_conversation_ids
+                .len(),
+            4
+        );
+        drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 

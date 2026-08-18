@@ -10,7 +10,7 @@ use agentmage_kernel_contracts::{
     ApprovalId, CONTRACT_SCHEMA_VERSION, ConversationId, StrictLocalStorageObservation,
     to_canonical_json,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 use crate::conversation_library::ConversationLibraryError;
@@ -66,7 +66,7 @@ impl std::fmt::Display for ConversationArchiveError {
 impl std::error::Error for ConversationArchiveError {}
 
 /// Visible lifecycle policy for one encrypted private archive.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ConversationArchiveRetention {
     /// Earliest trusted time at which deletion may proceed, when no hold is active.
     pub delete_after_epoch_ms: u64,
@@ -90,7 +90,7 @@ pub struct ConversationArchiveRequest {
 }
 
 /// Content-free manifest binding encrypted bytes to the reviewed canonical inventory.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ConversationArchiveManifest {
     /// Contract schema version.
     pub schema_version: u16,
@@ -708,15 +708,22 @@ fn map_conversation_error(error: ConversationLibraryError) -> ConversationArchiv
 #[cfg(test)]
 mod tests {
     use std::fs;
+    use std::path::Path;
+    use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     use agentmage_kernel_contracts::{
         CloudSynchronizationMarker, ConversationRecord, ConversationRetention,
         ConversationRetentionKind, ConversationStatus, ConversationTurn, ConversationTurnId,
-        ConversationTurnRole, DataSensitivity, ModelProfileId, StorageFilesystemClass, WorkspaceId,
+        ConversationTurnRole, DataSensitivity, MaterialClaimEvidenceStateKind, ModelProfileId,
+        StorageFilesystemClass, WorkspaceId,
     };
 
     use super::*;
+    use crate::evidence_bundle::{
+        EvidenceBundleApproval, EvidenceBundleClaim, EvidenceBundleDraft, EvidenceBundleMethod,
+        EvidenceExcerptDisposition, EvidenceExcerptSelection, conversation_evidence_history_sha256,
+    };
     use crate::operational_store::{OperationalStoreKeyError, OperationalStoreKeyProvider};
 
     static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
@@ -750,6 +757,12 @@ mod tests {
             std::process::id()
         ));
         fs::create_dir(&directory).expect("temporary directory");
+        let (store, conversation) = fixture_in(&directory);
+        (directory, store, conversation)
+    }
+
+    fn fixture_in(directory: &Path) -> (OperationalStore, ConversationRecord) {
+        fs::create_dir_all(directory).expect("temporary directory");
         let mut store = OperationalStore::open(
             &directory.join("canonical.db"),
             &observation(),
@@ -804,7 +817,7 @@ mod tests {
                 source_sha256: vec!["b".repeat(64)],
             })
             .expect("turn appends");
-        (directory, store, conversation)
+        (store, conversation)
     }
 
     fn request(conversation: &ConversationRecord) -> ConversationArchiveRequest {
@@ -1047,5 +1060,314 @@ mod tests {
         assert!(!destination.exists());
         drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    fn crash_bundle_draft(
+        store: &OperationalStore,
+        conversation: &ConversationRecord,
+    ) -> EvidenceBundleDraft {
+        let history = store
+            .conversation_history(&conversation.conversation_id)
+            .expect("crash fixture history");
+        EvidenceBundleDraft {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            bundle_id: "evidence-bundle-crash".to_owned(),
+            conversation_id: conversation.conversation_id.clone(),
+            expected_source_history_sha256: conversation_evidence_history_sha256(&history)
+                .expect("history digest"),
+            policy_sha256: "d".repeat(64),
+            redaction_policy_sha256: "e".repeat(64),
+            model_manifest_sha256: "f".repeat(64),
+            created_at_epoch_ms: CREATED + 10,
+            claims: vec![EvidenceBundleClaim {
+                claim_id: "claim-crash".to_owned(),
+                statement: "The selected archive fixture is present.".to_owned(),
+                evidence_state: MaterialClaimEvidenceStateKind::Observed,
+                citation_ids: vec!["citation-archive-alpha".to_owned()],
+            }],
+            methods: vec![EvidenceBundleMethod {
+                method_id: "method-crash".to_owned(),
+                description: "Exact immutable source selection".to_owned(),
+                method_sha256: "1".repeat(64),
+            }],
+            constraints: vec!["Local evidence only".to_owned()],
+            excerpts: vec![EvidenceExcerptSelection {
+                turn_id: ConversationTurnId::from_raw("turn-archive-alpha-1"),
+                start_byte: 0,
+                end_byte: CANARY.len() as u64,
+                disposition: EvidenceExcerptDisposition::Include,
+                redaction_codes: Vec::new(),
+                user_approved: true,
+                related: true,
+            }],
+            exclusions: vec!["No unselected content".to_owned()],
+        }
+    }
+
+    fn write_crash_manifest(directory: &Path, manifest: &ConversationArchiveManifest) {
+        fs::write(
+            directory.join("manifest.json"),
+            serde_json::to_vec(manifest).expect("manifest serializes"),
+        )
+        .expect("manifest sidecar writes");
+    }
+
+    fn read_crash_manifest(directory: &Path) -> ConversationArchiveManifest {
+        serde_json::from_slice(&fs::read(directory.join("manifest.json")).expect("manifest bytes"))
+            .expect("manifest parses")
+    }
+
+    fn crash_stop() -> ! {
+        std::process::exit(86)
+    }
+
+    #[test]
+    #[ignore = "subprocess stop target; invoked only by the S-027-RT01 matrix"]
+    fn s_027_rt01_crash_child() {
+        let directory = std::path::PathBuf::from(
+            std::env::var("AGENTMAGE_S027_RT01_DIR").expect("crash directory"),
+        );
+        let operation = std::env::var("AGENTMAGE_S027_RT01_OPERATION").expect("operation");
+        let position = std::env::var("AGENTMAGE_S027_RT01_POSITION").expect("position");
+        let (mut store, conversation) = fixture_in(&directory);
+        let archive = directory.join("archive.db");
+        let candidate = directory.join("candidate.db");
+        let bundle = directory.join("bundle.json");
+
+        let prepared_manifest = if matches!(operation.as_str(), "restore" | "delete") {
+            let manifest = store
+                .create_conversation_archive(
+                    &archive,
+                    &observation(),
+                    &mut TestKey([52; 32]),
+                    &request(&conversation),
+                )
+                .expect("archive prerequisite");
+            write_crash_manifest(&directory, &manifest);
+            Some(manifest)
+        } else {
+            None
+        };
+        if position == "before" {
+            crash_stop();
+        }
+
+        match operation.as_str() {
+            "archive" => {
+                let manifest = store
+                    .create_conversation_archive(
+                        &archive,
+                        &observation(),
+                        &mut TestKey([52; 32]),
+                        &request(&conversation),
+                    )
+                    .expect("archive target");
+                write_crash_manifest(&directory, &manifest);
+            }
+            "branch" => {
+                let mut branch = conversation.clone();
+                branch.conversation_id = ConversationId::from_raw("conversation-crash-branch");
+                branch.title = "Crash branch".to_owned();
+                branch.parent_conversation_id = Some(conversation.conversation_id.clone());
+                branch.branch_from_turn_id =
+                    Some(ConversationTurnId::from_raw("turn-archive-alpha-1"));
+                branch.created_at_epoch_ms += 100;
+                branch.updated_at_epoch_ms += 100;
+                store.create_conversation(&branch).expect("branch target");
+            }
+            "export" => {
+                let draft = crash_bundle_draft(&store, &conversation);
+                let preview = store
+                    .preview_evidence_bundle(
+                        &draft,
+                        "preview-crash-bundle".to_owned(),
+                        CREATED + 100,
+                    )
+                    .expect("bundle preview");
+                store
+                    .publish_evidence_bundle(
+                        &bundle,
+                        &observation(),
+                        &draft,
+                        &preview,
+                        &EvidenceBundleApproval {
+                            approval_id: "approval-crash-bundle".to_owned(),
+                            approved_preview_sha256: preview.preview_sha256.clone(),
+                            decision_sha256: "2".repeat(64),
+                            approved_at_epoch_ms: CREATED + 11,
+                            user_confirmed: true,
+                        },
+                        CREATED + 12,
+                    )
+                    .expect("bundle target");
+            }
+            "restore" => {
+                let manifest = prepared_manifest.expect("restore manifest");
+                OperationalStore::restore_conversation_archive_to_fresh_candidate(
+                    &archive,
+                    &observation(),
+                    &mut TestKey([52; 32]),
+                    &manifest,
+                    &candidate,
+                    &observation(),
+                    &mut TestKey([53; 32]),
+                )
+                .expect("restore target");
+            }
+            "delete" => {
+                let manifest = prepared_manifest.expect("delete manifest");
+                let retention = preview_conversation_archive_retention(
+                    &manifest,
+                    ConversationArchiveRetention {
+                        delete_after_epoch_ms: CREATED + 20,
+                        user_hold: false,
+                        policy_sha256: "3".repeat(64),
+                    },
+                )
+                .expect("retention preview");
+                let revised = apply_conversation_archive_retention(&manifest, &retention)
+                    .expect("retention applies");
+                write_crash_manifest(&directory, &revised);
+                let preview = preview_conversation_archive_deletion(
+                    &archive,
+                    &observation(),
+                    &revised,
+                    CREATED + 30,
+                )
+                .expect("deletion preview");
+                delete_conversation_archive(
+                    &archive,
+                    &observation(),
+                    &revised,
+                    &preview,
+                    &ConversationArchiveDeletionApproval {
+                        approval_id: ApprovalId::from_raw("approval-crash-delete"),
+                        approved_preview_sha256: preview.preview_sha256.clone(),
+                        decision_sha256: "4".repeat(64),
+                        approved_at_epoch_ms: CREATED + 29,
+                        user_confirmed: true,
+                    },
+                    CREATED + 30,
+                )
+                .expect("delete target");
+            }
+            _ => panic!("unknown crash operation"),
+        }
+        crash_stop();
+    }
+
+    #[test]
+    fn s_027_rt01_process_stops_and_concurrent_access_preserve_atomic_state() {
+        for operation in ["archive", "branch", "export", "delete", "restore"] {
+            for position in ["before", "after"] {
+                let sequence = NEXT_DIRECTORY.fetch_add(1, Ordering::Relaxed);
+                let directory = std::env::temp_dir().join(format!(
+                    "agentmage-s027-rt01-{}-{sequence}-{operation}-{position}",
+                    std::process::id()
+                ));
+                fs::create_dir(&directory).expect("crash case directory");
+                let status = Command::new(std::env::current_exe().expect("test executable"))
+                    .args([
+                        "--exact",
+                        "conversation_archive::tests::s_027_rt01_crash_child",
+                        "--ignored",
+                    ])
+                    .env("AGENTMAGE_S027_RT01_DIR", &directory)
+                    .env("AGENTMAGE_S027_RT01_OPERATION", operation)
+                    .env("AGENTMAGE_S027_RT01_POSITION", position)
+                    .status()
+                    .expect("crash child launches");
+                assert_eq!(status.code(), Some(86));
+
+                let canonical = directory.join("canonical.db");
+                let recovered =
+                    OperationalStore::open(&canonical, &observation(), &mut TestKey([51; 32]))
+                        .expect("canonical state reopens");
+                let history = recovered
+                    .conversation_history(&ConversationId::from_raw("conversation-archive-alpha"))
+                    .expect("canonical history verifies");
+                assert_eq!(history.turns.len(), 1);
+                assert_eq!(history.turns[0].text.as_deref(), Some(CANARY));
+                assert!(
+                    OperationalStore::open(&canonical, &observation(), &mut TestKey([51; 32]),)
+                        .is_err(),
+                    "a simultaneous writer must not open"
+                );
+
+                let effect_completed = position == "after";
+                match operation {
+                    "archive" => {
+                        assert_eq!(directory.join("archive.db").exists(), effect_completed);
+                        if effect_completed {
+                            OperationalStore::inspect_conversation_archive(
+                                &directory.join("archive.db"),
+                                &observation(),
+                                &mut TestKey([52; 32]),
+                                &read_crash_manifest(&directory),
+                            )
+                            .expect("completed archive verifies");
+                        }
+                    }
+                    "branch" => assert_eq!(
+                        recovered
+                            .conversation(&ConversationId::from_raw("conversation-crash-branch"))
+                            .expect("branch lookup")
+                            .is_some(),
+                        effect_completed
+                    ),
+                    "export" => {
+                        assert_eq!(directory.join("bundle.json").exists(), effect_completed);
+                        if effect_completed {
+                            let bytes = fs::read(directory.join("bundle.json"))
+                                .expect("completed bundle bytes");
+                            let value: serde_json::Value =
+                                serde_json::from_slice(&bytes).expect("completed bundle JSON");
+                            assert_eq!(value["external_delivery_attempted"], false);
+                            assert!(
+                                bytes
+                                    .windows(CANARY.len())
+                                    .any(|part| part == CANARY.as_bytes())
+                            );
+                        }
+                    }
+                    "delete" => {
+                        assert_eq!(directory.join("archive.db").exists(), !effect_completed);
+                        if !effect_completed {
+                            OperationalStore::inspect_conversation_archive(
+                                &directory.join("archive.db"),
+                                &observation(),
+                                &mut TestKey([52; 32]),
+                                &read_crash_manifest(&directory),
+                            )
+                            .expect("undeleted archive verifies");
+                        }
+                    }
+                    "restore" => {
+                        assert_eq!(directory.join("candidate.db").exists(), effect_completed);
+                        if effect_completed {
+                            let restored = OperationalStore::open(
+                                &directory.join("candidate.db"),
+                                &observation(),
+                                &mut TestKey([53; 32]),
+                            )
+                            .expect("completed restore verifies");
+                            assert_eq!(
+                                restored
+                                    .conversation_history(&ConversationId::from_raw(
+                                        "conversation-archive-alpha",
+                                    ))
+                                    .expect("restored history")
+                                    .turns
+                                    .len(),
+                                1
+                            );
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+                drop(recovered);
+                fs::remove_dir_all(directory).expect("crash case cleanup");
+            }
+        }
     }
 }
