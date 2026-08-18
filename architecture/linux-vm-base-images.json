@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "record_type": "linux-vm-base-image-catalog",
+  "decision": "ADR-0040",
+  "status": "admitted-local-regression-bases",
+  "targets": [
+    {
+      "target_id": "fedora-44-x86_64",
+      "distribution": "fedora",
+      "version": "44",
+      "architecture": "x86_64",
+      "source": {
+        "publisher": "Fedora Project",
+        "url": "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2",
+        "sha256": "28680fe5b371a5a82ebf43a31926e086a168e59949d03969c5093e7071f90b7f",
+        "format": "qcow2",
+        "license_disposition": "mixed-distribution-package-licenses",
+        "license_source": "https://docs.fedoraproject.org/en-US/legal/"
+      },
+      "cache_path": ".cache/agentmage/docker-kvm/Fedora-Cloud-Base-Generic-44-1.7.x86_64.qcow2",
+      "package_snapshot": [
+        { "id": "ca-certificates", "version": "0:2025.2.80_v9.0.304-6.fc44" },
+        { "id": "docker-cli", "version": "0:29.6.2-1.fc44" },
+        { "id": "iproute", "version": "0:6.17.0-2.fc44" },
+        { "id": "jq", "version": "0:1.8.1-3.fc44" },
+        { "id": "moby-engine", "version": "0:29.6.2-1.fc44" },
+        { "id": "openssh-server", "version": "0:10.2p1-7.fc44" },
+        { "id": "procps-ng", "version": "0:4.0.6-1.fc44" },
+        { "id": "python3", "version": "0:3.14.3-2.fc44" },
+        { "id": "shadow-utils", "version": "2:4.19.0-6.fc44" },
+        { "id": "sudo", "version": "0:1.9.17-7.p2.fc44" },
+        { "id": "util-linux", "version": "0:2.41.3-12.fc44" }
+      ]
+    },
+    {
+      "target_id": "ubuntu-26.04-x86_64",
+      "distribution": "ubuntu",
+      "version": "26.04",
+      "architecture": "x86_64",
+      "source": {
+        "publisher": "Canonical",
+        "url": "https://cloud-images.ubuntu.com/releases/resolute/release/ubuntu-26.04-server-cloudimg-amd64.img",
+        "sha256": "9dc7c5363c0146a08ba0c9aa834d82c2c6dfbb1c471ad9a2f0aba1189e21be05",
+        "format": "qcow2",
+        "license_disposition": "mixed-distribution-package-licenses",
+        "license_source": "https://ubuntu.com/legal/intellectual-property-policy"
+      },
+      "cache_path": ".cache/agentmage/ubuntu-vm/ubuntu-26.04-server-cloudimg-amd64.img",
+      "package_snapshot": [
+        { "id": "ca-certificates", "version": "20260601~26.04.1" },
+        { "id": "docker.io", "version": "29.1.3-0ubuntu4.1" },
+        { "id": "iproute2", "version": "6.19.0-1ubuntu1.1" },
+        { "id": "jq", "version": "1.8.1-4ubuntu2" },
+        { "id": "openssh-server", "version": "1:10.2p1-2ubuntu3.5" },
+        { "id": "procps", "version": "2:4.0.4-9ubuntu1" },
+        { "id": "python3", "version": "3.14.3-0ubuntu2" },
+        { "id": "sudo", "version": "1.9.17p2-1ubuntu3" },
+        { "id": "util-linux", "version": "2.41.3-3ubuntu2" }
+      ]
+    }
+  ],
+  "virtual_hardware": {
+    "acceleration": "kvm",
+    "machine": "q35",
+    "cpu": "host",
+    "cpu_count": 4,
+    "memory_mib": 8192,
+    "firmware": "qemu-machine-default-bios",
+    "disk": "virtio-qcow2-cache-none",
+    "network": "virtio-user-mode-phase-controlled",
+    "rng": "virtio-rng-pci",
+    "secure_boot": false,
+    "virtual_tpm": false
+  },
+  "toolchain": {
+    "rust": "1.95.0",
+    "node": "24.15.0",
+    "npm": "11.12.1"
+  },
+  "visual_studio_code": {
+    "version": "1.132.0",
+    "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
+    "url": "https://update.code.visualstudio.com/1.132.0/linux-x64/stable",
+    "archive_sha256": "acdaf0fa557bda1720956ff65ca0de0965e92d68f97e2db22341984400937aed"
+  },
+  "standard_user": {
+    "name": "agentmage",
+    "uid": 10001,
+    "gid": 10001,
+    "administrator_during_acceptance": false
+  },
+  "network_phases": [
+    "dependency-acquisition",
+    "connected-adapter",
+    "strict-offline"
+  ],
+  "repository_credentials_allowed": false,
+  "private_user_data_allowed": false,
+  "release_claim": false
+}

@@ -217,6 +217,8 @@
     "supply-chain:check": "python3 scripts/supply_chain.py",
     "strict-local-source:check": "python3 scripts/strict_local_source_audit.py",
     "hostile-network:check": "python3 scripts/hostile_network_injection_gate.py",
+    "linux-vm-regression:check": "python3 scripts/linux_vm_regression.py",
+    "linux-vm-regression:verify-bases": "python3 scripts/linux_vm_regression.py --verify-bases",
     "traceability:build": "python3 scripts/traceability_report.py",
     "traceability:check": "python3 scripts/traceability_report.py --check",
     "traceability:clean": "python3 scripts/verify_clean_traceability.py",
