@@ -42,6 +42,15 @@ class Sprint13CrossAdapterParityTests(unittest.TestCase):
         changed["input_sha256"]["unexpected"] = "c" * 64
         self.assertTrue(parity.validate_report(changed, verify_current=False))
 
+    def test_review_and_security_mappings_are_closed(self) -> None:
+        changed = copy.deepcopy(self.report)
+        changed["review_protocol_ids"].pop()
+        self.assertTrue(parity.validate_report(changed, verify_current=False))
+
+        changed = copy.deepcopy(self.report)
+        changed["security_requirement_ids"].append("SR-UNKNOWN")
+        self.assertTrue(parity.validate_report(changed, verify_current=False))
+
 
 if __name__ == "__main__":
     unittest.main()

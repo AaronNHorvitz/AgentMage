@@ -57,6 +57,14 @@ MUTATIONS: Final = (
     ("decoding-setting", ("shared", "decoding", "seed"), 9999),
     ("runtime-build", ("native", "runtime_sha256"), "4" * 64),
 )
+SECURITY_REQUIREMENTS: Final = (
+    "SR-SUP-006",
+    "SR-SUP-007",
+    "SR-SUP-008",
+    "SR-AI-006",
+    *(f"SR-AI-{index:03d}" for index in range(10, 17)),
+    "SR-TST-006",
+)
 
 
 class ParityEvidenceError(ValueError):
@@ -246,6 +254,8 @@ def build_report(source_revision: str) -> dict[str, object]:
         "input_sha256": {path: sha256_file(ROOT / path) for path in INPUT_PATHS},
         "profile_id": "gemma-4-12b-unified-it",
         "data_classification": "public-synthetic-only",
+        "review_protocol_ids": ["RV-13", "RV-14"],
+        "security_requirement_ids": list(SECURITY_REQUIREMENTS),
         "corpus": {
             "id": native["corpus_id"],
             "version": native["corpus_version"],
@@ -281,6 +291,7 @@ def validate_report(report: Any, *, verify_current: bool = True) -> list[str]:
     expected_fields = {
         "schema_version", "record_type", "source_revision", "source_sha256",
         "input_sha256", "profile_id", "data_classification", "corpus",
+        "review_protocol_ids", "security_requirement_ids",
         "comparison_tuple", "adapter_results", "mutation_results", "disposition",
         "limitations",
     }
@@ -288,6 +299,10 @@ def validate_report(report: Any, *, verify_current: bool = True) -> list[str]:
         return ["parity evidence fields are not closed"]
     if report.get("schema_version") != 1 or report.get("record_type") != "sprint_13_linux_cross_adapter_parity":
         failures.append("parity evidence identity changed")
+    if report.get("review_protocol_ids") != ["RV-13", "RV-14"]:
+        failures.append("parity review protocol mapping changed")
+    if report.get("security_requirement_ids") != list(SECURITY_REQUIREMENTS):
+        failures.append("parity security mapping changed")
     if set(report.get("source_sha256", {})) != set(SOURCE_PATHS):
         failures.append("parity source closure changed")
     if set(report.get("input_sha256", {})) != set(INPUT_PATHS):
