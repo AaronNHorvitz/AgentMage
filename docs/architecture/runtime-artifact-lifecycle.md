@@ -371,6 +371,12 @@ Current automated coverage includes:
   public-evidence separation, and path-free operator projection. The hash-bound
   report and redacted raw trace are retained under
   `artifacts/sprints/sprint-22/story-22.2/`.
+- One deterministic Story 22.2 evidence index maps every sub-task to its exact
+  statement digest, implementation paths, executable test identities, and
+  hashed retained files. Its mutation suite rejects omission, reorder, status
+  drift, unresolved tests, unsafe paths, changed artifacts, and false
+  completion. The index retains complete, partial, and open states and does not
+  claim story, sprint, or release completion.
 - Fedora journal and artifact pressure measurements retained by Story 50.2.
 
 Still open before Story 22.2 can pass:
