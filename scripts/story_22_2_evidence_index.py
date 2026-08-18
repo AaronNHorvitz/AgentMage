@@ -246,7 +246,7 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
     },
     {
         "task_id": "22.2.3.2",
-        "status": "partial",
+        "status": "complete",
         "code": [
             "platforms/linux/src/runtime_artifact_store.rs",
             "scripts/story_22_2_artifact_crash_evidence.py",
@@ -298,7 +298,7 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
     },
     {
         "task_id": "22.2.3.5",
-        "status": "partial",
+        "status": "complete",
         "code": [
             "platforms/linux/src/runtime_artifact_store.rs",
             "scripts/story_22_2_artifact_pressure_evidence.py",
@@ -337,7 +337,7 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
 
 LIMITATIONS = (
     "Stops inside filesystem or SQLite syscalls and physical storage-fault campaigns remain open.",
-    "Quarantined-payload operator recovery, long mixed-artifact sessions, and concurrent collection campaigns remain open.",
+    "Long mixed-artifact sessions and concurrent collection campaigns remain open.",
     "Larger unique-object and installed-interface pressure evidence remains open.",
     "Windows native artifact storage and supported-platform package evidence remains open.",
     "Independent automated artifact-boundary review passes; independent human and cryptographic review remains open.",

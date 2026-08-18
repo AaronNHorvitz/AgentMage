@@ -360,9 +360,13 @@ Current automated coverage includes:
   totaling 2,129,920 payload bytes; admits exactly 1,024 sorted checkpoint
   references deduplicated onto one immutable object; rejects reference 1,025;
   blocks checkpoint-rooted release; collects after an empty successor
-  checkpoint; and verifies a final reopen. Its hash-bound report retains
-  measured publication, collection, and total elapsed time, resident memory,
-  disk bytes, object counts, and stated host-local limitations.
+  checkpoint; and verifies a final reopen. The full checkpoint retains exactly
+  66 payload, 1,089 artifact, 1,219 lifecycle-event, one resume-binding, and
+  1,024 resume-artifact rows. Final collection retains the immutable history at
+  66 payload, 1,089 artifact, 3,267 lifecycle-event, two resume-binding, and
+  1,024 resume-artifact rows. Its hash-bound report retains measured
+  publication, collection, and total elapsed time, resident memory, disk bytes,
+  row and object counts, and stated host-local limitations.
 - One native durable-resume campaign executes four focused restart paths. It
   restores the exact event cursor, continuation, artifact set, receipt, and
   terminal no-op outcome without replaying a protected Git operation; rejects
@@ -391,8 +395,8 @@ Current automated coverage includes:
   statement digest, implementation paths, executable test identities, and
   hashed retained files. Its mutation suite rejects omission, reorder, status
   drift, unresolved tests, unsafe paths, changed artifacts, and false
-  completion. The index retains 15 complete and two partial states and does
-  not claim story, sprint, or release completion.
+  completion. The index retains all 17 local sub-task mappings as complete and
+  does not claim story, sprint, or release completion.
 - One independent automated artifact-boundary review rederives fourteen closed
   schema, owner/policy, transaction, descriptor, encryption-integrity,
   memory/network closure, namespace-separation, retained-campaign, index, and
