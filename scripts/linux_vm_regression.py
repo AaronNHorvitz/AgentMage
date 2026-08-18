@@ -6,13 +6,25 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Final
+
+try:
+    from scripts import linux_native_ubuntu_control_evidence as vm_support
+except ModuleNotFoundError:
+    import linux_native_ubuntu_control_evidence as vm_support
 
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 CATALOG_PATH: Final = ROOT / "architecture/linux-vm-base-images.json"
+REPORT_PATH: Final = (
+    ROOT / "artifacts/sprints/sprint-9/story-9.1/linux-vm-regression-overlays.json"
+)
+RUN_ROOT: Final = Path.home() / ".cache/agentmage/linux-vm-regression/runs"
 EXPECTED_TARGETS: Final = {
     "fedora-44-x86_64": ("fedora", "44"),
     "ubuntu-26.04-x86_64": ("ubuntu", "26.04"),
@@ -62,6 +74,47 @@ def sha256_file(path: Path) -> str:
         while block := handle.read(1024 * 1024):
             digest.update(block)
     return digest.hexdigest()
+
+
+def write_atomic(path: Path, value: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = (json.dumps(value, indent=2, sort_keys=True) + "\n").encode()
+    descriptor, name = tempfile.mkstemp(prefix=".agentmage-linux-vm-", dir=path.parent)
+    temporary = Path(name)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+
+
+def checked(argv: list[str] | tuple[str, ...], *, timeout: int = 120) -> str:
+    completed = subprocess.run(
+        list(argv),
+        cwd=ROOT,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise LinuxVmRegressionError(f"host command failed: {Path(argv[0]).name}")
+    return completed.stdout
+
+
+def exact_clean_revision(value: str) -> str:
+    revision = checked(["git", "rev-parse", "--verify", f"{value}^{{commit}}"], timeout=30).strip()
+    if len(revision) != 40 or any(character not in "0123456789abcdef" for character in revision):
+        raise LinuxVmRegressionError("Linux VM source revision is invalid")
+    if checked(["git", "status", "--porcelain", "--untracked-files=all"], timeout=30):
+        raise LinuxVmRegressionError("Linux VM source worktree is dirty")
+    return revision
 
 
 def load_catalog(path: Path = CATALOG_PATH) -> Any:
@@ -197,9 +250,148 @@ def verify_cached_bases(value: Any, home: Path = Path.home()) -> list[dict[str, 
     return records
 
 
+def exercise_overlays(
+    value: Any,
+    *,
+    source_revision: str,
+    report_path: Path = REPORT_PATH,
+    home: Path = Path.home(),
+    toolbox_container: str = "fedora-toolbox-44",
+) -> dict[str, Any]:
+    revision = exact_clean_revision(source_revision)
+    bases = verify_cached_bases(value, home)
+    tools = vm_support.discover_host_tools(toolbox_container)
+    RUN_ROOT.mkdir(parents=True, exist_ok=True, mode=0o700)
+    records: list[dict[str, Any]] = []
+    with tempfile.TemporaryDirectory(prefix="overlay-", dir=RUN_ROOT) as directory:
+        run_directory = Path(directory)
+        run_directory.chmod(0o700)
+        for target, base_record in zip(value["targets"], bases, strict=True):
+            base = home / target["cache_path"]
+            overlay = run_directory / f"{target['target_id']}.qcow2"
+            checked(
+                [
+                    *tools.qemu_img,
+                    "create",
+                    "-q",
+                    "-f",
+                    "qcow2",
+                    "-F",
+                    "qcow2",
+                    "-b",
+                    str(base),
+                    str(overlay),
+                ]
+            )
+            checked([*tools.qemu_img, "check", "-q", str(overlay)])
+            try:
+                info = json.loads(
+                    checked([*tools.qemu_img, "info", "--output=json", str(overlay)])
+                )
+            except json.JSONDecodeError as error:
+                raise LinuxVmRegressionError("Linux VM overlay metadata is malformed") from error
+            if (
+                info.get("format") != "qcow2"
+                or Path(str(info.get("backing-filename", ""))).resolve() != base.resolve()
+                or not overlay.is_file()
+            ):
+                raise LinuxVmRegressionError("Linux VM overlay backing identity drifted")
+            records.append(
+                {
+                    "target_id": target["target_id"],
+                    "base_bytes": base_record["bytes"],
+                    "base_sha256": base_record["sha256"],
+                    "overlay_format": "qcow2",
+                    "backing_format": "qcow2",
+                    "overlay_created": True,
+                    "overlay_cleanup_verified": False,
+                }
+            )
+        report = {
+            "schema_version": 1,
+            "record_type": "linux-vm-regression-overlay-evidence",
+            "task_ids": ["9.1.4.1", "9.1.4.2"],
+            "source_revision": revision,
+            "status": "pre-cleanup-retained",
+            "qemu": {
+                "launcher_class": tools.launcher_class,
+                "version": tools.qemu_version,
+                "sha256": tools.qemu_sha256,
+                "kvm_accessible": True,
+            },
+            "targets": records,
+            "repository_credentials_injected": False,
+            "private_user_data_used": False,
+            "guest_started": False,
+            "network_used": False,
+            "release_claim": False,
+        }
+        write_atomic(report_path, report)
+        for record in records:
+            overlay = run_directory / f"{record['target_id']}.qcow2"
+            overlay.unlink()
+            record["overlay_cleanup_verified"] = not overlay.exists()
+        if not all(record["overlay_cleanup_verified"] for record in records):
+            raise LinuxVmRegressionError("Linux VM overlay cleanup failed")
+        report["status"] = "pass-local-overlay-lifecycle"
+        write_atomic(report_path, report)
+    if run_directory.exists():
+        raise LinuxVmRegressionError("Linux VM transient run directory remains")
+    return report
+
+
+def validate_overlay_report(value: Any, catalog: Any) -> list[str]:
+    failures: list[str] = []
+    if not isinstance(value, dict):
+        return ["Linux VM overlay report must be an object"]
+    if (
+        value.get("schema_version") != 1
+        or value.get("record_type") != "linux-vm-regression-overlay-evidence"
+        or value.get("task_ids") != ["9.1.4.1", "9.1.4.2"]
+        or value.get("status") != "pass-local-overlay-lifecycle"
+    ):
+        failures.append("Linux VM overlay report identity drifted")
+    qemu = value.get("qemu", {})
+    if (
+        qemu.get("launcher_class") not in {"host-system-path", "fedora-toolbox"}
+        or not qemu.get("version")
+        or len(str(qemu.get("sha256", ""))) != 64
+        or qemu.get("kvm_accessible") is not True
+    ):
+        failures.append("Linux VM QEMU or KVM identity drifted")
+    targets = value.get("targets", [])
+    if [item.get("target_id") for item in targets if isinstance(item, dict)] != [
+        target["target_id"] for target in catalog.get("targets", [])
+    ]:
+        failures.append("Linux VM overlay target order drifted")
+    if any(
+        not isinstance(item, dict)
+        or item.get("overlay_format") != "qcow2"
+        or item.get("backing_format") != "qcow2"
+        or item.get("overlay_created") is not True
+        or item.get("overlay_cleanup_verified") is not True
+        or item.get("base_sha256")
+        != catalog["targets"][index]["source"]["sha256"]
+        for index, item in enumerate(targets)
+    ):
+        failures.append("Linux VM overlay lifecycle drifted")
+    for field in (
+        "repository_credentials_injected",
+        "private_user_data_used",
+        "guest_started",
+        "network_used",
+        "release_claim",
+    ):
+        if value.get(field) is not False:
+            failures.append(f"Linux VM overlay prohibited claim changed: {field}")
+    return failures
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--verify-bases", action="store_true")
+    parser.add_argument("--exercise-overlays", action="store_true")
+    parser.add_argument("--source-revision", default="HEAD")
     arguments = parser.parse_args()
     try:
         catalog = load_catalog()
@@ -210,6 +402,13 @@ def main() -> int:
             return 1
         if arguments.verify_bases:
             verify_cached_bases(catalog)
+        if arguments.exercise_overlays:
+            exercise_overlays(catalog, source_revision=arguments.source_revision)
+        elif REPORT_PATH.is_file():
+            report = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
+            failures = validate_overlay_report(report, catalog)
+            if failures:
+                raise LinuxVmRegressionError("; ".join(failures))
     except LinuxVmRegressionError as error:
         print(f"Linux VM regression contract failed: {error}", file=sys.stderr)
         return 1

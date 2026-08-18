@@ -9,6 +9,7 @@ from unittest.mock import patch
 from scripts.linux_vm_regression import (
     LinuxVmRegressionError,
     load_catalog,
+    validate_overlay_report,
     validate_catalog,
     verify_cached_bases,
 )
@@ -79,6 +80,52 @@ class LinuxVmRegressionTests(unittest.TestCase):
             ):
                 with self.assertRaises(LinuxVmRegressionError):
                     verify_cached_bases(catalog, home)
+
+    def test_overlay_report_requires_cleanup_and_zero_authority(self) -> None:
+        report = {
+            "schema_version": 1,
+            "record_type": "linux-vm-regression-overlay-evidence",
+            "task_ids": ["9.1.4.1", "9.1.4.2"],
+            "source_revision": "0" * 40,
+            "status": "pass-local-overlay-lifecycle",
+            "qemu": {
+                "launcher_class": "fedora-toolbox",
+                "version": "QEMU 10.2.2",
+                "sha256": "1" * 64,
+                "kvm_accessible": True,
+            },
+            "targets": [
+                {
+                    "target_id": target["target_id"],
+                    "base_bytes": 1,
+                    "base_sha256": target["source"]["sha256"],
+                    "overlay_format": "qcow2",
+                    "backing_format": "qcow2",
+                    "overlay_created": True,
+                    "overlay_cleanup_verified": True,
+                }
+                for target in self.catalog["targets"]
+            ],
+            "repository_credentials_injected": False,
+            "private_user_data_used": False,
+            "guest_started": False,
+            "network_used": False,
+            "release_claim": False,
+        }
+        self.assertEqual(validate_overlay_report(report, self.catalog), [])
+        for field in (
+            "repository_credentials_injected",
+            "private_user_data_used",
+            "guest_started",
+            "network_used",
+            "release_claim",
+        ):
+            mutation = copy.deepcopy(report)
+            mutation[field] = True
+            self.assertTrue(validate_overlay_report(mutation, self.catalog))
+        mutation = copy.deepcopy(report)
+        mutation["targets"][0]["overlay_cleanup_verified"] = False
+        self.assertTrue(validate_overlay_report(mutation, self.catalog))
 
 
 if __name__ == "__main__":
