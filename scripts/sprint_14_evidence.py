@@ -24,12 +24,16 @@ OUTPUT: Final = ROOT / "artifacts/sprints/sprint-14/local-evidence-report.json"
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 SOURCE_PATHS: Final = (
+    "kernel/contracts/src/model_discovery.rs",
+    "kernel/engine/src/model_discovery.rs",
     "platforms/linux-inference/src/model_acquisition.rs",
     "platforms/linux-inference/src/model_download.rs",
     "platforms/linux-inference/src/model_install_lifecycle.rs",
     "platforms/linux-inference/src/model_install_verifier.rs",
     "platforms/linux-inference/src/model_installer_process.rs",
     "platforms/linux-inference/tests/process_boundary.rs",
+    "shells/vscode/src/model_discovery.ts",
+    "shells/vscode/test/model_discovery.test.ts",
     "scripts/package_candidate.py",
     "scripts/package_lifecycle.py",
     "scripts/model_candidate_inventory.py",
@@ -45,6 +49,21 @@ EVIDENCE_PATHS: Final = (
     "artifacts/sprints/sprint-10/story-10.1/firewall-packet-capture.json",
 )
 COMMANDS: Final = (
+    (
+        "acquisition-review-contracts",
+        (
+            "cargo",
+            "test",
+            "-p",
+            "agentmage-kernel-engine",
+            "model_discovery",
+            "--locked",
+        ),
+    ),
+    (
+        "acquisition-review-vscode",
+        ("npm", "run", "test", "--workspace", "@agentmage/vscode-shell"),
+    ),
     (
         "installer-runtime-contracts",
         ("cargo", "test", "-p", "agentmage-platform-linux-inference", "--locked"),
@@ -261,6 +280,7 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
                 "bounded_download_contract_implemented": local_contract_pass,
                 "atomic_lifecycle_contract_implemented": local_contract_pass,
                 "installer_packaged": local_contract_pass,
+                "acquisition_review_facts_displayed": local_contract_pass,
                 "end_user_process_protocol_active": False,
                 "review_ui_implemented": False,
                 "production_package_signed": False,

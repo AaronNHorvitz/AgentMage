@@ -59,6 +59,7 @@ class Sprint14EvidenceTests(unittest.TestCase):
         self.assertTrue(value["summary"]["local_contract_passed"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertEqual(len(value["blockers"]), 6)
+        self.assertTrue(value["stories"][0]["acquisition_review_facts_displayed"])
 
     def test_process_artifact_platform_and_release_overclaims_fail(self) -> None:
         mutations = (
