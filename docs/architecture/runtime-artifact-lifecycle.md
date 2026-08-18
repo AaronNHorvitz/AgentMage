@@ -320,14 +320,23 @@ Current automated coverage includes:
 - Separate bounded Linux command stdout/stderr and validation-log candidates,
   including independent large-stream artifact publication and native producer
   assertions.
+- Fourteen native Linux subprocess-stop cases spanning before and after
+  encrypted staging, atomic placement, SQLCipher metadata commit, durable
+  artifact-event commit, checkpoint commit, reference release, and collection.
+  Every case reopens and reconciles without a false terminal event, hidden
+  orphan, mutable overwrite, duplicate artifact event, or invented checkpoint.
+  The hash-bound report and redacted raw trace are retained under
+  `artifacts/sprints/sprint-22/story-22.2/`.
 - Fedora journal and artifact pressure measurements retained by Story 50.2.
 
 Still open before Story 22.2 can pass:
 
 - Independent review of the encrypted-file construction and root/file-key
   lifecycle, plus deferred manual fuzzing of its parser and state transitions.
-- Full crash injection around every placement, metadata, event, checkpoint,
-  release, and collection edge using the native Linux store.
+- Stops inside an individual filesystem or SQLite syscall, physical power loss,
+  torn-sector/controller failure, and filesystem corruption. The current
+  native matrix stops immediately before and after each declared transaction
+  edge without unwinding; it does not claim those physical-fault conditions.
 - Native path-race, disk-full, device-latency, high-volume retention, and
   complete durable-resume campaigns.
 - Windows native artifact-store implementation and evidence; retained macOS work
