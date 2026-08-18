@@ -34,7 +34,10 @@ void test("acquisition review separates preflight and license without effects", 
   assert.match(review ?? "", /Acquisition started: no/);
   assert.match(review ?? "", /required before any acquisition/);
   assert.match(review ?? "", /Import, download, activation, rollback/);
-  assert.equal(renderModelAcquisitionReview(parsed, "missing-profile"), undefined);
+  assert.equal(
+    renderModelAcquisitionReview(parsed, "missing-profile"),
+    undefined,
+  );
   assert.equal(renderModelAcquisitionReview(parsed, "../invalid"), undefined);
 });
 

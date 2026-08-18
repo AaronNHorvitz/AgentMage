@@ -681,9 +681,10 @@ export class SecureReadController {
     const modelReviewProfile = parseModelReviewCommand(prompt);
     if (modelReviewProfile !== undefined) {
       const snapshot = await this.discoverModels(cancellation);
-      const review = snapshot === undefined
-        ? undefined
-        : renderModelAcquisitionReview(snapshot, modelReviewProfile);
+      const review =
+        snapshot === undefined
+          ? undefined
+          : renderModelAcquisitionReview(snapshot, modelReviewProfile);
       return review === undefined
         ? result(
             `# Model Acquisition Review\n\nThe exact requested profile is unavailable. AgentMage did not select or substitute another model.\n\n- Exact profile: \`${modelReviewProfile}\`\n- Status: unavailable\n- Code: \`vscode.model.review-unavailable\``,
@@ -1349,7 +1350,7 @@ function runtimeRequestMatchesSelection(
 
 function nestedRecord(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? value as Record<string, unknown>
+    ? (value as Record<string, unknown>)
     : undefined;
 }
 
@@ -1377,7 +1378,9 @@ function renderRuntimeSessionBoundary(
 }
 
 function parseModelReviewCommand(prompt: string): string | undefined {
-  const match = /^review model ([A-Za-z0-9][A-Za-z0-9._:-]{0,127})$/.exec(prompt);
+  const match = /^review model ([A-Za-z0-9][A-Za-z0-9._:-]{0,127})$/.exec(
+    prompt,
+  );
   return match?.[1];
 }
 

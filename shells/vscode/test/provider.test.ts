@@ -569,7 +569,10 @@ void test("exact model review refuses an absent profile without substitution", a
     request_id: "request-0001",
     snapshot: emptyModelSnapshot(),
   };
-  const response = await controller.respond("review model absent-profile", signal);
+  const response = await controller.respond(
+    "review model absent-profile",
+    signal,
+  );
   assert.match(response.text, /# Model Acquisition Review/);
   assert.match(response.text, /did not select or substitute another model/);
   assert.match(response.text, /vscode\.model\.review-unavailable/);
@@ -959,15 +962,20 @@ void test("native Chat rejects a substituted profile workspace or prompt before 
 
 void test("native Chat rejects every selected session identity mutation before start", async () => {
   const mutations: readonly ((profile: Record<string, unknown>) => void)[] = [
-    (profile) => { profile.manifest_sha256 = "9".repeat(64); },
+    (profile) => {
+      profile.manifest_sha256 = "9".repeat(64);
+    },
     (profile) => {
       (profile.artifact as Record<string, unknown>).sha256 = "9".repeat(64);
     },
     (profile) => {
-      (profile.runtime as Record<string, unknown>).adapter_id = "substituted-adapter";
+      (profile.runtime as Record<string, unknown>).adapter_id =
+        "substituted-adapter";
     },
     (profile) => {
-      (profile.runtime as Record<string, unknown>).runtime_sha256 = "9".repeat(64);
+      (profile.runtime as Record<string, unknown>).runtime_sha256 = "9".repeat(
+        64,
+      );
     },
     (profile) => {
       (profile.context as Record<string, unknown>).max_context_tokens = 4096;

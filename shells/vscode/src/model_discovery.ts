@@ -315,7 +315,9 @@ export function renderModelAcquisitionReview(
   if (!identifier(profileId)) {
     return undefined;
   }
-  const entry = snapshot.entries.find((candidate) => candidate.profile_id === profileId);
+  const entry = snapshot.entries.find(
+    (candidate) => candidate.profile_id === profileId,
+  );
   if (entry === undefined) {
     return undefined;
   }
