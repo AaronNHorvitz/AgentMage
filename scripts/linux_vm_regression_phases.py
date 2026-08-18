@@ -109,19 +109,18 @@ def guest_hash(vm: vm_support.VmHandle, command: str, stage: str) -> dict[str, A
 
 def start_guest(
     tools: vm_support.HostTools,
-    target: docker_vm.Target,
     overlay: Path,
     directory: Path,
+    private_key: Path,
+    seed: Path,
     *,
     restricted: bool,
 ) -> vm_support.VmHandle:
-    key, public = vm_support.generate_ssh_key(directory)
-    seed = docker_vm.create_seed(tools, target, directory, public, bootstrap=False)
     return vm_support.start_vm(
         tools,
         overlay,
         seed,
-        key,
+        private_key,
         directory,
         restricted_network=restricted,
         cpu_count=4,
@@ -157,9 +156,22 @@ def run_target(
         temporary.chmod(0o700)
         overlay = temporary / "regression.qcow2"
         vm_support.create_overlay(tools, target.prepared_path, overlay)
+        credential_dir = temporary / "credentials"
+        credential_dir.mkdir(mode=0o700)
+        private_key, public_key = vm_support.generate_ssh_key(credential_dir)
+        seed = docker_vm.create_seed(
+            tools, target, credential_dir, public_key, bootstrap=False
+        )
         connected_dir = temporary / "connected"
         connected_dir.mkdir(mode=0o700)
-        connected = start_guest(tools, target, overlay, connected_dir, restricted=False)
+        connected = start_guest(
+            tools,
+            overlay,
+            connected_dir,
+            private_key,
+            seed,
+            restricted=False,
+        )
         connected_cleanup = {"qemu_process_absent": False, "loopback_ssh_listener_absent": False}
         try:
             vm_support.wait_for_ssh(connected, timeout=300)
@@ -202,7 +214,14 @@ def run_target(
 
         offline_dir = temporary / "offline"
         offline_dir.mkdir(mode=0o700)
-        offline = start_guest(tools, target, overlay, offline_dir, restricted=True)
+        offline = start_guest(
+            tools,
+            overlay,
+            offline_dir,
+            private_key,
+            seed,
+            restricted=True,
+        )
         offline_cleanup = {"qemu_process_absent": False, "loopback_ssh_listener_absent": False}
         try:
             vm_support.wait_for_ssh(offline, timeout=300)
@@ -387,7 +406,7 @@ def main() -> int:
         else:
             report = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
         failures = validate_report(report)
-    except (OSError, json.JSONDecodeError, LinuxVmPhaseError) as error:
+    except (OSError, json.JSONDecodeError, ValueError) as error:
         print(f"Linux VM regression phases failed: {error}", file=sys.stderr)
         return 1
     for failure in failures:
