@@ -50,6 +50,10 @@ class Story222ArtifactIntegrityEvidenceTests(unittest.TestCase):
         changed = list(COMMANDS[0]["argv"])
         changed.append("--ignored")
         self.assertNotEqual(command_digest(COMMANDS[0]["argv"]), command_digest(tuple(changed)))
+        self.assertIn(
+            "publication_rejects_mismatched_producer_authority_before_staging",
+            COMMANDS[0]["tests"],
+        )
 
     @unittest.skipUnless(REPORT_PATH.is_file(), "retained report is generated after source commit")
     def test_current_report_and_raw_trace_are_hash_bound(self) -> None:

@@ -48,12 +48,13 @@ COMMANDS: Final = (
             "--",
             "--nocapture",
         ),
-        "summary": "21 passed; 0 failed; 0 ignored",
+        "summary": "22 passed; 0 failed; 0 ignored",
         "tests": (
             "manifest_digest_or_reference_drift_fails_closed",
             "size_media_retention_and_preview_bounds_are_closed",
             "unknown_versions_and_expired_artifacts_fail_closed",
             "partial_and_identifier_colliding_publications_preserve_canonical_state",
+            "publication_rejects_mismatched_producer_authority_before_staging",
             "story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
             "current_checkpoint_reference_prevents_release_and_collection",
             "missing_and_corrupt_payloads_quarantine_every_active_reference",
@@ -127,6 +128,7 @@ COVERAGE: Final = {
     ],
     "identity-reference-owner-checkpoint": [
         "kernel-contracts:story_21_2_artifact_canaries_require_an_exact_owner_bound_payload_read",
+        "kernel-contracts:publication_rejects_mismatched_producer_authority_before_staging",
         "kernel-contracts:checkpoint_cursor_and_artifact_set_publish_atomically_and_reopen",
     ],
     "encryption-key-binding-and-plaintext-exclusion": [
@@ -268,7 +270,7 @@ def build_report(
         "artifact_id": "story-22.2-native-runtime-artifact-integrity",
         "source_revision": revision,
         "status": "pass-current-linux-source-boundary",
-        "task_ids": ["22.2.3.1", "RV-17", "RV-18"],
+        "task_ids": ["22.2.1.3", "22.2.3.1", "RV-17", "RV-18"],
         "host": {"system": platform.system(), "machine": platform.machine()},
         "commands": command_results,
         "coverage": COVERAGE,
@@ -305,7 +307,7 @@ def validate_report(report: Any) -> list[str]:
         failures.append("runtime.artifact_integrity.report_revision")
     if report.get("status") != "pass-current-linux-source-boundary" or report.get(
         "task_ids"
-    ) != ["22.2.3.1", "RV-17", "RV-18"]:
+    ) != ["22.2.1.3", "22.2.3.1", "RV-17", "RV-18"]:
         failures.append("runtime.artifact_integrity.report_disposition")
     if report.get("coverage") != COVERAGE:
         failures.append("runtime.artifact_integrity.report_coverage")
