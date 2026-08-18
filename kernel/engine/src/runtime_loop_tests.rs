@@ -1018,10 +1018,29 @@ fn coordinator_for_mode_and_operation(
     permission: PermissionScript,
     emit_tool_evidence: bool,
 ) -> Result<(FixtureCoordinator, Arc<AtomicUsize>), RuntimeLoopError> {
+    coordinator_with_request_mutation(
+        mode,
+        operation,
+        scripts,
+        permission,
+        emit_tool_evidence,
+        |_| {},
+    )
+}
+
+fn coordinator_with_request_mutation(
+    mode: RuntimeSessionMode,
+    operation: GrantOperation,
+    scripts: impl IntoIterator<Item = ModelScript>,
+    permission: PermissionScript,
+    emit_tool_evidence: bool,
+    mutate: impl FnOnce(&mut RuntimeRunRequest),
+) -> Result<(FixtureCoordinator, Arc<AtomicUsize>), RuntimeLoopError> {
     let profile = profile("runtime-loop");
     let registry = registry_for_operation(operation);
     let mut request = request(profile.clone(), &registry);
     request.mode = mode;
+    mutate(&mut request);
     request.request_sha256 = "0".repeat(64);
     let request = seal_runtime_run_request(request).expect("mode-specific request seals");
     let executions = Arc::new(AtomicUsize::new(0));
@@ -2113,6 +2132,77 @@ fn story_23_4_malformed_model_result_fails_closed_with_terminal_evidence() {
             if failure_code == "runtime.model.result_invalid"
     )));
     assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn story_23_4_repeat_no_progress_and_turn_budgets_stop_truthfully() {
+    let (mut repeated, repeated_executions) = coordinator_with_request_mutation(
+        RuntimeSessionMode::EphemeralReadOnly,
+        GrantOperation::WorkspaceRead,
+        [ModelScript::Tool, ModelScript::Tool],
+        PermissionScript::Allow,
+        true,
+        |request| request.limits.max_repeated_tool_calls = 1,
+    )
+    .expect("repeat-bounded coordinator builds");
+    let RuntimeCoordinatorStep::Complete { outcome } = repeated
+        .run_until_boundary(None, None)
+        .expect("repeat ceiling closes truthfully")
+    else {
+        panic!("repeat ceiling cannot request approval");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Exhausted);
+    assert_eq!(
+        outcome.unresolved_codes,
+        ["tool.attempt.repeat_limit.exceeded".to_owned()]
+    );
+    assert_eq!(repeated_executions.load(Ordering::SeqCst), 1);
+    assert_valid_terminal_stream(&repeated);
+
+    let (mut stalled, stalled_executions) = coordinator(
+        [ModelScript::Tool, ModelScript::Tool],
+        PermissionScript::Allow,
+        false,
+    );
+    let RuntimeCoordinatorStep::Complete { outcome } = stalled
+        .run_until_boundary(None, None)
+        .expect("no-progress ceiling closes truthfully")
+    else {
+        panic!("no-progress ceiling cannot request approval");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Stalled);
+    assert_eq!(
+        outcome.unresolved_codes,
+        ["runtime.no_progress.exhausted".to_owned()]
+    );
+    assert_eq!(stalled_executions.load(Ordering::SeqCst), 2);
+    assert_valid_terminal_stream(&stalled);
+
+    let (mut turn_bounded, turn_executions) = coordinator_with_request_mutation(
+        RuntimeSessionMode::EphemeralReadOnly,
+        GrantOperation::WorkspaceRead,
+        [ModelScript::Tool, ModelScript::Completion],
+        PermissionScript::Allow,
+        true,
+        |request| {
+            request.limits.max_turns = 1;
+            request.limits.max_no_progress_turns = 1;
+        },
+    )
+    .expect("turn-bounded coordinator builds");
+    let RuntimeCoordinatorStep::Complete { outcome } = turn_bounded
+        .run_until_boundary(None, None)
+        .expect("turn budget closes truthfully")
+    else {
+        panic!("turn budget cannot request approval");
+    };
+    assert_eq!(outcome.state, AgentStateKind::Exhausted);
+    assert_eq!(
+        outcome.unresolved_codes,
+        ["runtime.budget.exhausted".to_owned()]
+    );
+    assert_eq!(turn_executions.load(Ordering::SeqCst), 1);
+    assert_valid_terminal_stream(&turn_bounded);
 }
 
 #[test]

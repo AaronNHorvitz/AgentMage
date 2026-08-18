@@ -225,7 +225,7 @@ impl ToolAttemptGuardError {
 pub struct ToolAttemptRecord {
     /// Monotonic in-memory attempt sequence.
     pub sequence: u64,
-    /// Digest of tool, version, action, schema, and exact argument bytes.
+    /// Digest of tool, version, schema, and exact argument bytes.
     pub semantic_sha256: String,
     /// One-based occurrence of this exact semantic call.
     pub occurrence: u8,
@@ -343,7 +343,6 @@ impl ToolAttemptGuard {
 
 fn semantic_call_sha256(call: &ToolCall) -> String {
     let material = serde_json::to_vec(&(
-        call.action_id.as_str(),
         call.tool_id.as_str(),
         &call.tool_version,
         call.arguments.schema.schema_id.as_str(),
@@ -1033,6 +1032,7 @@ mod tests {
         let mut repeated = first.clone();
         repeated.tool_call_id = ToolCallId::from_raw("call-0002");
         repeated.correlation_id = CorrelationId::from_raw("correlation-0002");
+        repeated.action_id = ActionId::from_raw("action-0002");
         let repeated_record = guard.record_attempt(&repeated, 1).expect("bounded repeat");
         assert_eq!(repeated_record.sequence, 2);
         assert_eq!(repeated_record.occurrence, 2);

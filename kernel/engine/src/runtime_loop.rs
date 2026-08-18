@@ -43,7 +43,8 @@ use crate::runtime_event::{
 };
 use crate::runtime_hardening::{RuntimeResourceLedger, RuntimeResourceSnapshot};
 use crate::tooling::{
-    PreGrantDispatchDisposition, ProposalOrigin, ToolAttemptGuard, ToolDispatcher, ToolRegistry,
+    PreGrantDispatchDisposition, ProposalOrigin, ToolAttemptGuard, ToolAttemptGuardError,
+    ToolDispatcher, ToolRegistry,
 };
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -1398,10 +1399,31 @@ where
         if receipt.disposition != PreGrantDispatchDisposition::GrantRequired {
             return Err(RuntimeLoopError::InvalidBoundaryResult);
         }
-        let attempt = self
-            .attempt_guard
-            .record_attempt(&call, 0)
-            .map_err(|_| RuntimeLoopError::InvalidBoundaryResult)?;
+        let attempt = match self.attempt_guard.record_attempt(&call, 0) {
+            Ok(attempt) => attempt,
+            Err(error @ ToolAttemptGuardError::RepeatLimitExceeded)
+            | Err(error @ ToolAttemptGuardError::CallDepthExceeded) => {
+                self.transition_terminal(AgentStateKind::Exhausted)?;
+                self.close_turn(&turn_id, proposal.proposal_sha256)?;
+                return self.finish_terminal(
+                    AgentStateKind::Exhausted,
+                    vec![error.code().to_owned()],
+                    None,
+                );
+            }
+            Err(error @ ToolAttemptGuardError::DuplicateCallIdentity) => {
+                self.transition_terminal(AgentStateKind::Failed)?;
+                self.close_turn(&turn_id, proposal.proposal_sha256)?;
+                return self.finish_terminal(
+                    AgentStateKind::Failed,
+                    vec![error.code().to_owned()],
+                    None,
+                );
+            }
+            Err(
+                ToolAttemptGuardError::InvalidLimit | ToolAttemptGuardError::InvalidRestoredState,
+            ) => return Err(RuntimeLoopError::InvalidBoundaryResult),
+        };
         self.tool_attempts.push(RuntimeToolAttemptState {
             schema_version: CONTRACT_SCHEMA_VERSION,
             sequence: attempt.sequence,
