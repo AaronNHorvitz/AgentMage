@@ -11,7 +11,7 @@ use agentmage_kernel_contracts::{
     RuntimePayloadReference, RuntimeResumeBinding, SessionCheckpoint, SessionId, TaskId, from_json,
     to_canonical_json,
 };
-use rusqlite::{OptionalExtension, Transaction, TransactionBehavior, params};
+use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, params};
 use sha2::{Digest, Sha256};
 
 use crate::operational_store::OperationalStore;
@@ -504,6 +504,7 @@ pub(crate) fn publish_runtime_artifact<S: RuntimeArtifactPayloadStore>(
     source: &mut dyn Read,
 ) -> Result<RuntimeArtifactPublication, RuntimeArtifactStoreError> {
     verify_runtime_artifact_manifest(&manifest)?;
+    verify_manifest_producer(&store.connection, &manifest)?;
     let expected = payload_observation(&manifest);
     let (staged, observed) =
         payloads.stage(&manifest.artifact_id, source, MAX_RUNTIME_ARTIFACT_BYTES)?;
@@ -1173,6 +1174,36 @@ fn quarantine_payload_metadata(
         .map_err(|_| RuntimeArtifactStoreError::Storage)
 }
 
+fn verify_manifest_producer(
+    connection: &Connection,
+    manifest: &RuntimeArtifactManifest,
+) -> Result<(), RuntimeArtifactStoreError> {
+    let owner = connection
+        .query_row(
+            "SELECT session_id, task_id, policy_id FROM runtime_runs WHERE run_id = ?1",
+            [manifest.producer_run_id.as_str()],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                ))
+            },
+        )
+        .optional()
+        .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    match owner {
+        Some((session_id, task_id, policy_id))
+            if session_id == manifest.session_id.as_str()
+                && task_id == manifest.task_id.as_str()
+                && policy_id == manifest.policy_id.as_str() =>
+        {
+            Ok(())
+        }
+        _ => Err(RuntimeArtifactStoreError::NotAuthorized),
+    }
+}
+
 fn delete_payload_metadata(
     store: &mut OperationalStore,
     payload_sha256: &str,
@@ -1600,6 +1631,7 @@ fn persist_artifact_manifest(
         .connection
         .transaction_with_behavior(TransactionBehavior::Immediate)
         .map_err(|_| RuntimeArtifactStoreError::Storage)?;
+    verify_manifest_producer(&transaction, manifest)?;
     let retained_payload = transaction
         .query_row(
             "SELECT byte_size, lifecycle_state FROM runtime_payloads
@@ -3299,6 +3331,53 @@ mod tests {
                 .expect("original remains readable"),
             b"0123456789"
         );
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn publication_rejects_mismatched_producer_authority_before_staging() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut runtime = runtime_with_run(&path);
+        let mut payloads = FakePayloadStore::default();
+        let valid = manifest_with_id("runtime-artifact-owner-bound-1");
+
+        let mut candidates = Vec::new();
+        let mut changed = valid.clone();
+        changed.producer_run_id = RuntimeRunId::from_raw("run-other");
+        candidates.push(changed);
+        let mut changed = valid.clone();
+        changed.session_id = SessionId::from_raw("session-other");
+        candidates.push(changed);
+        let mut changed = valid.clone();
+        changed.task_id = TaskId::from_raw("task-other");
+        candidates.push(changed);
+        let mut changed = valid.clone();
+        changed.policy_id = PolicyId::from_raw("policy-other");
+        candidates.push(changed);
+
+        for mut candidate in candidates {
+            candidate.manifest_sha256 = digest('0');
+            let candidate =
+                seal_runtime_artifact_manifest(candidate).expect("candidate remains well formed");
+            assert_eq!(
+                runtime.publish_runtime_artifact(
+                    &mut payloads,
+                    candidate,
+                    &mut Cursor::new(b"0123456789"),
+                ),
+                Err(DurableAuthorityError::RuntimeArtifact(
+                    RuntimeArtifactStoreError::NotAuthorized
+                ))
+            );
+            assert!(payloads.objects.is_empty());
+        }
+
+        runtime
+            .publish_runtime_artifact(&mut payloads, valid, &mut Cursor::new(b"0123456789"))
+            .expect("the exact producer owner still publishes");
+        assert_eq!(payloads.objects.len(), 1);
         drop(runtime);
         fs::remove_dir_all(directory).expect("cleanup");
     }
