@@ -79,6 +79,9 @@ class Sprint38EvidenceTests(unittest.TestCase):
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertTrue(value["implemented_contracts"]["namespace_compare_and_swap"])
         self.assertTrue(value["summary"]["native_end_to_end_passed"])
+        self.assertTrue(
+            value["verification_evidence"]["native_source_index_process_stop_matrix"]
+        )
 
     def test_dependency_native_race_launcher_platform_review_fuzz_and_release_overclaims_fail(self) -> None:
         mutations = (
@@ -109,6 +112,9 @@ class Sprint38EvidenceTests(unittest.TestCase):
             lambda value: value["summary"].update({"native_end_to_end_passed": False}),
             lambda value: value["implemented_contracts"].update({
                 "native_end_to_end_knowledge_transaction": False
+            }),
+            lambda value: value["verification_evidence"].update({
+                "native_source_index_process_stop_matrix": False
             }),
             lambda value: value["security_requirement_ids"].pop(),
             lambda value: value["environment"].pop("rustc"),

@@ -9,6 +9,7 @@
 | Canonical-first index publication | Pass locally |
 | Plain-folder and Obsidian domain parity | Pass locally |
 | Fedora native canonical write and index publication | Pass locally |
+| Native source/index process-stop recovery | Pass locally at four host boundaries |
 | Complete crash and external-edit race matrix | Incomplete |
 | Full host binary under trusted package launcher | Environment blocked |
 | Ubuntu, macOS, and Windows native evidence | Absent |
@@ -39,6 +40,9 @@
   consumes its approved grant through the native driver, verifies the postimage and mode, and then
   publishes exactly that canonical snapshot to the disposable index. A newer external edit denies
   the stale plan, remains byte-exact, leaves the prior projection stale, and requires rebuild.
+- Four real host-process stops cover before/after native source execution and before/after index
+  publication. Every restart sees a parseable exact preimage or postimage, no write staging residue,
+  and a new current index rebuilt only from canonical Markdown.
 
 ## Requirement Mapping
 
@@ -68,7 +72,7 @@ The full host binary's packaged-parent
 tests cannot pass from the current development shell because the trusted launcher relationship is
 intentionally absent; that control is not weakened for test convenience.
 
-The current suite does not exhaustively crash the native write and derived-index paths at every
-boundary or race every external edit schedule. Native Ubuntu, macOS, and Windows execution,
+The current suite does not exhaustively race every external-edit timing or inject every durability
+fault across the native write and derived-index path. Native Ubuntu, macOS, and Windows execution,
 independent review, and manual fuzzing are absent. Sprint 38 therefore remains blocked even though
 all locally retained focused checks pass with zero blocking skips.

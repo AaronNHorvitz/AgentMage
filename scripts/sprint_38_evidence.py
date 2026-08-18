@@ -107,6 +107,7 @@ IMPLEMENTED: Final = {
     "canonical_first_index_publication": True,
     "plain_folder_obsidian_domain_parity": True,
     "native_end_to_end_knowledge_transaction": True,
+    "native_source_index_process_stop_matrix": True,
     "complete_native_crash_and_race_matrix": False,
     "trusted_package_launcher_test_environment": False,
     "non_fedora_native_evidence": False,
@@ -204,6 +205,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "focused_blocking_skip_count": 0 if local_pass else None,
             "upstream_sprint_37_gate": False,
             "native_end_to_end_knowledge_transaction": local_pass,
+            "native_source_index_process_stop_matrix": local_pass,
             "complete_native_crash_and_race_matrix": False,
             "trusted_package_launcher_test_environment": False,
             "non_fedora_native_evidence": False,
@@ -279,6 +281,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("focused blocking skip summary invalid")
     if verification.get("native_end_to_end_knowledge_transaction") is not True:
         failures.append("native end-to-end evidence missing")
+    if verification.get("native_source_index_process_stop_matrix") is not True:
+        failures.append("native source/index process-stop evidence missing")
     for field in (
         "upstream_sprint_37_gate",
         "complete_native_crash_and_race_matrix",
@@ -293,6 +297,10 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "native_end_to_end_knowledge_transaction"
     ) is not True:
         failures.append("native end-to-end implementation missing")
+    if report.get("implemented_contracts", {}).get(
+        "native_source_index_process_stop_matrix"
+    ) is not True:
+        failures.append("native source/index process-stop implementation missing")
     for field in (
         "complete_native_crash_and_race_matrix",
         "trusted_package_launcher_test_environment",
