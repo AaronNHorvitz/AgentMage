@@ -190,6 +190,8 @@ class CleanBuildEvidenceTests(unittest.TestCase):
         recipe = (ROOT / "release/clean-build/Containerfile.linux").read_text()
         self.assertIn("dnf install -y bubblewrap ca-certificates curl gcc git ", recipe)
         self.assertIn("bubblewrap build-essential ca-certificates curl git ", recipe)
+        self.assertIn("glibc-devel libsecret make", recipe)
+        self.assertIn("git libsecret-tools libssl-dev", recipe)
         self.assertIn("python3 shadow-utils systemd xz", recipe)
         self.assertIn("passwd python3 systemd xz-utils", recipe)
         ownership = recipe.index("chown -R 10001:10001 /opt/cargo")
@@ -215,7 +217,14 @@ class CleanBuildEvidenceTests(unittest.TestCase):
     def test_linux_security_runtime_dependencies_are_closed(self) -> None:
         self.assertEqual(
             self.policy["runtime_dependencies"],
-            {"platform_packaged": ["bubblewrap", "git", "systemd-run"]},
+            {
+                "platform_packaged": [
+                    "bubblewrap",
+                    "git",
+                    "secret-tool",
+                    "systemd-run",
+                ]
+            },
         )
         mutated = copy.deepcopy(self.policy)
         mutated["runtime_dependencies"]["platform_packaged"].remove("bubblewrap")
