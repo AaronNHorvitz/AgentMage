@@ -76,6 +76,27 @@ seeded as canaries and remain inert during inspection.
 
 ## Instruction Provenance
 
+Instruction discovery begins with a kernel-sealed metadata-only plan. The plan
+binds one workspace manifest, no more than 256 explicit workspace,
+repository, or approved project-document paths, and no more than 64
+non-overlapping hierarchical roots. Paths must belong to the same authorized
+workspace, duplicates are rejected across source classes, and the complete
+sorted plan is hash-bound before platform inspection.
+
+The Linux adapter resolves every explicit candidate through the held workspace
+path adapter without reading file bytes. It walks hierarchical roots through
+descriptor-relative directory observations and recognizes only nested
+`AGENTS.md` metadata. `.git`, dependency, virtual-environment, build, cache, and
+generated-output directories are excluded. Directory, entry, depth, name-byte,
+and result counts have hard ceilings; exceeding any ceiling fails the whole
+scan. Symlinks, hard links, and special objects never become discoveries.
+
+Each accepted path produces a metadata freshness digest, a source-identity
+digest, and a provenance record. The record contains no source content. An
+authorized bounded read must later reopen the exact path, match freshness, and
+produce a separate content digest before the source can enter the read ledger.
+Changing file metadata invalidates the prior freshness identity.
+
 The ledger recognizes twenty source classes: workspace, repository, project,
 and hierarchical instructions; filenames; source; comments; issues; generated
 files; tool results; diffs; commits; branches; tags; submodules; hooks;
@@ -98,10 +119,13 @@ disable guidance rather than selecting a winner silently.
 ## Verification Truth
 
 Local tests cover all thirteen Git operations, the required clean, dirty,
-staged, renamed, detached, untracked, and malformed states, twenty instruction
-source classes, and 200 generated direct and indirect instruction attacks. The
-complete kernel suite proves that instruction records remain part of the sealed
-non-authoritative artifact family.
+staged, renamed, detached, untracked, and malformed states, four real Linux
+instruction-discovery classes, twenty provenance source classes, and 200
+generated direct and indirect instruction attacks. Discovery fixtures prove
+generated-tree exclusion, symlink and hard-link refusal, stale metadata
+detection, bounded failure, no source-byte retention, and complete workspace
+invariance. The complete kernel suite proves that instruction records remain
+part of the sealed non-authoritative artifact family.
 
 Sprint 17 remains blocked on retained installed-package Fedora and Ubuntu
 evidence, the full live network observation interval, native macOS evidence,
