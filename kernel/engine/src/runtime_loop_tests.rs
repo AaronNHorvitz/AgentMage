@@ -78,6 +78,7 @@ enum ModelScript {
     LargeCompletion,
     Tool,
     Malformed,
+    Failure(RuntimePortFailure),
 }
 
 struct FakeModel {
@@ -112,6 +113,9 @@ impl RuntimeModelPort for FakeModel {
             .pop_front()
             .ok_or(RuntimePortFailure::ResourceExhausted)?;
         self.calls += 1;
+        if let ModelScript::Failure(failure) = script {
+            return Err(failure);
+        }
         let (kind, payload, tool_call) = match script {
             ModelScript::Completion | ModelScript::Malformed => (
                 ModelProposalKind::CompletionCandidate,
@@ -139,6 +143,7 @@ impl RuntimeModelPort for FakeModel {
                     arguments: payload("fixture.input", br#"{"path":"fixture.txt"}"#),
                 }),
             ),
+            ModelScript::Failure(_) => unreachable!("failure returned before proposal creation"),
         };
         let mut proposal = agentmage_kernel_contracts::ClosedModelProposal {
             schema_version: CONTRACT_SCHEMA_VERSION,
@@ -500,6 +505,7 @@ struct FakeToolBoundary {
     script: PermissionScript,
     executions: Arc<AtomicUsize>,
     emit_evidence: bool,
+    outcome: OperationOutcome,
     state_change: StateChange,
     tool_output_bytes: usize,
     journal: Arc<Mutex<Vec<RuntimeEvent>>>,
@@ -601,7 +607,7 @@ impl RuntimeToolBoundary for FakeToolBoundary {
         _cancellation: Option<&dyn agentmage_kernel_contracts::ModelCancellationProbe>,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
         let execution = self.executions.fetch_add(1, Ordering::SeqCst) + 1;
-        let evidence = if self.emit_evidence {
+        let evidence = if self.emit_evidence && self.outcome == OperationOutcome::Succeeded {
             vec![evidence(
                 &format!("tool-evidence-{execution}"),
                 EvidenceKind::ToolOutput,
@@ -609,22 +615,30 @@ impl RuntimeToolBoundary for FakeToolBoundary {
         } else {
             Vec::new()
         };
-        let output = if self.tool_output_bytes > 0 {
-            vec![b't'; self.tool_output_bytes]
-        } else {
-            b"fixture contents".to_vec()
-        };
+        let output = (self.outcome == OperationOutcome::Succeeded).then(|| {
+            if self.tool_output_bytes > 0 {
+                vec![b't'; self.tool_output_bytes]
+            } else {
+                b"fixture contents".to_vec()
+            }
+        });
         let result = ToolResult {
             schema_version: CONTRACT_SCHEMA_VERSION,
             tool_call_id: call.tool_call_id.clone(),
             correlation_id: call.correlation_id.clone(),
-            outcome: OperationOutcome::Succeeded,
-            output: Some(payload("fixture.output", &output)),
+            outcome: self.outcome,
+            output: output.map(|bytes| payload("fixture.output", &bytes)),
             validation_issues: Vec::new(),
             evidence,
             error: None,
             elapsed_ms: 1,
-            state_change: self.state_change,
+            state_change: if self.outcome == OperationOutcome::Succeeded {
+                self.state_change
+            } else if self.outcome == OperationOutcome::Uncertain {
+                StateChange::Uncertain
+            } else {
+                StateChange::NotChanged
+            },
         };
         let receipt_id = ReceiptId::from_raw(format!("receipt-{execution}"));
         let receipt_sha256 = sha256(
@@ -1053,6 +1067,7 @@ fn coordinator_with_request_mutation(
             script: permission,
             executions: Arc::clone(&executions),
             emit_evidence: emit_tool_evidence,
+            outcome: OperationOutcome::Succeeded,
             state_change: if operation == GrantOperation::WorkspaceWrite {
                 StateChange::Changed
             } else {
@@ -1636,6 +1651,7 @@ fn durable_mode_persists_ordered_session_events_before_terminal_return() {
             script: PermissionScript::Allow,
             executions: Arc::new(AtomicUsize::new(0)),
             emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
             journal: Arc::clone(&journal),
@@ -1690,6 +1706,7 @@ fn durable_large_model_output_is_artifact_backed_and_event_referenced() {
             script: PermissionScript::Allow,
             executions: Arc::new(AtomicUsize::new(0)),
             emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
             journal: Arc::clone(&journal),
@@ -1762,6 +1779,7 @@ fn durable_tool_receipt_commits_before_its_bound_large_artifact() {
             script: PermissionScript::Allow,
             executions: Arc::new(AtomicUsize::new(0)),
             emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: MAX_RUNTIME_INLINE_OUTPUT_BYTES + 1,
             journal: Arc::clone(&journal),
@@ -1838,6 +1856,7 @@ fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
             script: PermissionScript::Allow,
             executions: Arc::clone(&executions),
             emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
             journal: Arc::clone(&journal),
@@ -1893,6 +1912,7 @@ fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
             script: PermissionScript::Allow,
             executions: Arc::clone(&executions),
             emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
             journal: Arc::clone(&journal),
@@ -1944,6 +1964,7 @@ fn ephemeral_mode_cannot_accidentally_attach_a_durable_journal() {
             script: PermissionScript::Allow,
             executions: Arc::new(AtomicUsize::new(0)),
             emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
             state_change: StateChange::NotChanged,
             tool_output_bytes: 0,
             journal: Arc::clone(&journal),
@@ -2132,6 +2153,100 @@ fn story_23_4_malformed_model_result_fails_closed_with_terminal_evidence() {
             if failure_code == "runtime.model.result_invalid"
     )));
     assert_valid_terminal_stream(&coordinator);
+}
+
+#[test]
+fn story_23_4_model_dependency_failures_close_without_effect_or_retry() {
+    for (failure, state) in [
+        (RuntimePortFailure::Invalid, AgentStateKind::Failed),
+        (RuntimePortFailure::Unavailable, AgentStateKind::Failed),
+        (RuntimePortFailure::Cancelled, AgentStateKind::Failed),
+        (RuntimePortFailure::Uncertain, AgentStateKind::Failed),
+        (RuntimePortFailure::TimedOut, AgentStateKind::Exhausted),
+        (
+            RuntimePortFailure::ResourceExhausted,
+            AgentStateKind::Exhausted,
+        ),
+    ] {
+        let (mut coordinator, executions) = coordinator(
+            [ModelScript::Failure(failure)],
+            PermissionScript::Allow,
+            true,
+        );
+        let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+            .run_until_boundary(None, None)
+            .expect("model dependency failure closes truthfully")
+        else {
+            panic!("model dependency failure cannot request approval");
+        };
+        assert_eq!(outcome.state, state, "{failure:?}");
+        assert_eq!(outcome.unresolved_codes, [failure.code().to_owned()]);
+        assert_eq!(outcome.model_call_count, 1);
+        assert_eq!(outcome.tool_call_count, 0);
+        assert_eq!(executions.load(Ordering::SeqCst), 0);
+        assert_eq!(
+            coordinator
+                .events()
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::ModelFailed { .. }))
+                .count(),
+            1
+        );
+        assert_valid_terminal_stream(&coordinator);
+    }
+}
+
+#[test]
+fn story_23_4_terminal_tool_failures_have_one_receipt_and_no_hidden_retry() {
+    for (tool_outcome, state, code) in [
+        (
+            OperationOutcome::Denied,
+            AgentStateKind::Failed,
+            "runtime.tool.denied_after_launch",
+        ),
+        (
+            OperationOutcome::TimedOut,
+            AgentStateKind::Exhausted,
+            "runtime.tool.timed_out",
+        ),
+        (
+            OperationOutcome::Failed,
+            AgentStateKind::Failed,
+            "runtime.tool.failed",
+        ),
+    ] {
+        let (mut coordinator, executions) =
+            coordinator([ModelScript::Tool], PermissionScript::Allow, true);
+        coordinator.tool_boundary.outcome = tool_outcome;
+        let RuntimeCoordinatorStep::Complete { outcome } = coordinator
+            .run_until_boundary(None, None)
+            .expect("terminal tool result closes truthfully")
+        else {
+            panic!("terminal tool result cannot request approval");
+        };
+        assert_eq!(outcome.state, state, "{tool_outcome:?}");
+        assert_eq!(outcome.unresolved_codes, [code.to_owned()]);
+        assert_eq!(outcome.tool_call_count, 1);
+        assert_eq!(outcome.receipt_ids.len(), 1);
+        assert_eq!(executions.load(Ordering::SeqCst), 1);
+        assert_eq!(
+            coordinator
+                .events()
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::ToolStarted { .. }))
+                .count(),
+            1
+        );
+        assert_eq!(
+            coordinator
+                .events()
+                .iter()
+                .filter(|event| matches!(event.kind, RuntimeEventKind::ToolFailed { .. }))
+                .count(),
+            1
+        );
+        assert_valid_terminal_stream(&coordinator);
+    }
 }
 
 #[test]

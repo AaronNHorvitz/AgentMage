@@ -2282,12 +2282,13 @@ where
         failure: RuntimePortFailure,
     ) -> Result<(), RuntimeLoopError> {
         let state = match failure {
-            RuntimePortFailure::Cancelled => AgentStateKind::Cancelled,
             RuntimePortFailure::TimedOut | RuntimePortFailure::ResourceExhausted => {
                 AgentStateKind::Exhausted
             }
-            RuntimePortFailure::Uncertain => AgentStateKind::Uncertain,
-            RuntimePortFailure::Invalid | RuntimePortFailure::Unavailable => AgentStateKind::Failed,
+            RuntimePortFailure::Cancelled
+            | RuntimePortFailure::Uncertain
+            | RuntimePortFailure::Invalid
+            | RuntimePortFailure::Unavailable => AgentStateKind::Failed,
         };
         self.transition_terminal(state)?;
         self.close_turn(turn_id, sha256(failure.code().as_bytes()))?;
