@@ -561,4 +561,61 @@ mod tests {
         fs::remove_dir_all(private).expect("cleanup");
         fs::remove_dir_all(public).expect("cleanup");
     }
+
+    #[test]
+    fn prohibited_source_canaries_never_reach_preview_receipt_or_export() {
+        let canaries = [
+            "AM-S15-CANARY-00-prompt",
+            "AM-S15-CANARY-01-file-content",
+            "AM-S15-CANARY-02-credential",
+            "AM-S15-CANARY-03-private-key",
+            "AM-S15-CANARY-04-environment-value",
+            "AM-S15-CANARY-05-absolute-path",
+            "AM-S15-CANARY-06-hostname",
+            "AM-S15-CANARY-07-username",
+            "AM-S15-CANARY-08-device-identifier",
+        ];
+        let safe_report = report();
+        let expected_semantics = serde_json::to_vec(&safe_report).expect("safe report");
+        let root = directory("canary-matrix");
+        let destination = root.join("doctor.json");
+        let mut workflow = DiagnosticExportWorkflow::new();
+        let preview = workflow
+            .preview(
+                "export-canary-matrix".to_owned(),
+                &safe_report,
+                &destination,
+                100,
+            )
+            .expect("preview");
+        let preview_surface = format!("{preview:?}");
+        let receipt = workflow
+            .approve(&preview.preview_id, &preview.confirmation_sha256, 101)
+            .expect("approval");
+        let receipt_surface = format!("{receipt:?}");
+        let exported = fs::read(&destination).expect("exported report");
+        let exported_report: DoctorReport =
+            serde_json::from_slice(&exported).expect("closed exported report");
+
+        assert_eq!(exported_report, safe_report);
+        assert_eq!(
+            serde_json::to_vec(&exported_report).expect("report"),
+            expected_semantics
+        );
+        for canary in canaries {
+            assert!(
+                !expected_semantics
+                    .windows(canary.len())
+                    .any(|part| part == canary.as_bytes())
+            );
+            assert!(!preview_surface.contains(canary));
+            assert!(!receipt_surface.contains(canary));
+            assert!(
+                !exported
+                    .windows(canary.len())
+                    .any(|part| part == canary.as_bytes())
+            );
+        }
+        fs::remove_dir_all(root).expect("cleanup");
+    }
 }

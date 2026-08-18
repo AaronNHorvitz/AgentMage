@@ -613,6 +613,37 @@ void test("doctor renders every typed state without workspace approval", async (
   assert.match(response.text, new RegExp("d{64}"));
 });
 
+void test("doctor rejects prohibited-source fields without canary disclosure", async () => {
+  const fields = [
+    "prompt",
+    "file_content",
+    "credential",
+    "private_key",
+    "environment_value",
+    "absolute_path",
+    "hostname",
+    "username",
+    "device_identifier",
+  ] as const;
+  for (const [index, field] of fields.entries()) {
+    const { controller, bridge, signal } = fixture();
+    const original = bridge.doctor.bind(bridge);
+    const canary = `AM-S15-CANARY-${index.toString().padStart(2, "0")}-${field}`;
+    bridge.doctor = async (request) => {
+      const response = await original(request);
+      assert.equal(response.kind, "doctor_completed");
+      return {
+        ...response,
+        report: { ...response.report, [field]: canary },
+      } as HostResponse;
+    };
+    const response = await controller.respond("doctor", signal);
+    assert.match(response.text, /vscode\.host\.response_invalid/);
+    assert.doesNotMatch(response.text, new RegExp(canary));
+    assert.doesNotMatch(JSON.stringify(response), new RegExp(canary));
+  }
+});
+
 void test("diagnostic export requires destination preview and one approval", async () => {
   const { controller, bridge, signal } = fixture();
   const response = await controller.respond("export diagnostics", signal);

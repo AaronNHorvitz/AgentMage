@@ -114,6 +114,75 @@ void test("authenticated bridge validates the closed diagnostic export preview",
   }
 });
 
+void test("authenticated doctor transport rejects every prohibited source field", async () => {
+  const components = [
+    "package",
+    "platform",
+    "model",
+    "runtime",
+    "hardware_fit",
+    "offline_boundary",
+    "sandbox_helper",
+    "workspace_grant",
+    "capabilities",
+    "repository_map",
+    "encrypted_store",
+    "receipt_chain",
+    "recovery",
+  ];
+  const fields = [
+    "prompt",
+    "file_content",
+    "credential",
+    "private_key",
+    "environment_value",
+    "absolute_path",
+    "hostname",
+    "username",
+    "device_identifier",
+  ];
+  for (const [index, field] of fields.entries()) {
+    const canary = `AM-S15-CANARY-${index.toString().padStart(2, "0")}-${field}`;
+    const fixture = await socketFixture({
+      kind: "doctor_completed",
+      schema_version: 1,
+      request_id: "request-doctor-0001",
+      report: {
+        schema_version: 2,
+        report_kind: "agentmage.local-doctor.v1",
+        overall_state: "unavailable",
+        items: components.map((component) => ({
+          component,
+          state: "unavailable",
+          reason_code: "diagnostic.fixture.unavailable",
+          remediation_code: "diagnostic.remediation.none",
+          identity_sha256: null,
+        })),
+        report_sha256: "d".repeat(64),
+        [field]: canary,
+      },
+    });
+    try {
+      const bridge = new AuthenticatedLinuxHostBridge(fixture.credentials);
+      const response = await bridge.doctor({
+        kind: "doctor",
+        schema_version: 1,
+        request_id: "request-doctor-0001",
+      });
+      assert.deepEqual(response, {
+        kind: "denied",
+        schema_version: 1,
+        request_id: "request-doctor-0001",
+        code: "host.connection.failed",
+      });
+      assert.doesNotMatch(JSON.stringify(response), new RegExp(canary));
+      bridge.dispose();
+    } finally {
+      await fixture.close();
+    }
+  }
+});
+
 void test("authenticated bridge verifies model snapshot digests before display", async () => {
   const unsigned = {
     schema_version: 1,

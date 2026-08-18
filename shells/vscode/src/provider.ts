@@ -1573,6 +1573,13 @@ const DIAGNOSTIC_STATES: readonly DiagnosticState[] = [
 
 function validDoctorReport(report: DoctorReport): boolean {
   return (
+    exactKeys(report, [
+      "items",
+      "overall_state",
+      "report_kind",
+      "report_sha256",
+      "schema_version",
+    ]) &&
     report.schema_version === 2 &&
     report.report_kind === "agentmage.local-doctor.v1" &&
     DIAGNOSTIC_STATES.includes(report.overall_state) &&
@@ -1580,12 +1587,28 @@ function validDoctorReport(report: DoctorReport): boolean {
     report.items.length === DIAGNOSTIC_COMPONENTS.length &&
     report.items.every(
       (item, index) =>
+        exactKeys(item, [
+          "component",
+          "identity_sha256",
+          "reason_code",
+          "remediation_code",
+          "state",
+        ]) &&
         item.component === DIAGNOSTIC_COMPONENTS[index] &&
         DIAGNOSTIC_STATES.includes(item.state) &&
         validCode(item.reason_code) &&
         validCode(item.remediation_code) &&
         (item.identity_sha256 === null || validSha256(item.identity_sha256)),
     )
+  );
+}
+
+function exactKeys(value: object, expected: readonly string[]): boolean {
+  const actual = Object.keys(value).sort();
+  const ordered = [...expected].sort();
+  return (
+    actual.length === ordered.length &&
+    actual.every((key, index) => key === ordered[index])
   );
 }
 

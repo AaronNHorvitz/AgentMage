@@ -328,7 +328,12 @@ mod tests {
 
     #[test]
     fn prohibited_raw_sources_are_not_members_of_the_closed_observation_schema() {
-        for field in [
+        let baseline = build_doctor_report(vec![observation(
+            DiagnosticComponent::Package,
+            DiagnosticState::Healthy,
+        )])
+        .expect("baseline report");
+        for (index, field) in [
             "prompt",
             "file_content",
             "credential",
@@ -338,17 +343,33 @@ mod tests {
             "hostname",
             "username",
             "device_identifier",
-        ] {
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let canary = format!("AM-S15-CANARY-{index:02}-{field}");
             let candidate = serde_json::json!({
                 "component": "package",
                 "state": "healthy",
                 "reason_code": "diagnostic.fixture.observed",
                 "identity_sha256": null,
                 "stale": false,
-                (field): "UNIQUE-CANARY-MUST-NOT-PASS"
+                (field): canary
             });
+            let error = serde_json::from_value::<DiagnosticObservation>(candidate)
+                .expect_err("prohibited source must not enter the observation schema");
+            assert!(!error.to_string().contains(&canary), "{field}");
+
+            let after_rejection = build_doctor_report(vec![observation(
+                DiagnosticComponent::Package,
+                DiagnosticState::Healthy,
+            )])
+            .expect("report after rejected source");
+            assert_eq!(after_rejection, baseline, "{field}");
             assert!(
-                serde_json::from_value::<DiagnosticObservation>(candidate).is_err(),
+                !serde_json::to_string(&after_rejection)
+                    .expect("report JSON")
+                    .contains(&canary),
                 "{field}"
             );
         }
