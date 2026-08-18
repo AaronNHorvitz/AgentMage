@@ -96,6 +96,16 @@ use crate::{
 const PREVIEW_LIFETIME_MS: u64 = 60_000;
 const MAX_PENDING_OPERATIONS: usize = 8;
 
+#[cfg(test)]
+const STORY_22_1_CRASH_ENVIRONMENT: &str = "AGENTMAGE_STORY_22_1_CRASH_BOUNDARY";
+
+#[cfg(test)]
+fn story_22_1_crash_at(boundary: &str) {
+    if std::env::var(STORY_22_1_CRASH_ENVIRONMENT).as_deref() == Ok(boundary) {
+        std::process::exit(93);
+    }
+}
+
 /// Stable content-free failure while composing the Linux coding boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxCodingRuntimeError {
@@ -1846,11 +1856,15 @@ where
             (None, None) => Ok((execution, Vec::new())),
             (Some(context), Some(pending)) => {
                 let terminal = (context.build_terminal_event)(&execution)?;
+                #[cfg(test)]
+                story_22_1_crash_at("before-tool-terminal-commit");
                 let events = self
                     .authority
                     .authority_mut()
                     .finish_effect_with_runtime_event(pending, terminal)
                     .map_err(map_journal_failure)?;
+                #[cfg(test)]
+                story_22_1_crash_at("after-tool-terminal-commit");
                 self.authority
                     .revalidate_root()
                     .map_err(|_| RuntimePortFailure::Uncertain)?;
@@ -2273,6 +2287,8 @@ where
     ) -> Result<(RuntimeCheckpointPublication, RuntimeEvent), RuntimePortFailure> {
         let publication = self.build_checkpoint_publication(input)?;
         let event = build_event(&publication)?;
+        #[cfg(test)]
+        story_22_1_crash_at("before-checkpoint-commit");
         self.authority
             .authority_mut()
             .checkpoint_runtime_session_with_event(
@@ -2281,6 +2297,8 @@ where
                 event.clone(),
             )
             .map_err(map_journal_failure)?;
+        #[cfg(test)]
+        story_22_1_crash_at("after-checkpoint-commit");
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
@@ -2758,6 +2776,7 @@ fn hex(bytes: &[u8]) -> String {
 mod tests {
     use std::collections::VecDeque;
     use std::fs;
+    use std::io::Write as _;
     use std::ops::Deref;
     use std::os::unix::fs::PermissionsExt as _;
     use std::path::PathBuf;
@@ -2889,6 +2908,16 @@ mod tests {
 
     const CHECKPOINT_CLOCK_UNARMED: usize = usize::MAX;
     const ARTIFACT_RESUME_METRIC_PREFIX: &str = "AGENTMAGE_ARTIFACT_RESUME=";
+    const STORY_22_1_CRASH_ROOT_ENVIRONMENT: &str = "AGENTMAGE_STORY_22_1_CRASH_ROOT";
+    const STORY_22_1_CRASH_CHILD_EXIT: i32 = 93;
+    const STORY_22_1_RESUME_METRIC_PREFIX: &str = "AGENTMAGE_STORY_22_1_RESUME=";
+    const STORY_22_1_REPETITIONS_PER_BOUNDARY: usize = 25;
+    const STORY_22_1_CRASH_BOUNDARIES: [&str; 4] = [
+        "before-tool-terminal-commit",
+        "after-tool-terminal-commit",
+        "before-checkpoint-commit",
+        "after-checkpoint-commit",
+    ];
 
     struct TestIdentities {
         next: u64,
@@ -3116,6 +3145,7 @@ mod tests {
         launches: usize,
         stdout: Vec<u8>,
         shared_launches: Option<Arc<AtomicUsize>>,
+        durable_launch_record: Option<PathBuf>,
     }
 
     impl Default for FakeGitExecutor {
@@ -3124,6 +3154,7 @@ mod tests {
                 launches: 0,
                 stdout: b"# branch.head main\0? src/new.rs\0".to_vec(),
                 shared_launches: None,
+                durable_launch_record: None,
             }
         }
     }
@@ -3134,6 +3165,7 @@ mod tests {
                 launches: 0,
                 stdout: b"# branch.head main\0".to_vec(),
                 shared_launches: None,
+                durable_launch_record: None,
             }
         }
 
@@ -3142,6 +3174,16 @@ mod tests {
                 launches: 0,
                 stdout: b"# branch.head main\0".to_vec(),
                 shared_launches: Some(shared_launches),
+                durable_launch_record: None,
+            }
+        }
+
+        fn clean_with_durable_counter(path: PathBuf) -> Self {
+            Self {
+                launches: 0,
+                stdout: b"# branch.head main\0".to_vec(),
+                shared_launches: None,
+                durable_launch_record: Some(path),
             }
         }
     }
@@ -3158,6 +3200,20 @@ mod tests {
             self.launches += 1;
             if let Some(shared_launches) = &self.shared_launches {
                 shared_launches.fetch_add(1, Ordering::SeqCst);
+            }
+            if let Some(path) = &self.durable_launch_record {
+                let prior = fs::read_to_string(path)
+                    .ok()
+                    .and_then(|value| value.parse::<u64>().ok())
+                    .unwrap_or(0);
+                let mut file = fs::OpenOptions::new()
+                    .create(true)
+                    .truncate(true)
+                    .write(true)
+                    .open(path)
+                    .expect("durable launch record opens");
+                write!(file, "{}", prior + 1).expect("durable launch count writes");
+                file.sync_all().expect("durable launch count synchronizes");
             }
             assert!(working_directory.revalidate().is_ok());
             assert!(!cancellation.is_cancelled());
@@ -3216,14 +3272,33 @@ mod tests {
         G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
     {
         let root = temp_root("boundary");
+        fixture_with_git_and_checkpoint_clock_at(root, true, 1, git_executor, checkpoint_clock)
+    }
+
+    fn fixture_with_git_and_checkpoint_clock_at<G>(
+        root: PathBuf,
+        initialize: bool,
+        now_epoch_ms: u64,
+        git_executor: G,
+        checkpoint_clock: Option<Arc<AtomicUsize>>,
+    ) -> Fixture<G>
+    where
+        G: BoundedRepositoryInspectionExecutor<WorkingDirectory = LinuxAuthorizedWorkspace>,
+    {
         let worktree_root = root.join("worktree");
         let state_root = root.join("state");
-        fs::create_dir_all(worktree_root.join("src")).expect("worktree tree");
-        fs::create_dir(&state_root).expect("state root");
-        fs::set_permissions(&state_root, fs::Permissions::from_mode(0o700))
-            .expect("private state root");
-        let content = b"pub fn runtime_fixture() {}\n";
-        fs::write(worktree_root.join("src/lib.rs"), content).expect("fixture source");
+        if initialize {
+            fs::create_dir_all(worktree_root.join("src")).expect("worktree tree");
+            fs::create_dir(&state_root).expect("state root");
+            fs::set_permissions(&state_root, fs::Permissions::from_mode(0o700))
+                .expect("private state root");
+            fs::write(
+                worktree_root.join("src/lib.rs"),
+                b"pub fn runtime_fixture() {}\n",
+            )
+            .expect("fixture source");
+        }
+        let content = fs::read(worktree_root.join("src/lib.rs")).expect("fixture source reads");
         let worktree_sha256 =
             linux_repository_path_sha256(&worktree_root).expect("worktree identity");
         let mut profile_input = input_with_worktree_path_sha256(worktree_sha256.clone());
@@ -3238,8 +3313,8 @@ mod tests {
             files: vec![RepositoryFileInput {
                 path: vec!["src".to_owned(), "lib.rs".to_owned()],
                 size_bytes: content.len() as u64,
-                content_sha256: sha256(content),
-                content: Some(content.to_vec()),
+                content_sha256: sha256(&content),
+                content: Some(content),
                 git_state: GitTrackedState::TrackedClean,
                 policy_excluded: false,
                 generated: false,
@@ -3309,7 +3384,7 @@ mod tests {
         };
         let mut key = TestKey([51; 32]);
         let authority =
-            open_test_linux_authority(&state_root, &mut key, 1).expect("test authority");
+            open_test_linux_authority(&state_root, &mut key, now_epoch_ms).expect("test authority");
         let sandbox = sandbox();
         let boundary = LinuxCodingRuntimeBoundary::new(LinuxCodingRuntimeBoundaryInput {
             workspace,
@@ -4347,6 +4422,153 @@ mod tests {
             sequence.push(event).expect("ordered durable runtime event");
         }
         assert!(sequence.is_terminal());
+    }
+
+    #[test]
+    #[ignore = "subprocess stop target; invoked only by the Story 22.1 native resume matrix"]
+    fn story_22_1_native_tool_terminal_resume_child() {
+        let root = PathBuf::from(
+            std::env::var_os(STORY_22_1_CRASH_ROOT_ENVIRONMENT).expect("Story 22.1 child root"),
+        );
+        let launch_record = root.join("worker-launches");
+        let mut fixture = fixture_with_git_and_checkpoint_clock_at(
+            root,
+            true,
+            1,
+            FakeGitExecutor::clean_with_durable_counter(launch_record),
+            None,
+        );
+        configure_git_status(&mut fixture);
+        fixture.call.tool_call_id = ToolCallId::from_raw("call-git-native-resume-22-1");
+        let clean_git = scripted_call(&fixture.call);
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Observation];
+        fixture.request = seal_runtime_run_request(fixture.request.clone())
+            .expect("native resume evidence requirement");
+        let profile = fixture.profile_for_test();
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [ScriptedCodingStep::Tool(clean_git)].into_iter().collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("native resume context");
+        let Fixture {
+            request, boundary, ..
+        } = fixture;
+        let mut coordinator = compose_durable_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(75_000),
+        )
+        .expect("native resume child coordinator");
+        let RuntimeCoordinatorStep::AwaitingApproval { challenge } = coordinator
+            .run_until_boundary(None, None)
+            .expect("native inspection reaches approval")
+        else {
+            panic!("native inspection must require approval");
+        };
+        let _ = coordinator.run_until_boundary(
+            Some(&response(&challenge, RuntimeApprovalDisposition::Allow)),
+            None,
+        );
+        panic!("configured no-unwind crash boundary was not reached");
+    }
+
+    #[test]
+    #[ignore = "explicit Story 22.1 native one-hundred-resume campaign"]
+    fn story_22_1_native_tool_terminal_resume_matrix_never_replays_or_invents_state() {
+        let executable = std::env::current_exe().expect("current test executable");
+        let mut total_cases = 0;
+        for boundary in STORY_22_1_CRASH_BOUNDARIES {
+            for repetition in 0..STORY_22_1_REPETITIONS_PER_BOUNDARY {
+                let root = temp_root(&format!("story-22-1-{boundary}-{repetition}"));
+                let launch_record = root.join("worker-launches");
+                let output = Command::new(&executable)
+                    .arg(
+                        "linux_coding_runtime::tests::story_22_1_native_tool_terminal_resume_child",
+                    )
+                    .arg("--exact")
+                    .arg("--ignored")
+                    .arg("--nocapture")
+                    .arg("--test-threads=1")
+                    .env(STORY_22_1_CRASH_ROOT_ENVIRONMENT, &root)
+                    .env(STORY_22_1_CRASH_ENVIRONMENT, boundary)
+                    .output()
+                    .expect("native resume crash child launches");
+                assert_eq!(
+                    output.status.code(),
+                    Some(STORY_22_1_CRASH_CHILD_EXIT),
+                    "{}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+                assert_eq!(
+                    fs::read_to_string(&launch_record).expect("worker launch count reads"),
+                    "1"
+                );
+
+                let fixture = fixture_with_git_and_checkpoint_clock_at(
+                    root,
+                    false,
+                    90_000,
+                    FakeGitExecutor::clean_with_durable_counter(launch_record.clone()),
+                    None,
+                );
+                let authority = fixture.boundary.authority.authority();
+                assert_eq!(authority.receipts().len(), 1);
+                assert_eq!(authority.receipts()[0].outcome, OperationOutcome::Succeeded);
+                let events = authority
+                    .runtime_events(&fixture.request.run_id)
+                    .expect("native resume events read");
+                let terminal_count = events
+                    .iter()
+                    .filter(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+                    .count();
+                let checkpoint_count = events
+                    .iter()
+                    .filter(|event| {
+                        matches!(event.kind, RuntimeEventKind::CheckpointCommitted { .. })
+                    })
+                    .count();
+                assert_eq!(
+                    terminal_count,
+                    usize::from(boundary != "before-tool-terminal-commit")
+                );
+                assert_eq!(
+                    checkpoint_count,
+                    usize::from(boundary == "after-checkpoint-commit")
+                );
+                assert_eq!(
+                    authority
+                        .current_session_checkpoint()
+                        .expect("checkpoint state reads")
+                        .is_some(),
+                    boundary == "after-checkpoint-commit"
+                );
+                assert_eq!(
+                    fs::read_to_string(&launch_record).expect("launch count remains readable"),
+                    "1"
+                );
+                total_cases += 1;
+            }
+        }
+        assert_eq!(total_cases, 100);
+        println!(
+            "{STORY_22_1_RESUME_METRIC_PREFIX}{}",
+            serde_json::json!({
+                "boundaries": STORY_22_1_CRASH_BOUNDARIES,
+                "case_count": total_cases,
+                "checkpoint_after_commit_cases": STORY_22_1_REPETITIONS_PER_BOUNDARY,
+                "external_network_used": false,
+                "false_checkpoint_count": 0,
+                "false_terminal_count": 0,
+                "manual_fuzzing_executed": false,
+                "repetitions_per_boundary": STORY_22_1_REPETITIONS_PER_BOUNDARY,
+                "total_worker_launches_per_case": 1
+            })
+        );
     }
 
     #[test]
