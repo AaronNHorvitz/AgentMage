@@ -118,15 +118,21 @@ def bounded_diagnostic(output: str) -> str:
     return " | ".join(lines)[:2400] or "no-output"
 
 
-def acquisition_script(vm: vm_support.VmHandle, script: str) -> None:
+def diagnostic_guest_script(
+    vm: vm_support.VmHandle,
+    script: str,
+    *,
+    stage: str,
+    timeout: int,
+) -> None:
     completed = vm_support.run(
         [*vm_support.ssh_argv(vm), "/usr/bin/bash", "-s"],
-        timeout=7200,
+        timeout=timeout,
         input_value=script,
     )
     if completed.returncode != 0:
         raise PromotedMatrixError(
-            "promoted dependency acquisition failed: "
+            f"promoted guest stage failed ({stage}): "
             + bounded_diagnostic(completed.stdout + "\n" + completed.stderr)
         )
 
@@ -241,7 +247,7 @@ def run_target(
             )
             vm_support.scp_to_guest(connected, bundle, "/home/agentmage/source.bundle")
             vm_support.scp_to_guest(connected, native_archive, "/home/agentmage/native-runtime.tar.gz")
-            acquisition_script(
+            diagnostic_guest_script(
                 connected,
                 "set -eu\n"
                 f"test \"$(sha256sum /home/agentmage/source.bundle | cut -d' ' -f1)\" = {bundle_sha256}\n"
@@ -255,6 +261,8 @@ def run_target(
                 f"test \"$(git -C /home/agentmage/source rev-parse HEAD)\" = {revision}\n"
                 "test -z \"$(git -C /home/agentmage/source status --porcelain --untracked-files=all)\"\n"
                 + toolchain_dependencies_script(),
+                stage="dependency-acquisition",
+                timeout=7200,
             )
             connected_cleanup = shutdown(connected)
         finally:
@@ -272,7 +280,7 @@ def run_target(
             vm_support.wait_for_ssh(offline, timeout=300)
             if not docker_vm.external_network_denied(offline):
                 raise PromotedMatrixError("promoted guest reached an external peer")
-            vm_support.ssh_script(
+            diagnostic_guest_script(
                 offline,
                 "set -eu\n"
                 "export PATH=/opt/node/bin:/opt/cargo/bin:$PATH CARGO_HOME=/opt/cargo RUSTUP_HOME=/opt/rustup RUSTUP_NO_UPDATE_CHECK=1\n"
@@ -280,7 +288,7 @@ def run_target(
                 f"python3 scripts/linux_vm_promoted_guest.py --distribution {target.distribution} "
                 "--native-archive /home/agentmage/native-runtime.tar.gz --output /home/agentmage/promoted-result.json\n",
                 timeout=14400,
-                stage="matrix-offline-execution",
+                stage="offline-matrix",
             )
             scp_from_guest(offline, "/home/agentmage/promoted-result.json", result_path)
             guest_result = json.loads(result_path.read_text(encoding="utf-8"))
