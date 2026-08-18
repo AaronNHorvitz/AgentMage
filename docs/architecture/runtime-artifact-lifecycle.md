@@ -354,14 +354,17 @@ Current automated coverage includes:
   release, collects after an empty successor checkpoint, and verifies a final
   reopen. Its hash-bound report retains measured elapsed time, resident memory,
   disk bytes, and stated host-local limitations.
-- One native durable-resume campaign stops deterministically immediately after
-  a committed safe-boundary checkpoint, destroys the coordinator, reopens the
-  encrypted Linux authority, and restores the exact event cursor, continuation,
-  artifact set, receipt, and terminal no-op outcome without replaying the
-  protected Git operation. Repository, policy, and model-runtime drift fail
-  closed. Missing and corrupt continuation payloads reconcile to an explicit
-  blocked restore with no second execution. The hash-bound report and redacted
-  raw trace are retained under `artifacts/sprints/sprint-22/story-22.2/`.
+- One native durable-resume campaign executes four focused restart paths. It
+  restores the exact event cursor, continuation, artifact set, receipt, and
+  terminal no-op outcome without replaying a protected Git operation; rejects
+  repository, policy, and model-runtime drift; and blocks missing or corrupt
+  continuation payloads with no second execution. It also checkpoints separate
+  70 KiB command and validation streams, byte-verifies their `standard_output`
+  and `test_log` artifacts after reopen, restores their exact reference set,
+  and completes without repeating either command. A separate terminal path
+  byte-verifies a 70 KiB `model_output` after restart without presenting
+  terminal work as resumable. The hash-bound report and redacted raw trace are
+  retained under `artifacts/sprints/sprint-22/story-22.2/`.
 - One combined artifact-integrity campaign source-binds 22 kernel contracts,
   nine native Linux payload-store and adversarial tests, one production
   generated-file publication and checkpoint test, and one public-schema
@@ -389,11 +392,10 @@ Still open before Story 22.2 can pass:
   native matrix stops immediately before and after each declared transaction
   edge without unwinding; it does not claim those physical-fault conditions.
 - Physical disk-full and device-latency injection, mixed-size unique-object
-  pressure, and the complete durable-resume campaign for large command, test,
-  and model artifacts, long sessions, concurrent collection, quarantined
-  payload operator recovery, installed interfaces, and a real local model. The
-  current path-substitution, deduplicated ceiling, and focused fake-model
-  resume campaigns do not substitute for those remaining classes.
+  pressure, long sessions with mixed artifacts, concurrent collection,
+  quarantined-payload operator recovery, installed interfaces, and a real local
+  model. The current path-substitution, deduplicated ceiling, and focused
+  fake-model resume campaigns do not substitute for those remaining classes.
 - Windows native artifact-store implementation and evidence; retained macOS work
   remains outside the current GA dependency lane.
 - Remaining installed-interface, long-session, and cross-platform producer

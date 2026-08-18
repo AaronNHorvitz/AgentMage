@@ -1,11 +1,15 @@
 
-running 2 tests
+running 4 tests
 AGENTMAGE_ARTIFACT_RESUME={"artifact_set":"exact","model_runtime_drift":"blocked","policy_drift":"blocked","post_resume_receipts":1,"post_resume_total_tool_executions":1,"pre_restart_receipts":1,"pre_restart_tool_executions":1,"repository_drift":"blocked","scenario":"exact-checkpoint-resume","terminal_state":"no_op"}
 test linux_coding_runtime::tests::story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool ... ok
+AGENTMAGE_ARTIFACT_RESUME={"artifact_kind":"model_output","artifact_payload_bytes":71680,"external_network_used":false,"manual_fuzzing_executed":false,"payload_recovered_exactly":true,"scenario":"large-model-terminal-restart","terminal_state":"blocked"}
+test linux_coding_runtime::tests::story_22_2_linux_restart_recovers_large_terminal_model_artifact ... ok
+AGENTMAGE_ARTIFACT_RESUME={"artifact_kinds":["standard_output","test_log"],"artifact_payload_bytes_each":71680,"exact_artifact_set_restored":true,"external_network_used":false,"manual_fuzzing_executed":false,"post_resume_command_executions":2,"pre_restart_command_executions":2,"scenario":"large-command-test-resume","terminal_state":"no_op","tool_call_count":3}
+test linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay ... ok
 AGENTMAGE_ARTIFACT_RESUME={"active_continuation_objects_after_reconcile":0,"cases":["missing","corrupt"],"cases_blocked":2,"post_failure_total_tool_executions_per_case":1,"pre_restart_tool_executions_per_case":1,"scenario":"continuation-integrity-loss"}
 test linux_coding_runtime::tests::story_22_2_linux_restart_rejects_lost_continuation_without_replaying_the_tool ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 125 filtered out; finished in 1.32s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 129 filtered out; finished in 1.43s
 
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
      Running unittests src/lib.rs (target/debug/deps/agentmage_host-606dfe028916acd7)

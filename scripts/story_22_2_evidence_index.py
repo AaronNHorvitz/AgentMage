@@ -54,6 +54,7 @@ EVIDENCE_PATHS = (
     "scripts/story_22_2_artifact_pressure_evidence.py",
     "scripts/story_22_2_artifact_resume_evidence.py",
     "scripts/story_22_2_evidence_index.py",
+    "shells/host/src/coding_session.rs",
     "shells/host/src/linux_coding_runtime.rs",
     "tests/test_planning_schemas.mjs",
     "tests/test_story_22_2_artifact_crash_evidence.py",
@@ -255,10 +256,13 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
         "task_id": "22.2.3.3",
         "status": "partial",
         "code": [
+            "shells/host/src/coding_session.rs",
             "shells/host/src/linux_coding_runtime.rs",
             "scripts/story_22_2_artifact_resume_evidence.py",
         ],
         "tests": [
+            "story_22_2_linux_restart_recovers_large_terminal_model_artifact",
+            "story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay",
             "story_22_2_linux_restart_restores_checkpoint_without_replaying_the_tool",
             "test_closed_metrics_cover_exact_resume_drift_and_payload_loss",
         ],
@@ -323,7 +327,7 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
 
 LIMITATIONS = (
     "Stops inside filesystem or SQLite syscalls and physical storage-fault campaigns remain open.",
-    "Large command, test, and model artifact recovery and concurrent collection campaigns remain open.",
+    "Quarantined-payload operator recovery, long mixed-artifact sessions, and concurrent collection campaigns remain open.",
     "Mixed-size unique-object and installed-interface pressure evidence remains open.",
     "Windows native artifact storage and supported-platform package evidence remains open.",
     "Independent artifact-boundary and cryptographic review remains open.",
