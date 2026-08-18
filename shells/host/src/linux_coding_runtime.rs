@@ -1951,6 +1951,8 @@ where
             }
             (Some(context), Some(pending)) => {
                 let terminal = (context.build_terminal_event)(&execution)?;
+                #[cfg(test)]
+                story_22_1_crash_at("before-tool-terminal-commit");
                 let events = self
                     .authority
                     .authority_mut()
@@ -1960,6 +1962,8 @@ where
                         write_checkpoints,
                     )
                     .map_err(map_journal_failure)?;
+                #[cfg(test)]
+                story_22_1_crash_at("after-tool-terminal-commit");
                 self.pending_write_completion = Some(completion);
                 self.authority
                     .revalidate_root()
@@ -5214,6 +5218,137 @@ mod tests {
                 "total_worker_launches_per_case": 1
             })
         );
+    }
+
+    #[test]
+    #[ignore = "subprocess stop target; invoked only by the Story 39.1 write recovery matrix"]
+    fn story_39_1_native_write_checkpoint_process_child() {
+        let root = PathBuf::from(
+            std::env::var_os(STORY_22_1_CRASH_ROOT_ENVIRONMENT).expect("Story 39.1 child root"),
+        );
+        let mut fixture =
+            fixture_with_git_and_checkpoint_clock_at(root, true, 1, FakeGitExecutor::clean(), None);
+        configure_controlled_create(&mut fixture);
+        let create = scripted_call(&fixture.call);
+        fixture.request.work_packet.required_evidence = vec![EvidenceKind::Receipt];
+        fixture.request = seal_runtime_run_request(fixture.request.clone())
+            .expect("write recovery evidence requirement");
+        let profile = fixture.profile_for_test();
+        let model = ScriptedCodingModel {
+            profile: profile.model_profile().clone(),
+            steps: [ScriptedCodingStep::Tool(create)].into_iter().collect(),
+            calls: 0,
+        };
+        let context = CodingContextPort::for_profile(profile, Vec::new(), FixtureTokenCounter)
+            .expect("write recovery context");
+        let Fixture {
+            request, boundary, ..
+        } = fixture;
+        let mut coordinator = compose_durable_coding_coordinator(
+            profile,
+            request,
+            model,
+            context,
+            boundary,
+            FixtureClock(95_000),
+        )
+        .expect("write recovery child coordinator");
+        let RuntimeCoordinatorStep::AwaitingApproval { challenge } = coordinator
+            .run_until_boundary(None, None)
+            .expect("controlled create reaches approval")
+        else {
+            panic!("controlled create must require approval");
+        };
+        let _ = coordinator.run_until_boundary(
+            Some(&response(&challenge, RuntimeApprovalDisposition::Allow)),
+            None,
+        );
+        panic!("configured no-unwind write crash boundary was not reached");
+    }
+
+    #[test]
+    fn story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay() {
+        let executable = std::env::current_exe().expect("current test executable");
+        for boundary in STORY_22_1_CRASH_BOUNDARIES {
+            let root = temp_root(&format!("story-39-1-{boundary}"));
+            let output = Command::new(&executable)
+                .arg(
+                    "linux_coding_runtime::tests::story_39_1_native_write_checkpoint_process_child",
+                )
+                .arg("--exact")
+                .arg("--ignored")
+                .arg("--nocapture")
+                .arg("--test-threads=1")
+                .env(STORY_22_1_CRASH_ROOT_ENVIRONMENT, &root)
+                .env(STORY_22_1_CRASH_ENVIRONMENT, boundary)
+                .output()
+                .expect("write recovery crash child launches");
+            assert_eq!(
+                output.status.code(),
+                Some(STORY_22_1_CRASH_CHILD_EXIT),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            assert_eq!(
+                fs::read(root.join("worktree/src/new.rs")).expect("committed file reopens"),
+                b"pub fn newly_created() {}\n"
+            );
+
+            let fixture = fixture_with_git_and_checkpoint_clock_at(
+                root,
+                false,
+                100_000,
+                FakeGitExecutor::clean(),
+                None,
+            );
+            let authority = fixture.boundary.authority.authority();
+            let transaction_ids = authority
+                .write_checkpoint_transaction_ids()
+                .expect("write checkpoint identities");
+            assert_eq!(transaction_ids.len(), 1);
+            let checkpoints = authority
+                .write_checkpoint_chain(&transaction_ids[0])
+                .expect("write checkpoint chain");
+            let expected_phase = match boundary {
+                "before-tool-terminal-commit" => WriteCheckpointPhase::GrantConsumed,
+                "after-tool-terminal-commit" | "before-checkpoint-commit" => {
+                    WriteCheckpointPhase::ReceiptPersisted
+                }
+                "after-checkpoint-commit" => WriteCheckpointPhase::Complete,
+                _ => unreachable!("closed crash boundary"),
+            };
+            assert_eq!(
+                checkpoints.last().map(|item| item.phase),
+                Some(expected_phase)
+            );
+            assert!(checkpoints.iter().skip(1).all(|checkpoint| {
+                checkpoint
+                    .consumed_grant_id
+                    .as_ref()
+                    .is_some_and(|grant_id| {
+                        authority
+                            .current_grant(&GrantId::from_raw(grant_id.clone()))
+                            .is_some_and(|grant| grant.status == GrantStatus::Consumed)
+                    })
+            }));
+            let events = authority
+                .runtime_events(&fixture.request.run_id)
+                .expect("write recovery events");
+            assert_eq!(
+                events
+                    .iter()
+                    .filter(|event| matches!(event.kind, RuntimeEventKind::ToolCompleted { .. }))
+                    .count(),
+                usize::from(boundary != "before-tool-terminal-commit")
+            );
+            assert_eq!(
+                authority
+                    .current_session_checkpoint()
+                    .expect("session checkpoint state")
+                    .is_some(),
+                boundary == "after-checkpoint-commit"
+            );
+        }
     }
 
     #[test]
