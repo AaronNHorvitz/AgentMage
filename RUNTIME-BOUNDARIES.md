@@ -268,6 +268,8 @@ hashed, size checked, atomically placed in the private content-addressed runtime
 referenced from SQLite. The artifact store is not the checked-in repository `artifacts/` evidence
 directory. Checkpoints bind the last committed event cursor and exact artifact references; startup
 verifies those references before resume and quarantines missing or mismatched objects.
+The complete implemented lifecycle, operator projection, and still-open payload-encryption boundary
+are recorded in [`runtime-artifact-lifecycle.md`](docs/architecture/runtime-artifact-lifecycle.md).
 
 Native filesystem, repository-search, patch, controlled-write, command, validation, and Git tools
 register directly with the existing tool registry and dispatcher. A later MCP gateway registers
