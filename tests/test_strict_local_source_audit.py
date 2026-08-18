@@ -191,6 +191,7 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
             "pub fn product() {}\n"
             "#[cfg(test)]\nmod tests {\n"
             "    use std::os::unix::net::UnixStream;\n"
+            '    const FIXTURE: &str = "https://test-only.example.invalid";\n'
             "}\n"
         )
         self.assertEqual(audit.scan_sources(self.policy, test_only), [])
@@ -205,19 +206,38 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
             audit.scan_sources(self.policy, production),
         )
 
+        production_uri = dict(test_only)
+        production_uri["shells/host/src/test_fixture.rs"] = (
+            'const REMOTE: &str = "https://product.example.invalid";\n'
+            + production_uri["shells/host/src/test_fixture.rs"]
+        )
+        self.assertIn(
+            "undeclared external URI in product source: shells/host/src/test_fixture.rs",
+            audit.scan_sources(self.policy, production_uri),
+        )
+
+    def test_uri_match_excludes_an_escaped_string_delimiter(self) -> None:
+        matches = audit.URI.findall(r'\"https://example.invalid/schema\"')
+        self.assertEqual(matches, ["https://example.invalid/schema"])
+
     def test_uri_allowance_is_exact_and_staleness_is_a_failure(self) -> None:
         sources = dict(self.sources)
-        sources["kernel/contracts/src/display_link.rs"] += '\n"https://second.example.test/x";\n'
+        path = "capabilities/read-only/src/catalog.rs"
+        sources[path] = sources[path].replace(
+            "#[cfg(test)]",
+            '"https://second.example.test/schema";\n#[cfg(test)]',
+            1,
+        )
         self.assertIn(
-            "undeclared external URI in product source: kernel/contracts/src/display_link.rs",
+            f"undeclared external URI in product source: {path}",
             audit.scan_sources(self.policy, sources),
         )
         removed = dict(self.sources)
-        removed["kernel/contracts/src/display_link.rs"] = removed[
-            "kernel/contracts/src/display_link.rs"
-        ].replace("https://example.test/x", "fixture-without-uri")
+        removed[path] = removed[path].replace(
+            "https://json-schema.org/draft/2020-12/schema", "schema-without-uri"
+        )
         self.assertIn(
-            "URI allowance is stale or incomplete: kernel/contracts/src/display_link.rs",
+            f"URI allowance is stale or incomplete: {path}",
             audit.scan_sources(self.policy, removed),
         )
 

@@ -15,7 +15,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "security" / "strict-local-source-policy.json"
 SOURCE_SUFFIXES = {".css", ".html", ".js", ".json", ".mjs", ".rs", ".ts"}
-URI = re.compile(r"(?:https?|wss?)://[^\s\"'<>`)]+", re.IGNORECASE)
+URI = re.compile(r"(?:https?|wss?)://[^\s\"'<>`)\\]+", re.IGNORECASE)
 TOP_LEVEL_KEYS = {
     "allowed_external_uris",
     "allowed_first_party_build_scripts",
@@ -229,13 +229,13 @@ def scan_sources(policy: dict[str, Any], sources: dict[str, str]) -> list[str]:
     allowed_uris = policy["allowed_external_uris"]
     observed_allowed: dict[str, set[str]] = {path: set() for path in allowed_uris}
     for path, content in sorted(sources.items()):
-        for match in URI.finditer(content):
+        product_content = production_source(path, content)
+        for match in URI.finditer(product_content):
             uri = match.group(0)
             if uri not in allowed_uris.get(path, []):
                 failures.append(f"undeclared external URI in product source: {path}")
             else:
                 observed_allowed[path].add(uri)
-        product_content = production_source(path, content)
         for rule in policy["symbol_rules"]:
             if re.search(rule["pattern"], product_content) and path not in rule["allowed_paths"]:
                 failures.append(f"{rule['id']} found outside its closed allowlist: {path}")

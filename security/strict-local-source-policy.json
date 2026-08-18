@@ -1,6 +1,75 @@
 {
   "allowed_external_uris": {
+    "capabilities/knowledge/src/presentation_generation.rs": [
+      "http://purl.org/dc/elements/1.1/",
+      "http://purl.org/dc/terms/",
+      "http://schemas.openxmlformats.org/drawingml/2006/chart",
+      "http://schemas.openxmlformats.org/drawingml/2006/main",
+      "http://schemas.openxmlformats.org/drawingml/2006/table",
+      "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes",
+      "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
+      "http://schemas.openxmlformats.org/package/2006/content-types",
+      "http://schemas.openxmlformats.org/package/2006/metadata/core-properties",
+      "http://schemas.openxmlformats.org/package/2006/relationships",
+      "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties",
+      "http://schemas.openxmlformats.org/presentationml/2006/main",
+      "http://www.w3.org/2001/XMLSchema-instance"
+    ],
+    "capabilities/knowledge/src/reconciliation_workbook.rs": [
+      "http://schemas.openxmlformats.org/drawingml/2006/chart",
+      "http://schemas.openxmlformats.org/drawingml/2006/main",
+      "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/table",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet",
+      "http://schemas.openxmlformats.org/package/2006/content-types",
+      "http://schemas.openxmlformats.org/package/2006/relationships",
+      "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    ],
+    "capabilities/knowledge/src/word_edit.rs": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments",
+      "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    ],
+    "capabilities/knowledge/src/word_generation.rs": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
+      "http://schemas.openxmlformats.org/package/2006/content-types",
+      "http://schemas.openxmlformats.org/package/2006/relationships",
+      "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    ],
+    "capabilities/knowledge/src/word_rich_generation.rs": [
+      "http://purl.org/dc/elements/1.1/",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/header",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
+      "http://schemas.openxmlformats.org/package/2006/content-types",
+      "http://schemas.openxmlformats.org/package/2006/metadata/core-properties",
+      "http://schemas.openxmlformats.org/package/2006/relationships",
+      "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties",
+      "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    ],
     "capabilities/read-only/src/catalog.rs": [
+      "https://json-schema.org/draft/2020-12/schema"
+    ],
+    "capabilities/read-only/src/git.rs": [
       "https://json-schema.org/draft/2020-12/schema"
     ],
     "capabilities/repository-map/src/grammar.rs": [
@@ -10,38 +79,36 @@
       "https://github.com/tree-sitter/tree-sitter-rust",
       "https://github.com/tree-sitter/tree-sitter-typescript"
     ],
-    "kernel/contracts/src/display_link.rs": [
-      "https://example.test/x"
+    "kernel/engine/src/repository_safety.rs": [
+      "https://{host}/{repository}.git"
     ],
-    "kernel/engine/src/policy.rs": [
-      "https://*.example.invalid"
+    "shells/host/src/coding_changes.rs": [
+      "https://json-schema.org/draft/2020-12/schema"
     ],
-    "platforms/linux-inference/src/model_download.rs": [
-      "https://first-party.invalid/resolve/{}/model.gguf"
+    "shells/host/src/coding_tools.rs": [
+      "https://json-schema.org/draft/2020-12/schema"
     ],
-    "platforms/linux-inference/src/docker_live_collector.rs": [
-      "http://example.invalid"
-    ],
-    "shells/host/src/protocol.rs": [
-      "https://example.invalid/health",
-      "https://example.invalid/submit"
+    "shells/host/src/coding_verifier.rs": [
+      "https://json-schema.org/draft/2020-12/schema"
     ]
   },
   "allowed_first_party_build_scripts": [],
   "approved_cargo_manifests": {
-    "Cargo.toml": "afd5d1e660d880f9446b0fc54821c65ad6a04e4e8074e8f6752701891b82af81",
-    "capabilities/knowledge/Cargo.toml": "f7fd813bd62ae53a0ea64ec6a5b6da5bf4dbd8190a3a6ccd0b6df6c990486bb4",
+    "Cargo.toml": "86a6057ca1cec714e92beb0165c57573d3f7e1caa8e5a50365b8af55f18491a8",
+    "capabilities/knowledge/Cargo.toml": "b7f36b6898ddcce5c3a8a03a148366a819bfa0d67d7af5fb7480c5a94207a76b",
     "capabilities/read-only/Cargo.toml": "7c13504dd4c895e5f5ada4c2cc5bc2d639b1c61b91c14c246fe177c19785b906",
     "capabilities/repository-map/Cargo.toml": "6893bed2643ac73332862345c84f6062bedb6ff506ba7bd3a4036921e6242de6",
     "kernel/contracts/Cargo.toml": "960fb2e7c1128ed9508a667f7240aa67eb5bf6da95f8d24df97658a0af958088",
-    "kernel/engine/Cargo.toml": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2",
+    "kernel/engine/Cargo.toml": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e",
     "platforms/linux-inference/Cargo.toml": "a4143fefbaa1ababfb26bc7701ef7c3fe9919a1122abbc98a0ae2841858d73b9",
     "platforms/linux/Cargo.toml": "1f72f4c8a1b4fd868a0b0fb26336d04826a50b21f1e99b24d4f7ebab4a8ac25b",
     "platforms/windows/Cargo.toml": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490",
     "release/xtask/Cargo.toml": "dd6e61c5561f24a35f8f802579f2c8374c15e77d76cd72a882dc104cff954a40",
-    "shells/host/Cargo.toml": "c111bb5e57d2709ed6bdccc9fdce46eec9a0f459288ebd08d4b4b2f3b88643fb"
+    "shells/host/Cargo.toml": "022c2254e404a7c54d790a894e98f6925a9f2b794f0ff37d7022bb4e19c9f923"
   },
   "approved_cargo_packages": [
+    "adler2@2.0.1",
+    "aes@0.9.2",
     "agentmage-capability-knowledge@0.0.0",
     "agentmage-capability-read-only@0.0.0",
     "agentmage-capability-repository-map@0.0.0",
@@ -55,33 +122,54 @@
     "aho-corasick@1.1.5",
     "bitflags@2.13.1",
     "block-buffer@0.12.1",
+    "block-padding@0.4.2",
+    "cbc@0.2.1",
     "cc@1.4.2",
     "cfg-if@1.0.4",
+    "chacha20@0.10.1",
+    "cipher@0.5.2",
     "const-oid@0.10.2",
+    "cpubits@0.1.1",
     "cpufeatures@0.3.0",
+    "crc32fast@1.5.0",
     "crypto-common@0.2.2",
     "curve25519-dalek-derive@0.1.1",
     "curve25519-dalek@5.0.0",
     "digest@0.11.3",
+    "ecb@0.2.0",
     "ed25519-dalek@3.0.0",
     "ed25519@3.0.0",
+    "encoding_rs@0.8.35",
     "equivalent@1.0.2",
     "errno@0.3.14",
     "fallible-iterator@0.3.0",
     "fallible-streaming-iterator@0.1.9",
     "fiat-crypto@0.3.0",
     "find-msvc-tools@0.1.10",
+    "flate2@1.1.9",
+    "getrandom@0.4.3",
     "hashbrown@0.17.1",
     "hybrid-array@0.4.14",
     "indexmap@2.14.0",
+    "inout@0.2.2",
     "itoa@1.0.18",
     "libc@0.2.189",
     "libsqlite3-sys@0.38.2",
     "linux-raw-sys@0.12.1",
+    "log@0.4.33",
+    "lopdf@0.44.0",
+    "md-5@0.11.0",
     "memchr@2.8.3",
+    "miniz_oxide@0.8.9",
+    "nom@8.0.0",
     "pkg-config@0.3.33",
     "proc-macro2@1.0.107",
+    "quick-xml@0.41.0",
     "quote@1.0.47",
+    "r-efi@6.0.0",
+    "rand@0.10.2",
+    "rand_core@0.10.1",
+    "rangemap@1.8.0",
     "regex-automata@0.4.18",
     "regex-syntax@0.8.11",
     "regex@1.13.1",
@@ -97,11 +185,15 @@
     "sha2@0.11.0",
     "shlex@2.0.1",
     "signature@3.0.0",
+    "simd-adler32@0.3.10",
     "smallvec@1.15.2",
     "streaming-iterator@0.1.9",
+    "stringprep@0.1.5",
     "subtle@2.6.1",
     "syn@2.0.119",
     "syn@3.0.3",
+    "thiserror-impl@2.0.20",
+    "thiserror@2.0.20",
     "tinyvec@1.10.0",
     "tinyvec_macros@0.1.1",
     "tree-sitter-javascript@0.25.0",
@@ -111,13 +203,19 @@
     "tree-sitter-swift@0.7.3",
     "tree-sitter-typescript@0.23.2",
     "tree-sitter@0.26.12",
+    "typed-path@0.12.3",
     "typenum@1.20.1",
+    "unicode-bidi@0.3.18",
     "unicode-ident@1.0.24",
     "unicode-normalization@0.1.25",
+    "unicode-properties@0.1.4",
     "vcpkg@0.2.15",
+    "weezl@0.2.1",
     "windows-link@0.2.1",
     "windows-sys@0.61.2",
     "zeroize@1.9.0",
+    "zip@8.6.0",
+    "zlib-rs@0.6.7",
     "zmij@1.0.23"
   ],
   "denied_npm_runtime_packages": [
