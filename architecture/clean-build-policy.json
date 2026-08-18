@@ -5,6 +5,7 @@
   "toolchains": {
     "cargo": "1.95.0",
     "clippy": "0.1.95",
+    "git": "platform-packaged",
     "node": "24.15.0",
     "npm": "11.12.1",
     "rustc": "1.95.0",

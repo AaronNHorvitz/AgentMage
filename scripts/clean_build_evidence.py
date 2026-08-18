@@ -91,11 +91,15 @@ LEGACY_COMMANDS = (
 EXPECTED_TOOLCHAINS = (
     "cargo",
     "clippy-driver",
+    "git",
     "node",
     "npm",
     "python3",
     "rustc",
     "rustfmt",
+)
+LEGACY_SCHEMA2_TOOLCHAINS = tuple(
+    toolchain for toolchain in EXPECTED_TOOLCHAINS if toolchain != "git"
 )
 EXPECTED_CONTROLS = {
     "capabilities": "all-dropped",
@@ -192,6 +196,23 @@ def git_source_identity(root: Path, revision: str) -> dict[str, str]:
         "revision": resolved,
         "tree": tree.stdout.strip(),
     }
+
+
+def expected_toolchains_for_revision(root: Path, revision: str) -> tuple[str, ...]:
+    result = _run(
+        ["git", "show", f"{revision}:architecture/clean-build-policy.json"],
+        root,
+        60,
+    )
+    if result.returncode != 0:
+        return ()
+    try:
+        historical_policy = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return ()
+    if historical_policy.get("toolchains", {}).get("git") == "platform-packaged":
+        return EXPECTED_TOOLCHAINS
+    return LEGACY_SCHEMA2_TOOLCHAINS
 
 
 def _ignored_path_allowed(path: str, patterns: list[str]) -> bool:
@@ -341,6 +362,8 @@ def validate_policy(policy: Any) -> list[str]:
         "uid": 10001,
     }:
         failures.append("clean-build execution user is not fixed and unprivileged")
+    if policy.get("toolchains", {}).get("git") != "platform-packaged":
+        failures.append("clean-build Git runtime dependency is not declared")
     if policy.get("platform_status") != {
         "fedora": "executable",
         "macos": "blocked-macos",
@@ -457,6 +480,13 @@ def validate_report(report: Any, root: Path = ROOT) -> list[str]:
     expected_controls = LEGACY_CONTROLS if legacy else EXPECTED_CONTROLS
     expected_commands = LEGACY_COMMANDS if legacy else EXPECTED_COMMANDS
     expected_status = "blocked-macos" if legacy else "pass-linux"
+    expected_toolchains = (
+        LEGACY_SCHEMA2_TOOLCHAINS
+        if legacy
+        else expected_toolchains_for_revision(
+            root, report.get("source", {}).get("revision", "")
+        )
+    )
     if report.get("status") != expected_status:
         failures.append("clean-build report status is invalid")
     _validate_source(report.get("source"), schema_version, root, failures)
@@ -499,7 +529,7 @@ def validate_report(report: Any, root: Path = ROOT) -> list[str]:
         if any(item.get("status") != "pass" for item in commands):
             failures.append(f"clean-build command failed: {platform_id}")
         toolchains = run.get("toolchains", [])
-        if tuple(item.get("id") for item in toolchains) != EXPECTED_TOOLCHAINS:
+        if tuple(item.get("id") for item in toolchains) != expected_toolchains:
             failures.append(f"clean-build toolchain closure is invalid: {platform_id}")
         for toolchain in toolchains:
             if not isinstance(toolchain.get("version"), str) or not toolchain["version"]:

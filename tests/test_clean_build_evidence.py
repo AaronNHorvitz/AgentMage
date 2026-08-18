@@ -15,6 +15,7 @@ from scripts.clean_build_evidence import (
     build_report,
     check_report,
     container_run_argv,
+    expected_toolchains_for_revision,
     git_source_identity,
     normalized_sha256_id,
     read_json,
@@ -83,7 +84,7 @@ class CleanBuildEvidenceTests(unittest.TestCase):
                         "id": toolchain,
                         "version": f"{toolchain} synthetic-version",
                     }
-                    for toolchain in EXPECTED_TOOLCHAINS
+                    for toolchain in expected_toolchains_for_revision(ROOT, "HEAD")
                 ],
                 "commands": [
                     {"id": command, "status": "pass"}
@@ -187,6 +188,8 @@ class CleanBuildEvidenceTests(unittest.TestCase):
 
     def test_container_bootstrap_and_runtime_permission_order_is_fixed(self) -> None:
         recipe = (ROOT / "release/clean-build/Containerfile.linux").read_text()
+        self.assertIn("dnf install -y ca-certificates curl gcc git ", recipe)
+        self.assertIn("build-essential ca-certificates curl git ", recipe)
         ownership = recipe.index("chown -R 10001:10001 /opt/cargo")
         unprivileged_bootstrap = recipe.index("USER 10001:10001", ownership)
         source_verification = recipe.index("--verify-source-content", unprivileged_bootstrap)
@@ -196,6 +199,16 @@ class CleanBuildEvidenceTests(unittest.TestCase):
         self.assertLess(unprivileged_bootstrap, source_verification)
         self.assertLess(source_verification, npm_bootstrap)
         self.assertLess(npm_bootstrap, lock_down)
+
+    def test_git_runtime_dependency_is_declared_and_recorded(self) -> None:
+        self.assertEqual(self.policy["toolchains"]["git"], "platform-packaged")
+        self.assertIn("git", EXPECTED_TOOLCHAINS)
+        mutated = copy.deepcopy(self.policy)
+        mutated["toolchains"].pop("git")
+        self.assertIn(
+            "clean-build Git runtime dependency is not declared",
+            validate_policy(mutated),
+        )
 
     def test_isolated_work_tree_can_be_made_writable(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

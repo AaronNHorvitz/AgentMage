@@ -28,6 +28,7 @@ TRANSIENT_ROOTS = (
 EXPECTED_TOOL_VERSIONS = {
     "cargo": re.compile(r"^cargo 1\.95\.0\b"),
     "clippy-driver": re.compile(r"^clippy 0\.1\.95\b"),
+    "git": re.compile(r"^git version \d+\.\d+\.\d+"),
     "node": re.compile(r"^v24\.15\.0$"),
     "npm": re.compile(r"^11\.12\.1$"),
     "python3": re.compile(r"^Python 3\."),
@@ -268,6 +269,7 @@ def execute(
             for name in (
                 "cargo",
                 "clippy-driver",
+                "git",
                 "node",
                 "npm",
                 "python3",
