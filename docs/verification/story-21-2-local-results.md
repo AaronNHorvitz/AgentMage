@@ -79,9 +79,19 @@
 - A story-local source-closure test fixes the security-authoritative kernel's
   direct dependencies and rejects external network or telemetry APIs in the
   runtime event, journal, projection, artifact, and CLI-client implementation.
+- A separately implemented automated boundary reviewer recomputes 12 closed
+  schema, family, persistence, queue, cancellation, network, crash, pressure,
+  load, canary, evidence-index, and limitation checks over 19 hash-bound source
+  and evidence inputs. It records that it is not an independent human review.
+- The product-security evidence map binds all 22 applicable `SR-DAT-*`,
+  `SR-AI-010`, `SR-OPS-*`, `SR-TST-*`, and `RV-18` controls to exact source and
+  retained evidence at commit `613abae23a9130da457dcbd08ebb2e92bf4d041a`.
+  Its repository-root-redacted trace records eight passing local-only commands
+  and explicitly denies external-network use, private-user-data use, manual
+  fuzzing, human review, release approval, and platform or model enablement.
 - A deterministic hashed index maps every Story 21.2 sub-task to its exact
   statement, implementation files, executable tests, and retained evidence.
-  It preserves 13 complete, two partial, and one open sub-task and rejects
+  It preserves 14 complete, two partial, and zero open sub-tasks and rejects
   omission, reorder, status, statement, file, test, digest, and completion
   mutations.
 - The JSON schema and canonical Rust example pass the repository schema gate.
@@ -105,6 +115,10 @@ python3 scripts/story_21_2_crash_evidence.py
 python3 -m unittest tests.test_story_21_2_crash_evidence
 python3 scripts/story_21_2_pressure_evidence.py
 python3 -m unittest tests.test_story_21_2_pressure_evidence
+python3 scripts/runtime_journal_boundary_review.py
+python3 -m unittest tests.test_runtime_journal_boundary_review
+python3 scripts/story_21_2_security_evidence.py
+python3 -m unittest tests.test_story_21_2_security_evidence
 npm run schemas:check
 npx markdownlint-cli2 README.md docs/architecture/runtime-event-journal.md docs/verification/story-21-2-local-results.md
 python3 scripts/check_mermaid.py
@@ -138,8 +152,8 @@ python3 scripts/runtime_hardening_load.py --output <fresh-evidence-path>
 - One Fedora source-host latency, throughput, memory, and disk profile is
   retained. Installed-interface and additional supported-platform profiles
   remain open.
-- Independent review of the hashed evidence index and every critical journal
-  boundary remains open.
+- The separate automated boundary review passes. Independent human review of
+  the hashed evidence index and critical journal boundaries remains open.
 - Manual fuzzing remains deliberately deferred to the final campaign.
 
 These absences keep Story 21.2, Sprint 21, and every dependent release gate

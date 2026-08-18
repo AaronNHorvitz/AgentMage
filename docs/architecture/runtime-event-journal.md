@@ -305,6 +305,17 @@ filesystem/device fault injection; installed model/runtime, shutdown, and
 additional supported-platform evidence remain open under Sub-tasks 21.2.3.3
 and 21.2.3.5 and later installed-platform gates.
 
+Story-local security evidence is retained as
+[`security-evidence-map.json`](../../artifacts/sprints/sprint-21/story-21.2/security-evidence-map.json)
+and `security-evidence.log`. The map binds 22 applicable controls to exact
+source and retained artifacts, and the root-redacted trace records eight
+passing canary, source-closure, crash, pressure, schema, evidence-index, and
+review commands. A separate rule implementation retains 12 recomputed boundary
+checks in
+[`journal-boundary-review.json`](../../artifacts/sprints/sprint-21/story-21.2/journal-boundary-review.json).
+These are automated local reviews, not independent human review, physical
+fault evidence, fuzz evidence, platform support, or release approval.
+
 ## Reason Codes
 
 | Code | Meaning | Required response |
@@ -346,5 +357,6 @@ and 21.2.3.5 and later installed-platform gates.
 | Requirement-to-code-to-test traceability and file-integrity index | Story 21.2 evidence-index generator, mutation tests, and retained JSON index | Implemented with complete, partial, and open states preserved |
 | Deterministic SQLCipher-delay model progress, client progress, cancellation, and terminal isolation | Story 21.2 pressure runner | Implemented locally; physical filesystem/device delay remains open |
 | Journal queue, batch, correctness-transaction, and subscriber process-stop matrix | Story 21.2 crash runner, raw trace, and mutation tests | Implemented locally |
+| Applicable product-security control map and automated boundary review | Story 21.2 security runner, redacted raw trace, independent rule implementation, and mutation tests | Implemented locally; independent human and release review remain open |
 | Physical filesystem/device pressure, integrated physical-effect recovery, and multi-profile benchmark campaign | Story 21.2.3 | Open |
-| Installed native-client and independent-review evidence | Sprint 23 and release gates | Open |
+| Installed native-client and independent human-review evidence | Sprint 23 and release gates | Open |

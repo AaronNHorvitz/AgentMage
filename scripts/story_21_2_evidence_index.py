@@ -29,8 +29,12 @@ EVIDENCE_PATHS = (
     "artifacts/sprints/sprint-21/story-21.2/crash-matrix.log",
     "artifacts/sprints/sprint-21/story-21.2/pressure-report.json",
     "artifacts/sprints/sprint-21/story-21.2/pressure-report.log",
+    "artifacts/sprints/sprint-21/story-21.2/journal-boundary-review.json",
+    "artifacts/sprints/sprint-21/story-21.2/security-evidence-map.json",
+    "artifacts/sprints/sprint-21/story-21.2/security-evidence.log",
     "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
     "docs/architecture/runtime-event-journal.md",
+    "docs/verification/task-21-2-3-6-product-security-evidence.md",
     "docs/verification/story-21-2-local-results.md",
     "fixtures/runtime-hardening/v1/linux-reference-load-profile.json",
     "kernel/contracts/src/runtime_event.rs",
@@ -45,14 +49,18 @@ EVIDENCE_PATHS = (
     "schemas/runtime/examples/runtime-event.valid.json",
     "schemas/runtime/runtime-event.schema.json",
     "scripts/runtime_hardening_load.py",
+    "scripts/runtime_journal_boundary_review.py",
     "scripts/story_21_2_crash_evidence.py",
     "scripts/story_21_2_evidence_index.py",
     "scripts/story_21_2_pressure_evidence.py",
+    "scripts/story_21_2_security_evidence.py",
     "shells/host/src/cli_runtime.rs",
     "shells/host/src/linux_coding_runtime.rs",
     "tests/test_story_21_2_crash_evidence.py",
     "tests/test_story_21_2_evidence_index.py",
     "tests/test_story_21_2_pressure_evidence.py",
+    "tests/test_runtime_journal_boundary_review.py",
+    "tests/test_story_21_2_security_evidence.py",
 )
 
 MAPPINGS: tuple[dict[str, Any], ...] = (
@@ -255,10 +263,22 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
     },
     {
         "task_id": "21.2.3.6",
-        "status": "open",
-        "code": [],
-        "tests": [],
-        "evidence": ["docs/verification/story-21-2-local-results.md"],
+        "status": "complete",
+        "code": [
+            "scripts/runtime_journal_boundary_review.py",
+            "scripts/story_21_2_security_evidence.py",
+        ],
+        "tests": [
+            "test_current_sources_and_synthetic_report_are_closed",
+            "test_retained_report_and_log_are_hash_bound",
+        ],
+        "evidence": [
+            "artifacts/sprints/sprint-21/story-21.2/journal-boundary-review.json",
+            "artifacts/sprints/sprint-21/story-21.2/security-evidence-map.json",
+            "artifacts/sprints/sprint-21/story-21.2/security-evidence.log",
+            "docs/verification/task-21-2-3-6-product-security-evidence.md",
+            "docs/verification/story-21-2-local-results.md",
+        ],
     },
 )
 
@@ -266,8 +286,8 @@ LIMITATIONS = (
     "Integrated physical-effect recovery-to-terminal-event reconciliation remains open.",
     "Physical filesystem/device latency, power-loss, and storage-failure campaigns remain open.",
     "Only one retained Fedora source-host benchmark profile exists.",
-    "Installed-client, supported-platform, and independent-review evidence remains open.",
-    "Product security mapping and deferred manual fuzzing remain open.",
+    "Installed-client, supported-platform, and independent human-review evidence remains open.",
+    "Manual fuzzing remains deliberately deferred and open.",
 )
 
 
