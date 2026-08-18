@@ -9,7 +9,7 @@
       "owner": "16.1.3.3"
     },
     {
-      "code": "WORKER-CANCEL-TIMEOUT-KILL-CRASH-CAMPAIGN-INCOMPLETE",
+      "code": "MACOS-WORKER-LIFECYCLE-CAMPAIGN-MISSING",
       "owner": "16.1.3.4"
     },
     {
@@ -30,7 +30,7 @@
       ],
       "exit_code": 0,
       "id": "package-worker-payload",
-      "output_sha256": "74252a207a000678ca7f29a6f5da23a49d41036cf86a353c0811debd2b48793b"
+      "output_sha256": "35f763aaab15b61f72ccaf56c9f201c32d3938548e9e613df77c85670eca7ce8"
     },
     {
       "argv": [
@@ -52,7 +52,7 @@
       ],
       "exit_code": 0,
       "id": "closed-tool-pack",
-      "output_sha256": "a2ac6a3a3de103392129f4152bba03a90b8b4ab209f4a9d30b873c354b684d39"
+      "output_sha256": "0c669e060bef2abb60abfe7571859eaa51cc064903e04270b9b026a6f6ff2592"
     },
     {
       "argv": [
@@ -64,7 +64,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-tool-authority",
-      "output_sha256": "0fdb294b5e8d90957ca9d6a448a6186d1c19804d560c47cb5dc63a6f8cac9ab0"
+      "output_sha256": "9152ca462093426a68e1774d8fd688e8c0ffcd94782f15bf70cae0b1d58bf5f1"
     },
     {
       "argv": [
@@ -76,7 +76,7 @@
       ],
       "exit_code": 0,
       "id": "linux-sandbox-contract",
-      "output_sha256": "24bcae9a006791e655436f3ce816a84d2c02cfd8e9ddbcfe53eb297957a25958"
+      "output_sha256": "f3bcc28c93ad9b7bef99fa6bf63487c2272df03bb1158b47e8bdb37205408cd9"
     },
     {
       "argv": [
@@ -88,7 +88,7 @@
       ],
       "exit_code": 0,
       "id": "authenticated-host-flow",
-      "output_sha256": "0d263f715df977e7625558f6dbeef4aeb102d4592acd33bad266db889fbd9be1"
+      "output_sha256": "c60d96ae578974efbc7d132af11dc2b7dff9cb3e312782bcc97cb78d11a2edb2"
     },
     {
       "argv": [
@@ -108,7 +108,7 @@
     "hash_verified_result": true,
     "installed_linux_worker_operation_matrix": {
       "artifact": "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json",
-      "artifact_sha256": "a92d0e0eda1c2f6bad4f2b81897128ab8d6f1a4fe35ce7c908c0dc503a5f305c",
+      "artifact_sha256": "b5820f1107f783430f87552b7e6ca24bf3be7758e6105e4e132a594704be85f2",
       "linux_attack_cases": [
         "path_escape",
         "symlink_race",
@@ -122,7 +122,21 @@
         "write",
         "secret_canary"
       ],
-      "source_revision": "74b211d8b1ae8e35fecf90ada155e73987eb941b",
+      "linux_lifecycle_cases": [
+        "cancel_before_result",
+        "cancel_during_result",
+        "cancel_after_result",
+        "timeout_before_result",
+        "timeout_during_result",
+        "timeout_after_result",
+        "kill_before_result",
+        "kill_during_result",
+        "kill_after_result",
+        "crash_before_result",
+        "crash_during_result",
+        "crash_after_result"
+      ],
+      "source_revision": "fe42c0a81ffeeed6f5bd24560224454e92b837c4",
       "target_ids": [
         "fedora-44-x86_64",
         "ubuntu-26.04-x86_64"
@@ -153,6 +167,7 @@
     "linux_complete_operation_matrix": true,
     "linux_contract_tests": true,
     "linux_live_attack_matrix": true,
+    "linux_live_lifecycle_campaign": true,
     "linux_packaged_live_worker": true,
     "macos_xpc_worker": false
   },
@@ -174,14 +189,16 @@
     "RV-03",
     "RV-04"
   ],
-  "source_revision": "853bb9e51c99cb96da1cee8acc3a062213b72680",
+  "source_revision": "49ddf4dccf64389daedb2e8fa2adc9844a3054d1",
   "source_sha256": {
+    "capabilities/read-only/Cargo.toml": "0779ae133a0b654cbd5686ffbde501f72ed333b271592467af87bba02379d25e",
+    "capabilities/read-only/src/bin/agentmage-read-only-lifecycle-fixture.rs": "8ca2fcde02c3883d997443597a19cec94131cab2cf4b73d2ac94f3d240562fed",
     "capabilities/read-only/src/bin/agentmage-read-only-worker.rs": "1adbae4446e6e686fe6c6b2e061d1027fc335d36d7c77636751dd36e078ed7f3",
     "capabilities/read-only/src/catalog.rs": "b4e0a778bbad28052d207f1a874420a5cb0266bc1db2e9b53ca5fab7ed8d2d2e",
     "capabilities/read-only/src/protocol.rs": "f93e3d30cc39d1912d64f157b60aa5c74c0251e7265816e9a622dd5d720c1e63",
     "capabilities/read-only/src/worker.rs": "f1494a0daece8751a57e5956a549c9f93e761faa2fb14ac96a0d85a88af72e91",
-    "docs/architecture/read-only-tool-protocol.md": "a421358be83b8ea8bd9a84d0baa4cfc6e19af132c5f6c5db6d0f85bd54f72629",
-    "docs/verification/sprint-16-local-results.md": "ba96107606cb5a2656395266225289fdc1c65849fe8983dd1d06b3b4f945275f",
+    "docs/architecture/read-only-tool-protocol.md": "884907c8afd229512b446fdfae3cf8331c1868c40e80b0f58856429f27e98934",
+    "docs/verification/sprint-16-local-results.md": "69c08a86d9c3aeb9d4040a3fb536e782671aae8dc63d10feb400567d3e92dfc3",
     "kernel/contracts/src/workspace_snapshot.rs": "136e67fd70c721d856a8a005a024f1bd13d7160a7f3f69a76b05e8571a140a09",
     "kernel/engine/src/authority_transaction.rs": "cf12332a555bf9a5849857aba6c7273226bb3056c012211299ca81cb436b92a2",
     "kernel/engine/src/tooling.rs": "1ef5e74b2d8ab2cdfb18b60856870146bb5cff4b37ee43ef1596923c3327f2fa",
@@ -189,25 +206,25 @@
     "packaging/linux/README.md": "cf388277622854186df4abfa936b36d11cf4b0caf747d31778cb5498bf80ecbc",
     "packaging/linux/agentmage-release.spec.in": "f3bd5a937e5a024038da0b08374d3b0a8f31650a86332cead078ef7c71ee758e",
     "packaging/linux/agentmage.spec.in": "f2a59f2bdd7211bc8046f1fbd80ddf4c9b88bac791dc89463f825d3a3dc914ac",
-    "platforms/linux/src/lib.rs": "1de445d868f71f422a66b2ec3151e18e9c8d9100cef68c3d1e47b64aa11c8899",
-    "platforms/linux/src/sandbox.rs": "537e8b84b1ac774e682a2ed5ea64158ad54e020622e1120ce1b16b9fa5a44a16",
+    "platforms/linux/src/lib.rs": "cc0abea1296d619c9837e1ac0ead7d3f459e0701d69a1b1d20814d3bd771c609",
+    "platforms/linux/src/sandbox.rs": "009e4974fe9f6e553e2d904fceff67bd938919cbec330d412527457bfc1ebdd7",
     "scripts/linux_docker_prerequisite_evidence.py": "49d79a77587a0132b4306dcab8533ce54ed0c861c3b907c25b94c1dce26bc842",
     "scripts/linux_package_lifecycle_evidence.py": "1fc191b0e0a194e87fba8d1d966fe41c9e25fc8108d014ff6e2943c20dba9985",
     "scripts/package_candidate.py": "ff9d7f65db6dfcd4355d92aa91efcf46e4721216622cf22135590e09f28f8692",
     "scripts/package_lifecycle.py": "2bb52fe3b0389547f0569c5bcbd5f3b785fc7b7236a9f5d8d008ce436269681e",
-    "scripts/sprint_16_evidence.py": "3754ec769eb362c8365183866d83b34a6b419963bd1a0e1339bff9114e2be7c8",
-    "scripts/sprint_16_linux_worker_evidence.py": "f360a44a72de7270cb407d997823f00deea5c500ea93d9e291e9e1059ccc25dc",
-    "scripts/sprint_16_linux_worker_guest.py": "4bac2d813998a4def58de5f8c5541493207526d132730671535e016801feb4e5",
+    "scripts/sprint_16_evidence.py": "464c43de1e0ccdc1d8d5a6a1d9666623aa7303ca220238caceb6682fc38c87a7",
+    "scripts/sprint_16_linux_worker_evidence.py": "7cdb64099130ea09b9fc15bde65d45cedc059c000dba22c6ba2d0c7f56c8c0d4",
+    "scripts/sprint_16_linux_worker_guest.py": "1fe65cbfd1d794aafb3e08048c0d09a42d1e3d5d61f4cc832fe777ed59d95802",
     "shells/host/src/linux_coding_runtime.rs": "8865a699314921f80db31bba4dca18997e07bc643f024a77286514564cd82fb2",
-    "shells/host/src/linux_read.rs": "a49555e7a3952f665f2eca372b10f957280a31ee616685e9b7428c92f54110ba",
+    "shells/host/src/linux_read.rs": "845f9688620759d37914add60c7020ba3e1d7c4c42ac5ce687e3ebfb63d123bc",
     "shells/host/src/package_verify.rs": "a3be641131ef9737feb09e8de6bd666564ed7338de35339afb1f0127d92d0a6b",
     "shells/host/src/protocol.rs": "a48a7d8ed8f43727bba23f14fb70acf73ce298ad9abfa96eab2a51d574579c43",
     "tests/test_linux_docker_prerequisite_evidence.py": "b2de9a274204b786c8e476fcc168a689bcbc3ed5d22bff7490077cbb13dd46b3",
     "tests/test_linux_package_lifecycle_evidence.py": "058fe3fc268c73fae5a67cba9ecec1b0b25ca5f28ec212c43347c0f4f8eea100",
     "tests/test_package_candidate.py": "1ac4e4e7a44ab1ce714ddaf10a87bc017636057b9d8f586689d7fedf6255116a",
     "tests/test_package_lifecycle.py": "2d86c0a8f267955dcbd1e346300e9c2b58b9919ba65aaef444d7a2a2c77ae3fd",
-    "tests/test_sprint_16_evidence.py": "43466d062a99bfed82fb7c485eb342611a153d8ca1bfcffd8b19fd86d60a6ada",
-    "tests/test_sprint_16_linux_worker_evidence.py": "6c2d1c6c4b660bcda81f64b43cf60720d5e58d1f8a94f21f5b598fb3a3f4b0bc"
+    "tests/test_sprint_16_evidence.py": "63f11a515f7b3bc4a87ad4715da09ac30a7864e63a2a86784f710793442552da",
+    "tests/test_sprint_16_linux_worker_evidence.py": "888b9813e8f7a2a83e34d25472039169d50389043fb131d5d1136b0b35bde34f"
   },
   "summary": {
     "local_contract_passed": true,
