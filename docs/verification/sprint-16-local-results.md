@@ -30,20 +30,29 @@
 - Deterministic RPM and DEB candidates include the read-only worker as a
   verifier-required executable; extraction, exact manifest comparison,
   mutation refusal, and deterministic rebuild pass locally.
+- Native Fedora 44 and Ubuntu 26.04 KVM guests install those candidates and run
+  `agentmage.workspace.search-text` through the root-owned mode-`0755` worker
+  under strict-offline Bubblewrap/systemd isolation. Each target retains one
+  receipt, preserves the workspace, removes the package, and leaves no worker,
+  unit, listener, overlay, transient source, or credential residue.
+- Candidate construction normalizes every archived payload directory to mode
+  `0755`; a regression test proves a group-writable staging parent cannot enter
+  the DEB or RPM payload.
 - Existing Linux namespace, network-syscall, path, descriptor, and workspace
   invariance contract tests pass.
 
 ## Open Evidence
 
-The production Linux manifest correctly rejected the user-owned development
-worker binary during a live attempt. Although the worker is now present in the
-candidate package payload, that package has not been installed and exercised as
-a root-owned, non-writable, hash-verified live worker. The full live attack and
-worker cancellation/timeout/kill/crash
+The production Linux manifest correctly rejects a user-owned development
+worker. The installed root-owned worker now has current native evidence for one
+SearchText operation on Fedora and Ubuntu. The other nine production
+operations, full live attack matrix, worker cancellation/timeout/kill/crash
 campaigns, independent worker review, and native macOS XPC evidence remain
 open. Model-context disclosure handling is locally verified. The remaining live
 campaigns and platform evidence are blockers, not waived or substituted by the
-passing local contract tests.
+passing installed subset.
 
-The machine-readable source-bound record is
-[`local-evidence-report.json`](../../artifacts/sprints/sprint-16/local-evidence-report.json).
+The machine-readable records are
+[`local-evidence-report.json`](../../artifacts/sprints/sprint-16/local-evidence-report.json)
+and
+[`installed-linux-worker-matrix.json`](../../artifacts/sprints/sprint-16/installed-linux-worker-matrix.json).

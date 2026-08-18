@@ -16,7 +16,17 @@ def commands() -> list[dict[str, object]]:
 
 def report() -> dict[str, object]:
     with patch.object(evidence, "git_file", return_value=b"source"):
-        return evidence.build_report("b" * 40, commands())
+        return evidence.build_report(
+            "b" * 40,
+            commands(),
+            {
+                "artifact": "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json",
+                "artifact_sha256": "c" * 64,
+                "source_revision": "d" * 40,
+                "target_ids": ["fedora-44-x86_64", "ubuntu-26.04-x86_64"],
+                "verified_operations": ["agentmage.workspace.search-text"],
+            },
+        )
 
 
 class Sprint16EvidenceTests(unittest.TestCase):
@@ -28,11 +38,17 @@ class Sprint16EvidenceTests(unittest.TestCase):
         self.assertEqual(value["implemented_contracts"]["catalog_tools"], 10)
         self.assertEqual(value["implemented_contracts"]["write_capable_tools"], 0)
         self.assertTrue(value["implemented_contracts"]["packaged_worker_payload_declared"])
+        self.assertTrue(value["platform_evidence"]["linux_packaged_live_worker_subset"])
 
     def test_platform_cleanup_disclosure_and_review_claim_drift_fails(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
-            lambda value: value["platform_evidence"].update({"linux_packaged_live_worker": True}),
+            lambda value: value["platform_evidence"].update(
+                {"linux_packaged_live_worker_subset": False}
+            ),
+            lambda value: value["platform_evidence"].update(
+                {"linux_complete_operation_matrix": True}
+            ),
             lambda value: value["platform_evidence"].update({"macos_xpc_worker": True}),
             lambda value: value["verification_evidence"].update({"live_cleanup_campaign": True}),
             lambda value: value["verification_evidence"].update(

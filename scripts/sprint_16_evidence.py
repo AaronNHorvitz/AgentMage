@@ -14,6 +14,9 @@ from typing import Any, Final
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 OUTPUT: Final = ROOT / "artifacts/sprints/sprint-16/local-evidence-report.json"
+INSTALLED_WORKER_OUTPUT: Final = (
+    ROOT / "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+)
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 SOURCE_PATHS: Final = (
@@ -33,6 +36,8 @@ SOURCE_PATHS: Final = (
     "scripts/package_lifecycle.py",
     "scripts/linux_package_lifecycle_evidence.py",
     "scripts/linux_docker_prerequisite_evidence.py",
+    "scripts/sprint_16_linux_worker_evidence.py",
+    "scripts/sprint_16_linux_worker_guest.py",
     "shells/host/src/linux_coding_runtime.rs",
     "shells/host/src/linux_read.rs",
     "shells/host/src/package_verify.rs",
@@ -45,6 +50,7 @@ SOURCE_PATHS: Final = (
     "tests/test_linux_package_lifecycle_evidence.py",
     "tests/test_linux_docker_prerequisite_evidence.py",
     "tests/test_sprint_16_evidence.py",
+    "tests/test_sprint_16_linux_worker_evidence.py",
 )
 COMMANDS: Final = (
     (
@@ -58,6 +64,10 @@ COMMANDS: Final = (
             "tests.test_linux_package_lifecycle_evidence",
             "tests.test_linux_docker_prerequisite_evidence",
         ),
+    ),
+    (
+        "installed-linux-worker-subset",
+        ("python", "scripts/sprint_16_linux_worker_evidence.py"),
     ),
     (
         "closed-tool-pack",
@@ -101,7 +111,7 @@ SECURITY_REQUIREMENTS: Final = [
     "RV-04",
 ]
 BLOCKERS: Final = [
-    {"code": "PACKAGED-ROOT-OWNED-LINUX-WORKER-NOT-INSTALLED", "owner": "16.1.1.5"},
+    {"code": "COMPLETE-LINUX-WORKER-OPERATION-MATRIX-INCOMPLETE", "owner": "16.1.1.5"},
     {"code": "MACOS-XPC-WORKER-EVIDENCE-MISSING", "owner": "16.1.1.5"},
     {"code": "LIVE-WORKER-ATTACK-MATRIX-INCOMPLETE", "owner": "16.1.3.3"},
     {"code": "WORKER-CANCEL-TIMEOUT-KILL-CRASH-CAMPAIGN-INCOMPLETE", "owner": "16.1.3.4"},
@@ -152,7 +162,37 @@ def run_commands() -> list[dict[str, Any]]:
     return records
 
 
-def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[str, Any]:
+def installed_worker_summary(value: Any, encoded: bytes) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ValueError("installed worker matrix must be an object")
+    targets = value.get("targets")
+    if (
+        value.get("status") != "pass-installed-linux-worker-subset"
+        or not isinstance(targets, list)
+        or [target.get("target_id") for target in targets]
+        != ["fedora-44-x86_64", "ubuntu-26.04-x86_64"]
+        or value.get("verified_operations") != ["agentmage.workspace.search-text"]
+    ):
+        raise ValueError("installed worker matrix is not the admitted subset")
+    return {
+        "artifact": "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json",
+        "artifact_sha256": sha256_bytes(encoded),
+        "source_revision": value.get("source_revision"),
+        "target_ids": [target["target_id"] for target in targets],
+        "verified_operations": value["verified_operations"],
+    }
+
+
+def load_installed_worker_summary() -> dict[str, Any]:
+    encoded = INSTALLED_WORKER_OUTPUT.read_bytes()
+    return installed_worker_summary(json.loads(encoded), encoded)
+
+
+def build_report(
+    source_revision: str,
+    commands: list[dict[str, Any]],
+    installed_worker: dict[str, Any],
+) -> dict[str, Any]:
     local_pass = all(command["exit_code"] == 0 for command in commands)
     return {
         "schema_version": 1,
@@ -177,10 +217,12 @@ def build_report(source_revision: str, commands: list[dict[str, Any]]) -> dict[s
             "one_receipt_per_launched_attempt": True,
             "sensitive_output_withheld_before_model_context": True,
             "packaged_worker_payload_declared": True,
+            "installed_linux_worker_subset": installed_worker,
         },
         "platform_evidence": {
             "linux_contract_tests": local_pass,
-            "linux_packaged_live_worker": False,
+            "linux_packaged_live_worker_subset": True,
+            "linux_complete_operation_matrix": False,
             "linux_live_attack_matrix": False,
             "macos_xpc_worker": False,
         },
@@ -234,8 +276,25 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "one_receipt_per_launched_attempt": True,
         "sensitive_output_withheld_before_model_context": True,
         "packaged_worker_payload_declared": True,
+        "installed_linux_worker_subset": report.get("implemented_contracts", {}).get(
+            "installed_linux_worker_subset"
+        ),
     }:
         failures.append("implemented-contract inventory drift")
+    installed_worker = report.get("implemented_contracts", {}).get(
+        "installed_linux_worker_subset", {}
+    )
+    if (
+        installed_worker.get("artifact")
+        != "artifacts/sprints/sprint-16/installed-linux-worker-matrix.json"
+        or not SHA256.fullmatch(str(installed_worker.get("artifact_sha256", "")))
+        or not REVISION.fullmatch(str(installed_worker.get("source_revision", "")))
+        or installed_worker.get("target_ids")
+        != ["fedora-44-x86_64", "ubuntu-26.04-x86_64"]
+        or installed_worker.get("verified_operations")
+        != ["agentmage.workspace.search-text"]
+    ):
+        failures.append("installed worker subset evidence drift")
     expected_summary = {
         "local_contract_passed": True,
         "sprint_status": "BLOCKED",
@@ -245,7 +304,13 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         failures.append("summary overclaim or local failure")
     platform = report.get("platform_evidence", {})
     verification = report.get("verification_evidence", {})
-    for field in ("linux_packaged_live_worker", "linux_live_attack_matrix", "macos_xpc_worker"):
+    if platform.get("linux_packaged_live_worker_subset") is not True:
+        failures.append("installed Linux worker subset evidence drift")
+    for field in (
+        "linux_complete_operation_matrix",
+        "linux_live_attack_matrix",
+        "macos_xpc_worker",
+    ):
         if platform.get(field) is not False:
             failures.append(f"platform overclaim: {field}")
     for field in ("live_cleanup_campaign", "independent_review"):
@@ -274,7 +339,7 @@ def main() -> int:
             capture_output=True,
             text=True,
         ).stdout.strip()
-        report = build_report(revision, run_commands())
+        report = build_report(revision, run_commands(), load_installed_worker_summary())
         OUTPUT.parent.mkdir(parents=True, exist_ok=True)
         OUTPUT.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     else:

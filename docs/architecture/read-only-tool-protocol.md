@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Implemented platform-neutral contracts; Linux packaged live execution and macOS XPC evidence remain open |
+| Status | Implemented platform-neutral contracts and one installed Linux operation; complete Linux and macOS worker evidence remains open |
 | Requirement | `AM-TOL-001` |
 | Acceptance | `AT-TOOL-001` |
 | Task gate | Sprint 16 |
@@ -115,12 +115,20 @@ Both unsigned candidate and signable Linux payloads include
 `/usr/libexec/agentmage/agentmage-read-only-worker` as an exact executable
 manifest entry. Candidate construction, deterministic rebuild, RPM/DEB
 extraction, complete-payload verification, and mutation refusal pass locally.
-This proves package composition, not package-manager installation or live
-sandbox execution on the installed root-owned identity.
+Disposable native KVM guests additionally install the resulting RPM on Fedora
+44 and DEB on Ubuntu 26.04, verify the exact root-owned mode-`0755` worker,
+execute `agentmage.workspace.search-text` through Bubblewrap and a transient
+systemd user unit with external networking denied, retain one operation
+receipt, prove workspace invariance, remove the package, and prove process,
+unit, source, credential, listener, and overlay cleanup. Package construction
+sets every archived payload directory to mode `0755`; this prevents a mutable
+staging umask from making an installed executable parent group-writable.
 
 The platform-neutral tool engine, Linux mediation contract, host approval flow,
 golden results, malformed-input matrix, and non-live sandbox attacks are locally
-verified. Sprint 16 remains blocked until a packaged root-owned worker is tested
-live, cancellation/timeout/kill/crash cleanup evidence is retained, the complete
-attack matrix passes, an independent worker review is retained, and the required
-macOS XPC evidence is produced on eligible hardware.
+verified. The installed matrix currently covers one of ten operations on Linux;
+it does not substitute for the complete operation or attack matrices. Sprint 16
+remains blocked until all ten operations are exercised through the installed
+worker, cancellation/timeout/kill/crash cleanup evidence is retained, the
+complete attack matrix passes, an independent worker review is retained, and
+the required macOS XPC evidence is produced on eligible hardware.
