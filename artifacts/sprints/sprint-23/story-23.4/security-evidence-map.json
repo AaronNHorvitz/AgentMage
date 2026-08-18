@@ -4,7 +4,15 @@
     {
       "argv_sha256": "cc4a25de1ec491c408fa47a4f724d34dcac8cc52040cbae67f7a080b1c283b74",
       "command_id": "retained-runtime-evidence",
-      "elapsed_ms": 57,
+      "elapsed_ms": 52,
+      "exit_code": 0,
+      "maximum_elapsed_ms": 120000,
+      "test_result": null
+    },
+    {
+      "argv_sha256": "04097c4689903a4ef8fa630b7dd87fa756a1c0e0741d9556492342c372cb7306",
+      "command_id": "coordinator-boundary-review",
+      "elapsed_ms": 133,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -12,7 +20,7 @@
     {
       "argv_sha256": "b26bfb863a1251b307c473309b2fa69a8ddccbeb10b4b37bb83f2f2a1e19196f",
       "command_id": "engine-security-matrix",
-      "elapsed_ms": 111,
+      "elapsed_ms": 117,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
@@ -26,7 +34,7 @@
     {
       "argv_sha256": "d25c1a35db190c5821af496f6e3cc07b1ba96ddb12ec19c8b6a21d7bc7325ee1",
       "command_id": "native-read-security-matrix",
-      "elapsed_ms": 73,
+      "elapsed_ms": 67,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": {
@@ -40,7 +48,7 @@
     {
       "argv_sha256": "42b7033e8c1755137c5ef769a46bc5d66124d64c1be520aca978c6e62dbde1a3",
       "command_id": "engine-strict-clippy",
-      "elapsed_ms": 86,
+      "elapsed_ms": 82,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -48,7 +56,7 @@
     {
       "argv_sha256": "65e69937c136fc6ddff76a8bd81a066958fed2f9858f8642f8e36f08b08ee814",
       "command_id": "host-strict-clippy",
-      "elapsed_ms": 71,
+      "elapsed_ms": 68,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -56,7 +64,7 @@
     {
       "argv_sha256": "47cdc321aaa5c7c4ed9eed236a4c8f7fcf3cee3ea5f1542a8e3304e1832cac09",
       "command_id": "dependency-direction",
-      "elapsed_ms": 16,
+      "elapsed_ms": 18,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -64,7 +72,7 @@
     {
       "argv_sha256": "1ba5e4e0d2b5860ae9e4b0ed786fc45413e659b7c435186b2ad8dc781a2c4045",
       "command_id": "effect-mediation",
-      "elapsed_ms": 115,
+      "elapsed_ms": 119,
       "exit_code": 0,
       "maximum_elapsed_ms": 120000,
       "test_result": null
@@ -113,7 +121,8 @@
     {
       "evidence": [
         "shells/host/src/runtime_read_tests.rs",
-        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json"
       ],
       "remaining": "Installed-process ambient-home and credential canary inspection remains open.",
       "requirement_id": "SR-ACC-006",
@@ -158,7 +167,8 @@
     {
       "evidence": [
         "shells/host/src/cli_runtime.rs",
-        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json"
       ],
       "remaining": "The complete labeled direct and indirect injection corpus is not claimed.",
       "requirement_id": "SR-AI-005",
@@ -356,6 +366,7 @@
     {
       "evidence": [
         "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
         "scripts/dependency_rules.py",
         "scripts/effect_boundary.py"
       ],
@@ -410,7 +421,8 @@
     {
       "evidence": [
         "shells/host/src/native_chat_runtime.rs",
-        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json"
+        "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.json",
+        "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json"
       ],
       "remaining": "Source replay and identity tests pass; installed IPC observation remains open.",
       "requirement_id": "RV-05",
@@ -446,15 +458,15 @@
   ],
   "private_user_data_used": false,
   "raw_trace": {
-    "bytes": 4012,
+    "bytes": 4094,
     "path": "artifacts/sprints/sprint-23/story-23.4/security-evidence.log",
     "redactions": [
       "repository-root"
     ],
-    "sha256": "0c5d7ba2e14e66dd3ef53f1761651bfe147c61d5dd5364853c320b60cc6c3117"
+    "sha256": "16cc4ad84e85eeaa4faa5d97f007379723c6004ac057f254f363f197c3af7c4d"
   },
   "schema_version": 1,
-  "source_revision": "4a49f38167c724e957de35b6a69b611467dc7b8a",
+  "source_revision": "7176b327197733ed4fd3a890bb8bfb5410b00c39",
   "sources": [
     {
       "bytes": 136944,
@@ -480,6 +492,11 @@
       "bytes": 5890,
       "path": "artifacts/sprints/sprint-23/story-23.4/runtime-evidence.log",
       "sha256": "4f600b8ad884fabbe858b51db7e1165d8c7d3a07ad0b7278905caeced4c8188b"
+    },
+    {
+      "bytes": 6618,
+      "path": "artifacts/sprints/sprint-23/story-23.4/coordinator-boundary-review.json",
+      "sha256": "c5cb423c381257e59bcac8b6969509499b19f0084c6558be874d95c9675ab72e"
     },
     {
       "bytes": 11161,
@@ -547,14 +564,24 @@
       "sha256": "d000f01a67aa42af5ecdf7d74926c99d9b01c9a0ea92ce5f59f901e5f32956bd"
     },
     {
+      "bytes": 16105,
+      "path": "scripts/runtime_coordinator_boundary_review.py",
+      "sha256": "7f992c505977a40470824abf7fdad6bf4254d352f64c1469fd8c9305ddf96d64"
+    },
+    {
       "bytes": 19413,
       "path": "scripts/story_23_4_runtime_evidence.py",
       "sha256": "b0ff690ff53b4aee5051996bb703d19b45af3a6c9bc52f97cfd1212e2a8e4f16"
     },
     {
-      "bytes": 25134,
+      "bytes": 25634,
       "path": "scripts/story_23_4_security_evidence.py",
-      "sha256": "36d22b85db590f52093fd87e61a336e20a1588f8ec193d7791c8ff4f6be47069"
+      "sha256": "ad0cd36434e3212b711a1da0c060e2cb51c9c305158fc94884939c5f99303480"
+    },
+    {
+      "bytes": 3818,
+      "path": "tests/test_runtime_coordinator_boundary_review.py",
+      "sha256": "c344f7b213801c6aa15acdb0e59e026e9c1af7bd5e1ecf000d55c14fea961dce"
     },
     {
       "bytes": 4041,
@@ -564,7 +591,7 @@
     {
       "bytes": 2814,
       "path": "tests/test_story_23_4_security_evidence.py",
-      "sha256": "04311d891a5fec2ce52ff8d30421d93ddf0d0ad4f0648b5c49f7c78c3e25cf98"
+      "sha256": "961f22c6f2add7b061651b9e8e730c060364e930ec075f755a7c6a2326386d9d"
     }
   ],
   "status": "pass-current-linux-source-security-map",
