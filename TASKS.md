@@ -1592,10 +1592,10 @@ claims.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 17.1.1 - Implement the bounded story**
+- [x] **Task 17.1.1 - Implement the bounded story**
   - [x] **Sub-task 17.1.1.1** (legacy `S-017-I01`): Implement read-only status, branch, upstream, branch list, log, diff, staged diff, show, worktree list, object, ref, dirty-tree, and untracked-file inspection.
-  - [ ] **Sub-task 17.1.1.2** (legacy `S-017-I02`): Enforce bounded counts, bytes, object types, and parser errors through the sandboxed tool protocol.
-  - [ ] **Sub-task 17.1.1.3** (legacy `S-017-I03`): Implement workspace, repository, project-document, and hierarchical instruction discovery.
+  - [x] **Sub-task 17.1.1.2** (legacy `S-017-I02`): Enforce bounded counts, bytes, object types, and parser errors through the sandboxed tool protocol. Evidence: the kernel-sealed thirteen-operation planner and parser run through the descriptor-held, strict-offline Linux systemd/Bubblewrap executor with output, record, time, memory, task, and cleanup bounds; the retained native matrix covers Fedora 44 and Ubuntu 26.04.
+  - [x] **Sub-task 17.1.1.3** (legacy `S-017-I03`): Implement workspace, repository, project-document, and hierarchical instruction discovery. Evidence: the Linux metadata-only descriptor scanner implements all four discovery classes with generated-tree exclusions, hard bounds, link refusal, freshness identities, no source-content retention, and native Fedora/Ubuntu execution.
   - [x] **Sub-task 17.1.1.4** (legacy `S-017-I04`): Treat every repository instruction, comment, issue, generated file, tool result, and document as untrusted data by default.
   - [x] **Sub-task 17.1.1.5** (legacy `S-017-I05`): Implement optional non-authority guidance trust with source, hash, scope, precedence, conflict, and user decision.
   - [x] **Sub-task 17.1.1.6** (legacy `S-017-I06`): Record files discovered versus files actually read and warn when evidence or instructions become stale.
@@ -1608,28 +1608,28 @@ claims.
   - [x] **Sub-task 17.1.2.4:** Workspace manifest and evidence ledger.
 
 - [ ] **Task 17.1.3 - Verify and close the story**
-  - [ ] **Sub-task 17.1.3.1:** `S-017-UT01` compares status, diff, log, show, branch, tag, ignore, and metadata results with pinned Git fixture expectations; assert bounded output and no repository mutation.
-  - [ ] **Sub-task 17.1.3.2:** `S-017-ST01` places instructions in filenames, source, comments, docs, diffs, commits, branches, tags, submodules, hooks, attributes, config, and model output; assert all remain cited untrusted data.
-  - [ ] **Sub-task 17.1.3.3:** `S-017-ST02` seeds hooks, filters, pagers, aliases, credential helpers, unsafe directories, replacement objects, and remote URLs; assert no execution, credential access, or network contact.
+  - [x] **Sub-task 17.1.3.1:** `S-017-UT01` compares status, diff, log, show, branch, tag, ignore, and metadata results with pinned Git fixture expectations; assert bounded output and no repository mutation. Evidence: exact branch, tag, ignore, object-type, dirty/staged/renamed/detached/untracked/malformed, bounds, and before/after assertions pass in the source-bound local and native Linux matrices.
+  - [x] **Sub-task 17.1.3.2:** `S-017-ST01` places instructions in filenames, source, comments, docs, diffs, commits, branches, tags, submodules, hooks, attributes, config, and model output; assert all remain cited untrusted data. Evidence: every one of the twenty sealed source classes is exercised with a source-appropriate file or non-file placement and remains untrusted; the four real filesystem discovery classes additionally execute in native Fedora and Ubuntu guests without retaining source bytes.
+  - [x] **Sub-task 17.1.3.3:** `S-017-ST02` seeds hooks, filters, pagers, aliases, credential helpers, unsafe directories, replacement objects, and remote URLs; assert no execution, credential access, or network contact. Evidence: local live and strict-offline native Linux campaigns retain zero canary executions and zero loopback contact across all named hostile classes; the collector no longer invokes filter-capable Git status machinery.
   - [x] **Sub-task 17.1.3.4:** `S-017-IT01` snapshots every byte and relevant metadata before and after full Git inspection; assert invariance except separately authorized operational receipts.
   - [ ] **Sub-task 17.1.3.5 - Product security evidence:** Map `SR-ACC-006` through `SR-ACC-008`, `SR-AI-005`, `SR-AI-008`, `SR-NET-001`, `SR-TST-002`/`SR-TST-004`; retain injection matrix, environment hardening results, before/after hashes, and evidence ledger.
 
 ##### Story Acceptance Criteria
 
 - [x] **Story AC 17.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then hosted or local repository content cannot change policy, tools, grants, trusted instructions, completion criteria, or evidence state.
-- [ ] **Story AC 17.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every Git fact identifies repository, worktree, revision, command-equivalent operation, path/range where applicable, truncation, and freshness.
+- [x] **Story AC 17.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every Git fact identifies repository, worktree, revision, command-equivalent operation, path/range where applicable, truncation, and freshness. Evidence: the sealed result verifier and exact fixture corpus reject missing or changed identity, operation, path/range, bounds, truncation, and freshness fields.
 
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 17.AC1:** `AT-GIT-001`, `AT-INJ-001`, and `AT-INS-001` pass.
-- [ ] **Sprint AC 17.AC2:** Clean, dirty, detached, untracked, renamed, and malformed fixture repositories return exact expected evidence.
+- [x] **Sprint AC 17.AC2:** Clean, dirty, detached, untracked, renamed, and malformed fixture repositories return exact expected evidence. Evidence: the seven-state local fixture suite and both retained native Linux targets pass the source-bound operation matrix.
 - [x] **Sprint AC 17.AC3:** Workspace tree, index, refs, and object set are identical before and after inspection.
 - [x] **Sprint AC 17.AC4:** No workspace content can alter policy, grant authority, root scope, tool availability, current user intent, transfer policy, or completion status.
 - [x] **Sprint AC 17.AC5:** Trusted guidance can narrow behavior but can never grant authority.
 
 **Gate decision:** Sprint 17 is PASS only when Story 17.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
-**Current gate result:** BLOCKED with the thirteen-operation Git plan and parser, local disposable-repository invariance corpus, twenty-class default-untrusted instruction ledger, explicit narrowing-only trust decisions, stale/conflict stops, and 200-case injection matrix passing. Remaining blockers are the sealed production repository projection and packaged Git helper/runtime inside the platform worker, real workspace/repository/project/hierarchical discovery, exact pinned Git result expectations across every required fixture, the complete hostile Git configuration and source-placement matrix, live network and prohibited-read canaries, deferred manual parser fuzzing, independent review, and native macOS implementation and evidence.
+**Current gate result:** BLOCKED with the thirteen-operation Git plan and parser, descriptor-held strict-offline Linux executor, metadata-only four-class Linux instruction scanner, exact seven-state fixture corpus, complete hostile Git and source-placement matrices, workspace invariance, live prohibited-execution and loopback canaries, twenty-class default-untrusted ledger, narrowing-only trust decisions, stale/conflict stops, 200-case injection matrix, and native Fedora 44 and Ubuntu 26.04 evidence passing. Remaining blockers are native macOS implementation and evidence, the deliberately deferred manual Git parser fuzz campaign, and independent review. The Linux installed-environment evidence does not claim a finished user-facing product entrypoint or substitute for those gates.
 ### [ ] Sprint 18 - Pinned Repository Structure
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

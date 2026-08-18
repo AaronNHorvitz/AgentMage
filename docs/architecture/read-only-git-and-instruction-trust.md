@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Linux sandboxed Git worker and platform-neutral contracts implemented; packaged/native evidence remains open |
+| Status | Linux sandboxed Git worker, discovery adapter, and native Fedora/Ubuntu evidence implemented; macOS and independent review remain open |
 | Requirements | `AM-GIT-001`, `AM-INS-001` |
 | Acceptance | `AT-GIT-001`, `AT-INJ-001`, `AT-INS-001` |
 | Task gate | Sprint 17 |
@@ -35,9 +35,10 @@ The platform-neutral engine, disposable Git fixture adapter, and Linux worker
 pass locally. The Linux worker receives a descriptor-held read-only repository
 projection and verified Git executable, then executes the fixed plan inside an
 offline Bubblewrap namespace owned by a bounded user-systemd unit. It has no
-direct host-process fallback. Production activation remains denied pending
-installed-package evidence on the supported Linux distributions. Native macOS
-worker evidence is also absent.
+direct host-process fallback. Native Fedora 44 and Ubuntu 26.04 guests verify
+the declared package environment and execute the source-bound worker matrix.
+That evidence does not substitute for the later user-facing runtime activation
+or for the absent native macOS worker campaign.
 
 The Linux worker binds the repository root itself. Linked worktrees whose
 `.git` file resolves outside that root fail closed until a separately held Git
@@ -68,11 +69,13 @@ Every plan:
 - binds repository identity, worktree identity, requested revision,
   truncation, freshness, and the complete typed result.
 
-The test adapter runs these plans only inside disposable pinned repositories.
-It snapshots every fixture path, mode, symlink target, and file byte digest
-before and after the complete inspection set. Hostile hooks, pagers, aliases,
-diff drivers, credential helpers, remotes, and replacement-object behavior are
-seeded as canaries and remain inert during inspection.
+The test adapter and native Linux worker run these plans only inside disposable
+pinned repositories. They snapshot every fixture path, mode, symlink target,
+and file byte digest before and after the complete inspection set. Hostile
+hooks, filters, pagers, aliases, diff drivers, credential helpers, unsafe links,
+remotes, and replacement-object behavior are seeded as canaries and remain
+inert during inspection. The host-side repository collector avoids Git
+operations that can invoke configured clean or smudge filters.
 
 ## Instruction Provenance
 
@@ -127,7 +130,9 @@ detection, bounded failure, no source-byte retention, and complete workspace
 invariance. The complete kernel suite proves that instruction records remain
 part of the sealed non-authoritative artifact family.
 
-Sprint 17 remains blocked on retained installed-package Fedora and Ubuntu
-evidence, the full live network observation interval, native macOS evidence,
-deferred manual parser fuzzing, and independent review. Those open items cannot
-be replaced by the passing local contract and source-tree Linux worker tests.
+The retained installed-package-environment campaign passes on Fedora 44 and
+Ubuntu 26.04 for all thirteen operations, seven fixture states, nine hostile
+cases, strict-offline execution, and teardown. Sprint 17 remains blocked on
+native macOS evidence, deferred manual parser fuzzing, and independent review.
+Linux evidence cannot substitute for those open gates, and no release or
+supported-platform completion claim is made.

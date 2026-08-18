@@ -16,7 +16,20 @@ def commands() -> list[dict[str, object]]:
 
 def report() -> dict[str, object]:
     with patch.object(evidence, "git_file", return_value=b"source"):
-        return evidence.build_report("b" * 40, commands())
+        return evidence.build_report(
+            "b" * 40,
+            commands(),
+            {
+                "artifact": "artifacts/sprints/sprint-17/installed-linux-git-matrix.json",
+                "artifact_sha256": "c" * 64,
+                "source_revision": "d" * 40,
+                "target_ids": ["fedora-44-x86_64", "ubuntu-26.04-x86_64"],
+                "git_operations": evidence.linux_evidence.GIT_OPERATIONS,
+                "fixture_states": evidence.linux_evidence.FIXTURE_STATES,
+                "attack_cases": evidence.linux_evidence.ATTACK_CASES,
+                "instruction_classes": evidence.linux_evidence.INSTRUCTION_CLASSES,
+            },
+        )
 
 
 class Sprint17EvidenceTests(unittest.TestCase):
@@ -28,16 +41,18 @@ class Sprint17EvidenceTests(unittest.TestCase):
         self.assertEqual(value["implemented_contracts"]["fixed_git_operations"], 13)
         self.assertEqual(value["implemented_contracts"]["injection_cases"], 200)
         self.assertEqual(value["implemented_contracts"]["git_mutation_operations"], 0)
+        self.assertTrue(value["platform_evidence"]["linux_sandboxed_git_worker"])
+        self.assertTrue(value["platform_evidence"]["linux_live_network_observation"])
 
     def test_platform_fuzz_review_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["platform_evidence"].update(
-                {"linux_packaged_git_worker": True}
+                {"linux_sandboxed_git_worker": False}
             ),
             lambda value: value["platform_evidence"].update({"macos_git_worker": True}),
             lambda value: value["platform_evidence"].update(
-                {"linux_live_network_observation": True}
+                {"linux_live_network_observation": False}
             ),
             lambda value: value["verification_evidence"].update(
                 {"manual_parser_fuzzing": True}
@@ -61,6 +76,9 @@ class Sprint17EvidenceTests(unittest.TestCase):
             lambda value: value["implemented_contracts"].update(
                 {"authority_broadening_fields": 1}
             ),
+            lambda value: value["implemented_contracts"][
+                "linux_installed_git_matrix"
+            ].update({"target_ids": ["fedora-44-x86_64"]}),
         )
         for mutate in mutations:
             changed = copy.deepcopy(report())

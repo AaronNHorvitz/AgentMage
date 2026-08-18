@@ -94,6 +94,7 @@ artifacts/sprints/sprint-16/*
 artifacts/sprints/sprint-17/*
 !artifacts/sprints/sprint-17/local-evidence-report.json
 !artifacts/sprints/sprint-17/installed-linux-git-matrix.json
+!artifacts/sprints/sprint-17/security-evidence-map.json
 !artifacts/sprints/sprint-21/
 artifacts/sprints/sprint-21/*
 !artifacts/sprints/sprint-21/story-21.2/
