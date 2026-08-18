@@ -2134,9 +2134,13 @@ mod tests {
 
     fn sandbox_for(executable: impl AsRef<Path>) -> LinuxSandboxRunner {
         let executable = fs::canonicalize(executable).expect("canonical worker executable");
+        let systemd_run =
+            fs::canonicalize("/usr/bin/systemd-run").expect("canonical systemd-run executable");
+        let bubblewrap =
+            fs::canonicalize("/usr/bin/bwrap").expect("canonical Bubblewrap executable");
         let manifest = LinuxSandboxManifest::verify(
-            "/usr/bin/systemd-run",
-            "/usr/bin/bwrap",
+            systemd_run,
+            bubblewrap,
             &executable,
             &runtime_files(&executable),
         )
