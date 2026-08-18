@@ -1,20 +1,8 @@
 {
   "blockers": [
     {
-      "code": "PACKAGED-LINUX-GIT-WORKER-NOT-INTEGRATED",
-      "owner": "17.1.1.2"
-    },
-    {
-      "code": "ROOT-OWNED-LINUX-WORKER-NOT-INSTALLED",
-      "owner": "17.1.3.3"
-    },
-    {
       "code": "MACOS-GIT-WORKER-EVIDENCE-MISSING",
       "owner": "17.1.3.1"
-    },
-    {
-      "code": "LIVE-NETWORK-OBSERVATION-INCOMPLETE",
-      "owner": "17.1.3.3"
     },
     {
       "code": "MANUAL-GIT-PARSER-FUZZING-DEFERRED",
@@ -37,7 +25,16 @@
       ],
       "exit_code": 0,
       "id": "read-only-git-pack",
-      "output_sha256": "f4b9fbc843c8a2228fc5ca3a5382577687fa82022647276cd8682d87fa5b417e"
+      "output_sha256": "e1acbe9e3f916625b44ce249743c8c23acbe0f0a7a172bc3c015c27e8231cfef"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/sprint_17_linux_git_evidence.py"
+      ],
+      "exit_code": 0,
+      "id": "installed-linux-git-matrix",
+      "output_sha256": "0fa50fa1ccd87b612fdf2a7bd2c2630568779331f39944891ce87d30b11c9ad8"
     },
     {
       "argv": [
@@ -50,7 +47,52 @@
       ],
       "exit_code": 0,
       "id": "instruction-trust-kernel",
-      "output_sha256": "9666c4a3ab10d4238efad15d82660a74b04818fab88be4df72c45349aba3d0c6"
+      "output_sha256": "4a0c2d1f010a9efdb33223c6e6a31d9e630f54a9be24508d0a39053f99152752"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "--all-targets",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "linux-git-and-discovery-contracts",
+      "output_sha256": "9d58d90e1ecbbabfd0cf77678b7b3c8e4b8ed0155fcc4ef4244845c7218ccee1"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "--locked",
+        "repository_safety::tests::live_read_only_git_inspection_runs_inside_the_offline_worker",
+        "--",
+        "--ignored",
+        "--exact"
+      ],
+      "exit_code": 0,
+      "id": "linux-live-read-only-git",
+      "output_sha256": "f0e426b5dfcf2de37063f33a45b47e08971e18195294e3e36469f3af6d9b2528"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "--locked",
+        "repository_safety::tests::live_hostile_git_configuration_cannot_execute_or_contact_loopback",
+        "--",
+        "--ignored",
+        "--exact"
+      ],
+      "exit_code": 0,
+      "id": "linux-live-hostile-git",
+      "output_sha256": "e335ff47091db57366db26fb0aaf247d6e336ff6c8f6bc37114bd62a1721f0ea"
     },
     {
       "argv": [
@@ -58,22 +100,10 @@
         "clippy",
         "-p",
         "agentmage-capability-read-only",
-        "--all-targets",
-        "--locked",
-        "--",
-        "-D",
-        "warnings"
-      ],
-      "exit_code": 0,
-      "id": "git-pack-clippy",
-      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
-    },
-    {
-      "argv": [
-        "cargo",
-        "clippy",
         "-p",
         "agentmage-kernel-engine",
+        "-p",
+        "agentmage-platform-linux",
         "--all-targets",
         "--locked",
         "--",
@@ -81,8 +111,8 @@
         "warnings"
       ],
       "exit_code": 0,
-      "id": "instruction-kernel-clippy",
-      "output_sha256": "a13905646e2aed93ec6ea9ed6ac91490a4e01f91af0215c3965279a910612149"
+      "id": "sprint-17-clippy",
+      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd"
     }
   ],
   "implemented_contracts": {
@@ -92,14 +122,66 @@
     "git_mutation_operations": 0,
     "injection_cases": 200,
     "instruction_source_classes": 20,
+    "linux_installed_git_matrix": {
+      "artifact": "artifacts/sprints/sprint-17/installed-linux-git-matrix.json",
+      "artifact_sha256": "308670035ced51a48d790d2750ebe67a38182a4191a413810a47c63407388385",
+      "attack_cases": [
+        "hook",
+        "filter",
+        "pager",
+        "alias",
+        "credential_helper",
+        "unsafe_link",
+        "replacement_object",
+        "remote_url",
+        "loopback_contact"
+      ],
+      "fixture_states": [
+        "clean",
+        "dirty",
+        "staged",
+        "renamed",
+        "detached",
+        "untracked",
+        "malformed"
+      ],
+      "git_operations": [
+        "status",
+        "current_branch",
+        "upstream",
+        "branch_list",
+        "log",
+        "diff",
+        "staged_diff",
+        "show",
+        "worktree_list",
+        "object",
+        "ref",
+        "dirty_tree",
+        "untracked_files"
+      ],
+      "instruction_classes": [
+        "workspace_instruction",
+        "repository_instruction",
+        "project_document",
+        "hierarchical_instruction"
+      ],
+      "source_revision": "bae429ffa799c4fcee439b2391d720d5bf4ab2cc",
+      "target_ids": [
+        "fedora-44-x86_64",
+        "ubuntu-26.04-x86_64"
+      ]
+    },
     "narrowing_constraint_classes": 6,
     "raw_instruction_content_in_ledger": false,
     "stale_and_conflict_stop": true,
     "workspace_manifest_ledger": true
   },
   "platform_evidence": {
-    "linux_live_network_observation": false,
-    "linux_packaged_git_worker": false,
+    "linux_installed_package_environment": true,
+    "linux_instruction_discovery": true,
+    "linux_live_network_observation": true,
+    "linux_sandboxed_git_worker": true,
     "local_disposable_git_adapter": true,
     "macos_git_worker": false
   },
@@ -116,17 +198,28 @@
     "SR-TST-004",
     "RV-11"
   ],
-  "source_revision": "a2079c61b6bf0d15742001ac044bb258ec98ab05",
+  "source_revision": "5235a22da8b52432cfd0350b2434fa896b3a4fd2",
   "source_sha256": {
-    "capabilities/read-only/src/git.rs": "60ff74b828fa9a24c8f7800165dde2f2953e74f81509ce654c74314447198451",
-    "capabilities/read-only/src/lib.rs": "dd6cc08daee21bf294ac91a71912872b435fa93c6c91d4afaef65dc526d1f84b",
-    "docs/architecture/read-only-git-and-instruction-trust.md": "35410a221c7c7f73cca1a0d12045ce6448fe35af5201e84836c526d0b4ebc2b2",
-    "docs/verification/sprint-17-local-results.md": "a13e7a3e9a0c2c4b7c254aaecb87c8f9c4411cdc8c166fd7d52f2bb383ae9931",
-    "kernel/engine/src/authority.rs": "ea048636f4765337ad16d0341f7bcceaa80f3be76d918455880cba78ac6e37eb",
-    "kernel/engine/src/instruction_provenance.rs": "7117d1acf7a00e7187a81a1fa34af3df043b8f734c34692e123705b80f1de107",
-    "kernel/engine/src/lib.rs": "3d6dbe32eae670e19f749694f7c5e917a5d4fcda6cc09942d2afb03145327304",
-    "scripts/sprint_17_evidence.py": "ce479d647204b480ce8e496bc059c4ec18a386900c32879ac4398c989f7b9754",
-    "tests/test_sprint_17_evidence.py": "532602d50740cbd7ae4aace299183fa0f0ea5afe1d72fc240727208c9e5e44e4"
+    "capabilities/read-only/Cargo.toml": "0779ae133a0b654cbd5686ffbde501f72ed333b271592467af87bba02379d25e",
+    "capabilities/read-only/src/git.rs": "2c3ce7dbe6f5e6d077afa2373c4fb0abf8fa57bde34d262a523455a754bc1624",
+    "capabilities/read-only/src/lib.rs": "2b70cce4aa8a06b5ddbf0bad8534856eb61ec3ef388827df17f4f9857cb17a6c",
+    "docs/architecture/read-only-git-and-instruction-trust.md": "98b449d039adcc95271ae832577603482914d87c0cc80095a8fa6a422490d707",
+    "docs/verification/sprint-17-local-results.md": "f384ef7beb2a95f0e5fefef113edf46aa68ba5b13e9f80b792e074cc35285e25",
+    "kernel/engine/src/authority.rs": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8",
+    "kernel/engine/src/instruction_provenance.rs": "0e88d2dd4d200450f777fc8d8b24b3ba6091ae89cadc6c919af6689205ae9c94",
+    "kernel/engine/src/lib.rs": "e271b7751d53d4eb2a98f6f80ee0d5a93652628efb814fd9b1b293b1992f3545",
+    "kernel/engine/src/repository_inspection.rs": "cb0066e061da3e07a6a2a1a4535d0b36e7214bca5d4a6f537443f772b91f2426",
+    "packaging/linux/agentmage.spec.in": "e8e18b4dbbe68130700571fa3b0052b326ea0c19fb1b4cce086cc8173b9de3da",
+    "packaging/linux/debian-control.in": "ffd459b3912d6bba47f5d30ffd9ddeb15598abc2b1f81181f43c15aa6e149575",
+    "platforms/linux/src/instruction_discovery.rs": "5a0506cb8d813cdffd82c69b18553008872e741a61172daf2411b394ec16fb8a",
+    "platforms/linux/src/lib.rs": "82fc3e93661c6e2dbc3e6362eae88c04ffc03112cb06199d34b19ee3cf7ea9e7",
+    "platforms/linux/src/repository_safety.rs": "97b6df1109aed3df6f9b2eca597bca46f50ec25c32b19f7fe860a9dc45995b2d",
+    "scripts/sprint_17_evidence.py": "fedf8898b1ad776b51523fe27fa044047dffdc015cc2a91966074cd1617ad7ac",
+    "scripts/sprint_17_linux_git_evidence.py": "ab2986cec08350292697191dea1155e19e4f435379fb2b2a56fb82d1c5702ba9",
+    "scripts/sprint_17_linux_git_guest.py": "a08d65d4241be613caecb85121f2e037db8641b6fed36e94889f35985be86a86",
+    "shells/host/src/linux_coding_runtime.rs": "58f0dc49f9b56f9a9879af68629245b8a0de1028968d44fee5d5e2609781b4d3",
+    "tests/test_sprint_17_evidence.py": "e48bf33ca882f7ff2ca83a4a68054c70796cf454b8694f9f71d8d571469a9827",
+    "tests/test_sprint_17_linux_git_evidence.py": "587499d124c81ff9c92768d374049c8b9e76a310812df8373053be6141a12915"
   },
   "summary": {
     "local_contract_passed": true,
