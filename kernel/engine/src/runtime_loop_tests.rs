@@ -77,6 +77,7 @@ enum ModelScript {
     Completion,
     LargeCompletion,
     Tool,
+    ToolAt(u32),
     Malformed,
     Failure(RuntimePortFailure),
 }
@@ -130,7 +131,7 @@ impl RuntimeModelPort for FakeModel {
                 )),
                 None,
             ),
-            ModelScript::Tool => (
+            ModelScript::Tool | ModelScript::ToolAt(_) => (
                 ModelProposalKind::ToolCall,
                 None,
                 Some(ModelToolCallCandidate {
@@ -140,7 +141,17 @@ impl RuntimeModelPort for FakeModel {
                     )),
                     tool_id: ToolId::from_raw("fixture.read"),
                     tool_version: "1.0.0".to_owned(),
-                    arguments: payload("fixture.input", br#"{"path":"fixture.txt"}"#),
+                    arguments: payload(
+                        "fixture.input",
+                        match script {
+                            ModelScript::Tool => br#"{"path":"fixture.txt"}"#.to_vec(),
+                            ModelScript::ToolAt(index) => {
+                                format!(r#"{{"path":"fixture-{index}.txt"}}"#).into_bytes()
+                            }
+                            _ => unreachable!("tool arm admits only tool scripts"),
+                        }
+                        .as_slice(),
+                    ),
                 }),
             ),
             ModelScript::Failure(_) => unreachable!("failure returned before proposal creation"),
@@ -2336,6 +2347,179 @@ fn story_23_4_expired_allow_is_rejected_before_worker_launch() {
             .iter()
             .any(|event| matches!(event.kind, RuntimeEventKind::ToolStarted { .. }))
     );
+}
+
+#[test]
+fn story_23_4_ephemeral_runtime_profile_is_bounded() {
+    const MAXIMUM_SCENARIO_US: u128 = 250_000;
+
+    let (mut direct, direct_executions) =
+        coordinator([ModelScript::Completion], PermissionScript::Allow, true);
+    let direct_started = Instant::now();
+    let RuntimeCoordinatorStep::Complete {
+        outcome: direct_outcome,
+    } = direct
+        .run_until_boundary(None, None)
+        .expect("direct profile completes")
+    else {
+        panic!("direct profile cannot pause");
+    };
+    let direct_us = direct_started.elapsed().as_micros();
+    assert_eq!(direct_outcome.state, AgentStateKind::Success);
+    assert_eq!(direct_executions.load(Ordering::SeqCst), 0);
+    assert_valid_terminal_stream(&direct);
+
+    let (mut nominal, nominal_executions) = coordinator(
+        [ModelScript::Tool, ModelScript::Completion],
+        PermissionScript::Allow,
+        true,
+    );
+    let nominal_started = Instant::now();
+    let RuntimeCoordinatorStep::Complete {
+        outcome: nominal_outcome,
+    } = nominal
+        .run_until_boundary(None, None)
+        .expect("nominal profile completes")
+    else {
+        panic!("nominal profile cannot pause");
+    };
+    let nominal_us = nominal_started.elapsed().as_micros();
+    assert_eq!(nominal_outcome.state, AgentStateKind::Success);
+    assert_eq!(nominal_executions.load(Ordering::SeqCst), 1);
+    assert_valid_terminal_stream(&nominal);
+
+    let (mut maximum, maximum_executions) = coordinator(
+        [
+            ModelScript::ToolAt(1),
+            ModelScript::ToolAt(2),
+            ModelScript::ToolAt(3),
+            ModelScript::Completion,
+        ],
+        PermissionScript::Allow,
+        true,
+    );
+    let maximum_started = Instant::now();
+    let RuntimeCoordinatorStep::Complete {
+        outcome: maximum_outcome,
+    } = maximum
+        .run_until_boundary(None, None)
+        .expect("maximum successful profile completes")
+    else {
+        panic!("maximum successful profile cannot pause");
+    };
+    let maximum_us = maximum_started.elapsed().as_micros();
+    assert_eq!(maximum_outcome.state, AgentStateKind::Success);
+    assert_eq!(maximum_outcome.model_call_count, 4);
+    assert_eq!(maximum_outcome.tool_call_count, 3);
+    assert_eq!(maximum_executions.load(Ordering::SeqCst), 3);
+    assert_valid_terminal_stream(&maximum);
+
+    let (mut over_limit, over_limit_executions) = coordinator_with_request_mutation(
+        RuntimeSessionMode::EphemeralReadOnly,
+        GrantOperation::WorkspaceRead,
+        [
+            ModelScript::ToolAt(1),
+            ModelScript::ToolAt(2),
+            ModelScript::ToolAt(3),
+            ModelScript::ToolAt(4),
+        ],
+        PermissionScript::Allow,
+        true,
+        |request| request.limits.max_tool_calls = 3,
+    )
+    .expect("over-limit profile builds");
+    let over_limit_started = Instant::now();
+    let RuntimeCoordinatorStep::Complete {
+        outcome: over_limit_outcome,
+    } = over_limit
+        .run_until_boundary(None, None)
+        .expect("over-limit profile closes truthfully")
+    else {
+        panic!("over-limit profile cannot pause");
+    };
+    let over_limit_us = over_limit_started.elapsed().as_micros();
+    assert_eq!(over_limit_outcome.state, AgentStateKind::Exhausted);
+    assert_eq!(over_limit_executions.load(Ordering::SeqCst), 3);
+    assert_valid_terminal_stream(&over_limit);
+
+    let (mut cancelled, cancelled_executions) =
+        coordinator([ModelScript::Completion], PermissionScript::Allow, true);
+    let cancellation = CancellationSignal {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        cancellation_id: CancellationId::from_raw("profile-cancellation-0001"),
+        correlation_id: CorrelationId::from_raw(derived_id(
+            "correlation",
+            cancelled.request.run_id.as_str(),
+            0,
+        )),
+        task_id: cancelled.request.task.task_id.clone(),
+        reason: CancellationReason::UserRequested,
+        requested_by: BoundaryKind::Shell,
+    };
+    let cancellation_started = Instant::now();
+    let RuntimeCoordinatorStep::Complete {
+        outcome: cancelled_outcome,
+    } = cancelled
+        .run_until_boundary(None, Some(&cancellation))
+        .expect("pre-observed cancellation closes")
+    else {
+        panic!("pre-observed cancellation cannot pause");
+    };
+    let cancellation_us = cancellation_started.elapsed().as_micros();
+    assert_eq!(cancelled_outcome.state, AgentStateKind::Cancelled);
+    assert_eq!(cancelled_executions.load(Ordering::SeqCst), 0);
+    assert_valid_terminal_stream(&cancelled);
+
+    for elapsed in [
+        direct_us,
+        nominal_us,
+        maximum_us,
+        over_limit_us,
+        cancellation_us,
+    ] {
+        assert!(elapsed <= MAXIMUM_SCENARIO_US);
+    }
+    assert!(maximum.events().len() <= maximum.request.limits.max_events as usize);
+    assert!(
+        inline_output_bytes(&maximum_outcome) <= maximum.request.limits.max_output_bytes as usize
+    );
+
+    println!(
+        "AGENTMAGE_STORY_23_4_PERFORMANCE={}",
+        serde_json::json!({
+            "schema_version": 1,
+            "maximum_scenario_us": MAXIMUM_SCENARIO_US,
+            "direct": profile_metrics(&direct, &direct_outcome, direct_us),
+            "nominal": profile_metrics(&nominal, &nominal_outcome, nominal_us),
+            "maximum": profile_metrics(&maximum, &maximum_outcome, maximum_us),
+            "over_limit": profile_metrics(&over_limit, &over_limit_outcome, over_limit_us),
+            "cancellation": profile_metrics(&cancelled, &cancelled_outcome, cancellation_us),
+        })
+    );
+}
+
+fn profile_metrics(
+    coordinator: &FixtureCoordinator,
+    outcome: &agentmage_kernel_contracts::RuntimeOutcome,
+    elapsed_us: u128,
+) -> serde_json::Value {
+    serde_json::json!({
+        "elapsed_us": elapsed_us,
+        "event_count": coordinator.events().len(),
+        "model_calls": outcome.model_call_count,
+        "output_bytes": inline_output_bytes(outcome),
+        "state": format!("{:?}", outcome.state).to_ascii_lowercase(),
+        "tool_calls": outcome.tool_call_count,
+        "turns": outcome.turn_count,
+    })
+}
+
+fn inline_output_bytes(outcome: &agentmage_kernel_contracts::RuntimeOutcome) -> usize {
+    match outcome.output.as_ref() {
+        Some(RuntimeOutput::Inline { payload }) => payload.bytes.len(),
+        Some(RuntimeOutput::Artifact { reference }) => reference.byte_size as usize,
+        None => 0,
+    }
 }
 
 fn controlled_write_hardening_request() -> RuntimeRunRequest {
