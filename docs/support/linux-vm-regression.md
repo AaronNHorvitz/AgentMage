@@ -30,7 +30,17 @@ or inject a repository credential.
 ## Current Boundary
 
 The retained overlay report proves only Tasks `9.1.4.1` and `9.1.4.2`. The
-dependency-acquisition, connected-adapter, and strict-offline guest phases and
-the complete independent Fedora and Ubuntu product matrices remain open under
-Tasks `9.1.4.3` and `9.1.4.4`. KVM evidence is not physical-host or release
-evidence.
+three-phase guest runner is available through:
+
+```bash
+npm run linux-vm-regression:phases:build
+npm run linux-vm-regression:phases:check
+```
+
+It executes dependency acquisition and local connected-adapter observation,
+restarts the same disposable overlay under restricted networking, proves an
+external connection is denied, runs its committed contract and focused tests,
+and retains only bounded hashes, counts, package identities, and cleanup state.
+This closes Task `9.1.4.3`. The complete independent Fedora and Ubuntu promoted
+product matrices remain open under Task `9.1.4.4`. KVM evidence is not
+physical-host or release evidence.
