@@ -96,7 +96,7 @@ COMMANDS: Final = (
         "runtime-model-tool-events",
         (
             "cargo", "test", "-p", "agentmage-kernel-engine", "--lib", "--locked",
-            "runtime_loop_tests::story_23_4_runtime_events_exclude_raw_model_and_tool_canaries",
+            "runtime_loop::tests::story_23_4_runtime_events_exclude_raw_model_and_tool_canaries",
         ),
         "1 passed; 0 failed",
         "story_23_4_runtime_events_exclude_raw_model_and_tool_canaries",

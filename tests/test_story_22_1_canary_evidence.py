@@ -36,6 +36,11 @@ class Story221CanaryEvidenceTests(unittest.TestCase):
         records = expected_command_records()
         self.assertEqual(len({record["command_id"] for record in records}), len(records))
         self.assertTrue(all(record["required_test"] for record in records))
+        runtime_command = next(argv for identifier, argv, _, _ in COMMANDS if identifier == "runtime-model-tool-events")
+        self.assertIn(
+            "runtime_loop::tests::story_23_4_runtime_events_exclude_raw_model_and_tool_canaries",
+            runtime_command,
+        )
 
     @unittest.skipUnless(REPORT_PATH.is_file(), "retained report is generated after source commit")
     def test_current_report_and_raw_trace_are_hash_bound(self) -> None:
