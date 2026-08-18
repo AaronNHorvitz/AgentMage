@@ -1694,7 +1694,7 @@ claims.
 
 **Dependencies:** Sprint 18; legacy dependency record: Sprint 11 (legacy S-011), Sprint 16 (legacy S-016), Sprint 17 (legacy S-017).
 
-#### [ ] Story 19.1 - Repository Map Coverage and Source Resolution
+#### [x] Story 19.1 - Repository Map Coverage and Source Resolution
 
 **User-facing value:** As an AgentMage user, maintainer, or reviewer, I need repository map coverage and source resolution so that AgentMage delivers the following bounded outcome: Build a bounded, Git-aware structural map with exact parser evidence and visible coverage limits.
 
@@ -1712,27 +1712,29 @@ claims.
   - [x] **Sub-task 19.1.2.3:** Golden map hashes and source-resolution fixtures.
   - [x] **Sub-task 19.1.2.4:** Read-only invariance report.
 
-- [ ] **Task 19.1.3 - Verify and close the story**
+- [x] **Task 19.1.3 - Verify and close the story**
   - [x] **Sub-task 19.1.3.1:** `S-018-UT01` maps empty, small, nested, ignored, generated, vendored, binary, unsupported-language, malformed, and limit-exceeding repositories; assert deterministic nodes, edges, ordering, and visible omissions.
   - [x] **Sub-task 19.1.3.2:** `S-018-UT02` changes one file, parser version, grammar hash, ignore rule, revision, and configuration at a time; assert only correctly dependent cache entries invalidate.
-  - [ ] **Sub-task 19.1.3.3:** `S-018-ST01` supplies parser crashes, hostile encodings, enormous files, recursive links, name collisions, and source injections; assert bounded fallback, no execution, and `Unknown/Blocked` rather than invented structure. Partial local evidence: hostile encodings, oversized sources, recursive links, duplicate symbol names, source injections, bounded fallback, and zero product effects pass; the packaged-worker parser-process crash and cancellation matrix remains open.
+  - [x] **Sub-task 19.1.3.3:** `S-018-ST01` supplies parser crashes, hostile encodings, enormous files, recursive links, name collisions, and source injections; assert bounded fallback, no execution, and `Unknown/Blocked` rather than invented structure. Evidence: hostile encodings, oversized sources, recursive links, duplicate symbol names, source injections, bounded fallback, and zero product effects pass; cancellation is polled before activation, during Tree-sitter progress, and during traversal, while guarded Rust parser or control-probe panics return a content-free failure and no partial structure. Native memory faults and process aborts are not claimed and remain part of native, fuzz, and independent campaigns.
   - [x] **Sub-task 19.1.3.4:** `S-018-IT01` resolves every rendered architecture claim back to exact revision/file/range/parser evidence and compares pre/post workspace hashes; assert complete citations and read-only invariance.
   - [x] **Sub-task 19.1.3.5 - Product security evidence:** Map `SR-ACC-008`, `SR-AI-003`, `SR-AI-007`, `SR-AI-010`, `SR-TST-002`, `SR-TST-004`, and `SR-OPS-001`; retain parser BOM, map hashes, invalidation traces, coverage ledger, and source-resolution results.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 19.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then two runs over identical repository identity produce byte-identical maps, while any relevant source or parser change invalidates stale evidence.
-- [ ] **Story AC 19.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then coverage reports quantify scanned, parsed, unsupported, ignored, truncated, failed, and uncertain content; no unsupported area is silently presented as understood.
+- [x] **Story AC 19.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then two runs over identical repository identity produce byte-identical maps, while any relevant source or parser change invalidates stale evidence.
+- [x] **Story AC 19.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then coverage reports quantify scanned, parsed, unsupported, ignored, truncated, failed, and uncertain content; no unsupported area is silently presented as understood.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 19.AC1:** `AT-REP-001` passes exactly.
+- [x] **Sprint AC 19.AC1:** `AT-REP-001` passes exactly.
 - [x] **Sprint AC 19.AC2:** Repeated unchanged runs are byte-identical.
-- [ ] **Sprint AC 19.AC3:** Changed files, Git identity, parser, grammar, or policy invalidate only affected records before citation.
+- [x] **Sprint AC 19.AC3:** Changed files, Git identity, parser, grammar, or policy invalidate only affected records before citation.
 - [x] **Sprint AC 19.AC4:** Unsupported or failed relationships are omitted or visibly Unknown/Blocked, never fabricated.
 - [x] **Sprint AC 19.AC5:** Mapping leaves workspace files, metadata, Git index, refs, objects, and instructions unchanged.
 
 **Gate decision:** Sprint 19 is PASS only when Story 19.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current gate result:** BLOCKED with deterministic coverage, rendering, source resolution, exact selective invalidation, native Fedora held-object projection and encrypted derivative-cache reconciliation, one-use pre-citation freshness, hostile-input isolation, cooperative parser cancellation, guarded Rust panic containment, golden identities, and read-only invariance passing. Remaining blockers are native Ubuntu, macOS, and Windows repository-map campaigns, the deliberately deferred manual parser fuzz campaign, and independent review. Rust panic containment does not claim native memory-fault or process-abort recovery and no release approval is inferred.
 ### [ ] Sprint 20 - Evidence-State Assignment
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

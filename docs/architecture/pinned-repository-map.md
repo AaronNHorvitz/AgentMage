@@ -49,6 +49,8 @@ All use the exact `tree-sitter` `0.26.12` runtime locked by Cargo. Each runtime 
 
 The parser accepts UTF-8 sources up to 4 MiB and retains at most 10,000 stable items. It records modules, functions, classes, structs, enums, interfaces or protocols, traits, type aliases, constants, and exact import declarations with byte and line ranges plus syntax-node hashes.
 
+Parsing polls a caller-owned cancellation or deadline probe before activation, during Tree-sitter progress, and during structural traversal. Cancellation returns a stable content-free failure and no partial structure. The complete Rust parser operation is protected by a panic boundary; a panic in parser-side Rust logic or the control probe becomes `repository.parse.panicked`. This does not claim recovery from native memory faults, process aborts, or operating-system termination.
+
 The only v0.1 relationship is `declares_import`: an exact parsed module contains an exact import declaration. It is emitted only when the corresponding import item exists with the same range and hash. The map does not guess that an import resolves to another file, package, symbol, or runtime dependency.
 
 ## Coverage Ledger
@@ -97,4 +99,4 @@ Local tests prove deterministic ordering, exact grammar identity, parser extract
 
 A test-only disposable Git repository verifies real ignore rules, tracked and untracked state, a symbolic link, a Gitlink, and hostile filter configuration through the native Fedora collector and host projection. The hostile filter canary remains absent. Cross-repository projection fails before content opening. Cancellation and timeout tests prove child termination and reaping. Encrypted-cache restart, expiry, tamper, capacity, exact-key reconciliation, and one-use synchronization tests pass.
 
-Sprint closure remains blocked on native Ubuntu, macOS, and Windows repository-map campaigns, the deferred manual parser fuzz campaign, and independent review. Fedora evidence and passing pure-core tests do not substitute for those controls or establish release approval.
+Sprint closure remains blocked on native Ubuntu, macOS, and Windows repository-map campaigns, the deferred manual parser fuzz campaign, and independent review. Fedora evidence, Rust panic containment, and passing pure-core tests do not substitute for native memory-fault, fuzz, review, or release evidence.

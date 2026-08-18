@@ -17,13 +17,16 @@ OUTPUT: Final = ROOT / "artifacts/sprints/sprint-19/local-evidence-report.json"
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
 SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 SOURCE_PATHS: Final = (
+    "TASKS.md",
     "capabilities/repository-map/src/cache.rs",
     "capabilities/repository-map/src/invariance_tests.rs",
     "capabilities/repository-map/src/inventory.rs",
     "capabilities/repository-map/src/lib.rs",
+    "capabilities/repository-map/src/parser.rs",
     "capabilities/repository-map/src/renderer.rs",
     "capabilities/repository-map/src/resolution.rs",
     "docs/architecture/pinned-repository-map.md",
+    "docs/verification/task-19-1-3-5-product-security-evidence.md",
     "docs/verification/sprint-19-local-results.md",
     "scripts/sprint_19_evidence.py",
     "tests/test_sprint_19_evidence.py",
@@ -54,6 +57,29 @@ COMMANDS: Final = (
             "warnings",
         ),
     ),
+    (
+        "linux-repository-host-tests",
+        (
+            "cargo",
+            "test",
+            "-p",
+            "agentmage-host",
+            "linux_repository_map",
+            "--locked",
+        ),
+    ),
+    (
+        "repository-cache-tests",
+        (
+            "cargo",
+            "test",
+            "-p",
+            "agentmage-kernel-engine",
+            "repository_cache",
+            "--locked",
+        ),
+    ),
+    ("sprint-18-evidence", ("python3", "scripts/sprint_18_evidence.py")),
     ("effect-boundary", ("python3", "scripts/effect_boundary.py")),
     ("strict-local-source", ("python3", "scripts/strict_local_source_audit.py")),
     ("supply-chain", ("python3", "scripts/supply_chain.py")),
@@ -78,10 +104,9 @@ SECURITY_REQUIREMENTS: Final = [
     "SR-TST-004",
 ]
 BLOCKERS: Final = [
-    {"code": "PRODUCTION-HELD-REPOSITORY-PROJECTION-NOT-INTEGRATED", "owner": "19.1.3.1"},
-    {"code": "PRODUCTION-CITATION-INVALIDATION-NOT-INTEGRATED", "owner": "19.1.3.2"},
-    {"code": "PACKAGED-WORKER-CANCELLATION-AND-PARSER-FAILURE-MATRIX-INCOMPLETE", "owner": "19.1.3.3"},
-    {"code": "NATIVE-PLATFORM-REPOSITORY-MAP-EVIDENCE-INCOMPLETE", "owner": "19.1.3.4"},
+    {"code": "NATIVE-UBUNTU-REPOSITORY-MAP-EVIDENCE-INCOMPLETE", "owner": "19.1.3.4"},
+    {"code": "NATIVE-MACOS-REPOSITORY-MAP-EVIDENCE-INCOMPLETE", "owner": "19.1.3.4"},
+    {"code": "NATIVE-WINDOWS-REPOSITORY-MAP-EVIDENCE-INCOMPLETE", "owner": "19.1.3.4"},
     {"code": "MANUAL-REPOSITORY-PARSER-FUZZING-DEFERRED", "owner": "19.1.3.5"},
     {"code": "INDEPENDENT-SPRINT-19-REVIEW-NOT-RETAINED", "owner": "19.1.3.5"},
 ]
@@ -94,6 +119,9 @@ IMPLEMENTED_CONTRACTS: Final = {
     "minimum_context_tokens": 512,
     "maximum_context_tokens": 262_144,
     "unknown_blocked_fallback": True,
+    "cooperative_parser_cancellation": True,
+    "rust_panic_containment": True,
+    "partial_parser_results_emitted": False,
     "filesystem_authority": False,
     "process_authority": False,
     "network_authority": False,
@@ -182,12 +210,18 @@ def build_report(
             "lexical_fallback_unknown_blocked": local_pass,
             "golden_hashes": local_pass,
             "disposable_git_invariance": local_pass,
+            "parser_cancellation": local_pass,
+            "rust_parser_panic_containment": local_pass,
+            "pre_citation_cache_reconciliation": local_pass,
+            "one_use_freshness_permit": local_pass,
             "manual_parser_fuzzing": False,
             "independent_review": False,
         },
         "platform_evidence": {
             "local_pure_core": local_pass,
-            "linux_packaged_worker": False,
+            "fedora_held_repository_projection": local_pass,
+            "fedora_encrypted_derivative_cache": local_pass,
+            "ubuntu_native_map": False,
             "macos_native_map": False,
             "windows_native_map": False,
         },
@@ -245,9 +279,30 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "release_approval": False,
     }:
         failures.append("summary overclaim or local failure")
-    for field in ("linux_packaged_worker", "macos_native_map", "windows_native_map"):
+    for field in ("ubuntu_native_map", "macos_native_map", "windows_native_map"):
         if report.get("platform_evidence", {}).get(field) is not False:
             failures.append(f"platform overclaim: {field}")
+    for field in (
+        "local_pure_core",
+        "fedora_held_repository_projection",
+        "fedora_encrypted_derivative_cache",
+    ):
+        if report.get("platform_evidence", {}).get(field) is not True:
+            failures.append(f"missing local platform evidence: {field}")
+    for field in (
+        "coverage_matrix",
+        "selective_invalidation",
+        "source_resolution",
+        "lexical_fallback_unknown_blocked",
+        "golden_hashes",
+        "disposable_git_invariance",
+        "parser_cancellation",
+        "rust_parser_panic_containment",
+        "pre_citation_cache_reconciliation",
+        "one_use_freshness_permit",
+    ):
+        if report.get("verification_evidence", {}).get(field) is not True:
+            failures.append(f"missing local verification evidence: {field}")
     for field in ("manual_parser_fuzzing", "independent_review"):
         if report.get("verification_evidence", {}).get(field) is not False:
             failures.append(f"verification overclaim: {field}")

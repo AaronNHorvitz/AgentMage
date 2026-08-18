@@ -34,11 +34,16 @@ class Sprint19EvidenceTests(unittest.TestCase):
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertEqual(value["implemented_contracts"]["render_priority_tiers"], 6)
         self.assertTrue(value["verification_evidence"]["disposable_git_invariance"])
+        self.assertTrue(value["verification_evidence"]["parser_cancellation"])
+        self.assertTrue(value["platform_evidence"]["fedora_held_repository_projection"])
 
     def test_platform_fuzz_review_and_release_overclaims_fail(self) -> None:
         mutations = (
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
-            lambda value: value["platform_evidence"].update({"linux_packaged_worker": True}),
+            lambda value: value["platform_evidence"].update(
+                {"fedora_held_repository_projection": False}
+            ),
+            lambda value: value["platform_evidence"].update({"ubuntu_native_map": True}),
             lambda value: value["platform_evidence"].update({"macos_native_map": True}),
             lambda value: value["platform_evidence"].update({"windows_native_map": True}),
             lambda value: value["verification_evidence"].update(
@@ -62,6 +67,9 @@ class Sprint19EvidenceTests(unittest.TestCase):
                 {"golden_map_sha256": "d" * 64}
             ),
             lambda value: value["implemented_contracts"].update({"network_authority": True}),
+            lambda value: value["verification_evidence"].update(
+                {"rust_parser_panic_containment": False}
+            ),
         )
         for mutate in mutations:
             changed = copy.deepcopy(report())
