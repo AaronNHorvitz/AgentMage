@@ -30,7 +30,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-transaction-tests",
-      "output_sha256": "34238f1a7200d3a1a5c019e1767f874cfea2f66e6fe9a80b7ed156ef477478cc"
+      "output_sha256": "6fe0b59a2220dbd74e4eb85139c0f677f8c36287a1affe6c9bc04f309f63c639"
     },
     {
       "argv": [
@@ -43,7 +43,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "4e1c4f936091f0b0edd6936a3371bacd0bcdb1145ee05635a833e6be8ab7a98f"
+      "output_sha256": "da147296b7918e8b27f3ceaf9c119365daaa099e03e6f04a8c3274ca52af954c"
     },
     {
       "argv": [
@@ -60,7 +60,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-clippy",
-      "output_sha256": "c65b2bf1b138c141daa5837a3df8a3266a97ff8490a3041238180916f01e43f8"
+      "output_sha256": "0faf639f8f9919cc32d3574fb53e316475b87b9c12fdcbaa3d0ca0aabba25d37"
     },
     {
       "argv": [
@@ -74,7 +74,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "linux-write-transaction-tests",
-      "output_sha256": "5603d642ec0ee0ce7bc082437c497c8d599775823d19168aa7424536075c564f"
+      "output_sha256": "a0c45a63ae5851039f23a6fb66967a1d83d851b2708edc4aeb376049aa7e34cd"
     },
     {
       "argv": [
@@ -91,7 +91,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "linux-platform-clippy",
-      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd"
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
     },
     {
       "argv": [
@@ -104,7 +104,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "contract-tests",
-      "output_sha256": "4bca463a58ff39eca8cd2c4c090885a332918a1ca28a87463c7d8baf90da4906"
+      "output_sha256": "39aa043b22a36087e94feb274d598e41fc5b8c5a0bdd6c2d33a7733e194e69c7"
     },
     {
       "argv": [
@@ -115,7 +115,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "e351612b9395c05f209ad5833f4e6b96d0609f08002aa17c540b296fc7f786cc"
+      "output_sha256": "bca5df65eb7de6dee251048cb3f16813b85b9f957d8c6ad91991c71e8df92f20"
     },
     {
       "argv": [
@@ -126,7 +126,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "55a3e21d102324562319a956c6695c8830a088e77eb2bc9fd51542e2c72f0416"
+      "output_sha256": "943e8013da4ed453fbfc90286fff3ca0485abdf0bd94e32e90c672c1055af02a"
     },
     {
       "argv": [
@@ -226,6 +226,8 @@
     "native_filesystem_driver": true,
     "native_linux_atomic_exchange_and_restore": true,
     "native_linux_descriptor_race_fixtures": true,
+    "native_linux_parent_rename_boundary_matrix": true,
+    "native_linux_process_stop_matrix": true,
     "native_race_matrix_complete": false,
     "network_access": false,
     "opaque_effect_authorization": true,
@@ -252,17 +254,17 @@
     "SR-TST-011",
     "SR-TST-012"
   ],
-  "source_revision": "21739092b077753a4597f24de1a48e07f0561f16",
+  "source_revision": "9a1adfcb9d8794edffc0d8c57458ad5ba60caa97",
   "source_sha256": {
-    "docs/architecture/atomic-write-transaction-and-rollback.md": "0f02148077afd38ef9f0234cc7e5aa9da8f4db85bd77910a2cfd7128fdb0e347",
-    "docs/verification/sprint-36-local-results.md": "3d2ff2fefb3fc1a6908b12c465cdeb516bc1997c40b86f4deae2448940d48ace",
+    "docs/architecture/atomic-write-transaction-and-rollback.md": "5f5fad3d6a4cb427353d764722a83065257445030e001e07295f011359a18185",
+    "docs/verification/sprint-36-local-results.md": "a24fe0e47715afe91382de75904e5e944a3fa7f61342aa88be36441f657846fa",
     "kernel/engine/src/grants.rs": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291",
     "kernel/engine/src/lib.rs": "ba0fc7331c014a86772c22cd1713a3a147d84511d6f30e844b2a87b9bf9d7136",
     "kernel/engine/src/write_approval.rs": "3aec5c24b53f5ab5e0476c03c13422a737a59d2932ba1649b15d2e50306e67e0",
     "kernel/engine/src/write_transaction.rs": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03",
-    "platforms/linux/src/write_transaction.rs": "862afe43fe0d1aba341c705b3210580f595e2245efbd1c8b98c8a0422aad717b",
-    "scripts/sprint_36_evidence.py": "ba1f465fd3a525462a6df36ea97ea3721e18ceedf7f5889510848f9c48df703e",
-    "tests/test_sprint_36_evidence.py": "ee39c057ca48210bfe767cb64b20c4e924507b4d4b458f2f1e453f60d531af44"
+    "platforms/linux/src/write_transaction.rs": "fab5551124bc2e4cbcbcec68a3095fbf199a8fbeae23ac13558dd91bf6384c81",
+    "scripts/sprint_36_evidence.py": "1800e6404746b5bd93528996e426233405a21c8801c6deb7a4b73551a54e5644",
+    "tests/test_sprint_36_evidence.py": "d9a4c6eafc3e2e6e358e43a5d42e24e6c6648318feca4b3df3ea6cb42bec40f1"
   },
   "summary": {
     "independent_review_passed": false,
@@ -282,6 +284,8 @@
     "native_filesystem_driver_evidence": true,
     "native_linux_atomic_exchange_and_restore": true,
     "native_linux_descriptor_race_fixtures": true,
+    "native_linux_parent_rename_boundary_matrix": true,
+    "native_linux_process_stop_matrix": true,
     "native_mount_change_matrix": false,
     "native_race_matrix": false,
     "post_preview_mutation_matrix": true,
