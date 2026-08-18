@@ -177,6 +177,8 @@
     "model:activation:check": "python3 scripts/model_activation.py",
     "model:substitution-build": "python3 scripts/model_substitution.py --write --verification-revision HEAD",
     "model:substitution-check": "python3 scripts/model_substitution.py",
+    "model:cross-adapter-parity:build": "python3 scripts/sprint_13_cross_adapter_parity.py --write --source-revision HEAD",
+    "model:cross-adapter-parity:check": "python3 scripts/sprint_13_cross_adapter_parity.py",
     "resolution:build": "python3 scripts/locked_resolution.py --write",
     "resolution:check": "python3 scripts/locked_resolution.py",
     "product:build": "cargo build --workspace --all-targets --locked && npm run build --workspace @agentmage/vscode-shell",
