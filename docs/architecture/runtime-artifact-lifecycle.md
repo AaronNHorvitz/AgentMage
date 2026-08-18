@@ -366,8 +366,11 @@ Current automated coverage includes:
 - One native durable-resume campaign executes four focused restart paths. It
   restores the exact event cursor, continuation, artifact set, receipt, and
   terminal no-op outcome without replaying a protected Git operation; rejects
-  repository, policy, and model-runtime drift; and blocks missing or corrupt
-  continuation payloads with no second execution. It also checkpoints separate
+  repository, policy, model-profile, and model-runtime drift; and blocks missing
+  or corrupt continuation payloads with no second execution. Their path-free
+  operator projections retain quarantined lifecycle, exact missing/corrupt
+  integrity, blocked cleanup, and stable reason codes. The campaign also
+  checkpoints separate
   70 KiB command and validation streams, byte-verifies their `standard_output`
   and `test_log` artifacts after reopen, restores their exact reference set,
   and completes without repeating either command. A separate terminal path
@@ -388,7 +391,7 @@ Current automated coverage includes:
   statement digest, implementation paths, executable test identities, and
   hashed retained files. Its mutation suite rejects omission, reorder, status
   drift, unresolved tests, unsafe paths, changed artifacts, and false
-  completion. The index retains 14 complete and three partial states and does
+  completion. The index retains 15 complete and two partial states and does
   not claim story, sprint, or release completion.
 - One independent automated artifact-boundary review rederives fourteen closed
   schema, owner/policy, transaction, descriptor, encryption-integrity,

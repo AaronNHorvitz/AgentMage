@@ -211,7 +211,7 @@ def build_report(revision: str, output: str, elapsed_ms: int) -> dict[str, Any]:
         "schema_version": 1,
         "artifact_id": "story-22.2-native-runtime-artifact-resume",
         "source_revision": revision,
-        "status": "partial-pass-current-linux-native-source-boundary",
+        "status": "pass-current-linux-native-source-boundary",
         "task_ids": ["22.2.3.3", "RV-17", "RV-18"],
         "host": {
             "system": platform.system(),
@@ -255,7 +255,7 @@ def validate_report(report: Any) -> list[str]:
     revision = report.get("source_revision")
     if not isinstance(revision, str) or REVISION.fullmatch(revision) is None:
         failures.append("runtime.artifact_resume.report_revision")
-    if report.get("status") != "partial-pass-current-linux-native-source-boundary" or report.get(
+    if report.get("status") != "pass-current-linux-native-source-boundary" or report.get(
         "task_ids"
     ) != ["22.2.3.3", "RV-17", "RV-18"]:
         failures.append("runtime.artifact_resume.report_disposition")

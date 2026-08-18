@@ -262,7 +262,7 @@ MAPPINGS: tuple[dict[str, Any], ...] = (
     },
     {
         "task_id": "22.2.3.3",
-        "status": "partial",
+        "status": "complete",
         "code": [
             "shells/host/src/coding_session.rs",
             "shells/host/src/linux_coding_runtime.rs",
