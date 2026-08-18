@@ -131,7 +131,7 @@ def acquisition_script(vm: vm_support.VmHandle, script: str) -> None:
         )
 
 
-def install_script(target: docker_vm.Target) -> str:
+def system_dependencies_script(target: docker_vm.Target) -> str:
     if target.distribution == "fedora":
         packages = (
             "bash bubblewrap ca-certificates cpio curl gcc gcc-c++ git glibc-devel gnupg2 "
@@ -139,7 +139,7 @@ def install_script(target: docker_vm.Target) -> str:
             "atk cups-libs dbus-libs mesa-libgbm glib2 gtk3 nspr nss "
             "libX11-xcb libXcomposite libXdamage libXfixes libXrandr libxkbcommon"
         )
-        install = f"sudo dnf -y -q install {packages} >/dev/null"
+        return f"sudo dnf -y -q install {packages} >/dev/null"
     else:
         packages = (
             "bash bubblewrap build-essential ca-certificates cpio curl git gnupg libsecret-tools "
@@ -148,12 +148,14 @@ def install_script(target: docker_vm.Target) -> str:
             "libgtk-3-0t64 libnspr4 libnss3 libx11-xcb1 libxcomposite1 libxdamage1 "
             "libxfixes3 libxkbcommon0 libxrandr2"
         )
-        install = (
+        return (
             "sudo apt-get -qq update >/dev/null && "
             f"sudo DEBIAN_FRONTEND=noninteractive apt-get -qq -y install {packages} >/dev/null"
         )
+
+
+def toolchain_dependencies_script() -> str:
     return f"""set -eu
-{install}
 sudo install -d -m 0755 /opt/node /opt/cargo /opt/rustup
 curl --fail --location --silent --show-error https://nodejs.org/dist/v24.15.0/node-v24.15.0-linux-x64.tar.xz -o /tmp/node.tar.xz
 echo '{NODE_SHA256}  /tmp/node.tar.xz' | sha256sum --check --strict
@@ -175,6 +177,10 @@ npm ci --ignore-scripts --no-audit --no-fund
 cargo fetch --locked
 npx --no-install puppeteer browsers install chrome-headless-shell
 """
+
+
+def install_script(target: docker_vm.Target) -> str:
+    return system_dependencies_script(target) + "\n" + toolchain_dependencies_script()
 
 
 def start_guest(
@@ -240,13 +246,15 @@ def run_target(
                 "set -eu\n"
                 f"test \"$(sha256sum /home/agentmage/source.bundle | cut -d' ' -f1)\" = {bundle_sha256}\n"
                 f"test \"$(sha256sum /home/agentmage/native-runtime.tar.gz | cut -d' ' -f1)\" = {sha256_file(native_archive)}\n"
+                + system_dependencies_script(target)
+                + "\n"
                 "mkdir /home/agentmage/source\n"
                 "git -C /home/agentmage/source init --quiet\n"
                 "git -C /home/agentmage/source fetch --quiet /home/agentmage/source.bundle HEAD\n"
                 "git -C /home/agentmage/source checkout --quiet --detach FETCH_HEAD\n"
                 f"test \"$(git -C /home/agentmage/source rev-parse HEAD)\" = {revision}\n"
                 "test -z \"$(git -C /home/agentmage/source status --porcelain --untracked-files=all)\"\n"
-                + install_script(target),
+                + toolchain_dependencies_script(),
             )
             connected_cleanup = shutdown(connected)
         finally:
