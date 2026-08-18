@@ -13,10 +13,6 @@
       "owner": "22.1.3.5"
     },
     {
-      "code": "NATIVE-PLATFORM-CRASH-EVIDENCE-NOT-RETAINED",
-      "owner": "22.1.3.5"
-    },
-    {
       "code": "INDEPENDENT-SPRINT-22-REVIEW-NOT-RETAINED",
       "owner": "22.1.3.5"
     }
@@ -33,7 +29,7 @@
       ],
       "exit_code": 0,
       "id": "context-tests",
-      "output_sha256": "45bca8542c76047467353bbec753d363a0b30853bb62a3714c4360d50075cdc3"
+      "output_sha256": "a5c9cad281a951b01220661f5f99d4abcba3a46ee4771f18a0299f9d8c9514c4"
     },
     {
       "argv": [
@@ -46,7 +42,7 @@
       ],
       "exit_code": 0,
       "id": "checkpoint-tests",
-      "output_sha256": "3fefbb70d2b6a4820a2a75a0cd38674af7eca3ae63e7ad62d9ac152ffc67b18c"
+      "output_sha256": "5ad27d42db738bfa132d5c1ca5c1dc206847c8e6e5d420ef8a9627fa1f24ebfa"
     },
     {
       "argv": [
@@ -59,7 +55,16 @@
       ],
       "exit_code": 0,
       "id": "crash-campaign",
-      "output_sha256": "1b1bbca0b2eb4a0ffa80d47c9930ae94f14b054915c6d0a1d3ca581dd9fbac1b"
+      "output_sha256": "8b3cee27dc01193c337241b3dee288d315bb886613686a04f3d776356ac9a42f"
+    },
+    {
+      "argv": [
+        "python3",
+        "scripts/story_22_1_native_resume_evidence.py"
+      ],
+      "exit_code": 0,
+      "id": "native-resume-evidence",
+      "output_sha256": "ac21cb95404b38c4eef8b4b26019c06510510f97de3d6d0f1613252b32ddedb0"
     },
     {
       "argv": [
@@ -75,7 +80,7 @@
       ],
       "exit_code": 0,
       "id": "engine-clippy",
-      "output_sha256": "551a72c77c1093340b9fa328f31bfa46a60f73a6286448ad946c8748d5b2976c"
+      "output_sha256": "efd762f0a767fab74e461fc185b8d90cd3fbfa2fe00b4c40e491dc50baeed70d"
     },
     {
       "argv": [
@@ -125,6 +130,7 @@
     "encrypted_atomic_checkpoint_publication": true,
     "ephemeral_checkpoint_persistence": false,
     "explicit_drift_decisions": 3,
+    "native_tool_terminal_resume_runs": 100,
     "network_authority": false,
     "resume_authority": false,
     "resume_drift_dimensions": 9,
@@ -143,17 +149,20 @@
     "SR-TST-005",
     "SR-TST-006"
   ],
-  "source_revision": "db32c995fc3ed4fa734fc7934e4486abc3509227",
+  "source_revision": "52362697089ecd6d132d0912548d503fc5471fea",
   "source_sha256": {
-    "docs/architecture/context-and-crash-safe-resume.md": "505368dccc5c4e37b9c0ce56c9ed4844e3b481574dbd9f405a6d251c44d85c3c",
-    "docs/verification/sprint-22-local-results.md": "2a37ec79bbe130acf39a0ae10d4e1161a701a7d62a13624beafada5bae05d220",
+    "docs/architecture/context-and-crash-safe-resume.md": "24eacf749f341f0d23146f065804c6052031d7552b524909b305ffe7f72dc33a",
+    "docs/verification/sprint-22-local-results.md": "2744ff95e32a267f370430ef722570e6c78a93eabfe9e21131c4c7fd695dfde4",
     "kernel/contracts/src/context.rs": "3fdc7d7f3a0b7b9c0b23bc6c5056bd9720f2d4729839546bdae8015aaf859a97",
     "kernel/engine/migrations/operational-store/0004-session-checkpoints.sql": "2ba8afc6ed5aed817e4b88046e6f28fc1b0b3c7aec98b7479daea34cebb43089",
-    "kernel/engine/src/authority_transaction.rs": "f6dcc6d976bb10faebb4a385e456b7aceecb681bbf1d35f289d796ed8f14ab60",
-    "kernel/engine/src/context_management.rs": "4640c87cc85fdf99a2dc91128a83e11325139fe0bcdc0c77dc380f0762ba8141",
-    "kernel/engine/src/operational_store.rs": "2430fa292326d51e952fe2e745c75732bfb0c971283e7ba2a1819a4008852d59",
-    "scripts/sprint_22_evidence.py": "b31491c8f065fdb3f56864674462f6035ea795b1645ff3543ad7b540c99fb654",
-    "tests/test_sprint_22_evidence.py": "7c5dc538e206224a53311fa7797dd01b3f88ac1018de0bc394b3f5176aca9a33"
+    "kernel/engine/src/authority_transaction.rs": "cf12332a555bf9a5849857aba6c7273226bb3056c012211299ca81cb436b92a2",
+    "kernel/engine/src/context_management.rs": "bc6a562f4573364bc82a3972aae64d93e24b976303c52ce9227018717516c077",
+    "kernel/engine/src/operational_store.rs": "a80de50a46f86df5bfdd5d937674972f7270203347629be10d8fca084b39cf11",
+    "scripts/sprint_22_evidence.py": "0b23c21f69d163760bd6158a504aea608c229051ab0e4098da4701da1cde8fd4",
+    "scripts/story_22_1_native_resume_evidence.py": "02af4229ecf6430d1558fedf56c042daf4b1d939c9c7ef18793b267f189aa27a",
+    "shells/host/src/linux_coding_runtime.rs": "feac9fae8fe78313bbdae00fb5fe6c68475cf8ab68c9fb557d1a6ccdd561843d",
+    "tests/test_sprint_22_evidence.py": "a5cef5e0bc40a320a9ad98f89f50c69647459758c2cea2dfafd7a3d39ad3a899",
+    "tests/test_story_22_1_native_resume_evidence.py": "7c1611dd8876e0e7a9abbafa2a3c711bba5522d17d9d2952601e94d5ad5577f9"
   },
   "summary": {
     "local_contract_passed": true,
@@ -168,7 +177,7 @@
     "drift_decision_matrix": true,
     "ephemeral_no_persistence": true,
     "independent_review": false,
-    "native_platform_crash_matrix": false,
+    "native_platform_crash_matrix": true,
     "product_wide_canary_sweep": false,
     "production_context_integration": false,
     "subprocess_crash_campaign": true
