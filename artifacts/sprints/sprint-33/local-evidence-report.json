@@ -5,12 +5,12 @@
       "owner": "32.1"
     },
     {
-      "code": "SPRINT-33-RT01-MATRIX-INCOMPLETE",
-      "owner": "33.1.3.4"
-    },
-    {
       "code": "INDEPENDENT-SPRINT-33-REVIEW-ABSENT",
       "owner": "33.1.3.5"
+    },
+    {
+      "code": "SHELL-CONVERSATION-INTEGRATION-ABSENT",
+      "owner": "33.AC5"
     }
   ],
   "commands": [
@@ -24,7 +24,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "6c9edaea9a57cb9ac0c20994be08ec7eac1a27ab252b56608dd26b128b763617"
+      "output_sha256": "5bd30e8f72ca05fe0de8439a8f28c9c84b2af967100809ef19e287db618b2cd5"
     },
     {
       "argv": [
@@ -40,7 +40,7 @@
       ],
       "exit_code": 0,
       "id": "kernel-clippy",
-      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126"
+      "output_sha256": "0faf639f8f9919cc32d3574fb53e316475b87b9c12fdcbaa3d0ca0aabba25d37"
     },
     {
       "argv": [
@@ -52,7 +52,7 @@
       ],
       "exit_code": 0,
       "id": "contract-tests",
-      "output_sha256": "a55f45c53fbcc87d8d23128d07e7d1168b99af2cda44b8bfed5977ab12c3cd83"
+      "output_sha256": "39fb8a480c2e907981690289c93e02be2f338d0dbb5b00b46c5f3f0a55a83931"
     },
     {
       "argv": [
@@ -62,7 +62,7 @@
       ],
       "exit_code": 0,
       "id": "product-gate",
-      "output_sha256": "bbc7fffaeb899b31df93b6d360161d71d7e211d70c1d33d4d03b5f284593bbe4"
+      "output_sha256": "1211260c2c18279b226bf075ebc87efce4f1c3006908b16d842e15830a291455"
     },
     {
       "argv": [
@@ -72,7 +72,7 @@
       ],
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "5c23acdf22e139c8a7cca4c912e9210c1c56524ff3b6217080827b13d6520e39"
+      "output_sha256": "0d6b3e78aa25e6227058108b03070761aef331230651e4e2107f0ac9497c85b2"
     },
     {
       "argv": [
@@ -144,13 +144,17 @@
   "implemented_contracts": {
     "archive_inspection_and_fresh_restore": true,
     "archive_retention_revision_and_deletion": true,
+    "bounded_evidence_state_and_ancestry_search": true,
     "bundle_import_authority": false,
     "derived_citation_receipt_and_source_sets": true,
+    "disclosure_canary_corpus": true,
+    "every_turn_role_branch_corpus": true,
     "exact_byte_disclosure_preview": true,
     "exact_reviewed_archive_inventory": true,
     "external_delivery": false,
     "network_access": false,
     "private_atomic_local_publication": true,
+    "process_stop_and_concurrent_access_matrix": true,
     "redacted_portable_evidence_bundle": true,
     "secret_hidden_unrelated_and_unapproved_exclusion": true,
     "separately_keyed_sqlcipher_archive": true
@@ -171,33 +175,37 @@
     "SR-CIV-005",
     "SR-OPS-003"
   ],
-  "source_revision": "b00f98936f09c31d4e9182c256cc8a6025310a91",
+  "source_revision": "7d6271dd44a94961c90c07db990ecc3be572c26c",
   "source_sha256": {
-    "docs/architecture/private-archives-evidence-bundles.md": "ba98ed812054125573b766d4b779c71cd3166c4caeaa84cf9a9dc027a9997efc",
-    "docs/verification/sprint-33-local-results.md": "ec5033d25e8c2da2bf91f683cca0428b654cfa8df723af6a4cea5fd2d8bc9e56",
-    "kernel/engine/src/conversation_archive.rs": "e2ebfae07e185fd60e8ecd80b31da54e981ef55225035f528b39befc35385297",
-    "kernel/engine/src/conversation_library.rs": "6e4a5d34e1378e0acc73fd577572f9874a77a1c0ea91b422ae218a8b578ed3fa",
-    "kernel/engine/src/evidence_bundle.rs": "833e5394fa3106a6a49b7d85f88768a3635d0bc1e1f77b0bf034fd7ff3c5e04c",
-    "kernel/engine/src/operational_store.rs": "b6bab5a7dd1ca05747286327ad7cdac595507046b42b96cddb9c34b7d2957a70",
+    "docs/architecture/private-archives-evidence-bundles.md": "3f8217129126c7ff5e5cf05c2036fdc2e1fb7c03e18a38fff554f989a0d906c2",
+    "docs/verification/sprint-33-local-results.md": "d6676bd3382eb8b086036a5c3df6fea07aa53dc536860edc768c63cdd3e3e67d",
+    "kernel/engine/src/conversation_archive.rs": "89bc61a06c8196c1a60ce9c1f97e8a9ad94903dc81a3b1ee5b85340cdba5c633",
+    "kernel/engine/src/conversation_library.rs": "8f1b2446128a73b97efde001e41a879f19d8c6efbb23220a6b3bc27fe4726d33",
+    "kernel/engine/src/evidence_bundle.rs": "95945112e0a009c827825f4be463a15257094579f0ff12012d65364657f34d55",
+    "kernel/engine/src/operational_store.rs": "b80d873c2148aa3ae7338f48e5f3a2574db2e3cfbbed4a74ae384f6bf794700b",
     "kernel/engine/src/persistence.rs": "fb537c04df0d687af10e36eea98834910f8760877858266bb1f54cb1ca28d540",
-    "scripts/sprint_33_evidence.py": "e28f5d7d8eb755a80d2872a2c5dbdac3adf301710695e9b1b595c4b76b55dbf9",
-    "tests/test_sprint_33_evidence.py": "52e49c6b1f883a8497cb378c80a5b573572c5f29078d22c99f070bde8fc88a8e"
+    "scripts/sprint_33_evidence.py": "eea576bba63e54ee0644580203a6a8ca01f1800b28f88ed8f84686ee5936c0c0",
+    "tests/test_sprint_33_evidence.py": "2a246f757de8c6ffdc3b1813428cd4296a694e35ef688306a28ceed6db607461"
   },
   "summary": {
     "independent_review_passed": false,
     "local_archive_and_bundle_contract_passed": true,
     "network_access_enabled": false,
     "release_approval": false,
-    "rt01_matrix_complete": false,
+    "rt01_matrix_complete": true,
     "sprint_status": "BLOCKED",
     "upstream_dependency_passed": false
   },
   "verification_evidence": {
     "archive_lifecycle_suite": true,
     "complete_local_product_and_docs_gates": true,
-    "complete_rt01_crash_and_simultaneous_access_matrix": false,
+    "complete_rt01_crash_and_simultaneous_access_matrix": true,
+    "complete_st01_disclosure_canary_matrix": true,
+    "complete_ut01_search_matrix": true,
+    "complete_ut02_every_turn_role_branch_matrix": true,
     "evidence_disclosure_and_redaction_suite": true,
     "independent_review": false,
+    "shell_integration": false,
     "upstream_sprint_32_gate": false
   }
 }
