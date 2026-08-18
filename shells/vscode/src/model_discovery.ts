@@ -116,6 +116,10 @@ export interface NativeModelInformation {
   };
   readonly entrySha256: string;
   readonly discoverySha256: string;
+  readonly artifactSha256: string;
+  readonly runtimeAdapterId: string;
+  readonly runtimeSha256: string;
+  readonly visionInput: boolean;
 }
 
 const SHA256 = /^[0-9a-f]{64}$/;
@@ -254,6 +258,10 @@ export function selectableModelInformation(
       },
       entrySha256: entry.entry_sha256,
       discoverySha256: snapshot.snapshot_sha256,
+      artifactSha256: entry.artifact_sha256,
+      runtimeAdapterId: entry.runtime_adapter_id,
+      runtimeSha256: entry.runtime_sha256,
+      visionInput: entry.modalities.includes("image"),
     }));
 }
 

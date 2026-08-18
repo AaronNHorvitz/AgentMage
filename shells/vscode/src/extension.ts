@@ -185,6 +185,14 @@ export async function activate(
           {
             profileId: model.id,
             expectedEntrySha256: model.entrySha256,
+            manifestSha256: model.version,
+            artifactSha256: model.artifactSha256,
+            runtimeAdapterId: model.runtimeAdapterId,
+            runtimeSha256: model.runtimeSha256,
+            maxContextTokens: model.maxInputTokens,
+            maxOutputTokens: model.maxOutputTokens,
+            toolCalling: model.capabilities.toolCalling,
+            visionInput: model.visionInput,
           },
           (part) => {
             reportedParts += 1;

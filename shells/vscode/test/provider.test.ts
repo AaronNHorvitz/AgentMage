@@ -877,6 +877,15 @@ void test("native Chat renders one complete shared-runtime stream and outcome", 
   );
 
   assert.deepEqual(streamed, response.parts);
+  assert.match(response.text, /## Session Boundary/u);
+  assert.match(response.text, /Model: `profile-0001`/u);
+  assert.match(response.text, /Manifest: `6{64}`/u);
+  assert.match(response.text, /Artifact: `7{64}`/u);
+  assert.match(response.text, /Runtime: `runtime-adapter-0001` \(8{64}\)/u);
+  assert.match(response.text, /8,192 input tokens; 256 output tokens/u);
+  assert.match(response.text, /Tool limit: tool calling unavailable/u);
+  assert.match(response.text, /Vision limit: image input unavailable/u);
+  assert.match(response.text, /Resource status: bounded/u);
   assert.match(response.text, /Verified local result/u);
   assert.match(response.text, /Status: SUCCESS/u);
   assert.equal(bridge.runtimePrepareCalls, 1);
@@ -915,6 +924,38 @@ void test("native Chat rejects a substituted profile workspace or prompt before 
   assert.equal(bridge.runtimeStartCalls, 0);
   assert.equal(bridge.runtimeCancellationCalls, 0);
   assert.equal(bridge.runtimeReleaseCalls, 1);
+});
+
+void test("native Chat rejects every selected session identity mutation before start", async () => {
+  const mutations: readonly ((profile: Record<string, unknown>) => void)[] = [
+    (profile) => { profile.manifest_sha256 = "9".repeat(64); },
+    (profile) => {
+      (profile.artifact as Record<string, unknown>).sha256 = "9".repeat(64);
+    },
+    (profile) => {
+      (profile.runtime as Record<string, unknown>).adapter_id = "substituted-adapter";
+    },
+    (profile) => {
+      (profile.runtime as Record<string, unknown>).runtime_sha256 = "9".repeat(64);
+    },
+    (profile) => {
+      (profile.context as Record<string, unknown>).max_context_tokens = 4096;
+    },
+  ];
+  for (const mutate of mutations) {
+    const { controller, bridge, signal } = fixture();
+    const request = runtimeRequest("Inspect the selected workspace");
+    mutate(request.model_profile);
+    bridge.runtimePreparedRequest = request;
+    const response = await controller.respond(
+      "Inspect the selected workspace",
+      signal,
+      runtimeProfile(),
+    );
+    assert.match(response.text, /runtime\.request_substituted/u);
+    assert.equal(bridge.runtimeStartCalls, 0);
+    assert.equal(bridge.runtimeReleaseCalls, 1);
+  }
 });
 
 void test("native Chat relays one exact protected denial before terminal output", async () => {
@@ -1012,10 +1053,26 @@ void test("deactivation cancels and releases an active native Chat run before IP
 function runtimeProfile(): {
   readonly profileId: string;
   readonly expectedEntrySha256: string;
+  readonly manifestSha256: string;
+  readonly artifactSha256: string;
+  readonly runtimeAdapterId: string;
+  readonly runtimeSha256: string;
+  readonly maxContextTokens: number;
+  readonly maxOutputTokens: number;
+  readonly toolCalling: boolean;
+  readonly visionInput: boolean;
 } {
   return {
     profileId: "profile-0001",
     expectedEntrySha256: "f".repeat(64),
+    manifestSha256: "6".repeat(64),
+    artifactSha256: "7".repeat(64),
+    runtimeAdapterId: "runtime-adapter-0001",
+    runtimeSha256: "8".repeat(64),
+    maxContextTokens: 8192,
+    maxOutputTokens: 256,
+    toolCalling: false,
+    visionInput: false,
   };
 }
 
@@ -1042,7 +1099,16 @@ function runtimeRequest(
     workspace_snapshot_sha256: "1".repeat(64),
     repository_snapshot_id: "repository-snapshot-0001",
     repository_snapshot_sha256: "2".repeat(64),
-    model_profile: { profile_id: "profile-0001" },
+    model_profile: {
+      profile_id: "profile-0001",
+      manifest_sha256: "6".repeat(64),
+      artifact: { sha256: "7".repeat(64) },
+      runtime: {
+        adapter_id: "runtime-adapter-0001",
+        runtime_sha256: "8".repeat(64),
+      },
+      context: { max_context_tokens: 8192 },
+    },
     context_budget: {},
     tool_catalog_id: "tool-catalog-0001",
     tool_catalog_sha256: "3".repeat(64),

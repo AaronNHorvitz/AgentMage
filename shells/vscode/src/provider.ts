@@ -363,6 +363,14 @@ export interface ApprovalUi {
 export interface SelectedRuntimeProfile {
   readonly profileId: string;
   readonly expectedEntrySha256: string;
+  readonly manifestSha256: string;
+  readonly artifactSha256: string;
+  readonly runtimeAdapterId: string;
+  readonly runtimeSha256: string;
+  readonly maxContextTokens: number;
+  readonly maxOutputTokens: number;
+  readonly toolCalling: boolean;
+  readonly visionInput: boolean;
 }
 
 interface PendingRuntimeRun {
@@ -861,6 +869,7 @@ export class SecureReadController {
     }
     if (
       request.model_profile.profile_id !== profile.profileId ||
+      !runtimeRequestMatchesSelection(request, profile) ||
       request.workspace_id !== workspace.id ||
       request.task.objective !== prompt ||
       request.task.session_id !== request.session_id ||
@@ -951,7 +960,7 @@ export class SecureReadController {
       active.cursor = verifier.cursor();
       if (!progressStarted) {
         progressStarted = true;
-        emit("# AgentMage Runtime\n\n## Progress\n\n");
+        emit(renderRuntimeSessionBoundary(request, profile));
       }
       for (const event of events) {
         emit(renderRuntimeEvent(event));
@@ -1319,6 +1328,52 @@ export class SecureReadController {
       preview_id: previewId,
     });
   }
+}
+
+function runtimeRequestMatchesSelection(
+  request: RuntimeRunRequestEnvelope,
+  profile: SelectedRuntimeProfile,
+): boolean {
+  const model = request.model_profile;
+  const artifact = nestedRecord(model.artifact);
+  const runtime = nestedRecord(model.runtime);
+  const context = nestedRecord(model.context);
+  return (
+    model.manifest_sha256 === profile.manifestSha256 &&
+    artifact?.sha256 === profile.artifactSha256 &&
+    runtime?.adapter_id === profile.runtimeAdapterId &&
+    runtime.runtime_sha256 === profile.runtimeSha256 &&
+    context?.max_context_tokens === profile.maxContextTokens
+  );
+}
+
+function nestedRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : undefined;
+}
+
+function renderRuntimeSessionBoundary(
+  request: RuntimeRunRequestEnvelope,
+  profile: SelectedRuntimeProfile,
+): string {
+  return [
+    "# AgentMage Runtime",
+    "",
+    "## Session Boundary",
+    "",
+    `- Model: \`${profile.profileId}\``,
+    `- Manifest: \`${profile.manifestSha256}\``,
+    `- Artifact: \`${profile.artifactSha256}\``,
+    `- Runtime: \`${profile.runtimeAdapterId}\` (${profile.runtimeSha256})`,
+    `- Context: ${profile.maxContextTokens.toLocaleString("en-US")} input tokens; ${profile.maxOutputTokens.toLocaleString("en-US")} output tokens`,
+    `- Tool limit: ${profile.toolCalling ? `${request.visible_tools.length.toString()} exact visible tools` : "tool calling unavailable"}`,
+    `- Vision limit: ${profile.visionInput ? "declared by the exact profile" : "image input unavailable"}`,
+    `- Resource status: bounded by the host-framed run limits (request ${request.request_sha256})`,
+    "",
+    "## Progress",
+    "",
+  ].join("\n");
 }
 
 function parseModelReviewCommand(prompt: string): string | undefined {
