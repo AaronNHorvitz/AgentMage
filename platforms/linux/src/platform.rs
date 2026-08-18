@@ -31,7 +31,7 @@ use crate::{
     DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxHeldObject, LinuxHostIpcEndpoint,
     LinuxIpcError, LinuxOperationalStoreKeyProvider, LinuxPathAdapter,
     LinuxRuntimeArtifactPayloadStore, LinuxStrictLocalRoot, LinuxStrictLocalRootInspector,
-    authorize_workspace_root,
+    LinuxSymbolicLinkEvidence, authorize_workspace_root,
 };
 
 const MAX_IDENTITY_FILE_BYTES: u64 = 256 * 1024 * 1024;
@@ -216,6 +216,18 @@ pub fn resolve_linux_workspace_object(
         .resolve(workspace, path, intent)
 }
 
+/// Observes one symbolic-link target through the verified aggregate path adapter.
+pub fn observe_linux_workspace_symbolic_link(
+    verified: &VerifiedPlatformAdapter<LinuxPlatformAdapter>,
+    workspace: &LinuxAuthorizedWorkspace,
+    path: &WorkspacePath,
+) -> Result<LinuxSymbolicLinkEvidence, agentmage_kernel_contracts::PathAdapterError> {
+    verified
+        .adapter()
+        .path_adapter
+        .observe_symbolic_link(workspace, path)
+}
+
 /// Binds one private authenticated host endpoint after aggregate activation.
 pub fn open_linux_host_ipc(
     verified: &VerifiedPlatformAdapter<LinuxPlatformAdapter>,
@@ -261,6 +273,17 @@ pub fn resolve_test_linux_workspace_object(
 ) -> Result<LinuxHeldObject, agentmage_kernel_contracts::PathAdapterError> {
     LinuxPathAdapter::new(adapter_instance_id, crate::DEFAULT_MAX_PREIMAGE_BYTES)
         .resolve(workspace, path, intent)
+}
+
+/// Observes one symbolic link through a synthetic test-only Linux adapter identity.
+#[cfg(feature = "test-support")]
+pub fn observe_test_linux_workspace_symbolic_link(
+    workspace: &LinuxAuthorizedWorkspace,
+    adapter_instance_id: agentmage_kernel_contracts::AdapterInstanceId,
+    path: &WorkspacePath,
+) -> Result<LinuxSymbolicLinkEvidence, agentmage_kernel_contracts::PathAdapterError> {
+    LinuxPathAdapter::new(adapter_instance_id, crate::DEFAULT_MAX_PREIMAGE_BYTES)
+        .observe_symbolic_link(workspace, path)
 }
 
 /// Durable authority runtime that retains its descriptor-held private Linux root.

@@ -61,13 +61,14 @@ pub use local_commit::{
 };
 pub use platform::{
     LinuxAuthorityOpenError, LinuxAuthorityRuntime, LinuxPlatformAdapter,
-    LinuxPlatformDiscoveryError, LinuxPlatformDiscoveryErrorKind, open_linux_authority,
-    open_linux_bootstrap_ipc, open_linux_host_ipc, resolve_linux_workspace_object,
-    select_linux_workspace,
+    LinuxPlatformDiscoveryError, LinuxPlatformDiscoveryErrorKind,
+    observe_linux_workspace_symbolic_link, open_linux_authority, open_linux_bootstrap_ipc,
+    open_linux_host_ipc, resolve_linux_workspace_object, select_linux_workspace,
 };
 #[cfg(feature = "test-support")]
 pub use platform::{
-    open_test_linux_authority, resolve_test_linux_workspace_object, select_test_linux_workspace,
+    observe_test_linux_workspace_symbolic_link, open_test_linux_authority,
+    resolve_test_linux_workspace_object, select_test_linux_workspace,
 };
 pub use repository_inventory::{
     LinuxRepositoryInventory, LinuxRepositoryInventoryEntry, LinuxRepositoryInventoryState,
@@ -112,9 +113,10 @@ use agentmage_kernel_contracts::{
 use rustix::fd::OwnedFd;
 use rustix::fs::{
     AtFlags, Dir, FileType, Mode, OFlags, ResolveFlags, Stat, StatxFlags, fstat, open, openat,
-    openat2, statx,
+    openat2, readlinkat, statx,
 };
 use rustix::io::{Errno, pread};
+use sha1::{Digest as Sha1Digest, Sha1};
 use sha2::{Digest, Sha256};
 
 /// Stable component identity used by diagnostics and build verification.
@@ -154,6 +156,47 @@ pub struct LinuxPathAdapter {
     resolver_preference: ResolverPreference,
 }
 
+/// Exact symbolic-link evidence observed without following its target.
+pub struct LinuxSymbolicLinkEvidence {
+    /// Byte length of the exact link target.
+    pub size_bytes: u64,
+    /// Lowercase SHA-256 of the exact link-target bytes.
+    pub target_sha256: String,
+    target_bytes: Vec<u8>,
+    root_descriptor: OwnedFd,
+    root_snapshot: LinuxStatSnapshot,
+    link_descriptor: OwnedFd,
+    link_snapshot: LinuxStatSnapshot,
+}
+
+impl fmt::Debug for LinuxSymbolicLinkEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LinuxSymbolicLinkEvidence")
+            .field("size_bytes", &self.size_bytes)
+            .field("target_sha256", &self.target_sha256)
+            .finish_non_exhaustive()
+    }
+}
+
+impl LinuxSymbolicLinkEvidence {
+    /// Returns the exact link-target bytes to trusted host composition only.
+    #[must_use]
+    pub fn target_bytes(&self) -> &[u8] {
+        &self.target_bytes
+    }
+
+    /// Revalidates the continuously held workspace and link identities.
+    pub fn revalidate(&self) -> Result<(), PathAdapterError> {
+        if snapshot(&self.root_descriptor, None)? != self.root_snapshot
+            || snapshot(&self.link_descriptor, None)? != self.link_snapshot
+        {
+            return Err(adapter_error(PathAdapterErrorKind::IdentityChanged, None));
+        }
+        Ok(())
+    }
+}
+
 /// Security mechanism selected for one Linux path resolution.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LinuxResolutionStrategy {
@@ -185,6 +228,125 @@ impl LinuxPathAdapter {
     pub const fn max_preimage_bytes(&self) -> u64 {
         self.max_preimage_bytes
     }
+
+    /// Observes one exact symbolic-link target without following any path component.
+    pub fn observe_symbolic_link(
+        &self,
+        workspace: &LinuxAuthorizedWorkspace,
+        path: &WorkspacePath,
+    ) -> Result<LinuxSymbolicLinkEvidence, PathAdapterError> {
+        if workspace.adapter_instance_id() != self.adapter_instance_id()
+            || workspace.workspace_id() != path.workspace_id()
+        {
+            return Err(adapter_error(PathAdapterErrorKind::ForeignHandle, None));
+        }
+        let root_now = snapshot(&workspace.root_descriptor, None)?;
+        if !workspace.root_snapshot.same_object(&root_now)
+            || root_now.file_type != FileType::Directory
+        {
+            return Err(adapter_error(PathAdapterErrorKind::MountChanged, None));
+        }
+        let strategy = select_strategy(
+            &workspace.root_descriptor,
+            &root_now,
+            self.resolver_preference,
+        )?;
+        let held_root = workspace
+            .root_descriptor
+            .try_clone()
+            .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, None))?;
+        let mut parent = workspace
+            .root_descriptor
+            .try_clone()
+            .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, None))?;
+        let last_index = path.components().len() - 1;
+        for (index, component) in path.components()[..last_index].iter().enumerate() {
+            let next = open_relative(
+                strategy,
+                &parent,
+                component.as_str(),
+                OFlags::PATH | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+                index,
+            )?;
+            let observed = snapshot(&next, Some(index))?;
+            if observed.file_type != FileType::Directory
+                || !same_mount(&root_now, &observed, strategy)
+            {
+                return Err(adapter_error(
+                    PathAdapterErrorKind::ObjectKindMismatch,
+                    Some(index),
+                ));
+            }
+            parent = next;
+        }
+        let final_component = &path.components()[last_index];
+        let candidate = open_relative(
+            strategy,
+            &parent,
+            final_component.as_str(),
+            OFlags::PATH | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+            last_index,
+        )?;
+        let before = snapshot(&candidate, Some(last_index))?;
+        if before.file_type != FileType::Symlink || !same_mount(&root_now, &before, strategy) {
+            return Err(adapter_error(
+                PathAdapterErrorKind::ObjectKindMismatch,
+                Some(last_index),
+            ));
+        }
+        let target = readlinkat(&parent, final_component.as_str(), Vec::new())
+            .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, Some(last_index)))?
+            .into_bytes();
+        if target.is_empty() || target.len() as u64 > self.max_preimage_bytes {
+            return Err(adapter_error(
+                PathAdapterErrorKind::ResourceLimitExceeded,
+                Some(last_index),
+            ));
+        }
+        let after = snapshot(&candidate, Some(last_index))?;
+        if before != after || snapshot(&workspace.root_descriptor, None)? != root_now {
+            return Err(adapter_error(
+                PathAdapterErrorKind::IdentityChanged,
+                Some(last_index),
+            ));
+        }
+        Ok(LinuxSymbolicLinkEvidence {
+            size_bytes: target.len() as u64,
+            target_sha256: encode_sha256(&target),
+            target_bytes: target,
+            root_descriptor: held_root,
+            root_snapshot: root_now,
+            link_descriptor: candidate,
+            link_snapshot: after,
+        })
+    }
+}
+
+/// Computes the exact Git blob object identifier without invoking Git or content filters.
+pub fn linux_git_blob_object_id(
+    object_format: &str,
+    bytes: &[u8],
+) -> Result<String, PathAdapterError> {
+    let mut framed = format!("blob {}\0", bytes.len()).into_bytes();
+    framed.extend_from_slice(bytes);
+    match object_format {
+        "sha1" => Ok(encode_digest(Sha1::digest(&framed).as_slice())),
+        "sha256" => Ok(encode_digest(Sha256::digest(&framed).as_slice())),
+        _ => Err(adapter_error(PathAdapterErrorKind::PlatformFailure, None)),
+    }
+}
+
+fn encode_sha256(bytes: &[u8]) -> String {
+    encode_digest(Sha256::digest(bytes).as_slice())
+}
+
+fn encode_digest(bytes: &[u8]) -> String {
+    let mut output = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        use std::fmt::Write as _;
+        write!(&mut output, "{byte:02x}").expect("writing to String cannot fail");
+    }
+    output
 }
 
 /// Adapter-owned authorization for one already user-approved Linux workspace.
@@ -197,6 +359,7 @@ pub struct LinuxAuthorizedWorkspace {
     root_descriptor: OwnedFd,
     root_snapshot: LinuxStatSnapshot,
     root_identity: WorkspaceObjectIdentity,
+    root_path_sha256: String,
 }
 
 impl fmt::Debug for LinuxAuthorizedWorkspace {
@@ -235,6 +398,12 @@ impl HeldWorkspaceRoot for LinuxAuthorizedWorkspace {
 }
 
 impl LinuxAuthorizedWorkspace {
+    /// Returns the canonical path/device/inode digest bound at workspace selection.
+    #[must_use]
+    pub fn root_path_sha256(&self) -> &str {
+        &self.root_path_sha256
+    }
+
     /// Revalidates the continuously held workspace-root descriptor and identity.
     pub fn revalidate(&self) -> Result<(), PathAdapterError> {
         let root_now = snapshot(&self.root_descriptor, None)?;
@@ -318,6 +487,7 @@ fn authorize_workspace_root(
         ));
     }
     let root_identity = workspace_root_identity(&root_snapshot);
+    let root_path_sha256 = workspace_path_sha256(root, &root_snapshot)?;
     Ok(LinuxAuthorizedWorkspace {
         workspace_id,
         authorization_id,
@@ -325,7 +495,22 @@ fn authorize_workspace_root(
         root_descriptor: descriptor,
         root_snapshot,
         root_identity,
+        root_path_sha256,
     })
+}
+
+fn workspace_path_sha256(
+    root: &Path,
+    snapshot: &LinuxStatSnapshot,
+) -> Result<String, PathAdapterError> {
+    let canonical = root
+        .canonicalize()
+        .map_err(|_| adapter_error(PathAdapterErrorKind::PlatformFailure, None))?;
+    let mut material = Vec::new();
+    material.extend_from_slice(canonical.as_os_str().as_bytes());
+    material.extend_from_slice(&snapshot.device.to_be_bytes());
+    material.extend_from_slice(&snapshot.inode.to_be_bytes());
+    Ok(encode_sha256(&material))
 }
 
 fn workspace_root_identity(snapshot: &LinuxStatSnapshot) -> WorkspaceObjectIdentity {
@@ -1091,8 +1276,8 @@ mod tests {
     use super::{
         COMPONENT_ID, DEFAULT_MAX_PREIMAGE_BYTES, LinuxAuthorizedWorkspace, LinuxPathAdapter,
         LinuxResolutionStrategy, LinuxStatSnapshot, ResolverPreference, STRICT_RESOLVE_FLAGS,
-        contract_component_id, mediation_component_id, same_mount, select_strategy,
-        verified_fallback,
+        contract_component_id, linux_git_blob_object_id, mediation_component_id, same_mount,
+        select_strategy, verified_fallback,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -1141,6 +1326,8 @@ mod tests {
         .expect("test root opens");
         let root_snapshot = super::snapshot(&root_descriptor, None).expect("test root stats");
         let root_identity = super::workspace_root_identity(&root_snapshot);
+        let root_path_sha256 =
+            super::workspace_path_sha256(root, &root_snapshot).expect("test root path identity");
         LinuxAuthorizedWorkspace {
             workspace_id: WorkspaceId::from_raw("workspace-0001"),
             authorization_id: WorkspaceAuthorizationId::from_raw("authorization-0001"),
@@ -1148,6 +1335,7 @@ mod tests {
             root_descriptor,
             root_snapshot,
             root_identity,
+            root_path_sha256,
         }
     }
 
@@ -1297,6 +1485,41 @@ mod tests {
             .read_exact_bytes()
             .expect_err("mutation invalidates exact read");
         assert_eq!(error.kind(), PathAdapterErrorKind::IdentityChanged);
+    }
+
+    #[test]
+    fn symbolic_link_observation_never_follows_the_target() {
+        let test = TestDirectory::new();
+        let root = test.path.join("workspace");
+        fs::create_dir_all(root.join("docs")).expect("fixture directories create");
+        fs::write(root.join("outside.txt"), b"secret target bytes\n").expect("target writes");
+        symlink("../outside.txt", root.join("docs/link.txt")).expect("link writes");
+        let workspace = authorize_for_test(&root);
+        let evidence = adapter()
+            .observe_symbolic_link(&workspace, &path(&["docs", "link.txt"]))
+            .expect("link target observes");
+
+        assert_eq!(evidence.size_bytes, b"../outside.txt".len() as u64);
+        assert_eq!(
+            evidence.target_sha256,
+            super::encode_sha256(b"../outside.txt")
+        );
+        assert_ne!(
+            evidence.target_sha256,
+            super::encode_sha256(b"secret target bytes\n")
+        );
+    }
+
+    #[test]
+    fn git_blob_identity_is_filter_free_and_object_format_exact() {
+        assert_eq!(
+            linux_git_blob_object_id("sha1", b"").expect("SHA-1 blob identity"),
+            "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+        );
+        let sha256 = linux_git_blob_object_id("sha256", b"").expect("SHA-256 blob identity");
+        assert_eq!(sha256.len(), 64);
+        assert!(sha256.bytes().all(|byte| byte.is_ascii_hexdigit()));
+        assert!(linux_git_blob_object_id("unknown", b"").is_err());
     }
 
     #[test]

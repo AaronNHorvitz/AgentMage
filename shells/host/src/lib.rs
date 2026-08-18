@@ -71,6 +71,10 @@ pub mod linux_coding;
 pub mod linux_coding_runtime;
 
 #[cfg(target_os = "linux")]
+/// Held-object Linux projection into the pure repository-map capability.
+pub mod linux_repository_map;
+
+#[cfg(target_os = "linux")]
 pub mod linux_read;
 
 /// Stable component identity used by diagnostics and build verification.
