@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
 
 from scripts.supply_chain import ROOT, build_documents, check_outputs, validate_documents
@@ -45,7 +46,15 @@ class SupplyChainTests(unittest.TestCase):
             for item in self.provenance["components"]
             if item["ecosystem"] == "cargo" and item["source"]["type"] == "registry"
         ]
-        self.assertEqual(len(external), 52)
+        catalog = json.loads(
+            (ROOT / "supply-chain/cargo-external-catalog.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            {(item["name"], item["version"]) for item in external},
+            {(item["name"], item["version"]) for item in catalog["packages"]},
+        )
         for component in external:
             self.assertTrue(component["source"]["url"].startswith("https://crates.io/crates/"))
             self.assertEqual(component["integrity"], f"sha256:{component['hashes'][0]['content']}")
