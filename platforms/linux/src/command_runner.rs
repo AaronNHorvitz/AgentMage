@@ -1284,30 +1284,56 @@ mod tests {
             .expect("temporary name");
         assert!(!listing.contains(temporary_name), "{listing}");
 
-        let enumerated: Vec<(u32, &str)> = listing
-            .lines()
-            .filter_map(|line| {
-                let (left, target) = line.split_once(" -> ")?;
-                let descriptor = left.rsplit(' ').next()?.parse().ok()?;
-                Some((descriptor, target))
+        let mut lines = listing.lines();
+        let header = lines.next().expect("listing header");
+        assert!(header.starts_with("total "), "{listing}");
+        let enumerated: Vec<(u32, &str)> = lines
+            .map(|line| {
+                let (left, target) = line
+                    .split_once(" -> ")
+                    .unwrap_or_else(|| panic!("unexpected listing line: {line}"));
+                let descriptor = left
+                    .rsplit(' ')
+                    .next()
+                    .expect("descriptor column")
+                    .parse()
+                    .unwrap_or_else(|_| panic!("unexpected descriptor column: {line}"));
+                (descriptor, target)
             })
             .collect();
-        for expected in [0, 1, 2] {
-            assert!(
-                enumerated
-                    .iter()
-                    .any(|(descriptor, _)| *descriptor == expected),
-                "{listing}"
-            );
-        }
+        assert_eq!(enumerated.len(), 4, "{listing}");
+        let mut descriptors: Vec<u32> = enumerated
+            .iter()
+            .map(|(descriptor, _)| *descriptor)
+            .collect();
+        descriptors.sort_unstable();
+        assert_eq!(descriptors[..3], [0, 1, 2], "{listing}");
+        assert!(descriptors[3] > 2, "{listing}");
         for (descriptor, target) in &enumerated {
             match descriptor {
                 0 => assert_eq!(*target, "/dev/null", "{listing}"),
-                1 | 2 => assert!(target.starts_with("pipe:"), "{listing}"),
-                _ => assert!(
-                    target.ends_with("/fd"),
-                    "undeclared guest descriptor {descriptor} -> {target}"
-                ),
+                1 | 2 => {
+                    let inode = target
+                        .strip_prefix("pipe:[")
+                        .and_then(|rest| rest.strip_suffix(']'))
+                        .unwrap_or_else(|| panic!("unexpected stream target: {target}"));
+                    assert!(
+                        !inode.is_empty() && inode.bytes().all(|byte| byte.is_ascii_digit()),
+                        "{listing}"
+                    );
+                }
+                _ => {
+                    let owner = target
+                        .strip_prefix("/proc/")
+                        .and_then(|rest| rest.strip_suffix("/fd"))
+                        .unwrap_or_else(|| {
+                            panic!("undeclared guest descriptor {descriptor} -> {target}")
+                        });
+                    assert!(
+                        !owner.is_empty() && owner.bytes().all(|byte| byte.is_ascii_digit()),
+                        "{listing}"
+                    );
+                }
             }
         }
     }
