@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "record_type": "sprint_42_local_evidence",
-  "source_revision": "666a79e921c9ed34a5c441060cf3e185b3ec7885",
+  "source_revision": "e39e14b4ebd3b0733162edcec7a74a8796c31b83",
   "source_sha256": {
     "kernel/engine/src/repository_safety.rs": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f",
-    "platforms/linux/src/repository_safety.rs": "e59eda91fc212e77541a9b8883af838732cb0cf0e306769a05665ada14a51775",
+    "platforms/linux/src/repository_safety.rs": "51c9cd8198f7d3ac4bed8fff769b4fd574eab48fed6cb49c5055ec79cfd50416",
     "kernel/engine/tests/repository_safety_matrix.rs": "ce44de22d7623b99ba672921fbc7837bdfbd32aae91aca40a79855fa9d66ed32",
     "schemas/runtime/repository-preservation-manifest.schema.json": "d975faf6408bcab834d560260c797b08a3f8e08432d43f8cf56e8b7bcdbe71dd",
     "schemas/runtime/repository-operation-plan.schema.json": "e18be0f17720689a4af950f5fd5b51e09d02a00f0c9bb0350340070576c14751",
@@ -42,7 +42,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "422cb8ef9cee96be9785354287b94663d3e952633c867c32fa703f229354188b",
+      "output_sha256": "7d4c2070e9fb3d6932464dc97b45e2900d7ba5f6c0b411e292449180a16f48b4",
       "blocking_skip_count": 0
     },
     {
@@ -74,7 +74,7 @@
         "--include-ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "ada79d2312628300e6fea434c337c0f94d1e6e0890a89747da0d095155069684",
+      "output_sha256": "8efc16e889fd63332ef9a373f017b6d4a526021fed47394e1b4b48f4054df886",
       "blocking_skip_count": 0
     },
     {
@@ -85,7 +85,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "8925fd1362a07dd525a8968489fe74593f97c064d9293aee5484eafa65a34a1a",
+      "output_sha256": "928432d3aa37170cc4d138b97a4dc27838599ac2ea8ed50fb8bcde7ed5e644fd",
       "blocking_skip_count": null
     },
     {
@@ -96,7 +96,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "cc3c2b9359b0d0230a66974850bbdee29b2c6917de8ac7d8b114f3127bcf0202",
+      "output_sha256": "41ecdef61db3b40068d3ae37a5de3387f3b5ac019ec526aa068a47476162d6ea",
       "blocking_skip_count": null
     },
     {
@@ -136,7 +136,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "edabcabcf963c1ded4b0e8ef722ec76fc2c5861ff99c92f50d988848b10da029",
+      "output_sha256": "15b14c3490ea555247916e5623ed9e5c71dc1cd8c74fd803e1b2ebdc14ce2f07",
       "blocking_skip_count": null
     },
     {
@@ -148,7 +148,7 @@
         "tests.test_sprint_42_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "e7bd78a776b3a5dc6c2bea86892c333f9b1637d2b67bb78c35665ee93da27fb0",
+      "output_sha256": "3588e7358668f60a49dfb2ffc8c686fc7a01e642b69853a6b28218f8e4336e2e",
       "blocking_skip_count": null
     }
   ],
