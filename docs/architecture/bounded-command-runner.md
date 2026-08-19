@@ -140,6 +140,21 @@ the cumulative or greatest observation, and records the typed values in the term
 Unavailable observations remain explicit `null`; they are never replaced by invented zeroes.
 Observed memory and task use must remain within the approved template bounds.
 
+The task ceiling counts every task in the transient unit's control group, not only the command's own
+processes, because that is exactly what `TasksCurrent` reports and what the receipt must record
+literally. Bubblewrap needs one task for itself and one for the guest's pid 1, so the Linux runner
+declares a minimum executable ceiling of three and rejects any smaller ceiling before spawn with
+`linux.command.tasks.below_minimum`. The kernel keeps its platform-neutral admitted range because
+other platforms may carry different launcher overhead; a ceiling this runner cannot execute fails
+closed with an exact platform code instead of an opaque namespace-creation error. The enforced
+`TasksMax` therefore always equals the declared ceiling, and observed task counts are never adjusted
+to hide launcher overhead.
+
+If the supervising process dies mid-attempt, the abandoned transient unit is not terminated by the
+supervisor's death: it remains bounded by `RuntimeMaxSec`, which is derived from the command's own
+declared timeout. The interrupted attempt yields no terminal receipt, because no result was ever
+observed, and it is never replayed to manufacture one.
+
 ## Verification And Remaining Work
 
 The retained injection corpus is

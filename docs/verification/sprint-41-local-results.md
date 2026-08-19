@@ -54,10 +54,20 @@
   stdout ceiling terminates as an output limit, retains exactly the declared byte count, and still
   reports the complete observed length and a SHA-256 over the whole stream; the smallest admissible
   deadline still terminates the unit and verifies descendant cleanup.
-- The smallest admissible task ceiling of one cannot execute through this isolation stack:
-  Bubblewrap must fork to create the guest namespaces, so a one-task ceiling fails closed with a
-  namespace-creation error rather than running unbounded. Local limit evidence therefore covers the
-  minimum usable task ceiling, not the minimum admissible one.
+- The Linux runner declares a minimum executable task ceiling of three, measured directly:
+  Bubblewrap needs one task for itself and one for the guest's pid 1, leaving one for the command.
+  Ceilings of one and two are now rejected before spawn with `linux.command.tasks.below_minimum`
+  rather than failing opaquely inside namespace creation, and the minimum-boundary test succeeds at
+  the declared minimum. The kernel keeps its platform-neutral admitted range because other platforms
+  may carry different launcher overhead.
+- A crashed supervisor leaves no owned unit, descendant, scratch tree, or process behind. Six
+  scenarios per run kill a uniquely identified driver at two lifecycle points, once immediately
+  after it reports readiness and once after its owned transient unit is confirmed present. The
+  abandoned unit is not terminated by the supervisor's death; it stays bounded by `RuntimeMaxSec`,
+  measured at roughly two seconds of survival for a three-second ceiling. The interrupted attempt
+  produces no terminal receipt and is never replayed. Units are inventoried by exact name before and
+  after, descendants are matched by exact control-group path, and cleanup guards terminate only the
+  exact owned units even when an assertion fails.
 - Preview and receipt schemas reject unknown fields, inherited environment, shell executables,
   false timeout success, nonzero success, and cancellation without descendant cleanup.
 
@@ -71,11 +81,11 @@ preservation.
 The current receipt records elapsed time, stream use, cumulative CPU time, peak memory, and greatest
 observed task count while the preview records the enforced ceilings.
 
-Inherited-descriptor confinement, host-configuration unreachability, and empty-scratch residue are
-now covered by live fixtures. A multi-level process tree built by exec remains unreachable rather
-than merely denied, because the guest mounts no second executable; proving termination of a
-purpose-built multi-level helper would require registering a root-owned helper binary, which local
-development cannot install. Parent-crash recovery, maximum-limit boundary campaigns, and complete
-canary campaigns remain absent. Ubuntu, macOS, and Windows native
+Inherited-descriptor confinement, host-configuration unreachability, empty-scratch residue, and
+parent-crash recovery are now covered by live fixtures. A multi-level process tree built by exec
+remains unreachable rather than merely denied, because the guest mounts no second executable;
+proving termination of a purpose-built multi-level helper would require registering a root-owned
+helper binary, which local development cannot install without weakening executable provenance.
+Maximum-limit boundary campaigns and complete canary campaigns remain absent. Ubuntu, macOS, and Windows native
 results cannot be inferred from Fedora. Independent review, installed trusted-launcher evidence,
 manual fuzzing, the blocked Sprint 40 dependency, and `G-V0.3` remain open.

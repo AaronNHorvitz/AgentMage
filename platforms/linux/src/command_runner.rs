@@ -43,6 +43,11 @@ const COMMAND_DESCRIPTOR: u32 = LISTEN_FDS_START;
 const SECCOMP_DESCRIPTOR: u32 = LISTEN_FDS_START + 1;
 /// Holds the reopened owned worktree; absent for empty scratch.
 const WORKTREE_DESCRIPTOR: u32 = LISTEN_FDS_START + 2;
+/// Smallest task ceiling this runner can actually execute: Bubblewrap needs one task
+/// for itself and one for the guest's pid 1, leaving one for the command. The kernel
+/// admits smaller platform-neutral ceilings, so this platform rejects them before
+/// spawn instead of failing opaquely inside namespace creation.
+const MINIMUM_TASK_COUNT: u32 = 3;
 
 /// Content-free failure categories at the Linux command boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -204,6 +209,9 @@ impl LinuxBoundedCommandExecutor {
             || revalidate(artifact).is_err()
         {
             return failed("linux.command.artifact.changed");
+        }
+        if command.bounds.task_count < MINIMUM_TASK_COUNT {
+            return failed("linux.command.tasks.below_minimum");
         }
         if held_working_directory.revalidate().is_err() {
             return failed("linux.command.worktree.changed");
@@ -862,14 +870,17 @@ fn hex(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
+    use std::collections::{BTreeMap, BTreeSet};
     use std::fs;
+    use std::io::{BufRead as _, BufReader, Write as _};
     use std::os::unix::fs::PermissionsExt as _;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use std::process::{Command, Stdio};
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::thread;
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
+
+    use super::{POLL_INTERVAL, TERMINATION_GRACE};
 
     use agentmage_kernel_contracts::{
         AdapterInstanceId, BoundaryKind, CONTRACT_SCHEMA_VERSION, CancellationId,
@@ -925,6 +936,367 @@ mod tests {
         )
         .expect("workspace authorizes");
         (temporary, workspace)
+    }
+
+    const DRIVER_SCENARIO_VARIABLE: &str = "AGENTMAGE_PARENT_CRASH_SCENARIO";
+    const DRIVER_WORKTREE_VARIABLE: &str = "AGENTMAGE_PARENT_CRASH_WORKTREE";
+    const DRIVER_READY_MARKER: &str = "agentmage-parent-crash-driver-ready";
+    const DRIVER_TEST_PATH: &str = "command_runner::tests::internal_parent_crash_driver";
+    /// Bounds the abandoned unit through `RuntimeMaxSec`, keeping recovery observable.
+    const PARENT_CRASH_TIMEOUT_MS: u64 = 3_000;
+    const PARENT_CRASH_ITERATIONS: usize = 3;
+
+    /// Where the driver is killed relative to the transient unit's lifecycle.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum CrashPhase {
+        /// Immediately after the driver reports readiness, racing unit creation.
+        AfterReady,
+        /// Once the owned transient unit is confirmed present.
+        AfterUnitRunning,
+    }
+
+    /// What the campaign actually observed, never assumed.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum CrashOutcome {
+        /// The driver died before any owned unit existed.
+        InterruptedBeforeLaunch,
+        /// An owned unit existed and was later confirmed absent.
+        RecoveredAfterLaunch,
+    }
+
+    fn systemctl_user(arguments: &[&str]) -> bool {
+        Command::new("/usr/bin/systemctl")
+            .arg("--user")
+            .args(arguments)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .is_ok_and(|status| status.success())
+    }
+
+    /// Lists exactly the AgentMage-owned command units the manager currently knows.
+    fn owned_command_units() -> BTreeSet<String> {
+        let output = Command::new("/usr/bin/systemctl")
+            .args([
+                "--user",
+                "list-units",
+                "--all",
+                "agentmage-command-*.service",
+                "--no-legend",
+                "--plain",
+            ])
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .output()
+            .expect("systemctl lists owned units");
+        String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .filter_map(|line| line.split_whitespace().next())
+            .filter(|unit| unit.starts_with("agentmage-command-") && unit.ends_with(".service"))
+            .map(str::to_owned)
+            .collect()
+    }
+
+    /// Returns the processes whose control group is exactly this unit.
+    fn processes_in_unit(unit: &str) -> Vec<u32> {
+        let suffix = format!("/{unit}");
+        let Ok(entries) = fs::read_dir("/proc") else {
+            return Vec::new();
+        };
+        let mut processes = Vec::new();
+        for entry in entries.flatten() {
+            let Ok(pid) = entry.file_name().to_string_lossy().parse::<u32>() else {
+                continue;
+            };
+            let Ok(cgroup) = fs::read_to_string(format!("/proc/{pid}/cgroup")) else {
+                continue;
+            };
+            if cgroup.lines().any(|line| line.ends_with(&suffix)) {
+                processes.push(pid);
+            }
+        }
+        processes
+    }
+
+    fn process_exists(pid: u32) -> bool {
+        Path::new(&format!("/proc/{pid}")).exists()
+    }
+
+    /// Terminates only the exact units it was told to own, on every exit path
+    /// including assertion failure. It never matches by pattern or by approximate name.
+    #[derive(Default)]
+    struct OwnedUnitGuard {
+        units: BTreeSet<String>,
+    }
+
+    impl OwnedUnitGuard {
+        fn observe(&mut self, units: &BTreeSet<String>) {
+            self.units.extend(units.iter().cloned());
+        }
+    }
+
+    impl Drop for OwnedUnitGuard {
+        fn drop(&mut self) {
+            for unit in &self.units {
+                let _ = systemctl_user(&["kill", "--signal=KILL", "--kill-whom=all", unit]);
+                let _ = systemctl_user(&["stop", unit, "--no-block", "--no-ask-password"]);
+                let _ = systemctl_user(&["reset-failed", unit, "--no-ask-password"]);
+            }
+        }
+    }
+
+    /// Removes exactly the directory tree it owns, even if an assertion fails.
+    struct OwnedScratchGuard(PathBuf);
+
+    impl Drop for OwnedScratchGuard {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn unique_scenario_id(iteration: usize, phase: CrashPhase) -> String {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock")
+            .as_nanos();
+        let phase = match phase {
+            CrashPhase::AfterReady => "ready",
+            CrashPhase::AfterUnitRunning => "running",
+        };
+        format!("{}-{phase}-{iteration}-{nanos}", std::process::id())
+    }
+
+    /// Launches one bounded command and is expected to be killed mid-flight.
+    /// It runs only when the recovery fixture hands it a scenario identity.
+    #[test]
+    #[ignore = "internal parent-crash driver spawned by the recovery fixture"]
+    fn internal_parent_crash_driver() {
+        let (Ok(scenario), Ok(worktree)) = (
+            std::env::var(DRIVER_SCENARIO_VARIABLE),
+            std::env::var(DRIVER_WORKTREE_VARIABLE),
+        ) else {
+            return;
+        };
+        let executable = "/usr/bin/sleep";
+        let command = CommandSpec::seal(
+            "fixture.parent-crash",
+            "1.0.0",
+            executable,
+            hash_file_for_test(executable),
+            vec!["30".to_owned()],
+            CommandWorkingDirectory::EmptyScratch,
+            BTreeMap::from([
+                ("LANG".to_owned(), "C".to_owned()),
+                ("TZ".to_owned(), "UTC".to_owned()),
+            ]),
+            CommandRisk::Low,
+            CommandBounds::new(
+                PARENT_CRASH_TIMEOUT_MS,
+                1_024,
+                4_096,
+                64 * 1024 * 1024,
+                8,
+                100,
+            )
+            .expect("limits"),
+        )
+        .expect("command");
+        let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
+        let manifest = LinuxCommandManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            &registry,
+        )
+        .expect("manifest");
+        let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
+        let held = crate::authorize_workspace_root(
+            Path::new(&worktree),
+            WorkspaceId::from_raw(format!("workspace-parent-crash-{scenario}")),
+            WorkspaceAuthorizationId::from_raw(format!("authorization-parent-crash-{scenario}")),
+            AdapterInstanceId::from_raw(format!("adapter-parent-crash-{scenario}")),
+        )
+        .expect("workspace authorizes");
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Tool,
+            TaskId::from_raw(format!("task-parent-crash-{scenario}")),
+            CorrelationId::from_raw(format!("correlation-parent-crash-{scenario}")),
+        );
+        println!("{DRIVER_READY_MARKER}");
+        std::io::stdout().flush().expect("driver flushes readiness");
+        let _ = executor.run(&command, &held, &cancellation);
+        println!("agentmage-parent-crash-driver-completed");
+    }
+
+    /// A crashed parent must never leave an owned unit, descendant, scratch tree, or
+    /// process behind, and must never manufacture a terminal receipt for the attempt
+    /// it abandoned.
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_parent_crash_leaves_no_owned_unit_descendant_or_scratch() {
+        let mut outcomes = Vec::new();
+        for iteration in 0..PARENT_CRASH_ITERATIONS {
+            for phase in [CrashPhase::AfterReady, CrashPhase::AfterUnitRunning] {
+                outcomes.push(run_parent_crash_scenario(iteration, phase));
+            }
+        }
+        // Killing once the unit is confirmed present must always exercise recovery.
+        assert!(
+            outcomes.contains(&CrashOutcome::RecoveredAfterLaunch),
+            "{outcomes:?}"
+        );
+    }
+
+    fn run_parent_crash_scenario(iteration: usize, phase: CrashPhase) -> CrashOutcome {
+        let scenario = unique_scenario_id(iteration, phase);
+        let scratch = std::env::temp_dir().join(format!("agentmage-parent-crash-{scenario}"));
+        fs::create_dir(&scratch).expect("scenario scratch creates");
+        let scratch_guard = OwnedScratchGuard(scratch.clone());
+        let worktree = scratch.join("owned-worktree");
+        fs::create_dir(&worktree).expect("worktree creates");
+        fs::write(worktree.join("marker.txt"), b"agentmage").expect("marker writes");
+
+        let before = owned_command_units();
+        let mut unit_guard = OwnedUnitGuard::default();
+
+        let mut driver = Command::new(std::env::current_exe().expect("test binary"))
+            .args([DRIVER_TEST_PATH, "--exact", "--ignored", "--nocapture"])
+            .env(DRIVER_SCENARIO_VARIABLE, &scenario)
+            .env(DRIVER_WORKTREE_VARIABLE, &worktree)
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("driver spawns");
+        let driver_pid = driver.id();
+        let mut reader = BufReader::new(driver.stdout.take().expect("driver stdout"));
+        let mut line = String::new();
+        let mut ready = false;
+        while reader.read_line(&mut line).unwrap_or(0) > 0 {
+            if line.contains(DRIVER_READY_MARKER) {
+                ready = true;
+                break;
+            }
+            line.clear();
+        }
+        assert!(ready, "driver never reported readiness");
+
+        if phase == CrashPhase::AfterUnitRunning {
+            let deadline = Instant::now() + Duration::from_secs(10);
+            while Instant::now() < deadline {
+                let observed: BTreeSet<String> =
+                    owned_command_units().difference(&before).cloned().collect();
+                if !observed.is_empty() {
+                    unit_guard.observe(&observed);
+                    break;
+                }
+                thread::sleep(POLL_INTERVAL);
+            }
+            assert!(
+                !unit_guard.units.is_empty(),
+                "owned unit never appeared before the crash point"
+            );
+        }
+
+        driver.kill().expect("driver is killed");
+        driver.wait().expect("driver is reaped");
+
+        // The unit can still appear after an early kill; adopt whatever is actually there.
+        let appeared: BTreeSet<String> =
+            owned_command_units().difference(&before).cloned().collect();
+        unit_guard.observe(&appeared);
+        let owned = unit_guard.units.clone();
+        let outcome = if owned.is_empty() {
+            CrashOutcome::InterruptedBeforeLaunch
+        } else {
+            CrashOutcome::RecoveredAfterLaunch
+        };
+
+        // Recovery is bounded by RuntimeMaxSec; never replay the command to force it.
+        let deadline = Instant::now()
+            + Duration::from_millis(PARENT_CRASH_TIMEOUT_MS)
+            + TERMINATION_GRACE
+            + Duration::from_secs(5);
+        let mut remaining: BTreeSet<String> = BTreeSet::new();
+        while Instant::now() < deadline {
+            let current = owned_command_units();
+            remaining = owned.intersection(&current).cloned().collect();
+            if remaining.is_empty() {
+                break;
+            }
+            thread::sleep(POLL_INTERVAL);
+        }
+
+        assert!(
+            remaining.is_empty(),
+            "owned units outlived the crashed parent: {remaining:?}"
+        );
+        assert!(!process_exists(driver_pid), "crashed driver still present");
+        for unit in &owned {
+            assert!(
+                processes_in_unit(unit).is_empty(),
+                "descendants of {unit} outlived the crashed parent"
+            );
+        }
+        assert!(
+            !worktree.join("forbidden.txt").exists(),
+            "interrupted attempt mutated the held worktree"
+        );
+        let mut retained: Vec<String> = fs::read_dir(&worktree)
+            .expect("worktree reads")
+            .flatten()
+            .map(|entry| entry.file_name().to_string_lossy().into_owned())
+            .collect();
+        retained.sort();
+        assert_eq!(retained, ["marker.txt"], "scratch residue after crash");
+
+        drop(scratch_guard);
+        assert!(!scratch.exists(), "scenario scratch outlived cleanup");
+        outcome
+    }
+
+    /// The kernel admits task ceilings this runner cannot execute, so the platform
+    /// rejects them before spawn rather than letting namespace creation fail opaquely.
+    #[test]
+    fn task_ceilings_below_the_linux_minimum_fail_before_launch() {
+        let executable = fs::canonicalize("/usr/bin/printf").expect("canonical printf");
+        let executable = executable.to_str().expect("UTF-8 executable");
+        for task_count in 1..super::MINIMUM_TASK_COUNT {
+            let command = CommandSpec::seal(
+                "fixture.task-minimum",
+                "1.0.0",
+                executable,
+                hash_file_for_test(executable),
+                vec!["agentmage-ok".to_owned()],
+                CommandWorkingDirectory::EmptyScratch,
+                BTreeMap::from([("LANG".to_owned(), "C".to_owned())]),
+                CommandRisk::Low,
+                CommandBounds::new(1_000, 1_024, 1_024, 16 * 1024 * 1024, task_count, 100)
+                    .expect("kernel admits the ceiling"),
+            )
+            .expect("command");
+            let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
+            let manifest = LinuxCommandManifest::verify(
+                "/usr/bin/systemd-run",
+                "/usr/bin/systemctl",
+                "/usr/bin/bwrap",
+                &registry,
+            )
+            .expect("manifest");
+            let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
+            let (_temporary, held) = held_worktree();
+            let result = executor.run(&command, &held, &worktree_token("task-minimum"));
+            assert_eq!(
+                result.termination,
+                CommandTermination::LaunchFailed,
+                "{result:?}"
+            );
+            assert_eq!(result.platform_code, "linux.command.tasks.below_minimum");
+            assert!(result.stdout.is_empty(), "{result:?}");
+            assert!(result.resource_usage.is_none(), "{result:?}");
+        }
     }
 
     #[test]
@@ -1413,8 +1785,16 @@ mod tests {
                 ("TZ".to_owned(), "UTC".to_owned()),
             ]),
             CommandRisk::Low,
-            // Minimum admissible timeout and memory ceilings.
-            CommandBounds::new(1, 1_024, 1_024, 16 * 1024 * 1024, 4, 100).expect("limits"),
+            // Minimum executable timeout, memory, task, and CPU ceilings.
+            CommandBounds::new(
+                1,
+                1_024,
+                1_024,
+                16 * 1024 * 1024,
+                super::MINIMUM_TASK_COUNT,
+                1,
+            )
+            .expect("limits"),
         )
         .expect("command");
         let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
