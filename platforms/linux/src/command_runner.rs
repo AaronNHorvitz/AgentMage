@@ -1203,11 +1203,43 @@ mod tests {
         assert!((3..=command.bounds.task_count).contains(&usage.peak_task_count));
     }
 
+    /// Seals a single-command registry and executor for one empty-scratch fixture.
+    fn scratch_fixture(
+        template_id: &str,
+        executable: &str,
+        arguments: Vec<String>,
+        risk: CommandRisk,
+    ) -> (CommandSpec, LinuxBoundedCommandExecutor) {
+        command_fixture(
+            template_id,
+            executable,
+            arguments,
+            CommandWorkingDirectory::EmptyScratch,
+            risk,
+        )
+    }
+
     /// Seals a single-command registry and executor for one owned-worktree fixture.
     fn owned_worktree_fixture(
         template_id: &str,
         executable: &str,
         arguments: Vec<String>,
+        risk: CommandRisk,
+    ) -> (CommandSpec, LinuxBoundedCommandExecutor) {
+        command_fixture(
+            template_id,
+            executable,
+            arguments,
+            CommandWorkingDirectory::OwnedWorktree,
+            risk,
+        )
+    }
+
+    fn command_fixture(
+        template_id: &str,
+        executable: &str,
+        arguments: Vec<String>,
+        working_directory: CommandWorkingDirectory,
         risk: CommandRisk,
     ) -> (CommandSpec, LinuxBoundedCommandExecutor) {
         let command = CommandSpec::seal(
@@ -1216,7 +1248,7 @@ mod tests {
             executable,
             hash_file_for_test(executable),
             arguments,
-            CommandWorkingDirectory::OwnedWorktree,
+            working_directory,
             BTreeMap::from([
                 ("LANG".to_owned(), "C".to_owned()),
                 ("TZ".to_owned(), "UTC".to_owned()),
@@ -1243,6 +1275,105 @@ mod tests {
             TaskId::from_raw(format!("task-linux-worktree-{suffix}")),
             CorrelationId::from_raw(format!("correlation-linux-worktree-{suffix}")),
         )
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_guest_environment_holds_only_the_sealed_template_variables() {
+        let executable = fs::canonicalize("/usr/bin/printenv").expect("canonical printenv");
+        let executable = executable.to_str().expect("UTF-8 executable");
+        let (command, executor) =
+            scratch_fixture("fixture.printenv", executable, Vec::new(), CommandRisk::Low);
+        // The ambient host environment carries these; none may cross the boundary.
+        let ambient: Vec<String> = ["HOME", "PATH", "USER", "XDG_RUNTIME_DIR"]
+            .into_iter()
+            .filter_map(|name| std::env::var(name).ok())
+            .collect();
+        assert!(
+            !ambient.is_empty(),
+            "host environment is unexpectedly empty"
+        );
+        let (_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &worktree_token("environment-0001"));
+        assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
+        assert_eq!(result.exit_code, Some(0), "{result:?}");
+        let observed = String::from_utf8(result.stdout.clone()).expect("UTF-8 environment");
+        // Bubblewrap sets PWD from the fixed guest working directory; it names no host path.
+        let mut names: Vec<&str> = observed.lines().collect();
+        names.sort_unstable();
+        assert_eq!(names, ["LANG=C", "PWD=/work", "TZ=UTC"], "{observed}");
+        for value in &ambient {
+            assert!(!observed.contains(value.as_str()), "{observed}");
+        }
+    }
+
+    /// The guest mounts only `/app/command` and read-only runtime libraries, so an
+    /// approved template cannot reach a second executable to exec. This closes
+    /// pager, editor, hook, and helper-binary activation at the mount boundary and
+    /// makes an exec-built grandchild tree unreachable rather than merely denied.
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_guest_cannot_execute_any_second_program() {
+        let executable = fs::canonicalize("/usr/bin/timeout").expect("canonical timeout");
+        let executable = executable.to_str().expect("UTF-8 executable");
+        let (command, executor) = scratch_fixture(
+            "fixture.second-program-denied",
+            executable,
+            vec![
+                "60".to_owned(),
+                "/usr/bin/sleep".to_owned(),
+                "60".to_owned(),
+            ],
+            CommandRisk::Moderate,
+        );
+        let (_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &worktree_token("second-program-0001"));
+        assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
+        assert_eq!(result.exit_code, Some(127), "{result:?}");
+        let stderr = String::from_utf8_lossy(&result.stderr);
+        assert!(stderr.contains("No such file or directory"), "{stderr}");
+        assert!(result.descendants_terminated, "{result:?}");
+        // A command this short can exit before the sampler observes the unit at all.
+        if let Some(usage) = result.resource_usage {
+            assert!(
+                usage.peak_task_count <= command.bounds.task_count,
+                "{usage:?}"
+            );
+        }
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_empty_scratch_retains_no_residue_between_attempts() {
+        let write_executable = fs::canonicalize("/usr/bin/touch").expect("canonical touch");
+        let write_executable = write_executable.to_str().expect("UTF-8 executable");
+        let (write_command, write_executor) = scratch_fixture(
+            "fixture.scratch-write",
+            write_executable,
+            vec!["residue.txt".to_owned()],
+            CommandRisk::Moderate,
+        );
+        let (_temporary, held) = held_worktree();
+        let written = write_executor.run(&write_command, &held, &worktree_token("scratch-write"));
+        assert_eq!(
+            written.termination,
+            CommandTermination::Exited,
+            "{written:?}"
+        );
+        assert_eq!(written.exit_code, Some(0), "{written:?}");
+
+        let list_executable = fs::canonicalize("/usr/bin/ls").expect("canonical ls");
+        let list_executable = list_executable.to_str().expect("UTF-8 executable");
+        let (list_command, list_executor) = scratch_fixture(
+            "fixture.scratch-list",
+            list_executable,
+            vec!["-A".to_owned()],
+            CommandRisk::Low,
+        );
+        let listed = list_executor.run(&list_command, &held, &worktree_token("scratch-list"));
+        assert_eq!(listed.termination, CommandTermination::Exited, "{listed:?}");
+        assert_eq!(listed.exit_code, Some(0), "{listed:?}");
+        assert!(listed.stdout.is_empty(), "{listed:?}");
     }
 
     #[test]
