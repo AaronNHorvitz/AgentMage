@@ -813,6 +813,7 @@ mod tests {
     use std::collections::BTreeMap;
     use std::fs;
     use std::path::PathBuf;
+    use std::process::{Command, Stdio};
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::thread;
     use std::time::Duration;
@@ -828,6 +829,8 @@ mod tests {
     };
     use agentmage_kernel_engine::propagation::CancellationToken;
 
+    use rustix::fs::{Mode, OFlags, open};
+    use rustix::io::{FdFlags, fcntl_getfd};
     use sha2::Digest as _;
 
     use super::{LinuxBoundedCommandExecutor, LinuxCommandManifest};
@@ -1197,6 +1200,116 @@ mod tests {
         assert_eq!(result.termination, CommandTermination::Exited);
         assert_ne!(result.exit_code, Some(0), "{result:?}");
         assert!(!temporary.0.join("owned-worktree/forbidden.txt").exists());
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_inherited_descriptors_do_not_reach_the_command_guest() {
+        let temporary = TestDirectory::new();
+        let secret_path = temporary.0.join("inherited-secret.txt");
+        fs::write(&secret_path, b"agentmage-inherited-secret").expect("secret writes");
+        let leaked_file =
+            open(&secret_path, OFlags::RDWR, Mode::empty()).expect("secret descriptor opens");
+        let leaked_directory = open(
+            &temporary.0,
+            OFlags::RDONLY | OFlags::DIRECTORY,
+            Mode::empty(),
+        )
+        .expect("directory descriptor opens");
+        for leaked in [&leaked_file, &leaked_directory] {
+            assert!(
+                !fcntl_getfd(leaked)
+                    .expect("descriptor flags")
+                    .contains(FdFlags::CLOEXEC)
+            );
+        }
+
+        let control = Command::new("/usr/bin/ls")
+            .env_clear()
+            .args(["-l", "/proc/self/fd"])
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .output()
+            .expect("control child runs");
+        assert!(control.status.success(), "{control:?}");
+        let control_listing = String::from_utf8_lossy(&control.stdout);
+        assert!(
+            control_listing.contains("inherited-secret.txt"),
+            "{control_listing}"
+        );
+
+        let executable = fs::canonicalize("/usr/bin/ls").expect("canonical ls");
+        let executable = executable.to_str().expect("UTF-8 executable");
+        let command = CommandSpec::seal(
+            "fixture.fd-enumeration",
+            "1.0.0",
+            executable,
+            hash_file_for_test(executable),
+            vec!["-l".to_owned(), "/proc/self/fd".to_owned()],
+            CommandWorkingDirectory::EmptyScratch,
+            BTreeMap::from([
+                ("LANG".to_owned(), "C".to_owned()),
+                ("TZ".to_owned(), "UTC".to_owned()),
+            ]),
+            CommandRisk::Low,
+            CommandBounds::new(5_000, 4_096, 4_096, 64 * 1024 * 1024, 8, 100).expect("limits"),
+        )
+        .expect("command");
+        let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
+        let manifest = LinuxCommandManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            &registry,
+        )
+        .expect("manifest");
+        let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Tool,
+            TaskId::from_raw("task-linux-descriptors-0001"),
+            CorrelationId::from_raw("correlation-linux-descriptors-0001"),
+        );
+        let (_worktree_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &cancellation);
+        assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
+        assert_eq!(result.exit_code, Some(0), "{result:?}");
+
+        let listing = String::from_utf8(result.stdout.clone()).expect("UTF-8 guest listing");
+        assert!(!listing.contains("inherited-secret"), "{listing}");
+        let temporary_name = temporary
+            .0
+            .file_name()
+            .and_then(|name| name.to_str())
+            .expect("temporary name");
+        assert!(!listing.contains(temporary_name), "{listing}");
+
+        let enumerated: Vec<(u32, &str)> = listing
+            .lines()
+            .filter_map(|line| {
+                let (left, target) = line.split_once(" -> ")?;
+                let descriptor = left.rsplit(' ').next()?.parse().ok()?;
+                Some((descriptor, target))
+            })
+            .collect();
+        for expected in [0, 1, 2] {
+            assert!(
+                enumerated
+                    .iter()
+                    .any(|(descriptor, _)| *descriptor == expected),
+                "{listing}"
+            );
+        }
+        for (descriptor, target) in &enumerated {
+            match descriptor {
+                0 => assert_eq!(*target, "/dev/null", "{listing}"),
+                1 | 2 => assert!(target.starts_with("pipe:"), "{listing}"),
+                _ => assert!(
+                    target.ends_with("/fd"),
+                    "undeclared guest descriptor {descriptor} -> {target}"
+                ),
+            }
+        }
     }
 
     fn hash_file_for_test(path: &str) -> String {
