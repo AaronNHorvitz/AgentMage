@@ -2796,6 +2796,94 @@ mod tests {
         }
     }
 
+    /// The user keeps working while AgentMage removes and cleans up its own worktree.
+    /// Every artifact the user creates during that window must survive untouched.
+    #[test]
+    fn concurrent_user_changes_survive_worktree_removal_and_cleanup() {
+        let fixture = Fixture::new();
+        seed_user_git_state(&fixture);
+        let scope = fixture.scope();
+        let cancellation = cancellation("worktree-concurrent");
+        let mut executor = LinuxRepositoryExecutor::new(fixture.collector(), scope.clone());
+        let (worktree_path, record) = create_owned_worktree(
+            &fixture,
+            &mut executor,
+            &scope,
+            &cancellation,
+            "worktree-concurrent",
+        );
+
+        // The user mutates files, refs, tags, notes, and configuration during removal.
+        let repository = fixture.repository.clone();
+        let mutator = thread::spawn(move || {
+            fs::write(
+                repository.join("concurrent.txt"),
+                b"written during removal\n",
+            )
+            .expect("concurrent file");
+            run_fixture(&repository, &["branch", "user/concurrent"]);
+            run_fixture(&repository, &["tag", "user-concurrent-tag"]);
+            run_fixture(
+                &repository,
+                &["config", "user.agentmageConcurrent", "written"],
+            );
+            fs::write(
+                repository.join("README.md"),
+                b"user edited during removal\n",
+            )
+            .expect("concurrent edit");
+        });
+
+        let before_remove = executor.collector.collect(&scope).expect("before remove");
+        let removal = plan_worktree_remove(
+            "transaction-remove",
+            &record,
+            scope.repository_path_sha256(),
+            &before_remove,
+        )
+        .expect("remove plan");
+        let removed = executor.run(&removal, &before_remove, &cancellation);
+        mutator.join().expect("concurrent user work");
+
+        // Removal either completed or reported truthfully; it never silently half-acted.
+        assert!(
+            matches!(
+                removed.outcome,
+                OperationOutcome::Succeeded
+                    | OperationOutcome::Denied
+                    | OperationOutcome::Uncertain
+            ),
+            "{removed:?}"
+        );
+
+        // Every concurrently created user artifact survives exactly.
+        assert_eq!(
+            fs::read(fixture.repository.join("concurrent.txt")).expect("concurrent file"),
+            b"written during removal\n"
+        );
+        assert_eq!(
+            fs::read(fixture.repository.join("README.md")).expect("readme"),
+            b"user edited during removal\n"
+        );
+        let refs = run_fixture(&fixture.repository, &["show-ref"]);
+        let refs = String::from_utf8(refs).expect("refs UTF-8");
+        assert!(refs.contains("refs/heads/user/concurrent"), "{refs}");
+        assert!(refs.contains("refs/tags/user-concurrent-tag"), "{refs}");
+        assert_eq!(
+            run_fixture(
+                &fixture.repository,
+                &["config", "--get", "user.agentmageConcurrent"],
+            ),
+            b"written\n"
+        );
+        // The user's earlier seeded state is equally intact.
+        assert!(!run_fixture(&fixture.repository, &["stash", "list"]).is_empty());
+        assert!(!run_fixture(&fixture.repository, &["notes", "list"]).is_empty());
+        if worktree_path.exists() {
+            fs::remove_dir_all(&worktree_path).expect("owned scratch removes");
+        }
+    }
+
     /// An interrupted compare-and-swap must leave the branch either exactly where it was
     /// or exactly at the proven descendant, and must never disturb any other ref.
     #[test]
