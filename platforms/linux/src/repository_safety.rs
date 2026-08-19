@@ -1248,9 +1248,46 @@ impl LinuxRepositoryExecutor {
         let Ok(mut child) = command.spawn() else {
             return InvocationStatus::Failed;
         };
+        // Reported while the Git child is live, so a test can act strictly inside
+        // the execution window instead of relying on thread scheduling.
+        report_invocation_spawned(child.id());
         wait_bounded(&mut child, cancellation)
     }
 }
+
+/// Test-only seam reporting that a hardened Git child is running.
+///
+/// It observes an already-spawned process identifier and can neither choose nor
+/// alter any invocation. It compiles to nothing outside tests.
+#[cfg(test)]
+mod invocation_observer {
+    use std::sync::Mutex;
+
+    static OBSERVER: Mutex<Option<fn(u32)>> = Mutex::new(None);
+
+    pub(super) fn install(observer: fn(u32)) {
+        *OBSERVER.lock().expect("invocation observer") = Some(observer);
+    }
+
+    pub(super) fn clear() {
+        *OBSERVER.lock().expect("invocation observer") = None;
+    }
+
+    pub(super) fn report(pid: u32) {
+        let observer = *OBSERVER.lock().expect("invocation observer");
+        if let Some(observer) = observer {
+            observer(pid);
+        }
+    }
+}
+
+#[cfg(test)]
+fn report_invocation_spawned(pid: u32) {
+    invocation_observer::report(pid);
+}
+
+#[cfg(not(test))]
+const fn report_invocation_spawned(_pid: u32) {}
 
 fn make_created_worktree_private(path: &Path) -> bool {
     let Ok(descriptor) = open(
@@ -1936,12 +1973,13 @@ mod tests {
         RepositoryInspectionOperation, RepositoryInspectionRequest, prepare_repository_inspection,
     };
     use agentmage_kernel_engine::repository_safety::{
-        OwnedWorktreeRecord, WorktreeDisposition, plan_branch_fast_forward, plan_worktree_create,
-        plan_worktree_remove, reconcile_operation,
+        OwnedWorktreeRecord, RepositorySafetyError, WorktreeDisposition, plan_branch_fast_forward,
+        plan_worktree_create, plan_worktree_remove, reconcile_operation,
     };
     use std::net::TcpListener;
     use std::os::unix::fs::PermissionsExt as _;
-    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::Mutex;
+    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
     static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -2796,12 +2834,61 @@ mod tests {
         }
     }
 
-    /// The user keeps working while AgentMage removes and cleans up its own worktree.
-    /// Every artifact the user creates during that window must survive untouched.
+    /// Coordinates the concurrent-mutation case: the observer callback is a plain
+    /// function pointer, so the repository path and observations live here.
+    static CONCURRENT_REPOSITORY: Mutex<Option<PathBuf>> = Mutex::new(None);
+    /// Only the thread running this fixture's removal may trigger the mutation, so a
+    /// parallel test's Git invocation can never consume or misfire the observer.
+    static CONCURRENT_THREAD: Mutex<Option<std::thread::ThreadId>> = Mutex::new(None);
+    static CONCURRENT_OVERLAPPED: AtomicBool = AtomicBool::new(false);
+    static CONCURRENT_MUTATED: AtomicBool = AtomicBool::new(false);
+
+    /// Runs while the hardened Git child for the removal is still alive, which is what
+    /// makes the overlap deterministic rather than a scheduling accident.
+    fn mutate_during_removal(git_pid: u32) {
+        let expected = *CONCURRENT_THREAD.lock().expect("concurrent thread");
+        if expected != Some(std::thread::current().id()) {
+            return;
+        }
+        if CONCURRENT_MUTATED.swap(true, Ordering::SeqCst) {
+            return;
+        }
+        // The Git child is live at this instant: the window is real, not assumed.
+        CONCURRENT_OVERLAPPED.store(
+            Path::new(&format!("/proc/{git_pid}")).exists(),
+            Ordering::SeqCst,
+        );
+        let repository = CONCURRENT_REPOSITORY
+            .lock()
+            .expect("concurrent repository")
+            .clone()
+            .expect("concurrent repository set");
+        fs::write(
+            repository.join("concurrent.txt"),
+            b"written during removal\n",
+        )
+        .expect("concurrent file");
+        fs::write(
+            repository.join("README.md"),
+            b"user edited during removal\n",
+        )
+        .expect("concurrent edit");
+        run_fixture(&repository, &["branch", "user/concurrent"]);
+        run_fixture(&repository, &["tag", "user-concurrent-tag"]);
+        run_fixture(
+            &repository,
+            &["config", "user.agentmageConcurrent", "written"],
+        );
+    }
+
+    /// The user works inside the exact window in which AgentMage removes its own
+    /// worktree. Every seeded and concurrently created user artifact must survive, and
+    /// the reported outcome and cleanup flag must match the observed postconditions.
     #[test]
     fn concurrent_user_changes_survive_worktree_removal_and_cleanup() {
         let fixture = Fixture::new();
         seed_user_git_state(&fixture);
+        let seeded = capture_user_git_state(&fixture);
         let scope = fixture.scope();
         let cancellation = cancellation("worktree-concurrent");
         let mut executor = LinuxRepositoryExecutor::new(fixture.collector(), scope.clone());
@@ -2812,28 +2899,13 @@ mod tests {
             &cancellation,
             "worktree-concurrent",
         );
+        assert!(worktree_path.is_dir(), "worktree was not created");
 
-        // The user mutates files, refs, tags, notes, and configuration during removal.
-        let repository = fixture.repository.clone();
-        let mutator = thread::spawn(move || {
-            fs::write(
-                repository.join("concurrent.txt"),
-                b"written during removal\n",
-            )
-            .expect("concurrent file");
-            run_fixture(&repository, &["branch", "user/concurrent"]);
-            run_fixture(&repository, &["tag", "user-concurrent-tag"]);
-            run_fixture(
-                &repository,
-                &["config", "user.agentmageConcurrent", "written"],
-            );
-            fs::write(
-                repository.join("README.md"),
-                b"user edited during removal\n",
-            )
-            .expect("concurrent edit");
-        });
-
+        *CONCURRENT_REPOSITORY.lock().expect("concurrent repository") =
+            Some(fixture.repository.clone());
+        *CONCURRENT_THREAD.lock().expect("concurrent thread") = Some(std::thread::current().id());
+        CONCURRENT_OVERLAPPED.store(false, Ordering::SeqCst);
+        CONCURRENT_MUTATED.store(false, Ordering::SeqCst);
         let before_remove = executor.collector.collect(&scope).expect("before remove");
         let removal = plan_worktree_remove(
             "transaction-remove",
@@ -2842,33 +2914,63 @@ mod tests {
             &before_remove,
         )
         .expect("remove plan");
+        super::invocation_observer::install(mutate_during_removal);
         let removed = executor.run(&removal, &before_remove, &cancellation);
-        mutator.join().expect("concurrent user work");
+        super::invocation_observer::clear();
+        *CONCURRENT_THREAD.lock().expect("concurrent thread") = None;
 
-        // Removal either completed or reported truthfully; it never silently half-acted.
+        // The mutation ran, and it ran while the removal's Git child was alive.
         assert!(
-            matches!(
-                removed.outcome,
-                OperationOutcome::Succeeded
-                    | OperationOutcome::Denied
-                    | OperationOutcome::Uncertain
-            ),
-            "{removed:?}"
+            CONCURRENT_MUTATED.load(Ordering::SeqCst),
+            "mutation never ran"
+        );
+        assert!(
+            CONCURRENT_OVERLAPPED.load(Ordering::SeqCst),
+            "mutation did not overlap the removal"
         );
 
-        // Every concurrently created user artifact survives exactly.
+        // Exact postconditions, not a menu of permitted outcomes.
+        assert_eq!(removed.outcome, OperationOutcome::Succeeded, "{removed:?}");
+        assert!(removed.cleanup_verified, "{removed:?}");
+        assert_eq!(removed.platform_code, "linux.git.succeeded");
+        assert!(!worktree_path.exists(), "owned worktree survived removal");
+        // The postflight manifest observed the user's concurrent work rather than
+        // reporting a stale snapshot.
+        assert_ne!(removed.after, removed.before, "{removed:?}");
+        // Because protected state moved underneath the operation, no receipt may claim
+        // a clean removal: reconciliation refuses rather than attesting to it.
+        assert_eq!(
+            reconcile_operation(&removal, removed, "authority-remove", "attempt-remove")
+                .expect_err("concurrent movement must not reconcile"),
+            RepositorySafetyError::PreservationMismatch
+        );
+
+        // Every seeded artifact is byte-for-byte identical except where the user
+        // themselves changed it during the window.
+        let after = capture_user_git_state(&fixture);
+        assert_eq!(after.notes, seeded.notes);
+        assert_eq!(after.stash, seeded.stash);
+        assert_eq!(after.hook, seeded.hook);
+        assert_eq!(after.config, seeded.config);
+        assert_eq!(after.checkout.head, seeded.checkout.head);
+        assert_eq!(
+            after.checkout.abbreviated_ref,
+            seeded.checkout.abbreviated_ref
+        );
+        assert_eq!(after.checkout.index, seeded.checkout.index);
+        assert_eq!(after.checkout.untracked, seeded.checkout.untracked);
+
+        // Every artifact the user created inside the window survives exactly.
         assert_eq!(
             fs::read(fixture.repository.join("concurrent.txt")).expect("concurrent file"),
             b"written during removal\n"
         );
-        assert_eq!(
-            fs::read(fixture.repository.join("README.md")).expect("readme"),
-            b"user edited during removal\n"
-        );
-        let refs = run_fixture(&fixture.repository, &["show-ref"]);
-        let refs = String::from_utf8(refs).expect("refs UTF-8");
+        assert_eq!(after.checkout.readme, b"user edited during removal\n");
+        let refs = String::from_utf8(after.refs).expect("refs UTF-8");
         assert!(refs.contains("refs/heads/user/concurrent"), "{refs}");
+        assert!(refs.contains("refs/heads/user/topic"), "{refs}");
         assert!(refs.contains("refs/tags/user-concurrent-tag"), "{refs}");
+        assert!(refs.contains("refs/tags/user-tag"), "{refs}");
         assert_eq!(
             run_fixture(
                 &fixture.repository,
@@ -2876,12 +2978,6 @@ mod tests {
             ),
             b"written\n"
         );
-        // The user's earlier seeded state is equally intact.
-        assert!(!run_fixture(&fixture.repository, &["stash", "list"]).is_empty());
-        assert!(!run_fixture(&fixture.repository, &["notes", "list"]).is_empty());
-        if worktree_path.exists() {
-            fs::remove_dir_all(&worktree_path).expect("owned scratch removes");
-        }
     }
 
     /// An interrupted compare-and-swap must leave the branch either exactly where it was
