@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "record_type": "sprint_41_local_evidence",
-  "source_revision": "73e4d89601a6380481aa8642fb0caf5210fb5634",
+  "source_revision": "485b27fd8c7674fafa93a4b2d1b63d3af8839bab",
   "source_sha256": {
     "kernel/engine/src/command_runner.rs": "e3c595700324b094d4c0df6634b277a7443c3a992680f9da613ce5873a82c8a6",
     "kernel/engine/src/validation_result.rs": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9",
-    "platforms/linux/src/command_runner.rs": "4d40c66368b1854a2a02c91c79afb6a720bd115068f852bfbce296e72bef28d6",
+    "platforms/linux/src/command_runner.rs": "816843fd035a9938bbb034603076a5bee890ac84b4347bf527b488f748d2e89e",
     "shells/host/src/linux_coding_runtime.rs": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af",
     "kernel/engine/tests/command_injection_corpus.rs": "b8a9102a0a76fa4fc5cc3b98348bf2001512526d99bf8bbf5e3794b80a4c8cf5",
     "schemas/runtime/command-preview.schema.json": "1a11dd45b8cd53ac6633451d9ffc927e21760de1db40e3d19de0511a96295ca6",
@@ -14,8 +14,8 @@
     "schemas/runtime/examples/command-receipt.valid.json": "c6f8359cce61612dadb529ba10cb19040b5da053e1863c072e2e6facde1ae6dd",
     "docs/architecture/bounded-command-runner.md": "244bea1636f568dce183077f17b294508677830bce022cdfebb151321ad951dc",
     "docs/verification/sprint-41-command-injection-corpus.json": "78a5a8e9cc57d8967ad433c9395039b38340bdd85ed2ee0fdc049868f830792f",
-    "docs/verification/sprint-41-local-results.md": "b7d00ca7d55254e5c159fcfd9405915770d478bdb4b84a25dceb0e0dffd32c49",
-    "scripts/sprint_41_evidence.py": "c4d24249dcf0e25d5c1c42c7159bd9823a1b0c6b41eb9c47df099bf39e093339",
+    "docs/verification/sprint-41-local-results.md": "60f7a424a54fc582d37dfa9110e2e915c3eaa2bddfc56df3947d82e90ece2348",
+    "scripts/sprint_41_evidence.py": "c5cbbf8052dd6c305cc73461cece13e5f98bc76a3b76f790c78c46ad8ddbcaec",
     "tests/test_planning_schemas.mjs": "2449f8676f5fb226e35910b5e00652228aa06dfd613c31324881609081aaaa1f",
     "tests/test_sprint_41_evidence.py": "f48771af1a69a70b838f3e75d41a827f79eb5209d8e3aa52845373712530e283"
   },
@@ -43,7 +43,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "d3e5912d494ca5c89cc3d3102849a77e7200a28086f4a508378181a8ef5d8f5e",
+      "output_sha256": "c224b75e71e403a4f3f0e0641f68d6e5db656ec3d462b67d0ba4589e786fcb39",
       "blocking_skip_count": 0
     },
     {
@@ -72,7 +72,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "f664d1a67c50586a2dafa1cde23ce26b1da25e20f7626b5b9f59971abf49d8af",
+      "output_sha256": "1bec97e215ecd713eb20ab147e78f6722ae75512cebc795e6fb6d9e439c1bf41",
       "blocking_skip_count": 0
     },
     {
@@ -88,7 +88,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "a8e2ba2829bf45485c2525f7cfaf5a6a6a2e7b8469675dd962d24f540a2f4994",
+      "output_sha256": "fdf487a1e395bf816991061e7bb8bf4cd394c8d8b61ac826326a295f2ef30ff2",
       "blocking_skip_count": 0
     },
     {
@@ -104,7 +104,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "fcff2fc05c743681dbdda22f0e804e2ae043b13b09bcf21ec2cfaf1d4878179b",
+      "output_sha256": "44943ed78fd2d799e373b2662636a69f9334a39c5fd0d4ef8936c55c6d2d23d2",
       "blocking_skip_count": 0
     },
     {
@@ -120,7 +120,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "86733d1433e68d1f65699443a8711bfa29c1d699d79a47fd143a5b995e070124",
+      "output_sha256": "44933051b8ace8acc8932cd725c3c0a8cde5c20ed4c53b2add1c21637dcf33db",
       "blocking_skip_count": 0
     },
     {
@@ -136,7 +136,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "d98ecf8c3142061858a5a201d173f6e1dadf5fa2bbf2c4f9a0ddc0a292b3937c",
+      "output_sha256": "d973c3da5b156cb8f214797927a999a7c3a56a5ca57f979de66982a581d7d58c",
       "blocking_skip_count": 0
     },
     {
@@ -152,7 +152,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "63d175ca8c543b183b5421c3469ddac731e4ae76853ba6afef30c556537276fd",
+      "output_sha256": "89b00ef493f3787e7988c912789f1eefb3858b63f315b603c8266abce6c1a794",
       "blocking_skip_count": 0
     },
     {
@@ -168,7 +168,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "451d1749d751a99fed8fd20b5b0027f26a361e335856c6c636dc9ad1c68c25fd",
+      "output_sha256": "72ba2ee500e1c0986b17e84c27029f866b17a3c9f58bbb08c822f7c48408e569",
       "blocking_skip_count": 0
     },
     {
@@ -184,7 +184,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "22fb129a75a6d013f1e000e52fcb091f56bf9e980f9ffb3d2b30bf1bc7c23b84",
+      "output_sha256": "b50a5fc53552a61e87ed372764a3ba608eff543644efff244c63771fd3e3eb2d",
       "blocking_skip_count": 0
     },
     {
@@ -200,7 +200,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "977bcc9e31ba8e51399bee035cf03a3261cc290b33ae22effc61775b7ce0cb99",
+      "output_sha256": "ddcaa08b45bfd5e1507295490b5b285e585d671a5efbdb429e2780e71029a2ec",
       "blocking_skip_count": 0
     },
     {
@@ -216,7 +216,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "114af83b8ce0f99cf57cf6fe186e2d5d6aca3ca080753109599fa5b69d81b577",
+      "output_sha256": "18da7d57f4a13ced528e0d2b7f230907234fe4a39c36eee2462ced035c8c80f9",
       "blocking_skip_count": 0
     },
     {
@@ -232,7 +232,23 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "274457f1190a5bb15480fb7f7feb6e6f92b3f1572112632b82901e9e9c14542d",
+      "output_sha256": "db2913bec559583dcee40fcfd59f3bf4e137a29468a2821864f09fab2a2c95bc",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-root-enumeration",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_guest_filesystem_root_exposes_only_declared_mounts",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "fee228f1beb0e82cbc7cab753313af918dba4db1743cb55e33a1f0be09c6398d",
       "blocking_skip_count": 0
     },
     {
@@ -248,7 +264,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "3e5a3b8832340d5b1f632b1f809a2b76f71fdf321caa139635cee3db9f5356ee",
+      "output_sha256": "6a8729e7efa735372c550b3ab801ba017e7513644acf7a20ca3c7e2d719c6a1b",
       "blocking_skip_count": 0
     },
     {
@@ -259,7 +275,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "02d8f7e195066aa723ffe07974cb2c2503400afb4bb2b1c92462f756ba35ca93",
+      "output_sha256": "bc54f0a62228721a1fd4bdbb7cfcad7cdbf57f21f7b9c981efe4cf6f3355f348",
       "blocking_skip_count": null
     },
     {
@@ -270,7 +286,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "750070cd5d4a3f7199560fbdbea1d8164b69b0be8e0745f0f5a116f590d0056d",
+      "output_sha256": "9ef24de0694b7b56e95d62883b2f885e192c76910e926c5e303c8821283aa4bd",
       "blocking_skip_count": null
     },
     {
@@ -310,7 +326,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "fe1e882fead82cc8679c3d67257c4e049c94a9bbda64a5a29abcfcef0c171c66",
+      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd",
       "blocking_skip_count": null
     },
     {
@@ -449,7 +465,8 @@
     "guest_environment_containment_exercised": true,
     "empty_scratch_residue_absent": true,
     "second_program_execution_unreachable": true,
-    "planted_host_configuration_campaign_complete": false,
+    "guest_root_exposes_only_declared_mounts": true,
+    "planted_host_configuration_campaign_complete": true,
     "hostile_descendant_tree_campaign_complete": false,
     "parent_crash_recovery_campaign_complete": false,
     "native_cross_platform_command_acceptance": false,
@@ -469,7 +486,8 @@
     "guest_environment_containment": true,
     "empty_scratch_residue_absent": true,
     "second_program_execution_unreachable": true,
-    "planted_host_configuration_campaign": false,
+    "guest_root_exposes_only_declared_mounts": true,
+    "planted_host_configuration_campaign": true,
     "hostile_descendant_crash_campaign": false,
     "parent_crash_recovery_campaign": false,
     "native_cross_platform_command_acceptance": false,
@@ -485,10 +503,6 @@
     {
       "code": "COMMAND-PROFILE-NOT-PRODUCT-REGISTERED",
       "owner": "41.1.1"
-    },
-    {
-      "code": "PLANTED-HOST-CONFIGURATION-CAMPAIGN-ABSENT",
-      "owner": "41.1.3.2"
     },
     {
       "code": "HOSTILE-DESCENDANT-CRASH-CAMPAIGN-ABSENT",
