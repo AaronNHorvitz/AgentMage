@@ -151,6 +151,45 @@ NONZERO_STEP_IDS: Final = {
 }
 
 
+def lifecycle_step_ids(baseline_version: str, upgrade_version: str) -> tuple[str, ...]:
+    """Returns the exact ordered package lifecycle for one version transition."""
+    return (
+        "platform-identity",
+        "standard-user-identity",
+        f"install-{baseline_version}",
+        *(f"initial-{suffix}" for suffix in VERIFY_STATE_SUFFIXES),
+        "corrupt-upgrade-refusal",
+        *(f"post-refusal-{suffix}" for suffix in VERIFY_STATE_SUFFIXES),
+        f"upgrade-{upgrade_version}",
+        *(f"upgraded-{suffix}" for suffix in VERIFY_STATE_SUFFIXES),
+        f"rollback-{baseline_version}",
+        *(f"rolled-back-{suffix}" for suffix in VERIFY_STATE_SUFFIXES),
+        "uninstall-after-rollback",
+        "first-uninstall-package-record-absent",
+        "first-uninstall-filesystem-residue-absent",
+        f"reinstall-{upgrade_version}-after-clean-removal",
+        *(f"recovered-{suffix}" for suffix in VERIFY_STATE_SUFFIXES),
+        "final-uninstall",
+        "final-uninstall-package-record-absent",
+        "final-uninstall-filesystem-residue-absent",
+    )
+
+
+def lifecycle_admin_step_ids(
+    baseline_version: str, upgrade_version: str
+) -> set[str]:
+    """Returns the package-manager-only lifecycle steps."""
+    return {
+        f"install-{baseline_version}",
+        "corrupt-upgrade-refusal",
+        f"upgrade-{upgrade_version}",
+        f"rollback-{baseline_version}",
+        "uninstall-after-rollback",
+        f"reinstall-{upgrade_version}-after-clean-removal",
+        "final-uninstall",
+    }
+
+
 @dataclass(frozen=True)
 class ContainerTarget:
     """A closed package-manager and operating-system lifecycle target."""
@@ -689,6 +728,8 @@ def _run_container_target(
     artifacts: dict[str, dict[str, Path]],
     target: ContainerTarget,
     package_root: Path,
+    baseline_version: str = "0.0.0",
+    upgrade_version: str = "0.0.1",
 ) -> dict[str, Any]:
     image = _image_identity(target.image)
     if image["architecture"] != "amd64" or image["os"] != "linux":
@@ -715,19 +756,21 @@ def _run_container_target(
         records.append(user_record)
 
         extension = "rpm" if target.package_format == "rpm" else "deb"
-        package_v0 = f"{CONTAINER_PACKAGE_ROOT}/{artifacts['0.0.0'][extension].name}"
-        package_v1 = f"{CONTAINER_PACKAGE_ROOT}/{artifacts['0.0.1'][extension].name}"
-        broken_v1 = f"{CONTAINER_PACKAGE_ROOT}/broken-{artifacts['0.0.1'][extension].name}"
+        package_v0 = f"{CONTAINER_PACKAGE_ROOT}/{artifacts[baseline_version][extension].name}"
+        package_v1 = f"{CONTAINER_PACKAGE_ROOT}/{artifacts[upgrade_version][extension].name}"
+        broken_v1 = f"{CONTAINER_PACKAGE_ROOT}/broken-{artifacts[upgrade_version][extension].name}"
         install_record, _ = _step_record(
             container_id,
             LifecycleStep(
-                "install-0.0.0",
+                f"install-{baseline_version}",
                 "package-administrator",
                 _package_arguments(target, "install", package_v0),
             ),
         )
         records.append(install_record)
-        records.extend(_verify_installed_state(container_id, target, "0.0.0", "initial"))
+        records.extend(
+            _verify_installed_state(container_id, target, baseline_version, "initial")
+        )
 
         corrupt_record, _ = _step_record(
             container_id,
@@ -740,31 +783,37 @@ def _run_container_target(
         )
         records.append(corrupt_record)
         records.extend(
-            _verify_installed_state(container_id, target, "0.0.0", "post-refusal")
+            _verify_installed_state(
+                container_id, target, baseline_version, "post-refusal"
+            )
         )
 
         upgrade_record, _ = _step_record(
             container_id,
             LifecycleStep(
-                "upgrade-0.0.1",
+                f"upgrade-{upgrade_version}",
                 "package-administrator",
                 _package_arguments(target, "upgrade", package_v1),
             ),
         )
         records.append(upgrade_record)
-        records.extend(_verify_installed_state(container_id, target, "0.0.1", "upgraded"))
+        records.extend(
+            _verify_installed_state(container_id, target, upgrade_version, "upgraded")
+        )
 
         rollback_record, _ = _step_record(
             container_id,
             LifecycleStep(
-                "rollback-0.0.0",
+                f"rollback-{baseline_version}",
                 "package-administrator",
                 _package_arguments(target, "rollback", package_v0),
             ),
         )
         records.append(rollback_record)
         records.extend(
-            _verify_installed_state(container_id, target, "0.0.0", "rolled-back")
+            _verify_installed_state(
+                container_id, target, baseline_version, "rolled-back"
+            )
         )
 
         remove_record, _ = _step_record(
@@ -781,14 +830,14 @@ def _run_container_target(
         reinstall_record, _ = _step_record(
             container_id,
             LifecycleStep(
-                "reinstall-0.0.1-after-clean-removal",
+                f"reinstall-{upgrade_version}-after-clean-removal",
                 "package-administrator",
                 _package_arguments(target, "install", package_v1),
             ),
         )
         records.append(reinstall_record)
         records.extend(
-            _verify_installed_state(container_id, target, "0.0.1", "recovered")
+            _verify_installed_state(container_id, target, upgrade_version, "recovered")
         )
 
         final_remove_record, _ = _step_record(
@@ -833,16 +882,19 @@ def _run_container_target(
 
 
 def _prepare_container_packages(
-    artifacts: dict[str, dict[str, Path]], package_root: Path
+    artifacts: dict[str, dict[str, Path]],
+    package_root: Path,
+    baseline_version: str = "0.0.0",
+    upgrade_version: str = "0.0.1",
 ) -> None:
-    for version in ("0.0.0", "0.0.1"):
+    for version in (baseline_version, upgrade_version):
         for package_format in ("rpm", "deb"):
             source = artifacts[version][package_format]
             if not source.is_file() or source.is_symlink():
                 raise PackageLifecycleError("package.lifecycle.artifact")
             shutil.copyfile(source, package_root / source.name)
     for package_format in ("rpm", "deb"):
-        source = artifacts["0.0.1"][package_format]
+        source = artifacts[upgrade_version][package_format]
         broken = package_root / f"broken-{source.name}"
         content = source.read_bytes()
         if len(content) <= 1024:
@@ -850,7 +902,11 @@ def _prepare_container_packages(
         broken.write_bytes(content[:1024])
 
 
-def validate_container_lifecycle(value: Any) -> list[str]:
+def validate_container_lifecycle(
+    value: Any,
+    baseline_version: str = "0.0.0",
+    upgrade_version: str = "0.0.1",
+) -> list[str]:
     if not isinstance(value, dict):
         return ["container lifecycle must be an object"]
     failures: list[str] = []
@@ -882,6 +938,8 @@ def validate_container_lifecycle(value: Any) -> list[str]:
         "final_filesystem_residue_absent",
         "network_disabled",
     }
+    expected_steps = lifecycle_step_ids(baseline_version, upgrade_version)
+    admin_steps = lifecycle_admin_step_ids(baseline_version, upgrade_version)
     for platform in platforms:
         image = platform.get("image", {})
         controls = platform.get("controls", {})
@@ -929,13 +987,13 @@ def validate_container_lifecycle(value: Any) -> list[str]:
         if (
             not isinstance(steps, list)
             or any(not isinstance(step, dict) for step in steps)
-            or [step.get("id") for step in steps] != list(EXPECTED_STEP_IDS)
+            or [step.get("id") for step in steps] != list(expected_steps)
             or any(step.get("status") != "pass" for step in steps)
             or any(
                 step.get("actor")
                 != (
                     "package-administrator"
-                    if step.get("id") in ADMIN_STEP_IDS
+                    if step.get("id") in admin_steps
                     else "standard-user"
                 )
                 for step in steps
@@ -944,7 +1002,7 @@ def validate_container_lifecycle(value: Any) -> list[str]:
                 step.get("uid_gid")
                 != (
                     ADMIN_USER
-                    if step.get("id") in ADMIN_STEP_IDS
+                    if step.get("id") in admin_steps
                     else STANDARD_USER
                 )
                 for step in steps
@@ -967,7 +1025,11 @@ def validate_container_lifecycle(value: Any) -> list[str]:
 
 
 def verify_container_lifecycle(
-    artifacts: dict[str, dict[str, Path]], fedora_image: str, ubuntu_image: str
+    artifacts: dict[str, dict[str, Path]],
+    fedora_image: str,
+    ubuntu_image: str,
+    baseline_version: str = "0.0.0",
+    upgrade_version: str = "0.0.1",
 ) -> dict[str, Any]:
     require_commands(("podman",))
     rootless = run_command(
@@ -985,9 +1047,18 @@ def verify_container_lifecycle(
     )
     with tempfile.TemporaryDirectory(prefix="agentmage-container-packages-") as directory:
         package_root = Path(directory)
-        _prepare_container_packages(artifacts, package_root)
+        _prepare_container_packages(
+            artifacts, package_root, baseline_version, upgrade_version
+        )
         platforms = [
-            _run_container_target(artifacts, target, package_root) for target in targets
+            _run_container_target(
+                artifacts,
+                target,
+                package_root,
+                baseline_version,
+                upgrade_version,
+            )
+            for target in targets
         ]
     lifecycle = {
         "schema_version": 1,
@@ -996,7 +1067,9 @@ def verify_container_lifecycle(
         "network_used": False,
         "platforms": platforms,
     }
-    failures = validate_container_lifecycle(lifecycle)
+    failures = validate_container_lifecycle(
+        lifecycle, baseline_version, upgrade_version
+    )
     if failures:
         raise PackageLifecycleError("; ".join(failures))
     return {

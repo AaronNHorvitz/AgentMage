@@ -183,6 +183,31 @@ class PackageLifecycleTests(unittest.TestCase):
     def test_expected_lifecycle_is_valid(self) -> None:
         self.assertEqual(lifecycle.validate_container_lifecycle(self.valid_lifecycle()), [])
 
+    def test_custom_release_versions_preserve_the_closed_lifecycle(self) -> None:
+        report = self.valid_lifecycle()
+        expected = lifecycle.lifecycle_step_ids("0.2.0", "0.3.0")
+        administrators = lifecycle.lifecycle_admin_step_ids("0.2.0", "0.3.0")
+        self.assertEqual(len(expected), len(lifecycle.EXPECTED_STEP_IDS))
+        for platform in report["platforms"]:
+            for step, step_id in zip(platform["steps"], expected, strict=True):
+                step["id"] = step_id
+                administrator = step_id in administrators
+                step["actor"] = (
+                    "package-administrator" if administrator else "standard-user"
+                )
+                step["uid_gid"] = (
+                    lifecycle.ADMIN_USER
+                    if administrator
+                    else lifecycle.STANDARD_USER
+                )
+        self.assertEqual(
+            lifecycle.validate_container_lifecycle(report, "0.2.0", "0.3.0"), []
+        )
+        self.assertTrue(
+            lifecycle.validate_container_lifecycle(report),
+            "custom release evidence must not validate as the legacy transition",
+        )
+
     def test_validator_rejects_network_privilege_or_runtime_root(self) -> None:
         report = self.valid_lifecycle()
         report["network_used"] = True
