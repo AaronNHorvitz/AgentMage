@@ -2544,6 +2544,220 @@ mod tests {
         );
     }
 
+    /// Exactly what the user's active checkout looked like, for byte-for-byte comparison.
+    #[derive(Debug, PartialEq, Eq)]
+    struct ActiveCheckoutState {
+        head: String,
+        abbreviated_ref: String,
+        index: Vec<u8>,
+        status: Vec<u8>,
+        readme: Vec<u8>,
+        untracked: Option<Vec<u8>>,
+    }
+
+    fn capture_active_checkout(fixture: &Fixture) -> ActiveCheckoutState {
+        ActiveCheckoutState {
+            head: object(&fixture.repository, "HEAD"),
+            abbreviated_ref: String::from_utf8(run_fixture(
+                &fixture.repository,
+                &["rev-parse", "--abbrev-ref", "HEAD"],
+            ))
+            .expect("ref UTF-8")
+            .trim()
+            .to_owned(),
+            index: fs::read(fixture.git_directory.join("index")).expect("index bytes"),
+            status: run_fixture(&fixture.repository, &["status", "--porcelain"]),
+            readme: fs::read(fixture.repository.join("README.md")).expect("readme bytes"),
+            untracked: fs::read(fixture.repository.join("untracked.txt")).ok(),
+        }
+    }
+
+    /// Creates one owned worktree and returns its path and sealed ownership record.
+    fn create_owned_worktree(
+        fixture: &Fixture,
+        executor: &mut LinuxRepositoryExecutor,
+        scope: &LinuxRepositoryScope,
+        cancellation: &CancellationToken,
+        label: &str,
+    ) -> (PathBuf, OwnedWorktreeRecord) {
+        let source = object(&fixture.repository, "HEAD");
+        // The executor pins the destination to the scope's own worktree path.
+        let worktree_path = fixture.owned.join("worktree");
+        let before = executor.collector.collect(scope).expect("before create");
+        let plan = plan_worktree_create(
+            "transaction-create",
+            "task-1",
+            &source,
+            scope.repository_path_sha256(),
+            &hash(worktree_path.as_os_str().as_bytes()),
+            &before,
+        )
+        .expect("create plan");
+        let created = executor.run(&plan, &before, cancellation);
+        assert_eq!(created.outcome, OperationOutcome::Succeeded, "{label}");
+        reconcile_operation(&plan, created, "authority-create", "attempt-create")
+            .expect("create reconciles");
+        let record = eligible_record(
+            linux_repository_path_sha256(&worktree_path).expect("worktree identity"),
+            source,
+        );
+        (worktree_path, record)
+    }
+
+    /// The owned worktree lifecycle must never disturb the user's active checkout, in any
+    /// of its states, and ownership identity must stay stable across the whole lifecycle.
+    #[test]
+    fn worktree_lifecycle_preserves_a_dirty_active_checkout() {
+        let fixture = Fixture::new();
+        // Unstaged modification, a staged change, and an untracked file.
+        fs::write(fixture.repository.join("README.md"), b"fixture dirty\n").expect("dirty write");
+        fs::write(fixture.repository.join("staged.txt"), b"staged\n").expect("staged write");
+        run_fixture(&fixture.repository, &["add", "staged.txt"]);
+        fs::write(fixture.repository.join("untracked.txt"), b"untracked\n")
+            .expect("untracked write");
+        let before_state = capture_active_checkout(&fixture);
+        assert!(!before_state.status.is_empty(), "fixture is not dirty");
+
+        let scope = fixture.scope();
+        let cancellation = cancellation("worktree-dirty");
+        let mut executor = LinuxRepositoryExecutor::new(fixture.collector(), scope.clone());
+        let (worktree_path, record) = create_owned_worktree(
+            &fixture,
+            &mut executor,
+            &scope,
+            &cancellation,
+            "worktree-dirty",
+        );
+        assert_eq!(capture_active_checkout(&fixture), before_state);
+
+        let before_remove = executor.collector.collect(&scope).expect("before remove");
+        let removal = plan_worktree_remove(
+            "transaction-remove",
+            &record,
+            scope.repository_path_sha256(),
+            &before_remove,
+        )
+        .expect("remove plan");
+        let removed = executor.run(&removal, &before_remove, &cancellation);
+        assert_eq!(removed.outcome, OperationOutcome::Succeeded);
+        reconcile_operation(&removal, removed, "authority-remove", "attempt-remove")
+            .expect("removal reconciles");
+        assert!(!worktree_path.exists());
+        assert_eq!(capture_active_checkout(&fixture), before_state);
+    }
+
+    #[test]
+    fn worktree_lifecycle_preserves_a_detached_active_checkout() {
+        let fixture = Fixture::new();
+        let detached_at = object(&fixture.repository, "HEAD");
+        run_fixture(&fixture.repository, &["checkout", "--detach"]);
+        let before_state = capture_active_checkout(&fixture);
+        assert_eq!(
+            before_state.abbreviated_ref, "HEAD",
+            "checkout is not detached"
+        );
+        assert_eq!(before_state.head, detached_at);
+
+        let scope = fixture.scope();
+        let cancellation = cancellation("worktree-detached");
+        let mut executor = LinuxRepositoryExecutor::new(fixture.collector(), scope.clone());
+        let (worktree_path, record) = create_owned_worktree(
+            &fixture,
+            &mut executor,
+            &scope,
+            &cancellation,
+            "worktree-detached",
+        );
+        assert_eq!(capture_active_checkout(&fixture), before_state);
+
+        let before_remove = executor.collector.collect(&scope).expect("before remove");
+        let removal = plan_worktree_remove(
+            "transaction-remove",
+            &record,
+            scope.repository_path_sha256(),
+            &before_remove,
+        )
+        .expect("remove plan");
+        let removed = executor.run(&removal, &before_remove, &cancellation);
+        assert_eq!(removed.outcome, OperationOutcome::Succeeded);
+        reconcile_operation(&removal, removed, "authority-remove", "attempt-remove")
+            .expect("removal reconciles");
+        assert!(!worktree_path.exists());
+        assert_eq!(capture_active_checkout(&fixture), before_state);
+    }
+
+    /// A worktree that vanished underneath the owner can no longer be identified, so
+    /// removal must fail closed rather than act on whatever now occupies the path.
+    #[test]
+    fn worktree_removal_fails_closed_when_the_owned_directory_is_missing() {
+        let fixture = Fixture::new();
+        let scope = fixture.scope();
+        let cancellation = cancellation("worktree-missing");
+        let mut executor = LinuxRepositoryExecutor::new(fixture.collector(), scope.clone());
+        let (worktree_path, record) = create_owned_worktree(
+            &fixture,
+            &mut executor,
+            &scope,
+            &cancellation,
+            "worktree-missing",
+        );
+        fs::remove_dir_all(&worktree_path).expect("worktree removed outside AgentMage");
+        let before_state = capture_active_checkout(&fixture);
+
+        let before_remove = executor.collector.collect(&scope).expect("before remove");
+        let removal = plan_worktree_remove(
+            "transaction-remove",
+            &record,
+            scope.repository_path_sha256(),
+            &before_remove,
+        )
+        .expect("remove plan");
+        let removed = executor.run(&removal, &before_remove, &cancellation);
+        assert_eq!(removed.outcome, OperationOutcome::Denied, "{removed:?}");
+        assert_eq!(removed.platform_code, "linux.git.worktree.identity");
+        assert_eq!(removed.before, removed.after);
+        assert_eq!(capture_active_checkout(&fixture), before_state);
+    }
+
+    /// A renamed worktree no longer matches its sealed ownership identity, so removal
+    /// must fail closed and leave the renamed directory untouched.
+    #[test]
+    fn worktree_removal_fails_closed_when_the_owned_directory_is_renamed() {
+        let fixture = Fixture::new();
+        let scope = fixture.scope();
+        let cancellation = cancellation("worktree-renamed");
+        let mut executor = LinuxRepositoryExecutor::new(fixture.collector(), scope.clone());
+        let (worktree_path, record) = create_owned_worktree(
+            &fixture,
+            &mut executor,
+            &scope,
+            &cancellation,
+            "worktree-renamed",
+        );
+        let renamed = fixture.owned.join("renamed-worktree");
+        fs::rename(&worktree_path, &renamed).expect("worktree renamed outside AgentMage");
+        let before_state = capture_active_checkout(&fixture);
+
+        let before_remove = executor.collector.collect(&scope).expect("before remove");
+        let removal = plan_worktree_remove(
+            "transaction-remove",
+            &record,
+            scope.repository_path_sha256(),
+            &before_remove,
+        )
+        .expect("remove plan");
+        let removed = executor.run(&removal, &before_remove, &cancellation);
+        assert_eq!(removed.outcome, OperationOutcome::Denied, "{removed:?}");
+        assert_eq!(removed.platform_code, "linux.git.worktree.identity");
+        assert_eq!(removed.before, removed.after);
+        assert!(
+            renamed.join("README.md").is_file(),
+            "renamed tree was disturbed"
+        );
+        assert!(!worktree_path.exists());
+        assert_eq!(capture_active_checkout(&fixture), before_state);
+    }
+
     #[test]
     fn compare_and_swap_updates_only_one_unchecked_branch_and_stale_old_fails() {
         let fixture = Fixture::new();
