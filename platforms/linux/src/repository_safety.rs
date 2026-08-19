@@ -2686,6 +2686,178 @@ mod tests {
         assert_eq!(capture_active_checkout(&fixture), before_state);
     }
 
+    /// Everything the user owns that an interrupted AgentMage operation must never touch.
+    #[derive(Debug, PartialEq, Eq)]
+    struct UserGitState {
+        checkout: ActiveCheckoutState,
+        refs: Vec<u8>,
+        tags: Vec<u8>,
+        notes: Vec<u8>,
+        stash: Vec<u8>,
+        config: Vec<u8>,
+        hook: Vec<u8>,
+    }
+
+    /// Seeds refs, tags, notes, stash, configuration, a hook, and dirty working state.
+    fn seed_user_git_state(fixture: &Fixture) {
+        let repository = &fixture.repository;
+        let author: &[&str] = &[
+            "-c",
+            "user.name=AgentMage Fixture",
+            "-c",
+            "user.email=fixture@example.test",
+        ];
+        run_fixture(repository, &["branch", "user/topic"]);
+        run_fixture(repository, &["tag", "user-tag"]);
+        let mut note = author.to_vec();
+        note.extend_from_slice(&["notes", "add", "-m", "user note", "HEAD"]);
+        run_fixture(repository, &note);
+        fs::write(repository.join("README.md"), b"user stashed\n").expect("stash source");
+        let mut stash = author.to_vec();
+        stash.extend_from_slice(&["stash", "push", "-m", "user stash"]);
+        run_fixture(repository, &stash);
+        run_fixture(
+            repository,
+            &["config", "user.agentmageFixture", "preserved"],
+        );
+        let hooks = fixture.git_directory.join("hooks");
+        fs::create_dir_all(&hooks).expect("hooks directory");
+        fs::write(hooks.join("pre-commit"), b"#!/bin/sh\nexit 1\n").expect("hook writes");
+        // Dirty working state on top of everything above.
+        fs::write(repository.join("README.md"), b"user dirty\n").expect("dirty write");
+        fs::write(repository.join("untracked.txt"), b"untracked\n").expect("untracked write");
+    }
+
+    fn capture_user_git_state(fixture: &Fixture) -> UserGitState {
+        UserGitState {
+            checkout: capture_active_checkout(fixture),
+            refs: run_fixture(&fixture.repository, &["show-ref"]),
+            tags: run_fixture(&fixture.repository, &["tag", "--list"]),
+            notes: run_fixture(&fixture.repository, &["notes", "list"]),
+            stash: run_fixture(&fixture.repository, &["stash", "list"]),
+            config: run_fixture(
+                &fixture.repository,
+                &["config", "--get", "user.agentmageFixture"],
+            ),
+            hook: fs::read(fixture.git_directory.join("hooks/pre-commit")).expect("hook bytes"),
+        }
+    }
+
+    fn cancelled_token(label: &str) -> CancellationToken {
+        let token = cancellation(label);
+        token
+            .cancel(CancellationSignal {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                cancellation_id: CancellationId::from_raw(format!("cancel-{label}")),
+                correlation_id: CorrelationId::from_raw(format!("correlation-{label}")),
+                task_id: TaskId::from_raw(format!("task-{label}")),
+                reason: CancellationReason::UserRequested,
+                requested_by: BoundaryKind::Kernel,
+            })
+            .expect("cancellation");
+        token
+    }
+
+    /// An interrupted worktree creation must leave every user-owned artifact identical
+    /// and must report an indeterminate outcome whenever repository state actually moved.
+    #[test]
+    fn interrupted_worktree_create_preserves_every_user_artifact() {
+        let fixture = Fixture::new();
+        seed_user_git_state(&fixture);
+        let before_state = capture_user_git_state(&fixture);
+
+        let scope = fixture.scope();
+        let collector = fixture.collector();
+        let before = collector.collect(&scope).expect("before");
+        let plan = plan_worktree_create(
+            "transaction-create",
+            "task-1",
+            &object(&fixture.repository, "HEAD"),
+            scope.repository_path_sha256(),
+            &hash(scope.owned_root.join("worktree").as_os_str().as_bytes()),
+            &before,
+        )
+        .expect("create plan");
+        let mut executor = LinuxRepositoryExecutor::new(collector, scope.clone());
+        let result = executor.run(&plan, &before, &cancelled_token("worktree-interrupt"));
+
+        // Whatever the race decided, the report must match what actually happened.
+        if result.after != result.before {
+            assert_eq!(result.outcome, OperationOutcome::Uncertain, "{result:?}");
+        } else {
+            assert_ne!(result.outcome, OperationOutcome::Uncertain, "{result:?}");
+        }
+        assert_eq!(capture_user_git_state(&fixture), before_state);
+
+        // A partially created worktree is owned scratch, never user state.
+        let worktree = scope.owned_root.join("worktree");
+        if worktree.exists() {
+            fs::remove_dir_all(&worktree).expect("owned scratch removes");
+        }
+    }
+
+    /// An interrupted compare-and-swap must leave the branch either exactly where it was
+    /// or exactly at the proven descendant, and must never disturb any other ref.
+    #[test]
+    fn interrupted_branch_fast_forward_preserves_every_user_artifact() {
+        let fixture = Fixture::new();
+        let first = object(&fixture.repository, "HEAD");
+        run_fixture(
+            &fixture.repository,
+            &["branch", "agentmage/tasks/interrupt", &first],
+        );
+        fs::write(fixture.repository.join("README.md"), b"second\n").expect("second write");
+        run_fixture(&fixture.repository, &["add", "README.md"]);
+        run_fixture(
+            &fixture.repository,
+            &[
+                "-c",
+                "user.name=AgentMage Fixture",
+                "-c",
+                "user.email=fixture@example.test",
+                "commit",
+                "-m",
+                "second",
+            ],
+        );
+        let second = object(&fixture.repository, "HEAD");
+        seed_user_git_state(&fixture);
+        let before_state = capture_user_git_state(&fixture);
+
+        let scope = fixture.scope();
+        let collector = fixture.collector();
+        let before = collector.collect(&scope).expect("before");
+        let plan = plan_branch_fast_forward(
+            "transaction-cas",
+            "refs/heads/agentmage/tasks/interrupt",
+            &first,
+            &second,
+            true,
+            scope.repository_path_sha256(),
+            &before,
+        )
+        .expect("fast-forward plan");
+        let mut executor = LinuxRepositoryExecutor::new(collector, scope.clone());
+        let result = executor.run(&plan, &before, &cancelled_token("cas-interrupt"));
+
+        if result.after != result.before {
+            assert_eq!(result.outcome, OperationOutcome::Uncertain, "{result:?}");
+        } else {
+            assert_ne!(result.outcome, OperationOutcome::Uncertain, "{result:?}");
+        }
+        // The task branch may hold only its old or its exact proven new object.
+        let moved = object(&fixture.repository, "agentmage/tasks/interrupt");
+        assert!(moved == first || moved == second, "{moved}");
+        // Every user-owned artifact other than the AgentMage task branch is identical.
+        let after_state = capture_user_git_state(&fixture);
+        assert_eq!(after_state.checkout, before_state.checkout);
+        assert_eq!(after_state.tags, before_state.tags);
+        assert_eq!(after_state.notes, before_state.notes);
+        assert_eq!(after_state.stash, before_state.stash);
+        assert_eq!(after_state.config, before_state.config);
+        assert_eq!(after_state.hook, before_state.hook);
+    }
+
     /// A worktree that vanished underneath the owner can no longer be identified, so
     /// removal must fail closed rather than act on whatever now occupies the path.
     #[test]
