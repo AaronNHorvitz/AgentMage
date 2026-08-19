@@ -31,7 +31,7 @@ sequenceDiagram
     Tx->>Grants: Atomically consume exact grant
     Tx->>Linux: Nonforgeable one-use launch permit
     Linux->>Unit: Verified executable descriptor and literal argv
-    Unit-->>Linux: Exit, output, timeout, cancellation, and cleanup observations
+    Unit-->>Linux: Exit, output, resource, timeout, cancellation, and cleanup observations
     Linux-->>Tx: Closed platform result
     Tx-->>User: Kernel receipt plus command receipt
 ```
@@ -120,16 +120,19 @@ command receipt records:
 - exited, cancelled, timed-out, output-limit, or launch-failed termination;
 - deterministic operation outcome, exit code or signal, and stable platform code;
 - complete stream digests, total bytes, retained bytes, and truncation state;
-- monotonic elapsed time and verified descendant-cleanup state; and
+- monotonic elapsed time, cumulative CPU time, peak memory, greatest observed task count, and
+  verified descendant-cleanup state; and
 - a canonical receipt digest.
 
 Exit zero is the only successful process result. Nonzero exit, launch failure, and output-limit
 termination are failures. Cancellation and timeout retain their own outcomes. A model narration is
 not execution evidence.
 
-The preview records configured memory, task, CPU, time, and output budgets. Current command receipts
-record observed elapsed time and stream use. They do not yet retain platform-observed peak memory,
-CPU time, or maximum concurrent tasks.
+The preview records configured memory, task, CPU, time, and output budgets. Linux samples the exact
+transient unit's `CPUUsageNSec`, `MemoryPeak`, and `TasksCurrent` properties while it runs, retains
+the cumulative or greatest observation, and records the typed values in the terminal receipt.
+Unavailable observations remain explicit `null`; they are never replaced by invented zeroes.
+Observed memory and task use must remain within the approved template bounds.
 
 ## Verification And Remaining Work
 
@@ -137,14 +140,15 @@ The retained injection corpus is
 [`sprint-41-command-injection-corpus.json`](../verification/sprint-41-command-injection-corpus.json).
 Kernel tests cover exact registry selection, shell/interpreter/environment denials, one-use grant
 ordering, receipt classification, and cancellation before launch. Fedora live tests cover an exact
-literal command plus real timeout and cancellation cleanup through the native isolation stack.
+literal command, real timeout and cancellation cleanup, retained resource observations, and a
+bounded multi-process OpenSSL workload through the native isolation stack.
 
 Sprint 41 remains blocked from closure until all of the following exist:
 
 - an independently admitted production command registry and product configuration;
 - complete native Fedora, Ubuntu, macOS, and Windows sandbox runs at minimum and maximum limits;
-- hostile child and grandchild process-tree, descriptor, scratch, and crash fixtures;
-- measured peak-memory, CPU, and task accounting where the platform can supply it safely;
+- complete child/grandchild, descriptor, scratch, and parent-crash fixtures beyond the current
+  Fedora multi-process timeout case;
 - complete workspace/grant/network/credential canary campaigns;
 - clean installed-package execution through the trusted launcher;
 - independent command-boundary review; and

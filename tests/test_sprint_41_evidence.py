@@ -73,7 +73,6 @@ class Sprint41EvidenceTests(unittest.TestCase):
             "command_profile_active",
             "network_access_enabled",
             "cross_platform_acceptance_passed",
-            "peak_resource_accounting_complete",
             "hostile_descendant_campaign_complete",
             "trusted_package_execution_complete",
             "independent_review_present",
@@ -84,6 +83,10 @@ class Sprint41EvidenceTests(unittest.TestCase):
             changed = copy.deepcopy(report())
             changed["summary"][field] = True
             self.assertTrue(self.validate(changed), field)
+
+        changed = copy.deepcopy(report())
+        changed["summary"]["peak_resource_accounting_complete"] = False
+        self.assertTrue(self.validate(changed), "peak_resource_accounting_complete")
 
     def test_command_skip_artifact_source_security_and_blocker_mutations_fail(self) -> None:
         mutations = (

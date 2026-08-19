@@ -21,6 +21,11 @@
   "stderr_retained_bytes": 0,
   "stderr_truncated": false,
   "elapsed_ms": 4,
+  "resource_usage": {
+    "cpu_time_ns": 1000000,
+    "peak_memory_bytes": 1048576,
+    "peak_task_count": 1
+  },
   "descendants_terminated": true,
   "platform_code": "linux.command.exited",
   "receipt_sha256": "5555555555555555555555555555555555555555555555555555555555555555"

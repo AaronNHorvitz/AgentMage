@@ -27,6 +27,7 @@
     "stderr_retained_bytes",
     "stderr_truncated",
     "elapsed_ms",
+    "resource_usage",
     "descendants_terminated",
     "platform_code",
     "receipt_sha256"
@@ -66,6 +67,21 @@
     "stderr_retained_bytes": { "$ref": "#/$defs/bytes" },
     "stderr_truncated": { "type": "boolean" },
     "elapsed_ms": { "type": "integer", "minimum": 0, "maximum": 310000 },
+    "resource_usage": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cpu_time_ns", "peak_memory_bytes", "peak_task_count"],
+          "properties": {
+            "cpu_time_ns": { "$ref": "#/$defs/bytes" },
+            "peak_memory_bytes": { "$ref": "#/$defs/bytes" },
+            "peak_task_count": { "type": "integer", "minimum": 0, "maximum": 64 }
+          }
+        },
+        { "type": "null" }
+      ]
+    },
     "descendants_terminated": { "type": "boolean" },
     "platform_code": { "$ref": "#/$defs/identifier" },
     "receipt_sha256": { "$ref": "#/$defs/sha256" }

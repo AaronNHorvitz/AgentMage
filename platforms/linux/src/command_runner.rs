@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 
 use agentmage_kernel_engine::command_runner::{
     BoundedCommandExecutor, CommandLaunchPermit, CommandPlatformResult, CommandRegistry,
-    CommandSpec, CommandTermination, CommandWorkingDirectory,
+    CommandResourceUsage, CommandSpec, CommandTermination, CommandWorkingDirectory,
 };
 use agentmage_kernel_engine::propagation::CancellationToken;
 use rustix::fd::OwnedFd;
@@ -337,7 +337,14 @@ impl LinuxBoundedCommandExecutor {
         let stdout_reader = thread::spawn(move || read_bounded(stdout, stdout_limit));
         let stderr_reader = thread::spawn(move || read_bounded(stderr, stderr_limit));
         let deadline = started + Duration::from_millis(command.bounds.timeout_ms);
+        let mut resource_observation = ResourceObservation::default();
         let (termination, status, cleanup_verified, platform_code) = loop {
+            resource_observation.merge(observe_unit_resources(
+                &self.manifest,
+                &unit,
+                &runtime_directory,
+                &session_bus,
+            ));
             match child.try_wait() {
                 Ok(Some(status)) => {
                     let cleanup =
@@ -422,10 +429,81 @@ impl LinuxBoundedCommandExecutor {
             stderr_sha256: stderr.sha256,
             stderr_total_bytes: stderr.total,
             elapsed_ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
+            resource_usage: resource_observation.finish(),
             descendants_terminated: cleanup_verified,
             platform_code: platform_code.to_owned(),
         }
     }
+}
+
+#[derive(Default)]
+struct ResourceObservation {
+    cpu_time_ns: u64,
+    peak_memory_bytes: u64,
+    peak_task_count: u32,
+    observed: bool,
+}
+
+impl ResourceObservation {
+    fn merge(&mut self, observation: Option<CommandResourceUsage>) {
+        let Some(observation) = observation else {
+            return;
+        };
+        self.observed = true;
+        self.cpu_time_ns = self.cpu_time_ns.max(observation.cpu_time_ns);
+        self.peak_memory_bytes = self.peak_memory_bytes.max(observation.peak_memory_bytes);
+        self.peak_task_count = self.peak_task_count.max(observation.peak_task_count);
+    }
+
+    fn finish(self) -> Option<CommandResourceUsage> {
+        self.observed.then_some(CommandResourceUsage {
+            cpu_time_ns: self.cpu_time_ns,
+            peak_memory_bytes: self.peak_memory_bytes,
+            peak_task_count: self.peak_task_count,
+        })
+    }
+}
+
+fn observe_unit_resources(
+    manifest: &LinuxCommandManifest,
+    unit: &str,
+    runtime_directory: &str,
+    session_bus: &str,
+) -> Option<CommandResourceUsage> {
+    if revalidate(&manifest.systemctl).is_err() {
+        return None;
+    }
+    let result = Command::new(&manifest.systemctl.launch_path)
+        .env_clear()
+        .env("XDG_RUNTIME_DIR", runtime_directory)
+        .env("DBUS_SESSION_BUS_ADDRESS", session_bus)
+        .args([
+            "--user",
+            "show",
+            unit,
+            "--no-pager",
+            "--property=CPUUsageNSec",
+            "--property=MemoryPeak",
+            "--property=TasksCurrent",
+        ])
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .output()
+        .ok()?;
+    if !result.status.success() {
+        return None;
+    }
+    let output = std::str::from_utf8(&result.stdout).ok()?;
+    let properties = output
+        .lines()
+        .filter_map(|line| line.split_once('='))
+        .collect::<BTreeMap<_, _>>();
+    Some(CommandResourceUsage {
+        cpu_time_ns: properties.get("CPUUsageNSec")?.parse().ok()?,
+        peak_memory_bytes: properties.get("MemoryPeak")?.parse().ok()?,
+        peak_task_count: properties.get("TasksCurrent")?.parse().ok()?,
+    })
 }
 
 impl BoundedCommandExecutor for LinuxBoundedCommandExecutor {
@@ -711,6 +789,7 @@ fn failed(code: &str) -> CommandPlatformResult {
         stderr_sha256: hex(&Sha256::digest([])),
         stderr_total_bytes: 0,
         elapsed_ms: 0,
+        resource_usage: None,
         descendants_terminated: true,
         platform_code: code.to_owned(),
     }
@@ -934,6 +1013,9 @@ mod tests {
         let timed_result = timed_executor.run(&timed, &timed_held, &timed_token);
         assert_eq!(timed_result.termination, CommandTermination::TimedOut);
         assert!(timed_result.descendants_terminated);
+        let timed_usage = timed_result.resource_usage.expect("timed resource usage");
+        assert!(timed_usage.peak_memory_bytes <= timed.bounds.memory_bytes);
+        assert!(timed_usage.peak_task_count <= timed.bounds.task_count);
 
         let cancelled = command(5_000);
         let cancelled_registry = CommandRegistry::build(vec![cancelled.clone()]).expect("registry");
@@ -971,6 +1053,64 @@ mod tests {
         signaler.join().expect("signaler");
         assert_eq!(cancelled_result.termination, CommandTermination::Cancelled);
         assert!(cancelled_result.descendants_terminated);
+        let cancelled_usage = cancelled_result
+            .resource_usage
+            .expect("cancelled resource usage");
+        assert!(cancelled_usage.peak_memory_bytes <= cancelled.bounds.memory_bytes);
+        assert!(cancelled_usage.peak_task_count <= cancelled.bounds.task_count);
+    }
+
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session, Bubblewrap, and OpenSSL"]
+    fn live_hostile_descendant_process_tree_is_bounded_and_removed() {
+        let executable = fs::canonicalize("/usr/bin/openssl").expect("canonical openssl");
+        let executable = executable.to_str().expect("UTF-8 executable");
+        let command = CommandSpec::seal(
+            "fixture.openssl-descendants",
+            "1.0.0",
+            executable,
+            hash_file_for_test(executable),
+            vec![
+                "speed".to_owned(),
+                "-multi".to_owned(),
+                "4".to_owned(),
+                "sha256".to_owned(),
+            ],
+            CommandWorkingDirectory::EmptyScratch,
+            BTreeMap::from([
+                ("LANG".to_owned(), "C".to_owned()),
+                ("TZ".to_owned(), "UTC".to_owned()),
+            ]),
+            CommandRisk::Moderate,
+            CommandBounds::new(500, 1_024, 4_096, 64 * 1024 * 1024, 8, 100).expect("limits"),
+        )
+        .expect("command");
+        let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
+        let manifest = LinuxCommandManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            &registry,
+        )
+        .expect("manifest");
+        let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
+        let cancellation = CancellationToken::root(
+            BoundaryKind::Tool,
+            TaskId::from_raw("task-linux-descendants-0001"),
+            CorrelationId::from_raw("correlation-linux-descendants-0001"),
+        );
+        let (_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &cancellation);
+        assert_eq!(
+            result.termination,
+            CommandTermination::TimedOut,
+            "{result:?}"
+        );
+        assert!(result.descendants_terminated, "{result:?}");
+        let usage = result.resource_usage.expect("descendant resource usage");
+        assert!(usage.cpu_time_ns > 0, "{usage:?}");
+        assert!(usage.peak_memory_bytes <= command.bounds.memory_bytes);
+        assert!((3..=command.bounds.task_count).contains(&usage.peak_task_count));
     }
 
     #[test]

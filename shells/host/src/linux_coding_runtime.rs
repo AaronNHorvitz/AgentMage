@@ -3918,6 +3918,7 @@ mod tests {
                 stderr_total_bytes: stderr.len() as u64,
                 stderr,
                 elapsed_ms: 2,
+                resource_usage: None,
                 descendants_terminated: true,
                 platform_code: "fixture.command.exited".to_owned(),
             }

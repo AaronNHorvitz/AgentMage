@@ -10,8 +10,8 @@
 | Fixed command-injection corpus | Pass locally |
 | Closed preview and receipt schemas | Pass locally |
 | Production command profile registration | Disabled |
-| Peak CPU, memory, and task-use measurements | Absent |
-| Hostile child/grandchild process-tree campaign | Absent |
+| Peak CPU, memory, and task-use measurements | Pass on current Fedora host |
+| Hostile multi-process timeout fixture | Partial pass on current Fedora host |
 | Native Ubuntu, macOS, and Windows execution | Absent |
 | Independent command-boundary review | Absent |
 | Sprint result | Blocked |
@@ -28,7 +28,11 @@
   the host environment, omits `PATH`, mounts only runtime libraries and one descriptor-held target,
   unshares the network, applies seccomp and cgroup limits, and invokes no shell.
 - A live `/usr/bin/printf` fixture returns only its expected literal output. Live `/usr/bin/sleep`
-  timeout and cancellation fixtures both terminate and leave no active transient process unit.
+  timeout and cancellation fixtures both retain systemd CPU, peak-memory, and greatest-observed-task
+  measurements, terminate, and leave no active transient process unit.
+- A live OpenSSL multi-process workload creates at least three observed tasks inside an eight-task
+  ceiling, reaches its exact deadline, receives control-group termination, and leaves the unit
+  inactive. This does not substitute for the remaining grandchild, descriptor, or parent-crash cases.
 - The fixed 18-case injection corpus rejects substitution, separators, pipes, globbing, response
   files, configuration and alias injection, evaluators, shell/interpreter launchers, `PATH`, proxy
   and credential environment, relative/traversing executables, and control bytes.
@@ -42,9 +46,9 @@ installed VS Code product. Current Linux tests use exact synthetic development t
 authorize repository commands. Sprint 42 owns separately hardened Git templates and repository
 preservation.
 
-The current receipt records elapsed time and stream use while the preview records enforced CPU,
-memory, task, time, and output ceilings. It does not retain platform-observed peak CPU, memory, or
-task use. Native hostile child/grandchild escape, inherited-descriptor, parent-crash, maximum-limit,
-scratch-residue, and complete canary campaigns remain absent. Ubuntu, macOS, and Windows native
+The current receipt records elapsed time, stream use, cumulative CPU time, peak memory, and greatest
+observed task count while the preview records the enforced ceilings. Native grandchild escape,
+inherited-descriptor, parent-crash, maximum-limit, scratch-residue, and complete canary campaigns
+remain absent. Ubuntu, macOS, and Windows native
 results cannot be inferred from Fedora. Independent review, installed trusted-launcher evidence,
 manual fuzzing, the blocked Sprint 40 dependency, and `G-V0.3` remain open.

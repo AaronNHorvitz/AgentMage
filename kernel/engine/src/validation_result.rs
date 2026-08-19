@@ -1172,6 +1172,7 @@ mod tests {
             stderr_retained_bytes: stderr.len() as u64,
             stderr_truncated: false,
             elapsed_ms: 100,
+            resource_usage: None,
             descendants_terminated: true,
             platform_code: platform_code.to_owned(),
             receipt_sha256: "0".repeat(64),

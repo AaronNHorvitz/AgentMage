@@ -23,7 +23,9 @@ IGNORED_TESTS: Final = re.compile(
 )
 SOURCE_PATHS: Final = (
     "kernel/engine/src/command_runner.rs",
+    "kernel/engine/src/validation_result.rs",
     "platforms/linux/src/command_runner.rs",
+    "shells/host/src/linux_coding_runtime.rs",
     "kernel/engine/tests/command_injection_corpus.rs",
     "schemas/runtime/command-preview.schema.json",
     "schemas/runtime/command-receipt.schema.json",
@@ -33,6 +35,7 @@ SOURCE_PATHS: Final = (
     "docs/verification/sprint-41-command-injection-corpus.json",
     "docs/verification/sprint-41-local-results.md",
     "scripts/sprint_41_evidence.py",
+    "tests/test_planning_schemas.mjs",
     "tests/test_sprint_41_evidence.py",
 )
 COMMANDS: Final = (
@@ -67,6 +70,14 @@ COMMANDS: Final = (
             "--ignored",
         ),
     ),
+    (
+        "linux-live-hostile-descendants",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux",
+            "live_hostile_descendant_process_tree_is_bounded_and_removed", "--locked", "--",
+            "--ignored",
+        ),
+    ),
     ("schema-contract", ("node", "--test", "tests/test_planning_schemas.mjs")),
     ("documentation-gate", ("npm", "run", "docs:check")),
     ("product-ci-contract", ("python3", "scripts/product_ci.py", "--check")),
@@ -89,6 +100,7 @@ FOCUSED_COMMANDS: Final = (
     "linux-command-manifest",
     "linux-live-literal-command",
     "linux-live-termination",
+    "linux-live-hostile-descendants",
 )
 ARTIFACTS: Final = (
     ("systemd-run", Path("/usr/bin/systemd-run")),
@@ -113,7 +125,8 @@ IMPLEMENTED: Final = {
     "unrestricted_shell_and_hidden_expansion_absent": True,
     "fedora_live_literal_timeout_and_cancellation_exercised": True,
     "production_command_profile_registered": False,
-    "peak_cpu_memory_and_task_accounting_retained": False,
+    "peak_cpu_memory_and_task_accounting_retained": True,
+    "fedora_hostile_multiprocess_timeout_exercised": True,
     "hostile_descendant_tree_campaign_complete": False,
     "native_cross_platform_command_acceptance": False,
     "independent_command_boundary_review": False,
@@ -122,7 +135,6 @@ IMPLEMENTED: Final = {
 BLOCKERS: Final = [
     {"code": "UPSTREAM-G-V0.3-BLOCKED", "owner": "41.1"},
     {"code": "COMMAND-PROFILE-NOT-PRODUCT-REGISTERED", "owner": "41.1.1"},
-    {"code": "PEAK-RESOURCE-ACCOUNTING-ABSENT", "owner": "41.1.1.5"},
     {"code": "HOSTILE-DESCENDANT-CRASH-CAMPAIGN-ABSENT", "owner": "41.1.3.3"},
     {"code": "NATIVE-CROSS-PLATFORM-COMMAND-ACCEPTANCE-ABSENT", "owner": "41.1.3.4"},
     {"code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT", "owner": "41.1.3.5"},
@@ -247,7 +259,8 @@ def build_report(
             "fedora_live_literal_execution": local_pass,
             "fedora_live_timeout_and_cancellation_cleanup": local_pass,
             "production_command_profile_registration": False,
-            "peak_resource_accounting": False,
+            "peak_resource_accounting": local_pass,
+            "fedora_hostile_multiprocess_timeout": local_pass,
             "hostile_descendant_crash_campaign": False,
             "native_cross_platform_command_acceptance": False,
             "trusted_package_launcher_environment": False,
@@ -263,7 +276,7 @@ def build_report(
             "generic_shell_present": False,
             "network_access_enabled": False,
             "cross_platform_acceptance_passed": False,
-            "peak_resource_accounting_complete": False,
+            "peak_resource_accounting_complete": local_pass,
             "hostile_descendant_campaign_complete": False,
             "trusted_package_execution_complete": False,
             "independent_review_present": False,
@@ -315,7 +328,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "fedora_live_literal_execution": True,
         "fedora_live_timeout_and_cancellation_cleanup": True,
         "production_command_profile_registration": False,
-        "peak_resource_accounting": False,
+        "peak_resource_accounting": True,
+        "fedora_hostile_multiprocess_timeout": True,
         "hostile_descendant_crash_campaign": False,
         "native_cross_platform_command_acceptance": False,
         "trusted_package_launcher_environment": False,
@@ -332,7 +346,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "generic_shell_present": False,
         "network_access_enabled": False,
         "cross_platform_acceptance_passed": False,
-        "peak_resource_accounting_complete": False,
+        "peak_resource_accounting_complete": True,
         "hostile_descendant_campaign_complete": False,
         "trusted_package_execution_complete": False,
         "independent_review_present": False,

@@ -940,6 +940,13 @@ test("command runtime schemas reject authority and outcome ambiguity", () => {
       .valid,
     false,
   );
+  const excessTasks = structuredClone(receipt);
+  excessTasks.resource_usage.peak_task_count = 65;
+  assert.equal(
+    validateRuntimeRecord("command-receipt", excessTasks, runtimeValidators)
+      .valid,
+    false,
+  );
 });
 
 test("write-aware checkpoint schema rejects ambiguous completion", () => {

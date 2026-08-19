@@ -482,10 +482,24 @@ pub struct CommandPlatformResult {
     pub stderr_total_bytes: u64,
     /// Monotonic elapsed duration.
     pub elapsed_ms: u64,
+    /// Platform-observed resource use, when the owned process boundary exposed it.
+    pub resource_usage: Option<CommandResourceUsage>,
     /// Whether platform process-tree cleanup was verified.
     pub descendants_terminated: bool,
     /// Stable content-free platform detail code.
     pub platform_code: String,
+}
+
+/// Content-free resource observations for one owned command process tree.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CommandResourceUsage {
+    /// Cumulative CPU time observed for the process unit.
+    pub cpu_time_ns: u64,
+    /// Peak cgroup memory use observed for the process unit.
+    pub peak_memory_bytes: u64,
+    /// Greatest concurrently observed process/thread count.
+    pub peak_task_count: u32,
 }
 
 /// Terminal command receipt supplementing the kernel authority receipt.
@@ -536,6 +550,8 @@ pub struct CommandReceipt {
     pub stderr_truncated: bool,
     /// Observed monotonic elapsed duration.
     pub elapsed_ms: u64,
+    /// Platform-observed resource use, or `null` when unavailable.
+    pub resource_usage: Option<CommandResourceUsage>,
     /// Whether the platform verified descendant cleanup.
     pub descendants_terminated: bool,
     /// Stable content-free platform detail code.
@@ -604,6 +620,10 @@ pub fn verify_command_receipt(prepared: &PreparedCommand, receipt: &CommandRecei
         && receipt.stdout_truncated == (receipt.stdout_total_bytes > receipt.stdout_retained_bytes)
         && receipt.stderr_truncated == (receipt.stderr_total_bytes > receipt.stderr_retained_bytes)
         && receipt.elapsed_ms <= prepared.command.bounds.timeout_ms.saturating_add(10_000)
+        && receipt.resource_usage.is_none_or(|usage| {
+            usage.peak_memory_bytes <= prepared.command.bounds.memory_bytes
+                && usage.peak_task_count <= prepared.command.bounds.task_count
+        })
         && (!matches!(
             receipt.termination,
             CommandTermination::Cancelled | CommandTermination::TimedOut
@@ -832,6 +852,7 @@ where
                 stderr_sha256: sha256_hex(&[]),
                 stderr_total_bytes: 0,
                 elapsed_ms: 0,
+                resource_usage: None,
                 descendants_terminated: true,
                 platform_code: "command.cancelled.before_launch".to_owned(),
             }
@@ -905,6 +926,7 @@ fn seal_receipt(
         stderr_retained_bytes: platform.stderr.len() as u64,
         stderr_truncated: platform.stderr_total_bytes > platform.stderr.len() as u64,
         elapsed_ms: platform.elapsed_ms,
+        resource_usage: platform.resource_usage,
         descendants_terminated: platform.descendants_terminated,
         platform_code: platform.platform_code,
         receipt_sha256: "0".repeat(64),
@@ -976,6 +998,10 @@ fn validate_platform_result(
         || (result.stderr_total_bytes == result.stderr.len() as u64
             && sha256_hex(&result.stderr) != result.stderr_sha256)
         || result.elapsed_ms > bounds.timeout_ms.saturating_add(10_000)
+        || result.resource_usage.is_some_and(|usage| {
+            usage.peak_memory_bytes > bounds.memory_bytes
+                || usage.peak_task_count > bounds.task_count
+        })
         || !valid_identifier(&result.platform_code)
         || (!result.descendants_terminated
             && matches!(
@@ -1090,9 +1116,9 @@ mod tests {
 
     use super::{
         BoundedCommandExecutor, CommandBounds, CommandEffectDriver, CommandError,
-        CommandLaunchPermit, CommandPlatformResult, CommandRegistry, CommandRequest, CommandRisk,
-        CommandSpec, CommandTermination, CommandWorkingDirectory, RegisteredCommandWrapperBinding,
-        prepare_command,
+        CommandLaunchPermit, CommandPlatformResult, CommandRegistry, CommandRequest,
+        CommandResourceUsage, CommandRisk, CommandSpec, CommandTermination,
+        CommandWorkingDirectory, RegisteredCommandWrapperBinding, prepare_command,
     };
     use crate::authority_transaction::{
         AuthorityTransactionCoordinator, AuthorityTransactionRequest,
@@ -1451,6 +1477,11 @@ mod tests {
             stderr_sha256: super::sha256_hex(&[]),
             stderr_total_bytes: 0,
             elapsed_ms: 4,
+            resource_usage: Some(CommandResourceUsage {
+                cpu_time_ns: 1_000_000,
+                peak_memory_bytes: 1024 * 1024,
+                peak_task_count: 1,
+            }),
             descendants_terminated: true,
             platform_code: "fixture.command.exited".to_owned(),
         }
@@ -1498,6 +1529,14 @@ mod tests {
         assert_eq!(command_receipt.outcome, OperationOutcome::Succeeded);
         assert_eq!(command_receipt.exit_code, Some(0));
         assert_eq!(
+            command_receipt.resource_usage,
+            Some(CommandResourceUsage {
+                cpu_time_ns: 1_000_000,
+                peak_memory_bytes: 1024 * 1024,
+                peak_task_count: 1,
+            })
+        );
+        assert_eq!(
             command_receipt.stdout_sha256,
             super::sha256_hex(b"agentmage-ok")
         );
@@ -1506,7 +1545,7 @@ mod tests {
             &driver.prepared,
             &command_receipt
         ));
-        for sequence in 0_u8..8 {
+        for sequence in 0_u8..9 {
             let mut changed = command_receipt.clone();
             match sequence {
                 0 => changed.command_attempt_id.push('x'),
@@ -1516,6 +1555,13 @@ mod tests {
                 4 => changed.stdout_total_bytes = 1,
                 5 => changed.platform_code.clear(),
                 6 => changed.elapsed_ms = 1_000_000,
+                7 => {
+                    changed
+                        .resource_usage
+                        .as_mut()
+                        .expect("resource usage")
+                        .peak_task_count = 5
+                }
                 _ => changed.receipt_sha256 = "8".repeat(64),
             }
             assert!(!super::verify_command_receipt(&driver.prepared, &changed));
