@@ -33,7 +33,14 @@ except ModuleNotFoundError:
 ROOT: Final = Path(__file__).resolve().parents[1]
 OUTPUT: Final = ROOT / "artifacts/sprints/sprint-40/lifecycle-report.json"
 CANDIDATE_ROOT: Final = ROOT / "target/sprint-40-lifecycle"
-POLICY: Final = ROOT / "architecture/clean-build-policy.json"
+CLEAN_BUILD_REPORT: Final = (
+    ROOT
+    / "artifacts"
+    / "sprints"
+    / "sprint-1"
+    / "story-1.1"
+    / "clean-build-report.json"
+)
 BASELINE_VERSION: Final = "0.2.0"
 UPGRADE_VERSION: Final = "0.3.0"
 REVISION: Final = re.compile(r"^[0-9a-f]{40}$")
@@ -43,6 +50,7 @@ TEST_RESULT: Final = re.compile(
 )
 SOURCE_PATHS: Final = (
     "architecture/clean-build-policy.json",
+    "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
     "scripts/package_candidate.py",
     "scripts/package_lifecycle.py",
     "scripts/sprint_40_lifecycle.py",
@@ -130,7 +138,7 @@ STATE_COMMANDS: Final = (
 )
 LIMITATIONS: Final = (
     "The campaign uses unsigned local candidates and does not approve or publish a release.",
-    "Fedora and Ubuntu package-manager execution occurs in pinned rootless containers with networking disabled; it is not installed-host or graphical-client evidence.",
+    "Fedora and Ubuntu package-manager execution occurs in exact locally retained clean-build images with dependencies pre-provisioned, rootless Podman, and networking disabled; it is not installed-host or graphical-client evidence.",
     "The state campaign composes focused native test fixtures; it does not claim macOS, Windows, independent-review, or trusted-package-launcher evidence.",
     "Manual fuzzing remains deferred by the recorded project decision.",
 )
@@ -199,13 +207,43 @@ def run_record(identifier: str, argv: tuple[str, ...], *, test: bool) -> dict[st
     return record
 
 
-def policy_images() -> tuple[str, str]:
-    value = json.loads(POLICY.read_text(encoding="utf-8"))
-    platforms = value["linux_platforms"]
-    return (
-        platforms["fedora-x86_64"]["base_image"],
-        platforms["ubuntu-x86_64"]["base_image"],
-    )
+def lifecycle_images() -> tuple[str, str]:
+    report = json.loads(CLEAN_BUILD_REPORT.read_text(encoding="utf-8"))
+    if report.get("status") != "pass":
+        raise Sprint40LifecycleError("sprint40.lifecycle.clean_build_report")
+    runs = report.get("platform_runs")
+    if not isinstance(runs, dict):
+        raise Sprint40LifecycleError("sprint40.lifecycle.clean_build_report")
+    references = []
+    for platform_id in ("fedora-x86_64", "ubuntu-x86_64"):
+        run = runs.get(platform_id)
+        tag = f"localhost/agentmage-clean-build:{platform_id}"
+        if not isinstance(run, dict) or run.get("status") != "pass":
+            raise Sprint40LifecycleError("sprint40.lifecycle.clean_build_platform")
+        inspected = subprocess.run(
+            ("podman", "image", "inspect", tag),
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            timeout=30,
+        )
+        try:
+            image = json.loads(inspected.stdout)[0]
+            image_id = image["Id"]
+            repo_digests = sorted(image["RepoDigests"])
+        except (IndexError, KeyError, TypeError, json.JSONDecodeError) as error:
+            raise Sprint40LifecycleError(
+                "sprint40.lifecycle.clean_build_image_absent"
+            ) from error
+        if (
+            inspected.returncode != 0
+            or image_id != run.get("container_image_id")
+            or len(repo_digests) != 1
+            or not repo_digests[0].startswith("localhost/agentmage-clean-build@sha256:")
+        ):
+            raise Sprint40LifecycleError("sprint40.lifecycle.clean_build_image_drift")
+        references.append(repo_digests[0])
+    return references[0], references[1]
 
 
 def artifact_records(artifacts: dict[str, dict[str, Path]]) -> list[dict[str, Any]]:
@@ -244,7 +282,7 @@ def build_report(revision: str) -> dict[str, Any]:
     extraction = verify_extracted_candidates(
         artifacts[BASELINE_VERSION], artifacts[UPGRADE_VERSION]
     )
-    fedora, ubuntu = policy_images()
+    fedora, ubuntu = lifecycle_images()
     package_results = verify_container_lifecycle(
         artifacts,
         fedora,
