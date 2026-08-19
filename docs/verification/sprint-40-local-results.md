@@ -10,7 +10,7 @@
 | v0.3 guides, matrix, lifecycle bundle, and draft notes | Pass locally |
 | Write profile product registration | Disabled |
 | Native cross-platform write acceptance | Absent |
-| Complete upgrade, downgrade, restore, and uninstall campaign | Absent |
+| Complete local upgrade, downgrade, restore, and uninstall campaign | Pass locally |
 | Trusted packaged-launcher execution | Environment blocked |
 | Signed or published v0.3 packages | Absent |
 | Upstream Sprints 35 through 39 | Blocked |
@@ -32,6 +32,13 @@
 - Current release binaries and the VS Code shell build into unsigned local `0.3.0` DEB, RPM, and
   VSIX candidates. The retained evidence records names, sizes, and hashes, not package bytes or a
   publication claim.
+- The source-bound local lifecycle campaign builds `0.2.0` and `0.3.0` candidates and executes 53
+  package steps apiece in exact locally retained Fedora and Ubuntu clean-build images. It covers
+  dependency-aware install, corrupt-upgrade refusal, upgrade, downgrade, two uninstall/residue
+  checks, and reinstall without container networking or retained candidate bytes.
+- Five focused native state cases verify immutable configuration backup and rollback, interrupted
+  migration recovery, encrypted operational-store backup and fresh restore, and authority/write
+  restart recovery without replay. The retained lifecycle report records only command-output hashes.
 - Gate mutations reject write-profile activation, effective authority, shell, Git commit/push,
   network publication, connectors, schedules, unattended writes, wildcard approval, package
   publication/signing, platform acceptance, lifecycle completion, review, fuzzing, and release.
@@ -45,7 +52,8 @@ unsigned package exercise proves packaging mechanics only; the write profile rem
 the package is neither retained in the repository nor signed or published. No native installed
 candidate has completed the full write suite on every supported interface and platform.
 
-Clean v0.2 upgrade, v0.3 write exercise, downgrade, backup, restore, uninstall, residue scan,
-trusted-launcher run, signed-package verification, independent release review, and manually
-deferred fuzzing are absent. `G-V0.3` and package signing remain blocked even when every local
+The local v0.2-to-v0.3 package and state lifecycle campaign is complete, but it does not substitute
+for a trusted installed graphical-client run or native acceptance on every reference platform.
+Trusted-launcher execution, signed-package verification, independent release review, and manually
+deferred fuzzing remain absent. `G-V0.3` and package signing remain blocked even when every local
 contract command passes.

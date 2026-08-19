@@ -78,7 +78,6 @@ class Sprint40EvidenceTests(unittest.TestCase):
             "upstream_dependencies_passed",
             "write_profile_active",
             "cross_platform_acceptance_passed",
-            "lifecycle_acceptance_passed",
             "signed_packages_present",
             "independent_release_decision_present",
             "manual_fuzzing_complete",
@@ -90,6 +89,10 @@ class Sprint40EvidenceTests(unittest.TestCase):
             changed = copy.deepcopy(report())
             changed["summary"][field] = True
             self.assertTrue(self.validate(changed), field)
+
+        changed = copy.deepcopy(report())
+        changed["summary"]["lifecycle_acceptance_passed"] = False
+        self.assertTrue(self.validate(changed), "lifecycle_acceptance_passed")
 
     def test_command_skip_package_source_security_and_blocker_mutations_fail(self) -> None:
         mutations = (
