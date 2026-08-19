@@ -3130,9 +3130,9 @@ redacted audit fixture, local-results boundary, source-bound recorder, and evide
 - [x] **Sprint AC 39.AC4:** Orphan staging is detectable, attributable, and safely removable.
 - [x] **Sprint AC 39.AC5:** Completion is reported only after postimage and receipt verification.
 
-Retained local evidence: source revision `7b69900d765d8a58bb6f9976740b427931a9b06d` is bound by
+Retained local evidence: source revision `df04fde4c1d26bdf67fe7a3df8e91d894c61ef93` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-39/local-evidence-report.json), SHA-256
-`7f2af02b73ffc928f51f0056af15c5b6e8a9a04cb644570b714570f0057b37de`. All 13 recorded commands
+`c4bae5e64bb0b76156128c45090ee11c791313d22b500558572b0989dd16b1a7`. All 14 recorded commands
 exit zero, both focused suites report zero blocking skips, and no network or release claim is made.
 Sprint 39 remains **BLOCKED** because Sprint 38 is blocked; native derived-index completion, the complete
 native crash/concurrency and durability-fault matrix, a full live-root scan, trusted-package-launcher execution,

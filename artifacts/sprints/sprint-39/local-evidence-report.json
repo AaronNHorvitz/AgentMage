@@ -5,8 +5,8 @@
       "owner": "39.1"
     },
     {
-      "code": "SPRINT-39-NATIVE-END-TO-END-RECOVERY-ABSENT",
-      "owner": "39.1.3.3"
+      "code": "SPRINT-39-NATIVE-DERIVED-INDEX-CHECKPOINT-ABSENT",
+      "owner": "39.1.1.1"
     },
     {
       "code": "SPRINT-39-NATIVE-CRASH-CONCURRENCY-MATRIX-INCOMPLETE",
@@ -46,7 +46,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-recovery-unit-tests",
-      "output_sha256": "646e49f60824e3a1aa812ff9c1ce75ebd751c59e101af2ab06a0538d4f68a5ea"
+      "output_sha256": "ff7417e03a8d5a3e53173f7690842a465360efc268bc0b8441c03674006fecef"
     },
     {
       "argv": [
@@ -61,7 +61,21 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-recovery-integration-tests",
-      "output_sha256": "c5e8630c4ab1f22b40cb6de2ce2e95d1b9fccd772da4bb9d376a5c7b08d61387"
+      "output_sha256": "eb766e2c490eea4d667e958cf9383415bc17a6f413053367c682910307464178"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "story_39_1_native_write_checkpoint_process_matrix_recovers_without_replay",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "native-write-checkpoint-process-test",
+      "output_sha256": "cf4f7ed57ef1cbbe9902da58cc4b2a51295c3a4c7d7073d66e51cfa5de3df2fe"
     },
     {
       "argv": [
@@ -74,7 +88,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "3216f876f6550de14277ec55bcab40f3f0ffb9f00020446ccd32909304bc1967"
+      "output_sha256": "44ada1714b0101aa33c685da6b3c3f6240772c1e67c3cb3750d13e7d98a0a714"
     },
     {
       "argv": [
@@ -102,7 +116,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "runtime-schema-tests",
-      "output_sha256": "656ae6fb79c4126291df7d34dbf9c0033f6f7e6c45e987bbd217f3f48761a1f0"
+      "output_sha256": "dda64fc61a15d9e9e170df25a2619a17b5b4606b318f7d1396cdfd859e7a1386"
     },
     {
       "argv": [
@@ -113,7 +127,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "9429883b84fff375554a1f00270c78c44c0640cac6b5b0509a77cf427fa9c114"
+      "output_sha256": "94c7ae3b341dd295861baf47c3803f0b0054ee8165c52760c38b0bd257128d96"
     },
     {
       "argv": [
@@ -212,7 +226,9 @@
     "hash_chained_checkpoint_validation": true,
     "independent_review": false,
     "manual_fuzzing_complete": false,
-    "native_end_to_end_recovery_wiring": false,
+    "native_end_to_end_recovery_wiring": true,
+    "native_sqlcipher_checkpoint_journal": true,
+    "native_write_process_stop_matrix": true,
     "non_fedora_native_evidence": false,
     "redacted_human_audit": true,
     "removed_content_not_retained": true,
@@ -236,21 +252,26 @@
     "SR-OPS-007",
     "SR-TST-005"
   ],
-  "source_revision": "7b69900d765d8a58bb6f9976740b427931a9b06d",
+  "source_revision": "df04fde4c1d26bdf67fe7a3df8e91d894c61ef93",
   "source_sha256": {
-    "docs/architecture/write-privacy-recovery-audit.md": "2b59a5c25d786d548dfc354f3dd8d98a514ec467d95a6d9a492ab28e983efb33",
-    "docs/verification/sprint-39-local-results.md": "4d937002a458021c4ded99e8a43b6a587a601273f1087b062ac9e264e901df07",
+    "docs/architecture/write-privacy-recovery-audit.md": "2ac1e0d619fc33022e9237731989678bc4f3b0d49b4f6ed5e9dbf8562512fd39",
+    "docs/verification/sprint-39-local-results.md": "52678eed665fbd69750d6bb01e5a000742fbd635cf0a204f8507d3734a8e7a04",
     "docs/verification/sprint-39-recovery-corpus.json": "b2e16c1eff2b62113c6ec5061d7e9cd84c060e721dca76c9945b9d6f095b39fb",
     "docs/verification/sprint-39-redacted-audit-fixture.json": "763067076838702c82457d531dcd3ddb6800396c0aa97536a1c1218311b2ecb3",
-    "kernel/engine/src/lib.rs": "e60cfc40dbfa6786d216d876eba6b0432f5faab3989739cb05b54cfa1b8d947f",
+    "kernel/engine/migrations/operational-store/0010-write-checkpoints.sql": "2fe0ada1916efceab682f03d37cda75645755b6873074d17631fcf8991bc0588",
+    "kernel/engine/src/lib.rs": "ba0fc7331c014a86772c22cd1713a3a147d84511d6f30e844b2a87b9bf9d7136",
+    "kernel/engine/src/operational_store.rs": "0a81553be2fe17416b371fbaf2387e3f3a2557df29f75a657ee3de485b1833e3",
+    "kernel/engine/src/runtime_loop.rs": "72f2dd4c039788b19677e5977d0b81d92f3dade9c2a35cd6fc55f24b01aa4ffa",
     "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
     "kernel/engine/tests/write_recovery_matrix.rs": "5e1a223441698dfeab1775da6173f0c01728af40be67072635fe3448c9d2db6b",
+    "platforms/linux/src/platform.rs": "efc940d51c54a60c34e8cc65331d5fbd2f1c8cea878a514f415413fd2ca81f97",
     "schemas/runtime/examples/write-aware-checkpoint.valid.json": "abff8bbfb8d8d49b63d410170a8bc83713087e13b9d34b0a35241816caead5dd",
     "schemas/runtime/write-aware-checkpoint.schema.json": "26498af552caf936a8308a346ee4526a3409f1854878a9c9fc231b54c7551426",
-    "scripts/sprint_39_evidence.py": "64f701b79b3d6b89b303b9bdfabec2869e4ee5f8ec82dd75ec0a5dc421597204",
-    "scripts/validate_planning_schemas.mjs": "013d9268904c9de31794ceef10fc2e088970b05f0f5dc76fa9b6bb4d9f51e1b3",
-    "tests/test_planning_schemas.mjs": "fdc7c337e60b2bae1b772eda31d767bbfcec7187cf74430b9062256e42e0791a",
-    "tests/test_sprint_39_evidence.py": "c4bfdfd604abb8199bbd5a99f10867c65d403bde3fcdcce085d9f150be15f52a"
+    "scripts/sprint_39_evidence.py": "3df0e52e6b1b8fec79ee9e3d4be349234b637503f6f6383b5fa05bb10fa391d4",
+    "scripts/validate_planning_schemas.mjs": "9eb1e5277bc2ffe6953e2d2ecc6504f832825285beefecfb35c27aac4997ac20",
+    "shells/host/src/linux_coding_runtime.rs": "88aab4ef95fd80cccbcf6c1bac6a7656a1caf55e8d5ac87fc821ad64a0a9bafc",
+    "tests/test_planning_schemas.mjs": "af74d590af0eb8eb3cda538133f879dcb13eea0b8e3250c9b4e46f850c58b919",
+    "tests/test_sprint_39_evidence.py": "4ed2fbc553341d5cf083b06d24f63122e4410992013736d9393428d677f382f6"
   },
   "summary": {
     "all_runtime_roots_scanned": false,
@@ -259,7 +280,7 @@
     "local_write_recovery_contract_passed": true,
     "manual_fuzzing_complete": false,
     "native_crash_concurrency_passed": false,
-    "native_end_to_end_passed": false,
+    "native_end_to_end_passed": true,
     "network_access_enabled": false,
     "release_approval": false,
     "sprint_status": "BLOCKED",
@@ -273,7 +294,7 @@
     "focused_contracts": true,
     "independent_review": false,
     "manual_fuzzing": false,
-    "native_end_to_end_recovery": false,
+    "native_end_to_end_recovery": true,
     "non_fedora_native_evidence": false,
     "trusted_package_launcher_environment": false,
     "upstream_sprint_38_gate": false
