@@ -132,7 +132,7 @@ pub use obsidian_index::{
     ObsidianIndexReport, ObsidianIndexUpdate, ObsidianPostWriteIndexResult, ObsidianPreviewResult,
     ObsidianQueryResult, ObsidianRetrievalDocuments, ObsidianTemporalClass,
     ObsidianTraversalResult, ObsidianVaultFreshness, ObsidianVaultIndex, ObsidianWatchEvent,
-    ObsidianWatchEventKind, retrieval_documents_from_snapshot,
+    ObsidianWatchEventKind, obsidian_snapshot_sha256, retrieval_documents_from_snapshot,
 };
 pub use operations::{
     KnowledgeDashboard, KnowledgeDuplicate, KnowledgeDuplicateReason, KnowledgeExport,

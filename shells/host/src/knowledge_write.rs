@@ -3,13 +3,21 @@
 use std::fmt::Write as _;
 
 use agentmage_capability_knowledge::{
-    KnowledgeNoteCreatePreview, MarkdownDocument, MarkdownUpdatePreview,
+    KnowledgeIndexPublication, KnowledgeIndexPublicationState, KnowledgeNoteCreatePreview,
+    MarkdownDocument, MarkdownUpdatePreview, ObsidianPostWriteIndexResult, ObsidianVaultFreshness,
+    ObsidianVaultIndex, ObsidianVaultSnapshot, obsidian_snapshot_sha256,
     verify_knowledge_note_create_preview, verify_markdown_update_preview,
 };
 use agentmage_kernel_contracts::GrantTarget;
 use agentmage_kernel_engine::filesystem_control::{
     ExistingSourceDraft, ExistingWorkDisposition, FileClassification, FilesystemOperationDraft,
     NewDestinationDraft, StructuredPatch, StructuredPatchHunk,
+};
+use agentmage_kernel_engine::operational_store::DurableAuthorityRuntime;
+use agentmage_kernel_engine::write_recovery::{
+    WriteAwareCheckpoint, WriteAwareCheckpointInput, WriteBoundaryField, WriteCheckpointPhase,
+    WriteFieldSensitivity, WritePrivacyBoundary, build_write_checkpoint, sanitize_write_boundary,
+    verify_write_checkpoint,
 };
 use sha2::{Digest, Sha256};
 
@@ -72,6 +80,243 @@ impl std::fmt::Display for KnowledgeFilesystemError {
 }
 
 impl std::error::Error for KnowledgeFilesystemError {}
+
+/// Stable identities and clock values for one derived-index checkpoint pair.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KnowledgeIndexCheckpointRequest {
+    /// Identity of the checkpoint persisted before index publication.
+    pub updating_checkpoint_id: String,
+    /// Identity of the checkpoint persisted after exact index verification.
+    pub verified_checkpoint_id: String,
+    /// Kernel-clock time for the pre-publication checkpoint.
+    pub updating_at_epoch_ms: u64,
+    /// Kernel-clock time for the verified checkpoint.
+    pub verified_at_epoch_ms: u64,
+}
+
+/// Durable result of publishing one disposable index after canonical verification.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct KnowledgeIndexCheckpointResult {
+    /// Content-free digest of the exact declared index publication.
+    pub index_update_sha256: String,
+    /// Durable checkpoint committed before the index transaction.
+    pub updating_checkpoint: WriteAwareCheckpoint,
+    /// Durable checkpoint committed after the index matches canonical bytes.
+    pub verified_checkpoint: WriteAwareCheckpoint,
+    /// Exact non-canonical index publication result.
+    pub publication: ObsidianPostWriteIndexResult,
+}
+
+/// Content-free failure from the derived-index checkpoint coordinator.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum KnowledgeIndexCheckpointError {
+    /// The canonical checkpoint, request, or publication intent was invalid.
+    InvalidInput,
+    /// The SQLCipher checkpoint journal could not commit safely.
+    CheckpointPersistenceFailed,
+    /// The disposable index did not publish or verify against canonical bytes.
+    IndexPublicationFailed,
+}
+
+impl KnowledgeIndexCheckpointError {
+    /// Returns a stable redacted failure code.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::InvalidInput => "host.knowledge-index-checkpoint.invalid_input",
+            Self::CheckpointPersistenceFailed => {
+                "host.knowledge-index-checkpoint.persistence_failed"
+            }
+            Self::IndexPublicationFailed => "host.knowledge-index-checkpoint.publication_failed",
+        }
+    }
+}
+
+impl std::fmt::Display for KnowledgeIndexCheckpointError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(self.code())
+    }
+}
+
+impl std::error::Error for KnowledgeIndexCheckpointError {}
+
+/// Publishes one canonical-bound disposable index with durable before/after checkpoints.
+///
+/// The canonical filesystem transaction, derived SQLite index, and SQLCipher journal remain
+/// separate commits. A stop after the first checkpoint therefore reopens at `IndexUpdating` and
+/// requires deterministic index verification or rebuild; it never reports the write complete.
+pub fn publish_knowledge_index_with_checkpoints(
+    authority: &mut DurableAuthorityRuntime,
+    previous: &WriteAwareCheckpoint,
+    index: &mut ObsidianVaultIndex,
+    expected_index_revision: u64,
+    publication: &KnowledgeIndexPublication,
+    snapshot: &ObsidianVaultSnapshot,
+    request: KnowledgeIndexCheckpointRequest,
+) -> Result<KnowledgeIndexCheckpointResult, KnowledgeIndexCheckpointError> {
+    if verify_write_checkpoint(previous).is_err()
+        || previous.phase != WriteCheckpointPhase::CanonicalVerified
+        || previous.consumed_grant_id.is_none()
+        || previous.index_update_sha256.is_some()
+        || previous.index_verified
+        || publication.state != KnowledgeIndexPublicationState::ReadyAfterCommit
+        || publication.observed_source_sha256.as_deref()
+            != Some(publication.mutation.proposed_source_sha256())
+        || request.verified_at_epoch_ms < request.updating_at_epoch_ms
+    {
+        return Err(KnowledgeIndexCheckpointError::InvalidInput);
+    }
+    let index_update_sha256 =
+        knowledge_index_publication_digest(expected_index_revision, publication, snapshot)?;
+    let scan = sanitize_write_boundary(
+        WritePrivacyBoundary::Checkpoint,
+        &[
+            WriteBoundaryField {
+                name: "transaction_id",
+                value: previous.transaction_id.as_bytes(),
+                sensitivity: WriteFieldSensitivity::PublicMetadata,
+            },
+            WriteBoundaryField {
+                name: "action_id",
+                value: previous.action_id.as_bytes(),
+                sensitivity: WriteFieldSensitivity::PublicMetadata,
+            },
+            WriteBoundaryField {
+                name: "updating_checkpoint_id",
+                value: request.updating_checkpoint_id.as_bytes(),
+                sensitivity: WriteFieldSensitivity::PublicMetadata,
+            },
+            WriteBoundaryField {
+                name: "verified_checkpoint_id",
+                value: request.verified_checkpoint_id.as_bytes(),
+                sensitivity: WriteFieldSensitivity::PublicMetadata,
+            },
+            WriteBoundaryField {
+                name: "index_update_sha256",
+                value: index_update_sha256.as_bytes(),
+                sensitivity: WriteFieldSensitivity::PublicMetadata,
+            },
+        ],
+    )
+    .map_err(|_| KnowledgeIndexCheckpointError::InvalidInput)?;
+    let updating_checkpoint = build_index_checkpoint(
+        previous,
+        request.updating_checkpoint_id,
+        WriteCheckpointPhase::IndexUpdating,
+        &index_update_sha256,
+        false,
+        scan.receipt.receipt_sha256.clone(),
+        request.updating_at_epoch_ms,
+    )?;
+    authority
+        .checkpoint_write_transaction(std::slice::from_ref(&updating_checkpoint))
+        .map_err(|_| KnowledgeIndexCheckpointError::CheckpointPersistenceFailed)?;
+
+    let published = index
+        .publish_after_canonical_write(expected_index_revision, publication, snapshot)
+        .map_err(|_| KnowledgeIndexCheckpointError::IndexPublicationFailed)?;
+    let update = published
+        .update
+        .as_ref()
+        .ok_or(KnowledgeIndexCheckpointError::IndexPublicationFailed)?;
+    let expected_revision = expected_index_revision
+        .checked_add(1)
+        .ok_or(KnowledgeIndexCheckpointError::IndexPublicationFailed)?;
+    if published.state != KnowledgeIndexPublicationState::ReadyAfterCommit
+        || published.report != update.report
+        || published.report.revision != expected_revision
+        || update.receipt.index_revision != expected_revision
+        || update.receipt.snapshot_sha256 != published.report.snapshot_sha256
+        || update.receipt.index_sha256 != published.report.index_sha256
+        || update.receipt.source_files_mutated
+        || update.receipt.external_process_started
+        || update.receipt.network_accessed
+        || index.freshness(snapshot) != Ok(ObsidianVaultFreshness::Current)
+    {
+        return Err(KnowledgeIndexCheckpointError::IndexPublicationFailed);
+    }
+    let verified_checkpoint = build_index_checkpoint(
+        &updating_checkpoint,
+        request.verified_checkpoint_id,
+        WriteCheckpointPhase::IndexVerified,
+        &index_update_sha256,
+        true,
+        scan.receipt.receipt_sha256,
+        request.verified_at_epoch_ms,
+    )?;
+    authority
+        .checkpoint_write_transaction(std::slice::from_ref(&verified_checkpoint))
+        .map_err(|_| KnowledgeIndexCheckpointError::CheckpointPersistenceFailed)?;
+    Ok(KnowledgeIndexCheckpointResult {
+        index_update_sha256,
+        updating_checkpoint,
+        verified_checkpoint,
+        publication: published,
+    })
+}
+
+fn knowledge_index_publication_digest(
+    expected_index_revision: u64,
+    publication: &KnowledgeIndexPublication,
+    snapshot: &ObsidianVaultSnapshot,
+) -> Result<String, KnowledgeIndexCheckpointError> {
+    let intent = serde_json::json!({
+        "schema_version": 1,
+        "expected_index_revision": expected_index_revision,
+        "path_sha256": sha256(
+            &serde_json::to_vec(publication.mutation.path())
+                .map_err(|_| KnowledgeIndexCheckpointError::InvalidInput)?,
+        ),
+        "stable_id": publication.mutation.stable_id().as_str(),
+        "expected_source_sha256": publication.mutation.expected_source_sha256(),
+        "proposed_source_sha256": publication.mutation.proposed_source_sha256(),
+        "preview_sha256": publication.mutation.preview_sha256(),
+        "observed_source_sha256": publication.observed_source_sha256,
+        "canonical_snapshot_sha256": obsidian_snapshot_sha256(snapshot)
+            .map_err(|_| KnowledgeIndexCheckpointError::InvalidInput)?,
+    });
+    serde_json::to_vec(&intent)
+        .map(|bytes| sha256(&bytes))
+        .map_err(|_| KnowledgeIndexCheckpointError::InvalidInput)
+}
+
+fn build_index_checkpoint(
+    previous: &WriteAwareCheckpoint,
+    checkpoint_id: String,
+    phase: WriteCheckpointPhase,
+    index_update_sha256: &str,
+    index_verified: bool,
+    secret_scan_receipt_sha256: String,
+    occurred_at_epoch_ms: u64,
+) -> Result<WriteAwareCheckpoint, KnowledgeIndexCheckpointError> {
+    build_write_checkpoint(
+        WriteAwareCheckpointInput {
+            checkpoint_id,
+            transaction_id: previous.transaction_id.clone(),
+            action_id: previous.action_id.clone(),
+            phase,
+            consumed_grant_id: previous.consumed_grant_id.clone(),
+            file_receipt_head_sha256: previous.file_receipt_head_sha256.clone(),
+            file_receipt_count: previous.file_receipt_count,
+            evidence_set_sha256: previous.evidence_set_sha256.clone(),
+            index_update_sha256: Some(index_update_sha256.to_owned()),
+            next_session_checkpoint_sha256: previous.next_session_checkpoint_sha256.clone(),
+            secret_scan_receipt_sha256,
+            staging_inventory_sha256: previous.staging_inventory_sha256.clone(),
+            staging_item_count: previous.staging_item_count,
+            retention_expires_at_epoch_ms: previous.retention_expires_at_epoch_ms,
+            canonical_postimages_verified: true,
+            receipt_chain_verified: false,
+            index_verified,
+            rollback_verified: false,
+            cleanup_state: previous.cleanup_state,
+            failure_code: None,
+            occurred_at_epoch_ms,
+        },
+        Some(previous),
+    )
+    .map_err(|_| KnowledgeIndexCheckpointError::InvalidInput)
+}
 
 /// Translates one verified create preview into the kernel's closed create draft.
 pub fn compose_knowledge_create(
@@ -477,21 +722,42 @@ mod linux_tests {
         execute_filesystem_transaction, issue_filesystem_grant, render_filesystem_preview,
     };
     use agentmage_kernel_engine::grants::{GrantIssuer, SessionReadGrantRequest};
+    use agentmage_kernel_engine::operational_store::{
+        DurableAuthorityRuntime, OperationalStoreKeyError, OperationalStoreKeyProvider,
+    };
     use agentmage_kernel_engine::policy::{
         PolicyDocument, PolicyEngine, ScopeRules, ToolPolicyBinding,
     };
     use agentmage_kernel_engine::write_approval::WriteReviewNarrative;
+    use agentmage_kernel_engine::write_recovery::{
+        WriteAwareCheckpoint, WriteAwareCheckpointInput, WriteCheckpointPhase, WriteCleanupState,
+        build_write_checkpoint,
+    };
     use agentmage_platform_linux::{
         LinuxControlledFilesystemDriver, LinuxFilesystemDriverLimits, LinuxPathAdapter,
         select_test_linux_workspace,
     };
 
-    use super::{KnowledgeFilesystemContext, compose_knowledge_update, sha256};
+    use super::{
+        KnowledgeFilesystemContext, KnowledgeIndexCheckpointError, KnowledgeIndexCheckpointRequest,
+        compose_knowledge_update, publish_knowledge_index_with_checkpoints, sha256,
+    };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
     const KNOWLEDGE_CRASH_CHILD_EXIT: i32 = 88;
 
     struct TestDirectory(PathBuf);
+
+    struct TestKey([u8; 32]);
+
+    impl OperationalStoreKeyProvider for TestKey {
+        fn with_key<T>(
+            &mut self,
+            operation: impl FnOnce(&[u8]) -> T,
+        ) -> Result<T, OperationalStoreKeyError> {
+            Ok(operation(&self.0))
+        }
+    }
 
     impl TestDirectory {
         fn new() -> Self {
@@ -880,6 +1146,85 @@ mod linux_tests {
         .map(|result| result.outcome)
     }
 
+    fn checkpoint_input(
+        checkpoint_id: &str,
+        phase: WriteCheckpointPhase,
+        previous: Option<&WriteAwareCheckpoint>,
+    ) -> WriteAwareCheckpointInput {
+        let consumed = phase != WriteCheckpointPhase::BeforeTransaction;
+        let canonical_verified = phase == WriteCheckpointPhase::CanonicalVerified;
+        WriteAwareCheckpointInput {
+            checkpoint_id: checkpoint_id.to_owned(),
+            transaction_id: "transaction-native-knowledge-checkpoint".to_owned(),
+            action_id: "action-native-knowledge-checkpoint".to_owned(),
+            phase,
+            consumed_grant_id: consumed.then(|| "grant-native-knowledge-checkpoint".to_owned()),
+            file_receipt_head_sha256: canonical_verified.then(|| sha256(b"file-receipt")),
+            file_receipt_count: u32::from(canonical_verified),
+            evidence_set_sha256: sha256(b"[]"),
+            index_update_sha256: None,
+            next_session_checkpoint_sha256: "0".repeat(64),
+            secret_scan_receipt_sha256: sha256(b"checkpoint-scan"),
+            staging_inventory_sha256: sha256(b"[]"),
+            staging_item_count: 0,
+            retention_expires_at_epoch_ms: 0,
+            canonical_postimages_verified: canonical_verified,
+            receipt_chain_verified: false,
+            index_verified: false,
+            rollback_verified: false,
+            cleanup_state: WriteCleanupState::NotRequired,
+            failure_code: None,
+            occurred_at_epoch_ms: previous
+                .map_or(1_000, |checkpoint| checkpoint.occurred_at_epoch_ms + 1),
+        }
+    }
+
+    fn canonical_checkpoint_chain() -> Vec<WriteAwareCheckpoint> {
+        let mut chain = Vec::new();
+        for (checkpoint_id, phase) in [
+            (
+                "checkpoint-native-knowledge-before",
+                WriteCheckpointPhase::BeforeTransaction,
+            ),
+            (
+                "checkpoint-native-knowledge-consumed",
+                WriteCheckpointPhase::GrantConsumed,
+            ),
+            (
+                "checkpoint-native-knowledge-applying",
+                WriteCheckpointPhase::Applying,
+            ),
+            (
+                "checkpoint-native-knowledge-canonical",
+                WriteCheckpointPhase::CanonicalVerified,
+            ),
+        ] {
+            let checkpoint = build_write_checkpoint(
+                checkpoint_input(checkpoint_id, phase, chain.last()),
+                chain.last(),
+            )
+            .expect("canonical checkpoint");
+            chain.push(checkpoint);
+        }
+        chain
+    }
+
+    fn open_checkpoint_authority(root: &Path) -> DurableAuthorityRuntime {
+        let observation = StrictLocalStorageObservation {
+            filesystem: StorageFilesystemClass::Local,
+            synchronization_marker: None,
+            root_identity_sha256: [9; 32],
+            symlink_free: true,
+        };
+        DurableAuthorityRuntime::open(
+            &root.join("knowledge-checkpoints.db"),
+            &observation,
+            &mut TestKey([41; 32]),
+            10_000,
+        )
+        .expect("durable knowledge checkpoint authority")
+    }
+
     #[test]
     fn native_markdown_preview_commits_and_external_edit_fails_closed() {
         let mut committed = native_fixture();
@@ -984,6 +1329,158 @@ mod linux_tests {
         assert_eq!(
             blocked_publication.state,
             KnowledgeIndexPublicationState::RebuildRequired
+        );
+    }
+
+    #[test]
+    fn native_index_publication_persists_and_reopens_exact_checkpoint_phases() {
+        let mut fixture = native_fixture();
+        let selection = vault_selection(fixture.workspace_path.workspace_id());
+        let initial_snapshot = vault_snapshot(
+            &selection,
+            fixture.workspace_path.clone(),
+            &fixture.source_bytes,
+        );
+        let mut index = ObsidianVaultIndex::in_memory().expect("native durable index");
+        let initial = index.rebuild(&initial_snapshot).expect("initial index");
+        assert_eq!(
+            execute_native(&mut fixture),
+            Ok(FilesystemTransactionOutcome::Committed)
+        );
+        let post_snapshot = vault_snapshot(
+            &selection,
+            fixture.workspace_path.clone(),
+            &fixture.postimage_bytes,
+        );
+        let publication = decide_index_publication(
+            fixture.mutation.clone(),
+            CanonicalMarkdownWriteOutcome::Committed,
+            Some(sha256(&fixture.postimage_bytes)),
+        );
+        let chain = canonical_checkpoint_chain();
+        let transaction_id = chain[0].transaction_id.clone();
+        {
+            let mut authority = open_checkpoint_authority(fixture._root.path());
+            authority
+                .checkpoint_write_transaction(&chain)
+                .expect("canonical chain persists");
+            let result = publish_knowledge_index_with_checkpoints(
+                &mut authority,
+                chain.last().expect("canonical head"),
+                &mut index,
+                initial.report.revision,
+                &publication,
+                &post_snapshot,
+                KnowledgeIndexCheckpointRequest {
+                    updating_checkpoint_id: "checkpoint-native-knowledge-index-updating".to_owned(),
+                    verified_checkpoint_id: "checkpoint-native-knowledge-index-verified".to_owned(),
+                    updating_at_epoch_ms: 2_000,
+                    verified_at_epoch_ms: 2_001,
+                },
+            )
+            .expect("checkpointed index publication");
+            assert_eq!(
+                result.updating_checkpoint.phase,
+                WriteCheckpointPhase::IndexUpdating
+            );
+            assert_eq!(
+                result.verified_checkpoint.phase,
+                WriteCheckpointPhase::IndexVerified
+            );
+            assert!(result.verified_checkpoint.index_verified);
+            assert_eq!(
+                result.verified_checkpoint.index_update_sha256.as_deref(),
+                Some(result.index_update_sha256.as_str())
+            );
+        }
+        let reopened = open_checkpoint_authority(fixture._root.path());
+        let retained = reopened
+            .write_checkpoint_chain(&transaction_id)
+            .expect("verified index chain reopens");
+        assert_eq!(
+            retained
+                .iter()
+                .map(|checkpoint| checkpoint.phase)
+                .collect::<Vec<_>>(),
+            vec![
+                WriteCheckpointPhase::BeforeTransaction,
+                WriteCheckpointPhase::GrantConsumed,
+                WriteCheckpointPhase::Applying,
+                WriteCheckpointPhase::CanonicalVerified,
+                WriteCheckpointPhase::IndexUpdating,
+                WriteCheckpointPhase::IndexVerified,
+            ]
+        );
+        assert!(retained.last().expect("retained head").index_verified);
+        assert_eq!(
+            index.freshness(&post_snapshot).expect("index freshness"),
+            ObsidianVaultFreshness::Current
+        );
+    }
+
+    #[test]
+    fn stale_index_publication_retains_updating_checkpoint_without_false_verification() {
+        let fixture = native_fixture();
+        let selection = vault_selection(fixture.workspace_path.workspace_id());
+        let post_snapshot = vault_snapshot(
+            &selection,
+            fixture.workspace_path.clone(),
+            &fixture.postimage_bytes,
+        );
+        let initial_snapshot = vault_snapshot(
+            &selection,
+            fixture.workspace_path.clone(),
+            &fixture.source_bytes,
+        );
+        let mut index = ObsidianVaultIndex::in_memory().expect("stale durable index");
+        let initial = index
+            .rebuild(&initial_snapshot)
+            .expect("initial stale index");
+        let publication = decide_index_publication(
+            fixture.mutation.clone(),
+            CanonicalMarkdownWriteOutcome::Committed,
+            Some(sha256(&fixture.postimage_bytes)),
+        );
+        let chain = canonical_checkpoint_chain();
+        let mut authority = open_checkpoint_authority(fixture._root.path());
+        authority
+            .checkpoint_write_transaction(&chain)
+            .expect("canonical chain persists");
+        assert_eq!(
+            publish_knowledge_index_with_checkpoints(
+                &mut authority,
+                chain.last().expect("canonical head"),
+                &mut index,
+                initial.report.revision + 1,
+                &publication,
+                &post_snapshot,
+                KnowledgeIndexCheckpointRequest {
+                    updating_checkpoint_id: "checkpoint-native-knowledge-stale-updating".to_owned(),
+                    verified_checkpoint_id: "checkpoint-native-knowledge-stale-verified".to_owned(),
+                    updating_at_epoch_ms: 2_000,
+                    verified_at_epoch_ms: 2_001,
+                },
+            ),
+            Err(KnowledgeIndexCheckpointError::IndexPublicationFailed)
+        );
+        let retained = authority
+            .write_checkpoint_chain(&chain[0].transaction_id)
+            .expect("stale checkpoint chain");
+        assert_eq!(
+            retained.last().expect("stale checkpoint head").phase,
+            WriteCheckpointPhase::IndexUpdating
+        );
+        assert!(
+            !retained
+                .last()
+                .expect("stale checkpoint head")
+                .index_verified
+        );
+        assert_eq!(
+            index
+                .freshness(&initial_snapshot)
+                .expect("original freshness"),
+            ObsidianVaultFreshness::Current
         );
     }
 

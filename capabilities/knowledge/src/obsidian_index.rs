@@ -433,7 +433,7 @@ impl ObsidianVaultIndex {
         &self,
         snapshot: &ObsidianVaultSnapshot,
     ) -> Result<ObsidianVaultFreshness, ObsidianIndexError> {
-        let expected = snapshot_sha256(snapshot)?;
+        let expected = obsidian_snapshot_sha256(snapshot)?;
         Ok(
             if self.metadata("snapshot_sha256")? == expected
                 && self.metadata("parser_version")? == OBSIDIAN_PARSER_VERSION.to_string()
@@ -985,7 +985,7 @@ impl ObsidianVaultIndex {
         snapshot: &ObsidianVaultSnapshot,
         revision: u64,
     ) -> Result<ObsidianIndexReport, ObsidianIndexError> {
-        let snapshot_sha256 = snapshot_sha256(snapshot)?;
+        let snapshot_sha256 = obsidian_snapshot_sha256(snapshot)?;
         let conflicts = conflicts(snapshot)?;
         let transaction = self
             .connection
@@ -1467,7 +1467,10 @@ fn conflicts(
     Ok(values)
 }
 
-fn snapshot_sha256(snapshot: &ObsidianVaultSnapshot) -> Result<String, ObsidianIndexError> {
+/// Computes the canonical content-free identity of one complete vault snapshot.
+pub fn obsidian_snapshot_sha256(
+    snapshot: &ObsidianVaultSnapshot,
+) -> Result<String, ObsidianIndexError> {
     let mut material = Vec::new();
     material.extend_from_slice(b"agentmage-obsidian-snapshot-v2\0");
     material.extend_from_slice(&OBSIDIAN_PARSER_VERSION.to_be_bytes());
