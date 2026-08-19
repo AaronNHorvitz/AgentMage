@@ -150,6 +150,15 @@ Timeout, crash ambiguity, stale consumed authority, and rollback failure become 
 not replayable. Disk-full after a verified canonical postimage selects separate terminal-receipt
 persistence rather than file application.
 
+Native process-stop evidence composes at a strict call boundary. The durable authority commits the
+single-use grant and `GrantConsumed` checkpoint before invoking a Linux write driver. The atomic
+write matrix then stops each apply and restore pass around staging, exchange, directory durability,
+and cleanup; the controlled-filesystem matrix does the same for create, move, remove, and restore;
+and the knowledge matrix stops around canonical application and derived-index publication. Because
+the authority store is not written again until the driver returns, every internal stop reopens with
+consumed authority and cannot replay, while the descriptor-relative driver tests independently
+prove that canonical paths contain only an exact reviewed prestate or poststate.
+
 The public-synthetic scenario inventory is
 [`sprint-39-recovery-corpus.json`](../verification/sprint-39-recovery-corpus.json). The Rust
 integration suite executes those condition families through the public recovery API.
@@ -176,7 +185,7 @@ and real process termination before/after terminal receipt and session-checkpoin
 restart, the retained head is exactly `GrantConsumed`, `ReceiptPersisted`, or `Complete`; the exact
 file remains committed once and consumed authority is never replayed.
 
-This evidence does not claim power-loss durability, torn-sector behavior, exhaustive native fault
-injection at every staging, application, index, and rollback boundary, a complete live-root scan, a
+This evidence does not claim power-loss durability, torn-sector behavior, native disk-exhaustion
+injection, exhaustive external-edit or permission-race scheduling, a complete live-root scan, a
 trusted packaged-launcher run, non-Fedora native execution, independent review, release approval,
 or deferred manual fuzzing. Those remain explicit gate dependencies.

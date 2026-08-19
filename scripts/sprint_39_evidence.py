@@ -31,6 +31,8 @@ SOURCE_PATHS: Final = (
     "kernel/engine/tests/write_recovery_matrix.rs",
     "kernel/engine/migrations/operational-store/0010-write-checkpoints.sql",
     "platforms/linux/src/platform.rs",
+    "platforms/linux/src/write_transaction.rs",
+    "platforms/linux/src/filesystem_control.rs",
     "capabilities/knowledge/src/lib.rs",
     "capabilities/knowledge/src/obsidian_index.rs",
     "shells/host/src/knowledge_write.rs",
@@ -85,6 +87,27 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "native-atomic-write-internal-stop-matrix",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux",
+            "s_029_rt01_process_stops_leave_only_reviewed_target_bytes", "--locked",
+        ),
+    ),
+    (
+        "native-filesystem-internal-stop-matrix",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux",
+            "s_030_rt01_process_stops_leave_only_prestate_or_poststate_paths", "--locked",
+        ),
+    ),
+    (
+        "native-derived-index-process-stop-matrix",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "native_process_stops_rebuild_index_only_from_canonical_markdown", "--locked",
+        ),
+    ),
+    (
         "kernel-tests",
         ("cargo", "test", "-p", "agentmage-kernel-engine", "--locked"),
     ),
@@ -111,6 +134,9 @@ FOCUSED_COMMANDS: Final = (
     "native-write-checkpoint-process-test",
     "native-derived-index-checkpoint-tests",
     "native-write-producer-privacy-tests",
+    "native-atomic-write-internal-stop-matrix",
+    "native-filesystem-internal-stop-matrix",
+    "native-derived-index-process-stop-matrix",
 )
 SECURITY_REQUIREMENTS: Final = [
     "SR-DAT-002", "SR-DAT-003", "SR-DAT-004", "SR-DAT-010", "SR-DAT-011",
@@ -144,6 +170,7 @@ IMPLEMENTED: Final = {
     "native_write_process_stop_matrix": True,
     "native_derived_index_checkpoint_publication": True,
     "native_write_producer_privacy_gate": True,
+    "native_internal_process_stop_matrices": True,
     "complete_native_crash_concurrency_matrix": False,
     "all_runtime_roots_scanned": False,
     "non_fedora_native_evidence": False,
@@ -249,6 +276,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "native_end_to_end_recovery": True,
             "native_derived_index_recovery": True,
             "native_write_producer_privacy": True,
+            "native_internal_process_stop_matrices": True,
             "complete_native_crash_concurrency_matrix": False,
             "all_runtime_roots_scanned": False,
             "trusted_package_launcher_environment": False,
@@ -264,6 +292,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "native_end_to_end_passed": True,
             "native_derived_index_recovery_passed": True,
             "native_write_producer_privacy_passed": True,
+            "native_internal_process_stops_passed": True,
             "native_crash_concurrency_passed": False,
             "all_runtime_roots_scanned": False,
             "trusted_launcher_environment_passed": False,
@@ -313,6 +342,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "native_end_to_end_passed": True,
         "native_derived_index_recovery_passed": True,
         "native_write_producer_privacy_passed": True,
+        "native_internal_process_stops_passed": True,
         "native_crash_concurrency_passed": False,
         "all_runtime_roots_scanned": False,
         "trusted_launcher_environment_passed": False,
@@ -332,6 +362,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "native_end_to_end_recovery": True,
         "native_derived_index_recovery": True,
         "native_write_producer_privacy": True,
+        "native_internal_process_stop_matrices": True,
         "complete_native_crash_concurrency_matrix": False,
         "all_runtime_roots_scanned": False,
         "trusted_package_launcher_environment": False,
