@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "record_type": "sprint_42_local_evidence",
-  "source_revision": "301480ff3c1873bb00faa0e39488afafc788a00c",
+  "source_revision": "aaf49f77c9ebb7712e481427c3e972d995b863d7",
   "source_sha256": {
     "kernel/engine/src/repository_safety.rs": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f",
-    "platforms/linux/src/repository_safety.rs": "ccc4668e33ca14828c40dc0f5f2de758711b0310c502834ca1137f38d6f788e7",
+    "platforms/linux/src/repository_safety.rs": "0759a7c664d5d42a7366b4803d1c2afda922e60cb95d0a620563c5be395d2d22",
     "kernel/engine/tests/repository_safety_matrix.rs": "ce44de22d7623b99ba672921fbc7837bdfbd32aae91aca40a79855fa9d66ed32",
     "schemas/runtime/repository-preservation-manifest.schema.json": "d975faf6408bcab834d560260c797b08a3f8e08432d43f8cf56e8b7bcdbe71dd",
     "schemas/runtime/repository-operation-plan.schema.json": "e18be0f17720689a4af950f5fd5b51e09d02a00f0c9bb0350340070576c14751",
@@ -42,7 +42,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "4ee1e7e5212773cd885435ba199064c06b428ff14b65b29c4d7baf8ee84401ae",
+      "output_sha256": "fd1ec00fe1ea0f20b124f4a0bbd080db0dfe6810fcf89ff77fdac77de7c42c90",
       "blocking_skip_count": 0
     },
     {
@@ -74,7 +74,7 @@
         "--include-ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "c596fd8b8c3857176f1799c5024d7b30316e843c961559fbb2dd2e1a3762cbd0",
+      "output_sha256": "541ff7783106ae123a4be31bc66cce54e7c5f1f9f3827d735b14b21e697611f0",
       "blocking_skip_count": 0
     },
     {
@@ -85,7 +85,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "43acaeed08261464d3f0c67f4344b39868972ccfc8e7f664b8746807a2e17d78",
+      "output_sha256": "0768fc22e29288f70638bee62f7aaf37779aa5e696925394fc48f75e12fee649",
       "blocking_skip_count": null
     },
     {
@@ -96,7 +96,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "be7592687f5ff80d4025a31c9a758f158a181ae252c76d7192331c48bf9d3245",
+      "output_sha256": "a449f7a1f7d8b9a35e11b3ce1d0529297485eab09b93f2f02dee7f21fa040981",
       "blocking_skip_count": null
     },
     {
@@ -136,7 +136,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "d01afbc7fada60a01d73d6c1e09c3457f8e85e9150af5cb812f69ad3cccbe1d4",
+      "output_sha256": "51a1309366105afbe9b1b48d811436a12e42608a977e4ecf907ad575f98b652f",
       "blocking_skip_count": null
     },
     {
@@ -148,7 +148,7 @@
         "tests.test_sprint_42_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "cd449c4eb2295b7b66b994ed52c5ce99ff2bc0bc66827164e053f8b8bbee9af0",
+      "output_sha256": "32cab6e778c72bae605ebf713578e9651422bb61d49e90768763cc1e859a806d",
       "blocking_skip_count": null
     }
   ],
