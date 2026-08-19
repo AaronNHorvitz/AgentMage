@@ -172,6 +172,13 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "linux-live-parent-crash-decoy",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux",
+            "live_parent_crash_never_adopts_a_concurrent_unit", "--locked", "--", "--ignored",
+        ),
+    ),
+    (
         "linux-task-minimum",
         (
             "cargo", "test", "-p", "agentmage-platform-linux",
@@ -221,6 +228,7 @@ FOCUSED_COMMANDS: Final = (
     "linux-live-maximum-limits",
     "linux-live-minimum-timeout",
     "linux-live-parent-crash",
+    "linux-live-parent-crash-decoy",
     "linux-task-minimum",
     "linux-live-scratch-residue",
 )
@@ -267,6 +275,7 @@ IMPLEMENTED: Final = {
     "minimum_executable_task_ceiling_enforced": True,
     "maximum_limit_boundary_exercised": True,
     "parent_crash_recovery_campaign_complete": True,
+    "parent_crash_unit_ownership_proven": True,
     "complete_limit_boundary_campaign": False,
     "planted_host_configuration_campaign_complete": True,
     "hostile_descendant_tree_campaign_complete": False,
@@ -416,6 +425,7 @@ def build_report(
             "minimum_executable_task_ceiling": local_pass,
             "maximum_limit_boundary": local_pass,
             "parent_crash_recovery_campaign": local_pass,
+            "parent_crash_unit_ownership_proven": local_pass,
             "complete_limit_boundary_campaign": False,
             "planted_host_configuration_campaign": local_pass,
             "hostile_descendant_crash_campaign": False,
@@ -498,6 +508,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "minimum_executable_task_ceiling": True,
         "maximum_limit_boundary": True,
         "parent_crash_recovery_campaign": True,
+        "parent_crash_unit_ownership_proven": True,
         "complete_limit_boundary_campaign": False,
         "planted_host_configuration_campaign": True,
         "hostile_descendant_crash_campaign": False,

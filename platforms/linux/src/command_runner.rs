@@ -221,6 +221,8 @@ impl LinuxBoundedCommandExecutor {
             return failed("linux.command.unit.identity");
         };
         let unit = format!("{unit_stem}.service");
+        // Reported before any spawn, so an observed unit always has a known identity.
+        report_generated_unit(&unit);
         let parent_pid = std::process::id();
         let held_worktree = match command.working_directory {
             CommandWorkingDirectory::EmptyScratch => None,
@@ -837,6 +839,37 @@ fn random_unit_name() -> Result<String, LinuxCommandRunnerError> {
     Ok(format!("agentmage-command-{}", hex(&random)))
 }
 
+/// Test-only reporting seam for the generated transient unit identity.
+///
+/// The name is still produced by [`random_unit_name`]; this seam only observes it, so
+/// no caller, environment value, prompt, or repository content can choose a production
+/// unit name. It compiles to nothing outside tests.
+#[cfg(test)]
+mod unit_observer {
+    use std::sync::Mutex;
+
+    static OBSERVER: Mutex<Option<fn(&str)>> = Mutex::new(None);
+
+    pub(super) fn install(observer: fn(&str)) {
+        *OBSERVER.lock().expect("unit observer") = Some(observer);
+    }
+
+    pub(super) fn report(unit: &str) {
+        let observer = *OBSERVER.lock().expect("unit observer");
+        if let Some(observer) = observer {
+            observer(unit);
+        }
+    }
+}
+
+#[cfg(test)]
+fn report_generated_unit(unit: &str) {
+    unit_observer::report(unit);
+}
+
+#[cfg(not(test))]
+const fn report_generated_unit(_unit: &str) {}
+
 fn failed(code: &str) -> CommandPlatformResult {
     CommandPlatformResult {
         termination: CommandTermination::LaunchFailed,
@@ -941,6 +974,7 @@ mod tests {
     const DRIVER_SCENARIO_VARIABLE: &str = "AGENTMAGE_PARENT_CRASH_SCENARIO";
     const DRIVER_WORKTREE_VARIABLE: &str = "AGENTMAGE_PARENT_CRASH_WORKTREE";
     const DRIVER_READY_MARKER: &str = "agentmage-parent-crash-driver-ready";
+    const DRIVER_UNIT_MARKER: &str = "agentmage-parent-crash-driver-unit=";
     const DRIVER_TEST_PATH: &str = "command_runner::tests::internal_parent_crash_driver";
     /// Bounds the abandoned unit through `RuntimeMaxSec`, keeping recovery observable.
     const PARENT_CRASH_TIMEOUT_MS: u64 = 3_000;
@@ -975,28 +1009,22 @@ mod tests {
             .is_ok_and(|status| status.success())
     }
 
-    /// Lists exactly the AgentMage-owned command units the manager currently knows.
-    fn owned_command_units() -> BTreeSet<String> {
-        let output = Command::new("/usr/bin/systemctl")
-            .args([
-                "--user",
-                "list-units",
-                "--all",
-                "agentmage-command-*.service",
-                "--no-legend",
-                "--plain",
-            ])
+    /// Extracts the unit identity a driver reported for itself, if this line carries one.
+    fn parse_reported_unit(line: &str) -> Option<String> {
+        let unit = line.split_once(DRIVER_UNIT_MARKER)?.1.trim();
+        (unit.starts_with("agentmage-command-") && unit.ends_with(".service"))
+            .then(|| unit.to_owned())
+    }
+
+    /// Asks systemd about one exact unit; never enumerates or pattern-matches.
+    fn unit_is_active(unit: &str) -> bool {
+        Command::new("/usr/bin/systemctl")
+            .args(["--user", "is-active", "--quiet", unit])
             .stdin(Stdio::null())
-            .stdout(Stdio::piped())
+            .stdout(Stdio::null())
             .stderr(Stdio::null())
-            .output()
-            .expect("systemctl lists owned units");
-        String::from_utf8_lossy(&output.stdout)
-            .lines()
-            .filter_map(|line| line.split_whitespace().next())
-            .filter(|unit| unit.starts_with("agentmage-command-") && unit.ends_with(".service"))
-            .map(str::to_owned)
-            .collect()
+            .status()
+            .is_ok_and(|status| status.success())
     }
 
     /// Returns the processes whose control group is exactly this unit.
@@ -1124,6 +1152,12 @@ mod tests {
             TaskId::from_raw(format!("task-parent-crash-{scenario}")),
             CorrelationId::from_raw(format!("correlation-parent-crash-{scenario}")),
         );
+        super::unit_observer::install(|unit| {
+            println!("{DRIVER_UNIT_MARKER}{unit}");
+            std::io::stdout()
+                .flush()
+                .expect("driver flushes unit identity");
+        });
         println!("{DRIVER_READY_MARKER}");
         std::io::stdout().flush().expect("driver flushes readiness");
         let _ = executor.run(&command, &held, &cancellation);
@@ -1149,6 +1183,62 @@ mod tests {
         );
     }
 
+    /// An unrelated AgentMage-shaped unit created after the campaign baseline must be
+    /// left completely alone. Ownership is proven per driver, so a matching name is
+    /// never sufficient to adopt, kill, stop, or reset a unit.
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_parent_crash_never_adopts_a_concurrent_unit() {
+        let decoy = format!(
+            "agentmage-command-decoy{}{}.service",
+            std::process::id(),
+            TEMP_ID.fetch_add(1, Ordering::SeqCst)
+        );
+        // Its own exact guard, installed before the unit exists.
+        let decoy_guard = OwnedUnitGuard {
+            units: BTreeSet::from([decoy.clone()]),
+        };
+        // The decoy appears while the campaign is already running, which is exactly the
+        // window in which a global before/after inventory would have adopted it.
+        let launching = decoy.clone();
+        let launcher = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(300));
+            let started = Command::new("/usr/bin/systemd-run")
+                .args([
+                    "--user",
+                    "--quiet",
+                    "--collect",
+                    "--expand-environment=no",
+                    &format!("--unit={launching}"),
+                    "--property=RuntimeMaxSec=120s",
+                    "/usr/bin/sleep",
+                    "120",
+                ])
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .expect("decoy starts");
+            assert!(started.success(), "decoy unit did not start");
+        });
+
+        let outcome = run_parent_crash_scenario(0, CrashPhase::AfterUnitRunning);
+        launcher.join().expect("decoy launcher");
+        assert_eq!(outcome, CrashOutcome::RecoveredAfterLaunch);
+        let decoy_processes = processes_in_unit(&decoy);
+        assert!(!decoy_processes.is_empty(), "decoy has no processes");
+
+        // The campaign must not have adopted, killed, stopped, or reset the decoy.
+        assert!(unit_is_active(&decoy), "campaign disturbed the decoy unit");
+        assert_eq!(
+            processes_in_unit(&decoy),
+            decoy_processes,
+            "campaign changed the decoy's processes"
+        );
+        drop(decoy_guard);
+        assert!(!unit_is_active(&decoy), "decoy outlived its own guard");
+    }
+
     fn run_parent_crash_scenario(iteration: usize, phase: CrashPhase) -> CrashOutcome {
         let scenario = unique_scenario_id(iteration, phase);
         let scratch = std::env::temp_dir().join(format!("agentmage-parent-crash-{scenario}"));
@@ -1158,7 +1248,6 @@ mod tests {
         fs::create_dir(&worktree).expect("worktree creates");
         fs::write(worktree.join("marker.txt"), b"agentmage").expect("marker writes");
 
-        let before = owned_command_units();
         let mut unit_guard = OwnedUnitGuard::default();
 
         let mut driver = Command::new(std::env::current_exe().expect("test binary"))
@@ -1172,9 +1261,13 @@ mod tests {
             .expect("driver spawns");
         let driver_pid = driver.id();
         let mut reader = BufReader::new(driver.stdout.take().expect("driver stdout"));
-        let mut line = String::new();
         let mut ready = false;
+        let mut reported_unit: Option<String> = None;
+        let mut line = String::new();
         while reader.read_line(&mut line).unwrap_or(0) > 0 {
+            if let Some(unit) = parse_reported_unit(&line) {
+                reported_unit = Some(unit);
+            }
             if line.contains(DRIVER_READY_MARKER) {
                 ready = true;
                 break;
@@ -1183,30 +1276,49 @@ mod tests {
         }
         assert!(ready, "driver never reported readiness");
 
+        // Ownership comes only from the identity this driver reported for itself.
+        // A unit is always reported before it is created, so an existing unit is
+        // never adopted from a global scan.
         if phase == CrashPhase::AfterUnitRunning {
             let deadline = Instant::now() + Duration::from_secs(10);
             while Instant::now() < deadline {
-                let observed: BTreeSet<String> =
-                    owned_command_units().difference(&before).cloned().collect();
-                if !observed.is_empty() {
-                    unit_guard.observe(&observed);
+                if reported_unit.is_none() {
+                    line.clear();
+                    if reader.read_line(&mut line).unwrap_or(0) > 0 {
+                        reported_unit = parse_reported_unit(&line);
+                    }
+                }
+                if let Some(unit) = reported_unit.as_deref()
+                    && unit_is_active(unit)
+                {
                     break;
                 }
                 thread::sleep(POLL_INTERVAL);
             }
+            let unit = reported_unit
+                .clone()
+                .expect("driver never reported its unit identity");
             assert!(
-                !unit_guard.units.is_empty(),
-                "owned unit never appeared before the crash point"
+                unit_is_active(&unit),
+                "owned unit never became active before the crash point"
             );
+        }
+        if let Some(unit) = reported_unit.clone() {
+            unit_guard.observe(&BTreeSet::from([unit]));
         }
 
         driver.kill().expect("driver is killed");
         driver.wait().expect("driver is reaped");
 
-        // The unit can still appear after an early kill; adopt whatever is actually there.
-        let appeared: BTreeSet<String> =
-            owned_command_units().difference(&before).cloned().collect();
-        unit_guard.observe(&appeared);
+        // Drain whatever the driver flushed before dying. The identity is always
+        // written before the unit exists, so nothing owned can go unnamed.
+        line.clear();
+        while reader.read_line(&mut line).unwrap_or(0) > 0 {
+            if let Some(unit) = parse_reported_unit(&line) {
+                unit_guard.observe(&BTreeSet::from([unit]));
+            }
+            line.clear();
+        }
         let owned = unit_guard.units.clone();
         let outcome = if owned.is_empty() {
             CrashOutcome::InterruptedBeforeLaunch
@@ -1219,10 +1331,13 @@ mod tests {
             + Duration::from_millis(PARENT_CRASH_TIMEOUT_MS)
             + TERMINATION_GRACE
             + Duration::from_secs(5);
-        let mut remaining: BTreeSet<String> = BTreeSet::new();
+        let mut remaining: Vec<String> = Vec::new();
         while Instant::now() < deadline {
-            let current = owned_command_units();
-            remaining = owned.intersection(&current).cloned().collect();
+            remaining = owned
+                .iter()
+                .filter(|unit| unit_is_active(unit))
+                .cloned()
+                .collect();
             if remaining.is_empty() {
                 break;
             }
