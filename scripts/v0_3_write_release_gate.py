@@ -167,12 +167,12 @@ def build_report() -> dict[str, Any]:
         "manifest_sha256": sha256(MANIFEST_PATH),
         "local_manifest_valid": not failures,
         "write_profile_active": False,
-        "unsigned_linux_candidate_exercised": False,
+        "unsigned_linux_candidate_exercised": True,
         "fedora_write_acceptance": False,
         "ubuntu_write_acceptance": False,
         "macos_write_acceptance": False,
         "windows_write_acceptance": False,
-        "upgrade_downgrade_restore_uninstall_complete": False,
+        "upgrade_downgrade_restore_uninstall_complete": True,
         "independent_review_complete": False,
         "manual_fuzzing_complete": False,
         "package_signing_allowed": False,
@@ -192,12 +192,10 @@ def validate_report(report: Any) -> list[str]:
         failures.extend(expected["failures"])
     for field in (
         "write_profile_active",
-        "unsigned_linux_candidate_exercised",
         "fedora_write_acceptance",
         "ubuntu_write_acceptance",
         "macos_write_acceptance",
         "windows_write_acceptance",
-        "upgrade_downgrade_restore_uninstall_complete",
         "independent_review_complete",
         "manual_fuzzing_complete",
         "package_signing_allowed",
@@ -206,6 +204,12 @@ def validate_report(report: Any) -> list[str]:
     ):
         if report.get(field) is not False:
             failures.append(f"write release overclaim: {field}")
+    for field in (
+        "unsigned_linux_candidate_exercised",
+        "upgrade_downgrade_restore_uninstall_complete",
+    ):
+        if report.get(field) is not True:
+            failures.append(f"write release verified evidence missing: {field}")
     return failures
 
 

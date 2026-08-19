@@ -69,11 +69,11 @@
     },
     {
       "path": "kernel/engine/src/filesystem_control.rs",
-      "sha256": "0c500c4e807f7d5a885f06bbd183f0315d5292fa05366b1fa7ce1c58043fcce2"
+      "sha256": "6cff4a0c1b6819995056a0f8b4a65f73a1ca8749680cc944d45974a52c04d0cd"
     },
     {
       "path": "kernel/engine/src/write_approval.rs",
-      "sha256": "e3dca8673d1dac8168e1f7a303256b90e4565b49461b6fe754db41e556e90753"
+      "sha256": "3aec5c24b53f5ab5e0476c03c13422a737a59d2932ba1649b15d2e50306e67e0"
     },
     {
       "path": "kernel/engine/src/write_recovery.rs",
@@ -81,15 +81,15 @@
     },
     {
       "path": "kernel/engine/src/write_transaction.rs",
-      "sha256": "04dffceb1b66f49b8506bd53c5196045e3ff4834a0d6fdc86c35b4cec4177373"
+      "sha256": "37bfa344dc49b9e79aa7921b0c3b12241a1166cef0216395a56e280841d3dd03"
     },
     {
       "path": "platforms/linux/src/filesystem_control.rs",
-      "sha256": "aca1e70a576705d57014826f6bd67837e55842264d5fac38127da982b61ce270"
+      "sha256": "a6eff4af2243495d3cff18b06a4e437836845540315a25cd17fdad04c5eb9f40"
     },
     {
       "path": "shells/host/src/knowledge_write.rs",
-      "sha256": "62edb9b1cccffa316ccce851a06300193290580993d9a2c50ac9b4e4e07b8423"
+      "sha256": "3c2884e7136416d9c65c92a857819148514838dcf968cfa32ce10fc9075db3f4"
     }
   ],
   "blockers": [

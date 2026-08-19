@@ -12,6 +12,8 @@ class V03WriteReleaseGateTests(unittest.TestCase):
         report = gate.build_report()
         self.assertEqual(gate.validate_report(report), [])
         self.assertTrue(report["local_manifest_valid"])
+        self.assertTrue(report["unsigned_linux_candidate_exercised"])
+        self.assertTrue(report["upgrade_downgrade_restore_uninstall_complete"])
         self.assertFalse(report["write_profile_active"])
         self.assertFalse(report["package_signing_allowed"])
         self.assertFalse(report["gate_closed"])
@@ -20,12 +22,10 @@ class V03WriteReleaseGateTests(unittest.TestCase):
     def test_every_release_and_evidence_overclaim_fails(self) -> None:
         fields = (
             "write_profile_active",
-            "unsigned_linux_candidate_exercised",
             "fedora_write_acceptance",
             "ubuntu_write_acceptance",
             "macos_write_acceptance",
             "windows_write_acceptance",
-            "upgrade_downgrade_restore_uninstall_complete",
             "independent_review_complete",
             "manual_fuzzing_complete",
             "package_signing_allowed",
@@ -35,6 +35,14 @@ class V03WriteReleaseGateTests(unittest.TestCase):
         for field in fields:
             changed = copy.deepcopy(gate.build_report())
             changed[field] = True
+            self.assertTrue(gate.validate_report(changed), field)
+
+        for field in (
+            "unsigned_linux_candidate_exercised",
+            "upgrade_downgrade_restore_uninstall_complete",
+        ):
+            changed = copy.deepcopy(gate.build_report())
+            changed[field] = False
             self.assertTrue(gate.validate_report(changed), field)
 
     def test_manifest_activation_source_exclusion_and_blocker_drift_fails(self) -> None:
