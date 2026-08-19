@@ -98,9 +98,15 @@ The executor starts one random transient user unit with:
   SSH, cloud, or unrelated repository mount;
 - the exact executable and sealed seccomp program passed through systemd `OpenFile` descriptors,
   with the executable mounted as `/app/command`;
-- an optional held worktree reopened only through AgentMage's own descriptor table, transferred as
-  the service's noninteractive standard input descriptor, and mounted read-only at `/work`; and
+- an optional held worktree reopened only through AgentMage's own descriptor table, declared as a
+  third `OpenFile` descriptor, and mounted read-only at `/work`; and
 - an empty inherited environment followed by only the four safe fixed variables in the template.
+
+systemd numbers `OpenFile` descriptors from `SD_LISTEN_FDS_START` in declaration order, so the guest
+always receives the executable, the seccomp program, and the optional worktree in that fixed order.
+Bubblewrap consumes each of them while building the guest mount namespace, so none remains open when
+the target executes. Standard input is always the null device: a directory is never transported
+through it, and the worktree descriptor is never reopened through its ordinary filesystem path.
 
 The target is launched directly as `/app/command`. No shell parser, command string, `PATH` lookup,
 interactive standard input, repository configuration, or network namespace is available. Model
