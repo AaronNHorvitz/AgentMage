@@ -99,6 +99,7 @@ INSTALLED_FILES: Final = tuple(f"/{path.as_posix()}" for path in PAYLOAD_FILES) 
 INSTALLED_DIRECTORIES: Final = (
     "/usr/libexec/agentmage",
     "/usr/share/agentmage",
+    "/usr/share/agentmage/model-profiles",
     "/usr/share/licenses/agentmage",
 )
 EXPECTED_MODES: Final = {

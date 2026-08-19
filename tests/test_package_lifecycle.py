@@ -171,13 +171,15 @@ class PackageLifecycleTests(unittest.TestCase):
     def test_package_manifests_are_closed_per_distribution(self) -> None:
         rpm = lifecycle.expected_managed_paths("rpm")
         deb = lifecycle.expected_managed_paths("deb")
+        self.assertIn("/usr/share/agentmage/model-profiles", rpm)
+        self.assertIn("/usr/share/agentmage/model-profiles", deb)
         self.assertEqual(
             rpm,
             sorted((*lifecycle.INSTALLED_FILES, *lifecycle.INSTALLED_DIRECTORIES)),
         )
         self.assertEqual(set(lifecycle.INSTALLED_FILES) - set(deb), set())
         self.assertNotIn("/", deb)
-        self.assertEqual(len(rpm), 13)
+        self.assertEqual(len(rpm), 14)
         self.assertEqual(len(deb), 18)
 
     def test_expected_lifecycle_is_valid(self) -> None:
