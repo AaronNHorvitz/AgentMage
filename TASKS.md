@@ -3249,8 +3249,8 @@ therefore remain open.
 
 - [ ] **Task 41.1.3 - Verify and close the story**
   - [x] **Sub-task 41.1.3.1:** `S-034-UT01` validates allowlisted executable identity, literal argument vectors, working directory, environment, limits, expected outputs, and grant binding; assert unknown commands/flags/paths are rejected before spawn.
-  - [ ] **Sub-task 41.1.3.2:** `S-034-ST01` attempts shell metacharacters, substitution, globbing, response files, config discovery, aliases, pagers, hooks, loaders, inherited descriptors, proxy/credential environment, and PATH substitution; assert no interpretation or ambient authority. Partial evidence covers 18 fixed metacharacter, substitution, glob, response-file, config, alias, evaluator, plugin, pager/editor, loader, environment, and interpreter cases plus a cleared live environment; a complete inherited-descriptor and hostile configuration campaign remains absent.
-  - [ ] **Sub-task 41.1.3.3:** `S-034-RT01` cancels, times out, kills, and crashes parent/child/grandchild process trees; assert complete descendant termination, descriptor closure, scratch cleanup, and one truthful terminal receipt. Partial Fedora evidence covers live timeout/cancellation, a multi-process OpenSSL descendant workload, process-unit kill, retained resource use, inactive-state verification, and one typed receipt; grandchild escape, parent-crash, descriptor-leak, and scratch-forensics cases remain absent.
+  - [x] **Sub-task 41.1.3.2:** `S-034-ST01` attempts shell metacharacters, substitution, globbing, response files, config discovery, aliases, pagers, hooks, loaders, inherited descriptors, proxy/credential environment, and PATH substitution; assert no interpretation or ambient authority. Evidence: a 44-case fixed corpus rejects every metacharacter, substitution, redirection, background, glob, response-file, config, alias, evaluator, plugin, pager/editor, hook, transport-helper, loader-environment, proxy/credential-environment, `PATH`, relative/traversing, interpreter, control-byte, and empty-argument case before spawn, accepting exactly one literal control and asserting the exact case count. Live Fedora fixtures observe the guest environment as exactly the sealed template variables plus the fixed guest working directory, enumerate the guest descriptor table as exactly standard input, standard output, standard error, and the enumerator's own descriptor in both working-directory modes while deliberately inherited descriptors proven inheritable by an unsandboxed control child never cross, enumerate the guest filesystem root as only declared mounts with no host home, configuration, credential, or repository path, and prove no second executable is reachable to interpret anything.
+  - [ ] **Sub-task 41.1.3.3:** `S-034-RT01` cancels, times out, kills, and crashes parent/child/grandchild process trees; assert complete descendant termination, descriptor closure, scratch cleanup, and one truthful terminal receipt. Partial Fedora evidence covers live timeout/cancellation, a multi-process OpenSSL descendant workload, process-unit kill, retained resource use, inactive-state verification, one typed receipt, guest descriptor closure in both working-directory modes, and empty-scratch residue absence between attempts. An exec-built multi-level tree is unreachable because the guest mounts no second executable, so proving termination of a purpose-built grandchild requires registering a root-owned helper binary that local development cannot install; that case and parent-crash recovery remain absent.
   - [ ] **Sub-task 41.1.3.4:** `S-034-IT01` runs every approved template at minimum/maximum limits on each platform sandbox; assert exact command identity, output truncation, resource accounting, filesystem/network effects, and exit classification. Partial Fedora evidence covers exact identity, literal output, timeout/cancellation, network denial, bounded output semantics, and observed CPU/memory/task accounting; native Ubuntu/macOS/Windows runs and complete limit-boundary campaigns remain absent.
   - [ ] **Sub-task 41.1.3.5 - Product security evidence:** Map `SR-ACC-001` through `SR-ACC-007`, `SR-PLT-003`, `SR-AI-005`/`SR-AI-009`, `SR-TST-004`/`SR-TST-006`; retain template registry, argv/env traces, injection corpus, process-tree cleanup, resource results, and independent runner review. The exact requirement map, local artifacts, and Fedora resource observations are retained; trusted-package execution, independent review, cross-platform results, and deferred manual fuzzing remain absent.
 
@@ -3267,14 +3267,17 @@ therefore remain open.
 - [ ] **Sprint AC 41.AC4:** Commands cannot escape sandbox, workspace, grant, network, or credential scope.
 - [x] **Sprint AC 41.AC5:** No model narration is accepted as evidence that a command ran.
 
-Retained local evidence: source revision `ecff7c05d5cd7d7e3e0a28a865fc7d26dac2dc2f` is bound by
+Retained local evidence: source revision `73e4d89601a6380481aa8642fb0caf5210fb5634` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-41/local-evidence-report.json), SHA-256
-`fabc968176b140a0e5142c29a5ef06dd7bddef3bb3495a240a33d037692e38f9`. All 12 recorded commands
-exit zero, all six focused suites report zero blocking skips, and the Fedora live fixtures exercise
-literal execution, timeout/cancellation cleanup, bounded multi-process termination, and retained
-CPU/memory/task observations without shell or network authority. Sprint 41 remains **BLOCKED**
+`4de2d852bc98e56fdd50b40a47e1e4cbf89c05de2807789b75f1a308ff1f15b3`. All 20 recorded commands
+exit zero, all fourteen focused suites report zero blocking skips, and the Fedora live fixtures
+exercise literal execution, timeout/cancellation cleanup, bounded multi-process termination,
+retained CPU/memory/task observations, guest descriptor and environment confinement, owned-worktree
+descriptor binding and write denial, pre-launch identity revalidation, declared-mount-only guest
+filesystem exposure, unreachable second-program execution, and empty-scratch residue absence,
+without shell or network authority. Sprint 41 remains **BLOCKED**
 because Sprint 40 and `G-V0.3` are blocked; no production command profile is registered; the
-complete hostile descendant/crash campaign, native cross-platform acceptance,
+purpose-built grandchild and parent-crash campaigns, native cross-platform acceptance,
 trusted-package-launcher execution, independent review, and deferred manual fuzzing remain absent.
 The open tasks/sub-tasks, both story criteria, Sprint AC 41.AC3/AC4, the story, and the sprint
 therefore remain open.
