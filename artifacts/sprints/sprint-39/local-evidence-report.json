@@ -42,7 +42,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-recovery-unit-tests",
-      "output_sha256": "35a23edad30ae38e1db54c8da865447f0f11f3cea6664ff2082d62d4346c8907"
+      "output_sha256": "02f2818ab00fdb305c21750606af53413c73b21f90d290848391d65dec6c72bf"
     },
     {
       "argv": [
@@ -57,7 +57,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-recovery-integration-tests",
-      "output_sha256": "b7a5dca25e7da68421b4422fae5a77057f54650fde13c3328852bdedd4ea9fea"
+      "output_sha256": "d27683a9cad519e3222522dd7d3ddfdffe93f7d8fd52d8701702cd37cc713ccc"
     },
     {
       "argv": [
@@ -71,7 +71,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "native-write-checkpoint-process-test",
-      "output_sha256": "d673e64ccc585d4246a61699ed7ce0cfee225abe70599cad7c2efcbd5cadfe31"
+      "output_sha256": "d7b9d923ae69bf18862de0e57f4c94b59e065dad2df466d5ba00571543237624"
     },
     {
       "argv": [
@@ -85,7 +85,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "native-derived-index-checkpoint-tests",
-      "output_sha256": "90417de38b1b9379175c2fac173e41d50c4f9b28e206dc1bfe825f1961348e5f"
+      "output_sha256": "76b846fe3604c22ab533b0eaa73746b88fd285969072e42336d46f75808b4447"
     },
     {
       "argv": [
@@ -106,13 +106,55 @@
         "cargo",
         "test",
         "-p",
+        "agentmage-platform-linux",
+        "s_029_rt01_process_stops_leave_only_reviewed_target_bytes",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "native-atomic-write-internal-stop-matrix",
+      "output_sha256": "b173e7e57eb07ac0e47cd6a8efd5012e7b37fc6a988d12d72b3beb17af25694d"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "s_030_rt01_process_stops_leave_only_prestate_or_poststate_paths",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "native-filesystem-internal-stop-matrix",
+      "output_sha256": "d0d53aed1075f78c6d5ca344b58152191f94d6e2cd58105d5fdd16e9a3c240e8"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "native_process_stops_rebuild_index_only_from_canonical_markdown",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "native-derived-index-process-stop-matrix",
+      "output_sha256": "7454eee2f33a1d0ac1a51c95c08babc4694635ec39a21e34207950b265bebc18"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
         "agentmage-kernel-engine",
         "--locked"
       ],
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "1816343850f318d2bd00fb478c788413932f3ec28ddf1cab36f7ffd33e9f0f76"
+      "output_sha256": "a0a1b089ad7dc1636c583be05bb078a1b701b54e33cce6f7818dff8252de18b9"
     },
     {
       "argv": [
@@ -129,7 +171,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-clippy",
-      "output_sha256": "51a1309366105afbe9b1b48d811436a12e42608a977e4ecf907ad575f98b652f"
+      "output_sha256": "0faf639f8f9919cc32d3574fb53e316475b87b9c12fdcbaa3d0ca0aabba25d37"
     },
     {
       "argv": [
@@ -140,7 +182,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "runtime-schema-tests",
-      "output_sha256": "ad42df551c02ca5a262e281cb102a019d46c3d4523ec4757071ae69871f273f1"
+      "output_sha256": "a840b47cb4ede2deff7e6a4ddabf7e2ca843684d324b04b1e2b405451e039090"
     },
     {
       "argv": [
@@ -151,7 +193,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "ea67351346b42ebf391450157b975917e24540c7383473551fe1f921b457dfab"
+      "output_sha256": "e0373e006ff8a9373994547b7f6ed3933a27331829831d1af384dc7daa09c154"
     },
     {
       "argv": [
@@ -223,7 +265,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "evidence-tests",
-      "output_sha256": "41cee9cc70f8e2902ff4277cf9577cbdf05c130cf7652490990fd48efa2e4859"
+      "output_sha256": "7f651a454b7b284efe70fac28605ab5d9c389d39a8b6c9aae1f2193f021e78e2"
     }
   ],
   "environment": {
@@ -252,6 +294,7 @@
     "manual_fuzzing_complete": false,
     "native_derived_index_checkpoint_publication": true,
     "native_end_to_end_recovery_wiring": true,
+    "native_internal_process_stop_matrices": true,
     "native_sqlcipher_checkpoint_journal": true,
     "native_write_process_stop_matrix": true,
     "native_write_producer_privacy_gate": true,
@@ -278,12 +321,12 @@
     "SR-OPS-007",
     "SR-TST-005"
   ],
-  "source_revision": "2460c3834f866c92ee12a4a043d68c51f5fe5400",
+  "source_revision": "12527525da641b1337d3758755392b0264b5541a",
   "source_sha256": {
     "capabilities/knowledge/src/lib.rs": "37ac6fd09c4ad677c3fd4f4513400c0e319656fea257c341d8a6174280205b62",
     "capabilities/knowledge/src/obsidian_index.rs": "0cd1652365040263048d8bf96ea2e030394048c662d06b1ea0b5baab0b7919b5",
-    "docs/architecture/write-privacy-recovery-audit.md": "87cf26277d663f9b8ad2498e5f0b5b654b3607298da6525dcc00003feaebf882",
-    "docs/verification/sprint-39-local-results.md": "69a34146e210d74ffe2b8b31215bbe5c83c0b6b5aea695f7c84a49dba9232338",
+    "docs/architecture/write-privacy-recovery-audit.md": "53445dba54e148b97a48eb3498b28842652fa1ee238b56d0d32ddfd6e1cf9045",
+    "docs/verification/sprint-39-local-results.md": "a2ea8dbc5712215b54b465499336bb7adbc1450d5338792e44a2fb9f0d4c067b",
     "docs/verification/sprint-39-recovery-corpus.json": "b2e16c1eff2b62113c6ec5061d7e9cd84c060e721dca76c9945b9d6f095b39fb",
     "docs/verification/sprint-39-redacted-audit-fixture.json": "763067076838702c82457d531dcd3ddb6800396c0aa97536a1c1218311b2ecb3",
     "kernel/engine/migrations/operational-store/0010-write-checkpoints.sql": "2fe0ada1916efceab682f03d37cda75645755b6873074d17631fcf8991bc0588",
@@ -292,15 +335,17 @@
     "kernel/engine/src/runtime_loop.rs": "72f2dd4c039788b19677e5977d0b81d92f3dade9c2a35cd6fc55f24b01aa4ffa",
     "kernel/engine/src/write_recovery.rs": "043810f5062cfeca75d69b5ea8ad9f22f22ea200e182c86ae0594f99e983d8bd",
     "kernel/engine/tests/write_recovery_matrix.rs": "5e1a223441698dfeab1775da6173f0c01728af40be67072635fe3448c9d2db6b",
+    "platforms/linux/src/filesystem_control.rs": "a6eff4af2243495d3cff18b06a4e437836845540315a25cd17fdad04c5eb9f40",
     "platforms/linux/src/platform.rs": "efc940d51c54a60c34e8cc65331d5fbd2f1c8cea878a514f415413fd2ca81f97",
+    "platforms/linux/src/write_transaction.rs": "1b249db408fe8f77e469a746436fc0d6356d1978f0ca8cf685cb99d34255c132",
     "schemas/runtime/examples/write-aware-checkpoint.valid.json": "abff8bbfb8d8d49b63d410170a8bc83713087e13b9d34b0a35241816caead5dd",
     "schemas/runtime/write-aware-checkpoint.schema.json": "26498af552caf936a8308a346ee4526a3409f1854878a9c9fc231b54c7551426",
-    "scripts/sprint_39_evidence.py": "30376bbf9e54a77fecc8ac4e8f2ff84314bcfe78574fb819acdbcb293ff4059d",
+    "scripts/sprint_39_evidence.py": "3af0c5f797bd164624d3890ac63129c0dfdbbd7e6f5ab63176e57c6452117545",
     "scripts/validate_planning_schemas.mjs": "9eb1e5277bc2ffe6953e2d2ecc6504f832825285beefecfb35c27aac4997ac20",
     "shells/host/src/knowledge_write.rs": "3c2884e7136416d9c65c92a857819148514838dcf968cfa32ce10fc9075db3f4",
     "shells/host/src/linux_coding_runtime.rs": "ce7fc4c5462ccf664e5d05ae467922910f8186d4bf0afc66bdc338a5c4a2af9f",
     "tests/test_planning_schemas.mjs": "af74d590af0eb8eb3cda538133f879dcb13eea0b8e3250c9b4e46f850c58b919",
-    "tests/test_sprint_39_evidence.py": "0d174070e891223130f65b5d2940d9bc7363ccca768ee44a9538247b693e9207"
+    "tests/test_sprint_39_evidence.py": "6f8718c337f86222b7fe79182d113c61e002380afdc3fe73dbbf3477c00b1e6f"
   },
   "summary": {
     "all_runtime_roots_scanned": false,
@@ -311,6 +356,7 @@
     "native_crash_concurrency_passed": false,
     "native_derived_index_recovery_passed": true,
     "native_end_to_end_passed": true,
+    "native_internal_process_stops_passed": true,
     "native_write_producer_privacy_passed": true,
     "network_access_enabled": false,
     "release_approval": false,
@@ -327,6 +373,7 @@
     "manual_fuzzing": false,
     "native_derived_index_recovery": true,
     "native_end_to_end_recovery": true,
+    "native_internal_process_stop_matrices": true,
     "native_write_producer_privacy": true,
     "non_fedora_native_evidence": false,
     "trusted_package_launcher_environment": false,
