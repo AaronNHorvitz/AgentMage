@@ -31,7 +31,15 @@ fn retained_command_injection_corpus_fails_closed() {
     .expect("closed command corpus");
     assert_eq!(corpus.schema_version, 1);
     assert_eq!(corpus.corpus_id, "sprint-41-command-injection-v1");
-    assert!(corpus.cases.len() >= 18);
+    // Exact counts: silent growth or category loss must fail the corpus, not pass it.
+    assert_eq!(corpus.cases.len(), 44);
+    assert_eq!(corpus.cases.iter().filter(|case| case.accepted).count(), 1);
+    let identifiers = corpus
+        .cases
+        .iter()
+        .map(|case| case.case_id.as_str())
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(identifiers.len(), corpus.cases.len());
     for case in corpus.cases {
         let result = CommandSpec::seal(
             format!("fixture.{}", case.case_id),

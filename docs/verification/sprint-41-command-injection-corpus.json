@@ -127,6 +127,188 @@
       "arguments": ["safe\nsecond"],
       "environment": { "LANG": "C" },
       "accepted": false
+    },
+    {
+      "case_id": "pager-argument",
+      "executable": "/usr/bin/git",
+      "arguments": ["--pager=/tmp/hostile", "log"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "pager-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "PAGER": "/tmp/hostile" },
+      "accepted": false
+    },
+    {
+      "case_id": "editor-argument",
+      "executable": "/usr/bin/git",
+      "arguments": ["--editor=/tmp/hostile", "commit"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "editor-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "EDITOR": "/tmp/hostile" },
+      "accepted": false
+    },
+    {
+      "case_id": "plugin-argument",
+      "executable": "/usr/bin/git",
+      "arguments": ["--plugin=/tmp/hostile.so", "status"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "hook-exec-path",
+      "executable": "/usr/bin/git",
+      "arguments": ["--exec-path=/tmp/hooks", "status"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "upload-pack-argument",
+      "executable": "/usr/bin/git",
+      "arguments": ["--upload-pack=/tmp/hostile", "fetch"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "receive-pack-argument",
+      "executable": "/usr/bin/git",
+      "arguments": ["--receive-pack=/tmp/hostile", "push"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "require-argument",
+      "executable": "/usr/bin/git",
+      "arguments": ["--require=/tmp/hostile", "status"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "rc-argument",
+      "executable": "/usr/bin/git",
+      "arguments": ["--rc=/tmp/hostile", "status"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "preload-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "LD_PRELOAD": "/tmp/hostile.so" },
+      "accepted": false
+    },
+    {
+      "case_id": "library-path-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "LD_LIBRARY_PATH": "/tmp/hostile" },
+      "accepted": false
+    },
+    {
+      "case_id": "loader-audit-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "LD_AUDIT": "/tmp/hostile.so" },
+      "accepted": false
+    },
+    {
+      "case_id": "node-options-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "NODE_OPTIONS": "/tmp/hostile.js" },
+      "accepted": false
+    },
+    {
+      "case_id": "python-startup-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "PYTHONSTARTUP": "/tmp/hostile.py" },
+      "accepted": false
+    },
+    {
+      "case_id": "shell-startup-environment",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe"],
+      "environment": { "LANG": "C", "BASH_ENV": "/tmp/hostile.sh" },
+      "accepted": false
+    },
+    {
+      "case_id": "interpreter-executable-node",
+      "executable": "/usr/bin/node",
+      "arguments": ["safe.js"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "interpreter-executable-perl",
+      "executable": "/usr/bin/perl",
+      "arguments": ["safe.pl"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "multicall-executable-busybox",
+      "executable": "/usr/bin/busybox",
+      "arguments": ["ls"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "output-redirection",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe>captured"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "input-redirection",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe<captured"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "background-operator",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe&next"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "single-character-glob",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe?txt"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "bracket-glob",
+      "executable": "/usr/bin/printf",
+      "arguments": ["[abc]"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "tab-control-character",
+      "executable": "/usr/bin/printf",
+      "arguments": ["safe\tsecond"],
+      "environment": { "LANG": "C" },
+      "accepted": false
+    },
+    {
+      "case_id": "empty-argument",
+      "executable": "/usr/bin/printf",
+      "arguments": [""],
+      "environment": { "LANG": "C" },
+      "accepted": false
     }
   ]
 }

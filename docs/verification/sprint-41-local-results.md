@@ -33,9 +33,15 @@
 - A live OpenSSL multi-process workload creates at least three observed tasks inside an eight-task
   ceiling, reaches its exact deadline, receives control-group termination, and leaves the unit
   inactive. This does not substitute for the remaining grandchild, descriptor, or parent-crash cases.
-- The fixed 18-case injection corpus rejects substitution, separators, pipes, globbing, response
-  files, configuration and alias injection, evaluators, shell/interpreter launchers, `PATH`, proxy
-  and credential environment, relative/traversing executables, and control bytes.
+- The fixed 44-case injection corpus rejects substitution, separators, pipes, redirection,
+  background operators, globbing, response files, configuration and alias injection, evaluators,
+  pager/editor/plugin and hook arguments, transport helper arguments, shell/interpreter launchers,
+  `PATH`, proxy, credential, and loader environment, relative/traversing executables, control bytes,
+  and empty arguments. Exactly one literal control case is accepted, and the corpus test asserts the
+  exact case count so category loss or silent growth fails closed.
+- Live fixtures observe the guest environment as exactly the sealed template variables plus the
+  fixed guest working directory, prove empty scratch carries no residue between attempts, and prove
+  no second executable is reachable inside the guest mount namespace.
 - Preview and receipt schemas reject unknown fields, inherited environment, shell executables,
   false timeout success, nonzero success, and cancellation without descendant cleanup.
 
@@ -47,8 +53,13 @@ authorize repository commands. Sprint 42 owns separately hardened Git templates 
 preservation.
 
 The current receipt records elapsed time, stream use, cumulative CPU time, peak memory, and greatest
-observed task count while the preview records the enforced ceilings. Native grandchild escape,
-inherited-descriptor, parent-crash, maximum-limit, scratch-residue, and complete canary campaigns
-remain absent. Ubuntu, macOS, and Windows native
+observed task count while the preview records the enforced ceilings.
+
+Inherited-descriptor confinement and empty-scratch residue are now covered by live fixtures. A
+multi-level process tree built by exec remains unreachable rather than merely denied, because the
+guest mounts no second executable; proving termination of a purpose-built multi-level helper would
+require registering a root-owned helper binary, which local development cannot install. Parent-crash
+recovery, maximum-limit boundary campaigns, planted host-configuration observation, and complete
+canary campaigns remain absent. Ubuntu, macOS, and Windows native
 results cannot be inferred from Fedora. Independent review, installed trusted-launcher evidence,
 manual fuzzing, the blocked Sprint 40 dependency, and `G-V0.3` remain open.
