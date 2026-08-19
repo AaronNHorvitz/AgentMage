@@ -3267,16 +3267,17 @@ therefore remain open.
 - [ ] **Sprint AC 41.AC4:** Commands cannot escape sandbox, workspace, grant, network, or credential scope.
 - [x] **Sprint AC 41.AC5:** No model narration is accepted as evidence that a command ran.
 
-Retained local evidence: source revision `b9bd59f021d7c96e96e89dc005d19f537bd60e2b` is bound by
+Retained local evidence: source revision `ecff7c05d5cd7d7e3e0a28a865fc7d26dac2dc2f` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-41/local-evidence-report.json), SHA-256
-`631c2ddbdeb03746c0f80a2c28185404113325578cb992edb7699b19a47956d6`. All 11 recorded commands
-exit zero, all five focused suites report zero blocking skips, and the Fedora live fixtures exercise
-literal execution plus timeout/cancellation cleanup without shell or network authority. Sprint 41
-remains **BLOCKED** because Sprint 40 and `G-V0.3` are blocked; no production command profile is
-registered; peak resource accounting, the complete hostile descendant/crash campaign, native
-cross-platform acceptance, trusted-package-launcher execution, independent review, and deferred
-manual fuzzing remain absent. The open tasks/sub-tasks, both story criteria, Sprint AC 41.AC3/AC4,
-the story, and the sprint therefore remain open.
+`fabc968176b140a0e5142c29a5ef06dd7bddef3bb3495a240a33d037692e38f9`. All 12 recorded commands
+exit zero, all six focused suites report zero blocking skips, and the Fedora live fixtures exercise
+literal execution, timeout/cancellation cleanup, bounded multi-process termination, and retained
+CPU/memory/task observations without shell or network authority. Sprint 41 remains **BLOCKED**
+because Sprint 40 and `G-V0.3` are blocked; no production command profile is registered; the
+complete hostile descendant/crash campaign, native cross-platform acceptance,
+trusted-package-launcher execution, independent review, and deferred manual fuzzing remain absent.
+The open tasks/sub-tasks, both story criteria, Sprint AC 41.AC3/AC4, the story, and the sprint
+therefore remain open.
 
 **Gate decision:** Sprint 41 is PASS only when Story 41.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 42 - Git Worktrees and Remote Repository Safety

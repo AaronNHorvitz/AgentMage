@@ -1,20 +1,23 @@
 {
   "schema_version": 1,
   "record_type": "sprint_41_local_evidence",
-  "source_revision": "b9bd59f021d7c96e96e89dc005d19f537bd60e2b",
+  "source_revision": "ecff7c05d5cd7d7e3e0a28a865fc7d26dac2dc2f",
   "source_sha256": {
-    "kernel/engine/src/command_runner.rs": "c13f20df153fb8bfe8ec6c95bfe9d05b497811caed8033ca180ef697fffb238e",
-    "platforms/linux/src/command_runner.rs": "56c85176cd27b1e44294de5d38e94ef6be38f1952f0289727153e07614e38c3d",
+    "kernel/engine/src/command_runner.rs": "e3c595700324b094d4c0df6634b277a7443c3a992680f9da613ce5873a82c8a6",
+    "kernel/engine/src/validation_result.rs": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9",
+    "platforms/linux/src/command_runner.rs": "786d3dd9d79dcea5fff5caa029ea8d7aca6775eae30683cd466658114af220ca",
+    "shells/host/src/linux_coding_runtime.rs": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af",
     "kernel/engine/tests/command_injection_corpus.rs": "e6dba1d2f39db8b33d1339a2f27f197e872936349c727a4e8fe8c883a443f21c",
-    "schemas/runtime/command-preview.schema.json": "14ee9b02bf78b9f420141af86704bd14d63b0b1c1b63c7b923d845a79e03741e",
-    "schemas/runtime/command-receipt.schema.json": "2baca45226ea010d5c56fc45503cec2e0d0f4da6727e50df70b64a7e16393f85",
+    "schemas/runtime/command-preview.schema.json": "1a11dd45b8cd53ac6633451d9ffc927e21760de1db40e3d19de0511a96295ca6",
+    "schemas/runtime/command-receipt.schema.json": "1fd93b8d40418f11071c3ddf68d95f9c00b864012633c3053e0f9e57254a58ee",
     "schemas/runtime/examples/command-preview.valid.json": "8fee0a5d4fa1c9589ce74c1086975fe228425c305fa4dca95e9ce38b5772bfcd",
-    "schemas/runtime/examples/command-receipt.valid.json": "55a46ffb9ad671a389bf9d377c3917ceb240e0d260eec626af7bd5ad46272cf3",
-    "docs/architecture/bounded-command-runner.md": "b8a2231c5464d58df30160d14c604f26fe3598dea290fc994f1b02ae0e0326e9",
+    "schemas/runtime/examples/command-receipt.valid.json": "c6f8359cce61612dadb529ba10cb19040b5da053e1863c072e2e6facde1ae6dd",
+    "docs/architecture/bounded-command-runner.md": "64eda1022896241f2eee6384e40e72423bf112ee9e3050fe84232001471d7d11",
     "docs/verification/sprint-41-command-injection-corpus.json": "6fbc53a2802a528cc65a501b7cfabffef84cde19ed38b83cd287294c8220b6b5",
-    "docs/verification/sprint-41-local-results.md": "702f403c837efdf9e287ae766f7facec66f1c5c2e936aac009807d9e85e3b8a1",
-    "scripts/sprint_41_evidence.py": "4c38b4955b07ed0647bba42d689606f86041eba8eb2959e158105711b359a4ae",
-    "tests/test_sprint_41_evidence.py": "7e365df0392ab3541d7e79c100bd199cccde42137348ba89dafbeacb4108f375"
+    "docs/verification/sprint-41-local-results.md": "f9aec517591ebd00afe8e9be3f43a871a40d2bdc5edb48e3c8b3f31e987ffc60",
+    "scripts/sprint_41_evidence.py": "eabbf83b41ef2328aeeaa7ab87b48a207716c6dc2aaa013a5aa9c27796779ea8",
+    "tests/test_planning_schemas.mjs": "2449f8676f5fb226e35910b5e00652228aa06dfd613c31324881609081aaaa1f",
+    "tests/test_sprint_41_evidence.py": "e4a99bdc43b86034e4a01e84c83e2558a366ea2e97a8db7189537b9e324bd001"
   },
   "environment": {
     "system": "Linux",
@@ -40,7 +43,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "19581a85b7f52e7f7ee8450779448613247d6a31507fa7e39fe84fddb74ad479",
+      "output_sha256": "287abb98b360ffd372f0c570a00a9a784162ef9370cac833d40384a5ff976737",
       "blocking_skip_count": 0
     },
     {
@@ -55,7 +58,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "eceb14cf3ee3a338551018ada41f0c6fa10c9f7bab50ed58ccb7c5bef87d6bb1",
+      "output_sha256": "7966e0094757ad104501dd9760c72174e0ea02058e4c769422084adcc372d16c",
       "blocking_skip_count": 0
     },
     {
@@ -69,7 +72,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "e5f137fc610766d27ed28a9e82c7fc50d7eec5cb10cd31fba8e41ae1fbb0bddd",
+      "output_sha256": "6c6402ef7c45cc40483b4748b61e27a4e9705abe154df006d29b8917f54033fd",
       "blocking_skip_count": 0
     },
     {
@@ -85,7 +88,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "a04c198d10b18d11e7d26e2e15cac596a3e8f88ca6fafdeba53d6052c6b4f7eb",
+      "output_sha256": "8cc12fc509dde237117aacb852557653a56b59a318fe7b31a6b951f20e672885",
       "blocking_skip_count": 0
     },
     {
@@ -101,7 +104,23 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "641f6a3f4be57ac0f03d86e4aab846c0fb012c213804686627f1a143135da917",
+      "output_sha256": "b0ca4cc7b0205c040495ca06eb4f50392e213b243411aa60dc69e67280348442",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-hostile-descendants",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_hostile_descendant_process_tree_is_bounded_and_removed",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "2fd95590a63b7bffa95e0556da015c3e89e7c85eadf4dbf69bb277ce06acb1c1",
       "blocking_skip_count": 0
     },
     {
@@ -112,7 +131,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "8ccd763ad24d442d142d9edd2d95c7fadd7f0b92c102fbe45b1ac06719406ae8",
+      "output_sha256": "984360d6b3da645d27a2615fd3de73803d46417dffa128b9e8739a04656c159f",
       "blocking_skip_count": null
     },
     {
@@ -123,7 +142,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "1af53c49d732250ee7e044891371808b4f21b0f7fd268fca3935cc69fa5ac290",
+      "output_sha256": "5cdd052d634797ca79231f3a4e7aeeb5694e7d511fd6f50435a3f53b67da8470",
       "blocking_skip_count": null
     },
     {
@@ -163,7 +182,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "20d513ac4a7a72035579d36ee01902135b5f7537aacfe05e63b58fdeedba7e6b",
+      "output_sha256": "af3e1d57e2f212ba94a809a9006cad5e084babdbe8125cd77f46654ca1265a5e",
       "blocking_skip_count": null
     },
     {
@@ -246,7 +265,8 @@
     "unrestricted_shell_and_hidden_expansion_absent": true,
     "fedora_live_literal_timeout_and_cancellation_exercised": true,
     "production_command_profile_registered": false,
-    "peak_cpu_memory_and_task_accounting_retained": false,
+    "peak_cpu_memory_and_task_accounting_retained": true,
+    "fedora_hostile_multiprocess_timeout_exercised": true,
     "hostile_descendant_tree_campaign_complete": false,
     "native_cross_platform_command_acceptance": false,
     "independent_command_boundary_review": false,
@@ -258,7 +278,8 @@
     "fedora_live_literal_execution": true,
     "fedora_live_timeout_and_cancellation_cleanup": true,
     "production_command_profile_registration": false,
-    "peak_resource_accounting": false,
+    "peak_resource_accounting": true,
+    "fedora_hostile_multiprocess_timeout": true,
     "hostile_descendant_crash_campaign": false,
     "native_cross_platform_command_acceptance": false,
     "trusted_package_launcher_environment": false,
@@ -273,10 +294,6 @@
     {
       "code": "COMMAND-PROFILE-NOT-PRODUCT-REGISTERED",
       "owner": "41.1.1"
-    },
-    {
-      "code": "PEAK-RESOURCE-ACCOUNTING-ABSENT",
-      "owner": "41.1.1.5"
     },
     {
       "code": "HOSTILE-DESCENDANT-CRASH-CAMPAIGN-ABSENT",
@@ -307,7 +324,7 @@
     "generic_shell_present": false,
     "network_access_enabled": false,
     "cross_platform_acceptance_passed": false,
-    "peak_resource_accounting_complete": false,
+    "peak_resource_accounting_complete": true,
     "hostile_descendant_campaign_complete": false,
     "trusted_package_execution_complete": false,
     "independent_review_present": false,
