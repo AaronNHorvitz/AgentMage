@@ -241,7 +241,7 @@ def lifecycle_images() -> tuple[str, str]:
             ) from error
         if (
             inspected.returncode != 0
-            or image_id != run.get("container_image_id")
+            or f"sha256:{image_id}" != run.get("container_image_id")
             or len(repo_digests) != 1
             or not repo_digests[0].startswith("localhost/agentmage-clean-build@sha256:")
         ):
