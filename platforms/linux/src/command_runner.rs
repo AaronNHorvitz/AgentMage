@@ -1342,6 +1342,44 @@ mod tests {
         }
     }
 
+    /// No host home, configuration, credential, or repository path is mounted, so
+    /// planted configuration, hook, and rc files cannot be discovered at all.
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_guest_filesystem_root_exposes_only_declared_mounts() {
+        let executable = fs::canonicalize("/usr/bin/ls").expect("canonical ls");
+        let executable = executable.to_str().expect("UTF-8 executable");
+        let (command, executor) = scratch_fixture(
+            "fixture.root-enumeration",
+            executable,
+            vec!["-A".to_owned(), "/".to_owned()],
+            CommandRisk::Low,
+        );
+        let (_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &worktree_token("root-enumeration-0001"));
+        assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
+        assert_eq!(result.exit_code, Some(0), "{result:?}");
+        let listing = String::from_utf8(result.stdout.clone()).expect("UTF-8 root listing");
+        let mut entries: Vec<&str> = listing.split_whitespace().collect();
+        entries.sort_unstable();
+        entries.dedup();
+        let declared = [
+            "app", "dev", "etc", "lib", "lib64", "proc", "tmp", "usr", "work",
+        ];
+        for entry in &entries {
+            assert!(
+                declared.contains(entry),
+                "undeclared guest root entry: {entry}"
+            );
+        }
+        for required in ["app", "proc", "work"] {
+            assert!(entries.contains(&required), "{listing}");
+        }
+        assert!(!entries.contains(&"home"), "{listing}");
+        assert!(!entries.contains(&"root"), "{listing}");
+        assert!(!entries.contains(&"var"), "{listing}");
+    }
+
     #[test]
     #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
     fn live_empty_scratch_retains_no_residue_between_attempts() {

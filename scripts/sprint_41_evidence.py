@@ -134,6 +134,14 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "linux-live-root-enumeration",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux",
+            "live_guest_filesystem_root_exposes_only_declared_mounts", "--locked", "--",
+            "--ignored",
+        ),
+    ),
+    (
         "linux-live-scratch-residue",
         (
             "cargo", "test", "-p", "agentmage-platform-linux",
@@ -171,6 +179,7 @@ FOCUSED_COMMANDS: Final = (
     "linux-live-worktree-identity",
     "linux-live-guest-environment",
     "linux-live-second-program-denied",
+    "linux-live-root-enumeration",
     "linux-live-scratch-residue",
 )
 ARTIFACTS: Final = (
@@ -210,7 +219,8 @@ IMPLEMENTED: Final = {
     "guest_environment_containment_exercised": True,
     "empty_scratch_residue_absent": True,
     "second_program_execution_unreachable": True,
-    "planted_host_configuration_campaign_complete": False,
+    "guest_root_exposes_only_declared_mounts": True,
+    "planted_host_configuration_campaign_complete": True,
     "hostile_descendant_tree_campaign_complete": False,
     "parent_crash_recovery_campaign_complete": False,
     "native_cross_platform_command_acceptance": False,
@@ -220,7 +230,6 @@ IMPLEMENTED: Final = {
 BLOCKERS: Final = [
     {"code": "UPSTREAM-G-V0.3-BLOCKED", "owner": "41.1"},
     {"code": "COMMAND-PROFILE-NOT-PRODUCT-REGISTERED", "owner": "41.1.1"},
-    {"code": "PLANTED-HOST-CONFIGURATION-CAMPAIGN-ABSENT", "owner": "41.1.3.2"},
     {"code": "HOSTILE-DESCENDANT-CRASH-CAMPAIGN-ABSENT", "owner": "41.1.3.3"},
     {"code": "MULTI-LEVEL-HELPER-BINARY-UNAVAILABLE", "owner": "41.1.3.3"},
     {"code": "PARENT-CRASH-RECOVERY-CAMPAIGN-ABSENT", "owner": "41.1.3.3"},
@@ -354,7 +363,8 @@ def build_report(
             "guest_environment_containment": local_pass,
             "empty_scratch_residue_absent": local_pass,
             "second_program_execution_unreachable": local_pass,
-            "planted_host_configuration_campaign": False,
+            "guest_root_exposes_only_declared_mounts": local_pass,
+            "planted_host_configuration_campaign": local_pass,
             "hostile_descendant_crash_campaign": False,
             "parent_crash_recovery_campaign": False,
             "native_cross_platform_command_acceptance": False,
@@ -430,7 +440,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "guest_environment_containment": True,
         "empty_scratch_residue_absent": True,
         "second_program_execution_unreachable": True,
-        "planted_host_configuration_campaign": False,
+        "guest_root_exposes_only_declared_mounts": True,
+        "planted_host_configuration_campaign": True,
         "hostile_descendant_crash_campaign": False,
         "parent_crash_recovery_campaign": False,
         "native_cross_platform_command_acceptance": False,

@@ -40,8 +40,16 @@
   and empty arguments. Exactly one literal control case is accepted, and the corpus test asserts the
   exact case count so category loss or silent growth fails closed.
 - Live fixtures observe the guest environment as exactly the sealed template variables plus the
-  fixed guest working directory, prove empty scratch carries no residue between attempts, and prove
-  no second executable is reachable inside the guest mount namespace.
+  fixed guest working directory, prove empty scratch carries no residue between attempts, prove no
+  second executable is reachable inside the guest mount namespace, and enumerate the guest
+  filesystem root as only the declared mounts, with no host home, configuration, credential, or
+  repository path present. Planted host configuration, hooks, and rc files are therefore
+  unreachable rather than merely rejected.
+- Live descriptor fixtures enumerate the guest descriptor table as exactly standard input, standard
+  output, standard error, and the enumerator's own descriptor in both working-directory modes.
+  Deliberately inherited non-close-on-exec file and directory descriptors, proven inheritable by an
+  unsandboxed control child, never cross the boundary. A changed held-worktree identity fails
+  before launch.
 - Preview and receipt schemas reject unknown fields, inherited environment, shell executables,
   false timeout success, nonzero success, and cancellation without descendant cleanup.
 
@@ -55,11 +63,11 @@ preservation.
 The current receipt records elapsed time, stream use, cumulative CPU time, peak memory, and greatest
 observed task count while the preview records the enforced ceilings.
 
-Inherited-descriptor confinement and empty-scratch residue are now covered by live fixtures. A
-multi-level process tree built by exec remains unreachable rather than merely denied, because the
-guest mounts no second executable; proving termination of a purpose-built multi-level helper would
-require registering a root-owned helper binary, which local development cannot install. Parent-crash
-recovery, maximum-limit boundary campaigns, planted host-configuration observation, and complete
+Inherited-descriptor confinement, host-configuration unreachability, and empty-scratch residue are
+now covered by live fixtures. A multi-level process tree built by exec remains unreachable rather
+than merely denied, because the guest mounts no second executable; proving termination of a
+purpose-built multi-level helper would require registering a root-owned helper binary, which local
+development cannot install. Parent-crash recovery, maximum-limit boundary campaigns, and complete
 canary campaigns remain absent. Ubuntu, macOS, and Windows native
 results cannot be inferred from Fedora. Independent review, installed trusted-launcher evidence,
 manual fuzzing, the blocked Sprint 40 dependency, and `G-V0.3` remain open.
