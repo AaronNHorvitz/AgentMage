@@ -3267,10 +3267,10 @@ therefore remain open.
 - [ ] **Sprint AC 41.AC4:** Commands cannot escape sandbox, workspace, grant, network, or credential scope.
 - [x] **Sprint AC 41.AC5:** No model narration is accepted as evidence that a command ran.
 
-Retained local evidence: source revision `485b27fd8c7674fafa93a4b2d1b63d3af8839bab` is bound by
+Retained local evidence: source revision `19bdec6756ff9f0b15741686c4e979cf391524cb` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-41/local-evidence-report.json), SHA-256
-`be5b4d24654483fd4c5da066e44d4a3d645c7778f8e24adc82b4fa68d8960c1a`. All 21 recorded commands
-exit zero, all fifteen focused suites report zero blocking skips, and the Fedora live fixtures
+`9f61a5d047dcd79b647f690d0a7d3472ef5e6278200f4c8d9ed85e4ef757b6d5`. All 23 recorded commands
+exit zero, all seventeen focused suites report zero blocking skips, and the Fedora live fixtures
 exercise literal execution, timeout/cancellation cleanup, bounded multi-process termination,
 retained CPU/memory/task observations, guest descriptor and environment confinement, owned-worktree
 descriptor binding and write denial, pre-launch identity revalidation, declared-mount-only guest

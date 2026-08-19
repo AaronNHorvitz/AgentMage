@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "record_type": "sprint_41_local_evidence",
-  "source_revision": "485b27fd8c7674fafa93a4b2d1b63d3af8839bab",
+  "source_revision": "19bdec6756ff9f0b15741686c4e979cf391524cb",
   "source_sha256": {
     "kernel/engine/src/command_runner.rs": "e3c595700324b094d4c0df6634b277a7443c3a992680f9da613ce5873a82c8a6",
     "kernel/engine/src/validation_result.rs": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9",
-    "platforms/linux/src/command_runner.rs": "816843fd035a9938bbb034603076a5bee890ac84b4347bf527b488f748d2e89e",
+    "platforms/linux/src/command_runner.rs": "dab977142b2cc0364382715348806fa2060811a5722793f8660c0dd81ea8c1d1",
     "shells/host/src/linux_coding_runtime.rs": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af",
     "kernel/engine/tests/command_injection_corpus.rs": "b8a9102a0a76fa4fc5cc3b98348bf2001512526d99bf8bbf5e3794b80a4c8cf5",
     "schemas/runtime/command-preview.schema.json": "1a11dd45b8cd53ac6633451d9ffc927e21760de1db40e3d19de0511a96295ca6",
@@ -14,8 +14,8 @@
     "schemas/runtime/examples/command-receipt.valid.json": "c6f8359cce61612dadb529ba10cb19040b5da053e1863c072e2e6facde1ae6dd",
     "docs/architecture/bounded-command-runner.md": "244bea1636f568dce183077f17b294508677830bce022cdfebb151321ad951dc",
     "docs/verification/sprint-41-command-injection-corpus.json": "78a5a8e9cc57d8967ad433c9395039b38340bdd85ed2ee0fdc049868f830792f",
-    "docs/verification/sprint-41-local-results.md": "60f7a424a54fc582d37dfa9110e2e915c3eaa2bddfc56df3947d82e90ece2348",
-    "scripts/sprint_41_evidence.py": "c5cbbf8052dd6c305cc73461cece13e5f98bc76a3b76f790c78c46ad8ddbcaec",
+    "docs/verification/sprint-41-local-results.md": "e08632633e06fd7a615315db21631dfa567ecce374afe9df8ff813654284aab3",
+    "scripts/sprint_41_evidence.py": "a39fe1517fe5a0c8a5f3beaba822f5325ee18183a40e7233f9a23653cc3db9f4",
     "tests/test_planning_schemas.mjs": "2449f8676f5fb226e35910b5e00652228aa06dfd613c31324881609081aaaa1f",
     "tests/test_sprint_41_evidence.py": "f48771af1a69a70b838f3e75d41a827f79eb5209d8e3aa52845373712530e283"
   },
@@ -43,7 +43,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "c224b75e71e403a4f3f0e0641f68d6e5db656ec3d462b67d0ba4589e786fcb39",
+      "output_sha256": "2943cc0df315c69eaa72848eb85c4c9d1fb5b36ec1fa5e7de2884a56e52e0018",
       "blocking_skip_count": 0
     },
     {
@@ -72,7 +72,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "1bec97e215ecd713eb20ab147e78f6722ae75512cebc795e6fb6d9e439c1bf41",
+      "output_sha256": "9f29a8ade8a69ce66d2adf54f89adb139417c53e0c2c0edc0844e8569570daef",
       "blocking_skip_count": 0
     },
     {
@@ -88,7 +88,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "fdf487a1e395bf816991061e7bb8bf4cd394c8d8b61ac826326a295f2ef30ff2",
+      "output_sha256": "ae28de20de3743bf75b3c27ccc8a1fbf79309f8540bfc5e278a4f343d03af2a1",
       "blocking_skip_count": 0
     },
     {
@@ -104,7 +104,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "44943ed78fd2d799e373b2662636a69f9334a39c5fd0d4ef8936c55c6d2d23d2",
+      "output_sha256": "7ceb47c7e778d5baaae092f776694055be7c242359a78eefabbb5eb259e31770",
       "blocking_skip_count": 0
     },
     {
@@ -120,7 +120,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "44933051b8ace8acc8932cd725c3c0a8cde5c20ed4c53b2add1c21637dcf33db",
+      "output_sha256": "7ccc8006de15fbb850fb66dc74202af88a7795402a120bd2f19ef2afb4efd7e5",
       "blocking_skip_count": 0
     },
     {
@@ -136,7 +136,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "d973c3da5b156cb8f214797927a999a7c3a56a5ca57f979de66982a581d7d58c",
+      "output_sha256": "7f8f6d4481f74575ea9e8d242d16a693bd7bbe4af75d758ff795a7c39b3eda41",
       "blocking_skip_count": 0
     },
     {
@@ -152,7 +152,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "89b00ef493f3787e7988c912789f1eefb3858b63f315b603c8266abce6c1a794",
+      "output_sha256": "54489e428151028eb52ef892cd72ad6bb39dba0e5614487842d5d4002ba60c21",
       "blocking_skip_count": 0
     },
     {
@@ -168,7 +168,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "72ba2ee500e1c0986b17e84c27029f866b17a3c9f58bbb08c822f7c48408e569",
+      "output_sha256": "55db557ac6ba79ededb043ceed63ce036a4d933ce3ca577c0f8a816ae2169def",
       "blocking_skip_count": 0
     },
     {
@@ -184,7 +184,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "b50a5fc53552a61e87ed372764a3ba608eff543644efff244c63771fd3e3eb2d",
+      "output_sha256": "428d9c44c46a2ee5b1398aa2000362ac9e2d488631aa80d5ee48b60c986362ac",
       "blocking_skip_count": 0
     },
     {
@@ -200,7 +200,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "ddcaa08b45bfd5e1507295490b5b285e585d671a5efbdb429e2780e71029a2ec",
+      "output_sha256": "498239116d7b1255fa914f8fb90e28aaa298b64f60f42504cd8fc4ade703cc4e",
       "blocking_skip_count": 0
     },
     {
@@ -216,7 +216,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "18da7d57f4a13ced528e0d2b7f230907234fe4a39c36eee2462ced035c8c80f9",
+      "output_sha256": "6cd30f387c281e1557248b1b8ae77264cd1031f713c255db3aba1de621b54300",
       "blocking_skip_count": 0
     },
     {
@@ -232,7 +232,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "db2913bec559583dcee40fcfd59f3bf4e137a29468a2821864f09fab2a2c95bc",
+      "output_sha256": "3f5d6ac4d700bbb906d46fe23a97e26d2e79d27ff12f632dc70a7cb6a8898f4a",
       "blocking_skip_count": 0
     },
     {
@@ -248,7 +248,39 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "fee228f1beb0e82cbc7cab753313af918dba4db1743cb55e33a1f0be09c6398d",
+      "output_sha256": "e2b8f4a1a94fd5aebee5fa4af7faaf632a25ae15ef7678e681d0b67f5630a3bb",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-output-ceiling",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_output_beyond_the_declared_ceiling_is_truncated_and_still_hashed",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "672c42f8047a1808a0fd54fc9c6581f0b3a94f1fa711bb35c505e2403b7c5f75",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-minimum-timeout",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_minimum_timeout_boundary_terminates_the_unit",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "e87d88a8c9b5e743cb440c0117a64023c9a3df31ccd1f5d5e8b9b0a84318306a",
       "blocking_skip_count": 0
     },
     {
@@ -264,7 +296,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "6a8729e7efa735372c550b3ab801ba017e7513644acf7a20ca3c7e2d719c6a1b",
+      "output_sha256": "34d0006e3e44893356159a6df47ad8701d8ae4600037a81168808dccd6936863",
       "blocking_skip_count": 0
     },
     {
@@ -275,7 +307,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "bc54f0a62228721a1fd4bdbb7cfcad7cdbf57f21f7b9c981efe4cf6f3355f348",
+      "output_sha256": "ff4d97324acb3e3193f66ad3c7c5eb5251dac613bc51e6db41b94083740ee40d",
       "blocking_skip_count": null
     },
     {
@@ -286,7 +318,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "9ef24de0694b7b56e95d62883b2f885e192c76910e926c5e303c8821283aa4bd",
+      "output_sha256": "0e8563b1e4160e09d8147ee61412c057ca1cd048206f2f52628fdb3d71d775cc",
       "blocking_skip_count": null
     },
     {
@@ -326,7 +358,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd",
+      "output_sha256": "edabcabcf963c1ded4b0e8ef722ec76fc2c5861ff99c92f50d988848b10da029",
       "blocking_skip_count": null
     },
     {
@@ -466,6 +498,9 @@
     "empty_scratch_residue_absent": true,
     "second_program_execution_unreachable": true,
     "guest_root_exposes_only_declared_mounts": true,
+    "bounded_output_ceiling_exercised": true,
+    "minimum_deadline_boundary_exercised": true,
+    "complete_limit_boundary_campaign": false,
     "planted_host_configuration_campaign_complete": true,
     "hostile_descendant_tree_campaign_complete": false,
     "parent_crash_recovery_campaign_complete": false,
@@ -487,6 +522,9 @@
     "empty_scratch_residue_absent": true,
     "second_program_execution_unreachable": true,
     "guest_root_exposes_only_declared_mounts": true,
+    "bounded_output_ceiling": true,
+    "minimum_deadline_boundary": true,
+    "complete_limit_boundary_campaign": false,
     "planted_host_configuration_campaign": true,
     "hostile_descendant_crash_campaign": false,
     "parent_crash_recovery_campaign": false,
@@ -515,6 +553,10 @@
     {
       "code": "PARENT-CRASH-RECOVERY-CAMPAIGN-ABSENT",
       "owner": "41.1.3.3"
+    },
+    {
+      "code": "COMPLETE-LIMIT-BOUNDARY-CAMPAIGN-ABSENT",
+      "owner": "41.1.3.4"
     },
     {
       "code": "NATIVE-CROSS-PLATFORM-COMMAND-ACCEPTANCE-ABSENT",
