@@ -1,23 +1,23 @@
 {
   "schema_version": 1,
   "record_type": "sprint_41_local_evidence",
-  "source_revision": "ecff7c05d5cd7d7e3e0a28a865fc7d26dac2dc2f",
+  "source_revision": "73e4d89601a6380481aa8642fb0caf5210fb5634",
   "source_sha256": {
     "kernel/engine/src/command_runner.rs": "e3c595700324b094d4c0df6634b277a7443c3a992680f9da613ce5873a82c8a6",
     "kernel/engine/src/validation_result.rs": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9",
-    "platforms/linux/src/command_runner.rs": "786d3dd9d79dcea5fff5caa029ea8d7aca6775eae30683cd466658114af220ca",
+    "platforms/linux/src/command_runner.rs": "4d40c66368b1854a2a02c91c79afb6a720bd115068f852bfbce296e72bef28d6",
     "shells/host/src/linux_coding_runtime.rs": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af",
-    "kernel/engine/tests/command_injection_corpus.rs": "e6dba1d2f39db8b33d1339a2f27f197e872936349c727a4e8fe8c883a443f21c",
+    "kernel/engine/tests/command_injection_corpus.rs": "b8a9102a0a76fa4fc5cc3b98348bf2001512526d99bf8bbf5e3794b80a4c8cf5",
     "schemas/runtime/command-preview.schema.json": "1a11dd45b8cd53ac6633451d9ffc927e21760de1db40e3d19de0511a96295ca6",
     "schemas/runtime/command-receipt.schema.json": "1fd93b8d40418f11071c3ddf68d95f9c00b864012633c3053e0f9e57254a58ee",
     "schemas/runtime/examples/command-preview.valid.json": "8fee0a5d4fa1c9589ce74c1086975fe228425c305fa4dca95e9ce38b5772bfcd",
     "schemas/runtime/examples/command-receipt.valid.json": "c6f8359cce61612dadb529ba10cb19040b5da053e1863c072e2e6facde1ae6dd",
-    "docs/architecture/bounded-command-runner.md": "64eda1022896241f2eee6384e40e72423bf112ee9e3050fe84232001471d7d11",
-    "docs/verification/sprint-41-command-injection-corpus.json": "6fbc53a2802a528cc65a501b7cfabffef84cde19ed38b83cd287294c8220b6b5",
-    "docs/verification/sprint-41-local-results.md": "f9aec517591ebd00afe8e9be3f43a871a40d2bdc5edb48e3c8b3f31e987ffc60",
-    "scripts/sprint_41_evidence.py": "eabbf83b41ef2328aeeaa7ab87b48a207716c6dc2aaa013a5aa9c27796779ea8",
+    "docs/architecture/bounded-command-runner.md": "244bea1636f568dce183077f17b294508677830bce022cdfebb151321ad951dc",
+    "docs/verification/sprint-41-command-injection-corpus.json": "78a5a8e9cc57d8967ad433c9395039b38340bdd85ed2ee0fdc049868f830792f",
+    "docs/verification/sprint-41-local-results.md": "b7d00ca7d55254e5c159fcfd9405915770d478bdb4b84a25dceb0e0dffd32c49",
+    "scripts/sprint_41_evidence.py": "c4d24249dcf0e25d5c1c42c7159bd9823a1b0c6b41eb9c47df099bf39e093339",
     "tests/test_planning_schemas.mjs": "2449f8676f5fb226e35910b5e00652228aa06dfd613c31324881609081aaaa1f",
-    "tests/test_sprint_41_evidence.py": "e4a99bdc43b86034e4a01e84c83e2558a366ea2e97a8db7189537b9e324bd001"
+    "tests/test_sprint_41_evidence.py": "f48771af1a69a70b838f3e75d41a827f79eb5209d8e3aa52845373712530e283"
   },
   "environment": {
     "system": "Linux",
@@ -43,7 +43,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "287abb98b360ffd372f0c570a00a9a784162ef9370cac833d40384a5ff976737",
+      "output_sha256": "d3e5912d494ca5c89cc3d3102849a77e7200a28086f4a508378181a8ef5d8f5e",
       "blocking_skip_count": 0
     },
     {
@@ -72,7 +72,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "6c6402ef7c45cc40483b4748b61e27a4e9705abe154df006d29b8917f54033fd",
+      "output_sha256": "f664d1a67c50586a2dafa1cde23ce26b1da25e20f7626b5b9f59971abf49d8af",
       "blocking_skip_count": 0
     },
     {
@@ -88,7 +88,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "8cc12fc509dde237117aacb852557653a56b59a318fe7b31a6b951f20e672885",
+      "output_sha256": "a8e2ba2829bf45485c2525f7cfaf5a6a6a2e7b8469675dd962d24f540a2f4994",
       "blocking_skip_count": 0
     },
     {
@@ -104,7 +104,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "b0ca4cc7b0205c040495ca06eb4f50392e213b243411aa60dc69e67280348442",
+      "output_sha256": "fcff2fc05c743681dbdda22f0e804e2ae043b13b09bcf21ec2cfaf1d4878179b",
       "blocking_skip_count": 0
     },
     {
@@ -120,7 +120,135 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "2fd95590a63b7bffa95e0556da015c3e89e7c85eadf4dbf69bb277ce06acb1c1",
+      "output_sha256": "86733d1433e68d1f65699443a8711bfa29c1d699d79a47fd143a5b995e070124",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-inherited-descriptors",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_inherited_descriptors_do_not_reach_the_command_guest",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "d98ecf8c3142061858a5a201d173f6e1dadf5fa2bbf2c4f9a0ddc0a292b3937c",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-worktree-marker",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_owned_worktree_is_descriptor_bound_at_the_guest_working_directory",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "63d175ca8c543b183b5421c3469ddac731e4ae76853ba6afef30c556537276fd",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-worktree-write-denied",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_owned_worktree_command_cannot_mutate_the_held_directory",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "451d1749d751a99fed8fd20b5b0027f26a361e335856c6c636dc9ad1c68c25fd",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-worktree-descriptors",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_owned_worktree_guest_sees_no_inherited_descriptors",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "22fb129a75a6d013f1e000e52fcb091f56bf9e980f9ffb3d2b30bf1bc7c23b84",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-worktree-identity",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_changed_held_worktree_identity_fails_before_launch",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "977bcc9e31ba8e51399bee035cf03a3261cc290b33ae22effc61775b7ce0cb99",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-guest-environment",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_guest_environment_holds_only_the_sealed_template_variables",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "114af83b8ce0f99cf57cf6fe186e2d5d6aca3ca080753109599fa5b69d81b577",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-second-program-denied",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_guest_cannot_execute_any_second_program",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "274457f1190a5bb15480fb7f7feb6e6f92b3f1572112632b82901e9e9c14542d",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-scratch-residue",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_empty_scratch_retains_no_residue_between_attempts",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "3e5a3b8832340d5b1f632b1f809a2b76f71fdf321caa139635cee3db9f5356ee",
       "blocking_skip_count": 0
     },
     {
@@ -131,7 +259,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "984360d6b3da645d27a2615fd3de73803d46417dffa128b9e8739a04656c159f",
+      "output_sha256": "02d8f7e195066aa723ffe07974cb2c2503400afb4bb2b1c92462f756ba35ca93",
       "blocking_skip_count": null
     },
     {
@@ -142,7 +270,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "5cdd052d634797ca79231f3a4e7aeeb5694e7d511fd6f50435a3f53b67da8470",
+      "output_sha256": "750070cd5d4a3f7199560fbdbea1d8164b69b0be8e0745f0f5a116f590d0056d",
       "blocking_skip_count": null
     },
     {
@@ -182,7 +310,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "af3e1d57e2f212ba94a809a9006cad5e084babdbe8125cd77f46654ca1265a5e",
+      "output_sha256": "fe1e882fead82cc8679c3d67257c4e049c94a9bbda64a5a29abcfcef0c171c66",
       "blocking_skip_count": null
     },
     {
@@ -194,7 +322,7 @@
         "tests.test_sprint_41_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "372ee57a30b8a8b17bb056a0814266786a922da7dcf4139f4f9a2457745d6424",
+      "output_sha256": "27c4a39d34ece4cbc66cc59cb0870c7abe4cc0a5f009205bdd0ea06a93f8b3ac",
       "blocking_skip_count": null
     }
   ],
@@ -238,6 +366,54 @@
       "sha256": "651468d5d1adbd00e0cf39813d90dc2c0deeb57c99ef06227f13d4407797e14b",
       "root_owned": true,
       "group_or_world_writable": false
+    },
+    {
+      "id": "openssl-fixture",
+      "name": "openssl",
+      "size": 999688,
+      "sha256": "0469f12d909da7bd5401e584f7c0d3f19db10270c21cd238823d08227bcf8c00",
+      "root_owned": true,
+      "group_or_world_writable": false
+    },
+    {
+      "id": "cat-fixture",
+      "name": "cat",
+      "size": 40696,
+      "sha256": "73f19135b6cfb36142a19345557c48bdcc7d0d3b414b745be86e4458dfe5845b",
+      "root_owned": true,
+      "group_or_world_writable": false
+    },
+    {
+      "id": "ls-fixture",
+      "name": "ls",
+      "size": 153400,
+      "sha256": "54e936d37decdad9ecaf189b1de347605a0a99037ec87bd17679b6cbde871a0c",
+      "root_owned": true,
+      "group_or_world_writable": false
+    },
+    {
+      "id": "touch-fixture",
+      "name": "touch",
+      "size": 73784,
+      "sha256": "32c5d055a62032dd6854d7843e80a59f2a3d1aab069e7a5c62da1de9e3594de1",
+      "root_owned": true,
+      "group_or_world_writable": false
+    },
+    {
+      "id": "printenv-fixture",
+      "name": "printenv",
+      "size": 32336,
+      "sha256": "3d55c1b814d2dab075f178516b3e3852b21d119c663a12fb0432728461c8bf1b",
+      "root_owned": true,
+      "group_or_world_writable": false
+    },
+    {
+      "id": "timeout-fixture",
+      "name": "timeout",
+      "size": 45328,
+      "sha256": "b38f5f0cf308efd4f3861db2b917ffcb284d0e51a86f76235819356f075c7498",
+      "root_owned": true,
+      "group_or_world_writable": false
     }
   ],
   "security_requirement_ids": [
@@ -267,7 +443,15 @@
     "production_command_profile_registered": false,
     "peak_cpu_memory_and_task_accounting_retained": true,
     "fedora_hostile_multiprocess_timeout_exercised": true,
+    "inherited_descriptor_confinement_exercised": true,
+    "owned_worktree_descriptor_binding_exercised": true,
+    "changed_worktree_identity_fails_before_launch": true,
+    "guest_environment_containment_exercised": true,
+    "empty_scratch_residue_absent": true,
+    "second_program_execution_unreachable": true,
+    "planted_host_configuration_campaign_complete": false,
     "hostile_descendant_tree_campaign_complete": false,
+    "parent_crash_recovery_campaign_complete": false,
     "native_cross_platform_command_acceptance": false,
     "independent_command_boundary_review": false,
     "manual_fuzzing_complete": false
@@ -280,7 +464,14 @@
     "production_command_profile_registration": false,
     "peak_resource_accounting": true,
     "fedora_hostile_multiprocess_timeout": true,
+    "inherited_descriptor_confinement": true,
+    "owned_worktree_descriptor_binding": true,
+    "guest_environment_containment": true,
+    "empty_scratch_residue_absent": true,
+    "second_program_execution_unreachable": true,
+    "planted_host_configuration_campaign": false,
     "hostile_descendant_crash_campaign": false,
+    "parent_crash_recovery_campaign": false,
     "native_cross_platform_command_acceptance": false,
     "trusted_package_launcher_environment": false,
     "independent_command_boundary_review": false,
@@ -296,7 +487,19 @@
       "owner": "41.1.1"
     },
     {
+      "code": "PLANTED-HOST-CONFIGURATION-CAMPAIGN-ABSENT",
+      "owner": "41.1.3.2"
+    },
+    {
       "code": "HOSTILE-DESCENDANT-CRASH-CAMPAIGN-ABSENT",
+      "owner": "41.1.3.3"
+    },
+    {
+      "code": "MULTI-LEVEL-HELPER-BINARY-UNAVAILABLE",
+      "owner": "41.1.3.3"
+    },
+    {
+      "code": "PARENT-CRASH-RECOVERY-CAMPAIGN-ABSENT",
       "owner": "41.1.3.3"
     },
     {
