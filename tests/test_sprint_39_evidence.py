@@ -91,6 +91,7 @@ class Sprint39EvidenceTests(unittest.TestCase):
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
         self.assertFalse(value["implemented_contracts"]["completed_write_replay_allowed"])
         self.assertTrue(value["summary"]["native_end_to_end_passed"])
+        self.assertTrue(value["summary"]["native_derived_index_recovery_passed"])
 
     def test_dependency_native_roots_launcher_platform_review_fuzz_and_release_overclaims_fail(
         self,
@@ -99,6 +100,9 @@ class Sprint39EvidenceTests(unittest.TestCase):
             lambda value: value["summary"].update({"sprint_status": "PASS"}),
             lambda value: value["summary"].update({"upstream_dependency_passed": True}),
             lambda value: value["summary"].update({"native_end_to_end_passed": False}),
+            lambda value: value["summary"].update({
+                "native_derived_index_recovery_passed": False
+            }),
             lambda value: value["summary"].update({"native_crash_concurrency_passed": True}),
             lambda value: value["summary"].update({"all_runtime_roots_scanned": True}),
             lambda value: value["summary"].update({"trusted_launcher_environment_passed": True}),
@@ -110,8 +114,14 @@ class Sprint39EvidenceTests(unittest.TestCase):
             lambda value: value["verification_evidence"].update({
                 "native_end_to_end_recovery": False
             }),
+            lambda value: value["verification_evidence"].update({
+                "native_derived_index_recovery": False
+            }),
             lambda value: value["implemented_contracts"].update({
                 "native_end_to_end_recovery_wiring": False
+            }),
+            lambda value: value["implemented_contracts"].update({
+                "native_derived_index_checkpoint_publication": False
             }),
             lambda value: value["blockers"].pop(),
         )

@@ -109,6 +109,10 @@ exact next metadata-only `SessionCheckpoint`.
 
 That is the strongest atomic unit available inside one store. A canonical user file, an external
 derived index, and the SQLCipher store cannot honestly be described as one atomic transaction.
+The knowledge host therefore commits `IndexUpdating` first, performs the canonical-bound disposable
+index transaction, verifies its revision, source-snapshot digest, projection digest, and receipt,
+and only then commits `IndexVerified`. Interruption leaves an explicit rebuild/verification point;
+it never converts separate filesystem and database commits into a false atomicity claim.
 
 The cross-store protocol instead binds exact digests and uses ordered recovery:
 

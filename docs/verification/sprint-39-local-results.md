@@ -9,6 +9,7 @@
 | Staging attribution and single-use cleanup receipts | Pass locally |
 | Redacted human-readable audit | Pass locally |
 | Native file/checkpoint recovery wiring | Pass locally on Fedora |
+| Native derived-index checkpoint publication | Pass locally on Fedora |
 | Complete native crash and concurrency matrix | Incomplete |
 | Complete durable and temporary root scan | Absent |
 | Full host binary under trusted package launcher | Environment blocked |
@@ -45,6 +46,10 @@
 - A four-boundary real-process matrix stops before/after terminal receipt persistence and
   before/after session-checkpoint persistence. Reopen sees only `GrantConsumed`,
   `ReceiptPersisted`, or `Complete`, preserves the exact committed file, and never replays it.
+- The host's canonical-first knowledge coordinator publishes `IndexUpdating` to SQLCipher before
+  the disposable SQLite transaction and publishes `IndexVerified` only after the exact index
+  revision, source-snapshot digest, projection digest, and content-free receipt verify. A stale
+  revision leaves the durable head at `IndexUpdating` and preserves the prior current projection.
 
 ## Requirement Mapping
 
@@ -71,7 +76,7 @@ Every mapping is a Sprint 39 local contribution, not a product-completion claim.
 
 Sprint 38 remains blocked, so Sprint 39's declared dependency is not satisfied. The coordinator is
 platform-neutral and authority-free, while the Linux host now executes and checkpoints complete
-native file transactions through it. Native derived-index phase publication remains absent. The
+native file transactions and separately committed derived-index publication through it. The
 four-boundary process matrix does not yet inject disk exhaustion, filesystem permission races,
 moved mount points, simultaneous external editor writes, or process termination inside every
 staging, application, index, and rollback boundary.

@@ -31,6 +31,9 @@ SOURCE_PATHS: Final = (
     "kernel/engine/tests/write_recovery_matrix.rs",
     "kernel/engine/migrations/operational-store/0010-write-checkpoints.sql",
     "platforms/linux/src/platform.rs",
+    "capabilities/knowledge/src/lib.rs",
+    "capabilities/knowledge/src/obsidian_index.rs",
+    "shells/host/src/knowledge_write.rs",
     "shells/host/src/linux_coding_runtime.rs",
     "schemas/runtime/write-aware-checkpoint.schema.json",
     "schemas/runtime/examples/write-aware-checkpoint.valid.json",
@@ -67,6 +70,13 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "native-derived-index-checkpoint-tests",
+        (
+            "cargo", "test", "-p", "agentmage-host", "index_publication",
+            "--locked",
+        ),
+    ),
+    (
         "kernel-tests",
         ("cargo", "test", "-p", "agentmage-kernel-engine", "--locked"),
     ),
@@ -91,6 +101,7 @@ FOCUSED_COMMANDS: Final = (
     "write-recovery-unit-tests",
     "write-recovery-integration-tests",
     "native-write-checkpoint-process-test",
+    "native-derived-index-checkpoint-tests",
 )
 SECURITY_REQUIREMENTS: Final = [
     "SR-DAT-002", "SR-DAT-003", "SR-DAT-004", "SR-DAT-010", "SR-DAT-011",
@@ -122,6 +133,7 @@ IMPLEMENTED: Final = {
     "native_end_to_end_recovery_wiring": True,
     "native_sqlcipher_checkpoint_journal": True,
     "native_write_process_stop_matrix": True,
+    "native_derived_index_checkpoint_publication": True,
     "complete_native_crash_concurrency_matrix": False,
     "all_runtime_roots_scanned": False,
     "non_fedora_native_evidence": False,
@@ -130,7 +142,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-38-BLOCKED", "owner": "39.1"},
-    {"code": "SPRINT-39-NATIVE-DERIVED-INDEX-CHECKPOINT-ABSENT", "owner": "39.1.1.1"},
     {"code": "SPRINT-39-NATIVE-CRASH-CONCURRENCY-MATRIX-INCOMPLETE", "owner": "39.1.3.3"},
     {"code": "SPRINT-39-ALL-RUNTIME-ROOT-SCAN-ABSENT", "owner": "39.1.3.4"},
     {"code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT", "owner": "39.1.3.5"},
@@ -226,6 +237,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "focused_blocking_skip_count": 0 if local_pass else None,
             "upstream_sprint_38_gate": False,
             "native_end_to_end_recovery": True,
+            "native_derived_index_recovery": True,
             "complete_native_crash_concurrency_matrix": False,
             "all_runtime_roots_scanned": False,
             "trusted_package_launcher_environment": False,
@@ -239,6 +251,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "sprint_status": "BLOCKED",
             "upstream_dependency_passed": False,
             "native_end_to_end_passed": True,
+            "native_derived_index_recovery_passed": True,
             "native_crash_concurrency_passed": False,
             "all_runtime_roots_scanned": False,
             "trusted_launcher_environment_passed": False,
@@ -286,6 +299,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "sprint_status": "BLOCKED",
         "upstream_dependency_passed": False,
         "native_end_to_end_passed": True,
+        "native_derived_index_recovery_passed": True,
         "native_crash_concurrency_passed": False,
         "all_runtime_roots_scanned": False,
         "trusted_launcher_environment_passed": False,
@@ -303,6 +317,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "focused_blocking_skip_count": 0,
         "upstream_sprint_38_gate": False,
         "native_end_to_end_recovery": True,
+        "native_derived_index_recovery": True,
         "complete_native_crash_concurrency_matrix": False,
         "all_runtime_roots_scanned": False,
         "trusted_package_launcher_environment": False,
