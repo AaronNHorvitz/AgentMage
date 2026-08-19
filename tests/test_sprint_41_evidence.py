@@ -30,7 +30,9 @@ def artifacts() -> list[dict[str, object]]:
             "root_owned": True,
             "group_or_world_writable": False,
         }
-        for (identifier, path), character in zip(evidence.ARTIFACTS, "abcde", strict=True)
+        for (identifier, path), character in zip(
+            evidence.ARTIFACTS, "abcdef012345"[: len(evidence.ARTIFACTS)], strict=True
+        )
     ]
 
 
