@@ -177,6 +177,17 @@ failure fields pass through the same privacy gate and are replaced before serial
 retained public-synthetic example is
 [`sprint-39-redacted-audit-fixture.json`](../verification/sprint-39-redacted-audit-fixture.json).
 
+The Linux live-root verifier scans the exact authorized workspace and distinct strict-local
+configuration and state roots. It holds and revalidates all three root identities, traverses
+descriptor-relative without following links or crossing devices, and applies fixed entry, depth,
+and reserved-byte bounds. Its report contains only counts, content digests, hashed relative
+identities, and one sorted inventory digest. Active temporary objects, retained rollback material,
+durable runtime objects, and quarantined objects require exact declarations. Undeclared staging is
+an orphan; expired declarations, unknown reserved objects, undeclared durable copies, missing
+rollback material, content drift, links, special files, duplicate physical roots, and incomplete
+scans fail closed. User files and the fixed canonical configuration and authority stores are not
+treated as AgentMage residue.
+
 ## Evidence Boundary
 
 Current local evidence exercises the platform-neutral contracts, the schema-v10 encrypted journal,
@@ -186,6 +197,5 @@ restart, the retained head is exactly `GrantConsumed`, `ReceiptPersisted`, or `C
 file remains committed once and consumed authority is never replayed.
 
 This evidence does not claim power-loss durability, torn-sector behavior, native disk-exhaustion
-injection, a complete live-root scan, a
-trusted packaged-launcher run, non-Fedora native execution, independent review, release approval,
+injection, a trusted packaged-launcher run, non-Fedora native execution, independent review, release approval,
 or deferred manual fuzzing. Those remain explicit gate dependencies.

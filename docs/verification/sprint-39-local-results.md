@@ -14,7 +14,7 @@
 | Native internal write/index process-stop matrices | Pass locally on Fedora |
 | Complete required crash and concurrency matrix | Pass locally on Fedora |
 | Physical filesystem exhaustion | Not executed or claimed |
-| Complete durable and temporary root scan | Absent |
+| Complete workspace/configuration/state write-root scan | Pass locally on Fedora |
 | Full host binary under trusted package launcher | Environment blocked |
 | Ubuntu, macOS, and Windows native evidence | Absent |
 | Upstream Sprint 38 gate | Blocked |
@@ -68,17 +68,22 @@
   conflicts at every declared driver race boundary. The platform-neutral recovery matrix injects
   disk-full-after-canonical-write and selects separate terminal-receipt persistence without replay.
   These results do not claim physical exhaustion of the Fedora test filesystem.
+- The production Linux write-root verifier scans the held workspace, private configuration root,
+  and private state root before and after identity revalidation. It detects active, expired,
+  orphaned, cleaned, rollback, durable, quarantined, unknown, linked, mismatched, and over-limit
+  reserved objects without returning paths or content. Both transition and adversarial suites pass
+  with zero ignored tests.
 
 ## Requirement Mapping
 
 | Requirement | Local contribution | Remaining product evidence |
 |---|---|---|
 | `SR-DAT-002` | One deterministic classification and minimization API covers all write-adjacent boundaries | Prove every native boundary invokes it before content crosses |
-| `SR-DAT-003` | Checkpoints, recovery decisions, staging diagnostics, and receipts are content-free | Scan all live stores, memory diagnostics, and crash artifacts |
+| `SR-DAT-003` | Checkpoints, recovery decisions, staging diagnostics, receipts, and the live workspace/configuration/state inventory are content-free | Memory-forensics evidence remains outside this local story |
 | `SR-DAT-004` | Lost secret storage selects a fail-closed recovery instruction | Live key-service interruption and protected-store integration |
-| `SR-DAT-010` | Staging inventory carries an explicit expiration boundary and cleanup state | Integrated holds, backup, restore, export, and retention engine evidence |
+| `SR-DAT-010` | Live staging and rollback declarations carry explicit expiration and are reconciled across retention transitions | Product-wide backup and long-term retention policy evidence |
 | `SR-DAT-011` | No cryptographic-erasure claim is made by staging cleanup | Product-wide key-scope and media-assumption evidence |
-| `SR-DAT-012` | Orphan inventory is attributable and diagnosable | Complete install-populate-uninstall residue scan |
+| `SR-DAT-012` | Reserved workspace/configuration/state residue is scanned, content-bound, and classified without raw paths | Installed-package uninstall evidence remains a release gate |
 | `SR-OPS-001` | Stable failure and recovery codes identify each closed condition | Complete runtime logging and user-interface evidence |
 | `SR-OPS-002` | Audit output is deterministic and privacy gated | Clock, host identity, correlation, and production export coverage |
 | `SR-OPS-003` | Audit and checkpoint records retain hashes and stable metadata only | Product-wide log/export canary scan |
@@ -98,7 +103,6 @@ native file transactions and separately committed derived-index publication thro
 retained native matrices cover all declared process-stop and race hooks, but do not claim physical
 filesystem exhaustion, host power loss, or torn-sector behavior.
 
-The current root inventory is synthetic and does not scan every live durable, temporary, backup,
-diagnostic, export, and crash-artifact location. The trusted packaged-launcher environment,
-non-Fedora native runs, independent review, and manually deferred fuzzing are absent. Sprint 39
+The trusted packaged-launcher environment, non-Fedora native runs, independent review, and
+manually deferred fuzzing are absent. Sprint 39
 therefore remains blocked even though all focused local contracts pass with zero blocking skips.
