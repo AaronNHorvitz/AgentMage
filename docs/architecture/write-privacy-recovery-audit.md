@@ -186,6 +186,6 @@ restart, the retained head is exactly `GrantConsumed`, `ReceiptPersisted`, or `C
 file remains committed once and consumed authority is never replayed.
 
 This evidence does not claim power-loss durability, torn-sector behavior, native disk-exhaustion
-injection, exhaustive external-edit or permission-race scheduling, a complete live-root scan, a
+injection, a complete live-root scan, a
 trusted packaged-launcher run, non-Fedora native execution, independent review, release approval,
 or deferred manual fuzzing. Those remain explicit gate dependencies.

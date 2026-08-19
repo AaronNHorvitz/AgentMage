@@ -94,6 +94,8 @@ class Sprint39EvidenceTests(unittest.TestCase):
         self.assertTrue(value["summary"]["native_derived_index_recovery_passed"])
         self.assertTrue(value["summary"]["native_write_producer_privacy_passed"])
         self.assertTrue(value["summary"]["native_internal_process_stops_passed"])
+        self.assertTrue(value["summary"]["native_crash_concurrency_passed"])
+        self.assertFalse(value["summary"]["physical_enospc_executed"])
 
     def test_dependency_native_roots_launcher_platform_review_fuzz_and_release_overclaims_fail(
         self,
@@ -111,7 +113,8 @@ class Sprint39EvidenceTests(unittest.TestCase):
             lambda value: value["summary"].update({
                 "native_internal_process_stops_passed": False
             }),
-            lambda value: value["summary"].update({"native_crash_concurrency_passed": True}),
+            lambda value: value["summary"].update({"native_crash_concurrency_passed": False}),
+            lambda value: value["summary"].update({"physical_enospc_executed": True}),
             lambda value: value["summary"].update({"all_runtime_roots_scanned": True}),
             lambda value: value["summary"].update({"trusted_launcher_environment_passed": True}),
             lambda value: value["summary"].update({"cross_platform_evidence_passed": True}),
@@ -131,6 +134,12 @@ class Sprint39EvidenceTests(unittest.TestCase):
             lambda value: value["verification_evidence"].update({
                 "native_internal_process_stop_matrices": False
             }),
+            lambda value: value["verification_evidence"].update({
+                "complete_native_crash_concurrency_matrix": False
+            }),
+            lambda value: value["verification_evidence"].update({
+                "physical_enospc_executed": True
+            }),
             lambda value: value["implemented_contracts"].update({
                 "native_end_to_end_recovery_wiring": False
             }),
@@ -142,6 +151,12 @@ class Sprint39EvidenceTests(unittest.TestCase):
             }),
             lambda value: value["implemented_contracts"].update({
                 "native_internal_process_stop_matrices": False
+            }),
+            lambda value: value["implemented_contracts"].update({
+                "complete_native_crash_concurrency_matrix": False
+            }),
+            lambda value: value["implemented_contracts"].update({
+                "physical_enospc_executed": True
             }),
             lambda value: value["blockers"].pop(),
         )

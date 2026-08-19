@@ -108,6 +108,25 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "native-atomic-write-race-matrix",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux", "s_029_st01", "--locked",
+        ),
+    ),
+    (
+        "native-filesystem-race-matrix",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux", "s_030_st01", "--locked",
+        ),
+    ),
+    (
+        "native-filesystem-restore-race-matrix",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux",
+            "s_030_rt01_copy_restore_parent_renames_leave_no_transaction_effect", "--locked",
+        ),
+    ),
+    (
         "kernel-tests",
         ("cargo", "test", "-p", "agentmage-kernel-engine", "--locked"),
     ),
@@ -137,6 +156,9 @@ FOCUSED_COMMANDS: Final = (
     "native-atomic-write-internal-stop-matrix",
     "native-filesystem-internal-stop-matrix",
     "native-derived-index-process-stop-matrix",
+    "native-atomic-write-race-matrix",
+    "native-filesystem-race-matrix",
+    "native-filesystem-restore-race-matrix",
 )
 SECURITY_REQUIREMENTS: Final = [
     "SR-DAT-002", "SR-DAT-003", "SR-DAT-004", "SR-DAT-010", "SR-DAT-011",
@@ -171,7 +193,8 @@ IMPLEMENTED: Final = {
     "native_derived_index_checkpoint_publication": True,
     "native_write_producer_privacy_gate": True,
     "native_internal_process_stop_matrices": True,
-    "complete_native_crash_concurrency_matrix": False,
+    "complete_native_crash_concurrency_matrix": True,
+    "physical_enospc_executed": False,
     "all_runtime_roots_scanned": False,
     "non_fedora_native_evidence": False,
     "independent_review": False,
@@ -179,7 +202,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-38-BLOCKED", "owner": "39.1"},
-    {"code": "SPRINT-39-NATIVE-CRASH-CONCURRENCY-MATRIX-INCOMPLETE", "owner": "39.1.3.3"},
     {"code": "SPRINT-39-ALL-RUNTIME-ROOT-SCAN-ABSENT", "owner": "39.1.3.4"},
     {"code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT", "owner": "39.1.3.5"},
     {"code": "SPRINT-39-NON-FEDORA-EVIDENCE-ABSENT", "owner": "39.1.3.5"},
@@ -277,7 +299,8 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "native_derived_index_recovery": True,
             "native_write_producer_privacy": True,
             "native_internal_process_stop_matrices": True,
-            "complete_native_crash_concurrency_matrix": False,
+            "complete_native_crash_concurrency_matrix": True,
+            "physical_enospc_executed": False,
             "all_runtime_roots_scanned": False,
             "trusted_package_launcher_environment": False,
             "non_fedora_native_evidence": False,
@@ -293,7 +316,8 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "native_derived_index_recovery_passed": True,
             "native_write_producer_privacy_passed": True,
             "native_internal_process_stops_passed": True,
-            "native_crash_concurrency_passed": False,
+            "native_crash_concurrency_passed": True,
+            "physical_enospc_executed": False,
             "all_runtime_roots_scanned": False,
             "trusted_launcher_environment_passed": False,
             "cross_platform_evidence_passed": False,
@@ -343,7 +367,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "native_derived_index_recovery_passed": True,
         "native_write_producer_privacy_passed": True,
         "native_internal_process_stops_passed": True,
-        "native_crash_concurrency_passed": False,
+        "native_crash_concurrency_passed": True,
+        "physical_enospc_executed": False,
         "all_runtime_roots_scanned": False,
         "trusted_launcher_environment_passed": False,
         "cross_platform_evidence_passed": False,
@@ -363,7 +388,8 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "native_derived_index_recovery": True,
         "native_write_producer_privacy": True,
         "native_internal_process_stop_matrices": True,
-        "complete_native_crash_concurrency_matrix": False,
+        "complete_native_crash_concurrency_matrix": True,
+        "physical_enospc_executed": False,
         "all_runtime_roots_scanned": False,
         "trusted_package_launcher_environment": False,
         "non_fedora_native_evidence": False,

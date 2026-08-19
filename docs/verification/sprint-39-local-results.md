@@ -12,7 +12,8 @@
 | Native derived-index checkpoint publication | Pass locally on Fedora |
 | Native write-producer privacy enforcement | Pass locally on Fedora |
 | Native internal write/index process-stop matrices | Pass locally on Fedora |
-| Complete native crash and concurrency matrix | Incomplete |
+| Complete required crash and concurrency matrix | Pass locally on Fedora |
+| Physical filesystem exhaustion | Not executed or claimed |
 | Complete durable and temporary root scan | Absent |
 | Full host binary under trusted package launcher | Environment blocked |
 | Ubuntu, macOS, and Windows native evidence | Absent |
@@ -62,6 +63,11 @@
   around canonical application and derived-index publication and rebuilds only from canonical
   Markdown. Each matrix preserves an exact reviewed prestate or poststate, while authority remains
   durably consumed before the native driver is entered.
+- Native race suites schedule exact target replacement, symlink substitution, parent moves,
+  external writes before and after exchange, competing copy and move owners, and restoration
+  conflicts at every declared driver race boundary. The platform-neutral recovery matrix injects
+  disk-full-after-canonical-write and selects separate terminal-receipt persistence without replay.
+  These results do not claim physical exhaustion of the Fedora test filesystem.
 
 ## Requirement Mapping
 
@@ -80,7 +86,7 @@
 | `SR-OPS-005` | Checkpoint sequences preserve deterministic event order | Wall/monotonic clock-change and sleep/resume evidence |
 | `SR-OPS-006` | Uncertain, conflict, moved-root, and lost-store cases have containment instructions | Complete incident tabletop and runbook exercise |
 | `SR-OPS-007` | Unknown and quarantined staging is preserved rather than silently removed | Incident-hold authority and protected evidence-store enforcement |
-| `SR-TST-005` | Synthetic recovery conditions, four authority/checkpoint process stops, and exhaustive native driver/index stop matrices prove exact-state recovery without replay | Native disk exhaustion and broader external-edit and permission-race scheduling |
+| `SR-TST-005` | Synthetic recovery conditions, four authority/checkpoint process stops, exhaustive native driver/index stop matrices, and all declared native race hooks prove exact-state recovery without replay | Physical media exhaustion, power loss, and torn-sector behavior remain outside this local matrix |
 
 Every mapping is a Sprint 39 local contribution, not a product-completion claim.
 
@@ -89,8 +95,8 @@ Every mapping is a Sprint 39 local contribution, not a product-completion claim.
 Sprint 38 remains blocked, so Sprint 39's declared dependency is not satisfied. The coordinator is
 platform-neutral and authority-free, while the Linux host now executes and checkpoints complete
 native file transactions and separately committed derived-index publication through it. The
-retained native matrices do not yet inject real disk exhaustion or exhaustively schedule filesystem
-permission changes and simultaneous external editor writes across every boundary.
+retained native matrices cover all declared process-stop and race hooks, but do not claim physical
+filesystem exhaustion, host power loss, or torn-sector behavior.
 
 The current root inventory is synthetic and does not scan every live durable, temporary, backup,
 diagnostic, export, and crash-artifact location. The trusted packaged-launcher environment,
