@@ -42,7 +42,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-recovery-unit-tests",
-      "output_sha256": "02f2818ab00fdb305c21750606af53413c73b21f90d290848391d65dec6c72bf"
+      "output_sha256": "35a23edad30ae38e1db54c8da865447f0f11f3cea6664ff2082d62d4346c8907"
     },
     {
       "argv": [
@@ -57,7 +57,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "write-recovery-integration-tests",
-      "output_sha256": "d27683a9cad519e3222522dd7d3ddfdffe93f7d8fd52d8701702cd37cc713ccc"
+      "output_sha256": "b7a5dca25e7da68421b4422fae5a77057f54650fde13c3328852bdedd4ea9fea"
     },
     {
       "argv": [
@@ -71,7 +71,7 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "native-write-checkpoint-process-test",
-      "output_sha256": "53bb1a4d2b6e42dcbcd49b2adb658bf63496aa408719122d5a25b53f04c24b25"
+      "output_sha256": "d673e64ccc585d4246a61699ed7ce0cfee225abe70599cad7c2efcbd5cadfe31"
     },
     {
       "argv": [
@@ -85,7 +85,21 @@
       "blocking_skip_count": 0,
       "exit_code": 0,
       "id": "native-derived-index-checkpoint-tests",
-      "output_sha256": "081f3906e3fdfb987e91b6365b5b1bc5b70d8a88d20dbd75505232b700a01d92"
+      "output_sha256": "90417de38b1b9379175c2fac173e41d50c4f9b28e206dc1bfe825f1961348e5f"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "story_39_1_native_write_producer_gate_is_bounded_and_catches_split_canaries",
+        "--locked"
+      ],
+      "blocking_skip_count": 0,
+      "exit_code": 0,
+      "id": "native-write-producer-privacy-tests",
+      "output_sha256": "82030410b4b29d8004be15439630bfd367ca3d621417322a4e740a6eb38988e3"
     },
     {
       "argv": [
@@ -98,7 +112,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-tests",
-      "output_sha256": "c757aaf839ccaa2d3252dcb74e9c8862e224c8129429d3e26053b5b2e2ff8767"
+      "output_sha256": "1816343850f318d2bd00fb478c788413932f3ec28ddf1cab36f7ffd33e9f0f76"
     },
     {
       "argv": [
@@ -115,7 +129,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "kernel-clippy",
-      "output_sha256": "819854f5b8bf3039d0a3e5b10f717deff3f1929bea83ef77a06531bd1f858b9a"
+      "output_sha256": "51a1309366105afbe9b1b48d811436a12e42608a977e4ecf907ad575f98b652f"
     },
     {
       "argv": [
@@ -126,7 +140,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "runtime-schema-tests",
-      "output_sha256": "9eadf974cd343e4ea7f09150aaa6a322fc745319384db00653538d4d85992dbb"
+      "output_sha256": "ad42df551c02ca5a262e281cb102a019d46c3d4523ec4757071ae69871f273f1"
     },
     {
       "argv": [
@@ -137,7 +151,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "documentation-gate",
-      "output_sha256": "e74367ef66f9d29340582edc84f85730101586922241caa180939239e881fd57"
+      "output_sha256": "ea67351346b42ebf391450157b975917e24540c7383473551fe1f921b457dfab"
     },
     {
       "argv": [
@@ -209,7 +223,7 @@
       "blocking_skip_count": null,
       "exit_code": 0,
       "id": "evidence-tests",
-      "output_sha256": "7d59a8fbca92ef540f42b6883247c3844892d23f501b6cf2621d0e535813fb81"
+      "output_sha256": "41cee9cc70f8e2902ff4277cf9577cbdf05c130cf7652490990fd48efa2e4859"
     }
   ],
   "environment": {
@@ -240,6 +254,7 @@
     "native_end_to_end_recovery_wiring": true,
     "native_sqlcipher_checkpoint_journal": true,
     "native_write_process_stop_matrix": true,
+    "native_write_producer_privacy_gate": true,
     "non_fedora_native_evidence": false,
     "redacted_human_audit": true,
     "removed_content_not_retained": true,
@@ -263,12 +278,12 @@
     "SR-OPS-007",
     "SR-TST-005"
   ],
-  "source_revision": "76b3bd2ad22a8d70aa349a9934b5341058174baa",
+  "source_revision": "2460c3834f866c92ee12a4a043d68c51f5fe5400",
   "source_sha256": {
     "capabilities/knowledge/src/lib.rs": "37ac6fd09c4ad677c3fd4f4513400c0e319656fea257c341d8a6174280205b62",
     "capabilities/knowledge/src/obsidian_index.rs": "0cd1652365040263048d8bf96ea2e030394048c662d06b1ea0b5baab0b7919b5",
-    "docs/architecture/write-privacy-recovery-audit.md": "a30253a2593355c82b1d36ee03eae9308c6bf994619db27b5c50131ba6773300",
-    "docs/verification/sprint-39-local-results.md": "0eac79e878fd9b2c9351bcbf2a2c669fc03427f077cf2e4d8dfb82e7b8ac59b4",
+    "docs/architecture/write-privacy-recovery-audit.md": "87cf26277d663f9b8ad2498e5f0b5b654b3607298da6525dcc00003feaebf882",
+    "docs/verification/sprint-39-local-results.md": "69a34146e210d74ffe2b8b31215bbe5c83c0b6b5aea695f7c84a49dba9232338",
     "docs/verification/sprint-39-recovery-corpus.json": "b2e16c1eff2b62113c6ec5061d7e9cd84c060e721dca76c9945b9d6f095b39fb",
     "docs/verification/sprint-39-redacted-audit-fixture.json": "763067076838702c82457d531dcd3ddb6800396c0aa97536a1c1218311b2ecb3",
     "kernel/engine/migrations/operational-store/0010-write-checkpoints.sql": "2fe0ada1916efceab682f03d37cda75645755b6873074d17631fcf8991bc0588",
@@ -280,12 +295,12 @@
     "platforms/linux/src/platform.rs": "efc940d51c54a60c34e8cc65331d5fbd2f1c8cea878a514f415413fd2ca81f97",
     "schemas/runtime/examples/write-aware-checkpoint.valid.json": "abff8bbfb8d8d49b63d410170a8bc83713087e13b9d34b0a35241816caead5dd",
     "schemas/runtime/write-aware-checkpoint.schema.json": "26498af552caf936a8308a346ee4526a3409f1854878a9c9fc231b54c7551426",
-    "scripts/sprint_39_evidence.py": "5513c9cde5faf95cd7ea4429fbc18d51f149fd646b234e7c3924aa5df956db69",
+    "scripts/sprint_39_evidence.py": "30376bbf9e54a77fecc8ac4e8f2ff84314bcfe78574fb819acdbcb293ff4059d",
     "scripts/validate_planning_schemas.mjs": "9eb1e5277bc2ffe6953e2d2ecc6504f832825285beefecfb35c27aac4997ac20",
-    "shells/host/src/knowledge_write.rs": "b8c8f1e21057f8fe93f91ad543ecd085d5d1454e37c7404f24606431f15beabc",
-    "shells/host/src/linux_coding_runtime.rs": "88aab4ef95fd80cccbcf6c1bac6a7656a1caf55e8d5ac87fc821ad64a0a9bafc",
+    "shells/host/src/knowledge_write.rs": "3c2884e7136416d9c65c92a857819148514838dcf968cfa32ce10fc9075db3f4",
+    "shells/host/src/linux_coding_runtime.rs": "ce7fc4c5462ccf664e5d05ae467922910f8186d4bf0afc66bdc338a5c4a2af9f",
     "tests/test_planning_schemas.mjs": "af74d590af0eb8eb3cda538133f879dcb13eea0b8e3250c9b4e46f850c58b919",
-    "tests/test_sprint_39_evidence.py": "422c112e7bcec917b28431686413174ffa56efd034e1ad69f72435e27a99d4c5"
+    "tests/test_sprint_39_evidence.py": "0d174070e891223130f65b5d2940d9bc7363ccca768ee44a9538247b693e9207"
   },
   "summary": {
     "all_runtime_roots_scanned": false,
@@ -296,6 +311,7 @@
     "native_crash_concurrency_passed": false,
     "native_derived_index_recovery_passed": true,
     "native_end_to_end_passed": true,
+    "native_write_producer_privacy_passed": true,
     "network_access_enabled": false,
     "release_approval": false,
     "sprint_status": "BLOCKED",
@@ -311,6 +327,7 @@
     "manual_fuzzing": false,
     "native_derived_index_recovery": true,
     "native_end_to_end_recovery": true,
+    "native_write_producer_privacy": true,
     "non_fedora_native_evidence": false,
     "trusted_package_launcher_environment": false,
     "upstream_sprint_38_gate": false
