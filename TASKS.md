@@ -3182,7 +3182,7 @@ and evidence mutation suite.
   - [ ] **Sub-task 40.1.3.2:** `S-033-ST01` attempts generic shell, Git commit/push, network publication, unattended write, wildcard approval, bulk reorganization, and extension/model bypass; assert all remain absent or denied. Partial local evidence: the closed manifest/gate and existing configuration/tool boundaries reject every named capability class; complete installed-candidate adversarial execution is absent.
   - [x] **Sub-task 40.1.3.3:** `S-033-RT01` upgrades v0.2 state, exercises writes, rolls back/downgrades, restores backups, and resumes interrupted operations; assert canonical files and evidence remain valid. Evidence: the retained local lifecycle campaign composes the exact `0.2.0 -> 0.3.0 -> 0.2.0` package sequence with focused controlled-write suites, immutable configuration backup/rollback and interrupted migration recovery, encrypted operational-store backup/fresh restore, and authority/write restart recovery that refuses replay. All stages pass with zero focused ignores; cross-platform native interface and trusted installed-client evidence remain separate open requirements.
   - [ ] **Sub-task 40.1.3.4:** `S-033-AT01` forces each write-security, privacy, collision, recovery, and clean-platform threshold to fail; assert package signing and `G-V0.3` closure are blocked. Partial local evidence: release-gate and evidence mutations reject every activation, profile, source hash, exclusion, blocker, package, platform, lifecycle, signing, review, fuzz, and gate-closure overclaim; complete native threshold injection is absent.
-  - [ ] **Sub-task 40.1.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-DAT-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain cross-platform write bundle, prohibited-capability results, migration/rollback evidence, release manifest, and independent gate decision. Partial local evidence: 29 named requirements map to local contracts in the retained report; cross-platform, lifecycle, signed-package, independent-decision, and deferred manual-fuzzing evidence remains open.
+  - [ ] **Sub-task 40.1.3.5 - Product security evidence:** Map applicable `SR-ACC-*`, `SR-DAT-*`, `SR-OPS-*`, `SR-TST-*`, and `SR-CIV-*`; retain cross-platform write bundle, prohibited-capability results, migration/rollback evidence, release manifest, and independent gate decision. Partial local evidence: 29 named requirements map to local contracts in the retained report, and the migration/rollback lifecycle artifact is source-bound and passing; cross-platform, signed-package, independent-decision, and deferred manual-fuzzing evidence remains open.
 
 ##### Story Acceptance Criteria
 
@@ -3197,14 +3197,15 @@ and evidence mutation suite.
 - [x] **Sprint AC 40.AC4:** Documentation clean-runs complete without undocumented authority or recovery steps.
 - [ ] **Sprint AC 40.AC5:** `G-V0.3` closes only after every write safety threshold passes.
 
-Retained local evidence: source revision `7af24b6c7203e3a84b534545216f9c3d3da677a9` is bound by
+Retained local evidence: source revision `683bb190c7fdb2823b8d5b452130b68174b60c50` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-40/local-evidence-report.json), SHA-256
-`a74c04884b5059c7bd43604d02e1c372add02ad952d87ca95e292d76b787236b`. All 16 recorded commands
-exit zero, all eight focused suites report zero blocking skips, and unsigned candidate records make
-no activation, signing, publication, or release claim. Sprint 40 remains **BLOCKED** because
-Sprints 35 through 39 are blocked; the write profile is unregistered; complete native
-cross-platform write acceptance, clean lifecycle evidence, trusted-package-launcher execution,
-signed packages, independent release review, and deferred manual fuzzing are absent. The open
+`90aad4fdcf86f763ddfa4d1b49df8bba4520153be31dc281616dac0d1976e343`. All 17 recorded commands
+exit zero, all eight focused suites report zero blocking skips, the complete local lifecycle
+campaign passes, and unsigned candidate records make no activation, signing, publication, or
+release claim. Sprint 40 remains **BLOCKED** because Sprints 35 through 39 are blocked; the write
+profile is unregistered; complete native cross-platform write acceptance,
+trusted-package-launcher execution, signed packages, independent release review, and deferred
+manual fuzzing are absent. The open
 tasks/sub-tasks, both story criteria, Sprint AC 40.AC1/AC5, the story, the sprint, and `G-V0.3`
 therefore remain open.
 
