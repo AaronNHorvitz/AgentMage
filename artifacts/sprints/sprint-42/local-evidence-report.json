@@ -1,21 +1,21 @@
 {
   "schema_version": 1,
   "record_type": "sprint_42_local_evidence",
-  "source_revision": "4dbb2509a2117c0a48d4f76c329fd3a3955e3f6a",
+  "source_revision": "7188fcfbcb72e89998c6215d35ebe404d14ab710",
   "source_sha256": {
-    "kernel/engine/src/repository_safety.rs": "dfb93c22ee0ebee57341c85588192d889f488204ce95c12860837b1321a19d92",
-    "platforms/linux/src/repository_safety.rs": "a5e9aca69ad4fe9c49153ad98dca9883604bd49e735e5de53ba248b50bd83c7b",
+    "kernel/engine/src/repository_safety.rs": "5271b163889aca167cc0aca5484aed8d1e4e6d933009a02bd68dce32c700bd8f",
+    "platforms/linux/src/repository_safety.rs": "d7ee30776d28511e5c647c36a7890482a985e85af1a656c094087d1d3beac22f",
     "kernel/engine/tests/repository_safety_matrix.rs": "ce44de22d7623b99ba672921fbc7837bdfbd32aae91aca40a79855fa9d66ed32",
     "schemas/runtime/repository-preservation-manifest.schema.json": "d975faf6408bcab834d560260c797b08a3f8e08432d43f8cf56e8b7bcdbe71dd",
     "schemas/runtime/repository-operation-plan.schema.json": "e18be0f17720689a4af950f5fd5b51e09d02a00f0c9bb0350340070576c14751",
     "schemas/runtime/repository-operation-receipt.schema.json": "1ac525f1211b419118e2c69d0dcccf264ac90ce050ddd8d922be52deff019c59",
     "schemas/runtime/worktree-ownership.schema.json": "570e001df78f184e4c26be20adf2887a6d1b3e441275e667dfb9c8cb4a5438ec",
-    "docs/security/repository-safety.md": "885c59b59252f5a0a09945d964115c306af7de45be9a6cefc966a4715c7c12f7",
+    "docs/security/repository-safety.md": "5de6783ef3e84ca50732d99f4cd9bd3f06d5f72ce8f0f8c581e7b8f3922c4cb8",
     "docs/architecture/repository-worktree-boundary.md": "041de975ff0afa5d4dc40114c4a8cc004872682c4c321e568797b9b3a2723133",
     "docs/operations/repository-worktree-recovery.md": "131dec01a2ea919f5d6f77baee5dc015272f3f1c117cedbce18fcba90be59db3",
     "docs/verification/sprint-42-repository-mutation-corpus.json": "111ddb095467336fc9dd37cfdfcb705328b15401df4c0f252ede999e7a13a82a",
     "docs/verification/sprint-42-local-results.md": "7841b6ece567e61a0d9a4826a5ae7411baa1cb13c753bd073ba597dfe902e94a",
-    "scripts/sprint_42_evidence.py": "4114e4462c1b2306e5972e56822dd2ef919107f30c0fb372cd10a51e3d15663e",
+    "scripts/sprint_42_evidence.py": "1bb58ae06ca7e046230b206b59bc87f73514727796f58507c73f638e7393c732",
     "tests/test_sprint_42_evidence.py": "f61b4af51f7a146a74ac09ebcf109764243f7b49e6d1fbb6ab60cea8441c0aa0"
   },
   "environment": {
@@ -42,7 +42,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "f17f69aed948cbcded1c5fd59bac0e9de0010b3abf29527c9431b61bc943e8c1",
+      "output_sha256": "107814ab91cefe2ec0a688149eba164a6c38579be0281fefd6df54003afdf14a",
       "blocking_skip_count": 0
     },
     {
@@ -57,7 +57,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "b91169dab3ad2655463816b986729476fd64be87dccdd3eb8e2d9ae6605cfb64",
+      "output_sha256": "8b990a3ef252f022de4b69985e299358d9b2aa215f06a5bb60ea9d67bccb20ee",
       "blocking_skip_count": 0
     },
     {
@@ -69,10 +69,12 @@
         "agentmage-platform-linux",
         "repository_safety::tests",
         "--lib",
-        "--locked"
+        "--locked",
+        "--",
+        "--include-ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "4768561e180f252aaf708a092cf9bc52b741efc327dbaad056cb4b1514bdbee9",
+      "output_sha256": "ce67eeaa8c162f24f3c16476f700668a58e62b633b802c152ee06adf65a4d731",
       "blocking_skip_count": 0
     },
     {
@@ -83,7 +85,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "68eeff8087c33158a4bb5149e61ecc969651d15731ca14ece86f32096b6376a1",
+      "output_sha256": "3e2780a24d50a31dd5aecc3d6b4532386f56ddee7f3c7b760daf9108f9d7c0d9",
       "blocking_skip_count": null
     },
     {
@@ -94,7 +96,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "373cae86aaa4ac60b0bacdb3d5402040ad7ce8389bf87aa59887403f9b177fe0",
+      "output_sha256": "09894cd76a21d0c1948a28a1ab61d9c40f5b6fbdd8f8fc74f29b5fa04e204389",
       "blocking_skip_count": null
     },
     {
@@ -134,7 +136,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "85c7e32f042f853c6dea42273a9d2f3f44a2b34b1ef02d44f71285cdfcd6f3bc",
+      "output_sha256": "e17796635192d70db245e9f961553f5ef497310b6310eda678661ca9f2a22c73",
       "blocking_skip_count": null
     },
     {
@@ -146,7 +148,7 @@
         "tests.test_sprint_42_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "3e636b97cb66a8c31be4a446156a7a1fc83c6075493df3ffe8bd21ff14fd8a54",
+      "output_sha256": "f24358401f12ccf4155fcf14e0ce6907fe197e736a1166fa135058e6ed8ae027",
       "blocking_skip_count": null
     }
   ],
@@ -182,12 +184,14 @@
     "exact_namespaced_fetch_plan": true,
     "dirty_untracked_stale_and_divergence_reports": true,
     "owned_task_worktree_lifecycle": true,
+    "worktree_lifecycle_state_matrix": true,
     "content_minimized_ownership_registry": true,
     "stale_preimage_and_collision_denial": true,
     "preservation_manifest_reconciliation": true,
     "agentmage_branch_compare_and_swap": true,
     "ambient_git_hardening": true,
     "fedora_local_worktree_and_cas_execution": true,
+    "fedora_live_repository_fixtures_executed": true,
     "product_profile_registered": false,
     "network_clone_or_fetch_execution": false,
     "clone_success_reconciliation": false,
@@ -203,6 +207,8 @@
     "focused_local_contracts": true,
     "focused_blocking_skip_count": 0,
     "fedora_local_worktree_lifecycle": true,
+    "worktree_lifecycle_state_matrix": true,
+    "fedora_live_repository_fixtures_executed": true,
     "fedora_local_agentmage_branch_cas": true,
     "fixed_hostile_case_count": 44,
     "protected_manifest_mutation_count": 10000,

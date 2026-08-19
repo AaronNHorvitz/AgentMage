@@ -3322,7 +3322,7 @@ therefore remain open.
   - [x] **Sub-task 42.1.2.5:** Versioned repository preservation-manifest schema, hardened Git invocation profile, and prohibited-operation inventory.
 
 - [ ] **Task 42.1.3 - Verify and close the story**
-  - [ ] **Sub-task 42.1.3.1:** `S-035-UT01` creates, identifies, lists, hands off, and removes owned worktrees across clean/dirty/detached/missing/renamed states; assert stable ownership and no active-checkout mutation. Kernel ownership and Fedora create/remove fixtures pass; the complete dirty/detached/missing/renamed lifecycle matrix remains absent.
+  - [x] **Sub-task 42.1.3.1:** `S-035-UT01` creates, identifies, lists, hands off, and removes owned worktrees across clean/dirty/detached/missing/renamed states; assert stable ownership and no active-checkout mutation. Evidence: kernel ownership fixtures plus a Fedora lifecycle matrix over all five states. A dirty active checkout (unstaged edit, staged change, and untracked file) and a detached active checkout each survive create and remove byte-for-byte across `HEAD`, abbreviated ref, index bytes, porcelain status, and working-tree contents. A worktree deleted or renamed underneath its owner can no longer be identified, so removal fails closed with `linux.git.worktree.identity`, leaves the preservation manifest unchanged, and leaves a renamed tree untouched.
   - [ ] **Sub-task 42.1.3.2:** `S-035-ST01` seeds aliases, URL rewrites, hooks, executable filters, drivers, pagers, editors, signers, submodules, Large File Storage, alternates, replacement refs, malicious refs/objects, case/Unicode collisions, unsafe ownership, credential helpers, protocols, ambient Git variables, and hostile remote URLs; assert no execution, secret access, unapproved network, or unowned mutation. Forty-four fixed hostile cases and 10,000 deterministic protected-manifest mutations pass with zero unauthorized acceptance; the complete live hostile-repository campaign remains absent.
   - [ ] **Sub-task 42.1.3.3:** `S-035-IT01` performs visible approved clone/fetch with exact host/repository/ref/object/byte budgets and verifies only the transaction namespace changed; assert no prune, tag, `FETCH_HEAD`, remote-tracking, branch, checkout, push, publication, maintenance, or implicit credential effect.
   - [ ] **Sub-task 42.1.3.4:** `S-035-RT01` interrupts fetch, worktree creation/removal, compare-and-swap branch movement, and cleanup while the user changes files, index, refs, notes, stash, tags, configuration, hooks, and the active checkout; assert all user state survives and recovery identifies every owned artifact.
@@ -3342,11 +3342,13 @@ therefore remain open.
 - [x] **Sprint AC 42.AC4:** Repository credentials never enter model context, configuration, memory, command output, or audit logs.
 - [ ] **Sprint AC 42.AC5:** Worktree operations remain inside the operating-system sandbox and exact grants, and the Sprint 42 portion of `RV-49` proves complete active-checkout and unrelated-Git-state preservation.
 
-Retained local evidence: source revision `4dbb2509a2117c0a48d4f76c329fd3a3955e3f6a` is bound by
+Retained local evidence: source revision `7188fcfbcb72e89998c6215d35ebe404d14ab710` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-42/local-evidence-report.json), SHA-256
-`8587f4cc932dbd5ec7c6913a27fabdacdf106d30251f0319d54f391eae93c434`. All nine recorded commands
-exit zero, all three focused suites report zero blocking skips, and Fedora-local fixtures exercise
-owned worktree creation/removal plus task-branch compare-and-swap while the fixed hostile corpus and
+`fa3f0d1a6ec44f19caa1537e6e4581b6e52ffd390b7ed85865a15a100162b8c9`. All nine recorded commands
+exit zero, all three focused suites report zero blocking skips with the live Fedora repository
+fixtures now executed rather than skipped, and Fedora-local fixtures exercise the owned worktree
+lifecycle across clean, dirty, detached, missing, and renamed states plus task-branch
+compare-and-swap while the fixed hostile corpus and
 10,000 deterministic preservation-manifest mutations accept no unauthorized change. Sprint 42
 remains **BLOCKED** because Sprint 41 is blocked; no repository profile is registered; authenticated
 network Git, clone-success reconciliation, complete descendant containment and peak resource
