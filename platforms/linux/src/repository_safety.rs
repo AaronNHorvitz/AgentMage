@@ -2188,8 +2188,19 @@ mod tests {
             .set_nonblocking(true)
             .expect("listener becomes nonblocking");
         let port = listener.local_addr().expect("listener address").port();
-        let canaries = ["hook", "pager", "diff", "credential", "alias", "filter"]
-            .map(|name| fixture.root.join(format!("{name}-executed")));
+        let canaries = [
+            "hook",
+            "pager",
+            "diff",
+            "credential",
+            "alias",
+            "filter",
+            "editor",
+            "signer",
+            "sequence",
+            "textconv",
+        ]
+        .map(|name| fixture.root.join(format!("{name}-executed")));
         let hook = fixture.git_directory.join("hooks/post-index-change");
         fs::write(
             &hook,
@@ -2235,6 +2246,32 @@ mod tests {
                 format!("touch {}", canaries[5].display()),
             ],
             vec![
+                "config".to_owned(),
+                "core.editor".to_owned(),
+                format!("touch {}", canaries[6].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "gpg.program".to_owned(),
+                format!("touch {}", canaries[7].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "sequence.editor".to_owned(),
+                format!("touch {}", canaries[8].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "diff.hostile.textconv".to_owned(),
+                format!("touch {}", canaries[9].display()),
+            ],
+            // Rewrites any fetched URL onto the loopback listener.
+            vec![
+                "config".to_owned(),
+                format!("url.ssh://127.0.0.1:{port}/.insteadOf"),
+                "https://example.invalid/".to_owned(),
+            ],
+            vec![
                 "remote".to_owned(),
                 "add".to_owned(),
                 "origin".to_owned(),
@@ -2252,6 +2289,14 @@ mod tests {
                 "HEAD",
             ],
         );
+        // A hostile object alternate pointing outside the repository.
+        fs::create_dir_all(fixture.git_directory.join("objects/info"))
+            .expect("objects info directory");
+        fs::write(
+            fixture.git_directory.join("objects/info/alternates"),
+            format!("{}\n", fixture.root.join("hostile-objects").display()),
+        )
+        .expect("hostile alternates write");
         let before = fixture
             .collector()
             .collect(&fixture.scope())
