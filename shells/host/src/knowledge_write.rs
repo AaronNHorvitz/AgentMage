@@ -199,6 +199,9 @@ pub fn publish_knowledge_index_with_checkpoints(
         ],
     )
     .map_err(|_| KnowledgeIndexCheckpointError::InvalidInput)?;
+    if scan.receipt.redacted_fields != 0 {
+        return Err(KnowledgeIndexCheckpointError::InvalidInput);
+    }
     let updating_checkpoint = build_index_checkpoint(
         previous,
         request.updating_checkpoint_id,

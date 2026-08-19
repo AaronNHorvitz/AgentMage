@@ -244,6 +244,11 @@ fn build_pending_coding_authority(
             .map_err(|_| RuntimePortFailure::Invalid)?;
             let preview =
                 render_write_preview(&change_set).map_err(|_| RuntimePortFailure::Invalid)?;
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Preview,
+                "structured_write_preview",
+                &serde_json::to_vec(&preview).map_err(|_| RuntimePortFailure::Invalid)?,
+            )?;
             Ok(PendingCodingAuthority::StructuredWrite {
                 approval_id,
                 proposed_grant_id,
@@ -266,6 +271,11 @@ fn build_pending_coding_authority(
             .map_err(|_| RuntimePortFailure::Invalid)?;
             let preview =
                 render_filesystem_preview(&plan).map_err(|_| RuntimePortFailure::Invalid)?;
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Preview,
+                "filesystem_write_preview",
+                &serde_json::to_vec(&preview).map_err(|_| RuntimePortFailure::Invalid)?,
+            )?;
             Ok(PendingCodingAuthority::FilesystemWrite {
                 approval_id,
                 proposed_grant_id,
@@ -1600,6 +1610,24 @@ where
         {
             return Err(RuntimePortFailure::Invalid);
         }
+        require_safe_write_boundary(
+            WritePrivacyBoundary::Staging,
+            "structured_write_postimage",
+            plan.postimage(),
+        )?;
+        require_safe_write_boundary(
+            WritePrivacyBoundary::Backup,
+            "structured_write_preimage",
+            plan.preimage(),
+        )?;
+        if let Some(context) = event_context.as_ref() {
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Log,
+                "write_started_event",
+                &serde_json::to_vec(&context.started_event)
+                    .map_err(|_| RuntimePortFailure::Invalid)?,
+            )?;
+        }
         let transaction_id = self.next_id("write-transaction")?;
         let (before_checkpoint, consumed_checkpoint) = self.build_write_checkpoint_start(
             &transaction_id,
@@ -1613,6 +1641,13 @@ where
             transaction_id,
             now_epoch_ms: resolved_at_epoch_ms,
         };
+        for checkpoint in [&before_checkpoint, &consumed_checkpoint] {
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Persistence,
+                "write_start_checkpoint",
+                &serde_json::to_vec(checkpoint).map_err(|_| RuntimePortFailure::Invalid)?,
+            )?;
+        }
         let (result, pending) = if let Some(context) = event_context.as_ref() {
             let (result, pending) = self
                 .authority
@@ -1647,6 +1682,11 @@ where
             )
         };
         verify_write_receipts(&result.receipts).map_err(|_| RuntimePortFailure::Uncertain)?;
+        require_safe_write_boundary(
+            WritePrivacyBoundary::Receipt,
+            "structured_write_receipts",
+            &serde_json::to_vec(&result.receipts).map_err(|_| RuntimePortFailure::Invalid)?,
+        )?;
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
@@ -1654,6 +1694,13 @@ where
             .receipts
             .last()
             .ok_or(RuntimePortFailure::Uncertain)?;
+        if let Some(failure_code) = receipt.failure_code.as_deref() {
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Error,
+                "structured_write_failure_code",
+                failure_code.as_bytes(),
+            )?;
+        }
         let write_checkpoints = self.build_terminal_write_checkpoints(
             &consumed_checkpoint,
             result.outcome,
@@ -1722,6 +1769,22 @@ where
         {
             return Err(RuntimePortFailure::Invalid);
         }
+        let FilesystemOperationDraft::Create { content, .. } = &create_draft else {
+            return Err(RuntimePortFailure::Invalid);
+        };
+        require_safe_write_boundary(
+            WritePrivacyBoundary::Staging,
+            "filesystem_create_postimage",
+            content,
+        )?;
+        if let Some(context) = event_context.as_ref() {
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Log,
+                "filesystem_started_event",
+                &serde_json::to_vec(&context.started_event)
+                    .map_err(|_| RuntimePortFailure::Invalid)?,
+            )?;
+        }
         let transaction_id = self.next_id("filesystem-transaction")?;
         let (before_checkpoint, consumed_checkpoint) = self.build_write_checkpoint_start(
             &transaction_id,
@@ -1736,6 +1799,13 @@ where
             now_epoch_ms: resolved_at_epoch_ms,
             cancelled_before_consume: false,
         };
+        for checkpoint in [&before_checkpoint, &consumed_checkpoint] {
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Persistence,
+                "filesystem_start_checkpoint",
+                &serde_json::to_vec(checkpoint).map_err(|_| RuntimePortFailure::Invalid)?,
+            )?;
+        }
         let (result, pending) = if let Some(context) = event_context.as_ref() {
             let (result, pending) = self
                 .authority
@@ -1770,6 +1840,11 @@ where
             )
         };
         verify_filesystem_receipts(&result.receipts).map_err(|_| RuntimePortFailure::Uncertain)?;
+        require_safe_write_boundary(
+            WritePrivacyBoundary::Receipt,
+            "filesystem_write_receipts",
+            &serde_json::to_vec(&result.receipts).map_err(|_| RuntimePortFailure::Invalid)?,
+        )?;
         self.authority
             .revalidate_root()
             .map_err(|_| RuntimePortFailure::Uncertain)?;
@@ -1777,6 +1852,13 @@ where
             .receipts
             .last()
             .ok_or(RuntimePortFailure::Uncertain)?;
+        if let Some(failure_code) = receipt.failure_code.as_deref() {
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Error,
+                "filesystem_write_failure_code",
+                failure_code.as_bytes(),
+            )?;
+        }
         let write_checkpoints = self.build_terminal_filesystem_checkpoints(
             &consumed_checkpoint,
             result.outcome,
@@ -1809,6 +1891,11 @@ where
         if state_change == StateChange::Changed
             && let Some(bytes) = generated_bytes
         {
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Export,
+                "generated_file_artifact",
+                &bytes,
+            )?;
             execution
                 .artifact_candidates
                 .push(RuntimeToolArtifactCandidate {
@@ -1829,6 +1916,16 @@ where
         state_change: StateChange,
     ) -> Result<RuntimeToolExecution, RuntimePortFailure> {
         let output_bytes = serde_json::to_vec(&output).map_err(|_| RuntimePortFailure::Invalid)?;
+        require_safe_write_boundary(
+            WritePrivacyBoundary::ModelContext,
+            "controlled_change_output",
+            &output_bytes,
+        )?;
+        require_safe_write_boundary(
+            WritePrivacyBoundary::Diagnostic,
+            "controlled_change_report",
+            &output_bytes,
+        )?;
         if output_bytes.len() as u64 > request.limits.max_output_bytes {
             return Err(RuntimePortFailure::ResourceExhausted);
         }
@@ -1940,6 +2037,13 @@ where
         write_checkpoints: &[WriteAwareCheckpoint],
     ) -> Result<(RuntimeToolExecution, Vec<RuntimeEvent>), RuntimePortFailure> {
         let completion = self.pending_write_completion(&execution, write_checkpoints)?;
+        for checkpoint in write_checkpoints {
+            require_safe_write_boundary(
+                WritePrivacyBoundary::Persistence,
+                "terminal_write_checkpoint",
+                &serde_json::to_vec(checkpoint).map_err(|_| RuntimePortFailure::Invalid)?,
+            )?;
+        }
         match (event_context, pending) {
             (None, None) => {
                 self.authority
@@ -1951,6 +2055,11 @@ where
             }
             (Some(context), Some(pending)) => {
                 let terminal = (context.build_terminal_event)(&execution)?;
+                require_safe_write_boundary(
+                    WritePrivacyBoundary::Log,
+                    "write_terminal_event",
+                    &serde_json::to_vec(&terminal).map_err(|_| RuntimePortFailure::Invalid)?,
+                )?;
                 #[cfg(test)]
                 story_22_1_crash_at("before-tool-terminal-commit");
                 let events = self
@@ -2129,6 +2238,9 @@ where
             ],
         )
         .map_err(|_| RuntimePortFailure::Invalid)?;
+        if scan.receipt.redacted_fields != 0 {
+            return Err(RuntimePortFailure::Invalid);
+        }
         let before = build_write_checkpoint(
             WriteAwareCheckpointInput {
                 checkpoint_id: self.next_id("write-checkpoint")?,
@@ -2552,6 +2664,60 @@ fn serialize_read_result_for_model(result: &ReadOnlyResult) -> Result<Vec<u8>, &
         return Err("runtime.tool.output-sensitive");
     }
     serde_json::to_vec(result).map_err(|_| "runtime.tool.output-invalid")
+}
+
+fn require_safe_write_boundary(
+    boundary: WritePrivacyBoundary,
+    field_name: &'static str,
+    value: &[u8],
+) -> Result<(), RuntimePortFailure> {
+    const WINDOW_BYTES: usize = 4_096;
+    const OVERLAP_BYTES: usize = 256;
+    let text = std::str::from_utf8(value).map_err(|_| RuntimePortFailure::Invalid)?;
+    if text.is_empty() {
+        return require_safe_write_window(boundary, field_name, b"");
+    }
+    let mut start = 0;
+    while start < value.len() {
+        let mut end = start.saturating_add(WINDOW_BYTES).min(value.len());
+        while end > start && !text.is_char_boundary(end) {
+            end -= 1;
+        }
+        if end == start {
+            return Err(RuntimePortFailure::Invalid);
+        }
+        require_safe_write_window(boundary, field_name, &value[start..end])?;
+        if end == value.len() {
+            break;
+        }
+        let mut next = end.saturating_sub(OVERLAP_BYTES);
+        while next < end && !text.is_char_boundary(next) {
+            next += 1;
+        }
+        start = if next > start { next } else { end };
+    }
+    Ok(())
+}
+
+fn require_safe_write_window(
+    boundary: WritePrivacyBoundary,
+    field_name: &'static str,
+    value: &[u8],
+) -> Result<(), RuntimePortFailure> {
+    let scan = sanitize_write_boundary(
+        boundary,
+        &[WriteBoundaryField {
+            name: field_name,
+            value,
+            sensitivity: WriteFieldSensitivity::PublicMetadata,
+        }],
+    )
+    .map_err(|_| RuntimePortFailure::Invalid)?;
+    if scan.receipt.inspected_fields == 1 && scan.receipt.redacted_fields == 0 {
+        Ok(())
+    } else {
+        Err(RuntimePortFailure::Invalid)
+    }
 }
 
 impl<'workspace, 'session, 'platform, I, E, G> RuntimeToolBoundary
@@ -3431,6 +3597,30 @@ mod tests {
                 .expect_err("sensitive output must not be serialized for model context");
             assert_eq!(error, "runtime.tool.output-sensitive");
             assert!(!error.contains(content));
+        }
+    }
+
+    #[test]
+    fn story_39_1_native_write_producer_gate_is_bounded_and_catches_split_canaries() {
+        let safe_unicode = format!("safe {} value\n", '\u{03bb}').repeat(1_000);
+        let mut split_canary = "x".repeat(4_088);
+        split_canary.push_str(&format!("{}{}", "gh", "p_abcdefghijklmnopqrstuvwxyz123456"));
+        for boundary in WritePrivacyBoundary::ALL {
+            assert_eq!(
+                require_safe_write_boundary(boundary, "producer_output", safe_unicode.as_bytes()),
+                Ok(()),
+                "{boundary:?}"
+            );
+            assert_eq!(
+                require_safe_write_boundary(boundary, "producer_output", split_canary.as_bytes()),
+                Err(RuntimePortFailure::Invalid),
+                "{boundary:?}"
+            );
+            assert_eq!(
+                require_safe_write_boundary(boundary, "producer_output", &[0xff, 0xfe]),
+                Err(RuntimePortFailure::Invalid),
+                "{boundary:?}"
+            );
         }
     }
     #[cfg(feature = "workflow-caller")]
