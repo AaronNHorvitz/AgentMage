@@ -2202,6 +2202,8 @@ mod tests {
             "signer",
             "sequence",
             "textconv",
+            "submodule",
+            "lfs",
         ]
         .map(|name| fixture.root.join(format!("{name}-executed")));
         let hook = fixture.git_directory.join("hooks/post-index-change");
@@ -2214,9 +2216,17 @@ mod tests {
             .expect("hostile hook becomes executable");
         fs::write(
             fixture.repository.join(".gitattributes"),
-            "*.md diff=hostile filter=hostile\n",
+            "*.md diff=hostile filter=hostile\n*.bin filter=lfs\n",
         )
         .expect("hostile attributes write");
+        // A hostile submodule declaration pointing at the loopback listener.
+        fs::write(
+            fixture.repository.join(".gitmodules"),
+            format!(
+                "[submodule \"hostile\"]\n\tpath = hostile\n\turl = ssh://127.0.0.1:{port}/sub\n"
+            ),
+        )
+        .expect("hostile submodule declaration writes");
         for arguments in [
             vec![
                 "config".to_owned(),
@@ -2273,6 +2283,27 @@ mod tests {
                 "config".to_owned(),
                 format!("url.ssh://127.0.0.1:{port}/.insteadOf"),
                 "https://example.invalid/".to_owned(),
+            ],
+            vec![
+                "config".to_owned(),
+                "submodule.hostile.update".to_owned(),
+                format!("!touch {}", canaries[10].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "filter.lfs.smudge".to_owned(),
+                format!("touch {}", canaries[11].display()),
+            ],
+            vec![
+                "config".to_owned(),
+                "filter.lfs.process".to_owned(),
+                format!("touch {}", canaries[11].display()),
+            ],
+            // Unsafe ownership relaxation must not grant anything.
+            vec![
+                "config".to_owned(),
+                "safe.directory".to_owned(),
+                "*".to_owned(),
             ],
             vec![
                 "remote".to_owned(),
