@@ -209,7 +209,11 @@ def run_record(identifier: str, argv: tuple[str, ...], *, test: bool) -> dict[st
 
 def lifecycle_images() -> tuple[str, str]:
     report = json.loads(CLEAN_BUILD_REPORT.read_text(encoding="utf-8"))
-    if report.get("status") != "pass":
+    if (
+        report.get("status") != "pass-linux"
+        or report.get("summary", {}).get("linux_scope_complete") is not True
+        or report.get("summary", {}).get("cross_platform_task_complete") is not False
+    ):
         raise Sprint40LifecycleError("sprint40.lifecycle.clean_build_report")
     runs = report.get("platform_runs")
     if not isinstance(runs, dict):
