@@ -1,0 +1,1461 @@
+{
+  "acceptance": {
+    "backup_and_restore": true,
+    "clean_install": true,
+    "complete_local_lifecycle_campaign": true,
+    "corrupt_upgrade_refusal": true,
+    "downgrade": true,
+    "interrupted_authority_resume_without_replay": true,
+    "interrupted_write_resume_without_replay": true,
+    "migration_interruption_recovery": true,
+    "uninstall_and_residue": true,
+    "upgrade": true
+  },
+  "build_commands": [
+    {
+      "argv": [
+        "npm",
+        "run",
+        "build",
+        "--workspace",
+        "@agentmage/vscode-shell"
+      ],
+      "exit_code": 0,
+      "id": "vscode-release-build",
+      "observed_test_ignores": null,
+      "observed_test_passes": null,
+      "output_bytes": 70,
+      "output_sha256": "1ea8516eedc6f4f8c0796096bff9abd640232cfd15dc8c129b015d545a9e6d46"
+    },
+    {
+      "argv": [
+        "cargo",
+        "build",
+        "--release",
+        "-p",
+        "agentmage-host",
+        "-p",
+        "agentmage-capability-read-only",
+        "-p",
+        "agentmage-platform-linux-inference",
+        "--bins",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "native-release-build",
+      "observed_test_ignores": null,
+      "observed_test_passes": null,
+      "output_bytes": 62,
+      "output_sha256": "90c8a1a69c0155761cff4bfe0e61bbee007961d2b96729d2127c2e0c291489dd"
+    }
+  ],
+  "candidate_artifacts": [
+    {
+      "kind": "deb",
+      "name": "agentmage_0.2.0_amd64.deb",
+      "published": false,
+      "retained_in_repository": false,
+      "sha256": "c77f004f8e25df3c7046170c3d445d8ba16bdb4d6baeb072222929791d428ca8",
+      "signed": false,
+      "size": 2442106,
+      "version": "0.2.0"
+    },
+    {
+      "kind": "rpm",
+      "name": "agentmage-0.2.0-1.fc44.x86_64.rpm",
+      "published": false,
+      "retained_in_repository": false,
+      "sha256": "788509ca8191bf5c3a81566aaf1ef8bc2c62f6ddeb6a5834876015b3af99a9f2",
+      "signed": false,
+      "size": 1227361,
+      "version": "0.2.0"
+    },
+    {
+      "kind": "vsix",
+      "name": "agentmage-vscode-0.2.0.vsix",
+      "published": false,
+      "retained_in_repository": false,
+      "sha256": "9f15724ff98a3e757c38fe13a026be1b95dc929f35dcd6154e78932087fc6261",
+      "signed": false,
+      "size": 36713,
+      "version": "0.2.0"
+    },
+    {
+      "kind": "deb",
+      "name": "agentmage_0.3.0_amd64.deb",
+      "published": false,
+      "retained_in_repository": false,
+      "sha256": "2ce49c8987b9c771dc327620014582496fff01e046e9080a255b107e8d0b194f",
+      "signed": false,
+      "size": 2442110,
+      "version": "0.3.0"
+    },
+    {
+      "kind": "rpm",
+      "name": "agentmage-0.3.0-1.fc44.x86_64.rpm",
+      "published": false,
+      "retained_in_repository": false,
+      "sha256": "b60e98c21b5cff24fb0cc33a17a4a4492470a6572a181e3f81dd10ef6f11aec3",
+      "signed": false,
+      "size": 1227405,
+      "version": "0.3.0"
+    },
+    {
+      "kind": "vsix",
+      "name": "agentmage-vscode-0.3.0.vsix",
+      "published": false,
+      "retained_in_repository": false,
+      "sha256": "f670858759642c0437d888ff804c674615fc08e22b793c4f5778de48c24973ab",
+      "signed": false,
+      "size": 36715,
+      "version": "0.3.0"
+    }
+  ],
+  "environment": {
+    "machine": "x86_64",
+    "network_used_by_package_lifecycle": false,
+    "release": "7.1.6-201.fc44.x86_64",
+    "rootless_container_runtime": "podman",
+    "system": "Linux"
+  },
+  "extracted_candidate_checks": {
+    "extracted_payloads": "pass",
+    "mutation_refusal": "pass"
+  },
+  "limitations": [
+    "The campaign uses unsigned local candidates and does not approve or publish a release.",
+    "Fedora and Ubuntu package-manager execution occurs in exact locally retained clean-build images with dependencies pre-provisioned, rootless Podman, and networking disabled; it is not installed-host or graphical-client evidence.",
+    "The state campaign composes focused native test fixtures; it does not claim macOS, Windows, independent-review, or trusted-package-launcher evidence.",
+    "Manual fuzzing remains deferred by the recorded project decision."
+  ],
+  "package_lifecycle": {
+    "network_used": false,
+    "platforms": [
+      {
+        "checks": {
+          "clean_install": true,
+          "component_manifest_exact": true,
+          "corrupt_upgrade_refused": true,
+          "final_filesystem_residue_absent": true,
+          "final_package_record_absent": true,
+          "network_disabled": true,
+          "prior_valid_state_preserved": true,
+          "reinstall_recovery": true,
+          "rollback": true,
+          "root_owned_runtime_read_only": true,
+          "standard_user_launch": true,
+          "uninstall": true,
+          "upgrade": true
+        },
+        "controls": {
+          "capabilities_added": [],
+          "capabilities_dropped": [
+            "CAP_CHOWN",
+            "CAP_DAC_OVERRIDE",
+            "CAP_FOWNER",
+            "CAP_FSETID",
+            "CAP_KILL",
+            "CAP_NET_BIND_SERVICE",
+            "CAP_SETFCAP",
+            "CAP_SETGID",
+            "CAP_SETPCAP",
+            "CAP_SETUID",
+            "CAP_SYS_CHROOT"
+          ],
+          "memory_limit_bytes": 536870912,
+          "network": "none",
+          "no_new_privileges": true,
+          "package_mount": "read-only",
+          "pids_limit": 64,
+          "privileged": false,
+          "root_filesystem": "ephemeral-writable-for-package-manager",
+          "runtime": "rootless-podman",
+          "selinux_label_isolated_mount": true
+        },
+        "image": {
+          "architecture": "amd64",
+          "id": "sha256:f980826a8babd88b4d189dc6e211194db4d42f2dc37b81c00f297332b2168489",
+          "os": "linux",
+          "reference": "localhost/agentmage-clean-build@sha256:34b4746cd6cfd1f0640db8da7d1e1e1727296955c8ecff7c1adeaa358eb53e68",
+          "repo_digests": [
+            "localhost/agentmage-clean-build@sha256:34b4746cd6cfd1f0640db8da7d1e1e1727296955c8ecff7c1adeaa358eb53e68"
+          ]
+        },
+        "managed_paths": [
+          "/usr/libexec/agentmage",
+          "/usr/libexec/agentmage/agentmage-docker-guard",
+          "/usr/libexec/agentmage/agentmage-docker-topology-collector",
+          "/usr/libexec/agentmage/agentmage-host",
+          "/usr/libexec/agentmage/agentmage-model-installer",
+          "/usr/libexec/agentmage/agentmage-native-inference",
+          "/usr/libexec/agentmage/agentmage-read-only-worker",
+          "/usr/share/agentmage",
+          "/usr/share/agentmage/agentmage.vsix",
+          "/usr/share/agentmage/model-profiles",
+          "/usr/share/agentmage/model-profiles/exact-profile-catalog.json",
+          "/usr/share/agentmage/package-manifest.json",
+          "/usr/share/licenses/agentmage",
+          "/usr/share/licenses/agentmage/LICENSE"
+        ],
+        "package_administrator": "0:0",
+        "package_format": "rpm",
+        "platform": {
+          "architecture": "x86_64",
+          "os_id": "fedora",
+          "version_id": "44"
+        },
+        "platform_id": "fedora-x86_64",
+        "runtime_user": "10001:10001",
+        "status": "pass",
+        "steps": [
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "platform-identity",
+            "observed_exit": "zero",
+            "output_bytes": 17,
+            "output_sha256": "5b033851f4c1274fefbfcb8f7a2d0e73851dd07e02614246253b2dd65f130616",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "standard-user-identity",
+            "observed_exit": "zero",
+            "output_bytes": 12,
+            "output_sha256": "786010eb231a0631e64299c510850c5be5bd47b6b62bd1b361ec53336efc410d",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "install-0.2.0",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "1f930dd1f133c1f97a94fe3acb8db34372cf4c01ffdb2b3ff4ca72f9494121e9",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 582,
+            "output_sha256": "23a5c50da245924235f1c8945d85f2b960c066b77f291be902926707541218f7",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "nonzero",
+            "id": "corrupt-upgrade-refusal",
+            "observed_exit": "nonzero",
+            "output_bytes": 184,
+            "output_sha256": "94216108e0219e9e585eef0752075923e5d474d63757b0f06dba41e389b3efa2",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "1f930dd1f133c1f97a94fe3acb8db34372cf4c01ffdb2b3ff4ca72f9494121e9",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 582,
+            "output_sha256": "23a5c50da245924235f1c8945d85f2b960c066b77f291be902926707541218f7",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "upgrade-0.3.0",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "d915cc95d6ca8f47ae297713ed46d4e5c5d99ddd29fc3c61e263bdf305f2b5b0",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 582,
+            "output_sha256": "23a5c50da245924235f1c8945d85f2b960c066b77f291be902926707541218f7",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "rollback-0.2.0",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "1f930dd1f133c1f97a94fe3acb8db34372cf4c01ffdb2b3ff4ca72f9494121e9",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 582,
+            "output_sha256": "23a5c50da245924235f1c8945d85f2b960c066b77f291be902926707541218f7",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "uninstall-after-rollback",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "nonzero",
+            "id": "first-uninstall-package-record-absent",
+            "observed_exit": "nonzero",
+            "output_bytes": 35,
+            "output_sha256": "372fc553b3ad566f1c1b1d5f62a772d7cdb08d900943c5ce6d0b61d46e3b29ff",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "first-uninstall-filesystem-residue-absent",
+            "observed_exit": "zero",
+            "output_bytes": 33,
+            "output_sha256": "65b442aa4788f7832060ef0f23d783f93740f559c0c5ce1bb4a6fef47a6aa423",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "reinstall-0.3.0-after-clean-removal",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "d915cc95d6ca8f47ae297713ed46d4e5c5d99ddd29fc3c61e263bdf305f2b5b0",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 582,
+            "output_sha256": "23a5c50da245924235f1c8945d85f2b960c066b77f291be902926707541218f7",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "final-uninstall",
+            "observed_exit": "zero",
+            "output_bytes": 0,
+            "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "nonzero",
+            "id": "final-uninstall-package-record-absent",
+            "observed_exit": "nonzero",
+            "output_bytes": 35,
+            "output_sha256": "372fc553b3ad566f1c1b1d5f62a772d7cdb08d900943c5ce6d0b61d46e3b29ff",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "final-uninstall-filesystem-residue-absent",
+            "observed_exit": "zero",
+            "output_bytes": 33,
+            "output_sha256": "65b442aa4788f7832060ef0f23d783f93740f559c0c5ce1bb4a6fef47a6aa423",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          }
+        ]
+      },
+      {
+        "checks": {
+          "clean_install": true,
+          "component_manifest_exact": true,
+          "corrupt_upgrade_refused": true,
+          "final_filesystem_residue_absent": true,
+          "final_package_record_absent": true,
+          "network_disabled": true,
+          "prior_valid_state_preserved": true,
+          "reinstall_recovery": true,
+          "rollback": true,
+          "root_owned_runtime_read_only": true,
+          "standard_user_launch": true,
+          "uninstall": true,
+          "upgrade": true
+        },
+        "controls": {
+          "capabilities_added": [],
+          "capabilities_dropped": [
+            "CAP_CHOWN",
+            "CAP_DAC_OVERRIDE",
+            "CAP_FOWNER",
+            "CAP_FSETID",
+            "CAP_KILL",
+            "CAP_NET_BIND_SERVICE",
+            "CAP_SETFCAP",
+            "CAP_SETGID",
+            "CAP_SETPCAP",
+            "CAP_SETUID",
+            "CAP_SYS_CHROOT"
+          ],
+          "memory_limit_bytes": 536870912,
+          "network": "none",
+          "no_new_privileges": true,
+          "package_mount": "read-only",
+          "pids_limit": 64,
+          "privileged": false,
+          "root_filesystem": "ephemeral-writable-for-package-manager",
+          "runtime": "rootless-podman",
+          "selinux_label_isolated_mount": true
+        },
+        "image": {
+          "architecture": "amd64",
+          "id": "sha256:92d587476507b8668199c22f54c49b68d84b61e07527599560645ca61cd9ff18",
+          "os": "linux",
+          "reference": "localhost/agentmage-clean-build@sha256:2e4f03f6ca2b41381afbe95217755847e6a59663ad6abd764ad87ef6aa99a0c8",
+          "repo_digests": [
+            "localhost/agentmage-clean-build@sha256:2e4f03f6ca2b41381afbe95217755847e6a59663ad6abd764ad87ef6aa99a0c8"
+          ]
+        },
+        "managed_paths": [
+          "/usr",
+          "/usr/libexec",
+          "/usr/libexec/agentmage",
+          "/usr/libexec/agentmage/agentmage-docker-guard",
+          "/usr/libexec/agentmage/agentmage-docker-topology-collector",
+          "/usr/libexec/agentmage/agentmage-host",
+          "/usr/libexec/agentmage/agentmage-model-installer",
+          "/usr/libexec/agentmage/agentmage-native-inference",
+          "/usr/libexec/agentmage/agentmage-read-only-worker",
+          "/usr/share",
+          "/usr/share/agentmage",
+          "/usr/share/agentmage/agentmage.vsix",
+          "/usr/share/agentmage/model-profiles",
+          "/usr/share/agentmage/model-profiles/exact-profile-catalog.json",
+          "/usr/share/agentmage/package-manifest.json",
+          "/usr/share/licenses",
+          "/usr/share/licenses/agentmage",
+          "/usr/share/licenses/agentmage/LICENSE"
+        ],
+        "package_administrator": "0:0",
+        "package_format": "deb",
+        "platform": {
+          "architecture": "x86_64",
+          "os_id": "ubuntu",
+          "version_id": "26.04"
+        },
+        "platform_id": "ubuntu-x86_64",
+        "runtime_user": "10001:10001",
+        "status": "pass",
+        "steps": [
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "platform-identity",
+            "observed_exit": "zero",
+            "output_bytes": 20,
+            "output_sha256": "92513dd87a3a7b1ccded849c8941f66057e2bd895af9a3f0450197b7dbc62fe9",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "standard-user-identity",
+            "observed_exit": "zero",
+            "output_bytes": 12,
+            "output_sha256": "786010eb231a0631e64299c510850c5be5bd47b6b62bd1b361ec53336efc410d",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "install-0.2.0",
+            "observed_exit": "zero",
+            "output_bytes": 242,
+            "output_sha256": "5bb8e4470d292d9093c55468115e73906b8048b0105b2dcd9224018e5463e0c5",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "1f930dd1f133c1f97a94fe3acb8db34372cf4c01ffdb2b3ff4ca72f9494121e9",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 631,
+            "output_sha256": "329982328ae28c3e1a75b246f8c0bddafe15fd1040931d53c0989c25f1cd196e",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "initial-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "nonzero",
+            "id": "corrupt-upgrade-refusal",
+            "observed_exit": "nonzero",
+            "output_bytes": 559,
+            "output_sha256": "27b1ae07c9760ebd99e0c155b13c2d861e3bdc13e5390946f1c9ec633320e94c",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "1f930dd1f133c1f97a94fe3acb8db34372cf4c01ffdb2b3ff4ca72f9494121e9",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 631,
+            "output_sha256": "329982328ae28c3e1a75b246f8c0bddafe15fd1040931d53c0989c25f1cd196e",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "post-refusal-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "upgrade-0.3.0",
+            "observed_exit": "zero",
+            "output_bytes": 204,
+            "output_sha256": "27aa9aa2f11610ad341a8ba86be6b540eafee8334eddfcce158a97f7aeb33201",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "d915cc95d6ca8f47ae297713ed46d4e5c5d99ddd29fc3c61e263bdf305f2b5b0",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 631,
+            "output_sha256": "329982328ae28c3e1a75b246f8c0bddafe15fd1040931d53c0989c25f1cd196e",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "upgraded-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "rollback-0.2.0",
+            "observed_exit": "zero",
+            "output_bytes": 260,
+            "output_sha256": "16d38a4f468299644cf5c3d78107a0fc9833c8012e5faccc0b9ce30b62c6b9aa",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "1f930dd1f133c1f97a94fe3acb8db34372cf4c01ffdb2b3ff4ca72f9494121e9",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 631,
+            "output_sha256": "329982328ae28c3e1a75b246f8c0bddafe15fd1040931d53c0989c25f1cd196e",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "rolled-back-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "uninstall-after-rollback",
+            "observed_exit": "zero",
+            "output_bytes": 103,
+            "output_sha256": "cd434c3d7b24b4ae6dae81a3d8b437d16c004690097b0930f463e8f87f56f6e8",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "nonzero",
+            "id": "first-uninstall-package-record-absent",
+            "observed_exit": "nonzero",
+            "output_bytes": 143,
+            "output_sha256": "9686aecfc80e88cdec4a695e37f514daf61dc9bac41827620d7c6f86118ecc04",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "first-uninstall-filesystem-residue-absent",
+            "observed_exit": "zero",
+            "output_bytes": 33,
+            "output_sha256": "65b442aa4788f7832060ef0f23d783f93740f559c0c5ce1bb4a6fef47a6aa423",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "reinstall-0.3.0-after-clean-removal",
+            "observed_exit": "zero",
+            "output_bytes": 242,
+            "output_sha256": "cc2737381f23087fb66e528291a1f15b898a40deb97035a47b80c5adc8b83b23",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-package-version",
+            "observed_exit": "zero",
+            "output_bytes": 6,
+            "output_sha256": "d915cc95d6ca8f47ae297713ed46d4e5c5d99ddd29fc3c61e263bdf305f2b5b0",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-component-manifest",
+            "observed_exit": "zero",
+            "output_bytes": 631,
+            "output_sha256": "329982328ae28c3e1a75b246f8c0bddafe15fd1040931d53c0989c25f1cd196e",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-file-authority",
+            "observed_exit": "zero",
+            "output_bytes": 35,
+            "output_sha256": "ffb866efffda33a9adb05c991e816ea7688140766829d0a5700929f830e2e474",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-host-launch",
+            "observed_exit": "zero",
+            "output_bytes": 24,
+            "output_sha256": "8eb6e0db5eee7b8629dd305ba19d94057de66c5737a112200ec8f0550d1212da",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-inference-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 915,
+            "output_sha256": "bef9c8a268116582d2e51d60c2ad604b29dbf49e1f44782cca7946cdfed540b8",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-model-installer-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 322,
+            "output_sha256": "cd61ad9e6222f8c96425146064d9dd19039c2d6691c2fb7ccbd1d7db9c9d360a",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-docker-guard-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 289,
+            "output_sha256": "89bfb7ec83004a0c15da67cf3d70fcf5b050e7b1ad3b7ce4b5ffa059dce9e4ed",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "recovered-docker-collector-boundary-launch",
+            "observed_exit": "zero",
+            "output_bytes": 293,
+            "output_sha256": "bac54dcb0fbb21739a540efe8da195de2bbf8b8cbc604566034a7981eec9d1f3",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "package-administrator",
+            "expected_exit": "zero",
+            "id": "final-uninstall",
+            "observed_exit": "zero",
+            "output_bytes": 103,
+            "output_sha256": "eb545d4893527506ce05ff4198027b0e630b19c8bf0687eb54bfdc0c57e39c9f",
+            "status": "pass",
+            "uid_gid": "0:0"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "nonzero",
+            "id": "final-uninstall-package-record-absent",
+            "observed_exit": "nonzero",
+            "output_bytes": 143,
+            "output_sha256": "9686aecfc80e88cdec4a695e37f514daf61dc9bac41827620d7c6f86118ecc04",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          },
+          {
+            "actor": "standard-user",
+            "expected_exit": "zero",
+            "id": "final-uninstall-filesystem-residue-absent",
+            "observed_exit": "zero",
+            "output_bytes": 33,
+            "output_sha256": "65b442aa4788f7832060ef0f23d783f93740f559c0c5ce1bb4a6fef47a6aa423",
+            "status": "pass",
+            "uid_gid": "10001:10001"
+          }
+        ]
+      }
+    ],
+    "rootless_runtime": true,
+    "schema_version": 1,
+    "status": "pass"
+  },
+  "record_type": "sprint_40_v0_3_lifecycle",
+  "release_claim": false,
+  "schema_version": 1,
+  "source_revision": "91cf82334dc523db30c86e2a2778cc5b7d5f0d69",
+  "source_sha256": {
+    "architecture/clean-build-policy.json": "9530d37da134615bf2346e263f23bcddfb48b7bcd8b1441536ca9f2838220401",
+    "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693",
+    "scripts/package_candidate.py": "c68133f34c86a9ac91adb3319a793fee284fa2488bb7eaf79a0b1144e6bd2151",
+    "scripts/package_lifecycle.py": "7c98bad8b58669ad21687ed35fb94756d19472460472d73a98414c3a93de0c7e",
+    "scripts/sprint_40_lifecycle.py": "3e764116310274d6ccd5c7aa34bcadffa05941d8b65dd09f7d90366f15c81555",
+    "tests/test_package_lifecycle.py": "feaef5a248b937e3efac0ef788f667b1147ac199d3f669e42fb6e56dd1c2668c",
+    "tests/test_sprint_40_lifecycle.py": "b50cae4cfe1bcb92e4affd0fe3eb94485f46398bff30747f551a27fdc417c28f"
+  },
+  "source_tree": "abd732e26e969df654c846c55042c28106386dda",
+  "state_lifecycle_commands": [
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "apply_retains_immutable_backup_and_rollback_restores_it",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "configuration-backup-rollback",
+      "observed_test_ignores": 0,
+      "observed_test_passes": 1,
+      "output_bytes": 607,
+      "output_sha256": "459b8132eecd5b9333d0552e5d698bf90ed7aa4b20657f6ef0d62042da182aa8"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "migration_interruptions_select_valid_state_and_rollback_is_repeatable",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "configuration-migration-interruption",
+      "observed_test_ignores": 0,
+      "observed_test_passes": 1,
+      "output_bytes": 621,
+      "output_sha256": "9f2c7a783f0eb37d746b1ca4987b0337fe3f8838a4e7dc1389ae6e39199221f2"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "encrypted_backup_restores_only_to_a_verified_fresh_candidate",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "operational-store-backup-restore",
+      "observed_test_ignores": 0,
+      "observed_test_passes": 1,
+      "output_bytes": 2785,
+      "output_sha256": "1bb0ea9258643f5810064a28e18e9d029a8e6d37a1a5bdca2d6f799688ead14c"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "encrypted_restart_recovery_never_replays_and_publishes_one_receipt",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "authority-interrupted-operation-resume",
+      "observed_test_ignores": 0,
+      "observed_test_passes": 1,
+      "output_bytes": 2795,
+      "output_sha256": "fd38e925ffd05ec2dfd007a08c13edf28fdb015fd5f0dca12511ee488aa2c990"
+    },
+    {
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "restart_matrix_never_replays_a_consumed_or_completed_write",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "id": "write-interrupted-operation-resume",
+      "observed_test_ignores": 0,
+      "observed_test_passes": 1,
+      "output_bytes": 2780,
+      "output_sha256": "9b534529dcb5e1fd9dff3f3ae75d3adae10679275c30691adcac619a9ec85edf"
+    }
+  ],
+  "versions": {
+    "baseline": "0.2.0",
+    "upgrade": "0.3.0"
+  }
+}
