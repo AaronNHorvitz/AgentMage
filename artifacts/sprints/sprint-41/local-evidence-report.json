@@ -1,21 +1,21 @@
 {
   "schema_version": 1,
   "record_type": "sprint_41_local_evidence",
-  "source_revision": "19bdec6756ff9f0b15741686c4e979cf391524cb",
+  "source_revision": "828cd30b8e6b6cad363e45cb045818c78357e8be",
   "source_sha256": {
     "kernel/engine/src/command_runner.rs": "e3c595700324b094d4c0df6634b277a7443c3a992680f9da613ce5873a82c8a6",
     "kernel/engine/src/validation_result.rs": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9",
-    "platforms/linux/src/command_runner.rs": "dab977142b2cc0364382715348806fa2060811a5722793f8660c0dd81ea8c1d1",
+    "platforms/linux/src/command_runner.rs": "b16e7e44a0aa184e825a04622308a77c7bfee84cf802eaed975756e562b241ec",
     "shells/host/src/linux_coding_runtime.rs": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af",
     "kernel/engine/tests/command_injection_corpus.rs": "b8a9102a0a76fa4fc5cc3b98348bf2001512526d99bf8bbf5e3794b80a4c8cf5",
     "schemas/runtime/command-preview.schema.json": "1a11dd45b8cd53ac6633451d9ffc927e21760de1db40e3d19de0511a96295ca6",
     "schemas/runtime/command-receipt.schema.json": "1fd93b8d40418f11071c3ddf68d95f9c00b864012633c3053e0f9e57254a58ee",
     "schemas/runtime/examples/command-preview.valid.json": "8fee0a5d4fa1c9589ce74c1086975fe228425c305fa4dca95e9ce38b5772bfcd",
     "schemas/runtime/examples/command-receipt.valid.json": "c6f8359cce61612dadb529ba10cb19040b5da053e1863c072e2e6facde1ae6dd",
-    "docs/architecture/bounded-command-runner.md": "244bea1636f568dce183077f17b294508677830bce022cdfebb151321ad951dc",
+    "docs/architecture/bounded-command-runner.md": "1a1b08193b296064e18d1c17b35a76bb4a9c316af7f8feb04b82d035a8e9d944",
     "docs/verification/sprint-41-command-injection-corpus.json": "78a5a8e9cc57d8967ad433c9395039b38340bdd85ed2ee0fdc049868f830792f",
-    "docs/verification/sprint-41-local-results.md": "e08632633e06fd7a615315db21631dfa567ecce374afe9df8ff813654284aab3",
-    "scripts/sprint_41_evidence.py": "a39fe1517fe5a0c8a5f3beaba822f5325ee18183a40e7233f9a23653cc3db9f4",
+    "docs/verification/sprint-41-local-results.md": "9d2ffa3a6491ce09b6ee7aa6e355bc4d315b05811d96f6b4a341005895a9a487",
+    "scripts/sprint_41_evidence.py": "189971ac60f0c96a719e51166ed80caebe3d3da044342020c3fffdaab06c2e6e",
     "tests/test_planning_schemas.mjs": "2449f8676f5fb226e35910b5e00652228aa06dfd613c31324881609081aaaa1f",
     "tests/test_sprint_41_evidence.py": "f48771af1a69a70b838f3e75d41a827f79eb5209d8e3aa52845373712530e283"
   },
@@ -43,7 +43,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "2943cc0df315c69eaa72848eb85c4c9d1fb5b36ec1fa5e7de2884a56e52e0018",
+      "output_sha256": "7690617a5df007afbdfe89184dcbc1c2a23c1fbfe11ec9e9ff36a6579b1b5bdc",
       "blocking_skip_count": 0
     },
     {
@@ -72,7 +72,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "9f29a8ade8a69ce66d2adf54f89adb139417c53e0c2c0edc0844e8569570daef",
+      "output_sha256": "89ab4cbe65a49c9b18c0bbab9d8e98de75b373db219b6a3daa0395ca8836fa19",
       "blocking_skip_count": 0
     },
     {
@@ -88,7 +88,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "ae28de20de3743bf75b3c27ccc8a1fbf79309f8540bfc5e278a4f343d03af2a1",
+      "output_sha256": "6d0ecdcbb55130b57761e93028c187e57be9c039aba8aab41ab701e73317d96f",
       "blocking_skip_count": 0
     },
     {
@@ -104,7 +104,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "7ceb47c7e778d5baaae092f776694055be7c242359a78eefabbb5eb259e31770",
+      "output_sha256": "3979643dd6daa09bd373046a45cb9dd75593afa6c6eea43e5be0ed8428ddfd04",
       "blocking_skip_count": 0
     },
     {
@@ -120,7 +120,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "7ccc8006de15fbb850fb66dc74202af88a7795402a120bd2f19ef2afb4efd7e5",
+      "output_sha256": "9dac383ba862a2c9ef8c2a2911cf61bcfbe38090949351d91f6279a6d9a8a5e8",
       "blocking_skip_count": 0
     },
     {
@@ -136,7 +136,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "7f8f6d4481f74575ea9e8d242d16a693bd7bbe4af75d758ff795a7c39b3eda41",
+      "output_sha256": "00a4e7da42368981c2cda6f65fc2a0a8da518456f6276a8539083e2193d6d31c",
       "blocking_skip_count": 0
     },
     {
@@ -152,7 +152,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "54489e428151028eb52ef892cd72ad6bb39dba0e5614487842d5d4002ba60c21",
+      "output_sha256": "25c6611502d7a118b704b4ac106eeff479ddc2168fc62c5e89d8712c471bac37",
       "blocking_skip_count": 0
     },
     {
@@ -168,7 +168,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "55db557ac6ba79ededb043ceed63ce036a4d933ce3ca577c0f8a816ae2169def",
+      "output_sha256": "e488059023e4650ad0b7e0f5fefb12c93d76195e26bed913abe186454f9d3373",
       "blocking_skip_count": 0
     },
     {
@@ -184,7 +184,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "428d9c44c46a2ee5b1398aa2000362ac9e2d488631aa80d5ee48b60c986362ac",
+      "output_sha256": "add9c968869cc1f09b1767186bc29fd514e7a5eabc25aedba55349e00056f3de",
       "blocking_skip_count": 0
     },
     {
@@ -200,7 +200,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "498239116d7b1255fa914f8fb90e28aaa298b64f60f42504cd8fc4ade703cc4e",
+      "output_sha256": "0dcc2c1f5df2ac555cc071dcf54b26fbf2e63db079a9b89e334c831956eb51c7",
       "blocking_skip_count": 0
     },
     {
@@ -216,7 +216,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "6cd30f387c281e1557248b1b8ae77264cd1031f713c255db3aba1de621b54300",
+      "output_sha256": "4b9148012231fa8b28239de942a76be802863a41d414b731ce46674ce3b956df",
       "blocking_skip_count": 0
     },
     {
@@ -232,7 +232,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "3f5d6ac4d700bbb906d46fe23a97e26d2e79d27ff12f632dc70a7cb6a8898f4a",
+      "output_sha256": "34cf60f3ca6b00d917f8eb4256089e3c2401bdef4ab237039244c175f106726d",
       "blocking_skip_count": 0
     },
     {
@@ -248,7 +248,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "e2b8f4a1a94fd5aebee5fa4af7faaf632a25ae15ef7678e681d0b67f5630a3bb",
+      "output_sha256": "28eaa36edaebec98c9600c1963de54089413f1780f6ead3cdac19c22f135f1e6",
       "blocking_skip_count": 0
     },
     {
@@ -264,7 +264,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "672c42f8047a1808a0fd54fc9c6581f0b3a94f1fa711bb35c505e2403b7c5f75",
+      "output_sha256": "b4e7f4acd0d4fb49e16ffe8e82f3e8f2b9648a943a1e15967d351ee937043250",
       "blocking_skip_count": 0
     },
     {
@@ -280,7 +280,37 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "e87d88a8c9b5e743cb440c0117a64023c9a3df31ccd1f5d5e8b9b0a84318306a",
+      "output_sha256": "2797c1302ee73fdebb759757099e641550d093070d09de09387afb56b5d65d47",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-parent-crash",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_parent_crash_leaves_no_owned_unit_descendant_or_scratch",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "60508c46ba29ccf81570640b49e76e550780070f5018b109fb4bef2c2e32384c",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-task-minimum",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "task_ceilings_below_the_linux_minimum_fail_before_launch",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "f240a750ad2840695a4a4341b805ed446aa00899565341ef5b2615dac4e323ff",
       "blocking_skip_count": 0
     },
     {
@@ -296,7 +326,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "34d0006e3e44893356159a6df47ad8701d8ae4600037a81168808dccd6936863",
+      "output_sha256": "cba8d02a63bb0448db9aec04732d27898978bb69612161f819d9ae76a6e51f5c",
       "blocking_skip_count": 0
     },
     {
@@ -307,7 +337,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "ff4d97324acb3e3193f66ad3c7c5eb5251dac613bc51e6db41b94083740ee40d",
+      "output_sha256": "5f55c90b5d71b50b9bd7cf239404970809e32d7adcf6b3b996e7008c9611830e",
       "blocking_skip_count": null
     },
     {
@@ -318,7 +348,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "0e8563b1e4160e09d8147ee61412c057ca1cd048206f2f52628fdb3d71d775cc",
+      "output_sha256": "f80a3ed10227c698c3254969f4f8747404ee6a1b0c51e9d5a4b3d6c3302ae5c5",
       "blocking_skip_count": null
     },
     {
@@ -500,10 +530,11 @@
     "guest_root_exposes_only_declared_mounts": true,
     "bounded_output_ceiling_exercised": true,
     "minimum_deadline_boundary_exercised": true,
+    "minimum_executable_task_ceiling_enforced": true,
+    "parent_crash_recovery_campaign_complete": true,
     "complete_limit_boundary_campaign": false,
     "planted_host_configuration_campaign_complete": true,
     "hostile_descendant_tree_campaign_complete": false,
-    "parent_crash_recovery_campaign_complete": false,
     "native_cross_platform_command_acceptance": false,
     "independent_command_boundary_review": false,
     "manual_fuzzing_complete": false
@@ -524,10 +555,11 @@
     "guest_root_exposes_only_declared_mounts": true,
     "bounded_output_ceiling": true,
     "minimum_deadline_boundary": true,
+    "minimum_executable_task_ceiling": true,
+    "parent_crash_recovery_campaign": true,
     "complete_limit_boundary_campaign": false,
     "planted_host_configuration_campaign": true,
     "hostile_descendant_crash_campaign": false,
-    "parent_crash_recovery_campaign": false,
     "native_cross_platform_command_acceptance": false,
     "trusted_package_launcher_environment": false,
     "independent_command_boundary_review": false,
@@ -548,10 +580,6 @@
     },
     {
       "code": "MULTI-LEVEL-HELPER-BINARY-UNAVAILABLE",
-      "owner": "41.1.3.3"
-    },
-    {
-      "code": "PARENT-CRASH-RECOVERY-CAMPAIGN-ABSENT",
       "owner": "41.1.3.3"
     },
     {
