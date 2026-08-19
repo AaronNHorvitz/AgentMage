@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "record_type": "sprint_41_local_evidence",
-  "source_revision": "78ea9c101c38ba57fad1139ebfcd896cfe196d80",
+  "source_revision": "57981ed02a87b7f417e16ed478ce79e1c0626e5f",
   "source_sha256": {
     "kernel/engine/src/command_runner.rs": "e3c595700324b094d4c0df6634b277a7443c3a992680f9da613ce5873a82c8a6",
     "kernel/engine/src/validation_result.rs": "0dc1941e818fa94064b1c7928763f3357f3e1b7052fbb9bb7cc58f4ea36d6ef9",
-    "platforms/linux/src/command_runner.rs": "b19c738c73f85ea2672f4f173ad701fad850b34996eefaddf2aafb0e4328897a",
+    "platforms/linux/src/command_runner.rs": "210889e1b0420bce60871a8628a570845f7f4aea30486e7cf983443935b19e0d",
     "shells/host/src/linux_coding_runtime.rs": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af",
     "kernel/engine/tests/command_injection_corpus.rs": "b8a9102a0a76fa4fc5cc3b98348bf2001512526d99bf8bbf5e3794b80a4c8cf5",
     "schemas/runtime/command-preview.schema.json": "1a11dd45b8cd53ac6633451d9ffc927e21760de1db40e3d19de0511a96295ca6",
@@ -15,7 +15,7 @@
     "docs/architecture/bounded-command-runner.md": "1a1b08193b296064e18d1c17b35a76bb4a9c316af7f8feb04b82d035a8e9d944",
     "docs/verification/sprint-41-command-injection-corpus.json": "78a5a8e9cc57d8967ad433c9395039b38340bdd85ed2ee0fdc049868f830792f",
     "docs/verification/sprint-41-local-results.md": "005d3149ba2c55e27b7445e2f06699260d4f4025c5d750939875e3243dbce36c",
-    "scripts/sprint_41_evidence.py": "61b2cbdf719cba71b6c4d3946733983922afec281e515eb9e9157cb74c3cb8c9",
+    "scripts/sprint_41_evidence.py": "fee23de32a11a4de39f5f2d532fc37616bf40c157733863a32d99ba19aa4eaae",
     "tests/test_planning_schemas.mjs": "2449f8676f5fb226e35910b5e00652228aa06dfd613c31324881609081aaaa1f",
     "tests/test_sprint_41_evidence.py": "f48771af1a69a70b838f3e75d41a827f79eb5209d8e3aa52845373712530e283"
   },
@@ -43,7 +43,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "5fb54a337a318955a8d0540d609b8618ed1dc3fddf2e7d650563c0d6efb917b5",
+      "output_sha256": "4b1aa89d07510c678572d6a3f351bf2d174119c6e9e2143012825f01122819c9",
       "blocking_skip_count": 0
     },
     {
@@ -72,7 +72,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "c62f9dc528bf27f6789218e9045e4fa55b5fabaf4b3b4333d4a2e04d6012810b",
+      "output_sha256": "617fd1bd0f5244e02a3faf989972062daa9629a26a61c4f72daac83154c121a1",
       "blocking_skip_count": 0
     },
     {
@@ -88,7 +88,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "49836d2525e1b6c8048563fb5bb122282a0a5001d753221fb926b12b69585a31",
+      "output_sha256": "26e94c604831ebc3dc582bb883e23ce9d262b0f0ea544a64d3544f0909dc1937",
       "blocking_skip_count": 0
     },
     {
@@ -104,7 +104,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "2473a3335c940a7e438388711281f6fc0b6fb765328b09fda26dc356081808b4",
+      "output_sha256": "652d54124d918cc049412782dd8bffdbf9df8f722337372c2d942f17897f3b8e",
       "blocking_skip_count": 0
     },
     {
@@ -120,7 +120,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "089c6126210fa98c616af8c429719d529e0350fc76bdde1e2fb5c0ccf6aab163",
+      "output_sha256": "8739e17ecdbcf6e59581b53f9f4f8856f7def765dc978b18cc6421502bc67d44",
       "blocking_skip_count": 0
     },
     {
@@ -136,7 +136,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "c66322ea7254754a11175fb385685936739688a68ecb3e058062aa4d4eadb66b",
+      "output_sha256": "ebcdbf98e518279b707e81132fd3d1411549a235ddb7e5829ad34baa5f83ed1b",
       "blocking_skip_count": 0
     },
     {
@@ -152,7 +152,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "79cc5371f2e9a969253d9945f70749526660b4bf801b4bbcc5ed0414822f55b6",
+      "output_sha256": "af71bffa88491f1e26c6ce7be3128a6a0c265a796741ea54297b29d5ca790ad3",
       "blocking_skip_count": 0
     },
     {
@@ -168,7 +168,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "a0ee6605a5d930c89a32febe2d8b07657a83ccb8819b1e9a67be97ec1f87436e",
+      "output_sha256": "14f77352ebd22f3da792fde32c1c2d306670a63a773ad090bd4ed283a6d9398b",
       "blocking_skip_count": 0
     },
     {
@@ -184,7 +184,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "934c33d51207b9025167b89e597a28b6d4c34b3e050032945d83e6671d695465",
+      "output_sha256": "26696c45a514c868de01cc3b532c297ceb43965cdcb6dc8f4a472f8fdf9b4c17",
       "blocking_skip_count": 0
     },
     {
@@ -200,7 +200,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "72d974b38b8c288fa01b6c51a277293f1c367d3e346e8a998025f26177a1bb3c",
+      "output_sha256": "6b7efe67ebffe3685b4372b21000b1cfa4f81d2463404ad72baf30a57f5b5c70",
       "blocking_skip_count": 0
     },
     {
@@ -216,7 +216,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "305687ed04f3005dec4c24d1e2ed381f24a4af3a4c424eae84e72ee6a07fe30b",
+      "output_sha256": "c4112ef056bffaec4475d273c8960874429c3afa4af7a2b8e3607cdd947cd113",
       "blocking_skip_count": 0
     },
     {
@@ -232,7 +232,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "49867e913df7518f0e158dee74e0c6591ccefde9c8c9330899583b264494f5b9",
+      "output_sha256": "de4e2ee76a542bd84dccbaa6317c48ecce51129a2b5ec12039deec0163f7e4f8",
       "blocking_skip_count": 0
     },
     {
@@ -248,7 +248,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "85145e4718e9c1d54dad34e01df183c876dfdfb9de82e7df0da8042327d2b00d",
+      "output_sha256": "880f345b36fbed166d0622843a0da9e5723b45a8d05bf56d2d07f09d2ba500e0",
       "blocking_skip_count": 0
     },
     {
@@ -264,7 +264,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "1ebf8c006cf97214889ee3ac1cf24ebf8e2a906080a9916f26400dfb12bae93e",
+      "output_sha256": "b68b8b46abf6c5b0dc4d502dec9df941be706feb457c58e9f15ad7c8ee7cc3fe",
       "blocking_skip_count": 0
     },
     {
@@ -280,7 +280,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "68a0104b4bd3f5fe9686754bcee88cc67bab2a96c9b607a9d52d2c7440de459a",
+      "output_sha256": "46a762d2ce53427f94162f89bf78ace44610ab1a0b292b197e96e963c0c6816b",
       "blocking_skip_count": 0
     },
     {
@@ -296,7 +296,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "df98f7733ca1092e06cb60114dbb64eb08e63ce61db44629ddb507af4dfc85e4",
+      "output_sha256": "e6102352cfe2551255663ccf79bf8d849c3195e9a923b4fa961f67bc80ef9d74",
       "blocking_skip_count": 0
     },
     {
@@ -312,7 +312,23 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "507402231649429756d4e25a9fa09dcce2cd4f00e80b230e28c79713ddd27fb7",
+      "output_sha256": "8cbc05a83a44caa36270ad4ae1191c8ef3e4a7d8dc3cd247cb1c563f9ddcb4b8",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "linux-live-parent-crash-decoy",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-platform-linux",
+        "live_parent_crash_never_adopts_a_concurrent_unit",
+        "--locked",
+        "--",
+        "--ignored"
+      ],
+      "exit_code": 0,
+      "output_sha256": "c4976a6ece77fed846fff447c147583af6445e884349bdb194c2cd2067931524",
       "blocking_skip_count": 0
     },
     {
@@ -326,7 +342,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "855f0ad47644e41965ff63ce133b583bb1927055f0a76fd2326ff99911ec64d8",
+      "output_sha256": "296ec4d3772dc3221db2abc770ddac0d9cc71117284c65ce9e4042e1baa3d6e7",
       "blocking_skip_count": 0
     },
     {
@@ -342,7 +358,7 @@
         "--ignored"
       ],
       "exit_code": 0,
-      "output_sha256": "34b6c64c291ea5d4595ceeaf872f63528f0666078b9c48a8f13d6abaa0abc3e6",
+      "output_sha256": "3ea48b3f568b69509738e836b1c030a82e2e440899062095fe2b4f1248d9c360",
       "blocking_skip_count": 0
     },
     {
@@ -353,7 +369,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "35231f5bd8b6849deff9c88c6dcce76702cfe77d4b9c0b39a5379fdc682247b6",
+      "output_sha256": "20174b02c80b24ba891ea275ccf4abd3639e95ebc15317d1c9bf272e2a42d2ff",
       "blocking_skip_count": null
     },
     {
@@ -364,7 +380,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "dea8b8adc1aad9934b4c92744e4191040bef6afa92393efe6f7b6240a9d98f10",
+      "output_sha256": "39ac05a75b6884dc0d62fd2f4bc8b489b8c4403306f1f6f5f1be3c5ebafd36d2",
       "blocking_skip_count": null
     },
     {
@@ -549,6 +565,7 @@
     "minimum_executable_task_ceiling_enforced": true,
     "maximum_limit_boundary_exercised": true,
     "parent_crash_recovery_campaign_complete": true,
+    "parent_crash_unit_ownership_proven": true,
     "complete_limit_boundary_campaign": false,
     "planted_host_configuration_campaign_complete": true,
     "hostile_descendant_tree_campaign_complete": false,
@@ -575,6 +592,7 @@
     "minimum_executable_task_ceiling": true,
     "maximum_limit_boundary": true,
     "parent_crash_recovery_campaign": true,
+    "parent_crash_unit_ownership_proven": true,
     "complete_limit_boundary_campaign": false,
     "planted_host_configuration_campaign": true,
     "hostile_descendant_crash_campaign": false,
