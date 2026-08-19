@@ -20,6 +20,7 @@ mod sandbox;
 mod secret_service;
 mod security_controls;
 mod strict_local;
+mod write_root_inventory;
 mod write_transaction;
 
 pub use command_runner::{
@@ -95,6 +96,11 @@ pub use secret_service::{
 pub use strict_local::{
     LinuxStrictLocalRoot, LinuxStrictLocalRootError, LinuxStrictLocalRootErrorKind,
     LinuxStrictLocalRootInspector, classify_linux_filesystem_magic,
+};
+pub use write_root_inventory::{
+    LinuxDeclaredWriteObject, LinuxWriteObjectRole, LinuxWriteRootClass, LinuxWriteRootScanError,
+    LinuxWriteRootScanErrorKind, LinuxWriteRootScanLimits, LinuxWriteRootScanReport,
+    LinuxWriteStrictRoot, scan_linux_write_roots,
 };
 pub use write_transaction::{LinuxAtomicWriteDriver, LinuxAtomicWriteDriverLimits};
 
