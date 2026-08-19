@@ -59,7 +59,9 @@
   Ceilings of one and two are now rejected before spawn with `linux.command.tasks.below_minimum`
   rather than failing opaquely inside namespace creation, and the minimum-boundary test succeeds at
   the declared minimum. The kernel keeps its platform-neutral admitted range because other platforms
-  may carry different launcher overhead.
+  may carry different launcher overhead. The maximum admissible timeout, output, memory, task, and
+  CPU ceilings also execute with exact command identity and literal output, so the accepted bound
+  range is executable at both ends on Fedora.
 - A crashed supervisor leaves no owned unit, descendant, scratch tree, or process behind. Six
   scenarios per run kill a uniquely identified driver at two lifecycle points, once immediately
   after it reports readiness and once after its owned transient unit is confirmed present. The
@@ -86,6 +88,6 @@ parent-crash recovery are now covered by live fixtures. A multi-level process tr
 remains unreachable rather than merely denied, because the guest mounts no second executable;
 proving termination of a purpose-built multi-level helper would require registering a root-owned
 helper binary, which local development cannot install without weakening executable provenance.
-Maximum-limit boundary campaigns and complete canary campaigns remain absent. Ubuntu, macOS, and Windows native
+Complete per-template boundary sweeps and canary campaigns remain absent. Ubuntu, macOS, and Windows native
 results cannot be inferred from Fedora. Independent review, installed trusted-launcher evidence,
 manual fuzzing, the blocked Sprint 40 dependency, and `G-V0.3` remain open.

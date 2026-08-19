@@ -150,6 +150,13 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "linux-live-maximum-limits",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux",
+            "live_maximum_limit_boundary_runs_with_exact_identity", "--locked", "--", "--ignored",
+        ),
+    ),
+    (
         "linux-live-minimum-timeout",
         (
             "cargo", "test", "-p", "agentmage-platform-linux",
@@ -211,6 +218,7 @@ FOCUSED_COMMANDS: Final = (
     "linux-live-second-program-denied",
     "linux-live-root-enumeration",
     "linux-live-output-ceiling",
+    "linux-live-maximum-limits",
     "linux-live-minimum-timeout",
     "linux-live-parent-crash",
     "linux-task-minimum",
@@ -257,6 +265,7 @@ IMPLEMENTED: Final = {
     "bounded_output_ceiling_exercised": True,
     "minimum_deadline_boundary_exercised": True,
     "minimum_executable_task_ceiling_enforced": True,
+    "maximum_limit_boundary_exercised": True,
     "parent_crash_recovery_campaign_complete": True,
     "complete_limit_boundary_campaign": False,
     "planted_host_configuration_campaign_complete": True,
@@ -405,6 +414,7 @@ def build_report(
             "bounded_output_ceiling": local_pass,
             "minimum_deadline_boundary": local_pass,
             "minimum_executable_task_ceiling": local_pass,
+            "maximum_limit_boundary": local_pass,
             "parent_crash_recovery_campaign": local_pass,
             "complete_limit_boundary_campaign": False,
             "planted_host_configuration_campaign": local_pass,
@@ -486,6 +496,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "bounded_output_ceiling": True,
         "minimum_deadline_boundary": True,
         "minimum_executable_task_ceiling": True,
+        "maximum_limit_boundary": True,
         "parent_crash_recovery_campaign": True,
         "complete_limit_boundary_campaign": False,
         "planted_host_configuration_campaign": True,

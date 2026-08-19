@@ -1768,6 +1768,64 @@ mod tests {
         );
     }
 
+    /// The largest admissible ceilings still execute with exact identity and literal
+    /// output, so the accepted bound range is executable at both ends on this platform.
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_maximum_limit_boundary_runs_with_exact_identity() {
+        let executable = fs::canonicalize("/usr/bin/printf").expect("canonical printf");
+        let executable = executable.to_str().expect("UTF-8 executable");
+        let command = CommandSpec::seal(
+            "fixture.maximum-limits",
+            "1.0.0",
+            executable,
+            hash_file_for_test(executable),
+            vec!["agentmage-maximum".to_owned()],
+            CommandWorkingDirectory::EmptyScratch,
+            BTreeMap::from([
+                ("LANG".to_owned(), "C".to_owned()),
+                ("TZ".to_owned(), "UTC".to_owned()),
+            ]),
+            CommandRisk::Low,
+            // Maximum admissible timeout, output, memory, task, and CPU ceilings.
+            CommandBounds::new(
+                300_000,
+                4 * 1024 * 1024,
+                4 * 1024 * 1024,
+                4 * 1024 * 1024 * 1024,
+                64,
+                400,
+            )
+            .expect("limits"),
+        )
+        .expect("command");
+        let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
+        let manifest = LinuxCommandManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            &registry,
+        )
+        .expect("manifest");
+        let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
+        let (_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &worktree_token("maximum-limits-0001"));
+        assert_eq!(result.termination, CommandTermination::Exited, "{result:?}");
+        assert_eq!(result.exit_code, Some(0), "{result:?}");
+        assert_eq!(result.stdout, b"agentmage-maximum", "{result:?}");
+        assert_eq!(result.stdout_total_bytes, 17, "{result:?}");
+        if let Some(usage) = result.resource_usage {
+            assert!(
+                usage.peak_memory_bytes <= command.bounds.memory_bytes,
+                "{usage:?}"
+            );
+            assert!(
+                usage.peak_task_count <= command.bounds.task_count,
+                "{usage:?}"
+            );
+        }
+    }
+
     /// The smallest admissible deadline still terminates and reports truthfully.
     #[test]
     #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
