@@ -10,6 +10,7 @@
 | Redacted human-readable audit | Pass locally |
 | Native file/checkpoint recovery wiring | Pass locally on Fedora |
 | Native derived-index checkpoint publication | Pass locally on Fedora |
+| Native write-producer privacy enforcement | Pass locally on Fedora |
 | Complete native crash and concurrency matrix | Incomplete |
 | Complete durable and temporary root scan | Absent |
 | Full host binary under trusted package launcher | Environment blocked |
@@ -50,6 +51,10 @@
   the disposable SQLite transaction and publishes `IndexVerified` only after the exact index
   revision, source-snapshot digest, projection digest, and content-free receipt verify. A stale
   revision leaves the durable head at `IndexUpdating` and preserves the prior current projection.
+- Native controlled-write producers invoke the shared privacy gate before previews, staging and
+  rollback bytes, receipts, model/report payloads, generated-file artifacts, events, persistence
+  material, and failure codes cross their boundaries. The focused test rejects every boundary's
+  split-window canary and non-UTF-8 value while admitting bounded large safe Unicode.
 
 ## Requirement Mapping
 

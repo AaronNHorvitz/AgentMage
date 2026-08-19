@@ -41,6 +41,14 @@ the deterministic persistence secret detector are replaced with the fixed `[REDA
 The receipt retains only counts, stable finding classes, and a digest of sanitized output. It never
 retains removed bytes or their digests.
 
+The Linux write host invokes this gate before every producer currently present in the native
+controlled-write path: approval preview, staging postimage, rollback preimage, operation receipt,
+model/report projection, generated-file export, runtime event, checkpoint or authority persistence,
+and failure-code propagation. A value requiring redaction is refused before it crosses that
+boundary. Large UTF-8 values are scanned in bounded overlapping character-safe windows; the
+overlap prevents a detector token from being hidden across a 4 KiB edge without increasing the
+privacy API's per-field bound. Non-UTF-8 producer output fails closed.
+
 ## Checkpoint Contract
 
 The formal wire contract is

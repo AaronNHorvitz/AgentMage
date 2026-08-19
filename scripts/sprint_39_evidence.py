@@ -77,6 +77,14 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "native-write-producer-privacy-tests",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "story_39_1_native_write_producer_gate_is_bounded_and_catches_split_canaries",
+            "--locked",
+        ),
+    ),
+    (
         "kernel-tests",
         ("cargo", "test", "-p", "agentmage-kernel-engine", "--locked"),
     ),
@@ -102,6 +110,7 @@ FOCUSED_COMMANDS: Final = (
     "write-recovery-integration-tests",
     "native-write-checkpoint-process-test",
     "native-derived-index-checkpoint-tests",
+    "native-write-producer-privacy-tests",
 )
 SECURITY_REQUIREMENTS: Final = [
     "SR-DAT-002", "SR-DAT-003", "SR-DAT-004", "SR-DAT-010", "SR-DAT-011",
@@ -134,6 +143,7 @@ IMPLEMENTED: Final = {
     "native_sqlcipher_checkpoint_journal": True,
     "native_write_process_stop_matrix": True,
     "native_derived_index_checkpoint_publication": True,
+    "native_write_producer_privacy_gate": True,
     "complete_native_crash_concurrency_matrix": False,
     "all_runtime_roots_scanned": False,
     "non_fedora_native_evidence": False,
@@ -238,6 +248,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "upstream_sprint_38_gate": False,
             "native_end_to_end_recovery": True,
             "native_derived_index_recovery": True,
+            "native_write_producer_privacy": True,
             "complete_native_crash_concurrency_matrix": False,
             "all_runtime_roots_scanned": False,
             "trusted_package_launcher_environment": False,
@@ -252,6 +263,7 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
             "upstream_dependency_passed": False,
             "native_end_to_end_passed": True,
             "native_derived_index_recovery_passed": True,
+            "native_write_producer_privacy_passed": True,
             "native_crash_concurrency_passed": False,
             "all_runtime_roots_scanned": False,
             "trusted_launcher_environment_passed": False,
@@ -300,6 +312,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "upstream_dependency_passed": False,
         "native_end_to_end_passed": True,
         "native_derived_index_recovery_passed": True,
+        "native_write_producer_privacy_passed": True,
         "native_crash_concurrency_passed": False,
         "all_runtime_roots_scanned": False,
         "trusted_launcher_environment_passed": False,
@@ -318,6 +331,7 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "upstream_sprint_38_gate": False,
         "native_end_to_end_recovery": True,
         "native_derived_index_recovery": True,
+        "native_write_producer_privacy": True,
         "complete_native_crash_concurrency_matrix": False,
         "all_runtime_roots_scanned": False,
         "trusted_package_launcher_environment": False,

@@ -92,6 +92,7 @@ class Sprint39EvidenceTests(unittest.TestCase):
         self.assertFalse(value["implemented_contracts"]["completed_write_replay_allowed"])
         self.assertTrue(value["summary"]["native_end_to_end_passed"])
         self.assertTrue(value["summary"]["native_derived_index_recovery_passed"])
+        self.assertTrue(value["summary"]["native_write_producer_privacy_passed"])
 
     def test_dependency_native_roots_launcher_platform_review_fuzz_and_release_overclaims_fail(
         self,
@@ -102,6 +103,9 @@ class Sprint39EvidenceTests(unittest.TestCase):
             lambda value: value["summary"].update({"native_end_to_end_passed": False}),
             lambda value: value["summary"].update({
                 "native_derived_index_recovery_passed": False
+            }),
+            lambda value: value["summary"].update({
+                "native_write_producer_privacy_passed": False
             }),
             lambda value: value["summary"].update({"native_crash_concurrency_passed": True}),
             lambda value: value["summary"].update({"all_runtime_roots_scanned": True}),
@@ -117,11 +121,17 @@ class Sprint39EvidenceTests(unittest.TestCase):
             lambda value: value["verification_evidence"].update({
                 "native_derived_index_recovery": False
             }),
+            lambda value: value["verification_evidence"].update({
+                "native_write_producer_privacy": False
+            }),
             lambda value: value["implemented_contracts"].update({
                 "native_end_to_end_recovery_wiring": False
             }),
             lambda value: value["implemented_contracts"].update({
                 "native_derived_index_checkpoint_publication": False
+            }),
+            lambda value: value["implemented_contracts"].update({
+                "native_write_producer_privacy_gate": False
             }),
             lambda value: value["blockers"].pop(),
         )
