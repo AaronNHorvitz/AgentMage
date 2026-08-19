@@ -1342,6 +1342,105 @@ mod tests {
         }
     }
 
+    /// Retains only the declared byte ceiling while hashing and counting the complete
+    /// stream, so truncation cannot hide what a command actually produced.
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_output_beyond_the_declared_ceiling_is_truncated_and_still_hashed() {
+        let executable = fs::canonicalize("/usr/bin/printf").expect("canonical printf");
+        let executable = executable.to_str().expect("UTF-8 executable");
+        let emitted = "agentmage-overflow";
+        let command = CommandSpec::seal(
+            "fixture.output-ceiling",
+            "1.0.0",
+            executable,
+            hash_file_for_test(executable),
+            vec![emitted.to_owned()],
+            CommandWorkingDirectory::EmptyScratch,
+            BTreeMap::from([
+                ("LANG".to_owned(), "C".to_owned()),
+                ("TZ".to_owned(), "UTC".to_owned()),
+            ]),
+            CommandRisk::Low,
+            // Minimum retained stdout ceiling and minimum admissible memory.
+            CommandBounds::new(5_000, 1, 4_096, 16 * 1024 * 1024, 4, 100).expect("limits"),
+        )
+        .expect("command");
+        let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
+        let manifest = LinuxCommandManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            &registry,
+        )
+        .expect("manifest");
+        let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
+        let (_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &worktree_token("output-ceiling-0001"));
+        assert_eq!(
+            result.termination,
+            CommandTermination::OutputLimit,
+            "{result:?}"
+        );
+        assert_eq!(result.exit_code, None, "{result:?}");
+        assert_eq!(result.stdout, b"a", "{result:?}");
+        assert_eq!(
+            result.stdout_total_bytes,
+            emitted.len() as u64,
+            "{result:?}"
+        );
+        assert_eq!(
+            result.stdout_sha256,
+            super::hex(&sha2::Sha256::digest(emitted.as_bytes())),
+            "{result:?}"
+        );
+    }
+
+    /// The smallest admissible deadline still terminates and reports truthfully.
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_minimum_timeout_boundary_terminates_the_unit() {
+        let executable = "/usr/bin/sleep";
+        let command = CommandSpec::seal(
+            "fixture.minimum-timeout",
+            "1.0.0",
+            executable,
+            hash_file_for_test(executable),
+            vec!["30".to_owned()],
+            CommandWorkingDirectory::EmptyScratch,
+            BTreeMap::from([
+                ("LANG".to_owned(), "C".to_owned()),
+                ("TZ".to_owned(), "UTC".to_owned()),
+            ]),
+            CommandRisk::Low,
+            // Minimum admissible timeout and memory ceilings.
+            CommandBounds::new(1, 1_024, 1_024, 16 * 1024 * 1024, 4, 100).expect("limits"),
+        )
+        .expect("command");
+        let registry = CommandRegistry::build(vec![command.clone()]).expect("registry");
+        let manifest = LinuxCommandManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            &registry,
+        )
+        .expect("manifest");
+        let executor = LinuxBoundedCommandExecutor::new(manifest).expect("executor");
+        let (_temporary, held) = held_worktree();
+        let result = executor.run(&command, &held, &worktree_token("minimum-timeout-0001"));
+        assert_eq!(
+            result.termination,
+            CommandTermination::TimedOut,
+            "{result:?}"
+        );
+        assert_eq!(result.exit_code, None, "{result:?}");
+        assert!(result.descendants_terminated, "{result:?}");
+        assert!(
+            result.elapsed_ms <= command.bounds.timeout_ms.saturating_add(10_000),
+            "{result:?}"
+        );
+    }
+
     /// No host home, configuration, credential, or repository path is mounted, so
     /// planted configuration, hook, and rc files cannot be discovered at all.
     #[test]

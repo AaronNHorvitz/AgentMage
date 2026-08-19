@@ -142,6 +142,21 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "linux-live-output-ceiling",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux",
+            "live_output_beyond_the_declared_ceiling_is_truncated_and_still_hashed",
+            "--locked", "--", "--ignored",
+        ),
+    ),
+    (
+        "linux-live-minimum-timeout",
+        (
+            "cargo", "test", "-p", "agentmage-platform-linux",
+            "live_minimum_timeout_boundary_terminates_the_unit", "--locked", "--", "--ignored",
+        ),
+    ),
+    (
         "linux-live-scratch-residue",
         (
             "cargo", "test", "-p", "agentmage-platform-linux",
@@ -180,6 +195,8 @@ FOCUSED_COMMANDS: Final = (
     "linux-live-guest-environment",
     "linux-live-second-program-denied",
     "linux-live-root-enumeration",
+    "linux-live-output-ceiling",
+    "linux-live-minimum-timeout",
     "linux-live-scratch-residue",
 )
 ARTIFACTS: Final = (
@@ -220,6 +237,9 @@ IMPLEMENTED: Final = {
     "empty_scratch_residue_absent": True,
     "second_program_execution_unreachable": True,
     "guest_root_exposes_only_declared_mounts": True,
+    "bounded_output_ceiling_exercised": True,
+    "minimum_deadline_boundary_exercised": True,
+    "complete_limit_boundary_campaign": False,
     "planted_host_configuration_campaign_complete": True,
     "hostile_descendant_tree_campaign_complete": False,
     "parent_crash_recovery_campaign_complete": False,
@@ -233,6 +253,7 @@ BLOCKERS: Final = [
     {"code": "HOSTILE-DESCENDANT-CRASH-CAMPAIGN-ABSENT", "owner": "41.1.3.3"},
     {"code": "MULTI-LEVEL-HELPER-BINARY-UNAVAILABLE", "owner": "41.1.3.3"},
     {"code": "PARENT-CRASH-RECOVERY-CAMPAIGN-ABSENT", "owner": "41.1.3.3"},
+    {"code": "COMPLETE-LIMIT-BOUNDARY-CAMPAIGN-ABSENT", "owner": "41.1.3.4"},
     {"code": "NATIVE-CROSS-PLATFORM-COMMAND-ACCEPTANCE-ABSENT", "owner": "41.1.3.4"},
     {"code": "TRUSTED-PACKAGE-LAUNCHER-ENVIRONMENT-ABSENT", "owner": "41.1.3.5"},
     {"code": "INDEPENDENT-COMMAND-BOUNDARY-REVIEW-ABSENT", "owner": "41.1.3.5"},
@@ -364,6 +385,9 @@ def build_report(
             "empty_scratch_residue_absent": local_pass,
             "second_program_execution_unreachable": local_pass,
             "guest_root_exposes_only_declared_mounts": local_pass,
+            "bounded_output_ceiling": local_pass,
+            "minimum_deadline_boundary": local_pass,
+            "complete_limit_boundary_campaign": False,
             "planted_host_configuration_campaign": local_pass,
             "hostile_descendant_crash_campaign": False,
             "parent_crash_recovery_campaign": False,
@@ -441,6 +465,9 @@ def validate_report(report: dict[str, Any], verify_current: bool = True) -> list
         "empty_scratch_residue_absent": True,
         "second_program_execution_unreachable": True,
         "guest_root_exposes_only_declared_mounts": True,
+        "bounded_output_ceiling": True,
+        "minimum_deadline_boundary": True,
+        "complete_limit_boundary_campaign": False,
         "planted_host_configuration_campaign": True,
         "hostile_descendant_crash_campaign": False,
         "parent_crash_recovery_campaign": False,

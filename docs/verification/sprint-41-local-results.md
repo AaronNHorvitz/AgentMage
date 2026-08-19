@@ -50,6 +50,14 @@
   Deliberately inherited non-close-on-exec file and directory descriptors, proven inheritable by an
   unsandboxed control child, never cross the boundary. A changed held-worktree identity fails
   before launch.
+- Bounded-output and minimum-deadline boundaries are exercised live: output beyond the declared
+  stdout ceiling terminates as an output limit, retains exactly the declared byte count, and still
+  reports the complete observed length and a SHA-256 over the whole stream; the smallest admissible
+  deadline still terminates the unit and verifies descendant cleanup.
+- The smallest admissible task ceiling of one cannot execute through this isolation stack:
+  Bubblewrap must fork to create the guest namespaces, so a one-task ceiling fails closed with a
+  namespace-creation error rather than running unbounded. Local limit evidence therefore covers the
+  minimum usable task ceiling, not the minimum admissible one.
 - Preview and receipt schemas reject unknown fields, inherited environment, shell executables,
   false timeout success, nonzero success, and cancellation without descendant cleanup.
 
