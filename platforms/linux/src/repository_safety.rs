@@ -2430,8 +2430,8 @@ mod tests {
     #[ignore = "requires re-invoking the test binary as a subprocess harness"]
     fn live_ambient_git_env_variables_do_not_leak_into_hardened_git_processes() {
         let exe = std::env::current_exe().expect("current test binary");
-        let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0))
-            .expect("loopback listener binds");
+        let listener =
+            TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).expect("loopback listener binds");
         listener
             .set_nonblocking(true)
             .expect("listener becomes nonblocking");
@@ -2462,14 +2462,8 @@ mod tests {
             .env("GIT_HOOKS_PATH", "/nonexistent/hostile-hooks")
             .env("GIT_TEMPLATE_DIR", "/nonexistent/hostile-templates")
             .env("GIT_ATTR_SOURCE", "hostile")
-            .env(
-                "GIT_CONFIG_GLOBAL",
-                "/nonexistent/hostile-global-config",
-            )
-            .env(
-                "GIT_CONFIG_SYSTEM",
-                "/nonexistent/hostile-system-config",
-            )
+            .env("GIT_CONFIG_GLOBAL", "/nonexistent/hostile-global-config")
+            .env("GIT_CONFIG_SYSTEM", "/nonexistent/hostile-system-config")
             .env("GIT_CONFIG_NOSYSTEM", "0")
             .env("GIT_CONFIG_COUNT", "3")
             .env("GIT_CONFIG_KEY_0", "core.pager")
@@ -2566,9 +2560,9 @@ mod tests {
         let fixture = Fixture::new();
         let collector = fixture.collector();
         let scope = fixture.scope();
-        let manifest = collector.collect(&scope).expect(
-            "hardened observation must succeed despite hostile ambient GIT_* variables",
-        );
+        let manifest = collector
+            .collect(&scope)
+            .expect("hardened observation must succeed despite hostile ambient GIT_* variables");
         // Ambient GIT_* values would surface here if any leaked through env_clear:
         // a promiscuous alias, an alternate object directory, a hostile hooks path,
         // or an injected inline configuration would each flip these fields.
