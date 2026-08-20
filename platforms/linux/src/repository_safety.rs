@@ -2447,8 +2447,7 @@ mod tests {
         let manifest = collector
             .collect(&scope)
             .expect("harness manifest collects under hostile ambient environment");
-        fs::write(PathBuf::from(&result), manifest.manifest_sha256)
-            .expect("harness result writes");
+        fs::write(PathBuf::from(&result), manifest.manifest_sha256).expect("harness result writes");
     }
 
     /// Live end-to-end proof that ambient `GIT_*` variables cannot influence
