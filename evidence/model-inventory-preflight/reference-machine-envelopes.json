@@ -1,0 +1,199 @@
+{
+  "declared_on": "2026-08-14",
+  "envelopes": [
+    {
+      "accelerator": {
+        "class": "cuda-discrete",
+        "device_memory_bytes": 25769803776,
+        "driver": "nvidia-580.95.05",
+        "runtime_apis": [
+          "CUDA-13.3",
+          "Vulkan-1.3"
+        ]
+      },
+      "context_token_ceiling": 32768,
+      "cpu": {
+        "architecture": "x86_64",
+        "cores_logical": 32,
+        "family": "AMD Ryzen 9",
+        "vendor": "AMD"
+      },
+      "envelope_id": "fedora-kinoite-44-x86_64",
+      "expected_working_set_ceiling_bytes": 12884901888,
+      "installer_isolation": "podman-rootless-and-linux-native",
+      "memory_bytes": 68719476736,
+      "modality_support": [
+        "text-generation",
+        "image-text-to-text",
+        "any-to-any",
+        "sentence-similarity",
+        "text-classification"
+      ],
+      "network_egress": false,
+      "os": {
+        "distribution": "Fedora Kinoite",
+        "family": "linux",
+        "kernel": "7.1.8-200.fc44.x86_64",
+        "release": "44"
+      },
+      "platform_lane": "fedora-x86_64",
+      "role": "first-ga-primary-development-and-evaluation",
+      "storage_bytes": 1099511627776,
+      "supported_artifact_formats": [
+        "GGUF",
+        "safetensors"
+      ],
+      "supported_runtimes": [
+        "llama-cpp-b10333-linux-x86_64",
+        "llama-cpp-b10423-muse-linux-x86_64",
+        "docker-model-runner-v1.2.6-linux-x86_64"
+      ]
+    },
+    {
+      "accelerator": {
+        "class": "cuda-discrete",
+        "device_memory_bytes": 25769803776,
+        "driver": "nvidia-580.95.05",
+        "runtime_apis": [
+          "CUDA-13.3",
+          "Vulkan-1.3"
+        ]
+      },
+      "context_token_ceiling": 32768,
+      "cpu": {
+        "architecture": "x86_64",
+        "cores_logical": 32,
+        "family": "AMD Ryzen 9",
+        "vendor": "AMD"
+      },
+      "envelope_id": "ubuntu-24.04-x86_64",
+      "expected_working_set_ceiling_bytes": 12884901888,
+      "installer_isolation": "podman-rootless-and-linux-native",
+      "memory_bytes": 68719476736,
+      "modality_support": [
+        "text-generation",
+        "image-text-to-text",
+        "any-to-any",
+        "sentence-similarity",
+        "text-classification"
+      ],
+      "network_egress": false,
+      "os": {
+        "distribution": "Ubuntu",
+        "family": "linux",
+        "kernel": "6.11.0-generic",
+        "release": "24.04"
+      },
+      "platform_lane": "ubuntu-x86_64",
+      "role": "first-ga-secondary-linux",
+      "storage_bytes": 1099511627776,
+      "supported_artifact_formats": [
+        "GGUF",
+        "safetensors"
+      ],
+      "supported_runtimes": [
+        "llama-cpp-b10333-linux-x86_64",
+        "llama-cpp-b10423-muse-linux-x86_64",
+        "docker-model-runner-v1.2.6-linux-x86_64"
+      ]
+    },
+    {
+      "accelerator": {
+        "class": "cuda-discrete",
+        "device_memory_bytes": 25769803776,
+        "driver": "nvidia-580.95.05",
+        "runtime_apis": [
+          "CUDA-13.3",
+          "Vulkan-1.3"
+        ]
+      },
+      "context_token_ceiling": 32768,
+      "cpu": {
+        "architecture": "x86_64",
+        "cores_logical": 32,
+        "family": "Intel Core i9",
+        "vendor": "Intel"
+      },
+      "envelope_id": "windows-11-x64",
+      "expected_working_set_ceiling_bytes": 12884901888,
+      "installer_isolation": "windows-user-scope-native",
+      "memory_bytes": 68719476736,
+      "modality_support": [
+        "text-generation",
+        "image-text-to-text",
+        "any-to-any",
+        "sentence-similarity",
+        "text-classification"
+      ],
+      "network_egress": false,
+      "os": {
+        "distribution": "Windows",
+        "family": "windows",
+        "kernel": "windows-nt-10.0.26100",
+        "release": "11-24H2"
+      },
+      "platform_lane": "windows-x64",
+      "role": "first-ga-windows",
+      "storage_bytes": 1099511627776,
+      "supported_artifact_formats": [
+        "GGUF",
+        "safetensors"
+      ],
+      "supported_runtimes": [
+        "llama-cpp-b10333-windows-x86_64",
+        "llama-cpp-b10423-muse-windows-x86_64"
+      ]
+    },
+    {
+      "accelerator": {
+        "class": "apple-unified-memory",
+        "device_memory_bytes": 51539607552,
+        "driver": "metal-4",
+        "runtime_apis": [
+          "Metal-4"
+        ]
+      },
+      "context_token_ceiling": 32768,
+      "cpu": {
+        "architecture": "arm64",
+        "cores_logical": 14,
+        "family": "Apple M5",
+        "vendor": "Apple"
+      },
+      "envelope_id": "macbook-pro-m5-arm64",
+      "expected_working_set_ceiling_bytes": 12884901888,
+      "installer_isolation": "macos-user-scope-native",
+      "memory_bytes": 51539607552,
+      "modality_support": [
+        "text-generation",
+        "image-text-to-text",
+        "any-to-any",
+        "sentence-similarity",
+        "text-classification"
+      ],
+      "network_egress": false,
+      "os": {
+        "distribution": "macOS",
+        "family": "darwin",
+        "kernel": "darwin-arm64",
+        "release": "26.0"
+      },
+      "platform_lane": "macos-arm64",
+      "role": "retained-post-ga-apple-silicon",
+      "storage_bytes": 1099511627776,
+      "supported_artifact_formats": [
+        "GGUF",
+        "safetensors"
+      ],
+      "supported_runtimes": [
+        "llama-cpp-b10333-macos-arm64",
+        "llama-cpp-b10423-muse-macos-arm64"
+      ]
+    }
+  ],
+  "hardware_admission_rule": "Every envelope publishes an exact architecture, OS, runtime, artifact-format, accelerator, memory, storage, context, modality, and expected-working-set ceiling; a candidate cannot silently exceed a listed ceiling and cannot borrow another envelope's fit.",
+  "non_acquisition_rule": "Preflight against a declared envelope never downloads bytes, never opens network egress, never starts a runtime, and never activates a candidate.",
+  "record_type": "reference_machine_envelope_declaration",
+  "role_isolation_rule": "Preflight decisions record per exact profile only; a family, sibling, or lineage relative never inherits a result.",
+  "schema_version": 1
+}
