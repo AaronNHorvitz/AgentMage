@@ -2413,6 +2413,182 @@ mod tests {
         );
     }
 
+    // Names of ambient variables carrying the harness payload into the child. Each
+    // is set only inside the child process, so the outer suite can distinguish a
+    // spawned harness invocation from an ordinary run of the same #[test].
+    const AMBIENT_HARNESS_REPO: &str = "AGENTMAGE_TEST_AMBIENT_HARNESS_REPO";
+    const AMBIENT_HARNESS_GIT_DIR: &str = "AGENTMAGE_TEST_AMBIENT_HARNESS_GIT_DIR";
+    const AMBIENT_HARNESS_OWNED: &str = "AGENTMAGE_TEST_AMBIENT_HARNESS_OWNED";
+    const AMBIENT_HARNESS_RESULT: &str = "AGENTMAGE_TEST_AMBIENT_HARNESS_RESULT";
+
+    /// Child half of the ambient-variable harness. When the outer suite runs it
+    /// without the harness payload it is a no-op; when the parent test re-invokes
+    /// this binary with the payload variables set, it collects the manifest
+    /// under the hostile ambient environment and writes the exact digest.
+    #[test]
+    fn ambient_git_variables_harness_child() {
+        let (Ok(repository), Ok(git_directory), Ok(owned), Ok(result)) = (
+            std::env::var(AMBIENT_HARNESS_REPO),
+            std::env::var(AMBIENT_HARNESS_GIT_DIR),
+            std::env::var(AMBIENT_HARNESS_OWNED),
+            std::env::var(AMBIENT_HARNESS_RESULT),
+        ) else {
+            return;
+        };
+        let scope = LinuxRepositoryScope::verify(
+            PathBuf::from(&repository),
+            PathBuf::from(&git_directory),
+            PathBuf::from(&owned),
+        )
+        .expect("harness scope verifies under hostile ambient environment");
+        let collector = LinuxRepositoryCollector::new(
+            LinuxGitArtifact::verify("/usr/bin/git").expect("harness git artifact"),
+        );
+        let manifest = collector
+            .collect(&scope)
+            .expect("harness manifest collects under hostile ambient environment");
+        fs::write(PathBuf::from(&result), manifest.manifest_sha256)
+            .expect("harness result writes");
+    }
+
+    /// Live end-to-end proof that ambient `GIT_*` variables cannot influence
+    /// anything the collector spawns. The parent captures a clean baseline,
+    /// re-invokes this test binary with a broad set of hostile ambient
+    /// variables (including path-hijacking `GIT_DIR`, execution vectors like
+    /// `GIT_EXTERNAL_DIFF`, and trace files), and asserts that the child's
+    /// manifest digest is byte-for-byte identical to the baseline and that no
+    /// canary or trace file was written.
+    #[test]
+    #[ignore = "requires re-invoking the test binary and a root-owned /usr/bin/git"]
+    fn ambient_git_variables_never_leak_into_launched_git_children() {
+        let fixture = Fixture::new();
+        let baseline = fixture
+            .collector()
+            .collect(&fixture.scope())
+            .expect("baseline manifest");
+
+        let canary = fixture.root.join("ambient-canary");
+        let trace = fixture.root.join("ambient-trace.log");
+        let result = fixture.root.join("ambient-child-manifest.sha256");
+        let hostile_git_dir = fixture.root.join("hostile-git-dir");
+        let hostile_worktree = fixture.root.join("hostile-worktree");
+        let hostile_index = fixture.root.join("hostile-index");
+        let hostile_objects = fixture.root.join("hostile-objects");
+        let hostile_alternates = fixture.root.join("hostile-alternates");
+        let hostile_common = fixture.root.join("hostile-common");
+        let hostile_config = fixture.root.join("hostile-config");
+        let hostile_home = fixture.root.join("hostile-home");
+        let hostile_template = fixture.root.join("hostile-template");
+
+        let touch_canary = format!("touch {}", canary.display());
+        let current_exe = std::env::current_exe().expect("test binary path");
+        let output = Command::new(&current_exe)
+            .env(AMBIENT_HARNESS_REPO, &fixture.repository)
+            .env(AMBIENT_HARNESS_GIT_DIR, &fixture.git_directory)
+            .env(AMBIENT_HARNESS_OWNED, &fixture.owned)
+            .env(AMBIENT_HARNESS_RESULT, &result)
+            // Path-hijacking ambient variables: if they leak, the collector's
+            // observations would target the hostile paths instead of the
+            // fixture and the manifest digest would change or the observation
+            // would fail outright.
+            .env("GIT_DIR", &hostile_git_dir)
+            .env("GIT_WORK_TREE", &hostile_worktree)
+            .env("GIT_INDEX_FILE", &hostile_index)
+            .env("GIT_OBJECT_DIRECTORY", &hostile_objects)
+            .env("GIT_ALTERNATE_OBJECT_DIRECTORIES", &hostile_alternates)
+            .env("GIT_COMMON_DIR", &hostile_common)
+            .env("GIT_NAMESPACE", "hostile")
+            .env("GIT_CEILING_DIRECTORIES", "/")
+            .env("GIT_DISCOVERY_ACROSS_FILESYSTEM", "1")
+            // Execution vectors: any of these would run the canary command if
+            // the ambient environment leaked and the observation touched the
+            // matching Git surface.
+            .env("GIT_EXTERNAL_DIFF", &touch_canary)
+            .env("GIT_PAGER", &touch_canary)
+            .env("GIT_EDITOR", &touch_canary)
+            .env("GIT_SEQUENCE_EDITOR", &touch_canary)
+            .env("GIT_ASKPASS", &touch_canary)
+            .env("GIT_SSH", &touch_canary)
+            .env("GIT_SSH_COMMAND", &touch_canary)
+            .env("SSH_ASKPASS", &touch_canary)
+            // Trace variables: if leaked, Git writes trace output to the
+            // named file the moment it starts up.
+            .env("GIT_TRACE", &trace)
+            .env("GIT_TRACE_SETUP", &trace)
+            .env("GIT_TRACE_PACKET", &trace)
+            .env("GIT_TRACE_PERFORMANCE", &trace)
+            .env("GIT_TRACE_PACK_ACCESS", &trace)
+            // Configuration overrides that would relax the collector's
+            // hardening if the executor forwarded ambient values instead of
+            // replacing them.
+            .env("GIT_CONFIG_NOSYSTEM", "0")
+            .env("GIT_CONFIG_SYSTEM", &hostile_config)
+            .env("GIT_CONFIG_GLOBAL", &hostile_config)
+            .env("GIT_TERMINAL_PROMPT", "1")
+            .env("GIT_OPTIONAL_LOCKS", "1")
+            .env("GIT_LFS_SKIP_SMUDGE", "0")
+            .env("GIT_TEMPLATE_DIR", &hostile_template)
+            .env("GIT_ATTR_SOURCE", "hostile")
+            .env("GIT_AUTHOR_NAME", "Hostile Author")
+            .env("GIT_AUTHOR_EMAIL", "hostile@example.invalid")
+            .env("GIT_COMMITTER_NAME", "Hostile Committer")
+            .env("GIT_COMMITTER_EMAIL", "hostile@example.invalid")
+            .env("HOME", &hostile_home)
+            .env("XDG_CONFIG_HOME", &hostile_home)
+            .env("GCM_INTERACTIVE", "Always")
+            .args([
+                "repository_safety::tests::ambient_git_variables_harness_child",
+                "--exact",
+                "--include-ignored",
+                "--test-threads=1",
+                "--nocapture",
+            ])
+            .stdin(Stdio::null())
+            .output()
+            .expect("harness subprocess spawns");
+        assert!(
+            output.status.success(),
+            "harness subprocess failed: status={:?} stdout={} stderr={}",
+            output.status.code(),
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+
+        let child_digest = fs::read_to_string(&result).expect("harness result reads");
+        assert_eq!(
+            child_digest.trim(),
+            baseline.manifest_sha256,
+            "ambient GIT_* variables changed the manifest observed by the child"
+        );
+        assert!(
+            !canary.exists(),
+            "ambient GIT_* execution vector fired: {canary:?}"
+        );
+        assert!(
+            !trace.exists(),
+            "ambient GIT_TRACE leaked into a hardened Git child: {trace:?}"
+        );
+
+        // The hostile paths were only ever named through the environment; the
+        // executor must not have created any of them on the filesystem.
+        for path in [
+            &hostile_git_dir,
+            &hostile_worktree,
+            &hostile_index,
+            &hostile_objects,
+            &hostile_alternates,
+            &hostile_common,
+            &hostile_config,
+            &hostile_home,
+            &hostile_template,
+        ] {
+            assert!(
+                !path.exists(),
+                "hostile ambient path materialized on disk: {path:?}"
+            );
+        }
+    }
+
     fn eligible_record(path_sha256: String, source_object: String) -> OwnedWorktreeRecord {
         OwnedWorktreeRecord::seal(OwnedWorktreeRecord {
             schema_version: 0,
