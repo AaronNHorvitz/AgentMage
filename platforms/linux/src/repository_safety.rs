@@ -2185,6 +2185,22 @@ mod tests {
     #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
     fn live_hostile_git_configuration_cannot_execute_or_contact_loopback() {
         let fixture = Fixture::new();
+        let collision_paths = [
+            fixture.repository.join("Collision.txt"),
+            fixture.repository.join("collision.txt"),
+            fixture.repository.join("caf\u{e9}.txt"),
+            fixture.repository.join("cafe\u{301}.txt"),
+        ];
+        for path in &collision_paths {
+            fs::write(path, b"collision fixture\n").expect("collision fixture writes");
+        }
+        let collision_manifest = fixture
+            .collector()
+            .collect(&fixture.scope())
+            .expect("collision manifest");
+        assert_eq!(collision_manifest.untracked_count, 4);
+        assert!(collision_paths.iter().all(|path| path.exists()));
+
         let listener =
             TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).expect("loopback listener binds");
         listener
