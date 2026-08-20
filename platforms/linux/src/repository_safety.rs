@@ -2413,6 +2413,187 @@ mod tests {
         );
     }
 
+    /// Marker set by the ambient-variable parent so the child test only runs when
+    /// re-invoked through the subprocess harness.
+    const AMBIENT_CHILD_MARKER: &str = "AGENTMAGE_AMBIENT_GIT_ENV_CHILD";
+    /// Path the ambient-variable child must find empty; every hostile ambient
+    /// `GIT_*` value in the parent points at it, so any leak leaves it behind.
+    const AMBIENT_CANARY_MARKER: &str = "AGENTMAGE_AMBIENT_GIT_ENV_CANARY";
+
+    /// Ambient `GIT_*` variables set by a real parent shell must not leak into the
+    /// hardened observation, even though the worker environment is a fixed
+    /// allowlist applied only after `env_clear`. A subprocess harness reproduces
+    /// that end-to-end: the parent seeds hostile ambient values, the child re-runs
+    /// the collector under those values, and neither a canary nor a loopback
+    /// connection appears.
+    #[test]
+    #[ignore = "requires re-invoking the test binary as a subprocess harness"]
+    fn live_ambient_git_env_variables_do_not_leak_into_hardened_git_processes() {
+        let exe = std::env::current_exe().expect("current test binary");
+        let listener = TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0))
+            .expect("loopback listener binds");
+        listener
+            .set_nonblocking(true)
+            .expect("listener becomes nonblocking");
+        let port = listener.local_addr().expect("listener address").port();
+        let canary = std::env::temp_dir().join(format!(
+            "agentmage-ambient-canary-{}-{}",
+            std::process::id(),
+            NEXT_ID.fetch_add(1, Ordering::Relaxed)
+        ));
+        let _ = fs::remove_file(&canary);
+        let touch_canary = format!("touch {}", canary.display());
+        let alias_canary = format!("!touch {}", canary.display());
+        let loopback = format!("nc 127.0.0.1 {port}");
+
+        let output = Command::new(&exe)
+            .env(AMBIENT_CHILD_MARKER, "1")
+            .env(AMBIENT_CANARY_MARKER, &canary)
+            .env("GIT_DIR", "/nonexistent/hostile-git-dir")
+            .env("GIT_WORK_TREE", "/nonexistent/hostile-work-tree")
+            .env("GIT_COMMON_DIR", "/nonexistent/hostile-common-dir")
+            .env("GIT_INDEX_FILE", "/nonexistent/hostile-index")
+            .env("GIT_NAMESPACE", "hostile")
+            .env("GIT_OBJECT_DIRECTORY", "/nonexistent/hostile-objects")
+            .env(
+                "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+                "/nonexistent/hostile-alternates",
+            )
+            .env("GIT_HOOKS_PATH", "/nonexistent/hostile-hooks")
+            .env("GIT_TEMPLATE_DIR", "/nonexistent/hostile-templates")
+            .env("GIT_ATTR_SOURCE", "hostile")
+            .env(
+                "GIT_CONFIG_GLOBAL",
+                "/nonexistent/hostile-global-config",
+            )
+            .env(
+                "GIT_CONFIG_SYSTEM",
+                "/nonexistent/hostile-system-config",
+            )
+            .env("GIT_CONFIG_NOSYSTEM", "0")
+            .env("GIT_CONFIG_COUNT", "3")
+            .env("GIT_CONFIG_KEY_0", "core.pager")
+            .env("GIT_CONFIG_VALUE_0", &touch_canary)
+            .env("GIT_CONFIG_KEY_1", "core.hooksPath")
+            .env("GIT_CONFIG_VALUE_1", "/nonexistent/hostile-hooks")
+            .env("GIT_CONFIG_KEY_2", "alias.inspect")
+            .env("GIT_CONFIG_VALUE_2", &alias_canary)
+            .env("GIT_TERMINAL_PROMPT", "1")
+            .env("GIT_ASKPASS", &touch_canary)
+            .env("GIT_EDITOR", &touch_canary)
+            .env("GIT_SEQUENCE_EDITOR", &touch_canary)
+            .env("GIT_PAGER", &touch_canary)
+            .env("GIT_EXTERNAL_DIFF", &touch_canary)
+            .env("GIT_MERGE_AUTOEDIT", "no")
+            .env("GIT_SSH", &touch_canary)
+            .env("GIT_SSH_COMMAND", &loopback)
+            .env("GIT_PROXY_COMMAND", &loopback)
+            .env("GIT_LFS_SKIP_SMUDGE", "0")
+            .env("GIT_TRACE", "1")
+            .env("GIT_TRACE2", "1")
+            .env("GIT_TRACE_PACKET", "1")
+            .args([
+                "--include-ignored",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+                "repository_safety::tests::ambient_git_env_subprocess_child",
+            ])
+            .output()
+            .expect("ambient subprocess harness runs");
+        let canary_existed = canary.exists();
+        let _ = fs::remove_file(&canary);
+        assert!(
+            output.status.success(),
+            "ambient subprocess failed: stdout={} stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+        assert!(
+            !canary_existed,
+            "a hostile ambient GIT_* variable executed the canary path"
+        );
+        assert!(
+            matches!(
+                listener.accept(),
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock
+            ),
+            "hostile ambient GIT_SSH_COMMAND or GIT_PROXY_COMMAND reached the loopback listener"
+        );
+    }
+
+    /// Runs only when the ambient-variable parent test re-invokes the binary. It
+    /// asserts the hostile ambient `GIT_*` values are actually present, then runs
+    /// the hardened collector and confirms the manifest is exactly what a clean
+    /// fixture produces, proving `env_clear` scrubbed every hostile variable.
+    #[test]
+    #[ignore = "invoked only by the ambient-variable subprocess harness"]
+    fn ambient_git_env_subprocess_child() {
+        if std::env::var(AMBIENT_CHILD_MARKER).ok().as_deref() != Some("1") {
+            return;
+        }
+        for name in [
+            "GIT_DIR",
+            "GIT_WORK_TREE",
+            "GIT_INDEX_FILE",
+            "GIT_OBJECT_DIRECTORY",
+            "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+            "GIT_HOOKS_PATH",
+            "GIT_CONFIG_GLOBAL",
+            "GIT_CONFIG_SYSTEM",
+            "GIT_CONFIG_COUNT",
+            "GIT_CONFIG_KEY_0",
+            "GIT_CONFIG_VALUE_0",
+            "GIT_ASKPASS",
+            "GIT_EDITOR",
+            "GIT_PAGER",
+            "GIT_SSH_COMMAND",
+            "GIT_PROXY_COMMAND",
+            "GIT_TRACE",
+        ] {
+            assert!(
+                std::env::var_os(name).is_some(),
+                "subprocess harness must have seeded {name}"
+            );
+        }
+        let canary =
+            PathBuf::from(std::env::var_os(AMBIENT_CANARY_MARKER).expect("canary path env"));
+        assert!(
+            !canary.exists(),
+            "canary must start absent so the harness proof is meaningful"
+        );
+
+        let fixture = Fixture::new();
+        let collector = fixture.collector();
+        let scope = fixture.scope();
+        let manifest = collector.collect(&scope).expect(
+            "hardened observation must succeed despite hostile ambient GIT_* variables",
+        );
+        // Ambient GIT_* values would surface here if any leaked through env_clear:
+        // a promiscuous alias, an alternate object directory, a hostile hooks path,
+        // or an injected inline configuration would each flip these fields.
+        assert!(!manifest.hazardous_configuration);
+        assert!(!manifest.shallow);
+        assert!(!manifest.partial);
+        assert_eq!(manifest.untracked_count, 0);
+        assert_eq!(manifest.ignored_count, 0);
+        assert!(manifest.head_object.is_some());
+        assert_eq!(manifest.current_branch.as_deref(), Some("refs/heads/main"));
+
+        // Running the hardened observation a second time on the same scope must
+        // produce the same manifest, so ambient variables cannot introduce
+        // per-invocation drift either.
+        let repeat = collector
+            .collect(&scope)
+            .expect("second hardened observation succeeds");
+        assert_eq!(manifest, repeat);
+
+        assert!(
+            !canary.exists(),
+            "a hostile ambient GIT_* variable executed the canary through the hardened path"
+        );
+    }
+
     fn eligible_record(path_sha256: String, source_object: String) -> OwnedWorktreeRecord {
         OwnedWorktreeRecord::seal(OwnedWorktreeRecord {
             schema_version: 0,
