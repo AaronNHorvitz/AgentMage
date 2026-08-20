@@ -1090,6 +1090,142 @@ pub fn verify_transfer_paths(
     canonical_sha256(&observations).map_err(|_| RepositorySafetyError::Collision)
 }
 
+/// Content-minimized preview of one proposed merge-back or patch transfer.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PatchTransferPreview {
+    /// Closed preview schema version.
+    pub schema_version: u16,
+    /// Non-replayable preview identity.
+    pub transaction_id: String,
+    /// Exact task identity that owns the source worktree.
+    pub task_id: String,
+    /// Exact source AgentMage task branch.
+    pub source_branch_ref: String,
+    /// Exact source worktree identity.
+    pub source_worktree_id: String,
+    /// Digest of the canonical source worktree path.
+    pub source_worktree_path_sha256: String,
+    /// Digest of the destination owned repository path.
+    pub destination_repository_path_sha256: String,
+    /// Manifest digest that must still match immediately before any transfer effect.
+    pub destination_manifest_sha256: String,
+    /// Exact destination AgentMage task branch to update by fast-forward.
+    pub destination_branch_ref: String,
+    /// Exact expected old destination object.
+    pub expected_base_object: String,
+    /// Exact proposed new destination object.
+    pub proposed_head_object: String,
+    /// Whether ancestry from base to head has been independently proven.
+    pub descendant_proven: bool,
+    /// Digest of the exact bounded transfer path observations.
+    pub path_observations_sha256: String,
+    /// Bounded count of exact task-owned changed paths.
+    pub changed_path_count: u32,
+    /// SHA-256 over all preceding fields.
+    pub preview_sha256: String,
+}
+
+impl PatchTransferPreview {
+    /// Revalidates preview shape and canonical identity.
+    pub fn verify(&self) -> Result<(), RepositorySafetyError> {
+        validate_preview_shape(self)?;
+        let mut candidate = self.clone();
+        candidate.preview_sha256 = ZERO_SHA256.to_owned();
+        if canonical_sha256(&candidate)? != self.preview_sha256 {
+            return Err(RepositorySafetyError::ManifestDenied);
+        }
+        Ok(())
+    }
+}
+
+/// Builds one sealed merge-back or patch-transfer preview from trusted observations.
+#[allow(clippy::too_many_arguments)]
+pub fn preview_patch_transfer(
+    transaction_id: &str,
+    task_id: &str,
+    source: &OwnedWorktreeRecord,
+    destination_branch_ref: &str,
+    expected_base_object: &str,
+    proposed_head_object: &str,
+    descendant_proven: bool,
+    destination_repository_path_sha256: &str,
+    destination_manifest: &RepositoryPreservationManifest,
+    observations: &[TransferPathObservation],
+) -> Result<PatchTransferPreview, RepositorySafetyError> {
+    validate_identifier(transaction_id)?;
+    validate_identifier(task_id)?;
+    source.verify()?;
+    destination_manifest.verify()?;
+    require_sha(destination_repository_path_sha256)?;
+    validate_branch_ref(destination_branch_ref)?;
+    if source.task_id != task_id
+        || !source.branch_ref.starts_with("refs/heads/agentmage/tasks/")
+        || !destination_branch_ref.starts_with("refs/heads/agentmage/tasks/")
+        || !valid_object_id(expected_base_object)
+        || !valid_object_id(proposed_head_object)
+        || expected_base_object == proposed_head_object
+        || !descendant_proven
+        || destination_manifest.hazardous_configuration
+        || !destination_manifest.safe_ownership
+    {
+        return Err(RepositorySafetyError::FastForwardDenied);
+    }
+    let changed_path_count =
+        u32::try_from(observations.len()).map_err(|_| RepositorySafetyError::Collision)?;
+    let path_observations_sha256 = verify_transfer_paths(observations)?;
+    let mut preview = PatchTransferPreview {
+        schema_version: SCHEMA_VERSION,
+        transaction_id: transaction_id.to_owned(),
+        task_id: task_id.to_owned(),
+        source_branch_ref: source.branch_ref.clone(),
+        source_worktree_id: source.worktree_id.clone(),
+        source_worktree_path_sha256: source.worktree_path_sha256.clone(),
+        destination_repository_path_sha256: destination_repository_path_sha256.to_owned(),
+        destination_manifest_sha256: destination_manifest.manifest_sha256.clone(),
+        destination_branch_ref: destination_branch_ref.to_owned(),
+        expected_base_object: expected_base_object.to_owned(),
+        proposed_head_object: proposed_head_object.to_owned(),
+        descendant_proven,
+        path_observations_sha256,
+        changed_path_count,
+        preview_sha256: ZERO_SHA256.to_owned(),
+    };
+    validate_preview_shape(&preview)?;
+    preview.preview_sha256 = canonical_sha256(&preview)?;
+    Ok(preview)
+}
+
+fn validate_preview_shape(preview: &PatchTransferPreview) -> Result<(), RepositorySafetyError> {
+    if preview.schema_version != SCHEMA_VERSION
+        || !valid_identifier(&preview.transaction_id)
+        || !valid_identifier(&preview.task_id)
+        || !valid_identifier(&preview.source_worktree_id)
+        || !is_sha256(&preview.source_worktree_path_sha256)
+        || !is_sha256(&preview.destination_repository_path_sha256)
+        || !is_sha256(&preview.destination_manifest_sha256)
+        || !is_sha256(&preview.path_observations_sha256)
+        || !is_sha256(&preview.preview_sha256)
+        || validate_branch_ref(&preview.source_branch_ref).is_err()
+        || validate_branch_ref(&preview.destination_branch_ref).is_err()
+        || !preview
+            .source_branch_ref
+            .starts_with("refs/heads/agentmage/tasks/")
+        || !preview
+            .destination_branch_ref
+            .starts_with("refs/heads/agentmage/tasks/")
+        || !valid_object_id(&preview.expected_base_object)
+        || !valid_object_id(&preview.proposed_head_object)
+        || preview.expected_base_object == preview.proposed_head_object
+        || !preview.descendant_proven
+        || preview.changed_path_count == 0
+        || preview.changed_path_count as usize > MAX_CHANGED_PATHS
+    {
+        return Err(RepositorySafetyError::InvalidInput);
+    }
+    Ok(())
+}
+
 /// Trusted platform result for one exact repository operation attempt.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RepositoryPlatformResult {
@@ -1187,6 +1323,175 @@ pub fn reconcile_operation(
         after_manifest_sha256: result.after.manifest_sha256,
         outcome: result.outcome,
         cleanup_verified: result.cleanup_verified,
+        platform_code: result.platform_code,
+        receipt_sha256: ZERO_SHA256.to_owned(),
+    };
+    receipt.receipt_sha256 = canonical_sha256(&receipt)?;
+    Ok(receipt)
+}
+
+/// Closed class of separately visible remote Git read.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RemoteReadKind {
+    /// One no-checkout clone that installs one owned repository and fetches one ref.
+    Clone,
+    /// One namespaced fetch of one exact ref.
+    Fetch,
+}
+
+impl RemoteReadKind {
+    /// Returns the closed remote-read class for a repository operation, when one exists.
+    #[must_use]
+    pub const fn from_operation(operation: RepositoryOperation) -> Option<Self> {
+        match operation {
+            RepositoryOperation::Clone => Some(Self::Clone),
+            RepositoryOperation::Fetch => Some(Self::Fetch),
+            _ => None,
+        }
+    }
+}
+
+/// Trusted platform result for one exact remote Git read attempt.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RemoteReadPlatformResult {
+    /// Closed remote-read class established by the platform.
+    pub kind: RemoteReadKind,
+    /// Exact remote identity contacted; must equal the plan remote.
+    pub remote: GitRemoteIdentity,
+    /// Exact source ref requested; must equal the plan source ref.
+    pub source_ref: String,
+    /// Exact transaction ref populated by the read; must equal the plan transaction ref.
+    pub transaction_ref: String,
+    /// Terminal outcome established by platform postconditions.
+    pub outcome: OperationOutcome,
+    /// Exact fetched object identity when the read succeeded.
+    pub fetched_object: Option<String>,
+    /// Digest of the exact bounded fetch evidence retained by the platform.
+    pub fetch_evidence_sha256: String,
+    /// Currentness report derived from the read.
+    pub currentness: RepositoryCurrentnessReport,
+    /// Bounded count of bytes received during the read.
+    pub bytes_received: u64,
+    /// Bounded count of bytes sent during the read; must be zero for pure reads.
+    pub bytes_sent: u64,
+    /// Bounded read duration in kernel milliseconds.
+    pub duration_ms: u64,
+    /// Stable content-free platform result code.
+    pub platform_code: String,
+}
+
+/// Hash-bound terminal receipt for one exact remote Git read.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RemoteReadReceipt {
+    /// Closed receipt schema version.
+    pub schema_version: u16,
+    /// Exact repository transaction identity.
+    pub repository_transaction_id: String,
+    /// Exact authority transaction identity.
+    pub authority_transaction_id: String,
+    /// Exact non-replayable operation attempt identity.
+    pub operation_attempt_id: String,
+    /// Closed remote-read class.
+    pub kind: RemoteReadKind,
+    /// Exact canonical remote identity digest.
+    pub remote_sha256: String,
+    /// Exact requested source ref.
+    pub source_ref: String,
+    /// Exact populated owned transaction ref.
+    pub transaction_ref: String,
+    /// Exact plan digest.
+    pub plan_sha256: String,
+    /// Exact fetched object identity when the read succeeded.
+    pub fetched_object: Option<String>,
+    /// Digest of the exact bounded fetch evidence.
+    pub fetch_evidence_sha256: String,
+    /// Digest of the derived currentness report.
+    pub currentness_report_sha256: String,
+    /// Bounded count of bytes received.
+    pub bytes_received: u64,
+    /// Bounded count of bytes sent; must be zero for a read.
+    pub bytes_sent: u64,
+    /// Bounded kernel-millisecond duration.
+    pub duration_ms: u64,
+    /// Deterministically established outcome.
+    pub outcome: OperationOutcome,
+    /// Stable content-free platform code.
+    pub platform_code: String,
+    /// SHA-256 over all preceding fields.
+    pub receipt_sha256: String,
+}
+
+const MAX_REMOTE_READ_BYTES: u64 = 8 * 1024 * 1024 * 1024;
+const MAX_REMOTE_READ_DURATION_MS: u64 = 60 * 60 * 1000;
+
+/// Verifies remote-read postconditions and seals a truthful terminal read receipt.
+pub fn reconcile_remote_read(
+    plan: &RepositoryOperationPlan,
+    result: RemoteReadPlatformResult,
+    authority_transaction_id: &str,
+    operation_attempt_id: &str,
+) -> Result<RemoteReadReceipt, RepositorySafetyError> {
+    plan.verify()?;
+    validate_identifier(authority_transaction_id)?;
+    validate_identifier(operation_attempt_id)?;
+    let expected_kind = RemoteReadKind::from_operation(plan.operation)
+        .ok_or(RepositorySafetyError::ResultDenied)?;
+    let plan_remote = plan
+        .remote
+        .as_ref()
+        .ok_or(RepositorySafetyError::ResultDenied)?;
+    let plan_source_ref = plan
+        .source_ref
+        .as_deref()
+        .ok_or(RepositorySafetyError::ResultDenied)?;
+    let plan_transaction_ref = plan
+        .transaction_ref
+        .as_deref()
+        .ok_or(RepositorySafetyError::ResultDenied)?;
+    result.remote.verify()?;
+    result.currentness.verify()?;
+    if result.kind != expected_kind
+        || result.remote != *plan_remote
+        || result.source_ref != plan_source_ref
+        || result.transaction_ref != plan_transaction_ref
+        || result.currentness.remote_sha256 != plan_remote.identity_sha256
+        || result.currentness.fetch_evidence_sha256 != result.fetch_evidence_sha256
+        || result.bytes_sent != 0
+        || result.bytes_received > MAX_REMOTE_READ_BYTES
+        || result.duration_ms > MAX_REMOTE_READ_DURATION_MS
+        || !is_sha256(&result.fetch_evidence_sha256)
+        || !valid_platform_code(&result.platform_code)
+    {
+        return Err(RepositorySafetyError::ResultDenied);
+    }
+    match (result.outcome, &result.fetched_object) {
+        (OperationOutcome::Succeeded, Some(object)) => {
+            if !valid_object_id(object) || result.currentness.fetched_object != *object {
+                return Err(RepositorySafetyError::ResultDenied);
+            }
+        }
+        (OperationOutcome::Failed | OperationOutcome::Cancelled | OperationOutcome::TimedOut, None) => {}
+        _ => return Err(RepositorySafetyError::ResultDenied),
+    }
+    let mut receipt = RemoteReadReceipt {
+        schema_version: SCHEMA_VERSION,
+        repository_transaction_id: plan.transaction_id.clone(),
+        authority_transaction_id: authority_transaction_id.to_owned(),
+        operation_attempt_id: operation_attempt_id.to_owned(),
+        kind: result.kind,
+        remote_sha256: plan_remote.identity_sha256.clone(),
+        source_ref: result.source_ref,
+        transaction_ref: result.transaction_ref,
+        plan_sha256: plan.plan_sha256.clone(),
+        fetched_object: result.fetched_object,
+        fetch_evidence_sha256: result.fetch_evidence_sha256,
+        currentness_report_sha256: result.currentness.report_sha256,
+        bytes_received: result.bytes_received,
+        bytes_sent: result.bytes_sent,
+        duration_ms: result.duration_ms,
+        outcome: result.outcome,
         platform_code: result.platform_code,
         receipt_sha256: ZERO_SHA256.to_owned(),
     };
@@ -2227,6 +2532,207 @@ mod tests {
             verify_transfer_paths(&[accepted[0].clone(), accepted[0].clone()]),
             Err(RepositorySafetyError::Collision)
         );
+    }
+
+    #[test]
+    fn patch_transfer_preview_binds_paths_ancestry_and_manifest() {
+        let source = worktree(WorktreeDisposition::CleanupEligible);
+        let observations = vec![TransferPathObservation {
+            path_sha256: hash("path-a"),
+            approved_preimage_sha256: hash("preimage-a"),
+            current_preimage_sha256: hash("preimage-a"),
+            task_owned: true,
+            renamed_from_sha256: None,
+        }];
+        let preview = preview_patch_transfer(
+            "transaction-preview",
+            "task-1",
+            &source,
+            "refs/heads/agentmage/tasks/task-1-integration",
+            &object('a'),
+            &object('b'),
+            true,
+            &hash("destination"),
+            &manifest(),
+            &observations,
+        )
+        .expect("preview seals");
+        preview.verify().expect("preview verifies");
+        assert_eq!(preview.changed_path_count, 1);
+        assert_eq!(
+            preview.path_observations_sha256,
+            verify_transfer_paths(&observations).expect("digest"),
+        );
+        assert!(is_sha256(&preview.preview_sha256));
+
+        let mut tampered = preview.clone();
+        tampered.proposed_head_object = object('c');
+        assert!(tampered.verify().is_err());
+
+        assert_eq!(
+            preview_patch_transfer(
+                "transaction-preview",
+                "task-1",
+                &source,
+                "refs/heads/agentmage/tasks/task-1-integration",
+                &object('a'),
+                &object('b'),
+                false,
+                &hash("destination"),
+                &manifest(),
+                &observations,
+            ),
+            Err(RepositorySafetyError::FastForwardDenied),
+        );
+        assert_eq!(
+            preview_patch_transfer(
+                "transaction-preview",
+                "task-1",
+                &source,
+                "refs/heads/main",
+                &object('a'),
+                &object('b'),
+                true,
+                &hash("destination"),
+                &manifest(),
+                &observations,
+            ),
+            Err(RepositorySafetyError::FastForwardDenied),
+        );
+        let stale = vec![TransferPathObservation {
+            current_preimage_sha256: hash("moved"),
+            ..observations[0].clone()
+        }];
+        assert_eq!(
+            preview_patch_transfer(
+                "transaction-preview",
+                "task-1",
+                &source,
+                "refs/heads/agentmage/tasks/task-1-integration",
+                &object('a'),
+                &object('b'),
+                true,
+                &hash("destination"),
+                &manifest(),
+                &stale,
+            ),
+            Err(RepositorySafetyError::Collision),
+        );
+    }
+
+    #[test]
+    fn remote_read_receipt_binds_currentness_and_forbids_writes() {
+        let remote =
+            GitRemoteIdentity::parse("https://github.com/AgentMage/fixture.git", "github.com")
+                .expect("remote parses");
+        let plan = plan_fetch(
+            "transaction-read",
+            remote.clone(),
+            "refs/heads/main",
+            &hash("repository-path"),
+            &manifest(),
+        )
+        .expect("fetch plans");
+        let fetched = object('b');
+        let evidence_sha = hash("fetch-evidence");
+        let currentness = report_currentness(&CurrentnessObservation {
+            remote: remote.clone(),
+            default_branch: "refs/heads/main".to_owned(),
+            local_branch: Some("refs/heads/main".to_owned()),
+            upstream: Some("refs/remotes/origin/main".to_owned()),
+            local_object: Some(object('a')),
+            fetched_object: fetched.clone(),
+            ahead_count: 0,
+            behind_count: 1,
+            dirty: false,
+            untracked: false,
+            fetched_at_epoch_ms: 100,
+            observed_at_epoch_ms: 110,
+            max_age_ms: 60_000,
+            fetch_evidence_sha256: evidence_sha.clone(),
+        })
+        .expect("currentness reports");
+
+        let base_result = RemoteReadPlatformResult {
+            kind: RemoteReadKind::Fetch,
+            remote: remote.clone(),
+            source_ref: "refs/heads/main".to_owned(),
+            transaction_ref: "refs/agentmage/fetch/transaction-read/source".to_owned(),
+            outcome: OperationOutcome::Succeeded,
+            fetched_object: Some(fetched.clone()),
+            fetch_evidence_sha256: evidence_sha.clone(),
+            currentness: currentness.clone(),
+            bytes_received: 4_096,
+            bytes_sent: 0,
+            duration_ms: 250,
+            platform_code: "linux.git.fetch.ok".to_owned(),
+        };
+        let receipt = reconcile_remote_read(
+            &plan,
+            base_result.clone(),
+            "authority-transaction-read",
+            "operation-attempt-read",
+        )
+        .expect("remote read receipts");
+        assert_eq!(receipt.kind, RemoteReadKind::Fetch);
+        assert_eq!(receipt.remote_sha256, remote.identity_sha256);
+        assert_eq!(receipt.fetched_object.as_deref(), Some(fetched.as_str()));
+        assert_eq!(receipt.currentness_report_sha256, currentness.report_sha256);
+        assert_eq!(receipt.bytes_sent, 0);
+        assert!(is_sha256(&receipt.receipt_sha256));
+
+        let mutating = RemoteReadPlatformResult {
+            bytes_sent: 1,
+            ..base_result.clone()
+        };
+        assert_eq!(
+            reconcile_remote_read(
+                &plan,
+                mutating,
+                "authority-transaction-read",
+                "operation-attempt-read",
+            ),
+            Err(RepositorySafetyError::ResultDenied),
+        );
+
+        let mismatched_currentness = RemoteReadPlatformResult {
+            fetch_evidence_sha256: hash("other-evidence"),
+            ..base_result.clone()
+        };
+        assert_eq!(
+            reconcile_remote_read(
+                &plan,
+                mismatched_currentness,
+                "authority-transaction-read",
+                "operation-attempt-read",
+            ),
+            Err(RepositorySafetyError::ResultDenied),
+        );
+
+        let missing_object = RemoteReadPlatformResult {
+            fetched_object: None,
+            ..base_result
+        };
+        assert_eq!(
+            reconcile_remote_read(
+                &plan,
+                missing_object,
+                "authority-transaction-read",
+                "operation-attempt-read",
+            ),
+            Err(RepositorySafetyError::ResultDenied),
+        );
+
+        let worktree_plan = plan_worktree_create(
+            "transaction-wt",
+            "task-1",
+            &object('a'),
+            &hash("repository-path"),
+            &hash("worktree-path"),
+            &manifest(),
+        )
+        .expect("worktree plans");
+        assert!(RemoteReadKind::from_operation(worktree_plan.operation).is_none());
     }
 
     #[test]
