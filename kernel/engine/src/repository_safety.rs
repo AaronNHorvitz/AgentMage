@@ -238,6 +238,62 @@ pub struct RepositoryCurrentnessReport {
     pub report_sha256: String,
 }
 
+impl RepositoryCurrentnessReport {
+    /// Revalidates report shape, derived state, and canonical identity.
+    pub fn verify(&self) -> Result<(), RepositorySafetyError> {
+        if self.schema_version != SCHEMA_VERSION
+            || !is_sha256(&self.remote_sha256)
+            || validate_branch_ref(&self.default_branch).is_err()
+            || self
+                .local_branch
+                .as_deref()
+                .is_some_and(|branch| validate_branch_ref(branch).is_err())
+            || self
+                .upstream
+                .as_deref()
+                .is_some_and(|upstream| validate_remote_tracking_ref(upstream).is_err())
+            || self
+                .local_object
+                .as_deref()
+                .is_some_and(|object| !valid_object_id(object))
+            || !valid_object_id(&self.fetched_object)
+            || !is_sha256(&self.fetch_evidence_sha256)
+            || !is_sha256(&self.report_sha256)
+            || !self.state_matches_observations()
+        {
+            return Err(RepositorySafetyError::InvalidInput);
+        }
+        let mut candidate = self.clone();
+        candidate.report_sha256 = ZERO_SHA256.to_owned();
+        if canonical_sha256(&candidate)? != self.report_sha256 {
+            return Err(RepositorySafetyError::ManifestDenied);
+        }
+        Ok(())
+    }
+
+    fn state_matches_observations(&self) -> bool {
+        if self.untracked {
+            return self.state == RepositoryCurrentness::Untracked;
+        }
+        if self.dirty {
+            return self.state == RepositoryCurrentness::Dirty;
+        }
+        if self.state == RepositoryCurrentness::Stale {
+            return true;
+        }
+        if self.local_object.is_none() {
+            return self.state == RepositoryCurrentness::Unborn;
+        }
+        matches!(
+            (self.ahead_count, self.behind_count, self.state),
+            (0, 0, RepositoryCurrentness::Current)
+                | (1.., 0, RepositoryCurrentness::Ahead)
+                | (0, 1.., RepositoryCurrentness::Behind)
+                | (1.., 1.., RepositoryCurrentness::Diverged)
+        )
+    }
+}
+
 /// Derives currentness without accepting branch state from model narration.
 pub fn report_currentness(
     observation: &CurrentnessObservation,
@@ -1472,7 +1528,10 @@ pub fn reconcile_remote_read(
                 return Err(RepositorySafetyError::ResultDenied);
             }
         }
-        (OperationOutcome::Failed | OperationOutcome::Cancelled | OperationOutcome::TimedOut, None) => {}
+        (
+            OperationOutcome::Failed | OperationOutcome::Cancelled | OperationOutcome::TimedOut,
+            None,
+        ) => {}
         _ => return Err(RepositorySafetyError::ResultDenied),
     }
     let mut receipt = RemoteReadReceipt {
@@ -2680,6 +2739,22 @@ mod tests {
         assert_eq!(receipt.currentness_report_sha256, currentness.report_sha256);
         assert_eq!(receipt.bytes_sent, 0);
         assert!(is_sha256(&receipt.receipt_sha256));
+
+        let mut tampered_currentness = currentness.clone();
+        tampered_currentness.behind_count = 2;
+        let tampered = RemoteReadPlatformResult {
+            currentness: tampered_currentness,
+            ..base_result.clone()
+        };
+        assert_eq!(
+            reconcile_remote_read(
+                &plan,
+                tampered,
+                "authority-transaction-read",
+                "operation-attempt-read",
+            ),
+            Err(RepositorySafetyError::ManifestDenied),
+        );
 
         let mutating = RemoteReadPlatformResult {
             bytes_sent: 1,
