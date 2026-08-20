@@ -2413,6 +2413,235 @@ mod tests {
         );
     }
 
+    /// Runs the offline worker end-to-end inside a subprocess whose ambient
+    /// environment is loaded with hostile `GIT_*` variables. Only executes when
+    /// its parent harness launches it via `--exact`; behaves as an inert no-op
+    /// under the normal test-suite invocation.
+    #[test]
+    #[ignore = "internal probe launched by live_ambient_git_variables_do_not_reach_the_offline_worker"]
+    fn ambient_git_hostile_child_probe() {
+        if std::env::var_os("AGENTMAGE_AMBIENT_HOSTILE_CHILD").is_none() {
+            return;
+        }
+        let repository = PathBuf::from(
+            std::env::var_os("AGENTMAGE_AMBIENT_REPO").expect("child fixture repository"),
+        );
+        let git_directory = PathBuf::from(
+            std::env::var_os("AGENTMAGE_AMBIENT_GIT").expect("child fixture git directory"),
+        );
+        let owned = PathBuf::from(
+            std::env::var_os("AGENTMAGE_AMBIENT_OWNED").expect("child fixture owned directory"),
+        );
+        let out_path = PathBuf::from(
+            std::env::var_os("AGENTMAGE_AMBIENT_OUT").expect("child result path"),
+        );
+        let scope = LinuxRepositoryScope::verify(&repository, &git_directory, &owned)
+            .expect("child scope");
+        let collector = LinuxRepositoryCollector::new(
+            LinuxGitArtifact::verify("/usr/bin/git").expect("child git artifact"),
+        );
+        let workspace = crate::authorize_workspace_root(
+            &repository,
+            WorkspaceId::from_raw("workspace-linux-ambient-child-0001"),
+            WorkspaceAuthorizationId::from_raw("authorization-linux-ambient-child-0001"),
+            AdapterInstanceId::from_raw("adapter-linux-ambient-child-0001"),
+        )
+        .expect("child workspace root authorizes");
+        let manifest = LinuxRepositoryInspectionManifest::verify(
+            "/usr/bin/systemd-run",
+            "/usr/bin/systemctl",
+            "/usr/bin/bwrap",
+            "/usr/bin/git",
+        )
+        .expect("child inspection manifest verifies");
+        let executor = LinuxBoundedRepositoryInspectionExecutor::new(manifest)
+            .expect("child inspection executor constructs");
+        let cancellation_token = cancellation("ambient-hostile-child");
+        for (index, operation) in [
+            RepositoryInspectionOperation::Status,
+            RepositoryInspectionOperation::Log,
+            RepositoryInspectionOperation::Diff,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let prepared = prepare_repository_inspection(
+                RepositoryInspectionRequest {
+                    schema_version: 1,
+                    operation,
+                    revision: None,
+                    object_id: None,
+                    pathspecs: Vec::new(),
+                    max_records: 32,
+                    max_output_bytes: 4_096,
+                },
+                "d".repeat(64),
+                hash(format!("ambient-child-{index}").as_bytes()),
+            )
+            .expect("child inspection prepares");
+            let result = executor.run(&prepared, &workspace, &cancellation_token);
+            assert_eq!(
+                result.termination,
+                RepositoryInspectionTermination::Exited,
+                "child {operation:?}: {result:?}"
+            );
+            assert!(
+                result.descendants_terminated,
+                "child {operation:?}: {result:?}"
+            );
+        }
+        let after = collector
+            .collect(&scope)
+            .expect("child post-inspection manifest");
+        fs::write(&out_path, after.manifest_sha256).expect("child writes result manifest digest");
+    }
+
+    /// Live end-to-end proof that hostile ambient `GIT_*` variables set before
+    /// the worker launches cannot reach the sandboxed Git child. The parent
+    /// spawns the current test binary as a subprocess with the hostile
+    /// environment applied and invokes the child probe by exact name.
+    #[test]
+    #[ignore = "requires a supported Linux user systemd session and Bubblewrap"]
+    fn live_ambient_git_variables_do_not_reach_the_offline_worker() {
+        let fixture = Fixture::new();
+        let before = fixture
+            .collector()
+            .collect(&fixture.scope())
+            .expect("pre-ambient manifest");
+        let canaries_dir = fixture.root.join("ambient-canaries");
+        fs::create_dir_all(&canaries_dir).expect("ambient canary directory");
+        let hostile_config = fixture.root.join("ambient-hostile.gitconfig");
+        fs::write(
+            &hostile_config,
+            format!(
+                "[core]\n\tpager = touch {canary}/config-pager\n[alias]\n\tinjected = !touch {canary}/config-alias\n",
+                canary = canaries_dir.display()
+            ),
+        )
+        .expect("hostile ambient config writes");
+        let out_file = fixture.root.join("ambient-child-out");
+        let uid = getuid().as_raw();
+        let self_exe = std::env::current_exe().expect("current test executable");
+
+        let status = Command::new(&self_exe)
+            .env_clear()
+            .env("HOME", "/nonexistent")
+            .env("PATH", "/usr/bin:/bin")
+            .env("LANG", "C")
+            .env("LC_ALL", "C")
+            .env("XDG_RUNTIME_DIR", format!("/run/user/{uid}"))
+            .env(
+                "DBUS_SESSION_BUS_ADDRESS",
+                format!("unix:path=/run/user/{uid}/bus"),
+            )
+            .env("GIT_CONFIG_GLOBAL", &hostile_config)
+            .env("GIT_CONFIG_SYSTEM", &hostile_config)
+            .env("GIT_CONFIG_COUNT", "4")
+            .env("GIT_CONFIG_KEY_0", "core.pager")
+            .env(
+                "GIT_CONFIG_VALUE_0",
+                format!("touch {}/env-pager", canaries_dir.display()),
+            )
+            .env("GIT_CONFIG_KEY_1", "alias.canary")
+            .env(
+                "GIT_CONFIG_VALUE_1",
+                format!("!touch {}/env-alias", canaries_dir.display()),
+            )
+            .env("GIT_CONFIG_KEY_2", "core.hooksPath")
+            .env(
+                "GIT_CONFIG_VALUE_2",
+                format!("{}/env-hooks", canaries_dir.display()),
+            )
+            .env("GIT_CONFIG_KEY_3", "safe.directory")
+            .env("GIT_CONFIG_VALUE_3", "*")
+            .env(
+                "GIT_EXTERNAL_DIFF",
+                format!("touch {}/env-external-diff", canaries_dir.display()),
+            )
+            .env(
+                "GIT_PAGER",
+                format!("touch {}/env-git-pager", canaries_dir.display()),
+            )
+            .env(
+                "GIT_EDITOR",
+                format!("touch {}/env-editor", canaries_dir.display()),
+            )
+            .env(
+                "GIT_SEQUENCE_EDITOR",
+                format!("touch {}/env-sequence-editor", canaries_dir.display()),
+            )
+            .env(
+                "GIT_ASKPASS",
+                format!("touch {}/env-askpass", canaries_dir.display()),
+            )
+            .env(
+                "GIT_SSH_COMMAND",
+                format!("touch {}/env-ssh", canaries_dir.display()),
+            )
+            .env(
+                "GIT_SSH",
+                format!("touch {}/env-git-ssh", canaries_dir.display()),
+            )
+            .env("GIT_TRACE", format!("{}/env-trace", canaries_dir.display()))
+            .env(
+                "GIT_TRACE_PACKET",
+                format!("{}/env-trace-packet", canaries_dir.display()),
+            )
+            .env("GIT_ALLOW_PROTOCOL", "ext")
+            .env("GIT_PROTOCOL", "version=2")
+            .env("GIT_TERMINAL_PROMPT", "1")
+            .env("GIT_OPTIONAL_LOCKS", "1")
+            .env(
+                "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+                fixture.root.join("hostile-alt-objects"),
+            )
+            .env("GIT_OBJECT_DIRECTORY", fixture.root.join("hostile-objects"))
+            .env(
+                "GIT_INDEX_FILE",
+                fixture.root.join("hostile-index"),
+            )
+            .env("GIT_DIR", fixture.root.join("hostile-git-dir"))
+            .env("GIT_WORK_TREE", fixture.root.join("hostile-worktree"))
+            .env("AGENTMAGE_AMBIENT_HOSTILE_CHILD", "1")
+            .env("AGENTMAGE_AMBIENT_REPO", &fixture.repository)
+            .env("AGENTMAGE_AMBIENT_GIT", &fixture.git_directory)
+            .env("AGENTMAGE_AMBIENT_OWNED", &fixture.owned)
+            .env("AGENTMAGE_AMBIENT_OUT", &out_file)
+            .args([
+                "repository_safety::tests::ambient_git_hostile_child_probe",
+                "--exact",
+                "--include-ignored",
+                "--nocapture",
+                "--test-threads=1",
+            ])
+            .stdin(Stdio::null())
+            .status()
+            .expect("child subprocess launches");
+        assert!(status.success(), "child subprocess reported {status}");
+
+        let leaked: Vec<_> = fs::read_dir(&canaries_dir)
+            .expect("canary directory reads")
+            .filter_map(Result::ok)
+            .map(|entry| entry.file_name())
+            .collect();
+        assert!(
+            leaked.is_empty(),
+            "ambient GIT_* canaries fired inside the worker: {leaked:?}"
+        );
+
+        let after = fixture
+            .collector()
+            .collect(&fixture.scope())
+            .expect("post-ambient manifest");
+        assert_eq!(after, before);
+
+        let child_manifest = fs::read_to_string(&out_file)
+            .expect("child result manifest digest")
+            .trim()
+            .to_owned();
+        assert_eq!(child_manifest, before.manifest_sha256);
+    }
+
     fn eligible_record(path_sha256: String, source_object: String) -> OwnedWorktreeRecord {
         OwnedWorktreeRecord::seal(OwnedWorktreeRecord {
             schema_version: 0,
