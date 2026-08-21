@@ -279,6 +279,27 @@ class MacosPlatformManifestContractTests(unittest.TestCase):
             "unauthorized field in a newly added section must fail",
         )
 
+    def test_duplicate_section_heading_cannot_hide_unauthorized_field(
+        self,
+    ) -> None:
+        """CM-7.1.1.2-003: appending a second occurrence of an existing
+        heading must not let an unauthorized manifest-field declaration
+        bypass the closed-field-set validation."""
+        addition = (
+            "\n## Shared Runtime Identity\n\n"
+            "- `unauthorized_new_field`: required manifest field.\n"
+        )
+        mutated = self.freeze_text + addition
+        failures = MODULE.validate_freeze_document(mutated)
+        self.assertTrue(
+            any(
+                "unauthorized manifest field" in failure
+                and "unauthorized_new_field" in failure
+                for failure in failures
+            ),
+            "duplicate heading must not hide an unauthorized manifest field",
+        )
+
     def test_adapter_observation_identifier_is_not_treated_as_manifest_field(
         self,
     ) -> None:

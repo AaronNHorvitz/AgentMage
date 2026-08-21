@@ -395,23 +395,46 @@ def _all_section_headings(text: str) -> list[str]:
     return [line for line in text.splitlines() if line.startswith("## ")]
 
 
+def _iter_section_bodies(text: str) -> list[tuple[str, str]]:
+    """Return every ``## `` section as ``(heading, body)`` pairs in document
+    order. Walks the file once so a duplicate heading cannot hide a second
+    section body behind the first occurrence that ``_extract_section`` would
+    otherwise return."""
+    sections: list[tuple[str, str]] = []
+    current_heading: str | None = None
+    current_body: list[str] = []
+    for line in text.splitlines():
+        if line.startswith("## "):
+            if current_heading is not None:
+                sections.append((current_heading, "\n".join(current_body)))
+            current_heading = line
+            current_body = []
+        elif current_heading is not None:
+            current_body.append(line)
+    if current_heading is not None:
+        sections.append((current_heading, "\n".join(current_body)))
+    return sections
+
+
 def extract_declared_fields(text: str) -> set[str]:
     """Return every manifest-field identifier declared by a top-level bullet
     anywhere in the freeze document, sourced only from the bullet head
     (before the first ``:``).
 
-    Every ``##`` section is inspected so that a manifest-field declaration
-    cannot be smuggled outside a previously allowlisted section. Identifiers
-    that name separately typed adapter observations (per
-    ``ADAPTER_OBSERVATION_ALLOWLIST``) are excluded because they are not
-    manifest fields. A bullet without a ``:`` is prose that references
-    identifiers rather than declaring them; it is skipped so that removing a
-    real declaration bullet while leaving an incidental backticked mention
-    still fails the contract.
+    Every ``##`` section body is inspected in one ordered pass so that a
+    manifest-field declaration cannot be smuggled outside a previously
+    allowlisted section, and so that appending a second occurrence of an
+    existing heading cannot hide a body behind the first match returned by
+    ``_extract_section``. Identifiers that name separately typed adapter
+    observations (per ``ADAPTER_OBSERVATION_ALLOWLIST``) are excluded because
+    they are not manifest fields. A bullet without a ``:`` is prose that
+    references identifiers rather than declaring them; it is skipped so that
+    removing a real declaration bullet while leaving an incidental backticked
+    mention still fails the contract.
     """
     declared: set[str] = set()
-    for heading in _all_section_headings(text):
-        for bullet in _bullets(_extract_section(text, heading)):
+    for _heading, body in _iter_section_bodies(text):
+        for bullet in _bullets(body):
             if ":" not in bullet:
                 continue
             head = bullet.split(":", 1)[0]
