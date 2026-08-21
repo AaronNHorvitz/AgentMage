@@ -467,6 +467,27 @@ The normative implementation detail for this control family is
 | `SR-AUD-009` | Bound audit resources without silently dropping coverage. | Enforce visible file, byte, graph, packet, context, output, concurrency, CPU, memory, graphics, disk, time, and retention limits with checkpointed pause or block. | Exceed each limit during census, parsing, verification, semantic review, reconciliation, reporting, cancellation, and recovery; require responsiveness, cleanup, accurate gaps, and no weakened profile. |
 | `SR-AUD-010` | Make audit capability and retained evidence independently removable. | Cancel work, terminate workers, remove scratch, indexes, cards, checkpoints, findings, caches, registrations, and path authorities according to retention without changing source or neighboring data. | Remove during idle, parsing, verification, model analysis, reconciliation, reporting, crash, and restore; require zero worker, process, socket, path, schedule, authority, or undeclared residue. |
 
+### 8.16 Foundational Artifact and Workflow Runtime Security
+
+Decision 0042 composes existing controls rather than creating a separate security domain or new
+stable requirement identifiers. The mapped controls and reviewer protocols remain release-blocking
+where their owning sprint or release gate says so.
+
+| Boundary | Required control composition | Blocking evidence |
+|---|---|---|
+| Request-bound Chat ingress | `SR-ACC-001` through `SR-ACC-008`, `SR-PLT-005`, `SR-DAT-001` through `SR-DAT-004`, and `SR-AI-005` | Every supplied reference is accounted for; ambient workspace access and silent non-text omission are absent; remote or virtual references disclose no bytes without exact current request authority. |
+| Source-artifact admission and extraction | `SR-PLT-003`, `SR-PLT-004`, `SR-DAT-001` through `SR-DAT-007`, `SR-TST-002`, `SR-TST-004`, `SR-TST-006`, and parser-isolation portions of `SR-AUD-004` | Detection, parsing, active-content refusal, archive and relationship traversal, resource ceilings, cancellation, crash cleanup, secret handling, and unsupported states pass the hostile corpus. |
+| Context budgeting and source persistence | `SR-DAT-003` through `SR-DAT-008`, `SR-AI-002`, `SR-AI-006`, `SR-AI-009`, `SR-OPS-001`, and `SR-OPS-002` | Exact token partitions reconcile; every omission is visible; source manifests and encrypted payload references obey classification, retention, deletion, refresh, and invalidation rules. |
+| Step admission and tool calls | `SR-ACC-002`, `SR-ACC-004`, `SR-AI-003` through `SR-AI-008`, `SR-OPS-001`, and `SR-TST-004` | Missing, malformed, stale, unauthorized, over-budget, and unsupported calls fail before dispatch; model content cannot create authority or completion. |
+| Side effects, attempts, and recovery | `SR-ACC-004`, `SR-OPS-001` through `SR-OPS-005`, `SR-TST-005` through `SR-TST-009`, plus connected-effect controls when applicable | Every permitted retry is a fresh attempt; no consumed grant or effect is replayed; uncertain effects block; budgets terminate; one diagnostic exists for every non-cancelled failure. |
+| Cross-interface and MCP exposure | `SR-PLT-005`, `SR-AI-005`, `SR-TST-004`, `SR-TST-007`, and adapter controls when applicable | Chat, CLI, headless, and MCP clients produce the same correctness state and evidence from the same authorized input; no client gains parser, policy, storage, effect, retry, or completion authority. |
+
+The first execution owners are the mapped Decision 0042 stories in Sprints 1, 2, 5, 11, 13, 16,
+21-23, 50, 58, 60, 62, and 81. `RV-03`, `RV-04`, `RV-08`, `RV-11`, `RV-12`, `RV-15`, `RV-16`,
+`RV-17`, `RV-18`, and `RV-25` apply according to the exact boundary under review. Existing
+no-hidden-retry, no-replay, verifier-only completion, zero-silent-drop, and parser-isolation results
+remain mandatory regression evidence.
+
 ## 9. Proposed Reviewer Command Contract
 
 These commands are interfaces to implement. They do not exist yet. They should be packaged in a signed, read-only verifier and must not modify the workstation except inside an explicit temporary test directory.
@@ -1126,6 +1147,10 @@ Integrate this security baseline into the project without turning it into a pape
 12. Run `RV-36` through `RV-43` incrementally with the owning trusted-operations sprint and rerun the complete set at Sprint 166; extend `RV-13`, `RV-14`, `RV-17`, and `RV-41` for Decision 0027 in Sprints 12-15 and 165; run `RV-42` again for the post-GA Experimental Model Lab gate.
 13. Run `RV-44` through `RV-48` with their owning whole-codebase audit stories and rerun the complete set from raw evidence at Sprint 166.
 14. Run `RV-49` first across Sprints 42, 47, 71, 85-86, and 106 as its local, authentication, commit, push, and hosted boundaries become available; rerun it at Sprints 126 and 166 and for every source-control adapter promotion.
+15. Run the Decision 0042 artifact-ingestion and verified-workflow corpus incrementally through its
+    owning sprints. Require complete input accounting, exact token-ledger reconciliation, bounded
+    parser isolation, fresh attempt identities, no effect replay, verifier-only completion, one
+    terminal diagnosis per non-cancelled failure, and identical correctness results across clients.
 
 Recommended implementation gates:
 
@@ -1148,6 +1173,7 @@ Recommended implementation gates:
 | `SEC-G14` Experimental models | Post-GA lab authority absence, resource confinement, truthful provenance gaps, normal-admission-only promotion, and removal pass independently from first GA. |
 | `SEC-G15` Whole-codebase audit | Complete census, deterministic structure, bounded semantic review, cross-module reconciliation, canonical immutability, secret protection, checkpoint invalidation, evidence-backed reporting, platform parity, resource controls, and removal pass. |
 | `SEC-G16` Repository safety | Exact preservation manifests, hardened Git process isolation, namespaced fetches, owned worktrees and indexes, signed commits, host/account/repository/ref-bound authentication, separately approved ordinary fast-forward pushes, uncertain-effect reconciliation, prohibited-operation absence, and `RV-49` pass. |
+| `SEC-G17` Foundational artifact and workflow runtime | Request-bound ingress, zero silent drop, parser isolation, complete context accounting, deterministic preflight, fresh-attempt no-replay, verifier-only completion, bounded recovery, terminal diagnosis, interface parity, `M-FOUNDATIONAL-RUNTIME-CORE` at Sprint 50, and complete `M-FOUNDATIONAL-RUNTIME` no earlier than Sprint 62. |
 
 ## 14. Release Decision Rule
 

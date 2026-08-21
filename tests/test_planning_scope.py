@@ -52,7 +52,9 @@ class PlanningScopeTests(unittest.TestCase):
         failures, report = self.validate()
 
         self.assertEqual(failures, [])
-        self.assertEqual(report["accepted_decisions"], ["ADR-0027", "ADR-0040"])
+        self.assertEqual(
+            report["accepted_decisions"], ["ADR-0027", "ADR-0040", "ADR-0042"]
+        )
         self.assertEqual(
             report["historical_baseline"],
             {"stable_requirements": 241, "normative_mappings": 30},
@@ -63,6 +65,7 @@ class PlanningScopeTests(unittest.TestCase):
                 "stable_requirements": 241,
                 "normative_mappings": 31,
                 "epics": 17,
+                "foundational_runtime_epics": 2,
                 "sprints": 169,
             },
         )

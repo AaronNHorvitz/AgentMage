@@ -418,6 +418,7 @@
     "new_capability_families_frozen": false,
     "original_roadmap_paused": false,
     "accepted_epics": 17,
+    "accepted_foundational_runtime_epics": 2,
     "accepted_sprints": 169,
     "stable_requirements": 241,
     "exception_requires_explicit_approval": true,

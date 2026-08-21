@@ -11,7 +11,7 @@
 | Security-review authority | [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) |
 | Granular execution authority | [`TASKS.md`](./TASKS.md) |
 | Supporting policies | [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md), [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md), [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md), [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md), [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md), [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md), and [`architecture/status-model.json`](./architecture/status-model.json) |
-| Planning sequence | 169 sequential dependency gates across 17 epics; no calendar estimate implied |
+| Planning sequence | 169 sequential dependency gates across 17 release epics and two cross-cutting foundational runtime epics; no calendar estimate implied |
 
 ## 1. Purpose
 
@@ -37,7 +37,8 @@ Stabilization scope freeze: inactive.
 
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json) govern
-these current-state claims. This plan preserves the complete 17-epic,
+these current-state claims. This plan preserves the complete 17-release-epic,
+two-foundational-runtime-epic,
 169-sprint, 241-requirement target sequence. Under
 [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), that
 sequence resumes at its first incomplete dependency gate. New capability
@@ -315,6 +316,50 @@ deployment, and postcondition reconciliation outside model judgment. The
 complete catalog and canonical workflows are defined in
 [`planning-review-and-delivery-agent-profiles.md`](./docs/architecture/planning-review-and-delivery-agent-profiles.md).
 
+### 4.13 Universal Artifact Ingestion and Context Preparation
+
+Decision 0042 defines universal artifact ingestion as a cross-cutting foundational runtime epic,
+not a shell feature or a second context manager. The stable Visual Studio Code Chat Participant is
+the guaranteed request-ingress path. TypeScript may enumerate references explicitly supplied to
+that participant, stream bounded bytes for those references, render progress, and report
+unavailable content. It may not parse documents, choose context, grant ambient workspace access,
+or silently discard an unsupported message part.
+
+Rust owns source-artifact identity, provenance, classification, type detection, bounded extraction,
+canonical sections, lexical retrieval, cache invalidation, retention, and model-profile-aware token
+allocation. Source artifacts use a distinct logical manifest while sharing the existing encrypted
+content-addressed payload backend. Extracted candidates enter the existing Story 22.1 context
+manager; no parallel prompt assembler or physical artifact store is introduced. Existing DOCX,
+PDF, and spreadsheet parsers become adapters to this service through their owning sprints.
+
+The current extension contract still prohibits workspace reads. Story 1.2 must amend that contract,
+its validator, and its evidence together before the participant may resolve request-bound local
+references. Ambient workspace enumeration remains prohibited. Provider compatibility is best
+effort because current provider APIs receive normalized text rather than the participant's complete
+reference set. Stable, Preview, proposed, and private Visual Studio Code surfaces remain explicitly
+separated.
+
+### 4.14 Verified Workflow Execution and Recovery
+
+Decision 0042 also defines an additive deterministic supervisor around the existing reusable runtime
+coordinator. It does not create another agent loop, plan schema, policy engine, tool dispatcher,
+journal, artifact store, or completion authority. The supervisor binds each existing plan step to
+preflight, side-effect, approval, idempotency, verification, retry, budget, and diagnostic policies.
+
+The existing zero-hidden-retry runtime behavior remains valid. A permitted retry is a new attempt
+with a new tool-call identity, operation-attempt identity, grant, and approval when required; no
+effect call, consumed grant, or receipt is replayed. Read-only and proven-idempotent operations may
+be eligible only after deterministic reconciliation. Conditional, non-idempotent, destructive,
+external, and unknown effects fail closed unless their exact policy and current authority permit a
+new attempt. Models propose; kernel policy, platform preflight, tool execution, deterministic
+verification, and recovery state establish runtime truth.
+
+The supervisor persists attempt state, preflights, verification observations, budget consumption,
+recovery decisions, and terminal diagnostics through the current journal, artifact, checkpoint,
+and operational-store boundaries. Premature stopping, malformed calls, repeated state fingerprints,
+uncertain effects, interruption, and exhausted budgets end in a resumable diagnosis rather than a
+false completion or unbounded loop.
+
 ## 5. Cross-Cutting Workstreams
 
 These workstreams continue across multiple epics even though their first deliverables occur in a specific sprint range.
@@ -328,6 +373,8 @@ These workstreams continue across multiple epics even though their first deliver
 | Data and privacy | Epic 1 | Classification, encrypted operational state, retention, local data root, knowledge authority, export, backup, and deletion |
 | Deterministic evidence | Epic 1 | Read-only tools, Git, repository map, evidence states, citations, runtime journal, large-output artifact references, reconciliation, and truthful completion |
 | Runtime composition | Epics 1 and 4 | Shared run request/event/outcome contracts, bounded agent loop, context, model, tool dispatch, policy dispositions, session state, cancellation, journal, artifacts, and recovery |
+| Universal artifact ingestion | Cross-cutting foundational runtime epic | Participant reference ingress, source-artifact manifests, bounded Rust extraction, structural sections, lexical retrieval, explicit token allocation, context-manifest accounting, parser adaptation, cache invalidation, and native artifact tools |
+| Verified workflow execution | Cross-cutting foundational runtime epic | Step execution policy, preflight, attempt identity, side-effect and retry eligibility, deterministic verification, premature-stop handling, durable recovery, terminal diagnosis, and fault campaigns |
 | User interfaces | Epic 1 | Native Visual Studio Code Chat, then the v0.4 interactive coding CLI and later desktop applications using the same runtime coordinator and kernel |
 | Capability expansion | Epics 2-8 | Knowledge, writes, coding, frontier consultation, documents, connectors, web, schedules, and agents |
 | Delivery graph and adapters | Epics 7-10 | Provider SDK, identity correlation, GitHub/GHES, Jira, Azure DevOps, GitLab, Jenkins, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, and releases |
@@ -387,6 +434,13 @@ Sprints are numbered dependency and evidence gates, not calendar estimates. Work
 | 15 | Trusted operations, whole-codebase audit, and superseding v1.0 GA | 157-166 | `G-TRUSTED-OPERATIONS`, `G-CODEBASE-AUDIT`, and `G-GA` |
 | 16 | Post-GA Experimental Model Lab | 167-168 | `G-EXPERIMENTAL-MODELS` |
 
+The two cross-cutting foundational runtime epics do not add release numbers or sprint identities.
+Their dependency-ordered stories are distributed through existing owners in Sprints 1, 2, 5, 11,
+13, 16, 21-23, 50, 58, 60, 62, and 81. Their integrated milestone is
+`M-FOUNDATIONAL-RUNTIME-CORE` at Sprint 50, followed by `M-FOUNDATIONAL-RUNTIME` after the required
+DOCX, PDF/OCR, and spreadsheet adapters in Sprint 62. Both are internal evidence gates and neither
+supersedes a release gate.
+
 ### 6.1 Active Roadmap Execution Spine
 
 The canonical task order remains `TASKS.md`. The following execution spine is a
@@ -428,6 +482,10 @@ lifecycle is not platform support; and platform support is not final release.
    before the Decision 0025 manual fuzz campaign.
 7. Fix and rerun every affected boundary after the campaign, then enter Sprint
    166 independent release reproduction.
+8. Implement the two Decision 0042 foundational runtime epics in their mapped dependency order:
+   contracts and fixtures first; policy, persistence, model budgets, and tool protocols next;
+   journal, context, coordinator, and Chat ingress after those foundations; parser adapters and MCP
+   exposure only after the native runtime path; integrated hardening last.
 
 ### 6.3 Interactive Coding Harness Dependency Slice
 
@@ -777,6 +835,28 @@ write authority. Results remain visibly experimental.
 authority absence, robust artifact handling, truthful gaps, resource control, complete removal, and
 no direct promotion route. This gate does not block v1.0 GA.
 
+### 7.18 Cross-Cutting Foundational Runtime Epics
+
+**Universal Artifact Ingestion and Context Preparation objective:** Accept user-supplied text,
+files, and stable Chat references without silent loss; prepare bounded, provenance-preserving,
+model-ready context through one reusable Rust service; and expose truthful unsupported, partial,
+truncated, stale, and omitted states.
+
+**Verified Workflow Execution and Recovery objective:** Carry a bounded plan through deterministic
+preflight, exact tool admission, evidence-bearing execution, verifier-only completion, safe new
+attempts, crash recovery, and actionable terminal diagnosis without hidden replay or model-created
+authority.
+
+**Core milestone:** `M-FOUNDATIONAL-RUNTIME-CORE` passes at Sprint 50 only when the text/log artifact
+and verified-workflow vertical slices run through the shared runtime, every supplied source is
+accounted for, every non-cancelled failure has one terminal diagnosis, no guarded effect is
+duplicated, no unsupported input is silently dropped, and declared budgets hold.
+
+**Complete milestone:** `M-FOUNDATIONAL-RUNTIME` passes no earlier than Sprint 62, after the DOCX,
+PDF/native-text, separately admitted OCR, and spreadsheet source adapters pass their own fidelity,
+security, packaging, lifecycle, context, and parity gates. Neither milestone is a supported-release
+claim, and optional MCP exposure remains later and non-blocking.
+
 ## 8. Product Security and Independent Verification
 
 Security assurance is built with each component rather than added after feature completion.
@@ -882,6 +962,9 @@ Critical or high vulnerabilities, undeclared components or data flows, unavailab
 | Model-catalog or download substitution | A different, unlicensed, unsupported, or hostile artifact becomes active | Exact first-party identity, immutable hashes, quarantine, admission states, deterministic preview, separate installer, atomic activation, rollback, and no model self-approval. |
 | Large-repository context and summary drift | Files are omitted, contradictions disappear, or partial model summaries are presented as whole-codebase understanding | Complete census, deterministic structural graph, coherent packets, source-pinned evidence cards, persistent encrypted project memory, mandatory cross-module reconciliation, transitive invalidation, and explicit coverage gaps. |
 | Read-only audit mutates source or exposes secrets | Builds, parsers, hooks, tools, or hostile repository content alter canonical state or place protected values in model context | Read-only source handles, disposable copy-on-write verification, no hosted or credential authority, before-and-after attestation, parser isolation, pre-model classification and redaction, canaries, and `RV-45`. |
+| Unsupported or oversized artifacts are silently omitted | The user believes the model saw evidence that never entered context | Participant-first reference accounting, fail-visible provider behavior, source-artifact manifests, exact extraction states, context manifests, token-ledger reconciliation, and zero-silent-drop fixtures. |
+| Hostile document parsing escapes its budget or authority | Malformed files consume resources, traverse paths, execute active content, or disclose data | Rust-owned admission, isolated bounded parsers, no active content, archive and relationship traversal defenses, cancellation, resource ceilings, secret classification, and parser-specific hostile corpora. |
+| Workflow retries duplicate effects or loop indefinitely | External or local state changes twice, approval is bypassed, or execution never terminates | Closed side-effect classes, preflight and reconciliation, fresh attempt identities and grants, no replay, separate budgets, repeated-state detection, verifier-only completion, and deterministic terminal diagnostics. |
 
 ## 12. Planning and Change Management
 
@@ -908,6 +991,12 @@ Changes to the implementation sequence follow these rules:
     delivery, GitHub, work-management, CI, release, incident, and security
     requirements. It adds no requirement or sprint identity, grants no current
     authority, and leaves `M-HARNESS-MVP` earlier in dependency order.
+18. Decision 0042 establishes universal artifact ingestion and verified workflow execution as two
+    cross-cutting foundational runtime epics. It adds no stable requirement, release, or sprint
+    identity; preserves existing completed work; reuses the existing context manager, runtime
+    coordinator, journal, artifact backend, tool dispatcher, policy engine, and verifier; and adds
+    dependency-ordered stories and the internal `M-FOUNDATIONAL-RUNTIME-CORE` and
+    `M-FOUNDATIONAL-RUNTIME` gates.
 
 ### 12.1 Interactive Coding Runtime Execution Order
 
@@ -957,6 +1046,36 @@ The standardized profile family is implemented in this dependency order:
 Role templates may be documented before these dependencies pass. No role may
 execute out of order, and no external provider workflow may use a synthetic or
 local-only result as conformance evidence.
+
+### 12.3 Foundational Artifact and Workflow Execution Order
+
+1. Freeze source-artifact, extraction, context-manifest, step-policy, attempt, preflight,
+   verification, recovery, diagnostic, and event contracts in Story 1.2.
+2. Add deterministic format, budget, malformed-call, transient-failure, uncertain-effect,
+   interruption, and premature-stop corpora in Story 2.3.
+3. Define side-effect, approval, idempotency, retry, no-replay, and effect-reconciliation policy in
+   Story 5.2.
+4. Add transactional source-artifact and workflow materializations plus migrations and rollback in
+   Story 11.2.
+5. Define model-profile token partitions and orchestration adaptation in Story 13.4 without moving
+   safety or completion policy into a model profile.
+6. Freeze artifact tool schemas/registry ports against a fake backend and implement tool-call
+   preflight/evidence composition in Stories 16.2 and 16.3.
+7. Extend ordered runtime events, then implement the source-artifact core, production native
+   artifact tools, and durable recovery through Stories 21.3, 22.3, and 22.4.
+8. Implement stable participant ingress and one fake-model verified workflow through Stories 23.5
+   and 23.6. Provider mode must report non-text loss rather than silently omitting it.
+9. Run integrated text/log plus verified-workflow parity, security, recovery, pressure, and
+    evaluation campaigns in Story 50.3 and close only `M-FOUNDATIONAL-RUNTIME-CORE`.
+10. Adapt DOCX, PDF/OCR, and spreadsheet extractors in Stories 58.2, 60.2, and 62.2, then evaluate
+    the complete `M-FOUNDATIONAL-RUNTIME` milestone; admit OCR separately with page/image
+    provenance and confidence.
+11. Expose the already verified native artifact tool family through optional MCP in Story 81.2;
+    MCP does not own ingestion, policy, storage, or execution.
+12. Close `M-FOUNDATIONAL-RUNTIME-CORE` at Sprint 50 only from current core implementation and raw
+    evidence; close `M-FOUNDATIONAL-RUNTIME` no earlier than Sprint 62 from current parser-adapter,
+    packaging, security, context, and parity evidence. Preserve truthful unsupported-platform and
+    unavailable-API records at both gates.
 
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 

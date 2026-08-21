@@ -10,7 +10,7 @@
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
 | **High-level implementation plan** | [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) |
-| **Execution plan** | [TASKS.md](./TASKS.md) - 17 epics and 169 sequential dependency gates |
+| **Execution plan** | [TASKS.md](./TASKS.md) - 17 release epics, two foundational runtime epics, and 169 sequential dependency gates |
 | **First-GA reference platforms** | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon MacBook Pro M5 retained post-GA |
 | **First interface target** | Native Visual Studio Code Chat |
 | **Current enabled model** | None; Muse Glimmer is the primary evaluation candidate, eligible first-party Gemma models form the initial role-aware comparison inventory, and prior evaluated Gemma 4 E4B and Gemma 4 12B Unified profiles remain rejected |
@@ -38,7 +38,7 @@ This PRD specifies the accepted target product; it does not claim that the
 target is currently available. The current state is governed by
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json). The
-    17 epics, 169 sprints, and 241 stable requirements remain accepted and
+    17 release epics, two foundational runtime epics, 169 sprints, and 241 stable requirements remain accepted and
 protected. [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md)
 records the user's acceptance of the stabilization residuals and authorizes
 execution to resume at the first incomplete dependency gate. It does not close
@@ -678,7 +678,7 @@ Managed-device evaluation is optional and outside the personal development bound
 
 ## 22. Planning and Execution Contract
 
-`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 17 epics and 169 sequential dependency gates, numbered 0 through 168. A sprint is a dependency and evidence boundary rather than a calendar estimate. It contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains reviewable. Decisions 0001, 0008, 0009, 0010, 0011, and 0026 record the additions-only evolution; Decision 0025 changes only the timing of real fuzz-engine execution and leaves every affected gate open.
+`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 17 release epics, two cross-cutting foundational runtime epics, and 169 sequential dependency gates numbered 0 through 168. A sprint is a dependency and evidence boundary rather than a calendar estimate. It contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains reviewable. Decisions 0001, 0008, 0009, 0010, 0011, and 0026 record the additions-only evolution; Decision 0025 changes only the timing of real fuzz-engine execution and leaves every affected gate open.
 
 ```mermaid
 flowchart LR
@@ -1021,3 +1021,197 @@ release, and platform dependencies. Story 125.2 then proves all 49 enabled
 profiles in complete lifecycle, attack, recovery, replacement, and truthful-
 completion campaigns. No role profile changes the earlier `M-HARNESS-MVP`
 dependency or creates a current implementation or support claim.
+
+## 37. Foundational Universal Artifact Ingestion
+
+[Decision 0042](./docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md)
+establishes **FRE-INGEST - Universal Artifact Ingestion and Context
+Preparation** as a cross-cutting foundational runtime epic. It refines the
+existing kernel, data, privacy, model, tool, evidence, session, VS Code,
+document, retrieval, and test requirements without creating a competing release
+plan.
+
+### Product problem and value
+
+Large pasted text, file references, logs, diagnostics, notebooks, images, PDFs,
+DOCX files, and spreadsheets can cross VS Code and model-provider boundaries in
+different forms. AgentMage cannot recover bytes that VS Code omitted before an
+AgentMage-owned boundary received them. When bytes are accessible, users need
+one local, source-preserving path that extracts and budgets them without silent
+loss, unsupported format claims, or model-specific preprocessing.
+
+### Scope and architectural placement
+
+The supported path is an AgentMage-owned chat participant or custom-agent
+session using stable public VS Code APIs. The thin TypeScript adapter accounts
+for every publicly exposed reference supplied to the current request, attempts
+to resolve only content available through documented APIs and current
+authority, and streams accessible bounded bytes over the existing authenticated
+local protocol. Opaque or unavailable values remain visible states rather than
+a promise that the participant receives arbitrary attachment bytes. Rust owns admission, type detection,
+format extraction, canonicalization, classification, redaction, provenance,
+content addressing, retention, chunking, indexing, retrieval, model-aware
+budgeting, context manifests, and evaluation.
+
+The language-model provider remains a model-picker and compatibility path and
+can process only message parts delivered to it. An HTTP inference proxy can
+normalize only the request it receives. MCP can expose only a path, URI,
+resource, handle, or staged artifact. None may claim recovery of unavailable
+content.
+
+The common artifact contract records exact source, digest, type, size,
+extraction method and version, warnings, confidence, trust, sensitivity,
+retention, redaction, parentage, structural provenance, inclusion state, and
+truncation or omission reason. Runtime-generated outputs continue to use the
+existing runtime-artifact lifecycle; source artifacts use a distinct envelope
+and link to runtime evidence by immutable identity.
+
+Source bytes remain memory-only by default. Explicit policy-approved resume or
+retention may persist encrypted payloads through the existing runtime-artifact
+backend under a separate logical source manifest. Absolute paths and original
+URIs remain protected metadata and never enter model-visible context manifests;
+timestamps and token estimates cannot alter content identity.
+
+Initial adapter families cover streaming text and diagnostic logs, searchable
+PDF, scanned-page OCR fallback, DOCX, and XLSX. Existing knowledge-capability
+parsers remain the format implementation owners behind path-free Rust contracts.
+The kernel engine orchestrates them without importing capability code.
+
+### Security, privacy, and non-goals
+
+Artifact content is untrusted data. It cannot alter policy, authority, tool
+registration, model selection, workflow completion, or destination. File-type
+sniffing, archive and decompression limits, traversal and link defenses,
+resource ceilings, cancellation, temporary-file cleanup, secret-redaction
+hooks, encrypted metadata, workspace/session scoping, deterministic cache
+invalidation, and audit events apply before model inclusion.
+
+Local artifacts are not sent to a remote provider by default. Remote disclosure
+requires a separately enabled provider, current policy, exact destination,
+classification, minimization, preview, and receipt.
+
+This epic does not promise access to private VS Code internals, perfect PDF
+reading order, silent password bypass, formula execution, automatic OCR of
+every document, unrestricted archive extraction, or whole-corpus prompt
+stuffing.
+
+### Acceptance and rollout
+
+The blocking corpus includes long pasted text; text and growing logs; searchable,
+scanned, malformed, encrypted, and oversized PDFs; structured and hostile DOCX;
+formula/date/hidden-sheet/oversized XLSX; invalid encodings; remote-workspace
+URIs; combined context overflow; label-only references; extraction
+cancellation; cache invalidation; and remote-disclosure denial.
+
+Every offered reference receives one visible admitted, unavailable, rejected,
+cancelled, summarized, indexed, or omitted disposition. Context requests stay
+inside the selected exact model profile, preserve a verification and recovery
+reserve, and disclose tokenizer uncertainty. Zero silent attachment drops in
+the supported participant path and zero unauthorized remote transmissions are
+blocking release requirements.
+
+Rollout begins with contracts, fakes, plain text/logs, and context manifests;
+adds the participant path; then adds rich format adapters, retrieval, optional
+OCR, provider compatibility, and MCP exposure under separate feature flags and
+platform evidence.
+
+## 38. Foundational Verified Workflow Execution and Recovery
+
+Decision 0042 also establishes **FRE-WORKFLOW - Verified Workflow Execution and
+Recovery** as a cross-cutting foundational runtime epic. It completes and
+hardens the existing deterministic agent state, runtime coordinator, journal,
+tool, approval, verifier, artifact, checkpoint, recovery, and caller-neutral
+workflow boundaries rather than introducing another agent framework.
+
+### Product problem and value
+
+A model may describe an action without invoking it, stop after an intermediate
+result, repeat a deterministic failure, emit malformed calls, ignore tool
+evidence, or claim completion prematurely. A fluent response is not execution
+evidence. The Rust runtime, not a model or shell, owns workflow truth.
+
+### Runtime contract
+
+The persisted workflow projection follows `RECEIVE`, `PLAN`, `PREFLIGHT`,
+conditional `AWAIT_APPROVAL`, `EXECUTE`, `OBSERVE`, and `VERIFY`, followed by
+`CONTINUE`, `RETRY`, `REPLAN`, `DIAGNOSE`, `COMPLETE`, `FAILED`, or `CANCELLED`.
+Transitions outside model judgment are deterministic and invalid transitions
+fail closed.
+
+Each step binds exact workflow, dependencies, goal, tool, inputs, preconditions,
+expected observations, postconditions, verifier, side-effect class, approval,
+retry policy, timeout, status, evidence, failures, proposal/model/runtime,
+snapshot, schema, policy, and timestamps. Only executor-authored observations
+and registered verifier results can advance authoritative state.
+
+Tool calls undergo complete stream assembly, closed schema validation,
+canonical identity and path checks, size bounds, duplicate detection, safe
+deterministic normalization, and at most the measured profile's bounded targeted
+repair. Missing, malformed, truncated, stale, replayed, or unsupported calls
+produce typed evidence and are never silently discarded.
+
+Deterministic preflight covers trust, repository and revision, paths, files,
+executables, environment references without values, network policy, services,
+ports, containers, permissions, disk, processes, interactivity, and operating-
+system support. The trusted executor records immutable inputs, authority,
+sandbox, timing, status, output artifacts, changed resources, cancellation,
+errors, attempts, receipts, and digests.
+
+### Retry, approval, and completion
+
+Side-effect classes distinguish read-only, idempotent write, conditionally
+idempotent, non-idempotent, destructive, external effect, and unknown actions.
+Destructive and external actions are never automatically retried. Uncertain
+outcomes are reconciled before any new attempt, unknown classes fail toward
+approval, and materially changed retries require fresh narrow authority.
+
+Retry budgets are independent for steps, tools, error classes, workflow
+recovery, model repair, replanning, elapsed time, and inference. Backoff applies
+only to classified transient failures. Repeated action, failure, verification,
+and state fingerprints trigger changed-strategy and hard-stop diagnostics.
+
+A workflow reaches `COMPLETE` only when every required step has current
+deterministic evidence or an explicit permitted deferral. Model final text,
+confidence, a classifier, self-review, or a model judge cannot establish
+completion.
+
+### Persistence, recovery, and diagnostics
+
+SQLite remains authoritative for workflow projections while the append-only
+journal preserves history and content-addressed artifacts retain large results.
+Transactions bind grants, effects, receipts, events, verifications, artifacts,
+and checkpoints where atomicity is required. Restart revalidates the exact task,
+source snapshot, policy, model profile, tool catalog, journal, artifacts,
+checkpoint, approval, and effect state. Consumed grants and guarded side effects
+never replay.
+
+Every non-user-cancelled terminal failure returns an actionable structured
+diagnostic naming the goal, final state, failed and last verified steps, failure
+class, attempts, status/error evidence, artifacts, blocked retry reason,
+approval need, safe next action, workflow/resume identity, and trace identity.
+
+### Model adaptation, evaluation, and non-goals
+
+Model profiles may tune planning horizon, schema complexity, one-tool-per-turn
+behavior, parallel reads, repair budget, recovery prompts, observation size,
+checkpoint horizon, and no-progress thresholds. They cannot weaken approval,
+grants, side-effect classes, idempotency, executor authority, evidence, or
+completion.
+
+The fault corpus covers malformed and truncated calls, empty responses,
+premature completion, missing executables, delayed services, transient and
+deterministic failures, authentication denial, dirty Git, unknown effects,
+hallucinated results, loops, oversized output, cancellation, model-server
+disconnect, and crash/resume. Blocking gates include zero false `COMPLETE`
+states in deterministic fixtures, zero destructive automatic retries, zero
+approval bypasses, zero duplicate guarded effects, bounded termination, and one
+structured diagnostic for every non-user-cancelled terminal failure.
+
+This epic does not build a second model loop, replace native tool registration
+with MCP, give the model execution authority, auto-merge or deploy, or claim
+exactly-once behavior for an external system that supplies no idempotency or
+reconciliation mechanism.
+
+The detailed Rust/TypeScript boundary, protocol, schemas, format adapters,
+evaluation plan, rollout gates, risks, and sprint ownership are defined in
+[`foundational-artifact-and-workflow-runtime.md`](./docs/architecture/foundational-artifact-and-workflow-runtime.md).

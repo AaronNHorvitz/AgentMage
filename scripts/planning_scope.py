@@ -30,6 +30,7 @@ DEFAULT_STATUS: Final = ROOT / "architecture" / "status-model.json"
 DEFAULT_TASKS: Final = ROOT / "TASKS.md"
 
 EXPECTED_DECISIONS: Final = ("ADR-0027", "ADR-0040")
+EXPECTED_FOUNDATIONAL_DECISIONS: Final = ("ADR-0042",)
 EXPECTED_NEGATIVE_CONTROLS: Final = (
     "mutated-preserved-requirement",
     "deleted-preserved-requirement",
@@ -111,6 +112,13 @@ def _validate_counts(
         "stable_requirements": len(requirements),
         "normative_mappings": len(mappings),
         "epics": len(re.findall(r"^## \[[ xX]\] Epic \d+", tasks_text, re.MULTILINE)),
+        "foundational_runtime_epics": len(
+            re.findall(
+                r"^## \[[ xX]\] Foundational Runtime Epic F\d+ - ",
+                tasks_text,
+                re.MULTILINE,
+            )
+        ),
         "sprints": len(
             re.findall(r"^### \[[ xX]\] Sprint \d+", tasks_text, re.MULTILINE)
         ),
@@ -203,6 +211,26 @@ def validate_planning_scope(
         str(item.get("id")): _validate_decision(item, root, failures) for item in decisions
     }
 
+    foundational_decisions = _records(
+        manifest.get("foundational_runtime_decisions"),
+        "foundational runtime decisions",
+        failures,
+    )
+    foundational_ids = [item.get("id") for item in foundational_decisions]
+    if tuple(foundational_ids) != EXPECTED_FOUNDATIONAL_DECISIONS:
+        failures.append(
+            "accepted foundational decision set must be exactly "
+            + ", ".join(EXPECTED_FOUNDATIONAL_DECISIONS)
+        )
+    for item in foundational_decisions:
+        _validate_decision(item, root, failures)
+        if item.get("release_epic_delta") != 0 or item.get("sprint_delta") != 0:
+            failures.append(f"{item.get('id')}: release epic or sprint delta must remain zero")
+        if item.get("stable_requirement_delta") != 0:
+            failures.append(f"{item.get('id')}: stable requirement delta must remain zero")
+        if item.get("foundational_runtime_epics") != ["FRE-INGEST", "FRE-WORKFLOW"]:
+            failures.append(f"{item.get('id')}: foundational runtime epic identities are corrupt")
+
     snapshots = manifest.get("snapshots")
     if not isinstance(snapshots, dict):
         failures.append("planning snapshots must be an object")
@@ -270,13 +298,23 @@ def validate_planning_scope(
         failures.append("current normative mappings do not match the ordered post-0040 snapshot")
 
     counts = _validate_counts(registry, normative_map, tasks_text, failures)
-    expected_counts = {"stable_requirements": 241, "normative_mappings": 31, "epics": 17, "sprints": 169}
+    expected_counts = {
+        "stable_requirements": 241,
+        "normative_mappings": 31,
+        "epics": 17,
+        "foundational_runtime_epics": 2,
+        "sprints": 169,
+    }
     if counts != expected_counts:
         failures.append(f"current planning counts changed: expected {expected_counts}, observed {counts}")
     if status_model.get("scope_control", {}).get("stable_requirements") != counts[
         "stable_requirements"
     ]:
         failures.append("status count does not match the accepted requirement registry")
+    if status_model.get("scope_control", {}).get(
+        "accepted_foundational_runtime_epics"
+    ) != counts["foundational_runtime_epics"]:
+        failures.append("status count does not match the accepted foundational runtime epics")
 
     trace_records = _records(
         traceability.get("requirements"), "traceability requirements", failures
@@ -343,7 +381,9 @@ def validate_planning_scope(
     report = {
         "schema_version": 1,
         "status": "pass" if not failures else "fail",
-        "accepted_decisions": decision_ids,
+        "accepted_decisions": decision_ids + foundational_ids,
+        "accepted_scope_decisions": decision_ids,
+        "accepted_foundational_decisions": foundational_ids,
         "historical_baseline": snapshots.get("post-0027", {}).get("counts", {}),
         "current_counts": counts,
         "appended_requirement_ids": appended,
@@ -468,6 +508,25 @@ def build_manifest() -> dict[str, Any]:
                 "superseded_normative_hashes": sorted(d40_before - d40_after),
             },
         ],
+        "foundational_runtime_decisions": [
+            {
+                "id": "ADR-0042",
+                "status": "accepted",
+                "document": "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md",
+                "source_sha256": sha256_file(
+                    ROOT
+                    / "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md"
+                ),
+                "approval_markers": [
+                    "| Status | Accepted additive architecture and planning refinement |",
+                    "On 2026-08-21, the user explicitly directed AgentMage",
+                ],
+                "foundational_runtime_epics": ["FRE-INGEST", "FRE-WORKFLOW"],
+                "release_epic_delta": 0,
+                "sprint_delta": 0,
+                "stable_requirement_delta": 0,
+            }
+        ],
         "snapshots": snapshots,
         "model_direction": {
             "historical_document": "docs/decisions/0001-product-security-and-runtime-baseline.md",
@@ -549,7 +608,8 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(
             "Planning scope validation passed: Decision 0027 baseline 241/30; "
-            "current accepted chain 241/31."
+            "current accepted chain 241/31; Decision 0042 adds 2 foundational "
+            "runtime epics and 0 release epics, sprints, or stable requirements."
         )
         return 0
     except (OSError, ValueError, subprocess.CalledProcessError) as error:

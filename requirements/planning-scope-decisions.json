@@ -1,9 +1,9 @@
 {
   "current_source_hashes": {
-    "architecture/status-model.json": "94f82dbe2f0db086e6793cdc675c925c86dd210dcbb437ef53d38a8bf68d489a",
+    "architecture/status-model.json": "e2cf08c494cc41914747a92985156b9708a9269d906b16deef511a13b6259c45",
     "requirements/additions-only-baseline.json": "5cdf34aff04313ddd5fb95861540ed99fc479fd66b18ccc82818b87fd918bd1b",
     "requirements/normative-map.json": "d110e462865fef830286df96e76f56d59cfa85fc6196251f5682de6600558507",
-    "requirements/registry.json": "8c5f39d8018058d16469b85110069e5fce21aa5e2871ddbca5cc24b7981f9ba7"
+    "requirements/registry.json": "5fab172811137dbaf16e967e3efb05a27a319e88cf936bb646685fe0cbdafd5d"
   },
   "decisions": [
     {
@@ -67,6 +67,25 @@
       "superseded_normative_hashes": [
         "275206e5e373d18a28a6fb80c21c74de254344a10f51aceeca6e7c13bd8e623b"
       ]
+    }
+  ],
+  "foundational_runtime_decisions": [
+    {
+      "approval_markers": [
+        "| Status | Accepted additive architecture and planning refinement |",
+        "On 2026-08-21, the user explicitly directed AgentMage"
+      ],
+      "document": "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md",
+      "foundational_runtime_epics": [
+        "FRE-INGEST",
+        "FRE-WORKFLOW"
+      ],
+      "id": "ADR-0042",
+      "release_epic_delta": 0,
+      "source_sha256": "937f75604dd9b84d3f60a2566d480047385fcc5a43eb6532294f143715805837",
+      "sprint_delta": 0,
+      "stable_requirement_delta": 0,
+      "status": "accepted"
     }
   ],
   "historical_source_hashes": {

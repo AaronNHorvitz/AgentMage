@@ -21,7 +21,7 @@ This document gives reviewers and implementers one concrete description of Agent
 
 ```mermaid
 flowchart LR
-    U["User"] -->|"intent and approval; ephemeral"| V["Native VS Code Chat extension"]
+    U["User"] -->|"intent, supplied references, and approval; ephemeral"| V["Native VS Code Chat extension"]
     U -->|"interactive intent and approval; ephemeral"| CLI["Interactive coding CLI"]
     V -->|"authenticated request; ephemeral"| B["AgentMage bridge"]
     B -->|"typed local protocol; ephemeral"| K["AgentMage kernel"]
@@ -31,6 +31,13 @@ flowchart LR
     K -->|"run coordination; operational"| RUNCOORD["Reusable runtime coordinator"]
     RUNCOORD -->|"bounded context; ephemeral or restricted"| A
     RUNCOORD -->|"registered operation request"| K
+
+    V -->|"request-bound descriptors and bounded bytes; planned"| ING["Rust source-artifact service"]
+    ING -->|"classified sections and context candidates"| RUNCOORD
+    ING -->|"logical manifests and encrypted payload references"| AR
+    RUNCOORD -->|"step policy and current state"| SUP["Verified workflow supervisor"]
+    SUP -->|"preflight, fresh attempt, and verification requests"| K
+    K -->|"observations, receipts, and recovery truth"| SUP
 
     K -->|"exact grant plus bounded input; ephemeral"| T["Sandboxed tool worker"]
     T -->|"read-only authorized bytes; restricted until classified"| W["User-selected workspace"]
@@ -93,13 +100,15 @@ The dotted handoff edge is not an AgentMage network path. It depicts a separate 
 
 | Process or component | Authority | Explicitly prohibited |
 |---|---|---|
-| Visual Studio Code extension | Display, interaction, cancellation, and authenticated protocol transport | Workspace reads, raw model access, grant minting, key access, network transfer, and tool execution |
+| Visual Studio Code extension | Display, interaction, cancellation, authenticated protocol transport, and, after Story 1.2 changes the current contract, bounded transfer of references explicitly supplied to the AgentMage participant | Ambient workspace enumeration, document parsing, context selection, raw model access, grant minting, key access, arbitrary network transfer, and tool execution |
 | Interactive coding CLI | Terminal input, event rendering, protected approval interaction, cancellation, and authenticated protocol transport | Direct workspace, Git, command, model, storage, key, connector, grant, or effect authority |
 | Native bridge | Authenticate the installed extension and carry typed messages | Workspace, model, tool, key, and policy authority |
 | AgentMage kernel | Policy, grants, orchestration, storage, receipts, classification, and approved adapter selection | Unreviewed ambient filesystem or network access |
 | Runtime coordinator | Compose one bounded run across agent state, model, context, tools, policy dispositions, events, artifacts, checkpoints, cancellation, and terminal outcome | Grant minting outside the kernel transaction, direct native effects, raw credentials, shell-specific authority, hidden fallback, or self-certified completion |
 | Runtime event writer | Persist correctness events transactionally and batch approved progress or content-free metric events under bounded queues | Per-token synchronous writes, unbounded queues, secret-bearing telemetry, external telemetry dependency, reordered terminal truth, or authority decisions |
 | Runtime artifact store | Stage, digest, atomically place, open, retain, and collect large runtime payloads under the approved local data root | Treating paths as authority, mutable overwrite, executable loading, workspace publication, unreferenced disclosure, or startup authority independent of SQLite metadata |
+| Source-artifact service | Admit request-bound bytes, classify, detect, extract, section, index, budget, refresh, invalidate, and produce context candidates through exact parser profiles | Ambient collection, active content, parser-selected network, policy or grant authority, prompt assembly, hidden omission, or a second physical artifact store |
+| Verified workflow supervisor | Bind existing plan steps to preflight, fresh attempt, side-effect, approval, verification, retry-eligibility, recovery, and diagnostic policy | Tool execution, grant minting, hidden replay, automatic destructive or external retry, model-certified completion, unbounded repair, or a second runtime loop |
 | Sandboxed tool worker | One consumed grant and one bounded read-only workspace scope | Network, persistence, credentials, model access, and authority reuse |
 | Native model service | Inference for one hash-pinned model profile | Workspace, tools, grants, credentials, and network authority |
 | Docker Model Runner | Local inference for one digest-pinned model profile | AgentMage authority of any kind; non-loopback exposure; runtime artifact acquisition |
@@ -274,6 +283,41 @@ are recorded in [`runtime-artifact-lifecycle.md`](docs/architecture/runtime-arti
 Native filesystem, repository-search, patch, controlled-write, command, validation, and Git tools
 register directly with the existing tool registry and dispatcher. A later MCP gateway registers
 reviewed external tools through that same path. The model has no direct native-tool or MCP channel.
+
+## 7B. Source Artifact and Verified Workflow Boundaries
+
+The source-artifact service is logically distinct from runtime-generated artifacts but reuses the
+same encrypted content-addressed payload backend. A source-artifact manifest accounts for every
+supplied reference, detector, parser, structural section, classification, extraction state,
+truncation, omission, cache input, freshness observation, and context disposition. Parser workers
+receive bounded bytes or exact read handles, no ambient workspace, no credentials, no network, and
+no active-content authority. Extracted candidates enter the existing context manager.
+
+The current machine-readable extension contract prohibits workspace reads. Until Story 1.2 changes
+that contract, the extension cannot resolve even request-bound workspace references. The planned
+change is narrow: a stable Chat Participant may attempt to resolve only publicly exposed references
+delivered in its current request and stream accessible bytes through authenticated, bounded native
+IPC. A label or opaque reference is accounted for as unavailable rather than treated as readable.
+Provider compatibility receives
+only the content exposed by the provider API and must emit a visible unsupported-part record for
+anything it cannot preserve. Preview, proposed, or private APIs cannot become production
+dependencies without a separate admitted compatibility decision.
+
+The workflow supervisor does not retry an old call. It may authorize a new attempt only after
+deterministic preflight and effect reconciliation, with a new call identity, operation-attempt
+identity, current grant, and current approval when required. Read-only and proven-idempotent classes
+may be eligible within explicit budgets. Conditional, non-idempotent, destructive, external,
+uncertain, and unknown classes fail closed unless an exact policy permits a safe new attempt.
+`VerifiedCompletion` remains the only terminal-success authority.
+
+Source bytes remain memory-only by default. Explicit policy-approved resumability may persist an
+encrypted payload through the existing artifact backend; absolute paths and original URIs stay out
+of model-visible manifests. Source-artifact and workflow records use the existing journal,
+operational store, checkpoints, and artifact references. New materialized rows are projections, not
+alternate truth. Restart validates
+all source, parser, plan, step, model, policy, preflight, receipt, verifier, and environment
+identities. A mismatch invalidates dependent context or blocks resume with one actionable terminal
+diagnostic; it never guesses whether an effect occurred.
 
 ## 8. Runtime Parity and Evaluation Gate
 

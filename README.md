@@ -16,7 +16,7 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 | Model runtime target | Native `llama.cpp`; gated Docker Model Runner compatibility adapter; neither is integrated into an end-user workflow |
 | v1.0 GA platforms | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon macOS retained as a post-GA lane |
 | Delivery boundary | Full GitHub.com/GitHub Enterprise support within a published matrix, plus versioned provider adapters for planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, releases, communications, productivity, finance, read-only cloud observation, public research, and encrypted continuity |
-| Execution plan | 17 epics and 169 numbered dependency gates; completed work is preserved and all expansions or refinements are appended under Decisions 0008, 0009, 0010, 0011, 0026, 0027, and 0041 |
+| Execution plan | 17 release epics, two cross-cutting foundational runtime epics, and 169 numbered dependency gates; completed work is preserved and all expansions or refinements are appended under accepted decisions |
 | License | [Apache License 2.0](./LICENSE) |
 
 ## Current Implementation Truth
@@ -36,7 +36,8 @@ test, planning, or isolated Linux security work in the repository. The
 machine-readable source is
 [`architecture/status-model.json`](./architecture/status-model.json), governed
 by [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md).
-The accepted 17-epic, 169-sprint, 241-requirement scope is preserved. Under
+The accepted 17-release-epic, two-foundational-runtime-epic, 169-sprint,
+241-requirement scope is preserved. Under
 [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), the user
 accepted the recorded residual risks and authorized the original numbered
 roadmap to resume at its first incomplete dependency gate. Independent review
@@ -53,6 +54,14 @@ no model and preserves every prior artifact and requirement.
 standardizes 49 future planning, issue, bug, review, CI/CD, release,
 operations, and maintenance profiles over the shared runtime. It enables no
 agent or provider effect and preserves the coding-harness dependency order.
+[Decision 0042](./docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md)
+adds Universal Artifact Ingestion and Context Preparation and Verified Workflow
+Execution and Recovery as cross-cutting foundational runtime epics. The
+[architecture plan](./docs/architecture/foundational-artifact-and-workflow-runtime.md)
+extends the existing Rust contracts, coordinator, journal, artifact store,
+verifier, recovery path, native tools, and platform IPC. It does not claim that
+universal document support, the supported VS Code participant accounting path, or the
+complete workflow supervisor is implemented.
 
 Accepted Decisions 0013 through 0016 define the current authority transaction,
 opaque effect permit, canonical held targets, exact-object Linux worker,
@@ -265,6 +274,9 @@ flowchart LR
     FLOWNODE["Future workflow or agent node"] -. "bounded runtime request" .-> RC
     RC --> K["AgentMage kernel"]
     RC --> CTX["Context and persisted agent state"]
+    V --> ING["Accessible reference and artifact ingress"]
+    ING --> AST["Rust extraction, provenance, and context budgeting"]
+    AST --> CTX
     K --> P["Policy engine and CapabilityGrant validation"]
     RC <--> M["Candidate-neutral LocalModelRuntime"]
     M <--> F["Closed model-family codec"]
@@ -279,6 +291,10 @@ flowchart LR
     EV --> RC
     RC <--> S[("SQLCipher state and execution journal")]
     EV --> RA["Content-addressed runtime artifacts"]
+    RA --> AST
+    RC --> WF["Verified workflow supervisor"]
+    WF --> TR
+    EV --> WF
     RC --> V
     I["Separate model installer/importer"] --> A["Verified local model store"]
     A --> Q
@@ -321,6 +337,23 @@ reviewed MCP definitions enter through the same dispatcher without wrapping
 those built-in tools. The read-only MCP contract, manifest registry, identity
 binding, bounded gateway, and receipt path now exist as isolated source-level
 components. No production MCP process or network transport is activated.
+
+The planned foundational artifact service will resolve only publicly exposed
+references and bytes actually available to an AgentMage-owned request, then
+perform extraction, provenance, classification, optional policy-approved
+caching, chunking, retrieval, and model-aware budgeting in Rust. The planned
+supported path is the AgentMage participant; it can account only for references
+that the stable public API exposes and that current request authority can
+resolve. A language-model provider can process only parts that survive VS Code
+serialization, an HTTP proxy cannot reconstruct omitted content, and MCP needs
+an addressable resource or staged artifact.
+
+The planned verified workflow supervisor will treat model output as a proposal.
+Runtime-owned preflight, policy, execution evidence, postconditions, fresh-
+attempt and idempotency rules, persisted recovery, and completion guards will
+establish the authoritative result. Model-specific profiles may tune
+scaffolding and budgets but cannot weaken approval, side-effect, evidence, or
+completion controls. Current implementation still retains zero hidden retries.
 
 The earliest useful internal coding milestone, `M-HARNESS-MVP`, is one
 interactive local session with an admitted model, one approved repository and
@@ -489,11 +522,12 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Agent Scaffolding Inventory](./Agent-Scaffolding-Inventory.md) - stable requirements, detailed capability roadmap, build order, and acceptance matrix.
 - [Security Review and Verification Guide](./SECURITY-REVIEW.md) - public product-security baseline, security requirements, reviewer protocols, and evidence contract.
 - [High-Level Implementation Plan](./IMPLEMENTATION-PLAN.md) - architectural sequence, cross-cutting workstreams, milestones, risks, and release strategy.
-- [Story-Based Sprint Plan](./TASKS.md) - 17 epics, 169 dependency-bounded sprints, stories, tasks, sub-tasks, tests, acceptance criteria, and gates.
+- [Story-Based Sprint Plan](./TASKS.md) - 17 release epics, two cross-cutting foundational runtime epics, 169 dependency-bounded sprints, stories, tasks, sub-tasks, tests, acceptance criteria, and gates.
 - [Model Provenance and Admission Policy](./MODEL-PROVENANCE-POLICY.md) - origin, lineage, license, artifact, runtime, quality, and fallback admission rules.
 - [Security Policy](./SECURITY.md) - private reporting, supported versions, remediation, signed manual patch delivery, emergency disablement, and end of support.
 - [Runtime Boundaries](./RUNTIME-BOUNDARIES.md) - trust boundaries, classified data flows, privileges, processes, sockets, lifecycle, and runtime parity.
 - [Runtime Event Journal](./docs/architecture/runtime-event-journal.md) - canonical event envelope, legal ordering, projection separation, bounded publication, durable writer design, and current evidence limits.
+- [Foundational Artifact and Workflow Runtime](./docs/architecture/foundational-artifact-and-workflow-runtime.md) - universal artifact ingress, Rust context preparation, verified workflow execution, recovery, evaluation, and VS Code boundary plan.
 - [Reusable Runtime Coordinator](./docs/architecture/reusable-runtime-coordinator.md) - one interface-independent model/context/tool/policy/event/outcome loop, native fake-read slice, client boundary, and remaining integration work.
 - [Coding Harness Local Results](./docs/verification/story-48-2-local-results.md) - exact Story 48.2 profile, fixture, source-level client, and current admitted-model and installed-interface evidence status.
 - [Delivery System Architecture](./DELIVERY-SYSTEM.md) - provider-neutral delivery graph, adapter contract, capability classes, operation lifecycle, conformance levels, and extreme tests.

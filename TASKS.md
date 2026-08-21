@@ -33,8 +33,9 @@ Current supported platforms: none.
 
 Stabilization scope freeze: inactive.
 
-The complete 17-epic, 169-sprint, 241-requirement plan below remains the
-granular execution authority for the accepted target product. It is preserved,
+The complete 17-release-epic, two-cross-cutting-foundational-runtime-epic,
+169-sprint, 241-requirement plan below remains the granular execution authority
+for the accepted target product. It is preserved,
 not cancelled or renumbered. Decision 0021 resumes execution at the first
 authoritative incomplete dependency gate. Decision 0026 appends the Proton
 Calendar confirmed-UI requirement and Story 139.2 inside the existing
@@ -47,10 +48,17 @@ The interactive coding-harness reconciliation appends Stories 21.2, 22.2,
 It preserves all 169 sprint identities, every completed status, every existing
 requirement, and every release gate. It defines `M-HARNESS-MVP` as an internal
 Story 48.2 functional subset rather than a new release or parallel architecture.
+Decision 0042 establishes Universal Artifact Ingestion and Context Preparation
+and Verified Workflow Execution and Recovery as cross-cutting foundational
+runtime epics. Their work is distributed through existing sprint owners, adds
+no stable requirement or sprint identity, preserves all completed evidence, and
+defines `M-FOUNDATIONAL-RUNTIME-CORE` and `M-FOUNDATIONAL-RUNTIME` as internal integration gates.
 
 ## Planning Hierarchy and Numbering
 
 - `Epic E` is a release or major product increment and is not itself story-sized.
+- `Foundational Runtime Epic F` is a cross-cutting runtime outcome distributed across existing
+  release epics and sprints; it adds no release number or independent authority path.
 - `Sprint N` is one dependency-bounded planning and evidence gate with one or more reviewable stories; a story that becomes too broad is split through an appended planning decision before implementation continues.
 - `Story N.S` is one user-, maintainer-, or reviewer-facing value delivered by Sprint N.
 - `Task N.1.T` groups implementation, artifacts, or verification work under the story.
@@ -81,6 +89,8 @@ Story 48.2 functional subset rather than a new release or parallel architecture.
 | Proton Calendar lacks an admitted structured write path while direct invitations and email-first event confirmation remain required user workflows. | Accepted scope refinement | Apply `docs/decisions/0026-proton-calendar-confirmation-workflow.md`: append `AM-PCAL-001`, `AT-PCAL-001`, and Story 139.2; require structured providers where available and confine Proton Calendar to a visible, user-authenticated, versioned, confirmed-UI adapter with exact postcondition reconciliation. |
 | Rejected Gemma feasibility records and future E4B-specific sprint wording conflicted with the desired Muse-first, model-neutral architecture and exact determinism claims. | Accepted architecture refinement | Apply `docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md`: preserve all completed work and stable requirements; append `AM-MDL-004` through `AM-MDL-007`, `AM-AGT-001`, `AM-VSC-003`, and their tests; reconcile Sprints 12-15, 23, 49, 163-166; evaluate Muse first and every eligible official first-party Gemma profile by role; and keep all candidates disabled until exact admission passes. |
 | A Claude Code/Codex CLI-style coding harness could become a parallel agent implementation or force native tools through MCP. | Resolved architecture integration | Append shared-runtime, journal, artifact, coordinator, interactive harness, and hardening work to existing owning sprints; make the harness a thin client of one kernel runtime, retain native tool registration, keep MCP optional and later, and attach future workflow nodes through the same runtime port. |
+| Universal file and text inputs could be silently lost at the VS Code boundary or produce a second context and storage stack. | Accepted foundational runtime refinement | Apply Decision 0042: guarantee complete accounting for stable Chat Participant references, attempt to resolve only publicly exposed accessible content, report provider limitations, keep TypeScript thin, make Rust own source-artifact preparation, reuse the existing context manager and encrypted payload backend, and distribute work through existing sprint owners. |
+| Workflow recovery could become an unbounded model loop or replay side effects. | Accepted foundational runtime refinement | Apply Decision 0042: supervise the existing coordinator with deterministic preflight, fresh attempt identities, closed side-effect and retry policy, verifier-only completion, durable recovery, and terminal diagnosis; retain the existing zero-hidden-retry baseline. |
 
 ### Blocked Platform Lane
 
@@ -154,6 +164,53 @@ Every numbered implementation sub-task inherits five issue-local cases: `UT-POS`
 Evidence is stored under `artifacts/sprints/sprint-N/<story-or-test-id>/` as raw machine-readable output plus a concise generated summary. A test marked not applicable requires a written rationale and reviewer approval. A summary is never the authority over contradictory raw evidence.
 
 These controls support public product-security review, independent verification, customer evaluation, and optional managed-device assessment. They do not claim external certification or deployment approval that has not been independently granted, and they do not transfer project ownership.
+
+## Decision 0042 Task Execution Template
+
+This template applies to every open task and sub-task in Stories 1.2, 2.3, 5.2, 11.2, 13.4,
+16.2, 16.3, 21.3, 22.3, 22.4, 23.5, 23.6, 50.3, 58.2, 60.2, 62.2, and 81.2. It supplies the
+task metadata required in addition to the Universal Story Definition of Done.
+
+- **Epic/workstream:** The story's `FRE-INGEST`, `FRE-WORKFLOW`, or shared designation is binding.
+- **Status and priority:** Every added checkbox starts open. Contract, fixture, policy, persistence,
+  and native runtime critical-path work is P0; later structured-format and optional MCP work is P1.
+- **Review size:** Each numbered task is a focused PR group; each sub-task is independently
+  reviewable and should be split by an appended planning decision if it cannot remain S or M size.
+- **Dependencies/blocking:** A task may begin only after its story dependencies and earlier tasks in
+  the same story pass. It blocks every later story that names it and never consumes downstream
+  evidence early.
+- **Required task record:** Before implementation, the PR or evidence record names purpose, scope,
+  non-goals, likely files, exact inputs/outputs, error classes, security controls, deliverable,
+  migration/compatibility behavior, and any platform or API limitation.
+- **Required tests:** Test IDs use `D042-S<story>-T<task>-UT-POS`, `UT-NEG`, `UT-BND`, `UT-ERR`,
+  `UT-SFX`, `IT`, `RT`, and `ST` as applicable. Unit tests cover contract and algorithm behavior;
+  integration tests cross the real owning boundaries; evaluation cases use the Story 2.3 corpus.
+- **Required documentation:** Update the owning architecture section, public capability/limitation
+  matrix, schema or migration reference, operator diagnostics, and raw evidence index in the same
+  bounded change.
+- **Completion:** Implementation, all applicable named tests, migration or compatibility checks,
+  security evidence, docs, and exact acceptance criteria must pass. Source existence alone cannot
+  close a checkbox.
+
+| Story | Workstream | Priority | Likely implementation owners | Primary deliverable | Blocks |
+|---|---|---:|---|---|---|
+| 1.2 | Shared | P0 | `kernel/contracts`, `architecture/`, `schemas/`, `shells/vscode` contract | Versioned contracts, ownership and API matrix, dependency decisions | 2.3, 5.2, 11.2, 13.4 |
+| 2.3 | Shared evaluation | P0 | `fixtures/`, `scripts/`, `schemas/testing/`, `artifacts/sprints/sprint-2/` | Reproducible artifact/workflow corpus and goldens | All runtime implementations |
+| 5.2 | Workflow policy | P0 | `kernel/contracts`, `kernel/engine` | Closed effect/failure/retry policy and no-replay evidence | 16.3, 22.4, 23.6 |
+| 11.2 | Shared persistence | P0 | `kernel/engine/migrations`, operational-store modules | Transactional source/workflow projections and migrations | 21.3, 22.3, 22.4 |
+| 13.4 | Shared model policy | P0 | `kernel/contracts`, `kernel/engine`, model profiles | Exact token partitions and orchestration profiles | 16.2, 22.3, 23.5 |
+| 16.2 | Artifact protocol | P0 | `kernel/contracts`, tool registry, fake adapters | Closed artifact schemas, ports, and fake backend | 22.3 |
+| 16.3 | Workflow execution | P0 | `kernel/engine`, platform probe/executor ports | Preflight registry and attempt/verifier composition | 22.4, 23.6 |
+| 21.3 | Shared events | P0 | runtime-event contracts, journal writer, migrations | Legal ordered artifact/workflow event projection | 22.3, 22.4, 23.5, 23.6 |
+| 22.3 | Artifact core | P0 | `kernel/engine`, `capabilities/knowledge`, `shells/host` composition | Text/log ingestion, manifests, context, production native tools | 23.5, 50.3, format adapters |
+| 22.4 | Workflow recovery | P0 | `kernel/engine` recovery, artifacts, checkpoints | Durable fresh-attempt recovery and diagnosis | 23.6, 50.3 |
+| 23.5 | VS Code ingress | P0 | `shells/vscode`, `shells/host`, IPC schemas | Stable participant reference accounting and visible provider loss | 23.6, 50.3 |
+| 23.6 | Workflow supervisor | P0 | reusable coordinator and host adapters | Fake-model verified workflow vertical slices | 50.3 |
+| 50.3 | Core hardening | P0 | shared runtime, clients, eval harness | `M-FOUNDATIONAL-RUNTIME-CORE` evidence | 58.2, 60.2, 62.2 |
+| 58.2 | DOCX adapter | P1 | `capabilities/knowledge`, extractor registry | DOCX sections and hostile-package evidence | 62.2 milestone |
+| 60.2 | PDF/OCR adapter | P1 | `capabilities/knowledge`, optional parser/OCR workers | Page-cited PDF and admitted OCR evidence | 62.2 milestone |
+| 62.2 | Spreadsheet adapter | P1 | `capabilities/knowledge`, extractor registry | Cell-cited spreadsheet and `M-FOUNDATIONAL-RUNTIME` evidence | Later release gates |
+| 81.2 | Optional MCP | P1 | MCP gateway and common dispatcher | Native-equivalent artifact MCP adapter and removal evidence | MCP capability gate only |
 
 ### v0.1 Reviewer Protocol First-Execution Ownership
 
@@ -232,6 +289,24 @@ The owning sprint performs the first complete execution possible for its boundar
 | Epic 14 | Expanded v1.0 GA Verification Checkpoint | Sprint 156 |
 | Epic 15 | Trusted Operations, Whole-Codebase Audit, and Superseding v1.0 GA | Sprints 157-166 |
 | Epic 16 | Post-GA Experimental Model Lab | Sprints 167-168 |
+
+## [ ] Foundational Runtime Epic F1 - Universal Artifact Ingestion and Context Preparation
+
+**Milestones:** `M-FOUNDATIONAL-RUNTIME-CORE` for text/log ingestion at Sprint 50 and
+`M-FOUNDATIONAL-RUNTIME` for required structured-document adapters no earlier than Sprint 62.
+
+**Distributed ownership:** Stories 1.2, 2.3, 11.2, 13.4, 16.2, 21.3, 22.3, 23.5, 50.3,
+58.2, 60.2, 62.2, and 81.2. This heading adds no sprint, release, requirement, context manager,
+physical artifact store, or interface authority.
+
+## [ ] Foundational Runtime Epic F2 - Verified Workflow Execution and Recovery
+
+**Milestone:** `M-FOUNDATIONAL-RUNTIME-CORE` workflow half at Sprint 50; later parser adapters do not
+redefine workflow authority.
+
+**Distributed ownership:** Stories 1.2, 2.3, 5.2, 11.2, 13.4, 16.3, 21.3, 22.4, 23.6,
+and 50.3. This heading adds no second plan schema, runtime loop, policy engine, dispatcher, journal,
+artifact store, verifier, or completion authority.
 
 ## [ ] Epic 0 - Foundation
 
@@ -396,6 +471,74 @@ The owning sprint performs the first complete execution possible for its boundar
 - [ ] **Story AC 1.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the empty product builds reproducibly from pinned inputs, contains only manifest-declared components, and preserves one-way kernel/platform/capability/shell dependency boundaries.
 - [ ] **Story AC 1.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then removing any optional component degrades only its declared capability; removing a required security primitive blocks startup with a non-secret diagnostic.
 
+#### [ ] Story 1.2 - Foundational Artifact and Workflow Contracts
+
+**User-facing value:** As a user, I need files and multi-step work to cross every interface through
+one stable runtime contract so that no input disappears and no client invents execution authority.
+
+**Dependencies:** Story 1.1; Decision 0042; existing agent-state, context, tool, approval, event,
+artifact, and recovery contracts remain authoritative.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 1.2.1 - Freeze source-artifact contracts**
+  - [ ] **Sub-task 1.2.1.1:** Define closed, versioned source-artifact, origin, reference,
+    provenance, extraction-result, structural-section, context-disposition, and context-manifest
+    schemas with missing, extra, malformed, stale, oversized, and unsupported-version rejection.
+  - [ ] **Sub-task 1.2.1.2:** Define logical source-artifact ownership and retention over the
+    existing encrypted content-addressed backend without widening `RuntimeArtifactKind` or creating
+    a second physical store.
+  - [ ] **Sub-task 1.2.1.3:** Define authoritative byte, line, page, sheet, cell, image-region, and
+    section provenance plus explicit partial, truncated, encrypted, unsupported, and unavailable
+    states.
+- [ ] **Task 1.2.2 - Freeze verified-workflow contracts**
+  - [ ] **Sub-task 1.2.2.1:** Define a companion step-execution policy keyed to existing
+    `PlanStepId`, including preflight, side-effect, approval, idempotency, verifier, retry, budget,
+    and diagnostic policy identities.
+  - [ ] **Sub-task 1.2.2.2:** Define workflow, step, call, operation-attempt, verification,
+    recovery-decision, and terminal-diagnostic envelopes without replacing `Plan`, `ToolCall`,
+    `CapabilityGrant`, `OperationReceipt`, or `VerifiedCompletion`.
+  - [ ] **Sub-task 1.2.2.3:** Define compatibility and migration rules that preserve the current
+    zero-hidden-retry contract and make every permitted retry a new attempt rather than replay.
+- [ ] **Task 1.2.3 - Reconcile interface and ownership boundaries**
+  - [ ] **Sub-task 1.2.3.1:** Amend `language-build-matrix.json`, its validator, diagrams, and
+    evidence together to permit only current-request references delivered to the AgentMage Chat
+    Participant; retain the prohibition on ambient extension workspace reads.
+  - [ ] **Sub-task 1.2.3.2:** Record stable, Preview, proposed, and private Visual Studio Code API
+    surfaces; guarantee the stable participant path and label provider compatibility best effort.
+  - [ ] **Sub-task 1.2.3.3:** Record Rust, TypeScript, kernel, capability, platform, shell, MCP, and
+    parser ownership and add architecture tests that reject duplicate context managers, stores,
+    runtime loops, policy engines, dispatchers, or verifiers.
+- [ ] **Task 1.2.4 - Review dependencies and migration risk**
+  - [ ] **Sub-task 1.2.4.1:** Evaluate parser, MIME detection, tokenization, archive, OCR, and
+    database dependencies for license, provenance, maintenance, unsafe-code, platform, and resource
+    implications; record accepted, rejected, and deferred candidates.
+  - [ ] **Sub-task 1.2.4.2:** Publish a schema-evolution and rollback plan for additive records,
+    event compatibility, cache invalidation, unsupported clients, and downgrade behavior.
+  - [ ] **Sub-task 1.2.4.3:** Decide Rust host and parser/OCR process placement, package features,
+    cancellation, fallback, and byte-crossing behavior separately for Fedora, Ubuntu, Windows 11,
+    macOS, WSL, Remote SSH, and Dev Containers; retain unavailable native evidence as blocked.
+- [ ] **Task 1.2.5 - Verify and evidence the contract boundary**
+  - [ ] **Sub-task 1.2.5.1:** Run schema mutation, dependency-direction, forbidden-duplicate-owner,
+    API-surface, capability-absence, and current-versus-planned-truth tests.
+  - [ ] **Sub-task 1.2.5.2:** Retain machine-readable contract indexes, dependency dispositions,
+    diagrams, migration notes, raw test results, and a security mapping to `RV-03`, `RV-04`,
+    `RV-08`, `RV-11`, `RV-12`, and `RV-17`.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 1.2.AC1:** Given any supported or unsupported source and workflow envelope, when it
+  is decoded, then exactly one versioned result or precise fail-closed error is produced and no
+  unknown field silently changes behavior.
+- [ ] **Story AC 1.2.AC2:** Given the dependency graph, when forbidden ownership edges are injected,
+  then the build rejects every second context manager, store, runtime loop, policy engine,
+  dispatcher, and completion authority.
+- [ ] **Story AC 1.2.AC3:** Given a Chat request, when references are resolved, then only references
+  explicitly supplied to the AgentMage participant are readable and every unavailable or non-text
+  part is visible to the user.
+- [ ] **Story AC 1.2.AC4:** Given an existing zero-retry run, when the new contracts are absent or
+  disabled, then behavior and evidence remain byte-compatible and no implicit retry appears.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 1.AC1:** A clean checkout builds and runs the empty test suite on all reference platforms.
@@ -403,8 +546,12 @@ The owning sprint performs the first complete execution possible for its boundar
 - [x] **Sprint AC 1.AC3:** Dependency resolution is reproducible from lock files and approved artifacts. Evidence: [`locked-resolution-report.json`](artifacts/sprints/sprint-1/story-1.1/locked-resolution-report.json) records identical clean Cargo/npm graphs from two offline locked resolutions and fail-closed substituted, missing, revoked, and wrong-platform inputs; Swift remains `BLOCKED-MACOS` without weakening the demonstrated shared/Linux dependency result.
 - [ ] **Sprint AC 1.AC4:** No required Mac end-user dependency assumes Homebrew, Rosetta, ambient Python, ambient Git, Xcode command-line tools, Docker Desktop, or administrator access.
 - [ ] **Sprint AC 1.AC5:** Missing optional dependencies degrade only their declared capabilities.
+- [ ] **Sprint AC 1.AC6:** Decision 0042 contracts, ownership checks, API-surface matrix, dependency
+  dispositions, and backward-compatible migration plan pass with no duplicate runtime owner.
 
-**Gate decision:** Sprint 1 is PASS only when Story 1.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 1 is PASS only when Stories 1.1 and 1.2, every numbered task/sub-task,
+every story criterion, every sprint criterion, and the Universal Story Definition of Done are
+complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 2 - Test Harness and Synthetic Corpus
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -478,6 +625,62 @@ The owning sprint performs the first complete execution possible for its boundar
 
 **Story gate evidence:** All three story criteria and all shared/Linux foundation work pass. The story remains `BLOCKED-MACOS` under `G-DOD-10`; [`story-gate-report.json`](artifacts/sprints/sprint-2/story-2.2/story-gate-report.json) independently reviews pushed evidence commit `5c342303a5c30078d0ac6e7370d77bdf5152e51c`, prohibits Linux or fake-boundary evidence substitution, records no product-boundary execution, macOS support, product acceptance, external-human review, or release claim, and therefore leaves the Story 2.2 checkbox open.
 
+#### [ ] Story 2.3 - Artifact and Workflow Evaluation Corpus
+
+**User-facing value:** As a maintainer or reviewer, I need deterministic known-answer files and
+workflow failures so that ingestion, recovery, and model adaptation can be evaluated without private
+data or real external effects.
+
+**Dependencies:** Stories 1.2, 2.1, and 2.2.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 2.3.1 - Build artifact-ingestion fixtures**
+  - [ ] **Sub-task 2.3.1.1:** Add 999- and 1,001-character pastes; UTF-8, UTF-16, invalid and mixed
+    encodings; empty, duplicate, stale, replaced, virtual, remote, inaccessible, and unknown
+    references; plus bounded 25 MiB log fixtures generated from pinned seeds.
+  - [ ] **Sub-task 2.3.1.2:** Add digital, scanned, mixed, encrypted, malformed, oversized, and
+    relationship-hostile PDF, DOCX, and XLSX fixtures with exact expected sections and provenance.
+  - [ ] **Sub-task 2.3.1.3:** Add combined-artifact token-overflow, model-profile-change,
+    cancellation, crash, restart, cache-stale, refresh, retention, and deletion scenarios.
+- [ ] **Task 2.3.2 - Build verified-workflow fixtures**
+  - [ ] **Sub-task 2.3.2.1:** Add plan fixtures for success, missing dependency, stale preflight,
+    malformed call, deterministic repair, transient read failure, conditional conflict,
+    non-idempotent effect, uncertain effect, destructive request, and external effect.
+  - [ ] **Sub-task 2.3.2.2:** Add crash points before and after proposal, validation, approval,
+    dispatch, effect observation, receipt, verification, checkpoint, and terminal-event commit.
+  - [ ] **Sub-task 2.3.2.3:** Add empty output, reasoning-only output, false completion, open-plan
+    completion, post-error stop, repeated-state loop, budget exhaustion, cancellation, and provider
+    disconnect fixtures.
+- [ ] **Task 2.3.3 - Define metrics and golden outcomes**
+  - [ ] **Sub-task 2.3.3.1:** Record extraction coverage, provenance accuracy, section fidelity,
+    context inclusion and omission, token-budget reconciliation, latency, peak memory, cancellation,
+    and cleanup metrics.
+  - [ ] **Sub-task 2.3.3.2:** Record plan completion, preflight accuracy, schema-valid calls,
+    verifier precision, duplicate-effect count, approval bypass, attempt count, recovery quality,
+    terminal diagnosis, and bounded-termination metrics.
+  - [ ] **Sub-task 2.3.3.3:** Version golden manifests and mutation tests that prove missing inputs,
+    hidden non-pass states, false passes, raw secrets, and changed expected side effects block gates.
+- [ ] **Task 2.3.4 - Verify corpus safety and reproducibility**
+  - [ ] **Sub-task 2.3.4.1:** Regenerate twice in clean roots and require byte-identical fixture
+    identities, goldens, summaries, and provenance ledgers where determinism is declared.
+  - [ ] **Sub-task 2.3.4.2:** Scan nested packages and evidence for active content, real credentials,
+    private paths, executable payloads, unapproved remote references, and retained raw canaries.
+  - [ ] **Sub-task 2.3.4.3:** Register the new parser and workflow boundaries with the existing fuzz
+    and fault harnesses while keeping the real manual fuzz campaign deferred under Decision 0025.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 2.3.AC1:** Given every declared artifact class, when the corpus is enumerated, then
+  normal, boundary, malformed, hostile, oversized, cancellation, restart, and unsupported cases
+  have exact expected accounting and prohibited side effects.
+- [ ] **Story AC 2.3.AC2:** Given every workflow failure class, when the fake runtime executes it,
+  then the expected fresh attempts, no-replay decision, verifier result, terminal diagnosis, and
+  cleanup reconcile exactly.
+- [ ] **Story AC 2.3.AC3:** Given two clean corpus builds, when independent summaries are produced,
+  then identities and metrics match and no private data, credential, active content, or real effect
+  is present.
+
 #### Sprint Acceptance Criteria
 
 - [x] **Sprint AC 2.AC1:** Recreating the corpus yields identical expected hashes where determinism is required. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) independently confirms two byte-identical corpus regenerations against checked artifacts and two clean fake-boundary runs with all ten reconciliation comparisons exact.
@@ -485,8 +688,13 @@ The owning sprint performs the first complete execution possible for its boundar
 - [x] **Sprint AC 2.AC3:** Fake tools and models can simulate success, denial, malformed output, cancellation, timeout, crash, and uncertain completion. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) verifies the complete seven-adapter by eight-mode matrix: 56 typed cases, all expected outcomes matched, all cleanup passed, and all 56 post-close calls rejected.
 - [x] **Sprint AC 2.AC4:** Test results identify the exact fixture, platform, build, model, runtime, and policy versions. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) retains both synthetic Linux result identities with exact fixture, distribution/version/architecture, build, model, runtime, policy, record, and content hashes while recording no ambient environment values.
 - [x] **Sprint AC 2.AC5:** No fixture contains a real credential or private user file. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) independently requires the recursive fixture/security scan to retain zero blocking findings and no raw sensitive values or network calls while all six seeded prohibited-content categories remain detectable.
+- [ ] **Sprint AC 2.AC6:** Story 2.3 artifact and workflow corpora reproduce, every seeded failure
+  remains non-pass, and no golden manifest permits silent omission, false completion, or duplicate
+  effect.
 
-**Gate decision:** Sprint 2 is PASS only when Stories 2.1 and 2.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 2 is PASS only when Stories 2.1 through 2.3, every numbered task/sub-task,
+every story criterion, every sprint criterion, and the Universal Story Definition of Done are
+complete with current evidence. Otherwise it is BLOCKED.
 
 **Current gate evidence:** All five sprint criteria and the shared/Linux foundation pass. Sprint 2 remains `BLOCKED-MACOS`; [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) aggregates both story gates from pushed evidence commit `d628b91caefacd15256fd4ec3008e4a208070004`, leaves both story and sprint checkboxes open, preserves `G-DOD-10` as the sole shared gate blocker, and prohibits macOS evidence substitution or unsupported product/release claims.
 ### [ ] Sprint 3 - Configuration, Versioning, and Build Integrity
@@ -697,6 +905,59 @@ claims.
 - [x] **Story AC 5.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then no operation executes without one current exact grant, and every terminal path consumes or invalidates it according to the documented state machine. Evidence: the aggregate Story gate independently reconciles 560 grant mutations with zero admissions, five race/replay scenarios with zero successful replays, four post-approval mutations with zero worker starts, and all eight implemented parent/operation transitions. Both criteria pass their bounded shared/Linux in-memory scope; no production-executor or durable-transaction claim is made.
 - [x] **Story AC 5.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then wildcards, approve-all modes, implicit inheritance, grant aggregation, and model-created authority are structurally unrepresentable or fail closed. Evidence: the aggregate Story gate verifies the closed 15-operation schema, 12 explicit strict-local denials plus two denials by absence, zero authority fields in approval displays, and zero admitted authority across all 28 source-by-escalation cases.
 
+#### [ ] Story 5.2 - Side-Effect, Idempotency, and Retry Policy
+
+**User-facing value:** As a user, I need AgentMage to recover from safe failures without repeating
+an effect or treating approval as reusable authority.
+
+**Dependencies:** Stories 1.2, 2.3, and 5.1.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 5.2.1 - Define closed effect and failure taxonomies**
+  - [ ] **Sub-task 5.2.1.1:** Implement read-only, idempotent-write, conditional,
+    non-idempotent, destructive, external, and unknown effect classes independent of
+    `AuthorityClass` and `ToolRiskLevel`.
+  - [ ] **Sub-task 5.2.1.2:** Implement malformed-input, preflight, policy, approval, dependency,
+    transient, conflict, timeout, cancellation, crash, uncertain-effect, verification, resource,
+    and internal failure classes with exact default dispositions.
+  - [ ] **Sub-task 5.2.1.3:** Reject custom, wildcard, inherited, omitted, or model-created classes
+    and require every registered tool operation to map exactly once.
+- [ ] **Task 5.2.2 - Compile retry and repair eligibility**
+  - [ ] **Sub-task 5.2.2.1:** Define deterministic normalization before model repair and permit at
+    most one profile-bound model repair without any effect attempt.
+  - [ ] **Sub-task 5.2.2.2:** Permit a new attempt only after current preflight, effect
+    reconciliation, remaining budget, fresh call identity, fresh single-use grant, and fresh
+    approval when the operation requires one.
+  - [ ] **Sub-task 5.2.2.3:** Deny automatic new attempts for non-idempotent, destructive, external,
+    uncertain, and unknown effects and deny replay of any call, consumed grant, approval, receipt,
+    idempotency key, or operation-attempt identity.
+- [ ] **Task 5.2.3 - Bind budgets and repeated-state detection**
+  - [ ] **Sub-task 5.2.3.1:** Define separate parser-repair, step-attempt, per-error-class, workflow,
+    and replan budgets with checked arithmetic and immutable policy identity.
+  - [ ] **Sub-task 5.2.3.2:** Define deterministic state fingerprints over plan, step, observations,
+    proposal, tool, policy, receipts, artifacts, and verifier state; stop repeated no-progress loops.
+  - [ ] **Sub-task 5.2.3.3:** Make exhaustion, policy denial, and repeated-state termination produce
+    a non-secret reason and safe next action without consuming further authority.
+- [ ] **Task 5.2.4 - Verify policy and retain evidence**
+  - [ ] **Sub-task 5.2.4.1:** Mutate every effect, failure, budget, approval, preflight,
+    reconciliation, and attempt-identity field; require exact denial before dispatch.
+  - [ ] **Sub-task 5.2.4.2:** Race eligible attempts and prove at most one exact attempt enters
+    execution, no effect executes twice, and uncertainty cannot be converted into success or retry.
+  - [ ] **Sub-task 5.2.4.3:** Retain decision tables, tool-coverage maps, state diagrams, mutation
+    results, race traces, and mappings to `RV-12`, `RV-17`, and `RV-25`.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 5.2.AC1:** Given any registered operation and failure, when retry policy is
+  evaluated, then one closed disposition is returned from deterministic state and model output
+  cannot broaden it.
+- [ ] **Story AC 5.2.AC2:** Given a prior effect attempt, when recovery is considered, then no old
+  call or authority object is replayed and unsafe or uncertain effects remain blocked.
+- [ ] **Story AC 5.2.AC3:** Given repeated failures or no-progress state, when a declared budget is
+  reached, then the workflow terminates within that bound with one actionable diagnosis and no
+  additional effect.
+
 #### Sprint Acceptance Criteria
 
 - [x] **Sprint AC 5.AC1:** `AT-AUTH-001` passes with zero unauthorized executions. Evidence: the Sprint gate reconciles all 560 seeded grant mutations and 28 authority-escalation attempts with zero admissions in the shared/Linux in-memory boundary. No production-executor claim is made.
@@ -704,8 +965,12 @@ claims.
 - [x] **Sprint AC 5.AC3:** A changed preview, argument, target, preimage, policy, task, scope, expiry, or nonce invalidates authority. Evidence: 14 mutation classes across 560 deterministic seeds admit zero attempts, and all four post-approval policy/preimage/task/preview mutations reach final consumption with zero worker starts.
 - [x] **Sprint AC 5.AC4:** Models, tools, shells, plugins, and simulated child agents cannot mint or broaden a grant. Evidence: all seven descriptive source classes attempt mint, widen, transfer, and combine across 28 typed cases; every result is a redacted actor/session/task-attributed denial with zero admitted authority.
 - [x] **Sprint AC 5.AC5:** Wildcard and approve-everything configurations remain impossible. Evidence: the grant contract has 15 closed operation variants with no wildcard/custom/approve-all member, strict-local policy explicitly denies 12 hazardous operations and denies two more by absence, and approval displays contain zero authority fields.
+- [ ] **Sprint AC 5.AC6:** Every registered tool operation has one closed effect/retry disposition;
+  no prior call, grant, approval, receipt, or uncertain effect can be replayed.
 
-**Gate decision:** Sprint 5 is PASS only when Story 5.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 5 is PASS only when Stories 5.1 and 5.2, every numbered task/sub-task,
+every story criterion, every sprint criterion, and the Universal Story Definition of Done are
+complete with current evidence. Otherwise it is BLOCKED.
 
 **Current story-gate evidence:** Source commit `dd7c2d0` adds the independent [`story_5_1_gate.py`](scripts/story_5_1_gate.py) aggregate evaluator, package/requirements enrollment, and seven focused acceptance, review, checklist, Definition-of-Done, mutation, and overclaim tests; evidence commit `62b358c` publishes [`story-gate-report.json`](artifacts/sprints/sprint-5/story-5.1/story-gate-report.json), SHA-256 `d0e54d5754a639f39238a0ef2ba65c37a0d7731407dec1a85490b6ed58869c5a`. The gate independently reviews commit `345e2b561d5ed2263004e232d03ee880fcc09ba2` and tree `5894f9f707cedee1c9c7d93f9c0884813319b47c`, retains 24 exact artifact hashes, records zero findings, and passes both Story criteria and every non-platform Definition-of-Done control in the declared shared/Linux scope. Story 5.1 remains `BLOCKED-MACOS`; `G-DOD-10` is the sole blocker, Linux evidence substitution is prohibited, external human review is not claimed, and the Story checkbox remains open.
 
@@ -1065,6 +1330,60 @@ claims.
 - [ ] **Story AC 11.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then sQLite is the only v0.1 operational authority, all durable records satisfy classification/minimization/retention policy before commit, and recovery selects one valid state.
 - [ ] **Story AC 11.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then backup, restore, expiry, hold, deletion, and sanitization update every linked table/index/artifact consistently and produce tamper-evident receipts.
 
+#### [ ] Story 11.2 - Source-Artifact and Workflow Persistence
+
+**User-facing value:** As a user, I need attached evidence and workflow progress to survive a safe
+restart without stale context, guessed effects, duplicate attempts, or a second source of truth.
+
+**Dependencies:** Stories 1.2, 5.2, and 11.1; existing migrations 0006 and 0007 remain authoritative.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 11.2.1 - Add source-artifact materializations**
+  - [ ] **Sub-task 11.2.1.1:** Add normalized source manifest, origin, reference, extraction,
+    section, provenance, lexical-index, context-disposition, cache-input, retention, and lifecycle
+    records over existing encrypted payload references.
+  - [ ] **Sub-task 11.2.1.2:** Enforce content-hash deduplication without merging distinct origin,
+    classification, authority, freshness, or retention identities.
+  - [ ] **Sub-task 11.2.1.3:** Implement atomic refresh, transitive invalidation, expiry, deletion,
+    hold, and garbage-collection transactions with no orphan payload or live reference.
+- [ ] **Task 11.2.2 - Add workflow materializations**
+  - [ ] **Sub-task 11.2.2.1:** Add plan-step policy, attempt, preflight, tool-call, idempotency-key,
+    approval, receipt, verification, consumed-budget, recovery-decision, state-fingerprint, and
+    terminal-diagnostic records keyed to existing run/session/event identities.
+  - [ ] **Sub-task 11.2.2.2:** Enforce unique attempt and idempotency identities, monotonic attempt
+    numbers, one terminal state, exact receipt linkage, and uncertainty that cannot be rewritten as
+    success.
+  - [ ] **Sub-task 11.2.2.3:** Commit correctness events, materialized workflow state, checkpoint
+    cursor, and referenced artifacts in one canonical transaction or retain none.
+- [ ] **Task 11.2.3 - Implement migrations and compatibility**
+  - [ ] **Sub-task 11.2.3.1:** Add forward migrations, fixture snapshots, schema hashes, rollback
+    tests, interrupted-migration recovery, future-schema refusal, and occupied-destination handling.
+  - [ ] **Sub-task 11.2.3.2:** Define downgrade behavior: older clients refuse unsupported records
+    without deleting, rewriting, or partially interpreting them.
+  - [ ] **Sub-task 11.2.3.3:** Extend backup, export, restore, retention, erasure, canary, and
+    diagnostics coverage to every new record family without storing raw secrets or source bytes in
+    evidence.
+- [ ] **Task 11.2.4 - Verify crash and recovery semantics**
+  - [ ] **Sub-task 11.2.4.1:** Crash before and after each manifest, extraction, index, attempt,
+    receipt, verification, recovery, checkpoint, retention, and deletion commit.
+  - [ ] **Sub-task 11.2.4.2:** Require exact old or new state, no partial publication, no duplicate
+    attempt, no stale context represented as current, and no replay driver launch.
+  - [ ] **Sub-task 11.2.4.3:** Retain migration matrices, transaction traces, canary scans,
+    encrypted-page scans, cleanup evidence, and `RV-08` through `RV-10` plus `RV-17` mappings.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 11.2.AC1:** Given a crash at any new transaction boundary, when the store reopens,
+  then exactly one valid pre- or post-transaction state exists with no orphan, duplicate, or
+  authority-bearing partial record.
+- [ ] **Story AC 11.2.AC2:** Given changed source, parser, policy, model, plan, tool, or environment
+  identity, when resume is requested, then every affected context or attempt is invalidated or
+  blocked and no stale result becomes current.
+- [ ] **Story AC 11.2.AC3:** Given backup, restore, retention, and deletion, when lifecycle checks
+  run, then source and workflow records reconcile with payload references and raw restricted data
+  appears in no unauthorized surface.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 11.AC1:** `AT-DATA-001`, `AT-PRIV-001`, and `AT-PRIV-002` pass.
@@ -1072,8 +1391,12 @@ claims.
 - [ ] **Sprint AC 11.AC3:** Private and restricted records never fall back to plaintext.
 - [ ] **Sprint AC 11.AC4:** Secret canaries do not appear in SQLite, logs, exports, backups, errors, or unauthorized model context.
 - [ ] **Sprint AC 11.AC5:** Deleting JSON Lines exports or regenerable indexes cannot change canonical operational state.
+- [ ] **Sprint AC 11.AC6:** Source-artifact and workflow projections migrate, crash, resume, expire,
+  back up, restore, and delete transactionally with zero replay and zero stale-current state.
 
-**Gate decision:** Sprint 11 is PASS only when Story 11.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 11 is PASS only when Stories 11.1 and 11.2, every numbered task/sub-task,
+every story criterion, every sprint criterion, and the Universal Story Definition of Done are
+complete with current evidence. Otherwise it is BLOCKED.
 
 **Current gate status:** BLOCKED after completion of all numbered Story 11.1 tasks. The current implementation demonstrates the bounded encrypted-store foundation, but the story and sprint criteria require later integrated product ingress, live-platform, complete audit/sanitization, and acceptance-protocol evidence that this story does not overclaim.
 
@@ -1298,6 +1621,56 @@ claims.
 - [x] **Story AC 13.3.AC2:** Given any missing, incompatible, unsupported, under-resourced, or failed evidence class, when the spike is classified, then it yields a truthful non-pass state without activation, substitution, or a family-wide conclusion.
 - [x] **Story AC 13.3.AC3:** Given quality and diagnostic-repeatability trials, when results are reported, then every tuple and statistical limitation is visible and no repeated token result is represented as universal determinism.
 
+#### [ ] Story 13.4 - Model Context and Orchestration Profiles
+
+**User-facing value:** As a user, I need each admitted model to receive a context and recovery shape
+it can handle while all safety, authority, evidence, and completion rules stay model invariant.
+
+**Dependencies:** Stories 1.2, 2.3, 5.2, 11.2, and 13.1 through 13.3.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 13.4.1 - Define explicit context-window allocation**
+  - [ ] **Sub-task 13.4.1.1:** Separate total window, system/tool definitions, user input,
+    source-artifact sections, retrieved context, workflow/recovery reserve, output reserve, and
+    safety margin with checked arithmetic and no overcommit.
+  - [ ] **Sub-task 13.4.1.2:** Bind authoritative tokenizer and counting strategy to the exact model
+    profile; label byte or heuristic estimates as non-authoritative and prohibit them at admission.
+  - [ ] **Sub-task 13.4.1.3:** Define deterministic allocation, truncation, summarization, omission,
+    and reallocation order that feeds the existing Story 22.1 context manager.
+- [ ] **Task 13.4.2 - Define orchestration adaptation**
+  - [ ] **Sub-task 13.4.2.1:** Add a separate profile for plan horizon, visible tool subset,
+    observation size, parser-repair allowance, recovery scaffolding, and diagnostic verbosity.
+  - [ ] **Sub-task 13.4.2.2:** Keep policy, grants, approvals, side-effect class, retry eligibility,
+    verifier, budgets, and completion outside the model profile and immutable across candidates.
+  - [ ] **Sub-task 13.4.2.3:** Require independent role- and workflow-specific quality evidence
+    before enabling a profile; prohibit family-wide inference and automatic fallback.
+- [ ] **Task 13.4.3 - Evaluate profiles and failure behavior**
+  - [ ] **Sub-task 13.4.3.1:** Run the artifact and workflow corpus across fake, Muse-candidate,
+    eligible Gemma, and future admitted profiles with exact tokenizer/runtime/decoding identity.
+  - [ ] **Sub-task 13.4.3.2:** Measure extraction usage, context coverage, omission, malformed calls,
+    repair success, tool-call validity, verified completion, false completion, attempts, diagnosis,
+    latency, memory, and cancellation without merging incomparable tuples.
+  - [ ] **Sub-task 13.4.3.3:** Mutate every allocation and orchestration field; require stale-profile
+    invalidation, separate evidence, and no borrowed support claim.
+- [ ] **Task 13.4.4 - Document and evidence support**
+  - [ ] **Sub-task 13.4.4.1:** Publish machine-readable context/orchestration profile schemas,
+    capability matrices, limitations, migration behavior, and manual selection behavior.
+  - [ ] **Sub-task 13.4.4.2:** Retain raw token ledgers, quality trials, model/runtime manifests,
+    resource traces, negative tests, and `RV-13`, `RV-14`, `RV-16`, and `RV-41` mappings.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 13.4.AC1:** Given any admitted profile and input set, when the token plan is
+  compiled, then all partitions reconcile within the exact total window and every omission has a
+  deterministic visible reason.
+- [ ] **Story AC 13.4.AC2:** Given a different model or orchestration profile, when the same workflow
+  runs, then adaptation may change presentation and planning shape but cannot change authority,
+  effect eligibility, verification, or completion truth.
+- [ ] **Story AC 13.4.AC3:** Given missing tokenizer, runtime, quality, hardware, or workflow
+  evidence, when activation is requested, then the exact profile remains disabled without fallback
+  or a family-wide conclusion.
+
 #### Sprint Acceptance Criteria
 
 - [x] **Sprint AC 13.AC1:** `AT-MODEL-003` and the applicable historical `AT-MODEL-001` contract evidence pass; unavailable platform-specific activation remains visibly blocked rather than borrowed.
@@ -1309,8 +1682,14 @@ claims.
 - [x] **Sprint AC 13.AC7:** The isolated Muse 8k text profile has one exact truthful evidence disposition; no result activates a model or becomes evidence for vision, speculative decoding, larger context, Docker, Windows, or macOS.
 - [x] **Sprint AC 13.AC8:** `AT-MODEL-005` keeps quality and diagnostic-repeatability evidence separate and rejects every unrecorded tuple change.
 - [x] **Sprint AC 13.AC9:** Kernel and capability dependency checks contain no Muse-, Gemma-, or other family-specific branch.
+- [ ] **Sprint AC 13.AC10:** Every evaluated profile has an exact context ledger and orchestration
+  identity; all safety and completion controls remain model invariant.
 
-**Gate decision:** Sprint 13 is PASS only when Stories 13.1 through 13.3, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-MDL-004`, `AM-MDL-006`, `AT-MODEL-003`, `AT-MODEL-005`, applicable preserved historical requirements, and the Universal Story Definition of Done are complete with current evidence. A truthful Muse non-pass may close the evidence task but enables no profile. Otherwise the sprint is BLOCKED.
+**Gate decision:** Sprint 13 is PASS only when Stories 13.1 through 13.4, every numbered
+task/sub-task, every story criterion, every sprint criterion, `AM-MDL-004`, `AM-MDL-006`,
+`AT-MODEL-003`, `AT-MODEL-005`, applicable preserved historical requirements, and the Universal
+Story Definition of Done are complete with current evidence. A truthful Muse non-pass may close the
+evidence task but enables no profile. Otherwise the sprint is BLOCKED.
 
 **Current gate result:** BLOCKED with all currently executable local contract, negative Linux cross-adapter parity, and exact Muse evaluation work complete. The retained native and Docker Model Runner compatibility trials fail published quality thresholds and therefore cannot be merged or enabled. Remaining blockers are the native macOS adapter and execution evidence, successful matched cross-platform parity for an admitted profile, independent decoder review, and exact Muse packet-capture/product-security closure. Linux evidence is not substituted for those classes. The exact Muse quality profile is `REJECTED`, remains disabled, and triggers no fallback.
 ### [ ] Sprint 14 - Separate Model Installer and Importer
@@ -1563,6 +1942,100 @@ claims.
 - [ ] **Story AC 16.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then each call receives exactly one consumed operation grant, one bounded input scope, one isolated worker, one typed result, and one schema-valid receipt.
 - [ ] **Story AC 16.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the complete tool pack remains demonstrably read-only: fixture trees, metadata, Git state, external canaries, network state, and durable operational data are invariant except authorized receipts.
 
+#### [ ] Story 16.2 - Native Source-Artifact Tool Protocol and Registry
+
+**User-facing value:** As a user, I need the model to inspect admitted files through bounded native
+tools so large evidence stays outside prompts until an exact section is needed.
+
+**Dependencies:** Stories 1.2, 11.2, 13.4, and 16.1. Production artifact operations remain assigned
+to the later native source-artifact implementation story after the source-artifact core exists.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 16.2.1 - Register the closed artifact tool catalog**
+  - [ ] **Sub-task 16.2.1.1:** Define exact-version schemas for `artifact.list`,
+    `artifact.metadata`, `artifact.read`, `artifact.range`, `artifact.sections`, and
+    `artifact.search`, including source, section, range, limit, freshness, and output identities.
+  - [ ] **Sub-task 16.2.1.2:** Register all six through the common native tool registry and
+    dispatcher with `workspace_read` authority only; prohibit direct parser, path, store, model, or
+    MCP channels.
+  - [ ] **Sub-task 16.2.1.3:** Enforce per-call item, byte, range, result, time, memory, task,
+    recursion, and cancellation ceilings plus one terminal receipt for each launched attempt.
+- [ ] **Task 16.2.2 - Define dispatcher ports and fake-backend behavior**
+  - [ ] **Sub-task 16.2.2.1:** Define source-manifest, classification, extraction-state, section,
+    provenance, truncation, freshness, unsupported-state, redaction, and large-result reference
+    projections without implementing a source store or parser.
+  - [ ] **Sub-task 16.2.2.2:** Add a deterministic in-memory fake backend for byte/line/page/sheet/
+    cell/section reads and lexical search so registry, schema, grant, receipt, limit, and client
+    behavior can be reviewed before production operations exist.
+  - [ ] **Sub-task 16.2.2.3:** Define extension points for later `artifact.get_page`,
+    `artifact.get_sheet`, and `artifact.get_log_errors` operations; keep them unregistered until
+    their owning extractors and native implementations pass.
+- [ ] **Task 16.2.3 - Verify protocol safety and fake parity**
+  - [ ] **Sub-task 16.2.3.1:** Run valid, missing, extra, malformed, oversized, duplicate, stale,
+    unsupported-version, out-of-range, restricted, cancelled, timeout, crash, and repeated-call cases
+    for every tool.
+  - [ ] **Sub-task 16.2.3.2:** Prove exact deterministic fake results across Chat, CLI, and headless
+    callers, workspace/store invariance, no network or parser launch, and complete cleanup.
+  - [ ] **Sub-task 16.2.3.3:** Retain schemas, catalog closure, golden results, sandbox traces,
+    canary scans, receipts, cancellation results, and `RV-03`, `RV-04`, `RV-08`, and `RV-16` maps.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 16.2.AC1:** Given a synthetic source manifest and exact current grant, when any
+  artifact protocol operation runs against the fake backend, then one bounded typed result and one
+  terminal receipt identify exact source, provenance, freshness, limits, and truncation.
+- [ ] **Story AC 16.2.AC2:** Given malformed, stale, restricted, unsupported, or unauthorized input,
+  when dispatch is requested, then execution fails closed with no parser launch, data disclosure,
+  workspace mutation, network access, or hidden omission.
+- [ ] **Story AC 16.2.AC3:** Given the same synthetic authorized input through multiple clients,
+  when fake results are compared, then correctness data and evidence are identical and no result is
+  represented as production source-artifact execution.
+
+#### [ ] Story 16.3 - Tool Preflight, Attempt, and Verification Composition
+
+**User-facing value:** As a user, I need every tool call checked against current machine and project
+facts before execution and verified against exact postconditions afterward.
+
+**Dependencies:** Stories 5.2, 11.2, 16.1, and 16.2.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 16.3.1 - Build deterministic preflight registry**
+  - [ ] **Sub-task 16.3.1.1:** Register workspace, Git, executable, service, network-policy,
+    platform, storage, credential-reference, and resource preflight probes with exact versions,
+    freshness, evidence, limits, and failure classes.
+  - [ ] **Sub-task 16.3.1.2:** Bind every runtime-visible tool to required preflights, effect class,
+    approval rule, verifier, retry policy, and terminal diagnostic policy.
+  - [ ] **Sub-task 16.3.1.3:** Fail before grant consumption or worker creation when a required
+    observation is missing, stale, ambiguous, out of budget, or inconsistent.
+- [ ] **Task 16.3.2 - Compose call and attempt execution**
+  - [ ] **Sub-task 16.3.2.1:** Assemble exact calls, canonical arguments, targets, preimages,
+    expected effects, postconditions, and operation-attempt identity before policy evaluation.
+  - [ ] **Sub-task 16.3.2.2:** Consume one current grant immediately before one worker launch and
+    bind result, receipt, artifacts, changed state, and cleanup to that exact attempt.
+  - [ ] **Sub-task 16.3.2.3:** Invoke deterministic verifiers and record observed success, no-op,
+    partial, denied, cancelled, failed, uncertain, or blocked state without model interpretation.
+- [ ] **Task 16.3.3 - Verify hostile and recovery paths**
+  - [ ] **Sub-task 16.3.3.1:** Mutate each preflight between observation, approval, grant, and
+    dispatch; require stale authority invalidation and zero worker starts.
+  - [ ] **Sub-task 16.3.3.2:** Crash before/during/after worker, receipt, artifact, verification, and
+    checkpoint boundaries; require one terminal attempt record, no replay, and bounded cleanup.
+  - [ ] **Sub-task 16.3.3.3:** Race duplicate calls and retry decisions; require one admitted
+    attempt, zero duplicate guarded effects, and explicit uncertainty when reconciliation cannot
+    establish postconditions.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 16.3.AC1:** Given a proposed tool call, when preflight and policy run, then no
+  worker starts until every exact current dependency, schema, grant, approval, limit, and verifier
+  requirement passes.
+- [ ] **Story AC 16.3.AC2:** Given one launched attempt, when it terminates or crashes, then one
+  receipt, one verification state, and one cleanup result reconcile without replay or false
+  completion.
+- [ ] **Story AC 16.3.AC3:** Given changed preconditions or a duplicate request, when dispatch is
+  attempted, then authority invalidates before effect and no competing attempt can broaden scope.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 16.AC1:** `AT-TOOL-001` and tool portions of `AT-SBX-001` pass.
@@ -1570,8 +2043,13 @@ claims.
 - [ ] **Sprint AC 16.AC3:** Every configured limit fails closed with one receipt.
 - [ ] **Sprint AC 16.AC4:** Workspace tree and metadata remain unchanged after every operation.
 - [ ] **Sprint AC 16.AC5:** No tool can escape the current grant, sandbox, workspace, or offline boundary.
+- [ ] **Sprint AC 16.AC6:** The six artifact protocol definitions, fake backend, and every
+  registered preflight/verifier mapping pass schema, limit, stale-state, cancellation, crash,
+  no-replay, and interface-parity tests without claiming production artifact operations.
 
-**Gate decision:** Sprint 16 is PASS only when Story 16.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 16 is PASS only when Stories 16.1 through 16.3, every numbered
+task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of
+Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Current gate result:** BLOCKED with the complete platform-neutral ten-tool catalog, closed schemas, deterministic result engine, hard limits, repeated-call guard, sealed Linux input contract, multi-object grant binding, authenticated generic preview/cancel flow, one receipt retained for every launched attempt, model-context sensitive-output withholding, deterministic RPM/DEB payloads, and all ten operations, the eleven-case live attack corpus, and the 12-case lifecycle campaign executing through root-owned workers on native Fedora 44 and Ubuntu 26.04. Remaining blockers are the native macOS XPC operation, attack, and lifecycle matrices plus independent worker review. The production manifest's refusal of a user-owned development worker remains expected fail-closed behavior.
 ### [ ] Sprint 17 - Read-Only Git and Untrusted Instructions
@@ -1865,6 +2343,53 @@ claims.
 - [ ] **Story AC 21.2.AC2:** Given queue saturation, sink failure, cancellation, or restart, when the runtime continues or recovers, then correctness records and terminal truth remain durable while progress behavior stays bounded, explicit, and unable to stall indefinitely.
 - [ ] **Story AC 21.2.AC3:** Given streamed model output and sensitive inputs, when runtime events are projected, then no per-token synchronous persistence, secret-bearing telemetry, giant inline payload, or undeclared external transmission occurs.
 
+#### [ ] Story 21.3 - Artifact and Workflow Event Projection
+
+**User-facing value:** As a user or reviewer, I need every artifact preparation and workflow
+decision to appear in one ordered history so failures can be explained and resumed without trusting
+transcript prose.
+
+**Dependencies:** Stories 11.2, 16.2, 16.3, and 21.2.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 21.3.1 - Extend the closed event family**
+  - [ ] **Sub-task 21.3.1.1:** Add source admitted, extraction started/completed/blocked, section
+    indexed, context disposition, preflight observed, attempt started/ended, verification observed,
+    retry decided, recovery decided, and terminal diagnostic event payload references.
+  - [ ] **Sub-task 21.3.1.2:** Define legal ordering, causation, correlation, terminality, sensitivity,
+    retention, redaction, and content-reference rules for every new event.
+  - [ ] **Sub-task 21.3.1.3:** Keep large source, parser, model, tool, and diagnostic payloads out of
+    event rows; persist content-free correctness identities transactionally and progress through the
+    existing bounded asynchronous path.
+- [ ] **Task 21.3.2 - Build projections and replay**
+  - [ ] **Sub-task 21.3.2.1:** Project source-artifact lifecycle, context manifests, step attempts,
+    consumed budgets, verification, recovery, and diagnosis from canonical events and materialized
+    records with exact reconciliation.
+  - [ ] **Sub-task 21.3.2.2:** Reject missing, duplicate, reordered, stale, hash-invalid,
+    cross-session, cross-artifact, cross-attempt, and post-terminal events.
+  - [ ] **Sub-task 21.3.2.3:** Preserve compatibility for existing journals and emit explicit
+    unsupported-version results for clients unable to render new event kinds.
+- [ ] **Task 21.3.3 - Verify durability and pressure behavior**
+  - [ ] **Sub-task 21.3.3.1:** Saturate progress queues, fail optional sinks, disconnect clients,
+    cancel, and restart while requiring complete correctness history and bounded shutdown.
+  - [ ] **Sub-task 21.3.3.2:** Crash before and after each new correctness event transaction and
+    require exact replay, no invented event, no duplicate effect, and one terminal truth.
+  - [ ] **Sub-task 21.3.3.3:** Retain schema vectors, ordering tables, replay digests, pressure
+    traces, secret scans, compatibility results, and `RV-08`, `RV-17`, and `RV-18` mappings.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 21.3.AC1:** Given a complete artifact-backed workflow, when its journal is replayed,
+  then every supplied artifact, context decision, preflight, attempt, receipt, verification,
+  recovery decision, and terminal diagnosis resolves exactly in one legal order.
+- [ ] **Story AC 21.3.AC2:** Given corruption, reordering, queue pressure, sink failure, or restart,
+  when replay or recovery runs, then correctness truth remains durable and progress loss cannot
+  become false success or hidden omission.
+- [ ] **Story AC 21.3.AC3:** Given sensitive or large payloads, when events are inspected, then only
+  classified bounded identities and verified references appear and no raw secret or giant inline
+  content is retained.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 21.AC1:** `AT-EVD-001`, `AT-EVD-002`, and `AT-EVD-003` pass.
@@ -1874,8 +2399,12 @@ claims.
 - [x] **Sprint AC 21.AC5:** Changed evidence becomes stale and cannot be silently resolved to replacement content.
 - [ ] **Sprint AC 21.AC6:** Runtime events are schema-valid, contiguous, hash-bound, deterministically replayable, and reconciled to receipts and terminal state.
 - [ ] **Sprint AC 21.AC7:** Journal, transcript, diagnostics, and metrics remain separate; asynchronous progress handling meets declared queue, privacy, recovery, and throughput ceilings.
+- [ ] **Sprint AC 21.AC8:** Source-artifact and verified-workflow events satisfy closed-schema,
+  legal-ordering, transactional-durability, replay, pressure, compatibility, and redaction gates.
 
-**Gate decision:** Sprint 21 is PASS only when Stories 21.1 and 21.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 21 is PASS only when Stories 21.1 through 21.3, every numbered
+task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of
+Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 22 - Context Management and Crash-Safe Resume
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -1959,6 +2488,123 @@ claims.
 - [ ] **Story AC 22.2.AC2:** Given interruption, corruption, missing bytes, reference drift, or concurrent collection, when the Story 22.1 startup or resume path reconciles artifacts, then it reconstructs one current reference set safely or blocks explicitly without replaying effects or claiming unavailable evidence.
 - [ ] **Story AC 22.2.AC3:** Given another session, a hostile path, or repository `artifacts/` content, when artifact access is attempted, then no path name or content hash alone grants access and no private runtime payload is confused with public verification evidence.
 
+#### [ ] Story 22.3 - Source-Artifact Preparation and Context Accounting
+
+**User-facing value:** As a user, I need everything I supply to be represented truthfully in the
+model context or visibly excluded, with exact provenance and bounded resource use.
+
+**Dependencies:** Stories 11.2, 13.4, 16.2, 21.3, 22.1, and 22.2.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 22.3.1 - Implement source admission and text vertical slice**
+  - [ ] **Sub-task 22.3.1.1:** Stream bounded request bytes, compute immutable source identity,
+    classify before persistence or model use, detect text versus binary, and record one extraction
+    state for every supplied source.
+  - [ ] **Sub-task 22.3.1.2:** Implement UTF-8/UTF-16 and declared fallback decoding, line and byte
+    provenance, ANSI removal with meaningful error preservation, repeated-line collapse, head/tail,
+    deterministic error/warning/stack-trace/test-failure/timestamp clusters, truncation,
+    cancellation, and binary or unsupported refusal for plain text and logs.
+  - [ ] **Sub-task 22.3.1.3:** Persist only policy-admitted source bytes and manifests; default to
+    ephemeral source handling and expose retention, refresh, deletion, and reattachment state.
+  - [ ] **Sub-task 22.3.1.4:** Support bounded incremental ingestion of a growing log with stable
+    prior line identities, append-only refresh when valid, rotation/truncation detection, and no
+    blind reuse after replacement.
+- [ ] **Task 22.3.2 - Build sections, lexical retrieval, and context manifests**
+  - [ ] **Sub-task 22.3.2.1:** Produce canonical structural sections and provenance-preserving
+    chunks with stable identities, source hashes, parent relationships, classification, and limits.
+  - [ ] **Sub-task 22.3.2.2:** Build deterministic artifact-local lexical indexes and exact range
+    retrieval before optional semantic retrieval; embeddings cannot define identity or coverage.
+  - [ ] **Sub-task 22.3.2.3:** Compile a context manifest that accounts for every artifact and
+    section as included, summarized, truncated, duplicate, stale, unsupported, unavailable,
+    restricted, or omitted with exact reason and token allocation.
+- [ ] **Task 22.3.3 - Integrate the existing context manager**
+  - [ ] **Sub-task 22.3.3.1:** Convert minimized sections into existing `ContextItemCandidate`
+    records and invoke Story 22.1 prioritization, deduplication, budgeting, and omission logic.
+  - [ ] **Sub-task 22.3.3.2:** Reconcile authoritative tokenizer counts, model profile reserves,
+    actual request tokens, and output reserve; fail before inference on overcommit or count drift.
+  - [ ] **Sub-task 22.3.3.3:** Expose bounded user and diagnostics views without raw restricted
+    content, private paths, hidden source bytes, or a second prompt-assembly path.
+- [ ] **Task 22.3.4 - Implement production native artifact operations**
+  - [ ] **Sub-task 22.3.4.1:** Implement the Story 16.2 catalog against admitted manifests,
+    sections, indexes, and payload references through the common dispatcher with no direct path,
+    parser, database, model, or MCP bypass.
+  - [ ] **Sub-task 22.3.4.2:** Implement bounded byte/line/section reads, deterministic lexical
+    search, source metadata, redaction/withholding, large-result artifactization, cancellation,
+    receipts, and exact freshness checks.
+  - [ ] **Sub-task 22.3.4.3:** Register `artifact.get_log_errors` only after its text/log extractor
+    goldens pass; keep page and sheet operations unregistered until Stories 60.2 and 62.2.
+- [ ] **Task 22.3.5 - Verify ingestion, lifecycle, tools, and budgets**
+  - [ ] **Sub-task 22.3.5.1:** Run paste boundaries, encodings, 25 MiB logs, mixed artifacts,
+    duplicates, stale sources, overflow, cancellation, crash, restart, refresh, expiry, and deletion.
+  - [ ] **Sub-task 22.3.5.2:** Prove complete manifest accounting, exact provenance, deterministic
+    context and native results, no silent drop, no budget violation, bounded memory/time, and
+    complete cleanup.
+  - [ ] **Sub-task 22.3.5.3:** Retain source manifests, extraction and native-tool goldens, context
+    ledgers, token
+    counts, lifecycle traces, performance results, canary scans, and `RV-08`, `RV-16`, `RV-17`, and
+    `RV-18` mappings.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 22.3.AC1:** Given any supplied source set, when context is prepared, then every
+  source and section has exactly one visible disposition with immutable provenance and no input is
+  silently dropped.
+- [ ] **Story AC 22.3.AC2:** Given any admitted model profile, when the context ledger is compiled,
+  then all token partitions reconcile within the exact input window and output/recovery reserves
+  remain untouched.
+- [ ] **Story AC 22.3.AC3:** Given source mutation, restart, expiry, or deletion, when context is
+  reused, then stale dependencies invalidate transitively and unavailable evidence cannot be
+  represented as current.
+
+#### [ ] Story 22.4 - Durable Attempt Recovery and Resume
+
+**User-facing value:** As a user, I need interrupted multi-step work to resume from the last verified
+state without repeating an effect or hiding why progress stopped.
+
+**Dependencies:** Stories 5.2, 11.2, 16.3, 21.3, and 22.2.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 22.4.1 - Persist and validate attempt checkpoints**
+  - [ ] **Sub-task 22.4.1.1:** Bind checkpoints to source, plan, step, model, context, tool catalog,
+    policy, grants, approvals, preflights, attempts, receipts, artifacts, verifier, budgets, event
+    cursor, and environment identities.
+  - [ ] **Sub-task 22.4.1.2:** Revalidate every identity and current postcondition on resume;
+    continue only unchanged work, otherwise invalidate, reconcile, request approval, or block.
+  - [ ] **Sub-task 22.4.1.3:** Retain uncertainty and consumed authority across restart; never
+    reconstruct or replay an old effect call from transcript, model output, or incomplete state.
+- [ ] **Task 22.4.2 - Implement deterministic recovery decisions**
+  - [ ] **Sub-task 22.4.2.1:** Select exactly one safe action from continue, fresh eligible attempt,
+    deterministic repair, replan, await approval, await dependency, reconcile effect, cancel, or
+    terminate diagnosed.
+  - [ ] **Sub-task 22.4.2.2:** Enforce parser, attempt, error, workflow, and replan budgets plus
+    repeated-state detection across restart and concurrent clients.
+  - [ ] **Sub-task 22.4.2.3:** Produce one terminal diagnostic for each non-cancelled failure with
+    failed step, last verified state, attempts, evidence, exhausted budgets, blocked reason,
+    uncertainty, approval need, and safe resume action.
+- [ ] **Task 22.4.3 - Verify interruption and no-replay**
+  - [ ] **Sub-task 22.4.3.1:** Interrupt before and after each preflight, approval, dispatch, effect,
+    receipt, artifact, verification, retry decision, recovery decision, checkpoint, and terminal
+    commit across at least 100 deterministic seeds.
+  - [ ] **Sub-task 22.4.3.2:** Resume concurrently and under changed source, policy, model, tool,
+    environment, and postcondition state; require one owner, one current decision, no duplicate
+    effect, and explicit block on ambiguity.
+  - [ ] **Sub-task 22.4.3.3:** Retain crash traces, replay counters, checkpoint graphs, invalidation
+    results, diagnostics, cleanup, and `RV-12`, `RV-16`, `RV-17`, `RV-18`, and `RV-25` mappings.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 22.4.AC1:** Given interruption at any workflow boundary, when recovery runs, then
+  it restores one exact current state or blocks visibly and never repeats a completed or uncertain
+  effect.
+- [ ] **Story AC 22.4.AC2:** Given unchanged safe work and remaining budget, when a fresh attempt is
+  eligible, then it receives new identities and authority while preserving prior evidence and
+  attempt history.
+- [ ] **Story AC 22.4.AC3:** Given exhausted, repeated, stale, unauthorized, or ambiguous state,
+  when execution stops, then one actionable terminal diagnosis exists and no model or client can
+  convert it into success.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 22.AC1:** `AT-CRASH-001` and `AT-RESUME-001` pass.
@@ -1969,8 +2615,13 @@ claims.
 - [ ] **Sprint AC 22.AC6:** Every persisted large output resolves through a digest- and size-verified runtime artifact reference governed by SQLite metadata and current policy.
 - [ ] **Sprint AC 22.AC7:** Crash, corruption, retention, and collection campaigns leave no false reference, mutable overwrite, repeated effect, unauthorized disclosure, or hidden orphan.
 - [ ] **Sprint AC 22.AC8:** Session reconstruction binds the exact journal cursor, checkpoint, artifact set, workspace state, policy, and model profile or stops with one visible blocked result.
+- [ ] **Sprint AC 22.AC9:** Every supplied source is accounted for, every context token is budgeted,
+  and every interruption resumes or diagnoses with zero replay, zero stale-current evidence, and
+  zero duplicate guarded effect.
 
-**Gate decision:** Sprint 22 is PASS only when Stories 22.1 and 22.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 22 is PASS only when Stories 22.1 through 22.4, every numbered
+task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of
+Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 23 - Native Visual Studio Code Chat Experience
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -2098,6 +2749,112 @@ claims.
 - [x] **Story AC 23.4.AC2:** Given native Chat, a test CLI adapter, or a future bounded caller, when equivalent runtime requests are submitted, then policy, model, context, tool, event, receipt, and outcome semantics remain interface independent, including equivalent persistence references whenever persistence is enabled. Evidence: the three-client parity fixture proves equality for ephemeral read-only and controlled-write packets, including every present artifact and checkpoint reference.
 - [ ] **Story AC 23.4.AC3:** Given missing authority, malformed model output, cancellation, stale state, or a dependency failure, when the ephemeral run stops, then no client, model, coordinator, or event path broadens authority, retries an effect invisibly, or converts uncertainty into success.
 
+#### [ ] Story 23.5 - Stable Chat Participant Reference Ingress
+
+**User-facing value:** As a Visual Studio Code user, I need files and text I deliberately attach to
+AgentMage to reach the Rust runtime or fail visibly, regardless of which compatible local model I
+select.
+
+**Dependencies:** Stories 1.2, 13.4, 21.3, 22.3, and 23.4.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 23.5.1 - Implement stable participant collection**
+  - [ ] **Sub-task 23.5.1.1:** Enumerate stable `ChatRequest.references`, prompt text, commands, and
+    request identity; normalize descriptors without parsing content or deriving authority.
+  - [ ] **Sub-task 23.5.1.2:** Resolve only current-request local references under the amended
+    shell contract and stream bounded chunks through authenticated IPC with sequence, digest,
+    cancellation, timeout, and complete/partial state.
+  - [ ] **Sub-task 23.5.1.3:** Represent virtual, remote, inaccessible, unknown, oversized, changed,
+    and unsupported references explicitly; never fall back to ambient workspace search.
+- [ ] **Task 23.5.2 - Make provider compatibility fail visible**
+  - [ ] **Sub-task 23.5.2.1:** Replace the current silent non-text filtering with complete part
+    accounting and a visible unsupported-part result for every provider part that cannot be
+    represented safely.
+  - [ ] **Sub-task 23.5.2.2:** Keep the provider as an optional local-model picker/compatibility path
+    and prohibit provider internals, private Copilot classes, and undeclared proposed APIs from the
+    guaranteed attachment path.
+  - [ ] **Sub-task 23.5.2.3:** Revalidate selected model profile, request references, transport
+    identity, and budget immediately before run submission; block stale substitutions.
+  - [ ] **Sub-task 23.5.2.4:** Add label-only provider, omitted-proxy-body, and MCP-without-resource
+    fixtures proving that no compatibility adapter claims bytes or ingestion it did not receive.
+- [ ] **Task 23.5.3 - Implement presentation and accessibility**
+  - [ ] **Sub-task 23.5.3.1:** Render per-source queued, reading, extracting, partial, unsupported,
+    omitted, stale, cancelled, failed, and included states plus total budget accounting.
+  - [ ] **Sub-task 23.5.3.2:** Provide keyboard, screen-reader, focus, cancellation, and bounded
+    error-detail behavior without exposing private paths or restricted content.
+  - [ ] **Sub-task 23.5.3.3:** Document the supported participant accounting path, provider limitations,
+    remote-workspace disclosure boundary, supported API matrix, and troubleshooting evidence.
+- [ ] **Task 23.5.4 - Verify real interface behavior**
+  - [ ] **Sub-task 23.5.4.1:** Exercise 999/1,001-character prompts, multiple attachments, virtual
+    and remote URIs, unknown parts, stale references, disconnect, cancellation, restart, and model
+    changes through extension-host tests and installed VSIX evidence.
+  - [ ] **Sub-task 23.5.4.2:** Require complete source-manifest accounting, zero silent drop, no
+    ambient reads, no direct model/tool/store access, bounded IPC, and exact parity with headless
+    requests over the same source bytes.
+  - [ ] **Sub-task 23.5.4.3:** Run or truthfully block Fedora/Ubuntu local, Windows local, macOS
+    local, WSL, Remote SSH, and Dev Container placement, package, cancellation, restart, disclosure,
+    and cleanup cases without substituting one topology for another.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 23.5.AC1:** Given text and references supplied to the AgentMage participant, when a
+  run starts, then every item reaches Rust with verified identity or appears as one visible partial,
+  unsupported, unavailable, cancelled, or failed source state.
+- [ ] **Story AC 23.5.AC2:** Given provider mode with a non-text or unknown part, when normalization
+  runs, then the part is not silently discarded and the user is directed to the guaranteed
+  participant path where possible.
+- [ ] **Story AC 23.5.AC3:** Given any extension request, when authority is inspected, then only
+  current-request references are readable and TypeScript owns no parser, context, policy, tool,
+  model-runtime, credential, or effect boundary.
+
+#### [ ] Story 23.6 - Verified Workflow Supervisor Vertical Slice
+
+**User-facing value:** As a user, I need AgentMage to finish a bounded multi-step task only after
+its actual postconditions are verified, or tell me exactly why it could not continue safely.
+
+**Dependencies:** Stories 5.2, 16.3, 21.3, 22.4, 23.4, and 23.5.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 23.6.1 - Compose the supervisor through the existing coordinator**
+  - [ ] **Sub-task 23.6.1.1:** Bind existing `PlanStepId` values to execution policies and select
+    only dependency-ready steps with current context, preflights, policy, tools, and budgets.
+  - [ ] **Sub-task 23.6.1.2:** Compose proposal decoding, deterministic repair, call validation,
+    approval disposition, fresh grant, native dispatch, receipt, artifact, verifier, checkpoint,
+    recovery decision, and event emission without a second loop.
+  - [ ] **Sub-task 23.6.1.3:** Detect empty, reasoning-only, false-complete, open-plan, post-error,
+    and repeated-state stopping and route each to bounded recovery or terminal diagnosis.
+- [ ] **Task 23.6.2 - Deliver deterministic fake-model slices**
+  - [ ] **Sub-task 23.6.2.1:** Complete one multi-artifact read-only plan with at least three
+    dependent steps, exact context accounting, native artifact tools, and verifier-backed success.
+  - [ ] **Sub-task 23.6.2.2:** Complete one safely recoverable transient read failure using one
+    fresh attempt and prove old call/grant/receipt identities are not reused.
+  - [ ] **Sub-task 23.6.2.3:** Diagnose one uncertain effect, one false completion, one exhausted
+    budget, one stale preflight, one cancellation, and one restart without false success or replay.
+- [ ] **Task 23.6.3 - Verify interface independence and authority**
+  - [ ] **Sub-task 23.6.3.1:** Run identical slices through Chat, test CLI, and headless adapters;
+    require equivalent correctness events, source/context manifests, attempts, receipts,
+    verification, terminal state, and diagnosis.
+  - [ ] **Sub-task 23.6.3.2:** Mutate client output, model prose, classifier score, event projection,
+    and transcript; require no authority, retry, effect, or completion change.
+  - [ ] **Sub-task 23.6.3.3:** Retain raw traces, state transitions, budget ledgers, attempt and
+    receipt maps, no-replay counters, diagnostics, cleanup, and mapped reviewer evidence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 23.6.AC1:** Given a dependency-valid fake-model plan, when the supervisor runs,
+  then each step executes at most one admitted attempt at a time and success occurs only from
+  current deterministic postcondition evidence.
+- [ ] **Story AC 23.6.AC2:** Given a safely eligible failure, when recovery chooses a new attempt,
+  then every authority-bearing identity is fresh, prior evidence remains immutable, and no effect is
+  duplicated.
+- [ ] **Story AC 23.6.AC3:** Given unsafe, uncertain, exhausted, stale, or premature-stop state, when
+  the run terminates, then one actionable diagnosis is emitted and no client or model can convert it
+  into success.
+- [ ] **Story AC 23.6.AC4:** Given equivalent clients, when the same run is replayed, then only
+  presentation differs; policy, attempts, receipts, artifacts, verification, and outcome are equal.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 23.AC1:** Every numbered implementation sub-task in Stories 23.1 through 23.4 is complete and linked to its source requirement or issue identity.
@@ -2109,8 +2866,13 @@ claims.
 - [ ] **Sprint AC 23.AC7:** Native Chat completes the approved read-only vertical slice through one interface-independent runtime coordinator with no shell-to-model/tool/storage bypass. Partial local evidence: deterministic authenticated-host and VS Code fixtures traverse the common coordinator adapter and prove the thin-client boundary; installed-host runtime/model composition and native acceptance remain absent.
 - [ ] **Sprint AC 23.AC8:** Runtime requests, events, receipts, cancellation, outcomes, and the optional journal/checkpoint/artifact ports are reusable by a non-Chat test client without changing kernel semantics.
 - [ ] **Sprint AC 23.AC9:** `ALLOW`, `ASK`, and `DENY` preserve exact `CapabilityGrant` authority and produce no approval-dialog or coordinator-created authority.
+- [ ] **Sprint AC 23.AC10:** Stable participant ingress accounts for every supplied part, and the
+  fake-model workflow slice proves preflight, fresh attempts, verifier-only completion, bounded
+  recovery, diagnosis, and cross-client parity.
 
-**Gate decision:** Sprint 23 is PASS only when Stories 23.1 through 23.4, every numbered task/sub-task, every story criterion, every sprint criterion, `AM-VSC-003`, `AT-VSC-003`, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 23 is PASS only when Stories 23.1 through 23.6, every numbered
+task/sub-task, every story criterion, every sprint criterion, `AM-VSC-003`, `AT-VSC-003`, and the
+Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 24 - Manual Codex Handoff Boundary
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -4022,6 +4784,78 @@ count remains zero. Both implementation and artifact tasks, the verification tas
 - [ ] **Story AC 50.2.AC3:** Given sustained load, pressure, disconnect, cancellation, crash, retention, or component removal, when the runtime recovers or stops, then correctness records remain truthful, resources stay bounded, private data remains isolated, and one terminal state is reproducible.
 - [ ] **Story AC 50.2.AC4:** Given later Sprints 89-95, when workflow and specialist-agent capabilities are implemented, then they can attach through the documented runtime port without replacing the coding loop, model adapters, context manager, tool dispatcher, permission engine, event journal, session store, or artifact store.
 
+#### [ ] Story 50.3 - Foundational Runtime Integration and Hardening
+
+**User-facing value:** As a user, I need artifact-heavy, multi-step work to remain correct,
+responsive, recoverable, and explainable across supported clients and adverse conditions.
+
+**Dependencies:** Stories 2.3, 13.4, 21.3, 22.3, 22.4, 23.5, 23.6, 50.1, and 50.2; parser
+adapters may be exercised as they become available without claiming their later sprint gates.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 50.3.1 - Build integrated workflow fixtures**
+  - [ ] **Sub-task 50.3.1.1:** Run a multi-file repository review, long-log diagnosis, structured
+    document comparison, and mixed-artifact planning workflow through one coordinator with exact
+    sources, context manifests, native tools, attempts, receipts, and verifier outcomes.
+  - [ ] **Sub-task 50.3.1.2:** Run transient recovery, malformed-call repair, stale preflight,
+    conditional conflict, uncertain effect, false completion, premature stop, cancellation,
+    disconnect, restart, and removal workflows.
+  - [ ] **Sub-task 50.3.1.3:** Compare Chat, interactive CLI, headless, and future-caller projections;
+    permit presentation differences only.
+- [ ] **Task 50.3.2 - Execute pressure and performance campaigns**
+  - [ ] **Sub-task 50.3.2.1:** Exercise maximum artifact count/bytes, 25 MiB logs, combined token
+    overflow, maximum sections, event queue saturation, large tool output, checkpoint depth,
+    attempt budgets, low memory, low disk, timeout, and concurrent cancellation.
+  - [ ] **Sub-task 50.3.2.2:** Record ingest throughput, extraction latency, time to first useful
+    section, token allocation, peak memory, store growth, queue depth, recovery time, cleanup time,
+    and terminal-diagnosis latency against declared thresholds.
+  - [ ] **Sub-task 50.3.2.3:** Require bounded degradation, visible omissions, responsive
+    cancellation, no per-token durable writes, no false success, and no undeclared residue.
+- [ ] **Task 50.3.3 - Execute security and fault campaigns**
+  - [ ] **Sub-task 50.3.3.1:** Combine prompt injection, active documents, archive traversal,
+    secret canaries, hostile metadata, stale references, model-crafted authority, approval mutation,
+    retry loops, effect uncertainty, and client disconnect attacks.
+  - [ ] **Sub-task 50.3.3.2:** Crash at every source, context, proposal, preflight, grant, worker,
+    receipt, artifact, verification, recovery, checkpoint, and terminal boundary; rerun impact-based
+    tests after each correction.
+  - [ ] **Sub-task 50.3.3.3:** Prove zero silent drops, raw-secret disclosures, active-content
+    execution, approval bypasses, duplicate guarded effects, unsafe automatic retries, false
+    completions, and authority leaks.
+- [ ] **Task 50.3.4 - Close evaluation, documentation, and removal**
+  - [ ] **Sub-task 50.3.4.1:** Compare admitted model profiles without changing invariant safety
+    controls; report coverage, quality, invalid calls, interventions, resource use, and limitations
+    per exact tuple.
+  - [ ] **Sub-task 50.3.4.2:** Disable and remove source persistence, parser adapters, workflow
+    supervision, and clients separately and together; require native baseline operation and no
+    undeclared data, process, socket, cache, grant, or registration residue.
+  - [ ] **Sub-task 50.3.4.3:** Publish operator diagnostics, recovery guidance, architecture and
+    data-flow diagrams, capability/format/model/interface matrices, migration notes, raw evidence
+    index, and the `M-FOUNDATIONAL-RUNTIME-CORE` decision record.
+  - [ ] **Sub-task 50.3.4.4:** Run applicable `RV-03`, `RV-04`, `RV-08`, `RV-11`, `RV-12`,
+    `RV-15` through `RV-18`, and `RV-25` protocols and retain independent review where required.
+  - [ ] **Sub-task 50.3.4.5:** Implement independent feature flags for artifact ingress, each
+    extractor, OCR, retrieval, workflow supervision, model-assisted repair, participant, provider
+    compatibility, and MCP; disabled features leave no registration or authority.
+  - [ ] **Sub-task 50.3.4.6:** Execute migration from zero-hidden-retry behavior, opt-in beta,
+    rollback, emergency disablement, support/limitations publication, and post-release local
+    diagnostic review without automatic remote telemetry.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 50.3.AC1:** Given every integrated fixture, when executed through each client, then
+  all supplied sources, context decisions, policy decisions, attempts, effects, receipts,
+  verifications, and terminal outcomes reconcile exactly with no hidden non-pass state.
+- [ ] **Story AC 50.3.AC2:** Given pressure, faults, cancellation, restart, or removal, when the
+  runtime responds, then declared bounds hold, correctness remains durable, effects do not replay,
+  private data remains isolated, and cleanup completes or reports precise residue.
+- [ ] **Story AC 50.3.AC3:** Given malformed, hostile, stale, uncertain, or premature model behavior,
+  when execution terminates, then zero false completion and zero unsafe retry occur and one
+  actionable diagnosis exists for every non-cancelled failure.
+- [ ] **Story AC 50.3.AC4:** Given current evidence, when `M-FOUNDATIONAL-RUNTIME-CORE` is evaluated,
+  then it closes only if text/log ingestion and verified-workflow supervision pass and does not
+  imply later structured-parser, platform, MCP, model, or release support.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 50.AC1:** Every promoted language workflow passes exact change, validation, preservation, and rollback fixtures.
@@ -4032,6 +4866,8 @@ count remains zero. Both implementation and artifact tasks, the verification tas
 - [x] **Sprint AC 50.AC6:** Native Chat, interactive CLI, and the future-caller test adapter use one coordinator and produce equivalent non-presentation policy, event, artifact, receipt, checkpoint, evidence, and terminal results. Evidence: the two-packet `runtime_parity_tests` campaign uses the same replayable `CodingCoordinatorPort` behind all three callers and asserts complete projection equality, including the read tool receipt and the coding artifact and checkpoint.
 - [ ] **Sprint AC 50.AC7:** Runtime load, queue, output, artifact, cancellation, crash, recovery, retention, removal, and privacy campaigns meet declared bounds without per-token synchronous journal writes or false success.
 - [x] **Sprint AC 50.AC8:** The future workflow attachment port enforces narrower authority and leaves scheduling, retries, workflow design, child agents, and multi-agent coordination to their existing later sprints. Evidence: `WorkflowRuntimeSubmission`, `InMemoryWorkflowCaller`, and the eight-case zero-execution attack matrix enforce the seven-layer intersection, while the architecture boundary retains every scheduler, retry, design, child-isolation, and coordination owner for Sprints 89-95.
+- [ ] **Sprint AC 50.AC9:** `M-FOUNDATIONAL-RUNTIME-CORE` passes text/log and workflow integration,
+  parity, pressure, fault, recovery, security, removal, documentation, and truthful-limitation gates.
 
 Retained local evidence: source revision `f5780c3d58b0b9187d81208aeae6099f39e0956f` is bound by
 [`local-evidence-report.json`](artifacts/sprints/sprint-50/local-evidence-report.json), SHA-256
@@ -4046,7 +4882,9 @@ trusted installed-package execution, independent review, and deferred manual fuz
 The implementation and verification tasks, both story criteria, Story 50.1, Sprint AC 50.AC1, and
 the sprint therefore remain open.
 
-**Gate decision:** Sprint 50 is PASS only when Stories 50.1 and 50.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 50 is PASS only when Stories 50.1 through 50.3, every numbered
+task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of
+Done are complete with current evidence. Otherwise it is BLOCKED.
 
 ## [ ] Epic 5 - v0.5 - Manual Frontier Consultation
 
@@ -4557,6 +5395,46 @@ independent content review, and deferred manual fuzzing.
 - [ ] **Story AC 58.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-050-I01`, `S-050-I02`, `S-050-I03`, and `S-050-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
 - [ ] **Story AC 58.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
+#### [ ] Story 58.2 - DOCX Source-Artifact Adapter
+
+**User-facing value:** As a user, I need a Word document I attach to become bounded, structured,
+page-aware evidence for the same context and workflow runtime rather than a separate document path.
+
+**Dependencies:** Stories 16.2, 22.3, 23.5, 50.3, and 58.1.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 58.2.1 - Adapt the existing Word extractor**
+  - [ ] **Sub-task 58.2.1.1:** Implement the shared extractor trait over the existing DOCX parser
+    and map paragraphs, headings, lists, tables, headers, footers, notes, comments, tracked changes,
+    links, images, relationships, and unsupported structures into canonical sections.
+  - [ ] **Sub-task 58.2.1.2:** Preserve package-part, XML-path, paragraph, run, table, row, cell,
+    relationship, and rendered-page provenance where deterministically available.
+  - [ ] **Sub-task 58.2.1.3:** Disable macros, external relationships, embedded executables,
+    formulas, active content, and network retrieval; label omitted or unsupported structures.
+- [ ] **Task 58.2.2 - Integrate lifecycle and context**
+  - [ ] **Sub-task 58.2.2.1:** Emit source manifest, sections, extraction metrics, warnings, and
+    content-addressed payload references through the shared service and native tools.
+  - [ ] **Sub-task 58.2.2.2:** Support cancellation, restart, cache reuse, parser-version and source
+    invalidation, retention, deletion, and reattachment without duplicate storage authority.
+  - [ ] **Sub-task 58.2.2.3:** Feed minimized sections into Story 22.1 and require complete context
+    accounting under multiple model profiles and combined-artifact budgets.
+- [ ] **Task 58.2.3 - Verify hostile and fidelity cases**
+  - [ ] **Sub-task 58.2.3.1:** Test malformed ZIP/XML, traversal, external relationships, macros,
+    embedded files, recursion, decompression, oversized parts, duplicate names, Unicode, low memory,
+    cancellation, crash, and cleanup.
+  - [ ] **Sub-task 58.2.3.2:** Compare canonical sections and provenance against golden DOCX
+    fixtures; record structural loss, unsupported content, and rendered-page limitations visibly.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 58.2.AC1:** Given an admitted DOCX, when extraction runs, then canonical sections
+  retain exact available provenance and every omitted, unsupported, or active structure is visible.
+- [ ] **Story AC 58.2.AC2:** Given hostile or oversized Office content, when the parser runs, then
+  limits and cancellation hold, no active content or network executes, and cleanup leaves no residue.
+- [ ] **Story AC 58.2.AC3:** Given the same DOCX through any supported client, when context is built,
+  then source manifests and section dispositions are equal and no shell owns document logic.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 58.AC1:** Every numbered implementation sub-task in Story 58.1 is complete and linked to its legacy requirement or issue identity.
@@ -4564,8 +5442,12 @@ independent content review, and deferred manual fuzzing.
 - [x] **Sprint AC 58.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 58.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 58.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [ ] **Sprint AC 58.AC6:** The DOCX source-artifact adapter passes structural fidelity,
+  provenance, active-content refusal, resource, lifecycle, context, and client-parity gates.
 
-**Gate decision:** Sprint 58 is PASS only when Story 58.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 58 is PASS only when Stories 58.1 and 58.2, every numbered task/sub-task,
+every story criterion, every sprint criterion, and the Universal Story Definition of Done are
+complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-58/local-evidence-report.json`
 binds 9 passing commands and the 73-case acceptance corpus to source revision
@@ -4681,6 +5563,58 @@ review, and deferred manual fuzzing.
 - [ ] **Story AC 60.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-051-I01`, `S-051-I02`, `S-051-I03`, and `S-051-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
 - [x] **Story AC 60.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
+#### [ ] Story 60.2 - PDF and OCR Source-Artifact Adapter
+
+**User-facing value:** As a user, I need searchable and scanned PDFs to become page-cited evidence
+with honest reading-order, table, OCR, confidence, and encryption limitations.
+
+**Dependencies:** Stories 16.2, 22.3, 23.5, 50.3, and 60.1.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 60.2.1 - Adapt native PDF text extraction**
+  - [ ] **Sub-task 60.2.1.1:** Implement the shared extractor trait over the existing PDF parser
+    with page boundaries, spans, reading-order observations, text density, image-only detection,
+    password/encryption state, warnings, and page-level provenance.
+  - [ ] **Sub-task 60.2.1.2:** Preserve object/page/span identity and label tables, columns,
+    ligatures, forms, annotations, embedded files, damaged xrefs, and unsupported structures rather
+    than inventing layout certainty.
+  - [ ] **Sub-task 60.2.1.3:** Refuse JavaScript, actions, launches, external resources, embedded
+    executables, parser-selected network, and undeclared decryption attempts.
+- [ ] **Task 60.2.2 - Admit OCR as a separate optional path**
+  - [ ] **Sub-task 60.2.2.1:** Define an OCR trait and evaluate pure-Rust and optional isolated
+    native candidates for license, model files, quality, language, CPU/GPU, package size, platform,
+    cancellation, and security; adopt none without an ADR-backed disposition.
+  - [ ] **Sub-task 60.2.2.2:** Implement per-page eligibility and fallback with page/image regions,
+    engine/model identity, preprocessing, language, confidence, thresholds, and explicit
+    machine-derived status; never merge OCR with observed PDF text silently.
+  - [ ] **Sub-task 60.2.2.3:** Package OCR behind an optional feature and isolated bounded worker;
+    absence degrades to a visible scanned-page state and never blocks native PDF extraction.
+- [ ] **Task 60.2.3 - Integrate lifecycle, context, and tools**
+  - [ ] **Sub-task 60.2.3.1:** Emit source manifests, native and OCR sections, extraction metrics,
+    warnings, page retrieval, context candidates, and content-addressed references through shared
+    runtime paths.
+  - [ ] **Sub-task 60.2.3.2:** Implement cancellation, restart, cache and OCR-model invalidation,
+    retention, deletion, reattachment, and multi-model context accounting.
+- [ ] **Task 60.2.4 - Verify fidelity, isolation, and resources**
+  - [ ] **Sub-task 60.2.4.1:** Test digital, scanned, mixed, encrypted, malformed, recursive,
+    oversized, action-bearing, image-heavy, low-text, multilingual, cancellation, timeout, crash,
+    low-memory, and cleanup fixtures.
+  - [ ] **Sub-task 60.2.4.2:** Require exact page provenance, visible confidence and limitations,
+    no active content or network, bounded extraction/OCR, complete context accounting, and client
+    parity.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 60.2.AC1:** Given a searchable PDF, when extraction runs, then text resolves to
+  exact pages and spans while reading-order and table limitations remain visible.
+- [ ] **Story AC 60.2.AC2:** Given an eligible scanned page and admitted OCR profile, when fallback
+  runs, then recognized text is labeled machine-derived with exact page/region, engine, model, and
+  confidence provenance.
+- [ ] **Story AC 60.2.AC3:** Given hostile, encrypted, unsupported, or over-budget PDF content, when
+  processing runs, then it fails or degrades visibly with no active content, network, disclosure,
+  unbounded resource use, or residue.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 60.AC1:** Every numbered implementation sub-task in Story 60.1 is complete and linked to its legacy requirement or issue identity.
@@ -4688,8 +5622,12 @@ review, and deferred manual fuzzing.
 - [x] **Sprint AC 60.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 60.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 60.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [ ] **Sprint AC 60.AC6:** PDF and optional OCR adapters pass page provenance, confidence,
+  active-content refusal, resource, lifecycle, packaging, context, and client-parity gates.
 
-**Gate decision:** Sprint 60 is PASS only when Story 60.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 60 is PASS only when Stories 60.1 and 60.2, every numbered task/sub-task,
+every story criterion, every sprint criterion, and the Universal Story Definition of Done are
+complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-60/local-evidence-report.json`
 binds 9 passing commands and the 82-case review corpus to source revision
@@ -4803,6 +5741,65 @@ fuzzing remain incomplete. No story, sprint, product, platform, or release gate 
 - [ ] **Story AC 62.1.AC2:** Given positive, invalid/prohibited, boundary, cancellation, dependency-failure, and side-effect cases for `S-052-I01`, `S-052-I02`, `S-052-I03`, and `S-052-I04`, when the story test set runs, then each assigned sub-task produces its specified value, state, and receipt while every prohibited side effect remains absent.
 - [x] **Story AC 62.1.AC3:** Given the raw test output and environment manifest, when a reviewer recomputes the story result, then failures, skips, retries, suppressions, and limitations remain visible and the summary matches the raw evidence.
 
+#### [ ] Story 62.2 - Spreadsheet Source-Artifact Adapter
+
+**User-facing value:** As a user, I need workbook facts to reach the model with exact sheet and cell
+provenance and honest formula, date, hidden-sheet, and size behavior.
+
+**Dependencies:** Stories 16.2, 22.3, 23.5, 50.3, 58.2, 60.2, and 62.1.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 62.2.1 - Adapt the existing spreadsheet parser**
+  - [ ] **Sub-task 62.2.1.1:** Implement the shared extractor trait over existing XLSX, CSV, and
+    JSON parsing and map workbooks, sheets, tables, rows, columns, cells, names, and supported links
+    into canonical sections.
+  - [ ] **Sub-task 62.2.1.2:** Preserve workbook/sheet/cell/range provenance, cell type, displayed
+    and raw value, formula text, cached result, date-system interpretation, error values, and parser
+    warnings without calculating formulas.
+  - [ ] **Sub-task 62.2.1.3:** Define explicit hidden/very-hidden sheet policy, external links,
+    macros, embedded objects, formulas, protected sheets, sparse ranges, and unsupported features.
+- [ ] **Task 62.2.2 - Implement bounded structural retrieval**
+  - [ ] **Sub-task 62.2.2.1:** Enforce workbook, sheet, row, column, cell, string, relationship,
+    compressed/decompressed byte, output, time, memory, and cancellation limits.
+  - [ ] **Sub-task 62.2.2.2:** Emit source manifests, sheet summaries, selected ranges, lexical
+    indexes, exact `get_sheet`/range retrieval, context candidates, and content-addressed references
+    through shared services and native tools.
+  - [ ] **Sub-task 62.2.2.3:** Implement restart, cache/parser invalidation, retention, deletion,
+    reattachment, and combined-artifact token accounting without storing a second workbook copy.
+- [ ] **Task 62.2.3 - Verify malicious and fidelity cases**
+  - [ ] **Sub-task 62.2.3.1:** Test malformed ZIP/XML, traversal, bombs, macros, formulas, external
+    links, hidden sheets, sparse dimensions, date systems, errors, Unicode, protected content,
+    oversized strings, cancellation, crash, low memory, and cleanup.
+  - [ ] **Sub-task 62.2.3.2:** Compare exact sheet/cell/range values and provenance with golden
+    fixtures; require visible cached-versus-formula distinctions, no formula execution, no external
+    retrieval, bounded resources, and client parity.
+- [ ] **Task 62.2.4 - Evaluate the complete foundational runtime milestone**
+  - [ ] **Sub-task 62.2.4.1:** Run text/log, DOCX, searchable PDF, scanned-PDF/OCR where admitted,
+    and XLSX acceptance workflows through Chat, CLI, and headless clients under at least two exact
+    eligible model profiles or record truthful profile blockers.
+  - [ ] **Sub-task 62.2.4.2:** Reconcile every source/context manifest, native tool result,
+    preflight, attempt, receipt, verification, recovery decision, diagnosis, performance threshold,
+    and security result with no hidden non-pass state.
+  - [ ] **Sub-task 62.2.4.3:** Record `M-FOUNDATIONAL-RUNTIME` PASS or BLOCKED with exact platform,
+    parser, OCR, model, API, independent-review, and deferred-manual-fuzz limitations; do not infer
+    release or optional MCP support.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 62.2.AC1:** Given an admitted workbook, when extraction runs, then every returned
+  value resolves to exact workbook, sheet, cell or range provenance with type, formula/cache, date,
+  error, and hidden-state semantics visible.
+- [ ] **Story AC 62.2.AC2:** Given a workbook larger than context, when context is prepared, then a
+  bounded structural summary and retrieval handles are supplied without blind truncation or model
+  limit violation.
+- [ ] **Story AC 62.2.AC3:** Given malicious or unsupported workbook content, when parsing runs,
+  then no macro, formula, external link, active content, or network executes and failure remains
+  bounded, attributable, and clean.
+- [ ] **Story AC 62.2.AC4:** Given the complete required format and workflow corpus, when
+  `M-FOUNDATIONAL-RUNTIME` is evaluated, then every core and parser gate is current and passing or
+  the milestone remains explicitly blocked without weakening any earlier evidence.
+
 #### Sprint Acceptance Criteria
 
 - [x] **Sprint AC 62.AC1:** Every numbered implementation sub-task in Story 62.1 is complete and linked to its legacy requirement or issue identity.
@@ -4810,8 +5807,15 @@ fuzzing remain incomplete. No story, sprint, product, platform, or release gate 
 - [x] **Sprint AC 62.AC3:** No workspace, authority, privacy, network, platform, or canonical-state behavior outside this story's declared scope changes.
 - [x] **Sprint AC 62.AC4:** Required artifacts are present, hashed, source-traceable, and reproducible from the recorded environment.
 - [ ] **Sprint AC 62.AC5:** The gate is recorded as PASS only when no blocking test is failed, skipped, stale, unavailable, flaky, quarantined, suppressed, or awaiting required independent review.
+- [ ] **Sprint AC 62.AC6:** The spreadsheet source-artifact adapter passes sheet/cell provenance,
+  formula/date/hidden-state semantics, malicious-package, resource, lifecycle, context, and parity
+  gates.
+- [ ] **Sprint AC 62.AC7:** `M-FOUNDATIONAL-RUNTIME` reconciles text/log, DOCX, PDF/OCR, XLSX,
+  context, workflow, security, performance, recovery, and interface evidence with zero hidden blocker.
 
-**Gate decision:** Sprint 62 is PASS only when Story 62.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 62 is PASS only when Stories 62.1 and 62.2, every numbered task/sub-task,
+every story criterion, every sprint criterion, and the Universal Story Definition of Done are
+complete with current evidence. Otherwise it is BLOCKED.
 
 **Current status:** **BLOCKED.** The locally implementable direct Open XML inspection, strict
 delimited parsing, stable normalization, summary/filter/sort/comparison, formula-safe CSV,
@@ -5822,6 +6826,53 @@ platform, or release gate is closed.
 - [ ] **Story AC 81.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then mCP is a transport adapter behind the kernel, not an alternate authority path; every call has an exact local grant and all server output remains untrusted.
 - [ ] **Story AC 81.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then enabling an MCP server adds only its reviewed read-only manifest; disabling it removes process, tools, roots, network, cache, and retained state completely.
 
+#### [ ] Story 81.2 - Optional MCP Artifact Tool Exposure
+
+**User-facing value:** As a user of a compatible MCP client, I need the same bounded artifact
+inspection behavior without creating another ingestion, storage, policy, or execution path.
+
+**Dependencies:** Stories 16.2, 21.3, 22.3, 50.3, 80.1, and 81.1; native artifact-tool parity is
+required before MCP registration.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 81.2.1 - Define MCP artifact mapping**
+  - [ ] **Sub-task 81.2.1.1:** Map each of the six native artifact tools to exact MCP names,
+    schemas, versions, limits, annotations, errors, cancellation, provenance, and truncation without
+    adding an MCP-only operation.
+  - [ ] **Sub-task 81.2.1.2:** Translate MCP requests into the common registry and dispatcher and
+    translate typed results back; keep source admission, extraction, storage, retrieval, policy,
+    grants, receipts, and verification in existing Rust owners.
+  - [ ] **Sub-task 81.2.1.3:** Require an exact local grant and source/session scope for every call;
+    server names, content hashes, paths, prompts, and resource metadata grant no authority.
+- [ ] **Task 81.2.2 - Verify conformance and isolation**
+  - [ ] **Sub-task 81.2.2.1:** Run native-versus-MCP golden parity for valid, malformed, stale,
+    oversized, restricted, unsupported, cancelled, timeout, crash, duplicate, and cross-session
+    cases; require equal correctness state and receipts.
+  - [ ] **Sub-task 81.2.2.2:** Attempt direct parser/store access, writable tools, hidden roots,
+    undeclared network, credential use, authority transfer, alternate limits, and result-as-evidence;
+    require structural absence or denial.
+  - [ ] **Sub-task 81.2.2.3:** Disable and remove MCP during idle and active calls; require native
+    artifact tools and clients remain functional and no process, socket, registration, cache,
+    source, grant, or retained state remains.
+- [ ] **Task 81.2.3 - Document support and evidence**
+  - [ ] **Sub-task 81.2.3.1:** Publish MCP capability/version matrices, client limitations,
+    troubleshooting, removal, and the explicit statement that MCP cannot recover bytes it was not
+    given through a usable handle or staged artifact.
+  - [ ] **Sub-task 81.2.3.2:** Retain manifests, schema diffs, parity results, attack traces,
+    cancellation/cleanup results, receipts, and applicable `RV-11`, `RV-16`, `RV-17`, and `RV-23`
+    evidence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 81.2.AC1:** Given the same admitted source and grant, when a native and MCP
+  artifact call run, then schemas, limits, results, provenance, receipts, and terminal states are
+  equivalent apart from transport presentation.
+- [ ] **Story AC 81.2.AC2:** Given an MCP request without exact source/session authority, when it is
+  mediated, then no parser, store, tool, network, credential, or data access occurs.
+- [ ] **Story AC 81.2.AC3:** Given MCP removal, when native behavior is rerun, then the artifact
+  service and every native client remain correct and MCP leaves no undeclared residue.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 81.AC1:** Every MCP interaction passes through the kernel tool dispatcher and effective grant.
@@ -5830,8 +6881,12 @@ platform, or release gate is closed.
 - [ ] **Sprint AC 81.AC4:** Cancellation terminates pending server work and produces attributable receipts.
 - [ ] **Sprint AC 81.AC5:** No writable MCP tool is enabled.
 - [ ] **Sprint AC 81.AC6:** Removing or disabling MCP leaves every native coding tool and the interactive harness functional under the same kernel contracts.
+- [ ] **Sprint AC 81.AC7:** Artifact-tool MCP exposure is schema- and result-equivalent to the
+  native family and adds no ingestion, parser, store, policy, grant, or effect authority.
 
-**Gate decision:** Sprint 81 is PASS only when Story 81.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+**Gate decision:** Sprint 81 is PASS only when Stories 81.1 and 81.2, every numbered task/sub-task,
+every story criterion, every sprint criterion, and the Universal Story Definition of Done are
+complete with current evidence. Otherwise it is BLOCKED.
 ### [ ] Sprint 82 - Public Research and Citations
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

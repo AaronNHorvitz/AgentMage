@@ -2373,3 +2373,145 @@ deterministic, read-only, resumable, reconciled, and evidence-based whole-codeba
 - [ ] `VERIFY` cancellation, crash, checkpoint, resume, invalidation, low-memory, low-disk, context pressure, parser failure, unsupported language, resource exhaustion, accessibility, removal, and clean strict-local restoration.
 - [ ] `DOCUMENT` publish language, parser, build-system, repository-size, file-count, graph, context, model, resource, platform, support, limitation, retention, and audit-depth matrices with evidence digests.
 - [ ] `CAPABILITY GATE` Keep `G-GA` blocked until Sprint 166 passes `AM-GAD-004`, `AT-GA-004`, every Decision 0011 requirement, and all assigned security and reviewer protocols.
+
+## 41. Cross-Cutting Foundational Runtime Epic - Universal Artifact Ingestion
+
+Decision 0042 decomposes existing attachment, context, artifact, document-parser, native-tool, and
+Chat requirements into one reusable source-artifact preparation path. This section adds no stable
+requirement or release identity. It does not replace Story 22.1 context management, Story 22.2
+runtime artifacts, the existing document parsers, or the native tool registry.
+
+### 41A. Ingress and Source Identity
+
+- [ ] `BUILD` a closed source-artifact envelope for pasted text, request-bound Visual Studio Code
+  references, local files, virtual or remote URIs, directories, archives, and explicitly unsupported
+  reference classes.
+- [ ] `BUILD` immutable source identity from request identity, reference identity, origin class,
+  observed metadata, content hash where readable, classification, freshness, and collection time.
+- [ ] `CAPABILITY GATE` Permit the extension to resolve only references explicitly supplied to the
+  AgentMage Chat Participant; prohibit ambient workspace enumeration, background harvesting, and
+  reuse of a reference outside its exact request authority.
+- [ ] `CAPABILITY GATE` Keep stable Chat Participant ingress guaranteed and provider-only ingress
+  best effort; report every unknown or non-text provider part instead of silently discarding it.
+- [ ] `VERIFY` local, virtual, remote, stale, missing, renamed, replaced, linked, inaccessible,
+  unsupported, oversized, empty, duplicate, and concurrently changing references.
+
+### 41B. Bounded Extraction and Structural Preservation
+
+- [ ] `BUILD` a Rust extractor registry with exact detector, parser, version, limit, output-schema,
+  cancellation, and support identities.
+- [ ] `BUILD` text and log extraction with encoding detection, line and byte provenance, head/tail,
+  error clusters, timestamps where deterministic, truncation, and binary refusal.
+- [ ] `BUILD` adapters over the existing DOCX, PDF, and spreadsheet implementations; do not fork
+  their parsing logic into the Visual Studio Code extension or another capability pack.
+- [ ] `BUILD` separate OCR admission with page/image coordinates, engine identity, confidence,
+  language, preprocessing, and explicit observed-versus-recognized status.
+- [ ] `CAPABILITY GATE` Disable macros, scripts, active content, external relationships, formulas,
+  embedded executables, archive traversal, parser plugins, and network retrieval by default.
+- [ ] `VERIFY` malformed packages, zip and XML bombs, path traversal, external relationships,
+  encrypted documents, scanned pages, mixed encodings, sparse spreadsheets, 25 MiB logs, parser
+  hangs, low memory, cancellation, crash, and cleanup.
+
+### 41C. Storage, Retrieval, and Context Budgeting
+
+- [ ] `BUILD` a logical source-artifact manifest and lifecycle over the existing encrypted
+  content-addressed payload backend; keep runtime-generated artifacts logically distinct.
+- [ ] `BUILD` canonical structural sections, provenance-preserving chunks, deterministic lexical
+  indexes, exact range reads, refresh, invalidation, retention, deletion, and session reattachment.
+- [ ] `BUILD` native `artifact.list`, `artifact.metadata`, `artifact.read`, `artifact.range`,
+  `artifact.sections`, and `artifact.search` tools through the common registry and dispatcher.
+- [ ] `BUILD` explicit total-window, system/tool, user-input, source-artifact, retrieved-context,
+  recovery-reserve, output-reserve, and safety-margin token partitions per admitted model profile.
+- [ ] `BUILD` one context manifest accounting for every supplied artifact and section as included,
+  summarized, truncated, duplicate, stale, unsupported, unavailable, restricted, or omitted with a
+  deterministic reason.
+- [ ] `CAPABILITY GATE` Feed minimized candidates into the existing Story 22.1 context manager;
+  prohibit a second prompt assembler, retrieval authority, or physical artifact store.
+- [ ] `VERIFY` 999- and 1,001-character paste boundaries, combined-budget overflow, token-count
+  disagreement, model-profile changes, restart, stale cache, source mutation, retention expiry,
+  deletion, and zero silent omission.
+
+### 41D. Interface, Interoperability, and Closure
+
+- [ ] `BUILD` a thin TypeScript participant adapter for stable request references, bounded byte
+  streaming, progress, cancellation, unsupported-state rendering, and authenticated native IPC.
+- [ ] `DOCUMENT` stable, Preview, proposed, and private Visual Studio Code API surfaces and prohibit
+  production dependence on private classes or undeclared proposed APIs.
+- [ ] `BUILD` optional MCP exposure only after native artifact-tool parity; MCP remains an adapter
+  and owns no ingestion, parser, policy, storage, or context decision.
+- [ ] `VERIFY` identical source-artifact and context manifests across Chat, CLI, headless, and MCP
+  clients for the same authorized input and model profile.
+- [ ] `CAPABILITY GATE` Close the artifact half of `M-FOUNDATIONAL-RUNTIME-CORE` at Sprint 50 only
+  for text/log ingestion with complete manifest accounting, exact provenance, bounded resources, no
+  silent drop, no active-content execution, and current security evidence; close the complete
+  `M-FOUNDATIONAL-RUNTIME` no earlier than Sprint 62 after required structured-parser gates pass.
+
+## 42. Cross-Cutting Foundational Runtime Epic - Verified Workflow Execution
+
+Decision 0042 adds a deterministic supervisor around the existing runtime coordinator. This section
+adds no second agent loop, planner, policy engine, dispatcher, verifier, journal, artifact store, or
+completion authority. Existing zero-hidden-retry behavior remains the baseline unless the new
+attempt policy explicitly admits a fresh attempt.
+
+### 42A. Step Policy, Preflight, and Attempt Identity
+
+- [ ] `BUILD` a companion execution policy keyed to existing plan-step identity, with exact
+  preflight, tool, side-effect, approval, idempotency, verifier, retry, budget, and diagnostic policy
+  identities.
+- [ ] `BUILD` closed read-only, idempotent-write, conditional, non-idempotent, destructive,
+  external, and unknown side-effect classes independent of authority and tool-risk classes.
+- [ ] `BUILD` deterministic workspace, Git, executable, service, network-policy, platform, storage,
+  credential-reference, and resource preflight observations with freshness and evidence identity.
+- [ ] `BUILD` unique workflow, step, call, operation-attempt, grant, approval, receipt, verification,
+  recovery-decision, and terminal-diagnostic identities.
+- [ ] `CAPABILITY GATE` Refuse execution before dispatch when any required identity, preflight,
+  current grant, approval, parser, verifier, resource ceiling, or postcondition is absent or stale.
+
+### 42B. Execution, Verification, and Safe New Attempts
+
+- [ ] `BUILD` deterministic call assembly and schema validation before policy evaluation, grant
+  derivation, worker creation, or side effect.
+- [ ] `BUILD` attempt supervision with separate parser-repair, step-attempt, error-class, workflow,
+  and replan budgets plus repeated-state fingerprint detection.
+- [ ] `BUILD` deterministic malformed-call normalization followed by at most one
+  profile-permitted model repair; otherwise terminate with diagnosis.
+- [ ] `CAPABILITY GATE` Treat every retry as a fresh attempt with a fresh call identity, grant, and
+  approval where required; never replay an effect, consumed grant, approval, or prior receipt.
+- [ ] `CAPABILITY GATE` Never automatically retry destructive, external, non-idempotent, uncertain,
+  or unknown effects; reconcile observed postconditions before any eligible new attempt.
+- [ ] `BUILD` verifier observations for expected outputs, state changes, preserved invariants,
+  prohibited side effects, receipts, artifact hashes, and explicit unknown state.
+- [ ] `CAPABILITY GATE` Keep `VerifiedCompletion` as the only completion authority; model text,
+  process exit zero, a tool result, or an open plan cannot finish a workflow.
+
+### 42C. Recovery, Persistence, and Diagnosis
+
+- [ ] `BUILD` ordered preflight, attempt, verification, retry-decision, recovery-decision, and
+  diagnostic runtime events without weakening the existing hash chain or payload references.
+- [ ] `BUILD` transactional materializations for step policy, attempts, preflights, verifications,
+  idempotency keys, consumed budgets, recovery decisions, and terminal diagnostics.
+- [ ] `BUILD` checkpoint and resume validation against source, plan, step, tool, policy, model,
+  preflight, effect, receipt, artifact, verifier, and environment identities.
+- [ ] `BUILD` premature-stop handling for empty output, reasoning-only output, false completion,
+  incomplete plans, post-error stopping, repeated observations, and exhausted budgets.
+- [ ] `BUILD` one actionable terminal diagnostic for every non-cancelled failure, containing the
+  failed step, last verified state, attempts, evidence, exhausted budgets, blocked retry reason,
+  approval requirement, uncertainty, and safe resume action.
+- [ ] `CAPABILITY GATE` Resume only from a current checkpoint and never infer an effect outcome;
+  uncertain effects remain blocked until deterministic reconciliation or direct user disposition.
+
+### 42D. Evaluation and Closure
+
+- [ ] `VERIFY` success, malformed calls, missing dependencies, stale preflight, transient read
+  failures, conditional conflicts, uncertain effects, crashes at every boundary, false completion,
+  retry loops, cancellation, provider disconnect, low resources, and restart.
+- [ ] `VERIFY` zero approval bypass, zero false completion, zero duplicate guarded effects, zero
+  automatic destructive or external retries, one terminal diagnosis per non-cancelled failure, and
+  bounded termination for every corpus case.
+- [ ] `VERIFY` preserve the existing no-hidden-retry, no-replay, verifier-only completion, journal,
+  artifact, checkpoint, cancellation, and authority tests as mandatory regressions.
+- [ ] `VERIFY` run the same workflow fixtures through Chat, CLI, headless, and later workflow-node
+  callers and require identical correctness events, evidence, terminal state, and diagnosis.
+- [ ] `CAPABILITY GATE` Close the workflow half of `M-FOUNDATIONAL-RUNTIME-CORE` only when the shared
+  coordinator owns the complete path, all attempts and failures reconcile, and no client or model
+  gains policy, effect, retry, or completion authority.
