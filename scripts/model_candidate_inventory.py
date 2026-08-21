@@ -17,6 +17,7 @@ CATALOG_ROOT: Final = ROOT / "model-profiles/catalogs/2026-08-14"
 SOURCE_SNAPSHOT: Final = CATALOG_ROOT / "first-party-source-snapshot.json"
 INVENTORY: Final = CATALOG_ROOT / "candidate-inventory.json"
 ROLE_MATRIX: Final = CATALOG_ROOT / "candidate-role-suite-matrix.json"
+PREFLIGHT_MATRIX: Final = CATALOG_ROOT / "reference-machine-preflight-matrix.json"
 FREEZE_DATE: Final = "2026-08-14"
 GOOGLE_OWNER: Final = "google"
 META_OWNER: Final = "meta-models"
@@ -62,23 +63,45 @@ PREFLIGHT_STATUSES: Final = {
 
 REFERENCE_MACHINE_ENVELOPES: Final = (
     {
-        "envelope_id": "fedora-kinoite-44-x86_64-cuda",
+        "envelope_id": "fedora-kinoite-44-x86_64-cuda-llamacpp-native",
+        "profile_source": "README.md#platform-support",
         "platform": "Fedora Kinoite 44 x86_64",
         "architecture": "x86_64",
         "acceleration": "cuda",
-        "supported_runtime_families": ("llama.cpp", "docker-model-runner", "vllm"),
-        "supported_artifact_formats": ("GGUF", "safetensors"),
-        "supported_modalities": ("text-generation", "image-text-to-text", "any-to-any"),
+        "runtime_family": "llama.cpp",
+        "adapter_gate": "native-security-reference",
+        "supported_runtime_families": ("llama.cpp",),
+        "supported_artifact_formats": ("GGUF",),
+        "supported_modalities": ("text-generation",),
         "available_disk_bytes": 512 * 1024**3,
         "available_memory_bytes": 128 * 1024**3,
         "available_accelerator_bytes": 24 * 1024**3,
         "maximum_context_tokens": 32768,
     },
     {
-        "envelope_id": "ubuntu-24-04-x86_64-cpu",
+        "envelope_id": "fedora-kinoite-44-x86_64-cuda-docker-model-runner",
+        "profile_source": "PRD.md#7.2-fedora-and-ubuntu-runtime",
+        "platform": "Fedora Kinoite 44 x86_64",
+        "architecture": "x86_64",
+        "acceleration": "cuda",
+        "runtime_family": "docker-model-runner",
+        "adapter_gate": "separately-gated-compatibility-adapter",
+        "supported_runtime_families": ("docker-model-runner",),
+        "supported_artifact_formats": ("GGUF",),
+        "supported_modalities": ("text-generation",),
+        "available_disk_bytes": 512 * 1024**3,
+        "available_memory_bytes": 128 * 1024**3,
+        "available_accelerator_bytes": 24 * 1024**3,
+        "maximum_context_tokens": 32768,
+    },
+    {
+        "envelope_id": "ubuntu-24-04-x86_64-cpu-llamacpp-native",
+        "profile_source": "README.md#platform-support",
         "platform": "Ubuntu 24.04 x86_64",
         "architecture": "x86_64",
         "acceleration": "cpu",
+        "runtime_family": "llama.cpp",
+        "adapter_gate": "native-security-reference",
         "supported_runtime_families": ("llama.cpp",),
         "supported_artifact_formats": ("GGUF",),
         "supported_modalities": ("text-generation",),
@@ -88,26 +111,32 @@ REFERENCE_MACHINE_ENVELOPES: Final = (
         "maximum_context_tokens": 8192,
     },
     {
-        "envelope_id": "windows-11-x86_64-cuda",
+        "envelope_id": "windows-11-x86_64-cuda-llamacpp-native",
+        "profile_source": "PRD.md#24-windows-11-first-ga-scope",
         "platform": "Windows 11 x64",
         "architecture": "x86_64",
         "acceleration": "cuda",
-        "supported_runtime_families": ("llama.cpp", "docker-model-runner"),
-        "supported_artifact_formats": ("GGUF", "safetensors"),
-        "supported_modalities": ("text-generation", "image-text-to-text"),
+        "runtime_family": "llama.cpp",
+        "adapter_gate": "native-only-docker-inference-disabled",
+        "supported_runtime_families": ("llama.cpp",),
+        "supported_artifact_formats": ("GGUF",),
+        "supported_modalities": ("text-generation",),
         "available_disk_bytes": 512 * 1024**3,
         "available_memory_bytes": 64 * 1024**3,
         "available_accelerator_bytes": 16 * 1024**3,
         "maximum_context_tokens": 16384,
     },
     {
-        "envelope_id": "macbook-pro-m5-arm64-metal",
+        "envelope_id": "macbook-pro-m5-arm64-metal-llamacpp-native",
+        "profile_source": "README.md#platform-support",
         "platform": "MacBook Pro M5 (Apple Silicon)",
         "architecture": "arm64",
         "acceleration": "metal",
+        "runtime_family": "llama.cpp",
+        "adapter_gate": "post-ga-blocked-macos-until-hardware-evidence",
         "supported_runtime_families": ("llama.cpp",),
         "supported_artifact_formats": ("GGUF",),
-        "supported_modalities": ("text-generation", "image-text-to-text"),
+        "supported_modalities": ("text-generation",),
         "available_disk_bytes": 1024 * 1024**3,
         "available_memory_bytes": 48 * 1024**3,
         "available_accelerator_bytes": 48 * 1024**3,
@@ -115,12 +144,7 @@ REFERENCE_MACHINE_ENVELOPES: Final = (
     },
 )
 
-_ARTIFACT_FORMAT_RUNTIME_FAMILY: Final = {
-    "GGUF": "llama.cpp",
-    "safetensors": "vllm",
-    "TFLite": "tflite",
-    "ExecuTorch-PTE": "executorch",
-}
+ARCHITECTURE_NEUTRAL: Final = "architecture-neutral"
 
 
 def canonical_bytes(value: object) -> bytes:
@@ -497,13 +521,24 @@ def normalize(snapshot: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
     return inventory, matrix
 
 
+def _serialize_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: (sorted(value) if isinstance(value, (list, tuple)) else value)
+        for key, value in envelope.items()
+    }
+
+
 def reference_machine_preflight(
     source_entry: dict[str, Any], envelope: dict[str, Any]
 ) -> dict[str, Any]:
-    formats = artifact_formats(source_entry.get("artifact_listing", []))
+    architectures = list(source_entry.get("artifact_architectures", []))
+    runtime_bindings = list(source_entry.get("artifact_runtime_bindings", []))
     pipeline = source_entry.get("pipeline_tag")
-    modalities = [pipeline] if pipeline else []
-    library = source_entry.get("library_name")
+    declared_modalities = source_entry.get("declared_modalities")
+    if declared_modalities is None:
+        modalities = [pipeline] if pipeline else []
+    else:
+        modalities = list(declared_modalities)
     repository = str(source_entry.get("id") or source_entry.get("repository", ""))
     envelope_formats = set(envelope["supported_artifact_formats"])
     envelope_runtimes = set(envelope["supported_runtime_families"])
@@ -511,47 +546,53 @@ def reference_machine_preflight(
 
     dimensions: dict[str, dict[str, Any]] = {}
 
-    dimensions["architecture"] = {
-        "status": "CANDIDATE",
-        "envelope_value": envelope["architecture"],
-        "note": "envelope-declared; artifact runs in envelope's native architecture",
-    }
-
-    if not formats:
-        dimensions["format"] = {
+    if not architectures:
+        dimensions["architecture"] = {
             "status": "BLOCKED",
-            "reason": "runtime-artifact-format-unresolved",
+            "reason": "artifact-architecture-binding-unresolved",
+            "envelope_architecture": envelope["architecture"],
         }
     else:
-        compatible_formats = sorted(f for f in formats if f in envelope_formats)
+        neutral = ARCHITECTURE_NEUTRAL in architectures
+        compatible = neutral or envelope["architecture"] in architectures
+        dimensions["architecture"] = {
+            "status": "CANDIDATE" if compatible else "BLOCKED-HARDWARE",
+            "envelope_architecture": envelope["architecture"],
+            "artifact_architectures": sorted(set(architectures)),
+        }
+
+    if not runtime_bindings:
+        dimensions["runtime"] = {
+            "status": "BLOCKED",
+            "reason": "artifact-runtime-binding-unresolved",
+            "envelope_supported_runtime_families": sorted(envelope_runtimes),
+        }
+        dimensions["format"] = {
+            "status": "BLOCKED",
+            "reason": "artifact-runtime-binding-unresolved",
+            "envelope_supported_formats": sorted(envelope_formats),
+        }
+    else:
+        binding_runtimes = sorted({b["runtime_family"] for b in runtime_bindings})
+        binding_formats = sorted({b["artifact_format"] for b in runtime_bindings})
+        compatible_runtimes = sorted(r for r in binding_runtimes if r in envelope_runtimes)
+        compatible_formats = sorted(f for f in binding_formats if f in envelope_formats)
+        dimensions["runtime"] = {
+            "status": "CANDIDATE" if compatible_runtimes else "BLOCKED-HARDWARE",
+            "artifact_runtime_families": binding_runtimes,
+            "envelope_supported_runtime_families": sorted(envelope_runtimes),
+            "compatible_runtime_families": compatible_runtimes,
+        }
         dimensions["format"] = {
             "status": "CANDIDATE" if compatible_formats else "BLOCKED-HARDWARE",
-            "candidate_formats": sorted(formats),
+            "artifact_formats": binding_formats,
             "envelope_supported_formats": sorted(envelope_formats),
             "compatible_formats": compatible_formats,
         }
 
-    runtime_families = sorted(
-        {_ARTIFACT_FORMAT_RUNTIME_FAMILY[f] for f in formats if f in _ARTIFACT_FORMAT_RUNTIME_FAMILY}
-    )
-    if not runtime_families:
-        dimensions["runtime"] = {
-            "status": "BLOCKED",
-            "reason": "runtime-family-not-derivable-until-exact-artifact-admission",
-            "library_hint": library,
-        }
-    else:
-        compatible_runtimes = sorted(r for r in runtime_families if r in envelope_runtimes)
-        dimensions["runtime"] = {
-            "status": "CANDIDATE" if compatible_runtimes else "BLOCKED-HARDWARE",
-            "candidate_runtime_families": runtime_families,
-            "envelope_supported_runtime_families": sorted(envelope_runtimes),
-            "compatible_runtime_families": compatible_runtimes,
-        }
-
-    if envelope["available_accelerator_bytes"] <= 0:
+    if envelope["acceleration"] == "cpu" and envelope["available_accelerator_bytes"] == 0:
         dimensions["acceleration"] = {
-            "status": "BLOCKED-HARDWARE" if envelope["acceleration"] != "cpu" else "CANDIDATE",
+            "status": "CANDIDATE",
             "envelope_acceleration": envelope["acceleration"],
             "envelope_accelerator_bytes": envelope["available_accelerator_bytes"],
         }
@@ -583,12 +624,13 @@ def reference_machine_preflight(
         dimensions["modality"] = {
             "status": "BLOCKED",
             "reason": "modality-unresolved-at-source",
+            "envelope_supported_modalities": sorted(envelope_modalities),
         }
     else:
         compatible_modalities = sorted(m for m in modalities if m in envelope_modalities)
         dimensions["modality"] = {
             "status": "CANDIDATE" if compatible_modalities else "BLOCKED-HARDWARE",
-            "candidate_modalities": sorted(modalities),
+            "candidate_modalities": sorted(set(modalities)),
             "envelope_supported_modalities": sorted(envelope_modalities),
             "compatible_modalities": compatible_modalities,
         }
@@ -619,16 +661,21 @@ def preflight_matrix(
     snapshot: dict[str, Any],
     envelopes: tuple[dict[str, Any], ...] = REFERENCE_MACHINE_ENVELOPES,
 ) -> dict[str, Any]:
+    envelope_records = [_serialize_envelope(envelope) for envelope in envelopes]
     entries = []
+    status_counts = {status: 0 for status in sorted(PREFLIGHT_STATUSES)}
     for source in snapshot.get("entries", []):
-        results = [reference_machine_preflight(source, envelope) for envelope in envelopes]
         entry_id = sha256_bytes(
             f"{source.get('repository', '')}@{source.get('revision', '')}".encode()
         )
+        results = [reference_machine_preflight(source, envelope) for envelope in envelopes]
+        for result in results:
+            status_counts[result["status"]] += 1
         entries.append(
             {
                 "entry_id": entry_id,
                 "repository": source.get("repository", ""),
+                "revision": source.get("revision", ""),
                 "results": results,
             }
         )
@@ -638,11 +685,95 @@ def preflight_matrix(
         "frozen_on": snapshot.get("frozen_on"),
         "source_snapshot_sha256": snapshot.get("snapshot_sha256"),
         "acquisition_authorized": False,
-        "envelopes": [dict(envelope) for envelope in envelopes],
+        "envelope_count": len(envelope_records),
+        "envelopes": envelope_records,
         "entries": entries,
+        "counts": {
+            "source_entries": len(entries),
+            "envelopes": len(envelope_records),
+            "results": len(entries) * len(envelope_records),
+            "by_status": status_counts,
+        },
     }
     matrix["matrix_sha256"] = sha256_bytes(canonical_bytes(matrix))
     return matrix
+
+
+def validate_preflight_matrix(
+    snapshot: dict[str, Any],
+    matrix: dict[str, Any],
+    envelopes: tuple[dict[str, Any], ...] = REFERENCE_MACHINE_ENVELOPES,
+) -> list[str]:
+    failures: list[str] = []
+    if matrix.get("frozen_on") != snapshot.get("frozen_on"):
+        failures.append("preflight matrix freeze date changed")
+    if matrix.get("source_snapshot_sha256") != snapshot.get("snapshot_sha256"):
+        failures.append("preflight matrix source binding changed")
+    if matrix.get("acquisition_authorized") is not False:
+        failures.append("preflight matrix authorized acquisition")
+
+    matrix_copy = dict(matrix)
+    observed = matrix_copy.pop("matrix_sha256", None)
+    if observed != sha256_bytes(canonical_bytes(matrix_copy)):
+        failures.append("preflight matrix digest mismatch")
+
+    expected_envelopes = [_serialize_envelope(envelope) for envelope in envelopes]
+    expected_envelope_ids = [envelope["envelope_id"] for envelope in expected_envelopes]
+    matrix_envelope_ids = [
+        envelope.get("envelope_id") for envelope in matrix.get("envelopes", [])
+    ]
+    if matrix_envelope_ids != expected_envelope_ids:
+        failures.append("preflight matrix envelope identities drifted")
+    if matrix.get("envelopes", []) != expected_envelopes:
+        failures.append("preflight matrix envelope declarations drifted")
+
+    source_ids = [
+        f"{item.get('repository')}@{item.get('revision')}"
+        for item in snapshot.get("entries", [])
+    ]
+    expected_entry_ids = [sha256_bytes(item.encode()) for item in source_ids]
+    matrix_entry_ids = [item.get("entry_id") for item in matrix.get("entries", [])]
+    if matrix_entry_ids != expected_entry_ids:
+        failures.append("preflight matrix does not reconcile to source order")
+    if len(matrix_entry_ids) != len(set(matrix_entry_ids)):
+        failures.append("preflight matrix contains duplicate entry identity")
+
+    expected_result_count = len(snapshot.get("entries", [])) * len(envelopes)
+    actual_result_count = sum(
+        len(entry.get("results", [])) for entry in matrix.get("entries", [])
+    )
+    if actual_result_count != expected_result_count:
+        failures.append("preflight matrix result count incomplete")
+
+    for entry in matrix.get("entries", []):
+        repository = str(entry.get("repository", ""))
+        seen_envelopes = [
+            result.get("envelope_id") for result in entry.get("results", [])
+        ]
+        if seen_envelopes != expected_envelope_ids:
+            failures.append(f"preflight matrix envelope drift: {repository}")
+        if len(seen_envelopes) != len(set(seen_envelopes)):
+            failures.append(f"preflight matrix duplicate envelope: {repository}")
+        for result in entry.get("results", []):
+            if result.get("status") not in PREFLIGHT_STATUSES:
+                failures.append(
+                    f"preflight matrix invalid status: {repository}/{result.get('envelope_id')}"
+                )
+            if result.get("acquisition_started") is not False:
+                failures.append(
+                    f"preflight matrix acquired bytes: {repository}/{result.get('envelope_id')}"
+                )
+            dimensions = result.get("dimensions", {})
+            if set(dimensions.keys()) != set(PREFLIGHT_DIMENSIONS):
+                failures.append(
+                    f"preflight matrix dimensions incomplete: {repository}/{result.get('envelope_id')}"
+                )
+            for dimension_name, dimension in dimensions.items():
+                if dimension.get("status") not in PREFLIGHT_STATUSES:
+                    failures.append(
+                        f"preflight matrix invalid dimension status: {repository}/{result.get('envelope_id')}/{dimension_name}"
+                    )
+    return failures
 
 
 def hardware_fit(
@@ -751,13 +882,21 @@ def main() -> int:
     else:
         snapshot = read_json(SOURCE_SNAPSHOT)
     inventory, matrix = normalize(snapshot)
+    preflight = preflight_matrix(snapshot) if args.preflight else None
     if args.write:
         write_json(SOURCE_SNAPSHOT, snapshot)
         write_json(INVENTORY, inventory)
         write_json(ROLE_MATRIX, matrix)
+        if preflight is not None:
+            write_json(PREFLIGHT_MATRIX, preflight)
     stored_inventory = read_json(INVENTORY) if INVENTORY.exists() else inventory
     stored_matrix = read_json(ROLE_MATRIX) if ROLE_MATRIX.exists() else matrix
     failures = validate(snapshot, stored_inventory, stored_matrix)
+    if args.preflight:
+        stored_preflight = (
+            read_json(PREFLIGHT_MATRIX) if PREFLIGHT_MATRIX.exists() else preflight
+        )
+        failures.extend(validate_preflight_matrix(snapshot, stored_preflight))
     if failures:
         print("Sprint 14 candidate inventory: invalid")
         for failure in failures:
@@ -767,19 +906,16 @@ def main() -> int:
         "Sprint 14 candidate inventory: valid "
         f"({len(snapshot['entries'])} exact source entries; zero acquisition authority)"
     )
-    if args.preflight:
-        result = preflight_matrix(snapshot)
-        overall = {"CANDIDATE": 0, "BLOCKED": 0, "BLOCKED-HARDWARE": 0}
-        for entry in result["entries"]:
-            for envelope_result in entry["results"]:
-                overall[envelope_result["status"]] += 1
+    if args.preflight and preflight is not None:
+        counts = preflight["counts"]
+        by_status = counts["by_status"]
         print(
             "Sprint 14 reference-machine preflight: "
-            f"{len(result['entries'])} entries against "
-            f"{len(result['envelopes'])} envelopes; "
-            f"CANDIDATE={overall['CANDIDATE']}, "
-            f"BLOCKED={overall['BLOCKED']}, "
-            f"BLOCKED-HARDWARE={overall['BLOCKED-HARDWARE']} "
+            f"{counts['source_entries']} entries against "
+            f"{counts['envelopes']} envelopes; "
+            f"CANDIDATE={by_status['CANDIDATE']}, "
+            f"BLOCKED={by_status['BLOCKED']}, "
+            f"BLOCKED-HARDWARE={by_status['BLOCKED-HARDWARE']} "
             "(zero acquisition authority)"
         )
     return 0

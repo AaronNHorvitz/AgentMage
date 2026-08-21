@@ -6,6 +6,34 @@ import unittest
 from scripts import model_candidate_inventory as inventory
 
 
+def _synthetic_snapshot() -> dict:
+    snapshot = {
+        "frozen_on": inventory.FREEZE_DATE,
+        "entries": [
+            {
+                "repository": "google/gemma-2-2b-it",
+                "revision": "f" * 40,
+                "artifact_listing": ["README.md", "model.safetensors"],
+                "pipeline_tag": "text-generation",
+                "tags": [],
+                "private": False,
+            },
+            {
+                "repository": "google/gemma-2-2b-gguf",
+                "revision": "a" * 40,
+                "artifact_listing": ["README.md", "model.gguf"],
+                "pipeline_tag": "text-generation",
+                "tags": [],
+                "private": False,
+            },
+        ],
+    }
+    snapshot["snapshot_sha256"] = inventory.sha256_bytes(
+        inventory.canonical_bytes(snapshot)
+    )
+    return snapshot
+
+
 class ModelCandidateInventoryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -139,16 +167,18 @@ class ModelCandidateInventoryTests(unittest.TestCase):
             changed["entries"][0][field] = True
             self.assertTrue(inventory.validate(self.snapshot, changed, self.matrix))
 
-    def test_reference_machine_envelopes_declared_and_distinct(self) -> None:
+    def test_reference_machine_envelopes_reconcile_with_authoritative_profiles(self) -> None:
         envelopes = inventory.REFERENCE_MACHINE_ENVELOPES
-        self.assertGreaterEqual(len(envelopes), 2)
         envelope_ids = [envelope["envelope_id"] for envelope in envelopes]
         self.assertEqual(len(envelope_ids), len(set(envelope_ids)))
         required_keys = {
             "envelope_id",
+            "profile_source",
             "platform",
             "architecture",
             "acceleration",
+            "runtime_family",
+            "adapter_gate",
             "supported_runtime_families",
             "supported_artifact_formats",
             "supported_modalities",
@@ -159,6 +189,31 @@ class ModelCandidateInventoryTests(unittest.TestCase):
         }
         for envelope in envelopes:
             self.assertTrue(required_keys.issubset(envelope.keys()))
+            self.assertNotIn("vllm", envelope["supported_runtime_families"])
+        fedora_envelopes = [
+            envelope
+            for envelope in envelopes
+            if envelope["platform"].startswith("Fedora")
+        ]
+        fedora_runtimes = {
+            envelope["runtime_family"] for envelope in fedora_envelopes
+        }
+        self.assertEqual(fedora_runtimes, {"llama.cpp", "docker-model-runner"})
+        for envelope in fedora_envelopes:
+            self.assertEqual(len(envelope["supported_runtime_families"]), 1)
+        windows_envelopes = [
+            envelope
+            for envelope in envelopes
+            if envelope["platform"].startswith("Windows")
+        ]
+        self.assertEqual(len(windows_envelopes), 1)
+        self.assertEqual(windows_envelopes[0]["runtime_family"], "llama.cpp")
+        self.assertEqual(
+            windows_envelopes[0]["supported_runtime_families"], ("llama.cpp",)
+        )
+        self.assertNotIn(
+            "docker-model-runner", windows_envelopes[0]["supported_runtime_families"]
+        )
 
     def test_reference_machine_preflight_covers_every_declared_dimension(self) -> None:
         source_entry = {
@@ -179,35 +234,139 @@ class ModelCandidateInventoryTests(unittest.TestCase):
             for dimension in result["dimensions"].values():
                 self.assertIn(dimension["status"], inventory.PREFLIGHT_STATUSES)
 
-    def test_reference_machine_preflight_is_exact_per_envelope_not_family(self) -> None:
-        gguf_source = {
-            "id": "google/gemma-2b-gguf",
-            "revision": "b" * 40,
-            "artifact_listing": ["README.md", "model.gguf"],
-            "pipeline_tag": "text-generation",
-        }
-        safetensors_source = {
-            "id": "google/gemma-2b-keras",
-            "revision": "c" * 40,
+    def test_runtime_binding_required_before_runtime_or_format_result(self) -> None:
+        safetensors_only = {
+            "id": "google/codegemma-1.1-2b",
+            "revision": "1" * 40,
             "artifact_listing": ["README.md", "model.safetensors"],
             "pipeline_tag": "text-generation",
         }
-        cpu_envelope = next(
+        gguf_only = {
+            "id": "google/gemma-2b-gguf",
+            "revision": "2" * 40,
+            "artifact_listing": ["README.md", "model.gguf"],
+            "pipeline_tag": "text-generation",
+        }
+        fedora_native = next(
             envelope
             for envelope in inventory.REFERENCE_MACHINE_ENVELOPES
-            if envelope["acceleration"] == "cpu"
+            if envelope["envelope_id"] == "fedora-kinoite-44-x86_64-cuda-llamacpp-native"
         )
-        gguf_result = inventory.reference_machine_preflight(gguf_source, cpu_envelope)
-        safetensors_result = inventory.reference_machine_preflight(
-            safetensors_source, cpu_envelope
+        for source in (safetensors_only, gguf_only):
+            result = inventory.reference_machine_preflight(source, fedora_native)
+            self.assertEqual(result["dimensions"]["runtime"]["status"], "BLOCKED")
+            self.assertEqual(result["dimensions"]["format"]["status"], "BLOCKED")
+
+    def test_runtime_binding_produces_per_envelope_result(self) -> None:
+        pinned_llamacpp = {
+            "id": "google/gemma-2b-gguf",
+            "revision": "3" * 40,
+            "artifact_listing": ["README.md", "model.gguf"],
+            "artifact_architectures": ["x86_64"],
+            "artifact_runtime_bindings": [
+                {"artifact_format": "GGUF", "runtime_family": "llama.cpp"}
+            ],
+            "pipeline_tag": "text-generation",
+        }
+        pinned_docker = {
+            "id": "google/gemma-2b-dmr",
+            "revision": "4" * 40,
+            "artifact_listing": ["README.md", "model.gguf"],
+            "artifact_architectures": ["x86_64"],
+            "artifact_runtime_bindings": [
+                {"artifact_format": "GGUF", "runtime_family": "docker-model-runner"}
+            ],
+            "pipeline_tag": "text-generation",
+        }
+        fedora_native = next(
+            envelope
+            for envelope in inventory.REFERENCE_MACHINE_ENVELOPES
+            if envelope["envelope_id"] == "fedora-kinoite-44-x86_64-cuda-llamacpp-native"
         )
-        self.assertEqual(gguf_result["dimensions"]["format"]["status"], "CANDIDATE")
+        fedora_docker = next(
+            envelope
+            for envelope in inventory.REFERENCE_MACHINE_ENVELOPES
+            if envelope["envelope_id"]
+            == "fedora-kinoite-44-x86_64-cuda-docker-model-runner"
+        )
+        native_result = inventory.reference_machine_preflight(
+            pinned_llamacpp, fedora_native
+        )
+        docker_result = inventory.reference_machine_preflight(
+            pinned_llamacpp, fedora_docker
+        )
+        self.assertEqual(native_result["dimensions"]["runtime"]["status"], "CANDIDATE")
         self.assertEqual(
-            safetensors_result["dimensions"]["format"]["status"], "BLOCKED-HARDWARE"
+            docker_result["dimensions"]["runtime"]["status"], "BLOCKED-HARDWARE"
         )
-        self.assertEqual(gguf_result["dimensions"]["runtime"]["status"], "CANDIDATE")
+        native_docker = inventory.reference_machine_preflight(
+            pinned_docker, fedora_native
+        )
+        docker_docker = inventory.reference_machine_preflight(
+            pinned_docker, fedora_docker
+        )
         self.assertEqual(
-            safetensors_result["dimensions"]["runtime"]["status"], "BLOCKED-HARDWARE"
+            native_docker["dimensions"]["runtime"]["status"], "BLOCKED-HARDWARE"
+        )
+        self.assertEqual(docker_docker["dimensions"]["runtime"]["status"], "CANDIDATE")
+
+    def test_architecture_fixture_matrix(self) -> None:
+        fedora_native = next(
+            envelope
+            for envelope in inventory.REFERENCE_MACHINE_ENVELOPES
+            if envelope["envelope_id"] == "fedora-kinoite-44-x86_64-cuda-llamacpp-native"
+        )
+        binding = [{"artifact_format": "GGUF", "runtime_family": "llama.cpp"}]
+        x86_only = {
+            "id": "google/gemma-x86",
+            "revision": "5" * 40,
+            "artifact_architectures": ["x86_64"],
+            "artifact_runtime_bindings": binding,
+            "pipeline_tag": "text-generation",
+        }
+        arm_only = {
+            "id": "google/gemma-arm",
+            "revision": "6" * 40,
+            "artifact_architectures": ["arm64"],
+            "artifact_runtime_bindings": binding,
+            "pipeline_tag": "text-generation",
+        }
+        neutral = {
+            "id": "google/gemma-neutral",
+            "revision": "7" * 40,
+            "artifact_architectures": [inventory.ARCHITECTURE_NEUTRAL],
+            "artifact_runtime_bindings": binding,
+            "pipeline_tag": "text-generation",
+        }
+        unresolved = {
+            "id": "google/gemma-unresolved",
+            "revision": "8" * 40,
+            "artifact_runtime_bindings": binding,
+            "pipeline_tag": "text-generation",
+        }
+        self.assertEqual(
+            inventory.reference_machine_preflight(x86_only, fedora_native)[
+                "dimensions"
+            ]["architecture"]["status"],
+            "CANDIDATE",
+        )
+        self.assertEqual(
+            inventory.reference_machine_preflight(arm_only, fedora_native)[
+                "dimensions"
+            ]["architecture"]["status"],
+            "BLOCKED-HARDWARE",
+        )
+        self.assertEqual(
+            inventory.reference_machine_preflight(neutral, fedora_native)[
+                "dimensions"
+            ]["architecture"]["status"],
+            "CANDIDATE",
+        )
+        self.assertEqual(
+            inventory.reference_machine_preflight(unresolved, fedora_native)[
+                "dimensions"
+            ]["architecture"]["status"],
+            "BLOCKED",
         )
 
     def test_reference_machine_preflight_records_blocked_hardware_for_modality(self) -> None:
@@ -215,6 +374,10 @@ class ModelCandidateInventoryTests(unittest.TestCase):
             "id": "google/paligemma-3b-mix-448",
             "revision": "d" * 40,
             "artifact_listing": ["README.md", "model.safetensors"],
+            "artifact_architectures": ["x86_64"],
+            "artifact_runtime_bindings": [
+                {"artifact_format": "GGUF", "runtime_family": "llama.cpp"}
+            ],
             "pipeline_tag": "image-text-to-text",
         }
         cpu_envelope = next(
@@ -229,77 +392,108 @@ class ModelCandidateInventoryTests(unittest.TestCase):
         self.assertEqual(result["status"], "BLOCKED-HARDWARE")
         self.assertIs(result["acquisition_started"], False)
 
-    def test_reference_machine_preflight_blocks_when_format_unresolved(self) -> None:
-        source = {
-            "id": "google/gemma-mystery",
-            "revision": "e" * 40,
-            "artifact_listing": ["README.md", "config.json"],
-            "pipeline_tag": "text-generation",
-        }
-        envelope = inventory.REFERENCE_MACHINE_ENVELOPES[0]
-        result = inventory.reference_machine_preflight(source, envelope)
-        self.assertEqual(result["dimensions"]["format"]["status"], "BLOCKED")
-        self.assertEqual(result["dimensions"]["runtime"]["status"], "BLOCKED")
-        self.assertEqual(result["status"], "BLOCKED")
-
     def test_reference_machine_preflight_matrix_is_non_acquiring_and_complete(self) -> None:
-        synthetic_snapshot = {
-            "frozen_on": inventory.FREEZE_DATE,
-            "snapshot_sha256": "0" * 64,
-            "entries": [
-                {
-                    "repository": "google/gemma-2-2b-it",
-                    "revision": "f" * 40,
-                    "artifact_listing": ["README.md", "model.safetensors"],
-                    "pipeline_tag": "text-generation",
-                    "tags": [],
-                    "private": False,
-                },
-                {
-                    "repository": "google/gemma-2-2b-gguf",
-                    "revision": "a" * 40,
-                    "artifact_listing": ["README.md", "model.gguf"],
-                    "pipeline_tag": "text-generation",
-                    "tags": [],
-                    "private": False,
-                },
-            ],
-        }
-        result = inventory.preflight_matrix(synthetic_snapshot)
+        snapshot = _synthetic_snapshot()
+        result = inventory.preflight_matrix(snapshot)
         self.assertEqual(result["acquisition_authorized"], False)
         self.assertEqual(len(result["entries"]), 2)
         self.assertEqual(
             len(result["envelopes"]), len(inventory.REFERENCE_MACHINE_ENVELOPES)
         )
+        expected_result_count = 2 * len(inventory.REFERENCE_MACHINE_ENVELOPES)
+        self.assertEqual(result["counts"]["results"], expected_result_count)
         for entry in result["entries"]:
             self.assertEqual(
                 len(entry["results"]), len(inventory.REFERENCE_MACHINE_ENVELOPES)
             )
+            envelope_ids = [item["envelope_id"] for item in entry["results"]]
+            self.assertEqual(
+                envelope_ids,
+                [
+                    envelope["envelope_id"]
+                    for envelope in inventory.REFERENCE_MACHINE_ENVELOPES
+                ],
+            )
             for envelope_result in entry["results"]:
                 self.assertIs(envelope_result["acquisition_started"], False)
                 self.assertIn(envelope_result["status"], inventory.PREFLIGHT_STATUSES)
+                self.assertEqual(
+                    set(envelope_result["dimensions"].keys()),
+                    set(inventory.PREFLIGHT_DIMENSIONS),
+                )
         self.assertRegex(result["matrix_sha256"], r"^[0-9a-f]{64}$")
 
-    def test_reference_machine_preflight_never_infers_family_result(self) -> None:
-        specialist_source = {
-            "id": "google/shieldgemma-2b",
-            "revision": "1" * 40,
-            "artifact_listing": ["README.md", "model.safetensors"],
-            "pipeline_tag": "text-classification",
-        }
-        dialogue_source = {
-            "id": "google/gemma-2b-it",
-            "revision": "2" * 40,
-            "artifact_listing": ["README.md", "model.safetensors"],
-            "pipeline_tag": "text-generation",
-        }
-        envelope = inventory.REFERENCE_MACHINE_ENVELOPES[0]
-        specialist_result = inventory.reference_machine_preflight(specialist_source, envelope)
-        dialogue_result = inventory.reference_machine_preflight(dialogue_source, envelope)
-        self.assertNotEqual(
-            specialist_result["dimensions"]["modality"],
-            dialogue_result["dimensions"]["modality"],
+    def test_preflight_matrix_validation_and_drift(self) -> None:
+        snapshot = _synthetic_snapshot()
+        matrix = inventory.preflight_matrix(snapshot)
+        self.assertEqual(inventory.validate_preflight_matrix(snapshot, matrix), [])
+
+        omitted = copy.deepcopy(matrix)
+        omitted["entries"].pop()
+        omitted["matrix_sha256"] = inventory.sha256_bytes(
+            inventory.canonical_bytes(
+                {k: v for k, v in omitted.items() if k != "matrix_sha256"}
+            )
         )
+        self.assertTrue(inventory.validate_preflight_matrix(snapshot, omitted))
+
+        duplicated = copy.deepcopy(matrix)
+        duplicated["entries"].append(copy.deepcopy(duplicated["entries"][0]))
+        duplicated["matrix_sha256"] = inventory.sha256_bytes(
+            inventory.canonical_bytes(
+                {k: v for k, v in duplicated.items() if k != "matrix_sha256"}
+            )
+        )
+        self.assertTrue(inventory.validate_preflight_matrix(snapshot, duplicated))
+
+        mutated = copy.deepcopy(matrix)
+        mutated["entries"][0]["results"][0]["status"] = "not-a-status"
+        mutated["matrix_sha256"] = inventory.sha256_bytes(
+            inventory.canonical_bytes(
+                {k: v for k, v in mutated.items() if k != "matrix_sha256"}
+            )
+        )
+        self.assertTrue(inventory.validate_preflight_matrix(snapshot, mutated))
+
+        drifted = copy.deepcopy(matrix)
+        drifted["envelopes"].pop()
+        drifted["matrix_sha256"] = inventory.sha256_bytes(
+            inventory.canonical_bytes(
+                {k: v for k, v in drifted.items() if k != "matrix_sha256"}
+            )
+        )
+        self.assertTrue(inventory.validate_preflight_matrix(snapshot, drifted))
+
+        acquired = copy.deepcopy(matrix)
+        acquired["acquisition_authorized"] = True
+        acquired["matrix_sha256"] = inventory.sha256_bytes(
+            inventory.canonical_bytes(
+                {k: v for k, v in acquired.items() if k != "matrix_sha256"}
+            )
+        )
+        self.assertTrue(inventory.validate_preflight_matrix(snapshot, acquired))
+
+        digest_broken = copy.deepcopy(matrix)
+        digest_broken["matrix_sha256"] = "0" * 64
+        self.assertTrue(
+            inventory.validate_preflight_matrix(snapshot, digest_broken)
+        )
+
+    def test_preflight_matrix_result_dimensions_and_envelope_pairing(self) -> None:
+        snapshot = _synthetic_snapshot()
+        matrix = inventory.preflight_matrix(snapshot)
+        expected_pairs = len(snapshot["entries"]) * len(
+            inventory.REFERENCE_MACHINE_ENVELOPES
+        )
+        actual_pairs = sum(len(entry["results"]) for entry in matrix["entries"])
+        self.assertEqual(actual_pairs, expected_pairs)
+        seen = set()
+        for entry in matrix["entries"]:
+            for result in entry["results"]:
+                key = (entry["entry_id"], result["envelope_id"])
+                self.assertNotIn(key, seen)
+                seen.add(key)
+        self.assertEqual(len(seen), expected_pairs)
 
 
 if __name__ == "__main__":
