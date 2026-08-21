@@ -9,9 +9,13 @@ contain a production signing key, signed release manifest, supported package,
 or integrated product workflow. Synthetic manifests used by tests make no
 release or platform-support claim.
 
-macOS field requirements remain frozen but unimplemented. Windows remains a
-later independent platform increment. Evidence from one platform cannot satisfy
-another platform's gate.
+macOS field requirements remain frozen but unimplemented. The exact frozen
+schema is recorded in
+[`release/platform-manifests/v2/macos-fields.md`](../../release/platform-manifests/v2/macos-fields.md)
+and covers the shared runtime identity plus the macOS-specific Team ID, bundle
+identifiers, App Group identifier, entitlements digest, designated
+requirements, and helper hashes. Windows remains a later independent platform
+increment. Evidence from one platform cannot satisfy another platform's gate.
 
 ## Independent Trust Boundary
 

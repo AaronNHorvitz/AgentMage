@@ -29,3 +29,8 @@ This directory intentionally contains no manifest JSON, signature, private key,
 or claimed release identity. Such files may be added only by the later reviewed
 release pipeline and must represent the exact package and native evidence under
 review.
+
+The macOS platform is not yet accepted by the verifier. Its future
+manifest fields are frozen ahead of implementation in
+[`macos-fields.md`](macos-fields.md) so that later work cannot silently expand,
+rename, or reorder them.
