@@ -13,8 +13,10 @@ macOS field requirements remain frozen but unimplemented. The exact frozen
 schema is recorded in
 [`release/platform-manifests/v2/macos-fields.md`](../../release/platform-manifests/v2/macos-fields.md)
 and covers the shared runtime identity plus the macOS-specific Team ID, bundle
-identifiers, App Group identifier, entitlements digest, designated
-requirements, and helper hashes. Windows remains a later independent platform
+identifiers, App Group identifier, per-component and aggregate entitlement
+digests, designated requirements, split distribution-artifact and
+installed-closure digests, separately typed minimum, tested, and
+supported-set macOS build digests, and helper hashes. Windows remains a later independent platform
 increment. Evidence from one platform cannot satisfy another platform's gate.
 
 ## Independent Trust Boundary
