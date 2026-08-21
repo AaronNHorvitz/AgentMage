@@ -242,6 +242,121 @@ class MacosPlatformManifestContractTests(unittest.TestCase):
         self.assertIn(".v3", MODULE.DOMAIN_SEPARATOR_V3)
         self.assertIn(".v2", MODULE.DOMAIN_SEPARATOR_V2)
 
+    def test_unknown_field_under_build_boundary_section_fails_contract(self) -> None:
+        """CM-7.1.1.2-001: unauthorized manifest-field declarations outside the
+        previously allowlisted sections must still be rejected."""
+        addition = "\n- `unauthorized_new_field`: required manifest field.\n"
+        mutated = self.freeze_text.replace(
+            "## macOS Build Boundary\n",
+            "## macOS Build Boundary\n" + addition,
+        )
+        self.assertNotEqual(mutated, self.freeze_text)
+        failures = MODULE.validate_freeze_document(mutated)
+        self.assertTrue(
+            any(
+                "unauthorized manifest field" in failure
+                and "unauthorized_new_field" in failure
+                for failure in failures
+            ),
+            "unauthorized field added under macOS Build Boundary must fail",
+        )
+
+    def test_unknown_field_in_newly_added_section_fails_contract(self) -> None:
+        """CM-7.1.1.2-001: adding a whole new section with a manifest-field
+        declaration bullet must still be rejected."""
+        addition = (
+            "\n## Sneaky Additional Manifest Fields\n\n"
+            "- `unauthorized_new_field`: required manifest field.\n"
+        )
+        mutated = self.freeze_text + addition
+        failures = MODULE.validate_freeze_document(mutated)
+        self.assertTrue(
+            any(
+                "unauthorized manifest field" in failure
+                and "unauthorized_new_field" in failure
+                for failure in failures
+            ),
+            "unauthorized field in a newly added section must fail",
+        )
+
+    def test_adapter_observation_identifier_is_not_treated_as_manifest_field(
+        self,
+    ) -> None:
+        """Separately typed adapter-observation identifiers must not be
+        reported as manifest-field additions if a future edit ever declares
+        one with a bullet head."""
+        addition = (
+            "\n- `observed_os_build_sha256`: adapter observation, separately "
+            "typed from the manifest.\n"
+        )
+        mutated = self.freeze_text.replace(
+            "## macOS Build Boundary\n",
+            "## macOS Build Boundary\n" + addition,
+        )
+        failures = MODULE.validate_freeze_document(mutated)
+        self.assertFalse(
+            any(
+                "unauthorized manifest field" in failure
+                and "observed_os_build_sha256" in failure
+                for failure in failures
+            ),
+            "allowlisted adapter-observation identifier must not be flagged",
+        )
+
+    def test_installed_closure_member_grammar_bound_to_owning_field(self) -> None:
+        """CM-7.1.1.2-002: mutating only the installed-closure member-line key
+        while leaving the additional-signed-inventory member line intact must
+        fail specifically for the installed-closure preimage."""
+        installed_bullet_start = self.freeze_text.index(
+            "- `installed_closure_sha256`:"
+        )
+        additional_bullet_start = self.freeze_text.index(
+            "- `additional_signed_inventory_sha256`:"
+        )
+        self.assertLess(installed_bullet_start, additional_bullet_start)
+        member_line = (
+            "`component=<name> path=<installed-relative-path> "
+            "sha256=<lowercase-hex>\\n`"
+        )
+        replacement = (
+            "`runtime=<name> path=<installed-relative-path> "
+            "sha256=<lowercase-hex>\\n`"
+        )
+        prefix = self.freeze_text[:installed_bullet_start]
+        middle = self.freeze_text[installed_bullet_start:additional_bullet_start]
+        suffix = self.freeze_text[additional_bullet_start:]
+        self.assertIn(member_line, middle)
+        mutated_middle = middle.replace(member_line, replacement, 1)
+        mutated = prefix + mutated_middle + suffix
+        self.assertIn(
+            member_line,
+            mutated,
+            "additional-signed-inventory member line must remain unchanged",
+        )
+        failures = MODULE.validate_freeze_document(mutated)
+        installed_failures = [
+            failure
+            for failure in failures
+            if "installed_closure_sha256" in failure
+            and "canonical preimage" in failure
+        ]
+        self.assertTrue(
+            installed_failures,
+            "installed-closure preimage must be reported when only its "
+            "member-line key drifts",
+        )
+        additional_failures = [
+            failure
+            for failure in failures
+            if "additional_signed_inventory_sha256" in failure
+            and "canonical preimage" in failure
+        ]
+        self.assertFalse(
+            additional_failures,
+            "unchanged additional-signed-inventory preimage must not be "
+            "reported when only the installed-closure member line drifts",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

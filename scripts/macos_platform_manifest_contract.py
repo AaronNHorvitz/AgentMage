@@ -199,10 +199,62 @@ FROZEN_MANIFEST_FIELDS: Final = frozenset(
     }
 )
 
-FIELD_DECLARATION_SECTIONS: Final = (
-    "## Shared Runtime Identity",
-    "## macOS Package Identity",
-    "## macOS Signing and Sandbox Fields",
+# Identifiers that appear as declaration bullets somewhere in the freeze
+# document but name separately typed adapter observations rather than manifest
+# fields. They are excluded from the closed manifest-field set instead of being
+# scoped to a section list so that a future author cannot smuggle a new
+# manifest field into a non-manifest section and evade the closed-set check.
+ADAPTER_OBSERVATION_ALLOWLIST: Final = frozenset(
+    {
+        "observed_os_build_sha256",
+    }
+)
+
+# Per-field canonical preimage definitions. Each definition is validated
+# inside the specific bullet that declares its owning manifest field so that a
+# grammar shared with a sibling field (for example the installed-closure and
+# additional-signed-inventory member lines both spelling
+# ``component=<name> path=<installed-relative-path> sha256=<lowercase-hex>``)
+# cannot silently drift on one side while the sibling occurrence keeps a
+# global substring check satisfied.
+CANONICAL_PREIMAGE_DEFINITIONS: Final = (
+    {
+        "field": "installed_closure_sha256",
+        "section": "## macOS Package Identity",
+        "domain_prefix": r"agentmage.macos-installed-closure.v3\n",
+        "member_grammar": (
+            r"component=<name> path=<installed-relative-path> "
+            r"sha256=<lowercase-hex>\n"
+        ),
+        "count_phrase": "exactly four lines",
+        "ordering": (
+            "`host`, `bridge`, `xpc_helper`, `inference` in that exact order"
+        ),
+    },
+    {
+        "field": "additional_signed_inventory_sha256",
+        "section": "## macOS Package Identity",
+        "domain_prefix": r"agentmage.macos-additional-signed-inventory.v3\n",
+        "member_grammar": (
+            r"component=<name> path=<installed-relative-path> "
+            r"sha256=<lowercase-hex>\n"
+        ),
+        "count_phrase": "exactly two lines",
+        "ordering": (
+            "`model_installer`, `vscode_extension` in that exact order"
+        ),
+    },
+    {
+        "field": "entitlements_map_sha256",
+        "section": "## macOS Signing and Sandbox Fields",
+        "domain_prefix": r"agentmage.macos-entitlements.v3\n",
+        "member_grammar": r"component=<name> sha256=<lowercase-hex>\n",
+        "count_phrase": "exactly six lines",
+        "ordering": (
+            "`host`, `bridge`, `xpc_helper`, `inference`, "
+            "`model_installer`, `vscode_extension` in that exact order"
+        ),
+    },
 )
 
 # --- Exact canonical preimage byte strings ------------------------------------
@@ -338,22 +390,78 @@ def _bullets(section_body: str) -> list[str]:
     return bullets
 
 
-def extract_declared_fields(text: str) -> set[str]:
-    """Return every identifier declared by a top-level bullet in a field
-    section, sourced only from the bullet head (before the first ``:``).
+def _all_section_headings(text: str) -> list[str]:
+    """Return every ``## `` heading line in document order."""
+    return [line for line in text.splitlines() if line.startswith("## ")]
 
-    A bullet without a ``:`` is prose that references identifiers rather than
-    declaring them; it is skipped so that removing a real declaration bullet
-    while leaving an incidental backticked mention still fails the contract.
+
+def extract_declared_fields(text: str) -> set[str]:
+    """Return every manifest-field identifier declared by a top-level bullet
+    anywhere in the freeze document, sourced only from the bullet head
+    (before the first ``:``).
+
+    Every ``##`` section is inspected so that a manifest-field declaration
+    cannot be smuggled outside a previously allowlisted section. Identifiers
+    that name separately typed adapter observations (per
+    ``ADAPTER_OBSERVATION_ALLOWLIST``) are excluded because they are not
+    manifest fields. A bullet without a ``:`` is prose that references
+    identifiers rather than declaring them; it is skipped so that removing a
+    real declaration bullet while leaving an incidental backticked mention
+    still fails the contract.
     """
     declared: set[str] = set()
-    for heading in FIELD_DECLARATION_SECTIONS:
+    for heading in _all_section_headings(text):
         for bullet in _bullets(_extract_section(text, heading)):
             if ":" not in bullet:
                 continue
             head = bullet.split(":", 1)[0]
-            declared.update(_FIELD_IDENT_RE.findall(head))
+            for ident in _FIELD_IDENT_RE.findall(head):
+                if ident in ADAPTER_OBSERVATION_ALLOWLIST:
+                    continue
+                declared.add(ident)
     return declared
+
+
+def _find_field_bullet(section_body: str, field: str) -> str | None:
+    """Return the top-level bullet in ``section_body`` whose head declares
+    ``field``, or ``None`` if no such bullet exists."""
+    prefix = f"`{field}`:"
+    for bullet in _bullets(section_body):
+        if bullet.startswith(prefix):
+            return bullet
+    return None
+
+
+def validate_canonical_preimage_definition(
+    text: str, spec: "dict[str, str]"
+) -> list[str]:
+    """Validate the complete canonical preimage definition for one field
+    inside the specific bullet that declares it. Binds the domain prefix,
+    member-line grammar, count phrase, and component ordering to the owning
+    manifest field instead of accepting them as free-floating global
+    substrings that a sibling section could satisfy on its behalf."""
+    failures: list[str] = []
+    field = spec["field"]
+    section_body = _extract_section(text, spec["section"])
+    bullet = _find_field_bullet(section_body, field)
+    if bullet is None:
+        failures.append(
+            "macOS freeze document is missing the canonical preimage "
+            f"declaration bullet for {field} inside {spec['section']}"
+        )
+        return failures
+    for label, token in (
+        ("domain prefix", spec["domain_prefix"]),
+        ("member-line grammar", spec["member_grammar"]),
+        ("count phrase", spec["count_phrase"]),
+        ("component ordering", spec["ordering"]),
+    ):
+        if token not in bullet:
+            failures.append(
+                f"macOS freeze document {field} canonical preimage lost its "
+                f"{label}: {token!r}"
+            )
+    return failures
 
 
 def validate_freeze_document(text: str) -> list[str]:
@@ -423,6 +531,11 @@ def validate_freeze_document(text: str) -> list[str]:
                 "macOS freeze document lost the exact canonical preimage string: "
                 f"{preimage}"
             )
+
+    # Per-field canonical preimage definitions, scoped to their owning
+    # section bullet so a shared grammar cannot silently drift on one side.
+    for spec in CANONICAL_PREIMAGE_DEFINITIONS:
+        failures.extend(validate_canonical_preimage_definition(text, spec))
 
     # Frozen array / component orderings.
     for ordering in FROZEN_ARRAY_ORDERINGS:
@@ -528,6 +641,8 @@ def main() -> int:
         "macOS release manifest v3 field freeze holds: "
         f"{len(FROZEN_MANIFEST_FIELDS)} closed manifest fields, "
         f"{len(CANONICAL_PREIMAGE_STRINGS)} canonical preimage strings, "
+        f"{len(CANONICAL_PREIMAGE_DEFINITIONS)} section-scoped preimage "
+        "definitions, "
         f"{len(FROZEN_ARRAY_ORDERINGS)} frozen orderings, "
         f"{len(AUTHORITATIVE_SOURCE_RULES)} authoritative source rules."
     )
