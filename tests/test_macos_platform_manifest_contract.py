@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -94,6 +95,83 @@ class MacosPlatformManifestContractTests(unittest.TestCase):
             mutated = self.freeze_text.replace(token, "some other count")
             self.assertTrue(MODULE.validate_freeze_document(mutated))
 
+    def test_committed_freeze_declares_exactly_the_closed_field_set(self) -> None:
+        self.assertEqual(
+            MODULE.extract_declared_fields(self.freeze_text),
+            set(MODULE.FROZEN_MANIFEST_FIELDS),
+        )
+
+    def test_adding_unknown_manifest_field_fails_contract(self) -> None:
+        addition = "\n- `unauthorized_new_field`: SHA-256 of something not in the freeze.\n"
+        mutated = self.freeze_text.replace(
+            "- `team_id`:",
+            addition + "- `team_id`:",
+            1,
+        )
+        failures = MODULE.validate_freeze_document(mutated)
+        self.assertTrue(
+            any("unauthorized manifest field" in failure for failure in failures),
+            "adding an unknown declared field must be reported as an addition",
+        )
+
+    def test_removing_field_declaration_leaving_reference_fails_contract(self) -> None:
+        bullet = "- `schema_version`: integer `3`."
+        self.assertIn(bullet, self.freeze_text)
+        mutated = self.freeze_text.replace(
+            bullet,
+            "- integer three (`schema_version` referenced but no longer declared).",
+        )
+        self.assertIn("schema_version", mutated)
+        failures = MODULE.validate_freeze_document(mutated)
+        self.assertTrue(
+            any(
+                "missing declaration of frozen field: schema_version" in failure
+                for failure in failures
+            ),
+            "removing a declaration bullet must fail even when the identifier "
+            "still appears in prose",
+        )
+
+    def test_reordering_frozen_component_array_fails_contract(self) -> None:
+        original = "`host`, `bridge`, `xpc_helper`, `inference` in that exact order"
+        self.assertIn(original, self.freeze_text)
+        mutated = self.freeze_text.replace(
+            original,
+            "`bridge`, `host`, `xpc_helper`, `inference` in that exact order",
+        )
+        failures = MODULE.validate_freeze_document(mutated)
+        self.assertTrue(
+            any("frozen component ordering" in failure for failure in failures),
+            "reordering the runtime closure order must fail the freeze contract",
+        )
+
+    def test_renaming_canonical_preimage_key_fails_contract(self) -> None:
+        mutated = self.freeze_text.replace(
+            "xcode-command-line-tools-build=<XcodeCLTBuild>",
+            "unexpected-key=<XcodeCLTBuild>",
+        )
+        failures = MODULE.validate_freeze_document(mutated)
+        self.assertTrue(
+            any(
+                "exact canonical preimage string" in failure for failure in failures
+            ),
+            "renaming a canonical-preimage key must fail the freeze contract",
+        )
+
+    def test_weakening_authoritative_source_rule_fails_contract(self) -> None:
+        mutated = self.freeze_text.replace(
+            "Contents/Resources/app/product.json",
+            "some-other-source.txt",
+        )
+        failures = MODULE.validate_freeze_document(mutated)
+        self.assertTrue(
+            any(
+                "weakened an authoritative source rule" in failure
+                for failure in failures
+            ),
+            "weakening the Visual Studio Code product.json source must fail",
+        )
+
     def test_v3_readme_declares_reservation(self) -> None:
         for token in MODULE.V3_README_REQUIRED_TOKENS:
             self.assertIn(token, self.v3_readme_text)
@@ -117,6 +195,40 @@ class MacosPlatformManifestContractTests(unittest.TestCase):
         self.assertTrue(
             any("forbidden .json artifact" in failure for failure in failures), note
         )
+
+    def test_v3_reservation_rejects_nested_forbidden_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "README.md").write_text("stub", encoding="utf-8")
+            fixtures = root / "fixtures"
+            fixtures.mkdir()
+            nested = fixtures / "macos-apple-silicon.json"
+            nested.write_text("{}", encoding="utf-8")
+            entries = tuple(sorted(root.rglob("*")))
+            failures = MODULE.validate_v3_reservation(self.v3_readme_text, entries)
+            self.assertTrue(
+                any(
+                    "forbidden .json artifact" in failure
+                    and "fixtures/macos-apple-silicon.json" in failure
+                    for failure in failures
+                ),
+                "nested forbidden artifacts must be reported with their "
+                "relative path, not silently accepted",
+            )
+
+    def test_v3_reservation_descends_into_directory_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            nested_dir = root / "fixtures"
+            nested_dir.mkdir()
+            (nested_dir / "macos.json").write_text("{}", encoding="utf-8")
+            failures = MODULE.validate_v3_reservation(
+                self.v3_readme_text, (nested_dir,)
+            )
+            self.assertTrue(
+                any("forbidden .json artifact" in failure for failure in failures),
+                "passing a directory entry must trigger recursive descent",
+            )
 
     def test_dropping_domain_separator_pointer_from_v3_readme_fails(self) -> None:
         mutated = self.v3_readme_text.replace(MODULE.DOMAIN_SEPARATOR_V3, "")
