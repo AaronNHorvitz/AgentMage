@@ -9,15 +9,23 @@ contain a production signing key, signed release manifest, supported package,
 or integrated product workflow. Synthetic manifests used by tests make no
 release or platform-support claim.
 
-macOS field requirements remain frozen but unimplemented. The exact frozen
-schema is recorded in
+macOS field requirements remain frozen but unimplemented. Because the closed
+v2 wire schema is Linux-specific, the macOS record is allocated to a distinct
+signed schema version 3 with its own domain separator; no v2 manifest bytes are
+ever reinterpreted as a v3 record and no v3 manifest bytes are ever
+reinterpreted as a v2 record. The exact frozen schema is recorded in
 [`release/platform-manifests/v2/macos-fields.md`](../../release/platform-manifests/v2/macos-fields.md)
-and covers the shared runtime identity plus the macOS-specific Team ID, bundle
-identifiers, App Group identifier, per-component and aggregate entitlement
-digests, designated requirements, split distribution-artifact and
-installed-closure digests, separately typed minimum, tested, and
-supported-set macOS build digests, and helper hashes. Windows remains a later independent platform
-increment. Evidence from one platform cannot satisfy another platform's gate.
+and covers the shared runtime identity plus the macOS-specific Team ID, six
+bundle identifiers (`host`, `bridge`, `xpc_helper`, `inference`,
+`model_installer`, `vscode_extension`), App Group identifier, per-component
+and aggregate entitlement digests, designated requirements, split
+distribution-artifact and four-member runtime installed-closure digests, a
+separate two-member additional signed inventory that authenticates the signed
+model installer and signed Visual Studio Code extension without triggering the
+installed-inventory completeness rejection, separately typed minimum, tested,
+and supported-set macOS build digests, and helper hashes. Windows remains a
+later independent platform increment. Evidence from one platform cannot satisfy
+another platform's gate.
 
 ## Independent Trust Boundary
 

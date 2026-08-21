@@ -30,7 +30,13 @@ or claimed release identity. Such files may be added only by the later reviewed
 release pipeline and must represent the exact package and native evidence under
 review.
 
-The macOS platform is not yet accepted by the verifier. Its future
-manifest fields are frozen ahead of implementation in
+The macOS platform is not yet accepted by the verifier. Because the closed v2
+wire schema above fixes the Linux runtime identity (single `os_build_sha256`
+and single `package_sha256`) and rejects unknown or missing fields, the macOS
+record cannot be added as a v2 amendment. Its future manifest fields are
+therefore frozen ahead of implementation as a distinct signed schema version 3
+record, with its own domain separator
+(`agentmage.platform-release-manifest.v3\0`), in
 [`macos-fields.md`](macos-fields.md) so that later work cannot silently expand,
-rename, or reorder them.
+rename, or reorder them and so that no v2 or v3 manifest bytes are ever
+reinterpreted under the other variant's field set.
