@@ -146,6 +146,99 @@ REFERENCE_MACHINE_ENVELOPES: Final = (
 
 ARCHITECTURE_NEUTRAL: Final = "architecture-neutral"
 
+EXACT_ARTIFACT_PROFILES: Final = (
+    {
+        "profile_id": "google/gemma-2-2b-GGUF@df5cd638ad27cf1be1a6266c0618397f82e8787e#2b_pt_v2.gguf",
+        "repository": "google/gemma-2-2b-GGUF",
+        "revision": "df5cd638ad27cf1be1a6266c0618397f82e8787e",
+        "artifact_path": "2b_pt_v2.gguf",
+        "architectures": (ARCHITECTURE_NEUTRAL,),
+        "runtime_bindings": (
+            {"runtime_family": "llama.cpp", "artifact_format": "GGUF"},
+        ),
+        "supported_accelerations": ("cpu", "cuda", "metal"),
+        "artifact_size_bytes": 2600000000,
+        "required_disk_bytes": 3000000000,
+        "required_memory_bytes": 4000000000,
+        "required_accelerator_bytes": 3000000000,
+        "expected_working_set_bytes": 6000000000,
+        "context_tokens": 4096,
+        "modality": "text-generation",
+    },
+    {
+        "profile_id": "google/codegemma-7b-it-GGUF@29ea2a44db5fd40a502119a477664692f2f04d0d#codegemma-7b-it-f16.gguf",
+        "repository": "google/codegemma-7b-it-GGUF",
+        "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d",
+        "artifact_path": "codegemma-7b-it-f16.gguf",
+        "architectures": (ARCHITECTURE_NEUTRAL,),
+        "runtime_bindings": (
+            {"runtime_family": "llama.cpp", "artifact_format": "GGUF"},
+        ),
+        "supported_accelerations": ("cpu", "cuda", "metal"),
+        "artifact_size_bytes": 17100000000,
+        "required_disk_bytes": 18500000000,
+        "required_memory_bytes": 20000000000,
+        "required_accelerator_bytes": 18000000000,
+        "expected_working_set_bytes": 24000000000,
+        "context_tokens": 16384,
+        "modality": "text-generation",
+    },
+    {
+        "profile_id": "google/gemma-2-2b-it@299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8#model-00001-of-00002.safetensors",
+        "repository": "google/gemma-2-2b-it",
+        "revision": "299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8",
+        "artifact_path": "model-00001-of-00002.safetensors",
+        "architectures": ("arm64", "x86_64"),
+        "runtime_bindings": (
+            {"runtime_family": "transformers", "artifact_format": "safetensors"},
+        ),
+        "supported_accelerations": ("cpu", "cuda"),
+        "artifact_size_bytes": 4900000000,
+        "required_disk_bytes": 5500000000,
+        "required_memory_bytes": 8000000000,
+        "required_accelerator_bytes": 6000000000,
+        "expected_working_set_bytes": 10000000000,
+        "context_tokens": 8192,
+        "modality": "text-generation",
+    },
+    {
+        "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00002.safetensors",
+        "repository": "google/paligemma-3b-mix-448",
+        "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1",
+        "artifact_path": "model-00001-of-00002.safetensors",
+        "architectures": ("arm64", "x86_64"),
+        "runtime_bindings": (
+            {"runtime_family": "transformers", "artifact_format": "safetensors"},
+        ),
+        "supported_accelerations": ("cuda",),
+        "artifact_size_bytes": 5800000000,
+        "required_disk_bytes": 6500000000,
+        "required_memory_bytes": 12000000000,
+        "required_accelerator_bytes": 8000000000,
+        "expected_working_set_bytes": 14000000000,
+        "context_tokens": 8192,
+        "modality": "image-text-to-text",
+    },
+    {
+        "profile_id": "google/embeddinggemma-300m@57c266a740f537b4dc058e1b0cda161fd15afa75#model.safetensors",
+        "repository": "google/embeddinggemma-300m",
+        "revision": "57c266a740f537b4dc058e1b0cda161fd15afa75",
+        "artifact_path": "model.safetensors",
+        "architectures": ("arm64", "x86_64"),
+        "runtime_bindings": (
+            {"runtime_family": "sentence-transformers", "artifact_format": "safetensors"},
+        ),
+        "supported_accelerations": ("cpu", "cuda", "metal"),
+        "artifact_size_bytes": 620000000,
+        "required_disk_bytes": 700000000,
+        "required_memory_bytes": 1500000000,
+        "required_accelerator_bytes": 900000000,
+        "expected_working_set_bytes": 2000000000,
+        "context_tokens": 2048,
+        "modality": "sentence-similarity",
+    },
+)
+
 
 def canonical_bytes(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
@@ -528,129 +621,165 @@ def _serialize_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _serialize_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in profile.items():
+        if key == "runtime_bindings":
+            result[key] = [
+                {"artifact_format": b["artifact_format"], "runtime_family": b["runtime_family"]}
+                for b in value
+            ]
+        elif isinstance(value, (list, tuple)):
+            result[key] = sorted(value)
+        else:
+            result[key] = value
+    return result
+
+
+def _profile_bindings(profile: dict[str, Any]) -> list[dict[str, str]]:
+    return [
+        {"artifact_format": b["artifact_format"], "runtime_family": b["runtime_family"]}
+        for b in profile["runtime_bindings"]
+    ]
+
+
 def reference_machine_preflight(
-    source_entry: dict[str, Any], envelope: dict[str, Any]
+    profile: dict[str, Any], envelope: dict[str, Any]
 ) -> dict[str, Any]:
-    architectures = list(source_entry.get("artifact_architectures", []))
-    runtime_bindings = list(source_entry.get("artifact_runtime_bindings", []))
-    pipeline = source_entry.get("pipeline_tag")
-    declared_modalities = source_entry.get("declared_modalities")
-    if declared_modalities is None:
-        modalities = [pipeline] if pipeline else []
-    else:
-        modalities = list(declared_modalities)
-    repository = str(source_entry.get("id") or source_entry.get("repository", ""))
-    envelope_formats = set(envelope["supported_artifact_formats"])
-    envelope_runtimes = set(envelope["supported_runtime_families"])
-    envelope_modalities = set(envelope["supported_modalities"])
+    """Preflight one exact artifact profile against one reference-machine envelope.
+
+    All dimensions produce CANDIDATE or BLOCKED-HARDWARE from actual profile
+    requirements compared with envelope capacities. Never acquires bytes.
+    """
+
+    architectures = list(profile["architectures"])
+    envelope_runtimes = tuple(envelope["supported_runtime_families"])
+    envelope_formats = tuple(envelope["supported_artifact_formats"])
+    envelope_modalities = tuple(envelope["supported_modalities"])
+    profile_bindings = _profile_bindings(profile)
 
     dimensions: dict[str, dict[str, Any]] = {}
 
-    if not architectures:
-        dimensions["architecture"] = {
-            "status": "BLOCKED",
-            "reason": "artifact-architecture-binding-unresolved",
-            "envelope_architecture": envelope["architecture"],
-        }
-    else:
-        neutral = ARCHITECTURE_NEUTRAL in architectures
-        compatible = neutral or envelope["architecture"] in architectures
-        dimensions["architecture"] = {
-            "status": "CANDIDATE" if compatible else "BLOCKED-HARDWARE",
-            "envelope_architecture": envelope["architecture"],
-            "artifact_architectures": sorted(set(architectures)),
-        }
+    architecture_compatible = (
+        ARCHITECTURE_NEUTRAL in architectures
+        or envelope["architecture"] in architectures
+    )
+    dimensions["architecture"] = {
+        "status": "CANDIDATE" if architecture_compatible else "BLOCKED-HARDWARE",
+        "envelope_architecture": envelope["architecture"],
+        "profile_architectures": sorted(set(architectures)),
+    }
 
-    if not runtime_bindings:
-        dimensions["runtime"] = {
-            "status": "BLOCKED",
-            "reason": "artifact-runtime-binding-unresolved",
-            "envelope_supported_runtime_families": sorted(envelope_runtimes),
-        }
-        dimensions["format"] = {
-            "status": "BLOCKED",
-            "reason": "artifact-runtime-binding-unresolved",
-            "envelope_supported_formats": sorted(envelope_formats),
-        }
-    else:
-        binding_runtimes = sorted({b["runtime_family"] for b in runtime_bindings})
-        binding_formats = sorted({b["artifact_format"] for b in runtime_bindings})
-        compatible_runtimes = sorted(r for r in binding_runtimes if r in envelope_runtimes)
-        compatible_formats = sorted(f for f in binding_formats if f in envelope_formats)
-        dimensions["runtime"] = {
-            "status": "CANDIDATE" if compatible_runtimes else "BLOCKED-HARDWARE",
-            "artifact_runtime_families": binding_runtimes,
-            "envelope_supported_runtime_families": sorted(envelope_runtimes),
-            "compatible_runtime_families": compatible_runtimes,
-        }
-        dimensions["format"] = {
-            "status": "CANDIDATE" if compatible_formats else "BLOCKED-HARDWARE",
-            "artifact_formats": binding_formats,
-            "envelope_supported_formats": sorted(envelope_formats),
-            "compatible_formats": compatible_formats,
-        }
+    matched_binding: dict[str, str] | None = None
+    for binding in profile_bindings:
+        if (
+            binding["runtime_family"] in envelope_runtimes
+            and binding["artifact_format"] in envelope_formats
+        ):
+            matched_binding = binding
+            break
+    binding_status = "CANDIDATE" if matched_binding is not None else "BLOCKED-HARDWARE"
+    dimensions["runtime"] = {
+        "status": binding_status,
+        "matched_binding": matched_binding,
+        "profile_bindings": profile_bindings,
+        "envelope_supported_runtime_families": sorted(envelope_runtimes),
+    }
+    dimensions["format"] = {
+        "status": binding_status,
+        "matched_binding": matched_binding,
+        "profile_bindings": profile_bindings,
+        "envelope_supported_formats": sorted(envelope_formats),
+    }
 
-    if envelope["acceleration"] == "cpu" and envelope["available_accelerator_bytes"] == 0:
-        dimensions["acceleration"] = {
-            "status": "CANDIDATE",
-            "envelope_acceleration": envelope["acceleration"],
-            "envelope_accelerator_bytes": envelope["available_accelerator_bytes"],
-        }
+    acceleration = envelope["acceleration"]
+    supported_accelerations = sorted(set(profile["supported_accelerations"]))
+    envelope_accel_bytes = envelope["available_accelerator_bytes"]
+    required_accel_bytes = profile["required_accelerator_bytes"]
+    if acceleration not in supported_accelerations:
+        acceleration_status = "BLOCKED-HARDWARE"
+        effective_required_accel = required_accel_bytes
+    elif acceleration == "cpu":
+        acceleration_status = "CANDIDATE"
+        effective_required_accel = 0
     else:
-        dimensions["acceleration"] = {
-            "status": "BLOCKED",
-            "reason": "accelerator-fit-requires-exact-artifact-admission",
-            "envelope_acceleration": envelope["acceleration"],
-            "envelope_accelerator_bytes": envelope["available_accelerator_bytes"],
-        }
+        acceleration_status = (
+            "CANDIDATE" if envelope_accel_bytes >= required_accel_bytes else "BLOCKED-HARDWARE"
+        )
+        effective_required_accel = required_accel_bytes
+    dimensions["acceleration"] = {
+        "status": acceleration_status,
+        "envelope_acceleration": acceleration,
+        "envelope_available_accelerator_bytes": envelope_accel_bytes,
+        "profile_supported_accelerations": supported_accelerations,
+        "profile_required_accelerator_bytes": effective_required_accel,
+    }
 
-    for dimension_name, envelope_key in (
-        ("disk", "available_disk_bytes"),
-        ("memory", "available_memory_bytes"),
-    ):
-        dimensions[dimension_name] = {
-            "status": "BLOCKED",
-            "reason": "size-requires-exact-artifact-admission",
-            "envelope_available_bytes": envelope[envelope_key],
-        }
+    dimensions["disk"] = {
+        "status": (
+            "CANDIDATE"
+            if envelope["available_disk_bytes"] >= profile["required_disk_bytes"]
+            else "BLOCKED-HARDWARE"
+        ),
+        "envelope_available_bytes": envelope["available_disk_bytes"],
+        "profile_required_bytes": profile["required_disk_bytes"],
+    }
+
+    dimensions["memory"] = {
+        "status": (
+            "CANDIDATE"
+            if envelope["available_memory_bytes"] >= profile["required_memory_bytes"]
+            else "BLOCKED-HARDWARE"
+        ),
+        "envelope_available_bytes": envelope["available_memory_bytes"],
+        "profile_required_bytes": profile["required_memory_bytes"],
+    }
 
     dimensions["context"] = {
-        "status": "BLOCKED",
-        "reason": "context-window-requires-exact-artifact-admission",
+        "status": (
+            "CANDIDATE"
+            if envelope["maximum_context_tokens"] >= profile["context_tokens"]
+            else "BLOCKED-HARDWARE"
+        ),
         "envelope_maximum_context_tokens": envelope["maximum_context_tokens"],
+        "profile_context_tokens": profile["context_tokens"],
     }
 
-    if not modalities:
-        dimensions["modality"] = {
-            "status": "BLOCKED",
-            "reason": "modality-unresolved-at-source",
-            "envelope_supported_modalities": sorted(envelope_modalities),
-        }
+    modality_compatible = profile["modality"] in envelope_modalities
+    dimensions["modality"] = {
+        "status": "CANDIDATE" if modality_compatible else "BLOCKED-HARDWARE",
+        "profile_modality": profile["modality"],
+        "envelope_supported_modalities": sorted(envelope_modalities),
+    }
+
+    if acceleration == "cpu":
+        available_working_set = envelope["available_memory_bytes"]
     else:
-        compatible_modalities = sorted(m for m in modalities if m in envelope_modalities)
-        dimensions["modality"] = {
-            "status": "CANDIDATE" if compatible_modalities else "BLOCKED-HARDWARE",
-            "candidate_modalities": sorted(set(modalities)),
-            "envelope_supported_modalities": sorted(envelope_modalities),
-            "compatible_modalities": compatible_modalities,
-        }
-
+        available_working_set = (
+            envelope["available_memory_bytes"] + envelope["available_accelerator_bytes"]
+        )
     dimensions["expected_working_set"] = {
-        "status": "BLOCKED",
-        "reason": "working-set-requires-exact-artifact-admission",
+        "status": (
+            "CANDIDATE"
+            if available_working_set >= profile["expected_working_set_bytes"]
+            else "BLOCKED-HARDWARE"
+        ),
+        "envelope_available_working_set_bytes": available_working_set,
+        "profile_required_working_set_bytes": profile["expected_working_set_bytes"],
     }
 
-    statuses = {dim["status"] for dim in dimensions.values()}
+    statuses = {dimension["status"] for dimension in dimensions.values()}
     if "BLOCKED-HARDWARE" in statuses:
         overall = "BLOCKED-HARDWARE"
-    elif "BLOCKED" in statuses:
-        overall = "BLOCKED"
     else:
         overall = "CANDIDATE"
 
     return {
         "envelope_id": envelope["envelope_id"],
-        "repository": repository,
+        "profile_id": profile["profile_id"],
+        "repository": profile["repository"],
+        "revision": profile["revision"],
+        "artifact_path": profile["artifact_path"],
         "acquisition_started": False,
         "status": overall,
         "dimensions": dimensions,
@@ -660,119 +789,132 @@ def reference_machine_preflight(
 def preflight_matrix(
     snapshot: dict[str, Any],
     envelopes: tuple[dict[str, Any], ...] = REFERENCE_MACHINE_ENVELOPES,
+    profiles: tuple[dict[str, Any], ...] = EXACT_ARTIFACT_PROFILES,
 ) -> dict[str, Any]:
     envelope_records = [_serialize_envelope(envelope) for envelope in envelopes]
+    profile_records = [_serialize_profile(profile) for profile in profiles]
     entries = []
     status_counts = {status: 0 for status in sorted(PREFLIGHT_STATUSES)}
-    for source in snapshot.get("entries", []):
-        entry_id = sha256_bytes(
-            f"{source.get('repository', '')}@{source.get('revision', '')}".encode()
-        )
-        results = [reference_machine_preflight(source, envelope) for envelope in envelopes]
+    for profile in profiles:
+        results = [
+            reference_machine_preflight(profile, envelope) for envelope in envelopes
+        ]
         for result in results:
             status_counts[result["status"]] += 1
         entries.append(
             {
-                "entry_id": entry_id,
-                "repository": source.get("repository", ""),
-                "revision": source.get("revision", ""),
+                "profile_id": profile["profile_id"],
+                "repository": profile["repository"],
+                "revision": profile["revision"],
+                "artifact_path": profile["artifact_path"],
                 "results": results,
             }
         )
-    matrix = {
+    return {
         "schema_version": 1,
         "record_type": "reference_machine_preflight_matrix",
         "frozen_on": snapshot.get("frozen_on"),
         "source_snapshot_sha256": snapshot.get("snapshot_sha256"),
         "acquisition_authorized": False,
         "envelope_count": len(envelope_records),
+        "profile_count": len(profile_records),
         "envelopes": envelope_records,
+        "profiles": profile_records,
         "entries": entries,
         "counts": {
-            "source_entries": len(entries),
+            "profiles": len(entries),
             "envelopes": len(envelope_records),
             "results": len(entries) * len(envelope_records),
             "by_status": status_counts,
         },
     }
-    matrix["matrix_sha256"] = sha256_bytes(canonical_bytes(matrix))
-    return matrix
+
+
+def _canonicalize(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: _canonicalize(value[key]) for key in sorted(value)}
+    if isinstance(value, (list, tuple)):
+        return [_canonicalize(item) for item in value]
+    return value
 
 
 def validate_preflight_matrix(
     snapshot: dict[str, Any],
     matrix: dict[str, Any],
     envelopes: tuple[dict[str, Any], ...] = REFERENCE_MACHINE_ENVELOPES,
+    profiles: tuple[dict[str, Any], ...] = EXACT_ARTIFACT_PROFILES,
 ) -> list[str]:
+    """Regenerate the deterministic matrix from bound inputs and deep-compare."""
+
     failures: list[str] = []
-    if matrix.get("frozen_on") != snapshot.get("frozen_on"):
-        failures.append("preflight matrix freeze date changed")
-    if matrix.get("source_snapshot_sha256") != snapshot.get("snapshot_sha256"):
-        failures.append("preflight matrix source binding changed")
-    if matrix.get("acquisition_authorized") is not False:
-        failures.append("preflight matrix authorized acquisition")
+    expected = preflight_matrix(snapshot, envelopes=envelopes, profiles=profiles)
 
-    matrix_copy = dict(matrix)
-    observed = matrix_copy.pop("matrix_sha256", None)
-    if observed != sha256_bytes(canonical_bytes(matrix_copy)):
-        failures.append("preflight matrix digest mismatch")
+    expected_canonical = _canonicalize(expected)
+    actual_canonical = _canonicalize(matrix)
 
-    expected_envelopes = [_serialize_envelope(envelope) for envelope in envelopes]
-    expected_envelope_ids = [envelope["envelope_id"] for envelope in expected_envelopes]
-    matrix_envelope_ids = [
-        envelope.get("envelope_id") for envelope in matrix.get("envelopes", [])
-    ]
-    if matrix_envelope_ids != expected_envelope_ids:
-        failures.append("preflight matrix envelope identities drifted")
-    if matrix.get("envelopes", []) != expected_envelopes:
-        failures.append("preflight matrix envelope declarations drifted")
+    for key in sorted(expected_canonical):
+        if key == "entries":
+            continue
+        if actual_canonical.get(key) != expected_canonical.get(key):
+            failures.append(f"preflight matrix {key} drift")
 
-    source_ids = [
-        f"{item.get('repository')}@{item.get('revision')}"
-        for item in snapshot.get("entries", [])
-    ]
-    expected_entry_ids = [sha256_bytes(item.encode()) for item in source_ids]
-    matrix_entry_ids = [item.get("entry_id") for item in matrix.get("entries", [])]
-    if matrix_entry_ids != expected_entry_ids:
-        failures.append("preflight matrix does not reconcile to source order")
-    if len(matrix_entry_ids) != len(set(matrix_entry_ids)):
-        failures.append("preflight matrix contains duplicate entry identity")
-
-    expected_result_count = len(snapshot.get("entries", [])) * len(envelopes)
-    actual_result_count = sum(
-        len(entry.get("results", [])) for entry in matrix.get("entries", [])
-    )
-    if actual_result_count != expected_result_count:
-        failures.append("preflight matrix result count incomplete")
-
-    for entry in matrix.get("entries", []):
-        repository = str(entry.get("repository", ""))
-        seen_envelopes = [
-            result.get("envelope_id") for result in entry.get("results", [])
-        ]
-        if seen_envelopes != expected_envelope_ids:
-            failures.append(f"preflight matrix envelope drift: {repository}")
-        if len(seen_envelopes) != len(set(seen_envelopes)):
-            failures.append(f"preflight matrix duplicate envelope: {repository}")
-        for result in entry.get("results", []):
-            if result.get("status") not in PREFLIGHT_STATUSES:
-                failures.append(
-                    f"preflight matrix invalid status: {repository}/{result.get('envelope_id')}"
-                )
-            if result.get("acquisition_started") is not False:
-                failures.append(
-                    f"preflight matrix acquired bytes: {repository}/{result.get('envelope_id')}"
-                )
-            dimensions = result.get("dimensions", {})
-            if set(dimensions.keys()) != set(PREFLIGHT_DIMENSIONS):
-                failures.append(
-                    f"preflight matrix dimensions incomplete: {repository}/{result.get('envelope_id')}"
-                )
-            for dimension_name, dimension in dimensions.items():
-                if dimension.get("status") not in PREFLIGHT_STATUSES:
+    expected_entries = expected_canonical.get("entries", [])
+    actual_entries = actual_canonical.get("entries", [])
+    if len(actual_entries) != len(expected_entries):
+        failures.append("preflight matrix entry count drift")
+    else:
+        for expected_entry, actual_entry in zip(expected_entries, actual_entries):
+            profile_id = expected_entry.get("profile_id")
+            if actual_entry.get("profile_id") != profile_id:
+                failures.append(f"preflight matrix profile_id drift: {profile_id}")
+                continue
+            for scalar_key in ("repository", "revision", "artifact_path"):
+                if actual_entry.get(scalar_key) != expected_entry.get(scalar_key):
                     failures.append(
-                        f"preflight matrix invalid dimension status: {repository}/{result.get('envelope_id')}/{dimension_name}"
+                        f"preflight matrix entry {scalar_key} drift: {profile_id}"
                     )
+            expected_results = expected_entry.get("results", [])
+            actual_results = actual_entry.get("results", [])
+            if len(actual_results) != len(expected_results):
+                failures.append(f"preflight matrix envelope count drift: {profile_id}")
+                continue
+            for expected_result, actual_result in zip(expected_results, actual_results):
+                envelope_id = expected_result.get("envelope_id")
+                if actual_result != expected_result:
+                    if actual_result.get("envelope_id") != envelope_id:
+                        failures.append(
+                            f"preflight matrix envelope_id drift: {profile_id}"
+                        )
+                    if actual_result.get("status") != expected_result.get("status"):
+                        failures.append(
+                            f"preflight matrix overall status drift: {profile_id}/{envelope_id}"
+                        )
+                    expected_dims = expected_result.get("dimensions", {})
+                    actual_dims = actual_result.get("dimensions", {})
+                    if set(actual_dims) != set(expected_dims):
+                        failures.append(
+                            f"preflight matrix dimension set drift: {profile_id}/{envelope_id}"
+                        )
+                    for dim_name in expected_dims:
+                        if actual_dims.get(dim_name) != expected_dims.get(dim_name):
+                            failures.append(
+                                f"preflight matrix dimension drift: {profile_id}/{envelope_id}/{dim_name}"
+                            )
+                    for scalar_key in (
+                        "repository",
+                        "revision",
+                        "artifact_path",
+                        "profile_id",
+                        "acquisition_started",
+                    ):
+                        if actual_result.get(scalar_key) != expected_result.get(scalar_key):
+                            failures.append(
+                                f"preflight matrix result {scalar_key} drift: {profile_id}/{envelope_id}"
+                            )
+
+    if actual_canonical != expected_canonical and not failures:
+        failures.append("preflight matrix deep-compare mismatch")
+
     return failures
 
 
@@ -893,10 +1035,14 @@ def main() -> int:
     stored_matrix = read_json(ROLE_MATRIX) if ROLE_MATRIX.exists() else matrix
     failures = validate(snapshot, stored_inventory, stored_matrix)
     if args.preflight:
-        stored_preflight = (
-            read_json(PREFLIGHT_MATRIX) if PREFLIGHT_MATRIX.exists() else preflight
-        )
-        failures.extend(validate_preflight_matrix(snapshot, stored_preflight))
+        if not PREFLIGHT_MATRIX.exists():
+            failures.append(
+                "preflight matrix missing: model-profiles/catalogs/2026-08-14/"
+                "reference-machine-preflight-matrix.json is required"
+            )
+        else:
+            stored_preflight = read_json(PREFLIGHT_MATRIX)
+            failures.extend(validate_preflight_matrix(snapshot, stored_preflight))
     if failures:
         print("Sprint 14 candidate inventory: invalid")
         for failure in failures:
@@ -911,7 +1057,7 @@ def main() -> int:
         by_status = counts["by_status"]
         print(
             "Sprint 14 reference-machine preflight: "
-            f"{counts['source_entries']} entries against "
+            f"{counts['profiles']} exact artifact profiles against "
             f"{counts['envelopes']} envelopes; "
             f"CANDIDATE={by_status['CANDIDATE']}, "
             f"BLOCKED={by_status['BLOCKED']}, "

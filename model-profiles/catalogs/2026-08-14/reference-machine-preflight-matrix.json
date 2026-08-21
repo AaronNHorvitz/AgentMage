@@ -1,0 +1,2408 @@
+{
+  "acquisition_authorized": false,
+  "counts": {
+    "by_status": {
+      "BLOCKED": 0,
+      "BLOCKED-HARDWARE": 19,
+      "CANDIDATE": 6
+    },
+    "envelopes": 5,
+    "profiles": 5,
+    "results": 25
+  },
+  "entries": [
+    {
+      "artifact_path": "2b_pt_v2.gguf",
+      "profile_id": "google/gemma-2-2b-GGUF@df5cd638ad27cf1be1a6266c0618397f82e8787e#2b_pt_v2.gguf",
+      "repository": "google/gemma-2-2b-GGUF",
+      "results": [
+        {
+          "acquisition_started": false,
+          "artifact_path": "2b_pt_v2.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 3000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 4096,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 3000000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 6000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 4000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/gemma-2-2b-GGUF@df5cd638ad27cf1be1a6266c0618397f82e8787e#2b_pt_v2.gguf",
+          "repository": "google/gemma-2-2b-GGUF",
+          "revision": "df5cd638ad27cf1be1a6266c0618397f82e8787e",
+          "status": "CANDIDATE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "2b_pt_v2.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 3000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 4096,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 3000000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 6000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 4000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "docker-model-runner"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-docker-model-runner",
+          "profile_id": "google/gemma-2-2b-GGUF@df5cd638ad27cf1be1a6266c0618397f82e8787e#2b_pt_v2.gguf",
+          "repository": "google/gemma-2-2b-GGUF",
+          "revision": "df5cd638ad27cf1be1a6266c0618397f82e8787e",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "2b_pt_v2.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cpu",
+              "envelope_available_accelerator_bytes": 0,
+              "profile_required_accelerator_bytes": 0,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 8192,
+              "profile_context_tokens": 4096,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 274877906944,
+              "profile_required_bytes": 3000000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 68719476736,
+              "profile_required_working_set_bytes": 6000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 4000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            }
+          },
+          "envelope_id": "ubuntu-24-04-x86_64-cpu-llamacpp-native",
+          "profile_id": "google/gemma-2-2b-GGUF@df5cd638ad27cf1be1a6266c0618397f82e8787e#2b_pt_v2.gguf",
+          "repository": "google/gemma-2-2b-GGUF",
+          "revision": "df5cd638ad27cf1be1a6266c0618397f82e8787e",
+          "status": "CANDIDATE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "2b_pt_v2.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 17179869184,
+              "profile_required_accelerator_bytes": 3000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 4096,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 3000000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 85899345920,
+              "profile_required_working_set_bytes": 6000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 4000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            }
+          },
+          "envelope_id": "windows-11-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/gemma-2-2b-GGUF@df5cd638ad27cf1be1a6266c0618397f82e8787e#2b_pt_v2.gguf",
+          "repository": "google/gemma-2-2b-GGUF",
+          "revision": "df5cd638ad27cf1be1a6266c0618397f82e8787e",
+          "status": "CANDIDATE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "2b_pt_v2.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "metal",
+              "envelope_available_accelerator_bytes": 51539607552,
+              "profile_required_accelerator_bytes": 3000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "arm64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 4096,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 1099511627776,
+              "profile_required_bytes": 3000000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 103079215104,
+              "profile_required_working_set_bytes": 6000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            },
+            "memory": {
+              "envelope_available_bytes": 51539607552,
+              "profile_required_bytes": 4000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            }
+          },
+          "envelope_id": "macbook-pro-m5-arm64-metal-llamacpp-native",
+          "profile_id": "google/gemma-2-2b-GGUF@df5cd638ad27cf1be1a6266c0618397f82e8787e#2b_pt_v2.gguf",
+          "repository": "google/gemma-2-2b-GGUF",
+          "revision": "df5cd638ad27cf1be1a6266c0618397f82e8787e",
+          "status": "CANDIDATE"
+        }
+      ],
+      "revision": "df5cd638ad27cf1be1a6266c0618397f82e8787e"
+    },
+    {
+      "artifact_path": "codegemma-7b-it-f16.gguf",
+      "profile_id": "google/codegemma-7b-it-GGUF@29ea2a44db5fd40a502119a477664692f2f04d0d#codegemma-7b-it-f16.gguf",
+      "repository": "google/codegemma-7b-it-GGUF",
+      "results": [
+        {
+          "acquisition_started": false,
+          "artifact_path": "codegemma-7b-it-f16.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 18000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 16384,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 18500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 24000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 20000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/codegemma-7b-it-GGUF@29ea2a44db5fd40a502119a477664692f2f04d0d#codegemma-7b-it-f16.gguf",
+          "repository": "google/codegemma-7b-it-GGUF",
+          "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d",
+          "status": "CANDIDATE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "codegemma-7b-it-f16.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 18000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 16384,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 18500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 24000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 20000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "docker-model-runner"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-docker-model-runner",
+          "profile_id": "google/codegemma-7b-it-GGUF@29ea2a44db5fd40a502119a477664692f2f04d0d#codegemma-7b-it-f16.gguf",
+          "repository": "google/codegemma-7b-it-GGUF",
+          "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "codegemma-7b-it-f16.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cpu",
+              "envelope_available_accelerator_bytes": 0,
+              "profile_required_accelerator_bytes": 0,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 8192,
+              "profile_context_tokens": 16384,
+              "status": "BLOCKED-HARDWARE"
+            },
+            "disk": {
+              "envelope_available_bytes": 274877906944,
+              "profile_required_bytes": 18500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 68719476736,
+              "profile_required_working_set_bytes": 24000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 20000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            }
+          },
+          "envelope_id": "ubuntu-24-04-x86_64-cpu-llamacpp-native",
+          "profile_id": "google/codegemma-7b-it-GGUF@29ea2a44db5fd40a502119a477664692f2f04d0d#codegemma-7b-it-f16.gguf",
+          "repository": "google/codegemma-7b-it-GGUF",
+          "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "codegemma-7b-it-f16.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 17179869184,
+              "profile_required_accelerator_bytes": 18000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 16384,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 18500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 85899345920,
+              "profile_required_working_set_bytes": 24000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 20000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            }
+          },
+          "envelope_id": "windows-11-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/codegemma-7b-it-GGUF@29ea2a44db5fd40a502119a477664692f2f04d0d#codegemma-7b-it-f16.gguf",
+          "repository": "google/codegemma-7b-it-GGUF",
+          "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "codegemma-7b-it-f16.gguf",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "metal",
+              "envelope_available_accelerator_bytes": 51539607552,
+              "profile_required_accelerator_bytes": 18000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "arm64",
+              "profile_architectures": [
+                "architecture-neutral"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 16384,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 1099511627776,
+              "profile_required_bytes": 18500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 103079215104,
+              "profile_required_working_set_bytes": 24000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            },
+            "memory": {
+              "envelope_available_bytes": 51539607552,
+              "profile_required_bytes": 20000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": {
+                "artifact_format": "GGUF",
+                "runtime_family": "llama.cpp"
+              },
+              "profile_bindings": [
+                {
+                  "artifact_format": "GGUF",
+                  "runtime_family": "llama.cpp"
+                }
+              ],
+              "status": "CANDIDATE"
+            }
+          },
+          "envelope_id": "macbook-pro-m5-arm64-metal-llamacpp-native",
+          "profile_id": "google/codegemma-7b-it-GGUF@29ea2a44db5fd40a502119a477664692f2f04d0d#codegemma-7b-it-f16.gguf",
+          "repository": "google/codegemma-7b-it-GGUF",
+          "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d",
+          "status": "CANDIDATE"
+        }
+      ],
+      "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d"
+    },
+    {
+      "artifact_path": "model-00001-of-00002.safetensors",
+      "profile_id": "google/gemma-2-2b-it@299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8#model-00001-of-00002.safetensors",
+      "repository": "google/gemma-2-2b-it",
+      "results": [
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 6000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 5500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 10000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 8000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/gemma-2-2b-it@299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8#model-00001-of-00002.safetensors",
+          "repository": "google/gemma-2-2b-it",
+          "revision": "299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 6000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 5500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 10000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 8000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "docker-model-runner"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-docker-model-runner",
+          "profile_id": "google/gemma-2-2b-it@299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8#model-00001-of-00002.safetensors",
+          "repository": "google/gemma-2-2b-it",
+          "revision": "299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cpu",
+              "envelope_available_accelerator_bytes": 0,
+              "profile_required_accelerator_bytes": 0,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 8192,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 274877906944,
+              "profile_required_bytes": 5500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 68719476736,
+              "profile_required_working_set_bytes": 10000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 8000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "ubuntu-24-04-x86_64-cpu-llamacpp-native",
+          "profile_id": "google/gemma-2-2b-it@299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8#model-00001-of-00002.safetensors",
+          "repository": "google/gemma-2-2b-it",
+          "revision": "299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 17179869184,
+              "profile_required_accelerator_bytes": 6000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 5500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 85899345920,
+              "profile_required_working_set_bytes": 10000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 8000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "windows-11-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/gemma-2-2b-it@299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8#model-00001-of-00002.safetensors",
+          "repository": "google/gemma-2-2b-it",
+          "revision": "299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "metal",
+              "envelope_available_accelerator_bytes": 51539607552,
+              "profile_required_accelerator_bytes": 6000000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda"
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "architecture": {
+              "envelope_architecture": "arm64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 1099511627776,
+              "profile_required_bytes": 5500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 103079215104,
+              "profile_required_working_set_bytes": 10000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 51539607552,
+              "profile_required_bytes": 8000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "text-generation",
+              "status": "CANDIDATE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "macbook-pro-m5-arm64-metal-llamacpp-native",
+          "profile_id": "google/gemma-2-2b-it@299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8#model-00001-of-00002.safetensors",
+          "repository": "google/gemma-2-2b-it",
+          "revision": "299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8",
+          "status": "BLOCKED-HARDWARE"
+        }
+      ],
+      "revision": "299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8"
+    },
+    {
+      "artifact_path": "model-00001-of-00002.safetensors",
+      "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00002.safetensors",
+      "repository": "google/paligemma-3b-mix-448",
+      "results": [
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 8000000000,
+              "profile_supported_accelerations": [
+                "cuda"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 6500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 14000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 12000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "image-text-to-text",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00002.safetensors",
+          "repository": "google/paligemma-3b-mix-448",
+          "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 8000000000,
+              "profile_supported_accelerations": [
+                "cuda"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 6500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 14000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 12000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "image-text-to-text",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "docker-model-runner"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-docker-model-runner",
+          "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00002.safetensors",
+          "repository": "google/paligemma-3b-mix-448",
+          "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cpu",
+              "envelope_available_accelerator_bytes": 0,
+              "profile_required_accelerator_bytes": 8000000000,
+              "profile_supported_accelerations": [
+                "cuda"
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 8192,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 274877906944,
+              "profile_required_bytes": 6500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 68719476736,
+              "profile_required_working_set_bytes": 14000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 12000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "image-text-to-text",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "ubuntu-24-04-x86_64-cpu-llamacpp-native",
+          "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00002.safetensors",
+          "repository": "google/paligemma-3b-mix-448",
+          "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 17179869184,
+              "profile_required_accelerator_bytes": 8000000000,
+              "profile_supported_accelerations": [
+                "cuda"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 6500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 85899345920,
+              "profile_required_working_set_bytes": 14000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 12000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "image-text-to-text",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "windows-11-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00002.safetensors",
+          "repository": "google/paligemma-3b-mix-448",
+          "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model-00001-of-00002.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "metal",
+              "envelope_available_accelerator_bytes": 51539607552,
+              "profile_required_accelerator_bytes": 8000000000,
+              "profile_supported_accelerations": [
+                "cuda"
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "architecture": {
+              "envelope_architecture": "arm64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 8192,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 1099511627776,
+              "profile_required_bytes": 6500000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 103079215104,
+              "profile_required_working_set_bytes": 14000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 51539607552,
+              "profile_required_bytes": 12000000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "image-text-to-text",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "macbook-pro-m5-arm64-metal-llamacpp-native",
+          "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00002.safetensors",
+          "repository": "google/paligemma-3b-mix-448",
+          "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1",
+          "status": "BLOCKED-HARDWARE"
+        }
+      ],
+      "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1"
+    },
+    {
+      "artifact_path": "model.safetensors",
+      "profile_id": "google/embeddinggemma-300m@57c266a740f537b4dc058e1b0cda161fd15afa75#model.safetensors",
+      "repository": "google/embeddinggemma-300m",
+      "results": [
+        {
+          "acquisition_started": false,
+          "artifact_path": "model.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 900000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 2048,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 700000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 2000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 1500000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "sentence-similarity",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/embeddinggemma-300m@57c266a740f537b4dc058e1b0cda161fd15afa75#model.safetensors",
+          "repository": "google/embeddinggemma-300m",
+          "revision": "57c266a740f537b4dc058e1b0cda161fd15afa75",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 25769803776,
+              "profile_required_accelerator_bytes": 900000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 32768,
+              "profile_context_tokens": 2048,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 700000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 163208757248,
+              "profile_required_working_set_bytes": 2000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 137438953472,
+              "profile_required_bytes": 1500000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "sentence-similarity",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "docker-model-runner"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "fedora-kinoite-44-x86_64-cuda-docker-model-runner",
+          "profile_id": "google/embeddinggemma-300m@57c266a740f537b4dc058e1b0cda161fd15afa75#model.safetensors",
+          "repository": "google/embeddinggemma-300m",
+          "revision": "57c266a740f537b4dc058e1b0cda161fd15afa75",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cpu",
+              "envelope_available_accelerator_bytes": 0,
+              "profile_required_accelerator_bytes": 0,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 8192,
+              "profile_context_tokens": 2048,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 274877906944,
+              "profile_required_bytes": 700000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 68719476736,
+              "profile_required_working_set_bytes": 2000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 1500000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "sentence-similarity",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "ubuntu-24-04-x86_64-cpu-llamacpp-native",
+          "profile_id": "google/embeddinggemma-300m@57c266a740f537b4dc058e1b0cda161fd15afa75#model.safetensors",
+          "repository": "google/embeddinggemma-300m",
+          "revision": "57c266a740f537b4dc058e1b0cda161fd15afa75",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "cuda",
+              "envelope_available_accelerator_bytes": 17179869184,
+              "profile_required_accelerator_bytes": 900000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "x86_64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 2048,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 549755813888,
+              "profile_required_bytes": 700000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 85899345920,
+              "profile_required_working_set_bytes": 2000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 68719476736,
+              "profile_required_bytes": 1500000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "sentence-similarity",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "windows-11-x86_64-cuda-llamacpp-native",
+          "profile_id": "google/embeddinggemma-300m@57c266a740f537b4dc058e1b0cda161fd15afa75#model.safetensors",
+          "repository": "google/embeddinggemma-300m",
+          "revision": "57c266a740f537b4dc058e1b0cda161fd15afa75",
+          "status": "BLOCKED-HARDWARE"
+        },
+        {
+          "acquisition_started": false,
+          "artifact_path": "model.safetensors",
+          "dimensions": {
+            "acceleration": {
+              "envelope_acceleration": "metal",
+              "envelope_available_accelerator_bytes": 51539607552,
+              "profile_required_accelerator_bytes": 900000000,
+              "profile_supported_accelerations": [
+                "cpu",
+                "cuda",
+                "metal"
+              ],
+              "status": "CANDIDATE"
+            },
+            "architecture": {
+              "envelope_architecture": "arm64",
+              "profile_architectures": [
+                "arm64",
+                "x86_64"
+              ],
+              "status": "CANDIDATE"
+            },
+            "context": {
+              "envelope_maximum_context_tokens": 16384,
+              "profile_context_tokens": 2048,
+              "status": "CANDIDATE"
+            },
+            "disk": {
+              "envelope_available_bytes": 1099511627776,
+              "profile_required_bytes": 700000000,
+              "status": "CANDIDATE"
+            },
+            "expected_working_set": {
+              "envelope_available_working_set_bytes": 103079215104,
+              "profile_required_working_set_bytes": 2000000000,
+              "status": "CANDIDATE"
+            },
+            "format": {
+              "envelope_supported_formats": [
+                "GGUF"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            },
+            "memory": {
+              "envelope_available_bytes": 51539607552,
+              "profile_required_bytes": 1500000000,
+              "status": "CANDIDATE"
+            },
+            "modality": {
+              "envelope_supported_modalities": [
+                "text-generation"
+              ],
+              "profile_modality": "sentence-similarity",
+              "status": "BLOCKED-HARDWARE"
+            },
+            "runtime": {
+              "envelope_supported_runtime_families": [
+                "llama.cpp"
+              ],
+              "matched_binding": null,
+              "profile_bindings": [
+                {
+                  "artifact_format": "safetensors",
+                  "runtime_family": "sentence-transformers"
+                }
+              ],
+              "status": "BLOCKED-HARDWARE"
+            }
+          },
+          "envelope_id": "macbook-pro-m5-arm64-metal-llamacpp-native",
+          "profile_id": "google/embeddinggemma-300m@57c266a740f537b4dc058e1b0cda161fd15afa75#model.safetensors",
+          "repository": "google/embeddinggemma-300m",
+          "revision": "57c266a740f537b4dc058e1b0cda161fd15afa75",
+          "status": "BLOCKED-HARDWARE"
+        }
+      ],
+      "revision": "57c266a740f537b4dc058e1b0cda161fd15afa75"
+    }
+  ],
+  "envelope_count": 5,
+  "envelopes": [
+    {
+      "acceleration": "cuda",
+      "adapter_gate": "native-security-reference",
+      "architecture": "x86_64",
+      "available_accelerator_bytes": 25769803776,
+      "available_disk_bytes": 549755813888,
+      "available_memory_bytes": 137438953472,
+      "envelope_id": "fedora-kinoite-44-x86_64-cuda-llamacpp-native",
+      "maximum_context_tokens": 32768,
+      "platform": "Fedora Kinoite 44 x86_64",
+      "profile_source": "README.md#platform-support",
+      "runtime_family": "llama.cpp",
+      "supported_artifact_formats": [
+        "GGUF"
+      ],
+      "supported_modalities": [
+        "text-generation"
+      ],
+      "supported_runtime_families": [
+        "llama.cpp"
+      ]
+    },
+    {
+      "acceleration": "cuda",
+      "adapter_gate": "separately-gated-compatibility-adapter",
+      "architecture": "x86_64",
+      "available_accelerator_bytes": 25769803776,
+      "available_disk_bytes": 549755813888,
+      "available_memory_bytes": 137438953472,
+      "envelope_id": "fedora-kinoite-44-x86_64-cuda-docker-model-runner",
+      "maximum_context_tokens": 32768,
+      "platform": "Fedora Kinoite 44 x86_64",
+      "profile_source": "PRD.md#7.2-fedora-and-ubuntu-runtime",
+      "runtime_family": "docker-model-runner",
+      "supported_artifact_formats": [
+        "GGUF"
+      ],
+      "supported_modalities": [
+        "text-generation"
+      ],
+      "supported_runtime_families": [
+        "docker-model-runner"
+      ]
+    },
+    {
+      "acceleration": "cpu",
+      "adapter_gate": "native-security-reference",
+      "architecture": "x86_64",
+      "available_accelerator_bytes": 0,
+      "available_disk_bytes": 274877906944,
+      "available_memory_bytes": 68719476736,
+      "envelope_id": "ubuntu-24-04-x86_64-cpu-llamacpp-native",
+      "maximum_context_tokens": 8192,
+      "platform": "Ubuntu 24.04 x86_64",
+      "profile_source": "README.md#platform-support",
+      "runtime_family": "llama.cpp",
+      "supported_artifact_formats": [
+        "GGUF"
+      ],
+      "supported_modalities": [
+        "text-generation"
+      ],
+      "supported_runtime_families": [
+        "llama.cpp"
+      ]
+    },
+    {
+      "acceleration": "cuda",
+      "adapter_gate": "native-only-docker-inference-disabled",
+      "architecture": "x86_64",
+      "available_accelerator_bytes": 17179869184,
+      "available_disk_bytes": 549755813888,
+      "available_memory_bytes": 68719476736,
+      "envelope_id": "windows-11-x86_64-cuda-llamacpp-native",
+      "maximum_context_tokens": 16384,
+      "platform": "Windows 11 x64",
+      "profile_source": "PRD.md#24-windows-11-first-ga-scope",
+      "runtime_family": "llama.cpp",
+      "supported_artifact_formats": [
+        "GGUF"
+      ],
+      "supported_modalities": [
+        "text-generation"
+      ],
+      "supported_runtime_families": [
+        "llama.cpp"
+      ]
+    },
+    {
+      "acceleration": "metal",
+      "adapter_gate": "post-ga-blocked-macos-until-hardware-evidence",
+      "architecture": "arm64",
+      "available_accelerator_bytes": 51539607552,
+      "available_disk_bytes": 1099511627776,
+      "available_memory_bytes": 51539607552,
+      "envelope_id": "macbook-pro-m5-arm64-metal-llamacpp-native",
+      "maximum_context_tokens": 16384,
+      "platform": "MacBook Pro M5 (Apple Silicon)",
+      "profile_source": "README.md#platform-support",
+      "runtime_family": "llama.cpp",
+      "supported_artifact_formats": [
+        "GGUF"
+      ],
+      "supported_modalities": [
+        "text-generation"
+      ],
+      "supported_runtime_families": [
+        "llama.cpp"
+      ]
+    }
+  ],
+  "frozen_on": "2026-08-14",
+  "profile_count": 5,
+  "profiles": [
+    {
+      "architectures": [
+        "architecture-neutral"
+      ],
+      "artifact_path": "2b_pt_v2.gguf",
+      "artifact_size_bytes": 2600000000,
+      "context_tokens": 4096,
+      "expected_working_set_bytes": 6000000000,
+      "modality": "text-generation",
+      "profile_id": "google/gemma-2-2b-GGUF@df5cd638ad27cf1be1a6266c0618397f82e8787e#2b_pt_v2.gguf",
+      "repository": "google/gemma-2-2b-GGUF",
+      "required_accelerator_bytes": 3000000000,
+      "required_disk_bytes": 3000000000,
+      "required_memory_bytes": 4000000000,
+      "revision": "df5cd638ad27cf1be1a6266c0618397f82e8787e",
+      "runtime_bindings": [
+        {
+          "artifact_format": "GGUF",
+          "runtime_family": "llama.cpp"
+        }
+      ],
+      "supported_accelerations": [
+        "cpu",
+        "cuda",
+        "metal"
+      ]
+    },
+    {
+      "architectures": [
+        "architecture-neutral"
+      ],
+      "artifact_path": "codegemma-7b-it-f16.gguf",
+      "artifact_size_bytes": 17100000000,
+      "context_tokens": 16384,
+      "expected_working_set_bytes": 24000000000,
+      "modality": "text-generation",
+      "profile_id": "google/codegemma-7b-it-GGUF@29ea2a44db5fd40a502119a477664692f2f04d0d#codegemma-7b-it-f16.gguf",
+      "repository": "google/codegemma-7b-it-GGUF",
+      "required_accelerator_bytes": 18000000000,
+      "required_disk_bytes": 18500000000,
+      "required_memory_bytes": 20000000000,
+      "revision": "29ea2a44db5fd40a502119a477664692f2f04d0d",
+      "runtime_bindings": [
+        {
+          "artifact_format": "GGUF",
+          "runtime_family": "llama.cpp"
+        }
+      ],
+      "supported_accelerations": [
+        "cpu",
+        "cuda",
+        "metal"
+      ]
+    },
+    {
+      "architectures": [
+        "arm64",
+        "x86_64"
+      ],
+      "artifact_path": "model-00001-of-00002.safetensors",
+      "artifact_size_bytes": 4900000000,
+      "context_tokens": 8192,
+      "expected_working_set_bytes": 10000000000,
+      "modality": "text-generation",
+      "profile_id": "google/gemma-2-2b-it@299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8#model-00001-of-00002.safetensors",
+      "repository": "google/gemma-2-2b-it",
+      "required_accelerator_bytes": 6000000000,
+      "required_disk_bytes": 5500000000,
+      "required_memory_bytes": 8000000000,
+      "revision": "299a8560bedf22ed1c72a8a11e7dce4a7f9f51f8",
+      "runtime_bindings": [
+        {
+          "artifact_format": "safetensors",
+          "runtime_family": "transformers"
+        }
+      ],
+      "supported_accelerations": [
+        "cpu",
+        "cuda"
+      ]
+    },
+    {
+      "architectures": [
+        "arm64",
+        "x86_64"
+      ],
+      "artifact_path": "model-00001-of-00002.safetensors",
+      "artifact_size_bytes": 5800000000,
+      "context_tokens": 8192,
+      "expected_working_set_bytes": 14000000000,
+      "modality": "image-text-to-text",
+      "profile_id": "google/paligemma-3b-mix-448@ead2d9a35598cb89119af004f5d023b311d1c4a1#model-00001-of-00002.safetensors",
+      "repository": "google/paligemma-3b-mix-448",
+      "required_accelerator_bytes": 8000000000,
+      "required_disk_bytes": 6500000000,
+      "required_memory_bytes": 12000000000,
+      "revision": "ead2d9a35598cb89119af004f5d023b311d1c4a1",
+      "runtime_bindings": [
+        {
+          "artifact_format": "safetensors",
+          "runtime_family": "transformers"
+        }
+      ],
+      "supported_accelerations": [
+        "cuda"
+      ]
+    },
+    {
+      "architectures": [
+        "arm64",
+        "x86_64"
+      ],
+      "artifact_path": "model.safetensors",
+      "artifact_size_bytes": 620000000,
+      "context_tokens": 2048,
+      "expected_working_set_bytes": 2000000000,
+      "modality": "sentence-similarity",
+      "profile_id": "google/embeddinggemma-300m@57c266a740f537b4dc058e1b0cda161fd15afa75#model.safetensors",
+      "repository": "google/embeddinggemma-300m",
+      "required_accelerator_bytes": 900000000,
+      "required_disk_bytes": 700000000,
+      "required_memory_bytes": 1500000000,
+      "revision": "57c266a740f537b4dc058e1b0cda161fd15afa75",
+      "runtime_bindings": [
+        {
+          "artifact_format": "safetensors",
+          "runtime_family": "sentence-transformers"
+        }
+      ],
+      "supported_accelerations": [
+        "cpu",
+        "cuda",
+        "metal"
+      ]
+    }
+  ],
+  "record_type": "reference_machine_preflight_matrix",
+  "schema_version": 1,
+  "source_snapshot_sha256": "665be56bcad7dd3c4542d553f7c5fa9691a6c322afba1e2f700ffd5da7f2082d"
+}
