@@ -247,7 +247,7 @@ has been deleted or unmounted:
   the 64-character lowercase hexadecimal SHA-256 of that installed signed
   component at rest. The `model_installer` entry names the signed installer
   or importer required by the `ModelInstallation` capability under
-  [`RUNTIME-BOUNDARIES.md`](../../../docs/architecture/RUNTIME-BOUNDARIES.md);
+  [`RUNTIME-BOUNDARIES.md`](../../../RUNTIME-BOUNDARIES.md);
   the `vscode_extension` entry names the signed Visual Studio Code
   extension bundle shipped alongside the bridge. The inventory has exactly
   two members; no additional signed component may be added, removed,
