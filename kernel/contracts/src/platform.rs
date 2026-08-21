@@ -70,6 +70,84 @@ pub const REQUIRED_PLATFORM_CAPABILITIES: [PlatformCapability; 10] = [
     PlatformCapability::NetworkIsolation,
 ];
 
+/// One reserved wire field of the frozen macOS signed release manifest schema.
+///
+/// macOS platform activation is not yet implemented, but the future Apple
+/// Silicon signed release manifest carries a fixed set of macOS-only fields in
+/// addition to the shared signed-release schema. The set is closed: any change
+/// requires a bumped adapter API version.
+#[allow(dead_code)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum MacOsManifestField {
+    /// Digest of the exact macOS SoftwareUpdate build identity.
+    PlatformBuildSha256,
+    /// Frozen processor architecture, always Apple Silicon `aarch64`.
+    Architecture,
+    /// Digest of the pinned macOS product toolchain identity.
+    ToolchainSha256,
+    /// Apple Developer Team identifier that signed the release.
+    TeamId,
+    /// Host application bundle identifier.
+    HostBundleId,
+    /// XPC helper bundle identifier.
+    HelperBundleId,
+    /// Shared App Group identifier joining the host and helper.
+    AppGroup,
+    /// Digest of the host application's entitlements plist.
+    HostEntitlementsSha256,
+    /// Digest of the XPC helper's entitlements plist.
+    HelperEntitlementsSha256,
+    /// Digest of the codesign designated requirement expression.
+    DesignatedRequirementSha256,
+    /// Digest of every packaged helper binary code-directory hash set.
+    HelperHashes,
+    /// Digest of the installed macOS package archive.
+    PackageSha256,
+    /// Digest of the supported Visual Studio Code build identity.
+    VscodeBuildSha256,
+}
+
+impl MacOsManifestField {
+    /// Returns the stable wire name of the frozen manifest field.
+    #[allow(dead_code)]
+    #[must_use]
+    pub const fn wire_name(self) -> &'static str {
+        match self {
+            Self::PlatformBuildSha256 => "platform_build_sha256",
+            Self::Architecture => "architecture",
+            Self::ToolchainSha256 => "toolchain_sha256",
+            Self::TeamId => "team_id",
+            Self::HostBundleId => "host_bundle_id",
+            Self::HelperBundleId => "helper_bundle_id",
+            Self::AppGroup => "app_group",
+            Self::HostEntitlementsSha256 => "host_entitlements_sha256",
+            Self::HelperEntitlementsSha256 => "helper_entitlements_sha256",
+            Self::DesignatedRequirementSha256 => "designated_requirement_sha256",
+            Self::HelperHashes => "helper_hashes",
+            Self::PackageSha256 => "package_sha256",
+            Self::VscodeBuildSha256 => "vscode_build_sha256",
+        }
+    }
+}
+
+/// Frozen ordered wire fields required by every future macOS signed release manifest.
+#[allow(dead_code)]
+pub const FROZEN_MACOS_MANIFEST_FIELDS: [MacOsManifestField; 13] = [
+    MacOsManifestField::PlatformBuildSha256,
+    MacOsManifestField::Architecture,
+    MacOsManifestField::ToolchainSha256,
+    MacOsManifestField::TeamId,
+    MacOsManifestField::HostBundleId,
+    MacOsManifestField::HelperBundleId,
+    MacOsManifestField::AppGroup,
+    MacOsManifestField::HostEntitlementsSha256,
+    MacOsManifestField::HelperEntitlementsSha256,
+    MacOsManifestField::DesignatedRequirementSha256,
+    MacOsManifestField::HelperHashes,
+    MacOsManifestField::PackageSha256,
+    MacOsManifestField::VscodeBuildSha256,
+];
+
 /// Allowlisted runtime identity compared with one release manifest before startup.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlatformRuntimeIdentity {
@@ -353,4 +431,46 @@ pub trait PlatformAdapter: fmt::Debug + Send + Sync {
 
     /// Probes one required capability without accessing a workspace.
     fn probe_capability(&self, capability: PlatformCapability) -> PlatformCapabilityObservation;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{FROZEN_MACOS_MANIFEST_FIELDS, MacOsManifestField};
+
+    #[test]
+    fn frozen_macos_manifest_fields_are_stable_and_ordered() {
+        let expected: [&'static str; 13] = [
+            "platform_build_sha256",
+            "architecture",
+            "toolchain_sha256",
+            "team_id",
+            "host_bundle_id",
+            "helper_bundle_id",
+            "app_group",
+            "host_entitlements_sha256",
+            "helper_entitlements_sha256",
+            "designated_requirement_sha256",
+            "helper_hashes",
+            "package_sha256",
+            "vscode_build_sha256",
+        ];
+        let actual = FROZEN_MACOS_MANIFEST_FIELDS.map(MacOsManifestField::wire_name);
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn frozen_macos_manifest_field_wire_names_are_unique() {
+        let mut names: Vec<&'static str> = FROZEN_MACOS_MANIFEST_FIELDS
+            .iter()
+            .copied()
+            .map(MacOsManifestField::wire_name)
+            .collect();
+        names.sort_unstable();
+        let unique_count = {
+            let mut deduped = names.clone();
+            deduped.dedup();
+            deduped.len()
+        };
+        assert_eq!(unique_count, FROZEN_MACOS_MANIFEST_FIELDS.len());
+    }
 }

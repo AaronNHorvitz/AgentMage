@@ -29,3 +29,29 @@ This directory intentionally contains no manifest JSON, signature, private key,
 or claimed release identity. Such files may be added only by the later reviewed
 release pipeline and must represent the exact package and native evidence under
 review.
+
+## Frozen macOS-only fields
+
+macOS platform activation is not yet implemented. Every future
+`platform_family: "macos-apple-silicon"` manifest must carry the shared
+signed-release fields plus every field in `FROZEN_MACOS_MANIFEST_FIELDS`
+(defined in the kernel contracts crate and enumerated in
+`docs/architecture/platform-adapter-contract.md`):
+
+- `platform_build_sha256`
+- `architecture` (frozen to `aarch64`)
+- `toolchain_sha256`
+- `team_id`
+- `host_bundle_id`
+- `helper_bundle_id`
+- `app_group`
+- `host_entitlements_sha256`
+- `helper_entitlements_sha256`
+- `designated_requirement_sha256`
+- `helper_hashes`
+- `package_sha256`
+- `vscode_build_sha256`
+
+No macOS signed release fixture is committed. The current verifier refuses
+every manifest whose `platform_family` is `macos-apple-silicon` with
+`ManifestUnsupported`, and macOS evidence cannot satisfy any Linux gate.

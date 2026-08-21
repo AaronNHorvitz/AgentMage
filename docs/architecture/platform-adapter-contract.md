@@ -134,6 +134,40 @@ Wrong capability order, foreign platform evidence, zero mechanisms, changed
 runtime fields, a substituted signer or signature, and an adapter that reports
 arbitrary `Verified` evidence all fail closed with content-free errors.
 
+## Frozen macOS Manifest Fields
+
+macOS platform activation is not yet implemented, but its future Apple Silicon
+signed release manifest schema is frozen so that a later implementation cannot
+silently reshape the wire format. The kernel contracts crate defines
+`MacOsManifestField` and the ordered `FROZEN_MACOS_MANIFEST_FIELDS` constant,
+and the crate's contract tests fix their wire names, count, and order. Any
+macOS release manifest must carry the shared signed-release fields plus every
+frozen macOS field in the declared order; adding, removing, or renaming a
+field requires a new adapter API version.
+
+| Wire field | Bound content |
+| --- | --- |
+| `platform_build_sha256` | Digest of the exact macOS SoftwareUpdate build identity |
+| `architecture` | Frozen to Apple Silicon `aarch64` |
+| `toolchain_sha256` | Digest of the pinned macOS product toolchain identity |
+| `team_id` | Apple Developer Team identifier that signed the release |
+| `host_bundle_id` | Host application bundle identifier |
+| `helper_bundle_id` | XPC helper bundle identifier |
+| `app_group` | Shared App Group identifier joining host and helper |
+| `host_entitlements_sha256` | Digest of the host entitlements plist |
+| `helper_entitlements_sha256` | Digest of the helper entitlements plist |
+| `designated_requirement_sha256` | Digest of the codesign designated requirement expression |
+| `helper_hashes` | Digest of every packaged helper binary code-directory hash set |
+| `package_sha256` | Digest of the installed macOS package archive |
+| `vscode_build_sha256` | Digest of the supported Visual Studio Code build identity |
+
+`verify_platform_release` continues to refuse any manifest whose
+`platform_family` is `macos-apple-silicon` with `ManifestUnsupported` and never
+accepts a macOS payload against a Linux target. macOS evidence therefore
+cannot satisfy any Linux gate, and no future macOS adapter may activate
+without a manifest that carries every one of the fields above in the frozen
+order.
+
 ## Dependency and Evidence Limits
 
 Maintainer signing dependencies, end-user runtime dependencies, and excluded

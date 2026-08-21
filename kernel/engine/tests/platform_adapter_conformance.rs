@@ -48,15 +48,7 @@ const fn capability_name(capability: PlatformCapability) -> &'static str {
     }
 }
 
-fn signed_release(
-    family: PlatformFamily,
-) -> agentmage_kernel_engine::platform_startup::VerifiedPlatformRelease {
-    let family_name = match family {
-        PlatformFamily::Fedora => "fedora",
-        PlatformFamily::Ubuntu => "ubuntu",
-        PlatformFamily::MacOsAppleSilicon => "macos-apple-silicon",
-        PlatformFamily::DeterministicFake => panic!("fake is not a signed release target"),
-    };
+fn signed_release_material(family_name: &str) -> (Vec<u8>, [u8; 64], [u8; 32]) {
     let capabilities: Vec<_> = REQUIRED_PLATFORM_CAPABILITIES
         .iter()
         .map(|capability| {
@@ -83,12 +75,24 @@ fn signed_release(
     let key = SigningKey::from_bytes(&[42; 32]);
     let mut material = SIGNATURE_DOMAIN.to_vec();
     material.extend_from_slice(&bytes);
-    verify_platform_release(
-        &bytes,
-        &key.sign(&material).to_bytes(),
-        &key.verifying_key().to_bytes(),
+    (
+        bytes,
+        key.sign(&material).to_bytes(),
+        key.verifying_key().to_bytes(),
     )
-    .expect("release verifies")
+}
+
+fn signed_release(
+    family: PlatformFamily,
+) -> agentmage_kernel_engine::platform_startup::VerifiedPlatformRelease {
+    let family_name = match family {
+        PlatformFamily::Fedora => "fedora",
+        PlatformFamily::Ubuntu => "ubuntu",
+        PlatformFamily::MacOsAppleSilicon => "macos-apple-silicon",
+        PlatformFamily::DeterministicFake => panic!("fake is not a signed release target"),
+    };
+    let (bytes, signature, key) = signed_release_material(family_name);
+    verify_platform_release(&bytes, &signature, &key).expect("release verifies")
 }
 
 fn adapter(family: PlatformFamily) -> ObservedAdapter {
@@ -131,5 +135,16 @@ fn signed_platform_identity_is_never_portable_between_adapters() {
         .expect_err("cross-platform activation")
         .kind(),
         PlatformStartupErrorKind::PlatformMismatch
+    );
+}
+
+#[test]
+fn frozen_macos_family_is_refused_at_release_verification() {
+    let (bytes, signature, key) = signed_release_material("macos-apple-silicon");
+    assert_eq!(
+        verify_platform_release(&bytes, &signature, &key)
+            .expect_err("macOS activation is frozen but unimplemented")
+            .kind(),
+        PlatformStartupErrorKind::ManifestUnsupported
     );
 }
