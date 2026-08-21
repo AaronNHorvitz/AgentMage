@@ -42,6 +42,86 @@ PROTECTED_SPECIALIST_MARKERS: Final = (
     "diffusiongemma",
 )
 
+PREFLIGHT_DIMENSIONS: Final = (
+    "architecture",
+    "runtime",
+    "format",
+    "acceleration",
+    "disk",
+    "memory",
+    "context",
+    "modality",
+    "expected_working_set",
+)
+
+PREFLIGHT_STATUSES: Final = {
+    "CANDIDATE",
+    "BLOCKED",
+    "BLOCKED-HARDWARE",
+}
+
+REFERENCE_MACHINE_ENVELOPES: Final = (
+    {
+        "envelope_id": "fedora-kinoite-44-x86_64-cuda",
+        "platform": "Fedora Kinoite 44 x86_64",
+        "architecture": "x86_64",
+        "acceleration": "cuda",
+        "supported_runtime_families": ("llama.cpp", "docker-model-runner", "vllm"),
+        "supported_artifact_formats": ("GGUF", "safetensors"),
+        "supported_modalities": ("text-generation", "image-text-to-text", "any-to-any"),
+        "available_disk_bytes": 512 * 1024**3,
+        "available_memory_bytes": 128 * 1024**3,
+        "available_accelerator_bytes": 24 * 1024**3,
+        "maximum_context_tokens": 32768,
+    },
+    {
+        "envelope_id": "ubuntu-24-04-x86_64-cpu",
+        "platform": "Ubuntu 24.04 x86_64",
+        "architecture": "x86_64",
+        "acceleration": "cpu",
+        "supported_runtime_families": ("llama.cpp",),
+        "supported_artifact_formats": ("GGUF",),
+        "supported_modalities": ("text-generation",),
+        "available_disk_bytes": 256 * 1024**3,
+        "available_memory_bytes": 64 * 1024**3,
+        "available_accelerator_bytes": 0,
+        "maximum_context_tokens": 8192,
+    },
+    {
+        "envelope_id": "windows-11-x86_64-cuda",
+        "platform": "Windows 11 x64",
+        "architecture": "x86_64",
+        "acceleration": "cuda",
+        "supported_runtime_families": ("llama.cpp", "docker-model-runner"),
+        "supported_artifact_formats": ("GGUF", "safetensors"),
+        "supported_modalities": ("text-generation", "image-text-to-text"),
+        "available_disk_bytes": 512 * 1024**3,
+        "available_memory_bytes": 64 * 1024**3,
+        "available_accelerator_bytes": 16 * 1024**3,
+        "maximum_context_tokens": 16384,
+    },
+    {
+        "envelope_id": "macbook-pro-m5-arm64-metal",
+        "platform": "MacBook Pro M5 (Apple Silicon)",
+        "architecture": "arm64",
+        "acceleration": "metal",
+        "supported_runtime_families": ("llama.cpp",),
+        "supported_artifact_formats": ("GGUF",),
+        "supported_modalities": ("text-generation", "image-text-to-text"),
+        "available_disk_bytes": 1024 * 1024**3,
+        "available_memory_bytes": 48 * 1024**3,
+        "available_accelerator_bytes": 48 * 1024**3,
+        "maximum_context_tokens": 16384,
+    },
+)
+
+_ARTIFACT_FORMAT_RUNTIME_FAMILY: Final = {
+    "GGUF": "llama.cpp",
+    "safetensors": "vllm",
+    "TFLite": "tflite",
+    "ExecuTorch-PTE": "executorch",
+}
+
 
 def canonical_bytes(value: object) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
@@ -417,6 +497,154 @@ def normalize(snapshot: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
     return inventory, matrix
 
 
+def reference_machine_preflight(
+    source_entry: dict[str, Any], envelope: dict[str, Any]
+) -> dict[str, Any]:
+    formats = artifact_formats(source_entry.get("artifact_listing", []))
+    pipeline = source_entry.get("pipeline_tag")
+    modalities = [pipeline] if pipeline else []
+    library = source_entry.get("library_name")
+    repository = str(source_entry.get("id") or source_entry.get("repository", ""))
+    envelope_formats = set(envelope["supported_artifact_formats"])
+    envelope_runtimes = set(envelope["supported_runtime_families"])
+    envelope_modalities = set(envelope["supported_modalities"])
+
+    dimensions: dict[str, dict[str, Any]] = {}
+
+    dimensions["architecture"] = {
+        "status": "CANDIDATE",
+        "envelope_value": envelope["architecture"],
+        "note": "envelope-declared; artifact runs in envelope's native architecture",
+    }
+
+    if not formats:
+        dimensions["format"] = {
+            "status": "BLOCKED",
+            "reason": "runtime-artifact-format-unresolved",
+        }
+    else:
+        compatible_formats = sorted(f for f in formats if f in envelope_formats)
+        dimensions["format"] = {
+            "status": "CANDIDATE" if compatible_formats else "BLOCKED-HARDWARE",
+            "candidate_formats": sorted(formats),
+            "envelope_supported_formats": sorted(envelope_formats),
+            "compatible_formats": compatible_formats,
+        }
+
+    runtime_families = sorted(
+        {_ARTIFACT_FORMAT_RUNTIME_FAMILY[f] for f in formats if f in _ARTIFACT_FORMAT_RUNTIME_FAMILY}
+    )
+    if not runtime_families:
+        dimensions["runtime"] = {
+            "status": "BLOCKED",
+            "reason": "runtime-family-not-derivable-until-exact-artifact-admission",
+            "library_hint": library,
+        }
+    else:
+        compatible_runtimes = sorted(r for r in runtime_families if r in envelope_runtimes)
+        dimensions["runtime"] = {
+            "status": "CANDIDATE" if compatible_runtimes else "BLOCKED-HARDWARE",
+            "candidate_runtime_families": runtime_families,
+            "envelope_supported_runtime_families": sorted(envelope_runtimes),
+            "compatible_runtime_families": compatible_runtimes,
+        }
+
+    if envelope["available_accelerator_bytes"] <= 0:
+        dimensions["acceleration"] = {
+            "status": "BLOCKED-HARDWARE" if envelope["acceleration"] != "cpu" else "CANDIDATE",
+            "envelope_acceleration": envelope["acceleration"],
+            "envelope_accelerator_bytes": envelope["available_accelerator_bytes"],
+        }
+    else:
+        dimensions["acceleration"] = {
+            "status": "BLOCKED",
+            "reason": "accelerator-fit-requires-exact-artifact-admission",
+            "envelope_acceleration": envelope["acceleration"],
+            "envelope_accelerator_bytes": envelope["available_accelerator_bytes"],
+        }
+
+    for dimension_name, envelope_key in (
+        ("disk", "available_disk_bytes"),
+        ("memory", "available_memory_bytes"),
+    ):
+        dimensions[dimension_name] = {
+            "status": "BLOCKED",
+            "reason": "size-requires-exact-artifact-admission",
+            "envelope_available_bytes": envelope[envelope_key],
+        }
+
+    dimensions["context"] = {
+        "status": "BLOCKED",
+        "reason": "context-window-requires-exact-artifact-admission",
+        "envelope_maximum_context_tokens": envelope["maximum_context_tokens"],
+    }
+
+    if not modalities:
+        dimensions["modality"] = {
+            "status": "BLOCKED",
+            "reason": "modality-unresolved-at-source",
+        }
+    else:
+        compatible_modalities = sorted(m for m in modalities if m in envelope_modalities)
+        dimensions["modality"] = {
+            "status": "CANDIDATE" if compatible_modalities else "BLOCKED-HARDWARE",
+            "candidate_modalities": sorted(modalities),
+            "envelope_supported_modalities": sorted(envelope_modalities),
+            "compatible_modalities": compatible_modalities,
+        }
+
+    dimensions["expected_working_set"] = {
+        "status": "BLOCKED",
+        "reason": "working-set-requires-exact-artifact-admission",
+    }
+
+    statuses = {dim["status"] for dim in dimensions.values()}
+    if "BLOCKED-HARDWARE" in statuses:
+        overall = "BLOCKED-HARDWARE"
+    elif "BLOCKED" in statuses:
+        overall = "BLOCKED"
+    else:
+        overall = "CANDIDATE"
+
+    return {
+        "envelope_id": envelope["envelope_id"],
+        "repository": repository,
+        "acquisition_started": False,
+        "status": overall,
+        "dimensions": dimensions,
+    }
+
+
+def preflight_matrix(
+    snapshot: dict[str, Any],
+    envelopes: tuple[dict[str, Any], ...] = REFERENCE_MACHINE_ENVELOPES,
+) -> dict[str, Any]:
+    entries = []
+    for source in snapshot.get("entries", []):
+        results = [reference_machine_preflight(source, envelope) for envelope in envelopes]
+        entry_id = sha256_bytes(
+            f"{source.get('repository', '')}@{source.get('revision', '')}".encode()
+        )
+        entries.append(
+            {
+                "entry_id": entry_id,
+                "repository": source.get("repository", ""),
+                "results": results,
+            }
+        )
+    matrix = {
+        "schema_version": 1,
+        "record_type": "reference_machine_preflight_matrix",
+        "frozen_on": snapshot.get("frozen_on"),
+        "source_snapshot_sha256": snapshot.get("snapshot_sha256"),
+        "acquisition_authorized": False,
+        "envelopes": [dict(envelope) for envelope in envelopes],
+        "entries": entries,
+    }
+    matrix["matrix_sha256"] = sha256_bytes(canonical_bytes(matrix))
+    return matrix
+
+
 def hardware_fit(
     *,
     required_disk: int,
@@ -516,6 +744,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--preflight", action="store_true")
     args = parser.parse_args()
     if args.refresh:
         snapshot = refresh_source_snapshot()
@@ -538,6 +767,21 @@ def main() -> int:
         "Sprint 14 candidate inventory: valid "
         f"({len(snapshot['entries'])} exact source entries; zero acquisition authority)"
     )
+    if args.preflight:
+        result = preflight_matrix(snapshot)
+        overall = {"CANDIDATE": 0, "BLOCKED": 0, "BLOCKED-HARDWARE": 0}
+        for entry in result["entries"]:
+            for envelope_result in entry["results"]:
+                overall[envelope_result["status"]] += 1
+        print(
+            "Sprint 14 reference-machine preflight: "
+            f"{len(result['entries'])} entries against "
+            f"{len(result['envelopes'])} envelopes; "
+            f"CANDIDATE={overall['CANDIDATE']}, "
+            f"BLOCKED={overall['BLOCKED']}, "
+            f"BLOCKED-HARDWARE={overall['BLOCKED-HARDWARE']} "
+            "(zero acquisition authority)"
+        )
     return 0
 
 
