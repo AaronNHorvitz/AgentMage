@@ -476,6 +476,11 @@ pub(crate) fn build_event(
         {
             return Err(PersistentSupervisorError::InvalidInput);
         }
+        EngineeringEventKind::CampaignUpdated { campaign_id, .. }
+            if campaign_id.as_str().is_empty() =>
+        {
+            return Err(PersistentSupervisorError::InvalidInput);
+        }
         _ => {}
     }
     let mut event = EngineeringEvent {
@@ -532,6 +537,11 @@ pub fn verify_event_chain(events: &[EngineeringEvent]) -> Result<(), PersistentS
                 if binding.session_id != event.session_id
                     || crate::engineering_execution::verify_runtime_binding_shape(binding)
                         .is_err() =>
+            {
+                return Err(PersistentSupervisorError::Integrity);
+            }
+            EngineeringEventKind::CampaignUpdated { campaign_id, .. }
+                if campaign_id.as_str().is_empty() =>
             {
                 return Err(PersistentSupervisorError::Integrity);
             }

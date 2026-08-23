@@ -153,6 +153,7 @@ export function parseEngineeringHostResponse(
       "verified_turn_completed",
       "plan_approved",
       "runtime_bound",
+      "team_campaign_completed",
       "events",
       "lifecycle_event",
     ]).has(result)

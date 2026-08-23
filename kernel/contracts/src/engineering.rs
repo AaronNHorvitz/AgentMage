@@ -877,6 +877,13 @@ pub enum EngineeringEventKind {
         /// New persistent integration state.
         state: IntegrationState,
     },
+    /// A durable Team campaign projection entered one validated lifecycle state.
+    CampaignUpdated {
+        /// Exact Team campaign.
+        campaign_id: CampaignId,
+        /// Validated campaign lifecycle state.
+        state: TeamCampaignState,
+    },
     /// A task or campaign reached a truthful terminal state.
     Terminal {
         /// Truthful terminal state.
@@ -1076,6 +1083,23 @@ pub enum EngineeringRpcRequest {
         /// Trusted host binding time.
         occurred_at_epoch_ms: u64,
     },
+    /// Executes one approved Team Plan through an installed host-owned Team coordinator.
+    ExecuteTeamCampaign {
+        /// Exact Team session created from the approved Plan.
+        session_id: SessionId,
+        /// Exact new campaign identity.
+        campaign_id: CampaignId,
+        /// AgentMage-owned campaign branch.
+        campaign_branch: String,
+        /// Exact immutable starting commit.
+        starting_commit: String,
+        /// Configured worker ceiling, at most five.
+        max_workers: u8,
+        /// Exact request correlation identity.
+        correlation_id: CorrelationId,
+        /// Trusted host start time.
+        occurred_at_epoch_ms: u64,
+    },
     /// Replay durable events after an optional exclusive cursor.
     ReplayEvents {
         /// Exact session identity.
@@ -1183,6 +1207,15 @@ pub enum EngineeringRpcResponse {
         /// Sealed non-authoritative execution-intent binding.
         binding: Box<EngineeringRuntimeBinding>,
         /// Exact hash-chained durable binding event.
+        event: Box<EngineeringEvent>,
+    },
+    /// One installed Team coordinator returned a durable validated terminal campaign.
+    TeamCampaignCompleted {
+        /// Complete validated campaign projection.
+        campaign: Box<TeamCampaign>,
+        /// Durable content-addressed campaign record.
+        campaign_artifact: Box<ArtifactCaptureResult>,
+        /// Exact hash-chained terminal campaign event.
         event: Box<EngineeringEvent>,
     },
     /// Exact ordered durable replay.

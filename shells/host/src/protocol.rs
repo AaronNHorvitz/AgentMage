@@ -939,9 +939,9 @@ fn valid_semver(value: &str) -> bool {
 fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), HostProtocolError> {
     use EngineeringRpcRequest::{
         ApprovePlan, BeginArtifact, BindApprovedPlanRuntime, CancelArtifact, CancelSession,
-        CommitArtifact, CreateSession, CreateSessionFromApprovedPlan, ExecuteVerifiedTurn,
-        IngestArtifact, ListSessions, OpenSession, PauseSession, ReadArtifactRange, ReplayEvents,
-        ResumeSession, UploadArtifactChunk,
+        CommitArtifact, CreateSession, CreateSessionFromApprovedPlan, ExecuteTeamCampaign,
+        ExecuteVerifiedTurn, IngestArtifact, ListSessions, OpenSession, PauseSession,
+        ReadArtifactRange, ReplayEvents, ResumeSession, UploadArtifactChunk,
     };
     let valid_id = |value: &str| valid_identifier(value);
     match request {
@@ -1123,6 +1123,34 @@ fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), H
                     run_request,
                 )
                 .is_err()
+            {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        ExecuteTeamCampaign {
+            session_id,
+            campaign_id,
+            campaign_branch,
+            starting_commit,
+            max_workers,
+            correlation_id,
+            occurred_at_epoch_ms,
+        } => {
+            if !valid_id(session_id.as_str())
+                || !valid_id(campaign_id.as_str())
+                || campaign_branch.is_empty()
+                || campaign_branch.len() > 1024
+                || campaign_branch.starts_with('/')
+                || campaign_branch.contains('\0')
+                || campaign_branch.contains("..")
+                || !(starting_commit.len() == 40 || starting_commit.len() == 64)
+                || !starting_commit
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+                || *max_workers == 0
+                || *max_workers > 5
+                || !valid_id(correlation_id.as_str())
+                || *occurred_at_epoch_ms == 0
             {
                 return Err(HostProtocolError::InvalidValue);
             }
