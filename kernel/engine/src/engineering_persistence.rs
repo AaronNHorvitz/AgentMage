@@ -1,9 +1,11 @@
 //! SQLCipher-backed persistence for Verified Chat sessions, events, and source artifacts.
 
+use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 
 use agentmage_kernel_contracts::{
-    EngineeringEvent, EngineeringSessionSnapshot, RuntimeArtifactId, SessionId,
+    CorrelationId, EngineeringEvent, EngineeringEventKind, EngineeringSessionSnapshot,
+    RuntimeArtifactId, SessionId,
 };
 use rusqlite::{OptionalExtension as _, params};
 use sha2::{Digest, Sha256};
@@ -250,6 +252,38 @@ impl VerifiedArtifactStore for SqlCipherEngineeringStore {
             payload_deduplicated,
             completed_at_epoch_ms,
         )?;
+        let (mut snapshot, events) =
+            load_engineering_session_transaction(&transaction, &spec.session_id)?;
+        if snapshot.terminal.is_some()
+            || snapshot
+                .artifacts
+                .iter()
+                .any(|capture| capture.artifact_id == record.capture.artifact_id)
+        {
+            return Err(VerifiedArtifactError::Duplicate);
+        }
+        let sequence = events.len() as u64;
+        let previous_event_sha256 = events.last().map_or_else(
+            || "0000000000000000000000000000000000000000000000000000000000000000".to_owned(),
+            |event| event.event_sha256.clone(),
+        );
+        snapshot.artifacts.push(record.capture.clone());
+        let event = crate::persistent_supervisor::build_event(
+            &snapshot,
+            sequence,
+            previous_event_sha256,
+            CorrelationId::from_raw(format!("artifact-{}", spec.upload_id.as_str())),
+            completed_at_epoch_ms,
+            EngineeringEventKind::ArtifactCaptured {
+                artifact_id: record.capture.artifact_id.clone(),
+            },
+        )
+        .map_err(|_| VerifiedArtifactError::Storage)?;
+        snapshot.last_event_sequence = Some(sequence);
+        snapshot.snapshot_sha256 =
+            "0000000000000000000000000000000000000000000000000000000000000000".to_owned();
+        snapshot.snapshot_sha256 = crate::persistent_supervisor::snapshot_digest(&snapshot)
+            .map_err(|_| VerifiedArtifactError::Storage)?;
         transaction
             .execute(
                 "INSERT OR IGNORE INTO engineering_artifact_payloads(source_sha256, payload) VALUES (?1, ?2)",
@@ -279,6 +313,26 @@ impl VerifiedArtifactStore for SqlCipherEngineeringStore {
                     VerifiedArtifactError::Storage
                 }
             })?;
+        let event_json = serde_json::to_vec(&event).map_err(|_| VerifiedArtifactError::Storage)?;
+        insert_event(&transaction, &event, &event_json)
+            .map_err(|_| VerifiedArtifactError::Storage)?;
+        let snapshot_json =
+            serde_json::to_vec(&snapshot).map_err(|_| VerifiedArtifactError::Storage)?;
+        let changed = transaction
+            .execute(
+                "UPDATE engineering_sessions
+                 SET snapshot_sha256 = ?2, record_json = ?3
+                 WHERE session_id = ?1",
+                params![
+                    snapshot.session_id.as_str(),
+                    snapshot.snapshot_sha256,
+                    snapshot_json,
+                ],
+            )
+            .map_err(|_| VerifiedArtifactError::Storage)?;
+        if changed != 1 {
+            return Err(VerifiedArtifactError::NotFound);
+        }
         transaction
             .commit()
             .map_err(|_| VerifiedArtifactError::Storage)?;
@@ -330,6 +384,51 @@ impl VerifiedArtifactStore for SqlCipherEngineeringStore {
         }
         Ok(record)
     }
+}
+
+fn load_engineering_session_transaction(
+    transaction: &rusqlite::Transaction<'_>,
+    session_id: &SessionId,
+) -> Result<(EngineeringSessionSnapshot, Vec<EngineeringEvent>), VerifiedArtifactError> {
+    let row = transaction
+        .query_row(
+            "SELECT snapshot_sha256, record_json
+             FROM engineering_sessions WHERE session_id = ?1",
+            [session_id.as_str()],
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, Vec<u8>>(1)?)),
+        )
+        .optional()
+        .map_err(|_| VerifiedArtifactError::Storage)?
+        .ok_or(VerifiedArtifactError::NotFound)?;
+    let snapshot: EngineeringSessionSnapshot =
+        serde_json::from_slice(&row.1).map_err(|_| VerifiedArtifactError::IntegrityMismatch)?;
+    if snapshot.session_id != *session_id || snapshot.snapshot_sha256 != row.0 {
+        return Err(VerifiedArtifactError::IntegrityMismatch);
+    }
+    crate::persistent_supervisor::verify_snapshot(&snapshot)
+        .map_err(|_| VerifiedArtifactError::IntegrityMismatch)?;
+    let mut statement = transaction
+        .prepare(
+            "SELECT record_json FROM engineering_events
+             WHERE session_id = ?1 ORDER BY sequence",
+        )
+        .map_err(|_| VerifiedArtifactError::Storage)?;
+    let rows = statement
+        .query_map([session_id.as_str()], |row| row.get::<_, Vec<u8>>(0))
+        .map_err(|_| VerifiedArtifactError::Storage)?;
+    let mut events = Vec::new();
+    for row in rows {
+        let bytes = row.map_err(|_| VerifiedArtifactError::Storage)?;
+        events.push(
+            serde_json::from_slice(&bytes).map_err(|_| VerifiedArtifactError::IntegrityMismatch)?,
+        );
+    }
+    crate::persistent_supervisor::verify_event_chain(&events)
+        .map_err(|_| VerifiedArtifactError::IntegrityMismatch)?;
+    if snapshot.last_event_sequence != events.last().map(|event| event.sequence) {
+        return Err(VerifiedArtifactError::IntegrityMismatch);
+    }
+    Ok((snapshot, events))
 }
 
 fn insert_event(
@@ -386,6 +485,7 @@ fn sha256(bytes: &[u8]) -> String {
 }
 
 pub(crate) fn verify_all(store: &OperationalStore) -> Result<(), PersistentSupervisorError> {
+    let mut session_artifacts = BTreeMap::new();
     let mut session_statement = store
         .connection
         .prepare("SELECT session_id, snapshot_sha256, record_json FROM engineering_sessions ORDER BY session_id")
@@ -410,6 +510,37 @@ pub(crate) fn verify_all(store: &OperationalStore) -> Result<(), PersistentSuper
         crate::persistent_supervisor::verify_event_chain(&events)?;
         if snapshot.last_event_sequence != events.last().map(|event| event.sequence) {
             return Err(PersistentSupervisorError::Integrity);
+        }
+        let captured_event_ids: Vec<_> = events
+            .iter()
+            .filter_map(|event| match &event.kind {
+                EngineeringEventKind::ArtifactCaptured { artifact_id } => Some(artifact_id),
+                _ => None,
+            })
+            .collect();
+        if captured_event_ids.len() != snapshot.artifacts.len()
+            || captured_event_ids
+                .iter()
+                .zip(&snapshot.artifacts)
+                .any(|(artifact_id, capture)| **artifact_id != capture.artifact_id)
+        {
+            return Err(PersistentSupervisorError::Integrity);
+        }
+        for capture in &snapshot.artifacts {
+            verify_capture(capture).map_err(|_| PersistentSupervisorError::Integrity)?;
+            if capture.session_id != snapshot.session_id
+                || session_artifacts
+                    .insert(
+                        (
+                            snapshot.session_id.as_str().to_owned(),
+                            capture.artifact_id.as_str().to_owned(),
+                        ),
+                        capture.clone(),
+                    )
+                    .is_some()
+            {
+                return Err(PersistentSupervisorError::Integrity);
+            }
         }
     }
     let mut artifact_statement = store
@@ -449,6 +580,15 @@ pub(crate) fn verify_all(store: &OperationalStore) -> Result<(), PersistentSuper
         {
             return Err(PersistentSupervisorError::Integrity);
         }
+        let attached = session_artifacts
+            .remove(&(session_id, artifact_id))
+            .ok_or(PersistentSupervisorError::Integrity)?;
+        if attached != capture {
+            return Err(PersistentSupervisorError::Integrity);
+        }
+    }
+    if !session_artifacts.is_empty() {
+        return Err(PersistentSupervisorError::Integrity);
     }
     let orphan_payloads: i64 = store
         .connection
@@ -605,8 +745,10 @@ mod tests {
             let adapter = SqlCipherEngineeringStore::new(shared);
             let supervisor = PersistentTaskSupervisor::new(adapter.clone());
             let snapshot = supervisor.open_session(&session_id).unwrap();
-            assert_eq!(snapshot.last_event_sequence, Some(1));
-            assert_eq!(supervisor.replay(&session_id, None).unwrap().len(), 2);
+            assert_eq!(snapshot.last_event_sequence, Some(2));
+            assert_eq!(snapshot.artifacts.len(), 1);
+            assert_eq!(snapshot.artifacts[0].artifact_id, artifact_id);
+            assert_eq!(supervisor.replay(&session_id, None).unwrap().len(), 3);
             let record = adapter.load(&session_id, &artifact_id).unwrap();
             assert_eq!(record.bytes, bytes);
             assert_eq!(record.capture.source_sha256, digest);
@@ -670,6 +812,94 @@ mod tests {
             Some(0)
         );
         drop(supervisor);
+        drop(shared);
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn artifact_payload_event_and_snapshot_roll_back_as_one_transaction() {
+        let (directory, path) = temporary_path();
+        let shared = std::sync::Arc::new(std::sync::Mutex::new(
+            OperationalStore::open(&path, &observation(), &mut TestKey).unwrap(),
+        ));
+        let adapter = SqlCipherEngineeringStore::new(shared.clone());
+        let session_id = SessionId::from_raw("session-atomic-artifact");
+        PersistentTaskSupervisor::new(adapter.clone())
+            .create_session(
+                session_id.clone(),
+                "Atomic artifact".to_owned(),
+                EngineeringSessionMode::Agent,
+                CorrelationId::from_raw("correlation-atomic-artifact-create"),
+                10,
+            )
+            .unwrap();
+        let bytes = b"exact atomic source".to_vec();
+        let digest = super::sha256(&bytes);
+        let upload_id = ArtifactUploadId::from_raw("upload-atomic-artifact");
+        let mut uploads = VerifiedArtifactUploads::new(adapter.clone());
+        uploads
+            .begin(ArtifactUploadSpec {
+                upload_id: upload_id.clone(),
+                session_id: session_id.clone(),
+                source_kind: ArtifactSourceKind::Paste,
+                display_name: "Atomic paste".to_owned(),
+                media_type: "text/plain".to_owned(),
+                total_bytes: bytes.len() as u64,
+                expected_sha256: digest.clone(),
+            })
+            .unwrap();
+        uploads
+            .append(ArtifactUploadChunk {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                upload_id: upload_id.clone(),
+                session_id: session_id.clone(),
+                sequence: 0,
+                offset: 0,
+                total_bytes: bytes.len() as u64,
+                bytes,
+                chunk_sha256: digest,
+                final_chunk: true,
+            })
+            .unwrap();
+        shared
+            .lock()
+            .unwrap()
+            .connection
+            .execute_batch(
+                "CREATE TEMP TRIGGER deny_engineering_artifact_snapshot_update
+                 BEFORE UPDATE ON engineering_sessions
+                 BEGIN SELECT RAISE(ABORT, 'fixture'); END;",
+            )
+            .unwrap();
+        assert_eq!(
+            uploads.commit(&upload_id, 20),
+            Err(crate::verified_artifact::VerifiedArtifactError::Storage)
+        );
+        let store = shared.lock().unwrap();
+        for table in ["engineering_artifacts", "engineering_artifact_payloads"] {
+            let count: i64 = store
+                .connection
+                .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                    row.get(0)
+                })
+                .unwrap();
+            assert_eq!(count, 0, "{table} must roll back");
+        }
+        let event_count: i64 = store
+            .connection
+            .query_row(
+                "SELECT COUNT(*) FROM engineering_events WHERE session_id = ?1",
+                [session_id.as_str()],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(event_count, 1);
+        drop(store);
+        let snapshot = PersistentTaskSupervisor::new(adapter)
+            .open_session(&session_id)
+            .unwrap();
+        assert!(snapshot.artifacts.is_empty());
+        assert_eq!(snapshot.last_event_sequence, Some(0));
         drop(shared);
         fs::remove_dir_all(directory).unwrap();
     }

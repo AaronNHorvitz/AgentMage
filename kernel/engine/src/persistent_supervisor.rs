@@ -397,7 +397,7 @@ where
     }
 }
 
-fn build_event(
+pub(crate) fn build_event(
     snapshot: &EngineeringSessionSnapshot,
     sequence: u64,
     previous_event_sha256: String,
@@ -474,7 +474,7 @@ fn event_digest(event: &EngineeringEvent) -> Result<String, PersistentSupervisor
     canonical_sha256(event)
 }
 
-fn snapshot_digest(
+pub(crate) fn snapshot_digest(
     snapshot: &EngineeringSessionSnapshot,
 ) -> Result<String, PersistentSupervisorError> {
     canonical_sha256(snapshot)
