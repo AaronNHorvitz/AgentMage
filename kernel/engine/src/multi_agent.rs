@@ -347,7 +347,18 @@ where
     }
 
     /// Executes all dependency-ready waves, reviews, corrections, and integrations.
-    pub fn run(mut self) -> Result<TeamCampaignResult, MultiAgentError> {
+    pub fn run(self) -> Result<TeamCampaignResult, MultiAgentError> {
+        self.run_with_progress(|_| Ok(()))
+    }
+
+    /// Executes one campaign while synchronously checkpointing every durable boundary.
+    pub fn run_with_progress<F>(
+        mut self,
+        mut checkpoint: F,
+    ) -> Result<TeamCampaignResult, MultiAgentError>
+    where
+        F: FnMut(&TeamCampaignResult) -> Result<(), MultiAgentError>,
+    {
         let mut completed = BTreeSet::new();
         let mut admitted = BTreeSet::new();
         let mut final_leases = BTreeMap::new();
@@ -365,7 +376,14 @@ where
                 .collect::<Result<Vec<_>, _>>()?;
             for lease in &leases {
                 admitted.insert(lease.task_id.clone());
+                final_leases.insert(lease.task_id.clone(), lease.clone());
             }
+            checkpoint(&campaign_result(
+                &self.campaign_head,
+                &final_leases,
+                &integrations,
+                maximum_concurrent_workers,
+            ))?;
             let candidates = thread::scope(|scope| {
                 let handles = leases
                     .iter()
@@ -376,11 +394,30 @@ where
                     .collect::<Vec<_>>();
                 handles
                     .into_iter()
-                    .map(|handle| handle.join().map_err(|_| MultiAgentError::WorkerPanicked)?)
-                    .collect::<Result<Vec<_>, MultiAgentError>>()
-            })?;
+                    .map(|handle| {
+                        handle
+                            .join()
+                            .unwrap_or(Err(MultiAgentError::WorkerPanicked))
+                    })
+                    .collect::<Vec<_>>()
+            });
 
-            for (mut lease, mut candidate) in leases.into_iter().zip(candidates) {
+            for (mut lease, candidate) in leases.into_iter().zip(candidates) {
+                let mut candidate = match candidate {
+                    Ok(candidate) => candidate,
+                    Err(error) => {
+                        lease.state = AgentLeaseState::Failed;
+                        reseal_lease(&mut lease)?;
+                        final_leases.insert(lease.task_id.clone(), lease);
+                        checkpoint(&campaign_result(
+                            &self.campaign_head,
+                            &final_leases,
+                            &integrations,
+                            maximum_concurrent_workers,
+                        ))?;
+                        return Err(error);
+                    }
+                };
                 if candidate.task_id != lease.task_id || !valid_commit(&candidate.candidate_commit)
                 {
                     return Err(MultiAgentError::WorkerFailed);
@@ -388,6 +425,13 @@ where
                 lease.state = AgentLeaseState::Reviewing;
                 lease.candidate_commit = Some(candidate.candidate_commit.clone());
                 reseal_lease(&mut lease)?;
+                final_leases.insert(lease.task_id.clone(), lease.clone());
+                checkpoint(&campaign_result(
+                    &self.campaign_head,
+                    &final_leases,
+                    &integrations,
+                    maximum_concurrent_workers,
+                ))?;
                 loop {
                     let review = self.reviewer.review(&lease, &candidate)?;
                     match review.outcome {
@@ -399,6 +443,13 @@ where
                             lease.state = AgentLeaseState::Correcting;
                             lease.correction_count += 1;
                             reseal_lease(&mut lease)?;
+                            final_leases.insert(lease.task_id.clone(), lease.clone());
+                            checkpoint(&campaign_result(
+                                &self.campaign_head,
+                                &final_leases,
+                                &integrations,
+                                maximum_concurrent_workers,
+                            ))?;
                             candidate =
                                 self.worker.correct(&lease, &candidate, &review.findings)?;
                             if candidate.task_id != lease.task_id
@@ -409,6 +460,13 @@ where
                             lease.state = AgentLeaseState::Reviewing;
                             lease.candidate_commit = Some(candidate.candidate_commit.clone());
                             reseal_lease(&mut lease)?;
+                            final_leases.insert(lease.task_id.clone(), lease.clone());
+                            checkpoint(&campaign_result(
+                                &self.campaign_head,
+                                &final_leases,
+                                &integrations,
+                                maximum_concurrent_workers,
+                            ))?;
                         }
                         ReviewOutcome::Blocked | ReviewOutcome::Disputed => {
                             return Err(MultiAgentError::ReviewFailed);
@@ -418,9 +476,23 @@ where
                 }
                 lease.state = AgentLeaseState::IntegrationQueued;
                 reseal_lease(&mut lease)?;
+                final_leases.insert(lease.task_id.clone(), lease.clone());
+                checkpoint(&campaign_result(
+                    &self.campaign_head,
+                    &final_leases,
+                    &integrations,
+                    maximum_concurrent_workers,
+                ))?;
                 let prior_head = self.campaign_head.clone();
                 lease.state = AgentLeaseState::Integrating;
                 reseal_lease(&mut lease)?;
+                final_leases.insert(lease.task_id.clone(), lease.clone());
+                checkpoint(&campaign_result(
+                    &self.campaign_head,
+                    &final_leases,
+                    &integrations,
+                    maximum_concurrent_workers,
+                ))?;
                 let integrated = self.integrator.integrate(
                     &self.campaign_id,
                     &prior_head,
@@ -455,14 +527,20 @@ where
                 })?);
                 completed.insert(lease.task_id.clone());
                 final_leases.insert(lease.task_id.clone(), lease);
+                checkpoint(&campaign_result(
+                    &self.campaign_head,
+                    &final_leases,
+                    &integrations,
+                    maximum_concurrent_workers,
+                ))?;
             }
         }
-        Ok(TeamCampaignResult {
-            campaign_head: self.campaign_head,
-            leases: final_leases.into_values().collect(),
-            integrations,
+        Ok(campaign_result(
+            &self.campaign_head,
+            &final_leases,
+            &integrations,
             maximum_concurrent_workers,
-        })
+        ))
     }
 
     fn next_wave<'a>(
@@ -499,6 +577,20 @@ where
             selected.push(task);
         }
         Ok(selected)
+    }
+}
+
+fn campaign_result(
+    campaign_head: &str,
+    leases: &BTreeMap<TaskId, AgentLease>,
+    integrations: &[IntegrationRecord],
+    maximum_concurrent_workers: u8,
+) -> TeamCampaignResult {
+    TeamCampaignResult {
+        campaign_head: campaign_head.to_owned(),
+        leases: leases.values().cloned().collect(),
+        integrations: integrations.to_vec(),
+        maximum_concurrent_workers,
     }
 }
 
@@ -804,11 +896,27 @@ mod tests {
             },
         )
         .unwrap();
-        let result = coordinator.run().unwrap();
+        let mut progress = Vec::new();
+        let result = coordinator
+            .run_with_progress(|snapshot| {
+                progress.push(snapshot.clone());
+                Ok(())
+            })
+            .unwrap();
         assert_eq!(maximum.load(Ordering::SeqCst), 3);
         assert_eq!(result.maximum_concurrent_workers, 3);
         assert_eq!(result.integrations.len(), 3);
         assert_eq!(order.lock().unwrap().len(), 3);
+        assert_eq!(progress.first().unwrap().leases.len(), 3);
+        assert!(progress.first().unwrap().leases.iter().all(|lease| {
+            lease.state == agentmage_kernel_contracts::AgentLeaseState::Implementing
+        }));
+        assert!(
+            progress.last().unwrap().leases.iter().all(|lease| {
+                lease.state == agentmage_kernel_contracts::AgentLeaseState::Merged
+            })
+        );
+        assert_eq!(progress.last().unwrap(), &result);
     }
 
     #[test]
