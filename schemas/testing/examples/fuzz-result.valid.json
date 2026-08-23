@@ -49,7 +49,7 @@
   },
   "product_fuzz_claim": "none",
   "record_id": "am-fuzz-result-e8cdf560641e3537004d",
-  "record_sha256": "6d0b2f1f5e3cc7033649b0da10480ec28c4907b4ea8f9923669e73ef28ccdab7",
+  "record_sha256": "e641da13ac971d6f25cf54d35aa86b15646eaf1f60057d048b84916841bc8a30",
   "record_type": "fuzz-result",
   "redaction": {
     "private_paths_recorded": false,
@@ -78,7 +78,7 @@
   "schema_version": 1,
   "target": {
     "boundary_class": "paths",
-    "build_sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af",
+    "build_sha256": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e",
     "corpus_sha256": "7986d5886b5fdc22968fde755ad04a803585c1e055691c7f6a6914864cf8fa75",
     "dictionary_sha256": [
       "aa65916629d9dd135eb8d3acd14e38d16d28372469f4835b2b37e19599972273",

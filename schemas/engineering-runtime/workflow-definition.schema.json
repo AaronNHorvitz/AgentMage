@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/workflow-definition.schema.json",
+  "title": "AgentMage workflow-definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "workflow_id",
+    "workflow_version",
+    "input_schema",
+    "output_schema",
+    "steps",
+    "entry_step_ids",
+    "definition_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "workflow_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "workflow_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "input_schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "schema_version",
+        "schema_sha256"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "schema_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "schema_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "output_schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "schema_version",
+        "schema_sha256"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "schema_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "schema_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "step_id",
+          "depends_on",
+          "model_role",
+          "tool_id",
+          "effect_class",
+          "retry_class",
+          "verifier_ids",
+          "budgets"
+        ],
+        "properties": {
+          "step_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "minItems": 0,
+            "maxItems": 256
+          },
+          "model_role": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tool_id": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "effect_class": {
+            "enum": [
+              "read_only",
+              "idempotent_write",
+              "conditional",
+              "non_idempotent",
+              "destructive",
+              "external",
+              "unknown"
+            ]
+          },
+          "retry_class": {
+            "enum": [
+              "never",
+              "recoverable_read",
+              "conditional_after_reconciliation",
+              "user_decision_required"
+            ]
+          },
+          "verifier_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "minItems": 1,
+            "maxItems": 32
+          },
+          "budgets": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "turns",
+              "tokens",
+              "duration_ms",
+              "tool_calls",
+              "attempts",
+              "no_progress_events",
+              "output_bytes",
+              "memory_bytes",
+              "cost_minor_units"
+            ],
+            "properties": {
+              "turns": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "tokens": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "duration_ms": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "tool_calls": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "attempts": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "no_progress_events": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "output_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "memory_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "cost_minor_units": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 256
+    },
+    "entry_step_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 1,
+      "maxItems": 32
+    },
+    "definition_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

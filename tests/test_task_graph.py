@@ -2,18 +2,13 @@ from __future__ import annotations
 
 import unittest
 
-from scripts.task_graph import validate_text
+from scripts.task_graph import DECISION_STORIES, validate_text
 
 
 class TaskGraphTests(unittest.TestCase):
     def test_minimal_valid_graph(self) -> None:
         stories = []
-        for index, story in enumerate(
-            (
-                "1.2", "2.3", "5.2", "11.2", "13.4", "16.2", "16.3", "21.3",
-                "22.3", "22.4", "23.5", "23.6", "50.3", "58.2", "60.2", "62.2", "81.2",
-            )
-        ):
+        for index, story in enumerate(DECISION_STORIES):
             dependency = "None" if index == 0 else f"Story {stories[-1][0]}"
             stories.append(
                 (
@@ -26,7 +21,10 @@ class TaskGraphTests(unittest.TestCase):
         text = (
             "## [ ] Foundational Runtime Epic F1 - Ingest\n"
             "## [ ] Foundational Runtime Epic F2 - Workflow\n"
-            "FRE-INGEST FRE-WORKFLOW M-FOUNDATIONAL-RUNTIME-CORE\n"
+            "## [ ] Foundational Runtime Epic F3 - Engineering Runtime\n"
+            "## [ ] Foundational Runtime Epic F4 - Model Gateway\n"
+            "FRE-INGEST FRE-WORKFLOW FRE-ENGINEERING-RUNTIME "
+            "FRE-MODEL-GATEWAY M-FOUNDATIONAL-RUNTIME-CORE ER-M0 ER-M9\n"
             + "".join(value for _, value in stories)
         )
         references = " ".join(story for story, _ in stories)

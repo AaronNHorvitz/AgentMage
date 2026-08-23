@@ -6,7 +6,7 @@
         "base_image_sha256": "89f61a124414261868224666aa7fb8df1b78397a53623774bdfb105d1612b48b",
         "component_id": "build-environment:fedora-x86_64",
         "platform": "fedora-x86_64",
-        "sha256": "fb7f4199ff530a6363a6ce48e4e3832f606f9279251bca98af7a98a31dcb6584",
+        "sha256": "f980826a8babd88b4d189dc6e211194db4d42f2dc37b81c00f297332b2168489",
         "version": "Fedora Linux 44 (Container Image)"
       },
       {
@@ -14,7 +14,7 @@
         "base_image_sha256": "7b202b0e2e0028c6250f5fcf41d04df492d145a1654c6995a6553f0c1f6f1960",
         "component_id": "build-environment:ubuntu-x86_64",
         "platform": "ubuntu-x86_64",
-        "sha256": "8556ead43fd12012e32cf5d397acabda47d6dfd0e800db018599c94e547a7801",
+        "sha256": "92d587476507b8668199c22f54c49b68d84b61e07527599560645ca61cd9ff18",
         "version": "Ubuntu 26.04 LTS"
       }
     ],
@@ -34,6 +34,14 @@
         "platform": "fedora-x86_64",
         "sha256": "4acc9acc76d5079515b46346a485974457b5a79893cfb01112423c89aeb5aa10",
         "version": "clippy 0.1.95 (59807616e1 2026-04-14)"
+      },
+      {
+        "approval_scope": "build-and-test-only",
+        "component_id": "executable:fedora-x86_64:git",
+        "executable_id": "git",
+        "platform": "fedora-x86_64",
+        "sha256": "86c21d0ccccfb45c107c213b693d1132413959f71c6b0a4165f07c5072d47b34",
+        "version": "git version 2.55.0"
       },
       {
         "approval_scope": "build-and-test-only",
@@ -93,6 +101,14 @@
       },
       {
         "approval_scope": "build-and-test-only",
+        "component_id": "executable:ubuntu-x86_64:git",
+        "executable_id": "git",
+        "platform": "ubuntu-x86_64",
+        "sha256": "5516c9f362c29376ab9a499a33082f9f611941d8c75930c880e30ad109e39c9a",
+        "version": "git version 2.53.0"
+      },
+      {
+        "approval_scope": "build-and-test-only",
         "component_id": "executable:ubuntu-x86_64:node",
         "executable_id": "node",
         "platform": "ubuntu-x86_64",
@@ -138,16 +154,16 @@
       "all_versions_present": true,
       "classifications": {
         "development": 371,
-        "production": 62
+        "production": 127
       },
-      "component_count": 433,
+      "component_count": 498,
       "ecosystems": {
-        "cargo": 60,
+        "cargo": 125,
         "npm": 370,
         "npm-workspace": 2,
         "swift-workspace": 1
       },
-      "identity_set_sha256": "261e98cc505fc83b18861a0016c26ad9a971e06e88cc0e24394cff7f2aa366c4",
+      "identity_set_sha256": "6949bdf5290bdd75f37286030bf0b43d0369fdb61257300b0d59962d2a4347db",
       "source": "supply-chain/dependency-provenance.json"
     },
     "product_runtimes": []
@@ -336,23 +352,23 @@
   "source_artifacts": [
     {
       "path": "architecture/component-inventory-policy.json",
-      "sha256": "e6aab7bf206f0920417ae3c8f340e2bcf81d55474f421709f2c0037f44bec807"
+      "sha256": "1000c8ded45ba53fc51be5260edb782793fee39c77f9a97d37a0605f402bcd01"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
-      "sha256": "631a332e980b2f595f1ef9d703b412500d904d39d06ffbbdf26d1fa7ec64cfbd"
+      "sha256": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693"
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "8c86520fa7b7e4a3dbaccec93ec918e8bf85193ebf3c295e893920ac573699a6"
+      "sha256": "63ae3f4536bcd9b15b033ffe1904c8a5c408b3eacda5ad28f2fca2f7df66303a"
     },
     {
       "path": "architecture/dependency-classes.json",
-      "sha256": "dc6fd651cb4cbe1fb90b39b714984dc1a362d5c9b736b1ea34a0236a29fd20c2"
+      "sha256": "3fd1ae526c801ec60a79090ec417842846f7bca9a11f83516368c77c125eba6b"
     },
     {
       "path": "architecture/optional-component-inventory.json",
-      "sha256": "ba0f6b7fb07c4c3e60aebc6f9ab9aac9dd181055e1a7dc00e12d181ba435ecc5"
+      "sha256": "1b73a283b4294e880a6f5aa7e8e24041d256db833565b1a3fd49cf81747c0e65"
     },
     {
       "path": "model-profiles/runtimes/llama-cpp-b10333-linux-x86_64.json",
@@ -380,28 +396,28 @@
     },
     {
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "b069d6d5b5b47921d226724104a14ec89b7d1f5fba10ab7afac88ae6ea49f6e9"
+      "sha256": "83e61d1a4c1e33c1ff16cbddd5b758949e04593c38b21b9f1ce858feff4e2307"
     },
     {
       "path": "supply-chain/dependency-hashes.sha256",
-      "sha256": "d726646cf6ecb18fb7a61d112be9c83a4d9ad4d1dbe43dfd2b39f0ceecc838dc"
+      "sha256": "b63ed302e6b49a019960599d8edd166dabb64103ba5f73579bfae9fb79991df8"
     },
     {
       "path": "scripts/component_inventory.py",
-      "sha256": "063028bb833385c0fb00e45446399b4614a77098c4cb87b3a8b429f36b5f6ab1"
+      "sha256": "108e6eda80fb6e8097c2db9e40b7c1201bbadefffc6d386efb72851a39575d74"
     },
     {
       "path": "tests/test_component_inventory.py",
-      "sha256": "e7302c707da9ae124972b65c9259922a73ea4a1e7bdff3ce29be283ac3a4d52f"
+      "sha256": "dc579002819072b5def417437455692e7bcb96881cba61f33ebb5a82a9024374"
     }
   ],
   "status": "pass-shared-linux-versioned-hashed-component-inventory",
   "summary": {
     "approved_build_environment_count": 2,
-    "approved_build_executable_count": 14,
-    "approved_component_count": 449,
+    "approved_build_executable_count": 16,
+    "approved_component_count": 516,
     "approved_optional_dependency_count": 0,
-    "approved_package_count": 433,
+    "approved_package_count": 498,
     "approved_product_runtime_count": 0,
     "approved_records_missing_hash_count": 0,
     "approved_records_missing_version_count": 0,

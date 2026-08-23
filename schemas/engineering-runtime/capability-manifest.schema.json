@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/capability-manifest.schema.json",
+  "title": "AgentMage capability-manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "capability_id",
+    "capability_version",
+    "publisher_id",
+    "title",
+    "purpose",
+    "lifecycle",
+    "input_schema",
+    "output_schema",
+    "workflow_definition_sha256",
+    "required_tool_ids",
+    "required_model_roles",
+    "requested_authority_ids",
+    "prohibited_authority_ids",
+    "budgets",
+    "verifier_ids",
+    "fixture_manifest_sha256",
+    "migration_policy_sha256",
+    "removal_policy_sha256",
+    "manifest_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "capability_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "capability_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "publisher_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "lifecycle": {
+      "enum": [
+        "draft",
+        "admitted",
+        "enabled",
+        "degraded",
+        "disabled",
+        "quarantined",
+        "retired"
+      ]
+    },
+    "input_schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "schema_version",
+        "schema_sha256"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "schema_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "schema_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "output_schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "schema_version",
+        "schema_sha256"
+      ],
+      "properties": {
+        "schema_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "schema_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "schema_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "workflow_definition_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "required_tool_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "required_model_roles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "requested_authority_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "prohibited_authority_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turns",
+        "tokens",
+        "duration_ms",
+        "tool_calls",
+        "attempts",
+        "no_progress_events",
+        "output_bytes",
+        "memory_bytes",
+        "cost_minor_units"
+      ],
+      "properties": {
+        "turns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tool_calls": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "no_progress_events": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "output_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memory_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cost_minor_units": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "verifier_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 1,
+      "maxItems": 64
+    },
+    "fixture_manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "migration_policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "removal_policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

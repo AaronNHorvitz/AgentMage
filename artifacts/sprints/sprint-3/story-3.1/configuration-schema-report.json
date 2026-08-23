@@ -12,68 +12,68 @@
   "schemas": [
     {
       "path": "schemas/configuration/common.schema.json",
-      "sha256": "d01ef7808eacd03024ad8cf96734405791a9c0f85865e0f7a0a6934b072a178d"
+      "sha256": "e84e306d12026d94dee5d5d8b1974b10b9665c89248b15c9df559f795be3e83e"
     },
     {
       "path": "schemas/configuration/core.schema.json",
-      "sha256": "bf91c31b56debc34225aefc850f042975203b7679f8cd602e5de1b4cbef35697"
+      "sha256": "ec8cbb079108ff6385e47fecf30a35dbeaf5402b9f2677a8ec99862d7230c689"
     },
     {
       "path": "schemas/configuration/platform.schema.json",
-      "sha256": "fe7ce7edbe34fa68c69d3c8c1bc32240fd7f344af702973e854e0abcaba2e63a"
+      "sha256": "c9842ee4c3b2cd56ddbdc2bb84c8a24d452297e34efefc5ce1bb86d8d2dc9fb9"
     },
     {
       "path": "schemas/configuration/model.schema.json",
-      "sha256": "7a1734821222909f6146904c94018a5793bd756e1c0081093dee7e56858f7875"
+      "sha256": "3e32c3e86e7edd2501882a590a3a0b85037f5fb5d80ca92b4d61ac1033d3d42c"
     },
     {
       "path": "schemas/configuration/workspace.schema.json",
-      "sha256": "d053c0e62cce239e59787d8b1e59f142c258458ec9d00f5cb6dbd9551e91975d"
+      "sha256": "d379002d2028af5b66be56d5bcec0cafa7d42015a6135fbff812b1a6440db5e8"
     },
     {
       "path": "schemas/configuration/tool.schema.json",
-      "sha256": "183b6f954807b493ad652f84a25ad78f572225fffd2f945a94e59a79d5ea3c5e"
+      "sha256": "dd36213fd4096583aa4ddd4393115945a87de33a175db9f5de3b155f20848a61"
     },
     {
       "path": "schemas/configuration/permission.schema.json",
-      "sha256": "678b1c56d7f8829aa5b97af729c8ec8b3fc663c28bba240a31f70f95837dcac0"
+      "sha256": "412065b0419571fe4f1365b63f999ed8ce4ac3b870917fc63e378e22309add23"
     },
     {
       "path": "schemas/configuration/budget.schema.json",
-      "sha256": "b9e31e0b7362c3ec1e1edc545ac5298c5a81d8cdabf2b44d386a5178f45c0a85"
+      "sha256": "efab641cc9d4c743def8f02fdba9afc3d3f594fc5a677542aed4dbbe09d4ac08"
     },
     {
       "path": "schemas/configuration/logging.schema.json",
-      "sha256": "dbec9f547889c74b98fdd05a225d436bbf1fa5c77e20afd66f643857890c478b"
+      "sha256": "eac99a06020034ed4187d064053053bfc1feaae23d4caf6468563097fa7ff30b"
     },
     {
       "path": "schemas/configuration/retention.schema.json",
-      "sha256": "80af0d27b524bc26af09cfd89341c0344ca6120a2cb3f4c861664a8902365f1b"
+      "sha256": "1c89dc34dda5f68f6abfd940f3784c071a348f95fe93b3fe54a4c38ea2c8651a"
     },
     {
       "path": "schemas/configuration/skill.schema.json",
-      "sha256": "50e5278074b2806bba9473850f4cf9665c5be6e840d28e01f6619d7df52ba3d0"
+      "sha256": "c50636d6a6d8fb733b95b11f4afc4e5b889c6fe02e0577cf5bf2a8a6d559572e"
     },
     {
       "path": "schemas/configuration/shell.schema.json",
-      "sha256": "06fc78d50e438a45b7fa3cd52aa16bf3ab8138844c8e08304281f5112c2bce42"
+      "sha256": "d56fc236156a97b536da36cb2b8e623c9e3a5559b5507492978164e1962ecfbb"
     },
     {
       "path": "schemas/configuration/agent-configuration.schema.json",
-      "sha256": "dfbc69c126722349ac38e42447645961304de7f73a75bd24b1d8c2b329fa726d"
+      "sha256": "cfd71d4100d4c2f7155df52c9fc19af08be9d76eef855289ca0283d677eadd36"
     }
   ],
   "canonical_fixture": {
     "path": "schemas/configuration/examples/agent-configuration.valid.json",
-    "sha256": "aa0114507e32e96f8840f147364120261c6a8465b267653b117d738d57a5b0d7"
+    "sha256": "8bb5bd4d02cdcbda9d6e5eba48f2d2108f3c80627536caef032353de28fa6e9a"
   },
   "implementation": {
     "path": "scripts/validate_planning_schemas.mjs",
-    "sha256": "18f81e29d68671e2e32b09d50fc7a6b424f8b6d5808adc0552bcc051f72a4ad4"
+    "sha256": "9eb1e5277bc2ffe6953e2d2ecc6504f832825285beefecfb35c27aac4997ac20"
   },
   "tests": {
     "path": "tests/test_planning_schemas.mjs",
-    "sha256": "3b826bd91ff3f4d39e9d7fcf8443e5526678b5190696a8944e4847a6f55704e7"
+    "sha256": "2449f8676f5fb226e35910b5e00652228aa06dfd613c31324881609081aaaa1f"
   },
   "section_types": [
     "core",

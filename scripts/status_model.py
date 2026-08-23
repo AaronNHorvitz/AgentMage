@@ -264,9 +264,9 @@ def _validate_scope(model: dict[str, Any], root: Path, failures: list[str]) -> N
     }
     expected = {
         "accepted_epics": 17,
-        "accepted_foundational_runtime_epics": 2,
+        "accepted_foundational_runtime_epics": 4,
         "accepted_sprints": 169,
-        "stable_requirements": 241,
+        "stable_requirements": 294,
     }
     for field, count in expected.items():
         if scope.get(field) != count:
@@ -385,6 +385,8 @@ def validate_status_model(
         failures.append("status model schema_version must equal 1")
     if model.get("decision_id") != "ADR-0012" or model.get("status") != "accepted":
         failures.append("status model must bind accepted Decision 0012")
+    if model.get("amendment_decision_ids") != ["ADR-0043", "ADR-0044"]:
+        failures.append("status model engineering-runtime amendments are incomplete")
     if (
         model.get("reference_contract")
         != "architecture/status-model.json#<collection>=<record-id>"

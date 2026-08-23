@@ -68,6 +68,17 @@ class ConfigurationAuthorityMutationEvidenceTests(unittest.TestCase):
         for changed in (removed, duplicate, unknown, weakened):
             self.assertTrue(validate_registry(changed))
 
+    def test_planned_authority_fields_cannot_be_activated_by_registry_edit(self) -> None:
+        registry = read_json(REGISTRY_PATH)
+        activated = copy.deepcopy(registry)
+        activated["planned_entries"][0]["status"] = "active"
+        weakened = copy.deepcopy(registry)
+        weakened["planned_entry_policy"]["default_effect"] = "allow"
+        embedded_credential = copy.deepcopy(registry)
+        embedded_credential["planned_entry_policy"]["credential_values_prohibited"] = False
+        for changed in (activated, weakened, embedded_credential):
+            self.assertTrue(validate_registry(changed))
+
     def test_result_weakening_and_platform_overclaims_fail_closed(self) -> None:
         report = build_report(EXPECTED_TESTS)
         missing_source = copy.deepcopy(report)

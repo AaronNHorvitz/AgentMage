@@ -30,7 +30,69 @@ DEFAULT_STATUS: Final = ROOT / "architecture" / "status-model.json"
 DEFAULT_TASKS: Final = ROOT / "TASKS.md"
 
 EXPECTED_DECISIONS: Final = ("ADR-0027", "ADR-0040")
-EXPECTED_FOUNDATIONAL_DECISIONS: Final = ("ADR-0042",)
+EXPECTED_FOUNDATIONAL_DECISIONS: Final = ("ADR-0042", "ADR-0043", "ADR-0044")
+DECISION_0043_REQUIREMENTS: Final = (
+    "AM-CAP-001",
+    "AM-CAP-002",
+    "AM-CTX-001",
+    "AM-CTX-002",
+    "AM-CTX-003",
+    "AM-DEG-001",
+    "AM-ERT-001",
+    "AM-MAG-001",
+    "AM-OBS-002",
+    "AM-PERF-001",
+    "AM-SES-002",
+    "AM-TIO-001",
+    "AM-VER-001",
+    "AM-VSC-004",
+    "AM-VSC-005",
+    "AM-VSC-006",
+    "AM-WKF-001",
+    "AM-WKF-002",
+    "AT-CAP-001",
+    "AT-CAP-002",
+    "AT-CTX-001",
+    "AT-CTX-002",
+    "AT-CTX-003",
+    "AT-CTX-004",
+    "AT-DEG-001",
+    "AT-ERT-001",
+    "AT-MAG-001",
+    "AT-MAG-002",
+    "AT-OBS-002",
+    "AT-PERF-002",
+    "AT-PERF-003",
+    "AT-RESUME-002",
+    "AT-TIO-001",
+    "AT-TIO-002",
+    "AT-VER-001",
+    "AT-VSC-004",
+    "AT-VSC-005",
+    "AT-VSC-006",
+    "AT-WKF-001",
+    "AT-WKF-002",
+    "AT-WKF-003",
+)
+DECISION_0044_REQUIREMENTS: Final = (
+    "AM-GWY-001",
+    "AM-GWY-002",
+    "AM-GWY-003",
+    "AM-REM-001",
+    "AM-REM-002",
+    "AM-REM-003",
+    "AT-GWY-001",
+    "AT-GWY-002",
+    "AT-GWY-003",
+    "AT-REM-001",
+    "AT-REM-002",
+    "AT-REM-003",
+)
+EXPECTED_FOUNDATIONAL_ADDITIONS: Final = {
+    "ADR-0042": ((), ("FRE-INGEST", "FRE-WORKFLOW")),
+    "ADR-0043": (DECISION_0043_REQUIREMENTS, ("FRE-ENGINEERING-RUNTIME",)),
+    "ADR-0044": (DECISION_0044_REQUIREMENTS, ("FRE-MODEL-GATEWAY",)),
+}
 EXPECTED_NEGATIVE_CONTROLS: Final = (
     "mutated-preserved-requirement",
     "deleted-preserved-requirement",
@@ -222,14 +284,28 @@ def validate_planning_scope(
             "accepted foundational decision set must be exactly "
             + ", ".join(EXPECTED_FOUNDATIONAL_DECISIONS)
         )
+    foundational_additions: list[str] = []
     for item in foundational_decisions:
-        _validate_decision(item, root, failures)
+        decision_text_value = _validate_decision(item, root, failures)
+        decision_id = str(item.get("id"))
         if item.get("release_epic_delta") != 0 or item.get("sprint_delta") != 0:
-            failures.append(f"{item.get('id')}: release epic or sprint delta must remain zero")
-        if item.get("stable_requirement_delta") != 0:
-            failures.append(f"{item.get('id')}: stable requirement delta must remain zero")
-        if item.get("foundational_runtime_epics") != ["FRE-INGEST", "FRE-WORKFLOW"]:
-            failures.append(f"{item.get('id')}: foundational runtime epic identities are corrupt")
+            failures.append(f"{decision_id}: release epic or sprint delta must remain zero")
+        expected_ids, expected_epics = EXPECTED_FOUNDATIONAL_ADDITIONS.get(
+            decision_id, ((), ())
+        )
+        actual_ids = item.get("appended_requirement_ids")
+        if actual_ids != list(expected_ids):
+            failures.append(f"{decision_id}: appended requirement id set is corrupt")
+            actual_ids = []
+        if item.get("stable_requirement_delta") != len(expected_ids):
+            failures.append(f"{decision_id}: stable requirement delta is corrupt")
+        if item.get("foundational_runtime_epics") != list(expected_epics):
+            failures.append(f"{decision_id}: foundational runtime epic identities are corrupt")
+        if decision_id != "ADR-0042" and not decision_text_value:
+            failures.append(f"{decision_id}: additive decision text is unavailable")
+        foundational_additions.extend(str(identifier) for identifier in actual_ids)
+    if len(foundational_additions) != len(set(foundational_additions)):
+        failures.append("foundational decisions contain duplicate appended requirement ids")
 
     snapshots = manifest.get("snapshots")
     if not isinstance(snapshots, dict):
@@ -287,9 +363,12 @@ def validate_planning_scope(
         _normative_identity(item)
         for item in _records(normative_map.get("mappings"), "normative mappings", failures)
     ]
-    if current_ids != d40_ids:
-        missing = sorted(set(d40_ids) - set(current_ids))
-        added = sorted(set(current_ids) - set(d40_ids))
+    accepted_current_ids = sorted(set(d40_ids) | set(foundational_additions))
+    if len(accepted_current_ids) != len(d40_ids) + len(foundational_additions):
+        failures.append("foundational appended requirement ids overlap accepted history")
+    if current_ids != accepted_current_ids:
+        missing = sorted(set(accepted_current_ids) - set(current_ids))
+        added = sorted(set(current_ids) - set(accepted_current_ids))
         failures.append(
             "current requirement identities do not match accepted decisions; "
             f"missing={missing}, unapproved={added}"
@@ -299,10 +378,10 @@ def validate_planning_scope(
 
     counts = _validate_counts(registry, normative_map, tasks_text, failures)
     expected_counts = {
-        "stable_requirements": 241,
+        "stable_requirements": 294,
         "normative_mappings": 31,
         "epics": 17,
-        "foundational_runtime_epics": 2,
+        "foundational_runtime_epics": 4,
         "sprints": 169,
     }
     if counts != expected_counts:
@@ -386,7 +465,8 @@ def validate_planning_scope(
         "accepted_foundational_decisions": foundational_ids,
         "historical_baseline": snapshots.get("post-0027", {}).get("counts", {}),
         "current_counts": counts,
-        "appended_requirement_ids": appended,
+        "appended_requirement_ids": sorted(set(appended) | set(foundational_additions)),
+        "foundational_appended_requirement_ids": foundational_additions,
         "preserved_requirement_ids": pre_ids,
         "superseded_assumptions": model_direction.get("superseded_assumptions", []),
         "source_hashes": source_hashes,
@@ -525,6 +605,43 @@ def build_manifest() -> dict[str, Any]:
                 "release_epic_delta": 0,
                 "sprint_delta": 0,
                 "stable_requirement_delta": 0,
+                "appended_requirement_ids": [],
+            },
+            {
+                "id": "ADR-0043",
+                "status": "accepted",
+                "document": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md",
+                "source_sha256": sha256_file(
+                    ROOT
+                    / "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md"
+                ),
+                "approval_markers": [
+                    "| Status | Accepted additive architecture and planning refinement |",
+                    "On 2026-08-22, the user explicitly instructed AgentMage",
+                ],
+                "foundational_runtime_epics": ["FRE-ENGINEERING-RUNTIME"],
+                "release_epic_delta": 0,
+                "sprint_delta": 0,
+                "stable_requirement_delta": len(DECISION_0043_REQUIREMENTS),
+                "appended_requirement_ids": list(DECISION_0043_REQUIREMENTS),
+            },
+            {
+                "id": "ADR-0044",
+                "status": "accepted",
+                "document": "docs/decisions/0044-local-and-remote-open-weight-inference-profiles.md",
+                "source_sha256": sha256_file(
+                    ROOT
+                    / "docs/decisions/0044-local-and-remote-open-weight-inference-profiles.md"
+                ),
+                "approval_markers": [
+                    "| Status | Accepted additive architecture and planning refinement |",
+                    "On 2026-08-22, the user explicitly instructed AgentMage",
+                ],
+                "foundational_runtime_epics": ["FRE-MODEL-GATEWAY"],
+                "release_epic_delta": 0,
+                "sprint_delta": 0,
+                "stable_requirement_delta": len(DECISION_0044_REQUIREMENTS),
+                "appended_requirement_ids": list(DECISION_0044_REQUIREMENTS),
             }
         ],
         "snapshots": snapshots,
@@ -581,6 +698,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--bootstrap-manifest", action="store_true")
+    action.add_argument("--refresh-manifest", action="store_true")
     action.add_argument("--write", action="store_true")
     action.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
@@ -590,6 +708,16 @@ def main(argv: list[str] | None = None) -> int:
                 raise PlanningScopeError(
                     f"refusing to overwrite existing manifest: {DEFAULT_MANIFEST}"
                 )
+            DEFAULT_MANIFEST.write_text(render(build_manifest()), encoding="utf-8")
+            return 0
+        if args.refresh_manifest:
+            if not DEFAULT_MANIFEST.is_file():
+                raise PlanningScopeError(
+                    f"cannot refresh missing manifest: {DEFAULT_MANIFEST}"
+                )
+            current = load_object(DEFAULT_MANIFEST)
+            if current.get("schema_version") != 1:
+                raise PlanningScopeError("refusing to refresh an unknown manifest version")
             DEFAULT_MANIFEST.write_text(render(build_manifest()), encoding="utf-8")
             return 0
         failures, report = build_report()
@@ -608,8 +736,8 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(
             "Planning scope validation passed: Decision 0027 baseline 241/30; "
-            "current accepted chain 241/31; Decision 0042 adds 2 foundational "
-            "runtime epics and 0 release epics, sprints, or stable requirements."
+            "current accepted chain 294/31; Decisions 0042-0044 add 4 foundational "
+            "runtime epics, 53 stable requirements, and 0 release epics or sprints."
         )
         return 0
     except (OSError, ValueError, subprocess.CalledProcessError) as error:

@@ -178,7 +178,12 @@ def validate_rules(rules: Any, inventory: Any) -> list[str]:
         failures.append("schema_version must equal 1")
     if rules.get("decision_id") != "ADR-0004":
         failures.append("decision_id must equal ADR-0004")
-    if rules.get("amendment_decision_ids") != ["ADR-0014", "ADR-0028"]:
+    if rules.get("amendment_decision_ids") != [
+        "ADR-0014",
+        "ADR-0028",
+        "ADR-0043",
+        "ADR-0044",
+    ]:
         failures.append("dependency rules must record accepted boundary amendments")
     if rules.get("status") != "accepted":
         failures.append("dependency rules status must be accepted")

@@ -482,3 +482,43 @@ model, runtime, policy, graph, queue, evidence, contradiction, resource, and com
 Changed input invalidates reverse-dependent records before reuse. Audit removal terminates workers,
 deletes disposable roots, indexes, cards, checkpoints, findings, caches, and registrations according
 to retention, and then proves the canonical repository and neighboring user data are unchanged.
+
+## 15. Engineering Runtime, Verified Chat, and Model Gateway Topology
+
+Decisions 0043 and 0044 retain the existing process and authenticated IPC model and add planned
+roles, not ambient authorities:
+
+| Process or surface | Planned authority | Prohibited authority |
+|---|---|---|
+| Verified Chat webview | Render host events, collect user interaction, request native editor surfaces | Policy, files, Git, tools, models, secrets, grants, persistence, routing, or completion |
+| TypeScript bridge | Stable VS Code API adaptation, authenticated IPC, bounded chunk transfer, progress, cancellation | Independent task state, prompt assembly, parsing policy, effects, raw credentials, or completion |
+| Rust host | Composition root for Engineering Runtime, state, policy, artifacts, journal, tools, gateway admission, verification, and terminal results | Ambient privilege or undeclared provider authority |
+| Local model worker | Exact admitted local runtime request and bounded canonical events | Workspace, credentials, tools, grants, routing, policy, or completion |
+| Remote inference worker | One minimized classified request to one exact endpoint using one credential reference and transport policy | Workspace, general network, tools, grants, endpoint selection, fallback, or completion |
+| Parser worker | One bounded source object and declared extraction contract | Network, active content, plugins, external relationships, credentials, workspace mutation, or policy |
+| Tool worker | One exact operation under current grant, sandbox, path, process, and resource policy | Model access, route selection, grant minting, or completion |
+| Verifier worker | Exact expected state and current evidence through a closed verifier | Effects, model calls, credentials, or authority widening |
+| Multi-agent coordinator | Bounded work packets, leases, capacity, evidence routing, and serialized integration plan | Shared credentials, pod authority widening, self-approval, hidden merge, or final promotion by default |
+
+Verified Chat and native compatibility use the existing platform-native authenticated transport:
+mode-`0600` Unix-domain sockets on Linux, the admitted App Group channel on macOS, and
+access-controlled named pipes on Windows. No loopback listener is introduced for the editor bridge.
+Attachment frames bind session, host, protocol, sequence, total bytes, chunk digest,
+acknowledgement, cancellation, expiry, and flow-control state.
+
+An optional local model compatibility listener is a separate Model Gateway adapter and remains
+disabled until its bind, authentication, protocol, request-size, rate, cancellation, and removal
+gates pass. A listener never exposes AgentMage tools or workspace authority.
+
+Remote inference uses outbound connectivity only from the exact worker. Non-loopback destinations
+require verified TLS, exact host and address policy, deny-first redirects, explicit proxy behavior,
+DNS-rebinding and SSRF checks, bounded request and response, and emergency disablement. The worker
+resolves a typed credential reference after route admission; the Rust workflow state, model-visible
+context, webview, TypeScript bridge, logs, traces, receipts, and committed configuration never
+receive the raw value.
+
+The endpoint, model, runtime, codec, and route remain separate identities. Endpoint health may make
+a route unavailable but cannot choose another destination or widen disclosure. Strict-local routes
+do not depend on a remote worker, account, credential, listener, or cloud service. Disabling and
+removing remote inference reconciles in-flight requests, stops workers, closes sockets, revokes
+credential access, removes route registration, applies retention, and reruns strict-local gates.

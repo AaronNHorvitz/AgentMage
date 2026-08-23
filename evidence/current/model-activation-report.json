@@ -24,16 +24,18 @@
     "profile_discovery": "signed-exact-admitted-only",
     "vendor": "agentmage"
   },
+  "enabled_endpoint_profiles": [],
   "enabled_profile_count": 0,
   "enabled_profiles": [],
+  "enabled_routes": [],
   "inputs": [
     {
       "path": "architecture/model-activation-policy.json",
-      "sha256": "d87636417c9e54317a5bc60e21a8938796b23bdc20c4d1ff6150b0b7f5f88764"
+      "sha256": "6c23245ac071205156bb1733bf16091c7e3ed410b45bf7fe84e7cb596d32aeea"
     },
     {
       "path": "architecture/status-model.json",
-      "sha256": "e2cf08c494cc41914747a92985156b9708a9269d906b16deef511a13b6259c45"
+      "sha256": "78a86e1b1b99bc35cbb5872ca8591072db8e747953374a510a8ea49059d7d496"
     },
     {
       "path": "shells/vscode/package.json",
@@ -44,7 +46,9 @@
       "sha256": "74725f714a4d085dfe52c4f7373b51c484f7e1713b5173e975084274c343e000"
     }
   ],
+  "remote_inference_optional": true,
   "report_id": "agentmage-current-model-activation-v1",
   "schema_version": 1,
+  "strict_local_complete_target": true,
   "support_claim": "none-pre-release"
 }

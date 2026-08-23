@@ -17,6 +17,9 @@ except ModuleNotFoundError:  # Direct execution adds scripts/, not the repositor
 
 
 ROOT = Path(__file__).resolve().parents[1]
+LOCAL_INSTRUCTION_INPUTS = {
+    "AgentMage_Engineering_Runtime_and_Local_Remote_Model_Gateway_Instructions_for_GPT-5.6_Sol_Ultra.md"
+}
 REQUIRED_FILES = (
     "README.md",
     "PRD.md",
@@ -32,6 +35,13 @@ REQUIRED_FILES = (
     "TRUSTED-OPERATIONS.md",
     "CODEBASE-AUDIT.md",
     "WINDOWS-BOUNDARIES.md",
+    "ENGINEERING-RUNTIME.md",
+    "MODEL-GATEWAY.md",
+    "ENGINEERING-CAPABILITY-REGISTRY.md",
+    "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md",
+    "docs/decisions/0044-local-and-remote-open-weight-inference-profiles.md",
+    "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md",
+    "architecture/engineering-runtime-change-manifest.json",
     "architecture/language-build-matrix.json",
     "architecture/status-model.json",
     "architecture/module-inventory.json",
@@ -310,7 +320,7 @@ DECISION_BOUNDARIES = {
 LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
 IDENTIFIER = re.compile(r"\b(?:AM|AT|CR)-[A-Z0-9.-]+\b")
 SR_IDENTIFIER = re.compile(r"\bSR-[A-Z]+-\d{3}\b")
-RV_IDENTIFIER = re.compile(r"\bRV-(?:0[1-9]|[1-3]\d|4[0-8])\b")
+RV_IDENTIFIER = re.compile(r"\bRV-(?:0[1-9]|[1-4]\d|5[0-7])\b")
 PROHIBITED_CLAIM = re.compile(
     r"\b(?:federal|government|treasury|fedramp|fisma|fips|nist|sp\s*800)\b",
     re.IGNORECASE,
@@ -328,14 +338,21 @@ def markdown_files() -> list[Path]:
     return sorted(
         path
         for path in ROOT.rglob("*.md")
-        if ".git" not in path.parts and "node_modules" not in path.parts
+        if ".git" not in path.parts
+        and "node_modules" not in path.parts
+        and path.relative_to(ROOT).as_posix() not in LOCAL_INSTRUCTION_INPUTS
     )
 
 
 def text_files() -> list[Path]:
     files: list[Path] = []
     for path in ROOT.rglob("*"):
-        if not path.is_file() or ".git" in path.parts or "node_modules" in path.parts:
+        if (
+            not path.is_file()
+            or ".git" in path.parts
+            or "node_modules" in path.parts
+            or path.relative_to(ROOT).as_posix() in LOCAL_INSTRUCTION_INPUTS
+        ):
             continue
         try:
             path.read_text(encoding="utf-8")
@@ -405,7 +422,7 @@ def check_identifiers(files: list[Path], failures: list[str]) -> None:
         re.findall(r"^\| `(SR-[A-Z]+-\d{3})` \|", security, re.MULTILINE)
     )
     definition_list.extend(
-        re.findall(r"^### `(RV-(?:0[1-9]|[1-3]\d|4[0-8]))`", security, re.MULTILINE)
+        re.findall(r"^### `(RV-(?:0[1-9]|[1-4]\d|5[0-7]))`", security, re.MULTILINE)
     )
     definitions = set(definition_list)
 
@@ -425,7 +442,7 @@ def check_identifiers(files: list[Path], failures: list[str]) -> None:
     for identifier in sorted(references - definitions):
         failures.append(f"unresolved stable identifier: {identifier}")
 
-    expected_rv = {f"RV-{number:02d}" for number in range(1, 49)}
+    expected_rv = {f"RV-{number:02d}" for number in range(1, 58)}
     missing_rv = expected_rv - set(RV_IDENTIFIER.findall(security))
     if missing_rv:
         failures.append(f"missing reviewer protocols: {', '.join(sorted(missing_rv))}")

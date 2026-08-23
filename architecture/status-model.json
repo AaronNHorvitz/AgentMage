@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "decision_id": "ADR-0012",
+  "amendment_decision_ids": ["ADR-0043", "ADR-0044"],
   "status": "accepted",
   "reference_contract": "architecture/status-model.json#<collection>=<record-id>",
   "dimensions": {
@@ -265,6 +266,111 @@
           "path": "ENGINEERING-AUDIT-REMEDIATION.md"
         }
       ]
+    },
+    {
+      "id": "engineering-runtime",
+      "lifecycle_status": "designed",
+      "verification_status": "not-run",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "design",
+          "path": "ENGINEERING-RUNTIME.md"
+        },
+        {
+          "kind": "accepted-decision",
+          "path": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+        }
+      ]
+    },
+    {
+      "id": "model-gateway",
+      "lifecycle_status": "designed",
+      "verification_status": "not-run",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "design",
+          "path": "MODEL-GATEWAY.md"
+        },
+        {
+          "kind": "accepted-decision",
+          "path": "docs/decisions/0044-local-and-remote-open-weight-inference-profiles.md"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+        }
+      ]
+    },
+    {
+      "id": "verified-chat",
+      "lifecycle_status": "designed",
+      "verification_status": "not-run",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "design",
+          "path": "ENGINEERING-RUNTIME.md"
+        },
+        {
+          "kind": "accepted-decision",
+          "path": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+        }
+      ]
+    },
+    {
+      "id": "engineering-capability-registry",
+      "lifecycle_status": "designed",
+      "verification_status": "not-run",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "design",
+          "path": "ENGINEERING-CAPABILITY-REGISTRY.md"
+        },
+        {
+          "kind": "accepted-decision",
+          "path": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-capability-composition",
+      "lifecycle_status": "designed",
+      "verification_status": "not-run",
+      "disposition_status": "active",
+      "support_status": "unsupported-pre-release",
+      "evidence_basis": [
+        {
+          "kind": "design",
+          "path": "ENGINEERING-CAPABILITY-REGISTRY.md"
+        },
+        {
+          "kind": "accepted-decision",
+          "path": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md"
+        },
+        {
+          "kind": "status-assessment",
+          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+        }
+      ]
     }
   ],
   "platforms": [
@@ -418,9 +524,9 @@
     "new_capability_families_frozen": false,
     "original_roadmap_paused": false,
     "accepted_epics": 17,
-    "accepted_foundational_runtime_epics": 2,
+    "accepted_foundational_runtime_epics": 4,
     "accepted_sprints": 169,
-    "stable_requirements": 241,
+    "stable_requirements": 294,
     "exception_requires_explicit_approval": true,
     "exception_impact_fields": [
       "architecture",
@@ -442,7 +548,10 @@
       "PRD.md",
       "IMPLEMENTATION-PLAN.md",
       "Agent-Scaffolding-Inventory.md",
-      "TASKS.md"
+      "TASKS.md",
+      "ENGINEERING-RUNTIME.md",
+      "MODEL-GATEWAY.md",
+      "ENGINEERING-CAPABILITY-REGISTRY.md"
     ],
     "required_markers": [
       "Current product lifecycle: `scaffolded`.",

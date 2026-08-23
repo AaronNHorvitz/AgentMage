@@ -107,6 +107,24 @@ def binding(path: Path) -> dict[str, object]:
     return {"path": relative(path), "sha256": sha256_file(path), "size": path.stat().st_size}
 
 
+def binding_at_revision(path: Path, revision: str) -> dict[str, object]:
+    result = subprocess.run(
+        ["git", "show", f"{revision}:{relative(path)}"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise Story03SecurityEvidenceError(
+            f"cannot read {relative(path)} at verification revision {revision}"
+        )
+    return {
+        "path": relative(path),
+        "sha256": sha256(result.stdout),
+        "size": len(result.stdout),
+    }
+
+
 def resolve_revision(revision: str) -> str:
     result = subprocess.run(
         ["git", "rev-parse", "--verify", f"{revision}^{{commit}}"],
@@ -200,7 +218,15 @@ def evidence_index(verification_revision: str) -> dict[str, object]:
         "index_signature_status": "NOT_SIGNED_NO_RELEASE_SIGNING_IDENTITY",
         "release_signature_claim": False,
         "records": [
-            {"evidence_id": evidence_id, **binding(path), "supports": supports}
+            {
+                "evidence_id": evidence_id,
+                **(
+                    binding_at_revision(path, verification_revision)
+                    if evidence_id == "model_policy"
+                    else binding(path)
+                ),
+                "supports": supports,
+            }
             for evidence_id, path, supports in records
         ],
     }

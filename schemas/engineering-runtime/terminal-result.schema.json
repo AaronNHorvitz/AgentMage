@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/terminal-result.schema.json",
+  "title": "AgentMage terminal-result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "terminal_result_id",
+    "workflow_id",
+    "outcome",
+    "verification_result_ids",
+    "last_verified_state_sha256",
+    "diagnostic_code",
+    "safe_next_action",
+    "established_by",
+    "result_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "terminal_result_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "workflow_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "outcome": {
+      "enum": [
+        "verified_success",
+        "verified_no_op",
+        "blocked",
+        "failed",
+        "cancelled",
+        "timed_out",
+        "resource_exhausted",
+        "uncertain"
+      ]
+    },
+    "verification_result_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "last_verified_state_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "diagnostic_code": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "safe_next_action": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "established_by": {
+      "const": "agentmage-runtime-verifier"
+    },
+    "result_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "outcome": {
+            "enum": [
+              "verified_success",
+              "verified_no_op"
+            ]
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verification_result_ids": {
+            "type": "array",
+            "minItems": 1
+          },
+          "diagnostic_code": {
+            "type": "null"
+          },
+          "safe_next_action": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "diagnostic_code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "safe_next_action": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        }
+      }
+    }
+  ]
+}

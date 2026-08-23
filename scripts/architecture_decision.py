@@ -81,6 +81,8 @@ def validate_matrix(matrix: Any) -> list[str]:
         failures.append("decision_id must equal ADR-0004")
     if matrix.get("amending_decision_id") != "ADR-0012":
         failures.append("amending_decision_id must equal ADR-0012")
+    if matrix.get("planning_decision_ids") != ["ADR-0043", "ADR-0044"]:
+        failures.append("planning decision identities must equal ADR-0043 and ADR-0044")
     if matrix.get("status") != "accepted":
         failures.append("architecture decision must be accepted")
 
@@ -144,12 +146,42 @@ def validate_matrix(matrix: Any) -> list[str]:
             failures.append("the VS Code provider contribution point must be selected")
         if vscode.get("api_channel") != "stable" or vscode.get("proposed_api_allowed") is not False:
             failures.append("proposed VS Code APIs must remain disabled")
+        if vscode.get("canonical_reliable_interface") != "agentmage-verified-chat":
+            failures.append("Verified Chat must remain the canonical reliable interface")
+        if vscode.get("native_compatibility_interfaces") != [
+            "chat-participant",
+            "language-model-chat-provider",
+        ]:
+            failures.append("native VS Code compatibility interface set is incomplete")
+        if vscode.get("native_semantic_gap_disclosure_required") is not True:
+            failures.append("native VS Code semantic gaps must be disclosed")
+        if vscode.get("webview_state_authoritative") is not False:
+            failures.append("the Verified Chat webview cannot own runtime state")
+        if vscode.get("rust_host_state_authoritative") is not True:
+            failures.append("the Rust host must own Verified Chat runtime state")
         prohibited = set(vscode.get("extension_prohibited_authority", []))
         missing = PROHIBITED_EXTENSION_AUTHORITY - prohibited
         if missing:
             failures.append(
                 "VS Code extension missing prohibited authority: " + ", ".join(sorted(missing))
             )
+
+    runtime = matrix.get("planned_runtime_contract")
+    expected_runtime = {
+        "language": "rust",
+        "strict_local_complete_target": True,
+        "remote_inference_optional": True,
+        "automatic_fallback": False,
+        "profile_classes": [
+            "strict_local",
+            "local_network_private",
+            "remote_private",
+            "remote_managed",
+        ],
+        "status_ref": "architecture/status-model.json#component=engineering-runtime",
+    }
+    if runtime != expected_runtime:
+        failures.append("planned Engineering Runtime contract is incomplete or changed")
 
     return failures
 

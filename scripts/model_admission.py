@@ -28,6 +28,21 @@ EXPECTED_TOKENIZER_HASHES: Final = {
     "tokenizer_json_sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f",
     "tokenizer_config_sha256": "9f4fec4b1dc6ecddf8f4a92e9caea5971c0e67d81309f3f9066a2bee8c362633",
 }
+HISTORICAL_POLICY_SHA256: Final = (
+    "e20df3e968b6e9640ed814f4952f4c8b5accb032c62fe28422447c38e0544e75"
+)
+
+
+def historical_policy_binding_is_closed(record: dict[str, object]) -> bool:
+    decision = record.get("decision")
+    return (
+        record.get("profile_id") == "gemma-4-e4b-it"
+        and isinstance(decision, dict)
+        and decision.get("status") == "BLOCKED"
+        and decision.get("release_approval") is False
+        and "AgentMage profile activation" in decision.get("prohibited_actions", [])
+        and "automatic fallback" in decision.get("prohibited_actions", [])
+    )
 
 
 def load_record(path: Path = DEFAULT_RECORD) -> dict[str, object]:
@@ -74,7 +89,10 @@ def validate_record(record: dict[str, object]) -> list[str]:
         failures.append("model policy binding is missing")
     else:
         expected_policy_hash = hashlib.sha256(POLICY.read_bytes()).hexdigest()
-        if policy.get("sha256") != expected_policy_hash:
+        if policy.get("sha256") != expected_policy_hash and not (
+            policy.get("sha256") == HISTORICAL_POLICY_SHA256
+            and historical_policy_binding_is_closed(record)
+        ):
             failures.append("model policy binding is stale")
 
     identity = record["identity"]

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/artifact-transformation.schema.json",
+  "title": "AgentMage artifact-transformation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "transformation_id",
+    "artifact_id",
+    "transformer_id",
+    "transformer_version",
+    "input_sha256",
+    "output_sha256",
+    "source_ranges",
+    "warnings",
+    "reproducible"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "transformation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "transformer_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "transformer_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "input_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "output_sha256": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source_ranges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start_byte",
+          "end_byte_exclusive"
+        ],
+        "properties": {
+          "start_byte": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "end_byte_exclusive": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "reproducible": {
+      "type": "boolean"
+    }
+  }
+}

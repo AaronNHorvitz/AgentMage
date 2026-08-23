@@ -39,6 +39,26 @@ EXPECTED_REJECTIONS = {
     "configuration-authority-broadening": 59,
     "configuration-contract-violation": 38,
 }
+EXPECTED_PLANNED_ENTRY_POLICY = {
+    "activation": "requires-versioned-schema-implementation-and-evidence",
+    "audit_required": True,
+    "credential_values_prohibited": True,
+    "default_effect": "deny",
+    "exact_bound_required": True,
+    "expiry_required": True,
+}
+EXPECTED_PLANNED_ENTRIES = (
+    ("/permission/inference_egress", "inference-egress"),
+    ("/permission/remote_endpoint", "remote-endpoint"),
+    ("/permission/managed_endpoint", "managed-endpoint"),
+    ("/permission/context_disclosure", "context-disclosure"),
+    ("/permission/persistent_execution", "persistent-execution"),
+    ("/permission/unattended_execution", "unattended-execution"),
+    ("/permission/multi_agent_fanout", "multi-agent-fanout"),
+    ("/permission/model_route", "model-route"),
+    ("/permission/endpoint_credential", "endpoint-credential-reference"),
+    ("/permission/cost_budget", "cost-budget"),
+)
 COMMAND_PREFIX = (
     "cargo",
     "test",
@@ -118,6 +138,8 @@ def validate_registry(value: Any) -> list[str]:
     if set(value) != {
         "schema_version",
         "status",
+        "planned_entries",
+        "planned_entry_policy",
         "entries",
         "excluded_non_authority_fields",
         "exclusion_rationale",
@@ -125,6 +147,31 @@ def validate_registry(value: Any) -> list[str]:
         failures.append("permission-bearing registry fields are not closed")
     if value.get("schema_version") != 1 or value.get("status") != "enforced-test-closure":
         failures.append("permission-bearing registry identity is invalid")
+    planned_entries = value.get("planned_entries")
+    if not isinstance(planned_entries, list):
+        failures.append("planned permission-bearing entries must be an array")
+    else:
+        observed_planned_entries = []
+        for entry in planned_entries:
+            if not isinstance(entry, dict) or set(entry) != {
+                "path",
+                "dimension",
+                "status",
+                "expected_rejection",
+            }:
+                failures.append("planned permission-bearing entry fields are not closed")
+                continue
+            if entry.get("status") != "planned-not-active":
+                failures.append("planned permission-bearing entries must remain inactive")
+            if entry.get("expected_rejection") != "configuration-authority-broadening":
+                failures.append("planned permission-bearing entries must fail closed")
+            observed_planned_entries.append(
+                (entry.get("path"), entry.get("dimension"))
+            )
+        if tuple(observed_planned_entries) != EXPECTED_PLANNED_ENTRIES:
+            failures.append("planned permission-bearing entry closure is invalid")
+    if value.get("planned_entry_policy") != EXPECTED_PLANNED_ENTRY_POLICY:
+        failures.append("planned permission-bearing policy is invalid")
     entries = value.get("entries")
     if not isinstance(entries, list):
         return [*failures, "permission-bearing entries must be an array"]

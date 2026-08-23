@@ -349,3 +349,16 @@ planning, issue, bug, and GitHub review execution remains deferred to Story
 release, deployment, observability, incident, and maintenance profile paths
 remain deferred through Sprints 108-124, followed by all-profile lifecycle
 conformance in Story 125.2. The catalog itself creates no current support claim.
+## 19. Engineering Runtime, Capability, and Model Gateway Relationship
+
+Delivery adapters expose provider objects and effects through the existing delivery graph. A Model
+Gateway endpoint profile is an inference destination, not a Git, issue, CI, artifact, deployment,
+observability, or incident adapter. Inference compatibility cannot grant provider credentials,
+network destinations, write authority, deployment authority, or support status.
+
+Engineering capabilities may compose delivery operations only through admitted manifests under
+`ENGINEERING-CAPABILITY-REGISTRY.md`. The Rust Engineering Runtime owns workflow state, fresh
+attempts, grants, approvals, observations, verification, recovery, and terminal results. Local and
+remote model routes return untrusted proposals. CI and release evidence must bind the exact
+capability, model/runtime/codec/endpoint/route tuple where inference was used, and every delivery
+effect remains separately receipted and approved under this document.

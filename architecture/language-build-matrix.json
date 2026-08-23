@@ -2,6 +2,7 @@
   "schema_version": 2,
   "decision_id": "ADR-0004",
   "amending_decision_id": "ADR-0012",
+  "planning_decision_ids": ["ADR-0043", "ADR-0044"],
   "status": "accepted",
   "product_components": [
     {
@@ -137,6 +138,14 @@
     "contribution_point": "contributes.languageModelChatProviders",
     "api_channel": "stable",
     "proposed_api_allowed": false,
+    "canonical_reliable_interface": "agentmage-verified-chat",
+    "native_compatibility_interfaces": [
+      "chat-participant",
+      "language-model-chat-provider"
+    ],
+    "native_semantic_gap_disclosure_required": true,
+    "webview_state_authoritative": false,
+    "rust_host_state_authoritative": true,
     "extension_authority": [
       "display",
       "interaction",
@@ -152,5 +161,18 @@
       "grant-minting",
       "secret-store"
     ]
+  },
+  "planned_runtime_contract": {
+    "language": "rust",
+    "strict_local_complete_target": true,
+    "remote_inference_optional": true,
+    "automatic_fallback": false,
+    "profile_classes": [
+      "strict_local",
+      "local_network_private",
+      "remote_private",
+      "remote_managed"
+    ],
+    "status_ref": "architecture/status-model.json#component=engineering-runtime"
   }
 }

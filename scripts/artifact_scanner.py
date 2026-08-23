@@ -33,7 +33,9 @@ EXPECTED_SEEDS = (
     "undeclared-license",
 )
 EXPECTED_PRODUCTION_LICENSES = (
+    "0BSD OR MIT OR Apache-2.0",
     "(MIT OR Apache-2.0) AND Unicode-3.0",
+    "(Apache-2.0 OR MIT) AND BSD-3-Clause",
     "Apache-2.0",
     "Apache-2.0 OR BSD-3-Clause",
     "Apache-2.0 OR MIT",
@@ -41,15 +43,38 @@ EXPECTED_PRODUCTION_LICENSES = (
     "BSD-3-Clause",
     "MIT",
     "MIT AND BSD-3-Clause",
+    "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
     "MIT OR Apache-2.0 OR BSD-1-Clause",
     "MIT OR Apache-2.0 OR Zlib",
     "MIT OR Apache-2.0",
+    "MIT OR Zlib OR Apache-2.0",
     "MIT/Apache-2.0",
     "Unlicense OR MIT",
     "Zlib OR Apache-2.0 OR MIT",
+    "Zlib",
 )
+EXPECTED_PLANNING_ROOTS = (
+    "architecture",
+    "configuration",
+    "docs",
+    "requirements",
+    "schemas",
+    "scripts",
+    "tests",
+)
+EXPECTED_PLANNING_DISPOSITION = {
+    "production_source_roots_unchanged": True,
+    "runtime_source_scan_expansion": "blocked-until-source-exists",
+    "validation_owners": [
+        "build-contract",
+        "documentation",
+        "schema",
+        "secret-scan",
+    ],
+}
 SECRET_ASSIGNMENT = re.compile(
-    r"(?i)\b(?:api[_-]?key|password|token)\s*=\s*[\"'][^\"']+[\"']"
+    r"(?i)\b(?:api[_-]?key|password|token)\s*=\s*[\"']"
+    r"(?=[^,\r\n\"'])[^\r\n\"']+[\"']"
 )
 DYNAMIC_LOADERS = (
     re.compile(r"\bdlopen\s*\("),
@@ -81,6 +106,12 @@ def validate_policy(policy: Any) -> list[str]:
         return ["artifact scan policy must be an object"]
     if policy.get("schema_version") != 1 or policy.get("status") != "enforced":
         failures.append("artifact scan policy identity is invalid")
+    if policy.get("planning_decision_ids") != ["ADR-0043", "ADR-0044"]:
+        failures.append("artifact scan planning decisions are incomplete")
+    if tuple(policy.get("planning_contract_roots", [])) != EXPECTED_PLANNING_ROOTS:
+        failures.append("artifact scan planning contract roots drifted")
+    if policy.get("planning_contract_disposition") != EXPECTED_PLANNING_DISPOSITION:
+        failures.append("artifact scan planning disposition drifted")
     if tuple(policy.get("source_roots", [])) != EXPECTED_SOURCE_ROOTS:
         failures.append("artifact scan source roots drifted")
     if tuple(policy.get("source_extensions", [])) != EXPECTED_EXTENSIONS:

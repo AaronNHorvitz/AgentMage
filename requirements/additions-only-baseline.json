@@ -56,6 +56,17 @@
       "statement": "question answering with exact file, line, symbol, and immutable commit references plus a visible known, inferred, or unknown label."
     },
     {
+      "id": "CL-01049DA7559D48B651E9",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41B. Bounded Extraction and Structural Preservation",
+        "line": 2407,
+        "semantic_sha256": "01049da7559d48b651e9b34fc603fbf14c17b8955fd2a017eb1fdefe64c8a96b"
+      },
+      "statement": "separate OCR admission with page/image coordinates, engine identity, confidence,"
+    },
+    {
       "id": "CL-012C74259FF617035377",
       "label": "CAPABILITY GATE",
       "source": {
@@ -936,6 +947,17 @@
       "statement": "evidence typing that marks parser facts as Observed, deterministic graph calculations as Derived, model explanations as Inferred, and unavailable or failed parsing as Unknown/Blocked."
     },
     {
+      "id": "CL-0F424ADD2B6A30EF1184",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41B. Bounded Extraction and Structural Preservation",
+        "line": 2409,
+        "semantic_sha256": "0f424add2b6a30ef1184a1614aae935c3440eb793ae5d27daa1769fcb282d64c"
+      },
+      "statement": "Disable macros, scripts, active content, external relationships, formulas,"
+    },
+    {
       "id": "CL-0F4C24308AA0D92BB9C3",
       "label": "VERIFY",
       "source": {
@@ -1319,6 +1341,28 @@
         "semantic_sha256": "1580ee73677c20f4bdc82e6a1cbe41ba0a088015aab5a28291e06dc431eb05e2"
       },
       "statement": "a shared-read and single-writer rule for files that several agents inspect; require an explicit merge step before any child output changes a user-owned file."
+    },
+    {
+      "id": "CL-159BBF81686FD8BE4505",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41B. Bounded Extraction and Structural Preservation",
+        "line": 2405,
+        "semantic_sha256": "159bbf81686fd8be45053196e603ff6f63a728c87eefa30c8b7772b487be2397"
+      },
+      "statement": "adapters over the existing DOCX, PDF, and spreadsheet implementations; do not fork"
+    },
+    {
+      "id": "CL-15C02D2709C489D87242",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Model Gateway and Remote Inference",
+        "line": 2609,
+        "semantic_sha256": "15c02d2709c489d87242f2d63ad255885bec6d68d18fe8435b8d55b877fedd6a"
+      },
+      "statement": "exact local, private-network, private-remote, and managed-remote endpoint and route profiles with credential references and disclosure policy."
     },
     {
       "id": "CL-1602E2686BE60FFBCEC5",
@@ -1739,6 +1783,17 @@
       "statement": "release inspection covering release notes, tags, assets, checksums, provenance, pre-release state, publication time, and comparison with the previous release."
     },
     {
+      "id": "CL-1DC3CD8AD143C241E367",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42B. Execution, Verification, and Safe New Attempts",
+        "line": 2472,
+        "semantic_sha256": "1dc3cd8ad143c241e36750e498e9210b20719ddd0afab00d8f407ecebc851df8"
+      },
+      "statement": "deterministic call assembly and schema validation before policy evaluation, grant"
+    },
+    {
       "id": "CL-1DF4A0630B2DCB83E9C3",
       "label": "CAPABILITY GATE",
       "source": {
@@ -1937,6 +1992,17 @@
       "statement": "Reject shell escape, file read, network resource, package loading, executable extension, unbounded macro expansion, and unsupported LaTeX commands."
     },
     {
+      "id": "CL-216EBA45DC4890C1B87C",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42B. Execution, Verification, and Safe New Attempts",
+        "line": 2474,
+        "semantic_sha256": "216eba45dc4890c1b87cba0efc5ef61665a74e28278df3f085eb1bf4d21f920d"
+      },
+      "statement": "attempt supervision with separate parser-repair, step-attempt, error-class, workflow,"
+    },
+    {
       "id": "CL-2174610C9D809199FFCD",
       "label": "VERIFY",
       "source": {
@@ -1946,6 +2012,17 @@
         "semantic_sha256": "2174610c9d809199ffcd558f186582d0f4bf40fdd3e5fc6efbf89c374a81c1ae"
       },
       "statement": "cross-pack credential, cache, cursor, identity, context, classification, retention, schedule, grant, recipient, attachment, financial-record, and cloud-resource confusion attacks."
+    },
+    {
+      "id": "CL-2198E1338EAA33E9898C",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Model Gateway and Remote Inference",
+        "line": 2607,
+        "semantic_sha256": "2198e1338eaa33e9898c213e179262e75ed2095c5f51c614166f9317dafe7972"
+      },
+      "statement": "canonical gateway request, event, error, usage, cancellation, health, route-decision, and fallback contracts plus deterministic fake adapters."
     },
     {
       "id": "CL-21BADFCABB44D8489B08",
@@ -1990,6 +2067,17 @@
         "semantic_sha256": "221dfbdb540b4e287183ea942ce986ada8e8dd61bde85ff4f61899f15e4b8bf8"
       },
       "statement": "a full offline acceptance test."
+    },
+    {
+      "id": "CL-223112626F350F732BCA",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41C. Storage, Retrieval, and Context Budgeting",
+        "line": 2430,
+        "semantic_sha256": "223112626f350f732bcac63c9f8baba0bc419403ba7b899793e76052b399ac2e"
+      },
+      "statement": "999- and 1,001-character paste boundaries, combined-budget overflow, token-count"
     },
     {
       "id": "CL-223C0F0FFC0DE664F045",
@@ -2201,6 +2289,17 @@
       "statement": "an independent verification pass that receives the task, evidence, proposed result, and acceptance checks but does not inherit the first pass's unsupported conclusions."
     },
     {
+      "id": "CL-26C01E592AB9D941A22A",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42D. Evaluation and Closure",
+        "line": 2508,
+        "semantic_sha256": "26c01e592ab9d941a22aa76f22adcb134f745f4ef0c3315f5b9266037f2397d0"
+      },
+      "statement": "zero approval bypass, zero false completion, zero duplicate guarded effects, zero"
+    },
+    {
       "id": "CL-27013E53943AFE91399D",
       "label": "CAPABILITY GATE",
       "source": {
@@ -2377,6 +2476,28 @@
       "statement": "Package the macOS kernel host, inference service, and tool helper as arm64 code signed with Developer ID, notarized, stapled, and verified by Gatekeeper; enable Hardened Runtime and minimal App Sandbox entitlements."
     },
     {
+      "id": "CL-2C0CB621DCEE6844621B",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42B. Execution, Verification, and Safe New Attempts",
+        "line": 2476,
+        "semantic_sha256": "2c0cb621dcee6844621b5556128dafd6fdb0a5985a0b549946ed02b8a6d7e168"
+      },
+      "statement": "deterministic malformed-call normalization followed by at most one"
+    },
+    {
+      "id": "CL-2C0E383BEB0C1A7E8683",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Model Gateway and Remote Inference",
+        "line": 2608,
+        "semantic_sha256": "2c0e383beb0c1a7e86835e7c5c1525aad9b02ee79b08dbf79139700a6437cd97"
+      },
+      "statement": "separately isolated codecs and runtime adapters for admitted local and remote families without adding provider-specific policy to workflows."
+    },
+    {
       "id": "CL-2C7C7B18A82612092115",
       "label": "DEFER",
       "source": {
@@ -2397,6 +2518,17 @@
         "semantic_sha256": "2cc127e6a620d45208eec73dfa364148baf24e1813b4617e30cab8e6251645cf"
       },
       "statement": "one reference cloud backup adapter and a conformance contract for S3-compatible, OneDrive, Google Drive, Box, Dropbox, and later destinations."
+    },
+    {
+      "id": "CL-2D1C9A1FC02F17D9B3B5",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Registry, Observability, Performance, and Multi-Agent",
+        "line": 2618,
+        "semantic_sha256": "2d1c9a1fc02f17d9b3b50c8c5b88cd9ae0673c4562ff7c1759791b55e5f042a0"
+      },
+      "statement": "multi-agent scheduling only after single-agent gates pass, with role qualification, worktree and resource leases, independent review, failure isolation, serialized integration, and global ceilings."
     },
     {
       "id": "CL-2D1D9CF1108E777E6E64",
@@ -2485,6 +2617,17 @@
         "semantic_sha256": "2ec341771e770c0374b7a893177290d9592f7da616246ed79241fecd7e2bee20"
       },
       "statement": "a correspondence drafter for email, chat, memorandum, briefing note, request, thank-you, follow-up, escalation, and status update using user-approved tone profiles."
+    },
+    {
+      "id": "CL-2EC69C931DD32718963E",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Verified Chat and Native Compatibility",
+        "line": 2602,
+        "semantic_sha256": "2ec69c931dd32718963e3e428d84936cdf89d9ba05fb68de7083d06a94a339d7"
+      },
+      "statement": "Stable, previous Stable, current Stable, and Insiders matrices, known-bad-version disablement, remote workspace placement, accessibility, replay, origin, injection, reload, and view-loss recovery."
     },
     {
       "id": "CL-2ED417FD6BD7E95DB443",
@@ -3180,6 +3323,17 @@
       "statement": "Keep rollback, mitigation, notification, status change, and work creation as separate exact approvals; incident content cannot trigger them automatically."
     },
     {
+      "id": "CL-3B49D25EB239FA109742",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42C. Recovery, Persistence, and Diagnosis",
+        "line": 2489,
+        "semantic_sha256": "3b49d25eb239fa109742c0156b3cfbc0a65e4fec0d49684ad83526c5c7245a1c"
+      },
+      "statement": "ordered preflight, attempt, verification, retry-decision, recovery-decision, and"
+    },
+    {
       "id": "CL-3B7B7C5D20BE4C7E0A1C",
       "label": "BUILD",
       "source": {
@@ -3213,6 +3367,17 @@
       "statement": "Treat frontier engagement as memo-shaped: one dense packet in, one structured response out, like a consultant writing an opinion rather than a pair programmer on retainer."
     },
     {
+      "id": "CL-3BCD148ED2BCED74C8E1",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42A. Step Policy, Preflight, and Attempt Identity",
+        "line": 2458,
+        "semantic_sha256": "3bcd148ed2bced74c8e15d27c604365ace97bcbd5d112e91fb7d422865966e1f"
+      },
+      "statement": "a companion execution policy keyed to existing plan-step identity, with exact"
+    },
+    {
       "id": "CL-3BCFD29E132502E1C8A9",
       "label": "BUILD",
       "source": {
@@ -3222,6 +3387,17 @@
         "semantic_sha256": "3bcfd29e132502e1c8a9285b6b4fccc13fead79f2748c3d57c2aaeabeb9be130"
       },
       "statement": "a reasoning budget controller that stops when acceptance checks pass, evidence cannot improve, authority is missing, or the configured budget is exhausted."
+    },
+    {
+      "id": "CL-3BCFD53B5EE8951B0D91",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41B. Bounded Extraction and Structural Preservation",
+        "line": 2403,
+        "semantic_sha256": "3bcfd53b5ee8951b0d91bb8c18fbab0279bf2cc901cb048cd22798cd8cdd0217"
+      },
+      "statement": "text and log extraction with encoding detection, line and byte provenance, head/tail,"
     },
     {
       "id": "CL-3BDA95928A087661E80B",
@@ -3543,6 +3719,17 @@
       "statement": "approval-gated fixes from review findings that re-read the current branch, refuse unrelated changes, run the applicable checks, and show the new diff before commit or push."
     },
     {
+      "id": "CL-401C70C1E81A597FA54E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42C. Recovery, Persistence, and Diagnosis",
+        "line": 2497,
+        "semantic_sha256": "401c70c1e81a597fa54ef3282876865596e008d3fd690d787b3b508c495babe8"
+      },
+      "statement": "one actionable terminal diagnostic for every non-cancelled failure, containing the"
+    },
+    {
       "id": "CL-402029A5E10C07427E04",
       "label": "BUILD",
       "source": {
@@ -3730,6 +3917,17 @@
       "statement": "independent review-profile execution that starts from an immutable review packet, preserves each finding and dissent, and cannot inherit the implementation role's conclusions or approval state."
     },
     {
+      "id": "CL-4253BE0702C2F950F247",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42B. Execution, Verification, and Safe New Attempts",
+        "line": 2482,
+        "semantic_sha256": "4253be0702c2f950f2471a0c93f901d471c7033df2135cf30087d611795063d5"
+      },
+      "statement": "verifier observations for expected outputs, state changes, preserved invariants,"
+    },
+    {
       "id": "CL-425ED5F451AED88F1181",
       "label": "BUILD",
       "source": {
@@ -3829,6 +4027,17 @@
       "statement": "log-level, log-entry, log-metadata, and logger types."
     },
     {
+      "id": "CL-43746E41D3005DBBE9D4",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42D. Evaluation and Closure",
+        "line": 2513,
+        "semantic_sha256": "43746e41d3005dbbe9d4b2a46fab978bc19c42cc88e41a3c2809126485440c48"
+      },
+      "statement": "run the same workflow fixtures through Chat, CLI, headless, and later workflow-node"
+    },
+    {
       "id": "CL-43CBB5D0EA201E3FF69B",
       "label": "BUILD",
       "source": {
@@ -3895,6 +4104,17 @@
       "statement": "Keep generic pull, destructive/implicit Git, hooks/filters/helpers, force and force-with-lease push, implicit/multi-ref/tag/deletion/mirror push, bypass use, secret changes, repository administration, organization administration, and ruleset administration absent unless a future taxonomy decision and separately promoted L5 contract admit them."
     },
     {
+      "id": "CL-44F89F8704689ADD5850",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Model Gateway and Remote Inference",
+        "line": 2610,
+        "semantic_sha256": "44f89f8704689add5850383f0ec1a86666167c6bd29f5f629e06a9a1c2ae29d3"
+      },
+      "statement": "model, endpoint, and route qualification; TLS, mutually authenticated TLS, DNS, SSRF, redirect, proxy, host, credential, region, retention, logging, training-use, quota, cost, cancellation, circuit-breaker, and emergency-disable campaigns."
+    },
+    {
       "id": "CL-45183AB202ABAEC74B2B",
       "label": "BUILD",
       "source": {
@@ -3926,6 +4146,17 @@
         "semantic_sha256": "459e8aa3d22eff8f52756a25ab998a2c32eaa563d2e06ea1a25b0bbffdf5e00d"
       },
       "statement": "On interruption or restart, revalidate task, snapshot, policy, model profile, context packet, pending authority, in-flight effect, and verifier state; never replay a consumed grant or assume a timed-out effect did not occur."
+    },
+    {
+      "id": "CL-45C93D855C7ED725950D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41C. Storage, Retrieval, and Context Budgeting",
+        "line": 2425,
+        "semantic_sha256": "45c93d855c7ed725950d3d2af945379d979173d1384359090be2873457b53d54"
+      },
+      "statement": "one context manifest accounting for every supplied artifact and section as included,"
     },
     {
       "id": "CL-45D1F4E6E54B6B8D3F6B",
@@ -3992,6 +4223,17 @@
         "semantic_sha256": "46407244d85edccb295ca9e4697618532aecff638bcd15c503a4d68d5dc71a8d"
       },
       "statement": "an approval tracker containing the item, exact version, required approver, requested date, response, conditions, and proof of approval."
+    },
+    {
+      "id": "CL-46AF21D6AD07DB1A33BA",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41C. Storage, Retrieval, and Context Budgeting",
+        "line": 2428,
+        "semantic_sha256": "46af21d6ad07db1a33ba33f0b7662cd89b056eae63a326e88ff4864932d35df7"
+      },
+      "statement": "Feed minimized candidates into the existing Story 22.1 context manager;"
     },
     {
       "id": "CL-4724F1A1B1CD0C383737",
@@ -4192,6 +4434,17 @@
       "statement": "an architecture view that explains runtime components, process boundaries, storage, queues, scheduled jobs, user interfaces, and external systems with exact file citations."
     },
     {
+      "id": "CL-49F631A1C6B66FB93A6D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41D. Interface, Interoperability, and Closure",
+        "line": 2436,
+        "semantic_sha256": "49f631a1c6b66fb93a6db7add1a2ee1f0918bea28b4abe194eb85c7908026e04"
+      },
+      "statement": "a thin TypeScript participant adapter for stable request references, bounded byte"
+    },
+    {
       "id": "CL-4A0DB2E8E3617E753A73",
       "label": "CAPABILITY GATE",
       "source": {
@@ -4355,6 +4608,17 @@
         "semantic_sha256": "4c455878c352282281c01d7d7f855f893a74c8f66fe07bdf584589e50f31c142"
       },
       "statement": "automatic model ensembles and invisible task routing until local benchmarks prove that they improve results reliably."
+    },
+    {
+      "id": "CL-4C49167A9832229DC09A",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Registry, Observability, Performance, and Multi-Agent",
+        "line": 2619,
+        "semantic_sha256": "4c49167a9832229dc09aba44f1a5a453b0e0e0fe381613f4b30a1bd5a1d328f4"
+      },
+      "statement": "Keep final promotion human-gated by default and block every release claim on unexecuted live model, endpoint, platform, package, security, accessibility, performance, or independent-review evidence."
     },
     {
       "id": "CL-4C578D777278C1BE7C69",
@@ -5424,6 +5688,17 @@
       "statement": "paragraph creation, removal, cloning, and section-replacement helpers."
     },
     {
+      "id": "CL-5CD01752E99DE93805F6",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42A. Step Policy, Preflight, and Attempt Identity",
+        "line": 2461,
+        "semantic_sha256": "5cd01752e99de93805f61082fbf553d9545c54e91c1626f35524b8a69c9ce9d3"
+      },
+      "statement": "closed read-only, idempotent-write, conditional, non-idempotent, destructive,"
+    },
+    {
       "id": "CL-5CDCD6509CEE51AF7458",
       "label": "CAPABILITY GATE",
       "source": {
@@ -5543,6 +5818,17 @@
         "semantic_sha256": "5e94c11598273021d9f667f792d8071acdd0c3bf3ad93f0504e01c54ccec2345"
       },
       "statement": "a maximum-context test that proves the agent can continue after condensation without repeating completed work or losing the active request."
+    },
+    {
+      "id": "CL-5E952FA5B2B0B13CA3B0",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42B. Execution, Verification, and Safe New Attempts",
+        "line": 2478,
+        "semantic_sha256": "5e952fa5b2b0b13ca3b01a434845a2af4c8c2ff1c271ece9f05b4670dd4e6073"
+      },
+      "statement": "Treat every retry as a fresh attempt with a fresh call identity, grant, and"
     },
     {
       "id": "CL-5E9B03DDAF70172E62D7",
@@ -5765,6 +6051,17 @@
       "statement": "a commit/push gate that requires the exact diff and commit message to be approved before the action."
     },
     {
+      "id": "CL-61CCE1816B37EB473739",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42C. Recovery, Persistence, and Diagnosis",
+        "line": 2500,
+        "semantic_sha256": "61cce1816b37eb473739ce9b8909d8e8ace73a11390c2fa57e7355298ccf063c"
+      },
+      "statement": "Resume only from a current checkpoint and never infer an effect outcome;"
+    },
+    {
       "id": "CL-61D9F2E5AAD879750072",
       "label": "CAPABILITY GATE",
       "source": {
@@ -5840,6 +6137,17 @@
         "semantic_sha256": "6292d84637ac0e10b5e3af03a91d494f831e5311b19445bc7663dc0bce471c2f"
       },
       "statement": "provider-neutral evidence-backed edges and keep inferred relationships visibly non-authoritative."
+    },
+    {
+      "id": "CL-62A80C6E61D47A30E20F",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Contracts and Reliability Spine",
+        "line": 2594,
+        "semantic_sha256": "62a80c6e61d47a30e20f3232cf7e5e4015ffcf761b9e973ab10280694e944d6b"
+      },
+      "statement": "Rust contracts and ports for ingestion, context delivery, workflows, checkpoints, observations, verification, terminal results, model endpoints, route decisions, and capability manifests."
     },
     {
       "id": "CL-62BAA3942CBF21DF52D1",
@@ -6128,6 +6436,17 @@
       "statement": "acronym handling that spells out an acronym on first use and does not guess unknown expansions."
     },
     {
+      "id": "CL-678D1647C08A3179C710",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41D. Interface, Interoperability, and Closure",
+        "line": 2444,
+        "semantic_sha256": "678d1647c08a3179c710cf3c8ec9baecbae8af2415af0af9ab6dc58a5ea7d11c"
+      },
+      "statement": "Close the artifact half of `M-FOUNDATIONAL-RUNTIME-CORE` at Sprint 50 only"
+    },
+    {
       "id": "CL-67B9EEA5152954B5F87D",
       "label": "BUILD",
       "source": {
@@ -6392,6 +6711,17 @@
       "statement": "prompt injection in every provider-controlled text field, code file, comment, issue, review, log, artifact, telemetry record, incident, finding, and catalog field."
     },
     {
+      "id": "CL-6BFB145DDBF4EE3B5E0D",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42D. Evaluation and Closure",
+        "line": 2505,
+        "semantic_sha256": "6bfb145ddbf4ee3b5e0d1686b72737543b9c4c8364bcd0ef322fdfd26eb3a767"
+      },
+      "statement": "success, malformed calls, missing dependencies, stale preflight, transient read"
+    },
+    {
       "id": "CL-6C18AB6934D9BBF96351",
       "label": "BUILD",
       "source": {
@@ -6577,6 +6907,17 @@
         "semantic_sha256": "6f847f9e923459d775620fc73567cfc373c812660bcd2bdf6a279f6a1972ff82"
       },
       "statement": "Provide a redacted local doctor response in native Visual Studio Code Chat containing model and runtime manifests, hardware-fit result, offline state, platform sandbox and helper status, workspace grant, capability-pack versions, repository-map health, encrypted-store availability, last receipt sequence, and session recoverability without including secrets, prompts, or unrelated absolute paths. Keep any command-line diagnostic harness internal to development and verification in v0.1."
+    },
+    {
+      "id": "CL-6F9ED984E23B7C15E780",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Contracts and Reliability Spine",
+        "line": 2593,
+        "semantic_sha256": "6f9ed984e23b7c15e780b464067e8af9db6d1149b0f36cc7103d70f4f4b024af"
+      },
+      "statement": "the 14 new closed Engineering Runtime schemas and preserve the six reused model and runtime schema authorities without aliases."
     },
     {
       "id": "CL-6FCD8BC922523D3E1A8A",
@@ -6821,6 +7162,17 @@
       "statement": "`convert_docx_to_text(source, sidecar)` with timestamp and hash caching."
     },
     {
+      "id": "CL-72FE867E7B7F5BB8CCFC",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Verified Chat and Native Compatibility",
+        "line": 2603,
+        "semantic_sha256": "72fe867e7b7f5bb8ccfcd75a7889bc5b623b1a2be700869d0d071dc2ac3a16fb"
+      },
+      "statement": "Keep native compatibility distinct from Verified Chat and future External Agent Host integration decoupled until a stable API exists."
+    },
+    {
       "id": "CL-73118120E4C2974FB6A6",
       "label": "BUILD",
       "source": {
@@ -6951,6 +7303,28 @@
         "semantic_sha256": "7435e03d61212a12a9ad56da27d1369365307e38cedc7a6acaceebbd48b77f83"
       },
       "statement": "native Chat intents for compatible-model listing, tradeoff explanation, user-confirmed download, import, verify, activate, compare, rollback, remove, and storage cleanup."
+    },
+    {
+      "id": "CL-7468756DAD3586B5DE03",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Verified Chat and Native Compatibility",
+        "line": 2600,
+        "semantic_sha256": "7468756dad3586b5de037a6547b371e5f8073e4863a26e7fbbee2be78792032d"
+      },
+      "statement": "the secured disposable webview, thin TypeScript bridge, authenticated chunked IPC, Rust reconstruction, and Ask, Plan, and Agent policy views."
+    },
+    {
+      "id": "CL-7489361E2B36A4C58FF0",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42C. Recovery, Persistence, and Diagnosis",
+        "line": 2495,
+        "semantic_sha256": "7489361e2b36a4c58ff01d1fd48aef37160ebb462b2177ac025f0ad991d6c204"
+      },
+      "statement": "premature-stop handling for empty output, reasoning-only output, false completion,"
     },
     {
       "id": "CL-750D3A864EC688EE86EE",
@@ -7195,6 +7569,17 @@
       "statement": "per-operation receipts with `proposed`, `approved`, `applied`, `verified`, `failed`, `rolled_back`, or `superseded` status and exact preimage and postimage hashes."
     },
     {
+      "id": "CL-78E39F1E9A3DC9E0E433",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Verified Chat and Native Compatibility",
+        "line": 2601,
+        "semantic_sha256": "78e39f1e9a3dc9e0e4334cec117194f8958329bf53a87f00a0ad30c13a3a76fe"
+      },
+      "statement": "stable Chat Participant and Language Model Chat Provider compatibility adapters with exact capability labels and fail-closed unsupported states."
+    },
+    {
       "id": "CL-78F9DB620BFBD34F27B0",
       "label": "ROADMAP",
       "source": {
@@ -7281,6 +7666,17 @@
         "semantic_sha256": "7ad49966712538726e83029fe48b1ffdfd8e9b3fa87b9b1c403272b81bc21770"
       },
       "statement": "`openssl` for certificates, hashes, and cryptographic inspection."
+    },
+    {
+      "id": "CL-7ADE73515E66DF02377C",
+      "label": "DOCUMENT",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41D. Interface, Interoperability, and Closure",
+        "line": 2438,
+        "semantic_sha256": "7ade73515e66df02377c9e4a53bc456ddb72a3994e62c144470ebd96c2147896"
+      },
+      "statement": "stable, Preview, proposed, and private Visual Studio Code API surfaces and prohibit"
     },
     {
       "id": "CL-7AEB12BFEF4612C64C68",
@@ -7501,6 +7897,17 @@
         "semantic_sha256": "7e9437b03b8599b9516142f3e1d5f26ba96ed24261561d713fb418e76ce78654"
       },
       "statement": "L0 manifested, L1 observable, L2 writable, L3 executable, L4 deployable, and L5 administrative conformance levels."
+    },
+    {
+      "id": "CL-7EA862C6EC54C34BED02",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Registry, Observability, Performance, and Multi-Agent",
+        "line": 2616,
+        "semantic_sha256": "7ea862c6ec54c34bed02e042ff6a0e3e4c6ead798a9edb188a71c21daebce59e"
+      },
+      "statement": "privacy-aware event lineage and user inspector for capture through terminal result with content-addressed sensitive payload handling."
     },
     {
       "id": "CL-7EAE54647C699E365A6E",
@@ -8053,6 +8460,17 @@
       "statement": "explainable statistical outlier and potential-fraud indicators with feature, baseline, method, confidence, limitation, drift, source, and user-disposition records."
     },
     {
+      "id": "CL-8707814E73006AEEF3F7",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Contracts and Reliability Spine",
+        "line": 2596,
+        "semantic_sha256": "8707814e73006aeef3f759d60e703146d3fdd7205d463def651e0626ffb241e7"
+      },
+      "statement": "Prohibit models, TypeScript, webviews, capability manifests, adapters, endpoints, and tools from minting authority or establishing completion."
+    },
+    {
       "id": "CL-8707B525B0B15CAE44FB",
       "label": "VERIFY",
       "source": {
@@ -8141,6 +8559,17 @@
       "statement": "an interface-independent runtime coordinator that composes the persisted agent state machine, selected model controller, context manager, tool registry and dispatcher, policy and grants, canonical store, event sink, artifact references, cancellation, and terminal outcome for one bounded run."
     },
     {
+      "id": "CL-88F4D62CB394E97AF7F1",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Contracts and Reliability Spine",
+        "line": 2595,
+        "semantic_sha256": "88f4d62cb394e97af7f1cdfbbf9d441ccd3e85261233f7f3aa949e91cd0cf6dd"
+      },
+      "statement": "unknown-field, missing-field, malformed, oversized, stale, reordered, replayed, corrupt, and unsupported-version fixtures for every contract."
+    },
+    {
       "id": "CL-88FE18CEC42B8A500DBF",
       "label": "CAPABILITY GATE",
       "source": {
@@ -8196,6 +8625,17 @@
       "statement": "open, continue, resume-from-turn, branch, rename, pin, archive, export, and approval-gated delete actions."
     },
     {
+      "id": "CL-89FF3BDD7B0828055F10",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42A. Step Policy, Preflight, and Attempt Identity",
+        "line": 2467,
+        "semantic_sha256": "89ff3bdd7b0828055f1023357b2bbd0e55f51ea07b98ba3fcab350ae3fa53ad0"
+      },
+      "statement": "Refuse execution before dispatch when any required identity, preflight,"
+    },
+    {
       "id": "CL-8A0FDE8BC68945815CA7",
       "label": "BUILD",
       "source": {
@@ -8238,6 +8678,17 @@
         "semantic_sha256": "8aa47445347a1da096b1128ce81e4a3d9725548f6d73f0f0d7dda823784e09a0"
       },
       "statement": "Google Cloud organization, folder, project, and asset inventory, configuration, labels, health, bounded Monitoring metrics and logs, audit references, security observations, deployment identity, and billing summaries."
+    },
+    {
+      "id": "CL-8AAD810DBE48C9554E03",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42D. Evaluation and Closure",
+        "line": 2515,
+        "semantic_sha256": "8aad810dbe48c9554e0348d12390d8d03162823b80c6826581f186d7aece9da8"
+      },
+      "statement": "Close the workflow half of `M-FOUNDATIONAL-RUNTIME-CORE` only when the shared"
     },
     {
       "id": "CL-8AF91F396FAD42577883",
@@ -8526,6 +8977,17 @@
       "statement": "Separate public research from authenticated browser state, form submission, upload, publication, purchase, account changes, and every other external effect."
     },
     {
+      "id": "CL-8F9DB3C91A0AF0946EF0",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41A. Ingress and Source Identity",
+        "line": 2391,
+        "semantic_sha256": "8f9db3c91a0af0946ef0cd6d3b1e9d2b460a94b4f272ff5e5e0819832192411a"
+      },
+      "statement": "Permit the extension to resolve only references explicitly supplied to the"
+    },
+    {
       "id": "CL-8FBB9E6EF9598D5A8289",
       "label": "BUILD",
       "source": {
@@ -8669,6 +9131,17 @@
       "statement": "local attachment handlers for text, code, Word, Portable Document Format, Excel, comma-separated value, PowerPoint, image, notebook, archive, and log files."
     },
     {
+      "id": "CL-91ED04A3E040109D0850",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41C. Storage, Retrieval, and Context Budgeting",
+        "line": 2417,
+        "semantic_sha256": "91ed04a3e040109d0850b18f0f6d457b02c957ee0d7f80c9b9217b51d167b692"
+      },
+      "statement": "a logical source-artifact manifest and lifecycle over the existing encrypted"
+    },
+    {
       "id": "CL-9202BA3F445BB1A3854A",
       "label": "BUILD",
       "source": {
@@ -8755,6 +9228,17 @@
         "semantic_sha256": "92ad5701b64feead2449c905feb779082134fddb15f6c4965575f0d33a629ba9"
       },
       "statement": "Treat tags, names, channels, versions, and build numbers as non-authoritative display identities until resolved to immutable digests."
+    },
+    {
+      "id": "CL-92DC8A5D82E62E504D67",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42D. Evaluation and Closure",
+        "line": 2511,
+        "semantic_sha256": "92dc8a5d82e62e504d67a303c37d3c60573ef6d2e3e48ac83ea8dd50839ce501"
+      },
+      "statement": "preserve the existing no-hidden-retry, no-replay, verifier-only completion, journal,"
     },
     {
       "id": "CL-92F60B423EBAD21E5262",
@@ -9373,6 +9857,17 @@
       "statement": "suggested fixes as local patches first, with affected files, tests, risk, rollback, and validation shown before any branch update."
     },
     {
+      "id": "CL-9CE6DB55CFD4E08BA456",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41A. Ingress and Source Identity",
+        "line": 2394,
+        "semantic_sha256": "9ce6db55cfd4e08ba456e5fe60f6d942cd0edf66a49e55ec10aebb7dd8764233"
+      },
+      "statement": "Keep stable Chat Participant ingress guaranteed and provider-only ingress"
+    },
+    {
       "id": "CL-9D27893D91F48EC6FA8E",
       "label": "CAPABILITY GATE",
       "source": {
@@ -9802,6 +10297,17 @@
       "statement": "In v0.1, run deterministic read-only operations before model inference, never switch models automatically, never contact a frontier model, and stop with a visible failure when the selected model cannot satisfy the task contract."
     },
     {
+      "id": "CL-A44FD7B2D5E7B6AFD7D8",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Model Gateway and Remote Inference",
+        "line": 2611,
+        "semantic_sha256": "a44fd7b2d5e7b6afd7d83f90d4cf47ed4399c43c7651ae8ae352ac2c07d46c9c"
+      },
+      "statement": "Keep every model, endpoint, route, and fallback disabled until exact current qualification passes; preserve strict-local target completeness."
+    },
+    {
       "id": "CL-A4F62F6B63E8BD69230F",
       "label": "CAPABILITY GATE",
       "source": {
@@ -10020,6 +10526,17 @@
         "semantic_sha256": "a8188f87ddd25d3a06db8d35eb6554653734f8d7ae74b6406770675276fee4c7"
       },
       "statement": "Preserve Sprint 156 as a stable expanded-productivity checkpoint and keep `G-GA` blocked until Sprint 166 passes every Decision 0010 first-GA requirement and acceptance test."
+    },
+    {
+      "id": "CL-A81D22D620683A3C1365",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Registry, Observability, Performance, and Multi-Agent",
+        "line": 2617,
+        "semantic_sha256": "a81d22d620683a3c136531500cc09ed6fdd6f36ae8b3506718a70272e801c16b"
+      },
+      "statement": "deterministic workflow performance, backpressure, cancellation, no-progress, resource, cost, interruption, recovery, and removal thresholds on pinned environments."
     },
     {
       "id": "CL-A831AA45F34074041CB8",
@@ -10561,6 +11078,17 @@
       "statement": "record `BLOCKED-HARDWARE` for an exact profile that cannot run within a declared reference-machine envelope instead of silently omitting it or treating the result as family-wide rejection."
     },
     {
+      "id": "CL-B1219AF3D45A4E272A18",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41C. Storage, Retrieval, and Context Budgeting",
+        "line": 2423,
+        "semantic_sha256": "b1219af3d45a4e272a18020270d6f5ee1bfd761e5a236ccdffb2e49fff6243e7"
+      },
+      "statement": "explicit total-window, system/tool, user-input, source-artifact, retrieved-context,"
+    },
+    {
       "id": "CL-B174F78398785419B204",
       "label": "BUILD",
       "source": {
@@ -10660,6 +11188,17 @@
       "statement": "Keep every competitive requirement mapped to a stable inventory section, release, acceptance test, and decision record when it becomes executable."
     },
     {
+      "id": "CL-B2ADDD952DDAD913F7EE",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41D. Interface, Interoperability, and Closure",
+        "line": 2442,
+        "semantic_sha256": "b2addd952ddad913f7ee40e504f8b881ec6a22cac6cf299d42169ae9fb45a3ea"
+      },
+      "statement": "identical source-artifact and context manifests across Chat, CLI, headless, and MCP"
+    },
+    {
       "id": "CL-B3444237A2F91AEC9528",
       "label": "CAPABILITY GATE",
       "source": {
@@ -10691,6 +11230,17 @@
         "semantic_sha256": "b3d0bb5617cb9502d0c7bd3ea3f16f97fe127281d53f1eb681ada4b112a3e891"
       },
       "statement": "a plain-language review pass based on configurable language rules."
+    },
+    {
+      "id": "CL-B3E992D00047FD355BB8",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41C. Storage, Retrieval, and Context Budgeting",
+        "line": 2421,
+        "semantic_sha256": "b3e992d00047fd355bb8cc4674b04c68679bff4ae6224fdb750785d44694d38b"
+      },
+      "statement": "native `artifact.list`, `artifact.metadata`, `artifact.read`, `artifact.range`,"
     },
     {
       "id": "CL-B45D45EB5C19B01C1C3B",
@@ -11131,6 +11681,17 @@
         "semantic_sha256": "bb963366176539a7cf89b9cad20a30566fc8658e795fdbeae3a0067b1347cd99"
       },
       "statement": "staged-diff checking equivalent to `git diff --cached --check`."
+    },
+    {
+      "id": "CL-BBD6881147E2E21C2272",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41C. Storage, Retrieval, and Context Budgeting",
+        "line": 2419,
+        "semantic_sha256": "bbd6881147e2e21c227206dc1ac7f91e971f8b835f95b43400529afafcb3f518"
+      },
+      "statement": "canonical structural sections, provenance-preserving chunks, deterministic lexical"
     },
     {
       "id": "CL-BC049DB3BCD62BD67AE7",
@@ -11694,6 +12255,17 @@
       "statement": "interactive-process refusal unless a dedicated safe adapter exists."
     },
     {
+      "id": "CL-C3BF26982C48A16905B4",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42A. Step Policy, Preflight, and Attempt Identity",
+        "line": 2465,
+        "semantic_sha256": "c3bf26982c48a16905b48dd37353dd6894732c8ba07f0c9336672ed2c221674d"
+      },
+      "statement": "unique workflow, step, call, operation-attempt, grant, approval, receipt, verification,"
+    },
+    {
       "id": "CL-C3E0BA592382925EFC18",
       "label": "BUILD",
       "source": {
@@ -11923,6 +12495,17 @@
         "semantic_sha256": "c87ddfabf05e38a00b95a407642416b91a480d1f37e4ea0c078603c0faf48fbf"
       },
       "statement": "a `TaskPlan` object with objective, steps, current step, status, evidence, blockers, and completion checks."
+    },
+    {
+      "id": "CL-C89DC9713E822F2EF39D",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41A. Ingress and Source Identity",
+        "line": 2386,
+        "semantic_sha256": "c89dc9713e822f2ef39d1a3c9eff076b1ad6e41e20b1b0cf16d62c3b6eb3c581"
+      },
+      "statement": "a closed source-artifact envelope for pasted text, request-bound Visual Studio Code"
     },
     {
       "id": "CL-C8AB411D0A39AA4566B0",
@@ -12167,6 +12750,17 @@
       "statement": "counterexample, edge-case, failure-mode, security, data-loss, and rollback review for changes whose failure would be costly."
     },
     {
+      "id": "CL-CD5EB1C55FD4ABEB0D32",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41A. Ingress and Source Identity",
+        "line": 2396,
+        "semantic_sha256": "cd5eb1c55fd4abeb0d32c2eef52675a522532234e0732f0f8d25b6a34a4803a0"
+      },
+      "statement": "local, virtual, remote, stale, missing, renamed, replaced, linked, inaccessible,"
+    },
+    {
       "id": "CL-CD78861D5DB7CB8FCE52",
       "label": "BUILD",
       "source": {
@@ -12253,6 +12847,17 @@
         "semantic_sha256": "cf0750bf55e5572e557dacca6de104baf259cbdc01f5ba9c237b47b37f18180c"
       },
       "statement": "an import checker that detects duplicate people, projects, meetings, tasks, decisions, and documents before adding them."
+    },
+    {
+      "id": "CL-CF354F9F46B53BF4A43A",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42B. Execution, Verification, and Safe New Attempts",
+        "line": 2484,
+        "semantic_sha256": "cf354f9f46b53bf4a43a049af6707eac7fc51004efe9438cfb9509625147a06b"
+      },
+      "statement": "Keep `VerifiedCompletion` as the only completion authority; model text,"
     },
     {
       "id": "CL-CF685C27748609FBD49E",
@@ -12629,6 +13234,17 @@
       "statement": "exact fetch of one approved remote ref through an empty ref map into `refs/agentmage/fetch/<transaction-id>/`, with atomic local ref update and no prune, tag following, `FETCH_HEAD`, submodule recursion, Large File Storage transfer, shallow-state mutation, maintenance, commit-graph write, or user remote-tracking-ref update."
     },
     {
+      "id": "CL-D607A62211750B836305",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41B. Bounded Extraction and Structural Preservation",
+        "line": 2401,
+        "semantic_sha256": "d607a62211750b83630532f825f44af025681b914db73fadffa2f811e54a10c5"
+      },
+      "statement": "a Rust extractor registry with exact detector, parser, version, limit, output-schema,"
+    },
+    {
       "id": "CL-D61BDA0C0B43DD22BD59",
       "label": "BUILD",
       "source": {
@@ -12671,6 +13287,17 @@
         "semantic_sha256": "d6b3faa02d43b3f1053b3a8dc9ad434af0976bffd7dcd9acdbfb82bf0da959e7"
       },
       "statement": "a database-adapter interface so SQLite, PostgreSQL, and fixture files remain separate implementations."
+    },
+    {
+      "id": "CL-D7317F34D7EEDD5F2413",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42A. Step Policy, Preflight, and Attempt Identity",
+        "line": 2463,
+        "semantic_sha256": "d7317f34d7eedd5f24130fbf4030f2e4b37569399d1d10ce37b6fa57e5cf4777"
+      },
+      "statement": "deterministic workspace, Git, executable, service, network-policy, platform, storage,"
     },
     {
       "id": "CL-D7A6F1C5E3EEBFB7E897",
@@ -12948,6 +13575,17 @@
       "statement": "Provide a plain-folder implementation using ordinary Markdown plus a regenerable local SQLite search index."
     },
     {
+      "id": "CL-DC4DE54A66E2750F3190",
+      "label": "VERIFY",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41B. Bounded Extraction and Structural Preservation",
+        "line": 2411,
+        "semantic_sha256": "dc4de54a66e2750f3190f77fac141e8f819e4bf24a9e5d42d5fbd51b1a0e9570"
+      },
+      "statement": "malformed packages, zip and XML bombs, path traversal, external relationships,"
+    },
+    {
       "id": "CL-DD1C7895CA61E3BC1EC2",
       "label": "BUILD",
       "source": {
@@ -13034,6 +13672,17 @@
         "semantic_sha256": "defe72f67f6488a4495325e244d86ba702f18f59c64c96ba7f230e4469a6649d"
       },
       "statement": "an image-metadata reader for dimensions, type, color space, and file size."
+    },
+    {
+      "id": "CL-DF3F2FED78BE011D6F27",
+      "label": "CAPABILITY GATE",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42B. Execution, Verification, and Safe New Attempts",
+        "line": 2480,
+        "semantic_sha256": "df3f2fed78be011d6f276182a14e953c24707425c52c9d14d5dc6446ef8c932e"
+      },
+      "statement": "Never automatically retry destructive, external, non-idempotent, uncertain,"
     },
     {
       "id": "CL-DF42FBD50E8DE478E3F5",
@@ -13465,6 +14114,17 @@
       "statement": "Require an explicit classified and receipted data-flow rule before communication, delivery, finance, cloud, document, calendar, task, or memory content crosses pack boundaries."
     },
     {
+      "id": "CL-E5A65D245607621A3BFE",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41A. Ingress and Source Identity",
+        "line": 2389,
+        "semantic_sha256": "e5a65d245607621a3bfe86d0f3ae42b83ff2c661eede851a59e7899fda157a59"
+      },
+      "statement": "immutable source identity from request identity, reference identity, origin class,"
+    },
+    {
       "id": "CL-E5A6F117624CB4BCAD6A",
       "label": "BUILD",
       "source": {
@@ -13507,6 +14167,17 @@
         "semantic_sha256": "e6da0d6790b0f71af2205af6b6566e86bdcb0d197370aea092d35d302e7c1cf4"
       },
       "statement": "Give every writable child its own isolated worktree, declared file ownership, conflict policy, and transfer review; no two children may write the same path concurrently."
+    },
+    {
+      "id": "CL-E6E32A8DAED84F32B9C3",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42C. Recovery, Persistence, and Diagnosis",
+        "line": 2493,
+        "semantic_sha256": "e6e32a8daed84f32b9c34acc00fef7aa133a091488785447ac28ef761f5cd11a"
+      },
+      "statement": "checkpoint and resume validation against source, plan, step, tool, policy, model,"
     },
     {
       "id": "CL-E74B4694065A96F9A2AA",
@@ -14389,6 +15060,17 @@
       "statement": "approval-gated pull-request creation and updates, including body edits, comments, review requests, labels, milestones, draft conversion, branch updates, and closure."
     },
     {
+      "id": "CL-F82A5381B13607BF17F9",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "41D. Interface, Interoperability, and Closure",
+        "line": 2440,
+        "semantic_sha256": "f82a5381b13607bf17f9611cb933fc58d6e74e97f88a862e77d5c7ca4b19f625"
+      },
+      "statement": "optional MCP exposure only after native artifact-tool parity; MCP remains an adapter"
+    },
+    {
       "id": "CL-F865C8D16480895E5B3A",
       "label": "BUILD",
       "source": {
@@ -14398,6 +15080,17 @@
         "semantic_sha256": "f865c8d16480895e5b3a976e15a9480ecb8524dd02bff8c397586b27d6445839"
       },
       "statement": "session summary, resume-card, and handoff export generation from canonical records."
+    },
+    {
+      "id": "CL-F8A21A0D15502F65330E",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "Registry, Observability, Performance, and Multi-Agent",
+        "line": 2615,
+        "semantic_sha256": "f8a21a0d15502f65330e8408a11fbcb14caa539be8aeb5dffd817a31dcbd2670"
+      },
+      "statement": "the versioned Capability Registry, initial catalog manifests, dependency health, degradation, migration, quarantine, disablement, and removal lifecycle."
     },
     {
       "id": "CL-F91DB09A926530FB4379",
@@ -14631,6 +15324,17 @@
       "statement": "a pure-Python or equivalent local Markdown adapter that implements vault discovery, parsing, search, links, backlinks, tasks, and note creation without Obsidian plugins or APIs."
     },
     {
+      "id": "CL-FC56A43FE634BCFFA4FF",
+      "label": "BUILD",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "42C. Recovery, Persistence, and Diagnosis",
+        "line": 2491,
+        "semantic_sha256": "fc56a43fe634bcffa4ff6f5ae85add1479066ecf31afc8ea260654033ee06eb5"
+      },
+      "statement": "transactional materializations for step policy, attempts, preflights, verifications,"
+    },
+    {
       "id": "CL-FC9B2929F143BEE8FA80",
       "label": "BUILD",
       "source": {
@@ -14775,8 +15479,8 @@
     }
   ],
   "counts": {
-    "checklist": 1343,
-    "requirements": 241
+    "checklist": 1407,
+    "requirements": 294
   },
   "policy": {
     "mode": "additions_only",
@@ -15056,6 +15760,41 @@
     },
     {
       "acceptance_tests": [
+        "AT-CAP-001"
+      ],
+      "dependencies": [
+        "AM-WKF-001",
+        "AM-VER-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CAP-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Implement a closed versioned Engineering Capability Registry whose manifests bind schemas, workflow graph, tools, model roles, maximum requested authority, budgets, verification, degradation, fixtures, migration, disablement, and removal without minting grants."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CAP-002"
+      ],
+      "dependencies": [
+        "AM-CAP-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CAP-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Admit and lifecycle-test an initial engineering capability catalog for repository inspection, coding, review, issue and bug work, test diagnosis, release readiness, document work, research, and whole-codebase audit through the shared runtime."
+    },
+    {
+      "acceptance_tests": [
         "AT-CAT-001",
         "AT-XTE-001"
       ],
@@ -15295,6 +16034,60 @@
     },
     {
       "acceptance_tests": [
+        "AT-CTX-001",
+        "AT-CTX-002"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CTX-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Account for every supplied paste, request reference, file, URI, directory, archive, and tool artifact with original-byte identity and exactly one captured, parsed, partial, unsupported, denied, unavailable, failed, or explicitly omitted disposition."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CTX-002",
+        "AT-CTX-003"
+      ],
+      "dependencies": [
+        "AM-CTX-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CTX-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Preserve source-to-derivative provenance, parser identity, warnings, structural ranges, exact retrieval, context budgets, and one manifest that explains every included, summarized, truncated, duplicate, stale, restricted, unavailable, or omitted range."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CTX-004"
+      ],
+      "dependencies": [
+        "AM-CTX-002",
+        "AM-GWY-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CTX-003",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Issue a context-delivery receipt for every model turn that reconstructs model-visible ranges and blocks completion whenever required unseen artifacts or unresolved authoritative ranges remain."
+    },
+    {
+      "acceptance_tests": [
         "AT-DATA-001",
         "AT-CRASH-001"
       ],
@@ -15310,6 +16103,23 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Make SQLite the sole authority for sessions, tasks, checkpoints, grants, and receipts."
+    },
+    {
+      "acceptance_tests": [
+        "AT-DEG-001"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-DEG-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Classify dependencies as required, optional, or explicitly substitutable and expose blocked or degraded behavior without silent omission, weakened authority, hidden route changes, or false success."
     },
     {
       "acceptance_tests": [
@@ -15418,6 +16228,23 @@
         "heading": "39. Post-GA Experimental Model Lab Backlog"
       },
       "title": "Implement a separately packaged Experimental Model Lab for user-selected unapproved artifacts with quarantine, explicit provenance and license gaps, no network, no credentials, no command or connector authority, no canonical workspace write, disposable synthetic evaluation, strict resource limits, truthful results, complete removal, and promotion only through normal independent model admission."
+    },
+    {
+      "acceptance_tests": [
+        "AT-ERT-001"
+      ],
+      "dependencies": [
+        "AM-TRU-001"
+      ],
+      "disposition": "build",
+      "id": "AM-ERT-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Implement one Rust-owned Engineering Runtime that composes artifact admission, context delivery, workflow state, persistent supervision, model mediation, tools, observations, verification, observability, and terminal results while keeping models and clients outside authority."
     },
     {
       "acceptance_tests": [
@@ -15709,6 +16536,58 @@
     },
     {
       "acceptance_tests": [
+        "AT-GWY-001"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GWY-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Implement a candidate-neutral Model Gateway with a richer internal request, event, usage, error, cancellation, and route-receipt protocol that returns untrusted proposals and never executes tools or establishes workflow completion."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GWY-002"
+      ],
+      "dependencies": [
+        "AM-GWY-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GWY-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Implement versioned runtime and protocol codecs for qualified local and remote endpoints while preserving every supported message part, stream event, structured-output constraint, tool proposal, usage field, failure, and cancellation result or exposing an explicit unsupported state."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GWY-003"
+      ],
+      "dependencies": [
+        "AM-GWY-002",
+        "AM-VER-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GWY-003",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Route only across currently qualified model, endpoint, runtime, codec, role, disclosure, resource, and policy tuples; receipt every choice and prohibit silent local-to-remote or cross-remote fallback."
+    },
+    {
+      "acceptance_tests": [
         "AT-HOF-001"
       ],
       "dependencies": [
@@ -15848,6 +16727,26 @@
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
       },
       "title": "Implement a conformance-gated Outlook and Exchange Online adapter for supported mailboxes, folders, messages, threads, labels, flags, categories, drafts, sends, replies, forwards, attachments, events, and shared-mailbox behavior through Microsoft Graph."
+    },
+    {
+      "acceptance_tests": [
+        "AT-MAG-001",
+        "AT-MAG-002"
+      ],
+      "dependencies": [
+        "AM-CAP-002",
+        "AM-WKF-002",
+        "AM-VER-001"
+      ],
+      "disposition": "build",
+      "id": "AM-MAG-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Add bounded multi-agent engineering teams only after the single-agent reliability spine passes, with role qualification, per-pod authority, worktree and resource leases, independent review, disagreement retention, failure isolation, serialized integration, re-verification, and human-gated default-branch promotion."
     },
     {
       "acceptance_tests": [
@@ -16104,6 +17003,23 @@
     },
     {
       "acceptance_tests": [
+        "AT-OBS-002"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-OBS-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Provide privacy-aware execution lineage and a user-facing inspector covering capture, parsing, context, routing, model events, proposals, policy, approvals, tools, effects, verification, recovery, and terminal state without retaining raw secrets or hidden reasoning."
+    },
+    {
+      "acceptance_tests": [
         "AT-PCAL-001"
       ],
       "dependencies": [
@@ -16120,6 +17036,24 @@
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
       },
       "title": "Implement a conformance-gated Proton Calendar confirmed-UI adapter for an exact visible user-authenticated session when no admitted structured write path exists, covering calendar and event identity, attendees, invitations, responses, direct-invitation and email-first confirmation workflows, versioned document and accessibility capabilities, visual fallback, postcondition re-reading, uncertain-result reconciliation, and removal without credential extraction or standing computer-use authority."
+    },
+    {
+      "acceptance_tests": [
+        "AT-PERF-002",
+        "AT-PERF-003"
+      ],
+      "dependencies": [
+        "AM-OBS-002"
+      ],
+      "disposition": "build",
+      "id": "AM-PERF-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Stream ordered bounded events with backpressure and cancellation while measuring capture, parsing, retrieval, queue, first-event, first-token, generation, tool, verification, total latency, throughput, memory, accelerator, disk, process, artifact, and backlog behavior against identity-bound fixtures."
     },
     {
       "acceptance_tests": [
@@ -16251,6 +17185,58 @@
     },
     {
       "acceptance_tests": [
+        "AT-REM-001"
+      ],
+      "dependencies": [
+        "AM-GWY-001"
+      ],
+      "disposition": "build",
+      "id": "AM-REM-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Define separate `strict_local`, `local_network_private`, `remote_private`, and `remote_managed` endpoint classes with independent model, operator, runtime, codec, endpoint, route, and qualification identities."
+    },
+    {
+      "acceptance_tests": [
+        "AT-REM-002"
+      ],
+      "dependencies": [
+        "AM-REM-001"
+      ],
+      "disposition": "build",
+      "id": "AM-REM-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Isolate remote inference in a least-privilege worker with exact TLS, host, address, redirect, proxy, SSRF, DNS-rebinding, credential-reference, disclosure, region, retention, logging, training-use, quota, cost, cancellation, and emergency-disable controls."
+    },
+    {
+      "acceptance_tests": [
+        "AT-REM-003"
+      ],
+      "dependencies": [
+        "AM-REM-002",
+        "AM-GWY-003"
+      ],
+      "disposition": "build",
+      "id": "AM-REM-003",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Qualify models, endpoints, and exact routes independently and invalidate affected evidence on artifact, tokenizer, template, codec, quantization, decoding, runtime, endpoint, transport, policy, or operator change."
+    },
+    {
+      "acceptance_tests": [
         "AT-REP-001",
         "AT-EVD-002"
       ],
@@ -16378,6 +17364,23 @@
     },
     {
       "acceptance_tests": [
+        "AT-RESUME-002"
+      ],
+      "dependencies": [
+        "AM-WKF-002"
+      ],
+      "disposition": "build",
+      "id": "AM-SES-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Decouple task lifetime and truth from any model turn, chat view, extension process, or client connection and require identity-bound restart reconciliation before execution continues."
+    },
+    {
+      "acceptance_tests": [
         "AT-SLK-001"
       ],
       "dependencies": [
@@ -16463,6 +17466,24 @@
         "heading": "37. First-GA Productivity, Finance, and Cloud Observer Backlog"
       },
       "title": "Implement provider-neutral delta, cursor, webhook, change-notification, bounded-polling, backfill, edit, deletion, tombstone, ordering, duplicate, gap, freshness, coverage, and reconciliation contracts for productivity adapters."
+    },
+    {
+      "acceptance_tests": [
+        "AT-TIO-001",
+        "AT-TIO-002"
+      ],
+      "dependencies": [
+        "AM-WKF-001"
+      ],
+      "disposition": "build",
+      "id": "AM-TIO-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Produce exactly one closed terminal `ToolObservation` for every admitted tool call, including denial, cancellation, timeout, resource exhaustion, crash, and uncertainty, with complete output stored as distinct content-addressed artifacts and bounded disclosed excerpts."
     },
     {
       "acceptance_tests": [
@@ -16618,6 +17639,25 @@
     },
     {
       "acceptance_tests": [
+        "AT-VER-001",
+        "AT-WKF-003"
+      ],
+      "dependencies": [
+        "AM-WKF-001",
+        "AM-TIO-001"
+      ],
+      "disposition": "build",
+      "id": "AM-VER-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Allow only current deterministic verifier evidence to establish verified success or verified no-op; model text, exit zero, tool output, stale evidence, and open plans have no completion authority."
+    },
+    {
+      "acceptance_tests": [
         "AT-VSC-001"
       ],
       "dependencies": [
@@ -16671,6 +17711,60 @@
         "heading": "Executable v0.1 Backlog"
       },
       "title": "Discover and display only exact admitted local profiles in the native Visual Studio Code model picker, with Muse-first evaluation focus, manual selection, visible profile/runtime/limit identity, zero hard-coded model prerequisite, and no automatic substitution or activation."
+    },
+    {
+      "acceptance_tests": [
+        "AT-VSC-004"
+      ],
+      "dependencies": [
+        "AM-CTX-003",
+        "AM-WKF-002",
+        "AM-OBS-002"
+      ],
+      "disposition": "build",
+      "id": "AM-VSC-004",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Implement AgentMage Verified Chat as the canonical VS Code interface through a disposable secured webview, thin TypeScript bridge, authenticated versioned IPC, Rust-owned state, and Ask, Plan, and Agent modes that cannot mint authority."
+    },
+    {
+      "acceptance_tests": [
+        "AT-VSC-005"
+      ],
+      "dependencies": [
+        "AM-VSC-004"
+      ],
+      "disposition": "build",
+      "id": "AM-VSC-005",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Provide stable `@agentmage` Chat Participant compatibility that accounts for every public request reference, fails visibly on unresolved required content, and discloses when native Chat cannot provide Verified Chat guarantees."
+    },
+    {
+      "acceptance_tests": [
+        "AT-VSC-006"
+      ],
+      "dependencies": [
+        "AM-GWY-002",
+        "AM-VSC-005"
+      ],
+      "disposition": "build",
+      "id": "AM-VSC-006",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Provide stable Language Model Chat Provider compatibility that preserves supported normalized message parts and exposes explicit version and capability limits without private APIs or a false Agent Host claim."
     },
     {
       "acceptance_tests": [
@@ -16728,6 +17822,43 @@
         "heading": "36. First-GA Delivery and Windows Backlog"
       },
       "title": "Implement and package the complete Windows 11 x64 platform boundary, including signed per-user installation, authenticated IPC, restricted workers, NTFS path safety, DPAPI key protection, native model inference, connected workers, accessibility, recovery, and removal."
+    },
+    {
+      "acceptance_tests": [
+        "AT-WKF-001",
+        "AT-WKF-002"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-WKF-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Execute versioned workflows through closed runtime-owned state transitions, deterministic preflight, fresh attempt identities, side-effect and retry classes, reconciliation, postcondition verification, bounded replanning, and explicit non-success results."
+    },
+    {
+      "acceptance_tests": [
+        "AT-WKF-002",
+        "AT-WKF-003",
+        "AT-RESUME-002"
+      ],
+      "dependencies": [
+        "AM-WKF-001"
+      ],
+      "disposition": "build",
+      "id": "AM-WKF-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog"
+      },
+      "title": "Persist host-owned task state, budgets, checkpoints, approvals, consumed grants, attempts, observations, and verification so admitted work can pause, resume, cancel, or recover without duplicate effects or artificial continue prompts."
     },
     {
       "acceptance_tests": [
@@ -17030,6 +18161,32 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-CAP-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Validate manifests with missing, extra, malformed, stale, incompatible, authority-widening, unqualified, over-budget, prompt-only, migration, quarantine, and removal variants."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CAP-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Run each initial catalog capability across valid, hostile, cancelled, interrupted, degraded, migrated, disabled, and removed fixtures through the shared runtime."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-CAT-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -17225,6 +18382,58 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-CTX-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Supply pasted text, files, directories, archives, virtual and remote references, logs, diffs, notebooks, images, and supported office documents plus missing, inaccessible, linked, changing, malformed, oversized, encrypted, and unsupported variants."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CTX-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Parse, reparse, reorder, transform, cancel, crash, and resume artifacts with beginning, middle, and ending sentinels and seeded parser warnings."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CTX-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Force combined context overflow, token-counter disagreement, duplicate and stale artifacts, restricted content, profile changes, and exact retrieval across large inputs."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CTX-004",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Remove or withhold required beginning, middle, ending, or cited ranges before model invocation and mutate a delivered range after receipt creation."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-DATA-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -17233,6 +18442,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Transaction and migration invariants with crashes injected at every durable-write boundary."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-DEG-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Remove required, optional, and substitutable parsers, tools, models, endpoints, stores, and clients during every lifecycle phase."
     },
     {
       "acceptance_tests": [],
@@ -17311,6 +18533,19 @@
         "heading": "39A. Post-GA Experimental Model Acceptance Matrix"
       },
       "title": "Import, parse, load, evaluate, interrupt, crash, replace, remove, and attempt promotion of unknown, malformed, oversized, hostile, unsupported, provenance-incomplete, license-unclear, and policy-excluded artifacts."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-ERT-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Run one fake-model engineering objective through Chat, CLI, and headless clients across input admission, planning, tools, verification, persistence, cancellation, recovery, and terminal reporting."
     },
     {
       "acceptance_tests": [],
@@ -17524,6 +18759,45 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-GWY-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Send canonical requests, message parts, artifact references, structured-output constraints, tool schemas, cancellation, and errors through deterministic fake adapters."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GWY-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Run the protocol conformance corpus against every claimed adapter and version with unknown parts, malformed streams, usage drift, delayed cancellation, structured-output failure, and tool-proposal variants."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GWY-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Vary role, data class, endpoint health, context, modality, latency, quota, cost, policy, and qualification while inducing local and remote failures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-HOF-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -17623,6 +18897,32 @@
         "heading": "37A. Productivity, Finance, and Cloud Quantitative Acceptance Matrix"
       },
       "title": "Exercise the published Outlook and Exchange Online matrix across mailbox, folder, thread, message, flag, category, draft, send, reply, forward, attachment, shared-mailbox, permission, pagination, event, failure, and recovery fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MAG-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Run concurrent planning, implementation, test, review, issue, and integration pods with separate worktrees, path and test leases, bounded capacity, provider failure, cancellation, disagreement, and correction routing."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MAG-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Attempt self-approval, hidden merge, default-branch promotion, credential sharing, resource starvation, stale review reuse, duplicate integration, and completion with blocked pods."
     },
     {
       "acceptance_tests": [],
@@ -17797,6 +19097,19 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-OBS-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Trace complete and failed workflows with sensitive artifacts, credentials, remote routes, retries, recovery, and removal while mutating event order and lineage links."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-PATH-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -17831,6 +19144,32 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Five warmups and 30 measured runs on the recorded MacBook Pro M5 and Fedora reference machines, with functional budget verification on clean Ubuntu."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-PERF-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Benchmark capture, parse, retrieval, queue, first-event, first-token, generation, tool, verification, and total workflow time plus throughput and resource use across pinned fixture, hardware, runtime, model, endpoint, and policy identities."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-PERF-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Saturate stream buffers, event queues, output, memory, accelerator memory, disk, process, concurrency, timeout, and cancellation ceilings."
     },
     {
       "acceptance_tests": [],
@@ -17940,6 +19279,45 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-REM-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Mutate model, publisher, operator, runtime, codec, endpoint, route, and profile-class identities and attempt to conflate local, private-network, private-remote, and managed-remote records."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-REM-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Probe remote workers with bad certificates, redirects, DNS rebinding, SSRF targets, proxies, host aliases, credential canaries, quota and cost exhaustion, cancellation, logs, errors, and emergency disablement."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-REM-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Qualify and then mutate each model, endpoint, runtime, codec, route, policy, region, retention, logging, and operator dimension."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-REP-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -17961,6 +19339,19 @@
         "heading": "31B. v0.1 Quantitative Acceptance Matrix"
       },
       "title": "Resume after file, instruction, model-digest, permission, branch, repository-map, citation, and workspace changes."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-RESUME-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Disconnect every client, restart extension and host processes, alter checkpoints and bindings, and pause, resume, or cancel long-running tasks."
     },
     {
       "acceptance_tests": [],
@@ -18122,6 +19513,32 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-TIO-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Run tools that succeed, deny, fail, time out, cancel, exhaust resources, crash, fork descendants, emit empty or large mixed output, create files, and leave uncertain state."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-TIO-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Drop, duplicate, reorder, truncate, corrupt, or replay tool events and observations across restart and output pressure."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-TMS-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -18174,6 +19591,19 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-VER-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Attempt completion through model text, tool output, exit zero, stale evidence, incomplete plans, modified outputs, failed invariants, and hidden prohibited effects."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-VSC-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -18213,6 +19643,45 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-VSC-004",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Reload and close the Verified Chat webview during Ask, Plan, Agent, approval, tool, verification, recovery, and large-attachment phases; inject script, markup, origin, replay, and oversized-frame attacks."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-VSC-005",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Exercise the stable Chat Participant with every public reference class, unresolved and opaque values, remote workspaces, cancellation, supported-version matrix, and known-bad-version disablement."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-VSC-006",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Exercise the Language Model Chat Provider with every supported normalized message part, unknown parts, streaming, cancellation, model selection, version skew, and native client behavior."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-WEB-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -18247,6 +19716,45 @@
         "heading": "36A. First-GA Quantitative Acceptance Matrix"
       },
       "title": "Run clean install, package identity, IPC, AppContainer, NTFS path/race, DPAPI, native model, strict-local network, delivery adapter, accessibility, update, rollback, uninstall, and residue suites on Windows 11 x64."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-WKF-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Exercise valid and invalid workflow graphs, preconditions, postconditions, side-effect classes, retry classes, stale grants, approvals, malformed proposals, uncertain effects, and bounded replanning."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-WKF-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Terminate the host at every state boundary, close and reload clients, interrupt tools and models, and recover with unchanged, changed, and uncertain environment state."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-WKF-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix"
+      },
+      "title": "Seed false completion, exit-zero failure, missing observations, stale verification, repeated state, exhausted budgets, post-error stopping, and incomplete plans."
     },
     {
       "acceptance_tests": [],

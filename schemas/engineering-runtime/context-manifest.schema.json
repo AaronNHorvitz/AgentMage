@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/context-manifest.schema.json",
+  "title": "AgentMage context-manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "context_manifest_id",
+    "session_id",
+    "turn_id",
+    "model_profile_id",
+    "source_artifact_count",
+    "items",
+    "total_input_tokens",
+    "reserved_output_tokens",
+    "safety_margin_tokens",
+    "manifest_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "context_manifest_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "turn_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "model_profile_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "source_artifact_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact_id",
+          "disposition",
+          "ranges",
+          "token_count",
+          "reason"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "disposition": {
+            "enum": [
+              "included",
+              "summarized",
+              "truncated",
+              "duplicate",
+              "stale",
+              "unsupported",
+              "unavailable",
+              "restricted",
+              "omitted"
+            ]
+          },
+          "ranges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start_byte",
+                "end_byte_exclusive"
+              ],
+              "properties": {
+                "start_byte": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end_byte_exclusive": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "minItems": 0,
+            "maxItems": 256
+          },
+          "token_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reason": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "minItems": 0,
+      "maxItems": 4096
+    },
+    "total_input_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reserved_output_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "safety_margin_tokens": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

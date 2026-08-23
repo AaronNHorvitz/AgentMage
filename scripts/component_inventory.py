@@ -37,6 +37,7 @@ IMAGE_DIGEST = re.compile(r"^sha256:([0-9a-f]{64})$")
 EXPECTED_EXECUTABLES = (
     "cargo",
     "clippy-driver",
+    "git",
     "node",
     "npm",
     "python3",

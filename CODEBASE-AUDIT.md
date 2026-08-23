@@ -297,3 +297,19 @@ The integrated gate must prove:
 
 No model-quality result overrides a failed coverage, read-only, secret-protection, reconciliation,
 platform, recovery, resource, accessibility, or evidence gate.
+## 14. Engineering Runtime and Model Gateway Relationship
+
+The whole-codebase audit is an Engineering Capability Registry workflow. It consumes canonical
+source-artifact envelopes, provenance, context manifests, and delivery receipts from
+`ENGINEERING-RUNTIME.md`; it does not enumerate ambient workspace content or maintain a second
+artifact store, prompt assembler, journal, tool dispatcher, or completion engine. Deterministic
+census, graph, command, and repository facts remain authoritative. Model output contributes
+untrusted semantic proposals and findings only.
+
+`MODEL-GATEWAY.md` may supply an explicitly qualified local or remote model route for semantic
+partitions. Route choice never changes audit coverage, repository authority, command policy,
+verification, or completion. A remote route requires per-artifact classification and disclosure;
+strict local remains a complete target; and absent or unqualified remote capacity produces an
+explicit blocked or degraded result rather than silent omission or fallback. A comprehensive audit
+cannot complete while required unseen artifacts, unresolved partitions, stale evidence, or route
+dependent limitations remain.

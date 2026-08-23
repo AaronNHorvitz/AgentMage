@@ -8,7 +8,9 @@
     "ADR-0029",
     "ADR-0030",
     "ADR-0031",
-    "ADR-0032"
+    "ADR-0032",
+    "ADR-0043",
+    "ADR-0044"
   ],
   "status": "configured",
   "toolchains": {
@@ -123,7 +125,31 @@
     "shells/vscode/test/index.test.ts",
     "shells/vscode/test/provider.test.ts",
     "shells/vscode/tsconfig.json",
-    "supply-chain/cargo-external-catalog.json"
+    "supply-chain/cargo-external-catalog.json",
+    "ENGINEERING-RUNTIME.md",
+    "MODEL-GATEWAY.md",
+    "ENGINEERING-CAPABILITY-REGISTRY.md",
+    "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md",
+    "docs/decisions/0044-local-and-remote-open-weight-inference-profiles.md",
+    "architecture/engineering-runtime-change-manifest.json",
+    "schemas/engineering-runtime/artifact-envelope.schema.json",
+    "schemas/engineering-runtime/artifact-ingestion-result.schema.json",
+    "schemas/engineering-runtime/artifact-transformation.schema.json",
+    "schemas/engineering-runtime/capability-manifest.schema.json",
+    "schemas/engineering-runtime/context-delivery-receipt.schema.json",
+    "schemas/engineering-runtime/context-manifest.schema.json",
+    "schemas/engineering-runtime/model-endpoint-profile.schema.json",
+    "schemas/engineering-runtime/model-route-decision.schema.json",
+    "schemas/engineering-runtime/terminal-result.schema.json",
+    "schemas/engineering-runtime/tool-observation.schema.json",
+    "schemas/engineering-runtime/verification-result.schema.json",
+    "schemas/engineering-runtime/workflow-checkpoint.schema.json",
+    "schemas/engineering-runtime/workflow-definition.schema.json",
+    "schemas/engineering-runtime/workflow-state.schema.json",
+    "scripts/engineering_runtime_manifest.py",
+    "scripts/engineering_runtime_schemas.mjs",
+    "tests/test_engineering_runtime_manifest.py",
+    "tests/test_engineering_runtime_schemas.mjs"
   ],
   "lockfiles": [
     "Cargo.lock",

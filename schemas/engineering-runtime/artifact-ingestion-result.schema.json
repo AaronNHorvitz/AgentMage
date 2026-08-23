@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/artifact-ingestion-result.schema.json",
+  "title": "AgentMage artifact-ingestion-result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ingestion_id",
+    "artifact_id",
+    "disposition",
+    "source",
+    "transformation_ids",
+    "warnings",
+    "error_code",
+    "terminal"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "ingestion_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "disposition": {
+      "enum": [
+        "captured",
+        "parsed",
+        "partial",
+        "unsupported",
+        "denied",
+        "unavailable",
+        "failed",
+        "omitted"
+      ]
+    },
+    "source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact_id",
+            "sha256",
+            "byte_length"
+          ],
+          "properties": {
+            "artifact_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "byte_length": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "transformation_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "error_code": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "terminal": {
+      "const": true
+    }
+  }
+}

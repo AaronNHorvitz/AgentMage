@@ -1,0 +1,1003 @@
+{
+  "added_story_ids": [
+    "1.3",
+    "2.4",
+    "5.3",
+    "11.3",
+    "13.5",
+    "13.6",
+    "16.4",
+    "21.4",
+    "22.5",
+    "23.7",
+    "23.8",
+    "49.2",
+    "50.4",
+    "95.3",
+    "95.4",
+    "121.2",
+    "123.2",
+    "124.2",
+    "125.3",
+    "126.2"
+  ],
+  "automatic_fallback": false,
+  "counts": {
+    "acceptance_tests": 29,
+    "foundational_epics_added": 2,
+    "foundational_epics_total": 4,
+    "new_schemas": 14,
+    "planned_stories_added": 20,
+    "product_requirements": 24,
+    "release_epics_added": 0,
+    "requirement_owner_stories": 14,
+    "reused_schemas": 6,
+    "sprints_added": 0,
+    "sub_tasks_added": 141,
+    "tasks_added": 60
+  },
+  "current_status_ref": "architecture/status-model.json",
+  "decision_ids": [
+    "ADR-0043",
+    "ADR-0044"
+  ],
+  "execution_authority": "TASKS.md",
+  "new_schema_paths": [
+    "schemas/engineering-runtime/artifact-envelope.schema.json",
+    "schemas/engineering-runtime/artifact-ingestion-result.schema.json",
+    "schemas/engineering-runtime/artifact-transformation.schema.json",
+    "schemas/engineering-runtime/capability-manifest.schema.json",
+    "schemas/engineering-runtime/context-delivery-receipt.schema.json",
+    "schemas/engineering-runtime/context-manifest.schema.json",
+    "schemas/engineering-runtime/model-endpoint-profile.schema.json",
+    "schemas/engineering-runtime/model-route-decision.schema.json",
+    "schemas/engineering-runtime/terminal-result.schema.json",
+    "schemas/engineering-runtime/tool-observation.schema.json",
+    "schemas/engineering-runtime/verification-result.schema.json",
+    "schemas/engineering-runtime/workflow-checkpoint.schema.json",
+    "schemas/engineering-runtime/workflow-definition.schema.json",
+    "schemas/engineering-runtime/workflow-state.schema.json"
+  ],
+  "profile_classes": [
+    "strict_local",
+    "local_network_private",
+    "remote_private",
+    "remote_managed"
+  ],
+  "remote_inference_optional": true,
+  "requirement_mappings": [
+    {
+      "acceptance_test_ids": [
+        "AT-CAP-001"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M5",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-CAP-001",
+      "review_protocol_ids": [
+        "RV-56"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/capability-manifest.schema.json",
+        "schemas/engineering-runtime/workflow-definition.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-CAP-001",
+        "SR-CAP-002"
+      ],
+      "sprint_id": 95,
+      "status": "planned",
+      "story_id": "95.3",
+      "task_ids": [
+        "95.3.1",
+        "95.3.2",
+        "95.3.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-CAP-002"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M5",
+      "module_ids": [
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-CAP-002",
+      "review_protocol_ids": [
+        "RV-56"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/capability-manifest.schema.json",
+        "schemas/engineering-runtime/workflow-state.schema.json",
+        "schemas/engineering-runtime/verification-result.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-CAP-003",
+        "SR-CAP-004"
+      ],
+      "sprint_id": 95,
+      "status": "planned",
+      "story_id": "95.3",
+      "task_ids": [
+        "95.3.1",
+        "95.3.2",
+        "95.3.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-CTX-001",
+        "AT-CTX-002"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M1",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-CTX-001",
+      "review_protocol_ids": [
+        "RV-51"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/artifact-envelope.schema.json",
+        "schemas/engineering-runtime/artifact-ingestion-result.schema.json",
+        "schemas/engineering-runtime/artifact-transformation.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-CTX-001",
+        "SR-CTX-002"
+      ],
+      "sprint_id": 2,
+      "status": "planned",
+      "story_id": "2.4",
+      "task_ids": [
+        "2.4.1",
+        "2.4.2",
+        "2.4.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-CTX-002",
+        "AT-CTX-003"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M1",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-CTX-002",
+      "review_protocol_ids": [
+        "RV-51"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/context-manifest.schema.json",
+        "schemas/engineering-runtime/artifact-transformation.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-CTX-003",
+        "SR-CTX-004"
+      ],
+      "sprint_id": 2,
+      "status": "planned",
+      "story_id": "2.4",
+      "task_ids": [
+        "2.4.1",
+        "2.4.2",
+        "2.4.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-CTX-004"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M1",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-CTX-003",
+      "review_protocol_ids": [
+        "RV-51"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/context-delivery-receipt.schema.json",
+        "schemas/engineering-runtime/context-manifest.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-CTX-005",
+        "SR-CTX-006"
+      ],
+      "sprint_id": 2,
+      "status": "planned",
+      "story_id": "2.4",
+      "task_ids": [
+        "2.4.1",
+        "2.4.2",
+        "2.4.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-DEG-001"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M9",
+      "module_ids": [
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-DEG-001",
+      "review_protocol_ids": [
+        "RV-50"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/workflow-state.schema.json",
+        "schemas/engineering-runtime/terminal-result.schema.json",
+        "schemas/engineering-runtime/capability-manifest.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-ERT-006",
+        "SR-CAP-004"
+      ],
+      "sprint_id": 50,
+      "status": "planned",
+      "story_id": "50.4",
+      "task_ids": [
+        "50.4.1",
+        "50.4.2",
+        "50.4.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-ERT-001"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M1",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-ERT-001",
+      "review_protocol_ids": [
+        "RV-50"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/workflow-definition.schema.json",
+        "schemas/engineering-runtime/workflow-state.schema.json",
+        "schemas/runtime/runtime-event.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-ERT-001",
+        "SR-ERT-002",
+        "SR-ERT-003"
+      ],
+      "sprint_id": 1,
+      "status": "planned",
+      "story_id": "1.3",
+      "task_ids": [
+        "1.3.1",
+        "1.3.2",
+        "1.3.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-GWY-001"
+      ],
+      "decision_id": "ADR-0044",
+      "foundational_epic_id": "FRE-MODEL-GATEWAY",
+      "milestone_id": "ER-M3",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-GWY-001",
+      "review_protocol_ids": [
+        "RV-53"
+      ],
+      "schema_paths": [
+        "schemas/model/run-request.schema.json",
+        "schemas/model/stream-fragment.schema.json",
+        "schemas/model/closed-proposal.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-GWY-001",
+        "SR-GWY-002"
+      ],
+      "sprint_id": 13,
+      "status": "planned",
+      "story_id": "13.5",
+      "task_ids": [
+        "13.5.1",
+        "13.5.2",
+        "13.5.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-GWY-002"
+      ],
+      "decision_id": "ADR-0044",
+      "foundational_epic_id": "FRE-MODEL-GATEWAY",
+      "milestone_id": "ER-M3",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine",
+        "platform-linux-native-inference"
+      ],
+      "requirement_id": "AM-GWY-002",
+      "review_protocol_ids": [
+        "RV-53"
+      ],
+      "schema_paths": [
+        "schemas/model/run-request.schema.json",
+        "schemas/model/stream-fragment.schema.json",
+        "schemas/engineering-runtime/model-endpoint-profile.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-GWY-003",
+        "SR-GWY-004"
+      ],
+      "sprint_id": 13,
+      "status": "planned",
+      "story_id": "13.6",
+      "task_ids": [
+        "13.6.1",
+        "13.6.2",
+        "13.6.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-GWY-003"
+      ],
+      "decision_id": "ADR-0044",
+      "foundational_epic_id": "FRE-MODEL-GATEWAY",
+      "milestone_id": "ER-M3",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-GWY-003",
+      "review_protocol_ids": [
+        "RV-53"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/model-route-decision.schema.json",
+        "schemas/model/exact-profile.schema.json",
+        "schemas/engineering-runtime/model-endpoint-profile.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-GWY-005",
+        "SR-GWY-006"
+      ],
+      "sprint_id": 13,
+      "status": "planned",
+      "story_id": "13.6",
+      "task_ids": [
+        "13.6.1",
+        "13.6.2",
+        "13.6.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-MAG-001",
+        "AT-MAG-002"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M8",
+      "module_ids": [
+        "kernel-engine",
+        "shell-host"
+      ],
+      "requirement_id": "AM-MAG-001",
+      "review_protocol_ids": [
+        "RV-57"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/capability-manifest.schema.json",
+        "schemas/engineering-runtime/workflow-definition.schema.json",
+        "schemas/engineering-runtime/workflow-state.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-MAG-001",
+        "SR-MAG-002",
+        "SR-MAG-003",
+        "SR-MAG-004"
+      ],
+      "sprint_id": 95,
+      "status": "planned",
+      "story_id": "95.4",
+      "task_ids": [
+        "95.4.1",
+        "95.4.2",
+        "95.4.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-OBS-002"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M2",
+      "module_ids": [
+        "kernel-engine",
+        "shell-host",
+        "shell-vscode"
+      ],
+      "requirement_id": "AM-OBS-002",
+      "review_protocol_ids": [
+        "RV-52"
+      ],
+      "schema_paths": [
+        "schemas/runtime/runtime-event.schema.json",
+        "schemas/engineering-runtime/tool-observation.schema.json",
+        "schemas/engineering-runtime/terminal-result.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-ERT-005",
+        "SR-VSC-004"
+      ],
+      "sprint_id": 21,
+      "status": "planned",
+      "story_id": "21.4",
+      "task_ids": [
+        "21.4.1",
+        "21.4.2",
+        "21.4.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-PERF-002",
+        "AT-PERF-003"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M2",
+      "module_ids": [
+        "kernel-engine",
+        "shell-host"
+      ],
+      "requirement_id": "AM-PERF-001",
+      "review_protocol_ids": [
+        "RV-52"
+      ],
+      "schema_paths": [
+        "schemas/runtime/runtime-event.schema.json",
+        "schemas/model/stream-fragment.schema.json",
+        "schemas/engineering-runtime/tool-observation.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-ERT-005",
+        "SR-GWY-004"
+      ],
+      "sprint_id": 21,
+      "status": "planned",
+      "story_id": "21.4",
+      "task_ids": [
+        "21.4.1",
+        "21.4.2",
+        "21.4.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-REM-001"
+      ],
+      "decision_id": "ADR-0044",
+      "foundational_epic_id": "FRE-MODEL-GATEWAY",
+      "milestone_id": "ER-M3",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-REM-001",
+      "review_protocol_ids": [
+        "RV-53"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/model-endpoint-profile.schema.json",
+        "schemas/engineering-runtime/model-route-decision.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-GWY-005",
+        "SR-GWY-006"
+      ],
+      "sprint_id": 13,
+      "status": "planned",
+      "story_id": "13.5",
+      "task_ids": [
+        "13.5.1",
+        "13.5.2",
+        "13.5.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-REM-002"
+      ],
+      "decision_id": "ADR-0044",
+      "foundational_epic_id": "FRE-MODEL-GATEWAY",
+      "milestone_id": "ER-M6",
+      "module_ids": [
+        "kernel-engine",
+        "platform-linux",
+        "platform-windows"
+      ],
+      "requirement_id": "AM-REM-002",
+      "review_protocol_ids": [
+        "RV-54"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/model-endpoint-profile.schema.json",
+        "schemas/engineering-runtime/model-route-decision.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-GWY-007",
+        "SR-GWY-008",
+        "SR-GWY-009"
+      ],
+      "sprint_id": 123,
+      "status": "planned",
+      "story_id": "123.2",
+      "task_ids": [
+        "123.2.1",
+        "123.2.2",
+        "123.2.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-REM-003"
+      ],
+      "decision_id": "ADR-0044",
+      "foundational_epic_id": "FRE-MODEL-GATEWAY",
+      "milestone_id": "ER-M7",
+      "module_ids": [
+        "kernel-engine",
+        "platform-linux",
+        "platform-windows"
+      ],
+      "requirement_id": "AM-REM-003",
+      "review_protocol_ids": [
+        "RV-54"
+      ],
+      "schema_paths": [
+        "schemas/model/exact-profile.schema.json",
+        "schemas/engineering-runtime/model-endpoint-profile.schema.json",
+        "schemas/engineering-runtime/model-route-decision.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-GWY-009",
+        "SR-GWY-010"
+      ],
+      "sprint_id": 123,
+      "status": "planned",
+      "story_id": "123.2",
+      "task_ids": [
+        "123.2.1",
+        "123.2.2",
+        "123.2.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-RESUME-002"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M2",
+      "module_ids": [
+        "kernel-engine",
+        "shell-host"
+      ],
+      "requirement_id": "AM-SES-002",
+      "review_protocol_ids": [
+        "RV-52"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/workflow-checkpoint.schema.json",
+        "schemas/engineering-runtime/workflow-state.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-ERT-004",
+        "SR-ERT-005"
+      ],
+      "sprint_id": 11,
+      "status": "planned",
+      "story_id": "11.3",
+      "task_ids": [
+        "11.3.1",
+        "11.3.2",
+        "11.3.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-TIO-001",
+        "AT-TIO-002"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M2",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine",
+        "shell-host"
+      ],
+      "requirement_id": "AM-TIO-001",
+      "review_protocol_ids": [
+        "RV-52"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/tool-observation.schema.json",
+        "schemas/engineering-runtime/terminal-result.schema.json",
+        "schemas/model/tool-call-candidate.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-ERT-005",
+        "SR-ERT-006"
+      ],
+      "sprint_id": 16,
+      "status": "planned",
+      "story_id": "16.4",
+      "task_ids": [
+        "16.4.1",
+        "16.4.2",
+        "16.4.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-VER-001",
+        "AT-WKF-003"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M2",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-VER-001",
+      "review_protocol_ids": [
+        "RV-50"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/verification-result.schema.json",
+        "schemas/engineering-runtime/terminal-result.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-ERT-003",
+        "SR-ERT-006"
+      ],
+      "sprint_id": 5,
+      "status": "planned",
+      "story_id": "5.3",
+      "task_ids": [
+        "5.3.1",
+        "5.3.2",
+        "5.3.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-VSC-004"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M4",
+      "module_ids": [
+        "shell-vscode",
+        "shell-host",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-VSC-004",
+      "review_protocol_ids": [
+        "RV-55"
+      ],
+      "schema_paths": [
+        "schemas/runtime/runtime-event.schema.json",
+        "schemas/engineering-runtime/workflow-state.schema.json",
+        "schemas/engineering-runtime/terminal-result.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-VSC-001",
+        "SR-VSC-002"
+      ],
+      "sprint_id": 23,
+      "status": "planned",
+      "story_id": "23.7",
+      "task_ids": [
+        "23.7.1",
+        "23.7.2",
+        "23.7.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-VSC-005"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M4",
+      "module_ids": [
+        "shell-vscode",
+        "shell-host"
+      ],
+      "requirement_id": "AM-VSC-005",
+      "review_protocol_ids": [
+        "RV-55"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/artifact-envelope.schema.json",
+        "schemas/engineering-runtime/context-manifest.schema.json",
+        "schemas/runtime/runtime-event.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-VSC-002",
+        "SR-VSC-003"
+      ],
+      "sprint_id": 23,
+      "status": "planned",
+      "story_id": "23.8",
+      "task_ids": [
+        "23.8.1",
+        "23.8.2",
+        "23.8.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-VSC-006"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M4",
+      "module_ids": [
+        "shell-vscode",
+        "shell-host"
+      ],
+      "requirement_id": "AM-VSC-006",
+      "review_protocol_ids": [
+        "RV-55"
+      ],
+      "schema_paths": [
+        "schemas/model/run-request.schema.json",
+        "schemas/model/stream-fragment.schema.json",
+        "schemas/model/closed-proposal.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-VSC-003",
+        "SR-VSC-004"
+      ],
+      "sprint_id": 23,
+      "status": "planned",
+      "story_id": "23.8",
+      "task_ids": [
+        "23.8.1",
+        "23.8.2",
+        "23.8.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-WKF-001",
+        "AT-WKF-002"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M2",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-WKF-001",
+      "review_protocol_ids": [
+        "RV-50"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/workflow-definition.schema.json",
+        "schemas/engineering-runtime/workflow-state.schema.json",
+        "schemas/engineering-runtime/verification-result.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-ERT-002",
+        "SR-ERT-003",
+        "SR-ERT-004"
+      ],
+      "sprint_id": 5,
+      "status": "planned",
+      "story_id": "5.3",
+      "task_ids": [
+        "5.3.1",
+        "5.3.2",
+        "5.3.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    },
+    {
+      "acceptance_test_ids": [
+        "AT-WKF-002",
+        "AT-WKF-003",
+        "AT-RESUME-002"
+      ],
+      "decision_id": "ADR-0043",
+      "foundational_epic_id": "FRE-ENGINEERING-RUNTIME",
+      "milestone_id": "ER-M2",
+      "module_ids": [
+        "kernel-contracts",
+        "kernel-engine"
+      ],
+      "requirement_id": "AM-WKF-002",
+      "review_protocol_ids": [
+        "RV-52"
+      ],
+      "schema_paths": [
+        "schemas/engineering-runtime/workflow-state.schema.json",
+        "schemas/engineering-runtime/workflow-checkpoint.schema.json"
+      ],
+      "security_control_ids": [
+        "SR-ERT-004",
+        "SR-ERT-005"
+      ],
+      "sprint_id": 11,
+      "status": "planned",
+      "story_id": "11.3",
+      "task_ids": [
+        "11.3.1",
+        "11.3.2",
+        "11.3.3"
+      ],
+      "verification_commands": [
+        "npm run engineering-runtime:schemas:check",
+        "npm run task-graph:check",
+        "npm run requirements:current-check"
+      ]
+    }
+  ],
+  "reused_schema_paths": [
+    "schemas/model/closed-proposal.schema.json",
+    "schemas/model/stream-fragment.schema.json",
+    "schemas/model/exact-profile.schema.json",
+    "schemas/model/run-request.schema.json",
+    "schemas/runtime/runtime-event.schema.json",
+    "schemas/model/tool-call-candidate.schema.json"
+  ],
+  "schema_version": 1,
+  "status": "enforced-planning-contract",
+  "strict_local_complete_target": true
+}

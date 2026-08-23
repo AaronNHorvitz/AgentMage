@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "policy_id": "agentmage-model-activation-policy-v1",
+  "decision_ids": ["ADR-0027", "ADR-0044"],
   "allowed_platforms": [
     "fedora-x86_64",
     "ubuntu-x86_64",
@@ -8,6 +9,16 @@
   ],
   "automatic_fallback": false,
   "baseline_enabled_profiles": [],
+  "baseline_enabled_endpoint_profiles": [],
+  "baseline_enabled_routes": [],
+  "strict_local_complete_target": true,
+  "remote_inference_optional": true,
+  "profile_classes": [
+    "local_network_private",
+    "remote_managed",
+    "remote_private",
+    "strict_local"
+  ],
   "candidate_profile_ids": [
     "gemma-4-12b-unified-it",
     "gemma-4-e4b-it"

@@ -85,6 +85,13 @@ EXPECTED_MODULES = {
     ),
     "release-xtask": ("release/xtask", "release-tooling", "rust", "cargo"),
 }
+EXPECTED_PLANNED_BOUNDARIES = {
+    "engineering-runtime": ("designed-not-module", {"kernel-contracts", "kernel-engine", "shell-host"}),
+    "model-gateway": ("designed-not-module", {"kernel-contracts", "kernel-engine", "platform-linux-native-inference"}),
+    "verified-chat": ("designed-not-module", {"shell-vscode", "shell-host", "kernel-engine"}),
+    "engineering-capability-registry": ("designed-not-module", {"kernel-contracts", "kernel-engine"}),
+    "remote-inference-worker": ("planned-not-module", {"kernel-engine", "platform-linux", "platform-windows"}),
+}
 
 
 def load_inventory(path: Path = INVENTORY_PATH) -> dict[str, Any]:
@@ -123,6 +130,8 @@ def validate_inventory(inventory: Any, root: Path = ROOT) -> list[str]:
         failures.append("schema_version must equal 1")
     if inventory.get("decision_id") != "ADR-0004":
         failures.append("decision_id must equal ADR-0004")
+    if inventory.get("planning_decision_ids") != ["ADR-0043", "ADR-0044"]:
+        failures.append("planning decision identities must equal ADR-0043 and ADR-0044")
     if inventory.get("status") != "scaffolded":
         failures.append("module inventory status must be scaffolded")
 
@@ -173,6 +182,17 @@ def validate_inventory(inventory: Any, root: Path = ROOT) -> list[str]:
             failures.append(f"missing module marker: {module_path}/README.md")
         if not isinstance(record.get("platforms"), list) or not record.get("platforms"):
             failures.append(f"{module_id} must declare at least one platform")
+
+    planned = _index(inventory.get("planned_boundaries"), "planned boundary", failures)
+    if set(planned) != set(EXPECTED_PLANNED_BOUNDARIES):
+        failures.append("planned boundary set does not match Decisions 0043 and 0044")
+    for boundary_id, (status, owners) in EXPECTED_PLANNED_BOUNDARIES.items():
+        record = planned.get(boundary_id, {})
+        if record.get("status") != status:
+            failures.append(f"{boundary_id} planning status must equal {status}")
+        actual_owners = set(record.get("future_owning_modules", []))
+        if actual_owners != owners or not actual_owners.issubset(modules):
+            failures.append(f"{boundary_id} future module ownership is invalid")
 
     return failures
 

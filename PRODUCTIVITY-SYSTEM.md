@@ -435,3 +435,18 @@ retention, and disclosure controls.
 Repository content cannot cause a productivity lookup, recipient selection, message send, workflow,
 financial operation, or cloud request. Audit findings are evidence, not authority. Any later draft
 or effect begins as a new operation under the applicable pack and Autonomy Center ceiling.
+## 18. Engineering Runtime and Model Route Relationship
+
+Productivity packs are Engineering Capability Registry workflows. Their manifests declare exact
+provider objects, operations, recipients, attachments, authority ceilings, approvals, budgets,
+postconditions, retention, degradation, and removal. They cannot create a private agent loop,
+credential store, provider client, tool dispatcher, or completion rule outside the Rust
+Engineering Runtime.
+
+External messages, calendar content, documents, and provider events remain untrusted artifacts.
+When a model route is used, the context-delivery receipt identifies what was visible and the route
+receipt identifies whether processing was strict local, local-network private, remote private, or
+remote managed. Remote inference is opt-in and separately disclosed; no email, chat, calendar,
+financial, cloud, or private content silently leaves the device. Missing optional inference may
+degrade a named interpretation feature but cannot weaken recipient/effect approvals or turn partial
+work into success.

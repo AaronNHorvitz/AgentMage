@@ -106,9 +106,15 @@ def validate_policy(policy: Any) -> list[str]:
     expected = {
         "schema_version",
         "policy_id",
+        "decision_ids",
         "allowed_platforms",
         "automatic_fallback",
         "baseline_enabled_profiles",
+        "baseline_enabled_endpoint_profiles",
+        "baseline_enabled_routes",
+        "strict_local_complete_target",
+        "remote_inference_optional",
+        "profile_classes",
         "candidate_profile_ids",
         "deterministic_provider",
         "required_binding_ids",
@@ -123,7 +129,11 @@ def validate_policy(policy: Any) -> list[str]:
     for field in (
         "allowed_platforms",
         "baseline_enabled_profiles",
+        "baseline_enabled_endpoint_profiles",
+        "baseline_enabled_routes",
         "candidate_profile_ids",
+        "decision_ids",
+        "profile_classes",
         "required_binding_ids",
     ):
         value = policy.get(field)
@@ -135,6 +145,23 @@ def validate_policy(policy: Any) -> list[str]:
             failures.append(f"model.policy.{field}")
     if policy.get("automatic_fallback") is not False:
         failures.append("model.policy.fallback")
+    if policy.get("decision_ids") != ["ADR-0027", "ADR-0044"]:
+        failures.append("model.policy.decisions")
+    if policy.get("profile_classes") != [
+        "local_network_private",
+        "remote_managed",
+        "remote_private",
+        "strict_local",
+    ]:
+        failures.append("model.policy.profile_classes")
+    if policy.get("strict_local_complete_target") is not True:
+        failures.append("model.policy.strict_local")
+    if policy.get("remote_inference_optional") is not True:
+        failures.append("model.policy.remote_optional")
+    if policy.get("baseline_enabled_endpoint_profiles") != []:
+        failures.append("model.baseline.enabled_endpoint_drift")
+    if policy.get("baseline_enabled_routes") != []:
+        failures.append("model.baseline.enabled_route_drift")
     provider = policy.get("deterministic_provider")
     if provider != {
         "model_id": None,
@@ -211,12 +238,16 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         ],
         "enabled_profiles": [],
         "enabled_profile_count": 0,
+        "enabled_endpoint_profiles": [],
+        "enabled_routes": [],
         "candidates": candidates,
         "deterministic_provider": {
             **policy["deterministic_provider"],
             "classification": "zero-profile-exact-discovery-boundary",
         },
         "automatic_fallback": False,
+        "strict_local_complete_target": True,
+        "remote_inference_optional": True,
         "activation_status": "disabled-until-new-hash-bound-admission",
         "support_claim": "none-pre-release",
     }

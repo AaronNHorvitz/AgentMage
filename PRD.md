@@ -5,14 +5,14 @@
 | **Product** | AgentMage - a portable, local-first AI agent |
 | **Version** | Draft v0.7 |
 | **Author** | Aaron N. Horvitz |
-| **Date** | 2026-08-12 |
+| **Date** | 2026-08-22 |
 | **Status** | Pre-alpha scaffold; roadmap resumed under Decision 0021 and model direction reconciled under Decision 0027; no integrated end-user workflow or supported binary |
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
 | **High-level implementation plan** | [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) |
-| **Execution plan** | [TASKS.md](./TASKS.md) - 17 release epics, two foundational runtime epics, and 169 sequential dependency gates |
+| **Execution plan** | [TASKS.md](./TASKS.md) - 17 release epics, four foundational runtime epics, and 169 sequential dependency gates |
 | **First-GA reference platforms** | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon MacBook Pro M5 retained post-GA |
-| **First interface target** | Native Visual Studio Code Chat |
+| **First interface target** | AgentMage Verified Chat as the canonical reliable surface, with native Visual Studio Code Chat compatibility |
 | **Current enabled model** | None; Muse Glimmer is the primary evaluation candidate, eligible first-party Gemma models form the initial role-aware comparison inventory, and prior evaluated Gemma 4 E4B and Gemma 4 12B Unified profiles remain rejected |
 | **License** | Apache License 2.0 |
 
@@ -38,7 +38,7 @@ This PRD specifies the accepted target product; it does not claim that the
 target is currently available. The current state is governed by
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json). The
-    17 release epics, two foundational runtime epics, 169 sprints, and 241 stable requirements remain accepted and
+    17 release epics, four foundational runtime epics, 169 sprints, and 294 stable requirements remain accepted and
 protected. [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md)
 records the user's acceptance of the stabilization residuals and authorizes
 execution to resume at the first incomplete dependency gate. It does not close
@@ -91,6 +91,9 @@ change.
 | `TRUSTED-OPERATIONS.md` | Normative command-authority, public-research, credential-broker, continuity, model-manager, and experimental-model architecture |
 | `CODEBASE-AUDIT.md` | Normative whole-codebase census, structural, semantic, reconciliation, read-only, checkpoint, finding, and coverage architecture |
 | `WINDOWS-BOUNDARIES.md` | Normative first-GA Windows package, process, path, IPC, key, sandbox, runtime, and verification contract |
+| `ENGINEERING-RUNTIME.md` | Normative artifact, context, workflow, task, tool-observation, verification, observability, degradation, performance, Verified Chat, native compatibility, and multi-agent runtime contract |
+| `MODEL-GATEWAY.md` | Normative local and remote model, endpoint, codec, route, qualification, routing, fallback, streaming, usage, cost, and remote-inference contract |
+| `ENGINEERING-CAPABILITY-REGISTRY.md` | Normative versioned executable engineering capability manifest, lifecycle, workflow, verification, degradation, migration, and catalog contract |
 | `architecture/status-model.json` | Machine-readable current lifecycle, verification, disposition, support, platform, model, and stabilization state under Decision 0012 |
 | `docs/decisions/*.md` | Accepted clarifications and supersessions with rationale and verification; never authority to weaken a higher-ranked requirement silently |
 
@@ -678,7 +681,7 @@ Managed-device evaluation is optional and outside the personal development bound
 
 ## 22. Planning and Execution Contract
 
-`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 17 release epics, two cross-cutting foundational runtime epics, and 169 sequential dependency gates numbered 0 through 168. A sprint is a dependency and evidence boundary rather than a calendar estimate. It contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains reviewable. Decisions 0001, 0008, 0009, 0010, 0011, and 0026 record the additions-only evolution; Decision 0025 changes only the timing of real fuzz-engine execution and leaves every affected gate open.
+`IMPLEMENTATION-PLAN.md` describes the high-level build sequence and milestone outcomes. `TASKS.md` converts that roadmap into 17 release epics, four cross-cutting foundational runtime epics, and 169 sequential dependency gates numbered 0 through 168. A sprint is a dependency and evidence boundary rather than a calendar estimate. It contains one or more bounded user-, maintainer-, or reviewer-facing stories only when their combined gate remains reviewable. Decisions 0001, 0008, 0009, 0010, 0011, 0026, 0042, 0043, and 0044 record the additions-only evolution; Decision 0025 changes only the timing of real fuzz-engine execution and leaves every affected gate open.
 
 ```mermaid
 flowchart LR
@@ -1215,3 +1218,92 @@ reconciliation mechanism.
 The detailed Rust/TypeScript boundary, protocol, schemas, format adapters,
 evaluation plan, rollout gates, risks, and sprint ownership are defined in
 [`foundational-artifact-and-workflow-runtime.md`](./docs/architecture/foundational-artifact-and-workflow-runtime.md).
+
+## 39. Engineering Runtime, Verified Chat, and Model Gateway
+
+Decisions 0043 and 0044 establish AgentMage as a Rust-owned universal
+engineering harness around untrusted, replaceable model planners. They compose
+Decision 0042 rather than replacing its artifact and workflow foundations.
+The normative subsystem authorities are `ENGINEERING-RUNTIME.md`,
+`MODEL-GATEWAY.md`, and `ENGINEERING-CAPABILITY-REGISTRY.md`; stable detailed
+requirements are `AM-ERT-001` through `AM-MAG-001` in Inventory Section 43.
+
+### Product outcome
+
+The target runtime captures and accounts for supplied engineering artifacts,
+delivers exact bounded context, persists versioned workflows, supervises tools,
+produces complete artifact-backed observations, verifies postconditions, and
+returns one explicit terminal result. Models may propose plans, content, and
+tool calls but receive no workspace handle, raw credential, direct effect path,
+grant authority, route authority, or completion authority.
+
+Every long-running task remains bounded by turn, token, time, tool, attempt,
+effect, no-progress, resource, disclosure, and cost ceilings. A closed view or
+disconnected client does not stop host-owned work. Resume requires current
+identity-bound checkpoints and effect reconciliation; consumed grants and
+completed effects never replay.
+
+### Verified Chat and native compatibility
+
+AgentMage Verified Chat is the canonical reliable VS Code experience. A
+disposable secured webview and thin TypeScript bridge communicate over
+authenticated versioned IPC with the Rust host. Ask, Plan, and Agent modes
+select workflow and effect policy but cannot create authority. The host remains
+the sole source of task, artifact, approval, tool, verification, recovery, and
+terminal truth and can reconstruct the view after reload.
+
+The stable `@agentmage` Chat Participant and Language Model Chat Provider are
+compatibility surfaces. They preserve every publicly exposed supported message
+part, account for request references, fail visibly on unresolved required
+content, and disclose capability and version limitations. Native compatibility
+does not inherit Verified Chat guarantees without exact parity evidence.
+Production does not depend on private or proposed APIs, and full External Agent
+Host registration remains future work until VS Code exposes a stable extension
+API.
+
+### Local and remote inference
+
+The candidate-neutral Model Gateway separates model, runtime, protocol codec,
+endpoint, route, operator, policy, and qualification identities. It supports
+planned `strict_local`, `local_network_private`, `remote_private`, and
+`remote_managed` profile classes through one canonical request and event
+contract. Strict local remains a complete target configuration and remote
+inference is optional.
+
+Remote routes require explicit disclosure, exact endpoint and operator,
+verified TLS and host policy, isolated credential-reference resolution, region,
+retention, logging, training-use, quota, cost, cancellation, and emergency
+disablement controls. Routing is deterministic and receipted. Fallback is
+disabled by default and no local-to-remote or cross-remote transition may occur
+silently. Gateway output is an untrusted proposal and cannot execute tools or
+establish task completion.
+
+### Capabilities, observability, and multi-agent work
+
+The Engineering Capability Registry defines closed versioned executable
+workflows with exact schemas, tools, model roles, requested maximum authority,
+budgets, verification, degradation, fixtures, migration, disablement, and
+removal. A prompt-only file is not a capability and a manifest cannot mint a
+grant.
+
+Privacy-aware event lineage and a user-facing inspector explain capture,
+parsing, context, routing, model events, policy, approvals, tools, effects,
+verification, recovery, and terminal state without retaining raw secrets or
+hidden reasoning. Performance claims require identity-bound measurements for
+latency, throughput, backpressure, cancellation, resources, and complete
+workflow time.
+
+Multi-agent engineering teams are downstream of the complete single-agent
+reliability spine. Each pod uses bounded authority, worktree and resource
+leases, qualified roles, independent review, failure isolation, and explicit
+evidence. Integration is serialized, effective diff changes force
+re-verification, and default-branch promotion remains human-gated by default.
+
+### Release truth
+
+These decisions add target architecture, requirements, schemas, security
+controls, milestones, and executable planning. They do not enable a model,
+endpoint, route, capability, workflow, or platform; do not qualify a live
+service; and do not close a release gate. Every live model, endpoint, adapter,
+platform, package, security, performance, accessibility, removal, and
+independent-review result remains open until executed against its exact tuple.

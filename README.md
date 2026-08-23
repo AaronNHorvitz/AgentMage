@@ -11,12 +11,12 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 | Status | Pre-alpha scaffold; stabilization closed and numbered roadmap resumed under Decision 0021; model construction reconciled under Decision 0027; no integrated end-user workflow or supported binary |
 | First supported public release | v1.0 GA Local-First Delivery, Productivity, Trusted Operations, and Whole-Codebase Audit System |
 | Internal milestones | v0.1-v0.7 and the inherited v1+ capability sequence |
-| First interface target | Native Visual Studio Code Chat beside the separate Codex tab |
+| First interface target | AgentMage Verified Chat in Visual Studio Code, with stable `@agentmage` and Language Model Chat Provider compatibility paths beside the separate Codex tab |
 | Current enabled model | None; Muse Glimmer is the primary deep-evaluation candidate, eligible official first-party Gemma profiles form the initial role-aware comparison inventory, and evaluated E4B/12B profiles remain rejected |
-| Model runtime target | Native `llama.cpp`; gated Docker Model Runner compatibility adapter; neither is integrated into an end-user workflow |
+| Model runtime target | Candidate-neutral Model Gateway with strict-local native `llama.cpp` first, optional qualified local/private/managed adapters, and no enabled endpoint, route, or fallback |
 | v1.0 GA platforms | Fedora, Ubuntu, and Windows 11 x64; Apple Silicon macOS retained as a post-GA lane |
 | Delivery boundary | Full GitHub.com/GitHub Enterprise support within a published matrix, plus versioned provider adapters for planning, CI/CD, artifacts, deployment, infrastructure, observability, incidents, security, catalogs, releases, communications, productivity, finance, read-only cloud observation, public research, and encrypted continuity |
-| Execution plan | 17 release epics, two cross-cutting foundational runtime epics, and 169 numbered dependency gates; completed work is preserved and all expansions or refinements are appended under accepted decisions |
+| Execution plan | 17 release epics, four cross-cutting foundational runtime epics, 169 numbered dependency gates, and 294 stable requirements; completed work is preserved and all expansions or refinements are appended under accepted decisions |
 | License | [Apache License 2.0](./LICENSE) |
 
 ## Current Implementation Truth
@@ -36,8 +36,8 @@ test, planning, or isolated Linux security work in the repository. The
 machine-readable source is
 [`architecture/status-model.json`](./architecture/status-model.json), governed
 by [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md).
-The accepted 17-release-epic, two-foundational-runtime-epic, 169-sprint,
-241-requirement scope is preserved. Under
+The accepted 17-release-epic, four-foundational-runtime-epic, 169-sprint,
+294-requirement scope is preserved. Under
 [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), the user
 accepted the recorded residual risks and authorized the original numbered
 roadmap to resume at its first incomplete dependency gate. Independent review
@@ -62,6 +62,24 @@ extends the existing Rust contracts, coordinator, journal, artifact store,
 verifier, recovery path, native tools, and platform IPC. It does not claim that
 universal document support, the supported VS Code participant accounting path, or the
 complete workflow supervisor is implemented.
+[Decision 0043](./docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md)
+defines the Rust-owned [Engineering Runtime](./ENGINEERING-RUNTIME.md), AgentMage Verified Chat,
+native Chat compatibility disclosures, reliable tool observations, persistent tasks, the
+[Engineering Capability Registry](./ENGINEERING-CAPABILITY-REGISTRY.md), and bounded multi-agent
+placement after the single-agent reliability spine. [Decision
+0044](./docs/decisions/0044-local-and-remote-open-weight-inference-profiles.md) defines the
+candidate-neutral [Model Gateway](./MODEL-GATEWAY.md), four explicit endpoint classes, separate
+model/runtime/codec/endpoint/route qualification, optional remote workers, and no-silent-fallback
+rules. These are designed target components, not integrated capabilities, enabled routes, or
+support claims. Strict-local operation remains a complete target configuration.
+The machine-readable [Engineering Runtime change manifest](./architecture/engineering-runtime-change-manifest.json)
+binds the 24 added requirements, 29 acceptance tests, 20 stories, 60 tasks, 141 sub-tasks, schemas,
+controls, modules, and verification commands. The [scope and plan
+audit](./docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md) records the adversarial
+review, repaired findings, exact limitations, and `PASS WITH RECORDED LIMITATION` planning
+disposition without promoting product status. Current planning, documentation, schema, and product
+contract gates pass locally; preserved historical-review chains and live qualifications remain open
+exactly as the audit records.
 
 Accepted Decisions 0013 through 0016 define the current authority transaction,
 opaque effect permit, canonical held targets, exact-object Linux worker,
@@ -522,7 +540,10 @@ A gate is only `PASS` or `BLOCKED`. Failed, skipped, stale, unavailable, flaky, 
 - [Agent Scaffolding Inventory](./Agent-Scaffolding-Inventory.md) - stable requirements, detailed capability roadmap, build order, and acceptance matrix.
 - [Security Review and Verification Guide](./SECURITY-REVIEW.md) - public product-security baseline, security requirements, reviewer protocols, and evidence contract.
 - [High-Level Implementation Plan](./IMPLEMENTATION-PLAN.md) - architectural sequence, cross-cutting workstreams, milestones, risks, and release strategy.
-- [Story-Based Sprint Plan](./TASKS.md) - 17 release epics, two cross-cutting foundational runtime epics, 169 dependency-bounded sprints, stories, tasks, sub-tasks, tests, acceptance criteria, and gates.
+- [Story-Based Sprint Plan](./TASKS.md) - 17 release epics, four cross-cutting foundational runtime epics, 169 dependency-bounded sprints, stories, tasks, sub-tasks, tests, acceptance criteria, and gates.
+- [Engineering Runtime](./ENGINEERING-RUNTIME.md) - canonical Rust-owned artifacts, context, workflows, persistence, tool observations, verification, observability, Verified Chat, and capability composition.
+- [Model Gateway](./MODEL-GATEWAY.md) - candidate-neutral local and optional remote model mediation, qualification, routing, disclosure, cancellation, and no-silent-fallback policy.
+- [Engineering Capability Registry](./ENGINEERING-CAPABILITY-REGISTRY.md) - versioned capability manifests, deterministic workflow composition, lifecycle, degradation, and bounded multi-agent placement.
 - [Model Provenance and Admission Policy](./MODEL-PROVENANCE-POLICY.md) - origin, lineage, license, artifact, runtime, quality, and fallback admission rules.
 - [Security Policy](./SECURITY.md) - private reporting, supported versions, remediation, signed manual patch delivery, emergency disablement, and end of support.
 - [Runtime Boundaries](./RUNTIME-BOUNDARIES.md) - trust boundaries, classified data flows, privileges, processes, sockets, lifecycle, and runtime parity.

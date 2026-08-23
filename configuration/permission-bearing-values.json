@@ -1,6 +1,26 @@
 {
   "schema_version": 1,
   "status": "enforced-test-closure",
+  "planned_entries": [
+    {"path": "/permission/inference_egress", "dimension": "inference-egress", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/permission/remote_endpoint", "dimension": "remote-endpoint", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/permission/managed_endpoint", "dimension": "managed-endpoint", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/permission/context_disclosure", "dimension": "context-disclosure", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/permission/persistent_execution", "dimension": "persistent-execution", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/permission/unattended_execution", "dimension": "unattended-execution", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/permission/multi_agent_fanout", "dimension": "multi-agent-fanout", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/permission/model_route", "dimension": "model-route", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/permission/endpoint_credential", "dimension": "endpoint-credential-reference", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"},
+    {"path": "/permission/cost_budget", "dimension": "cost-budget", "status": "planned-not-active", "expected_rejection": "configuration-authority-broadening"}
+  ],
+  "planned_entry_policy": {
+    "activation": "requires-versioned-schema-implementation-and-evidence",
+    "audit_required": true,
+    "credential_values_prohibited": true,
+    "default_effect": "deny",
+    "exact_bound_required": true,
+    "expiry_required": true
+  },
   "entries": [
     {"path": "/core/configuration_mode", "dimension": "core-authority-mode", "expected_rejection": "configuration-authority-broadening"},
     {"path": "/core/startup_failure_policy", "dimension": "core-fail-closed-policy", "expected_rejection": "configuration-contract-violation"},

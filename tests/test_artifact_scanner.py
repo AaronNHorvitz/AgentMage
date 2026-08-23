@@ -75,6 +75,14 @@ class ArtifactScannerTests(unittest.TestCase):
         self.assertTrue(findings)
         self.assertNotIn(value, str(findings))
 
+    def test_secret_scanner_does_not_join_adjacent_marker_literals(self) -> None:
+        findings = scan_text(
+            '["password=", "api_key=", "token="].iter()',
+            "source",
+            "synthetic/secret-markers.rs",
+        )
+        self.assertNotIn("secret-pattern", {item["category"] for item in findings})
+
     def test_defensive_docker_socket_comparison_is_not_privilege_assumption(self) -> None:
         findings = scan_text(
             'if mount.source == "/var/run/docker.sock" { reject(); }',

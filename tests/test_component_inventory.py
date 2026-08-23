@@ -49,8 +49,8 @@ class ComponentInventoryTests(unittest.TestCase):
 
     def test_package_inventory_binds_all_locked_components(self) -> None:
         packages = build_report()["approved_inventory"]["packages"]
-        self.assertEqual(packages["component_count"], 433)
-        self.assertEqual(packages["classifications"], {"development": 371, "production": 62})
+        self.assertEqual(packages["component_count"], 498)
+        self.assertEqual(packages["classifications"], {"development": 371, "production": 127})
         self.assertRegex(packages["identity_set_sha256"], r"^[0-9a-f]{64}$")
 
     def test_runtime_candidates_and_presence_only_components_are_not_approved(self) -> None:

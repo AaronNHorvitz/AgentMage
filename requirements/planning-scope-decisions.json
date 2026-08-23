@@ -1,9 +1,9 @@
 {
   "current_source_hashes": {
-    "architecture/status-model.json": "e2cf08c494cc41914747a92985156b9708a9269d906b16deef511a13b6259c45",
-    "requirements/additions-only-baseline.json": "5cdf34aff04313ddd5fb95861540ed99fc479fd66b18ccc82818b87fd918bd1b",
-    "requirements/normative-map.json": "d110e462865fef830286df96e76f56d59cfa85fc6196251f5682de6600558507",
-    "requirements/registry.json": "5fab172811137dbaf16e967e3efb05a27a319e88cf936bb646685fe0cbdafd5d"
+    "architecture/status-model.json": "78a86e1b1b99bc35cbb5872ca8591072db8e747953374a510a8ea49059d7d496",
+    "requirements/additions-only-baseline.json": "8480b7f1a971f3e8da6c8bf80f25eac68d45a431469b618fcad6aa2918009190",
+    "requirements/normative-map.json": "80f055e9083092249df2b56221a6d6bfa203f0bcc50f3118bfa5d5d4a6d5167d",
+    "requirements/registry.json": "dcf1a3bf7aedcf8822ac4beb94bcaa11ef1ae1f796740925ed74c628c0159861"
   },
   "decisions": [
     {
@@ -71,6 +71,7 @@
   ],
   "foundational_runtime_decisions": [
     {
+      "appended_requirement_ids": [],
       "approval_markers": [
         "| Status | Accepted additive architecture and planning refinement |",
         "On 2026-08-21, the user explicitly directed AgentMage"
@@ -85,6 +86,95 @@
       "source_sha256": "937f75604dd9b84d3f60a2566d480047385fcc5a43eb6532294f143715805837",
       "sprint_delta": 0,
       "stable_requirement_delta": 0,
+      "status": "accepted"
+    },
+    {
+      "appended_requirement_ids": [
+        "AM-CAP-001",
+        "AM-CAP-002",
+        "AM-CTX-001",
+        "AM-CTX-002",
+        "AM-CTX-003",
+        "AM-DEG-001",
+        "AM-ERT-001",
+        "AM-MAG-001",
+        "AM-OBS-002",
+        "AM-PERF-001",
+        "AM-SES-002",
+        "AM-TIO-001",
+        "AM-VER-001",
+        "AM-VSC-004",
+        "AM-VSC-005",
+        "AM-VSC-006",
+        "AM-WKF-001",
+        "AM-WKF-002",
+        "AT-CAP-001",
+        "AT-CAP-002",
+        "AT-CTX-001",
+        "AT-CTX-002",
+        "AT-CTX-003",
+        "AT-CTX-004",
+        "AT-DEG-001",
+        "AT-ERT-001",
+        "AT-MAG-001",
+        "AT-MAG-002",
+        "AT-OBS-002",
+        "AT-PERF-002",
+        "AT-PERF-003",
+        "AT-RESUME-002",
+        "AT-TIO-001",
+        "AT-TIO-002",
+        "AT-VER-001",
+        "AT-VSC-004",
+        "AT-VSC-005",
+        "AT-VSC-006",
+        "AT-WKF-001",
+        "AT-WKF-002",
+        "AT-WKF-003"
+      ],
+      "approval_markers": [
+        "| Status | Accepted additive architecture and planning refinement |",
+        "On 2026-08-22, the user explicitly instructed AgentMage"
+      ],
+      "document": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md",
+      "foundational_runtime_epics": [
+        "FRE-ENGINEERING-RUNTIME"
+      ],
+      "id": "ADR-0043",
+      "release_epic_delta": 0,
+      "source_sha256": "60070042b47516e1e2c377726adf824d9115aecac97127bff20c544280e5e4f9",
+      "sprint_delta": 0,
+      "stable_requirement_delta": 41,
+      "status": "accepted"
+    },
+    {
+      "appended_requirement_ids": [
+        "AM-GWY-001",
+        "AM-GWY-002",
+        "AM-GWY-003",
+        "AM-REM-001",
+        "AM-REM-002",
+        "AM-REM-003",
+        "AT-GWY-001",
+        "AT-GWY-002",
+        "AT-GWY-003",
+        "AT-REM-001",
+        "AT-REM-002",
+        "AT-REM-003"
+      ],
+      "approval_markers": [
+        "| Status | Accepted additive architecture and planning refinement |",
+        "On 2026-08-22, the user explicitly instructed AgentMage"
+      ],
+      "document": "docs/decisions/0044-local-and-remote-open-weight-inference-profiles.md",
+      "foundational_runtime_epics": [
+        "FRE-MODEL-GATEWAY"
+      ],
+      "id": "ADR-0044",
+      "release_epic_delta": 0,
+      "source_sha256": "9789b976748110c8cada9a2ea93ec38c44a9f07f678c730999afeec85bde5db4",
+      "sprint_delta": 0,
+      "stable_requirement_delta": 12,
       "status": "accepted"
     }
   ],

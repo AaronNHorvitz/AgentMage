@@ -58,3 +58,11 @@ Release gates include tabletop exercises for suspected egress, a compromised dep
 This policy covers AgentMage source, distributed packages, release infrastructure, supported runtime adapters, trusted-operations and whole-codebase audit workers, continuity objects, credential references, and approved model artifacts. It does not make a security guarantee for modified builds, unsupported platforms, unapproved models, exposed raw inference endpoints, disabled platform protections, commands a user deliberately authorizes in Owner / Unrestricted Session, or information the user independently transfers to another product.
 
 See [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) for normative security requirements and reviewer protocols, [MODEL-PROVENANCE-POLICY.md](./MODEL-PROVENANCE-POLICY.md) for model admission, [TRUSTED-OPERATIONS.md](./TRUSTED-OPERATIONS.md) for command, research, credential, continuity, and model-management boundaries, [CODEBASE-AUDIT.md](./CODEBASE-AUDIT.md) for comprehensive repository-audit boundaries, and [RUNTIME-BOUNDARIES.md](./RUNTIME-BOUNDARIES.md) for processes, privileges, sockets, and data flows.
+The vulnerability process covers the Engineering Runtime, Model Gateway, Verified Chat and native
+VS Code compatibility adapters, Engineering Capability Registry, multi-agent composition,
+local/private/managed endpoint profiles, protocol codecs, remote-inference workers, routing and
+fallback policy, context-delivery receipts, tool observations, deterministic verification, and
+their schemas and update/removal paths. Reports involving secret disclosure, private endpoint
+exposure, route substitution, silent fallback, SSRF, DNS rebinding, IPC spoofing, authority
+aggregation, self-approval, false completion, artifact/context omission, or evidence forgery are
+security reports even when no model weight or provider account is bundled.

@@ -2,11 +2,11 @@
   "inputs": [
     {
       "path": "architecture/platform-lane-policy.json",
-      "sha256": "82d8d0c4827cbf9009149f819263d1bf9bc490b6348dec6272c433cd218d9548"
+      "sha256": "4eb936ff71743b2c06770b9d4bdc851cd3dec42f77fc59d15b940e22aaa18365"
     },
     {
       "path": "architecture/platform-lane-status.json",
-      "sha256": "00cee1f823f0e468c5cc17f50ae1121b3d51b9a6711226f3b60fb220f31a22db"
+      "sha256": "396dad6c50f47776d2cdb96c1aa30ce642dedaea6139ecc79bbd3787487a3442"
     }
   ],
   "lanes": [
@@ -153,6 +153,28 @@
         "windows-x86_64"
       ],
       "status": "block"
+    }
+  ],
+  "planning_qualifications": [
+    {
+      "state": "planned-no-native-evidence",
+      "support_claim": "none",
+      "surface_id": "engineering-runtime-host"
+    },
+    {
+      "state": "planned-no-native-evidence",
+      "support_claim": "none",
+      "surface_id": "model-gateway-strict-local"
+    },
+    {
+      "state": "planned-no-native-evidence",
+      "support_claim": "none",
+      "surface_id": "remote-inference-worker"
+    },
+    {
+      "state": "planned-no-native-evidence",
+      "support_claim": "none",
+      "surface_id": "verified-chat"
     }
   ],
   "report_id": "agentmage-current-platform-gates-v1",

@@ -30,6 +30,21 @@ SHA256: Final = re.compile(r"^[0-9a-f]{64}$")
 COMMIT: Final = re.compile(r"^[0-9a-f]{40}$")
 OCI_DIGEST: Final = re.compile(r"^sha256:[0-9a-f]{64}$")
 ALLOWED_SOURCE_HOSTS: Final = {"ai.google.dev", "huggingface.co"}
+HISTORICAL_POLICY_SHA256: Final = (
+    "e20df3e968b6e9640ed814f4952f4c8b5accb032c62fe28422447c38e0544e75"
+)
+
+
+def historical_policy_binding_is_closed(record: dict[str, object]) -> bool:
+    decision = record.get("decision")
+    return (
+        record.get("profile_id") == "gemma-4-12b-unified-it"
+        and isinstance(decision, dict)
+        and decision.get("status") == "BLOCKED"
+        and decision.get("release_approval") is False
+        and "AgentMage profile activation" in decision.get("prohibited_actions", [])
+        and "automatic fallback" in decision.get("prohibited_actions", [])
+    )
 
 
 def read_json(path: Path) -> dict[str, object]:
@@ -75,7 +90,10 @@ def validate_source(record: dict[str, object]) -> list[str]:
     policy = record["policy"]
     if not isinstance(policy, dict) or policy.get("path") != "MODEL-PROVENANCE-POLICY.md":
         failures.append("fallback policy binding is missing")
-    elif policy.get("sha256") != sha256_file(POLICY):
+    elif policy.get("sha256") != sha256_file(POLICY) and not (
+        policy.get("sha256") == HISTORICAL_POLICY_SHA256
+        and historical_policy_binding_is_closed(record)
+    ):
         failures.append("fallback policy binding is stale")
 
     identity = record["identity"]

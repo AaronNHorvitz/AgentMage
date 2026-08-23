@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/workflow-state.schema.json",
+  "title": "AgentMage workflow-state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "workflow_id",
+    "workflow_version",
+    "sequence",
+    "state",
+    "active_step_id",
+    "completed_step_ids",
+    "attempt_ids",
+    "consumed_budget_sha256",
+    "terminal_result_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "workflow_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "workflow_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "state": {
+      "enum": [
+        "created",
+        "validating",
+        "ready",
+        "running",
+        "verifying",
+        "waiting_for_dependency",
+        "waiting_for_approval",
+        "paused",
+        "reconciling",
+        "recovering",
+        "succeeded",
+        "no_op",
+        "blocked",
+        "failed",
+        "cancelled",
+        "timed_out",
+        "resource_exhausted",
+        "uncertain"
+      ]
+    },
+    "active_step_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "completed_step_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "attempt_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "consumed_budget_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "terminal_result_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  }
+}

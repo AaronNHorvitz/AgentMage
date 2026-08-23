@@ -57,5 +57,27 @@
   ],
   "schema_version": 1,
   "status_id": "agentmage-current-platform-lanes-v1",
-  "support_claim": "none-pre-release"
+  "support_claim": "none-pre-release",
+  "planning_qualification_status": [
+    {
+      "state": "planned-no-native-evidence",
+      "support_claim": "none",
+      "surface_id": "engineering-runtime-host"
+    },
+    {
+      "state": "planned-no-native-evidence",
+      "support_claim": "none",
+      "surface_id": "model-gateway-strict-local"
+    },
+    {
+      "state": "planned-no-native-evidence",
+      "support_claim": "none",
+      "surface_id": "remote-inference-worker"
+    },
+    {
+      "state": "planned-no-native-evidence",
+      "support_claim": "none",
+      "surface_id": "verified-chat"
+    }
+  ]
 }

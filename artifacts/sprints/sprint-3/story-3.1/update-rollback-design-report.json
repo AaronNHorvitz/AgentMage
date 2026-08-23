@@ -30,11 +30,11 @@
   "source_artifacts": [
     {
       "path": "SECURITY.md",
-      "sha256": "b51a261676b86f51458421f087e1738d431dee321a2c168e5b3ee4c07c3dff8d"
+      "sha256": "2bad07c40bdfccae4013d142a287e85464deb4ad65cfc9838a77eba429a97862"
     },
     {
       "path": "SECURITY-REVIEW.md",
-      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+      "sha256": "bdb895af6035c08693abbc62932127df8970aaf7a3f0419c5870ef4611bf861a"
     },
     {
       "path": "architecture/signed-update-design.json",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Decision 0042 task identities, dependencies, and roadmap coverage."""
+"""Validate Decisions 0042-0044 task identities, dependencies, and roadmap coverage."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DECISION_STORIES = (
+DECISION_0042_STORIES = (
     "1.2",
     "2.3",
     "5.2",
@@ -29,6 +29,29 @@ DECISION_STORIES = (
     "62.2",
     "81.2",
 )
+DECISION_0043_0044_STORIES = (
+    "1.3",
+    "2.4",
+    "5.3",
+    "11.3",
+    "13.5",
+    "13.6",
+    "16.4",
+    "21.4",
+    "22.5",
+    "23.7",
+    "23.8",
+    "49.2",
+    "50.4",
+    "95.3",
+    "95.4",
+    "121.2",
+    "123.2",
+    "124.2",
+    "125.3",
+    "126.2",
+)
+DECISION_STORIES = DECISION_0042_STORIES + DECISION_0043_0044_STORIES
 
 STORY = re.compile(r"^#### \[[ xX]\] Story (\d+\.\d+)\b", re.MULTILINE)
 TASK = re.compile(r"^- \[[ xX]\] \*\*Task (\d+\.\d+\.\d+)\b", re.MULTILINE)
@@ -93,9 +116,13 @@ def validate_text(tasks: str, plan: str, architecture: str) -> list[str]:
             failures.append(f"duplicate {label} ids: {', '.join(duplicates)}")
 
     story_set = set(story_ids)
-    missing = sorted(set(DECISION_STORIES) - story_set)
-    if missing:
-        failures.append(f"missing Decision 0042 stories: {', '.join(missing)}")
+    for label, expected_stories in (
+        ("Decision 0042", DECISION_0042_STORIES),
+        ("Decisions 0043-0044", DECISION_0043_0044_STORIES),
+    ):
+        missing = sorted(set(expected_stories) - story_set)
+        if missing:
+            failures.append(f"missing {label} stories: {', '.join(missing)}")
 
     for task_id in task_ids:
         if ".".join(task_id.split(".")[:2]) not in story_set:
@@ -131,11 +158,19 @@ def validate_text(tasks: str, plan: str, architecture: str) -> list[str]:
     foundational_headings = re.findall(
         r"^## \[[ xX]\] Foundational Runtime Epic F\d+ - ", tasks, re.MULTILINE
     )
-    if len(foundational_headings) != 2:
+    if len(foundational_headings) != 4:
         failures.append(
-            f"expected 2 foundational runtime epic headings, found {len(foundational_headings)}"
+            f"expected 4 foundational runtime epic headings, found {len(foundational_headings)}"
         )
-    for marker in ("FRE-INGEST", "FRE-WORKFLOW", "M-FOUNDATIONAL-RUNTIME-CORE"):
+    for marker in (
+        "FRE-INGEST",
+        "FRE-WORKFLOW",
+        "FRE-ENGINEERING-RUNTIME",
+        "FRE-MODEL-GATEWAY",
+        "M-FOUNDATIONAL-RUNTIME-CORE",
+        "ER-M0",
+        "ER-M9",
+    ):
         if marker not in tasks + plan + architecture:
             failures.append(f"missing foundational roadmap marker: {marker}")
 
@@ -146,8 +181,14 @@ def main() -> int:
     failures = validate_text(
         (ROOT / "TASKS.md").read_text(encoding="utf-8"),
         (ROOT / "IMPLEMENTATION-PLAN.md").read_text(encoding="utf-8"),
-        (ROOT / "docs/architecture/foundational-artifact-and-workflow-runtime.md").read_text(
-            encoding="utf-8"
+        "\n".join(
+            (ROOT / path).read_text(encoding="utf-8")
+            for path in (
+                "docs/architecture/foundational-artifact-and-workflow-runtime.md",
+                "ENGINEERING-RUNTIME.md",
+                "MODEL-GATEWAY.md",
+                "ENGINEERING-CAPABILITY-REGISTRY.md",
+            )
         ),
     )
     if failures:
@@ -156,7 +197,9 @@ def main() -> int:
         return 1
     print(
         "task graph validation passed: "
-        f"{len(DECISION_STORIES)} Decision 0042 stories, 2 foundational runtime epics"
+        f"{len(DECISION_0042_STORIES)} Decision 0042 stories, "
+        f"{len(DECISION_0043_0044_STORIES)} Decisions 0043-0044 stories, "
+        "4 foundational runtime epics"
     )
     return 0
 

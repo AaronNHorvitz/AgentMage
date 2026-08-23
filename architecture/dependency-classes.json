@@ -2,6 +2,18 @@
   "schema_version": 1,
   "decision_id": "ADR-0004",
   "status": "enforced",
+  "planned_engineering_runtime": {
+    "adapter_families_require_separate_admission": true,
+    "declared_package_dependencies": [],
+    "decision_ids": [
+      "ADR-0043",
+      "ADR-0044"
+    ],
+    "enabled": false,
+    "included_in_default_build": false,
+    "included_in_release": false,
+    "status": "planned-contracts-only"
+  },
   "production": {
     "cargo_internal_path_packages": [
       "agentmage-capability-knowledge",

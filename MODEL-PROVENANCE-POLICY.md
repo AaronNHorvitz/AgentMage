@@ -251,3 +251,39 @@ never receives a repository handle, canonical workspace write grant, credential,
 hosted-service authority, command authority, coverage authority, approval authority, or checkpoint
 decryption key. Model output remains untrusted data until schema validation, source resolution, and
 cross-module reconciliation succeed.
+
+## 12. Local and Remote Gateway Admission
+
+Decision 0044 extends admission from a local model/runtime tuple to distinct model, runtime,
+protocol-codec, endpoint, operator, route, and policy records. It does not change Section 4. The
+instruction's broad reference to future model families conflicts with the current non-Chinese and
+non-Chinese-derived rule; the stricter existing rule remains authoritative unless a separately
+approved owner decision changes it.
+
+A local or remote endpoint can enter evaluation only after the model itself is eligible under this
+policy. Endpoint compatibility, private deployment, self-hosting, open weights, a familiar API, or
+provider marketing does not repair a license, origin, lineage, artifact, runtime, quality, or
+security gap.
+
+Each endpoint profile additionally records:
+
+- Endpoint operator, deployment owner, immutable or otherwise exact deployment identity, profile
+  class, protocol and version, runtime and codec;
+- Endpoint reference separately from any credential, exact TLS and mutually authenticated TLS
+  policy, host and address policy, redirect and proxy policy, DNS and SSRF controls;
+- Region, residency, retention, logging, training-use, incident, emergency-disable, quota, cost,
+  concurrency, context, streaming, cancellation, error, and health behavior;
+- Credential reference type and exact worker allowed to resolve it, never the credential value;
+- Endpoint conformance, route conformance, privacy, latency, throughput, resource, failure,
+  cancellation, version-skew, removal, and strict-local restoration evidence.
+
+Route admission binds one exact model profile, endpoint profile, runtime adapter, codec, role,
+disclosure policy, resource policy, and fallback policy. Technical compatibility is not approval.
+Model qualification, endpoint qualification, and route qualification remain separate. Changing any
+material identity invalidates every safely identified dependent route; uncertain reach requires a
+broader requalification.
+
+No endpoint or route is enabled by documentation or schema validation. `strict_local` remains a
+complete target profile. `local_network_private`, `remote_private`, and `remote_managed` are
+optional profiles that require their own evidence. Fallback remains disabled by default; no route
+may silently move from local to remote or between remote operators.

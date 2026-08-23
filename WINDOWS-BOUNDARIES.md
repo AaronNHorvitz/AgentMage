@@ -182,3 +182,16 @@ The Windows release gate requires:
 - Install, upgrade, rollback, repair, safe mode, backup, restore, migration, uninstall, and residue tests.
 
 Passing Linux or Apple Silicon evidence cannot satisfy a Windows result. Passing Windows evidence cannot satisfy another platform result.
+## 12. Verified Chat and Model Gateway Boundaries
+
+AgentMage Verified Chat on Windows uses a disposable secured webview, a thin TypeScript bridge,
+authenticated versioned IPC, and the Rust host as state and authority owner. Native `@agentmage`
+and Language Model Chat Provider paths are compatibility adapters and must disclose semantic gaps.
+Named-pipe, loopback, process, token, integrity-level, package, executable, session, ACL, replay,
+cancellation, and cleanup evidence is Windows-native and cannot be inferred from Linux tests.
+
+Strict-local inference and every optional remote route use separate process, credential, network,
+endpoint, and qualification identities. A remote-inference worker has no workspace or tool
+authority and resolves only an operation-scoped credential reference. Windows Verified Chat,
+native compatibility, strict-local gateway, and remote-worker support all remain unqualified until
+the physical Windows tasks in Stories 121.2, 123.2, 124.2, 125.3, and 126.2 execute and pass.

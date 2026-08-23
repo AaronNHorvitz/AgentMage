@@ -33,6 +33,13 @@ POLICY_PATH: Final = ROOT / "architecture" / "platform-lane-policy.json"
 STATUS_PATH: Final = ROOT / "architecture" / "platform-lane-status.json"
 REPORT_PATH: Final = ROOT / "evidence" / "current" / "platform-gate-report.json"
 STATES: Final = {"pass", "block", "unsupported", "not-applicable"}
+PLANNING_DECISIONS: Final = ["ADR-0043", "ADR-0044"]
+PLANNED_SURFACES: Final = (
+    "engineering-runtime-host",
+    "model-gateway-strict-local",
+    "remote-inference-worker",
+    "verified-chat",
+)
 
 
 class PlatformGateError(ValueError):
@@ -56,6 +63,8 @@ def validate_policy(policy: Any) -> list[str]:
         "policy_id",
         "states",
         "lane_ids",
+        "planning_decision_ids",
+        "planned_qualification_surfaces",
         "milestones",
     }:
         return ["platform.policy.field_closure"]
@@ -69,6 +78,37 @@ def validate_policy(policy: Any) -> list[str]:
         lane_ids, states = [], []
     if set(states) != STATES:
         failures.append("platform.states.closure")
+    if policy.get("planning_decision_ids") != PLANNING_DECISIONS:
+        failures.append("platform.planning_decisions.closure")
+    planned_surfaces = policy.get("planned_qualification_surfaces")
+    if not isinstance(planned_surfaces, list):
+        failures.append("platform.planned_surfaces.invalid")
+    else:
+        observed_surfaces = []
+        for surface in planned_surfaces:
+            if not isinstance(surface, dict) or set(surface) != {
+                "surface_id",
+                "required_lanes",
+                "status",
+            }:
+                failures.append("platform.planned_surface.field_closure")
+                continue
+            surface_id = surface.get("surface_id")
+            observed_surfaces.append(surface_id)
+            if surface.get("status") != "planned-not-gated":
+                failures.append(f"platform.{surface_id}.planning_status")
+            try:
+                required = _ordered_unique_strings(
+                    surface.get("required_lanes"),
+                    f"platform.{surface_id}.planned_required",
+                )
+            except PlatformGateError as error:
+                failures.append(str(error))
+                continue
+            if required != lane_ids:
+                failures.append(f"platform.{surface_id}.planned_lane_closure")
+        if tuple(observed_surfaces) != PLANNED_SURFACES:
+            failures.append("platform.planned_surfaces.closure")
     milestones = policy.get("milestones")
     if not isinstance(milestones, list):
         failures.append("platform.milestones.invalid")
@@ -106,6 +146,7 @@ def validate_status(status: Any, policy: dict[str, Any], root: Path) -> list[str
         "schema_version",
         "status_id",
         "support_claim",
+        "planning_qualification_status",
         "lanes",
     }:
         return ["platform.status.field_closure"]
@@ -113,6 +154,28 @@ def validate_status(status: Any, policy: dict[str, Any], root: Path) -> list[str
         failures.append("platform.status.identity")
     if status.get("support_claim") != "none-pre-release":
         failures.append("platform.status.support_overclaim")
+    planning_status = status.get("planning_qualification_status")
+    if not isinstance(planning_status, list):
+        failures.append("platform.status.planning_qualification")
+    else:
+        observed_surfaces = []
+        for surface in planning_status:
+            if not isinstance(surface, dict) or set(surface) != {
+                "surface_id",
+                "state",
+                "support_claim",
+            }:
+                failures.append("platform.status.planning_field_closure")
+                continue
+            surface_id = surface.get("surface_id")
+            observed_surfaces.append(surface_id)
+            if (
+                surface.get("state") != "planned-no-native-evidence"
+                or surface.get("support_claim") != "none"
+            ):
+                failures.append(f"platform.{surface_id}.planning_overclaim")
+        if tuple(observed_surfaces) != PLANNED_SURFACES:
+            failures.append("platform.status.planning_surface_closure")
     lanes = status.get("lanes")
     if not isinstance(lanes, list):
         return [*failures, "platform.status.lanes"]
@@ -202,6 +265,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         ],
         "lanes": status["lanes"],
         "milestones": milestones,
+        "planning_qualifications": status["planning_qualification_status"],
         "support_claim": "none-pre-release",
     }
 

@@ -36,7 +36,7 @@ class Story121SecurityEvidenceTests(unittest.TestCase):
         changed[evidence.SOURCE_PATHS[0]] = changed[evidence.SOURCE_PATHS[0]].replace(evidence.DOCUMENT_FRAGMENTS[0], "mutated", 1)
         self.assertTrue(evidence.validate_sources(changed))
         changed = self.sources()
-        changed["SECURITY-REVIEW.md"] = changed["SECURITY-REVIEW.md"].replace("`SR-AI-005`", "`SR-AI-X05`", 1)
+        changed["SECURITY-REVIEW.md"] = changed["SECURITY-REVIEW.md"].replace("`SR-AI-005`", "`SR-AI-X05`")
         self.assertTrue(evidence.validate_sources(changed))
         changed = self.sources()
         artifact_path = evidence.EVIDENCE_PATHS[0]

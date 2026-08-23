@@ -17,6 +17,7 @@
   "approved_build_executable_ids": [
     "cargo",
     "clippy-driver",
+    "git",
     "node",
     "npm",
     "python3",

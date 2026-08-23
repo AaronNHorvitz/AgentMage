@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/artifact-envelope.schema.json",
+  "title": "AgentMage artifact-envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "request_id",
+    "authority_id",
+    "origin",
+    "media_type",
+    "classification",
+    "capture_state",
+    "byte_length",
+    "sha256",
+    "collected_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "authority_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "origin": {
+      "enum": [
+        "paste",
+        "request_reference",
+        "file",
+        "uri",
+        "directory",
+        "archive",
+        "tool_output"
+      ]
+    },
+    "media_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "classification": {
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ]
+    },
+    "capture_state": {
+      "enum": [
+        "captured",
+        "unavailable",
+        "unsupported",
+        "denied",
+        "failed"
+      ]
+    },
+    "byte_length": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sha256": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "capture_state": {
+            "const": "captured"
+          }
+        },
+        "required": [
+          "capture_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "byte_length": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "byte_length": {
+            "type": "null"
+          },
+          "sha256": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

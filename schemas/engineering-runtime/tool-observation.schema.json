@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/tool-observation.schema.json",
+  "title": "AgentMage tool-observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observation_id",
+    "tool_call_id",
+    "attempt_id",
+    "task_id",
+    "step_id",
+    "tool_id",
+    "tool_version",
+    "tool_schema_sha256",
+    "arguments_sha256",
+    "authority_id",
+    "started_at",
+    "completed_at",
+    "outcome",
+    "exit_code",
+    "signal",
+    "stdout",
+    "stderr",
+    "stdout_excerpt",
+    "stderr_excerpt",
+    "stdout_truncated",
+    "stderr_truncated",
+    "generated_artifact_ids",
+    "state_change",
+    "descendants_cleaned",
+    "resource_usage_sha256",
+    "retry_disposition",
+    "receipt_sha256",
+    "terminal"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observation_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "tool_call_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "step_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "tool_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "tool_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "tool_schema_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "arguments_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "authority_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "outcome": {
+      "enum": [
+        "succeeded",
+        "denied",
+        "failed",
+        "cancelled",
+        "timed_out",
+        "resource_exhausted",
+        "uncertain"
+      ]
+    },
+    "exit_code": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "signal": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "stdout": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact_id",
+            "sha256",
+            "byte_length"
+          ],
+          "properties": {
+            "artifact_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "byte_length": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "stderr": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact_id",
+            "sha256",
+            "byte_length"
+          ],
+          "properties": {
+            "artifact_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "byte_length": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "stdout_excerpt": {
+      "type": "string",
+      "maxLength": 8192
+    },
+    "stderr_excerpt": {
+      "type": "string",
+      "maxLength": 8192
+    },
+    "stdout_truncated": {
+      "type": "boolean"
+    },
+    "stderr_truncated": {
+      "type": "boolean"
+    },
+    "generated_artifact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "state_change": {
+      "enum": [
+        "not_changed",
+        "changed",
+        "uncertain"
+      ]
+    },
+    "descendants_cleaned": {
+      "type": "boolean"
+    },
+    "resource_usage_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "retry_disposition": {
+      "enum": [
+        "not_eligible",
+        "eligible_fresh_attempt",
+        "reconcile_first",
+        "user_decision_required"
+      ]
+    },
+    "receipt_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "terminal": {
+      "const": true
+    }
+  }
+}

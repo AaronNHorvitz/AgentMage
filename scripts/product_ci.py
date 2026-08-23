@@ -216,6 +216,17 @@ def validate_contract(
         "independent": True,
     }:
         failures.append("product CI documentation independence policy drifted")
+    if policy.get("engineering_runtime_contract_gate") != {
+        "execution_venue": "local",
+        "commands": [
+            ["npm", "run", "engineering-runtime:schemas:check"],
+            ["npm", "run", "engineering-runtime:manifest:check"],
+            ["npm", "run", "task-graph:check"],
+        ],
+        "enables_product_capability": False,
+        "decision_ids": ["ADR-0043", "ADR-0044"],
+    }:
+        failures.append("product CI Engineering Runtime contract gate drifted")
     engines = package.get("engines", {}) if isinstance(package, dict) else {}
     if engines.get("node") != f">={toolchains.get('node')} <25":
         failures.append("product CI Node version differs from package.json")

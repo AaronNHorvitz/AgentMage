@@ -53,7 +53,8 @@ class PlanningScopeTests(unittest.TestCase):
 
         self.assertEqual(failures, [])
         self.assertEqual(
-            report["accepted_decisions"], ["ADR-0027", "ADR-0040", "ADR-0042"]
+            report["accepted_decisions"],
+            ["ADR-0027", "ADR-0040", "ADR-0042", "ADR-0043", "ADR-0044"],
         )
         self.assertEqual(
             report["historical_baseline"],
@@ -62,14 +63,15 @@ class PlanningScopeTests(unittest.TestCase):
         self.assertEqual(
             report["current_counts"],
             {
-                "stable_requirements": 241,
+                "stable_requirements": 294,
                 "normative_mappings": 31,
                 "epics": 17,
-                "foundational_runtime_epics": 2,
+                "foundational_runtime_epics": 4,
                 "sprints": 169,
             },
         )
-        self.assertEqual(len(report["appended_requirement_ids"]), 12)
+        self.assertEqual(len(report["appended_requirement_ids"]), 65)
+        self.assertEqual(len(report["foundational_appended_requirement_ids"]), 53)
         self.assertEqual(len(report["preserved_requirement_ids"]), 229)
         self.assertEqual(
             tuple(report["required_negative_controls"]), EXPECTED_NEGATIVE_CONTROLS
@@ -129,7 +131,7 @@ class PlanningScopeTests(unittest.TestCase):
         unsupported_id = "AT-" + "ZZZ-999"
         added["id"] = unsupported_id
         changed["requirements"].append(added)
-        changed["counts"]["total"] = 242
+        changed["counts"]["total"] = 295
 
         failures, _ = self.validate(registry=changed)
 

@@ -3,15 +3,15 @@
 | Field | Planning baseline |
 |---|---|
 | Status | Pre-alpha scaffold; stabilization sequence closed, numbered roadmap resumed under Decision 0021, and model construction reconciled under Decision 0027 |
-| Version | 1.8 |
-| Date | 2026-08-12 |
+| Version | 1.9 |
+| Date | 2026-08-22 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
 | Product authority | [`PRD.md`](./PRD.md) |
 | Detailed requirement authority | [`Agent-Scaffolding-Inventory.md`](./Agent-Scaffolding-Inventory.md) |
 | Security-review authority | [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) |
 | Granular execution authority | [`TASKS.md`](./TASKS.md) |
-| Supporting policies | [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md), [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md), [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md), [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md), [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md), [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md), and [`architecture/status-model.json`](./architecture/status-model.json) |
-| Planning sequence | 169 sequential dependency gates across 17 release epics and two cross-cutting foundational runtime epics; no calendar estimate implied |
+| Supporting policies | [`ENGINEERING-RUNTIME.md`](./ENGINEERING-RUNTIME.md), [`MODEL-GATEWAY.md`](./MODEL-GATEWAY.md), [`ENGINEERING-CAPABILITY-REGISTRY.md`](./ENGINEERING-CAPABILITY-REGISTRY.md), [`MODEL-PROVENANCE-POLICY.md`](./MODEL-PROVENANCE-POLICY.md), [`SECURITY.md`](./SECURITY.md), [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md), [`DELIVERY-SYSTEM.md`](./DELIVERY-SYSTEM.md), [`PRODUCTIVITY-SYSTEM.md`](./PRODUCTIVITY-SYSTEM.md), [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md), [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md), [`WINDOWS-BOUNDARIES.md`](./WINDOWS-BOUNDARIES.md), and [`architecture/status-model.json`](./architecture/status-model.json) |
+| Planning sequence | 169 sequential dependency gates across 17 release epics and four cross-cutting foundational runtime epics; no calendar estimate implied |
 
 ## 1. Purpose
 
@@ -38,8 +38,7 @@ Stabilization scope freeze: inactive.
 [`Decision 0012`](./docs/decisions/0012-stabilization-truth-and-status-model.md)
 and [`architecture/status-model.json`](./architecture/status-model.json) govern
 these current-state claims. This plan preserves the complete 17-release-epic,
-two-foundational-runtime-epic,
-169-sprint, 241-requirement target sequence. Under
+four-foundational-runtime-epic, 169-sprint, 294-requirement target sequence. Under
 [`Decision 0021`](./docs/decisions/0021-stabilization-resumption.md), that
 sequence resumes at its first incomplete dependency gate. New capability
 families remain subject to explicit decisions and complete impact analysis.
@@ -360,6 +359,30 @@ and operational-store boundaries. Premature stopping, malformed calls, repeated 
 uncertain effects, interruption, and exhausted budgets end in a resumable diagnosis rather than a
 false completion or unbounded loop.
 
+### 4.15 Engineering Runtime, Verified Chat, Gateway, and Capability Registry
+
+Decisions 0043 and 0044 compose the Decision 0042 foundations into one professional engineering
+harness. `ENGINEERING-RUNTIME.md` owns the complete client-to-verifier lifecycle,
+`MODEL-GATEWAY.md` owns candidate-neutral local and remote inference, and
+`ENGINEERING-CAPABILITY-REGISTRY.md` owns versioned executable capability manifests.
+
+The Rust host remains the sole authority for policy, grants, persistence, tools, route admission,
+verification, and completion. AgentMage Verified Chat is the canonical reliable VS Code interface;
+its webview is disposable and its TypeScript bridge is transport and presentation only. Stable
+Chat Participant and Language Model Chat Provider adapters remain separately labeled compatibility
+surfaces. No private VS Code API or present-day External Agent Host extension mechanism is assumed.
+
+The Model Gateway separates model, runtime, codec, endpoint, operator, route, policy, and
+qualification identities. Strict local remains complete. Private-network, private-remote, and
+managed-remote routes are optional, separately disclosed, and disabled until live qualification.
+Fallback is disabled by default and can never silently cross a disclosure boundary.
+
+The Capability Registry and Decision 0041 role profiles run over the same workflow, journal,
+artifact, observation, authority, and verifier contracts. Multi-agent scheduling follows, rather
+than precedes, complete single-agent reliability. Each pod receives isolated authority, leases,
+budgets, worktree state where applicable, and evidence; independent review and serialized
+integration remain deterministic and final promotion is human-gated by default.
+
 ## 5. Cross-Cutting Workstreams
 
 These workstreams continue across multiple epics even though their first deliverables occur in a specific sprint range.
@@ -434,11 +457,12 @@ Sprints are numbered dependency and evidence gates, not calendar estimates. Work
 | 15 | Trusted operations, whole-codebase audit, and superseding v1.0 GA | 157-166 | `G-TRUSTED-OPERATIONS`, `G-CODEBASE-AUDIT`, and `G-GA` |
 | 16 | Post-GA Experimental Model Lab | 167-168 | `G-EXPERIMENTAL-MODELS` |
 
-The two cross-cutting foundational runtime epics do not add release numbers or sprint identities.
+The four cross-cutting foundational runtime epics do not add release numbers or sprint identities.
 Their dependency-ordered stories are distributed through existing owners in Sprints 1, 2, 5, 11,
-13, 16, 21-23, 50, 58, 60, 62, and 81. Their integrated milestone is
+13, 16, 21-23, 49-50, 58, 60, 62, 81, 95, and 121-126. Decision 0042 retains
 `M-FOUNDATIONAL-RUNTIME-CORE` at Sprint 50, followed by `M-FOUNDATIONAL-RUNTIME` after the required
-DOCX, PDF/OCR, and spreadsheet adapters in Sprint 62. Both are internal evidence gates and neither
+DOCX, PDF/OCR, and spreadsheet adapters in Sprint 62. Decisions 0043 and 0044 add `ER-M0` through
+`ER-M9` for the Engineering Runtime and Model Gateway. All are internal evidence gates and none
 supersedes a release gate.
 
 ### 6.1 Active Roadmap Execution Spine
@@ -482,7 +506,7 @@ lifecycle is not platform support; and platform support is not final release.
    before the Decision 0025 manual fuzz campaign.
 7. Fix and rerun every affected boundary after the campaign, then enter Sprint
    166 independent release reproduction.
-8. Implement the two Decision 0042 foundational runtime epics in their mapped dependency order:
+8. Implement the four Decisions 0042-0044 foundational runtime epics in their mapped dependency order:
    contracts and fixtures first; policy, persistence, model budgets, and tool protocols next;
    journal, context, coordinator, and Chat ingress after those foundations; parser adapters and MCP
    exposure only after the native runtime path; integrated hardening last.
@@ -857,6 +881,24 @@ PDF/native-text, separately admitted OCR, and spreadsheet source adapters pass t
 security, packaging, lifecycle, context, and parity gates. Neither milestone is a supported-release
 claim, and optional MCP exposure remains later and non-blocking.
 
+### 7.19 Engineering Runtime Integration Milestones
+
+Foundational Runtime Epics F3 and F4 add no release epic or sprint. Their work is distributed into
+existing incomplete sprints and closes through the milestones below.
+
+| Milestone | Bounded outcome | Owning stories | Gate evidence |
+|---|---|---|---|
+| `ER-M0` Governance Freeze | Decisions, authorities, stable requirements, controls, schemas, task graph, registries, and audit agree without status promotion. | Planning assignment; Stories 1.3 and 2.4 implement later contract and corpus work | Documentation, additions-only, schema, traceability, task-graph, secret, identifier, and audit checks |
+| `ER-M1` Exact Context Vertical Slice | Paste and text/log artifacts are captured, retrievable, manifest-accounted, and delivery-verified through the shared runtime. | 1.3, 2.4, 13.5, 16.4, 21.4, 22.5 | `AT-CTX-001` through `AT-CTX-004`, `RV-51` |
+| `ER-M2` Reliable Single-Agent Spine | One fake-model workflow persists, observes every tool call, reconciles restart, and reaches verifier-owned terminal state. | 5.3, 11.3, 16.4, 21.4, 22.5 | `AT-WKF-001`, `AT-WKF-002`, `AT-WKF-003`, `AT-RESUME-002`, `AT-TIO-001`, `AT-TIO-002`, `AT-VER-001`, `RV-50`, `RV-52` |
+| `ER-M3` Local Model Gateway | Canonical protocol and qualified local adapter tuples run the same workflow without model-specific policy. | 13.5, 13.6, 49.2, 50.4 | `AT-GWY-001`, `AT-GWY-002`, local portions of `RV-53` |
+| `ER-M4` Verified Chat | Ask, Plan, and Agent modes run through reconstructable host-owned state; native compatibility is separately truthful. | 23.7, 23.8, 50.4 | `AT-VSC-004` through `AT-VSC-006`, `RV-55`, accessibility and version evidence |
+| `ER-M5` Capability Registry | Initial closed capabilities run through the shared runtime and remove cleanly. | 95.3 | `AT-CAP-001`, `AT-CAP-002`, `RV-56` |
+| `ER-M6` Private Remote Inference | A private route passes endpoint, disclosure, credential, network, cancellation, and workflow qualification. | 123.2, 124.2 | `AT-REM-001`, `AT-REM-002`, `AT-REM-003`, `RV-53`, `RV-54`, strict-local restoration |
+| `ER-M7` Managed Remote Inference | A managed route passes exact operator, account, region, retention, training-use, quota, cost, incident, and removal gates. | 123.2, 124.2 | Managed tuple qualification, `RV-53`, `RV-54`; no provider is preselected by planning |
+| `ER-M8` Multi-Agent Team | Bounded pods coordinate, review, recover, and serialize integration after all single-agent gates pass. | 95.4, 125.3 | `AT-MAG-001`, `AT-MAG-002`, `RV-57` |
+| `ER-M9` Release Qualification | Engineering Runtime, gateway, Chat, capability, route, platform, security, performance, removal, and independent evidence reconcile. | 121.2, 123.2, 124.2, 125.3, 126.2 | All applicable `RV-50` through `RV-57`; live and platform blockers remain open until executed |
+
 ## 8. Product Security and Independent Verification
 
 Security assurance is built with each component rather than added after feature completion.
@@ -1077,6 +1119,39 @@ local-only result as conformance evidence.
     packaging, security, context, and parity evidence. Preserve truthful unsupported-platform and
     unavailable-API records at both gates.
 
+### 12.4 Engineering Runtime and Gateway Execution Order
+
+1. Freeze the canonical records, stable requirements, controls, schema-reuse map, capability
+   registry contract, and dependency graph through Stories 1.3 and 2.4.
+2. Extend deterministic authority, side-effect, verification, persistence, migration, budget,
+   cancellation, and recovery contracts through Stories 5.3 and 11.3.
+3. Define the canonical Model Gateway protocol and exact local profile taxonomy in Story 13.5,
+   then implement fake and separately qualified local adapter tuples in Story 13.6.
+4. Implement `ToolObservation`, context-delivery, retrieval, verification, terminal-result, and
+   event-lineage composition through Stories 16.4, 21.4, and 22.5.
+5. Implement Verified Chat in Story 23.7 and stable native Chat compatibility in Story 23.8; keep
+   the webview disposable, TypeScript thin, and native limitations visible.
+6. Evaluate alternate local runtime and protocol codecs in Story 49.2 without treating API-shape
+   compatibility as support, then close only the measured local slice in Story 50.4.
+7. Admit initial executable capabilities in Story 95.3 after the shared runtime passes. Implement
+   multi-agent scheduling in Story 95.4 only after every single-agent reliability prerequisite is
+   current.
+8. Add Windows host and Verified Chat parity work in Story 121.2 without substituting Linux
+   evidence or claiming Windows support before native execution.
+9. Implement and qualify private and managed remote routes in Story 123.2, including isolated
+   credential resolution, exact destination controls, disclosure, quota, cost, cancellation, and
+   emergency disablement. No service is selected or enabled by planning.
+10. Remove every optional route and restore strict local in Story 124.2. Run integrated gateway,
+    capability, multi-agent, platform, pressure, recovery, and workflow evidence in Story 125.3.
+11. Reconcile `ER-M0` through `ER-M9` in Story 126.2. Keep live model, endpoint, platform, package,
+    security, performance, accessibility, removal, manual fuzz, and independent-review blockers
+    open until their exact evidence exists.
+
+Contract, fixture, Rust runtime, VS Code, gateway, and later capability work may proceed in parallel
+only after shared schemas freeze and only with non-overlapping owned paths or an explicit
+integration owner. Schema and authority changes invalidate dependent work and require
+reconciliation before merge.
+
 Release dates, sprint durations, staffing assumptions, and parallelization are intentionally not promised here. Safety boundaries, dependency gates, and evidence requirements take precedence over schedule pressure.
 
 ## 13. Starting the Build
@@ -1112,7 +1187,7 @@ sequencing does not allow any affected sprint or release gate to pass early.
 The implementation plan is complete only when:
 
 - Every promoted requirement maps to current code, tests, documentation, evidence, owner, and release identity.
-- Every internal milestone gate, `G-LEGACY-CLOSURE`, `G-DELIVERY`, `G-WINDOWS`, `G-PRODUCTIVITY`, `G-FINANCE`, `G-CLOUD-OBSERVER`, `G-TRUSTED-OPERATIONS`, `G-CODEBASE-AUDIT`, and `G-GA` is closed with reproducible evidence; the post-GA `G-EXPERIMENTAL-MODELS` gate remains independently tracked.
+- Every internal milestone gate, `ER-M0` through `ER-M9`, `G-LEGACY-CLOSURE`, `G-DELIVERY`, `G-WINDOWS`, `G-PRODUCTIVITY`, `G-FINANCE`, `G-CLOUD-OBSERVER`, `G-TRUSTED-OPERATIONS`, `G-CODEBASE-AUDIT`, and `G-GA` is closed with reproducible evidence; the post-GA `G-EXPERIMENTAL-MODELS` gate remains independently tracked.
 - Every deferred item is either a tested exclusion or has been formally promoted into the stable inventory and appended execution plan.
 - Every supported platform, provider/version/capability tuple, model, interface, capability pack, delivery object, productivity object, financial object, cloud observation, command level, research source, credential reference, continuity destination, audit profile, repository class, parser, structural graph, evidence-card state, finding, data domain, authority path, recovery path, and package agrees across the governing documents and release artifacts.
 - Every prohibited path has a test proving that it is absent or denied.

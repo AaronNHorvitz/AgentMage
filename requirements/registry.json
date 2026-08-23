@@ -1,11 +1,11 @@
 {
   "counts": {
     "by_kind": {
-      "acceptance_test": 114,
+      "acceptance_test": 143,
       "competitive_requirement": 18,
-      "product_requirement": 109
+      "product_requirement": 133
     },
-    "total": 241
+    "total": 294
   },
   "requirements": [
     {
@@ -322,6 +322,47 @@
     },
     {
       "acceptance_tests": [
+        "AT-CAP-001"
+      ],
+      "dependencies": [
+        "AM-WKF-001",
+        "AM-VER-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CAP-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "58835376c381e5d5726f60e5385f2831c2f55efcbb7059d216ef9107a7ca2627",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2551
+      },
+      "status": "planned",
+      "title": "Implement a closed versioned Engineering Capability Registry whose manifests bind schemas, workflow graph, tools, model roles, maximum requested authority, budgets, verification, degradation, fixtures, migration, disablement, and removal without minting grants."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CAP-002"
+      ],
+      "dependencies": [
+        "AM-CAP-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CAP-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "0d80f77f5fffa01568b49409393d0b016979f1b2f35734023b636c60be9be2c0",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2552
+      },
+      "status": "planned",
+      "title": "Admit and lifecycle-test an initial engineering capability catalog for repository inspection, coding, review, issue and bug work, test diagnosis, release readiness, document work, research, and whole-codebase audit through the shared runtime."
+    },
+    {
+      "acceptance_tests": [
         "AT-CAT-001",
         "AT-XTE-001"
       ],
@@ -600,6 +641,69 @@
     },
     {
       "acceptance_tests": [
+        "AT-CTX-001",
+        "AT-CTX-002"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CTX-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "09e08944981936b75b16baa80c5dfaeef7bc6db335806a3032629ac78f5a8979",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2531
+      },
+      "status": "planned",
+      "title": "Account for every supplied paste, request reference, file, URI, directory, archive, and tool artifact with original-byte identity and exactly one captured, parsed, partial, unsupported, denied, unavailable, failed, or explicitly omitted disposition."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CTX-002",
+        "AT-CTX-003"
+      ],
+      "dependencies": [
+        "AM-CTX-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CTX-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "5e680814ff0c33619d55d49419d9b4476a8c14414afcb9d105154ab4838fb9fe",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2532
+      },
+      "status": "planned",
+      "title": "Preserve source-to-derivative provenance, parser identity, warnings, structural ranges, exact retrieval, context budgets, and one manifest that explains every included, summarized, truncated, duplicate, stale, restricted, unavailable, or omitted range."
+    },
+    {
+      "acceptance_tests": [
+        "AT-CTX-004"
+      ],
+      "dependencies": [
+        "AM-CTX-002",
+        "AM-GWY-001"
+      ],
+      "disposition": "build",
+      "id": "AM-CTX-003",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "886be193a6253548834e9c9f3be81eb740a0bc15457687dd9f8774647d332782",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2533
+      },
+      "status": "planned",
+      "title": "Issue a context-delivery receipt for every model turn that reconstructs model-visible ranges and blocks completion whenever required unseen artifacts or unresolved authoritative ranges remain."
+    },
+    {
+      "acceptance_tests": [
         "AT-DATA-001",
         "AT-CRASH-001"
       ],
@@ -618,6 +722,26 @@
       },
       "status": "planned",
       "title": "Make SQLite the sole authority for sessions, tasks, checkpoints, grants, and receipts."
+    },
+    {
+      "acceptance_tests": [
+        "AT-DEG-001"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-DEG-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "0a614ca1efde2decbb8129f14ffe91c97f20c01068a8d8a66e39d23602d3b1c9",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2546
+      },
+      "status": "planned",
+      "title": "Classify dependencies as required, optional, or explicitly substitutable and expose blocked or degraded behavior without silent omission, weakened authority, hidden route changes, or false success."
     },
     {
       "acceptance_tests": [
@@ -744,6 +868,26 @@
       },
       "status": "planned",
       "title": "Implement a separately packaged Experimental Model Lab for user-selected unapproved artifacts with quarantine, explicit provenance and license gaps, no network, no credentials, no command or connector authority, no canonical workspace write, disposable synthetic evaluation, strict resource limits, truthful results, complete removal, and promotion only through normal independent model admission."
+    },
+    {
+      "acceptance_tests": [
+        "AT-ERT-001"
+      ],
+      "dependencies": [
+        "AM-TRU-001"
+      ],
+      "disposition": "build",
+      "id": "AM-ERT-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "4a2487e938c021b0c9cbdf5855950f47140e955aea4815f73e347594863a755e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2530
+      },
+      "status": "planned",
+      "title": "Implement one Rust-owned Engineering Runtime that composes artifact admission, context delivery, workflow state, persistent supervision, model mediation, tools, observations, verification, observability, and terminal results while keeping models and clients outside authority."
     },
     {
       "acceptance_tests": [
@@ -1083,6 +1227,67 @@
     },
     {
       "acceptance_tests": [
+        "AT-GWY-001"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GWY-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "a9833ea6b0f1c552ae3a49b0c8f3025566a422775c8a67620554279024525736",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2539
+      },
+      "status": "planned",
+      "title": "Implement a candidate-neutral Model Gateway with a richer internal request, event, usage, error, cancellation, and route-receipt protocol that returns untrusted proposals and never executes tools or establishes workflow completion."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GWY-002"
+      ],
+      "dependencies": [
+        "AM-GWY-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GWY-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "ce8a7c88c0c482d3b7d11cf88aca806b8308ee58ce9499b62e9b9fa42c12bb0f",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2540
+      },
+      "status": "planned",
+      "title": "Implement versioned runtime and protocol codecs for qualified local and remote endpoints while preserving every supported message part, stream event, structured-output constraint, tool proposal, usage field, failure, and cancellation result or exposing an explicit unsupported state."
+    },
+    {
+      "acceptance_tests": [
+        "AT-GWY-003"
+      ],
+      "dependencies": [
+        "AM-GWY-002",
+        "AM-VER-001"
+      ],
+      "disposition": "build",
+      "id": "AM-GWY-003",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "18f6904d81dceb6975315b32cd34e1cf04fd2f7686a9edfc905a255d781595a4",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2541
+      },
+      "status": "planned",
+      "title": "Route only across currently qualified model, endpoint, runtime, codec, role, disclosure, resource, and policy tuples; receipt every choice and prohibit silent local-to-remote or cross-remote fallback."
+    },
+    {
+      "acceptance_tests": [
         "AT-HOF-001"
       ],
       "dependencies": [
@@ -1246,6 +1451,29 @@
       },
       "status": "planned",
       "title": "Implement a conformance-gated Outlook and Exchange Online adapter for supported mailboxes, folders, messages, threads, labels, flags, categories, drafts, sends, replies, forwards, attachments, events, and shared-mailbox behavior through Microsoft Graph."
+    },
+    {
+      "acceptance_tests": [
+        "AT-MAG-001",
+        "AT-MAG-002"
+      ],
+      "dependencies": [
+        "AM-CAP-002",
+        "AM-WKF-002",
+        "AM-VER-001"
+      ],
+      "disposition": "build",
+      "id": "AM-MAG-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "12f6aafef8379cb99bc567de6ffa8dcc22ab265d67bad9661d58f774ad0d41d6",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2553
+      },
+      "status": "planned",
+      "title": "Add bounded multi-agent engineering teams only after the single-agent reliability spine passes, with role qualification, per-pod authority, worktree and resource leases, independent review, disagreement retention, failure isolation, serialized integration, re-verification, and human-gated default-branch promotion."
     },
     {
       "acceptance_tests": [
@@ -1544,6 +1772,26 @@
     },
     {
       "acceptance_tests": [
+        "AT-OBS-002"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-OBS-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "24e4c04dfc469c9de885315c99bcdc01111ecf8831784c27de9a908714048b94",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2545
+      },
+      "status": "planned",
+      "title": "Provide privacy-aware execution lineage and a user-facing inspector covering capture, parsing, context, routing, model events, proposals, policy, approvals, tools, effects, verification, recovery, and terminal state without retaining raw secrets or hidden reasoning."
+    },
+    {
+      "acceptance_tests": [
         "AT-PCAL-001"
       ],
       "dependencies": [
@@ -1563,6 +1811,27 @@
       },
       "status": "planned",
       "title": "Implement a conformance-gated Proton Calendar confirmed-UI adapter for an exact visible user-authenticated session when no admitted structured write path exists, covering calendar and event identity, attendees, invitations, responses, direct-invitation and email-first confirmation workflows, versioned document and accessibility capabilities, visual fallback, postcondition re-reading, uncertain-result reconciliation, and removal without credential extraction or standing computer-use authority."
+    },
+    {
+      "acceptance_tests": [
+        "AT-PERF-002",
+        "AT-PERF-003"
+      ],
+      "dependencies": [
+        "AM-OBS-002"
+      ],
+      "disposition": "build",
+      "id": "AM-PERF-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "50788b786fec8a2d0cba536033c8b73681248091824ba2af6821390da646f8d4",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2547
+      },
+      "status": "planned",
+      "title": "Stream ordered bounded events with backpressure and cancellation while measuring capture, parsing, retrieval, queue, first-event, first-token, generation, tool, verification, total latency, throughput, memory, accelerator, disk, process, artifact, and backlog behavior against identity-bound fixtures."
     },
     {
       "acceptance_tests": [
@@ -1715,6 +1984,67 @@
     },
     {
       "acceptance_tests": [
+        "AT-REM-001"
+      ],
+      "dependencies": [
+        "AM-GWY-001"
+      ],
+      "disposition": "build",
+      "id": "AM-REM-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "0892c874342ef369eb121107b38754c0793715242c07eae32c9b02150ea20f6d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2542
+      },
+      "status": "planned",
+      "title": "Define separate `strict_local`, `local_network_private`, `remote_private`, and `remote_managed` endpoint classes with independent model, operator, runtime, codec, endpoint, route, and qualification identities."
+    },
+    {
+      "acceptance_tests": [
+        "AT-REM-002"
+      ],
+      "dependencies": [
+        "AM-REM-001"
+      ],
+      "disposition": "build",
+      "id": "AM-REM-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "7927018f55ed2ab48c42ab667ff828a3bbef9771eb80d515b9775d17c085067b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2543
+      },
+      "status": "planned",
+      "title": "Isolate remote inference in a least-privilege worker with exact TLS, host, address, redirect, proxy, SSRF, DNS-rebinding, credential-reference, disclosure, region, retention, logging, training-use, quota, cost, cancellation, and emergency-disable controls."
+    },
+    {
+      "acceptance_tests": [
+        "AT-REM-003"
+      ],
+      "dependencies": [
+        "AM-REM-002",
+        "AM-GWY-003"
+      ],
+      "disposition": "build",
+      "id": "AM-REM-003",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "d29cb7eec569afc97afa66cbaa749ef1afff91a07867df40662587a2f3a8a651",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2544
+      },
+      "status": "planned",
+      "title": "Qualify models, endpoints, and exact routes independently and invalidate affected evidence on artifact, tokenizer, template, codec, quantization, decoding, runtime, endpoint, transport, policy, or operator change."
+    },
+    {
+      "acceptance_tests": [
         "AT-REP-001",
         "AT-EVD-002"
       ],
@@ -1863,6 +2193,26 @@
     },
     {
       "acceptance_tests": [
+        "AT-RESUME-002"
+      ],
+      "dependencies": [
+        "AM-WKF-002"
+      ],
+      "disposition": "build",
+      "id": "AM-SES-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "115af82e75aff683e2456c6a6c6a4d3c223e69719469443ff2331129fccc68b6",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2536
+      },
+      "status": "planned",
+      "title": "Decouple task lifetime and truth from any model turn, chat view, extension process, or client connection and require identity-bound restart reconciliation before execution continues."
+    },
+    {
+      "acceptance_tests": [
         "AT-SLK-001"
       ],
       "dependencies": [
@@ -1963,6 +2313,27 @@
       },
       "status": "planned",
       "title": "Implement provider-neutral delta, cursor, webhook, change-notification, bounded-polling, backfill, edit, deletion, tombstone, ordering, duplicate, gap, freshness, coverage, and reconciliation contracts for productivity adapters."
+    },
+    {
+      "acceptance_tests": [
+        "AT-TIO-001",
+        "AT-TIO-002"
+      ],
+      "dependencies": [
+        "AM-WKF-001"
+      ],
+      "disposition": "build",
+      "id": "AM-TIO-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "139205a98f9093dd04175aa4a0f60f8bfb2bdecb63efada7682bcf0b38b16dac",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2537
+      },
+      "status": "planned",
+      "title": "Produce exactly one closed terminal `ToolObservation` for every admitted tool call, including denial, cancellation, timeout, resource exhaustion, crash, and uncertainty, with complete output stored as distinct content-addressed artifacts and bounded disclosed excerpts."
     },
     {
       "acceptance_tests": [
@@ -2136,6 +2507,28 @@
     },
     {
       "acceptance_tests": [
+        "AT-VER-001",
+        "AT-WKF-003"
+      ],
+      "dependencies": [
+        "AM-WKF-001",
+        "AM-TIO-001"
+      ],
+      "disposition": "build",
+      "id": "AM-VER-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "199c75f110e731ccb0339b7f29c841008b979c00238599c0710ff178c2d47dbb",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2538
+      },
+      "status": "planned",
+      "title": "Allow only current deterministic verifier evidence to establish verified success or verified no-op; model text, exit zero, tool output, stale evidence, and open plans have no completion authority."
+    },
+    {
+      "acceptance_tests": [
         "AT-VSC-001"
       ],
       "dependencies": [
@@ -2198,6 +2591,69 @@
       },
       "status": "planned",
       "title": "Discover and display only exact admitted local profiles in the native Visual Studio Code model picker, with Muse-first evaluation focus, manual selection, visible profile/runtime/limit identity, zero hard-coded model prerequisite, and no automatic substitution or activation."
+    },
+    {
+      "acceptance_tests": [
+        "AT-VSC-004"
+      ],
+      "dependencies": [
+        "AM-CTX-003",
+        "AM-WKF-002",
+        "AM-OBS-002"
+      ],
+      "disposition": "build",
+      "id": "AM-VSC-004",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "fdf494f55e2b70b4c3336faeae0eb96fd46e9e4f0d0d8374c41cbcc39ffa82ba",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2548
+      },
+      "status": "planned",
+      "title": "Implement AgentMage Verified Chat as the canonical VS Code interface through a disposable secured webview, thin TypeScript bridge, authenticated versioned IPC, Rust-owned state, and Ask, Plan, and Agent modes that cannot mint authority."
+    },
+    {
+      "acceptance_tests": [
+        "AT-VSC-005"
+      ],
+      "dependencies": [
+        "AM-VSC-004"
+      ],
+      "disposition": "build",
+      "id": "AM-VSC-005",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "4a2d870d38f57d3d92c4b0f9cb882e49d2d22cd256b315307f8e9c10894e15d6",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2549
+      },
+      "status": "planned",
+      "title": "Provide stable `@agentmage` Chat Participant compatibility that accounts for every public request reference, fails visibly on unresolved required content, and discloses when native Chat cannot provide Verified Chat guarantees."
+    },
+    {
+      "acceptance_tests": [
+        "AT-VSC-006"
+      ],
+      "dependencies": [
+        "AM-GWY-002",
+        "AM-VSC-005"
+      ],
+      "disposition": "build",
+      "id": "AM-VSC-006",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "f924ffffb64d8e7d20a1c877d6be996855ebb989c3749b8679ef14b0b7f64bf2",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2550
+      },
+      "status": "planned",
+      "title": "Provide stable Language Model Chat Provider compatibility that preserves supported normalized message parts and exposes explicit version and capability limits without private APIs or a false Agent Host claim."
     },
     {
       "acceptance_tests": [
@@ -2264,6 +2720,49 @@
       },
       "status": "planned",
       "title": "Implement and package the complete Windows 11 x64 platform boundary, including signed per-user installation, authenticated IPC, restricted workers, NTFS path safety, DPAPI key protection, native model inference, connected workers, accessibility, recovery, and removal."
+    },
+    {
+      "acceptance_tests": [
+        "AT-WKF-001",
+        "AT-WKF-002"
+      ],
+      "dependencies": [
+        "AM-ERT-001"
+      ],
+      "disposition": "build",
+      "id": "AM-WKF-001",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "e81d5e120acf9c36442b945e1bca13835bb9710377a3f544d1515cf5d581de31",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2534
+      },
+      "status": "planned",
+      "title": "Execute versioned workflows through closed runtime-owned state transitions, deterministic preflight, fresh attempt identities, side-effect and retry classes, reconciliation, postcondition verification, bounded replanning, and explicit non-success results."
+    },
+    {
+      "acceptance_tests": [
+        "AT-WKF-002",
+        "AT-WKF-003",
+        "AT-RESUME-002"
+      ],
+      "dependencies": [
+        "AM-WKF-001"
+      ],
+      "disposition": "build",
+      "id": "AM-WKF-002",
+      "kind": "product_requirement",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "e77af883e4af74c04a8848dcd8b380bd9f077b602ba27e414f995d47214ae3e3",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43. Engineering Runtime, Verified Chat, and Model Gateway Backlog",
+        "line": 2535
+      },
+      "status": "planned",
+      "title": "Persist host-owned task state, budgets, checkpoints, approvals, consumed grants, attempts, observations, and verification so admitted work can pause, resume, cancel, or recover without duplicate effects or artificial continue prompts."
     },
     {
       "acceptance_tests": [
@@ -2626,6 +3125,38 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-CAP-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "83fc86c2b2b318284fbeded132b34a4acaaa16de0c01a5923e910275fe156fdf",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2584
+      },
+      "status": "planned",
+      "title": "Validate manifests with missing, extra, malformed, stale, incompatible, authority-widening, unqualified, over-budget, prompt-only, migration, quarantine, and removal variants."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CAP-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "0468d93c6f3e6ceb57f53320cde285cb4f694ee15f788ada8a3ab514b370898d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2585
+      },
+      "status": "planned",
+      "title": "Run each initial catalog capability across valid, hostile, cancelled, interrupted, degraded, migrated, disabled, and removed fixtures through the shared runtime."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-CAT-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -2866,6 +3397,70 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-CTX-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "0f96abc5071f9124f82bf3c8bc4e14dded0ab82c5a28f1054f6603078a1e804d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2560
+      },
+      "status": "planned",
+      "title": "Supply pasted text, files, directories, archives, virtual and remote references, logs, diffs, notebooks, images, and supported office documents plus missing, inaccessible, linked, changing, malformed, oversized, encrypted, and unsupported variants."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CTX-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "3699b73be3a9297cde5ff68a496ba50c9ff79f00d9ef2594cd211f3f4728748d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2561
+      },
+      "status": "planned",
+      "title": "Parse, reparse, reorder, transform, cancel, crash, and resume artifacts with beginning, middle, and ending sentinels and seeded parser warnings."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CTX-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "7253671b9c629c3378ada1ac5ea5664be62abd75c3493e4f9e3d734fc6afe498",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2562
+      },
+      "status": "planned",
+      "title": "Force combined context overflow, token-counter disagreement, duplicate and stale artifacts, restricted content, profile changes, and exact retrieval across large inputs."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-CTX-004",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "1362d89c9793f8520d8ad2dd3058ff8a071db3fa0284c611965da79c40d45f6b",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2563
+      },
+      "status": "planned",
+      "title": "Remove or withhold required beginning, middle, ending, or cited ranges before model invocation and mutate a delivered range after receipt creation."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-DATA-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -2877,6 +3472,22 @@
       },
       "status": "planned",
       "title": "Transaction and migration invariants with crashes injected at every durable-write boundary."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-DEG-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "9061cbe0f3b5353a01b524c35949099da5b316e4ca19d3ef7d4200a456105b4d",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2578
+      },
+      "status": "planned",
+      "title": "Remove required, optional, and substitutable parsers, tools, models, endpoints, stores, and clients during every lifecycle phase."
     },
     {
       "acceptance_tests": [],
@@ -2973,6 +3584,22 @@
       },
       "status": "planned",
       "title": "Import, parse, load, evaluate, interrupt, crash, replace, remove, and attempt promotion of unknown, malformed, oversized, hostile, unsupported, provenance-incomplete, license-unclear, and policy-excluded artifacts."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-ERT-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "827c04bb8be2eac26f8c5fc90b4e151629f6ad0d38265086cbf83870116e3a40",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2559
+      },
+      "status": "planned",
+      "title": "Run one fake-model engineering objective through Chat, CLI, and headless clients across input admission, planning, tools, verification, persistence, cancellation, recovery, and terminal reporting."
     },
     {
       "acceptance_tests": [],
@@ -3234,6 +3861,54 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-GWY-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "b9b6d3606034c5b767b48411b3a882dfc9a952fb2204aa2adff987588dc4731f",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2571
+      },
+      "status": "planned",
+      "title": "Send canonical requests, message parts, artifact references, structured-output constraints, tool schemas, cancellation, and errors through deterministic fake adapters."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GWY-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "68db232f7324dbe3b52174cef6aff8a8720cc5a60c188350c4a8f251d274ffca",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2572
+      },
+      "status": "planned",
+      "title": "Run the protocol conformance corpus against every claimed adapter and version with unknown parts, malformed streams, usage drift, delayed cancellation, structured-output failure, and tool-proposal variants."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-GWY-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "a3065ee2d449396656c1f027a104d9c8cbf2445ac00129113b89565ae8effd92",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2573
+      },
+      "status": "planned",
+      "title": "Vary role, data class, endpoint health, context, modality, latency, quota, cost, policy, and qualification while inducing local and remote failures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-HOF-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -3357,6 +4032,38 @@
       },
       "status": "planned",
       "title": "Exercise the published Outlook and Exchange Online matrix across mailbox, folder, thread, message, flag, category, draft, send, reply, forward, attachment, shared-mailbox, permission, pagination, event, failure, and recovery fixtures."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MAG-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "9aaa81ca58b05c9af128df0423b11fe6480abe783458ea228c9c01989af1553c",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2586
+      },
+      "status": "planned",
+      "title": "Run concurrent planning, implementation, test, review, issue, and integration pods with separate worktrees, path and test leases, bounded capacity, provider failure, cancellation, disagreement, and correction routing."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-MAG-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "cdfd48bd2f44847a2dbbc50ef4021f7c881a427eba7d73c9c8846480decef55e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2587
+      },
+      "status": "planned",
+      "title": "Attempt self-approval, hidden merge, default-branch promotion, credential sharing, resource starvation, stale review reuse, duplicate integration, and completion with blocked pods."
     },
     {
       "acceptance_tests": [],
@@ -3570,6 +4277,22 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-OBS-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "24cf7cfaa9ea066d4fa1d6e9865ac77e40cefd11e7ce4d4aca0aa26386f4547a",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2577
+      },
+      "status": "planned",
+      "title": "Trace complete and failed workflows with sensitive artifacts, credentials, remote routes, retries, recovery, and removal while mutating event order and lineage links."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-PATH-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -3613,6 +4336,38 @@
       },
       "status": "planned",
       "title": "Five warmups and 30 measured runs on the recorded MacBook Pro M5 and Fedora reference machines, with functional budget verification on clean Ubuntu."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-PERF-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "64a0e689017296b6a23e5f415893458f87c30e0c2725ce5e2ed705dcc4a41ed4",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2579
+      },
+      "status": "planned",
+      "title": "Benchmark capture, parse, retrieval, queue, first-event, first-token, generation, tool, verification, and total workflow time plus throughput and resource use across pinned fixture, hardware, runtime, model, endpoint, and policy identities."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-PERF-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "2aa707439dc43241b0049f6078bf675e496f9cd38d1e94e309af8c472d678304",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2580
+      },
+      "status": "planned",
+      "title": "Saturate stream buffers, event queues, output, memory, accelerator memory, disk, process, concurrency, timeout, and cancellation ceilings."
     },
     {
       "acceptance_tests": [],
@@ -3746,6 +4501,54 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-REM-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "d4a60585ad55008e06484b3adb97ec314e6ca077f22fef2400d7ad865632bb53",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2574
+      },
+      "status": "planned",
+      "title": "Mutate model, publisher, operator, runtime, codec, endpoint, route, and profile-class identities and attempt to conflate local, private-network, private-remote, and managed-remote records."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-REM-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "c66af444034a402ee500fbdb1e4f6e16b6a130862eb74cb2b48d386e7d89cabb",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2575
+      },
+      "status": "planned",
+      "title": "Probe remote workers with bad certificates, redirects, DNS rebinding, SSRF targets, proxies, host aliases, credential canaries, quota and cost exhaustion, cancellation, logs, errors, and emergency disablement."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-REM-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "1c8b592be5b3696712d5f2e638a52872b173fc89dcb0a0c1eedfc53864042065",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2576
+      },
+      "status": "planned",
+      "title": "Qualify and then mutate each model, endpoint, runtime, codec, route, policy, region, retention, logging, and operator dimension."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-REP-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -3773,6 +4576,22 @@
       },
       "status": "planned",
       "title": "Resume after file, instruction, model-digest, permission, branch, repository-map, citation, and workspace changes."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-RESUME-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "33ff56ebc2b3dd7ce1aca1814578bf17c63760e888b5dca18c32311047c2ee14",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2567
+      },
+      "status": "planned",
+      "title": "Disconnect every client, restart extension and host processes, alter checkpoints and bindings, and pause, resume, or cancel long-running tasks."
     },
     {
       "acceptance_tests": [],
@@ -3970,6 +4789,38 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-TIO-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "16209015177a6088b1e3bb453e80f71a79a1b9085cc4a90eae4f28311aad00a7",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2568
+      },
+      "status": "planned",
+      "title": "Run tools that succeed, deny, fail, time out, cancel, exhaust resources, crash, fork descendants, emit empty or large mixed output, create files, and leave uncertain state."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-TIO-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "fba27b858efbb248a6d354d22f469dfb688a73654839fc078b7ef7c9f4fc2330",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2569
+      },
+      "status": "planned",
+      "title": "Drop, duplicate, reorder, truncate, corrupt, or replay tool events and observations across restart and output pressure."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-TMS-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -4034,6 +4885,22 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-VER-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "1a24cb21443304ad93a82cad3cd96dbbc153adc5608b4fc2e5b60b7e27e715ed",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2570
+      },
+      "status": "planned",
+      "title": "Attempt completion through model text, tool output, exit zero, stale evidence, incomplete plans, modified outputs, failed invariants, and hidden prohibited effects."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-VSC-001",
       "kind": "acceptance_test",
       "release": "v0.1",
@@ -4082,6 +4949,54 @@
       "acceptance_tests": [],
       "dependencies": [],
       "disposition": "required",
+      "id": "AT-VSC-004",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "156ed9a357f9482113509133762e3da122c2d16a269c6a0484a6f372dee62464",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2581
+      },
+      "status": "planned",
+      "title": "Reload and close the Verified Chat webview during Ask, Plan, Agent, approval, tool, verification, recovery, and large-attachment phases; inject script, markup, origin, replay, and oversized-frame attacks."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-VSC-005",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "16449669f56183460897b30574c299a93fba94d42cb9a73d76daca4af04943a6",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2582
+      },
+      "status": "planned",
+      "title": "Exercise the stable Chat Participant with every public reference class, unresolved and opaque values, remote workspaces, cancellation, supported-version matrix, and known-bad-version disablement."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-VSC-006",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "353c1c1f2c72439ff77a9db4422f330d08e0b42f1601724df43c9201e23858e1",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2583
+      },
+      "status": "planned",
+      "title": "Exercise the Language Model Chat Provider with every supported normalized message part, unknown parts, streaming, cancellation, model selection, version skew, and native client behavior."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
       "id": "AT-WEB-001",
       "kind": "acceptance_test",
       "release": "v1.0",
@@ -4125,6 +5040,54 @@
       },
       "status": "planned",
       "title": "Run clean install, package identity, IPC, AppContainer, NTFS path/race, DPAPI, native model, strict-local network, delivery adapter, accessibility, update, rollback, uninstall, and residue suites on Windows 11 x64."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-WKF-001",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "757c4cdeaf4dfd9235dd8bbb335b1e4290d403b904708789ae17eb5ec12ae74e",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2564
+      },
+      "status": "planned",
+      "title": "Exercise valid and invalid workflow graphs, preconditions, postconditions, side-effect classes, retry classes, stale grants, approvals, malformed proposals, uncertain effects, and bounded replanning."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-WKF-002",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "737b6cf9590b170f8351f1165a31e8dcbed5f3ff11cc4e6c0e6b34720a1d6443",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2565
+      },
+      "status": "planned",
+      "title": "Terminate the host at every state boundary, close and reload clients, interrupt tools and models, and recover with unchanged, changed, and uncertain environment state."
+    },
+    {
+      "acceptance_tests": [],
+      "dependencies": [],
+      "disposition": "required",
+      "id": "AT-WKF-003",
+      "kind": "acceptance_test",
+      "release": "v1.0",
+      "source": {
+        "definition_sha256": "6458ef38cb579cf9d782214c4d8a9393bd5214012a180aa98c84128e9f04de94",
+        "document": "Agent-Scaffolding-Inventory.md",
+        "heading": "43A. Engineering Runtime and Model Gateway Acceptance Matrix",
+        "line": 2566
+      },
+      "status": "planned",
+      "title": "Seed false completion, exit-zero failure, missing observations, stale verification, repeated state, exhausted budgets, post-error stopping, and incomplete plans."
     },
     {
       "acceptance_tests": [],
@@ -4482,6 +5445,6 @@
   "schema_version": 2,
   "source": {
     "document": "Agent-Scaffolding-Inventory.md",
-    "sha256": "178eab56f0ea3d04aba5f0a5b07be33ead739c51f7b2532ec9a0f0b6798179cd"
+    "sha256": "80134b438d801f092f34ee7e19597c9d96eaf802e26365620ec802e3a405955b"
   }
 }

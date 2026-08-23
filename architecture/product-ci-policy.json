@@ -144,5 +144,15 @@
     "execution_venue": "local",
     "command": ["npm", "run", "docs:clean-check"],
     "independent": true
+  },
+  "engineering_runtime_contract_gate": {
+    "execution_venue": "local",
+    "commands": [
+      ["npm", "run", "engineering-runtime:schemas:check"],
+      ["npm", "run", "engineering-runtime:manifest:check"],
+      ["npm", "run", "task-graph:check"]
+    ],
+    "enables_product_capability": false,
+    "decision_ids": ["ADR-0043", "ADR-0044"]
   }
 }

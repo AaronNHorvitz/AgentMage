@@ -6,6 +6,56 @@
     "ubuntu-x86_64",
     "windows-x86_64"
   ],
+  "planning_decision_ids": [
+    "ADR-0043",
+    "ADR-0044"
+  ],
+  "planned_qualification_surfaces": [
+    {
+      "required_lanes": [
+        "fedora-x86_64",
+        "macos-arm64-retained",
+        "shared",
+        "ubuntu-x86_64",
+        "windows-x86_64"
+      ],
+      "status": "planned-not-gated",
+      "surface_id": "engineering-runtime-host"
+    },
+    {
+      "required_lanes": [
+        "fedora-x86_64",
+        "macos-arm64-retained",
+        "shared",
+        "ubuntu-x86_64",
+        "windows-x86_64"
+      ],
+      "status": "planned-not-gated",
+      "surface_id": "model-gateway-strict-local"
+    },
+    {
+      "required_lanes": [
+        "fedora-x86_64",
+        "macos-arm64-retained",
+        "shared",
+        "ubuntu-x86_64",
+        "windows-x86_64"
+      ],
+      "status": "planned-not-gated",
+      "surface_id": "remote-inference-worker"
+    },
+    {
+      "required_lanes": [
+        "fedora-x86_64",
+        "macos-arm64-retained",
+        "shared",
+        "ubuntu-x86_64",
+        "windows-x86_64"
+      ],
+      "status": "planned-not-gated",
+      "surface_id": "verified-chat"
+    }
+  ],
   "milestones": [
     {
       "milestone_id": "linux-source-candidate",

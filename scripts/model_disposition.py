@@ -85,6 +85,24 @@ def file_binding(path: Path) -> dict[str, object]:
     }
 
 
+def sha256_at_revision(path: Path, revision: str) -> str:
+    result = subprocess.run(
+        ["git", "show", f"{revision}:{relative(path)}"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise ModelDispositionError(
+            f"cannot read {relative(path)} at decision source revision {revision}"
+        )
+    return hashlib.sha256(result.stdout).hexdigest()
+
+
+def revision_file_binding(path: Path, revision: str) -> dict[str, object]:
+    return {"path": relative(path), "sha256": sha256_at_revision(path, revision)}
+
+
 def failed_cases(result: dict[str, Any]) -> list[str]:
     return [str(case["case_id"]) for case in result["cases"] if not case["passed"]]
 
@@ -159,7 +177,7 @@ def build_record(decision_source_revision: str) -> dict[str, object]:
             "v0.1 Gemma 4 E4B feasibility on every available Fedora runtime path; "
             "the unavailable MacBook Pro M5 path is not substituted"
         ),
-        "policy": file_binding(POLICY),
+        "policy": revision_file_binding(POLICY, decision_source_revision),
         "corpus": {
             **file_binding(CORPUS),
             "corpus_id": corpus["corpus_id"],
@@ -270,14 +288,19 @@ def build_record(decision_source_revision: str) -> dict[str, object]:
 
 
 def validate_file_binding(
-    value: object, expected_path: Path, label: str, failures: list[str]
+    value: object,
+    expected_path: Path,
+    label: str,
+    failures: list[str],
+    *,
+    expected_sha256: str | None = None,
 ) -> None:
     if not isinstance(value, dict):
         failures.append(f"{label} binding must be an object")
         return
     if value.get("path") != relative(expected_path):
         failures.append(f"{label} path binding changed")
-    if value.get("sha256") != sha256_file(expected_path):
+    if value.get("sha256") != (expected_sha256 or sha256_file(expected_path)):
         failures.append(f"{label} hash binding changed")
 
 
@@ -355,7 +378,18 @@ def validate_record(record: dict[str, object], check_revision: bool = True) -> l
         except ModelDispositionError as error:
             failures.append(str(error))
 
-    validate_file_binding(record["policy"], POLICY, "policy", failures)
+    try:
+        policy_sha256 = sha256_at_revision(POLICY, revision)
+    except ModelDispositionError as error:
+        failures.append(str(error))
+    else:
+        validate_file_binding(
+            record["policy"],
+            POLICY,
+            "policy",
+            failures,
+            expected_sha256=policy_sha256,
+        )
     corpus_record = record["corpus"]
     if not isinstance(corpus_record, dict):
         failures.append("corpus disposition must be an object")

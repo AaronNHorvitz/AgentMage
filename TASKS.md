@@ -17,6 +17,9 @@
 | Trusted operations, research, continuity, and model-management boundary | `TRUSTED-OPERATIONS.md` |
 | Whole-codebase audit boundary | `CODEBASE-AUDIT.md` |
 | Windows 11 boundary | `WINDOWS-BOUNDARIES.md` |
+| Engineering Runtime and Verified Chat boundary | `ENGINEERING-RUNTIME.md` |
+| Local and remote model gateway boundary | `MODEL-GATEWAY.md` |
+| Engineering capability registry boundary | `ENGINEERING-CAPABILITY-REGISTRY.md` |
 | Current status authority | `architecture/status-model.json` under Decision 0012 |
 | High-level implementation guide | `IMPLEMENTATION-PLAN.md` (derived; does not override requirements or task gates) |
 | Execution rule | Execute the first authoritative incomplete dependency gate under Decision 0021; no platform evidence may be substituted and no open release or security blocker is waived |
@@ -33,8 +36,8 @@ Current supported platforms: none.
 
 Stabilization scope freeze: inactive.
 
-The complete 17-release-epic, two-cross-cutting-foundational-runtime-epic,
-169-sprint, 241-requirement plan below remains the granular execution authority
+The complete 17-release-epic, four-cross-cutting-foundational-runtime-epic,
+169-sprint, 294-requirement plan below remains the granular execution authority
 for the accepted target product. It is preserved,
 not cancelled or renumbered. Decision 0021 resumes execution at the first
 authoritative incomplete dependency gate. Decision 0026 appends the Proton
@@ -53,6 +56,13 @@ and Verified Workflow Execution and Recovery as cross-cutting foundational
 runtime epics. Their work is distributed through existing sprint owners, adds
 no stable requirement or sprint identity, preserves all completed evidence, and
 defines `M-FOUNDATIONAL-RUNTIME-CORE` and `M-FOUNDATIONAL-RUNTIME` as internal integration gates.
+Decisions 0043 and 0044 add the Rust-owned Engineering Runtime, Verified Chat,
+native Chat compatibility, Model Gateway, local and remote profile taxonomy,
+Capability Registry, observability, performance, and gated multi-agent work as
+Foundational Runtime Epics F3 and F4. The changes append stable requirements,
+tests, stories, tasks, and evidence gates inside existing incomplete sprints;
+they add no release epic or sprint and do not enable any model, endpoint, route,
+capability, workflow, or platform.
 
 ## Planning Hierarchy and Numbering
 
@@ -91,6 +101,10 @@ defines `M-FOUNDATIONAL-RUNTIME-CORE` and `M-FOUNDATIONAL-RUNTIME` as internal i
 | A Claude Code/Codex CLI-style coding harness could become a parallel agent implementation or force native tools through MCP. | Resolved architecture integration | Append shared-runtime, journal, artifact, coordinator, interactive harness, and hardening work to existing owning sprints; make the harness a thin client of one kernel runtime, retain native tool registration, keep MCP optional and later, and attach future workflow nodes through the same runtime port. |
 | Universal file and text inputs could be silently lost at the VS Code boundary or produce a second context and storage stack. | Accepted foundational runtime refinement | Apply Decision 0042: guarantee complete accounting for stable Chat Participant references, attempt to resolve only publicly exposed accessible content, report provider limitations, keep TypeScript thin, make Rust own source-artifact preparation, reuse the existing context manager and encrypted payload backend, and distribute work through existing sprint owners. |
 | Workflow recovery could become an unbounded model loop or replay side effects. | Accepted foundational runtime refinement | Apply Decision 0042: supervise the existing coordinator with deterministic preflight, fresh attempt identities, closed side-effect and retry policy, verifier-only completion, durable recovery, and terminal diagnosis; retain the existing zero-hidden-retry baseline. |
+| Native Chat alone cannot guarantee complete attachment and persistent lifecycle control without private APIs. | Accepted Engineering Runtime refinement | Apply Decision 0043: make secured AgentMage Verified Chat canonical, keep TypeScript and webview thin and disposable, retain stable native Chat as an explicitly limited compatibility surface, and keep future External Agent Host integration decoupled until a stable API exists. |
+| Local and remote open-weight endpoints could be conflated with model identity, approval, or silent fallback. | Accepted gateway refinement | Apply Decision 0044: separate model, runtime, codec, endpoint, operator, route, policy, and qualification identities; preserve strict-local completeness; require explicit remote disclosure and credential isolation; and disable all fallback by default. |
+| The instruction's broad model-family inventory conflicts with the existing model-origin restriction. | Resolved provenance conflict | Preserve the stricter Section 4 rule in `MODEL-PROVENANCE-POLICY.md`; no excluded or lineage-uncertain model enters ordinary admission without a separate approved owner decision. |
+| Engineering Runtime work spans existing incomplete sprints and release epics. | Resolved planning mechanism | Use the hybrid mechanism in Decisions 0043 and 0044: add Foundational Runtime Epics F3 and F4 for cross-cutting outcomes and append uniquely numbered stories to existing owning sprints without inserting or renumbering any sprint. |
 
 ### Blocked Platform Lane
 
@@ -134,7 +148,7 @@ No vague or epic-sized item remains silently assigned as a single active story. 
 
 ## Universal Story Definition of Done
 
-Controls `G-DOD-01` through `G-DOD-13` apply to every story. Decision 0008 adds `G-DOD-14` through `G-DOD-16` prospectively to Sprints 103-126 and to any future story that introduces a connected operation or adapter. Decision 0009 adds `G-DOD-17` through `G-DOD-19` to Sprints 127-156 and to any later change that touches autonomy, cross-pack data, finance, or cloud observation. Those controls do not retroactively rewrite or reopen immutable evidence for completed local-only stories; a later change to one of those stories that introduces connected authority must satisfy the added controls.
+Controls `G-DOD-01` through `G-DOD-13` apply to every story. Decision 0008 adds `G-DOD-14` through `G-DOD-16` prospectively to Sprints 103-126 and to any future story that introduces a connected operation or adapter. Decision 0009 adds `G-DOD-17` through `G-DOD-19` to Sprints 127-156 and to any later change that touches autonomy, cross-pack data, finance, or cloud observation. Decision 0043 adds `G-DOD-21` and `G-DOD-22` to Engineering Runtime, Verified Chat, capability, and multi-agent stories; Decision 0044 adds `G-DOD-23` to every gateway, endpoint, route, and remote-inference story. Those controls do not retroactively rewrite or reopen immutable evidence for completed local-only stories; a later change to one of those stories that introduces connected authority must satisfy the added controls.
 
 - [ ] **G-DOD-01:** Scope, dependencies, risks, exclusions, source requirements, and applicable `SR-*` controls are recorded before implementation.
 - [ ] **G-DOD-02:** Every implementation sub-task has positive, invalid/prohibited, boundary, dependency-failure/cancellation, and exact-side-effect unit cases where applicable.
@@ -156,6 +170,9 @@ Controls `G-DOD-01` through `G-DOD-13` apply to every story. Decision 0008 adds 
 - [ ] **G-DOD-18:** Every cross-pack transfer has an explicit classification, source, destination, purpose, minimization, retention, policy decision, and receipt; external content cannot create the transfer or its authority.
 - [ ] **G-DOD-19:** Finance and Cloud Observer changes prove money-movement and cloud-mutation families absent from schemas, manifests, registrations, policies, shells, workflows, provider requests, and compiled artifacts.
 - [ ] **G-DOD-20:** Every Git or hosted-source mutation reconciles an exact pre/post repository preservation manifest, uses one closed adapter operation and current single-use grant, preserves user and unrelated Git state, and proves destructive, implicit, force, hook/filter, credential-crossover, and unsafe-retry paths absent.
+- [ ] **G-DOD-21:** Every Engineering Runtime call preserves one Rust-owned authority, state, observation, verification, and terminal-result chain; no model, client, manifest, adapter, endpoint, or tool can mint authority or completion.
+- [ ] **G-DOD-22:** Every Verified Chat, native Chat, capability, and multi-agent change proves client reconstruction, declared capability limits, manifest authority denial, bounded resources, cancellation, recovery, removal, accessibility, and no private production API.
+- [ ] **G-DOD-23:** Every model-gateway or remote-inference change binds separate model, runtime, codec, endpoint, operator, route, disclosure, credential-reference, qualification, quota, cost, cancellation, fallback, disablement, and strict-local-restoration evidence.
 
 ## Test and Evidence Contract
 
@@ -212,6 +229,32 @@ task metadata required in addition to the Universal Story Definition of Done.
 | 62.2 | Spreadsheet adapter | P1 | `capabilities/knowledge`, extractor registry | Cell-cited spreadsheet and `M-FOUNDATIONAL-RUNTIME` evidence | Later release gates |
 | 81.2 | Optional MCP | P1 | MCP gateway and common dispatcher | Native-equivalent artifact MCP adapter and removal evidence | MCP capability gate only |
 
+## Decisions 0043 and 0044 Task Execution Template
+
+This template applies to Stories 1.3, 2.4, 5.3, 11.3, 13.5, 13.6, 16.4, 21.4, 22.5, 23.7,
+23.8, 49.2, 50.4, 95.3, 95.4, 121.2, 123.2, 124.2, 125.3, and 126.2.
+
+- **Status:** Every added checkbox starts open. Schema validation performed during planning is not
+  implementation, integration, qualification, platform, support, or release evidence.
+- **Dependency rule:** Earlier numbered tasks and declared story dependencies must pass. Multi-agent
+  work also requires every named single-agent gate; remote routes require model, endpoint, and route
+  qualification independently.
+- **Owned paths:** Each story names exact owning modules and shared schemas. Concurrent work on a
+  shared contract requires an explicit integration owner and invalidates dependent evidence when the
+  contract changes.
+- **Unit contract:** Every sub-task includes positive, missing/extra/malformed, boundary/oversize,
+  dependency loss/cancellation, hostile authority, exact side-effect, migration, and removal cases
+  where applicable.
+- **Evidence:** Retain exact source revision, schema and fixture hashes, commands, tool/runtime/model/
+  endpoint/platform identities, raw output, failures, skips, limitations, cleanup, and reviewer
+  disposition. Live or native work remains open when not executed.
+- **Security:** Apply `SR-ERT-*`, `SR-CTX-*`, `SR-GWY-*`, `SR-VSC-*`, `SR-CAP-*`, and `SR-MAG-*`
+  according to scope plus every inherited earlier control. `RV-50` through `RV-57` are blocking at
+  their named integration and release gates.
+- **Terminal rule:** PASS requires every acceptance criterion and current evidence. BLOCKED records
+  the exact unavailable hardware, credential, endpoint, account, package, live model, manual fuzz,
+  accessibility, or independent-review prerequisite and never becomes a waiver.
+
 ### v0.1 Reviewer Protocol First-Execution Ownership
 
 The owning sprint performs the first complete execution possible for its boundary and retains raw evidence. Sprint 25 reruns every applicable protocol against the integrated release candidate; it does not become the first owner merely because it assembles the release evidence bundle.
@@ -267,6 +310,14 @@ The owning sprint performs the first complete execution possible for its boundar
 | `RV-47` Audit checkpoint, invalidation, findings, and reporting | Sprints 161 and 165 | Every checkpoint, resume, invalidation, finding, report, or coverage-state change and Sprint 166 |
 | `RV-48` Whole-codebase audit removal and first-GA qualification | Sprints 165-166 | Every audit-capability lifecycle change and final Sprint 166 closure |
 | `RV-49` Repository and GitHub mutation safety | Sprint 42 for clone/fetch/worktrees; Sprint 47 for commits; Sprint 71 for authentication; Sprints 85-86 and 106 for pushes and hosted effects | Every Git/source-adapter change and Sprints 126 and 166 |
+| `RV-50` Engineering Runtime authority and completion | Stories 5.3, 11.3, 16.4, 21.4, and 22.5 | Story 50.4, Sprint 126, and every changed runtime authority or terminal-state boundary |
+| `RV-51` Artifact, context fidelity, and parser isolation | Stories 1.3, 2.4, 16.4, and 22.5 | Story 50.4, structured-parser owning sprints, and Sprint 126 |
+| `RV-52` Tool observation, persistence, and execution lineage | Stories 11.3, 16.4, 21.4, and 22.5 | Story 50.4 and every changed tool, event, persistence, recovery, or inspector boundary |
+| `RV-53` Model Gateway qualification and no-silent-fallback | Stories 13.5, 13.6, and 49.2 for local tuples; Story 123.2 for remote tuples | Stories 50.4, 124.2, 125.3, 126.2, and every model, endpoint, codec, route, or fallback change |
+| `RV-54` Remote endpoint, disclosure, and credential isolation | Story 123.2 | Stories 124.2, 125.3, 126.2, and every remote destination, credential, disclosure, quota, cost, or removal change |
+| `RV-55` Verified Chat and native compatibility | Stories 23.7 and 23.8 | Stories 50.4, 121.2, 125.3, 126.2, and every VS Code API, bridge, webview, attachment, or version change |
+| `RV-56` Engineering Capability Registry | Story 95.3 | Stories 125.3, 126.2, and every capability manifest, workflow, migration, lifecycle, or removal change |
+| `RV-57` Multi-agent authority, resources, recovery, and integration | Story 95.4 after all single-agent prerequisites | Stories 125.3, 126.2, and every scheduler, role, lease, worktree, review, integration, or promotion change |
 
 ## Epic Roadmap
 
@@ -292,6 +343,8 @@ The owning sprint performs the first complete execution possible for its boundar
 
 ## [ ] Foundational Runtime Epic F1 - Universal Artifact Ingestion and Context Preparation
 
+**Planning identity:** `FRE-INGEST`.
+
 **Milestones:** `M-FOUNDATIONAL-RUNTIME-CORE` for text/log ingestion at Sprint 50 and
 `M-FOUNDATIONAL-RUNTIME` for required structured-document adapters no earlier than Sprint 62.
 
@@ -301,12 +354,35 @@ physical artifact store, or interface authority.
 
 ## [ ] Foundational Runtime Epic F2 - Verified Workflow Execution and Recovery
 
+**Planning identity:** `FRE-WORKFLOW`.
+
 **Milestone:** `M-FOUNDATIONAL-RUNTIME-CORE` workflow half at Sprint 50; later parser adapters do not
 redefine workflow authority.
 
 **Distributed ownership:** Stories 1.2, 2.3, 5.2, 11.2, 13.4, 16.3, 21.3, 22.4, 23.6,
 and 50.3. This heading adds no second plan schema, runtime loop, policy engine, dispatcher, journal,
 artifact store, verifier, or completion authority.
+
+## [ ] Foundational Runtime Epic F3 - Engineering Runtime, Verified Chat, and Capabilities
+
+**Planning identity:** `FRE-ENGINEERING-RUNTIME`.
+
+**Milestones:** `ER-M0`, `ER-M1`, `ER-M2`, `ER-M4`, `ER-M5`, `ER-M8`, and `ER-M9`.
+
+**Distributed ownership:** Stories 1.3, 2.4, 5.3, 11.3, 16.4, 21.4, 22.5, 23.7, 23.8, 50.4,
+95.3, 95.4, 121.2, 125.3, and 126.2. This heading adds no release or sprint identity, second Rust
+kernel, TypeScript policy engine, webview state authority, private VS Code dependency, private agent
+loop, or manifest-created grant.
+
+## [ ] Foundational Runtime Epic F4 - Local and Remote Model Gateway
+
+**Planning identity:** `FRE-MODEL-GATEWAY`.
+
+**Milestones:** `ER-M3`, `ER-M6`, `ER-M7`, and the gateway portion of `ER-M9`.
+
+**Distributed ownership:** Stories 13.5, 13.6, 21.4, 23.8, 49.2, 50.4, 123.2, 124.2, 125.3,
+and 126.2. This heading adds no enabled model, endpoint, route, credential, provider support claim,
+automatic fallback, cloud dependency, model tool authority, or model completion authority.
 
 ## [ ] Epic 0 - Foundation
 
@@ -552,6 +628,35 @@ artifact, and recovery contracts remain authoritative.
 **Gate decision:** Sprint 1 is PASS only when Stories 1.1 and 1.2, every numbered task/sub-task,
 every story criterion, every sprint criterion, and the Universal Story Definition of Done are
 complete with current evidence. Otherwise it is BLOCKED.
+#### [ ] Story 1.3 - Canonical Engineering Runtime Records
+
+**User-facing value:** As an AgentMage client or capability, I need one closed Rust-owned record
+family so that artifacts, context, workflows, model proposals, tools, verification, and terminal
+results cannot acquire different meanings in different interfaces.
+
+**Source coverage:** `AM-ERT-001`, `AM-CTX-001`, `AT-ERT-001`, `AT-CTX-001`.
+
+**Dependencies:** Story 1.2; Decisions 0042 and 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 1.3.1 - Implement canonical records and ownership**
+  - [ ] **Sub-task 1.3.1.1:** Implement closed Rust types for artifact envelopes, transformations, ingestion results, context manifests, workflow definitions/state, observations, verification, and terminal results from the admitted schemas.
+  - [ ] **Sub-task 1.3.1.2:** Bind every record to version, request, task, session, source, policy, and content identities where applicable; reject unknown fields, identities, versions, and transitions.
+  - [ ] **Sub-task 1.3.1.3:** Map each record to the existing encrypted store, journal, event, and artifact authorities without creating a second physical store or client-owned truth.
+- [ ] **Task 1.3.2 - Prove contract closure**
+  - [ ] **Sub-task 1.3.2.1:** Generate valid and invalid fixtures for every new schema, including missing, extra, malformed, stale, oversized, cyclic, and unsupported-version records.
+  - [ ] **Sub-task 1.3.2.2:** Round-trip records through Rust and JSON and prove byte/content identities, enum meaning, and fail-closed behavior are stable across supported callers.
+- [ ] **Task 1.3.3 - Retain reviewable evidence**
+  - [ ] **Sub-task 1.3.3.1:** Run schema, serialization, additions-only, dependency-direction, and mutation gates and retain hashes for schemas, implementations, fixtures, and results.
+  - [ ] **Sub-task 1.3.3.2:** Execute the applicable portions of `RV-50` and record unsupported platform/runtime evidence without substituting it.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 1.3.AC1:** Given any canonical runtime record, when it crosses a client or module boundary, then one versioned Rust-owned schema defines its complete meaning and unknown data fails closed.
+- [ ] **Story AC 1.3.AC2:** Given identical admitted inputs, when records are produced through different clients, then identities and deterministic fields match and no client becomes state authority.
+- [ ] **Story AC 1.3.AC3:** Given malformed, stale, or unsupported records, when admission runs, then execution is blocked before model, tool, or effect dispatch with a non-secret diagnostic.
+
 ### [ ] Sprint 2 - Test Harness and Synthetic Corpus
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -697,6 +802,34 @@ every story criterion, every sprint criterion, and the Universal Story Definitio
 complete with current evidence. Otherwise it is BLOCKED.
 
 **Current gate evidence:** All five sprint criteria and the shared/Linux foundation pass. Sprint 2 remains `BLOCKED-MACOS`; [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) aggregates both story gates from pushed evidence commit `d628b91caefacd15256fd4ec3008e4a208070004`, leaves both story and sprint checkboxes open, preserves `G-DOD-10` as the sole shared gate blocker, and prohibits macOS evidence substitution or unsupported product/release claims.
+#### [ ] Story 2.4 - Universal Artifact Admission and Context Accounting Corpus
+
+**User-facing value:** As a user, I need every supplied source and every model-visible range
+accounted for so that large, mixed, or partially unreadable inputs never disappear silently.
+
+**Source coverage:** `AM-CTX-002`, `AM-CTX-003`, `AT-CTX-002`, `AT-CTX-003`, `AT-CTX-004`.
+
+**Dependencies:** Stories 1.3 and 2.3; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 2.4.1 - Build identity-bound ingestion fixtures**
+  - [ ] **Sub-task 2.4.1.1:** Add paste, local file, virtual URI, remote URI, directory, archive, text, log, PDF, DOCX, spreadsheet, image/OCR, duplicate, stale, inaccessible, and unsupported fixtures with exact byte identities.
+  - [ ] **Sub-task 2.4.1.2:** Add malformed packages, active content, external relationships, traversal, bombs, mixed encodings, concurrent replacement, truncation, cancellation, and parser-failure cases.
+- [ ] **Task 2.4.2 - Verify provenance and context delivery**
+  - [ ] **Sub-task 2.4.2.1:** Assert every source and derivative range has parser, transformation, warning, structure, provenance, retention, and disposition linkage.
+  - [ ] **Sub-task 2.4.2.2:** Exercise token-budget overflow, retrieval, summary, duplicate, stale, restricted, omitted, and model-profile-change paths and require one complete context manifest.
+  - [ ] **Sub-task 2.4.2.3:** Reconstruct each model-visible byte/range set from the context-delivery receipt and block completion when required authoritative content was not delivered.
+- [ ] **Task 2.4.3 - Run adversarial and resource gates**
+  - [ ] **Sub-task 2.4.3.1:** Measure byte, page, row, cell, file, archive, time, memory, disk, and process ceilings and prove cleanup after denial, timeout, crash, and cancellation.
+  - [ ] **Sub-task 2.4.3.2:** Run `RV-51`; retain fixture manifests, parser identities, source/derivative hashes, context receipts, resource observations, and zero-silent-drop results.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 2.4.AC1:** Given any supplied artifact, when ingestion ends, then exactly one explicit disposition and complete provenance record exists and no active content executes.
+- [ ] **Story AC 2.4.AC2:** Given context pressure or partial parsing, when a model request is assembled, then every source range is included or assigned a deterministic disclosed reason.
+- [ ] **Story AC 2.4.AC3:** Given required unseen or stale authoritative content, when verification evaluates completion, then success is denied and the safe remediation is visible.
+
 ### [ ] Sprint 3 - Configuration, Versioning, and Build Integrity
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -975,6 +1108,34 @@ complete with current evidence. Otherwise it is BLOCKED.
 **Current story-gate evidence:** Source commit `dd7c2d0` adds the independent [`story_5_1_gate.py`](scripts/story_5_1_gate.py) aggregate evaluator, package/requirements enrollment, and seven focused acceptance, review, checklist, Definition-of-Done, mutation, and overclaim tests; evidence commit `62b358c` publishes [`story-gate-report.json`](artifacts/sprints/sprint-5/story-5.1/story-gate-report.json), SHA-256 `d0e54d5754a639f39238a0ef2ba65c37a0d7731407dec1a85490b6ed58869c5a`. The gate independently reviews commit `345e2b561d5ed2263004e232d03ee880fcc09ba2` and tree `5894f9f707cedee1c9c7d93f9c0884813319b47c`, retains 24 exact artifact hashes, records zero findings, and passes both Story criteria and every non-platform Definition-of-Done control in the declared shared/Linux scope. Story 5.1 remains `BLOCKED-MACOS`; `G-DOD-10` is the sole blocker, Linux evidence substitution is prohibited, external human review is not claimed, and the Story checkbox remains open.
 
 **Current sprint-gate evidence:** Source commit `8bc070f` adds the independent [`sprint_5_gate.py`](scripts/sprint_5_gate.py) aggregate evaluator, package/requirements enrollment, and seven focused acceptance, story/blocker, checklist, review, Definition-of-Done, mutation, and overclaim tests; evidence commit `76b54a1` publishes [`sprint-gate-report.json`](artifacts/sprints/sprint-5/sprint-gate-report.json), SHA-256 `3bda13960c43acff01a14cb02b637563cfc950e01176e4dd9b8690212582b05d`. The gate independently reviews commit `89e68a38001b0991f964c47a04fc5a33156d9f89` and tree `a99b5cda5f9b195f0afdbbb6ceefe978ec1b3d70`, retains 13 exact artifact hashes, records zero findings, and passes all five Sprint criteria in their bounded shared/Linux scopes. Sprint 5 remains `BLOCKED-MACOS`; `G-DOD-10` and Story 5.1 are the sole blocking control and story, Linux evidence substitution is prohibited, external human review is not claimed, and both the Story and Sprint checkboxes remain open.
+#### [ ] Story 5.3 - Verified Workflow Definition and Completion Authority
+
+**User-facing value:** As a user, I need multi-step work to execute through deterministic policy
+and verification so that model confidence, exit zero, or plausible text cannot become false success.
+
+**Source coverage:** `AM-WKF-001`, `AM-VER-001`, `AT-WKF-001`, `AT-VER-001`.
+
+**Dependencies:** Stories 1.3, 2.4, and 5.2; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 5.3.1 - Implement workflow and attempt policy**
+  - [ ] **Sub-task 5.3.1.1:** Implement closed workflow graphs, step policies, side-effect classes, preflights, postconditions, idempotency keys, budgets, and terminal states.
+  - [ ] **Sub-task 5.3.1.2:** Issue fresh call, attempt, grant, approval, receipt, and verification identities; prohibit effect replay and automatic retry of destructive, external, uncertain, non-idempotent, or unknown operations.
+  - [ ] **Sub-task 5.3.1.3:** Bound parser repair, model repair, step attempts, replanning, repeated-state, and total workflow work independently.
+- [ ] **Task 5.3.2 - Implement verifier-only completion**
+  - [ ] **Sub-task 5.3.2.1:** Evaluate expected outputs, postconditions, preserved invariants, prohibited effects, observations, receipts, and current evidence through deterministic verifiers.
+  - [ ] **Sub-task 5.3.2.2:** Return verified success, verified no-op, blocked, denied, failed, cancelled, timed out, resource exhausted, or uncertain without collapsing non-success states.
+- [ ] **Task 5.3.3 - Attack and verify the workflow contract**
+  - [ ] **Sub-task 5.3.3.1:** Inject missing/stale preflight, malformed calls, approval bypass, grant reuse, retry loops, false completion, uncertain effects, and contradictory evidence.
+  - [ ] **Sub-task 5.3.3.2:** Run `RV-52`; retain graph, event, attempt, grant, effect, receipt, verification, terminal-state, and no-replay evidence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 5.3.AC1:** Given an admitted workflow, when it executes, then only runtime-owned legal transitions occur within exact policy, authority, approval, and budget bounds.
+- [ ] **Story AC 5.3.AC2:** Given exit zero, persuasive model text, or tool output without current postcondition evidence, when completion is evaluated, then verified success is refused.
+- [ ] **Story AC 5.3.AC3:** Given any uncertain or ineligible effect, when recovery or retry is considered, then no effect replays and the workflow remains visibly blocked pending deterministic reconciliation or user disposition.
+
 ### [ ] Sprint 6 - Canonical Workspace Paths
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -1400,6 +1561,34 @@ complete with current evidence. Otherwise it is BLOCKED.
 
 **Current gate status:** BLOCKED after completion of all numbered Story 11.1 tasks. The current implementation demonstrates the bounded encrypted-store foundation, but the story and sprint criteria require later integrated product ingress, live-platform, complete audit/sanitization, and acceptance-protocol evidence that this story does not overclaim.
 
+#### [ ] Story 11.3 - Durable Workflow Journal, Checkpoints, and Resume
+
+**User-facing value:** As a user, I need long-running work to survive client reloads, process
+crashes, and restarts without losing truth, repeating effects, or asking artificial continue prompts.
+
+**Source coverage:** `AM-WKF-002`, `AM-SES-002`, `AT-WKF-002`, `AT-WKF-003`, `AT-RESUME-002`.
+
+**Dependencies:** Stories 5.3 and 11.2; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 11.3.1 - Persist authoritative workflow state**
+  - [ ] **Sub-task 11.3.1.1:** Store workflow/step state, budgets, attempts, idempotency keys, approvals, consumed grants, observations, artifacts, verifications, recovery decisions, and terminal diagnostics transactionally.
+  - [ ] **Sub-task 11.3.1.2:** Extend the existing ordered hash-chained journal and encrypted materializations without creating client, model, or extension-owned state.
+- [ ] **Task 11.3.2 - Implement checkpoint and recovery reconciliation**
+  - [ ] **Sub-task 11.3.2.1:** Bind checkpoints to source, workflow, plan, step, tool, model route, policy, environment, effect, receipt, artifact, verifier, and schema identities.
+  - [ ] **Sub-task 11.3.2.2:** On restart, reconcile current identities and observed effects before resuming; invalidate stale checkpoints transitively and preserve unresolved uncertainty.
+  - [ ] **Sub-task 11.3.2.3:** Decouple task lifetime from chat turns, views, extension processes, provider streams, and client connections while retaining cancellation ownership.
+- [ ] **Task 11.3.3 - Execute crash and replay campaigns**
+  - [ ] **Sub-task 11.3.3.1:** Crash before/after each journal, dispatch, effect, receipt, verification, checkpoint, and terminal boundary and assert deterministic recovery.
+  - [ ] **Sub-task 11.3.3.2:** Run `RV-53`; retain restart schedules, pre/post state, replay counters, invalidation decisions, and one actionable terminal diagnosis per non-cancelled failure.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 11.3.AC1:** Given a crash or client loss at any workflow boundary, when recovery begins, then accepted state is reconstructed from authoritative records and no completed effect repeats.
+- [ ] **Story AC 11.3.AC2:** Given stale identity, uncertain effect, or exhausted budget, when resume is requested, then work remains blocked with exact evidence and a safe next action.
+- [ ] **Story AC 11.3.AC3:** Given a healthy resumable task with no client attached, when execution continues, then its truth and lifecycle remain host-owned and bounded.
+
 ### [x] Sprint 12 - Agent Runtime, Planning, and Session Behavior
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -1692,6 +1881,62 @@ Story Definition of Done are complete with current evidence. A truthful Muse non
 evidence task but enables no profile. Otherwise the sprint is BLOCKED.
 
 **Current gate result:** BLOCKED with all currently executable local contract, negative Linux cross-adapter parity, and exact Muse evaluation work complete. The retained native and Docker Model Runner compatibility trials fail published quality thresholds and therefore cannot be merged or enabled. Remaining blockers are the native macOS adapter and execution evidence, successful matched cross-platform parity for an admitted profile, independent decoder review, and exact Muse packet-capture/product-security closure. Linux evidence is not substituted for those classes. The exact Muse quality profile is `REJECTED`, remains disabled, and triggers no fallback.
+#### [ ] Story 13.5 - Candidate-Neutral Model and Endpoint Identity
+
+**User-facing value:** As a user, I need local and remote inference represented by exact separate
+identities so that a familiar model name or compatible API cannot silently substitute a route.
+
+**Source coverage:** `AM-GWY-001`, `AM-REM-001`, `AT-GWY-001`, `AT-REM-001`.
+
+**Dependencies:** Stories 1.3 and 13.4; Decision 0044.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 13.5.1 - Define canonical gateway and profile records**
+  - [ ] **Sub-task 13.5.1.1:** Implement model request, ordered event, proposal, usage, error, cancellation, and route-receipt contracts that return untrusted proposals only.
+  - [ ] **Sub-task 13.5.1.2:** Separate model, runtime adapter, protocol codec, endpoint, route, operator, credential-reference, and qualification identities with content hashes and versions.
+  - [ ] **Sub-task 13.5.1.3:** Represent `strict_local`, `local_network_private`, `remote_private`, and `remote_managed` classes without enabling any endpoint or fallback.
+- [ ] **Task 13.5.2 - Enforce authority and identity boundaries**
+  - [ ] **Sub-task 13.5.2.1:** Prove the gateway cannot dispatch tools, mint grants, select credentials, alter policy, approve disclosure, or establish completion.
+  - [ ] **Sub-task 13.5.2.2:** Reject missing, mutable, ambiguous, cross-class, unknown-operator, or partially specified profile tuples before inference.
+- [ ] **Task 13.5.3 - Verify and retain evidence**
+  - [ ] **Sub-task 13.5.3.1:** Mutate every identity and profile-class field independently and assert visible pre-inference refusal.
+  - [ ] **Sub-task 13.5.3.2:** Run the identity portions of `RV-54`; retain schema, fixture, substitution, authority, and disabled-baseline evidence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 13.5.AC1:** Given any inference candidate, when admission runs, then model, runtime, codec, endpoint, route, operator, and qualification identities are independently exact.
+- [ ] **Story AC 13.5.AC2:** Given no enabled profile, when a request is made, then the gateway returns a truthful blocked result and neither chooses a route nor enables fallback.
+- [ ] **Story AC 13.5.AC3:** Given a model proposal, when it returns to the runtime, then it remains untrusted data with no tool, policy, credential, or completion authority.
+
+#### [ ] Story 13.6 - Gateway Codec, Routing, and Fallback Contracts
+
+**User-facing value:** As a user, I need protocol translation and route choice to preserve meaning
+and disclosure so that local privacy cannot become remote processing through convenience behavior.
+
+**Source coverage:** `AM-GWY-002`, `AM-GWY-003`, `AT-GWY-002`, `AT-GWY-003`.
+
+**Dependencies:** Stories 2.4 and 13.5; Decision 0044.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 13.6.1 - Implement versioned codec contracts**
+  - [ ] **Sub-task 13.6.1.1:** Define adapter capabilities for message parts, streaming, structured output, tool proposals, usage, cancellation, health, concurrency, and typed failures.
+  - [ ] **Sub-task 13.6.1.2:** Preserve every supported canonical field and convert every semantic gap, unknown event, or unsupported operation into an explicit non-success result.
+- [ ] **Task 13.6.2 - Implement deterministic route decisions**
+  - [ ] **Sub-task 13.6.2.1:** Select only currently qualified tuples under exact user profile, classification, disclosure, role, capability, health, resource, quota, cost, and platform policy.
+  - [ ] **Sub-task 13.6.2.2:** Record considered routes, exclusions, selected tuple, reason, limits, disclosure, policy, and qualification digest in each route receipt.
+  - [ ] **Sub-task 13.6.2.3:** Keep fallback disabled by default; require an explicit ordered policy, fresh route decision, independent destination authorization, disclosure, and equivalent controls for every permitted fallback.
+- [ ] **Task 13.6.3 - Execute compatibility and routing tests**
+  - [ ] **Sub-task 13.6.3.1:** Run field/event parity, malformed stream, cancellation, unknown-version, health-flap, quota, and fallback substitution fixtures across fake adapters.
+  - [ ] **Sub-task 13.6.3.2:** Run the routing portions of `RV-54`; retain route receipts and prove zero silent local-to-remote or cross-remote transition.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 13.6.AC1:** Given a supported external protocol event, when translation occurs, then its canonical meaning and identity are preserved exactly or the operation fails visibly.
+- [ ] **Story AC 13.6.AC2:** Given multiple candidate routes, when routing runs, then only a current qualified policy-compatible tuple is selected with a complete receipt.
+- [ ] **Story AC 13.6.AC3:** Given local or remote route failure, when fallback is absent or unauthorized, then the task blocks without silent destination, disclosure, cost, or authority change.
+
 ### [ ] Sprint 14 - Separate Model Installer and Importer
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -2052,6 +2297,34 @@ task/sub-task, every story criterion, every sprint criterion, and the Universal 
 Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Current gate result:** BLOCKED with the complete platform-neutral ten-tool catalog, closed schemas, deterministic result engine, hard limits, repeated-call guard, sealed Linux input contract, multi-object grant binding, authenticated generic preview/cancel flow, one receipt retained for every launched attempt, model-context sensitive-output withholding, deterministic RPM/DEB payloads, and all ten operations, the eleven-case live attack corpus, and the 12-case lifecycle campaign executing through root-owned workers on native Fedora 44 and Ubuntu 26.04. Remaining blockers are the native macOS XPC operation, attack, and lifecycle matrices plus independent worker review. The production manifest's refusal of a user-owned development worker remains expected fail-closed behavior.
+#### [ ] Story 16.4 - Closed ToolObservation and Terminal Result Contract
+
+**User-facing value:** As a user and verifier, I need every tool call to end in one complete,
+bounded observation so that truncation, crashes, denials, and uncertainty cannot masquerade as success.
+
+**Source coverage:** `AM-TIO-001`, `AT-TIO-001`, `AT-TIO-002`.
+
+**Dependencies:** Stories 5.3, 13.5, 16.2, and 16.3; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 16.4.1 - Implement terminal observation assembly**
+  - [ ] **Sub-task 16.4.1.1:** Produce exactly one terminal observation for success, verified no-op, denial, cancellation, timeout, resource exhaustion, crash, malformed output, partial effect, and uncertainty.
+  - [ ] **Sub-task 16.4.1.2:** Store complete stdout, stderr, binary output, and structured results as separate content-addressed artifacts while exposing bounded redacted excerpts and full-stream digests.
+  - [ ] **Sub-task 16.4.1.3:** Bind command/tool identity, call, attempt, process, policy, grant, approval, timing, resources, truncation, effect, cleanup, and artifact references.
+- [ ] **Task 16.4.2 - Preserve observation truth under failure**
+  - [ ] **Sub-task 16.4.2.1:** Reconcile worker crash, supervisor crash, output-pipe failure, cancellation race, timeout race, and post-effect uncertainty into typed terminal results.
+  - [ ] **Sub-task 16.4.2.2:** Reject duplicate terminal events, mismatched identities, forged lengths/digests, missing artifacts, and observations that claim more than measured facts.
+- [ ] **Task 16.4.3 - Verify terminal behavior**
+  - [ ] **Sub-task 16.4.3.1:** Run boundary and overflow fixtures for every output/resource ceiling and every terminal state through fake and live local tools.
+  - [ ] **Sub-task 16.4.3.2:** Run `RV-55`; retain complete artifacts, disclosed excerpts, digests, process/resource observations, cleanup results, and verifier decisions.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 16.4.AC1:** Given any admitted tool call, when it terminates or is interrupted, then exactly one closed terminal observation with complete identity and measured disposition exists.
+- [ ] **Story AC 16.4.AC2:** Given output larger than a client limit, when it is returned, then the excerpt is bounded while the full content, length, digest, and retrieval reference remain exact.
+- [ ] **Story AC 16.4.AC3:** Given crash, cancellation, timeout, or uncertain effect, when verification runs, then no successful result is inferred and owned resources are reconciled.
+
 ### [ ] Sprint 17 - Read-Only Git and Untrusted Instructions
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -2405,6 +2678,34 @@ transcript prose.
 **Gate decision:** Sprint 21 is PASS only when Stories 21.1 through 21.3, every numbered
 task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of
 Done are complete with current evidence. Otherwise it is BLOCKED.
+#### [ ] Story 21.4 - Ordered Runtime Lineage, Inspector, and Performance Budgets
+
+**User-facing value:** As a user, I need a privacy-aware view of what AgentMage actually did and
+why, with measurable responsiveness and bounded resource use rather than hidden reasoning claims.
+
+**Source coverage:** `AM-OBS-002`, `AM-PERF-001`, `AT-OBS-002`, `AT-PERF-002`, `AT-PERF-003`.
+
+**Dependencies:** Stories 11.3, 13.6, 16.4, and 21.3; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 21.4.1 - Implement ordered privacy-aware lineage**
+  - [ ] **Sub-task 21.4.1.1:** Emit ordered capture, parse, context, route, model-event, proposal, policy, approval, tool, effect, verification, recovery, and terminal records with sequence and correlation identities.
+  - [ ] **Sub-task 21.4.1.2:** Redact raw secrets, credentials, private endpoint values, and hidden reasoning while retaining attributable actions, summarized rationale, evidence links, and uncertainty.
+  - [ ] **Sub-task 21.4.1.3:** Implement backpressure, bounded buffers, resumable event cursors, slow-client isolation, and cancellation without event reordering or state loss.
+- [ ] **Task 21.4.2 - Build the execution inspector contract**
+  - [ ] **Sub-task 21.4.2.1:** Expose current step, route class, proposals, approvals, tools, effects, verification, blockers, artifacts, diagnostics, and safe next actions through read-only projections.
+  - [ ] **Sub-task 21.4.2.2:** Reconstruct inspector views from journal and artifacts after reload without making the view a state authority.
+- [ ] **Task 21.4.3 - Measure and gate performance**
+  - [ ] **Sub-task 21.4.3.1:** Measure capture, parsing, retrieval, queue, first event/token, generation, tool, verification, total latency, throughput, memory, accelerator, disk, process, artifact, and backlog behavior.
+  - [ ] **Sub-task 21.4.3.2:** Run `RV-56`; retain fixture identities, distributions, ceilings, overflow/backpressure behavior, redaction scans, and replay-equivalent inspector results.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 21.4.AC1:** Given an execution, when its lineage is inspected live or after restart, then ordered attributable facts and evidence reconstruct without exposing secrets or hidden reasoning.
+- [ ] **Story AC 21.4.AC2:** Given a slow or disconnected client, when work continues, then bounded backpressure protects the runtime and no accepted event or cancellation is silently lost.
+- [ ] **Story AC 21.4.AC3:** Given an identity-bound performance fixture, when it executes, then each declared latency/resource metric is measured and threshold failure blocks qualification without changing authority.
+
 ### [ ] Sprint 22 - Context Management and Crash-Safe Resume
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -2622,6 +2923,34 @@ state without repeating an effect or hiding why progress stopped.
 **Gate decision:** Sprint 22 is PASS only when Stories 22.1 through 22.4, every numbered
 task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of
 Done are complete with current evidence. Otherwise it is BLOCKED.
+#### [ ] Story 22.5 - Engineering Runtime Vertical Slice
+
+**User-facing value:** As a user, I need one complete local read-only engineering task to travel
+from admitted source through context, model proposal, tools, verification, artifacts, and resume.
+
+**Source coverage:** `AM-ERT-001`, `AM-CTX-001`, `AM-CTX-002`, `AM-CTX-003`, `AM-WKF-001`, `AM-WKF-002`, `AM-SES-002`, `AM-TIO-001`, `AM-VER-001`, `AT-ERT-001`, `AT-CTX-001`, `AT-CTX-002`, `AT-CTX-003`, `AT-CTX-004`, `AT-WKF-001`, `AT-WKF-002`, `AT-WKF-003`, `AT-RESUME-002`, `AT-TIO-001`, `AT-TIO-002`, `AT-VER-001`.
+
+**Dependencies:** Stories 21.4, 22.3, and 22.4; Decisions 0042 and 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 22.5.1 - Compose one runtime-owned path**
+  - [ ] **Sub-task 22.5.1.1:** Connect artifact admission, context delivery, model gateway, read-only tools, observations, verification, journal, artifacts, checkpoints, cancellation, and terminal results through Rust-owned interfaces.
+  - [ ] **Sub-task 22.5.1.2:** Implement a fake-model repository-analysis fixture that requests bounded reads and produces a cited proposal without direct tool or completion authority.
+  - [ ] **Sub-task 22.5.1.3:** Ensure Chat, CLI, and headless callers consume the same ordered events and terminal record without independent orchestration logic.
+- [ ] **Task 22.5.2 - Exercise recovery and truth**
+  - [ ] **Sub-task 22.5.2.1:** Interrupt at each major boundary, reload the caller, resume from current checkpoints, and compare events, artifacts, observations, verification, and terminal state.
+  - [ ] **Sub-task 22.5.2.2:** Inject stale sources, malformed model events, denied tools, truncated output, contradictory evidence, and cancellation and require explicit non-success results.
+- [ ] **Task 22.5.3 - Close the local vertical-slice evidence**
+  - [ ] **Sub-task 22.5.3.1:** Run applicable `RV-50` through `RV-56` portions and retain the complete source-to-terminal lineage plus resource and cleanup evidence.
+  - [ ] **Sub-task 22.5.3.2:** Recompute every summary from raw records and prove no client/model claim overrides deterministic evidence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 22.5.AC1:** Given an authorized repository-analysis request, when the vertical slice runs, then every source, model-visible range, proposal, tool call, observation, citation, and terminal claim is attributable.
+- [ ] **Story AC 22.5.AC2:** Given interruption or caller reload, when the task resumes, then accepted work is preserved, completed effects do not replay, and identical evidence controls completion.
+- [ ] **Story AC 22.5.AC3:** Given malformed, denied, stale, partial, contradictory, or cancelled execution, when the slice ends, then it reports the exact non-success state and safe next action.
+
 ### [ ] Sprint 23 - Native Visual Studio Code Chat Experience
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -2873,6 +3202,62 @@ its actual postconditions are verified, or tell me exactly why it could not cont
 **Gate decision:** Sprint 23 is PASS only when Stories 23.1 through 23.6, every numbered
 task/sub-task, every story criterion, every sprint criterion, `AM-VSC-003`, `AT-VSC-003`, and the
 Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+#### [ ] Story 23.7 - AgentMage Verified Chat
+
+**User-facing value:** As a VS Code user, I need a durable AgentMage-owned Chat surface where Ask,
+Plan, and Agent modes show exact evidence and cannot grant themselves authority.
+
+**Source coverage:** `AM-VSC-004`, `AT-VSC-004`.
+
+**Dependencies:** Stories 22.5, 23.5, and 23.6; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 23.7.1 - Implement the secured interface shell**
+  - [ ] **Sub-task 23.7.1.1:** Build a disposable CSP-restricted webview, thin TypeScript bridge, authenticated versioned IPC, and Rust host session binding with no direct filesystem, network, credential, model, or tool authority.
+  - [ ] **Sub-task 23.7.1.2:** Render ordered streaming events, artifacts, citations, approvals, tool observations, verification, blockers, terminal diagnostics, and resumable task state accessibly.
+  - [ ] **Sub-task 23.7.1.3:** Implement Ask, Plan, and Agent mode requests as policy inputs only; mode selection cannot mint grants, bypass approval, or establish completion.
+- [ ] **Task 23.7.2 - Prove lifecycle and IPC security**
+  - [ ] **Sub-task 23.7.2.1:** Test reload, duplicate view, stale/replayed/spoofed message, wrong session, extension-host restart, Rust-host restart, cancellation race, and slow-view backpressure.
+  - [ ] **Sub-task 23.7.2.2:** Scan webview state, logs, storage, IPC payloads, and diagnostics for secrets, hidden reasoning, private endpoint values, or undeclared durable truth.
+- [ ] **Task 23.7.3 - Verify the canonical experience**
+  - [ ] **Sub-task 23.7.3.1:** Run `RV-57` Verified Chat cases on locally available platforms and retain accessibility, state-reconstruction, IPC-authentication, parity, and limitation evidence.
+  - [ ] **Sub-task 23.7.3.2:** Leave macOS and Windows native execution rows open until their physical evidence exists; do not infer support from Linux or unit fixtures.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 23.7.AC1:** Given a Verified Chat request, when it executes, then the Rust runtime owns state and authority while the view renders only authenticated projections and user decisions.
+- [ ] **Story AC 23.7.AC2:** Given reload, restart, replay, spoofing, or slow consumption, when the interface recovers, then no accepted state is lost, duplicated, widened, or falsely completed.
+- [ ] **Story AC 23.7.AC3:** Given Ask, Plan, or Agent mode, when an effect is proposed, then the same deterministic policy, grant, approval, tool, and verifier boundaries apply.
+
+#### [ ] Story 23.8 - Native VS Code Chat Compatibility and Disclosure
+
+**User-facing value:** As a VS Code user, I need `@agentmage` and provider integration to work
+where stable APIs allow it, with visible disclosure where native Chat cannot match Verified Chat.
+
+**Source coverage:** `AM-VSC-005`, `AM-VSC-006`, `AT-VSC-005`, `AT-VSC-006`.
+
+**Dependencies:** Stories 13.6 and 23.7; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 23.8.1 - Implement stable compatibility adapters**
+  - [ ] **Sub-task 23.8.1.1:** Extend the stable `@agentmage` Chat Participant to account for every public request reference, cancellation, progress, result, and unsupported part through canonical runtime records.
+  - [ ] **Sub-task 23.8.1.2:** Implement a stable Language Model Chat Provider adapter that preserves supported normalized parts, tools-as-proposals, ordered streaming, usage, cancellation, errors, and route disclosure.
+  - [ ] **Sub-task 23.8.1.3:** Keep proposed/private APIs out of production and maintain a versioned compatibility matrix for stable, Preview, proposed, and unavailable surfaces.
+- [ ] **Task 23.8.2 - Make semantic gaps visible**
+  - [ ] **Sub-task 23.8.2.1:** Detect unresolved required references, missing approval UI, hidden artifact limits, unsupported message parts, and unavailable lifecycle/inspector features before execution or completion.
+  - [ ] **Sub-task 23.8.2.2:** Offer a visible transition to Verified Chat when native Chat cannot provide required guarantees; never silently weaken the request.
+- [ ] **Task 23.8.3 - Verify compatibility behavior**
+  - [ ] **Sub-task 23.8.3.1:** Run request-reference, stream/event, cancellation, provider-selection, unsupported-part, reload, and disclosure fixtures across supported VS Code versions.
+  - [ ] **Sub-task 23.8.3.2:** Run the compatibility portions of `RV-57` and retain API-version, platform, parity, disclosure, and unsupported-state evidence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 23.8.AC1:** Given stable native Chat inputs, when an adapter runs, then supported semantics reach the canonical runtime intact and every unsupported requirement is visible.
+- [ ] **Story AC 23.8.AC2:** Given a native Chat surface that lacks a required guarantee, when the user requests affected work, then AgentMage discloses the gap and does not claim Verified Chat parity.
+- [ ] **Story AC 23.8.AC3:** Given a proposed or private VS Code API disappears, when compatibility checks run, then production behavior remains supported or fails closed without relying on that API.
+
 ### [ ] Sprint 24 - Manual Codex Handoff Boundary
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -4683,6 +5068,34 @@ count remains zero. Both implementation and artifact tasks, the verification tas
 49.1, all story criteria, Sprint AC 49.AC2, and the sprint remain open.
 
 **Gate decision:** Sprint 49 is PASS only when Story 49.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+#### [ ] Story 49.2 - Alternate Runtime and Protocol Adapter Evaluation
+
+**User-facing value:** As a user, I need candidate runtimes evaluated against one exact contract
+so that convenience compatibility never creates unmeasured support or semantic loss.
+
+**Source coverage:** `AM-GWY-002`, `AM-GWY-003`, `AT-GWY-002`, `AT-GWY-003`.
+
+**Dependencies:** Stories 13.6 and 49.1; Decision 0044.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 49.2.1 - Build the adapter evaluation matrix**
+  - [ ] **Sub-task 49.2.1.1:** Inventory exact versions and protocol surfaces for llama.cpp, Ollama, LM Studio, vLLM, SGLang, TGI, Ray Serve LLM, KServe, OpenAI Responses-compatible, and Anthropic Messages-compatible candidates.
+  - [ ] **Sub-task 49.2.1.2:** Map each candidate's message parts, structured output, proposals, stream events, usage, cancellation, errors, health, concurrency, and version behavior to the canonical protocol.
+  - [ ] **Sub-task 49.2.1.3:** Record unsupported, lossy, unavailable, rejected, or candidate states without promoting a support matrix.
+- [ ] **Task 49.2.2 - Run exact parity and failure fixtures**
+  - [ ] **Sub-task 49.2.2.1:** Execute identical fake/local fixtures for field preservation, ordering, backpressure, cancellation, malformed events, resource limits, and typed error mapping where each runtime is available.
+  - [ ] **Sub-task 49.2.2.2:** Compare results by exact runtime/codec identity; quarantine semantic substitution and invalidate stale evidence after version change.
+- [ ] **Task 49.2.3 - Record disposition and limitations**
+  - [ ] **Sub-task 49.2.3.1:** Produce one disposition per adapter/version with raw evidence, gaps, remediation, platform qualification, and explicit non-support language.
+  - [ ] **Sub-task 49.2.3.2:** Re-run applicable `RV-54` and performance checks; retain no silent fallback and no enabled-route evidence.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 49.2.AC1:** Given an adapter candidate, when the canonical corpus runs, then each supported semantic is preserved and every gap or unavailable feature is explicit.
+- [ ] **Story AC 49.2.AC2:** Given a runtime, codec, or endpoint version change, when prior evidence is evaluated, then affected qualification becomes stale before use.
+- [ ] **Story AC 49.2.AC3:** Given a passing subset, when disposition is recorded, then it does not enable a model, route, platform, fallback, or release claim without all owning gates.
+
 ### [ ] Sprint 50 - Coding Skills, Documentation, and v0.4 Release
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -4856,6 +5269,35 @@ adapters may be exercised as they become available without claiming their later 
   then it closes only if text/log ingestion and verified-workflow supervision pass and does not
   imply later structured-parser, platform, MCP, model, or release support.
 
+#### [ ] Story 50.4 - Engineering Runtime Reliability and Degradation Hardening
+
+**User-facing value:** As a user, I need the assembled runtime to remain truthful under missing
+dependencies, load, malformed inputs, failures, and recovery before later capabilities depend on it.
+
+**Source coverage:** `AM-DEG-001`, `AT-DEG-001`, `AM-ERT-001`, `AM-WKF-001`, `AM-WKF-002`, `AM-TIO-001`, `AM-VER-001`, `AM-GWY-003`, `AT-ERT-001`, `AT-WKF-001`, `AT-WKF-002`, `AT-WKF-003`, `AT-TIO-001`, `AT-TIO-002`, `AT-VER-001`, `AT-GWY-003`.
+
+**Dependencies:** Stories 23.8, 49.2, and 50.3; Decisions 0043 and 0044.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 50.4.1 - Enforce dependency degradation classes**
+  - [ ] **Sub-task 50.4.1.1:** Classify every runtime, parser, model, codec, endpoint, tool, verifier, client feature, and optional capability as required, optional, or explicitly substitutable.
+  - [ ] **Sub-task 50.4.1.2:** Implement visible blocked, degraded, unavailable, disabled, and quarantined states with no silent omission, authority reduction, route change, or false success.
+  - [ ] **Sub-task 50.4.1.3:** Verify substitutable dependencies require a fresh qualified selection and equivalent or stricter security and completion policy.
+- [ ] **Task 50.4.2 - Execute reliability campaigns**
+  - [ ] **Sub-task 50.4.2.1:** Test parser/model/tool/verifier/client loss, malformed data, cancellation, process crash, restart, resource exhaustion, backpressure, event duplication/reordering, stale state, and uncertain effects.
+  - [ ] **Sub-task 50.4.2.2:** Run long-context, large-artifact, concurrency, queue, latency, memory, disk, descriptor, and process-ceiling campaigns with deterministic termination.
+  - [ ] **Sub-task 50.4.2.3:** Compare Chat, Verified Chat, CLI, and headless results for canonical evidence and terminal-state parity where implemented.
+- [ ] **Task 50.4.3 - Close the core milestone evidence**
+  - [ ] **Sub-task 50.4.3.1:** Run `RV-50` through `RV-57` applicable local portions, strict schema/traceability/security gates, and independent evidence recomputation.
+  - [ ] **Sub-task 50.4.3.2:** Keep all unavailable native platform, model, endpoint, route, independent-review, and live-service qualifications open and list exact blockers.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 50.4.AC1:** Given loss or failure of any dependency, when the runtime responds, then behavior matches the declared degradation class without hidden omission, route change, or false completion.
+- [ ] **Story AC 50.4.AC2:** Given adversarial load or interruption, when execution terminates or resumes, then authority, evidence, artifacts, and completed effects remain exact and bounded.
+- [ ] **Story AC 50.4.AC3:** Given the foundational runtime-core gate, when status is computed, then it closes only from current raw evidence and leaves every unavailable qualification explicitly open.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 50.AC1:** Every promoted language workflow passes exact change, validation, preservation, and rollback fixtures.
@@ -4882,7 +5324,7 @@ trusted installed-package execution, independent review, and deferred manual fuz
 The implementation and verification tasks, both story criteria, Story 50.1, Sprint AC 50.AC1, and
 the sprint therefore remain open.
 
-**Gate decision:** Sprint 50 is PASS only when Stories 50.1 through 50.3, every numbered
+**Gate decision:** Sprint 50 is PASS only when Stories 50.1 through 50.4, every numbered
 task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of
 Done are complete with current evidence. Otherwise it is BLOCKED.
 
@@ -7662,6 +8104,62 @@ complete with current evidence. Otherwise it is BLOCKED.
 - [ ] **Sprint AC 95.AC7:** The idea, bug, pull-request review, and roadmap workflows pass with isolated roles, preserved dissent, deterministic control flow, and zero undeclared local or external effect.
 
 **Gate decision:** Sprint 95 is PASS only when Stories 95.1 and 95.2, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+#### [ ] Story 95.3 - Engineering Capability Registry
+
+**User-facing value:** As a user, I need repeatable engineering outcomes packaged as versioned,
+testable capabilities rather than opaque prompts with undeclared tools or authority.
+
+**Source coverage:** `AM-CAP-001`, `AM-CAP-002`, `AT-CAP-001`, `AT-CAP-002`.
+
+**Dependencies:** Stories 50.4, 92.2, and 95.2; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 95.3.1 - Implement manifest admission and lifecycle**
+  - [ ] **Sub-task 95.3.1.1:** Implement the closed capability manifest with identity, schemas, workflow, tools, model roles, authority ceiling, classification, budgets, verifiers, degradation, fixtures, compatibility, and removal.
+  - [ ] **Sub-task 95.3.1.2:** Implement draft, admitted, enabled, degraded, disabled, quarantined, and retired states with deterministic admission and immediate quarantine/disable behavior.
+  - [ ] **Sub-task 95.3.1.3:** Resolve dependencies by exact version and qualification; prevent manifests or models from minting grants, credentials, registrations, or completion.
+- [ ] **Task 95.3.2 - Seed and compose initial capabilities**
+  - [ ] **Sub-task 95.3.2.1:** Create disabled candidate manifests for repository inspection, coding change, pull-request review, issue/bug workflow, test diagnosis, release readiness, document workflow, research, and whole-codebase audit.
+  - [ ] **Sub-task 95.3.2.2:** Reuse existing workflows, tools, schemas, policies, and role profiles; prohibit private capability loops and prompt-only completion claims.
+- [ ] **Task 95.3.3 - Verify lifecycle and isolation**
+  - [ ] **Sub-task 95.3.3.1:** Test malformed/unknown manifests, dependency loss, migration, replacement, quarantine, disablement, removal, authority widening, prompt injection, and strict-local restoration.
+  - [ ] **Sub-task 95.3.3.2:** Retain manifest, admission, graph, authority, fixture, migration, and removal evidence for `AT-CAP-001` and `AT-CAP-002`.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 95.3.AC1:** Given a capability manifest, when admission runs, then every dependency, authority ceiling, budget, verifier, lifecycle, and schema is exact before enablement.
+- [ ] **Story AC 95.3.AC2:** Given a missing or incompatible dependency, when invocation is requested, then the capability blocks or degrades exactly as declared without improvising a hidden workflow.
+- [ ] **Story AC 95.3.AC3:** Given disablement, quarantine, migration, or removal, when lifecycle reconciliation completes, then no residual registration, grant, worker, cache, or authority remains.
+
+#### [ ] Story 95.4 - Bounded Multi-Agent Capability Composition
+
+**User-facing value:** As a user, I need specialist agents to accelerate independent work only
+after the single-agent spine is reliable, without self-approval, shared hidden state, or authority pooling.
+
+**Source coverage:** `AM-MAG-001`, `AT-MAG-001`, `AT-MAG-002`.
+
+**Dependencies:** Stories 95.3, 94.1, and 95.2; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 95.4.1 - Define bounded pod and role execution**
+  - [ ] **Sub-task 95.4.1.1:** Compose admitted capabilities and qualified `AG-01` through `AG-49` roles into explicit DAGs with separate work packets, leases, grants, budgets, context, worktrees, and evidence.
+  - [ ] **Sub-task 95.4.1.2:** Keep policy, credentials, signing, deterministic verification, effect actuation, reconciliation, integration, and completion outside model roles.
+  - [ ] **Sub-task 95.4.1.3:** Gate multi-agent enablement on current single-agent reliability, resource, and verifier evidence; preserve a complete single-agent mode.
+- [ ] **Task 95.4.2 - Implement independent review and serialized integration**
+  - [ ] **Sub-task 95.4.2.1:** Isolate implementer and reviewer inputs/outputs, retain dissent, detect shared-model/context conflicts, and forbid self/sibling approval.
+  - [ ] **Sub-task 95.4.2.2:** Serialize candidate integration through deterministic repository preservation, merge preview, validation, and user-authorized publication services.
+- [ ] **Task 95.4.3 - Run multi-agent attack and recovery tests**
+  - [ ] **Sub-task 95.4.3.1:** Attempt authority aggregation, role impersonation, reviewer collusion, stale review, worktree collision, hidden effects, budget evasion, duplicate work, and false consensus.
+  - [ ] **Sub-task 95.4.3.2:** Test crash, cancellation, worker loss, replacement, rescheduling, and partial integration while preserving evidence and completed effects.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 95.4.AC1:** Given multiple specialist roles, when a pod runs, then each receives only its exact packet and ceiling and cannot combine authority or approve its own work.
+- [ ] **Story AC 95.4.AC2:** Given conflicting conclusions or stale evidence, when integration is considered, then dissent remains visible and deterministic gates block unsupported publication.
+- [ ] **Story AC 95.4.AC3:** Given multi-agent failure or disablement, when recovery occurs, then accepted artifacts and evidence remain attributable and the single-agent path remains intact.
+
 ### [ ] Sprint 96 - Signed Updates and Supply-Chain Maintenance
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -8976,6 +9474,33 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Gate decision:** Sprint 121 is PASS only when Story 121.1, all criteria, the applicable `AT-WIN-001` cases, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
 
+#### [ ] Story 121.2 - Windows Verified Chat and Native Compatibility Evidence
+
+**User-facing value:** As a Windows user and reviewer, I need the same Rust-owned runtime and
+truth boundaries proven through native VS Code interfaces without borrowing Linux evidence.
+
+**Source coverage:** `AM-VSC-004`, `AM-VSC-005`, `AM-VSC-006`, `AT-VSC-004`, `AT-VSC-005`, `AT-VSC-006`.
+
+**Dependencies:** Stories 23.8 and 121.1; Decision 0043.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 121.2.1 - Package and launch Windows interface paths**
+  - [ ] **Sub-task 121.2.1.1:** Build/install the exact Windows extension and Rust host, launch Verified Chat, `@agentmage`, and Language Model Chat Provider paths, and record package/runtime/VS Code identities.
+  - [ ] **Sub-task 121.2.1.2:** Verify authenticated IPC, named-pipe/loopback policy, process ownership, filesystem ACLs, secret-store references, webview CSP, cancellation, and cleanup.
+- [ ] **Task 121.2.2 - Run native parity and lifecycle campaigns**
+  - [ ] **Sub-task 121.2.2.1:** Execute the same request-reference, streaming, artifact, approval, observation, verification, reload, restart, unsupported-state, and disclosure fixtures used on Linux.
+  - [ ] **Sub-task 121.2.2.2:** Verify Windows path, process, shell, encoding, line-ending, case, Unicode, update, uninstall, and residue behavior independently.
+- [ ] **Task 121.2.3 - Retain truthful platform evidence**
+  - [ ] **Sub-task 121.2.3.1:** Run Windows portions of `RV-57`; retain raw native results, environment manifests, screenshots/accessibility output, process/socket/path inventories, and limitations.
+  - [ ] **Sub-task 121.2.3.2:** Keep this story open until physical Windows execution and independent evidence checks pass; unit tests or Wine cannot substitute.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 121.2.AC1:** Given the Windows candidate package, when each VS Code interface runs, then Rust-owned state, policy, tools, verification, and disclosures match canonical contracts.
+- [ ] **Story AC 121.2.AC2:** Given reload, crash, cancellation, spoofing, or uninstall on Windows, when reconciliation runs, then no authority, secret, process, socket, or durable view state escapes its lifecycle.
+- [ ] **Story AC 121.2.AC3:** Given absent physical Windows evidence, when support status is computed, then Windows Verified Chat and compatibility claims remain blocked.
+
 ### [ ] Sprint 122 - Windows Path, Sandbox, Keys, Model, and Connected Workers
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -9074,6 +9599,34 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Gate decision:** Sprint 123 is PASS only when Story 123.1, all criteria, the resilience portions of `AT-XTE-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
 
+#### [ ] Story 123.2 - Remote Inference Worker and Route Qualification
+
+**User-facing value:** As a user who explicitly chooses remote inference, I need minimized data,
+exact destination disclosure, isolated credentials, bounded cost/resources, and independently qualified routes.
+
+**Source coverage:** `AM-REM-002`, `AM-REM-003`, `AT-REM-002`, `AT-REM-003`.
+
+**Dependencies:** Stories 13.6, 50.4, 104.1, and 123.1; Decision 0044.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 123.2.1 - Implement the isolated remote worker**
+  - [ ] **Sub-task 123.2.1.1:** Launch a least-privilege worker with no workspace/tool authority and pass only minimized classified context, route identity, endpoint policy, credential reference, and request limits.
+  - [ ] **Sub-task 123.2.1.2:** Enforce exact TLS identity, host/address classes, DNS-rebinding checks, deny-first redirects/proxies, SSRF resistance, credential isolation, region/retention/logging/training disclosure, and emergency disablement.
+  - [ ] **Sub-task 123.2.1.3:** Enforce request/response bytes, tokens, time, retries, connections, concurrency, quota, and cost ceilings plus cancellation, cleanup, and route-scoped circuit breakers.
+- [ ] **Task 123.2.2 - Qualify exact endpoint and route tuples**
+  - [ ] **Sub-task 123.2.2.1:** Verify endpoint operator, deployment, codec/version, authentication, TLS, transport, streaming, usage, cancellation, errors, health, concurrency, limits, disclosure, and incident behavior.
+  - [ ] **Sub-task 123.2.2.2:** Run the canonical workflow corpus through the exact model/runtime/codec/endpoint/policy tuple and invalidate dependencies on material identity change.
+- [ ] **Task 123.2.3 - Execute remote security and truth campaigns**
+  - [ ] **Sub-task 123.2.3.1:** Test redirect, proxy, rebinding, private-address pivot, credential exfiltration, log leakage, cross-tenant mix-up, hidden fallback, quota/cost overflow, cancellation, partition, and uncertain completion.
+  - [ ] **Sub-task 123.2.3.2:** Run remote portions of `RV-54` and `RV-56`; retain endpoint/route receipts, network captures, disclosures, redaction scans, cost/resource results, and independent qualification.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 123.2.AC1:** Given an explicitly authorized remote route, when inference executes, then only the exact qualified destination receives minimized disclosed content through the isolated worker.
+- [ ] **Story AC 123.2.AC2:** Given redirect, rebinding, proxy, credential, quota, retention, or operator mismatch, when admission or execution runs, then the route fails closed before unauthorized disclosure or cost.
+- [ ] **Story AC 123.2.AC3:** Given a material model, runtime, codec, endpoint, policy, or operator change, when qualification is checked, then dependent evidence is invalidated before reuse.
+
 ### [ ] Sprint 124 - Adapter Removal and Strict-Local Restoration
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
@@ -9121,6 +9674,34 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 124.AC5:** `RV-30` passes with independent evidence.
 
 **Gate decision:** Sprint 124 is PASS only when Story 124.1, all criteria, the removal portions of `AT-ADP-001` and `AT-XTE-001`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
+
+#### [ ] Story 124.2 - Model Gateway Profile Removal and Strict-Local Restoration
+
+**User-facing value:** As a user, I need remote profiles and optional adapters removed completely
+so that strict-local operation can be independently restored without residue or hidden fallback.
+
+**Source coverage:** `AM-DEG-001`, `AM-GWY-003`, `AM-REM-002`, `AM-REM-003`, `AT-DEG-001`, `AT-GWY-003`, `AT-REM-002`, `AT-REM-003`.
+
+**Dependencies:** Stories 123.2 and 124.1; Decision 0044.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 124.2.1 - Revoke and remove gateway profiles**
+  - [ ] **Sub-task 124.2.1.1:** Stop and reconcile in-flight requests, revoke routes/grants, expire credential references, remove schedules, workers, registrations, caches, disclosures, and endpoint-specific policy state.
+  - [ ] **Sub-task 124.2.1.2:** Apply retention/deletion policy to remote request/response artifacts and evidence without deleting required audit provenance or neighboring profile state.
+  - [ ] **Sub-task 124.2.1.3:** Recover deterministically from interruption at every removal boundary and prevent partially removed profiles from becoming selectable.
+- [ ] **Task 124.2.2 - Prove strict-local restoration**
+  - [ ] **Sub-task 124.2.2.1:** Inventory processes, sockets, routes, credentials, configuration, caches, grants, schedules, events, and files before and after removal.
+  - [ ] **Sub-task 124.2.2.2:** Run strict-local artifact, context, workflow, model, tool, verification, resume, and zero-egress fixtures with every remote component absent.
+- [ ] **Task 124.2.3 - Verify isolation and neighboring preservation**
+  - [ ] **Sub-task 124.2.3.1:** Remove profiles independently and in aggregate; assert user/provider resources and unrelated local profiles remain byte/state exact.
+  - [ ] **Sub-task 124.2.3.2:** Re-run `RV-54` removal portions and retain before/after inventories, residue scans, strict-local raw results, and limitations.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 124.2.AC1:** Given an installed remote profile, when removal completes, then no selectable route, credential, worker, process, socket, cache, schedule, or hidden fallback remains.
+- [ ] **Story AC 124.2.AC2:** Given interruption during removal, when recovery runs, then the profile reaches complete removal or a visible blocked state without partial authority.
+- [ ] **Story AC 124.2.AC3:** Given all optional remote profiles removed, when strict-local acceptance runs, then local behavior and zero-egress guarantees remain complete and unchanged.
 
 ### [ ] Sprint 125 - Cross-Provider Delivery and Windows Release Gates
 
@@ -9204,6 +9785,34 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 
 **Gate decision:** Sprint 125 is PASS only when Stories 125.1 and 125.2, all criteria, `AT-XTE-001`, `AT-WIN-001`, `G-DELIVERY`, `G-WINDOWS`, and the Universal Story Definition of Done pass. Otherwise it is BLOCKED.
 
+#### [ ] Story 125.3 - Integrated Engineering Runtime, Gateway, and Capability Qualification
+
+**User-facing value:** As a user and reviewer, I need complete capabilities exercised across
+interfaces, model routes, tools, providers, recovery, and removal before any expanded release claim.
+
+**Source coverage:** `AM-ERT-001`, `AM-CTX-001`, `AM-CTX-002`, `AM-CTX-003`, `AM-WKF-001`, `AM-WKF-002`, `AM-SES-002`, `AM-TIO-001`, `AM-VER-001`, `AM-GWY-001`, `AM-GWY-002`, `AM-GWY-003`, `AM-REM-001`, `AM-REM-002`, `AM-REM-003`, `AM-OBS-002`, `AM-DEG-001`, `AM-PERF-001`, `AM-VSC-004`, `AM-VSC-005`, `AM-VSC-006`, `AM-CAP-001`, `AM-CAP-002`, `AM-MAG-001`, `AT-ERT-001`, `AT-CTX-001`, `AT-CTX-002`, `AT-CTX-003`, `AT-CTX-004`, `AT-WKF-001`, `AT-WKF-002`, `AT-WKF-003`, `AT-RESUME-002`, `AT-TIO-001`, `AT-TIO-002`, `AT-VER-001`, `AT-GWY-001`, `AT-GWY-002`, `AT-GWY-003`, `AT-REM-001`, `AT-REM-002`, `AT-REM-003`, `AT-OBS-002`, `AT-DEG-001`, `AT-PERF-002`, `AT-PERF-003`, `AT-VSC-004`, `AT-VSC-005`, `AT-VSC-006`, `AT-CAP-001`, `AT-CAP-002`, `AT-MAG-001`, `AT-MAG-002`.
+
+**Dependencies:** Stories 95.4, 121.2, 124.2, 125.1, and 125.2; Decisions 0043 and 0044.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 125.3.1 - Run complete capability lifecycles**
+  - [ ] **Sub-task 125.3.1.1:** Execute repository inspection, coding change, pull-request review, bug/issue, test diagnosis, and release-readiness capabilities from artifact admission through verified terminal state.
+  - [ ] **Sub-task 125.3.1.2:** Exercise supported clients and exact local/remote route classes with complete context, route, proposal, tool, effect, verification, observability, recovery, and removal lineage.
+  - [ ] **Sub-task 125.3.1.3:** Compare single-agent and admitted multi-agent paths for equivalent authority, deterministic services, completion, evidence, and serialized integration.
+- [ ] **Task 125.3.2 - Run integrated attacks and failures**
+  - [ ] **Sub-task 125.3.2.1:** Inject source substitution, context omission, model/endpoint drift, route disclosure bypass, prompt injection, tool forgery, hidden effect, self-approval, stale verification, and false completion.
+  - [ ] **Sub-task 125.3.2.2:** Inject provider outage, partition, timeout, quota, low resources, crash/restart, cancellation, uncertain effect, client reload, adapter removal, and platform-specific failures.
+- [ ] **Task 125.3.3 - Reconcile current evidence**
+  - [ ] **Sub-task 125.3.3.1:** Recompute all requirement, route, capability, platform, security, performance, and completion summaries from raw journals, artifacts, receipts, pre/post state, and signatures.
+  - [ ] **Sub-task 125.3.3.2:** Execute `RV-50` through `RV-57` and every applicable existing protocol; retain dissent, limitations, unsupported tuples, and independent decisions.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 125.3.AC1:** Given a promoted capability and route tuple, when its complete lifecycle runs, then every source, decision, effect, observation, verification, artifact, and terminal claim is exact and attributable.
+- [ ] **Story AC 125.3.AC2:** Given attack, failure, uncertainty, or platform/provider drift, when recovery runs, then no unauthorized/duplicate effect or false completion occurs and limitations remain visible.
+- [ ] **Story AC 125.3.AC3:** Given unavailable platform, endpoint, model, reviewer, or live-service evidence, when gate status is computed, then affected qualification remains open without blocking independent locally implementable work.
+
 ## [ ] Epic 11 - Delivery and Windows GA Closure Checkpoint
 
 ### [ ] Sprint 126 - Delivery and Windows Release-Candidate Checkpoint
@@ -9254,6 +9863,35 @@ Decision 0008 supersedes Sprint 102 as the final product gate. Sprint 102 remain
 - [ ] **Sprint AC 126.AC5:** The Sprint 126 delivery-and-Windows checkpoint closes only after independent reproduction and explicit user approval; expanded `G-GA` remains blocked pending Sprints 127-156.
 
 **Gate decision:** Sprint 126 is PASS only when Story 126.1, all criteria, `AT-GA-001`, every applicable delivery-and-Windows `AT-*`, every `RV-01` through `RV-30`, `RV-49`, and the Universal Story Definition of Done pass with current signed evidence. This checkpoint does not close expanded `G-GA`, which remains BLOCKED until Sprint 156. Otherwise Sprint 126 is BLOCKED.
+
+#### [ ] Story 126.2 - Engineering Runtime Release Reconciliation
+
+**User-facing value:** As a reviewer, I need the added runtime, gateway, interface, capability, and
+multi-agent scope reconciled into release truth without promoting any unexecuted qualification.
+
+**Source coverage:** `AM-ERT-001`, `AM-CTX-001`, `AM-CTX-002`, `AM-CTX-003`, `AM-WKF-001`, `AM-WKF-002`, `AM-SES-002`, `AM-TIO-001`, `AM-VER-001`, `AM-GWY-001`, `AM-GWY-002`, `AM-GWY-003`, `AM-REM-001`, `AM-REM-002`, `AM-REM-003`, `AM-OBS-002`, `AM-DEG-001`, `AM-PERF-001`, `AM-VSC-004`, `AM-VSC-005`, `AM-VSC-006`, `AM-CAP-001`, `AM-CAP-002`, `AM-MAG-001`, `AT-ERT-001`, `AT-CTX-001`, `AT-CTX-002`, `AT-CTX-003`, `AT-CTX-004`, `AT-WKF-001`, `AT-WKF-002`, `AT-WKF-003`, `AT-RESUME-002`, `AT-TIO-001`, `AT-TIO-002`, `AT-VER-001`, `AT-GWY-001`, `AT-GWY-002`, `AT-GWY-003`, `AT-REM-001`, `AT-REM-002`, `AT-REM-003`, `AT-OBS-002`, `AT-DEG-001`, `AT-PERF-002`, `AT-PERF-003`, `AT-VSC-004`, `AT-VSC-005`, `AT-VSC-006`, `AT-CAP-001`, `AT-CAP-002`, `AT-MAG-001`, `AT-MAG-002`.
+
+**Dependencies:** Stories 125.3 and 126.1; Decisions 0043 and 0044.
+
+##### Tasks and Sub-tasks
+
+- [ ] **Task 126.2.1 - Rebuild additive scope and evidence closure**
+  - [ ] **Sub-task 126.2.1.1:** Reconcile all 53 appended requirements through decisions, security controls, reviewer protocols, milestones, epics, sprints, stories, tasks, schemas, modules, tests, evidence, support, and release state.
+  - [ ] **Sub-task 126.2.1.2:** Regenerate requirement, traceability, planning-scope, status, schema, component, dependency, product-CI, documentation, SBOM, provenance, and additions-only outputs from exact source.
+  - [ ] **Sub-task 126.2.1.3:** Publish exact strict-local, optional remote, Verified Chat, native compatibility, capability, multi-agent, platform, support, and exclusion matrices.
+- [ ] **Task 126.2.2 - Independently reproduce the expanded gates**
+  - [ ] **Sub-task 126.2.2.1:** Rerun every locally available `AT-*`, `SR-*`, `RV-50` through `RV-57`, performance, accessibility, recovery, zero-egress, removal, and documentation gate against exact candidates.
+  - [ ] **Sub-task 126.2.2.2:** Preserve physical macOS/Windows, live endpoint, credential-dependent, paid infrastructure, and independent human review as open until actually executed.
+  - [ ] **Sub-task 126.2.2.3:** Force each new gate and support claim to fail under mutation and prove no package, profile, route, capability, or release status can bypass it.
+- [ ] **Task 126.2.3 - Decide truthful release status**
+  - [ ] **Sub-task 126.2.3.1:** Recompute all summaries from raw evidence, reconcile failures/skips/quarantine/staleness, and retain independent reviewer and user decisions where required.
+  - [ ] **Sub-task 126.2.3.2:** Sign and publish only after every owning gate is current; otherwise retain exact blockers and continue no unsupported claim.
+
+##### Story Acceptance Criteria
+
+- [ ] **Story AC 126.2.AC1:** Given the appended scope, when release traceability is rebuilt, then every new identity resolves exactly once through implementation and evidence without altering prior accepted identities.
+- [ ] **Story AC 126.2.AC2:** Given any failed, skipped, stale, unavailable, unreviewed, or unsupported qualification, when release status is computed, then its gate remains blocked and no claim is promoted.
+- [ ] **Story AC 126.2.AC3:** Given strict-local operation with every optional remote component absent, when final acceptance runs, then the complete target remains functional with zero silent fallback or egress.
 
 ## [ ] Epic 12 - Productivity, Communications, and Unified Work
 

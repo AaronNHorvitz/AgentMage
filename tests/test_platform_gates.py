@@ -65,6 +65,12 @@ class PlatformGateTests(unittest.TestCase):
         changed["milestones"][0]["required_lanes"] = ["shared", "unknown"]
         self.assertTrue(validate_policy(changed))
 
+    def test_planned_surface_cannot_claim_native_evidence_or_support(self) -> None:
+        changed = copy.deepcopy(self.status)
+        changed["planning_qualification_status"][0]["state"] = "pass"
+        changed["planning_qualification_status"][0]["support_claim"] = "supported"
+        self.assertTrue(validate_status(changed, self.policy, ROOT))
+
 
 if __name__ == "__main__":
     unittest.main()

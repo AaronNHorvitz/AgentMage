@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/model-endpoint-profile.schema.json",
+  "title": "AgentMage model-endpoint-profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "endpoint_profile_id",
+    "profile_class",
+    "operator_id",
+    "endpoint_reference",
+    "protocol_codec_id",
+    "tls_policy",
+    "host_policy_sha256",
+    "credential_reference",
+    "region",
+    "retention_policy",
+    "logging_policy",
+    "training_use_policy",
+    "quota_policy_sha256",
+    "cost_policy_sha256",
+    "qualification_sha256",
+    "enabled",
+    "automatic_fallback"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "endpoint_profile_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "profile_class": {
+      "enum": [
+        "strict_local",
+        "local_network_private",
+        "remote_private",
+        "remote_managed"
+      ]
+    },
+    "operator_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "endpoint_reference": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "protocol_codec_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "tls_policy": {
+      "enum": [
+        "not_applicable_local",
+        "verified_tls",
+        "mutual_tls"
+      ]
+    },
+    "host_policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "credential_reference": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "region": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "retention_policy": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "logging_policy": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "training_use_policy": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "quota_policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "cost_policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "qualification_sha256": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "enabled": {
+      "const": false
+    },
+    "automatic_fallback": {
+      "const": false
+    }
+  }
+}

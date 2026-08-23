@@ -53,6 +53,18 @@ EXPECTED_PLATFORM_STATUS = {
     "macos_implementation": "blocked-macos",
     "macos_verification": "blocked-macos",
 }
+EXPECTED_GATEWAY_ADAPTER_FAMILIES = [
+    "anthropic-messages-compatible",
+    "kserve",
+    "llama-cpp",
+    "lm-studio",
+    "ollama",
+    "openai-responses-compatible",
+    "ray-serve-llm",
+    "sglang",
+    "tgi",
+    "vllm",
+]
 
 
 def load_inventory(path: Path = INVENTORY_PATH) -> dict[str, Any]:
@@ -75,6 +87,14 @@ def validate_inventory(inventory: Any) -> list[str]:
         failures.append("schema_version must equal 1")
     if inventory.get("status") != "enforced":
         failures.append("optional component inventory status must be enforced")
+    if inventory.get("planning_decision_ids") != ["ADR-0043", "ADR-0044"]:
+        failures.append("optional component planning decisions are incomplete")
+    if inventory.get("planned_gateway_adapter_families") != EXPECTED_GATEWAY_ADAPTER_FAMILIES:
+        failures.append("planned gateway adapter family inventory drifted")
+    if inventory.get("planned_gateway_adapter_status") != (
+        "candidate-not-approved-not-enabled"
+    ):
+        failures.append("planned gateway adapters must remain unapproved and disabled")
     if inventory.get("side_effect_contract") != EXPECTED_SIDE_EFFECTS:
         failures.append("diagnostic side-effect contract was weakened")
     if inventory.get("platform_status") != EXPECTED_PLATFORM_STATUS:

@@ -46,7 +46,7 @@ class Story161SecurityEvidenceTests(unittest.TestCase):
 
         changed = self.sources()
         changed["SECURITY-REVIEW.md"] = changed["SECURITY-REVIEW.md"].replace(
-            "`SR-ACC-001`", "`SR-ACC-X01`", 1
+            "`SR-ACC-001`", "`SR-ACC-X01`"
         )
         self.assertTrue(evidence.validate_sources(changed))
 

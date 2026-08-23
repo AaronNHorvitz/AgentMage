@@ -72,6 +72,20 @@ def file_binding(path: Path) -> dict[str, object]:
     return {"path": relative(path), "sha256": sha256_file(path)}
 
 
+def revision_file_binding(path: Path, revision: str) -> dict[str, object]:
+    result = subprocess.run(
+        ["git", "show", f"{revision}:{relative(path)}"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        raise FallbackDispositionError(
+            f"cannot read {relative(path)} at fallback decision revision {revision}"
+        )
+    return {"path": relative(path), "sha256": hashlib.sha256(result.stdout).hexdigest()}
+
+
 def resolve_revision(revision: str) -> str:
     result = subprocess.run(
         ["git", "rev-parse", "--verify", f"{revision}^{{commit}}"],
@@ -151,7 +165,7 @@ def build_record(decision_source_revision: str) -> dict[str, object]:
             "complete fallback admission and fixed-corpus gate on every available Fedora "
             "runtime path; unavailable MacBook Pro M5 evidence is not substituted"
         ),
-        "policy": file_binding(POLICY),
+        "policy": revision_file_binding(POLICY, revision),
         "trigger_disposition": {
             **file_binding(TRIGGER_DISPOSITION),
             "profile_id": trigger["profile_id"],

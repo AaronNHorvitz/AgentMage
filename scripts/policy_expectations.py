@@ -24,7 +24,7 @@ REFERENCE_ID: Final = re.compile(r"\b(?:AM|AT|CR)-[A-Z0-9.-]+\b")
 EXPECTED_COUNTS: Final = {
     "deferred": 30,
     "rejected_default": 11,
-    "release_deferred": 20,
+    "release_deferred": 21,
     "v0.1_exclusion": 14,
 }
 

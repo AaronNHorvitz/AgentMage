@@ -76,6 +76,15 @@ EXPECTED_CARGO_DEV = {
     "serde",
     "serde_json",
 }
+EXPECTED_PLANNED_ENGINEERING_RUNTIME = {
+    "adapter_families_require_separate_admission": True,
+    "declared_package_dependencies": [],
+    "decision_ids": ["ADR-0043", "ADR-0044"],
+    "enabled": False,
+    "included_in_default_build": False,
+    "included_in_release": False,
+    "status": "planned-contracts-only",
+}
 
 
 def read_json(path: Path) -> Any:
@@ -113,6 +122,10 @@ def validate_classes(record: Any, root: Path = ROOT) -> list[str]:
         failures.append("decision_id must equal ADR-0004")
     if record.get("status") != "enforced":
         failures.append("dependency classes status must be enforced")
+    if record.get("planned_engineering_runtime") != EXPECTED_PLANNED_ENGINEERING_RUNTIME:
+        failures.append(
+            "planned Engineering Runtime dependencies must remain absent and disabled"
+        )
 
     production = record.get("production")
     development = record.get("development")

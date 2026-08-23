@@ -488,6 +488,49 @@ The first execution owners are the mapped Decision 0042 stories in Sprints 1, 2,
 no-hidden-retry, no-replay, verifier-only completion, zero-silent-drop, and parser-isolation results
 remain mandatory regression evidence.
 
+### 8.17 Engineering Runtime, Verified Chat, and Model Gateway Security
+
+Decisions 0043 and 0044 add the controls below. They compose, and never weaken, all earlier
+artifact, workflow, model, platform, Git, connected-effect, command, credential, audit, and
+strict-local controls.
+
+| ID | Requirement | Build integration | Reviewer test or evidence |
+|---|---|---|---|
+| `SR-ERT-001` | Keep one Rust-owned authority and effect machine. | Place policy, grants, workflow truth, routing admission, tools, persistence, verification, and completion in the Rust host; expose only typed proposal and client ports. | Attempt to mint authority or establish state through model output, TypeScript, webview, manifest, adapter, endpoint, tool output, or client replay; require structural absence or denial. |
+| `SR-ERT-002` | Make persistent tasks bounded and crash-safe. | Journal state before meaningful transitions, bind checkpoints to exact inputs and environment, reconcile effects, and enforce turn, token, time, tool, attempt, no-progress, resource, disclosure, and cost ceilings. | Terminate and restart at every boundary with unchanged, changed, corrupt, and uncertain state; require exact resume or block, zero grant or effect replay, and complete owned-process cleanup. |
+| `SR-ERT-003` | Require one complete terminal observation per admitted tool call. | Correlate call, attempt, authority, worker, output artifacts, state change, cleanup, resources, and receipt through a closed `ToolObservation`. | Drop, duplicate, reorder, truncate, corrupt, or replay tool events under large output, cancellation, timeout, crash, and uncertainty; require one terminal truth and no workflow advancement on missing evidence. |
+| `SR-ERT-004` | Reserve completion for current deterministic verifiers. | Resolve success and no-op only from current postconditions, preserved invariants, prohibited-effect checks, receipt identity, artifacts, and environment evidence. | Seed model completion claims, exit-zero failures, stale evidence, altered output, hidden effects, and incomplete plans; require zero false completion and one explicit non-success result. |
+| `SR-ERT-005` | Make observability informative without becoming authority or a secret store. | Retain content-free identities, hashes, states, timings, counts, policy decisions, and protected artifact references; classify and minimize any sensitive trace payload. | Seed secret canaries and hidden-reasoning markers through every stage, mutate lineage, and submit trace-derived grants or state changes; require zero raw leakage, no authority, and explicit incomplete lineage. |
+| `SR-ERT-006` | Degrade and exhaust resources without silent loss or policy weakening. | Classify dependencies, bound queues and workers, apply backpressure and cancellation, and make every omission, substitution, limit, and degraded state visible. | Remove dependencies and exceed every budget during every lifecycle phase; require bounded termination, cleanup, accurate gaps, no hidden route, no dropped required content, and no false success. |
+| `SR-CTX-001` | Account for every supplied artifact before inference. | Capture AgentMage-owned paste text and enumerate request references with immutable origin, authority, media, classification, byte identity where available, and terminal disposition. | Supply valid, missing, inaccessible, stale, linked, changing, virtual, remote, unsupported, oversized, and malformed inputs; require exactly one visible disposition for every item. |
+| `SR-CTX-002` | Isolate all parsers and active content. | Run bounded no-network parser workers with macro, script, plugin, relationship, archive traversal, external retrieval, executable, and credential access disabled by default. | Exercise parser exploits, bombs, links, relationships, active content, hangs, crashes, low resources, and cancellation; require bounded failure, no external access or execution, and cleanup. |
+| `SR-CTX-003` | Preserve original-byte and derivative provenance. | Bind every extracted structure, chunk, OCR result, summary, and index to source hash, parser and transformation identity, exact ranges, confidence, warnings, and freshness. | Reorder, mutate, replace, reparse, summarize, and index beginning, middle, and ending sentinels; require exact source reconstruction and no derivative represented as authority. |
+| `SR-CTX-004` | Make context selection complete and reviewable. | Produce one manifest covering every supplied artifact and section, deterministic token partitions, explicit omission reasons, and exact retrieval references. | Force combined-budget overflow, token disagreement, duplicates, restrictions, stale data, and profile change; require complete accounting and no second prompt assembler or hidden omission. |
+| `SR-CTX-005` | Block success when required model-visible context is absent or stale. | Issue a context-delivery receipt with exact delivered ranges, route, model request, hashes, and required-unseen set. | Withhold or mutate required beginning, middle, ending, cited, and retrieved ranges and submit model claims or summaries; require terminal block until current exact delivery exists. |
+| `SR-CTX-006` | Keep source retention and disclosure least-privilege. | Separate source and runtime artifacts, encrypt retained payloads, minimize model-visible metadata, apply classification and retention, and delete or invalidate every dependent record. | Seed path, URI, credential, private value, expiry, deletion, restore, and source-change cases; require no raw secret or unrelated path disclosure and no stale context use. |
+| `SR-GWY-001` | Keep the internal model protocol candidate-neutral and richer than a vendor codec. | Preserve artifact references, message parts, proposals, route receipts, usage, errors, cancellation, and qualification through closed canonical records. | Round-trip the conformance corpus across codecs and versions; require exact preservation or explicit unsupported state and no vendor field becoming authority. |
+| `SR-GWY-002` | Isolate model runtime and protocol adapters from tools and workspace. | Give adapter workers only minimized context, route, deadlines, and transport capabilities; return canonical events and untrusted proposals. | Probe filesystem, tool, grant, credential, policy, completion, process, and network surfaces from hostile adapters and model output; require structural absence or denial. |
+| `SR-GWY-003` | Separate model, publisher, operator, runtime, codec, endpoint, route, and policy identity. | Use independently hash-bound profiles and qualification records; keep open-weight and open-source-license states separate. | Conflate or substitute each identity and mutate one dimension at a time; require affected qualification invalidation and truthful provenance state. |
+| `SR-GWY-004` | Make routing and fallback deterministic, explicit, and receipted. | Select only admitted exact tuples under current data, role, health, resource, cost, and policy constraints; disable fallback by default. | Fail local and remote routes, reorder candidates, falsify health, and request implicit fallback; require deterministic reasons and zero silent local-to-remote or cross-remote transition. |
+| `SR-GWY-005` | Confine remote inference to an exact least-privilege worker. | Start a fresh bounded worker with one route, minimized classified payload, credential reference, transport policy, cancellation, and no workspace or tool authority. | Inject hostile prompts and endpoint responses, crash and cancel workers, and inspect processes, descriptors, paths, sockets, and residue; require exact confinement and cleanup. |
+| `SR-GWY-006` | Enforce remote destination and transport identity. | Require HTTPS for non-loopback, verified TLS or mutually authenticated TLS, exact host and address policy, deny-first redirects, explicit proxy rules, and SSRF and DNS-rebinding checks. | Use bad certificates, aliases, rebinding, private and metadata addresses, redirects, proxies, alternate protocols, and endpoint substitution; require zero unauthorized connection. |
+| `SR-GWY-007` | Keep remote credentials as non-model secret references. | Resolve the exact credential only inside the remote worker and redact configuration, prompts, events, logs, traces, receipts, diagnostics, and errors. | Seed credential canaries in stores, environment, endpoint errors, redirects, logs, retries, and crash output; require zero raw-value model, disk, log, trace, or Git disclosure. |
+| `SR-GWY-008` | Bind every remote disclosure to explicit policy and user-visible destination. | Record data class, purpose, minimized fields, endpoint operator, profile class, region, retention, logging, training use, and route receipt before transfer. | Change destination, operator, classification, purpose, region, or terms after approval and attempt replay; require stale authority rejection and no transfer. |
+| `SR-GWY-009` | Qualify model, endpoint, and route independently. | Run exact capability, quality, protocol, context, tool-proposal, streaming, cancellation, failure, privacy, latency, resource, and workflow fixtures against each tuple. | Mutate artifact, tokenizer, template, codec, quantization, decoding, runtime, endpoint, transport, operator, or policy; require exact invalidation and no compatibility-as-approval claim. |
+| `SR-GWY-010` | Bound remote quota, cost, health, circuit breakers, disablement, and removal. | Enforce request, token, byte, connection, retry, concurrency, quota, cost, and time ceilings plus route-scoped breakers and emergency disablement. | Exhaust each ceiling, flap health, interrupt uncertain requests, disable and remove each route, and rerun strict local; require bounded loss, no hidden retry or charge, and complete restoration. |
+| `SR-VSC-001` | Keep Verified Chat webview disposable and untrusted. | Use minimum webview capabilities, strict Content Security Policy, sanitization, nonces, exact local roots, no secrets, and host-owned reconstruction. | Inject script, markup, resource, navigation, origin, and reload attacks during every state; require no privilege, data escape, hidden state, or task-truth loss. |
+| `SR-VSC-002` | Authenticate and bound every bridge and attachment frame. | Bind session and host identity, protocol version, sequence, replay window, chunk hash, byte count, acknowledgement, flow control, cancellation, and expiry. | Replay, reorder, duplicate, truncate, corrupt, oversize, cross-session, and race frames; require fail-closed rejection and zero partial authoritative admission. |
+| `SR-VSC-003` | Make native Chat reference limitations fail visibly. | Account for every stable public request reference and keep unresolved, opaque, remote, unsupported, and provider-only parts explicit. | Exercise every reference class across supported VS Code versions and remote placements; require required-unseen block and no native-parity overclaim. |
+| `SR-VSC-004` | Keep provider compatibility stable, normalized, and independently disableable. | Preserve supported normalized parts, expose capability labels, use stable APIs, isolate proposed experiments, and version-gate affected adapters. | Mutate message parts and VS Code versions, inject unknown fields, and trigger known-bad disablement; require explicit unsupported states and no private API or false Agent Host claim. |
+| `SR-CAP-001` | Prevent capability manifests from creating authority. | Treat schemas, tools, roles, requested maximum authority, budgets, workflow, and verifiers as signed or admitted declarations intersected by kernel policy. | Add hidden tools, grants, credentials, routes, effects, completion, unknown fields, prompt instructions, and stale hashes; require admission refusal. |
+| `SR-CAP-002` | Make capability lifecycle and dependency health explicit. | Define draft, admitted, enabled, degraded, disabled, quarantined, and retired states with exact dependency and evidence transitions. | Remove, replace, fail, restore, quarantine, migrate, and retire every dependency and manifest; require truthful state and no implicit re-enable. |
+| `SR-CAP-003` | Bind each capability to deterministic workflow and verification. | Require closed input and output schemas, versioned graph, exact tools, role qualifications, side-effect policy, budgets, fixtures, and capability-specific verifiers. | Reorder graphs, insert loops, omit verifiers, substitute roles, exceed budgets, and submit prompt-only capabilities; require bounded rejection or non-success. |
+| `SR-CAP-004` | Make migration, disablement, and removal complete. | Revoke registrations and grants, stop workers, reconcile effects, migrate or delete state, apply retention, and rerun shared and strict-local gates. | Remove capabilities during every lifecycle phase and after crash or restore; require no worker, socket, credential, registration, stale state, authority, or residue. |
+| `SR-MAG-001` | Gate multi-agent execution on single-agent reliability. | Require current context, workflow, observation, persistence, verification, resource, and removal evidence before enabling a team profile. | Invalidate each prerequisite and attempt team start or resume; require fail-closed denial with no child process or lease. |
+| `SR-MAG-002` | Isolate each pod's authority, state, branch, and worktree. | Issue separate work packets, grants, budgets, artifacts, journals, branches, and owned worktrees; prohibit credential or context sharing outside declared edges. | Cross-address paths, branches, grants, context, credentials, receipts, and recovery state; require zero cross-pod access or mutation. |
+| `SR-MAG-003` | Enforce path, test-resource, provider, and global resource leases. | Allocate finite leases, heartbeats, expiry, conflict handling, cancellation, and global ceilings before dispatch. | Race, starve, leak, expire, replay, and oversubscribe every lease and provider capacity; require bounded scheduling, isolation, cleanup, and no healthy-pod cancellation from unrelated failure. |
+| `SR-MAG-004` | Keep review independent and integration serialized and human-gated by default. | Route findings back to the exact pod, preserve dissent, bind review to source and effective diff, serialize integration, reverify changes, and require explicit final promotion authority. | Attempt self-approval, stale review reuse, duplicate merge, hidden promotion, changed-diff bypass, and completion with blocked pods; require rejection and truthful campaign state. |
+
 ## 9. Proposed Reviewer Command Contract
 
 These commands are interfaces to implement. They do not exist yet. They should be packaged in a signed, read-only verifier and must not modify the workstation except inside an explicit temporary test directory.
@@ -526,6 +569,11 @@ agentmage-review verify-model-manager --catalog <path>
 agentmage-review verify-muse-candidate --profile <path>
 agentmage-review verify-experimental-model-lab --profile <path>
 agentmage-review verify-trusted-operations-removal
+agentmage-review verify-engineering-runtime --fixture-set <path>
+agentmage-review verify-model-gateway --profile-set <path>
+agentmage-review verify-verified-chat --vscode-matrix <path>
+agentmage-review verify-capability-registry --catalog <path>
+agentmage-review verify-multi-agent --campaign <path>
 agentmage-review verify-delivery-graph
 agentmage-review verify-external-effects
 agentmage-review verify-provider-isolation
@@ -993,6 +1041,86 @@ credential, network, hosted, or publication effect; every admitted effect matche
 grant and reconciled preservation manifest; user-owned and unrelated work survives byte-for-byte;
 no destructive or implicit operation is registered; no unknown push is retried; all receipts and
 raw evidence reconcile on Fedora, Ubuntu, and Windows.
+
+### `RV-50` Engineering Runtime Authority and Completion
+
+Run the complete fake-model runtime lifecycle across Chat, CLI, and headless callers with hostile
+model proposals, malformed transitions, stale authority, missing observations, false completion,
+budget exhaustion, cancellation, crash, and resume.
+
+Pass: `AT-ERT-001`, `AT-WKF-001` through `AT-WKF-003`, `AT-RESUME-002`, `AT-TIO-001`,
+`AT-TIO-002`, and `AT-VER-001` pass with one Rust-owned state machine, zero replay, zero false
+completion, bounded termination, and one explicit terminal result.
+
+### `RV-51` Artifact, Context Fidelity, and Parser Isolation
+
+Exercise every admitted artifact class and hostile parser fixture, including source mutation,
+oversize, active content, archive and relationship attacks, cancellation, crash, token pressure,
+exact retrieval, and required-unseen delivery.
+
+Pass: `AT-CTX-001` through `AT-CTX-004` pass with complete source accounting, exact provenance,
+bounded parser behavior, no active-content execution, no secret disclosure, and no success while
+required context is missing or stale.
+
+### `RV-52` Tool Observation, Persistence, and Execution Lineage
+
+Drop, duplicate, reorder, corrupt, truncate, and replay tool and runtime events across large output,
+resource pressure, client loss, host restart, uncertain effects, retention, and inspector use.
+
+Pass: `AT-TIO-001`, `AT-TIO-002`, `AT-RESUME-002`, and `AT-OBS-002` pass with exactly one terminal
+observation per call, complete artifact-backed output, current reconstruction, zero secret leakage,
+and no observability-derived authority.
+
+### `RV-53` Model Gateway Qualification and No-Silent-Fallback
+
+Run the canonical conformance corpus across every claimed local and remote codec, adapter, model,
+endpoint, and route tuple; induce unknown message parts, malformed streams, health loss, quota and
+cost pressure, cancellation, policy change, and every fallback direction.
+
+Pass: `AT-GWY-001` through `AT-GWY-003` and `AT-REM-001` through `AT-REM-003` pass for the exact
+qualified tuple; unsupported semantics are explicit; zero unqualified or silent fallback route is
+selected; the gateway never executes a tool or establishes completion.
+
+### `RV-54` Remote Endpoint, Disclosure, and Credential Isolation
+
+Probe remote workers with TLS, mutually authenticated TLS, DNS rebinding, SSRF, redirect, proxy,
+host substitution, credential canary, region, retention, logging, training-use, quota, cost,
+circuit-breaker, emergency-disable, interruption, uncertain outcome, and removal cases.
+
+Pass: only exact admitted destinations receive minimized authorized data; raw credentials and
+private endpoint values appear in no model, event, log, receipt, error, or repository artifact;
+all effects and limits reconcile; strict local remains fully operable after removal.
+
+### `RV-55` Verified Chat and Native Compatibility
+
+Exercise Verified Chat and native compatibility through supported VS Code versions and remote
+placements with reference loss, opaque parts, attachment pressure, script and markup injection,
+origin and replay attacks, reload, view loss, cancellation, accessibility, and known-bad-version
+disablement.
+
+Pass: `AT-VSC-004` through `AT-VSC-006` pass with Rust-host reconstruction, bounded authenticated
+transport, stable public APIs, explicit native limitations, no webview or TypeScript authority, and
+no false External Agent Host or Verified Chat parity claim.
+
+### `RV-56` Engineering Capability Registry
+
+Validate the complete manifest and initial catalog corpus with missing, extra, malformed, stale,
+prompt-only, authority-widening, unqualified, degraded, migrated, quarantined, disabled, removed,
+crashed, and restored variants.
+
+Pass: `AT-CAP-001` and `AT-CAP-002` pass; no manifest creates a grant, credential, route, tool,
+effect, policy, or completion state; every capability uses the shared runtime and removes without
+authority or residue.
+
+### `RV-57` Multi-Agent Authority, Resources, Recovery, and Integration
+
+Run concurrent role-qualified pods under path, worktree, test, provider, and global resource leases
+with failure, cancellation, disagreement, correction, stale review, changed diff, duplicate
+integration, self-approval, hidden promotion, interruption, resume, and removal.
+
+Pass: `AT-MAG-001` and `AT-MAG-002` pass after all single-agent prerequisites; pods remain isolated,
+healthy independent work survives unrelated failure, dissent remains visible, integration is
+serialized and reverified, and default-branch promotion remains human-gated by default.
 
 ## 11. Reviewer Evidence Bundle
 

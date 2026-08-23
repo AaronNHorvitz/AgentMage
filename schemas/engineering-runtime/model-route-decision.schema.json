@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/model-route-decision.schema.json",
+  "title": "AgentMage model-route-decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "route_decision_id",
+    "request_id",
+    "policy_sha256",
+    "disclosure_class",
+    "considered_routes",
+    "selected_route_id",
+    "fallback_used",
+    "fallback_policy_sha256",
+    "reason",
+    "decision_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "route_decision_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "disclosure_class": {
+      "enum": [
+        "none",
+        "private_network",
+        "private_remote",
+        "managed_remote"
+      ]
+    },
+    "considered_routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "route_id",
+          "qualified",
+          "admitted",
+          "reason"
+        ],
+        "properties": {
+          "route_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "qualified": {
+            "type": "boolean"
+          },
+          "admitted": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 64
+    },
+    "selected_route_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "fallback_used": {
+      "type": "boolean"
+    },
+    "fallback_policy_sha256": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "decision_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "fallback_used": {
+            "const": false
+          }
+        },
+        "required": [
+          "fallback_used"
+        ]
+      },
+      "then": {
+        "properties": {
+          "fallback_policy_sha256": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "fallback_policy_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/workflow-checkpoint.schema.json",
+  "title": "AgentMage workflow-checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "checkpoint_id",
+    "workflow_id",
+    "state_sha256",
+    "journal_sequence",
+    "source_manifest_sha256",
+    "policy_sha256",
+    "environment_sha256",
+    "route_sha256",
+    "tool_catalog_sha256",
+    "receipt_sha256s",
+    "consumed_grant_sha256s",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "checkpoint_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "workflow_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "state_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "journal_sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source_manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "environment_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "route_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "tool_catalog_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "receipt_sha256s": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "consumed_grant_sha256s": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -354,3 +354,25 @@ The integrated gate must prove:
 
 No feature-completeness result overrides a failed security, provenance, restore, removal,
 accessibility, platform, or evidence gate.
+
+## 12. Remote Inference Credentials and Disclosure
+
+Decision 0044 reuses the credential broker but does not give the Model Gateway general secret
+authority. A route profile contains only a typed credential reference. After deterministic route
+admission and disclosure policy pass, the broker releases the exact value only to the exact
+least-privilege remote-inference worker for one bounded request or declared session. The kernel,
+model, context manifest, webview, TypeScript bridge, capability manifest, event stream, log, trace,
+receipt, diagnostic, export, backup, and committed configuration receive no raw value.
+
+Remote disclosure is a separate trusted operation that binds source classification, minimized
+fields, purpose, model, endpoint operator, host, profile class, region, retention, logging,
+training-use policy, credential reference, quota, cost ceiling, and route receipt. Any material
+change invalidates the decision before bytes leave the device. Endpoint health cannot create a
+disclosure, choose fallback, or reuse stale approval.
+
+`strict_local` uses no remote credential and remains a complete target configuration.
+`local_network_private`, `remote_private`, and `remote_managed` are optional profiles. Their
+disablement and removal cancel or reconcile in-flight requests, stop workers, revoke broker access,
+close sockets, remove route registrations, clear permitted caches, apply retention, and rerun
+strict-local and credential-canary gates. No remote error, circuit breaker, quota condition, or cost
+condition may silently weaken data classification, authority, verification, or fallback policy.
