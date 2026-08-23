@@ -14,7 +14,8 @@ const VIEW_TYPE = "agentmage.verifiedChat";
 const VIEW_ID = "agentmage.sessions";
 
 interface WebviewMessage {
-  readonly type: "ready" | "newSession" | "capturePaste" | "send";
+  readonly type:
+    "ready" | "newSession" | "capturePaste" | "send" | "approvePlan";
   readonly text?: string;
   readonly mode?: EngineeringMode;
 }
@@ -25,6 +26,8 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
   private view: vscode.WebviewView | undefined;
   private sessionId: string | undefined;
   private mode: EngineeringMode = "ask";
+  private latestPlan:
+    { readonly artifactId: string; readonly sourceSha256: string } | undefined;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -109,6 +112,49 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
     }
     const sessionId = this.sessionId;
     if (sessionId === undefined) return;
+    if (message.type === "approvePlan") {
+      const plan = this.latestPlan;
+      if (this.mode !== "plan" || plan === undefined) {
+        await this.post({
+          type: "status",
+          state: "blocked",
+          code: "verified-chat.plan-approval.unavailable",
+        });
+        return;
+      }
+      const response = await this.exchange(
+        request("approve_plan", {
+          session_id: sessionId,
+          plan_artifact_id: plan.artifactId,
+          plan_sha256: plan.sourceSha256,
+          approval_id: `approval-${randomUUID()}`,
+          correlation_id: `correlation-${randomUUID()}`,
+          occurred_at_epoch_ms: Date.now(),
+        }),
+      );
+      if (
+        response.kind === "denied" ||
+        response.response.result !== "plan_approved"
+      ) {
+        await this.post({
+          type: "status",
+          state: "blocked",
+          code:
+            response.kind === "denied"
+              ? response.code
+              : "verified-chat.plan-approval.failed",
+        });
+        return;
+      }
+      this.latestPlan = undefined;
+      await this.post({ type: "planState", approved: true });
+      await this.post({
+        type: "status",
+        state: "complete",
+        code: "verified-chat.plan.approved",
+      });
+      return;
+    }
     if (message.type === "capturePaste") {
       await this.capture(sessionId, "paste", "Pasted text", message.text ?? "");
       return;
@@ -179,6 +225,11 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
           sourceSha256: planArtifact.source_sha256,
           byteLength: planArtifact.byte_length,
         });
+        this.latestPlan = {
+          artifactId: planArtifact.artifact_id,
+          sourceSha256: planArtifact.source_sha256,
+        };
+        await this.post({ type: "planState", approved: false });
       } else if (response.response.plan_artifact !== null) {
         await this.post({
           type: "status",
@@ -216,6 +267,7 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
     }
     this.sessionId = sessionId;
     this.mode = mode;
+    this.latestPlan = undefined;
     await this.post({ type: "session", sessionId, mode });
     await this.refreshSessions();
   }
@@ -286,7 +338,13 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
 
 function parseWebviewMessage(value: unknown): WebviewMessage | undefined {
   if (!isRecord(value) || typeof value.type !== "string") return undefined;
-  const allowed = new Set(["ready", "newSession", "capturePaste", "send"]);
+  const allowed = new Set([
+    "ready",
+    "newSession",
+    "capturePaste",
+    "send",
+    "approvePlan",
+  ]);
   if (!allowed.has(value.type)) return undefined;
   if (
     value.text !== undefined &&
@@ -312,7 +370,7 @@ function sidebarHtml(): string {
 function editorHtml(webview: vscode.Webview): string {
   const nonce = randomBytes(18).toString("base64");
   const cspSource = webview.cspSource;
-  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource}; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'"><meta name="viewport" content="width=device-width,initial-scale=1"><style nonce="${nonce}">*{box-sizing:border-box}body{margin:0;color:var(--vscode-foreground);background:var(--vscode-editor-background);font-family:var(--vscode-font-family);height:100vh;display:grid;grid-template-rows:42px 1fr auto}.bar{display:flex;gap:8px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--vscode-panel-border)}select,textarea,button{font:inherit;color:inherit}select,textarea{background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);color:var(--vscode-input-foreground)}button{height:30px;border:0;background:var(--vscode-button-background);color:var(--vscode-button-foreground);padding:0 12px}.messages{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}.message{white-space:pre-wrap;line-height:1.45;max-width:900px}.user{border-left:3px solid var(--vscode-charts-blue);padding-left:10px}.status{color:var(--vscode-descriptionForeground);font-size:12px}.artifacts{color:var(--vscode-charts-green);font-size:12px}.composer{padding:10px 12px;border-top:1px solid var(--vscode-panel-border);display:grid;grid-template-columns:1fr auto;gap:8px}textarea{resize:vertical;min-height:72px;max-height:240px;padding:8px;letter-spacing:0}</style></head><body><header class="bar"><strong>AgentMage</strong><select id="mode" aria-label="Mode"><option value="ask">Ask</option><option value="plan">Plan</option><option value="agent">Agent</option><option value="team">Team</option></select><button id="new">New</button><span id="session" class="status"></span></header><main id="messages" class="messages" aria-live="polite"></main><footer class="composer"><textarea id="composer" aria-label="Message"></textarea><button id="send">Send</button></footer><script nonce="${nonce}">const vscode=acquireVsCodeApi(),composer=document.getElementById('composer'),messages=document.getElementById('messages'),mode=document.getElementById('mode');function post(type,extra={}){vscode.postMessage({type,...extra});}function add(text,kind='status'){const item=document.createElement('div');item.className='message '+kind;item.textContent=text;messages.appendChild(item);messages.scrollTop=messages.scrollHeight;}composer.addEventListener('paste',event=>{const text=event.clipboardData?.getData('text/plain');if(typeof text!=='string')return;event.preventDefault();const start=composer.selectionStart,end=composer.selectionEnd;composer.setRangeText(text,start,end,'end');post('capturePaste',{text});});document.getElementById('new').addEventListener('click',()=>post('newSession',{mode:mode.value}));document.getElementById('send').addEventListener('click',()=>{const text=composer.value;if(!text.trim())return;post('send',{text,mode:mode.value});composer.value='';});window.addEventListener('message',event=>{const data=event.data;if(data?.type==='session'){document.getElementById('session').textContent=data.sessionId??'';mode.value=data.mode??'ask';}else if(data?.type==='message'){add(data.text,data.role==='user'?'user':'assistant');}else if(data?.type==='artifact'){add(data.displayName+' · '+data.byteLength+' bytes · '+data.sourceSha256.slice(0,12),'artifacts');}else if(data?.type==='status'){add(data.code,'status');}});post('ready');</script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource}; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'"><meta name="viewport" content="width=device-width,initial-scale=1"><style nonce="${nonce}">*{box-sizing:border-box}body{margin:0;color:var(--vscode-foreground);background:var(--vscode-editor-background);font-family:var(--vscode-font-family);height:100vh;display:grid;grid-template-rows:42px 1fr auto}.bar{display:flex;gap:8px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--vscode-panel-border)}select,textarea,button{font:inherit;color:inherit}select,textarea{background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);color:var(--vscode-input-foreground)}button{height:30px;border:0;background:var(--vscode-button-background);color:var(--vscode-button-foreground);padding:0 12px}button:disabled{opacity:.55}.messages{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}.message{white-space:pre-wrap;line-height:1.45;max-width:900px}.user{border-left:3px solid var(--vscode-charts-blue);padding-left:10px}.status{color:var(--vscode-descriptionForeground);font-size:12px}.artifacts{color:var(--vscode-charts-green);font-size:12px}.composer{padding:10px 12px;border-top:1px solid var(--vscode-panel-border);display:grid;grid-template-columns:1fr auto;gap:8px}textarea{resize:vertical;min-height:72px;max-height:240px;padding:8px;letter-spacing:0}</style></head><body><header class="bar"><strong>AgentMage</strong><select id="mode" aria-label="Mode"><option value="ask">Ask</option><option value="plan">Plan</option><option value="agent">Agent</option><option value="team">Team</option></select><button id="approve" disabled>Approve Plan</button><button id="new">New</button><span id="session" class="status"></span></header><main id="messages" class="messages" aria-live="polite"></main><footer class="composer"><textarea id="composer" aria-label="Message"></textarea><button id="send">Send</button></footer><script nonce="${nonce}">const vscode=acquireVsCodeApi(),composer=document.getElementById('composer'),messages=document.getElementById('messages'),mode=document.getElementById('mode'),approve=document.getElementById('approve');function post(type,extra={}){vscode.postMessage({type,...extra});}function add(text,kind='status'){const item=document.createElement('div');item.className='message '+kind;item.textContent=text;messages.appendChild(item);messages.scrollTop=messages.scrollHeight;}composer.addEventListener('paste',event=>{const text=event.clipboardData?.getData('text/plain');if(typeof text!=='string')return;event.preventDefault();const start=composer.selectionStart,end=composer.selectionEnd;composer.setRangeText(text,start,end,'end');post('capturePaste',{text});});document.getElementById('new').addEventListener('click',()=>post('newSession',{mode:mode.value}));approve.addEventListener('click',()=>post('approvePlan'));document.getElementById('send').addEventListener('click',()=>{const text=composer.value;if(!text.trim())return;post('send',{text,mode:mode.value});composer.value='';});window.addEventListener('message',event=>{const data=event.data;if(data?.type==='session'){document.getElementById('session').textContent=data.sessionId??'';mode.value=data.mode??'ask';approve.disabled=true;}else if(data?.type==='message'){add(data.text,data.role==='user'?'user':'assistant');}else if(data?.type==='artifact'){add(data.displayName+' · '+data.byteLength+' bytes · '+data.sourceSha256.slice(0,12),'artifacts');}else if(data?.type==='planState'){approve.disabled=Boolean(data.approved);}else if(data?.type==='status'){add(data.code,'status');}});post('ready');</script></body></html>`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

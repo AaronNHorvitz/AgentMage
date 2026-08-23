@@ -151,6 +151,7 @@ export function parseEngineeringHostResponse(
       "artifact_range",
       "artifact_ingested",
       "verified_turn_completed",
+      "plan_approved",
       "events",
       "lifecycle_event",
     ]).has(result)

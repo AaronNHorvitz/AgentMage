@@ -931,7 +931,7 @@ fn valid_semver(value: &str) -> bool {
 
 fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), HostProtocolError> {
     use EngineeringRpcRequest::{
-        BeginArtifact, CancelArtifact, CancelSession, CommitArtifact, CreateSession,
+        ApprovePlan, BeginArtifact, CancelArtifact, CancelSession, CommitArtifact, CreateSession,
         ExecuteVerifiedTurn, IngestArtifact, ListSessions, OpenSession, PauseSession,
         ReadArtifactRange, ReplayEvents, ResumeSession, UploadArtifactChunk,
     };
@@ -1050,6 +1050,24 @@ fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), H
                 return Err(HostProtocolError::InvalidValue);
             }
         }
+        ApprovePlan {
+            session_id,
+            plan_artifact_id,
+            plan_sha256,
+            approval_id,
+            correlation_id,
+            occurred_at_epoch_ms,
+        } => {
+            if !valid_id(session_id.as_str())
+                || !valid_id(plan_artifact_id.as_str())
+                || !valid_sha256(plan_sha256)
+                || !valid_id(approval_id.as_str())
+                || !valid_id(correlation_id.as_str())
+                || *occurred_at_epoch_ms == 0
+            {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
         ReplayEvents { session_id, .. } => {
             if !valid_id(session_id.as_str()) {
                 return Err(HostProtocolError::InvalidValue);
@@ -1129,6 +1147,34 @@ mod tests {
         assert!(matches!(
             parse_request(&serde_json::to_vec(&request).unwrap()).unwrap(),
             HostRequest::Engineering { .. }
+        ));
+
+        let approval = json!({
+            "kind": "engineering",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-engineering-approval",
+            "request": {
+                "operation": "approve_plan",
+                "session_id": "session-engineering-1",
+                "plan_artifact_id": "artifact-plan-1",
+                "plan_sha256": "a".repeat(64),
+                "approval_id": "approval-plan-1",
+                "correlation_id": "correlation-plan-1",
+                "occurred_at_epoch_ms": 2
+            }
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&approval).unwrap()).unwrap(),
+            HostRequest::Engineering { .. }
+        ));
+        let mut actor_injection = approval.clone();
+        actor_injection["request"]["approved_by"] = json!("model-chosen-actor");
+        assert!(parse_request(&serde_json::to_vec(&actor_injection).unwrap()).is_err());
+        let mut digest_substitution = approval.clone();
+        digest_substitution["request"]["plan_sha256"] = json!("not-a-digest");
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&digest_substitution).unwrap()),
+            Err(HostProtocolError::InvalidValue)
         ));
 
         let oversized = json!({

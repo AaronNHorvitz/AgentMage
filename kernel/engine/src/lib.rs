@@ -43,6 +43,8 @@ pub mod document_control;
 pub mod engineering_mode;
 /// SQLCipher-backed Engineering Runtime session, event, and source-artifact persistence.
 pub mod engineering_persistence;
+/// Exact non-authoritative approvals of durable Verified Chat Plan artifacts.
+pub mod engineering_plan;
 /// Semantic validation and sealing helpers for canonical Engineering Runtime records.
 pub mod engineering_records;
 /// Exact-preview redacted evidence bundles derived from canonical conversation state.

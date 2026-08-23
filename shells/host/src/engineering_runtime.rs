@@ -1,16 +1,17 @@
 //! Caller-neutral composition of Engineering RPC over encrypted host-owned state.
 
 use agentmage_kernel_contracts::{
-    ArtifactCaptureResult, ArtifactSourceKind, ArtifactUploadChunk, ArtifactUploadId,
-    CONTRACT_SCHEMA_VERSION, ContextDeliveryReceipt, ContextPacketId, EndpointProfileId,
-    EngineeringEventKind, EngineeringRpcRequest, EngineeringRpcResponse, EngineeringSessionMode,
-    EngineeringTerminalState, ModelProfileId, RouteDecisionId, RuntimeArtifactId, RuntimeRunId,
-    SessionId, VerifiedModelTurnResult,
+    ActorId, ApprovalId, ArtifactCaptureResult, ArtifactSourceKind, ArtifactUploadChunk,
+    ArtifactUploadId, CONTRACT_SCHEMA_VERSION, ContextDeliveryReceipt, ContextPacketId,
+    EndpointProfileId, EngineeringEventKind, EngineeringRpcRequest, EngineeringRpcResponse,
+    EngineeringSessionMode, EngineeringTerminalState, ModelProfileId, RouteDecisionId,
+    RuntimeArtifactId, RuntimeRunId, SessionId, VerifiedModelTurnResult,
 };
 use agentmage_kernel_engine::engineering_mode::{
     EngineeringModeOperation, enforce_engineering_mode,
 };
 use agentmage_kernel_engine::engineering_persistence::SqlCipherEngineeringStore;
+use agentmage_kernel_engine::engineering_plan::{seal_plan_approval, verify_plan_approval};
 use agentmage_kernel_engine::engineering_records::ValidateCanonicalRecord;
 use agentmage_kernel_engine::persistent_supervisor::{
     PersistentSupervisorError, PersistentTaskSupervisor,
@@ -77,6 +78,8 @@ pub enum EngineeringRuntimeError {
     IngestionFailed,
     /// The immutable session mode denies this operation family.
     ModeDenied,
+    /// Exact Plan approval or replay validation failed closed.
+    PlanApprovalFailed,
 }
 
 impl EngineeringRuntimeError {
@@ -91,6 +94,7 @@ impl EngineeringRuntimeError {
             Self::ModelFailed => "engineering.model.failed",
             Self::IngestionFailed => "engineering.ingestion.failed",
             Self::ModeDenied => "engineering.mode.denied",
+            Self::PlanApprovalFailed => "engineering.plan.approval.failed",
         }
     }
 }
@@ -109,22 +113,100 @@ pub struct EngineeringRuntimeService {
     supervisor: PersistentTaskSupervisor<SqlCipherEngineeringStore>,
     artifacts: VerifiedArtifactUploads<SqlCipherEngineeringStore>,
     model: Option<Box<dyn EngineeringModelPort>>,
+    approval_actor: ActorId,
 }
 
 impl EngineeringRuntimeService {
     /// Composes session supervision and exact artifact transfer over one SQLCipher store.
     #[must_use]
-    pub fn new(store: SqlCipherEngineeringStore) -> Self {
+    pub fn new(store: SqlCipherEngineeringStore, approval_actor: ActorId) -> Self {
         Self {
             supervisor: PersistentTaskSupervisor::new(store.clone()),
             artifacts: VerifiedArtifactUploads::new(store),
             model: None,
+            approval_actor,
         }
     }
 
     /// Installs one qualified model executor from trusted host composition.
     pub fn install_model(&mut self, model: Box<dyn EngineeringModelPort>) {
         self.model = Some(model);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn approve_plan(
+        &mut self,
+        session_id: SessionId,
+        plan_artifact_id: RuntimeArtifactId,
+        plan_sha256: String,
+        approval_id: ApprovalId,
+        correlation_id: agentmage_kernel_contracts::CorrelationId,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<EngineeringRpcResponse, EngineeringRuntimeError> {
+        let snapshot = self
+            .supervisor
+            .open_session(&session_id)
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        if snapshot.terminal.is_some() || snapshot.mode != EngineeringSessionMode::Plan {
+            return Err(EngineeringRuntimeError::PlanApprovalFailed);
+        }
+        enforce_engineering_mode(snapshot.mode, EngineeringModeOperation::PlanArtifact)
+            .map_err(|_| EngineeringRuntimeError::ModeDenied)?;
+        let capture = snapshot
+            .artifacts
+            .iter()
+            .find(|capture| capture.artifact_id == plan_artifact_id)
+            .ok_or(EngineeringRuntimeError::PlanApprovalFailed)?;
+        if capture.source_kind != ArtifactSourceKind::Generated
+            || capture.display_name != "Verified Chat plan draft"
+            || capture.media_type != "text/markdown"
+            || capture.source_sha256 != plan_sha256
+        {
+            return Err(EngineeringRuntimeError::PlanApprovalFailed);
+        }
+        let approval = seal_plan_approval(
+            approval_id,
+            session_id.clone(),
+            plan_artifact_id.clone(),
+            plan_sha256,
+            self.approval_actor.clone(),
+            occurred_at_epoch_ms,
+        )
+        .map_err(|_| EngineeringRuntimeError::PlanApprovalFailed)?;
+        let events = self
+            .supervisor
+            .replay(&session_id, None)
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        for event in events {
+            if let EngineeringEventKind::PlanApproved { approval: existing } = &event.kind
+                && existing.plan_artifact_id == plan_artifact_id
+            {
+                verify_plan_approval(existing)
+                    .map_err(|_| EngineeringRuntimeError::PlanApprovalFailed)?;
+                if existing.as_ref() == &approval {
+                    return Ok(EngineeringRpcResponse::PlanApproved {
+                        approval: existing.clone(),
+                        event: Box::new(event),
+                    });
+                }
+                return Err(EngineeringRuntimeError::PlanApprovalFailed);
+            }
+        }
+        let event = self
+            .supervisor
+            .record(
+                &session_id,
+                correlation_id,
+                occurred_at_epoch_ms,
+                EngineeringEventKind::PlanApproved {
+                    approval: Box::new(approval.clone()),
+                },
+            )
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        Ok(EngineeringRpcResponse::PlanApproved {
+            approval: Box::new(approval),
+            event: Box::new(event),
+        })
     }
 
     fn ingest_artifact(
@@ -471,9 +553,9 @@ impl EngineeringRuntimePort for EngineeringRuntimeService {
         request: EngineeringRpcRequest,
     ) -> Result<EngineeringRpcResponse, EngineeringRuntimeError> {
         use EngineeringRpcRequest::{
-            BeginArtifact, CancelArtifact, CancelSession, CommitArtifact, CreateSession,
-            ExecuteVerifiedTurn, IngestArtifact, ListSessions, OpenSession, PauseSession,
-            ReadArtifactRange, ReplayEvents, ResumeSession, UploadArtifactChunk,
+            ApprovePlan, BeginArtifact, CancelArtifact, CancelSession, CommitArtifact,
+            CreateSession, ExecuteVerifiedTurn, IngestArtifact, ListSessions, OpenSession,
+            PauseSession, ReadArtifactRange, ReplayEvents, ResumeSession, UploadArtifactChunk,
         };
         match request {
             CreateSession {
@@ -578,6 +660,21 @@ impl EngineeringRuntimePort for EngineeringRuntimeService {
                 correlation_id,
                 occurred_at_epoch_ms,
             ),
+            ApprovePlan {
+                session_id,
+                plan_artifact_id,
+                plan_sha256,
+                approval_id,
+                correlation_id,
+                occurred_at_epoch_ms,
+            } => self.approve_plan(
+                session_id,
+                plan_artifact_id,
+                plan_sha256,
+                approval_id,
+                correlation_id,
+                occurred_at_epoch_ms,
+            ),
             ReplayEvents {
                 session_id,
                 after_sequence,
@@ -636,10 +733,10 @@ mod tests {
     use std::sync::{Arc, Mutex};
 
     use agentmage_kernel_contracts::{
-        ArtifactSourceKind, ArtifactUploadChunk, ArtifactUploadId, CloudSynchronizationMarker,
-        CorrelationId, EndpointProfileId, EngineeringEventKind, EngineeringRpcRequest,
-        EngineeringRpcResponse, EngineeringSessionMode, ModelProfileId, RouteDecisionId, SessionId,
-        StorageFilesystemClass, StrictLocalStorageObservation,
+        ActorId, ApprovalId, ArtifactSourceKind, ArtifactUploadChunk, ArtifactUploadId,
+        CloudSynchronizationMarker, CorrelationId, EndpointProfileId, EngineeringEventKind,
+        EngineeringRpcRequest, EngineeringRpcResponse, EngineeringSessionMode, ModelProfileId,
+        RouteDecisionId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
     };
     use agentmage_kernel_engine::engineering_persistence::SqlCipherEngineeringStore;
     use agentmage_kernel_engine::operational_store::{
@@ -752,7 +849,10 @@ mod tests {
             })
             .collect();
         let source_sha256 = sha256(&source);
-        let mut runtime = EngineeringRuntimeService::new(adapter.clone());
+        let mut runtime = EngineeringRuntimeService::new(
+            adapter.clone(),
+            ActorId::from_raw("user-exact-turn-fixture"),
+        );
         runtime.install_model(Box::new(ExactSentinelModel {
             expected_sha256: source_sha256.clone(),
             expected_mode: EngineeringSessionMode::Ask,
@@ -822,7 +922,8 @@ mod tests {
         assert_eq!(turn.context.inline_bytes, capture.byte_length);
         drop(runtime);
 
-        let mut reopened = EngineeringRuntimeService::new(adapter);
+        let mut reopened =
+            EngineeringRuntimeService::new(adapter, ActorId::from_raw("user-exact-turn-fixture"));
         let snapshot = reopened
             .handle(EngineeringRpcRequest::OpenSession {
                 session_id: session_id.clone(),
@@ -868,7 +969,10 @@ mod tests {
         let source = b"produce a bounded implementation plan".to_vec();
         let source_sha256 = sha256(&source);
         let expected_output = "exact-context-sentinels-verified";
-        let mut runtime = EngineeringRuntimeService::new(adapter.clone());
+        let mut runtime = EngineeringRuntimeService::new(
+            adapter.clone(),
+            ActorId::from_raw("user-plan-turn-fixture"),
+        );
         runtime.install_model(Box::new(ExactSentinelModel {
             expected_sha256: source_sha256.clone(),
             expected_mode: EngineeringSessionMode::Plan,
@@ -939,9 +1043,49 @@ mod tests {
             sha256(expected_output.as_bytes())
         );
         assert_eq!(plan_artifact.byte_length, expected_output.len() as u64);
+        let approval_request = EngineeringRpcRequest::ApprovePlan {
+            session_id: session_id.clone(),
+            plan_artifact_id: plan_artifact.artifact_id.clone(),
+            plan_sha256: plan_artifact.source_sha256.clone(),
+            approval_id: ApprovalId::from_raw("approval-plan-turn-fixture"),
+            correlation_id: CorrelationId::from_raw("correlation-plan-approval"),
+            occurred_at_epoch_ms: 130,
+        };
+        let EngineeringRpcResponse::PlanApproved { approval, event } =
+            runtime.handle(approval_request.clone()).unwrap()
+        else {
+            panic!("Plan approval response expected");
+        };
+        assert_eq!(approval.plan_sha256, plan_artifact.source_sha256);
+        assert_eq!(approval.plan_artifact_id, plan_artifact.artifact_id);
+        assert!(matches!(
+            event.kind,
+            EngineeringEventKind::PlanApproved { .. }
+        ));
+        let EngineeringRpcResponse::PlanApproved {
+            approval: replayed_approval,
+            event: replayed_event,
+        } = runtime.handle(approval_request).unwrap()
+        else {
+            panic!("idempotent Plan approval response expected");
+        };
+        assert_eq!(replayed_approval, approval);
+        assert_eq!(replayed_event, event);
+        assert_eq!(
+            runtime.handle(EngineeringRpcRequest::ApprovePlan {
+                session_id: session_id.clone(),
+                plan_artifact_id: plan_artifact.artifact_id.clone(),
+                plan_sha256: "f".repeat(64),
+                approval_id: ApprovalId::from_raw("approval-plan-turn-substitution"),
+                correlation_id: CorrelationId::from_raw("correlation-plan-substitution"),
+                occurred_at_epoch_ms: 131,
+            }),
+            Err(EngineeringRuntimeError::PlanApprovalFailed)
+        );
 
         drop(runtime);
-        let mut reopened = EngineeringRuntimeService::new(adapter);
+        let mut reopened =
+            EngineeringRuntimeService::new(adapter, ActorId::from_raw("user-plan-turn-fixture"));
         let EngineeringRpcResponse::Session { snapshot } = reopened
             .handle(EngineeringRpcRequest::OpenSession { session_id })
             .unwrap()
@@ -952,6 +1096,20 @@ mod tests {
         assert_eq!(snapshot.artifacts.len(), 2);
         assert_eq!(snapshot.artifacts[1], plan_artifact);
         assert!(snapshot.terminal.is_none());
+        let EngineeringRpcResponse::Events { events } = reopened
+            .handle(EngineeringRpcRequest::ReplayEvents {
+                session_id: snapshot.session_id,
+                after_sequence: None,
+            })
+            .unwrap()
+        else {
+            panic!("events response expected");
+        };
+        assert!(matches!(
+            events.last().map(|event| &event.kind),
+            Some(EngineeringEventKind::PlanApproved { approval: durable })
+                if durable.as_ref() == approval.as_ref()
+        ));
         fs::remove_dir_all(directory).unwrap();
     }
 
@@ -962,7 +1120,10 @@ mod tests {
         let upload_id = ArtifactUploadId::from_raw("upload-large-ingestion-fixture");
         let source = vec![b'x'; 1_200_000];
         let source_sha256 = sha256(&source);
-        let mut runtime = EngineeringRuntimeService::new(adapter.clone());
+        let mut runtime = EngineeringRuntimeService::new(
+            adapter.clone(),
+            ActorId::from_raw("user-ingestion-fixture"),
+        );
         runtime
             .handle(EngineeringRpcRequest::CreateSession {
                 session_id: session_id.clone(),
@@ -1039,7 +1200,8 @@ mod tests {
         assert_eq!(ingestion_record.source_kind, ArtifactSourceKind::Generated);
         drop(runtime);
 
-        let mut reopened = EngineeringRuntimeService::new(adapter);
+        let mut reopened =
+            EngineeringRuntimeService::new(adapter, ActorId::from_raw("user-ingestion-fixture"));
         let snapshot = reopened
             .handle(EngineeringRpcRequest::OpenSession {
                 session_id: session_id.clone(),

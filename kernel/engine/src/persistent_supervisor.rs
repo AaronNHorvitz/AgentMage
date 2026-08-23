@@ -11,6 +11,8 @@ use agentmage_kernel_contracts::{
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+use crate::engineering_plan::verify_plan_approval;
+
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const MAX_SESSION_TITLE_BYTES: usize = 256;
 const MAX_REPLAY_EVENTS: usize = 100_000;
@@ -405,6 +407,13 @@ pub(crate) fn build_event(
     occurred_at_epoch_ms: u64,
     kind: EngineeringEventKind,
 ) -> Result<EngineeringEvent, PersistentSupervisorError> {
+    if let EngineeringEventKind::PlanApproved { approval } = &kind
+        && (approval.session_id != snapshot.session_id
+            || approval.approved_at_epoch_ms != occurred_at_epoch_ms
+            || verify_plan_approval(approval).is_err())
+    {
+        return Err(PersistentSupervisorError::InvalidInput);
+    }
     let mut event = EngineeringEvent {
         schema_version: CONTRACT_SCHEMA_VERSION,
         event_id: RuntimeEventId::from_raw(format!(
@@ -437,6 +446,13 @@ pub fn verify_event_chain(events: &[EngineeringEvent]) -> Result<(), PersistentS
             || event.occurred_at_epoch_ms == 0
             || event.previous_event_sha256 != prior
             || session.is_some_and(|current| current != &event.session_id)
+        {
+            return Err(PersistentSupervisorError::Integrity);
+        }
+        if let EngineeringEventKind::PlanApproved { approval } = &event.kind
+            && (approval.session_id != event.session_id
+                || approval.approved_at_epoch_ms != event.occurred_at_epoch_ms
+                || verify_plan_approval(approval).is_err())
         {
             return Err(PersistentSupervisorError::Integrity);
         }

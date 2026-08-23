@@ -1,7 +1,7 @@
 //! Contracts for Verified Chat and the complete Engineering Runtime boundary.
 
 use crate::{
-    ActorId, AgentLeaseId, ArtifactUploadId, CampaignId, CapabilityId, ContextPacketId,
+    ActorId, AgentLeaseId, ApprovalId, ArtifactUploadId, CampaignId, CapabilityId, ContextPacketId,
     CorrelationId, EndpointProfileId, EvidenceReference, GrantId, IntegrationId, ModelProfileId,
     ReceiptId, ReviewId, RouteDecisionId, RuntimeArtifactId, RuntimeEventId, RuntimeRunId,
     SessionId, TaskId, ToolCallId, ToolId,
@@ -257,6 +257,31 @@ pub struct VerifiedModelTurnResult {
     pub output_sha256: String,
     /// Truthful deterministic delivery verification state.
     pub terminal: EngineeringTerminalState,
+}
+
+/// Explicit user approval of one exact durable Plan artifact.
+///
+/// This record can authorize a plan handoff but is not a capability grant and cannot execute an
+/// effect by itself.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EngineeringPlanApproval {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable approval identity.
+    pub approval_id: ApprovalId,
+    /// Owning immutable Plan session.
+    pub session_id: SessionId,
+    /// Exact durable Plan artifact.
+    pub plan_artifact_id: RuntimeArtifactId,
+    /// SHA-256 of the exact approved Plan bytes.
+    pub plan_sha256: String,
+    /// Explicit approving user actor.
+    pub approved_by: ActorId,
+    /// Trusted host approval time.
+    pub approved_at_epoch_ms: u64,
+    /// Digest of this approval with this field zeroed before sealing.
+    pub approval_sha256: String,
 }
 
 /// Privacy and network class for one exact model endpoint.
@@ -762,6 +787,11 @@ pub enum EngineeringEventKind {
         /// Deterministically established result.
         terminal: EngineeringTerminalState,
     },
+    /// One exact durable Plan artifact received explicit user approval.
+    PlanApproved {
+        /// Sealed approval record; this does not grant effect authority.
+        approval: Box<EngineeringPlanApproval>,
+    },
     /// A task paused at a checkpoint-safe boundary.
     TaskPaused,
     /// A paused task resumed without replaying completed effects.
@@ -930,6 +960,21 @@ pub enum EngineeringRpcRequest {
         /// Trusted host time.
         occurred_at_epoch_ms: u64,
     },
+    /// Approves one exact durable Plan artifact without granting effect authority.
+    ApprovePlan {
+        /// Exact owning Plan session.
+        session_id: SessionId,
+        /// Exact durable Plan artifact.
+        plan_artifact_id: RuntimeArtifactId,
+        /// Exact digest displayed to and approved by the user.
+        plan_sha256: String,
+        /// Stable user approval identity.
+        approval_id: ApprovalId,
+        /// Exact request correlation identity.
+        correlation_id: CorrelationId,
+        /// Trusted host approval time.
+        occurred_at_epoch_ms: u64,
+    },
     /// Replay durable events after an optional exclusive cursor.
     ReplayEvents {
         /// Exact session identity.
@@ -1024,6 +1069,13 @@ pub enum EngineeringRpcResponse {
         turn: Box<VerifiedModelTurnResult>,
         /// Durable hash-bound Plan output, present only for Plan-mode sessions.
         plan_artifact: Option<ArtifactCaptureResult>,
+    },
+    /// One exact Plan approval was atomically journaled.
+    PlanApproved {
+        /// Sealed non-authoritative approval binding.
+        approval: Box<EngineeringPlanApproval>,
+        /// Exact hash-chained durable approval event.
+        event: Box<EngineeringEvent>,
     },
     /// Exact ordered durable replay.
     Events {

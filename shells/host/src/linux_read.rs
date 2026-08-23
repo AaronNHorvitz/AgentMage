@@ -298,6 +298,7 @@ where
             authority
                 .engineering_store()
                 .map_err(|_| LinuxReadError::EngineeringRuntimeUnavailable)?,
+            actor_id.clone(),
         );
         Ok(Self {
             platform: LinuxReadPlatform::Verified(platform),
@@ -352,6 +353,7 @@ where
             authority
                 .engineering_store()
                 .map_err(|_| LinuxReadError::EngineeringRuntimeUnavailable)?,
+            actor_id.clone(),
         );
         Ok(Self {
             platform: LinuxReadPlatform::Test(AdapterInstanceId::from_raw(
