@@ -93,6 +93,8 @@ pub enum MultiAgentError {
     IntegrationFailed,
     /// A worker thread failed without a typed result.
     WorkerPanicked,
+    /// A durable checkpoint contains an in-flight effect that cannot be replayed safely.
+    RecoveryUncertain,
 }
 
 impl MultiAgentError {
@@ -108,6 +110,7 @@ impl MultiAgentError {
             Self::CorrectionExhausted => "multi-agent.correction.exhausted",
             Self::IntegrationFailed => "multi-agent.integration.failed",
             Self::WorkerPanicked => "multi-agent.worker.panicked",
+            Self::RecoveryUncertain => "multi-agent.recovery.uncertain",
         }
     }
 }
@@ -300,6 +303,11 @@ where
     worker: Arc<W>,
     reviewer: R,
     integrator: I,
+    completed: BTreeSet<TaskId>,
+    admitted: BTreeSet<TaskId>,
+    final_leases: BTreeMap<TaskId, AgentLease>,
+    integrations: Vec<IntegrationRecord>,
+    maximum_concurrent_workers: u8,
 }
 
 impl<W, R, I> TeamCampaignCoordinator<W, R, I>
@@ -343,7 +351,76 @@ where
             worker: Arc::new(worker),
             reviewer,
             integrator,
+            completed: BTreeSet::new(),
+            admitted: BTreeSet::new(),
+            final_leases: BTreeMap::new(),
+            integrations: Vec::new(),
+            maximum_concurrent_workers: 0,
         })
+    }
+
+    /// Restores one scheduler only from an effect-complete integrated wave boundary.
+    pub fn resume(
+        campaign_id: CampaignId,
+        max_workers: u8,
+        tasks: Vec<TeamTaskSpec>,
+        checkpoint: TeamCampaignResult,
+        worker: W,
+        reviewer: R,
+        integrator: I,
+    ) -> Result<Self, MultiAgentError> {
+        let mut coordinator = Self::new(
+            campaign_id.clone(),
+            checkpoint.campaign_head.clone(),
+            max_workers,
+            tasks,
+            worker,
+            reviewer,
+            integrator,
+        )?;
+        if checkpoint.maximum_concurrent_workers > max_workers
+            || checkpoint.leases.len() != checkpoint.integrations.len()
+            || !unique(checkpoint.leases.iter().map(|lease| lease.task_id.as_str()))
+            || checkpoint.leases.iter().any(|lease| {
+                lease.campaign_id != campaign_id
+                    || lease.state != AgentLeaseState::Merged
+                    || verify_agent_lease(lease).is_err()
+                    || !coordinator.tasks.contains_key(&lease.task_id)
+            })
+            || checkpoint.integrations.iter().any(|record| {
+                record.campaign_id != campaign_id
+                    || record.state != IntegrationState::Integrated
+                    || verify_integration_record(record).is_err()
+            })
+        {
+            return Err(MultiAgentError::RecoveryUncertain);
+        }
+        let lease_ids = checkpoint
+            .leases
+            .iter()
+            .map(|lease| &lease.lease_id)
+            .collect::<BTreeSet<_>>();
+        if checkpoint
+            .integrations
+            .iter()
+            .any(|record| !lease_ids.contains(&record.lease_id))
+        {
+            return Err(MultiAgentError::RecoveryUncertain);
+        }
+        coordinator.completed = checkpoint
+            .leases
+            .iter()
+            .map(|lease| lease.task_id.clone())
+            .collect();
+        coordinator.admitted = coordinator.completed.clone();
+        coordinator.final_leases = checkpoint
+            .leases
+            .into_iter()
+            .map(|lease| (lease.task_id.clone(), lease))
+            .collect();
+        coordinator.integrations = checkpoint.integrations;
+        coordinator.maximum_concurrent_workers = checkpoint.maximum_concurrent_workers;
+        Ok(coordinator)
     }
 
     /// Executes all dependency-ready waves, reviews, corrections, and integrations.
@@ -359,11 +436,11 @@ where
     where
         F: FnMut(&TeamCampaignResult) -> Result<(), MultiAgentError>,
     {
-        let mut completed = BTreeSet::new();
-        let mut admitted = BTreeSet::new();
-        let mut final_leases = BTreeMap::new();
-        let mut integrations = Vec::new();
-        let mut maximum_concurrent_workers = 0_u8;
+        let mut completed = std::mem::take(&mut self.completed);
+        let mut admitted = std::mem::take(&mut self.admitted);
+        let mut final_leases = std::mem::take(&mut self.final_leases);
+        let mut integrations = std::mem::take(&mut self.integrations);
+        let mut maximum_concurrent_workers = self.maximum_concurrent_workers;
         while completed.len() < self.tasks.len() {
             let wave = self.next_wave(&completed, &admitted)?;
             if wave.is_empty() {
@@ -773,7 +850,7 @@ mod tests {
     use super::{
         MultiAgentError, TeamCampaignCoordinator, TeamIntegrationPort, TeamIntegrationResult,
         TeamReviewPort, TeamReviewResult, TeamTaskSpec, TeamWorkerCandidate, TeamWorkerPort,
-        ZERO_SHA256, seal_team_campaign, verify_team_campaign,
+        ZERO_SHA256, reseal_lease, seal_team_campaign, verify_team_campaign,
     };
     use agentmage_kernel_contracts::{
         ActorId, AgentLease, CampaignId, EndpointProfileId, EvidenceId, EvidenceKind,
@@ -917,6 +994,75 @@ mod tests {
             })
         );
         assert_eq!(progress.last().unwrap(), &result);
+    }
+
+    #[test]
+    fn integrated_wave_resumes_without_replaying_and_inflight_state_is_refused() {
+        let mut second = task("task-b");
+        second.dependencies = vec![TaskId::from_raw("task-a")];
+        let tasks = vec![task("task-a"), second];
+        let worker = || ConcurrentWorker {
+            barrier: Arc::new(Barrier::new(1)),
+            active: Arc::new(AtomicU8::new(0)),
+            maximum: Arc::new(AtomicU8::new(0)),
+        };
+        let campaign_id = CampaignId::from_raw("campaign-resume");
+        let coordinator = TeamCampaignCoordinator::new(
+            campaign_id.clone(),
+            "0".repeat(40),
+            1,
+            tasks.clone(),
+            worker(),
+            PassingReviewer,
+            SerializedIntegrator::default(),
+        )
+        .unwrap();
+        let mut boundary = None;
+        assert_eq!(
+            coordinator.run_with_progress(|snapshot| {
+                if snapshot.leases.len() == 1
+                    && snapshot.leases.iter().all(|lease| {
+                        lease.state == agentmage_kernel_contracts::AgentLeaseState::Merged
+                    })
+                {
+                    boundary = Some(snapshot.clone());
+                    return Err(MultiAgentError::WorkerFailed);
+                }
+                Ok(())
+            }),
+            Err(MultiAgentError::WorkerFailed)
+        );
+        let boundary = boundary.unwrap();
+        let resumed = TeamCampaignCoordinator::resume(
+            campaign_id.clone(),
+            1,
+            tasks.clone(),
+            boundary.clone(),
+            worker(),
+            PassingReviewer,
+            SerializedIntegrator::default(),
+        )
+        .unwrap()
+        .run()
+        .unwrap();
+        assert_eq!(resumed.leases.len(), 2);
+        assert_eq!(resumed.integrations.len(), 2);
+
+        let mut uncertain = boundary;
+        uncertain.leases[0].state = agentmage_kernel_contracts::AgentLeaseState::Integrating;
+        reseal_lease(&mut uncertain.leases[0]).unwrap();
+        assert!(matches!(
+            TeamCampaignCoordinator::resume(
+                campaign_id,
+                1,
+                tasks,
+                uncertain,
+                worker(),
+                PassingReviewer,
+                SerializedIntegrator::default(),
+            ),
+            Err(MultiAgentError::RecoveryUncertain)
+        ));
     }
 
     #[test]
