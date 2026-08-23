@@ -7,7 +7,7 @@ use std::thread;
 use agentmage_kernel_contracts::{
     ActorId, AgentLease, AgentLeaseId, AgentLeaseState, CONTRACT_SCHEMA_VERSION, CampaignId,
     EndpointProfileId, IntegrationId, IntegrationRecord, IntegrationState, ModelProfileId,
-    ReviewFinding, ReviewOutcome, SessionId, TaskId,
+    ReviewFinding, ReviewOutcome, SessionId, TaskId, TeamCampaign, TeamCampaignState,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -159,6 +159,131 @@ pub struct TeamCampaignResult {
     pub integrations: Vec<IntegrationRecord>,
     /// Maximum workers observed in one concurrent wave.
     pub maximum_concurrent_workers: u8,
+}
+
+/// Seals one durable Team campaign projection after validating its complete lifecycle state.
+pub fn seal_team_campaign(mut campaign: TeamCampaign) -> Result<TeamCampaign, MultiAgentError> {
+    campaign.campaign_sha256 = ZERO_SHA256.to_owned();
+    validate_team_campaign(&campaign)?;
+    campaign.campaign_sha256 = canonical_sha256(&campaign)?;
+    Ok(campaign)
+}
+
+/// Verifies one durable Team campaign projection and its canonical digest.
+pub fn verify_team_campaign(campaign: &TeamCampaign) -> Result<(), MultiAgentError> {
+    validate_team_campaign(campaign)?;
+    let mut candidate = campaign.clone();
+    candidate.campaign_sha256 = ZERO_SHA256.to_owned();
+    if canonical_sha256(&candidate)? != campaign.campaign_sha256 {
+        return Err(MultiAgentError::InvalidInput);
+    }
+    Ok(())
+}
+
+fn validate_team_campaign(campaign: &TeamCampaign) -> Result<(), MultiAgentError> {
+    if campaign.schema_version != CONTRACT_SCHEMA_VERSION
+        || campaign.campaign_id.as_str().is_empty()
+        || campaign.coordinator_session_id.as_str().is_empty()
+        || campaign.objective.is_empty()
+        || campaign.objective.len() > 64 * 1024
+        || campaign.approved_plan_id.is_empty()
+        || !valid_sha256(&campaign.approved_plan_sha256)
+        || !valid_branch(&campaign.campaign_branch)
+        || !valid_commit(&campaign.starting_commit)
+        || !valid_commit(&campaign.campaign_head)
+        || campaign.max_workers == 0
+        || campaign.max_workers > MAX_TEAM_WORKERS
+        || campaign.task_ids.is_empty()
+        || campaign.task_ids.len() > MAX_TEAM_TASKS
+        || !unique(campaign.task_ids.iter().map(TaskId::as_str))
+        || campaign.leases.len() > campaign.task_ids.len()
+        || campaign.integrations.len() > campaign.task_ids.len()
+        || campaign
+            .reason_codes
+            .iter()
+            .any(|reason| !valid_identifier(reason))
+        || campaign
+            .leases
+            .iter()
+            .any(|lease| verify_agent_lease(lease).is_err())
+        || campaign
+            .integrations
+            .iter()
+            .any(|record| verify_integration_record(record).is_err())
+    {
+        return Err(MultiAgentError::InvalidInput);
+    }
+    let task_ids = campaign.task_ids.iter().collect::<BTreeSet<_>>();
+    if campaign
+        .leases
+        .iter()
+        .any(|lease| !task_ids.contains(&lease.task_id))
+        || campaign
+            .integrations
+            .iter()
+            .any(|record| record.campaign_id != campaign.campaign_id)
+    {
+        return Err(MultiAgentError::InvalidInput);
+    }
+    match campaign.state {
+        TeamCampaignState::Success => {
+            if campaign.campaign_head == campaign.starting_commit
+                || campaign.leases.len() != campaign.task_ids.len()
+                || campaign.integrations.len() != campaign.task_ids.len()
+                || campaign
+                    .leases
+                    .iter()
+                    .any(|lease| lease.state != AgentLeaseState::Merged)
+                || campaign
+                    .integrations
+                    .iter()
+                    .any(|record| record.state != IntegrationState::Integrated)
+                || !campaign.reason_codes.is_empty()
+                || campaign.final_evidence.is_empty()
+            {
+                return Err(MultiAgentError::InvalidInput);
+            }
+        }
+        TeamCampaignState::Blocked | TeamCampaignState::Failed => {
+            if campaign.reason_codes.is_empty() || !campaign.final_evidence.is_empty() {
+                return Err(MultiAgentError::InvalidInput);
+            }
+        }
+        TeamCampaignState::Cancelled => {
+            if campaign.reason_codes.is_empty() {
+                return Err(MultiAgentError::InvalidInput);
+            }
+        }
+        TeamCampaignState::Planned
+        | TeamCampaignState::Ready
+        | TeamCampaignState::Running
+        | TeamCampaignState::Paused => {
+            if !campaign.final_evidence.is_empty() {
+                return Err(MultiAgentError::InvalidInput);
+            }
+        }
+    }
+    Ok(())
+}
+
+fn verify_agent_lease(lease: &AgentLease) -> Result<(), MultiAgentError> {
+    let mut candidate = lease.clone();
+    let expected = candidate.lease_sha256.clone();
+    candidate.lease_sha256 = ZERO_SHA256.to_owned();
+    if !valid_sha256(&expected) || canonical_sha256(&candidate)? != expected {
+        return Err(MultiAgentError::InvalidInput);
+    }
+    Ok(())
+}
+
+fn verify_integration_record(record: &IntegrationRecord) -> Result<(), MultiAgentError> {
+    let mut candidate = record.clone();
+    let expected = candidate.integration_sha256.clone();
+    candidate.integration_sha256 = ZERO_SHA256.to_owned();
+    if !valid_sha256(&expected) || canonical_sha256(&candidate)? != expected {
+        return Err(MultiAgentError::InvalidInput);
+    }
+    Ok(())
 }
 
 /// Deterministic kernel-owned Team coordinator.
@@ -556,10 +681,12 @@ mod tests {
     use super::{
         MultiAgentError, TeamCampaignCoordinator, TeamIntegrationPort, TeamIntegrationResult,
         TeamReviewPort, TeamReviewResult, TeamTaskSpec, TeamWorkerCandidate, TeamWorkerPort,
+        ZERO_SHA256, seal_team_campaign, verify_team_campaign,
     };
     use agentmage_kernel_contracts::{
-        ActorId, AgentLease, CampaignId, EndpointProfileId, ModelProfileId, ReviewOutcome,
-        SessionId, TaskId,
+        ActorId, AgentLease, CampaignId, EndpointProfileId, EvidenceId, EvidenceKind,
+        EvidenceReference, ModelProfileId, ReviewOutcome, SessionId, TaskId, TeamCampaign,
+        TeamCampaignState,
     };
 
     struct ConcurrentWorker {
@@ -704,5 +831,60 @@ mod tests {
             SerializedIntegrator::default(),
         );
         assert!(matches!(result, Err(MultiAgentError::DependencyInvalid)));
+    }
+
+    #[test]
+    fn successful_campaign_projection_binds_every_lease_integration_and_plan() {
+        let coordinator = TeamCampaignCoordinator::new(
+            CampaignId::from_raw("campaign-durable"),
+            "0".repeat(40),
+            1,
+            vec![task("task-a")],
+            ConcurrentWorker {
+                barrier: Arc::new(Barrier::new(1)),
+                active: Arc::new(AtomicU8::new(0)),
+                maximum: Arc::new(AtomicU8::new(0)),
+            },
+            PassingReviewer,
+            SerializedIntegrator::default(),
+        )
+        .unwrap();
+        let result = coordinator.run().unwrap();
+        let campaign = seal_team_campaign(TeamCampaign {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            campaign_id: CampaignId::from_raw("campaign-durable"),
+            coordinator_session_id: SessionId::from_raw("session-team-coordinator"),
+            objective: "Implement the approved Plan".to_owned(),
+            approved_plan_id: "approval-team-plan".to_owned(),
+            approved_plan_sha256: "a".repeat(64),
+            campaign_branch: "agentmage/team/campaign-durable".to_owned(),
+            starting_commit: "0".repeat(40),
+            campaign_head: result.campaign_head,
+            max_workers: 1,
+            state: TeamCampaignState::Success,
+            task_ids: vec![TaskId::from_raw("task-a")],
+            leases: result.leases,
+            integrations: result.integrations,
+            reason_codes: Vec::new(),
+            final_evidence: vec![EvidenceReference {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                evidence_id: EvidenceId::from_raw("evidence-team-final"),
+                kind: EvidenceKind::Validation,
+                source_id: "team-final-verifier".to_owned(),
+                object_id: "campaign-durable".to_owned(),
+                fragment: None,
+                content_sha256: "b".repeat(64),
+                observed_revision: Some("final".to_owned()),
+            }],
+            campaign_sha256: ZERO_SHA256.to_owned(),
+        })
+        .unwrap();
+        verify_team_campaign(&campaign).unwrap();
+        let mut substituted = campaign;
+        substituted.approved_plan_sha256 = "c".repeat(64);
+        assert_eq!(
+            verify_team_campaign(&substituted),
+            Err(MultiAgentError::InvalidInput)
+        );
     }
 }
