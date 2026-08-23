@@ -103,8 +103,9 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
       await this.createSession(message.mode ?? "ask");
       return;
     }
-    if (this.sessionId === undefined) {
-      await this.createSession(message.mode ?? this.mode);
+    const requestedMode = message.mode ?? this.mode;
+    if (this.sessionId === undefined || requestedMode !== this.mode) {
+      await this.createSession(requestedMode);
     }
     const sessionId = this.sessionId;
     if (sessionId === undefined) return;

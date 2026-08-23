@@ -3,9 +3,12 @@
 use agentmage_kernel_contracts::{
     ArtifactCaptureResult, ArtifactSourceKind, ArtifactUploadChunk, ArtifactUploadId,
     CONTRACT_SCHEMA_VERSION, ContextDeliveryReceipt, ContextPacketId, EndpointProfileId,
-    EngineeringEventKind, EngineeringRpcRequest, EngineeringRpcResponse, EngineeringTerminalState,
-    ModelProfileId, RouteDecisionId, RuntimeArtifactId, RuntimeRunId, SessionId,
-    VerifiedModelTurnResult,
+    EngineeringEventKind, EngineeringRpcRequest, EngineeringRpcResponse, EngineeringSessionMode,
+    EngineeringTerminalState, ModelProfileId, RouteDecisionId, RuntimeArtifactId, RuntimeRunId,
+    SessionId, VerifiedModelTurnResult,
+};
+use agentmage_kernel_engine::engineering_mode::{
+    EngineeringModeOperation, enforce_engineering_mode,
 };
 use agentmage_kernel_engine::engineering_persistence::SqlCipherEngineeringStore;
 use agentmage_kernel_engine::engineering_records::ValidateCanonicalRecord;
@@ -30,6 +33,8 @@ const MAX_VERIFIED_MODEL_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 pub struct EngineeringModelInput {
     /// Exact owning Verified Chat session.
     pub session_id: SessionId,
+    /// Immutable kernel-enforced mode of the owning session.
+    pub mode: EngineeringSessionMode,
     /// Exact model-delivery receipt.
     pub context: ContextDeliveryReceipt,
     /// Exact prompt bytes loaded from encrypted artifact authority.
@@ -70,6 +75,8 @@ pub enum EngineeringRuntimeError {
     ModelFailed,
     /// Artifact ingestion or its semantic record validation failed closed.
     IngestionFailed,
+    /// The immutable session mode denies this operation family.
+    ModeDenied,
 }
 
 impl EngineeringRuntimeError {
@@ -83,6 +90,7 @@ impl EngineeringRuntimeError {
             Self::ModelUnavailable => "engineering.model.unavailable",
             Self::ModelFailed => "engineering.model.failed",
             Self::IngestionFailed => "engineering.ingestion.failed",
+            Self::ModeDenied => "engineering.mode.denied",
         }
     }
 }
@@ -135,6 +143,8 @@ impl EngineeringRuntimeService {
         if snapshot.terminal.is_some() {
             return Err(EngineeringRuntimeError::IngestionFailed);
         }
+        enforce_engineering_mode(snapshot.mode, EngineeringModeOperation::ArtifactIngestion)
+            .map_err(|_| EngineeringRuntimeError::ModeDenied)?;
         let capture = snapshot
             .artifacts
             .iter()
@@ -326,6 +336,8 @@ impl EngineeringRuntimeService {
         if snapshot.terminal.is_some() {
             return Err(EngineeringRuntimeError::ModelFailed);
         }
+        enforce_engineering_mode(snapshot.mode, EngineeringModeOperation::ModelInference)
+            .map_err(|_| EngineeringRuntimeError::ModeDenied)?;
         let capture = snapshot
             .artifacts
             .iter()
@@ -402,6 +414,7 @@ impl EngineeringRuntimeService {
         let output_text = model
             .execute(&EngineeringModelInput {
                 session_id: session_id.clone(),
+                mode: snapshot.mode,
                 context: context.clone(),
                 prompt_bytes: range.bytes,
             })
@@ -635,6 +648,7 @@ mod tests {
 
     struct ExactSentinelModel {
         expected_sha256: String,
+        expected_mode: EngineeringSessionMode,
         sentinels: Vec<(usize, Vec<u8>)>,
     }
 
@@ -656,6 +670,7 @@ mod tests {
             input: &EngineeringModelInput,
         ) -> Result<String, EngineeringModelError> {
             if sha256(&input.prompt_bytes) != self.expected_sha256
+                || input.mode != self.expected_mode
                 || input.context.artifacts.len() != 1
                 || input.context.artifacts[0].ranges != vec![(0, input.prompt_bytes.len() as u64)]
                 || self.sentinels.iter().any(|(offset, sentinel)| {
@@ -724,6 +739,7 @@ mod tests {
         let mut runtime = EngineeringRuntimeService::new(adapter.clone());
         runtime.install_model(Box::new(ExactSentinelModel {
             expected_sha256: source_sha256.clone(),
+            expected_mode: EngineeringSessionMode::Ask,
             sentinels,
         }));
         runtime
