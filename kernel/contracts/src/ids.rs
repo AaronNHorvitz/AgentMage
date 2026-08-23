@@ -61,6 +61,35 @@ define_identifier!(
 );
 define_identifier!(TaskId, "Stable identity for one user-directed task.");
 define_identifier!(
+    ArtifactUploadId,
+    "Stable identity for one ordered artifact-upload attempt."
+);
+define_identifier!(
+    EndpointProfileId,
+    "Stable identity for one exact model endpoint profile."
+);
+define_identifier!(
+    RouteDecisionId,
+    "Stable identity for one deterministic model-route decision."
+);
+define_identifier!(
+    CapabilityId,
+    "Stable identity for one versioned executable engineering capability."
+);
+define_identifier!(
+    CampaignId,
+    "Stable identity for one persistent multi-agent campaign."
+);
+define_identifier!(
+    AgentLeaseId,
+    "Stable identity for one bounded multi-agent task lease."
+);
+define_identifier!(ReviewId, "Stable identity for one independent review.");
+define_identifier!(
+    IntegrationId,
+    "Stable identity for one serialized campaign integration attempt."
+);
+define_identifier!(
     RuntimeRunId,
     "Stable identity for one bounded reusable-runtime run."
 );

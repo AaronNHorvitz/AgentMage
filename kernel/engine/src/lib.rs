@@ -138,6 +138,10 @@ pub mod tooling;
 pub mod validation_result;
 /// Trusted validation-template provenance, exact registries, and focused selection.
 pub mod validation_template;
+/// Exact chunked source-artifact capture and bounded retrieval for Verified Chat.
+pub mod verified_artifact;
+/// Deterministic context admission and model-delivery coverage receipts.
+pub mod verified_context;
 /// Bounded work-packet validation, revision history, and plan adaptation.
 pub mod work_packet;
 /// Narrowing-only authority intersection for future workflow callers.

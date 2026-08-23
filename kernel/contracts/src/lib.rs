@@ -17,6 +17,7 @@ mod conversation;
 mod diagnostics;
 mod display_link;
 mod document_control;
+mod engineering;
 mod evidence;
 mod executive;
 mod frontier;
@@ -102,6 +103,15 @@ pub use document_control::{
     DocumentRegisterEntry, DocumentRegisterKind, DocumentRegisterStatement, DocumentStatementClass,
     DocumentWorkflowKind, DocumentWorkflowReport,
 };
+pub use engineering::{
+    AgentLease, AgentLeaseState, ArtifactCaptureDisposition, ArtifactCaptureResult,
+    ArtifactCoverageState, ArtifactRangeReceipt, ArtifactSourceKind, ArtifactUploadChunk,
+    CapabilityManifest, ContextArtifactCoverage, ContextDeliveryReceipt, EndpointClass,
+    EndpointProtocol, EngineeringEvent, EngineeringEventKind, EngineeringSessionMode,
+    EngineeringSessionSnapshot, EngineeringTerminalState, IntegrationRecord, IntegrationState,
+    ModelEndpointProfile, ModelRouteDecision, ReviewFinding, ReviewOutcome, TeamCampaign,
+    TeamCampaignState, ToolObservation, ToolObservationTermination,
+};
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use executive::{
     ExecutiveCorrespondenceDraft, ExecutiveCorrespondenceIssue, ExecutiveCorrespondenceIssueKind,
@@ -136,15 +146,16 @@ pub use handoff::{
     HandoffSensitivity, LocalHandoffOutcome, LocalHandoffReceipt, RenderedHandoff,
 };
 pub use ids::{
-    ActionId, ActorId, AdapterInstanceId, ApprovalId, AuthorityTransactionId, CancellationId,
-    ContextPacketId, ContextSummaryId, ConversationCompactionId, ConversationId,
-    ConversationTurnId, CorrelationId, ErrorId, EvidenceId, GrantId, GrantNonce, ModelAdapterId,
+    ActionId, ActorId, AdapterInstanceId, AgentLeaseId, ApprovalId, ArtifactUploadId,
+    AuthorityTransactionId, CampaignId, CancellationId, CapabilityId, ContextPacketId,
+    ContextSummaryId, ConversationCompactionId, ConversationId, ConversationTurnId, CorrelationId,
+    EndpointProfileId, ErrorId, EvidenceId, GrantId, GrantNonce, IntegrationId, ModelAdapterId,
     ModelCodecId, ModelManifestId, ModelMessageId, ModelProfileId, ModelRunId, ModelStreamId,
     OperationAttemptId, PlanId, PlanStepId, PolicyId, PostconditionId, PromptId, ProposalId,
-    ReceiptId, RepositorySnapshotId, RuntimeArtifactId, RuntimeEventId, RuntimeOperationId,
-    RuntimeRunId, RuntimeTurnId, SchemaId, SessionCheckpointId, SessionId, TaskId, ToolCallId,
-    ToolCatalogId, ToolId, VerifierId, VerifierRecordId, WorkPacketId, WorkspaceAuthorizationId,
-    WorkspaceId,
+    ReceiptId, RepositorySnapshotId, ReviewId, RouteDecisionId, RuntimeArtifactId, RuntimeEventId,
+    RuntimeOperationId, RuntimeRunId, RuntimeTurnId, SchemaId, SessionCheckpointId, SessionId,
+    TaskId, ToolCallId, ToolCatalogId, ToolId, VerifierId, VerifierRecordId, WorkPacketId,
+    WorkspaceAuthorizationId, WorkspaceId,
 };
 pub use mcp::{
     McpCancellation, McpConnection, McpDisconnect, McpDiscovery, McpError, McpLimits, McpManifest,
