@@ -5,7 +5,10 @@ use agentmage_kernel_contracts::{
     ArtifactUploadId, CONTRACT_SCHEMA_VERSION, ContextDeliveryReceipt, ContextPacketId,
     EndpointProfileId, EngineeringEventKind, EngineeringRpcRequest, EngineeringRpcResponse,
     EngineeringSessionMode, EngineeringTerminalState, ModelProfileId, RouteDecisionId,
-    RuntimeArtifactId, RuntimeRunId, SessionId, VerifiedModelTurnResult,
+    RuntimeArtifactId, RuntimeRunId, RuntimeRunRequest, SessionId, VerifiedModelTurnResult,
+};
+use agentmage_kernel_engine::engineering_execution::{
+    seal_runtime_binding, verify_runtime_binding,
 };
 use agentmage_kernel_engine::engineering_mode::{
     EngineeringModeOperation, enforce_engineering_mode,
@@ -84,6 +87,8 @@ pub enum EngineeringRuntimeError {
     PlanApprovalFailed,
     /// Approved-Plan handoff validation or target-session creation failed closed.
     PlanHandoffFailed,
+    /// Approved-Plan runtime request binding failed closed.
+    RuntimeBindingFailed,
 }
 
 impl EngineeringRuntimeError {
@@ -100,6 +105,7 @@ impl EngineeringRuntimeError {
             Self::ModeDenied => "engineering.mode.denied",
             Self::PlanApprovalFailed => "engineering.plan.approval.failed",
             Self::PlanHandoffFailed => "engineering.plan.handoff.failed",
+            Self::RuntimeBindingFailed => "engineering.runtime.binding.failed",
         }
     }
 }
@@ -319,6 +325,80 @@ impl EngineeringRuntimeService {
             )
             .map(|snapshot| EngineeringRpcResponse::Session { snapshot })
             .map_err(EngineeringRuntimeError::Supervisor)
+    }
+
+    fn bind_approved_plan_runtime(
+        &mut self,
+        session_id: SessionId,
+        run_request: RuntimeRunRequest,
+        correlation_id: agentmage_kernel_contracts::CorrelationId,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<EngineeringRpcResponse, EngineeringRuntimeError> {
+        if occurred_at_epoch_ms == 0 {
+            return Err(EngineeringRuntimeError::RuntimeBindingFailed);
+        }
+        let snapshot = self
+            .supervisor
+            .open_session(&session_id)
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        if snapshot.mode != EngineeringSessionMode::Agent || snapshot.terminal.is_some() {
+            return Err(EngineeringRuntimeError::RuntimeBindingFailed);
+        }
+        enforce_engineering_mode(snapshot.mode, EngineeringModeOperation::LocalEffect)
+            .map_err(|_| EngineeringRuntimeError::ModeDenied)?;
+        let events = self
+            .supervisor
+            .replay(&session_id, None)
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        let handoff = match events.first().map(|event| &event.kind) {
+            Some(EngineeringEventKind::SessionCreatedFromPlan { handoff }) => handoff.clone(),
+            _ => return Err(EngineeringRuntimeError::RuntimeBindingFailed),
+        };
+        let source = self
+            .supervisor
+            .open_session(&handoff.source_session_id)
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        let plan = source
+            .artifacts
+            .iter()
+            .find(|capture| capture.artifact_id == handoff.plan_artifact_id)
+            .ok_or(EngineeringRuntimeError::RuntimeBindingFailed)?;
+        if source.mode != EngineeringSessionMode::Plan
+            || plan.source_kind != ArtifactSourceKind::Generated
+            || plan.source_sha256 != handoff.plan_sha256
+        {
+            return Err(EngineeringRuntimeError::RuntimeBindingFailed);
+        }
+        let binding = seal_runtime_binding(&handoff, &run_request)
+            .map_err(|_| EngineeringRuntimeError::RuntimeBindingFailed)?;
+        verify_runtime_binding(&binding, &handoff, &run_request)
+            .map_err(|_| EngineeringRuntimeError::RuntimeBindingFailed)?;
+        for event in events.into_iter().skip(1) {
+            if let EngineeringEventKind::RuntimeBound { binding: existing } = &event.kind {
+                if existing.as_ref() == &binding {
+                    return Ok(EngineeringRpcResponse::RuntimeBound {
+                        binding: existing.clone(),
+                        event: Box::new(event),
+                    });
+                }
+                return Err(EngineeringRuntimeError::RuntimeBindingFailed);
+            }
+        }
+        let event = self
+            .supervisor
+            .record(
+                &session_id,
+                correlation_id,
+                occurred_at_epoch_ms,
+                EngineeringEventKind::RuntimeBound {
+                    binding: Box::new(binding.clone()),
+                },
+            )
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        Ok(EngineeringRpcResponse::RuntimeBound {
+            binding: Box::new(binding),
+            event: Box::new(event),
+        })
     }
 
     fn ingest_artifact(
@@ -665,10 +745,10 @@ impl EngineeringRuntimePort for EngineeringRuntimeService {
         request: EngineeringRpcRequest,
     ) -> Result<EngineeringRpcResponse, EngineeringRuntimeError> {
         use EngineeringRpcRequest::{
-            ApprovePlan, BeginArtifact, CancelArtifact, CancelSession, CommitArtifact,
-            CreateSession, CreateSessionFromApprovedPlan, ExecuteVerifiedTurn, IngestArtifact,
-            ListSessions, OpenSession, PauseSession, ReadArtifactRange, ReplayEvents,
-            ResumeSession, UploadArtifactChunk,
+            ApprovePlan, BeginArtifact, BindApprovedPlanRuntime, CancelArtifact, CancelSession,
+            CommitArtifact, CreateSession, CreateSessionFromApprovedPlan, ExecuteVerifiedTurn,
+            IngestArtifact, ListSessions, OpenSession, PauseSession, ReadArtifactRange,
+            ReplayEvents, ResumeSession, UploadArtifactChunk,
         };
         match request {
             CreateSession {
@@ -811,6 +891,17 @@ impl EngineeringRuntimePort for EngineeringRuntimeService {
                 correlation_id,
                 occurred_at_epoch_ms,
             ),
+            BindApprovedPlanRuntime {
+                session_id,
+                run_request,
+                correlation_id,
+                occurred_at_epoch_ms,
+            } => self.bind_approved_plan_runtime(
+                session_id,
+                *run_request,
+                correlation_id,
+                occurred_at_epoch_ms,
+            ),
             ReplayEvents {
                 session_id,
                 after_sequence,
@@ -878,6 +969,7 @@ mod tests {
     use agentmage_kernel_engine::operational_store::{
         OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
     };
+    use agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request;
 
     use super::{
         EngineeringModelError, EngineeringModelInput, EngineeringModelPort,
@@ -1235,11 +1327,45 @@ mod tests {
             panic!("idempotent approved Plan handoff expected");
         };
         assert_eq!(replayed_target, target);
+        let (_, mut run_request) = crate::coding_run::tests::fixture_profile_and_request();
+        run_request.session_id = target_session_id.clone();
+        run_request.task.session_id = target_session_id.clone();
+        run_request.task.objective = expected_output.to_owned();
+        run_request.work_packet.objective = expected_output.to_owned();
+        run_request.request_sha256 = "0".repeat(64);
+        let run_request = seal_runtime_run_request(run_request).unwrap();
+        let binding_request = EngineeringRpcRequest::BindApprovedPlanRuntime {
+            session_id: target_session_id.clone(),
+            run_request: Box::new(run_request.clone()),
+            correlation_id: CorrelationId::from_raw("correlation-runtime-binding"),
+            occurred_at_epoch_ms: 150,
+        };
+        let EngineeringRpcResponse::RuntimeBound { binding, event } =
+            runtime.handle(binding_request.clone()).unwrap()
+        else {
+            panic!("approved Plan runtime binding expected");
+        };
+        assert_eq!(binding.session_id, target_session_id);
+        assert_eq!(binding.plan_sha256, plan_artifact.source_sha256);
+        assert_eq!(binding.request_sha256, run_request.request_sha256);
+        assert!(matches!(
+            event.kind,
+            EngineeringEventKind::RuntimeBound { .. }
+        ));
+        let EngineeringRpcResponse::RuntimeBound {
+            binding: replayed_binding,
+            event: replayed_binding_event,
+        } = runtime.handle(binding_request).unwrap()
+        else {
+            panic!("idempotent runtime binding expected");
+        };
+        assert_eq!(replayed_binding, binding);
+        assert_eq!(replayed_binding_event, event);
         let EngineeringRpcResponse::Events {
             events: target_events,
         } = runtime
             .handle(EngineeringRpcRequest::ReplayEvents {
-                session_id: target_session_id,
+                session_id: target_session_id.clone(),
                 after_sequence: None,
             })
             .unwrap()
@@ -1251,9 +1377,27 @@ mod tests {
             [agentmage_kernel_contracts::EngineeringEvent {
                 kind: EngineeringEventKind::SessionCreatedFromPlan { handoff },
                 ..
+            }, agentmage_kernel_contracts::EngineeringEvent {
+                kind: EngineeringEventKind::RuntimeBound { binding: durable },
+                ..
             }] if handoff.approval_sha256 == approval.approval_sha256
                 && handoff.plan_sha256 == plan_artifact.source_sha256
+                && durable.as_ref() == binding.as_ref()
         ));
+        let mut substituted_request = run_request;
+        substituted_request.task.objective = "substituted plan".to_owned();
+        substituted_request.work_packet.objective = "substituted plan".to_owned();
+        substituted_request.request_sha256 = "0".repeat(64);
+        let substituted_request = seal_runtime_run_request(substituted_request).unwrap();
+        assert_eq!(
+            runtime.handle(EngineeringRpcRequest::BindApprovedPlanRuntime {
+                session_id: target_session_id,
+                run_request: Box::new(substituted_request),
+                correlation_id: CorrelationId::from_raw("correlation-runtime-substitution"),
+                occurred_at_epoch_ms: 151,
+            }),
+            Err(EngineeringRuntimeError::RuntimeBindingFailed)
+        );
         assert_eq!(
             runtime.handle(EngineeringRpcRequest::CreateSessionFromApprovedPlan {
                 source_session_id: session_id.clone(),

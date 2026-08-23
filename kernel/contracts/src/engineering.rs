@@ -314,6 +314,33 @@ pub struct EngineeringPlanHandoff {
     pub handoff_sha256: String,
 }
 
+/// Exact binding between an approved Plan handoff and one controlled-write runtime request.
+///
+/// This record proves execution intent and provenance only. It is not a grant, approval challenge,
+/// tool permit, workspace authorization, or completion claim.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EngineeringRuntimeBinding {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Exact Agent session created from the approved Plan.
+    pub session_id: SessionId,
+    /// Exact sealed Plan handoff digest.
+    pub handoff_sha256: String,
+    /// Exact approved Plan artifact.
+    pub plan_artifact_id: RuntimeArtifactId,
+    /// SHA-256 of the exact approved Plan bytes.
+    pub plan_sha256: String,
+    /// Exact approval identity inherited from the handoff.
+    pub approval_id: ApprovalId,
+    /// Exact controlled-write runtime run.
+    pub run_id: RuntimeRunId,
+    /// Digest of the complete sealed runtime request.
+    pub request_sha256: String,
+    /// Digest of this binding with this field zeroed before sealing.
+    pub binding_sha256: String,
+}
+
 /// Privacy and network class for one exact model endpoint.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -827,6 +854,11 @@ pub enum EngineeringEventKind {
         /// Sealed approval record; this does not grant effect authority.
         approval: Box<EngineeringPlanApproval>,
     },
+    /// One exact controlled-write runtime request was bound to an approved Agent Plan.
+    RuntimeBound {
+        /// Sealed intent binding; all effects still require their normal authority transactions.
+        binding: Box<EngineeringRuntimeBinding>,
+    },
     /// A task paused at a checkpoint-safe boundary.
     TaskPaused,
     /// A paused task resumed without replaying completed effects.
@@ -907,7 +939,7 @@ pub struct EngineeringSessionSnapshot {
 }
 
 /// Closed authenticated host operation for the canonical Engineering Runtime.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "operation", rename_all = "snake_case", deny_unknown_fields)]
 pub enum EngineeringRpcRequest {
     /// Create one durable Verified Chat session.
@@ -1033,6 +1065,17 @@ pub enum EngineeringRpcRequest {
         /// Trusted host handoff time.
         occurred_at_epoch_ms: u64,
     },
+    /// Binds one already sealed controlled-write request to an approved Agent Plan.
+    BindApprovedPlanRuntime {
+        /// Exact Agent session created from the approved Plan.
+        session_id: SessionId,
+        /// Exact host-framed request; preparation alone has not started execution.
+        run_request: Box<crate::RuntimeRunRequest>,
+        /// Exact request correlation identity.
+        correlation_id: CorrelationId,
+        /// Trusted host binding time.
+        occurred_at_epoch_ms: u64,
+    },
     /// Replay durable events after an optional exclusive cursor.
     ReplayEvents {
         /// Exact session identity.
@@ -1133,6 +1176,13 @@ pub enum EngineeringRpcResponse {
         /// Sealed non-authoritative approval binding.
         approval: Box<EngineeringPlanApproval>,
         /// Exact hash-chained durable approval event.
+        event: Box<EngineeringEvent>,
+    },
+    /// One approved Agent Plan was bound to a controlled-write runtime request.
+    RuntimeBound {
+        /// Sealed non-authoritative execution-intent binding.
+        binding: Box<EngineeringRuntimeBinding>,
+        /// Exact hash-chained durable binding event.
         event: Box<EngineeringEvent>,
     },
     /// Exact ordered durable replay.

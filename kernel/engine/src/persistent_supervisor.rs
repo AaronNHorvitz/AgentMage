@@ -470,6 +470,12 @@ pub(crate) fn build_event(
         {
             return Err(PersistentSupervisorError::InvalidInput);
         }
+        EngineeringEventKind::RuntimeBound { binding }
+            if binding.session_id != snapshot.session_id
+                || crate::engineering_execution::verify_runtime_binding_shape(binding).is_err() =>
+        {
+            return Err(PersistentSupervisorError::InvalidInput);
+        }
         _ => {}
     }
     let mut event = EngineeringEvent {
@@ -519,6 +525,13 @@ pub fn verify_event_chain(events: &[EngineeringEvent]) -> Result<(), PersistentS
                 if handoff.target_session_id != event.session_id
                     || handoff.initiated_at_epoch_ms != event.occurred_at_epoch_ms
                     || crate::engineering_plan::verify_plan_handoff(handoff).is_err() =>
+            {
+                return Err(PersistentSupervisorError::Integrity);
+            }
+            EngineeringEventKind::RuntimeBound { binding }
+                if binding.session_id != event.session_id
+                    || crate::engineering_execution::verify_runtime_binding_shape(binding)
+                        .is_err() =>
             {
                 return Err(PersistentSupervisorError::Integrity);
             }

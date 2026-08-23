@@ -109,10 +109,11 @@ pub use engineering::{
     ArtifactCoverageState, ArtifactRangeReceipt, ArtifactSourceKind, ArtifactUploadChunk,
     CapabilityManifest, ContextArtifactCoverage, ContextDeliveryReceipt, EndpointClass,
     EndpointProtocol, EngineeringEvent, EngineeringEventKind, EngineeringPlanApproval,
-    EngineeringPlanHandoff, EngineeringRpcRequest, EngineeringRpcResponse, EngineeringSessionMode,
-    EngineeringSessionSnapshot, EngineeringTerminalState, IntegrationRecord, IntegrationState,
-    ModelEndpointProfile, ModelRouteDecision, ReviewFinding, ReviewOutcome, TeamCampaign,
-    TeamCampaignState, ToolObservation, ToolObservationTermination, VerifiedModelTurnResult,
+    EngineeringPlanHandoff, EngineeringRpcRequest, EngineeringRpcResponse,
+    EngineeringRuntimeBinding, EngineeringSessionMode, EngineeringSessionSnapshot,
+    EngineeringTerminalState, IntegrationRecord, IntegrationState, ModelEndpointProfile,
+    ModelRouteDecision, ReviewFinding, ReviewOutcome, TeamCampaign, TeamCampaignState,
+    ToolObservation, ToolObservationTermination, VerifiedModelTurnResult,
 };
 pub use engineering_records::*;
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};

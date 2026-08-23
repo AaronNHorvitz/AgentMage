@@ -39,6 +39,7 @@ pub mod conversation_library;
 pub mod diagnostics;
 /// Deterministic document registers, records review, and exact local action previews.
 pub mod document_control;
+pub mod engineering_execution;
 /// Kernel-enforced narrowing-only ceilings for Verified Chat operating modes.
 pub mod engineering_mode;
 /// SQLCipher-backed Engineering Runtime session, event, and source-artifact persistence.
