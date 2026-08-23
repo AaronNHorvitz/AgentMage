@@ -30,6 +30,10 @@ import {
   type RuntimeRunRequestEnvelope,
   type RuntimeStepResponse,
 } from "./runtime_transport.js";
+import type {
+  EngineeringHostRequest,
+  EngineeringHostResponse,
+} from "./verified_chat_protocol.js";
 
 export const PROVIDER_VENDOR = "agentmage" as const;
 export const HOST_PROTOCOL_VERSION = 1 as const;
@@ -143,6 +147,7 @@ export type HostReadResponse =
 export type HostResponse =
   | HostReadResponse
   | RuntimeHostResponse
+  | EngineeringHostResponse
   | {
       readonly kind: "models_discovered";
       readonly schema_version: 1;
@@ -191,6 +196,8 @@ export type HostResponse =
     };
 
 export interface HostBridge {
+  engineering(request: EngineeringHostRequest): Promise<HostResponse>;
+
   previewHandoff(request: {
     readonly kind: "preview_handoff";
     readonly schema_version: 1;
@@ -411,6 +418,14 @@ export interface ControllerResult {
 
 /** Inert bridge used until a verified package injects authenticated IPC. */
 export class UnavailableHostBridge implements HostBridge {
+  engineering(
+    request: Parameters<HostBridge["engineering"]>[0],
+  ): Promise<HostResponse> {
+    return Promise.resolve(
+      denied(request.request_id, "host.connection.unavailable"),
+    );
+  }
+
   previewHandoff(
     request: Parameters<HostBridge["previewHandoff"]>[0],
   ): Promise<HostResponse> {

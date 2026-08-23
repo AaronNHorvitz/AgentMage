@@ -18,6 +18,7 @@ import {
   parseRenderedHandoff,
 } from "./handoff.js";
 import { parseRuntimeHostResponse } from "./runtime_transport.js";
+import { parseEngineeringHostResponse } from "./verified_chat_protocol.js";
 
 const LINUX_IPC_PROTOCOL_VERSION = 1;
 const AUTHENTICATION_DOMAIN = Buffer.from(
@@ -69,6 +70,12 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
     };
     this.secret = Uint8Array.from(credentials.launchSecret);
     credentials.launchSecret.fill(0);
+  }
+
+  engineering(
+    request: Parameters<HostBridge["engineering"]>[0],
+  ): Promise<HostResponse> {
+    return this.safeExchange(request);
   }
 
   previewHandoff(
@@ -209,6 +216,7 @@ export class AuthenticatedLinuxHostBridge implements HostBridge {
       response.kind === "handoff_preview" ||
       response.kind === "handoff_rendered" ||
       response.kind === "handoff_receipt" ||
+      response.kind === "engineering" ||
       response.kind === "runtime_prepared" ||
       response.kind === "runtime_step"
         ? {
@@ -396,6 +404,12 @@ function parseResponse(candidate: unknown): HostResponse {
     throw new HostBridgeFailure();
   }
   switch (candidate.kind) {
+    case "engineering":
+      try {
+        return parseEngineeringHostResponse(candidate);
+      } catch {
+        throw new HostBridgeFailure();
+      }
     case "runtime_prepared":
     case "runtime_step":
       try {

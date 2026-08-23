@@ -133,6 +133,17 @@ class Bridge implements HostBridge {
   lastRuntimeApproval: RuntimeApprovalResponseEnvelope | null = null;
   lastRuntimeCancellationId: string | undefined;
 
+  engineering(
+    request: Parameters<HostBridge["engineering"]>[0],
+  ): ReturnType<HostBridge["engineering"]> {
+    return Promise.resolve({
+      kind: "denied",
+      schema_version: 1,
+      request_id: request.request_id,
+      code: "engineering.not-used",
+    });
+  }
+
   previewHandoff(
     request: Parameters<HostBridge["previewHandoff"]>[0],
   ): ReturnType<HostBridge["previewHandoff"]> {

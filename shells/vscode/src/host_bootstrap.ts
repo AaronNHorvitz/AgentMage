@@ -99,6 +99,12 @@ class SupervisedHostBridge implements HostBridge {
     child.stderr.on("data", () => this.dispose());
   }
 
+  engineering(
+    request: Parameters<HostBridge["engineering"]>[0],
+  ): ReturnType<HostBridge["engineering"]> {
+    return this.bridge.engineering(request);
+  }
+
   previewHandoff(
     request: Parameters<HostBridge["previewHandoff"]>[0],
   ): ReturnType<HostBridge["previewHandoff"]> {

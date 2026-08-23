@@ -30,6 +30,8 @@ pub mod coding_verifier;
 
 /// One-use reviewed local diagnostic export workflow.
 pub mod diagnostic_export;
+/// Durable session, event, and exact artifact RPC composition.
+pub mod engineering_runtime;
 
 /// Verified read-only knowledge workflows over the shared thin-client contract.
 pub mod knowledge_workflow_runtime;

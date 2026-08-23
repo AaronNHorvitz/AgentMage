@@ -4,10 +4,11 @@ use serde::{Deserialize, Deserializer, Serialize};
 
 use agentmage_capability_read_only::ReadOnlyResult;
 use agentmage_kernel_contracts::{
-    CancellationId, DoctorReport, HandoffProhibitedAction, HandoffReview, LocalHandoffReceipt,
-    ModelPickerSnapshot, ModelSelectionRevalidation, RenderedHandoff, RuntimeApprovalChallenge,
-    RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor, RuntimeOutcome,
-    RuntimeRunId, RuntimeRunRequest,
+    CancellationId, DoctorReport, EngineeringRpcRequest, EngineeringRpcResponse,
+    HandoffProhibitedAction, HandoffReview, LocalHandoffReceipt, ModelPickerSnapshot,
+    ModelSelectionRevalidation, RenderedHandoff, RuntimeApprovalChallenge, RuntimeApprovalResponse,
+    RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId,
+    RuntimeRunRequest,
 };
 use agentmage_kernel_engine::runtime_coordinator::verify_runtime_run_request;
 
@@ -25,6 +26,11 @@ const MAX_COMPONENTS: usize = 256;
 const MAX_COMPONENT_BYTES: usize = 255;
 const MAX_TOOL_ARGUMENT_BYTES: usize = 64 * 1024;
 const MAX_RUNTIME_PROMPT_BYTES: usize = 4 * 1024;
+// JSON represents each byte as up to three decimal digits plus a comma. Keep the
+// raw chunk below the authenticated 64 KiB frame in the worst case.
+const MAX_ENGINEERING_CHUNK_BYTES: usize = 12 * 1024;
+const MAX_ENGINEERING_ARTIFACT_BYTES: u64 = 64 * 1024 * 1024;
+const MAX_ENGINEERING_RANGE_BYTES: u64 = 1024 * 1024;
 
 /// Exact object kind requested for one bounded worker projection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -76,6 +82,15 @@ impl HostProtocolError {
 #[derive(Clone, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostRequest {
+    /// Invoke one closed Engineering Runtime operation over the authenticated channel.
+    Engineering {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity selected by the shell.
+        request_id: String,
+        /// Exact Rust-owned operation request.
+        request: EngineeringRpcRequest,
+    },
     /// Build one exact local-only handoff review from trusted current session state.
     PreviewHandoff {
         /// Protocol schema version.
@@ -318,6 +333,14 @@ pub enum HostRequest {
 impl HostRequest {
     fn validate(&self) -> Result<(), HostProtocolError> {
         let (version, request_id) = match self {
+            Self::Engineering {
+                schema_version,
+                request_id,
+                request,
+            } => {
+                validate_engineering_request(request)?;
+                (*schema_version, request_id)
+            }
             Self::PreviewHandoff {
                 schema_version,
                 request_id,
@@ -621,6 +644,15 @@ pub struct ReceiptSummary {
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum HostResponse {
+    /// One exact Engineering Runtime operation result.
+    Engineering {
+        /// Protocol schema version.
+        schema_version: u16,
+        /// Correlation identity from the request.
+        request_id: String,
+        /// Exact Rust-owned operation result.
+        response: EngineeringRpcResponse,
+    },
     /// Mandatory exact local-only handoff review.
     HandoffPreview {
         /// Protocol schema version.
@@ -897,6 +929,132 @@ fn valid_semver(value: &str) -> bool {
             .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
 }
 
+fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), HostProtocolError> {
+    use EngineeringRpcRequest::{
+        BeginArtifact, CancelArtifact, CancelSession, CommitArtifact, CreateSession, ListSessions,
+        OpenSession, PauseSession, ReadArtifactRange, ReplayEvents, ResumeSession,
+        UploadArtifactChunk,
+    };
+    let valid_id = |value: &str| valid_identifier(value);
+    match request {
+        CreateSession {
+            session_id,
+            title,
+            correlation_id,
+            occurred_at_epoch_ms,
+            ..
+        } => {
+            if !valid_id(session_id.as_str())
+                || title.is_empty()
+                || title.len() > 256
+                || title.contains('\0')
+                || !valid_id(correlation_id.as_str())
+                || *occurred_at_epoch_ms == 0
+            {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        ListSessions => {}
+        OpenSession { session_id } => {
+            if !valid_id(session_id.as_str()) {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        BeginArtifact {
+            upload_id,
+            session_id,
+            display_name,
+            media_type,
+            total_bytes,
+            expected_sha256,
+            ..
+        } => {
+            if !valid_id(upload_id.as_str())
+                || !valid_id(session_id.as_str())
+                || display_name.is_empty()
+                || display_name.len() > 256
+                || display_name.contains('\0')
+                || media_type.is_empty()
+                || media_type.len() > 128
+                || media_type.contains('\0')
+                || *total_bytes == 0
+                || *total_bytes > MAX_ENGINEERING_ARTIFACT_BYTES
+                || !valid_sha256(expected_sha256)
+            {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        UploadArtifactChunk { chunk } => {
+            if chunk.schema_version != agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION
+                || !valid_id(chunk.upload_id.as_str())
+                || !valid_id(chunk.session_id.as_str())
+                || chunk.bytes.is_empty()
+                || chunk.bytes.len() > MAX_ENGINEERING_CHUNK_BYTES
+                || chunk.total_bytes == 0
+                || chunk.total_bytes > MAX_ENGINEERING_ARTIFACT_BYTES
+                || !valid_sha256(&chunk.chunk_sha256)
+            {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        CommitArtifact {
+            upload_id,
+            completed_at_epoch_ms,
+        } => {
+            if !valid_id(upload_id.as_str()) || *completed_at_epoch_ms == 0 {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        CancelArtifact { upload_id } => {
+            if !valid_id(upload_id.as_str()) {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        ReadArtifactRange {
+            session_id,
+            artifact_id,
+            length,
+            ..
+        } => {
+            if !valid_id(session_id.as_str())
+                || !valid_id(artifact_id.as_str())
+                || *length == 0
+                || *length > MAX_ENGINEERING_RANGE_BYTES
+            {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        ReplayEvents { session_id, .. } => {
+            if !valid_id(session_id.as_str()) {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        PauseSession {
+            session_id,
+            correlation_id,
+            occurred_at_epoch_ms,
+        }
+        | ResumeSession {
+            session_id,
+            correlation_id,
+            occurred_at_epoch_ms,
+        }
+        | CancelSession {
+            session_id,
+            correlation_id,
+            occurred_at_epoch_ms,
+        } => {
+            if !valid_id(session_id.as_str())
+                || !valid_id(correlation_id.as_str())
+                || *occurred_at_epoch_ms == 0
+            {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use agentmage_kernel_contracts::{
@@ -925,6 +1083,51 @@ mod tests {
         let bytes = serde_json::to_vec(&preview_request()).expect("request JSON");
         let parsed = parse_request(&bytes).expect("exact request");
         assert!(matches!(parsed, HostRequest::PreviewRead { .. }));
+    }
+
+    #[test]
+    fn engineering_rpc_is_closed_and_chunk_remains_inside_frame() {
+        let request = json!({
+            "kind": "engineering",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-engineering-1",
+            "request": {
+                "operation": "create_session",
+                "session_id": "session-engineering-1",
+                "title": "Verified Chat",
+                "mode": "agent",
+                "correlation_id": "correlation-engineering-1",
+                "occurred_at_epoch_ms": 1
+            }
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&request).unwrap()).unwrap(),
+            HostRequest::Engineering { .. }
+        ));
+
+        let oversized = json!({
+            "kind": "engineering",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-engineering-2",
+            "request": {
+                "operation": "upload_artifact_chunk",
+                "chunk": {
+                    "schema_version": CONTRACT_SCHEMA_VERSION,
+                    "upload_id": "upload-engineering-1",
+                    "session_id": "session-engineering-1",
+                    "sequence": 0,
+                    "offset": 0,
+                    "total_bytes": 12289,
+                    "bytes": vec![1_u8; 12 * 1024 + 1],
+                    "chunk_sha256": "a".repeat(64),
+                    "final_chunk": true
+                }
+            }
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&oversized).unwrap()),
+            Err(HostProtocolError::InvalidValue)
+        ));
     }
 
     #[test]

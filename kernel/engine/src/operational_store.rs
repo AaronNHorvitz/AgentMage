@@ -1408,6 +1408,15 @@ impl DurableAuthorityRuntime {
         Ok(self.lock_store()?.generation())
     }
 
+    /// Returns a least-privilege Engineering Runtime adapter over this encrypted store.
+    pub fn engineering_store(
+        &self,
+    ) -> Result<crate::engineering_persistence::SqlCipherEngineeringStore, DurableAuthorityError>
+    {
+        self.ensure_usable()?;
+        Ok(crate::engineering_persistence::SqlCipherEngineeringStore::new(Arc::clone(&self.store)))
+    }
+
     /// Returns one current canonical transaction revision.
     #[must_use]
     pub fn current_transaction(

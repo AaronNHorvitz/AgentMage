@@ -18,6 +18,7 @@ import {
 } from "./model_discovery.js";
 import type { HandoffReview } from "./handoff.js";
 import type { RuntimeApprovalChallengeEnvelope } from "./runtime_transport.js";
+import { VerifiedChatSurface } from "./verified_chat.js";
 
 type AgentMageModelInformation = vscode.LanguageModelChatInformation &
   NativeModelInformation;
@@ -148,6 +149,8 @@ export async function activate(
     new SessionRequestIdentitySource(),
   );
   activeController = controller;
+  const verifiedChat = new VerifiedChatSurface(context.extensionUri, bridge);
+  verifiedChat.register(context);
   const provider: vscode.LanguageModelChatProvider<AgentMageModelInformation> =
     {
       provideLanguageModelChatInformation: async (_options, token) => {

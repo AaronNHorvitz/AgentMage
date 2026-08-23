@@ -45,6 +45,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use crate::diagnostic_export::{DiagnosticExportError, DiagnosticExportWorkflow};
+use crate::engineering_runtime::{EngineeringRuntimePort, EngineeringRuntimeService};
 use crate::protocol::{
     HOST_PROTOCOL_VERSION, HostProjectionKind, HostProjectionPath, HostRequest, HostResponse,
     MAX_HOST_REQUEST_BYTES, MAX_HOST_RESPONSE_BYTES, ReceiptSummary, encode_response,
@@ -96,6 +97,10 @@ pub enum LinuxReadError {
     HandoffInvalid,
     /// The optional shared-runtime transport dependency failed closed.
     RuntimeTransport(RuntimeTransportError),
+    /// No durable Engineering Runtime service was installed by trusted composition.
+    EngineeringRuntimeUnavailable,
+    /// A durable Engineering Runtime operation failed closed.
+    EngineeringRuntimeFailed,
 }
 
 /// Stable content-free failure while serving an authenticated host frame.
@@ -136,6 +141,8 @@ impl LinuxReadError {
             Self::HandoffUnavailable => "host.handoff.unavailable",
             Self::HandoffInvalid => "host.handoff.invalid",
             Self::RuntimeTransport(error) => error.code(),
+            Self::EngineeringRuntimeUnavailable => "host.engineering-runtime.unavailable",
+            Self::EngineeringRuntimeFailed => "host.engineering-runtime.failed",
         }
     }
 }
@@ -268,6 +275,7 @@ where
     handoff_draft: Option<HandoffDraft>,
     pending_handoffs: BTreeMap<String, HandoffReview>,
     runtime_transport: Option<Box<dyn RuntimeTransportPort>>,
+    engineering_runtime: Option<Box<dyn EngineeringRuntimePort>>,
 }
 
 impl<'platform, I, C> LinuxReadWorkflow<'platform, I, C>
@@ -286,6 +294,11 @@ where
         clock: C,
     ) -> Result<Self, LinuxReadError> {
         let registry = read_only_registry()?;
+        let engineering_runtime = EngineeringRuntimeService::new(
+            authority
+                .engineering_store()
+                .map_err(|_| LinuxReadError::EngineeringRuntimeUnavailable)?,
+        );
         Ok(Self {
             platform: LinuxReadPlatform::Verified(platform),
             authority,
@@ -305,6 +318,7 @@ where
             handoff_draft: None,
             pending_handoffs: BTreeMap::new(),
             runtime_transport: None,
+            engineering_runtime: Some(Box::new(engineering_runtime)),
         })
     }
 
@@ -334,6 +348,11 @@ where
         clock: C,
     ) -> Result<Self, LinuxReadError> {
         let registry = read_only_registry()?;
+        let engineering_runtime = EngineeringRuntimeService::new(
+            authority
+                .engineering_store()
+                .map_err(|_| LinuxReadError::EngineeringRuntimeUnavailable)?,
+        );
         Ok(Self {
             platform: LinuxReadPlatform::Test(AdapterInstanceId::from_raw(
                 "linux-read-test-uninitialized",
@@ -355,6 +374,7 @@ where
             handoff_draft: None,
             pending_handoffs: BTreeMap::new(),
             runtime_transport: None,
+            engineering_runtime: Some(Box::new(engineering_runtime)),
         })
     }
 
@@ -364,6 +384,11 @@ where
     /// composition supplies it, every runtime request fails closed as unavailable.
     pub fn install_runtime_transport(&mut self, runtime: Box<dyn RuntimeTransportPort>) {
         self.runtime_transport = Some(runtime);
+    }
+
+    /// Installs one Rust-owned durable Engineering Runtime service.
+    pub fn install_engineering_runtime(&mut self, runtime: Box<dyn EngineeringRuntimePort>) {
+        self.engineering_runtime = Some(runtime);
     }
 
     /// Returns a signal bound to the next read-only worker launch in this session.
@@ -411,6 +436,20 @@ where
     pub fn handle(&mut self, request: HostRequest) -> HostResponse {
         let request_id = request_id(&request).to_owned();
         let result = match request {
+            HostRequest::Engineering { request, .. } => self
+                .engineering_runtime
+                .as_mut()
+                .ok_or(LinuxReadError::EngineeringRuntimeUnavailable)
+                .and_then(|runtime| {
+                    runtime
+                        .handle(request)
+                        .map_err(|_| LinuxReadError::EngineeringRuntimeFailed)
+                })
+                .map(|response| HostResponse::Engineering {
+                    schema_version: HOST_PROTOCOL_VERSION,
+                    request_id: request_id.clone(),
+                    response,
+                }),
             HostRequest::PreviewHandoff { .. } => self.preview_handoff(&request_id),
             HostRequest::RenderHandoff {
                 preview_id,
@@ -1883,6 +1922,7 @@ fn runtime_response(request_id: &str, step: RuntimeTransportStep) -> HostRespons
 fn request_id(request: &HostRequest) -> &str {
     match request {
         HostRequest::PreviewHandoff { request_id, .. }
+        | HostRequest::Engineering { request_id, .. }
         | HostRequest::RenderHandoff { request_id, .. }
         | HostRequest::CancelHandoff { request_id, .. }
         | HostRequest::DenyHandoffAction { request_id, .. }

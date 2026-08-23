@@ -107,10 +107,11 @@ pub use engineering::{
     AgentLease, AgentLeaseState, ArtifactCaptureDisposition, ArtifactCaptureResult,
     ArtifactCoverageState, ArtifactRangeReceipt, ArtifactSourceKind, ArtifactUploadChunk,
     CapabilityManifest, ContextArtifactCoverage, ContextDeliveryReceipt, EndpointClass,
-    EndpointProtocol, EngineeringEvent, EngineeringEventKind, EngineeringSessionMode,
-    EngineeringSessionSnapshot, EngineeringTerminalState, IntegrationRecord, IntegrationState,
-    ModelEndpointProfile, ModelRouteDecision, ReviewFinding, ReviewOutcome, TeamCampaign,
-    TeamCampaignState, ToolObservation, ToolObservationTermination,
+    EndpointProtocol, EngineeringEvent, EngineeringEventKind, EngineeringRpcRequest,
+    EngineeringRpcResponse, EngineeringSessionMode, EngineeringSessionSnapshot,
+    EngineeringTerminalState, IntegrationRecord, IntegrationState, ModelEndpointProfile,
+    ModelRouteDecision, ReviewFinding, ReviewOutcome, TeamCampaign, TeamCampaignState,
+    ToolObservation, ToolObservationTermination,
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use executive::{

@@ -318,6 +318,18 @@ impl LinuxAuthorityRuntime {
         &mut self.runtime
     }
 
+    /// Returns the encrypted Engineering Runtime persistence adapter while retaining the root.
+    pub fn engineering_store(
+        &self,
+    ) -> Result<
+        agentmage_kernel_engine::engineering_persistence::SqlCipherEngineeringStore,
+        DurableAuthorityError,
+    > {
+        self.revalidate_root()
+            .map_err(|_| DurableAuthorityError::Poisoned)?;
+        self.runtime.engineering_store()
+    }
+
     /// Revalidates the private root around an explicit lifecycle checkpoint.
     pub fn revalidate_root(&self) -> Result<(), crate::LinuxStrictLocalRootError> {
         self.root.revalidate()

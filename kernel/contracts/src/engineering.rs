@@ -821,6 +821,164 @@ pub struct EngineeringSessionSnapshot {
     pub snapshot_sha256: String,
 }
 
+/// Closed authenticated host operation for the canonical Engineering Runtime.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "operation", rename_all = "snake_case", deny_unknown_fields)]
+pub enum EngineeringRpcRequest {
+    /// Create one durable Verified Chat session.
+    CreateSession {
+        /// Exact new session identity.
+        session_id: SessionId,
+        /// Bounded user-visible title.
+        title: String,
+        /// Initial operating mode.
+        mode: EngineeringSessionMode,
+        /// Exact request correlation identity.
+        correlation_id: CorrelationId,
+        /// Trusted host time.
+        occurred_at_epoch_ms: u64,
+    },
+    /// List all reconstructable sessions.
+    ListSessions,
+    /// Open one reconstructable session.
+    OpenSession {
+        /// Exact session identity.
+        session_id: SessionId,
+    },
+    /// Start one bounded exact artifact upload.
+    BeginArtifact {
+        /// Exact upload identity.
+        upload_id: ArtifactUploadId,
+        /// Owning session.
+        session_id: SessionId,
+        /// Original source class.
+        source_kind: ArtifactSourceKind,
+        /// Bounded display name.
+        display_name: String,
+        /// Exact media type.
+        media_type: String,
+        /// Declared source length.
+        total_bytes: u64,
+        /// Client-computed source digest reverified by the host.
+        expected_sha256: String,
+    },
+    /// Append one exact ordered upload chunk.
+    UploadArtifactChunk {
+        /// Exact authenticated transfer chunk.
+        chunk: ArtifactUploadChunk,
+    },
+    /// Verify and atomically commit one completed upload.
+    CommitArtifact {
+        /// Exact upload identity.
+        upload_id: ArtifactUploadId,
+        /// Trusted host time.
+        completed_at_epoch_ms: u64,
+    },
+    /// Drop one incomplete upload.
+    CancelArtifact {
+        /// Exact upload identity.
+        upload_id: ArtifactUploadId,
+    },
+    /// Read one exact bounded source range.
+    ReadArtifactRange {
+        /// Owning session.
+        session_id: SessionId,
+        /// Exact immutable artifact.
+        artifact_id: RuntimeArtifactId,
+        /// Starting byte offset.
+        offset: u64,
+        /// Maximum bytes to return.
+        length: u64,
+    },
+    /// Replay durable events after an optional exclusive cursor.
+    ReplayEvents {
+        /// Exact session identity.
+        session_id: SessionId,
+        /// Last sequence accepted by the caller.
+        after_sequence: Option<u64>,
+    },
+    /// Pause a non-terminal session at a safe boundary.
+    PauseSession {
+        /// Exact session identity.
+        session_id: SessionId,
+        /// Exact correlation identity.
+        correlation_id: CorrelationId,
+        /// Trusted host time.
+        occurred_at_epoch_ms: u64,
+    },
+    /// Resume a paused session without replaying effects.
+    ResumeSession {
+        /// Exact session identity.
+        session_id: SessionId,
+        /// Exact correlation identity.
+        correlation_id: CorrelationId,
+        /// Trusted host time.
+        occurred_at_epoch_ms: u64,
+    },
+    /// Cancel one non-terminal session and owned work.
+    CancelSession {
+        /// Exact session identity.
+        session_id: SessionId,
+        /// Exact correlation identity.
+        correlation_id: CorrelationId,
+        /// Trusted host time.
+        occurred_at_epoch_ms: u64,
+    },
+}
+
+/// Closed authenticated response from the Rust-owned Engineering Runtime.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "result", rename_all = "snake_case", deny_unknown_fields)]
+pub enum EngineeringRpcResponse {
+    /// One current reconstructable session.
+    Session {
+        /// Verified durable projection.
+        snapshot: EngineeringSessionSnapshot,
+    },
+    /// Stable session list.
+    Sessions {
+        /// Verified durable projections.
+        sessions: Vec<EngineeringSessionSnapshot>,
+    },
+    /// One upload was admitted and awaits ordered chunks.
+    ArtifactUploadStarted {
+        /// Exact upload identity.
+        upload_id: ArtifactUploadId,
+    },
+    /// One chunk was accepted without committing the source.
+    ArtifactChunkAccepted {
+        /// Exact upload identity.
+        upload_id: ArtifactUploadId,
+        /// Accepted sequence.
+        sequence: u32,
+    },
+    /// Exact source capture completed.
+    ArtifactCaptured {
+        /// Host-authoritative capture receipt.
+        capture: ArtifactCaptureResult,
+    },
+    /// One incomplete upload was discarded.
+    ArtifactUploadCancelled {
+        /// Exact upload identity.
+        upload_id: ArtifactUploadId,
+    },
+    /// Exact bounded source bytes were retrieved.
+    ArtifactRange {
+        /// Content-verifiable range receipt.
+        range: ArtifactRangeReceipt,
+    },
+    /// Exact ordered durable replay.
+    Events {
+        /// Events after the requested cursor.
+        events: Vec<EngineeringEvent>,
+    },
+    /// One lifecycle transition was durably recorded.
+    LifecycleEvent {
+        /// Exact durable event.
+        event: EngineeringEvent,
+    },
+}
+
 #[cfg(test)]
 mod tests {
     use super::{ArtifactSourceKind, EngineeringSessionMode, EngineeringTerminalState};
