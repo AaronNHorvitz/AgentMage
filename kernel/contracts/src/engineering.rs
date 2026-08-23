@@ -785,6 +785,8 @@ pub struct TeamCampaign {
     pub campaign_head: String,
     /// Maximum active implementation workers, at most five for this release.
     pub max_workers: u8,
+    /// Maximum implementation workers actually observed in one concurrent wave.
+    pub maximum_concurrent_workers: u8,
     /// Current campaign state.
     pub state: TeamCampaignState,
     /// Stable task identities in dependency order.

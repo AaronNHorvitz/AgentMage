@@ -95,6 +95,8 @@ pub enum MultiAgentError {
     WorkerPanicked,
     /// A durable checkpoint contains an in-flight effect that cannot be replayed safely.
     RecoveryUncertain,
+    /// The host refused or could not durably persist a required checkpoint.
+    CheckpointFailed,
 }
 
 impl MultiAgentError {
@@ -111,6 +113,7 @@ impl MultiAgentError {
             Self::IntegrationFailed => "multi-agent.integration.failed",
             Self::WorkerPanicked => "multi-agent.worker.panicked",
             Self::RecoveryUncertain => "multi-agent.recovery.uncertain",
+            Self::CheckpointFailed => "multi-agent.checkpoint.failed",
         }
     }
 }
@@ -196,6 +199,7 @@ fn validate_team_campaign(campaign: &TeamCampaign) -> Result<(), MultiAgentError
         || !valid_commit(&campaign.campaign_head)
         || campaign.max_workers == 0
         || campaign.max_workers > MAX_TEAM_WORKERS
+        || campaign.maximum_concurrent_workers > campaign.max_workers
         || campaign.task_ids.is_empty()
         || campaign.task_ids.len() > MAX_TEAM_TASKS
         || !unique(campaign.task_ids.iter().map(TaskId::as_str))
@@ -1115,6 +1119,7 @@ mod tests {
             starting_commit: "0".repeat(40),
             campaign_head: result.campaign_head,
             max_workers: 1,
+            maximum_concurrent_workers: result.maximum_concurrent_workers,
             state: TeamCampaignState::Success,
             task_ids: vec![TaskId::from_raw("task-a")],
             leases: result.leases,

@@ -738,6 +738,7 @@ impl EngineeringRuntimeService {
                 || previous.campaign_branch != campaign.campaign_branch
                 || previous.starting_commit != campaign.starting_commit
                 || previous.max_workers != campaign.max_workers
+                || previous.maximum_concurrent_workers > campaign.maximum_concurrent_workers
                 || previous.task_ids != campaign.task_ids
                 || is_terminal_campaign(previous.state)
                 || !valid_campaign_transition(previous.state, campaign.state)
@@ -1378,9 +1379,8 @@ mod tests {
     };
     use agentmage_kernel_engine::engineering_persistence::SqlCipherEngineeringStore;
     use agentmage_kernel_engine::multi_agent::{
-        MultiAgentError, TeamCampaignCoordinator, TeamIntegrationPort, TeamIntegrationResult,
-        TeamReviewPort, TeamReviewResult, TeamTaskSpec, TeamWorkerCandidate, TeamWorkerPort,
-        seal_team_campaign,
+        MultiAgentError, TeamIntegrationPort, TeamIntegrationResult, TeamReviewPort,
+        TeamReviewResult, TeamTaskSpec, TeamWorkerCandidate, TeamWorkerPort, seal_team_campaign,
     };
     use agentmage_kernel_engine::operational_store::{
         OperationalStore, OperationalStoreKeyError, OperationalStoreKeyProvider,
@@ -1392,10 +1392,12 @@ mod tests {
         EngineeringRuntimeError, EngineeringRuntimePort, EngineeringRuntimeService, sha256,
     };
     use crate::engineering_team::{
-        EngineeringTeamCheckpointPort, EngineeringTeamError, EngineeringTeamInput,
-        EngineeringTeamPort,
+        EngineeringTeamCheckpointPort, EngineeringTeamError, EngineeringTeamFinalVerifierPort,
+        EngineeringTeamInput, EngineeringTeamPlannerPort, EngineeringTeamPort,
+        KernelEngineeringTeamExecutor,
     };
 
+    #[derive(Clone)]
     struct FixtureTeamWorker;
 
     impl TeamWorkerPort for FixtureTeamWorker {
@@ -1417,6 +1419,7 @@ mod tests {
         }
     }
 
+    #[derive(Clone)]
     struct FixtureTeamReviewer;
 
     impl TeamReviewPort for FixtureTeamReviewer {
@@ -1432,6 +1435,7 @@ mod tests {
         }
     }
 
+    #[derive(Clone)]
     struct FixtureTeamIntegrator;
 
     impl TeamIntegrationPort for FixtureTeamIntegrator {
@@ -1451,6 +1455,51 @@ mod tests {
 
     struct FixtureTeam;
 
+    struct FixtureTeamPlanner;
+
+    impl EngineeringTeamPlannerPort for FixtureTeamPlanner {
+        fn plan(
+            &mut self,
+            input: &EngineeringTeamInput,
+        ) -> Result<Vec<TeamTaskSpec>, EngineeringTeamError> {
+            Ok(vec![TeamTaskSpec {
+                task_id: TaskId::from_raw("team-task-fixture"),
+                dependencies: Vec::new(),
+                agent_id: ActorId::from_raw("team-worker-fixture"),
+                session_id: SessionId::from_raw("team-worker-session-fixture"),
+                model_profile_id: ModelProfileId::from_raw("team-model-fixture"),
+                endpoint_profile_id: EndpointProfileId::from_raw("team-endpoint-fixture"),
+                base_commit: input.starting_commit.clone(),
+                worktree_id: "team-worktree-fixture".to_owned(),
+                branch: "agentmage/team/worker-fixture".to_owned(),
+                path_leases: vec!["src/team-fixture".to_owned()],
+                test_resource_leases: vec!["team-test-fixture".to_owned()],
+                correction_limit: 2,
+            }])
+        }
+    }
+
+    struct FixtureTeamVerifier;
+
+    impl EngineeringTeamFinalVerifierPort for FixtureTeamVerifier {
+        fn verify(
+            &mut self,
+            input: &EngineeringTeamInput,
+            result: &agentmage_kernel_engine::multi_agent::TeamCampaignResult,
+        ) -> Result<Vec<EvidenceReference>, EngineeringTeamError> {
+            Ok(vec![EvidenceReference {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                evidence_id: EvidenceId::from_raw("team-final-evidence-fixture"),
+                kind: EvidenceKind::Validation,
+                source_id: "team-final-verifier".to_owned(),
+                object_id: input.campaign_id.as_str().to_owned(),
+                fragment: None,
+                content_sha256: "c".repeat(64),
+                observed_revision: Some(result.campaign_head.clone()),
+            }])
+        }
+    }
+
     fn fixture_running_campaign(
         input: &EngineeringTeamInput,
         task_id: TaskId,
@@ -1467,6 +1516,7 @@ mod tests {
             starting_commit: input.starting_commit.clone(),
             campaign_head: input.starting_commit.clone(),
             max_workers: input.max_workers,
+            maximum_concurrent_workers: 0,
             state: TeamCampaignState::Running,
             task_ids: vec![task_id],
             leases: Vec::new(),
@@ -1525,71 +1575,14 @@ mod tests {
             input: &EngineeringTeamInput,
             checkpoints: &mut dyn EngineeringTeamCheckpointPort,
         ) -> Result<TeamCampaign, EngineeringTeamError> {
-            let task_id = TaskId::from_raw("team-task-fixture");
-            let running = fixture_running_campaign(input, task_id.clone())?;
-            if input.resume_from.as_deref().is_none() {
-                checkpoints.checkpoint(&running)?;
-            } else if input.resume_from.as_deref() != Some(&running) {
-                return Err(EngineeringTeamError::Failed);
-            }
-            let coordinator = TeamCampaignCoordinator::new(
-                input.campaign_id.clone(),
-                input.starting_commit.clone(),
-                input.max_workers,
-                vec![TeamTaskSpec {
-                    task_id: task_id.clone(),
-                    dependencies: Vec::new(),
-                    agent_id: ActorId::from_raw("team-worker-fixture"),
-                    session_id: SessionId::from_raw("team-worker-session-fixture"),
-                    model_profile_id: ModelProfileId::from_raw("team-model-fixture"),
-                    endpoint_profile_id: EndpointProfileId::from_raw("team-endpoint-fixture"),
-                    base_commit: input.starting_commit.clone(),
-                    worktree_id: "team-worktree-fixture".to_owned(),
-                    branch: "agentmage/team/worker-fixture".to_owned(),
-                    path_leases: vec!["src/team-fixture".to_owned()],
-                    test_resource_leases: vec!["team-test-fixture".to_owned()],
-                    correction_limit: 2,
-                }],
+            KernelEngineeringTeamExecutor::new(
+                FixtureTeamPlanner,
                 FixtureTeamWorker,
                 FixtureTeamReviewer,
                 FixtureTeamIntegrator,
+                FixtureTeamVerifier,
             )
-            .map_err(|_| EngineeringTeamError::Failed)?;
-            let result = coordinator
-                .run()
-                .map_err(|_| EngineeringTeamError::Failed)?;
-            let completed = seal_team_campaign(TeamCampaign {
-                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
-                campaign_id: input.campaign_id.clone(),
-                coordinator_session_id: input.session_id.clone(),
-                objective: String::from_utf8(input.plan_bytes.clone())
-                    .map_err(|_| EngineeringTeamError::Failed)?,
-                approved_plan_id: input.handoff.approval_id.as_str().to_owned(),
-                approved_plan_sha256: input.handoff.plan_sha256.clone(),
-                campaign_branch: input.campaign_branch.clone(),
-                starting_commit: input.starting_commit.clone(),
-                campaign_head: result.campaign_head.clone(),
-                max_workers: input.max_workers,
-                state: TeamCampaignState::Success,
-                task_ids: vec![task_id],
-                leases: result.leases,
-                integrations: result.integrations,
-                reason_codes: Vec::new(),
-                final_evidence: vec![EvidenceReference {
-                    schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
-                    evidence_id: EvidenceId::from_raw("team-final-evidence-fixture"),
-                    kind: EvidenceKind::Validation,
-                    source_id: "team-final-verifier".to_owned(),
-                    object_id: input.campaign_id.as_str().to_owned(),
-                    fragment: None,
-                    content_sha256: "c".repeat(64),
-                    observed_revision: Some(result.campaign_head),
-                }],
-                campaign_sha256: "0".repeat(64),
-            })
-            .map_err(|_| EngineeringTeamError::Failed)?;
-            checkpoints.checkpoint(&completed)?;
-            Ok(completed)
+            .execute(input, checkpoints)
         }
     }
 
@@ -2160,7 +2153,7 @@ mod tests {
             reopened_team.terminal,
             Some(agentmage_kernel_contracts::EngineeringTerminalState::Success)
         );
-        assert_eq!(reopened_team.artifacts.len(), 2);
+        assert_eq!(reopened_team.artifacts.len(), 7);
         assert_eq!(
             reopened_team.artifacts.last(),
             Some(campaign_artifact.as_ref())
@@ -2185,7 +2178,15 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(
             campaign_states,
-            vec![TeamCampaignState::Running, TeamCampaignState::Success]
+            vec![
+                TeamCampaignState::Running,
+                TeamCampaignState::Running,
+                TeamCampaignState::Running,
+                TeamCampaignState::Running,
+                TeamCampaignState::Running,
+                TeamCampaignState::Running,
+                TeamCampaignState::Success,
+            ]
         );
         fs::remove_dir_all(directory).unwrap();
     }
