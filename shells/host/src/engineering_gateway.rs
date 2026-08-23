@@ -170,9 +170,23 @@ mod tests {
         EngineeringModelError, EngineeringModelInput, EngineeringModelPort,
     };
 
+    #[derive(Clone, Copy)]
+    enum TransportMutation {
+        None,
+        Endpoint,
+        Protocol,
+        Host,
+        Model,
+        Request,
+        Redirect,
+        Proxy,
+        MissingTlsPeer,
+        InvalidTlsPeer,
+    }
+
     #[derive(Clone)]
     struct FixtureTransport {
-        mutate_host: bool,
+        mutation: TransportMutation,
     }
 
     impl QualifiedGatewayTransportPort for FixtureTransport {
@@ -182,18 +196,38 @@ mod tests {
             request: &agentmage_kernel_engine::model_gateway::EncodedGatewayRequest,
         ) -> Result<GatewayTransportReceipt, EngineeringModelError> {
             Ok(GatewayTransportReceipt {
-                endpoint_profile_id: profile.endpoint_profile_id.clone(),
-                protocol: profile.protocol,
-                connected_host: if self.mutate_host {
+                endpoint_profile_id: if matches!(self.mutation, TransportMutation::Endpoint) {
+                    EndpointProfileId::from_raw("endpoint-substituted")
+                } else {
+                    profile.endpoint_profile_id.clone()
+                },
+                protocol: if matches!(self.mutation, TransportMutation::Protocol) {
+                    EndpointProtocol::AnthropicMessages
+                } else {
+                    profile.protocol
+                },
+                connected_host: if matches!(self.mutation, TransportMutation::Host) {
                     "substituted.example.test".to_owned()
                 } else {
                     profile.allowed_hosts[0].clone()
                 },
-                model_id: profile.model_id.clone(),
-                request_body_sha256: request.body_sha256.clone(),
-                redirect_count: 0,
-                ambient_proxy_used: false,
-                tls_peer_sha256: Some("d".repeat(64)),
+                model_id: if matches!(self.mutation, TransportMutation::Model) {
+                    "substituted-model@revision".to_owned()
+                } else {
+                    profile.model_id.clone()
+                },
+                request_body_sha256: if matches!(self.mutation, TransportMutation::Request) {
+                    "f".repeat(64)
+                } else {
+                    request.body_sha256.clone()
+                },
+                redirect_count: u8::from(matches!(self.mutation, TransportMutation::Redirect)),
+                ambient_proxy_used: matches!(self.mutation, TransportMutation::Proxy),
+                tls_peer_sha256: match self.mutation {
+                    TransportMutation::MissingTlsPeer => None,
+                    TransportMutation::InvalidTlsPeer => Some("invalid".to_owned()),
+                    _ => Some("d".repeat(64)),
+                },
                 response_bytes: br#"{"choices":[{"message":{"content":"verified"}}]}"#.to_vec(),
             })
         }
@@ -250,7 +284,7 @@ mod tests {
     }
 
     #[test]
-    fn exact_remote_route_executes_and_host_substitution_fails_closed() {
+    fn exact_remote_route_executes_and_every_transport_substitution_fails_closed() {
         let endpoint = endpoint();
         let model = ModelProfileId::from_raw("model-private-fixture");
         let route = select_explicit_route(
@@ -267,7 +301,9 @@ mod tests {
             model.clone(),
             endpoint.clone(),
             route.clone(),
-            FixtureTransport { mutate_host: false },
+            FixtureTransport {
+                mutation: TransportMutation::None,
+            },
         )
         .unwrap();
         assert_eq!(
@@ -275,16 +311,28 @@ mod tests {
             "verified"
         );
 
-        let mut substituted = QualifiedGatewayEngineeringModel::new(
-            model.clone(),
-            endpoint.clone(),
-            route,
-            FixtureTransport { mutate_host: true },
-        )
-        .unwrap();
-        assert_eq!(
-            substituted.execute(&input(&model, &endpoint)),
-            Err(EngineeringModelError::Failed)
-        );
+        for mutation in [
+            TransportMutation::Endpoint,
+            TransportMutation::Protocol,
+            TransportMutation::Host,
+            TransportMutation::Model,
+            TransportMutation::Request,
+            TransportMutation::Redirect,
+            TransportMutation::Proxy,
+            TransportMutation::MissingTlsPeer,
+            TransportMutation::InvalidTlsPeer,
+        ] {
+            let mut substituted = QualifiedGatewayEngineeringModel::new(
+                model.clone(),
+                endpoint.clone(),
+                route.clone(),
+                FixtureTransport { mutation },
+            )
+            .unwrap();
+            assert_eq!(
+                substituted.execute(&input(&model, &endpoint)),
+                Err(EngineeringModelError::Failed)
+            );
+        }
     }
 }
