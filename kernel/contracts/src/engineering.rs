@@ -883,6 +883,10 @@ pub enum EngineeringEventKind {
         campaign_id: CampaignId,
         /// Validated campaign lifecycle state.
         state: TeamCampaignState,
+        /// Exact encrypted artifact containing the complete campaign projection.
+        campaign_artifact_id: RuntimeArtifactId,
+        /// Canonical digest of the complete campaign projection.
+        campaign_sha256: String,
     },
     /// A task or campaign reached a truthful terminal state.
     Terminal {

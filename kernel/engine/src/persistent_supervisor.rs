@@ -476,8 +476,14 @@ pub(crate) fn build_event(
         {
             return Err(PersistentSupervisorError::InvalidInput);
         }
-        EngineeringEventKind::CampaignUpdated { campaign_id, .. }
-            if campaign_id.as_str().is_empty() =>
+        EngineeringEventKind::CampaignUpdated {
+            campaign_id,
+            campaign_artifact_id,
+            campaign_sha256,
+            ..
+        } if campaign_id.as_str().is_empty()
+            || campaign_artifact_id.as_str().is_empty()
+            || !valid_sha256(campaign_sha256) =>
         {
             return Err(PersistentSupervisorError::InvalidInput);
         }
@@ -540,8 +546,14 @@ pub fn verify_event_chain(events: &[EngineeringEvent]) -> Result<(), PersistentS
             {
                 return Err(PersistentSupervisorError::Integrity);
             }
-            EngineeringEventKind::CampaignUpdated { campaign_id, .. }
-                if campaign_id.as_str().is_empty() =>
+            EngineeringEventKind::CampaignUpdated {
+                campaign_id,
+                campaign_artifact_id,
+                campaign_sha256,
+                ..
+            } if campaign_id.as_str().is_empty()
+                || campaign_artifact_id.as_str().is_empty()
+                || !valid_sha256(campaign_sha256) =>
             {
                 return Err(PersistentSupervisorError::Integrity);
             }

@@ -1,11 +1,12 @@
 //! Caller-neutral composition of Engineering RPC over encrypted host-owned state.
 
 use agentmage_kernel_contracts::{
-    ActorId, ApprovalId, ArtifactCaptureResult, ArtifactSourceKind, ArtifactUploadChunk,
-    ArtifactUploadId, CONTRACT_SCHEMA_VERSION, CampaignId, ContextDeliveryReceipt, ContextPacketId,
-    EndpointProfileId, EngineeringEventKind, EngineeringRpcRequest, EngineeringRpcResponse,
-    EngineeringSessionMode, EngineeringTerminalState, ModelProfileId, RouteDecisionId,
-    RuntimeArtifactId, RuntimeRunId, RuntimeRunRequest, SessionId, TeamCampaignState,
+    ActorId, AgentLeaseState, ApprovalId, ArtifactCaptureResult, ArtifactSourceKind,
+    ArtifactUploadChunk, ArtifactUploadId, CONTRACT_SCHEMA_VERSION, CampaignId,
+    ContextDeliveryReceipt, ContextPacketId, EndpointProfileId, EngineeringEventKind,
+    EngineeringRpcRequest, EngineeringRpcResponse, EngineeringSessionMode,
+    EngineeringTerminalState, IntegrationState, ModelProfileId, RouteDecisionId, RuntimeArtifactId,
+    RuntimeRunId, RuntimeRunRequest, SessionId, TeamCampaign, TeamCampaignState,
     VerifiedModelTurnResult,
 };
 use agentmage_kernel_engine::engineering_execution::{
@@ -33,9 +34,92 @@ use agentmage_kernel_engine::verified_context::{
 use sha2::{Digest, Sha256};
 
 use crate::artifact_ingestion::{ArtifactIngestionError, plan_artifact_ingestion};
-use crate::engineering_team::{EngineeringTeamInput, EngineeringTeamPort};
+use crate::engineering_team::{EngineeringTeamError, EngineeringTeamInput, EngineeringTeamPort};
 
 const MAX_VERIFIED_MODEL_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
+
+const fn is_terminal_campaign(state: TeamCampaignState) -> bool {
+    matches!(
+        state,
+        TeamCampaignState::Blocked
+            | TeamCampaignState::Cancelled
+            | TeamCampaignState::Failed
+            | TeamCampaignState::Success
+    )
+}
+
+fn valid_campaign_transition(from: TeamCampaignState, to: TeamCampaignState) -> bool {
+    matches!(
+        (from, to),
+        (TeamCampaignState::Planned, TeamCampaignState::Planned)
+            | (TeamCampaignState::Planned, TeamCampaignState::Ready)
+            | (TeamCampaignState::Planned, TeamCampaignState::Blocked)
+            | (TeamCampaignState::Planned, TeamCampaignState::Cancelled)
+            | (TeamCampaignState::Ready, TeamCampaignState::Ready)
+            | (TeamCampaignState::Ready, TeamCampaignState::Running)
+            | (TeamCampaignState::Ready, TeamCampaignState::Blocked)
+            | (TeamCampaignState::Ready, TeamCampaignState::Cancelled)
+            | (TeamCampaignState::Ready, TeamCampaignState::Failed)
+            | (TeamCampaignState::Running, TeamCampaignState::Running)
+            | (TeamCampaignState::Running, TeamCampaignState::Paused)
+            | (TeamCampaignState::Running, TeamCampaignState::Blocked)
+            | (TeamCampaignState::Running, TeamCampaignState::Cancelled)
+            | (TeamCampaignState::Running, TeamCampaignState::Failed)
+            | (TeamCampaignState::Running, TeamCampaignState::Success)
+            | (TeamCampaignState::Paused, TeamCampaignState::Paused)
+            | (TeamCampaignState::Paused, TeamCampaignState::Ready)
+            | (TeamCampaignState::Paused, TeamCampaignState::Running)
+            | (TeamCampaignState::Paused, TeamCampaignState::Blocked)
+            | (TeamCampaignState::Paused, TeamCampaignState::Cancelled)
+            | (TeamCampaignState::Paused, TeamCampaignState::Failed)
+    )
+}
+
+fn valid_lease_transition(from: AgentLeaseState, to: AgentLeaseState) -> bool {
+    use AgentLeaseState::{
+        Blocked, Cancelled, Correcting, Disputed, Failed, Gating, Implementing, Integrating,
+        IntegrationQueued, Leased, MergeReady, Merged, Ready, Reviewing,
+    };
+    from == to
+        || matches!(
+            (from, to),
+            (Ready, Leased)
+                | (Leased, Implementing)
+                | (
+                    Implementing,
+                    Gating | Reviewing | Blocked | Failed | Cancelled
+                )
+                | (Gating, Reviewing | Blocked | Failed | Cancelled)
+                | (
+                    Reviewing,
+                    Correcting
+                        | MergeReady
+                        | IntegrationQueued
+                        | Blocked
+                        | Disputed
+                        | Failed
+                        | Cancelled
+                )
+                | (
+                    Correcting,
+                    Implementing | Gating | Reviewing | Blocked | Failed | Cancelled
+                )
+                | (MergeReady, IntegrationQueued | Blocked | Cancelled)
+                | (IntegrationQueued, Integrating | Blocked | Cancelled)
+                | (Integrating, Merged | Blocked | Failed)
+        )
+}
+
+fn valid_integration_transition(from: IntegrationState, to: IntegrationState) -> bool {
+    use IntegrationState::{Blocked, Failed, Integrated, Integrating, Queued, Revalidating};
+    from == to
+        || matches!(
+            (from, to),
+            (Queued, Revalidating | Blocked | Failed)
+                | (Revalidating, Integrating | Blocked | Failed)
+                | (Integrating, Integrated | Blocked | Failed)
+        )
+}
 
 /// Exact verified input supplied to one already-qualified model executor.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -464,6 +548,7 @@ impl EngineeringRuntimeService {
             return Err(EngineeringRuntimeError::TeamFailed);
         }
         let plan_bytes = self.read_complete_artifact(&handoff.source_session_id, &plan)?;
+        let resume_from = self.load_team_checkpoint(&session_id, &campaign_id, &events)?;
         let input = EngineeringTeamInput {
             session_id: session_id.clone(),
             handoff: (*handoff).clone(),
@@ -472,79 +557,44 @@ impl EngineeringRuntimeService {
             campaign_branch: campaign_branch.clone(),
             starting_commit: starting_commit.clone(),
             max_workers,
+            resume_from: resume_from.clone().map(Box::new),
         };
-        let campaign = self
+        let mut team = self
             .team
-            .as_mut()
-            .ok_or(EngineeringRuntimeError::TeamUnavailable)?
-            .execute(&input)
-            .map_err(|_| EngineeringRuntimeError::TeamFailed)?;
-        verify_team_campaign(&campaign).map_err(|_| EngineeringRuntimeError::TeamFailed)?;
-        if campaign.campaign_id != campaign_id
-            || campaign.coordinator_session_id != session_id
-            || campaign.approved_plan_id != handoff.approval_id.as_str()
-            || campaign.approved_plan_sha256 != handoff.plan_sha256
-            || campaign.campaign_branch != campaign_branch
-            || campaign.starting_commit != starting_commit
-            || campaign.max_workers != max_workers
-            || !matches!(
-                campaign.state,
-                TeamCampaignState::Success
-                    | TeamCampaignState::Blocked
-                    | TeamCampaignState::Cancelled
-                    | TeamCampaignState::Failed
-            )
-        {
-            return Err(EngineeringRuntimeError::TeamFailed);
-        }
-        let campaign_bytes =
-            serde_json::to_vec(&campaign).map_err(|_| EngineeringRuntimeError::TeamFailed)?;
-        let campaign_artifact = self.persist_generated(
-            &session_id,
-            &handoff.plan_artifact_id,
-            "team-campaign",
-            "Team campaign result",
-            "application/vnd.agentmage.team-campaign+json",
-            &campaign_bytes,
-            occurred_at_epoch_ms,
-        )?;
-        for lease in &campaign.leases {
-            self.supervisor
-                .record(
-                    &session_id,
-                    correlation_id.clone(),
-                    occurred_at_epoch_ms,
-                    EngineeringEventKind::WorkerUpdated {
-                        lease_id: lease.lease_id.clone(),
-                        state: lease.state,
-                    },
-                )
-                .map_err(EngineeringRuntimeError::Supervisor)?;
-        }
-        for integration in &campaign.integrations {
-            self.supervisor
-                .record(
-                    &session_id,
-                    correlation_id.clone(),
-                    occurred_at_epoch_ms,
-                    EngineeringEventKind::IntegrationUpdated {
-                        integration_id: integration.integration_id.clone(),
-                        state: integration.state,
-                    },
-                )
-                .map_err(EngineeringRuntimeError::Supervisor)?;
-        }
-        self.supervisor
-            .record(
-                &session_id,
-                correlation_id.clone(),
+            .take()
+            .ok_or(EngineeringRuntimeError::TeamUnavailable)?;
+        let mut latest_campaign = resume_from;
+        let mut latest_artifact = None;
+        let result = {
+            let mut checkpoint = |campaign: &TeamCampaign| {
+                let artifact = self
+                    .persist_team_checkpoint(
+                        &input,
+                        latest_campaign.as_ref(),
+                        campaign,
+                        &correlation_id,
+                        occurred_at_epoch_ms,
+                    )
+                    .map_err(|_| EngineeringTeamError::Failed)?;
+                latest_campaign = Some(campaign.clone());
+                latest_artifact = Some(artifact);
+                Ok(())
+            };
+            team.execute(&input, &mut checkpoint)
+        };
+        self.team = Some(team);
+        let campaign = result.map_err(|_| EngineeringRuntimeError::TeamFailed)?;
+        self.validate_team_campaign_binding(&input, latest_campaign.as_ref(), &campaign)?;
+        if latest_campaign.as_ref() != Some(&campaign) {
+            latest_artifact = Some(self.persist_team_checkpoint(
+                &input,
+                latest_campaign.as_ref(),
+                &campaign,
+                &correlation_id,
                 occurred_at_epoch_ms,
-                EngineeringEventKind::CampaignUpdated {
-                    campaign_id,
-                    state: campaign.state,
-                },
-            )
-            .map_err(EngineeringRuntimeError::Supervisor)?;
+            )?);
+        }
+        let campaign_artifact = latest_artifact.ok_or(EngineeringRuntimeError::TeamFailed)?;
         let terminal = match campaign.state {
             TeamCampaignState::Success => EngineeringTerminalState::Success,
             TeamCampaignState::Blocked => EngineeringTerminalState::Blocked,
@@ -576,6 +626,171 @@ impl EngineeringRuntimeService {
             campaign_artifact: Box::new(campaign_artifact),
             event: Box::new(event),
         })
+    }
+
+    fn load_team_checkpoint(
+        &self,
+        session_id: &SessionId,
+        campaign_id: &CampaignId,
+        events: &[agentmage_kernel_contracts::EngineeringEvent],
+    ) -> Result<Option<TeamCampaign>, EngineeringRuntimeError> {
+        let Some((artifact_id, expected_sha256)) = events.iter().rev().find_map(|event| {
+            if let EngineeringEventKind::CampaignUpdated {
+                campaign_id: event_campaign_id,
+                campaign_artifact_id,
+                campaign_sha256,
+                ..
+            } = &event.kind
+                && event_campaign_id == campaign_id
+            {
+                return Some((campaign_artifact_id, campaign_sha256));
+            }
+            None
+        }) else {
+            return Ok(None);
+        };
+        let snapshot = self
+            .supervisor
+            .open_session(session_id)
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        let capture = snapshot
+            .artifacts
+            .iter()
+            .find(|capture| &capture.artifact_id == artifact_id)
+            .ok_or(EngineeringRuntimeError::TeamFailed)?;
+        let bytes = self.read_complete_artifact(session_id, capture)?;
+        let campaign: TeamCampaign =
+            serde_json::from_slice(&bytes).map_err(|_| EngineeringRuntimeError::TeamFailed)?;
+        verify_team_campaign(&campaign).map_err(|_| EngineeringRuntimeError::TeamFailed)?;
+        if &campaign.campaign_sha256 != expected_sha256 || &campaign.campaign_id != campaign_id {
+            return Err(EngineeringRuntimeError::TeamFailed);
+        }
+        Ok(Some(campaign))
+    }
+
+    fn persist_team_checkpoint(
+        &mut self,
+        input: &EngineeringTeamInput,
+        previous: Option<&TeamCampaign>,
+        campaign: &TeamCampaign,
+        correlation_id: &agentmage_kernel_contracts::CorrelationId,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<ArtifactCaptureResult, EngineeringRuntimeError> {
+        self.validate_team_campaign_binding(input, previous, campaign)?;
+        let bytes =
+            serde_json::to_vec(campaign).map_err(|_| EngineeringRuntimeError::TeamFailed)?;
+        let role = format!(
+            "team-campaign-{}-{}",
+            campaign.campaign_id.as_str(),
+            &campaign.campaign_sha256[..16]
+        );
+        let capture = self.persist_generated(
+            &input.session_id,
+            &input.handoff.plan_artifact_id,
+            &role,
+            "Team campaign checkpoint",
+            "application/vnd.agentmage.team-campaign+json",
+            &bytes,
+            occurred_at_epoch_ms,
+        )?;
+        self.supervisor
+            .record(
+                &input.session_id,
+                correlation_id.clone(),
+                occurred_at_epoch_ms,
+                EngineeringEventKind::CampaignUpdated {
+                    campaign_id: campaign.campaign_id.clone(),
+                    state: campaign.state,
+                    campaign_artifact_id: capture.artifact_id.clone(),
+                    campaign_sha256: campaign.campaign_sha256.clone(),
+                },
+            )
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        Ok(capture)
+    }
+
+    fn validate_team_campaign_binding(
+        &self,
+        input: &EngineeringTeamInput,
+        previous: Option<&TeamCampaign>,
+        campaign: &TeamCampaign,
+    ) -> Result<(), EngineeringRuntimeError> {
+        verify_team_campaign(campaign).map_err(|_| EngineeringRuntimeError::TeamFailed)?;
+        if campaign.campaign_id != input.campaign_id
+            || campaign.coordinator_session_id != input.session_id
+            || campaign.approved_plan_id != input.handoff.approval_id.as_str()
+            || campaign.approved_plan_sha256 != input.handoff.plan_sha256
+            || campaign.campaign_branch != input.campaign_branch
+            || campaign.starting_commit != input.starting_commit
+            || campaign.max_workers != input.max_workers
+        {
+            return Err(EngineeringRuntimeError::TeamFailed);
+        }
+        if let Some(previous) = previous {
+            if previous == campaign {
+                return Ok(());
+            }
+            if previous.campaign_id != campaign.campaign_id
+                || previous.coordinator_session_id != campaign.coordinator_session_id
+                || previous.objective != campaign.objective
+                || previous.approved_plan_id != campaign.approved_plan_id
+                || previous.approved_plan_sha256 != campaign.approved_plan_sha256
+                || previous.campaign_branch != campaign.campaign_branch
+                || previous.starting_commit != campaign.starting_commit
+                || previous.max_workers != campaign.max_workers
+                || previous.task_ids != campaign.task_ids
+                || is_terminal_campaign(previous.state)
+                || !valid_campaign_transition(previous.state, campaign.state)
+                || previous.leases.len() > campaign.leases.len()
+                || previous.integrations.len() > campaign.integrations.len()
+            {
+                return Err(EngineeringRuntimeError::TeamFailed);
+            }
+            for old in &previous.leases {
+                let Some(new) = campaign
+                    .leases
+                    .iter()
+                    .find(|candidate| candidate.lease_id == old.lease_id)
+                else {
+                    return Err(EngineeringRuntimeError::TeamFailed);
+                };
+                if old.campaign_id != new.campaign_id
+                    || old.task_id != new.task_id
+                    || old.agent_id != new.agent_id
+                    || old.session_id != new.session_id
+                    || old.model_profile_id != new.model_profile_id
+                    || old.endpoint_profile_id != new.endpoint_profile_id
+                    || old.base_commit != new.base_commit
+                    || old.worktree_id != new.worktree_id
+                    || old.branch != new.branch
+                    || old.path_leases != new.path_leases
+                    || old.test_resource_leases != new.test_resource_leases
+                    || old.correction_limit != new.correction_limit
+                    || old.correction_count > new.correction_count
+                    || !valid_lease_transition(old.state, new.state)
+                {
+                    return Err(EngineeringRuntimeError::TeamFailed);
+                }
+            }
+            for old in &previous.integrations {
+                let Some(new) = campaign
+                    .integrations
+                    .iter()
+                    .find(|candidate| candidate.integration_id == old.integration_id)
+                else {
+                    return Err(EngineeringRuntimeError::TeamFailed);
+                };
+                if old.campaign_id != new.campaign_id
+                    || old.lease_id != new.lease_id
+                    || old.prior_campaign_head != new.prior_campaign_head
+                    || old.candidate_commit != new.candidate_commit
+                    || !valid_integration_transition(old.state, new.state)
+                {
+                    return Err(EngineeringRuntimeError::TeamFailed);
+                }
+            }
+        }
+        Ok(())
     }
 
     fn ingest_artifact(
@@ -1177,7 +1392,8 @@ mod tests {
         EngineeringRuntimeError, EngineeringRuntimePort, EngineeringRuntimeService, sha256,
     };
     use crate::engineering_team::{
-        EngineeringTeamError, EngineeringTeamInput, EngineeringTeamPort,
+        EngineeringTeamCheckpointPort, EngineeringTeamError, EngineeringTeamInput,
+        EngineeringTeamPort,
     };
 
     struct FixtureTeamWorker;
@@ -1235,12 +1451,87 @@ mod tests {
 
     struct FixtureTeam;
 
+    fn fixture_running_campaign(
+        input: &EngineeringTeamInput,
+        task_id: TaskId,
+    ) -> Result<TeamCampaign, EngineeringTeamError> {
+        seal_team_campaign(TeamCampaign {
+            schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+            campaign_id: input.campaign_id.clone(),
+            coordinator_session_id: input.session_id.clone(),
+            objective: String::from_utf8(input.plan_bytes.clone())
+                .map_err(|_| EngineeringTeamError::Failed)?,
+            approved_plan_id: input.handoff.approval_id.as_str().to_owned(),
+            approved_plan_sha256: input.handoff.plan_sha256.clone(),
+            campaign_branch: input.campaign_branch.clone(),
+            starting_commit: input.starting_commit.clone(),
+            campaign_head: input.starting_commit.clone(),
+            max_workers: input.max_workers,
+            state: TeamCampaignState::Running,
+            task_ids: vec![task_id],
+            leases: Vec::new(),
+            integrations: Vec::new(),
+            reason_codes: Vec::new(),
+            final_evidence: Vec::new(),
+            campaign_sha256: "0".repeat(64),
+        })
+        .map_err(|_| EngineeringTeamError::Failed)
+    }
+
+    struct CheckpointThenFailTeam;
+
+    impl EngineeringTeamPort for CheckpointThenFailTeam {
+        fn execute(
+            &mut self,
+            input: &EngineeringTeamInput,
+            checkpoints: &mut dyn EngineeringTeamCheckpointPort,
+        ) -> Result<TeamCampaign, EngineeringTeamError> {
+            if input.resume_from.is_some() {
+                return Err(EngineeringTeamError::Failed);
+            }
+            checkpoints.checkpoint(&fixture_running_campaign(
+                input,
+                TaskId::from_raw("team-task-fixture"),
+            )?)?;
+            Err(EngineeringTeamError::Failed)
+        }
+    }
+
+    struct RegressingTeam;
+
+    impl EngineeringTeamPort for RegressingTeam {
+        fn execute(
+            &mut self,
+            input: &EngineeringTeamInput,
+            checkpoints: &mut dyn EngineeringTeamCheckpointPort,
+        ) -> Result<TeamCampaign, EngineeringTeamError> {
+            let mut regressed = input
+                .resume_from
+                .as_deref()
+                .cloned()
+                .ok_or(EngineeringTeamError::Failed)?;
+            regressed.state = TeamCampaignState::Planned;
+            regressed.campaign_sha256 = "0".repeat(64);
+            let regressed =
+                seal_team_campaign(regressed).map_err(|_| EngineeringTeamError::Failed)?;
+            checkpoints.checkpoint(&regressed)?;
+            Ok(regressed)
+        }
+    }
+
     impl EngineeringTeamPort for FixtureTeam {
         fn execute(
             &mut self,
             input: &EngineeringTeamInput,
+            checkpoints: &mut dyn EngineeringTeamCheckpointPort,
         ) -> Result<TeamCampaign, EngineeringTeamError> {
             let task_id = TaskId::from_raw("team-task-fixture");
+            let running = fixture_running_campaign(input, task_id.clone())?;
+            if input.resume_from.as_deref().is_none() {
+                checkpoints.checkpoint(&running)?;
+            } else if input.resume_from.as_deref() != Some(&running) {
+                return Err(EngineeringTeamError::Failed);
+            }
             let coordinator = TeamCampaignCoordinator::new(
                 input.campaign_id.clone(),
                 input.starting_commit.clone(),
@@ -1267,7 +1558,7 @@ mod tests {
             let result = coordinator
                 .run()
                 .map_err(|_| EngineeringTeamError::Failed)?;
-            seal_team_campaign(TeamCampaign {
+            let completed = seal_team_campaign(TeamCampaign {
                 schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
                 campaign_id: input.campaign_id.clone(),
                 coordinator_session_id: input.session_id.clone(),
@@ -1296,7 +1587,9 @@ mod tests {
                 }],
                 campaign_sha256: "0".repeat(64),
             })
-            .map_err(|_| EngineeringTeamError::Failed)
+            .map_err(|_| EngineeringTeamError::Failed)?;
+            checkpoints.checkpoint(&completed)?;
+            Ok(completed)
         }
     }
 
@@ -1782,29 +2075,43 @@ mod tests {
             }),
             Err(EngineeringRuntimeError::TeamUnavailable)
         );
+        let team_request = EngineeringRpcRequest::ExecuteTeamCampaign {
+            session_id: team_session_id.clone(),
+            campaign_id: CampaignId::from_raw("campaign-team-fixture"),
+            campaign_branch: "agentmage/team/campaign-fixture".to_owned(),
+            starting_commit: "0".repeat(40),
+            max_workers: 1,
+            correlation_id: CorrelationId::from_raw("correlation-team-execute"),
+            occurred_at_epoch_ms: 180,
+        };
+        runtime.install_team(Box::new(CheckpointThenFailTeam));
+        assert_eq!(
+            runtime.handle(team_request.clone()),
+            Err(EngineeringRuntimeError::TeamFailed)
+        );
+        drop(runtime);
+        let mut runtime = EngineeringRuntimeService::new(
+            adapter.clone(),
+            ActorId::from_raw("user-plan-turn-fixture"),
+        );
+        runtime.install_team(Box::new(RegressingTeam));
+        assert_eq!(
+            runtime.handle(team_request.clone()),
+            Err(EngineeringRuntimeError::TeamFailed)
+        );
         runtime.install_team(Box::new(FixtureTeam));
         let EngineeringRpcResponse::TeamCampaignCompleted {
             campaign,
             campaign_artifact,
             event: team_terminal,
-        } = runtime
-            .handle(EngineeringRpcRequest::ExecuteTeamCampaign {
-                session_id: team_session_id.clone(),
-                campaign_id: CampaignId::from_raw("campaign-team-fixture"),
-                campaign_branch: "agentmage/team/campaign-fixture".to_owned(),
-                starting_commit: "0".repeat(40),
-                max_workers: 1,
-                correlation_id: CorrelationId::from_raw("correlation-team-execute"),
-                occurred_at_epoch_ms: 180,
-            })
-            .unwrap()
+        } = runtime.handle(team_request).unwrap()
         else {
             panic!("validated Team campaign expected");
         };
         assert_eq!(campaign.state, TeamCampaignState::Success);
         assert_eq!(campaign.leases.len(), 1);
         assert_eq!(campaign.integrations.len(), 1);
-        assert_eq!(campaign_artifact.display_name, "Team campaign result");
+        assert_eq!(campaign_artifact.display_name, "Team campaign checkpoint");
         assert!(matches!(
             team_terminal.kind,
             EngineeringEventKind::Terminal {
@@ -1843,7 +2150,7 @@ mod tests {
             snapshot: reopened_team,
         } = reopened
             .handle(EngineeringRpcRequest::OpenSession {
-                session_id: team_session_id,
+                session_id: team_session_id.clone(),
             })
             .unwrap()
         else {
@@ -1853,7 +2160,33 @@ mod tests {
             reopened_team.terminal,
             Some(agentmage_kernel_contracts::EngineeringTerminalState::Success)
         );
-        assert_eq!(reopened_team.artifacts, vec![*campaign_artifact]);
+        assert_eq!(reopened_team.artifacts.len(), 2);
+        assert_eq!(
+            reopened_team.artifacts.last(),
+            Some(campaign_artifact.as_ref())
+        );
+        let EngineeringRpcResponse::Events {
+            events: team_events,
+        } = reopened
+            .handle(EngineeringRpcRequest::ReplayEvents {
+                session_id: team_session_id,
+                after_sequence: None,
+            })
+            .unwrap()
+        else {
+            panic!("durable Team events expected");
+        };
+        let campaign_states = team_events
+            .iter()
+            .filter_map(|event| match event.kind {
+                EngineeringEventKind::CampaignUpdated { state, .. } => Some(state),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            campaign_states,
+            vec![TeamCampaignState::Running, TeamCampaignState::Success]
+        );
         fs::remove_dir_all(directory).unwrap();
     }
 

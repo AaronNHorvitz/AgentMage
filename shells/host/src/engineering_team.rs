@@ -19,6 +19,8 @@ pub struct EngineeringTeamInput {
     pub starting_commit: String,
     /// Configured concurrent worker ceiling.
     pub max_workers: u8,
+    /// Last verified durable checkpoint when this campaign is being resumed.
+    pub resume_from: Option<Box<TeamCampaign>>,
 }
 
 /// Stable refusal from an installed Team campaign executor.
@@ -28,11 +30,27 @@ pub enum EngineeringTeamError {
     Failed,
 }
 
+/// Host-owned durable checkpoint boundary used during Team execution.
+pub trait EngineeringTeamCheckpointPort {
+    /// Persists one complete validated campaign projection before execution continues.
+    fn checkpoint(&mut self, campaign: &TeamCampaign) -> Result<(), EngineeringTeamError>;
+}
+
+impl<F> EngineeringTeamCheckpointPort for F
+where
+    F: FnMut(&TeamCampaign) -> Result<(), EngineeringTeamError>,
+{
+    fn checkpoint(&mut self, campaign: &TeamCampaign) -> Result<(), EngineeringTeamError> {
+        self(campaign)
+    }
+}
+
 /// Trusted host composition point for a Team scheduler and its isolated workers.
 pub trait EngineeringTeamPort {
     /// Executes one approved campaign and returns only its complete terminal projection.
     fn execute(
         &mut self,
         input: &EngineeringTeamInput,
+        checkpoints: &mut dyn EngineeringTeamCheckpointPort,
     ) -> Result<TeamCampaign, EngineeringTeamError>;
 }
