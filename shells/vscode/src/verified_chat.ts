@@ -156,6 +156,37 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
         });
         return;
       }
+      const planArtifact = asRecord(response.response.plan_artifact);
+      if (this.mode === "plan") {
+        if (
+          planArtifact === undefined ||
+          typeof planArtifact.artifact_id !== "string" ||
+          typeof planArtifact.display_name !== "string" ||
+          typeof planArtifact.source_sha256 !== "string" ||
+          typeof planArtifact.byte_length !== "number"
+        ) {
+          await this.post({
+            type: "status",
+            state: "blocked",
+            code: "verified-chat.plan-artifact.invalid",
+          });
+          return;
+        }
+        await this.post({
+          type: "artifact",
+          artifactId: planArtifact.artifact_id,
+          displayName: planArtifact.display_name,
+          sourceSha256: planArtifact.source_sha256,
+          byteLength: planArtifact.byte_length,
+        });
+      } else if (response.response.plan_artifact !== null) {
+        await this.post({
+          type: "status",
+          state: "blocked",
+          code: "verified-chat.plan-artifact.unexpected",
+        });
+        return;
+      }
       await this.post({
         type: "message",
         role: "assistant",

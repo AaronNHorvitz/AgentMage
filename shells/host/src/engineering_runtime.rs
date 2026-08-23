@@ -425,6 +425,21 @@ impl EngineeringRuntimeService {
         {
             return Err(EngineeringRuntimeError::ModelFailed);
         }
+        let plan_artifact = if snapshot.mode == EngineeringSessionMode::Plan {
+            enforce_engineering_mode(snapshot.mode, EngineeringModeOperation::PlanArtifact)
+                .map_err(|_| EngineeringRuntimeError::ModeDenied)?;
+            Some(self.persist_generated(
+                &session_id,
+                &prompt_artifact_id,
+                &format!("plan-{}", correlation_id.as_str()),
+                "Verified Chat plan draft",
+                "text/markdown",
+                output_text.as_bytes(),
+                occurred_at_epoch_ms,
+            )?)
+        } else {
+            None
+        };
         self.supervisor
             .record(
                 &session_id,
@@ -436,7 +451,7 @@ impl EngineeringRuntimeService {
             )
             .map_err(EngineeringRuntimeError::Supervisor)?;
         Ok(EngineeringRpcResponse::VerifiedTurnCompleted {
-            turn: VerifiedModelTurnResult {
+            turn: Box::new(VerifiedModelTurnResult {
                 schema_version: CONTRACT_SCHEMA_VERSION,
                 session_id,
                 run_id,
@@ -444,7 +459,8 @@ impl EngineeringRuntimeService {
                 output_sha256: sha256(output_text.as_bytes()),
                 output_text,
                 terminal: EngineeringTerminalState::Success,
-            },
+            }),
+            plan_artifact,
         })
     }
 }
@@ -794,9 +810,14 @@ mod tests {
                 occurred_at_epoch_ms: 30,
             })
             .unwrap();
-        let EngineeringRpcResponse::VerifiedTurnCompleted { turn } = turn else {
+        let EngineeringRpcResponse::VerifiedTurnCompleted {
+            turn,
+            plan_artifact,
+        } = turn
+        else {
             panic!("turn response expected");
         };
+        assert!(plan_artifact.is_none());
         assert_eq!(turn.output_text, "exact-context-sentinels-verified");
         assert_eq!(turn.context.inline_bytes, capture.byte_length);
         drop(runtime);
@@ -836,6 +857,101 @@ mod tests {
             }),
             Err(EngineeringRuntimeError::ModelUnavailable)
         );
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn plan_turn_persists_exact_hash_bound_markdown_without_implementation_authority() {
+        let (directory, adapter) = store();
+        let session_id = SessionId::from_raw("session-plan-turn-fixture");
+        let upload_id = ArtifactUploadId::from_raw("upload-plan-turn-fixture");
+        let source = b"produce a bounded implementation plan".to_vec();
+        let source_sha256 = sha256(&source);
+        let expected_output = "exact-context-sentinels-verified";
+        let mut runtime = EngineeringRuntimeService::new(adapter.clone());
+        runtime.install_model(Box::new(ExactSentinelModel {
+            expected_sha256: source_sha256.clone(),
+            expected_mode: EngineeringSessionMode::Plan,
+            sentinels: Vec::new(),
+        }));
+        runtime
+            .handle(EngineeringRpcRequest::CreateSession {
+                session_id: session_id.clone(),
+                title: "Durable plan turn".to_owned(),
+                mode: EngineeringSessionMode::Plan,
+                correlation_id: CorrelationId::from_raw("correlation-plan-create"),
+                occurred_at_epoch_ms: 100,
+            })
+            .unwrap();
+        runtime
+            .handle(EngineeringRpcRequest::BeginArtifact {
+                upload_id: upload_id.clone(),
+                session_id: session_id.clone(),
+                source_kind: ArtifactSourceKind::Paste,
+                display_name: "Plan request".to_owned(),
+                media_type: "text/plain".to_owned(),
+                total_bytes: source.len() as u64,
+                expected_sha256: source_sha256.clone(),
+            })
+            .unwrap();
+        runtime
+            .handle(EngineeringRpcRequest::UploadArtifactChunk {
+                chunk: ArtifactUploadChunk {
+                    schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                    upload_id: upload_id.clone(),
+                    session_id: session_id.clone(),
+                    sequence: 0,
+                    offset: 0,
+                    total_bytes: source.len() as u64,
+                    bytes: source,
+                    chunk_sha256: source_sha256,
+                    final_chunk: true,
+                },
+            })
+            .unwrap();
+        let EngineeringRpcResponse::ArtifactCaptured { capture } = runtime
+            .handle(EngineeringRpcRequest::CommitArtifact {
+                upload_id,
+                completed_at_epoch_ms: 110,
+            })
+            .unwrap()
+        else {
+            panic!("capture response expected");
+        };
+        let EngineeringRpcResponse::VerifiedTurnCompleted {
+            turn,
+            plan_artifact: Some(plan_artifact),
+        } = runtime
+            .handle(EngineeringRpcRequest::ExecuteVerifiedTurn {
+                session_id: session_id.clone(),
+                prompt_artifact_id: capture.artifact_id,
+                correlation_id: CorrelationId::from_raw("correlation-plan-turn"),
+                occurred_at_epoch_ms: 120,
+            })
+            .unwrap()
+        else {
+            panic!("Plan mode must return a durable plan artifact");
+        };
+        assert_eq!(turn.output_text, expected_output);
+        assert_eq!(plan_artifact.media_type, "text/markdown");
+        assert_eq!(
+            plan_artifact.source_sha256,
+            sha256(expected_output.as_bytes())
+        );
+        assert_eq!(plan_artifact.byte_length, expected_output.len() as u64);
+
+        drop(runtime);
+        let mut reopened = EngineeringRuntimeService::new(adapter);
+        let EngineeringRpcResponse::Session { snapshot } = reopened
+            .handle(EngineeringRpcRequest::OpenSession { session_id })
+            .unwrap()
+        else {
+            panic!("session response expected");
+        };
+        assert_eq!(snapshot.mode, EngineeringSessionMode::Plan);
+        assert_eq!(snapshot.artifacts.len(), 2);
+        assert_eq!(snapshot.artifacts[1], plan_artifact);
+        assert!(snapshot.terminal.is_none());
         fs::remove_dir_all(directory).unwrap();
     }
 

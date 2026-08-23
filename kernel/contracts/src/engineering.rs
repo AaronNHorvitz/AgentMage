@@ -1021,7 +1021,9 @@ pub enum EngineeringRpcResponse {
     /// One verified-context model turn completed.
     VerifiedTurnCompleted {
         /// Host-authoritative turn result.
-        turn: VerifiedModelTurnResult,
+        turn: Box<VerifiedModelTurnResult>,
+        /// Durable hash-bound Plan output, present only for Plan-mode sessions.
+        plan_artifact: Option<ArtifactCaptureResult>,
     },
     /// Exact ordered durable replay.
     Events {
