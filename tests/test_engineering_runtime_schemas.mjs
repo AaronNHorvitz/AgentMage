@@ -20,9 +20,60 @@ function validator(name) {
 }
 
 test("generated Engineering Runtime schemas are current, closed, and compile", () => {
-  assert.equal(synchronize(), 14);
+  assert.equal(synchronize(), 19);
   assert.equal(Object.keys(REUSED_SCHEMA_CONTRACTS).length, 6);
-  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 14);
+  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 19);
+});
+
+test("multi-agent schemas require bounded workers and verifier-owned completion evidence", () => {
+  const lease = {
+    schema_version: 1,
+    campaign_id: "campaign-1",
+    lease_id: "lease-1",
+    task_id: "task-1",
+    agent_id: "agent-1",
+    session_id: "session-1",
+    model_profile_id: "model-1",
+    endpoint_profile_id: "endpoint-1",
+    base_commit: "a".repeat(40),
+    worktree_id: "worktree-1",
+    branch: "agentmage/task-1",
+    path_leases: ["kernel/engine"],
+    test_resource_leases: ["cargo-workspace"],
+    state: "implementing",
+    correction_limit: 3,
+    correction_count: 0,
+    candidate_commit: null,
+    lease_sha256: SHA,
+  };
+  const validateLease = validator("agent-lease");
+  assert.equal(validateLease(lease), true, JSON.stringify(validateLease.errors));
+  assert.equal(validateLease({ ...lease, state: "self_approved" }), false);
+
+  const campaign = {
+    schema_version: 1,
+    campaign_id: "campaign-1",
+    coordinator_session_id: "session-1",
+    objective: "Implement an approved plan",
+    approved_plan_id: "approval-1",
+    approved_plan_sha256: SHA,
+    campaign_branch: "agentmage/campaign-1",
+    starting_commit: "a".repeat(40),
+    campaign_head: "b".repeat(40),
+    max_workers: 5,
+    maximum_concurrent_workers: 1,
+    state: "success",
+    task_ids: ["task-1"],
+    leases: [lease],
+    integrations: [],
+    reason_codes: [],
+    final_evidence: [{ kind: "test", uri: "artifact:test-1", sha256: SHA }],
+    campaign_sha256: SHA,
+  };
+  const validateCampaign = validator("multi-agent-campaign");
+  assert.equal(validateCampaign(campaign), true, JSON.stringify(validateCampaign.errors));
+  assert.equal(validateCampaign({ ...campaign, max_workers: 6 }), false);
+  assert.equal(validateCampaign({ ...campaign, final_evidence: [] }), false);
 });
 
 test("artifact capture and context delivery fail closed", () => {

@@ -55,6 +55,12 @@ const budgets = closed({
   memory_bytes: positive,
   cost_minor_units: uint,
 });
+const commit = { type: "string", pattern: "^[0-9a-f]{40,64}$" };
+const evidenceReference = closed({
+  kind: bounded,
+  uri: { type: "string", minLength: 1, maxLength: 4096 },
+  sha256: digest,
+});
 
 const artifactEnvelope = closed({
   schema_version: positive,
@@ -340,6 +346,102 @@ terminalResult.allOf = [{
   else: { properties: { diagnostic_code: identifier, safe_next_action: bounded } },
 }];
 
+const agentLease = closed({
+  schema_version: positive,
+  campaign_id: identifier,
+  lease_id: identifier,
+  task_id: identifier,
+  agent_id: identifier,
+  session_id: identifier,
+  model_profile_id: identifier,
+  endpoint_profile_id: identifier,
+  base_commit: commit,
+  worktree_id: identifier,
+  branch: { type: "string", minLength: 1, maxLength: 512 },
+  path_leases: { ...list({ type: "string", minLength: 1, maxLength: 4096 }, 0, 256), uniqueItems: true },
+  test_resource_leases: { ...list(identifier, 0, 256), uniqueItems: true },
+  state: { enum: ["ready", "leased", "implementing", "gating", "reviewing", "correcting", "merge_ready", "integration_queued", "integrating", "merged", "blocked", "disputed", "failed", "cancelled"] },
+  correction_limit: { type: "integer", minimum: 0, maximum: 255 },
+  correction_count: { type: "integer", minimum: 0, maximum: 255 },
+  candidate_commit: nullable(commit),
+  lease_sha256: digest,
+});
+
+const reviewFinding = closed({
+  schema_version: positive,
+  review_id: identifier,
+  campaign_id: identifier,
+  lease_id: identifier,
+  reviewer_id: identifier,
+  base_commit: commit,
+  candidate_commit: commit,
+  outcome: { enum: ["PASS", "CHANGES_REQUIRED", "BLOCKED", "DISPUTED"] },
+  severity: bounded,
+  code: identifier,
+  summary: { type: "string", minLength: 1, maxLength: 4096 },
+  diff_sha256: digest,
+  finding_sha256: digest,
+});
+
+const integrationRecord = closed({
+  schema_version: positive,
+  integration_id: identifier,
+  campaign_id: identifier,
+  lease_id: identifier,
+  prior_campaign_head: commit,
+  candidate_commit: commit,
+  resulting_campaign_head: nullable(commit),
+  state: { enum: ["queued", "revalidating", "integrating", "integrated", "blocked", "failed"] },
+  gate_evidence_sha256: nullable(digest),
+  reason_codes: { ...list(identifier, 0, 256), uniqueItems: true },
+  integration_sha256: digest,
+});
+
+const multiAgentCampaign = closed({
+  schema_version: positive,
+  campaign_id: identifier,
+  coordinator_session_id: identifier,
+  objective: { type: "string", minLength: 1, maxLength: 16384 },
+  approved_plan_id: identifier,
+  approved_plan_sha256: digest,
+  campaign_branch: { type: "string", minLength: 1, maxLength: 512 },
+  starting_commit: commit,
+  campaign_head: commit,
+  max_workers: { type: "integer", minimum: 1, maximum: 5 },
+  maximum_concurrent_workers: { type: "integer", minimum: 0, maximum: 5 },
+  state: { enum: ["planned", "ready", "running", "paused", "blocked", "cancelled", "failed", "success"] },
+  task_ids: { ...list(identifier, 1, 4096), uniqueItems: true },
+  leases: list(agentLease, 0, 4096),
+  integrations: list(integrationRecord, 0, 4096),
+  reason_codes: { ...list(identifier, 0, 256), uniqueItems: true },
+  final_evidence: list(evidenceReference, 0, 4096),
+  campaign_sha256: digest,
+});
+multiAgentCampaign.allOf = [
+  {
+    if: { properties: { state: { const: "success" } }, required: ["state"] },
+    then: { properties: { final_evidence: { type: "array", minItems: 1 } } },
+  },
+  {
+    if: { properties: { state: { enum: ["blocked", "failed"] } }, required: ["state"] },
+    then: { properties: { reason_codes: { type: "array", minItems: 1 } } },
+  },
+];
+
+const completionEvidence = closed({
+  schema_version: positive,
+  task_id: identifier,
+  attempt_id: identifier,
+  source_sha256: digest,
+  policy_sha256: digest,
+  verifier_id: identifier,
+  verifier_version: { type: "string", pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+  outcome: { enum: ["verified_success", "verified_no_op", "not_verified"] },
+  evidence: list(evidenceReference, 1, 4096),
+  verified_at: timestamp,
+  completion_evidence_sha256: digest,
+});
+
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
   "artifact-transformation": artifactTransformation,
@@ -355,6 +457,11 @@ export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "capability-manifest": capabilityManifest,
   "verification-result": verificationResult,
   "terminal-result": terminalResult,
+  "agent-lease": agentLease,
+  "review-finding": reviewFinding,
+  "integration-record": integrationRecord,
+  "multi-agent-campaign": multiAgentCampaign,
+  "completion-evidence": completionEvidence,
 });
 
 export const REUSED_SCHEMA_CONTRACTS = Object.freeze({
