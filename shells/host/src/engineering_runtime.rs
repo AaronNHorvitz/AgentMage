@@ -1,22 +1,27 @@
 //! Caller-neutral composition of Engineering RPC over encrypted host-owned state.
 
 use agentmage_kernel_contracts::{
+    ArtifactCaptureResult, ArtifactSourceKind, ArtifactUploadChunk, ArtifactUploadId,
     CONTRACT_SCHEMA_VERSION, ContextDeliveryReceipt, ContextPacketId, EndpointProfileId,
     EngineeringEventKind, EngineeringRpcRequest, EngineeringRpcResponse, EngineeringTerminalState,
-    ModelProfileId, RouteDecisionId, RuntimeRunId, VerifiedModelTurnResult,
+    ModelProfileId, RouteDecisionId, RuntimeArtifactId, RuntimeRunId, SessionId,
+    VerifiedModelTurnResult,
 };
 use agentmage_kernel_engine::engineering_persistence::SqlCipherEngineeringStore;
+use agentmage_kernel_engine::engineering_records::ValidateCanonicalRecord;
 use agentmage_kernel_engine::persistent_supervisor::{
     PersistentSupervisorError, PersistentTaskSupervisor,
 };
 use agentmage_kernel_engine::verified_artifact::{
-    ArtifactUploadSpec, MAX_VERIFIED_ARTIFACT_READ_BYTES, VerifiedArtifactError,
-    VerifiedArtifactUploads,
+    ArtifactUploadSpec, MAX_VERIFIED_ARTIFACT_CHUNK_BYTES, MAX_VERIFIED_ARTIFACT_READ_BYTES,
+    VerifiedArtifactError, VerifiedArtifactUploads,
 };
 use agentmage_kernel_engine::verified_context::{
     ContextAdmissionPolicy, VerifiedContextError, admit_context,
 };
 use sha2::{Digest, Sha256};
+
+use crate::artifact_ingestion::{ArtifactIngestionError, plan_artifact_ingestion};
 
 const MAX_VERIFIED_MODEL_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 
@@ -61,6 +66,8 @@ pub enum EngineeringRuntimeError {
     ModelUnavailable,
     /// The qualified model executor failed or returned invalid output.
     ModelFailed,
+    /// Artifact ingestion or its semantic record validation failed closed.
+    IngestionFailed,
 }
 
 impl EngineeringRuntimeError {
@@ -73,6 +80,7 @@ impl EngineeringRuntimeError {
             Self::Context(error) => error.code(),
             Self::ModelUnavailable => "engineering.model.unavailable",
             Self::ModelFailed => "engineering.model.failed",
+            Self::IngestionFailed => "engineering.ingestion.failed",
         }
     }
 }
@@ -107,6 +115,196 @@ impl EngineeringRuntimeService {
     /// Installs one qualified model executor from trusted host composition.
     pub fn install_model(&mut self, model: Box<dyn EngineeringModelPort>) {
         self.model = Some(model);
+    }
+
+    fn ingest_artifact(
+        &mut self,
+        session_id: SessionId,
+        artifact_id: RuntimeArtifactId,
+        completed_at_epoch_ms: u64,
+    ) -> Result<EngineeringRpcResponse, EngineeringRuntimeError> {
+        if completed_at_epoch_ms == 0 {
+            return Err(EngineeringRuntimeError::IngestionFailed);
+        }
+        let snapshot = self
+            .supervisor
+            .open_session(&session_id)
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        if snapshot.terminal.is_some() {
+            return Err(EngineeringRuntimeError::IngestionFailed);
+        }
+        let capture = snapshot
+            .artifacts
+            .iter()
+            .find(|capture| capture.artifact_id == artifact_id)
+            .cloned()
+            .ok_or(EngineeringRuntimeError::Artifact(
+                VerifiedArtifactError::NotFound,
+            ))?;
+        let source = self.read_complete_artifact(&session_id, &capture)?;
+        let plan = plan_artifact_ingestion(
+            &artifact_id,
+            &capture.media_type,
+            &capture.source_sha256,
+            &source,
+        )
+        .map_err(|error| match error {
+            ArtifactIngestionError::InvalidInput
+            | ArtifactIngestionError::ParseFailed(_)
+            | ArtifactIngestionError::EncodingFailed => EngineeringRuntimeError::IngestionFailed,
+        })?;
+        plan.result
+            .validate_canonical()
+            .map_err(|_| EngineeringRuntimeError::IngestionFailed)?;
+
+        let derivative = match (&plan.derivative_media_type, &plan.derivative_bytes) {
+            (Some(media_type), Some(bytes)) => Some(self.persist_generated(
+                &session_id,
+                &artifact_id,
+                "derivative",
+                "Parsed artifact derivative",
+                media_type,
+                bytes,
+                completed_at_epoch_ms,
+            )?),
+            (None, None) => None,
+            _ => return Err(EngineeringRuntimeError::IngestionFailed),
+        };
+        let transformation_record = if let Some(transformation) = &plan.transformation {
+            transformation
+                .validate_canonical()
+                .map_err(|_| EngineeringRuntimeError::IngestionFailed)?;
+            let bytes = serde_json::to_vec(transformation)
+                .map_err(|_| EngineeringRuntimeError::IngestionFailed)?;
+            Some(self.persist_generated(
+                &session_id,
+                &artifact_id,
+                "transformation",
+                "Artifact transformation provenance",
+                "application/vnd.agentmage.transformation+json",
+                &bytes,
+                completed_at_epoch_ms,
+            )?)
+        } else {
+            None
+        };
+        let ingestion_bytes = serde_json::to_vec(&plan.result)
+            .map_err(|_| EngineeringRuntimeError::IngestionFailed)?;
+        let ingestion_record = self.persist_generated(
+            &session_id,
+            &artifact_id,
+            "ingestion",
+            "Terminal artifact ingestion record",
+            "application/vnd.agentmage.ingestion+json",
+            &ingestion_bytes,
+            completed_at_epoch_ms,
+        )?;
+        Ok(EngineeringRpcResponse::ArtifactIngested {
+            ingestion: Box::new(plan.result),
+            derivative: Box::new(derivative),
+            transformation_record: Box::new(transformation_record),
+            ingestion_record: Box::new(ingestion_record),
+        })
+    }
+
+    fn read_complete_artifact(
+        &self,
+        session_id: &SessionId,
+        capture: &ArtifactCaptureResult,
+    ) -> Result<Vec<u8>, EngineeringRuntimeError> {
+        let capacity = usize::try_from(capture.byte_length)
+            .map_err(|_| EngineeringRuntimeError::IngestionFailed)?;
+        let mut bytes = Vec::with_capacity(capacity);
+        let mut offset = 0_u64;
+        while offset < capture.byte_length {
+            let length = (capture.byte_length - offset).min(MAX_VERIFIED_ARTIFACT_READ_BYTES);
+            let range = self
+                .artifacts
+                .read_range(session_id, &capture.artifact_id, offset, length)
+                .map_err(EngineeringRuntimeError::Artifact)?;
+            if range.returned_offset != offset || range.bytes.len() as u64 != length {
+                return Err(EngineeringRuntimeError::Artifact(
+                    VerifiedArtifactError::IntegrityMismatch,
+                ));
+            }
+            bytes.extend_from_slice(&range.bytes);
+            offset += length;
+        }
+        if bytes.len() as u64 != capture.byte_length || sha256(&bytes) != capture.source_sha256 {
+            return Err(EngineeringRuntimeError::Artifact(
+                VerifiedArtifactError::IntegrityMismatch,
+            ));
+        }
+        Ok(bytes)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn persist_generated(
+        &mut self,
+        session_id: &SessionId,
+        source_artifact_id: &RuntimeArtifactId,
+        role: &str,
+        display_name: &str,
+        media_type: &str,
+        bytes: &[u8],
+        completed_at_epoch_ms: u64,
+    ) -> Result<ArtifactCaptureResult, EngineeringRuntimeError> {
+        let upload_id = ArtifactUploadId::from_raw(format!(
+            "ingest-{}-{}",
+            role,
+            &sha256(format!("{}:{role}", source_artifact_id.as_str()).as_bytes())[..32]
+        ));
+        let snapshot = self
+            .supervisor
+            .open_session(session_id)
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        if let Some(existing) = snapshot
+            .artifacts
+            .iter()
+            .find(|capture| capture.upload_id == upload_id)
+        {
+            if existing.source_sha256 != sha256(bytes)
+                || existing.byte_length != bytes.len() as u64
+                || existing.media_type != media_type
+            {
+                return Err(EngineeringRuntimeError::IngestionFailed);
+            }
+            return Ok(existing.clone());
+        }
+        let expected_sha256 = sha256(bytes);
+        self.artifacts
+            .begin(ArtifactUploadSpec {
+                upload_id: upload_id.clone(),
+                session_id: session_id.clone(),
+                source_kind: ArtifactSourceKind::Generated,
+                display_name: display_name.to_owned(),
+                media_type: media_type.to_owned(),
+                total_bytes: bytes.len() as u64,
+                expected_sha256,
+            })
+            .map_err(EngineeringRuntimeError::Artifact)?;
+        let chunks = bytes.chunks(MAX_VERIFIED_ARTIFACT_CHUNK_BYTES);
+        let chunk_count = chunks.len();
+        let mut offset = 0_u64;
+        for (index, chunk) in chunks.enumerate() {
+            self.artifacts
+                .append(ArtifactUploadChunk {
+                    schema_version: CONTRACT_SCHEMA_VERSION,
+                    upload_id: upload_id.clone(),
+                    session_id: session_id.clone(),
+                    sequence: index as u32,
+                    offset,
+                    total_bytes: bytes.len() as u64,
+                    bytes: chunk.to_vec(),
+                    chunk_sha256: sha256(chunk),
+                    final_chunk: index + 1 == chunk_count,
+                })
+                .map_err(EngineeringRuntimeError::Artifact)?;
+            offset += chunk.len() as u64;
+        }
+        self.artifacts
+            .commit(&upload_id, completed_at_epoch_ms)
+            .map_err(EngineeringRuntimeError::Artifact)
     }
 
     fn execute_verified_turn(
@@ -242,8 +440,8 @@ impl EngineeringRuntimePort for EngineeringRuntimeService {
     ) -> Result<EngineeringRpcResponse, EngineeringRuntimeError> {
         use EngineeringRpcRequest::{
             BeginArtifact, CancelArtifact, CancelSession, CommitArtifact, CreateSession,
-            ExecuteVerifiedTurn, ListSessions, OpenSession, PauseSession, ReadArtifactRange,
-            ReplayEvents, ResumeSession, UploadArtifactChunk,
+            ExecuteVerifiedTurn, IngestArtifact, ListSessions, OpenSession, PauseSession,
+            ReadArtifactRange, ReplayEvents, ResumeSession, UploadArtifactChunk,
         };
         match request {
             CreateSession {
@@ -332,6 +530,11 @@ impl EngineeringRuntimePort for EngineeringRuntimeService {
                 .read_range(&session_id, &artifact_id, offset, length)
                 .map(|range| EngineeringRpcResponse::ArtifactRange { range })
                 .map_err(EngineeringRuntimeError::Artifact),
+            IngestArtifact {
+                session_id,
+                artifact_id,
+                completed_at_epoch_ms,
+            } => self.ingest_artifact(session_id, artifact_id, completed_at_epoch_ms),
             ExecuteVerifiedTurn {
                 session_id,
                 prompt_artifact_id,
@@ -613,6 +816,119 @@ mod tests {
                 occurred_at_epoch_ms: 40,
             }),
             Err(EngineeringRuntimeError::ModelUnavailable)
+        );
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn multi_range_ingestion_is_durable_and_idempotent() {
+        let (directory, adapter) = store();
+        let session_id = SessionId::from_raw("session-large-ingestion-fixture");
+        let upload_id = ArtifactUploadId::from_raw("upload-large-ingestion-fixture");
+        let source = vec![b'x'; 1_200_000];
+        let source_sha256 = sha256(&source);
+        let mut runtime = EngineeringRuntimeService::new(adapter.clone());
+        runtime
+            .handle(EngineeringRpcRequest::CreateSession {
+                session_id: session_id.clone(),
+                title: "Large ingestion".to_owned(),
+                mode: EngineeringSessionMode::Ask,
+                correlation_id: CorrelationId::from_raw("correlation-ingestion-create"),
+                occurred_at_epoch_ms: 100,
+            })
+            .unwrap();
+        runtime
+            .handle(EngineeringRpcRequest::BeginArtifact {
+                upload_id: upload_id.clone(),
+                session_id: session_id.clone(),
+                source_kind: ArtifactSourceKind::File,
+                display_name: "large.txt".to_owned(),
+                media_type: "text/plain".to_owned(),
+                total_bytes: source.len() as u64,
+                expected_sha256: source_sha256,
+            })
+            .unwrap();
+        let chunks = source.chunks(256 * 1024);
+        let count = chunks.len();
+        let mut offset = 0_u64;
+        for (index, bytes) in chunks.enumerate() {
+            runtime
+                .handle(EngineeringRpcRequest::UploadArtifactChunk {
+                    chunk: ArtifactUploadChunk {
+                        schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                        upload_id: upload_id.clone(),
+                        session_id: session_id.clone(),
+                        sequence: index as u32,
+                        offset,
+                        total_bytes: source.len() as u64,
+                        bytes: bytes.to_vec(),
+                        chunk_sha256: sha256(bytes),
+                        final_chunk: index + 1 == count,
+                    },
+                })
+                .unwrap();
+            offset += bytes.len() as u64;
+        }
+        let captured = runtime
+            .handle(EngineeringRpcRequest::CommitArtifact {
+                upload_id,
+                completed_at_epoch_ms: 110,
+            })
+            .unwrap();
+        let EngineeringRpcResponse::ArtifactCaptured { capture } = captured else {
+            panic!("capture expected");
+        };
+        let request = EngineeringRpcRequest::IngestArtifact {
+            session_id: session_id.clone(),
+            artifact_id: capture.artifact_id,
+            completed_at_epoch_ms: 120,
+        };
+        let first = runtime.handle(request.clone()).unwrap();
+        let second = runtime.handle(request).unwrap();
+        assert_eq!(first, second);
+        let EngineeringRpcResponse::ArtifactIngested {
+            ingestion,
+            derivative,
+            transformation_record,
+            ingestion_record,
+        } = first
+        else {
+            panic!("ingestion expected");
+        };
+        assert_eq!(
+            ingestion.disposition,
+            agentmage_kernel_contracts::CanonicalIngestionDisposition::Parsed
+        );
+        assert_eq!(derivative.as_ref().as_ref().unwrap().byte_length, 1_200_000);
+        assert!(transformation_record.as_ref().is_some());
+        assert_eq!(ingestion_record.source_kind, ArtifactSourceKind::Generated);
+        drop(runtime);
+
+        let mut reopened = EngineeringRuntimeService::new(adapter);
+        let snapshot = reopened
+            .handle(EngineeringRpcRequest::OpenSession {
+                session_id: session_id.clone(),
+            })
+            .unwrap();
+        let EngineeringRpcResponse::Session { snapshot } = snapshot else {
+            panic!("session expected");
+        };
+        assert_eq!(snapshot.artifacts.len(), 4);
+        let events = reopened
+            .handle(EngineeringRpcRequest::ReplayEvents {
+                session_id,
+                after_sequence: None,
+            })
+            .unwrap();
+        let EngineeringRpcResponse::Events { events } = events else {
+            panic!("events expected");
+        };
+        assert_eq!(events.len(), 5);
+        assert!(
+            events
+                .iter()
+                .skip(1)
+                .all(|event| matches!(event.kind, EngineeringEventKind::ArtifactCaptured { .. }))
         );
         fs::remove_dir_all(directory).unwrap();
     }

@@ -910,6 +910,15 @@ pub enum EngineeringRpcRequest {
         /// Maximum bytes to return.
         length: u64,
     },
+    /// Parses one exact captured artifact into durable provenance-bound derivatives.
+    IngestArtifact {
+        /// Owning session.
+        session_id: SessionId,
+        /// Exact immutable source artifact.
+        artifact_id: RuntimeArtifactId,
+        /// Trusted host time for generated artifact receipts.
+        completed_at_epoch_ms: u64,
+    },
     /// Executes one model turn over an exact captured prompt artifact.
     ExecuteVerifiedTurn {
         /// Exact owning session.
@@ -997,6 +1006,17 @@ pub enum EngineeringRpcResponse {
     ArtifactRange {
         /// Content-verifiable range receipt.
         range: ArtifactRangeReceipt,
+    },
+    /// One explicit artifact-ingestion attempt reached a durable terminal result.
+    ArtifactIngested {
+        /// Terminal schema-bound ingestion result.
+        ingestion: Box<crate::CanonicalArtifactIngestionResult>,
+        /// Parsed derivative artifact when a parser produced one.
+        derivative: Box<Option<ArtifactCaptureResult>>,
+        /// Transformation-provenance artifact when a derivative exists.
+        transformation_record: Box<Option<ArtifactCaptureResult>>,
+        /// Durable terminal ingestion-record artifact.
+        ingestion_record: Box<ArtifactCaptureResult>,
     },
     /// One verified-context model turn completed.
     VerifiedTurnCompleted {

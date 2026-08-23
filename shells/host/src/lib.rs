@@ -2,6 +2,9 @@
 #![forbid(unsafe_code)]
 //! Local host composition for the bounded AgentMage product surface.
 
+/// Deterministic in-memory ingestion over exact captured artifact bytes.
+pub mod artifact_ingestion;
+
 /// Authority-free composition of structured edits into kernel shadow changes.
 pub mod code_change;
 /// Exact non-authoritative approval composition for native coding operations.
