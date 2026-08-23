@@ -87,6 +87,10 @@ where
             || request.model_profile.profile_id.as_str() != input.profile_id
             || request.workspace_id.as_str() != input.workspace_id
             || request.task.objective != input.prompt
+            || input
+                .engineering_session_id
+                .as_ref()
+                .is_some_and(|session_id| request.session_id != *session_id)
             || self.prepared.contains_key(request.run_id.as_str())
             || self.active.contains_key(request.run_id.as_str())
         {
@@ -483,6 +487,7 @@ mod tests {
             crate::runtime_read_tests::completed_native_read_fixture();
         assert!(observed_result);
         let input = NativeChatPrepareInput {
+            engineering_session_id: None,
             profile_id: request.model_profile.profile_id.as_str().to_owned(),
             expected_entry_sha256: "a".repeat(64),
             workspace_id: request.workspace_id.as_str().to_owned(),
@@ -565,6 +570,7 @@ mod tests {
         let (_, events, outcome, _) = crate::runtime_read_tests::completed_native_read_fixture();
         let (_, controlled_request) = crate::coding_run::tests::fixture_profile_and_request();
         let input = NativeChatPrepareInput {
+            engineering_session_id: None,
             profile_id: controlled_request
                 .model_profile
                 .profile_id
@@ -582,6 +588,21 @@ mod tests {
             artifacts: Vec::new(),
             outcome,
         };
+        let mut mismatched_input = input.clone();
+        mismatched_input.engineering_session_id = Some(
+            agentmage_kernel_contracts::SessionId::from_raw("engineering-session-substituted"),
+        );
+        let mut mismatched_service = NativeChatRuntimeService::new(ReplayFactory {
+            expected_input: mismatched_input.clone(),
+            request: controlled_request.clone(),
+            events: factory.events.clone(),
+            artifacts: Vec::new(),
+            outcome: factory.outcome.clone(),
+        });
+        assert_eq!(
+            mismatched_service.prepare(mismatched_input),
+            Err(NativeChatRuntimeError::RequestDenied)
+        );
         let mut service = NativeChatRuntimeService::new(factory);
 
         let prepared = service.prepare(input).expect("trusted mode is admitted");

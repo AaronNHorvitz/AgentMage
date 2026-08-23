@@ -925,6 +925,7 @@ mod tests {
 
     fn input(request: &RuntimeRunRequest) -> NativeChatPrepareInput {
         NativeChatPrepareInput {
+            engineering_session_id: None,
             profile_id: request.model_profile.profile_id.as_str().to_owned(),
             expected_entry_sha256: "a".repeat(64),
             workspace_id: request.workspace_id.as_str().to_owned(),

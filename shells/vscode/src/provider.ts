@@ -30,9 +30,10 @@ import {
   type RuntimeRunRequestEnvelope,
   type RuntimeStepResponse,
 } from "./runtime_transport.js";
-import type {
-  EngineeringHostRequest,
-  EngineeringHostResponse,
+import {
+  request as engineeringRequest,
+  type EngineeringHostRequest,
+  type EngineeringHostResponse,
 } from "./verified_chat_protocol.js";
 
 export const PROVIDER_VENDOR = "agentmage" as const;
@@ -298,6 +299,7 @@ export interface HostBridge {
     readonly kind: "prepare_runtime";
     readonly schema_version: 1;
     readonly request_id: string;
+    readonly engineering_session_id: string | null;
     readonly profile_id: string;
     readonly expected_entry_sha256: string;
     readonly workspace_id: string;
@@ -835,6 +837,7 @@ export class SecureReadController {
     profile: SelectedRuntimeProfile,
     cancellation: CancellationSignal,
     onPart: ((part: string) => void) | undefined,
+    engineeringSessionId?: string,
   ): Promise<ControllerResult> {
     if (
       !validIdentifier(profile.profileId) ||
@@ -864,6 +867,7 @@ export class SecureReadController {
       kind: "prepare_runtime",
       schema_version: HOST_PROTOCOL_VERSION,
       request_id: prepareRequestId,
+      engineering_session_id: engineeringSessionId ?? null,
       profile_id: profile.profileId,
       expected_entry_sha256: profile.expectedEntrySha256,
       workspace_id: workspace.id,
@@ -889,6 +893,8 @@ export class SecureReadController {
       request.workspace_id !== workspace.id ||
       request.task.objective !== prompt ||
       request.task.session_id !== request.session_id ||
+      (engineeringSessionId !== undefined &&
+        request.session_id !== engineeringSessionId) ||
       !["ephemeral_read_only", "controlled_write"].includes(request.mode)
     ) {
       await this.releaseRuntime(request.run_id, request.request_sha256);
@@ -896,6 +902,37 @@ export class SecureReadController {
         "vscode.runtime.request_substituted",
         "The host-framed runtime request did not match the selected model, workspace, or prompt.",
       );
+    }
+
+    if (engineeringSessionId !== undefined) {
+      const bound = await this.host.engineering(
+        engineeringRequest("bind_approved_plan_runtime", {
+          session_id: engineeringSessionId,
+          run_request: request,
+          correlation_id: `correlation-${this.identities.next()}`,
+          occurred_at_epoch_ms: Date.now(),
+        }),
+      );
+      const response =
+        bound.kind === "engineering" ? bound.response : undefined;
+      const binding =
+        response?.result === "runtime_bound"
+          ? recordValue(response.binding)
+          : undefined;
+      if (
+        binding === undefined ||
+        binding.session_id !== engineeringSessionId ||
+        binding.run_id !== request.run_id ||
+        binding.request_sha256 !== request.request_sha256
+      ) {
+        await this.releaseRuntime(request.run_id, request.request_sha256);
+        return deniedResult(
+          bound.kind === "denied"
+            ? bound.code
+            : "vscode.runtime.plan-binding-invalid",
+          "The controlled runtime request was not bound to the exact approved Plan. Nothing was started.",
+        );
+      }
     }
 
     const active: PendingRuntimeRun = {
@@ -1089,6 +1126,29 @@ export class SecureReadController {
       await this.releaseRuntime(request.run_id, request.request_sha256);
       this.pendingRuntimeRuns.delete(request.run_id);
     }
+  }
+
+  /** Executes one approved Agent Plan through the existing controlled runtime. */
+  async runApprovedAgentPlan(
+    plan: string,
+    engineeringSessionId: string,
+    profile: SelectedRuntimeProfile,
+    cancellation: CancellationSignal,
+    onPart?: (part: string) => void,
+  ): Promise<ControllerResult> {
+    const stopped = await this.revalidateSelectedModel(
+      profile.profileId,
+      profile.expectedEntrySha256,
+      cancellation,
+    );
+    if (stopped !== undefined) return stopped;
+    return this.runNativeChatRuntime(
+      plan,
+      profile,
+      cancellation,
+      onPart,
+      engineeringSessionId,
+    );
   }
 
   private async releaseRuntime(
@@ -1344,6 +1404,14 @@ export class SecureReadController {
       preview_id: previewId,
     });
   }
+}
+
+function recordValue(
+  value: unknown,
+): Readonly<Record<string, unknown>> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Readonly<Record<string, unknown>>)
+    : undefined;
 }
 
 function runtimeRequestMatchesSelection(

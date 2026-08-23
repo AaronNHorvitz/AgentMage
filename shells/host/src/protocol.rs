@@ -264,6 +264,9 @@ pub enum HostRequest {
         schema_version: u16,
         /// Correlation identity selected by the shell.
         request_id: String,
+        /// Exact approved-Plan Engineering session, or `null` for ordinary native Chat.
+        #[serde(deserialize_with = "deserialize_required_option")]
+        engineering_session_id: Option<agentmage_kernel_contracts::SessionId>,
         /// Exact user-selected profile identity.
         profile_id: String,
         /// Digest of the exact picker entry shown to the user.
@@ -524,13 +527,17 @@ impl HostRequest {
             Self::PrepareRuntime {
                 schema_version,
                 request_id,
+                engineering_session_id,
                 profile_id,
                 expected_entry_sha256,
                 workspace_id,
                 workspace_root,
                 prompt,
             } => {
-                if !valid_identifier(profile_id)
+                if engineering_session_id
+                    .as_ref()
+                    .is_some_and(|session_id| !valid_identifier(session_id.as_str()))
+                    || !valid_identifier(profile_id)
                     || !valid_sha256(expected_entry_sha256)
                     || !valid_identifier(workspace_id)
                     || workspace_root.is_empty()
@@ -1379,6 +1386,7 @@ mod tests {
             "kind": "prepare_runtime",
             "schema_version": HOST_PROTOCOL_VERSION,
             "request_id": "request-runtime-0001",
+            "engineering_session_id": null,
             "profile_id": "exact-profile-0001",
             "expected_entry_sha256": "a".repeat(64),
             "workspace_id": "workspace-0001",

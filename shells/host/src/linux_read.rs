@@ -535,6 +535,7 @@ where
                 self.cancel_tool(&request_id, &preview_id)
             }
             HostRequest::PrepareRuntime {
+                engineering_session_id,
                 profile_id,
                 expected_entry_sha256,
                 workspace_id,
@@ -544,6 +545,7 @@ where
             } => self.prepare_runtime(
                 &request_id,
                 RuntimePrepareInput {
+                    engineering_session_id,
                     profile_id,
                     expected_entry_sha256,
                     workspace_id,
@@ -2707,6 +2709,7 @@ mod tests {
         let prepare_request = HostRequest::PrepareRuntime {
             schema_version: HOST_PROTOCOL_VERSION,
             request_id: "request-runtime-prepare-0001".to_owned(),
+            engineering_session_id: None,
             profile_id: "profile-native-chat-0001".to_owned(),
             expected_entry_sha256: "a".repeat(64),
             workspace_id: "workspace-native-chat-0001".to_owned(),

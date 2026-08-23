@@ -4,12 +4,14 @@ use std::fmt;
 
 use agentmage_kernel_contracts::{
     CancellationId, RuntimeApprovalChallenge, RuntimeApprovalResponse, RuntimeArtifactRef,
-    RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId, RuntimeRunRequest,
+    RuntimeEvent, RuntimeEventCursor, RuntimeOutcome, RuntimeRunId, RuntimeRunRequest, SessionId,
 };
 
 /// Trusted inputs from one authenticated runtime preparation request.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimePrepareInput {
+    /// Exact pre-existing Engineering session for approved-Plan execution, when applicable.
+    pub engineering_session_id: Option<SessionId>,
     /// Exact selected profile identity.
     pub profile_id: String,
     /// Digest of the exact picker entry displayed to the user.

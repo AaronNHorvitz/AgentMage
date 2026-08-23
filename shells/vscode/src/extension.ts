@@ -149,7 +149,11 @@ export async function activate(
     new SessionRequestIdentitySource(),
   );
   activeController = controller;
-  const verifiedChat = new VerifiedChatSurface(context.extensionUri, bridge);
+  const verifiedChat = new VerifiedChatSurface(
+    context.extensionUri,
+    bridge,
+    controller,
+  );
   verifiedChat.register(context);
   const provider: vscode.LanguageModelChatProvider<AgentMageModelInformation> =
     {

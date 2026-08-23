@@ -132,16 +132,25 @@ class Bridge implements HostBridge {
   lastRuntimeCursor: RuntimeEventCursorEnvelope | null = null;
   lastRuntimeApproval: RuntimeApprovalResponseEnvelope | null = null;
   lastRuntimeCancellationId: string | undefined;
+  engineeringResponse:
+    Awaited<ReturnType<HostBridge["engineering"]>> | undefined;
+  engineeringCalls = 0;
+  runtimeCallOrder: string[] = [];
+  lastEngineeringSessionId: string | null | undefined;
 
   engineering(
     request: Parameters<HostBridge["engineering"]>[0],
   ): ReturnType<HostBridge["engineering"]> {
-    return Promise.resolve({
-      kind: "denied",
-      schema_version: 1,
-      request_id: request.request_id,
-      code: "engineering.not-used",
-    });
+    this.engineeringCalls += 1;
+    this.runtimeCallOrder.push("bind");
+    return Promise.resolve(
+      this.engineeringResponse ?? {
+        kind: "denied",
+        schema_version: 1,
+        request_id: request.request_id,
+        code: "engineering.not-used",
+      },
+    );
   }
 
   previewHandoff(
@@ -362,6 +371,8 @@ class Bridge implements HostBridge {
     request: Parameters<HostBridge["prepareRuntime"]>[0],
   ): ReturnType<HostBridge["prepareRuntime"]> {
     this.runtimePrepareCalls += 1;
+    this.runtimeCallOrder.push("prepare");
+    this.lastEngineeringSessionId = request.engineering_session_id;
     return Promise.resolve(
       this.runtimePreparedRequest === undefined
         ? runtimeDenied(request.request_id)
@@ -378,6 +389,7 @@ class Bridge implements HostBridge {
     request: Parameters<HostBridge["startRuntime"]>[0],
   ): ReturnType<HostBridge["startRuntime"]> {
     this.runtimeStartCalls += 1;
+    this.runtimeCallOrder.push("start");
     return Promise.resolve(this.nextRuntimeStep(request.request_id));
   }
 
@@ -953,6 +965,85 @@ void test("native Chat accepts an exact host-framed controlled-write run", async
   assert.equal(bridge.runtimeStartCalls, 1);
   assert.equal(bridge.runtimeReleaseCalls, 1);
   assert.equal(bridge.previewCalls, 0);
+});
+
+void test("Verified Agent binds the exact approved Plan before controlled execution", async () => {
+  const { controller, bridge, signal } = fixture();
+  const plan = "Apply one exact approved Plan";
+  const request = runtimeRequest(plan, "controlled_write");
+  bridge.runtimePreparedRequest = request;
+  bridge.runtimeSteps.push((requestId) => completedRuntimeStep(requestId));
+  bridge.revalidationResponse = {
+    kind: "model_revalidated",
+    schema_version: 1,
+    request_id: "request-0001",
+    revalidation: {
+      schema_version: 1,
+      profile_id: "profile-0001",
+      expected_entry_sha256: "f".repeat(64),
+      current_snapshot_sha256: "b".repeat(64),
+      admitted: true,
+      result_code: "model.selection.admitted",
+    },
+  };
+  bridge.engineeringResponse = {
+    kind: "engineering",
+    schema_version: 1,
+    request_id: "request-binding-fixture",
+    response: {
+      result: "runtime_bound",
+      binding: {
+        session_id: request.session_id,
+        run_id: request.run_id,
+        request_sha256: request.request_sha256,
+      },
+    },
+  };
+
+  const response = await controller.runApprovedAgentPlan(
+    plan,
+    request.session_id,
+    runtimeProfile(),
+    signal,
+  );
+
+  assert.match(response.text, /Status: SUCCESS/u);
+  assert.deepEqual(bridge.runtimeCallOrder, ["prepare", "bind", "start"]);
+  assert.equal(bridge.lastEngineeringSessionId, request.session_id);
+  assert.equal(bridge.engineeringCalls, 1);
+  assert.equal(bridge.runtimeReleaseCalls, 1);
+});
+
+void test("Verified Agent never starts when approved Plan binding is unavailable", async () => {
+  const { controller, bridge, signal } = fixture();
+  const plan = "Apply one exact approved Plan";
+  const request = runtimeRequest(plan, "controlled_write");
+  bridge.runtimePreparedRequest = request;
+  bridge.revalidationResponse = {
+    kind: "model_revalidated",
+    schema_version: 1,
+    request_id: "request-0001",
+    revalidation: {
+      schema_version: 1,
+      profile_id: "profile-0001",
+      expected_entry_sha256: "f".repeat(64),
+      current_snapshot_sha256: "b".repeat(64),
+      admitted: true,
+      result_code: "model.selection.admitted",
+    },
+  };
+
+  const response = await controller.runApprovedAgentPlan(
+    plan,
+    request.session_id,
+    runtimeProfile(),
+    signal,
+  );
+
+  assert.match(response.text, /engineering\.not-used/u);
+  assert.deepEqual(bridge.runtimeCallOrder, ["prepare", "bind"]);
+  assert.equal(bridge.runtimeStartCalls, 0);
+  assert.equal(bridge.runtimeReleaseCalls, 1);
 });
 
 void test("native Chat rejects a substituted profile workspace or prompt before start", async () => {
