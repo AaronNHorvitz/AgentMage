@@ -21,6 +21,8 @@ pub mod attachment;
 pub mod authority;
 /// Kernel-owned authority-transaction ordering and recovery contract.
 pub mod authority_transaction;
+/// Versioned executable engineering capability admission and deterministic execution.
+pub mod capability_registry;
 /// Deterministic material-claim proof and truthful final-response construction.
 pub mod claim_evidence;
 /// Exact command templates, previews, execution permits, and terminal receipts.
@@ -73,6 +75,8 @@ pub mod model_adapter_evaluation;
 pub mod model_codec;
 /// Candidate-neutral native-picker projection and stale-selection refusal.
 pub mod model_discovery;
+/// Deterministic local and remote model endpoint validation, routing, and protocol encoding.
+pub mod model_gateway;
 pub mod model_response;
 /// Deterministic measured local routing over exact profile and role evidence.
 pub mod model_routing;
@@ -80,10 +84,14 @@ pub mod model_routing;
 pub mod model_runtime;
 /// Explicit exact-profile selection, deterministic-first dispatch, and resource control.
 pub mod model_selection;
+/// Dependency-aware multi-agent scheduling, leases, review, correction, and integration.
+pub mod multi_agent;
 /// Encrypted canonical operational state and crash recovery.
 pub mod operational_store;
 /// Deterministic pre-persistence classification, minimization, and receipts.
 pub mod persistence;
+/// Persistent Engineering Runtime session supervision and ordered event replay.
+pub mod persistent_supervisor;
 /// Fail-closed platform capability detection and adapter activation.
 pub mod platform_startup;
 /// Deterministic deny-first capability-grant policy evaluation.

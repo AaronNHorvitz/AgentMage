@@ -742,6 +742,10 @@ pub enum EngineeringEventKind {
         /// Deterministically established result.
         terminal: EngineeringTerminalState,
     },
+    /// A task paused at a checkpoint-safe boundary.
+    TaskPaused,
+    /// A paused task resumed without replaying completed effects.
+    TaskResumed,
     /// A Team worker entered a new lease state.
     WorkerUpdated {
         /// Exact worker lease.
