@@ -39,6 +39,8 @@ pub mod conversation_library;
 pub mod diagnostics;
 /// Deterministic document registers, records review, and exact local action previews.
 pub mod document_control;
+/// SQLCipher-backed Engineering Runtime session, event, and source-artifact persistence.
+pub mod engineering_persistence;
 /// Exact-preview redacted evidence bundles derived from canonical conversation state.
 pub mod evidence_bundle;
 /// Fresh citation resolution, complete answer ledgers, and keyed receipt integrity.

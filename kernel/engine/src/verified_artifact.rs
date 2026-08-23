@@ -295,30 +295,13 @@ impl VerifiedArtifactStore for MemoryVerifiedArtifactStore {
         self.payloads
             .entry(source_sha256.clone())
             .or_insert_with(|| bytes.clone());
-        let line_count = matches!(
-            spec.media_type.as_str(),
-            "text/plain" | "text/markdown" | "application/json" | "application/xml"
-        )
-        .then(|| line_count(&bytes));
-        let mut capture = ArtifactCaptureResult {
-            schema_version: CONTRACT_SCHEMA_VERSION,
-            upload_id: spec.upload_id.clone(),
-            artifact_id: artifact_id.clone(),
-            session_id: spec.session_id.clone(),
-            source_kind: spec.source_kind,
-            display_name: spec.display_name.clone(),
-            media_type: spec.media_type.clone(),
-            byte_length: spec.total_bytes,
-            line_count,
-            source_sha256,
-            disposition: ArtifactCaptureDisposition::CapturedExactly,
+        let record = build_verified_artifact_record(
+            spec,
+            artifact_id.clone(),
+            bytes,
             payload_deduplicated,
             completed_at_epoch_ms,
-            warning_codes: Vec::new(),
-            receipt_sha256: ZERO_SHA256.to_owned(),
-        };
-        capture.receipt_sha256 = canonical_sha256(&capture)?;
-        let record = VerifiedArtifactRecord { capture, bytes };
+        )?;
         self.records
             .insert((spec.session_id.clone(), artifact_id), record.clone());
         Ok(record)
@@ -334,6 +317,46 @@ impl VerifiedArtifactStore for MemoryVerifiedArtifactStore {
             .cloned()
             .ok_or(VerifiedArtifactError::NotFound)
     }
+}
+
+pub(crate) fn build_verified_artifact_record(
+    spec: &ArtifactUploadSpec,
+    artifact_id: RuntimeArtifactId,
+    bytes: Vec<u8>,
+    payload_deduplicated: bool,
+    completed_at_epoch_ms: u64,
+) -> Result<VerifiedArtifactRecord, VerifiedArtifactError> {
+    let source_sha256 = sha256(&bytes);
+    if source_sha256 != spec.expected_sha256
+        || bytes.len() as u64 != spec.total_bytes
+        || completed_at_epoch_ms == 0
+    {
+        return Err(VerifiedArtifactError::IntegrityMismatch);
+    }
+    let line_count = matches!(
+        spec.media_type.as_str(),
+        "text/plain" | "text/markdown" | "application/json" | "application/xml"
+    )
+    .then(|| line_count(&bytes));
+    let mut capture = ArtifactCaptureResult {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        upload_id: spec.upload_id.clone(),
+        artifact_id,
+        session_id: spec.session_id.clone(),
+        source_kind: spec.source_kind,
+        display_name: spec.display_name.clone(),
+        media_type: spec.media_type.clone(),
+        byte_length: spec.total_bytes,
+        line_count,
+        source_sha256,
+        disposition: ArtifactCaptureDisposition::CapturedExactly,
+        payload_deduplicated,
+        completed_at_epoch_ms,
+        warning_codes: Vec::new(),
+        receipt_sha256: ZERO_SHA256.to_owned(),
+    };
+    capture.receipt_sha256 = canonical_sha256(&capture)?;
+    Ok(VerifiedArtifactRecord { capture, bytes })
 }
 
 fn validate_spec(spec: &ArtifactUploadSpec) -> Result<(), VerifiedArtifactError> {
@@ -354,7 +377,7 @@ fn validate_spec(spec: &ArtifactUploadSpec) -> Result<(), VerifiedArtifactError>
     Ok(())
 }
 
-fn verify_capture(capture: &ArtifactCaptureResult) -> Result<(), VerifiedArtifactError> {
+pub(crate) fn verify_capture(capture: &ArtifactCaptureResult) -> Result<(), VerifiedArtifactError> {
     if capture.schema_version != CONTRACT_SCHEMA_VERSION
         || capture.byte_length == 0
         || capture.completed_at_epoch_ms == 0

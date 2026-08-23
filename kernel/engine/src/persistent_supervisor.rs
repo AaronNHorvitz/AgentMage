@@ -52,15 +52,17 @@ impl PersistentSupervisorError {
 
 /// Persistence boundary for exact session snapshots and append-only events.
 pub trait EngineeringSupervisorStore {
-    /// Inserts one new session snapshot if the identity is absent.
-    fn create_session(
+    /// Atomically inserts one new session and its initial event.
+    fn create_session_with_event(
         &mut self,
         snapshot: &EngineeringSessionSnapshot,
+        event: &EngineeringEvent,
     ) -> Result<(), PersistentSupervisorError>;
 
-    /// Replaces one current snapshot after its event is durable.
-    fn save_session(
+    /// Atomically appends one event and advances its current snapshot.
+    fn append_event_and_save_session(
         &mut self,
+        event: &EngineeringEvent,
         snapshot: &EngineeringSessionSnapshot,
     ) -> Result<(), PersistentSupervisorError>;
 
@@ -72,9 +74,6 @@ pub trait EngineeringSupervisorStore {
 
     /// Lists all current session snapshots in stable identity order.
     fn list_sessions(&self) -> Result<Vec<EngineeringSessionSnapshot>, PersistentSupervisorError>;
-
-    /// Appends exactly one next event.
-    fn append_event(&mut self, event: &EngineeringEvent) -> Result<(), PersistentSupervisorError>;
 
     /// Loads all events after an exclusive sequence cursor.
     fn load_events(
@@ -97,25 +96,33 @@ pub struct MemoryEngineeringSupervisorStore {
 }
 
 impl EngineeringSupervisorStore for MemoryEngineeringSupervisorStore {
-    fn create_session(
+    fn create_session_with_event(
         &mut self,
         snapshot: &EngineeringSessionSnapshot,
+        event: &EngineeringEvent,
     ) -> Result<(), PersistentSupervisorError> {
         let mut state = self
             .state
             .lock()
             .map_err(|_| PersistentSupervisorError::Storage)?;
-        if state.sessions.contains_key(&snapshot.session_id) {
+        if state.sessions.contains_key(&snapshot.session_id)
+            || event.session_id != snapshot.session_id
+            || event.sequence != 0
+        {
             return Err(PersistentSupervisorError::Duplicate);
         }
         state
             .sessions
             .insert(snapshot.session_id.clone(), snapshot.clone());
+        state
+            .events
+            .insert(snapshot.session_id.clone(), vec![event.clone()]);
         Ok(())
     }
 
-    fn save_session(
+    fn append_event_and_save_session(
         &mut self,
+        event: &EngineeringEvent,
         snapshot: &EngineeringSessionSnapshot,
     ) -> Result<(), PersistentSupervisorError> {
         let mut state = self
@@ -125,6 +132,14 @@ impl EngineeringSupervisorStore for MemoryEngineeringSupervisorStore {
         if !state.sessions.contains_key(&snapshot.session_id) {
             return Err(PersistentSupervisorError::NotFound);
         }
+        let events = state.events.entry(event.session_id.clone()).or_default();
+        if events.len() >= MAX_REPLAY_EVENTS {
+            return Err(PersistentSupervisorError::ResourceExceeded);
+        }
+        if event.session_id != snapshot.session_id || event.sequence != events.len() as u64 {
+            return Err(PersistentSupervisorError::Integrity);
+        }
+        events.push(event.clone());
         state
             .sessions
             .insert(snapshot.session_id.clone(), snapshot.clone());
@@ -148,22 +163,6 @@ impl EngineeringSupervisorStore for MemoryEngineeringSupervisorStore {
             .lock()
             .map_err(|_| PersistentSupervisorError::Storage)?;
         Ok(state.sessions.values().cloned().collect())
-    }
-
-    fn append_event(&mut self, event: &EngineeringEvent) -> Result<(), PersistentSupervisorError> {
-        let mut state = self
-            .state
-            .lock()
-            .map_err(|_| PersistentSupervisorError::Storage)?;
-        let events = state.events.entry(event.session_id.clone()).or_default();
-        if events.len() >= MAX_REPLAY_EVENTS {
-            return Err(PersistentSupervisorError::ResourceExceeded);
-        }
-        if event.sequence != events.len() as u64 {
-            return Err(PersistentSupervisorError::Integrity);
-        }
-        events.push(event.clone());
-        Ok(())
     }
 
     fn load_events(
@@ -232,14 +231,17 @@ where
             terminal: None,
             snapshot_sha256: ZERO_SHA256.to_owned(),
         };
-        snapshot.snapshot_sha256 = snapshot_digest(&snapshot)?;
-        self.store.create_session(&snapshot)?;
-        self.append_event(
-            &mut snapshot,
+        let event = build_event(
+            &snapshot,
+            0,
+            ZERO_SHA256.to_owned(),
             correlation_id,
             occurred_at_epoch_ms,
             EngineeringEventKind::SessionCreated,
         )?;
+        snapshot.last_event_sequence = Some(0);
+        snapshot.snapshot_sha256 = snapshot_digest(&snapshot)?;
+        self.store.create_session_with_event(&snapshot, &event)?;
         Ok(snapshot)
     }
 
@@ -376,32 +378,50 @@ where
             || ZERO_SHA256.to_owned(),
             |event| event.event_sha256.clone(),
         );
-        let mut event = EngineeringEvent {
-            schema_version: CONTRACT_SCHEMA_VERSION,
-            event_id: RuntimeEventId::from_raw(format!(
-                "engineering-event-{}-{sequence:016x}",
-                snapshot.session_id.as_str()
-            )),
-            session_id: snapshot.session_id.clone(),
-            task_id: snapshot.active_task_id.clone(),
+        let event = build_event(
+            snapshot,
             sequence,
+            previous_event_sha256,
             correlation_id,
             occurred_at_epoch_ms,
             kind,
-            previous_event_sha256,
-            event_sha256: ZERO_SHA256.to_owned(),
-        };
-        event.event_sha256 = event_digest(&event)?;
-        self.store.append_event(&event)?;
+        )?;
         snapshot.last_event_sequence = Some(sequence);
         if let EngineeringEventKind::Terminal { state } = &event.kind {
             snapshot.terminal = Some(*state);
         }
         snapshot.snapshot_sha256 = ZERO_SHA256.to_owned();
         snapshot.snapshot_sha256 = snapshot_digest(snapshot)?;
-        self.store.save_session(snapshot)?;
+        self.store.append_event_and_save_session(&event, snapshot)?;
         Ok(event)
     }
+}
+
+fn build_event(
+    snapshot: &EngineeringSessionSnapshot,
+    sequence: u64,
+    previous_event_sha256: String,
+    correlation_id: CorrelationId,
+    occurred_at_epoch_ms: u64,
+    kind: EngineeringEventKind,
+) -> Result<EngineeringEvent, PersistentSupervisorError> {
+    let mut event = EngineeringEvent {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        event_id: RuntimeEventId::from_raw(format!(
+            "engineering-event-{}-{sequence:016x}",
+            snapshot.session_id.as_str()
+        )),
+        session_id: snapshot.session_id.clone(),
+        task_id: snapshot.active_task_id.clone(),
+        sequence,
+        correlation_id,
+        occurred_at_epoch_ms,
+        kind,
+        previous_event_sha256,
+        event_sha256: ZERO_SHA256.to_owned(),
+    };
+    event.event_sha256 = event_digest(&event)?;
+    Ok(event)
 }
 
 /// Verifies one complete event chain and every event digest.
@@ -431,7 +451,9 @@ pub fn verify_event_chain(events: &[EngineeringEvent]) -> Result<(), PersistentS
     Ok(())
 }
 
-fn verify_snapshot(snapshot: &EngineeringSessionSnapshot) -> Result<(), PersistentSupervisorError> {
+pub(crate) fn verify_snapshot(
+    snapshot: &EngineeringSessionSnapshot,
+) -> Result<(), PersistentSupervisorError> {
     if snapshot.schema_version != CONTRACT_SCHEMA_VERSION
         || snapshot.session_id.as_str().is_empty()
         || snapshot.title.is_empty()
