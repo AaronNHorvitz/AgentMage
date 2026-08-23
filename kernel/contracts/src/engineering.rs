@@ -1035,6 +1035,8 @@ pub enum EngineeringRpcRequest {
         session_id: SessionId,
         /// Exact captured prompt artifact.
         prompt_artifact_id: RuntimeArtifactId,
+        /// Ordered exact captured context artifacts selected for this turn.
+        context_artifact_ids: Vec<RuntimeArtifactId>,
         /// Exact request correlation identity.
         correlation_id: CorrelationId,
         /// Trusted host time.

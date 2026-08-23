@@ -100,8 +100,8 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> EngineeringModelPort
                 schema_sha256: sha256(b"engineering.verified-chat.user-text.v1"),
             },
             media_type: "text/plain".to_owned(),
-            sha256: sha256(&input.prompt_bytes),
-            bytes: input.prompt_bytes.clone(),
+            sha256: sha256(&input.context_bytes),
+            bytes: input.context_bytes.clone(),
         };
         let mut packet = ModelContextPacket {
             schema_version: CONTRACT_SCHEMA_VERSION,
@@ -118,7 +118,7 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> EngineeringModelPort
                 role: ModelMessageRole::User,
                 content: payload,
             }],
-            input_bytes: input.prompt_bytes.len() as u64,
+            input_bytes: input.context_bytes.len() as u64,
             input_tokens: 1,
             packet_sha256: "0".repeat(64),
         };

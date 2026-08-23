@@ -53,6 +53,7 @@ pub fn admit_context(
     endpoint_profile_id: EndpointProfileId,
     route_decision_id: RouteDecisionId,
     artifacts: &[ArtifactCaptureResult],
+    artifact_bytes: &[Vec<u8>],
     policy: &ContextAdmissionPolicy,
 ) -> Result<ContextDeliveryReceipt, VerifiedContextError> {
     if context_packet_id.as_str().is_empty()
@@ -63,16 +64,19 @@ pub fn admit_context(
         || policy.max_inline_bytes == 0
         || policy.token_limit == 0
         || policy.estimated_bytes_per_token == 0
+        || artifacts.len() != artifact_bytes.len()
     {
         return Err(VerifiedContextError::InvalidInput);
     }
     let mut inline_bytes = 0_u64;
     let mut coverage = Vec::with_capacity(artifacts.len());
     let mut context_material = Vec::new();
-    for artifact in artifacts {
+    for (artifact, bytes) in artifacts.iter().zip(artifact_bytes) {
         if artifact.schema_version != CONTRACT_SCHEMA_VERSION
             || artifact.byte_length == 0
             || artifact.source_sha256.len() != 64
+            || artifact.byte_length != bytes.len() as u64
+            || artifact.source_sha256 != sha256(bytes)
         {
             return Err(VerifiedContextError::InvalidInput);
         }
@@ -81,9 +85,7 @@ pub fn admit_context(
             inline_bytes = inline_bytes
                 .checked_add(artifact.byte_length)
                 .ok_or(VerifiedContextError::ResourceExceeded)?;
-            context_material.extend_from_slice(artifact.artifact_id.as_str().as_bytes());
-            context_material.extend_from_slice(artifact.source_sha256.as_bytes());
-            context_material.extend_from_slice(&artifact.byte_length.to_be_bytes());
+            context_material.extend_from_slice(bytes);
             (
                 ArtifactCoverageState::AdmittedInline,
                 vec![(0, artifact.byte_length)],
@@ -196,7 +198,7 @@ mod tests {
             media_type: "text/plain".to_owned(),
             byte_length: bytes,
             line_count: Some(1),
-            source_sha256: "a".repeat(64),
+            source_sha256: super::sha256(&vec![b'a'; bytes as usize]),
             disposition: ArtifactCaptureDisposition::CapturedExactly,
             payload_deduplicated: false,
             completed_at_epoch_ms: 1,
@@ -214,6 +216,7 @@ mod tests {
             EndpointProfileId::from_raw("endpoint-1"),
             RouteDecisionId::from_raw("route-1"),
             &[capture("small", 128), capture("large", 50_000)],
+            &[vec![b'a'; 128], vec![b'a'; 50_000]],
             &ContextAdmissionPolicy {
                 max_inline_bytes: 1024,
                 token_limit: 4096,

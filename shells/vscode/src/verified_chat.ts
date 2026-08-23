@@ -10,6 +10,7 @@ import type {
   SelectedRuntimeProfile,
 } from "./provider.js";
 import {
+  captureExactBytes,
   captureExactText,
   request,
   type EngineeringHostResponse,
@@ -24,6 +25,7 @@ interface WebviewMessage {
     | "ready"
     | "newSession"
     | "capturePaste"
+    | "attachFiles"
     | "send"
     | "approvePlan"
     | "startApprovedPlan"
@@ -57,6 +59,7 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
     | undefined;
   private profiles: readonly SelectedRuntimeProfile[] = [];
   private selectedProfileId: string | undefined;
+  private attachedArtifactIds: string[] = [];
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -214,6 +217,7 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
       this.mode = targetMode;
       this.latestPlan = undefined;
       this.approvedPlan = undefined;
+      this.attachedArtifactIds = [];
       await this.post({
         type: "session",
         sessionId: targetSessionId,
@@ -325,6 +329,10 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
       await this.capture(sessionId, "paste", "Pasted text", message.text ?? "");
       return;
     }
+    if (message.type === "attachFiles") {
+      await this.attachFiles(sessionId);
+      return;
+    }
     if (message.type === "send" && (message.text ?? "").trim().length > 0) {
       const text = message.text ?? "";
       await this.post({ type: "message", role: "user", text });
@@ -339,6 +347,7 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
         request("execute_verified_turn", {
           session_id: sessionId,
           prompt_artifact_id: captured.artifactId,
+          context_artifact_ids: this.attachedArtifactIds,
           correlation_id: `correlation-${randomUUID()}`,
           occurred_at_epoch_ms: Date.now(),
         }),
@@ -368,6 +377,16 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
         });
         return;
       }
+      const context = contextSummary(turn.context);
+      if (context === undefined) {
+        await this.post({
+          type: "status",
+          state: "blocked",
+          code: "verified-chat.context-receipt.invalid",
+        });
+        return;
+      }
+      await this.post({ type: "contextReceipt", context });
       const planArtifact = asRecord(response.response.plan_artifact);
       if (this.mode === "plan") {
         if (
@@ -436,6 +455,7 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
     this.mode = mode;
     this.latestPlan = undefined;
     this.approvedPlan = undefined;
+    this.attachedArtifactIds = [];
     await this.post({ type: "session", sessionId, mode });
     await this.refreshSessions();
   }
@@ -474,6 +494,63 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
             : "verified-chat.capture.failed",
       });
       return undefined;
+    }
+  }
+
+  private async attachFiles(sessionId: string): Promise<void> {
+    const selected = await vscode.window.showOpenDialog({
+      canSelectFiles: true,
+      canSelectFolders: false,
+      canSelectMany: true,
+      title: "Attach files to AgentMage Verified Chat",
+      openLabel: "Attach",
+    });
+    if (selected === undefined) return;
+    if (selected.length > 16) {
+      await this.post({
+        type: "status",
+        state: "blocked",
+        code: "verified-chat.attachments.too-many",
+      });
+      return;
+    }
+    for (const uri of selected) {
+      const displayName = uri.path.split("/").pop() ?? "Selected file";
+      try {
+        const bytes = await vscode.workspace.fs.readFile(uri);
+        const mediaType = mediaTypeFor(displayName);
+        const captured = await captureExactBytes(
+          (hostRequest) => this.exchange(hostRequest),
+          sessionId,
+          "file",
+          displayName,
+          mediaType,
+          bytes,
+        );
+        if (mediaType.startsWith("text/") || mediaType === "application/json") {
+          this.attachedArtifactIds.push(captured.artifactId);
+        } else {
+          await this.post({
+            type: "status",
+            state: "blocked",
+            code: "verified-chat.attachment.captured-retrieval-only",
+          });
+        }
+        await this.post({
+          type: "attachment",
+          ...captured,
+          displayName,
+        });
+      } catch (error) {
+        await this.post({
+          type: "status",
+          state: "blocked",
+          code:
+            error instanceof Error
+              ? error.message
+              : "verified-chat.attachment.failed",
+        });
+      }
     }
   }
 
@@ -542,6 +619,7 @@ function parseWebviewMessage(value: unknown): WebviewMessage | undefined {
     "ready",
     "newSession",
     "capturePaste",
+    "attachFiles",
     "send",
     "approvePlan",
     "startApprovedPlan",
@@ -564,6 +642,50 @@ function parseWebviewMessage(value: unknown): WebviewMessage | undefined {
   return value as unknown as WebviewMessage;
 }
 
+function contextSummary(
+  value: unknown,
+): Readonly<Record<string, unknown>> | undefined {
+  const context = asRecord(value);
+  if (
+    context === undefined ||
+    typeof context.context_packet_id !== "string" ||
+    typeof context.model_profile_id !== "string" ||
+    typeof context.endpoint_profile_id !== "string" ||
+    typeof context.route_decision_id !== "string" ||
+    typeof context.inline_bytes !== "number" ||
+    typeof context.estimated_tokens !== "number" ||
+    typeof context.token_limit !== "number" ||
+    typeof context.context_sha256 !== "string" ||
+    !Array.isArray(context.artifacts)
+  ) {
+    return undefined;
+  }
+  return {
+    contextPacketId: context.context_packet_id,
+    modelProfileId: context.model_profile_id,
+    endpointProfileId: context.endpoint_profile_id,
+    routeDecisionId: context.route_decision_id,
+    inlineBytes: context.inline_bytes,
+    estimatedTokens: context.estimated_tokens,
+    tokenLimit: context.token_limit,
+    contextSha256: context.context_sha256,
+    artifacts: context.artifacts,
+  };
+}
+
+function mediaTypeFor(displayName: string): string {
+  const extension = displayName.toLowerCase().split(".").pop();
+  const known: Readonly<Record<string, string>> = {
+    csv: "text/csv",
+    json: "application/json",
+    log: "text/plain",
+    md: "text/markdown",
+    pdf: "application/pdf",
+    txt: "text/plain",
+  };
+  return known[extension ?? ""] ?? "application/octet-stream";
+}
+
 function sidebarHtml(): string {
   const nonce = randomBytes(18).toString("base64");
   return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'"><style nonce="${nonce}">body{padding:12px;color:var(--vscode-foreground);font-family:var(--vscode-font-family)}button{width:100%;height:32px;color:var(--vscode-button-foreground);background:var(--vscode-button-background);border:0}#sessions{margin-top:12px;font-size:12px;color:var(--vscode-descriptionForeground)}</style></head><body><button id="open">Open Verified Chat</button><div id="sessions"></div><script nonce="${nonce}">const vscode=acquireVsCodeApi();document.getElementById('open').addEventListener('click',()=>vscode.postMessage({type:'open'}));window.addEventListener('message',event=>{if(event.data?.type==='sessions'){document.getElementById('sessions').textContent=Array.isArray(event.data.sessions)?event.data.sessions.length+' sessions':'';}});</script></body></html>`;
@@ -572,8 +694,28 @@ function sidebarHtml(): string {
 function editorHtml(webview: vscode.Webview): string {
   const nonce = randomBytes(18).toString("base64");
   const cspSource = webview.cspSource;
+  return `<!doctype html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource}; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style nonce="${nonce}">
+*{box-sizing:border-box}body{margin:0;color:var(--vscode-foreground);background:var(--vscode-editor-background);font-family:var(--vscode-font-family);height:100vh;display:grid;grid-template-rows:42px 1fr auto}.bar{display:flex;gap:8px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--vscode-panel-border);overflow-x:auto}select,textarea,button{font:inherit;color:inherit}select,textarea{background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);color:var(--vscode-input-foreground)}button{height:30px;border:0;background:var(--vscode-button-background);color:var(--vscode-button-foreground);padding:0 12px;white-space:nowrap}button:disabled{opacity:.55}.workspace{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 320px}.messages{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}.message{white-space:pre-wrap;line-height:1.45;max-width:900px}.user{border-left:3px solid var(--vscode-charts-blue);padding-left:10px}.status{color:var(--vscode-descriptionForeground);font-size:12px}.artifacts{color:var(--vscode-charts-green);font-size:12px}.inspector{overflow:auto;border-left:1px solid var(--vscode-panel-border);padding:12px}.inspector h2{font-size:13px;margin:0 0 10px}.inspector pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px var(--vscode-editor-font-family);color:var(--vscode-descriptionForeground)}.composer{padding:10px 12px;border-top:1px solid var(--vscode-panel-border);display:grid;grid-template-columns:1fr auto;gap:8px}.compose-tools{grid-column:1/-1;display:flex;align-items:center;gap:8px;min-height:30px}.attachments{font-size:12px;color:var(--vscode-descriptionForeground);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}textarea{resize:vertical;min-height:72px;max-height:240px;padding:8px;letter-spacing:0}@media(max-width:800px){.workspace{grid-template-columns:1fr}.inspector{border-left:0;border-top:1px solid var(--vscode-panel-border);max-height:180px}}
+</style></head><body>
+<header class="bar"><strong>AgentMage</strong><select id="mode" aria-label="Mode"><option value="ask">Ask</option><option value="plan">Plan</option><option value="agent">Agent</option><option value="team">Team</option></select><select id="model" aria-label="Model"><option value="">No qualified model</option></select><button id="approve" disabled>Approve Plan</button><button id="startAgent" disabled>Start Agent</button><button id="startTeam" disabled>Start Team</button><button id="new">New</button><span id="session" class="status"></span></header>
+<div class="workspace"><main id="messages" class="messages" aria-live="polite"></main><aside class="inspector" aria-label="What the Model Saw"><h2>What the Model Saw</h2><pre id="context">No model context recorded</pre></aside></div>
+<footer class="composer"><div class="compose-tools"><button id="attach" title="Attach files">Attach</button><span id="attachments" class="attachments"></span></div><textarea id="composer" aria-label="Message"></textarea><button id="send">Send</button></footer>
+<script nonce="${nonce}">
+const vscode=acquireVsCodeApi(),composer=document.getElementById('composer'),messages=document.getElementById('messages'),mode=document.getElementById('mode'),model=document.getElementById('model'),approve=document.getElementById('approve'),startAgent=document.getElementById('startAgent'),startTeam=document.getElementById('startTeam'),attachments=document.getElementById('attachments'),context=document.getElementById('context');let planApproved=false,attachmentNames=[];function post(type,extra={}){vscode.postMessage({type,...extra});}function add(text,kind='status'){const item=document.createElement('div');item.className='message '+kind;item.textContent=text;messages.appendChild(item);messages.scrollTop=messages.scrollHeight;}function actions(){approve.disabled=planApproved;startAgent.disabled=!planApproved||!model.value;startTeam.disabled=!planApproved;}composer.addEventListener('paste',event=>{const text=event.clipboardData?.getData('text/plain');if(typeof text!=='string')return;event.preventDefault();const start=composer.selectionStart,end=composer.selectionEnd;composer.setRangeText(text,start,end,'end');post('capturePaste',{text});});model.addEventListener('change',()=>post('selectModel',{text:model.value}));document.getElementById('new').addEventListener('click',()=>post('newSession',{mode:mode.value}));document.getElementById('attach').addEventListener('click',()=>post('attachFiles',{mode:mode.value}));approve.addEventListener('click',()=>post('approvePlan'));startAgent.addEventListener('click',()=>post('startApprovedPlan',{mode:'agent'}));startTeam.addEventListener('click',()=>post('startApprovedPlan',{mode:'team'}));document.getElementById('send').addEventListener('click',()=>{const text=composer.value;if(!text.trim())return;post('send',{text,mode:mode.value});composer.value='';});window.addEventListener('message',event=>{const data=event.data;if(data?.type==='session'){document.getElementById('session').textContent=data.sessionId??'';mode.value=data.mode??'ask';planApproved=false;attachmentNames=[];attachments.textContent='';context.textContent='No model context recorded';actions();}else if(data?.type==='models'){model.replaceChildren();for(const entry of data.models??[]){const option=document.createElement('option');option.value=entry.id;option.textContent=entry.name;model.appendChild(option);}if(model.options.length===0){const option=document.createElement('option');option.value='';option.textContent='No qualified model';model.appendChild(option);}model.value=data.selectedProfileId??'';actions();}else if(data?.type==='modelSelected'){model.value=data.profileId??'';actions();}else if(data?.type==='message'){add(data.text,data.role==='user'?'user':'assistant');}else if(data?.type==='artifact'){add(data.displayName+' · '+data.byteLength+' bytes · '+data.sourceSha256.slice(0,12),'artifacts');}else if(data?.type==='attachment'){attachmentNames.push(data.displayName);attachments.textContent=attachmentNames.join(', ');add(data.displayName+' · '+data.byteLength+' bytes · '+data.sourceSha256.slice(0,12),'artifacts');}else if(data?.type==='contextReceipt'){context.textContent=JSON.stringify(data.context,null,2);}else if(data?.type==='planState'){planApproved=Boolean(data.approved);actions();}else if(data?.type==='status'){add(data.code,'status');}});actions();post('ready');
+</script></body></html>`;
+}
+
+function legacyEditorHtml(webview: vscode.Webview): string {
+  const nonce = randomBytes(18).toString("base64");
+  const cspSource = webview.cspSource;
   return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${cspSource}; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'"><meta name="viewport" content="width=device-width,initial-scale=1"><style nonce="${nonce}">*{box-sizing:border-box}body{margin:0;color:var(--vscode-foreground);background:var(--vscode-editor-background);font-family:var(--vscode-font-family);height:100vh;display:grid;grid-template-rows:42px 1fr auto}.bar{display:flex;gap:8px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--vscode-panel-border)}select,textarea,button{font:inherit;color:inherit}select,textarea{background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);color:var(--vscode-input-foreground)}button{height:30px;border:0;background:var(--vscode-button-background);color:var(--vscode-button-foreground);padding:0 12px}button:disabled{opacity:.55}.messages{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}.message{white-space:pre-wrap;line-height:1.45;max-width:900px}.user{border-left:3px solid var(--vscode-charts-blue);padding-left:10px}.status{color:var(--vscode-descriptionForeground);font-size:12px}.artifacts{color:var(--vscode-charts-green);font-size:12px}.composer{padding:10px 12px;border-top:1px solid var(--vscode-panel-border);display:grid;grid-template-columns:1fr auto;gap:8px}textarea{resize:vertical;min-height:72px;max-height:240px;padding:8px;letter-spacing:0}</style></head><body><header class="bar"><strong>AgentMage</strong><select id="mode" aria-label="Mode"><option value="ask">Ask</option><option value="plan">Plan</option><option value="agent">Agent</option><option value="team">Team</option></select><select id="model" aria-label="Model"><option value="">No qualified model</option></select><button id="approve" disabled>Approve Plan</button><button id="startAgent" disabled>Start Agent</button><button id="startTeam" disabled>Start Team</button><button id="new">New</button><span id="session" class="status"></span></header><main id="messages" class="messages" aria-live="polite"></main><footer class="composer"><textarea id="composer" aria-label="Message"></textarea><button id="send">Send</button></footer><script nonce="${nonce}">const vscode=acquireVsCodeApi(),composer=document.getElementById('composer'),messages=document.getElementById('messages'),mode=document.getElementById('mode'),model=document.getElementById('model'),approve=document.getElementById('approve'),startAgent=document.getElementById('startAgent'),startTeam=document.getElementById('startTeam');let planApproved=false;function post(type,extra={}){vscode.postMessage({type,...extra});}function add(text,kind='status'){const item=document.createElement('div');item.className='message '+kind;item.textContent=text;messages.appendChild(item);messages.scrollTop=messages.scrollHeight;}function actions(){approve.disabled=planApproved;startAgent.disabled=!planApproved||!model.value;startTeam.disabled=!planApproved;}composer.addEventListener('paste',event=>{const text=event.clipboardData?.getData('text/plain');if(typeof text!=='string')return;event.preventDefault();const start=composer.selectionStart,end=composer.selectionEnd;composer.setRangeText(text,start,end,'end');post('capturePaste',{text});});model.addEventListener('change',()=>post('selectModel',{text:model.value}));document.getElementById('new').addEventListener('click',()=>post('newSession',{mode:mode.value}));approve.addEventListener('click',()=>post('approvePlan'));startAgent.addEventListener('click',()=>post('startApprovedPlan',{mode:'agent'}));startTeam.addEventListener('click',()=>post('startApprovedPlan',{mode:'team'}));document.getElementById('send').addEventListener('click',()=>{const text=composer.value;if(!text.trim())return;post('send',{text,mode:mode.value});composer.value='';});window.addEventListener('message',event=>{const data=event.data;if(data?.type==='session'){document.getElementById('session').textContent=data.sessionId??'';mode.value=data.mode??'ask';planApproved=false;actions();}else if(data?.type==='models'){model.replaceChildren();for(const entry of data.models??[]){const option=document.createElement('option');option.value=entry.id;option.textContent=entry.name;model.appendChild(option);}if(model.options.length===0){const option=document.createElement('option');option.value='';option.textContent='No qualified model';model.appendChild(option);}model.value=data.selectedProfileId??'';actions();}else if(data?.type==='modelSelected'){model.value=data.profileId??'';actions();}else if(data?.type==='message'){add(data.text,data.role==='user'?'user':'assistant');}else if(data?.type==='artifact'){add(data.displayName+' · '+data.byteLength+' bytes · '+data.sourceSha256.slice(0,12),'artifacts');}else if(data?.type==='planState'){planApproved=Boolean(data.approved);actions();}else if(data?.type==='status'){add(data.code,'status');}});actions();post('ready');</script></body></html>`;
 }
+
+void legacyEditorHtml;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

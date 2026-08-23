@@ -42,6 +42,27 @@ export async function captureExactText(
   now: () => number = Date.now,
 ): Promise<CapturedSource> {
   const bytes = Buffer.from(text, "utf8");
+  return captureExactBytes(
+    exchange,
+    sessionId,
+    sourceKind,
+    displayName,
+    mediaType,
+    bytes,
+    now,
+  );
+}
+
+/** Captures exact explicitly selected file bytes through the same host authority. */
+export async function captureExactBytes(
+  exchange: EngineeringExchange,
+  sessionId: string,
+  sourceKind: "paste" | "editor_selection" | "file",
+  displayName: string,
+  mediaType: string,
+  bytes: Uint8Array,
+  now: () => number = Date.now,
+): Promise<CapturedSource> {
   if (bytes.length === 0 || bytes.length > MAX_VERIFIED_SOURCE_BYTES) {
     throw new VerifiedChatProtocolError("verified-chat.source.size-invalid");
   }

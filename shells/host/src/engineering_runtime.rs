@@ -130,8 +130,8 @@ pub struct EngineeringModelInput {
     pub mode: EngineeringSessionMode,
     /// Exact model-delivery receipt.
     pub context: ContextDeliveryReceipt,
-    /// Exact prompt bytes loaded from encrypted artifact authority.
-    pub prompt_bytes: Vec<u8>,
+    /// Exact ordered model-visible bytes loaded from encrypted artifact authority.
+    pub context_bytes: Vec<u8>,
 }
 
 /// Stable content-free model-execution refusal.
@@ -990,6 +990,7 @@ impl EngineeringRuntimeService {
         &mut self,
         session_id: agentmage_kernel_contracts::SessionId,
         prompt_artifact_id: agentmage_kernel_contracts::RuntimeArtifactId,
+        context_artifact_ids: Vec<agentmage_kernel_contracts::RuntimeArtifactId>,
         correlation_id: agentmage_kernel_contracts::CorrelationId,
         occurred_at_epoch_ms: u64,
     ) -> Result<EngineeringRpcResponse, EngineeringRuntimeError> {
@@ -1005,7 +1006,7 @@ impl EngineeringRuntimeService {
         }
         enforce_engineering_mode(snapshot.mode, EngineeringModeOperation::ModelInference)
             .map_err(|_| EngineeringRuntimeError::ModeDenied)?;
-        let capture = snapshot
+        let prompt_capture = snapshot
             .artifacts
             .iter()
             .find(|capture| capture.artifact_id == prompt_artifact_id)
@@ -1013,24 +1014,32 @@ impl EngineeringRuntimeService {
             .ok_or(EngineeringRuntimeError::Artifact(
                 VerifiedArtifactError::NotFound,
             ))?;
-        if capture.byte_length > MAX_VERIFIED_ARTIFACT_READ_BYTES {
+        let mut captures = vec![prompt_capture];
+        for artifact_id in context_artifact_ids {
+            captures.push(
+                snapshot
+                    .artifacts
+                    .iter()
+                    .find(|capture| capture.artifact_id == artifact_id)
+                    .cloned()
+                    .ok_or(EngineeringRuntimeError::Artifact(
+                        VerifiedArtifactError::NotFound,
+                    ))?,
+            );
+        }
+        let total_bytes = captures.iter().try_fold(0_u64, |total, capture| {
+            total.checked_add(capture.byte_length)
+        });
+        if total_bytes.is_none_or(|bytes| bytes > MAX_VERIFIED_ARTIFACT_READ_BYTES) {
             return Err(EngineeringRuntimeError::Context(
                 VerifiedContextError::ResourceExceeded,
             ));
         }
-        let range = self
-            .artifacts
-            .read_range(&session_id, &prompt_artifact_id, 0, capture.byte_length)
-            .map_err(EngineeringRuntimeError::Artifact)?;
-        if range.truncated
-            || range.returned_offset != 0
-            || range.bytes.len() as u64 != capture.byte_length
-            || sha256(&range.bytes) != capture.source_sha256
-        {
-            return Err(EngineeringRuntimeError::Artifact(
-                VerifiedArtifactError::IntegrityMismatch,
-            ));
+        let mut artifact_bytes = Vec::with_capacity(captures.len());
+        for capture in &captures {
+            artifact_bytes.push(self.read_complete_artifact(&session_id, capture)?);
         }
+        let context_bytes = artifact_bytes.concat();
         let model = self
             .model
             .as_mut()
@@ -1054,7 +1063,8 @@ impl EngineeringRuntimeService {
             model_profile_id,
             endpoint_profile_id,
             route_decision_id.clone(),
-            std::slice::from_ref(&capture),
+            &captures,
+            &artifact_bytes,
             &ContextAdmissionPolicy {
                 max_inline_bytes: MAX_VERIFIED_ARTIFACT_READ_BYTES,
                 token_limit: MAX_VERIFIED_ARTIFACT_READ_BYTES,
@@ -1083,7 +1093,7 @@ impl EngineeringRuntimeService {
                 session_id: session_id.clone(),
                 mode: snapshot.mode,
                 context: context.clone(),
-                prompt_bytes: range.bytes,
+                context_bytes,
             })
             .map_err(|_| EngineeringRuntimeError::ModelFailed)?;
         if output_text.is_empty()
@@ -1238,11 +1248,13 @@ impl EngineeringRuntimePort for EngineeringRuntimeService {
             ExecuteVerifiedTurn {
                 session_id,
                 prompt_artifact_id,
+                context_artifact_ids,
                 correlation_id,
                 occurred_at_epoch_ms,
             } => self.execute_verified_turn(
                 session_id,
                 prompt_artifact_id,
+                context_artifact_ids,
                 correlation_id,
                 occurred_at_epoch_ms,
             ),
@@ -1600,6 +1612,7 @@ mod tests {
     struct ExactSentinelModel {
         expected_sha256: String,
         expected_mode: EngineeringSessionMode,
+        expected_artifacts: usize,
         sentinels: Vec<(usize, Vec<u8>)>,
     }
 
@@ -1620,12 +1633,19 @@ mod tests {
             &mut self,
             input: &EngineeringModelInput,
         ) -> Result<String, EngineeringModelError> {
-            if sha256(&input.prompt_bytes) != self.expected_sha256
+            if sha256(&input.context_bytes) != self.expected_sha256
                 || input.mode != self.expected_mode
-                || input.context.artifacts.len() != 1
-                || input.context.artifacts[0].ranges != vec![(0, input.prompt_bytes.len() as u64)]
+                || input.context.artifacts.len() != self.expected_artifacts
+                || input
+                    .context
+                    .artifacts
+                    .iter()
+                    .flat_map(|artifact| artifact.ranges.iter())
+                    .map(|(start, end)| end - start)
+                    .sum::<u64>()
+                    != input.context_bytes.len() as u64
                 || self.sentinels.iter().any(|(offset, sentinel)| {
-                    input.prompt_bytes.get(*offset..offset + sentinel.len())
+                    input.context_bytes.get(*offset..offset + sentinel.len())
                         != Some(sentinel.as_slice())
                 })
             {
@@ -1694,6 +1714,7 @@ mod tests {
         runtime.install_model(Box::new(ExactSentinelModel {
             expected_sha256: source_sha256.clone(),
             expected_mode: EngineeringSessionMode::Ask,
+            expected_artifacts: 1,
             sentinels,
         }));
         runtime
@@ -1744,6 +1765,7 @@ mod tests {
             .handle(EngineeringRpcRequest::ExecuteVerifiedTurn {
                 session_id: session_id.clone(),
                 prompt_artifact_id: capture.artifact_id.clone(),
+                context_artifact_ids: Vec::new(),
                 correlation_id: CorrelationId::from_raw("correlation-exact-turn"),
                 occurred_at_epoch_ms: 30,
             })
@@ -1791,6 +1813,7 @@ mod tests {
             reopened.handle(EngineeringRpcRequest::ExecuteVerifiedTurn {
                 session_id: snapshot.session_id,
                 prompt_artifact_id: snapshot.artifacts[0].artifact_id.clone(),
+                context_artifact_ids: Vec::new(),
                 correlation_id: CorrelationId::from_raw("correlation-no-model"),
                 occurred_at_epoch_ms: 40,
             }),
@@ -1814,6 +1837,7 @@ mod tests {
         runtime.install_model(Box::new(ExactSentinelModel {
             expected_sha256: source_sha256.clone(),
             expected_mode: EngineeringSessionMode::Plan,
+            expected_artifacts: 1,
             sentinels: Vec::new(),
         }));
         runtime
@@ -1867,6 +1891,7 @@ mod tests {
             .handle(EngineeringRpcRequest::ExecuteVerifiedTurn {
                 session_id: session_id.clone(),
                 prompt_artifact_id: capture.artifact_id,
+                context_artifact_ids: Vec::new(),
                 correlation_id: CorrelationId::from_raw("correlation-plan-turn"),
                 occurred_at_epoch_ms: 120,
             })

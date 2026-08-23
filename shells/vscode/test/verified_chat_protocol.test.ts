@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import test from "node:test";
 
 import {
+  captureExactBytes,
   captureExactText,
   ENGINEERING_CHUNK_BYTES,
   parseEngineeringHostResponse,
@@ -68,6 +69,62 @@ void test("50,000-character paste reaches the host in exact ordered chunks", asy
   assert.deepEqual(Buffer.from(retained), Buffer.from(text, "utf8"));
   assert.equal(captured.byteLength, Buffer.byteLength(text));
   assert.ok(expectedSequence > 1);
+});
+
+void test("selected binary attachment reaches the host without text conversion", async () => {
+  const source = Buffer.from([0, 255, 1, 2, 13, 10, 128, 64]);
+  const retained: number[] = [];
+  let observedSourceKind: unknown;
+  const exchange = (request: EngineeringHostRequest) => {
+    const operation = request.request.operation;
+    if (operation === "begin_artifact") {
+      observedSourceKind = request.request.source_kind;
+      return Promise.resolve(
+        response(request.request_id, {
+          result: "artifact_upload_started",
+          upload_id: request.request.upload_id,
+        }),
+      );
+    }
+    if (operation === "upload_artifact_chunk") {
+      const chunk = request.request.chunk as {
+        readonly bytes: readonly number[];
+      };
+      retained.push(...chunk.bytes);
+      return Promise.resolve(
+        response(request.request_id, {
+          result: "artifact_chunk_accepted",
+          upload_id: request.request.upload_id,
+          sequence: 0,
+        }),
+      );
+    }
+    if (operation === "commit_artifact") {
+      return Promise.resolve(
+        response(request.request_id, {
+          result: "artifact_captured",
+          capture: {
+            artifact_id: "verified-file-fixture",
+            source_sha256: createHash("sha256").update(source).digest("hex"),
+            byte_length: source.length,
+          },
+        }),
+      );
+    }
+    return Promise.resolve({ kind: "denied" as const, code: "unexpected" });
+  };
+  const captured = await captureExactBytes(
+    exchange,
+    "session-file-fixture",
+    "file",
+    "fixture.bin",
+    "application/octet-stream",
+    source,
+    () => 2,
+  );
+  assert.equal(observedSourceKind, "file");
+  assert.deepEqual(Buffer.from(retained), source);
+  assert.equal(captured.byteLength, source.length);
 });
 
 void test("unknown Engineering response fields fail closed", () => {

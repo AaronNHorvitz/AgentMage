@@ -1047,11 +1047,21 @@ fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), H
         ExecuteVerifiedTurn {
             session_id,
             prompt_artifact_id,
+            context_artifact_ids,
             correlation_id,
             occurred_at_epoch_ms,
         } => {
             if !valid_id(session_id.as_str())
                 || !valid_id(prompt_artifact_id.as_str())
+                || context_artifact_ids.len() > 32
+                || context_artifact_ids.iter().any(|artifact_id| {
+                    !valid_id(artifact_id.as_str()) || artifact_id == prompt_artifact_id
+                })
+                || context_artifact_ids
+                    .iter()
+                    .collect::<std::collections::BTreeSet<_>>()
+                    .len()
+                    != context_artifact_ids.len()
                 || !valid_id(correlation_id.as_str())
                 || *occurred_at_epoch_ms == 0
             {
