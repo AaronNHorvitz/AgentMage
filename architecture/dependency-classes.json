@@ -7,12 +7,13 @@
     "declared_package_dependencies": [],
     "decision_ids": [
       "ADR-0043",
-      "ADR-0044"
+      "ADR-0044",
+      "ADR-0045"
     ],
     "enabled": false,
-    "included_in_default_build": false,
+    "included_in_default_build": true,
     "included_in_release": false,
-    "status": "planned-contracts-only"
+    "status": "scaffolded-not-enabled"
   },
   "production": {
     "cargo_internal_path_packages": [

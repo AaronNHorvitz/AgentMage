@@ -87,7 +87,7 @@ def validate_inventory(inventory: Any) -> list[str]:
         failures.append("schema_version must equal 1")
     if inventory.get("status") != "enforced":
         failures.append("optional component inventory status must be enforced")
-    if inventory.get("planning_decision_ids") != ["ADR-0043", "ADR-0044"]:
+    if inventory.get("planning_decision_ids") != ["ADR-0043", "ADR-0044", "ADR-0045"]:
         failures.append("optional component planning decisions are incomplete")
     if inventory.get("planned_gateway_adapter_families") != EXPECTED_GATEWAY_ADAPTER_FAMILIES:
         failures.append("planned gateway adapter family inventory drifted")

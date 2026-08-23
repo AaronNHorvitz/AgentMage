@@ -8,7 +8,8 @@
   ],
   "planning_decision_ids": [
     "ADR-0043",
-    "ADR-0044"
+    "ADR-0044",
+    "ADR-0045"
   ],
   "planned_qualification_surfaces": [
     {

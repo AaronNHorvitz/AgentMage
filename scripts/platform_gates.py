@@ -33,7 +33,7 @@ POLICY_PATH: Final = ROOT / "architecture" / "platform-lane-policy.json"
 STATUS_PATH: Final = ROOT / "architecture" / "platform-lane-status.json"
 REPORT_PATH: Final = ROOT / "evidence" / "current" / "platform-gate-report.json"
 STATES: Final = {"pass", "block", "unsupported", "not-applicable"}
-PLANNING_DECISIONS: Final = ["ADR-0043", "ADR-0044"]
+PLANNING_DECISIONS: Final = ["ADR-0043", "ADR-0044", "ADR-0045"]
 PLANNED_SURFACES: Final = (
     "engineering-runtime-host",
     "model-gateway-strict-local",

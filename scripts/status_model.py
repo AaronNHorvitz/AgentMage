@@ -385,7 +385,7 @@ def validate_status_model(
         failures.append("status model schema_version must equal 1")
     if model.get("decision_id") != "ADR-0012" or model.get("status") != "accepted":
         failures.append("status model must bind accepted Decision 0012")
-    if model.get("amendment_decision_ids") != ["ADR-0043", "ADR-0044"]:
+    if model.get("amendment_decision_ids") != ["ADR-0043", "ADR-0044", "ADR-0045"]:
         failures.append("status model engineering-runtime amendments are incomplete")
     if (
         model.get("reference_contract")

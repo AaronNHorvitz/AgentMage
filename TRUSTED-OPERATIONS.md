@@ -9,9 +9,14 @@
 | Model authority | `MODEL-PROVENANCE-POLICY.md` |
 | Runtime authority | `RUNTIME-BOUNDARIES.md` |
 | Whole-codebase audit authority | `CODEBASE-AUDIT.md` |
+| Engineering harness authority | `ENGINEERING-RUNTIME.md`, `MODEL-GATEWAY.md`, and Decision 0045 |
 | Scope decisions | `docs/decisions/0010-trusted-operations-research-continuity-and-model-management.md`; `docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md` |
 
 ## 1. Purpose
+
+Verified Chat, model routes, capability manifests, and Team workers compose these operations only
+through their existing typed grants and workers. They receive no raw credential, command, research,
+backup, model-management, or completion authority from role or mode selection.
 
 This document defines the shared architecture for five capabilities that make AgentMage useful as a
 complete local agent without quietly turning it into an ambiently privileged process:

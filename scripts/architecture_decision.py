@@ -81,8 +81,8 @@ def validate_matrix(matrix: Any) -> list[str]:
         failures.append("decision_id must equal ADR-0004")
     if matrix.get("amending_decision_id") != "ADR-0012":
         failures.append("amending_decision_id must equal ADR-0012")
-    if matrix.get("planning_decision_ids") != ["ADR-0043", "ADR-0044"]:
-        failures.append("planning decision identities must equal ADR-0043 and ADR-0044")
+    if matrix.get("planning_decision_ids") != ["ADR-0043", "ADR-0044", "ADR-0045"]:
+        failures.append("planning decision identities must equal ADR-0043, ADR-0044, and ADR-0045")
     if matrix.get("status") != "accepted":
         failures.append("architecture decision must be accepted")
 

@@ -7,10 +7,15 @@
 | Product authority | `PRD.md` |
 | Security authority | `SECURITY-REVIEW.md` |
 | Runtime authority | `RUNTIME-BOUNDARIES.md` |
+| Engineering harness authority | `ENGINEERING-RUNTIME.md` and Decision 0045 |
 | Trusted-operations authority | `TRUSTED-OPERATIONS.md` |
 | Scope decisions | `docs/decisions/0011-whole-codebase-audit.md`; `docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md` |
 
 ## 1. Purpose
+
+This audit workflow is a planned Engineering Capability Registry entry. Existing runtime and Team
+scaffolds do not enable it; its repository census, parser, coverage, reconciliation, and
+report-verification gates remain independently required.
 
 This document defines how AgentMage performs a comprehensive, evidence-based audit of a repository
 that is too large to fit in one model context. The capability inventories the entire declared

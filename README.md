@@ -8,7 +8,7 @@ AgentMage is an independent, privately developed product created by Aaron N. Hor
 
 | Field | Current baseline |
 |---|---|
-| Status | Pre-alpha scaffold; stabilization closed and numbered roadmap resumed under Decision 0021; model construction reconciled under Decision 0027; no integrated end-user workflow or supported binary |
+| Status | Pre-alpha scaffold; contract-tested Verified Chat and Engineering Runtime components exist under Decision 0045, but there is no integrated end-user workflow, enabled model, supported platform, or supported binary |
 | First supported public release | v1.0 GA Local-First Delivery, Productivity, Trusted Operations, and Whole-Codebase Audit System |
 | Internal milestones | v0.1-v0.7 and the inherited v1+ capability sequence |
 | First interface target | AgentMage Verified Chat in Visual Studio Code, with stable `@agentmage` and Language Model Chat Provider compatibility paths beside the separate Codex tab |
@@ -72,6 +72,11 @@ candidate-neutral [Model Gateway](./MODEL-GATEWAY.md), four explicit endpoint cl
 model/runtime/codec/endpoint/route qualification, optional remote workers, and no-silent-fallback
 rules. These are designed target components, not integrated capabilities, enabled routes, or
 support claims. Strict-local operation remains a complete target configuration.
+[Decision 0045](./docs/decisions/0045-mandatory-verified-chat-and-team-runtime.md) makes the
+own-tab Verified Chat, full host harness, local and remote gateway functionality, Capability
+Registry, and real Team execution mandatory for the first supported Engineering Runtime release.
+Current source provides contract-tested scaffolds for those paths; it does not promote them to an
+integrated or supported workflow.
 The machine-readable [Engineering Runtime change manifest](./architecture/engineering-runtime-change-manifest.json)
 binds the 24 added requirements, 29 acceptance tests, 20 stories, 60 tasks, 141 sub-tasks, schemas,
 controls, modules, and verification commands. The [scope and plan

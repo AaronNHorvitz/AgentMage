@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| Status | Normative target architecture; implementation remains incomplete |
-| Decisions | 0042 and 0043 |
+| Status | Normative implementation specification; contract-tested scaffold, not integrated or supported |
+| Decisions | 0042, 0043, and mandatory supersession 0045 |
 | Product authority | `PRD.md` |
 | Detailed requirements | `Agent-Scaffolding-Inventory.md` |
 | Security authority | `SECURITY-REVIEW.md` and `RUNTIME-BOUNDARIES.md` |
@@ -31,13 +31,23 @@ and later multi-agent execution accepted by Decision 0043.
 
 ## 2. Current Truth
 
-The repository contains implemented and contract-tested primitives for grants,
-agent state, runtime events, artifacts, recovery, model contracts, tools,
-platform workers, authenticated host transport, and a VS Code Language Model
-Chat Provider scaffold. It does not yet contain an integrated end-user
-Engineering Runtime, Verified Chat surface, enabled model, supported remote
-endpoint, enabled Capability Registry, or multi-agent team. Schemas and plans
-in this document are design artifacts, not support evidence.
+The repository now contains a contract-tested Engineering Runtime scaffold:
+closed Rust records and RPC, authenticated host composition, SQLCipher-backed
+sessions, artifacts, journal events, approvals, plan handoff, controlled Agent
+execution, conservative recovery, a secured own-tab Verified Chat client,
+candidate-neutral local and remote gateway ports, a capability registry, and a
+kernel-backed Team coordinator with bounded concurrent workers, independent
+review, correction, serialized integration, checkpoints, and final
+verification.
+
+This is not an integrated or supported product workflow. No model profile is
+currently qualified and selectable; no live private or managed remote endpoint
+has passed qualification; the production host does not yet install a complete
+Team worker/reviewer/integrator stack; in-flight Team effects fail closed as
+recovery-uncertain; broad artifact parsing, installed VS Code acceptance,
+cross-platform matrices, performance/soak campaigns, and independent review
+remain open. Component tests and fake ports are implementation evidence, not
+release evidence.
 
 ## 3. Non-Negotiable Invariants
 
@@ -302,7 +312,7 @@ The runtime loads only admitted capability manifests described by
 `ENGINEERING-CAPABILITY-REGISTRY.md`. Each workflow uses the same policy,
 observation, journal, artifact, verification, and terminal contracts.
 
-Multi-agent work begins after the single-agent reliability spine passes. A
+Multi-agent enablement remains gated on the single-agent reliability spine. A
 coordinator assigns bounded work packets to role profiles from Decision 0041.
 Each pod has separate authority, budgets, leases, evidence, and an isolated
 worktree where code changes are involved. Review remains independent,
@@ -335,7 +345,7 @@ is `IMPLEMENTATION-PLAN.md`; current status remains
 
 ## 17. Roadmap Placement
 
-The implementation is additive work inside existing sprints. The Engineering Runtime owns Stories
+The implementation is additive work inside existing sprints under Decision 0045. The Engineering Runtime owns Stories
 1.3, 2.4, 5.3, 11.3, 16.4, 21.4, 22.5, 23.7, 23.8, 50.4, 95.3, 95.4, 121.2,
 125.3, and 126.2. Gateway-specific work is composed through Stories 13.5, 13.6, 49.2, 123.2,
 and 124.2 under `MODEL-GATEWAY.md`. These placements add no sprint identity and leave every

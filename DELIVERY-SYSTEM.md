@@ -9,8 +9,13 @@
 | Security authority | [`SECURITY-REVIEW.md`](./SECURITY-REVIEW.md) |
 | Repository safety authority | [`docs/security/repository-safety.md`](./docs/security/repository-safety.md) |
 | Execution authority | [`TASKS.md`](./TASKS.md) |
+| Engineering harness authority | [`ENGINEERING-RUNTIME.md`](./ENGINEERING-RUNTIME.md) and Decision 0045 |
 
 ## 1. Purpose
+
+Decision 0045 does not allow a Team worker or model to bypass this delivery graph. Team candidates
+must enter through the same repository-preservation, review, integration, publication, and
+human-gated default-branch boundaries defined here.
 
 This document defines how AgentMage becomes a local-first software-delivery control plane without turning provider credentials, model output, or a generic connector into ambient authority. It defines the common delivery graph, adapter contract, capability classes, supported integration tiers, operation lifecycle, failure semantics, and verification boundary.
 

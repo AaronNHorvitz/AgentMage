@@ -2,6 +2,10 @@
 
 ## 1. Purpose
 
+Verified Chat and the Engineering Capability Registry are presentation and composition layers for
+these packs, not authority shortcuts. No chat mode, capability manifest, model, or Team worker can
+silently inherit connector credentials or send/write authority.
+
 This document defines the optional-at-runtime capability packs that extend AgentMage from a
 software-delivery control plane into a local-first productivity assistant without granting a
 model, connector, message, financial record, or cloud resource ambient authority. It governs:

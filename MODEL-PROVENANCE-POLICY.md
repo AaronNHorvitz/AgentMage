@@ -7,9 +7,14 @@
 | Product authority | `PRD.md` |
 | Security authority | `SECURITY-REVIEW.md` |
 | Model-management architecture | `TRUSTED-OPERATIONS.md` |
+| Model-route implementation | `MODEL-GATEWAY.md` and Decision 0045 |
 | Applies to | Models, family codecs, adapters, tokenizers, templates, conversions, quantizations, decoding profiles, context profiles, and derived artifacts |
 
 ## 1. Purpose
+
+Gateway codec availability and endpoint protocol compatibility are not admission. Each selectable
+route must bind a model admitted under this policy to an independently qualified runtime, codec,
+endpoint, operator, disclosure policy, and route record.
 
 This policy defines the evidence required before AgentMage can enable a local model profile. It makes the project's model-origin requirement testable, rejects unknown or silently changed lineage, and binds every approved profile to exact artifacts and measured behavior.
 

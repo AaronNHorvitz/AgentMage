@@ -2,7 +2,7 @@
   "inputs": [
     {
       "path": "architecture/platform-lane-policy.json",
-      "sha256": "4eb936ff71743b2c06770b9d4bdc851cd3dec42f77fc59d15b940e22aaa18365"
+      "sha256": "4a7cca52d4a111751f0d77f96c451b5f344c52bf3e22b61260c74a316266b700"
     },
     {
       "path": "architecture/platform-lane-status.json",

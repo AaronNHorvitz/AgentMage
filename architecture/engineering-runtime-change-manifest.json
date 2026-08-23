@@ -26,7 +26,7 @@
     "acceptance_tests": 29,
     "foundational_epics_added": 2,
     "foundational_epics_total": 4,
-    "new_schemas": 14,
+    "new_schemas": 19,
     "planned_stories_added": 20,
     "product_requirements": 24,
     "release_epics_added": 0,
@@ -39,7 +39,8 @@
   "current_status_ref": "architecture/status-model.json",
   "decision_ids": [
     "ADR-0043",
-    "ADR-0044"
+    "ADR-0044",
+    "ADR-0045"
   ],
   "execution_authority": "TASKS.md",
   "new_schema_paths": [
@@ -56,7 +57,12 @@
     "schemas/engineering-runtime/verification-result.schema.json",
     "schemas/engineering-runtime/workflow-checkpoint.schema.json",
     "schemas/engineering-runtime/workflow-definition.schema.json",
-    "schemas/engineering-runtime/workflow-state.schema.json"
+    "schemas/engineering-runtime/workflow-state.schema.json",
+    "schemas/engineering-runtime/agent-lease.schema.json",
+    "schemas/engineering-runtime/completion-evidence.schema.json",
+    "schemas/engineering-runtime/integration-record.schema.json",
+    "schemas/engineering-runtime/multi-agent-campaign.schema.json",
+    "schemas/engineering-runtime/review-finding.schema.json"
   ],
   "profile_classes": [
     "strict_local",
@@ -463,6 +469,11 @@
       ],
       "schema_paths": [
         "schemas/engineering-runtime/capability-manifest.schema.json",
+        "schemas/engineering-runtime/agent-lease.schema.json",
+        "schemas/engineering-runtime/review-finding.schema.json",
+        "schemas/engineering-runtime/integration-record.schema.json",
+        "schemas/engineering-runtime/multi-agent-campaign.schema.json",
+        "schemas/engineering-runtime/completion-evidence.schema.json",
         "schemas/engineering-runtime/workflow-definition.schema.json",
         "schemas/engineering-runtime/workflow-state.schema.json"
       ],

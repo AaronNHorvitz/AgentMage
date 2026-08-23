@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| Status | Normative target architecture; no model or endpoint is enabled |
-| Decision | 0044 |
+| Status | Normative implementation specification; contract-tested codecs and host ports, no enabled model or endpoint |
+| Decision | 0044 as mandatorily superseded by 0045 |
 | Model admission authority | `MODEL-PROVENANCE-POLICY.md` |
 | Runtime authority | `ENGINEERING-RUNTIME.md` |
 | Security authority | `SECURITY-REVIEW.md` and `TRUSTED-OPERATIONS.md` |
@@ -27,10 +27,18 @@ Engineering Runtime.
 
 ## 2. Current Truth
 
-The repository has model profile, request, stream, proposal, result, and
-candidate-admission contracts plus historical rejected Gemma evidence. It has
-no enabled model, supported endpoint, qualified remote route, automatic
-fallback, or integrated Model Gateway. Muse-first evaluation remains planned.
+The repository has model profile, request, stream, proposal, result, route,
+endpoint, and candidate-admission contracts; deterministic codecs for Ollama,
+OpenAI Chat, OpenAI Responses, Anthropic Messages, TGI, SGLang, Ray Serve, and
+KServe; a separately guarded native local controller; and host composition
+ports that keep credential values inside an injected transport boundary. Route
+verification rejects endpoint, protocol, host, model, request, redirect, proxy,
+and TLS substitution. Automatic fallback remains disabled.
+
+No model is enabled, no live endpoint is supported, no concrete remote HTTP
+transport is installed, and no local or remote route is product-qualified.
+Historical Gemma candidates remain rejected and Muse-first evaluation remains
+planned. Codec and hostile-fixture success is not live qualification.
 
 ## 3. Identity Separation
 

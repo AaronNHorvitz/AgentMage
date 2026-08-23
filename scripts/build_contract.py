@@ -238,9 +238,10 @@ def validate_contract(contract: Any, root: Path = ROOT) -> list[str]:
         "ADR-0032",
         "ADR-0043",
         "ADR-0044",
+        "ADR-0045",
     ]:
         failures.append(
-            "build contract must record signing, platform, runtime, Engineering Runtime, and Model Gateway amendments"
+            "build contract must record signing, platform, runtime, Engineering Runtime, Model Gateway, and mandatory runtime amendments"
         )
     if contract.get("status") != "configured":
         failures.append("build contract status must be configured")

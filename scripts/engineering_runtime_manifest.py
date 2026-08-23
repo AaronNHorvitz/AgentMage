@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and validate the Decisions 0043-0044 change manifest."""
+"""Build and validate the Decisions 0043-0045 change manifest."""
 
 from __future__ import annotations
 
@@ -20,6 +20,8 @@ NEW_SCHEMAS: Final = (
     "model-endpoint-profile", "model-route-decision", "terminal-result",
     "tool-observation", "verification-result", "workflow-checkpoint",
     "workflow-definition", "workflow-state",
+    "agent-lease", "completion-evidence", "integration-record",
+    "multi-agent-campaign", "review-finding",
 )
 REUSED_SCHEMAS: Final = {
     "action-proposal": "schemas/model/closed-proposal.schema.json",
@@ -77,7 +79,7 @@ PLAN: Final = {
     "AM-VSC-006": ("ADR-0043", "FRE-ENGINEERING-RUNTIME", "ER-M4", 23, "23.8", ("model-request", "model-event", "action-proposal"), ("shell-vscode", "shell-host"), ("SR-VSC-003", "SR-VSC-004"), "RV-55"),
     "AM-CAP-001": ("ADR-0043", "FRE-ENGINEERING-RUNTIME", "ER-M5", 95, "95.3", ("capability-manifest", "workflow-definition"), ("kernel-contracts", "kernel-engine"), ("SR-CAP-001", "SR-CAP-002"), "RV-56"),
     "AM-CAP-002": ("ADR-0043", "FRE-ENGINEERING-RUNTIME", "ER-M5", 95, "95.3", ("capability-manifest", "workflow-state", "verification-result"), ("kernel-engine",), ("SR-CAP-003", "SR-CAP-004"), "RV-56"),
-    "AM-MAG-001": ("ADR-0043", "FRE-ENGINEERING-RUNTIME", "ER-M8", 95, "95.4", ("capability-manifest", "workflow-definition", "workflow-state"), ("kernel-engine", "shell-host"), ("SR-MAG-001", "SR-MAG-002", "SR-MAG-003", "SR-MAG-004"), "RV-57"),
+    "AM-MAG-001": ("ADR-0043", "FRE-ENGINEERING-RUNTIME", "ER-M8", 95, "95.4", ("capability-manifest", "agent-lease", "review-finding", "integration-record", "multi-agent-campaign", "completion-evidence", "workflow-definition", "workflow-state"), ("kernel-engine", "shell-host"), ("SR-MAG-001", "SR-MAG-002", "SR-MAG-003", "SR-MAG-004"), "RV-57"),
 }
 
 
@@ -121,7 +123,7 @@ def build_manifest(root: Path = ROOT) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "status": "enforced-planning-contract",
-        "decision_ids": ["ADR-0043", "ADR-0044"],
+        "decision_ids": ["ADR-0043", "ADR-0044", "ADR-0045"],
         "current_status_ref": "architecture/status-model.json",
         "execution_authority": "TASKS.md",
         "strict_local_complete_target": True,
@@ -233,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     print(
         "engineering runtime manifest validation passed: 24 requirements, 29 tests, "
-        "20 stories, 60 tasks, 141 sub-tasks, 14 new schemas, 6 reused schemas"
+        "20 stories, 60 tasks, 141 sub-tasks, 19 new schemas, 6 reused schemas"
     )
     return 0
 

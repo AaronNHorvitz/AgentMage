@@ -2518,12 +2518,13 @@ attempt policy explicitly admits a fresh attempt.
 
 ## 43. Engineering Runtime, Verified Chat, and Model Gateway Backlog
 
-Decisions 0043 and 0044 append the stable requirements below without changing or renumbering any
+Decisions 0043 and 0044 append, and Decision 0045 makes mandatory, the stable requirements below without changing or renumbering any
 accepted identity. Decision 0042 remains authoritative for artifact ingestion and verified workflow
 mechanics. These additions complete the harness, interface, gateway, capability, qualification,
 observability, and later multi-agent boundaries around that foundation. Every record is planned for
 `v1.0`; no schema, decision, or planning result enables a model, endpoint, route, capability,
-platform, or workflow.
+platform, or workflow. Decision 0045 changes no stable identifier and permits no planning-only,
+sidebar-only, fake-endpoint-only, or mock-agent-only completion claim.
 
 | ID | Requirement | Dependencies | Disposition | Release | Acceptance |
 |---|---|---|---|---|---|

@@ -18,7 +18,8 @@ except ModuleNotFoundError:  # Direct execution adds scripts/, not the repositor
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCAL_INSTRUCTION_INPUTS = {
-    "AgentMage_Engineering_Runtime_and_Local_Remote_Model_Gateway_Instructions_for_GPT-5.6_Sol_Ultra.md"
+    "AgentMage_Engineering_Runtime_and_Local_Remote_Model_Gateway_Instructions_for_GPT-5.6_Sol_Ultra.md",
+    "AgentMage_Mandatory_Verified_Chat_Full_Runtime_and_Multi_Agent_Implementation_Directive.md",
 }
 REQUIRED_FILES = (
     "README.md",
@@ -40,7 +41,9 @@ REQUIRED_FILES = (
     "ENGINEERING-CAPABILITY-REGISTRY.md",
     "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md",
     "docs/decisions/0044-local-and-remote-open-weight-inference-profiles.md",
+    "docs/decisions/0045-mandatory-verified-chat-and-team-runtime.md",
     "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md",
+    "docs/reviews/2026-08-23-mandatory-verified-chat-runtime-independent-audit.md",
     "architecture/engineering-runtime-change-manifest.json",
     "architecture/language-build-matrix.json",
     "architecture/status-model.json",

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Pre-alpha scaffold; stabilization sequence closed, numbered roadmap resumed under Decision 0021, and future model work reconciled under Decision 0027 |
+| Status | Pre-alpha scaffold; Decision 0045 mandates the Verified Chat, full Engineering Runtime, gateway, capability, and Team paths; broad gates remain open until integrated and external evidence exists |
 | Cadence | Ordered dependency and evidence gates; no calendar duration or delivery estimate is implied |
 | Scope | Complete AgentMage roadmap from foundation through expanded v1.0 GA closure |
 | Project boundary | Independently developed by Aaron N. Horvitz on personal time and personally controlled equipment; not employer-sponsored or commissioned; intended for public distribution |
@@ -56,7 +56,7 @@ and Verified Workflow Execution and Recovery as cross-cutting foundational
 runtime epics. Their work is distributed through existing sprint owners, adds
 no stable requirement or sprint identity, preserves all completed evidence, and
 defines `M-FOUNDATIONAL-RUNTIME-CORE` and `M-FOUNDATIONAL-RUNTIME` as internal integration gates.
-Decisions 0043 and 0044 add the Rust-owned Engineering Runtime, Verified Chat,
+Decisions 0043 and 0044 add, and Decision 0045 mandates, the Rust-owned Engineering Runtime, Verified Chat,
 native Chat compatibility, Model Gateway, local and remote profile taxonomy,
 Capability Registry, observability, performance, and gated multi-agent work as
 Foundational Runtime Epics F3 and F4. The changes append stable requirements,
@@ -2935,8 +2935,8 @@ from admitted source through context, model proposal, tools, verification, artif
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 22.5.1 - Compose one runtime-owned path**
-  - [ ] **Sub-task 22.5.1.1:** Connect artifact admission, context delivery, model gateway, read-only tools, observations, verification, journal, artifacts, checkpoints, cancellation, and terminal results through Rust-owned interfaces.
-  - [ ] **Sub-task 22.5.1.2:** Implement a fake-model repository-analysis fixture that requests bounded reads and produces a cited proposal without direct tool or completion authority.
+  - [ ] **Sub-task 22.5.1.1:** Connect artifact admission, context delivery, model gateway, read-only tools, observations, verification, journal, artifacts, checkpoints, cancellation, and terminal results through Rust-owned interfaces. Partial local evidence: commits `3548cf35` through `25d38bf2` compose exact paste/file capture, SQLCipher artifacts and journal state, context-byte receipts, selected qualified-route mediation, approved Plan handoff, controlled Agent execution, deterministic terminal records, conservative restart behavior, and host-owned Team checkpoints. A production-qualified model, complete read-only repository tool loop, broad artifact parsers, and installed end-to-end slice remain absent.
+  - [ ] **Sub-task 22.5.1.2:** Implement a fake-model repository-analysis fixture that requests bounded reads and produces a cited proposal without direct tool or completion authority. Partial local evidence: host fixtures prove model output remains an untrusted proposal and cannot establish terminal success; the exact cited repository-analysis fixture and complete bounded-read loop remain open.
   - [ ] **Sub-task 22.5.1.3:** Ensure Chat, CLI, and headless callers consume the same ordered events and terminal record without independent orchestration logic.
 - [ ] **Task 22.5.2 - Exercise recovery and truth**
   - [ ] **Sub-task 22.5.2.1:** Interrupt at each major boundary, reload the caller, resume from current checkpoints, and compare events, artifacts, observations, verification, and terminal state.
@@ -3214,9 +3214,9 @@ Plan, and Agent modes show exact evidence and cannot grant themselves authority.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 23.7.1 - Implement the secured interface shell**
-  - [ ] **Sub-task 23.7.1.1:** Build a disposable CSP-restricted webview, thin TypeScript bridge, authenticated versioned IPC, and Rust host session binding with no direct filesystem, network, credential, model, or tool authority.
-  - [ ] **Sub-task 23.7.1.2:** Render ordered streaming events, artifacts, citations, approvals, tool observations, verification, blockers, terminal diagnostics, and resumable task state accessibly.
-  - [ ] **Sub-task 23.7.1.3:** Implement Ask, Plan, and Agent mode requests as policy inputs only; mode selection cannot mint grants, bypass approval, or establish completion.
+  - [ ] **Sub-task 23.7.1.1:** Build a disposable CSP-restricted webview, thin TypeScript bridge, authenticated versioned IPC, and Rust host session binding with no direct filesystem, network, credential, model, or tool authority. Partial local evidence: commits `38131aa0`, `a4ad5869`, and `f7ab019f` add the dedicated Activity Bar entry and editor-area tab, nonce/CSP webview, thin bridge, Rust session/artifact authority, exact paste/file bytes, and reload reconstruction. Installed VS Code and full adversarial IPC evidence remain open.
+  - [ ] **Sub-task 23.7.1.2:** Render ordered streaming events, artifacts, citations, approvals, tool observations, verification, blockers, terminal diagnostics, and resumable task state accessibly. Partial local evidence: the tab renders durable messages, artifact receipts, model-visible context metadata, mode controls, approvals, and terminal status projections. Full token streaming, tool/verification cards, backpressure, accessibility audit, and installed-host reconstruction remain open.
+  - [ ] **Sub-task 23.7.1.3:** Implement Ask, Plan, and Agent mode requests as policy inputs only; mode selection cannot mint grants, bypass approval, or establish completion. Partial local evidence: commits `8e330407` through `3548cf35` persist Plan artifacts, journal explicit approval, create hash-bound handoffs, and admit Agent execution only through an installed controlled runtime. Ask/Plan/Agent production-model integration remains open.
 - [ ] **Task 23.7.2 - Prove lifecycle and IPC security**
   - [ ] **Sub-task 23.7.2.1:** Test reload, duplicate view, stale/replayed/spoofed message, wrong session, extension-host restart, Rust-host restart, cancellation race, and slow-view backpressure.
   - [ ] **Sub-task 23.7.2.2:** Scan webview state, logs, storage, IPC payloads, and diagnostics for secrets, hidden reasoning, private endpoint values, or undeclared durable truth.
@@ -8116,11 +8116,11 @@ testable capabilities rather than opaque prompts with undeclared tools or author
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 95.3.1 - Implement manifest admission and lifecycle**
-  - [ ] **Sub-task 95.3.1.1:** Implement the closed capability manifest with identity, schemas, workflow, tools, model roles, authority ceiling, classification, budgets, verifiers, degradation, fixtures, compatibility, and removal.
+  - [ ] **Sub-task 95.3.1.1:** Implement the closed capability manifest with identity, schemas, workflow, tools, model roles, authority ceiling, classification, budgets, verifiers, degradation, fixtures, compatibility, and removal. Partial local evidence: `kernel/engine/src/capability_registry.rs` validates and seals exact manifest identities, schema digests, tools, model roles, authority classes, ordered workflow steps, postconditions, approvals, turn/worker limits, and immutable digests. Classification, complete budget classes, degradation, fixtures, compatibility, migration, and removal remain open.
   - [ ] **Sub-task 95.3.1.2:** Implement draft, admitted, enabled, degraded, disabled, quarantined, and retired states with deterministic admission and immediate quarantine/disable behavior.
   - [ ] **Sub-task 95.3.1.3:** Resolve dependencies by exact version and qualification; prevent manifests or models from minting grants, credentials, registrations, or completion.
 - [ ] **Task 95.3.2 - Seed and compose initial capabilities**
-  - [ ] **Sub-task 95.3.2.1:** Create disabled candidate manifests for repository inspection, coding change, pull-request review, issue/bug workflow, test diagnosis, release readiness, document workflow, research, and whole-codebase audit.
+  - [ ] **Sub-task 95.3.2.1:** Create disabled candidate manifests for repository inspection, coding change, pull-request review, issue/bug workflow, test diagnosis, release readiness, document workflow, research, and whole-codebase audit. Partial local evidence: a static Repository Review candidate exists and executes only through an injected runtime/verifier port. The complete disabled catalog and production admission remain open.
   - [ ] **Sub-task 95.3.2.2:** Reuse existing workflows, tools, schemas, policies, and role profiles; prohibit private capability loops and prompt-only completion claims.
 - [ ] **Task 95.3.3 - Verify lifecycle and isolation**
   - [ ] **Sub-task 95.3.3.1:** Test malformed/unknown manifests, dependency loss, migration, replacement, quarantine, disablement, removal, authority widening, prompt injection, and strict-local restoration.
@@ -8144,15 +8144,15 @@ after the single-agent spine is reliable, without self-approval, shared hidden s
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 95.4.1 - Define bounded pod and role execution**
-  - [ ] **Sub-task 95.4.1.1:** Compose admitted capabilities and qualified `AG-01` through `AG-49` roles into explicit DAGs with separate work packets, leases, grants, budgets, context, worktrees, and evidence.
+  - [ ] **Sub-task 95.4.1.1:** Compose admitted capabilities and qualified `AG-01` through `AG-49` roles into explicit DAGs with separate work packets, leases, grants, budgets, context, worktrees, and evidence. Partial local evidence: commits `db793fed` through `b353d249` add a bounded DAG coordinator, exact task dependencies, path/test-resource conflict exclusion, sealed leases, model/endpoint identities, worktree/branch fields, five-worker ceiling, observed-concurrency evidence, and explicit planner/worker/reviewer/integrator/verifier ports. Production capability/role qualification, grant and budget projection, and installed worker composition remain open.
   - [ ] **Sub-task 95.4.1.2:** Keep policy, credentials, signing, deterministic verification, effect actuation, reconciliation, integration, and completion outside model roles.
   - [ ] **Sub-task 95.4.1.3:** Gate multi-agent enablement on current single-agent reliability, resource, and verifier evidence; preserve a complete single-agent mode.
 - [ ] **Task 95.4.2 - Implement independent review and serialized integration**
-  - [ ] **Sub-task 95.4.2.1:** Isolate implementer and reviewer inputs/outputs, retain dissent, detect shared-model/context conflicts, and forbid self/sibling approval.
-  - [ ] **Sub-task 95.4.2.2:** Serialize candidate integration through deterministic repository preservation, merge preview, validation, and user-authorized publication services.
+  - [ ] **Sub-task 95.4.2.1:** Isolate implementer and reviewer inputs/outputs, retain dissent, detect shared-model/context conflicts, and forbid self/sibling approval. Partial local evidence: the kernel requires a distinct reviewer identity, structured PASS/CHANGES_REQUIRED/BLOCKED/DISPUTED outcomes, correction return to the owning lease, and reviewer-candidate identity checks. Full context-conflict and collusion campaigns remain open.
+  - [ ] **Sub-task 95.4.2.2:** Serialize candidate integration through deterministic repository preservation, merge preview, validation, and user-authorized publication services. Partial local evidence: integration is serialized against current campaign head with exact candidate SHA, gate evidence, and immutable integration records; default-branch promotion is absent and remains human-gated. Production repository preservation and publication composition remain open.
 - [ ] **Task 95.4.3 - Run multi-agent attack and recovery tests**
   - [ ] **Sub-task 95.4.3.1:** Attempt authority aggregation, role impersonation, reviewer collusion, stale review, worktree collision, hidden effects, budget evasion, duplicate work, and false consensus.
-  - [ ] **Sub-task 95.4.3.2:** Test crash, cancellation, worker loss, replacement, rescheduling, and partial integration while preserving evidence and completed effects.
+  - [ ] **Sub-task 95.4.3.2:** Test crash, cancellation, worker loss, replacement, rescheduling, and partial integration while preserving evidence and completed effects. Partial local evidence: commits `26de1272`, `23b2f5c6`, and `18f319ff` checkpoint worker, review, correction, queue, integration, and merge boundaries and resume only from a fully integrated wave. Any in-flight worker or integration effect returns recovery-uncertain and is never replayed. Cancellation, replacement, rescheduling, and partial-integration reconciliation remain open.
 
 ##### Story Acceptance Criteria
 

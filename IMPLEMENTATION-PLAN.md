@@ -2,7 +2,7 @@
 
 | Field | Planning baseline |
 |---|---|
-| Status | Pre-alpha scaffold; stabilization sequence closed, numbered roadmap resumed under Decision 0021, and model construction reconciled under Decision 0027 |
+| Status | Pre-alpha scaffold; Decision 0045 mandates the Verified Chat, full Engineering Runtime, gateway, capability, and Team paths; component implementation is active but integrated and release gates remain open |
 | Version | 1.9 |
 | Date | 2026-08-22 |
 | Product | AgentMage - a brand-new, from-scratch local-first assistant |
@@ -361,7 +361,7 @@ false completion or unbounded loop.
 
 ### 4.15 Engineering Runtime, Verified Chat, Gateway, and Capability Registry
 
-Decisions 0043 and 0044 compose the Decision 0042 foundations into one professional engineering
+Decisions 0043 and 0044 compose, and Decision 0045 mandates, the Decision 0042 foundations as one professional engineering
 harness. `ENGINEERING-RUNTIME.md` owns the complete client-to-verifier lifecycle,
 `MODEL-GATEWAY.md` owns candidate-neutral local and remote inference, and
 `ENGINEERING-CAPABILITY-REGISTRY.md` owns versioned executable capability manifests.
@@ -379,7 +379,8 @@ Fallback is disabled by default and can never silently cross a disclosure bounda
 
 The Capability Registry and Decision 0041 role profiles run over the same workflow, journal,
 artifact, observation, authority, and verifier contracts. Multi-agent scheduling follows, rather
-than precedes, complete single-agent reliability. Each pod receives isolated authority, leases,
+than precedes, complete single-agent reliability. Decision 0045 keeps Team implementation inside
+the first supported Engineering Runtime boundary while retaining this dependency gate. Each pod receives isolated authority, leases,
 budgets, worktree state where applicable, and evidence; independent review and serialized
 integration remain deterministic and final promotion is human-gated by default.
 

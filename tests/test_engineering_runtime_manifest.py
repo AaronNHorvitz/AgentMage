@@ -21,7 +21,7 @@ class EngineeringRuntimeManifestTests(unittest.TestCase):
         self.assertEqual(validate_manifest(manifest), [])
         self.assertEqual(manifest["counts"]["product_requirements"], 24)
         self.assertEqual(manifest["counts"]["acceptance_tests"], 29)
-        self.assertEqual(manifest["counts"]["new_schemas"], 14)
+        self.assertEqual(manifest["counts"]["new_schemas"], 19)
         self.assertEqual(manifest["counts"]["reused_schemas"], 6)
         self.assertEqual(manifest["counts"]["requirement_owner_stories"], 14)
         self.assertEqual(manifest["counts"]["planned_stories_added"], 20)

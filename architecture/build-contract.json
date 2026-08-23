@@ -10,7 +10,8 @@
     "ADR-0031",
     "ADR-0032",
     "ADR-0043",
-    "ADR-0044"
+    "ADR-0044",
+    "ADR-0045"
   ],
   "status": "configured",
   "toolchains": {
@@ -146,6 +147,11 @@
     "schemas/engineering-runtime/workflow-checkpoint.schema.json",
     "schemas/engineering-runtime/workflow-definition.schema.json",
     "schemas/engineering-runtime/workflow-state.schema.json",
+    "schemas/engineering-runtime/agent-lease.schema.json",
+    "schemas/engineering-runtime/completion-evidence.schema.json",
+    "schemas/engineering-runtime/integration-record.schema.json",
+    "schemas/engineering-runtime/multi-agent-campaign.schema.json",
+    "schemas/engineering-runtime/review-finding.schema.json",
     "scripts/engineering_runtime_manifest.py",
     "scripts/engineering_runtime_schemas.mjs",
     "tests/test_engineering_runtime_manifest.py",

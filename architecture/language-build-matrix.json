@@ -2,7 +2,7 @@
   "schema_version": 2,
   "decision_id": "ADR-0004",
   "amending_decision_id": "ADR-0012",
-  "planning_decision_ids": ["ADR-0043", "ADR-0044"],
+  "planning_decision_ids": ["ADR-0043", "ADR-0044", "ADR-0045"],
   "status": "accepted",
   "product_components": [
     {

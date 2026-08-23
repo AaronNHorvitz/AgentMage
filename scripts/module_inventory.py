@@ -86,11 +86,11 @@ EXPECTED_MODULES = {
     "release-xtask": ("release/xtask", "release-tooling", "rust", "cargo"),
 }
 EXPECTED_PLANNED_BOUNDARIES = {
-    "engineering-runtime": ("designed-not-module", {"kernel-contracts", "kernel-engine", "shell-host"}),
-    "model-gateway": ("designed-not-module", {"kernel-contracts", "kernel-engine", "platform-linux-native-inference"}),
-    "verified-chat": ("designed-not-module", {"shell-vscode", "shell-host", "kernel-engine"}),
-    "engineering-capability-registry": ("designed-not-module", {"kernel-contracts", "kernel-engine"}),
-    "remote-inference-worker": ("planned-not-module", {"kernel-engine", "platform-linux", "platform-windows"}),
+    "engineering-runtime": ("scaffolded-in-existing-modules", {"kernel-contracts", "kernel-engine", "shell-host"}),
+    "model-gateway": ("scaffolded-in-existing-modules", {"kernel-contracts", "kernel-engine", "platform-linux-native-inference"}),
+    "verified-chat": ("scaffolded-in-existing-modules", {"shell-vscode", "shell-host", "kernel-engine"}),
+    "engineering-capability-registry": ("scaffolded-in-existing-modules", {"kernel-contracts", "kernel-engine"}),
+    "remote-inference-worker": ("scaffolded-in-existing-modules", {"kernel-engine", "platform-linux", "platform-windows"}),
 }
 
 
@@ -130,8 +130,8 @@ def validate_inventory(inventory: Any, root: Path = ROOT) -> list[str]:
         failures.append("schema_version must equal 1")
     if inventory.get("decision_id") != "ADR-0004":
         failures.append("decision_id must equal ADR-0004")
-    if inventory.get("planning_decision_ids") != ["ADR-0043", "ADR-0044"]:
-        failures.append("planning decision identities must equal ADR-0043 and ADR-0044")
+    if inventory.get("planning_decision_ids") != ["ADR-0043", "ADR-0044", "ADR-0045"]:
+        failures.append("planning decision identities must equal ADR-0043, ADR-0044, and ADR-0045")
     if inventory.get("status") != "scaffolded":
         failures.append("module inventory status must be scaffolded")
 

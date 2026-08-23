@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| Status | Normative target architecture; no registry capability is enabled by this document |
-| Decision | 0043 |
+| Status | Normative implementation specification; contract-tested registry scaffold, no enabled product capability |
+| Decision | 0043 as mandatorily superseded by 0045 |
 | Runtime authority | `ENGINEERING-RUNTIME.md` |
 | Agent role catalog | `docs/architecture/planning-review-delivery-agent-profiles.md` |
 
@@ -12,6 +12,13 @@ Current integrated workflow: none.
 Current enabled models: none.
 Current supported platforms: none.
 Stabilization scope freeze: inactive.
+
+The Rust kernel currently validates, seals, registers, resolves, and executes
+closed manifests through an injected execution/verifier port and includes one
+static Repository Review candidate manifest. This is scaffold evidence only:
+the full lifecycle, dependency qualification, migration, quarantine, removal,
+initial disabled catalog, production registration, and integrated capability
+execution remain open.
 
 ## 1. Purpose
 

@@ -1,32 +1,32 @@
 {
   "schema_version": 1,
   "decision_id": "ADR-0004",
-  "planning_decision_ids": ["ADR-0043", "ADR-0044"],
+  "planning_decision_ids": ["ADR-0043", "ADR-0044", "ADR-0045"],
   "status": "scaffolded",
   "planned_boundaries": [
     {
       "id": "engineering-runtime",
-      "status": "designed-not-module",
+      "status": "scaffolded-in-existing-modules",
       "future_owning_modules": ["kernel-contracts", "kernel-engine", "shell-host"]
     },
     {
       "id": "model-gateway",
-      "status": "designed-not-module",
+      "status": "scaffolded-in-existing-modules",
       "future_owning_modules": ["kernel-contracts", "kernel-engine", "platform-linux-native-inference"]
     },
     {
       "id": "verified-chat",
-      "status": "designed-not-module",
+      "status": "scaffolded-in-existing-modules",
       "future_owning_modules": ["shell-vscode", "shell-host", "kernel-engine"]
     },
     {
       "id": "engineering-capability-registry",
-      "status": "designed-not-module",
+      "status": "scaffolded-in-existing-modules",
       "future_owning_modules": ["kernel-contracts", "kernel-engine"]
     },
     {
       "id": "remote-inference-worker",
-      "status": "planned-not-module",
+      "status": "scaffolded-in-existing-modules",
       "future_owning_modules": ["kernel-engine", "platform-linux", "platform-windows"]
     }
   ],

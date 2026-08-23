@@ -490,9 +490,17 @@ remain mandatory regression evidence.
 
 ### 8.17 Engineering Runtime, Verified Chat, and Model Gateway Security
 
-Decisions 0043 and 0044 add the controls below. They compose, and never weaken, all earlier
+Decisions 0043 and 0044 add, and Decision 0045 makes mandatory, the controls below. They compose, and never weaken, all earlier
 artifact, workflow, model, platform, Git, connected-effect, command, credential, audit, and
 strict-local controls.
+
+Current implementation evidence is component-scoped: the host and kernel enforce
+Rust-owned session/artifact/approval/checkpoint truth; Verified Chat uses a nonce-bound CSP and
+has no direct tool, credential, or filesystem handle; gateway ports reject route identity drift and
+keep credentials behind an injected transport; Team records bind leases, review, integrations,
+worker ceilings, and final evidence. These controls are contract-tested scaffolds. Parser isolation,
+live endpoint transport/TLS/SSRF qualification, installed IPC/webview attack campaigns, production
+Team worker confinement, platform matrices, and independent review remain release blockers.
 
 | ID | Requirement | Build integration | Reviewer test or evidence |
 |---|---|---|---|

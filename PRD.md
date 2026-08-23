@@ -6,7 +6,7 @@
 | **Version** | Draft v0.7 |
 | **Author** | Aaron N. Horvitz |
 | **Date** | 2026-08-22 |
-| **Status** | Pre-alpha scaffold; roadmap resumed under Decision 0021 and model direction reconciled under Decision 0027; no integrated end-user workflow or supported binary |
+| **Status** | Pre-alpha scaffold; mandatory Verified Chat and Engineering Runtime implementation is underway under Decision 0045; no integrated end-user workflow, enabled model, supported platform, or supported binary |
 | **Detailed requirements** | [Agent-Scaffolding-Inventory.md](./Agent-Scaffolding-Inventory.md) |
 | **Security-review baseline** | [SECURITY-REVIEW.md](./SECURITY-REVIEW.md) |
 | **High-level implementation plan** | [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) |
@@ -1221,9 +1221,11 @@ evaluation plan, rollout gates, risks, and sprint ownership are defined in
 
 ## 39. Engineering Runtime, Verified Chat, and Model Gateway
 
-Decisions 0043 and 0044 establish AgentMage as a Rust-owned universal
+Decisions 0043 and 0044 establish, and Decision 0045 mandates, AgentMage as a Rust-owned universal
 engineering harness around untrusted, replaceable model planners. They compose
-Decision 0042 rather than replacing its artifact and workflow foundations.
+Decision 0042 rather than replacing its artifact and workflow foundations. Decision 0045 also
+requires a dedicated editor-area Verified Chat tab and actual concurrent Team execution; planning,
+schemas, fake ports, or native Chat alone cannot satisfy those gates.
 The normative subsystem authorities are `ENGINEERING-RUNTIME.md`,
 `MODEL-GATEWAY.md`, and `ENGINEERING-CAPABILITY-REGISTRY.md`; stable detailed
 requirements are `AM-ERT-001` through `AM-MAG-001` in Inventory Section 43.

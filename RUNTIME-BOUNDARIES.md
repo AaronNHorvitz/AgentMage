@@ -12,10 +12,17 @@
 | Whole-codebase audit authority | `CODEBASE-AUDIT.md` |
 | Windows specialization | `WINDOWS-BOUNDARIES.md` |
 | Model construction decision | `docs/decisions/0027-muse-first-model-neutral-runtime-and-evaluation.md` |
+| Engineering Runtime decision | `docs/decisions/0045-mandatory-verified-chat-and-team-runtime.md` |
 
 ## 1. Purpose
 
 This document gives reviewers and implementers one concrete description of AgentMage processes, privileges, sockets, lifecycle, and classified data flows. It does not replace the PRD or security baseline. A discrepancy blocks implementation until a decision record resolves it under the document-authority rule.
+
+Current implementation is a contract-tested scaffold inside the existing kernel, host, and VS Code
+modules. Verified Chat, SQLCipher-backed runtime state, model-gateway ports, and Team coordination
+exist in source but are not an integrated or supported product workflow. In particular, no
+qualified model or remote endpoint is enabled and the production host does not yet install the
+complete Team worker stack.
 
 ## 2. Trust Boundaries and Data Flow
 

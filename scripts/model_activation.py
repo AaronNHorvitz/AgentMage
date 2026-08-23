@@ -145,7 +145,7 @@ def validate_policy(policy: Any) -> list[str]:
             failures.append(f"model.policy.{field}")
     if policy.get("automatic_fallback") is not False:
         failures.append("model.policy.fallback")
-    if policy.get("decision_ids") != ["ADR-0027", "ADR-0044"]:
+    if policy.get("decision_ids") != ["ADR-0027", "ADR-0044", "ADR-0045"]:
         failures.append("model.policy.decisions")
     if policy.get("profile_classes") != [
         "local_network_private",

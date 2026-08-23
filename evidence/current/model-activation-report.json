@@ -31,19 +31,19 @@
   "inputs": [
     {
       "path": "architecture/model-activation-policy.json",
-      "sha256": "6c23245ac071205156bb1733bf16091c7e3ed410b45bf7fe84e7cb596d32aeea"
+      "sha256": "72ef66f0a1c0155789792e98e52ded9749bb58b6c77f0d0c5a045a9ec6cbc9a4"
     },
     {
       "path": "architecture/status-model.json",
-      "sha256": "78a86e1b1b99bc35cbb5872ca8591072db8e747953374a510a8ea49059d7d496"
+      "sha256": "8249814efec43cd48c97eb7afed4091165ccc2a7a72942f630882646835bd444"
     },
     {
       "path": "shells/vscode/package.json",
-      "sha256": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16"
+      "sha256": "c2d7612804f9bcb2e0a3c5f4615a2d7d3ef2181f93e32b5e83fa854ec1bc1ecb"
     },
     {
       "path": "shells/vscode/src/provider.ts",
-      "sha256": "74725f714a4d085dfe52c4f7373b51c484f7e1713b5173e975084274c343e000"
+      "sha256": "9c0824496c1e8e62e2fc7e98506c8568af927af75719331c5bdbe0b33f89a14e"
     }
   ],
   "remote_inference_optional": true,

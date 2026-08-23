@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Decisions 0042-0044 task identities, dependencies, and roadmap coverage."""
+"""Validate Decisions 0042-0045 task identities, dependencies, and roadmap coverage."""
 
 from __future__ import annotations
 
@@ -118,7 +118,7 @@ def validate_text(tasks: str, plan: str, architecture: str) -> list[str]:
     story_set = set(story_ids)
     for label, expected_stories in (
         ("Decision 0042", DECISION_0042_STORIES),
-        ("Decisions 0043-0044", DECISION_0043_0044_STORIES),
+        ("Decisions 0043-0045", DECISION_0043_0044_STORIES),
     ):
         missing = sorted(set(expected_stories) - story_set)
         if missing:
@@ -198,7 +198,7 @@ def main() -> int:
     print(
         "task graph validation passed: "
         f"{len(DECISION_0042_STORIES)} Decision 0042 stories, "
-        f"{len(DECISION_0043_0044_STORIES)} Decisions 0043-0044 stories, "
+        f"{len(DECISION_0043_0044_STORIES)} Decisions 0043-0045 stories, "
         "4 foundational runtime epics"
     )
     return 0

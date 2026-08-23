@@ -106,7 +106,7 @@ def validate_policy(policy: Any) -> list[str]:
         return ["artifact scan policy must be an object"]
     if policy.get("schema_version") != 1 or policy.get("status") != "enforced":
         failures.append("artifact scan policy identity is invalid")
-    if policy.get("planning_decision_ids") != ["ADR-0043", "ADR-0044"]:
+    if policy.get("planning_decision_ids") != ["ADR-0043", "ADR-0044", "ADR-0045"]:
         failures.append("artifact scan planning decisions are incomplete")
     if tuple(policy.get("planning_contract_roots", [])) != EXPECTED_PLANNING_ROOTS:
         failures.append("artifact scan planning contract roots drifted")

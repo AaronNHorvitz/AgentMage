@@ -183,6 +183,7 @@ def validate_rules(rules: Any, inventory: Any) -> list[str]:
         "ADR-0028",
         "ADR-0043",
         "ADR-0044",
+        "ADR-0045",
     ]:
         failures.append("dependency rules must record accepted boundary amendments")
     if rules.get("status") != "accepted":

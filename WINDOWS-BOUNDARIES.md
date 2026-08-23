@@ -9,8 +9,13 @@
 | Shared runtime authority | [`RUNTIME-BOUNDARIES.md`](./RUNTIME-BOUNDARIES.md) |
 | Trusted-operations authority | [`TRUSTED-OPERATIONS.md`](./TRUSTED-OPERATIONS.md) |
 | Whole-codebase audit authority | [`CODEBASE-AUDIT.md`](./CODEBASE-AUDIT.md) |
+| Verified Chat and Engineering Runtime authority | [`ENGINEERING-RUNTIME.md`](./ENGINEERING-RUNTIME.md) and Decision 0045 |
 
 ## 1. Scope
+
+Verified Chat, the host supervisor, model routes, and Team execution remain unsupported on Windows
+until the exact Windows extension/host package and physical platform matrices pass. Linux source or
+contract tests do not substitute for those rows.
 
 Windows 11 is a required v1.0 GA platform. The supported matrix begins with current serviced Windows 11 x64 releases, stable x64 Visual Studio Code, one standard non-administrator interactive user, NTFS workspaces, and the manifest-pinned native local-model profile. Windows on Arm, network shares, Windows Subsystem for Linux as an execution boundary, and containerized model inference remain disabled until separately promoted.
 

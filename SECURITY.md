@@ -2,7 +2,8 @@
 
 ## Supported Versions
 
-AgentMage is currently in design and planning. No production binary is supported yet.
+AgentMage is currently a pre-alpha, contract-tested scaffold. No production binary, model,
+platform, endpoint, or end-user workflow is supported yet.
 
 Beginning with the first public binary release, the latest patch release of each supported minor version receives security fixes until the support end recorded in its signed release manifest. Unless a release states otherwise, a superseded pre-1.0 minor version remains supported for 90 days after its successor is published. Unsupported versions receive no remediation commitment and should not process new work.
 

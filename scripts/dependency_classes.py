@@ -79,11 +79,11 @@ EXPECTED_CARGO_DEV = {
 EXPECTED_PLANNED_ENGINEERING_RUNTIME = {
     "adapter_families_require_separate_admission": True,
     "declared_package_dependencies": [],
-    "decision_ids": ["ADR-0043", "ADR-0044"],
+    "decision_ids": ["ADR-0043", "ADR-0044", "ADR-0045"],
     "enabled": False,
-    "included_in_default_build": False,
+    "included_in_default_build": True,
     "included_in_release": False,
-    "status": "planned-contracts-only",
+    "status": "scaffolded-not-enabled",
 }
 
 

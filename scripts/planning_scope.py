@@ -736,7 +736,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(
             "Planning scope validation passed: Decision 0027 baseline 241/30; "
-            "current accepted chain 294/31; Decisions 0042-0044 add 4 foundational "
+            "current accepted chain 294/31; Decisions 0042-0045 add 4 foundational "
             "runtime epics, 53 stable requirements, and 0 release epics or sprints."
         )
         return 0

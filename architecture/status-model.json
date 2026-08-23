@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "decision_id": "ADR-0012",
-  "amendment_decision_ids": ["ADR-0043", "ADR-0044"],
+  "amendment_decision_ids": ["ADR-0043", "ADR-0044", "ADR-0045"],
   "status": "accepted",
   "reference_contract": "architecture/status-model.json#<collection>=<record-id>",
   "dimensions": {
@@ -269,106 +269,126 @@
     },
     {
       "id": "engineering-runtime",
-      "lifecycle_status": "designed",
-      "verification_status": "not-run",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "contract-tested",
       "disposition_status": "active",
       "support_status": "unsupported-pre-release",
       "evidence_basis": [
         {
-          "kind": "design",
-          "path": "ENGINEERING-RUNTIME.md"
+          "kind": "source",
+          "path": "shells/host/src/lib.rs"
         },
         {
           "kind": "accepted-decision",
-          "path": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md"
+          "path": "docs/decisions/0045-mandatory-verified-chat-and-team-runtime.md"
+        },
+        {
+          "kind": "test",
+          "path": "shells/host/src/engineering_runtime.rs"
         },
         {
           "kind": "status-assessment",
-          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+          "path": "docs/reviews/2026-08-23-mandatory-verified-chat-runtime-independent-audit.md"
         }
       ]
     },
     {
       "id": "model-gateway",
-      "lifecycle_status": "designed",
-      "verification_status": "not-run",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "contract-tested",
       "disposition_status": "active",
       "support_status": "unsupported-pre-release",
       "evidence_basis": [
         {
-          "kind": "design",
-          "path": "MODEL-GATEWAY.md"
+          "kind": "source",
+          "path": "kernel/engine/src/model_gateway.rs"
         },
         {
           "kind": "accepted-decision",
           "path": "docs/decisions/0044-local-and-remote-open-weight-inference-profiles.md"
         },
         {
+          "kind": "test",
+          "path": "shells/host/src/engineering_gateway.rs"
+        },
+        {
           "kind": "status-assessment",
-          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+          "path": "docs/reviews/2026-08-23-mandatory-verified-chat-runtime-independent-audit.md"
         }
       ]
     },
     {
       "id": "verified-chat",
-      "lifecycle_status": "designed",
-      "verification_status": "not-run",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "contract-tested",
       "disposition_status": "active",
       "support_status": "unsupported-pre-release",
       "evidence_basis": [
         {
-          "kind": "design",
-          "path": "ENGINEERING-RUNTIME.md"
+          "kind": "source",
+          "path": "shells/vscode/src/verified_chat.ts"
         },
         {
           "kind": "accepted-decision",
-          "path": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md"
+          "path": "docs/decisions/0045-mandatory-verified-chat-and-team-runtime.md"
+        },
+        {
+          "kind": "test",
+          "path": "shells/vscode/test/verified_chat_protocol.test.ts"
         },
         {
           "kind": "status-assessment",
-          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+          "path": "docs/reviews/2026-08-23-mandatory-verified-chat-runtime-independent-audit.md"
         }
       ]
     },
     {
       "id": "engineering-capability-registry",
-      "lifecycle_status": "designed",
-      "verification_status": "not-run",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "contract-tested",
       "disposition_status": "active",
       "support_status": "unsupported-pre-release",
       "evidence_basis": [
         {
-          "kind": "design",
-          "path": "ENGINEERING-CAPABILITY-REGISTRY.md"
+          "kind": "source",
+          "path": "kernel/engine/src/lib.rs"
         },
         {
           "kind": "accepted-decision",
-          "path": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md"
+          "path": "docs/decisions/0045-mandatory-verified-chat-and-team-runtime.md"
+        },
+        {
+          "kind": "test",
+          "path": "kernel/engine/src/capability_registry.rs"
         },
         {
           "kind": "status-assessment",
-          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+          "path": "docs/reviews/2026-08-23-mandatory-verified-chat-runtime-independent-audit.md"
         }
       ]
     },
     {
       "id": "multi-agent-capability-composition",
-      "lifecycle_status": "designed",
-      "verification_status": "not-run",
+      "lifecycle_status": "scaffolded",
+      "verification_status": "contract-tested",
       "disposition_status": "active",
       "support_status": "unsupported-pre-release",
       "evidence_basis": [
         {
-          "kind": "design",
-          "path": "ENGINEERING-CAPABILITY-REGISTRY.md"
+          "kind": "source",
+          "path": "kernel/engine/src/multi_agent.rs"
         },
         {
           "kind": "accepted-decision",
-          "path": "docs/decisions/0043-engineering-runtime-foundations-and-verified-chat.md"
+          "path": "docs/decisions/0045-mandatory-verified-chat-and-team-runtime.md"
+        },
+        {
+          "kind": "test",
+          "path": "shells/host/src/engineering_team.rs"
         },
         {
           "kind": "status-assessment",
-          "path": "docs/reviews/2026-08-22-engineering-runtime-scope-and-plan-audit.md"
+          "path": "docs/reviews/2026-08-23-mandatory-verified-chat-runtime-independent-audit.md"
         }
       ]
     }

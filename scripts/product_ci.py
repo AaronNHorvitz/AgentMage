@@ -224,7 +224,7 @@ def validate_contract(
             ["npm", "run", "task-graph:check"],
         ],
         "enables_product_capability": False,
-        "decision_ids": ["ADR-0043", "ADR-0044"],
+        "decision_ids": ["ADR-0043", "ADR-0044", "ADR-0045"],
     }:
         failures.append("product CI Engineering Runtime contract gate drifted")
     engines = package.get("engines", {}) if isinstance(package, dict) else {}
