@@ -113,11 +113,52 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
       return;
     }
     if (message.type === "send" && (message.text ?? "").trim().length > 0) {
-      await this.post({ type: "message", role: "user", text: message.text });
+      const text = message.text ?? "";
+      await this.post({ type: "message", role: "user", text });
+      const captured = await this.capture(
+        sessionId,
+        "paste",
+        "Verified Chat message",
+        text,
+      );
+      if (captured === undefined) return;
+      const response = await this.exchange(
+        request("execute_verified_turn", {
+          session_id: sessionId,
+          prompt_artifact_id: captured.artifactId,
+          correlation_id: `correlation-${randomUUID()}`,
+          occurred_at_epoch_ms: Date.now(),
+        }),
+      );
+      if (response.kind === "denied") {
+        await this.post({
+          type: "status",
+          state: "blocked",
+          code: response.code,
+        });
+        return;
+      }
+      if (response.response.result !== "verified_turn_completed") {
+        await this.post({
+          type: "status",
+          state: "blocked",
+          code: "verified-chat.response.mismatch",
+        });
+        return;
+      }
+      const turn = asRecord(response.response.turn);
+      if (turn === undefined || typeof turn.output_text !== "string") {
+        await this.post({
+          type: "status",
+          state: "blocked",
+          code: "verified-chat.response.invalid",
+        });
+        return;
+      }
       await this.post({
-        type: "status",
-        state: "blocked",
-        code: "verified-chat.model-route.not-qualified",
+        type: "message",
+        role: "assistant",
+        text: turn.output_text,
       });
     }
   }
@@ -152,7 +193,14 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
     sourceKind: "paste" | "editor_selection",
     displayName: string,
     text: string,
-  ): Promise<void> {
+  ): Promise<
+    | {
+        readonly artifactId: string;
+        readonly sourceSha256: string;
+        readonly byteLength: number;
+      }
+    | undefined
+  > {
     try {
       const captured = await captureExactText(
         (hostRequest) => this.exchange(hostRequest),
@@ -163,6 +211,7 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
         text,
       );
       await this.post({ type: "artifact", ...captured, displayName });
+      return captured;
     } catch (error) {
       await this.post({
         type: "status",
@@ -172,6 +221,7 @@ export class VerifiedChatSurface implements vscode.WebviewViewProvider {
             ? error.message
             : "verified-chat.capture.failed",
       });
+      return undefined;
     }
   }
 
@@ -235,4 +285,8 @@ function editorHtml(webview: vscode.Webview): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return isRecord(value) ? value : undefined;
 }

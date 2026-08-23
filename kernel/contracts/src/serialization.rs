@@ -58,6 +58,7 @@ impl_versioned_contract!(
     crate::ArtifactCaptureResult,
     crate::ArtifactRangeReceipt,
     crate::ContextDeliveryReceipt,
+    crate::VerifiedModelTurnResult,
     crate::ModelEndpointProfile,
     crate::ModelRouteDecision,
     crate::ToolObservation,

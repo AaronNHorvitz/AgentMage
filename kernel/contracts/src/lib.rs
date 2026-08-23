@@ -111,7 +111,7 @@ pub use engineering::{
     EngineeringRpcResponse, EngineeringSessionMode, EngineeringSessionSnapshot,
     EngineeringTerminalState, IntegrationRecord, IntegrationState, ModelEndpointProfile,
     ModelRouteDecision, ReviewFinding, ReviewOutcome, TeamCampaign, TeamCampaignState,
-    ToolObservation, ToolObservationTermination,
+    ToolObservation, ToolObservationTermination, VerifiedModelTurnResult,
 };
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use executive::{

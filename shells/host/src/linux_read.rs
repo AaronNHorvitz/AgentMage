@@ -436,20 +436,22 @@ where
     pub fn handle(&mut self, request: HostRequest) -> HostResponse {
         let request_id = request_id(&request).to_owned();
         let result = match request {
-            HostRequest::Engineering { request, .. } => self
-                .engineering_runtime
-                .as_mut()
-                .ok_or(LinuxReadError::EngineeringRuntimeUnavailable)
-                .and_then(|runtime| {
-                    runtime
-                        .handle(request)
-                        .map_err(|_| LinuxReadError::EngineeringRuntimeFailed)
-                })
-                .map(|response| HostResponse::Engineering {
-                    schema_version: HOST_PROTOCOL_VERSION,
-                    request_id: request_id.clone(),
-                    response,
-                }),
+            HostRequest::Engineering { request, .. } => match self.engineering_runtime.as_mut() {
+                Some(runtime) => match runtime.handle(request) {
+                    Ok(response) => Ok(HostResponse::Engineering {
+                        schema_version: HOST_PROTOCOL_VERSION,
+                        request_id: request_id.clone(),
+                        response,
+                    }),
+                    Err(error) => Ok(HostResponse::Denied {
+                        schema_version: HOST_PROTOCOL_VERSION,
+                        request_id: request_id.clone(),
+                        code: error.code().to_owned(),
+                        receipt: None,
+                    }),
+                },
+                None => Err(LinuxReadError::EngineeringRuntimeUnavailable),
+            },
             HostRequest::PreviewHandoff { .. } => self.preview_handoff(&request_id),
             HostRequest::RenderHandoff {
                 preview_id,

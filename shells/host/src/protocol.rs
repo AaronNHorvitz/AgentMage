@@ -931,9 +931,9 @@ fn valid_semver(value: &str) -> bool {
 
 fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), HostProtocolError> {
     use EngineeringRpcRequest::{
-        BeginArtifact, CancelArtifact, CancelSession, CommitArtifact, CreateSession, ListSessions,
-        OpenSession, PauseSession, ReadArtifactRange, ReplayEvents, ResumeSession,
-        UploadArtifactChunk,
+        BeginArtifact, CancelArtifact, CancelSession, CommitArtifact, CreateSession,
+        ExecuteVerifiedTurn, ListSessions, OpenSession, PauseSession, ReadArtifactRange,
+        ReplayEvents, ResumeSession, UploadArtifactChunk,
     };
     let valid_id = |value: &str| valid_identifier(value);
     match request {
@@ -1020,6 +1020,20 @@ fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), H
                 || !valid_id(artifact_id.as_str())
                 || *length == 0
                 || *length > MAX_ENGINEERING_RANGE_BYTES
+            {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
+        ExecuteVerifiedTurn {
+            session_id,
+            prompt_artifact_id,
+            correlation_id,
+            occurred_at_epoch_ms,
+        } => {
+            if !valid_id(session_id.as_str())
+                || !valid_id(prompt_artifact_id.as_str())
+                || !valid_id(correlation_id.as_str())
+                || *occurred_at_epoch_ms == 0
             {
                 return Err(HostProtocolError::InvalidValue);
             }

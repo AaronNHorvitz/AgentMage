@@ -239,6 +239,26 @@ pub struct ContextDeliveryReceipt {
     pub receipt_sha256: String,
 }
 
+/// Host-authoritative result of one model turn over verified exact context.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VerifiedModelTurnResult {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Exact owning session.
+    pub session_id: SessionId,
+    /// Exact runtime run.
+    pub run_id: RuntimeRunId,
+    /// Exact model-delivery proof.
+    pub context: ContextDeliveryReceipt,
+    /// Bounded model output text.
+    pub output_text: String,
+    /// Digest of the exact output UTF-8 bytes.
+    pub output_sha256: String,
+    /// Truthful deterministic delivery verification state.
+    pub terminal: EngineeringTerminalState,
+}
+
 /// Privacy and network class for one exact model endpoint.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -890,6 +910,17 @@ pub enum EngineeringRpcRequest {
         /// Maximum bytes to return.
         length: u64,
     },
+    /// Executes one model turn over an exact captured prompt artifact.
+    ExecuteVerifiedTurn {
+        /// Exact owning session.
+        session_id: SessionId,
+        /// Exact captured prompt artifact.
+        prompt_artifact_id: RuntimeArtifactId,
+        /// Exact request correlation identity.
+        correlation_id: CorrelationId,
+        /// Trusted host time.
+        occurred_at_epoch_ms: u64,
+    },
     /// Replay durable events after an optional exclusive cursor.
     ReplayEvents {
         /// Exact session identity.
@@ -966,6 +997,11 @@ pub enum EngineeringRpcResponse {
     ArtifactRange {
         /// Content-verifiable range receipt.
         range: ArtifactRangeReceipt,
+    },
+    /// One verified-context model turn completed.
+    VerifiedTurnCompleted {
+        /// Host-authoritative turn result.
+        turn: VerifiedModelTurnResult,
     },
     /// Exact ordered durable replay.
     Events {

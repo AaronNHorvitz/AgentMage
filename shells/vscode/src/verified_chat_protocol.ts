@@ -149,6 +149,7 @@ export function parseEngineeringHostResponse(
       "artifact_captured",
       "artifact_upload_cancelled",
       "artifact_range",
+      "verified_turn_completed",
       "events",
       "lifecycle_event",
     ]).has(result)
