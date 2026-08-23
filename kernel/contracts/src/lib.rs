@@ -18,6 +18,7 @@ mod diagnostics;
 mod display_link;
 mod document_control;
 mod engineering;
+mod engineering_records;
 mod evidence;
 mod executive;
 mod frontier;
@@ -113,6 +114,7 @@ pub use engineering::{
     ModelRouteDecision, ReviewFinding, ReviewOutcome, TeamCampaign, TeamCampaignState,
     ToolObservation, ToolObservationTermination, VerifiedModelTurnResult,
 };
+pub use engineering_records::*;
 pub use evidence::{EvidenceKind, EvidenceReference, Receipt};
 pub use executive::{
     ExecutiveCorrespondenceDraft, ExecutiveCorrespondenceIssue, ExecutiveCorrespondenceIssueKind,

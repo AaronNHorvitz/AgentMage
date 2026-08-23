@@ -41,6 +41,8 @@ pub mod diagnostics;
 pub mod document_control;
 /// SQLCipher-backed Engineering Runtime session, event, and source-artifact persistence.
 pub mod engineering_persistence;
+/// Semantic validation and sealing helpers for canonical Engineering Runtime records.
+pub mod engineering_records;
 /// Exact-preview redacted evidence bundles derived from canonical conversation state.
 pub mod evidence_bundle;
 /// Fresh citation resolution, complete answer ledgers, and keyed receipt integrity.
