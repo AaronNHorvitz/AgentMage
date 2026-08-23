@@ -28,6 +28,8 @@ const MAX_VERIFIED_MODEL_OUTPUT_BYTES: usize = 4 * 1024 * 1024;
 /// Exact verified input supplied to one already-qualified model executor.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EngineeringModelInput {
+    /// Exact owning Verified Chat session.
+    pub session_id: SessionId,
     /// Exact model-delivery receipt.
     pub context: ContextDeliveryReceipt,
     /// Exact prompt bytes loaded from encrypted artifact authority.
@@ -399,6 +401,7 @@ impl EngineeringRuntimeService {
             .map_err(EngineeringRuntimeError::Supervisor)?;
         let output_text = model
             .execute(&EngineeringModelInput {
+                session_id: session_id.clone(),
                 context: context.clone(),
                 prompt_bytes: range.bytes,
             })

@@ -222,6 +222,15 @@ pub struct LocalModelController<R: LocalModelRuntime, C: ModelFamilyCodec> {
     loaded: bool,
 }
 
+/// Complete model result plus the exact response bytes validated by the controller.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct VerifiedModelOutput {
+    /// Content-free terminal result and optional closed proposal.
+    pub result: ModelRunResult,
+    /// Exact contiguous response bytes whose digest matches the result.
+    pub response_bytes: Vec<u8>,
+}
+
 impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
     /// Binds one admitted profile to one exact runtime identity.
     pub fn new(
@@ -246,6 +255,12 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
     #[must_use]
     pub const fn exact_profile(&self) -> &ExactModelProfile {
         self.admitted.exact_profile()
+    }
+
+    /// Returns the exact purpose admitted before controller construction.
+    #[must_use]
+    pub const fn purpose(&self) -> ModelUsePurpose {
+        self.admitted.purpose()
     }
 
     /// Verifies and loads the exact selected tuple.
@@ -307,6 +322,56 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         Ok(result)
     }
 
+    /// Counts and binds tokens for a structurally valid packet before dispatch.
+    ///
+    /// This is the trusted bridge for callers that cannot run the exact profile tokenizer.
+    /// The adapter-produced count is accepted only when every other packet binding and the
+    /// encoded-context digest match the loaded tuple.
+    pub fn bind_token_count(
+        &self,
+        packet: &mut ModelContextPacket,
+    ) -> Result<TokenCountResult, ModelRuntimeGateError> {
+        if !self.loaded {
+            return Err(ModelRuntimeGateError::NotLoaded);
+        }
+        if packet.profile_id != self.admitted.profile.profile_id
+            || packet.manifest_sha256 != self.admitted.profile.manifest_sha256
+            || packet.messages.is_empty()
+            || packet.messages.len() > self.admitted.profile.context.max_messages as usize
+            || packet.input_bytes == 0
+            || packet.input_bytes > self.admitted.profile.context.max_input_bytes
+            || !valid_sha256(&packet.packet_sha256)
+        {
+            return Err(ModelRuntimeGateError::RequestMismatch);
+        }
+        packet.input_tokens = 1;
+        for _ in 0..4 {
+            packet.packet_sha256 = model_packet_digest(packet)?;
+            let context = self
+                .codec
+                .encode_context(&self.admitted.profile, packet)
+                .map_err(|_| ModelRuntimeGateError::RequestMismatch)?;
+            let result = self
+                .runtime
+                .count_tokens(&context)
+                .map_err(|_| ModelRuntimeGateError::RuntimeFailure)?;
+            if result.profile_id != self.admitted.profile.profile_id
+                || result.context_packet_id != packet.context_packet_id
+                || result.packet_sha256 != context.sha256
+                || result.counter != self.admitted.profile.context.token_counter
+                || result.tokens == 0
+                || result.tokens > self.admitted.profile.context.max_context_tokens
+            {
+                return Err(ModelRuntimeGateError::TokenCountMismatch);
+            }
+            if packet.input_tokens == result.tokens {
+                return Ok(result);
+            }
+            packet.input_tokens = result.tokens;
+        }
+        Err(ModelRuntimeGateError::TokenCountMismatch)
+    }
+
     /// Runs one exact bounded request and validates its complete inert stream.
     pub fn stream(
         &mut self,
@@ -314,6 +379,17 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
         packet: &ModelContextPacket,
         cancellation: Option<&dyn ModelCancellationProbe>,
     ) -> Result<ModelRunResult, ModelRuntimeGateError> {
+        self.stream_with_output(request, packet, cancellation)
+            .map(|output| output.result)
+    }
+
+    /// Runs one exact bounded request and returns its validated inert response bytes.
+    pub fn stream_with_output(
+        &mut self,
+        request: &ModelRunRequest,
+        packet: &ModelContextPacket,
+        cancellation: Option<&dyn ModelCancellationProbe>,
+    ) -> Result<VerifiedModelOutput, ModelRuntimeGateError> {
         self.validate_packet(packet)?;
         if request.profile_id != self.admitted.profile.profile_id
             || request.manifest_sha256 != self.admitted.profile.manifest_sha256
@@ -366,7 +442,10 @@ impl<R: LocalModelRuntime, C: ModelFamilyCodec> LocalModelController<R, C> {
             return Err(ModelRuntimeGateError::ResultMismatch);
         }
         validate_result(&self.admitted.profile, request, &result)?;
-        Ok(result)
+        Ok(VerifiedModelOutput {
+            result,
+            response_bytes: capture.bytes,
+        })
     }
 
     /// Returns resource accounting only for the exact loaded tuple.
@@ -774,6 +853,14 @@ fn sha256_hex(bytes: &[u8]) -> String {
         .iter()
         .map(|byte| format!("{byte:02x}"))
         .collect()
+}
+
+fn model_packet_digest(packet: &ModelContextPacket) -> Result<String, ModelRuntimeGateError> {
+    let mut candidate = packet.clone();
+    candidate.packet_sha256 = "0".repeat(64);
+    serde_json::to_vec(&candidate)
+        .map(|bytes| sha256_hex(&bytes))
+        .map_err(|_| ModelRuntimeGateError::RequestMismatch)
 }
 
 fn runtime_failure(code: &str) -> ModelRuntimeFailure {
@@ -1223,12 +1310,25 @@ mod tests {
             controller.health().expect("health").state,
             ModelHealthState::Ready
         );
-        let packet = packet(&profile);
+        let mut packet = packet(&profile);
+        packet.input_tokens = 77;
+        controller
+            .bind_token_count(&mut packet)
+            .expect("runtime-bound count");
+        assert_eq!(packet.input_tokens, 1);
+        assert_eq!(
+            packet.packet_sha256,
+            super::model_packet_digest(&packet).expect("packet digest")
+        );
         assert_eq!(controller.count_tokens(&packet).expect("count").tokens, 1);
-        let result = controller
-            .stream(&request(&profile), &packet, None)
+        let output = controller
+            .stream_with_output(&request(&profile), &packet, None)
             .expect("stream");
-        assert_eq!(result.terminal_state, ModelRunTerminalState::Proposed);
+        assert_eq!(
+            output.result.terminal_state,
+            ModelRunTerminalState::Proposed
+        );
+        assert!(!output.response_bytes.is_empty());
         assert_eq!(
             controller
                 .resources()
