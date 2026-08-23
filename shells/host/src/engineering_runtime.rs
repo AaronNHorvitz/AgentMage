@@ -11,7 +11,9 @@ use agentmage_kernel_engine::engineering_mode::{
     EngineeringModeOperation, enforce_engineering_mode,
 };
 use agentmage_kernel_engine::engineering_persistence::SqlCipherEngineeringStore;
-use agentmage_kernel_engine::engineering_plan::{seal_plan_approval, verify_plan_approval};
+use agentmage_kernel_engine::engineering_plan::{
+    seal_plan_approval, seal_plan_handoff, verify_plan_approval,
+};
 use agentmage_kernel_engine::engineering_records::ValidateCanonicalRecord;
 use agentmage_kernel_engine::persistent_supervisor::{
     PersistentSupervisorError, PersistentTaskSupervisor,
@@ -80,6 +82,8 @@ pub enum EngineeringRuntimeError {
     ModeDenied,
     /// Exact Plan approval or replay validation failed closed.
     PlanApprovalFailed,
+    /// Approved-Plan handoff validation or target-session creation failed closed.
+    PlanHandoffFailed,
 }
 
 impl EngineeringRuntimeError {
@@ -95,6 +99,7 @@ impl EngineeringRuntimeError {
             Self::IngestionFailed => "engineering.ingestion.failed",
             Self::ModeDenied => "engineering.mode.denied",
             Self::PlanApprovalFailed => "engineering.plan.approval.failed",
+            Self::PlanHandoffFailed => "engineering.plan.handoff.failed",
         }
     }
 }
@@ -207,6 +212,113 @@ impl EngineeringRuntimeService {
             approval: Box::new(approval),
             event: Box::new(event),
         })
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn create_session_from_approved_plan(
+        &mut self,
+        source_session_id: SessionId,
+        plan_artifact_id: RuntimeArtifactId,
+        plan_sha256: String,
+        approval_id: ApprovalId,
+        approval_sha256: String,
+        target_session_id: SessionId,
+        title: String,
+        target_mode: EngineeringSessionMode,
+        correlation_id: agentmage_kernel_contracts::CorrelationId,
+        occurred_at_epoch_ms: u64,
+    ) -> Result<EngineeringRpcResponse, EngineeringRuntimeError> {
+        if !matches!(
+            target_mode,
+            EngineeringSessionMode::Agent | EngineeringSessionMode::Team
+        ) {
+            return Err(EngineeringRuntimeError::PlanHandoffFailed);
+        }
+        let source = self
+            .supervisor
+            .open_session(&source_session_id)
+            .map_err(EngineeringRuntimeError::Supervisor)?;
+        if source.mode != EngineeringSessionMode::Plan || source.terminal.is_some() {
+            return Err(EngineeringRuntimeError::PlanHandoffFailed);
+        }
+        let capture = source
+            .artifacts
+            .iter()
+            .find(|capture| capture.artifact_id == plan_artifact_id)
+            .ok_or(EngineeringRuntimeError::PlanHandoffFailed)?;
+        if capture.source_kind != ArtifactSourceKind::Generated
+            || capture.display_name != "Verified Chat plan draft"
+            || capture.media_type != "text/markdown"
+            || capture.source_sha256 != plan_sha256
+        {
+            return Err(EngineeringRuntimeError::PlanHandoffFailed);
+        }
+        let approval = self
+            .supervisor
+            .replay(&source_session_id, None)
+            .map_err(EngineeringRuntimeError::Supervisor)?
+            .into_iter()
+            .find_map(|event| match event.kind {
+                EngineeringEventKind::PlanApproved { approval }
+                    if approval.approval_id == approval_id =>
+                {
+                    Some(approval)
+                }
+                _ => None,
+            })
+            .ok_or(EngineeringRuntimeError::PlanHandoffFailed)?;
+        verify_plan_approval(&approval).map_err(|_| EngineeringRuntimeError::PlanHandoffFailed)?;
+        if approval.session_id != source_session_id
+            || approval.plan_artifact_id != plan_artifact_id
+            || approval.plan_sha256 != plan_sha256
+            || approval.approval_sha256 != approval_sha256
+            || approval.approved_by != self.approval_actor
+        {
+            return Err(EngineeringRuntimeError::PlanHandoffFailed);
+        }
+        let handoff = seal_plan_handoff(
+            source_session_id,
+            target_session_id.clone(),
+            target_mode,
+            plan_artifact_id,
+            plan_sha256,
+            approval_id,
+            approval_sha256,
+            self.approval_actor.clone(),
+            occurred_at_epoch_ms,
+        )
+        .map_err(|_| EngineeringRuntimeError::PlanHandoffFailed)?;
+        match self.supervisor.open_session(&target_session_id) {
+            Ok(snapshot) => {
+                let events = self
+                    .supervisor
+                    .replay(&target_session_id, None)
+                    .map_err(EngineeringRuntimeError::Supervisor)?;
+                if events.len() == 1
+                    && matches!(
+                        &events[0].kind,
+                        EngineeringEventKind::SessionCreatedFromPlan { handoff: existing }
+                            if existing.as_ref() == &handoff
+                    )
+                {
+                    return Ok(EngineeringRpcResponse::Session { snapshot });
+                }
+                return Err(EngineeringRuntimeError::PlanHandoffFailed);
+            }
+            Err(PersistentSupervisorError::NotFound) => {}
+            Err(error) => return Err(EngineeringRuntimeError::Supervisor(error)),
+        }
+        self.supervisor
+            .create_session_from_plan(
+                target_session_id,
+                title,
+                target_mode,
+                correlation_id,
+                occurred_at_epoch_ms,
+                handoff,
+            )
+            .map(|snapshot| EngineeringRpcResponse::Session { snapshot })
+            .map_err(EngineeringRuntimeError::Supervisor)
     }
 
     fn ingest_artifact(
@@ -554,8 +666,9 @@ impl EngineeringRuntimePort for EngineeringRuntimeService {
     ) -> Result<EngineeringRpcResponse, EngineeringRuntimeError> {
         use EngineeringRpcRequest::{
             ApprovePlan, BeginArtifact, CancelArtifact, CancelSession, CommitArtifact,
-            CreateSession, ExecuteVerifiedTurn, IngestArtifact, ListSessions, OpenSession,
-            PauseSession, ReadArtifactRange, ReplayEvents, ResumeSession, UploadArtifactChunk,
+            CreateSession, CreateSessionFromApprovedPlan, ExecuteVerifiedTurn, IngestArtifact,
+            ListSessions, OpenSession, PauseSession, ReadArtifactRange, ReplayEvents,
+            ResumeSession, UploadArtifactChunk,
         };
         match request {
             CreateSession {
@@ -672,6 +785,29 @@ impl EngineeringRuntimePort for EngineeringRuntimeService {
                 plan_artifact_id,
                 plan_sha256,
                 approval_id,
+                correlation_id,
+                occurred_at_epoch_ms,
+            ),
+            CreateSessionFromApprovedPlan {
+                source_session_id,
+                plan_artifact_id,
+                plan_sha256,
+                approval_id,
+                approval_sha256,
+                target_session_id,
+                title,
+                target_mode,
+                correlation_id,
+                occurred_at_epoch_ms,
+            } => self.create_session_from_approved_plan(
+                source_session_id,
+                plan_artifact_id,
+                plan_sha256,
+                approval_id,
+                approval_sha256,
+                target_session_id,
+                title,
+                target_mode,
                 correlation_id,
                 occurred_at_epoch_ms,
             ),
@@ -1071,6 +1207,68 @@ mod tests {
         };
         assert_eq!(replayed_approval, approval);
         assert_eq!(replayed_event, event);
+        let target_session_id = SessionId::from_raw("session-agent-from-plan-fixture");
+        let handoff_request = EngineeringRpcRequest::CreateSessionFromApprovedPlan {
+            source_session_id: session_id.clone(),
+            plan_artifact_id: plan_artifact.artifact_id.clone(),
+            plan_sha256: plan_artifact.source_sha256.clone(),
+            approval_id: approval.approval_id.clone(),
+            approval_sha256: approval.approval_sha256.clone(),
+            target_session_id: target_session_id.clone(),
+            title: "Agent from approved Plan".to_owned(),
+            target_mode: EngineeringSessionMode::Agent,
+            correlation_id: CorrelationId::from_raw("correlation-plan-handoff"),
+            occurred_at_epoch_ms: 140,
+        };
+        let EngineeringRpcResponse::Session { snapshot: target } =
+            runtime.handle(handoff_request.clone()).unwrap()
+        else {
+            panic!("approved Plan handoff session expected");
+        };
+        assert_eq!(target.session_id, target_session_id);
+        assert_eq!(target.mode, EngineeringSessionMode::Agent);
+        assert!(target.artifacts.is_empty());
+        let EngineeringRpcResponse::Session {
+            snapshot: replayed_target,
+        } = runtime.handle(handoff_request).unwrap()
+        else {
+            panic!("idempotent approved Plan handoff expected");
+        };
+        assert_eq!(replayed_target, target);
+        let EngineeringRpcResponse::Events {
+            events: target_events,
+        } = runtime
+            .handle(EngineeringRpcRequest::ReplayEvents {
+                session_id: target_session_id,
+                after_sequence: None,
+            })
+            .unwrap()
+        else {
+            panic!("target events expected");
+        };
+        assert!(matches!(
+            target_events.as_slice(),
+            [agentmage_kernel_contracts::EngineeringEvent {
+                kind: EngineeringEventKind::SessionCreatedFromPlan { handoff },
+                ..
+            }] if handoff.approval_sha256 == approval.approval_sha256
+                && handoff.plan_sha256 == plan_artifact.source_sha256
+        ));
+        assert_eq!(
+            runtime.handle(EngineeringRpcRequest::CreateSessionFromApprovedPlan {
+                source_session_id: session_id.clone(),
+                plan_artifact_id: plan_artifact.artifact_id.clone(),
+                plan_sha256: plan_artifact.source_sha256.clone(),
+                approval_id: approval.approval_id.clone(),
+                approval_sha256: "e".repeat(64),
+                target_session_id: SessionId::from_raw("session-agent-substitution"),
+                title: "Substituted handoff".to_owned(),
+                target_mode: EngineeringSessionMode::Agent,
+                correlation_id: CorrelationId::from_raw("correlation-handoff-substitution"),
+                occurred_at_epoch_ms: 141,
+            }),
+            Err(EngineeringRuntimeError::PlanHandoffFailed)
+        );
         assert_eq!(
             runtime.handle(EngineeringRpcRequest::ApprovePlan {
                 session_id: session_id.clone(),

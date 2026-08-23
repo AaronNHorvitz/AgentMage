@@ -284,6 +284,36 @@ pub struct EngineeringPlanApproval {
     pub approval_sha256: String,
 }
 
+/// Exact approved-Plan handoff into a new Agent or Team session.
+///
+/// The handoff binds intent and provenance only. Effect authority remains separately granted.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EngineeringPlanHandoff {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Source immutable Plan session.
+    pub source_session_id: SessionId,
+    /// New Agent or Team session.
+    pub target_session_id: SessionId,
+    /// Exact target execution mode.
+    pub target_mode: EngineeringSessionMode,
+    /// Exact durable Plan artifact.
+    pub plan_artifact_id: RuntimeArtifactId,
+    /// SHA-256 of exact approved Plan bytes.
+    pub plan_sha256: String,
+    /// Exact approval identity.
+    pub approval_id: ApprovalId,
+    /// Exact sealed approval digest.
+    pub approval_sha256: String,
+    /// Authenticated local user initiating the handoff.
+    pub initiated_by: ActorId,
+    /// Trusted host handoff time.
+    pub initiated_at_epoch_ms: u64,
+    /// Digest of this handoff with this field zeroed before sealing.
+    pub handoff_sha256: String,
+}
+
 /// Privacy and network class for one exact model endpoint.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -750,6 +780,11 @@ pub struct TeamCampaign {
 pub enum EngineeringEventKind {
     /// A session was created.
     SessionCreated,
+    /// An Agent or Team session was created from one exact approved Plan.
+    SessionCreatedFromPlan {
+        /// Sealed non-authoritative Plan handoff binding.
+        handoff: Box<EngineeringPlanHandoff>,
+    },
     /// An artifact transfer began.
     ArtifactTransferStarted {
         /// Exact upload attempt.
@@ -973,6 +1008,29 @@ pub enum EngineeringRpcRequest {
         /// Exact request correlation identity.
         correlation_id: CorrelationId,
         /// Trusted host approval time.
+        occurred_at_epoch_ms: u64,
+    },
+    /// Creates a new Agent or Team session bound to one exact approved Plan.
+    CreateSessionFromApprovedPlan {
+        /// Exact source Plan session.
+        source_session_id: SessionId,
+        /// Exact approved Plan artifact.
+        plan_artifact_id: RuntimeArtifactId,
+        /// Exact approved Plan digest.
+        plan_sha256: String,
+        /// Exact approval identity.
+        approval_id: ApprovalId,
+        /// Exact sealed approval digest displayed after approval.
+        approval_sha256: String,
+        /// Exact new session identity.
+        target_session_id: SessionId,
+        /// Bounded user-visible target title.
+        title: String,
+        /// Agent or Team; Ask and Plan are invalid handoff targets.
+        target_mode: EngineeringSessionMode,
+        /// Exact request correlation identity.
+        correlation_id: CorrelationId,
+        /// Trusted host handoff time.
         occurred_at_epoch_ms: u64,
     },
     /// Replay durable events after an optional exclusive cursor.

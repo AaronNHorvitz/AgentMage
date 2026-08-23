@@ -5,8 +5,8 @@ use std::sync::{Arc, Mutex};
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CorrelationId, EngineeringEvent, EngineeringEventKind,
-    EngineeringSessionMode, EngineeringSessionSnapshot, EngineeringTerminalState, RuntimeEventId,
-    SessionId,
+    EngineeringPlanHandoff, EngineeringSessionMode, EngineeringSessionSnapshot,
+    EngineeringTerminalState, RuntimeEventId, SessionId,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -211,6 +211,53 @@ where
         correlation_id: CorrelationId,
         occurred_at_epoch_ms: u64,
     ) -> Result<EngineeringSessionSnapshot, PersistentSupervisorError> {
+        self.create_session_with_initial_event(
+            session_id,
+            title,
+            mode,
+            correlation_id,
+            occurred_at_epoch_ms,
+            EngineeringEventKind::SessionCreated,
+        )
+    }
+
+    /// Atomically creates one Agent or Team session from an exact approved-Plan handoff.
+    pub fn create_session_from_plan(
+        &mut self,
+        session_id: SessionId,
+        title: String,
+        mode: EngineeringSessionMode,
+        correlation_id: CorrelationId,
+        occurred_at_epoch_ms: u64,
+        handoff: EngineeringPlanHandoff,
+    ) -> Result<EngineeringSessionSnapshot, PersistentSupervisorError> {
+        if handoff.target_session_id != session_id
+            || handoff.target_mode != mode
+            || handoff.initiated_at_epoch_ms != occurred_at_epoch_ms
+        {
+            return Err(PersistentSupervisorError::InvalidInput);
+        }
+        self.create_session_with_initial_event(
+            session_id,
+            title,
+            mode,
+            correlation_id,
+            occurred_at_epoch_ms,
+            EngineeringEventKind::SessionCreatedFromPlan {
+                handoff: Box::new(handoff),
+            },
+        )
+    }
+
+    fn create_session_with_initial_event(
+        &mut self,
+        session_id: SessionId,
+        title: String,
+        mode: EngineeringSessionMode,
+        correlation_id: CorrelationId,
+        occurred_at_epoch_ms: u64,
+        kind: EngineeringEventKind,
+    ) -> Result<EngineeringSessionSnapshot, PersistentSupervisorError> {
         if session_id.as_str().is_empty()
             || title.is_empty()
             || title.len() > MAX_SESSION_TITLE_BYTES
@@ -239,7 +286,7 @@ where
             ZERO_SHA256.to_owned(),
             correlation_id,
             occurred_at_epoch_ms,
-            EngineeringEventKind::SessionCreated,
+            kind,
         )?;
         snapshot.last_event_sequence = Some(0);
         snapshot.snapshot_sha256 = snapshot_digest(&snapshot)?;
@@ -407,12 +454,23 @@ pub(crate) fn build_event(
     occurred_at_epoch_ms: u64,
     kind: EngineeringEventKind,
 ) -> Result<EngineeringEvent, PersistentSupervisorError> {
-    if let EngineeringEventKind::PlanApproved { approval } = &kind
-        && (approval.session_id != snapshot.session_id
-            || approval.approved_at_epoch_ms != occurred_at_epoch_ms
-            || verify_plan_approval(approval).is_err())
-    {
-        return Err(PersistentSupervisorError::InvalidInput);
+    match &kind {
+        EngineeringEventKind::PlanApproved { approval }
+            if approval.session_id != snapshot.session_id
+                || approval.approved_at_epoch_ms != occurred_at_epoch_ms
+                || verify_plan_approval(approval).is_err() =>
+        {
+            return Err(PersistentSupervisorError::InvalidInput);
+        }
+        EngineeringEventKind::SessionCreatedFromPlan { handoff }
+            if handoff.target_session_id != snapshot.session_id
+                || handoff.target_mode != snapshot.mode
+                || handoff.initiated_at_epoch_ms != occurred_at_epoch_ms
+                || crate::engineering_plan::verify_plan_handoff(handoff).is_err() =>
+        {
+            return Err(PersistentSupervisorError::InvalidInput);
+        }
+        _ => {}
     }
     let mut event = EngineeringEvent {
         schema_version: CONTRACT_SCHEMA_VERSION,
@@ -449,12 +507,22 @@ pub fn verify_event_chain(events: &[EngineeringEvent]) -> Result<(), PersistentS
         {
             return Err(PersistentSupervisorError::Integrity);
         }
-        if let EngineeringEventKind::PlanApproved { approval } = &event.kind
-            && (approval.session_id != event.session_id
-                || approval.approved_at_epoch_ms != event.occurred_at_epoch_ms
-                || verify_plan_approval(approval).is_err())
-        {
-            return Err(PersistentSupervisorError::Integrity);
+        match &event.kind {
+            EngineeringEventKind::PlanApproved { approval }
+                if approval.session_id != event.session_id
+                    || approval.approved_at_epoch_ms != event.occurred_at_epoch_ms
+                    || verify_plan_approval(approval).is_err() =>
+            {
+                return Err(PersistentSupervisorError::Integrity);
+            }
+            EngineeringEventKind::SessionCreatedFromPlan { handoff }
+                if handoff.target_session_id != event.session_id
+                    || handoff.initiated_at_epoch_ms != event.occurred_at_epoch_ms
+                    || crate::engineering_plan::verify_plan_handoff(handoff).is_err() =>
+            {
+                return Err(PersistentSupervisorError::Integrity);
+            }
+            _ => {}
         }
         let mut candidate = event.clone();
         candidate.event_sha256 = ZERO_SHA256.to_owned();

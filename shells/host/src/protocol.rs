@@ -932,8 +932,9 @@ fn valid_semver(value: &str) -> bool {
 fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), HostProtocolError> {
     use EngineeringRpcRequest::{
         ApprovePlan, BeginArtifact, CancelArtifact, CancelSession, CommitArtifact, CreateSession,
-        ExecuteVerifiedTurn, IngestArtifact, ListSessions, OpenSession, PauseSession,
-        ReadArtifactRange, ReplayEvents, ResumeSession, UploadArtifactChunk,
+        CreateSessionFromApprovedPlan, ExecuteVerifiedTurn, IngestArtifact, ListSessions,
+        OpenSession, PauseSession, ReadArtifactRange, ReplayEvents, ResumeSession,
+        UploadArtifactChunk,
     };
     let valid_id = |value: &str| valid_identifier(value);
     match request {
@@ -1068,6 +1069,39 @@ fn validate_engineering_request(request: &EngineeringRpcRequest) -> Result<(), H
                 return Err(HostProtocolError::InvalidValue);
             }
         }
+        CreateSessionFromApprovedPlan {
+            source_session_id,
+            plan_artifact_id,
+            plan_sha256,
+            approval_id,
+            approval_sha256,
+            target_session_id,
+            title,
+            target_mode,
+            correlation_id,
+            occurred_at_epoch_ms,
+        } => {
+            if !valid_id(source_session_id.as_str())
+                || !valid_id(plan_artifact_id.as_str())
+                || !valid_sha256(plan_sha256)
+                || !valid_id(approval_id.as_str())
+                || !valid_sha256(approval_sha256)
+                || !valid_id(target_session_id.as_str())
+                || source_session_id == target_session_id
+                || title.is_empty()
+                || title.len() > 256
+                || title.contains('\0')
+                || !matches!(
+                    target_mode,
+                    agentmage_kernel_contracts::EngineeringSessionMode::Agent
+                        | agentmage_kernel_contracts::EngineeringSessionMode::Team
+                )
+                || !valid_id(correlation_id.as_str())
+                || *occurred_at_epoch_ms == 0
+            {
+                return Err(HostProtocolError::InvalidValue);
+            }
+        }
         ReplayEvents { session_id, .. } => {
             if !valid_id(session_id.as_str()) {
                 return Err(HostProtocolError::InvalidValue);
@@ -1174,6 +1208,34 @@ mod tests {
         digest_substitution["request"]["plan_sha256"] = json!("not-a-digest");
         assert!(matches!(
             parse_request(&serde_json::to_vec(&digest_substitution).unwrap()),
+            Err(HostProtocolError::InvalidValue)
+        ));
+        let handoff = json!({
+            "kind": "engineering",
+            "schema_version": HOST_PROTOCOL_VERSION,
+            "request_id": "request-engineering-handoff",
+            "request": {
+                "operation": "create_session_from_approved_plan",
+                "source_session_id": "session-engineering-1",
+                "plan_artifact_id": "artifact-plan-1",
+                "plan_sha256": "a".repeat(64),
+                "approval_id": "approval-plan-1",
+                "approval_sha256": "b".repeat(64),
+                "target_session_id": "session-agent-1",
+                "title": "Approved Plan Agent",
+                "target_mode": "agent",
+                "correlation_id": "correlation-handoff-1",
+                "occurred_at_epoch_ms": 3
+            }
+        });
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&handoff).unwrap()).unwrap(),
+            HostRequest::Engineering { .. }
+        ));
+        let mut plan_target = handoff.clone();
+        plan_target["request"]["target_mode"] = json!("plan");
+        assert!(matches!(
+            parse_request(&serde_json::to_vec(&plan_target).unwrap()),
             Err(HostProtocolError::InvalidValue)
         ));
 

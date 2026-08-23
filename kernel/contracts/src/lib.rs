@@ -109,7 +109,7 @@ pub use engineering::{
     ArtifactCoverageState, ArtifactRangeReceipt, ArtifactSourceKind, ArtifactUploadChunk,
     CapabilityManifest, ContextArtifactCoverage, ContextDeliveryReceipt, EndpointClass,
     EndpointProtocol, EngineeringEvent, EngineeringEventKind, EngineeringPlanApproval,
-    EngineeringRpcRequest, EngineeringRpcResponse, EngineeringSessionMode,
+    EngineeringPlanHandoff, EngineeringRpcRequest, EngineeringRpcResponse, EngineeringSessionMode,
     EngineeringSessionSnapshot, EngineeringTerminalState, IntegrationRecord, IntegrationState,
     ModelEndpointProfile, ModelRouteDecision, ReviewFinding, ReviewOutcome, TeamCampaign,
     TeamCampaignState, ToolObservation, ToolObservationTermination, VerifiedModelTurnResult,
