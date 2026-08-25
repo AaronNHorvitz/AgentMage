@@ -4,10 +4,9 @@ use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CanonicalArtifactEnvelope, CanonicalArtifactIngestionResult,
     CanonicalArtifactTransformation, CanonicalCapabilityManifest, CanonicalCaptureState,
     CanonicalContextDeliveryReceipt, CanonicalContextManifest, CanonicalDeliveryOutcome,
-    CanonicalModelEndpointProfile, CanonicalModelRouteDecision,
-    CanonicalRuntimeArtifactBackendKind, CanonicalSourceArtifactOwnership,
-    CanonicalSourceArtifactOwnershipState, CanonicalSourceArtifactRetention,
-    CanonicalSourceArtifactRetentionKind, CanonicalTerminalOutcome, CanonicalTerminalResult,
+    CanonicalModelEndpointProfile, CanonicalModelRouteDecision, CanonicalSourceArtifactOwnership,
+    CanonicalSourceArtifactOwnershipState, CanonicalSourceArtifactRetentionKind,
+    CanonicalTerminalOutcome, CanonicalTerminalResult,
     CanonicalToolObservation, CanonicalVerificationOutcome, CanonicalVerificationResult,
     CanonicalWorkflowCheckpoint, CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle,
     CanonicalWorkflowState, VersionedContract, to_canonical_json,
@@ -708,7 +707,10 @@ pub const fn zero_sha256() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use agentmage_kernel_contracts::{CanonicalArtifactOrigin, CanonicalClassification};
+    use agentmage_kernel_contracts::{
+        CanonicalArtifactOrigin, CanonicalClassification, CanonicalRuntimeArtifactBackendKind,
+        CanonicalSourceArtifactRetention,
+    };
 
     fn digest() -> String {
         "a".repeat(64)
