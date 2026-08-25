@@ -1,0 +1,22 @@
+{
+  "schema_version": 2,
+  "source_artifact_id": "source-0001",
+  "backend": "runtime_artifact_store",
+  "artifact_kind": "generated_file",
+  "binding": {
+    "runtime_artifact_id": "artifact-0001",
+    "manifest_sha256": "3b1f8c4d2e6a7b90c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e",
+    "payload_sha256": "9f2c4a6e8b0d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f10",
+    "byte_size": 4096
+  },
+  "owner_session_id": "session-0001",
+  "owner_task_id": "task-0001",
+  "owner_run_id": "run-0001",
+  "retention": {
+    "kind": "session",
+    "expires_at_epoch_ms": null
+  },
+  "state": "active",
+  "checkpoint_rooted": true,
+  "release_reason_code": null
+}

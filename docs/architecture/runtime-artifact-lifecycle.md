@@ -52,6 +52,7 @@ The public schemas and canonical examples are:
 - `schemas/runtime/runtime-artifact-manifest.schema.json`
 - `schemas/runtime/runtime-artifact-operator-view.schema.json`
 - `schemas/runtime/runtime-resume-binding.schema.json`
+- `schemas/runtime/source-artifact-custody.schema.json`
 
 Unknown fields, missing fields, unsupported schema versions, oversized objects,
 invalid media types, unsafe retention, cursor/run drift, duplicate or unordered
@@ -213,6 +214,42 @@ SQLCipher state and every derived payload key unavailable. Individual
 reference collection unlinks verified ciphertext but does not claim independent
 per-payload cryptographic erasure because deduplicated payloads share references
 and the first format derives file keys from one store-scoped root.
+
+## Logical Source-Artifact Custody
+
+Source-artifact custody adds no second physical store. It is a separately versioned
+record, `schemas/runtime/source-artifact-custody.schema.json`, keyed by
+`source_artifact_id` and published beside the manifest it must reconcile against. It is
+deliberately not a member of the frozen version-1 `source-artifact` record: adding a
+required member under an unchanged schema identity would invalidate records that were
+exactly valid under that identity.
+
+| Custody member | Reconciled against | Rule |
+|---|---|---|
+| `backend` | The one existing runtime artifact store | Only `runtime_artifact_store` is representable |
+| `artifact_kind` | `RuntimeArtifactKind` | Reuses the frozen `generated_file` member; the family is never widened |
+| `binding` | `RuntimeArtifactManifest` | Present exactly when `state` is not `not_retained` |
+| `binding.runtime_artifact_id` and `binding.manifest_sha256` | Manifest identity and seal | Must equal `artifact_id` and `manifest_sha256` |
+| `binding.payload_sha256` and `binding.byte_size` | Manifest payload and captured source | Must equal both the manifest payload identity and the exact source digest and length |
+| `owner_session_id`, `owner_task_id`, `owner_run_id` | Manifest `session_id`, `task_id`, `producer_run_id` | Must match exactly |
+| `retention` | Manifest `retention` | Must match exactly; `ephemeral` exists only for `not_retained` |
+
+Admission requires the verified manifest itself. `validate_source_custody` accepts a
+custody record only together with the canonical `RuntimeArtifactManifest` of the artifact
+its binding names. It rejects an absent manifest, an unsupported manifest version, a
+different artifact identity, a different seal, a different kind, different payload bytes,
+a different owner, a different retention assignment, and a non-verified integrity state
+under an `active` reference. A well-formed custody record therefore cannot describe a
+nonexistent or differently owned backend object into existence.
+
+A durable binding uses the backend payload range of 1 to 67,108,864 bytes, not the wider
+source-capture ceiling of 104,857,600 bytes. A larger capture remains representable as a
+source artifact and is simply not retainable as one object in this store.
+
+`SourceArtifactCustody` is a registered `VersionedContract` at the live kernel contract
+version, so `to_canonical_json` and `from_json` are its only supported encode and parse
+paths. It inherits the shared size, version, unknown-field, duplicate-field, and
+normalized parse-error controls rather than a private Serde path.
 
 ## Checkpoint and Resume
 

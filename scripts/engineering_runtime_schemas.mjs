@@ -547,56 +547,16 @@ export const SOURCE_CUSTODY_STATES = Object.freeze(["not_retained", "active", "q
 export const SOURCE_CUSTODY_CLOSED_STATES = Object.freeze(["quarantined", "released", "deleted"]);
 export const SOURCE_CUSTODY_OPENABLE_STATES = Object.freeze(["active", "quarantined"]);
 
-const sourceCustodyBinding = closed({
-  runtime_artifact_id: identifier,
-  payload_sha256: digest,
-  byte_size: boundedSourceBytes,
-});
-const sourceCustody = closed({
-  backend: { const: SOURCE_CUSTODY_BACKEND },
-  artifact_kind: { const: SOURCE_CUSTODY_ARTIFACT_KIND },
-  binding: nullable(sourceCustodyBinding),
-  owner_session_id: identifier,
-  owner_task_id: identifier,
-  owner_run_id: identifier,
-  retention_class: { enum: [...SOURCE_RETENTION_CLASSES] },
-  expires_at: nullable(timestamp),
-  state: { enum: [...SOURCE_CUSTODY_STATES] },
-  checkpoint_rooted: { type: "boolean" },
-  release_reason_code: nullable(identifier),
-});
-sourceCustody.allOf = [
-  {
-    if: { properties: { state: { const: "not_retained" } }, required: ["state"] },
-    then: {
-      properties: {
-        binding: { type: "null" },
-        retention_class: { const: "ephemeral" },
-        checkpoint_rooted: { const: false },
-      },
-    },
-    else: {
-      properties: {
-        binding: { type: "object" },
-        retention_class: { enum: [...SOURCE_DURABLE_RETENTION_CLASSES] },
-      },
-    },
-  },
-  {
-    if: { properties: { retention_class: { const: "until_expiration" } }, required: ["retention_class"] },
-    then: { properties: { expires_at: timestamp } },
-    else: { properties: { expires_at: { type: "null" } } },
-  },
-  {
-    if: { properties: { state: { enum: [...SOURCE_CUSTODY_CLOSED_STATES] } }, required: ["state"] },
-    then: { properties: { release_reason_code: identifier } },
-    else: { properties: { release_reason_code: { type: "null" } } },
-  },
-  {
-    if: { properties: { checkpoint_rooted: { const: true } }, required: ["checkpoint_rooted"] },
-    then: { properties: { state: { enum: [...SOURCE_CUSTODY_OPENABLE_STATES] } } },
-  },
-];
+// Custody is published as its own versioned record keyed by source_artifact_id, at
+// schemas/runtime/source-artifact-custody.schema.json beside the runtime artifact manifest
+// it must reconcile against. Folding it into the frozen version-1 source-artifact record
+// would have added a required member under an unchanged schema identity and invalidated
+// records that were exactly valid under it.
+export const SOURCE_ARTIFACT_CUSTODY_SCHEMA_VERSION = 2;
+// The one existing runtime artifact store publishes exactly one non-empty object per
+// reference. Durable custody bindings therefore use the backend range, not the wider
+// source-capture ceiling: a larger capture stays representable but is not retainable.
+export const MAX_RUNTIME_ARTIFACT_PAYLOAD_BYTES = 67108864;
 
 const sourceArtifact = closed({
   schema_version: supportedSourceVersion,
@@ -613,7 +573,6 @@ const sourceArtifact = closed({
   byte_length: nullable(boundedSourceBytes),
   sha256: nullable(digest),
   collected_at: timestamp,
-  custody: sourceCustody,
   source_artifact_sha256: digest,
 });
 sourceArtifact.allOf = [{
@@ -765,31 +724,68 @@ function contextManifestSemantic(record) {
   return true;
 }
 
-function sourceArtifactSemantic(record) {
-  if (!record || typeof record !== "object") return false;
-  const custody = record.custody;
+/**
+ * Reconciles one custody record with its source artifact and its backend manifest.
+ *
+ * The published schemas own field syntax, bounds, and required members. Admission is a
+ * three-record rule and therefore cannot be a single-record semantic validator: a retained
+ * custody record must name one existing runtime artifact and must repeat that artifact's
+ * exact sealed identity, payload, owner identities, and retention assignment. `manifest`
+ * must be the verified `RuntimeArtifactManifest` of the artifact the binding names, and is
+ * required exactly when custody retains a payload.
+ */
+export function validateSourceCustodyAdmission(custody, source, manifest) {
   if (!custody || typeof custody !== "object") return false;
+  if (!source || typeof source !== "object") return false;
+  if (custody.schema_version !== SOURCE_ARTIFACT_CUSTODY_SCHEMA_VERSION) return false;
+  if (custody.source_artifact_id !== source.source_artifact_id) return false;
   if (custody.backend !== SOURCE_CUSTODY_BACKEND) return false;
+  if (custody.artifact_kind !== SOURCE_CUSTODY_ARTIFACT_KIND) return false;
   if (!FROZEN_RUNTIME_ARTIFACT_KINDS.includes(custody.artifact_kind)) return false;
+
+  const retention = custody.retention;
+  if (!retention || typeof retention !== "object") return false;
+  const binding = custody.binding ?? null;
   const retained = custody.state !== "not_retained";
-  if (retained !== (custody.binding !== null && custody.binding !== undefined)) return false;
-  if (retained && record.capture_state !== "captured") return false;
+  if (retained !== (binding !== null)) return false;
+  if (retained !== SOURCE_DURABLE_RETENTION_CLASSES.includes(retention.kind)) return false;
+  const expiresAt = retention.expires_at_epoch_ms ?? null;
+  if ((retention.kind === "until_expiration") !== (expiresAt !== null)) return false;
+  const closedState = SOURCE_CUSTODY_CLOSED_STATES.includes(custody.state);
+  if (closedState !== ((custody.release_reason_code ?? null) !== null)) return false;
+  if (custody.checkpoint_rooted && !SOURCE_CUSTODY_OPENABLE_STATES.includes(custody.state)) return false;
+  if (retained && source.capture_state !== "captured") return false;
+
+  const sealed = manifest ?? null;
+  if (retained !== (sealed !== null)) return false;
   if (!retained) return true;
+
+  if (!Number.isSafeInteger(binding.byte_size)) return false;
+  if (binding.byte_size < 1 || binding.byte_size > MAX_RUNTIME_ARTIFACT_PAYLOAD_BYTES) return false;
+  if (binding.payload_sha256 !== source.sha256 || binding.byte_size !== source.byte_length) return false;
   return (
-    custody.binding.payload_sha256 === record.sha256
-    && custody.binding.byte_size === record.byte_length
+    sealed.schema_version === SOURCE_ARTIFACT_CUSTODY_SCHEMA_VERSION
+    && sealed.artifact_id === binding.runtime_artifact_id
+    && sealed.manifest_sha256 === binding.manifest_sha256
+    && sealed.kind === custody.artifact_kind
+    && sealed.payload_sha256 === binding.payload_sha256
+    && sealed.byte_size === binding.byte_size
+    && sealed.session_id === custody.owner_session_id
+    && sealed.task_id === custody.owner_task_id
+    && sealed.producer_run_id === custody.owner_run_id
+    && sealed.retention?.kind === retention.kind
+    && (sealed.retention?.expires_at_epoch_ms ?? null) === expiresAt
+    && (custody.state !== "active" || sealed.integrity === "verified")
   );
 }
 
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
-  "source-artifact": sourceArtifactSemantic,
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
-  "source-artifact": "custody.backend MUST name the one existing runtime artifact store, custody.artifact_kind MUST remain a member of the frozen RuntimeArtifactKind family, custody.binding MUST be present exactly when custody.state is not not_retained, a retained custody MUST belong to a captured source, and a retained custody.binding MUST repeat the exact source sha256 and byte_length.",
   "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
   "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",

@@ -10,26 +10,46 @@ import {
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
   FROZEN_RUNTIME_ARTIFACT_KINDS,
+  MAX_RUNTIME_ARTIFACT_PAYLOAD_BYTES,
   REUSED_SCHEMA_CONTRACTS,
+  SOURCE_ARTIFACT_CUSTODY_SCHEMA_VERSION,
   SOURCE_CUSTODY_ARTIFACT_KIND,
   SOURCE_CUSTODY_BACKEND,
   createEngineeringRuntimeValidator,
   schemaDocument,
   synchronize,
   validateEngineeringRuntimeRecord,
+  validateSourceCustodyAdmission,
 } from "../scripts/engineering_runtime_schemas.mjs";
+import {
+  createRuntimeValidators,
+  validateRuntimeRecord,
+} from "../scripts/validate_planning_schemas.mjs";
 
 const SHA = "a".repeat(64);
+const SEAL = "b".repeat(64);
 const SOURCE_TIMESTAMP = "2026-08-25T12:00:00Z";
+const runtimeValidators = createRuntimeValidators();
+
+function payloadBinding(payload_sha256, byte_size) {
+  return {
+    runtime_artifact_id: "runtime-artifact-1",
+    manifest_sha256: SEAL,
+    payload_sha256,
+    byte_size,
+  };
+}
+
 const RETAINED_CUSTODY = Object.freeze({
+  schema_version: SOURCE_ARTIFACT_CUSTODY_SCHEMA_VERSION,
+  source_artifact_id: "source-1",
   backend: "runtime_artifact_store",
   artifact_kind: "generated_file",
-  binding: { runtime_artifact_id: "runtime-artifact-1", payload_sha256: SHA, byte_size: 3 },
+  binding: payloadBinding(SHA, 3),
   owner_session_id: "session-1",
   owner_task_id: "task-1",
   owner_run_id: "run-1",
-  retention_class: "session",
-  expires_at: null,
+  retention: { kind: "session", expires_at_epoch_ms: null },
   state: "active",
   checkpoint_rooted: false,
   release_reason_code: null,
@@ -37,7 +57,7 @@ const RETAINED_CUSTODY = Object.freeze({
 const UNRETAINED_CUSTODY = Object.freeze({
   ...RETAINED_CUSTODY,
   binding: null,
-  retention_class: "ephemeral",
+  retention: { kind: "ephemeral", expires_at_epoch_ms: null },
   state: "not_retained",
 });
 
@@ -57,14 +77,48 @@ function sourceArtifactRecord(overrides = {}) {
     byte_length: 3,
     sha256: SHA,
     collected_at: SOURCE_TIMESTAMP,
-    custody: { ...RETAINED_CUSTODY },
     source_artifact_sha256: SHA,
     ...overrides,
   };
 }
 
-function payloadBinding(payload_sha256, byte_size) {
-  return { runtime_artifact_id: "runtime-artifact-1", payload_sha256, byte_size };
+function sealedManifest(overrides = {}) {
+  return {
+    schema_version: 2,
+    artifact_id: "runtime-artifact-1",
+    kind: "generated_file",
+    payload_sha256: SHA,
+    byte_size: 3,
+    media_type: "text/plain",
+    sensitivity: "internal",
+    retention: { kind: "session", expires_at_epoch_ms: null },
+    session_id: "session-1",
+    task_id: "task-1",
+    producer_run_id: "run-1",
+    producer_turn_id: null,
+    producer_operation_id: null,
+    receipt_id: null,
+    policy_id: "policy-1",
+    policy_sha256: SHA,
+    created_at_epoch_ms: 1700000000000,
+    integrity: "verified",
+    preview: null,
+    manifest_sha256: SEAL,
+    ...overrides,
+  };
+}
+
+function custodyRecordValid(record) {
+  return validateRuntimeRecord("source-artifact-custody", record, runtimeValidators).valid;
+}
+
+function uncapturedSource() {
+  return sourceArtifactRecord({
+    capture_state: "unavailable",
+    freshness_state: "unavailable",
+    byte_length: null,
+    sha256: null,
+  });
 }
 
 function ajvInstance() {
@@ -105,7 +159,6 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
     capture_state: "unavailable",
     byte_length: null,
     sha256: null,
-    custody: { ...UNRETAINED_CUSTODY },
   };
   assert.equal(validateArtifact(unavailable), true, JSON.stringify(validateArtifact.errors));
   assert.equal(validateArtifact({ ...unavailable, byte_length: 3 }), false);
@@ -225,140 +278,243 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
   assert.equal(validateDisposition({ ...disposition, ranges: overRanges }), false);
 });
 
-test("source-artifact custody assigns one logical owner and retention over the existing store", () => {
+test("the frozen version-1 source-artifact record keeps its exact required members", () => {
   const validateArtifact = validator("source-artifact");
-  const semantic = combinedValidator("source-artifact");
-  const retained = sourceArtifactRecord();
-  assert.equal(semantic(retained), true, JSON.stringify(validateArtifact.errors));
-
-  const { custody: _dropped, ...withoutCustody } = retained;
-  assert.equal(validateArtifact(withoutCustody), false, "custody is required");
+  const document = schemaDocument("source-artifact");
+  const captured = sourceArtifactRecord();
+  assert.equal(validateArtifact(captured), true, JSON.stringify(validateArtifact.errors));
+  assert.equal(document.properties.schema_version.const, 1);
+  assert.equal(document.required.includes("custody"), false, "version 1 never required custody");
   assert.equal(
-    validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, unknown_field: true } }),
+    Object.hasOwn(document.properties, "custody"),
+    false,
+    "custody is a separately versioned record, not a version-1 source-artifact member",
+  );
+  assert.equal(
+    validateArtifact({ ...captured, custody: { ...RETAINED_CUSTODY } }),
+    false,
+    "a version-1 record cannot silently carry the newer custody member",
+  );
+});
+
+test("source-artifact custody assigns one logical owner and retention over the existing store", () => {
+  assert.equal(SOURCE_ARTIFACT_CUSTODY_SCHEMA_VERSION, 2);
+  assert.equal(custodyRecordValid(RETAINED_CUSTODY), true);
+  assert.equal(custodyRecordValid(UNRETAINED_CUSTODY), true);
+  for (const schema_version of [1, 3]) {
+    assert.equal(
+      custodyRecordValid({ ...RETAINED_CUSTODY, schema_version }),
+      false,
+      `custody version ${schema_version} must fail closed`,
+    );
+  }
+  assert.equal(
+    custodyRecordValid({ ...RETAINED_CUSTODY, unknown_field: true }),
     false,
     "custody rejects unknown fields",
   );
-  for (const field of ["owner_session_id", "owner_task_id", "owner_run_id"]) {
-    const { [field]: _removed, ...withoutOwner } = RETAINED_CUSTODY;
+  for (const field of ["source_artifact_id", "owner_session_id", "owner_task_id", "owner_run_id"]) {
+    const { [field]: _removed, ...incomplete } = RETAINED_CUSTODY;
     assert.equal(
-      validateArtifact({ ...retained, custody: withoutOwner }),
+      custodyRecordValid(incomplete),
       false,
       `${field} must identify the owner of every retained source artifact`,
     );
   }
 
-  const ephemeral = sourceArtifactRecord({ custody: { ...UNRETAINED_CUSTODY } });
-  assert.equal(semantic(ephemeral), true, "ephemeral capture stays outside the durable store");
   assert.equal(
-    validateArtifact({ ...retained, custody: { ...UNRETAINED_CUSTODY, state: "active" } }),
+    custodyRecordValid({ ...UNRETAINED_CUSTODY, state: "active" }),
     false,
     "an ephemeral retention class cannot own an active durable reference",
   );
   assert.equal(
-    validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, binding: null } }),
+    custodyRecordValid({ ...RETAINED_CUSTODY, binding: null }),
     false,
     "an active reference requires an exact payload binding",
   );
   assert.equal(
-    validateArtifact({ ...retained, custody: { ...UNRETAINED_CUSTODY, binding: payloadBinding(SHA, 3) } }),
+    custodyRecordValid({ ...UNRETAINED_CUSTODY, binding: payloadBinding(SHA, 3) }),
     false,
     "an unretained custody cannot name payload bytes",
   );
-
-  const expiring = { ...RETAINED_CUSTODY, retention_class: "until_expiration", expires_at: SOURCE_TIMESTAMP };
-  assert.equal(validateArtifact({ ...retained, custody: expiring }), true);
+  const { manifest_sha256: _unsealed, ...unsealedBinding } = payloadBinding(SHA, 3);
   assert.equal(
-    validateArtifact({ ...retained, custody: { ...expiring, expires_at: null } }),
+    custodyRecordValid({ ...RETAINED_CUSTODY, binding: unsealedBinding }),
+    false,
+    "a binding must name the manifest seal that grants it meaning",
+  );
+
+  const expiring = { ...RETAINED_CUSTODY, retention: { kind: "until_expiration", expires_at_epoch_ms: 1800000000000 } };
+  assert.equal(custodyRecordValid(expiring), true);
+  assert.equal(
+    custodyRecordValid({ ...expiring, retention: { kind: "until_expiration", expires_at_epoch_ms: null } }),
     false,
     "expiring retention requires an exact expiration",
   );
   assert.equal(
-    validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, expires_at: SOURCE_TIMESTAMP } }),
+    custodyRecordValid({ ...RETAINED_CUSTODY, retention: { kind: "session", expires_at_epoch_ms: 1800000000000 } }),
     false,
-    "session retention has no expiration timestamp",
+    "session retention has no expiration",
   );
 
   for (const state of ["quarantined", "released", "deleted"]) {
     assert.equal(
-      validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, state } }),
+      custodyRecordValid({ ...RETAINED_CUSTODY, state }),
       false,
       `${state} requires a stable reason code`,
     );
     assert.equal(
-      validateArtifact({
-        ...retained,
-        custody: { ...RETAINED_CUSTODY, state, release_reason_code: "owner-release" },
-      }),
+      custodyRecordValid({ ...RETAINED_CUSTODY, state, release_reason_code: "owner-release" }),
       true,
       `${state} with a stable reason code is admitted`,
     );
   }
   assert.equal(
-    validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, release_reason_code: "owner-release" } }),
+    custodyRecordValid({ ...RETAINED_CUSTODY, release_reason_code: "owner-release" }),
     false,
     "an active reference carries no release reason",
   );
 
   const rooted = { ...RETAINED_CUSTODY, checkpoint_rooted: true };
-  assert.equal(validateArtifact({ ...retained, custody: rooted }), true);
+  assert.equal(custodyRecordValid(rooted), true);
   for (const state of ["released", "deleted"]) {
     assert.equal(
-      validateArtifact({ ...retained, custody: { ...rooted, state, release_reason_code: "owner-release" } }),
+      custodyRecordValid({ ...rooted, state, release_reason_code: "owner-release" }),
       false,
       `a current checkpoint must root the reference against ${state}`,
     );
   }
   assert.equal(
-    validateArtifact({ ...retained, custody: { ...UNRETAINED_CUSTODY, checkpoint_rooted: true } }),
+    custodyRecordValid({ ...UNRETAINED_CUSTODY, checkpoint_rooted: true }),
     false,
     "an unretained reference cannot root a checkpoint",
   );
+});
 
+test("durable custody bindings stay inside the existing runtime artifact payload bounds", () => {
+  assert.equal(MAX_RUNTIME_ARTIFACT_PAYLOAD_BYTES, 67108864);
+  const source = (byte_length) => sourceArtifactRecord({ byte_length });
+  for (const byte_size of [0, MAX_RUNTIME_ARTIFACT_PAYLOAD_BYTES + 1, 104857600]) {
+    const binding = payloadBinding(SHA, byte_size);
+    assert.equal(
+      custodyRecordValid({ ...RETAINED_CUSTODY, binding }),
+      false,
+      `${byte_size} bytes cannot be published as one backend object`,
+    );
+    assert.equal(
+      validateSourceCustodyAdmission(
+        { ...RETAINED_CUSTODY, binding },
+        source(byte_size),
+        sealedManifest({ byte_size }),
+      ),
+      false,
+      `${byte_size} bytes must fail admission`,
+    );
+  }
+  for (const byte_size of [1, MAX_RUNTIME_ARTIFACT_PAYLOAD_BYTES]) {
+    const binding = payloadBinding(SHA, byte_size);
+    assert.equal(
+      custodyRecordValid({ ...RETAINED_CUSTODY, binding }),
+      true,
+      `${byte_size} bytes must stay representable`,
+    );
+    assert.equal(
+      validateSourceCustodyAdmission(
+        { ...RETAINED_CUSTODY, binding },
+        source(byte_size),
+        sealedManifest({ byte_size }),
+      ),
+      true,
+      `${byte_size} bytes must stay sealable as one backend object`,
+    );
+  }
+});
+
+test("custody admission reconciles the source artifact with its exact runtime manifest", () => {
+  const source = sourceArtifactRecord();
+  assert.equal(validateSourceCustodyAdmission(RETAINED_CUSTODY, source, sealedManifest()), true);
   assert.equal(
-    semantic({ ...retained, custody: { ...RETAINED_CUSTODY, binding: payloadBinding("b".repeat(64), 3) } }),
+    validateSourceCustodyAdmission(RETAINED_CUSTODY, source, null),
+    false,
+    "a retained reference cannot be admitted without its authoritative manifest",
+  );
+  assert.equal(
+    validateSourceCustodyAdmission(UNRETAINED_CUSTODY, source, sealedManifest()),
+    false,
+    "an unretained record owns no backend object",
+  );
+  assert.equal(
+    validateSourceCustodyAdmission(UNRETAINED_CUSTODY, uncapturedSource(), null),
+    true,
+    "ephemeral capture stays outside the durable store",
+  );
+  assert.equal(
+    validateSourceCustodyAdmission(RETAINED_CUSTODY, uncapturedSource(), sealedManifest()),
+    false,
+    "an uncaptured source cannot retain a payload",
+  );
+  assert.equal(
+    validateSourceCustodyAdmission(RETAINED_CUSTODY, sourceArtifactRecord({ source_artifact_id: "source-2" }), sealedManifest()),
+    false,
+    "custody belongs to exactly one source artifact",
+  );
+
+  for (const drift of [
+    { schema_version: 1 },
+    { artifact_id: "runtime-artifact-2" },
+    { manifest_sha256: "c".repeat(64) },
+    { kind: "patch" },
+    { payload_sha256: "d".repeat(64) },
+    { byte_size: 4 },
+    { session_id: "session-2" },
+    { task_id: "task-2" },
+    { producer_run_id: "run-2" },
+    { retention: { kind: "user_hold", expires_at_epoch_ms: null } },
+    { integrity: "quarantined" },
+  ]) {
+    assert.equal(
+      validateSourceCustodyAdmission(RETAINED_CUSTODY, source, sealedManifest(drift)),
+      false,
+      `manifest drift must fail admission: ${JSON.stringify(drift)}`,
+    );
+  }
+
+  const wrongDigest = { ...RETAINED_CUSTODY, binding: payloadBinding("e".repeat(64), 3) };
+  assert.equal(
+    validateSourceCustodyAdmission(wrongDigest, source, sealedManifest({ payload_sha256: "e".repeat(64) })),
     false,
     "retained payload bytes must repeat the exact source digest",
   );
+  const wrongSize = { ...RETAINED_CUSTODY, binding: payloadBinding(SHA, 4) };
   assert.equal(
-    semantic({ ...retained, custody: { ...RETAINED_CUSTODY, binding: payloadBinding(SHA, 4) } }),
+    validateSourceCustodyAdmission(wrongSize, source, sealedManifest({ byte_size: 4 })),
     false,
     "retained payload bytes must repeat the exact source length",
   );
-  const unavailable = sourceArtifactRecord({
-    capture_state: "unavailable",
-    freshness_state: "unavailable",
-    byte_length: null,
-    sha256: null,
-  });
-  assert.equal(validateArtifact(unavailable), true, "the contradiction is semantic, not structural");
-  assert.equal(semantic(unavailable), false, "an uncaptured source cannot retain a payload");
-  assert.equal(semantic({ ...unavailable, custody: { ...UNRETAINED_CUSTODY } }), true);
 });
 
 test("source-artifact custody cannot widen the frozen artifact family or name a second store", () => {
-  const validateArtifact = validator("source-artifact");
-  const retained = sourceArtifactRecord();
   assert.equal(FROZEN_RUNTIME_ARTIFACT_KINDS.length, 7);
   assert.equal(FROZEN_RUNTIME_ARTIFACT_KINDS.includes(SOURCE_CUSTODY_ARTIFACT_KIND), true);
   assert.equal(SOURCE_CUSTODY_BACKEND, "runtime_artifact_store");
 
   for (const artifact_kind of FROZEN_RUNTIME_ARTIFACT_KINDS) {
     assert.equal(
-      validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, artifact_kind } }),
+      custodyRecordValid({ ...RETAINED_CUSTODY, artifact_kind }),
       artifact_kind === SOURCE_CUSTODY_ARTIFACT_KIND,
       `${artifact_kind} must match the single declared source custody kind`,
     );
   }
   for (const artifact_kind of ["source_artifact", "source_payload", "attachment"]) {
     assert.equal(
-      validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, artifact_kind } }),
+      custodyRecordValid({ ...RETAINED_CUSTODY, artifact_kind }),
       false,
       `${artifact_kind} must not widen the frozen artifact family`,
     );
   }
   for (const backend of ["source_artifact_store", "runtime_artifact_store_v2", "filesystem"]) {
     assert.equal(
-      validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, backend } }),
+      custodyRecordValid({ ...RETAINED_CUSTODY, backend }),
       false,
       `${backend} must not be representable as a second physical store`,
     );

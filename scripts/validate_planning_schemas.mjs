@@ -58,6 +58,7 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "runtime-artifact-manifest",
   "runtime-artifact-operator-view",
   "runtime-resume-binding",
+  "source-artifact-custody",
   "session-environment-capture",
   "write-aware-checkpoint",
   "command-preview",

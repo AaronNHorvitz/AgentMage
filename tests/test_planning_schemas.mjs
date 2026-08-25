@@ -361,6 +361,7 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "runtime-artifact-manifest",
     "runtime-artifact-operator-view",
     "runtime-resume-binding",
+    "source-artifact-custody",
     "session-environment-capture",
     "write-aware-checkpoint",
     "command-preview",

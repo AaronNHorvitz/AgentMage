@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/source-artifact-custody.schema.json",
+  "title": "AgentMage Source Artifact Custody",
+  "description": "Logical ownership and retention of one source artifact over the one existing runtime artifact store. This is a separately versioned record keyed by source_artifact_id; it is never a member of the frozen version-1 source-artifact record. Admission requires the verified runtime-artifact-manifest named by binding.runtime_artifact_id: artifact identity, manifest seal, kind, payload identity, owner identities, and retention assignment must reconcile exactly.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_artifact_id",
+    "backend",
+    "artifact_kind",
+    "binding",
+    "owner_session_id",
+    "owner_task_id",
+    "owner_run_id",
+    "retention",
+    "state",
+    "checkpoint_rooted",
+    "release_reason_code"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "source_artifact_id": { "$ref": "#/$defs/sourceIdentifier" },
+    "backend": { "const": "runtime_artifact_store" },
+    "artifact_kind": { "const": "generated_file" },
+    "binding": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/binding" }]
+    },
+    "owner_session_id": { "$ref": "#/$defs/sourceIdentifier" },
+    "owner_task_id": { "$ref": "#/$defs/sourceIdentifier" },
+    "owner_run_id": { "$ref": "#/$defs/sourceIdentifier" },
+    "retention": { "$ref": "#/$defs/retention" },
+    "state": {
+      "enum": ["not_retained", "active", "quarantined", "released", "deleted"]
+    },
+    "checkpoint_rooted": { "type": "boolean" },
+    "release_reason_code": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sourceIdentifier" }]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "state": { "const": "not_retained" } },
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "binding": { "type": "null" },
+          "retention": { "properties": { "kind": { "const": "ephemeral" } } },
+          "checkpoint_rooted": { "const": false }
+        }
+      },
+      "else": {
+        "properties": {
+          "binding": { "$ref": "#/$defs/binding" },
+          "retention": {
+            "properties": {
+              "kind": { "enum": ["session", "until_expiration", "user_hold"] }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "retention": {
+            "properties": { "kind": { "const": "until_expiration" } },
+            "required": ["kind"]
+          }
+        },
+        "required": ["retention"]
+      },
+      "then": {
+        "properties": {
+          "retention": {
+            "properties": {
+              "expires_at_epoch_ms": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "retention": {
+            "properties": { "expires_at_epoch_ms": { "type": "null" } }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": { "enum": ["quarantined", "released", "deleted"] }
+        },
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "release_reason_code": { "$ref": "#/$defs/sourceIdentifier" }
+        }
+      },
+      "else": {
+        "properties": { "release_reason_code": { "type": "null" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "checkpoint_rooted": { "const": true } },
+        "required": ["checkpoint_rooted"]
+      },
+      "then": {
+        "properties": { "state": { "enum": ["active", "quarantined"] } }
+      }
+    }
+  ],
+  "$defs": {
+    "sourceIdentifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "artifactIdentifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtime_artifact_id",
+        "manifest_sha256",
+        "payload_sha256",
+        "byte_size"
+      ],
+      "properties": {
+        "runtime_artifact_id": { "$ref": "#/$defs/artifactIdentifier" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" },
+        "payload_sha256": { "$ref": "#/$defs/sha256" },
+        "byte_size": { "type": "integer", "minimum": 1, "maximum": 67108864 }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "expires_at_epoch_ms"],
+      "properties": {
+        "kind": {
+          "enum": ["ephemeral", "session", "until_expiration", "user_hold"]
+        },
+        "expires_at_epoch_ms": {
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+        }
+      }
+    }
+  }
+}
