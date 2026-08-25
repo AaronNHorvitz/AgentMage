@@ -901,3 +901,235 @@ pub struct CanonicalTerminalResult {
     /// Digest of this result with this field zeroed.
     pub result_sha256: String,
 }
+
+/// Retention semantic for one logical source-artifact ownership record.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceArtifactRetentionClass {
+    /// Keep only for the current in-memory run.
+    Ephemeral,
+    /// Retain under the owning session lifecycle.
+    Session,
+    /// Retain until the exact policy-selected expiration.
+    UntilExpiration,
+    /// Retain until an explicit user release.
+    UserHold,
+}
+
+/// Current lifecycle state exposed by one logical source-artifact retention record.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceArtifactRetentionLifecycleState {
+    /// Retention is current and the backend payload may be opened under policy.
+    Active,
+    /// Retention was released and the backend payload is eligible for collection.
+    Released,
+    /// Retention is quarantined pending operator review.
+    Quarantined,
+    /// Retention was already deleted; only metadata remains.
+    Deleted,
+}
+
+/// Logical source-artifact ownership and retention projected over the existing
+/// encrypted content-addressed runtime artifact backend.
+///
+/// The record binds one source artifact to its owning request, authority, session, task,
+/// and run and to exactly one payload already present in the runtime artifact backend.
+/// `payload_kind` reuses the closed [`RuntimeArtifactKind`](crate::RuntimeArtifactKind);
+/// the record therefore cannot widen that enum and cannot declare a second physical store.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceArtifactRetention {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable retention record identity.
+    pub retention_id: String,
+    /// Owning source-artifact identity.
+    pub source_artifact_id: String,
+    /// Request that introduced the source artifact.
+    pub request_id: String,
+    /// Authority under which the source was captured.
+    pub authority_id: String,
+    /// Owning session.
+    pub session_id: String,
+    /// Owning task.
+    pub task_id: String,
+    /// Runtime run responsible for admission.
+    pub run_id: String,
+    /// Existing content-addressed backend payload identity; never a native path.
+    pub payload_artifact_id: String,
+    /// Closed backend payload semantic family; this record cannot widen the enum.
+    pub payload_kind: crate::RuntimeArtifactKind,
+    /// SHA-256 content address of the exact backend payload.
+    pub payload_sha256: String,
+    /// Retention class.
+    pub retention_class: CanonicalSourceArtifactRetentionClass,
+    /// RFC 3339 expiration present only when `retention_class` is `UntilExpiration`.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub expires_at: Option<String>,
+    /// Stable code present only when `retention_class` is `UserHold`.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub hold_reason_code: Option<String>,
+    /// Current retention lifecycle state.
+    pub lifecycle_state: CanonicalSourceArtifactRetentionLifecycleState,
+    /// Stable current-state reason code.
+    pub reason_code: String,
+    /// Trusted RFC 3339 assignment time.
+    pub assigned_at: String,
+    /// Digest of this record with this field zeroed.
+    pub retention_sha256: String,
+}
+
+impl CanonicalSourceArtifactRetention {
+    /// Returns `true` when `retention_class` and its dependent optional fields agree.
+    ///
+    /// * `UntilExpiration` requires `expires_at` present and `hold_reason_code` absent.
+    /// * `UserHold` requires `hold_reason_code` present and `expires_at` absent.
+    /// * Every other class requires both to be absent.
+    #[must_use]
+    pub fn retention_class_consistent(&self) -> bool {
+        let expires_present = self.expires_at.is_some();
+        let hold_present = self.hold_reason_code.is_some();
+        match self.retention_class {
+            CanonicalSourceArtifactRetentionClass::UntilExpiration => {
+                expires_present && !hold_present
+            }
+            CanonicalSourceArtifactRetentionClass::UserHold => {
+                hold_present && !expires_present
+            }
+            CanonicalSourceArtifactRetentionClass::Ephemeral
+            | CanonicalSourceArtifactRetentionClass::Session => {
+                !expires_present && !hold_present
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod source_artifact_retention_tests {
+    use super::{
+        CanonicalSourceArtifactRetention, CanonicalSourceArtifactRetentionClass,
+        CanonicalSourceArtifactRetentionLifecycleState,
+    };
+    use crate::RuntimeArtifactKind;
+
+    const DIGEST: &str = "a1b2c3d4e5f60718293a4b5c6d7e8f900112233445566778899aabbccddeeff0";
+
+    fn base_record() -> CanonicalSourceArtifactRetention {
+        CanonicalSourceArtifactRetention {
+            schema_version: 1,
+            retention_id: "retention-1".to_string(),
+            source_artifact_id: "source-1".to_string(),
+            request_id: "request-1".to_string(),
+            authority_id: "authority-1".to_string(),
+            session_id: "session-1".to_string(),
+            task_id: "task-1".to_string(),
+            run_id: "run-1".to_string(),
+            payload_artifact_id: "artifact-1".to_string(),
+            payload_kind: RuntimeArtifactKind::GeneratedFile,
+            payload_sha256: DIGEST.to_string(),
+            retention_class: CanonicalSourceArtifactRetentionClass::Session,
+            expires_at: None,
+            hold_reason_code: None,
+            lifecycle_state: CanonicalSourceArtifactRetentionLifecycleState::Active,
+            reason_code: "admitted".to_string(),
+            assigned_at: "2026-08-25T12:00:00Z".to_string(),
+            retention_sha256: DIGEST.to_string(),
+        }
+    }
+
+    #[test]
+    fn round_trips_json_and_reuses_closed_payload_kind() {
+        let record = base_record();
+        let json = serde_json::to_string(&record).expect("serialize");
+        assert!(json.contains("\"payload_kind\":\"generated_file\""));
+        let decoded: CanonicalSourceArtifactRetention =
+            serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(decoded, record);
+    }
+
+    #[test]
+    fn rejects_unknown_payload_kind_that_would_widen_runtime_artifact_kind() {
+        let json = serde_json::to_string(&base_record())
+            .expect("serialize")
+            .replace("\"generated_file\"", "\"source_dataset\"");
+        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&json).is_err());
+    }
+
+    #[test]
+    fn rejects_unknown_and_missing_fields() {
+        let record = base_record();
+        let json = serde_json::to_string(&record).expect("serialize");
+        let with_extra = json.replace("{\"schema_version\"", "{\"unknown_field\":true,\"schema_version\"");
+        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&with_extra).is_err());
+        let without_owner = json.replace("\"task_id\":\"task-1\",", "");
+        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&without_owner).is_err());
+    }
+
+    #[test]
+    fn required_optional_fields_must_be_present_as_explicit_null() {
+        let json = serde_json::to_string(&base_record())
+            .expect("serialize")
+            .replace("\"expires_at\":null,", "");
+        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&json).is_err());
+    }
+
+    #[test]
+    fn retention_class_consistency_binds_ephemeral_and_session_to_no_expiration_or_hold() {
+        for class in [
+            CanonicalSourceArtifactRetentionClass::Ephemeral,
+            CanonicalSourceArtifactRetentionClass::Session,
+        ] {
+            let mut record = base_record();
+            record.retention_class = class;
+            assert!(record.retention_class_consistent());
+            record.expires_at = Some("2026-08-26T00:00:00Z".to_string());
+            assert!(!record.retention_class_consistent());
+            record.expires_at = None;
+            record.hold_reason_code = Some("user-hold".to_string());
+            assert!(!record.retention_class_consistent());
+        }
+    }
+
+    #[test]
+    fn retention_class_consistency_requires_expiration_only_for_until_expiration() {
+        let mut record = base_record();
+        record.retention_class = CanonicalSourceArtifactRetentionClass::UntilExpiration;
+        assert!(!record.retention_class_consistent());
+        record.expires_at = Some("2026-08-26T00:00:00Z".to_string());
+        assert!(record.retention_class_consistent());
+        record.hold_reason_code = Some("user-hold".to_string());
+        assert!(!record.retention_class_consistent());
+    }
+
+    #[test]
+    fn retention_class_consistency_requires_reason_code_only_for_user_hold() {
+        let mut record = base_record();
+        record.retention_class = CanonicalSourceArtifactRetentionClass::UserHold;
+        assert!(!record.retention_class_consistent());
+        record.hold_reason_code = Some("operator-hold".to_string());
+        assert!(record.retention_class_consistent());
+        record.expires_at = Some("2026-08-26T00:00:00Z".to_string());
+        assert!(!record.retention_class_consistent());
+    }
+
+    #[test]
+    fn lifecycle_states_serialize_snake_case_and_reject_unknown_values() {
+        let mut record = base_record();
+        for (state, expected) in [
+            (CanonicalSourceArtifactRetentionLifecycleState::Active, "active"),
+            (CanonicalSourceArtifactRetentionLifecycleState::Released, "released"),
+            (CanonicalSourceArtifactRetentionLifecycleState::Quarantined, "quarantined"),
+            (CanonicalSourceArtifactRetentionLifecycleState::Deleted, "deleted"),
+        ] {
+            record.lifecycle_state = state;
+            let json = serde_json::to_string(&record).expect("serialize");
+            assert!(json.contains(&format!("\"lifecycle_state\":\"{expected}\"")));
+        }
+        let record = base_record();
+        let json = serde_json::to_string(&record)
+            .expect("serialize")
+            .replace("\"lifecycle_state\":\"active\"", "\"lifecycle_state\":\"pending\"");
+        assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&json).is_err());
+    }
+}
