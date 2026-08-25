@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/extraction-result.schema.json",
+  "title": "AgentMage extraction-result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "extraction_id",
+    "source_artifact_id",
+    "extractor_id",
+    "extractor_version",
+    "source_sha256",
+    "output_sha256",
+    "media_type",
+    "disposition",
+    "section_ids",
+    "warnings",
+    "truncated",
+    "reproducible",
+    "terminal"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "extraction_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "source_artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "extractor_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "extractor_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "output_sha256": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "media_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "disposition": {
+      "enum": [
+        "captured",
+        "parsed",
+        "partially_parsed",
+        "unsupported",
+        "denied",
+        "unavailable",
+        "failed",
+        "omitted"
+      ]
+    },
+    "section_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "truncated": {
+      "type": "boolean"
+    },
+    "reproducible": {
+      "type": "boolean"
+    },
+    "terminal": {
+      "const": true
+    }
+  }
+}

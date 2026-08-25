@@ -442,12 +442,141 @@ const completionEvidence = closed({
   completion_evidence_sha256: digest,
 });
 
+export const SOURCE_ARTIFACT_SCHEMA_VERSION = 1;
+export const MAX_SOURCE_ARTIFACT_BYTE_LENGTH = 104857600;
+const supportedSourceVersion = { type: "integer", const: SOURCE_ARTIFACT_SCHEMA_VERSION };
+const boundedSourceBytes = { type: "integer", minimum: 0, maximum: MAX_SOURCE_ARTIFACT_BYTE_LENGTH };
+const originClass = { enum: ["paste", "request_reference", "file", "uri", "directory", "archive", "tool_output", "unsupported"] };
+const referenceClass = { enum: ["paste", "request_reference", "file_path", "virtual_uri", "remote_uri", "directory", "archive", "unsupported"] };
+const freshnessState = { enum: ["fresh", "stale", "renamed", "replaced", "missing", "unavailable", "unsupported"] };
+const captureStateEnum = { enum: ["captured", "unavailable", "unsupported", "denied", "failed"] };
+const classificationEnum = { enum: ["public", "internal", "confidential", "restricted"] };
+const dispositionEnum = { enum: ["included", "summarized", "truncated", "duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"] };
+const sectionKindEnum = { enum: ["document_root", "heading", "paragraph", "list_item", "table", "code_block", "image_region", "page", "sheet", "cell", "log_cluster", "unknown"] };
+
+const origin = closed({
+  schema_version: supportedSourceVersion,
+  origin_id: identifier,
+  request_id: identifier,
+  authority_id: identifier,
+  origin_class: originClass,
+  captured_at: timestamp,
+  origin_sha256: digest,
+});
+
+const sourceReference = closed({
+  schema_version: supportedSourceVersion,
+  reference_id: identifier,
+  request_id: identifier,
+  authority_id: identifier,
+  reference_class: referenceClass,
+  reference_display: bounded,
+  support_state: { enum: ["supported", "unsupported", "ambient_prohibited"] },
+  reference_sha256: digest,
+  collected_at: timestamp,
+});
+
+const sourceProvenance = closed({
+  schema_version: supportedSourceVersion,
+  provenance_id: identifier,
+  source_artifact_id: identifier,
+  reference_id: identifier,
+  origin_id: identifier,
+  classification: classificationEnum,
+  freshness_state: freshnessState,
+  observed_at: timestamp,
+  collected_at: timestamp,
+  provenance_sha256: digest,
+});
+
+const sourceArtifact = closed({
+  schema_version: supportedSourceVersion,
+  source_artifact_id: identifier,
+  request_id: identifier,
+  authority_id: identifier,
+  reference_id: identifier,
+  origin_id: identifier,
+  provenance_sha256: digest,
+  declared_media_type: bounded,
+  classification: classificationEnum,
+  freshness_state: freshnessState,
+  capture_state: captureStateEnum,
+  byte_length: nullable(boundedSourceBytes),
+  sha256: nullable(digest),
+  collected_at: timestamp,
+  source_artifact_sha256: digest,
+});
+sourceArtifact.allOf = [{
+  if: { properties: { capture_state: { const: "captured" } }, required: ["capture_state"] },
+  then: {
+    properties: {
+      byte_length: boundedSourceBytes,
+      sha256: digest,
+      freshness_state: { enum: ["fresh", "renamed"] },
+    },
+  },
+  else: { properties: { byte_length: { type: "null" }, sha256: { type: "null" } } },
+}];
+
+const extractionResult = closed({
+  schema_version: supportedSourceVersion,
+  extraction_id: identifier,
+  source_artifact_id: identifier,
+  extractor_id: identifier,
+  extractor_version: bounded,
+  source_sha256: digest,
+  output_sha256: nullable(digest),
+  media_type: bounded,
+  disposition: { enum: ["captured", "parsed", "partially_parsed", "unsupported", "denied", "unavailable", "failed", "omitted"] },
+  section_ids: list(identifier),
+  warnings: list(bounded),
+  truncated: { type: "boolean" },
+  reproducible: { type: "boolean" },
+  terminal: { const: true },
+});
+
+const structuralSection = closed({
+  schema_version: supportedSourceVersion,
+  section_id: identifier,
+  source_artifact_id: identifier,
+  extraction_id: identifier,
+  parent_section_id: nullable(identifier),
+  ordinal: uint,
+  kind: sectionKindEnum,
+  byte_range: range,
+  line_range: nullable(range),
+  token_count: uint,
+  title: nullable(bounded),
+  content_sha256: digest,
+});
+
+const contextDisposition = closed({
+  schema_version: supportedSourceVersion,
+  disposition_id: identifier,
+  context_manifest_id: identifier,
+  source_artifact_id: identifier,
+  section_id: nullable(identifier),
+  disposition: dispositionEnum,
+  ranges: list(range),
+  token_count: uint,
+  reason_code: identifier,
+  reason: nullable(bounded),
+  terminal: { const: true },
+});
+
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
   "artifact-transformation": artifactTransformation,
   "artifact-ingestion-result": artifactIngestionResult,
   "context-manifest": contextManifest,
   "context-delivery-receipt": contextDeliveryReceipt,
+  "source-artifact": sourceArtifact,
+  "origin": origin,
+  "source-reference": sourceReference,
+  "source-provenance": sourceProvenance,
+  "extraction-result": extractionResult,
+  "structural-section": structuralSection,
+  "context-disposition": contextDisposition,
   "workflow-definition": workflowDefinition,
   "workflow-state": workflowState,
   "workflow-checkpoint": workflowCheckpoint,

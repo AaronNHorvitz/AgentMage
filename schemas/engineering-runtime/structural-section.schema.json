@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/structural-section.schema.json",
+  "title": "AgentMage structural-section",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "section_id",
+    "source_artifact_id",
+    "extraction_id",
+    "parent_section_id",
+    "ordinal",
+    "kind",
+    "byte_range",
+    "line_range",
+    "token_count",
+    "title",
+    "content_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "section_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "source_artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "extraction_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "parent_section_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ordinal": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "enum": [
+        "document_root",
+        "heading",
+        "paragraph",
+        "list_item",
+        "table",
+        "code_block",
+        "image_region",
+        "page",
+        "sheet",
+        "cell",
+        "log_cluster",
+        "unknown"
+      ]
+    },
+    "byte_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_byte",
+        "end_byte_exclusive"
+      ],
+      "properties": {
+        "start_byte": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_byte_exclusive": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "line_range": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "start_byte",
+            "end_byte_exclusive"
+          ],
+          "properties": {
+            "start_byte": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "end_byte_exclusive": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "token_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "title": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "content_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/origin.schema.json",
+  "title": "AgentMage origin",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "origin_id",
+    "request_id",
+    "authority_id",
+    "origin_class",
+    "captured_at",
+    "origin_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "origin_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "authority_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "origin_class": {
+      "enum": [
+        "paste",
+        "request_reference",
+        "file",
+        "uri",
+        "directory",
+        "archive",
+        "tool_output",
+        "unsupported"
+      ]
+    },
+    "captured_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "origin_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/context-disposition.schema.json",
+  "title": "AgentMage context-disposition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "disposition_id",
+    "context_manifest_id",
+    "source_artifact_id",
+    "section_id",
+    "disposition",
+    "ranges",
+    "token_count",
+    "reason_code",
+    "reason",
+    "terminal"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "disposition_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "context_manifest_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "source_artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "section_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "disposition": {
+      "enum": [
+        "included",
+        "summarized",
+        "truncated",
+        "duplicate",
+        "stale",
+        "unsupported",
+        "unavailable",
+        "restricted",
+        "omitted"
+      ]
+    },
+    "ranges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start_byte",
+          "end_byte_exclusive"
+        ],
+        "properties": {
+          "start_byte": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "end_byte_exclusive": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "token_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reason_code": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "reason": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "terminal": {
+      "const": true
+    }
+  }
+}

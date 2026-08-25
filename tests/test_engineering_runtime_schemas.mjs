@@ -20,9 +20,151 @@ function validator(name) {
 }
 
 test("generated Engineering Runtime schemas are current, closed, and compile", () => {
-  assert.equal(synchronize(), 19);
+  assert.equal(synchronize(), 26);
   assert.equal(Object.keys(REUSED_SCHEMA_CONTRACTS).length, 6);
-  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 19);
+  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 26);
+});
+
+test("source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes", () => {
+  const timestamp = "2026-08-25T12:00:00Z";
+  const captured = {
+    schema_version: 1,
+    source_artifact_id: "source-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    reference_id: "reference-1",
+    origin_id: "origin-1",
+    provenance_sha256: SHA,
+    declared_media_type: "text/plain",
+    classification: "internal",
+    freshness_state: "fresh",
+    capture_state: "captured",
+    byte_length: 3,
+    sha256: SHA,
+    collected_at: timestamp,
+    source_artifact_sha256: SHA,
+  };
+  const validateArtifact = validator("source-artifact");
+  assert.equal(validateArtifact(captured), true, JSON.stringify(validateArtifact.errors));
+  const { schema_version: _omitted, ...missingVersion } = captured;
+  assert.equal(validateArtifact(missingVersion), false);
+  assert.equal(validateArtifact({ ...captured, unknown_field: true }), false);
+  assert.equal(validateArtifact({ ...captured, sha256: "not-a-digest" }), false);
+  assert.equal(validateArtifact({ ...captured, freshness_state: "stale" }), false);
+  assert.equal(validateArtifact({ ...captured, byte_length: 200 * 1024 * 1024 }), false);
+  assert.equal(validateArtifact({ ...captured, schema_version: 2 }), false);
+  const unavailable = { ...captured, capture_state: "unavailable", byte_length: null, sha256: null };
+  assert.equal(validateArtifact(unavailable), true, JSON.stringify(validateArtifact.errors));
+  assert.equal(validateArtifact({ ...unavailable, byte_length: 3 }), false);
+
+  const origin = {
+    schema_version: 1,
+    origin_id: "origin-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    origin_class: "request_reference",
+    captured_at: timestamp,
+    origin_sha256: SHA,
+  };
+  const validateOrigin = validator("origin");
+  assert.equal(validateOrigin(origin), true, JSON.stringify(validateOrigin.errors));
+  assert.equal(validateOrigin({ ...origin, origin_class: "ambient" }), false);
+  assert.equal(validateOrigin({ ...origin, schema_version: 0 }), false);
+
+  const reference = {
+    schema_version: 1,
+    reference_id: "reference-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    reference_class: "request_reference",
+    reference_display: "supplied editor selection",
+    support_state: "supported",
+    reference_sha256: SHA,
+    collected_at: timestamp,
+  };
+  const validateReference = validator("source-reference");
+  assert.equal(validateReference(reference), true, JSON.stringify(validateReference.errors));
+  assert.equal(validateReference({ ...reference, reference_display: "" }), false);
+  assert.equal(validateReference({ ...reference, extra: "field" }), false);
+
+  const provenance = {
+    schema_version: 1,
+    provenance_id: "provenance-1",
+    source_artifact_id: "source-1",
+    reference_id: "reference-1",
+    origin_id: "origin-1",
+    classification: "internal",
+    freshness_state: "fresh",
+    observed_at: timestamp,
+    collected_at: timestamp,
+    provenance_sha256: SHA,
+  };
+  const validateProvenance = validator("source-provenance");
+  assert.equal(validateProvenance(provenance), true, JSON.stringify(validateProvenance.errors));
+  assert.equal(validateProvenance({ ...provenance, freshness_state: "elsewhere" }), false);
+  assert.equal(validateProvenance({ ...provenance, provenance_sha256: "short" }), false);
+
+  const extraction = {
+    schema_version: 1,
+    extraction_id: "extraction-1",
+    source_artifact_id: "source-1",
+    extractor_id: "extractor-1",
+    extractor_version: "1.0.0",
+    source_sha256: SHA,
+    output_sha256: SHA,
+    media_type: "text/plain",
+    disposition: "parsed",
+    section_ids: ["section-1"],
+    warnings: [],
+    truncated: false,
+    reproducible: true,
+    terminal: true,
+  };
+  const validateExtraction = validator("extraction-result");
+  assert.equal(validateExtraction(extraction), true, JSON.stringify(validateExtraction.errors));
+  assert.equal(validateExtraction({ ...extraction, terminal: false }), false);
+  assert.equal(validateExtraction({ ...extraction, disposition: "queued" }), false);
+  const bigWarnings = Array.from({ length: 257 }, (_, index) => `warning-${index}`);
+  assert.equal(validateExtraction({ ...extraction, warnings: bigWarnings }), false);
+
+  const section = {
+    schema_version: 1,
+    section_id: "section-1",
+    source_artifact_id: "source-1",
+    extraction_id: "extraction-1",
+    parent_section_id: null,
+    ordinal: 0,
+    kind: "heading",
+    byte_range: { start_byte: 0, end_byte_exclusive: 32 },
+    line_range: { start_byte: 1, end_byte_exclusive: 2 },
+    token_count: 8,
+    title: "Overview",
+    content_sha256: SHA,
+  };
+  const validateSection = validator("structural-section");
+  assert.equal(validateSection(section), true, JSON.stringify(validateSection.errors));
+  assert.equal(validateSection({ ...section, kind: "footnote" }), false);
+  assert.equal(validateSection({ ...section, schema_version: 99 }), false);
+
+  const disposition = {
+    schema_version: 1,
+    disposition_id: "disposition-1",
+    context_manifest_id: "context-1",
+    source_artifact_id: "source-1",
+    section_id: null,
+    disposition: "stale",
+    ranges: [],
+    token_count: 0,
+    reason_code: "source-mutated",
+    reason: null,
+    terminal: true,
+  };
+  const validateDisposition = validator("context-disposition");
+  assert.equal(validateDisposition(disposition), true, JSON.stringify(validateDisposition.errors));
+  assert.equal(validateDisposition({ ...disposition, disposition: "queued" }), false);
+  assert.equal(validateDisposition({ ...disposition, terminal: false }), false);
+  const overRanges = Array.from({ length: 257 }, () => ({ start_byte: 0, end_byte_exclusive: 1 }));
+  assert.equal(validateDisposition({ ...disposition, ranges: overRanges }), false);
 });
 
 test("multi-agent schemas require bounded workers and verifier-owned completion evidence", () => {

@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/source-artifact.schema.json",
+  "title": "AgentMage source-artifact",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_artifact_id",
+    "request_id",
+    "authority_id",
+    "reference_id",
+    "origin_id",
+    "provenance_sha256",
+    "declared_media_type",
+    "classification",
+    "freshness_state",
+    "capture_state",
+    "byte_length",
+    "sha256",
+    "collected_at",
+    "source_artifact_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "source_artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "authority_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "reference_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "origin_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "provenance_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "declared_media_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "classification": {
+      "enum": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted"
+      ]
+    },
+    "freshness_state": {
+      "enum": [
+        "fresh",
+        "stale",
+        "renamed",
+        "replaced",
+        "missing",
+        "unavailable",
+        "unsupported"
+      ]
+    },
+    "capture_state": {
+      "enum": [
+        "captured",
+        "unavailable",
+        "unsupported",
+        "denied",
+        "failed"
+      ]
+    },
+    "byte_length": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 104857600
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sha256": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_artifact_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "capture_state": {
+            "const": "captured"
+          }
+        },
+        "required": [
+          "capture_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "byte_length": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 104857600
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "freshness_state": {
+            "enum": [
+              "fresh",
+              "renamed"
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "byte_length": {
+            "type": "null"
+          },
+          "sha256": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

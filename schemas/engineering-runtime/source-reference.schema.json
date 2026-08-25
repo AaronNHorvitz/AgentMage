@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/source-reference.schema.json",
+  "title": "AgentMage source-reference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "reference_id",
+    "request_id",
+    "authority_id",
+    "reference_class",
+    "reference_display",
+    "support_state",
+    "reference_sha256",
+    "collected_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "reference_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "authority_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "reference_class": {
+      "enum": [
+        "paste",
+        "request_reference",
+        "file_path",
+        "virtual_uri",
+        "remote_uri",
+        "directory",
+        "archive",
+        "unsupported"
+      ]
+    },
+    "reference_display": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "support_state": {
+      "enum": [
+        "supported",
+        "unsupported",
+        "ambient_prohibited"
+      ]
+    },
+    "reference_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "collected_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
