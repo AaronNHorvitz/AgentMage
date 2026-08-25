@@ -558,9 +558,16 @@ artifact, and recovery contracts remain authoritative.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 1.2.1 - Freeze source-artifact contracts**
-  - [ ] **Sub-task 1.2.1.1:** Define closed, versioned source-artifact, origin, reference,
+  - [x] **Sub-task 1.2.1.1:** Define closed, versioned source-artifact, origin, reference,
     provenance, extraction-result, structural-section, context-disposition, and context-manifest
     schemas with missing, extra, malformed, stale, oversized, and unsupported-version rejection.
+    Evidence: the closed version-bound schema family in `schemas/engineering-runtime`, its
+    authoritative generator and semantic validators in `scripts/engineering_runtime_schemas.mjs`,
+    the Rust-owned context-item contract, and 17 focused schema tests cover required-field,
+    unknown-field, malformed, stale, oversized, unsupported-version, contradictory-disposition,
+    range-order, source-count, duplicate-identity, and token-accounting failures. The complete
+    local documentation, schema, workspace-test, strict-Clippy, formatting, and diff gates pass;
+    this contract closure makes no macOS, release, or later ingestion-runtime implementation claim.
   - [ ] **Sub-task 1.2.1.2:** Define logical source-artifact ownership and retention over the
     existing encrypted content-addressed backend without widening `RuntimeArtifactKind` or creating
     a second physical store.
