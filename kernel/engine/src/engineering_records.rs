@@ -494,10 +494,7 @@ impl ValidateCanonicalRecord for CanonicalSourceArtifactOwnership {
             CanonicalSourceOwnershipScope::UntilExpiration
         );
         if requires_expiration != self.expires_at.is_some() {
-            return Err(error(
-                "engineering.ownership.expires_binding",
-                "expires_at",
-            ));
+            return Err(error("engineering.ownership.expires_binding", "expires_at"));
         }
         if let Some(expires_at) = &self.expires_at {
             timestamp(expires_at, "expires_at")?;
@@ -515,10 +512,7 @@ impl ValidateCanonicalRecord for CanonicalSourceArtifactOwnership {
         if let Some(released_at) = &self.released_at {
             timestamp(released_at, "released_at")?;
         }
-        let is_deleted = matches!(
-            self.retention_state,
-            CanonicalSourceRetentionState::Deleted
-        );
+        let is_deleted = matches!(self.retention_state, CanonicalSourceRetentionState::Deleted);
         if self.deletion_effective != is_deleted {
             return Err(error(
                 "engineering.ownership.deletion_flag",
@@ -799,7 +793,10 @@ mod tests {
         let mut scoped_with_expiration = ownership();
         scoped_with_expiration.ownership_scope = CanonicalSourceOwnershipScope::SessionScoped;
         assert_eq!(
-            scoped_with_expiration.validate_canonical().unwrap_err().code,
+            scoped_with_expiration
+                .validate_canonical()
+                .unwrap_err()
+                .code,
             "engineering.ownership.expires_binding"
         );
 
