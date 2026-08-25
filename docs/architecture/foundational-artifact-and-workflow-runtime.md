@@ -285,6 +285,29 @@ residue. Normal digital documents never pay the OCR cost by default.
 
 ## 8. Artifact Storage and Retrieval
 
+### 8.1 Logical source-artifact ownership and retention
+
+A source artifact is a logical record, not a second physical store. The closed
+`schemas/engineering-runtime/source-artifact.schema.json` contract carries its
+ownership and retention fields directly, so one versioned record answers who
+owns the artifact, how long it is kept, and whether any bytes exist at all.
+
+| Concern | Closed field | Rule |
+|---|---|---|
+| Retention root | `owner_class`, `owner_id`, `session_id`, `task_id` | Exactly one session, task, turn, request, checkpoint, or user hold owns the record |
+| Physical store | `payload_store_id` | Constant `runtime-payload-store-v1`; a second store identity is unrepresentable |
+| Byte binding | `payload_binding`, `runtime_artifact_id`, `shared_payload_reference_count` | `metadata_only` keeps no bytes and no payload reference; `shared_runtime_payload` requires captured bytes and at least one reference to an existing content-addressed object |
+| Retention assignment | `retention_class`, `expires_at` | Session, task, checkpoint, user-hold, and not-retained classes carry no expiration; only `expiring` carries a timestamp strictly later than `collected_at` |
+| Current state | `lifecycle`, `integrity`, `cleanup`, `lifecycle_revision`, `reason_code` | Exactly the existing `RuntimeArtifactLifecycleState`, `RuntimeArtifactIntegrityState`, and `RuntimeArtifactCleanupState` value sets, with a deterministic reason code for every non-active state |
+| Checkpoint root | `checkpoint_reference_count` | A current checkpoint reference keeps the record active and retained; release is rejected |
+
+Because the record names an existing artifact identity rather than declaring a
+new payload family, `RuntimeArtifactKind` is unchanged. A source artifact never
+becomes a runtime-generated kind, and no logical ownership record can create,
+name, or imply a second payload namespace.
+
+### 8.2 Physical storage and retrieval
+
 Source bytes are memory-only by default. When session resume or explicit user
 retention requires caching and policy permits it, payloads are encrypted and
 content-addressed under the approved local data root through the existing

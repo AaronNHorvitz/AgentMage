@@ -10,6 +10,7 @@ import {
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
   REUSED_SCHEMA_CONTRACTS,
+  SOURCE_ARTIFACT_PAYLOAD_STORE_ID,
   createEngineeringRuntimeValidator,
   schemaDocument,
   synchronize,
@@ -17,6 +18,24 @@ import {
 } from "../scripts/engineering_runtime_schemas.mjs";
 
 const SHA = "a".repeat(64);
+const RETAINED_OWNERSHIP = Object.freeze({
+  session_id: "session-1",
+  task_id: "task-1",
+  owner_class: "session",
+  owner_id: "session-1",
+  payload_store_id: SOURCE_ARTIFACT_PAYLOAD_STORE_ID,
+  payload_binding: "shared_runtime_payload",
+  runtime_artifact_id: "artifact-1",
+  retention_class: "session_scoped",
+  expires_at: null,
+  lifecycle: "active",
+  integrity: "verified",
+  cleanup: "retained",
+  lifecycle_revision: 1,
+  checkpoint_reference_count: 0,
+  shared_payload_reference_count: 1,
+  reason_code: null,
+});
 
 function ajvInstance() {
   const ajv = new Ajv2020({ allErrors: true, strict: true });
@@ -55,6 +74,7 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
     capture_state: "captured",
     byte_length: 3,
     sha256: SHA,
+    ...RETAINED_OWNERSHIP,
     collected_at: timestamp,
     source_artifact_sha256: SHA,
   };
@@ -67,7 +87,15 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
   assert.equal(validateArtifact({ ...captured, freshness_state: "stale" }), false);
   assert.equal(validateArtifact({ ...captured, byte_length: 200 * 1024 * 1024 }), false);
   assert.equal(validateArtifact({ ...captured, schema_version: 2 }), false);
-  const unavailable = { ...captured, capture_state: "unavailable", byte_length: null, sha256: null };
+  const unavailable = {
+    ...captured,
+    capture_state: "unavailable",
+    byte_length: null,
+    sha256: null,
+    payload_binding: "metadata_only",
+    runtime_artifact_id: null,
+    shared_payload_reference_count: 0,
+  };
   assert.equal(validateArtifact(unavailable), true, JSON.stringify(validateArtifact.errors));
   assert.equal(validateArtifact({ ...unavailable, byte_length: 3 }), false);
 
@@ -894,6 +922,215 @@ test("context-disposition terminal states forbid ranges and tokens outside admit
       `${state} must not claim admitted tokens`,
     );
   }
+});
+
+test("source-artifact ownership binds one logical owner to the single existing payload store", () => {
+  const validateArtifact = combinedValidator("source-artifact");
+  const retained = {
+    schema_version: 1,
+    source_artifact_id: "source-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    reference_id: "reference-1",
+    origin_id: "origin-1",
+    provenance_sha256: SHA,
+    declared_media_type: "text/plain",
+    classification: "internal",
+    freshness_state: "fresh",
+    capture_state: "captured",
+    byte_length: 3,
+    sha256: SHA,
+    ...RETAINED_OWNERSHIP,
+    collected_at: "2026-08-25T12:00:00Z",
+    source_artifact_sha256: SHA,
+  };
+  assert.equal(validateArtifact(retained), true);
+  assert.equal(
+    validateArtifact({ ...retained, payload_store_id: "second-source-store-v1" }),
+    false,
+    "a second physical payload store is unrepresentable",
+  );
+  assert.equal(
+    validateArtifact({ ...retained, runtime_artifact_kind: "generated_file" }),
+    false,
+    "a source artifact cannot widen RuntimeArtifactKind through an extra field",
+  );
+
+  const metadataOnly = {
+    ...retained,
+    payload_binding: "metadata_only",
+    runtime_artifact_id: null,
+    shared_payload_reference_count: 0,
+  };
+  assert.equal(validateArtifact(metadataOnly), true, "retained metadata without payload bytes is admitted");
+  assert.equal(
+    validateArtifact({ ...metadataOnly, runtime_artifact_id: "artifact-1" }),
+    false,
+    "metadata-only ownership cannot name a payload object",
+  );
+  assert.equal(
+    validateArtifact({ ...metadataOnly, shared_payload_reference_count: 1 }),
+    false,
+    "metadata-only ownership cannot hold a payload reference",
+  );
+  assert.equal(
+    validateArtifact({ ...retained, shared_payload_reference_count: 0 }),
+    false,
+    "a shared payload binding must hold at least one payload reference",
+  );
+  assert.equal(
+    validateArtifact({
+      ...retained,
+      capture_state: "unavailable",
+      byte_length: null,
+      sha256: null,
+      freshness_state: "unavailable",
+    }),
+    false,
+    "an uncaptured source cannot claim a stored payload",
+  );
+  assert.equal(
+    validateArtifact({ ...retained, retention_class: "not_retained" }),
+    false,
+    "not_retained ownership cannot bind stored payload bytes",
+  );
+  assert.equal(
+    validateArtifact({ ...metadataOnly, retention_class: "not_retained" }),
+    true,
+    "not_retained ownership remains valid without payload bytes",
+  );
+});
+
+test("source-artifact retention reuses the exact runtime artifact lifecycle, integrity, and cleanup states", () => {
+  const validateArtifact = combinedValidator("source-artifact");
+  const base = {
+    schema_version: 1,
+    source_artifact_id: "source-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    reference_id: "reference-1",
+    origin_id: "origin-1",
+    provenance_sha256: SHA,
+    declared_media_type: "text/plain",
+    classification: "internal",
+    freshness_state: "fresh",
+    capture_state: "captured",
+    byte_length: 3,
+    sha256: SHA,
+    ...RETAINED_OWNERSHIP,
+    collected_at: "2026-08-25T12:00:00Z",
+    source_artifact_sha256: SHA,
+  };
+  assert.equal(validateArtifact(base), true);
+  assert.equal(
+    validateArtifact({ ...base, integrity: "missing" }),
+    false,
+    "an active reference cannot claim a missing payload",
+  );
+  assert.equal(
+    validateArtifact({ ...base, reason_code: "released-by-user" }),
+    false,
+    "an active reference carries no state reason code",
+  );
+  for (const integrity of ["quarantined", "missing", "corrupt"]) {
+    assert.equal(
+      validateArtifact({
+        ...base,
+        lifecycle: "quarantined",
+        integrity,
+        cleanup: "blocked",
+        reason_code: `integrity-${integrity}`,
+      }),
+      true,
+      `${integrity} integrity blocks cleanup`,
+    );
+    assert.equal(
+      validateArtifact({
+        ...base,
+        lifecycle: "quarantined",
+        integrity,
+        cleanup: "eligible",
+        reason_code: `integrity-${integrity}`,
+      }),
+      false,
+      `${integrity} integrity cannot report eligible cleanup`,
+    );
+  }
+  const released = {
+    ...base,
+    lifecycle: "released",
+    integrity: "verified",
+    cleanup: "eligible",
+    reason_code: "session-closed",
+  };
+  assert.equal(validateArtifact(released), true);
+  assert.equal(
+    validateArtifact({ ...released, cleanup: "retained" }),
+    false,
+    "a released reference cannot report retained cleanup",
+  );
+  assert.equal(
+    validateArtifact({ ...released, reason_code: null }),
+    false,
+    "every non-active state requires a deterministic reason code",
+  );
+  const deleted = {
+    ...base,
+    lifecycle: "deleted",
+    integrity: "deleted",
+    cleanup: "completed",
+    reason_code: "retention-expired",
+  };
+  assert.equal(validateArtifact(deleted), true);
+  assert.equal(
+    validateArtifact({ ...deleted, integrity: "verified" }),
+    false,
+    "a deleted reference cannot claim a verified payload",
+  );
+
+  assert.equal(
+    validateArtifact({ ...base, retention_class: "checkpoint_rooted" }),
+    false,
+    "checkpoint-rooted retention requires at least one checkpoint reference",
+  );
+  assert.equal(
+    validateArtifact({ ...base, retention_class: "checkpoint_rooted", checkpoint_reference_count: 1 }),
+    true,
+  );
+  assert.equal(
+    validateArtifact({ ...released, retention_class: "checkpoint_rooted", checkpoint_reference_count: 1 }),
+    false,
+    "a current checkpoint reference is a retention root that blocks release",
+  );
+
+  for (const retention_class of ["session_scoped", "task_scoped", "user_hold", "not_retained"]) {
+    assert.equal(
+      validateArtifact({
+        ...base,
+        payload_binding: "metadata_only",
+        runtime_artifact_id: null,
+        shared_payload_reference_count: 0,
+        retention_class,
+        expires_at: "2026-08-26T12:00:00Z",
+      }),
+      false,
+      `${retention_class} retention carries no expiration timestamp`,
+    );
+  }
+  assert.equal(
+    validateArtifact({ ...base, retention_class: "expiring", expires_at: null }),
+    false,
+    "expiring retention requires an expiration timestamp",
+  );
+  assert.equal(
+    validateArtifact({ ...base, retention_class: "expiring", expires_at: "2026-08-26T12:00:00Z" }),
+    true,
+  );
+  assert.equal(
+    validateArtifact({ ...base, retention_class: "expiring", expires_at: "2026-08-25T12:00:00Z" }),
+    false,
+    "expiring retention must end strictly after collection",
+  );
 });
 
 test("context-disposition and context-manifest impose matching reason_code rules for each disposition", () => {

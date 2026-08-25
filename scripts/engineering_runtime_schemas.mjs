@@ -538,6 +538,15 @@ const sourceProvenance = closed({
   provenance_sha256: digest,
 });
 
+export const SOURCE_ARTIFACT_PAYLOAD_STORE_ID = "runtime-payload-store-v1";
+export const SOURCE_BLOCKED_INTEGRITY_STATES = Object.freeze(["quarantined", "missing", "corrupt"]);
+const ownerClassEnum = { enum: ["session", "task", "turn", "request", "checkpoint", "user_hold"] };
+const payloadBindingEnum = { enum: ["metadata_only", "shared_runtime_payload"] };
+const retentionClassEnum = { enum: ["session_scoped", "task_scoped", "checkpoint_rooted", "user_hold", "expiring", "not_retained"] };
+const lifecycleEnum = { enum: ["active", "quarantined", "released", "deleted"] };
+const integrityEnum = { enum: ["verified", "quarantined", "missing", "corrupt", "deleted"] };
+const cleanupEnum = { enum: ["retained", "eligible", "blocked", "completed"] };
+
 const sourceArtifact = closed({
   schema_version: supportedSourceVersion,
   source_artifact_id: identifier,
@@ -552,20 +561,86 @@ const sourceArtifact = closed({
   capture_state: captureStateEnum,
   byte_length: nullable(boundedSourceBytes),
   sha256: nullable(digest),
+  session_id: identifier,
+  task_id: identifier,
+  owner_class: ownerClassEnum,
+  owner_id: identifier,
+  payload_store_id: { const: SOURCE_ARTIFACT_PAYLOAD_STORE_ID },
+  payload_binding: payloadBindingEnum,
+  runtime_artifact_id: nullable(identifier),
+  retention_class: retentionClassEnum,
+  expires_at: nullable(timestamp),
+  lifecycle: lifecycleEnum,
+  integrity: integrityEnum,
+  cleanup: cleanupEnum,
+  lifecycle_revision: uint,
+  checkpoint_reference_count: uint,
+  shared_payload_reference_count: uint,
+  reason_code: nullable(identifier),
   collected_at: timestamp,
   source_artifact_sha256: digest,
 });
-sourceArtifact.allOf = [{
-  if: { properties: { capture_state: { const: "captured" } }, required: ["capture_state"] },
-  then: {
-    properties: {
-      byte_length: boundedSourceBytes,
-      sha256: digest,
-      freshness_state: { enum: ["fresh", "renamed"] },
+sourceArtifact.allOf = [
+  {
+    if: { properties: { capture_state: { const: "captured" } }, required: ["capture_state"] },
+    then: {
+      properties: {
+        byte_length: boundedSourceBytes,
+        sha256: digest,
+        freshness_state: { enum: ["fresh", "renamed"] },
+      },
+    },
+    else: { properties: { byte_length: { type: "null" }, sha256: { type: "null" } } },
+  },
+  {
+    if: { properties: { payload_binding: { const: "shared_runtime_payload" } }, required: ["payload_binding"] },
+    then: {
+      properties: {
+        capture_state: { const: "captured" },
+        runtime_artifact_id: identifier,
+        shared_payload_reference_count: positive,
+      },
+    },
+    else: {
+      properties: {
+        runtime_artifact_id: { type: "null" },
+        shared_payload_reference_count: { const: 0 },
+      },
     },
   },
-  else: { properties: { byte_length: { type: "null" }, sha256: { type: "null" } } },
-}];
+  {
+    if: { properties: { retention_class: { const: "not_retained" } }, required: ["retention_class"] },
+    then: { properties: { payload_binding: { const: "metadata_only" } } },
+  },
+  {
+    if: { properties: { retention_class: { const: "expiring" } }, required: ["retention_class"] },
+    then: { properties: { expires_at: timestamp } },
+    else: { properties: { expires_at: { type: "null" } } },
+  },
+  {
+    if: { properties: { lifecycle: { const: "active" } }, required: ["lifecycle"] },
+    then: {
+      properties: {
+        integrity: { const: "verified" },
+        cleanup: { const: "retained" },
+        reason_code: { type: "null" },
+      },
+    },
+    else: { properties: { reason_code: identifier } },
+  },
+  {
+    if: { properties: { lifecycle: { const: "released" } }, required: ["lifecycle"] },
+    then: { properties: { integrity: { const: "verified" }, cleanup: { const: "eligible" } } },
+  },
+  {
+    if: { properties: { lifecycle: { const: "deleted" } }, required: ["lifecycle"] },
+    then: { properties: { integrity: { const: "deleted" }, cleanup: { const: "completed" } } },
+  },
+  {
+    if: { properties: { integrity: { enum: [...SOURCE_BLOCKED_INTEGRITY_STATES] } }, required: ["integrity"] },
+    then: { properties: { lifecycle: { const: "quarantined" }, cleanup: { const: "blocked" } } },
+  },
+];
 
 const EXTRACTION_PRODUCING_STATES = ["captured", "parsed", "partially_parsed"];
 const EXTRACTION_NON_PRODUCING_STATES = ["unsupported", "denied", "unavailable", "failed", "omitted"];
@@ -704,16 +779,33 @@ function contextManifestSemantic(record) {
   return true;
 }
 
+function sourceArtifactRetentionSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  const collected = Date.parse(record.collected_at);
+  if (!Number.isFinite(collected)) return false;
+  if (record.retention_class === "expiring") {
+    const expires = Date.parse(record.expires_at);
+    if (!Number.isFinite(expires) || expires <= collected) return false;
+  }
+  if (record.retention_class === "checkpoint_rooted" && record.checkpoint_reference_count < 1) return false;
+  if (record.checkpoint_reference_count > 0 && (record.lifecycle !== "active" || record.cleanup !== "retained")) {
+    return false;
+  }
+  return true;
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
+  "source-artifact": sourceArtifactRetentionSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
   "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
   "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",
+  "source-artifact": "An expiring retention_class MUST carry an expires_at strictly later than collected_at, a checkpoint_rooted retention_class MUST name at least one checkpoint reference, and any record with checkpoint_reference_count above zero MUST remain active and retained.",
 });
 
 export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, candidate) {

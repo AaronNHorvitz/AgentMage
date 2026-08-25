@@ -7,6 +7,9 @@ use crate::{
 };
 
 /// Closed semantic family for one runtime-generated payload.
+///
+/// Logical source artifacts reuse the same content-addressed payload store through their
+/// own ownership and retention metadata. They never add a member to this family.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RuntimeArtifactKind {
@@ -329,4 +332,54 @@ pub struct RuntimeContinuationState {
     pub artifacts: Vec<RuntimeArtifactRef>,
     /// Digest of this canonical record with this field set to all zeroes.
     pub continuation_sha256: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::RuntimeArtifactKind;
+
+    /// Names the closed kind family without a wildcard arm, so widening fails to compile.
+    fn kind_name(kind: RuntimeArtifactKind) -> &'static str {
+        match kind {
+            RuntimeArtifactKind::Patch => "patch",
+            RuntimeArtifactKind::StandardOutput => "standard_output",
+            RuntimeArtifactKind::StandardError => "standard_error",
+            RuntimeArtifactKind::TestLog => "test_log",
+            RuntimeArtifactKind::GeneratedFile => "generated_file",
+            RuntimeArtifactKind::Report => "report",
+            RuntimeArtifactKind::ModelOutput => "model_output",
+        }
+    }
+
+    #[test]
+    fn runtime_artifact_kind_stays_closed_to_logical_source_artifacts() {
+        let closed = [
+            RuntimeArtifactKind::Patch,
+            RuntimeArtifactKind::StandardOutput,
+            RuntimeArtifactKind::StandardError,
+            RuntimeArtifactKind::TestLog,
+            RuntimeArtifactKind::GeneratedFile,
+            RuntimeArtifactKind::Report,
+            RuntimeArtifactKind::ModelOutput,
+        ];
+        for kind in closed {
+            let encoded = serde_json::to_string(&kind).expect("kind encodes");
+            assert_eq!(encoded, format!("\"{}\"", kind_name(kind)));
+            let decoded: RuntimeArtifactKind =
+                serde_json::from_str(&encoded).expect("kind decodes");
+            assert_eq!(decoded, kind);
+        }
+        for rejected in [
+            "source_artifact",
+            "source_payload",
+            "extraction_output",
+            "structural_section",
+        ] {
+            let candidate = serde_json::from_str::<RuntimeArtifactKind>(&format!("\"{rejected}\""));
+            assert!(
+                candidate.is_err(),
+                "{rejected} must not widen the runtime artifact kind family"
+            );
+        }
+    }
 }

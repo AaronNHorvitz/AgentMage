@@ -214,6 +214,26 @@ reference collection unlinks verified ciphertext but does not claim independent
 per-payload cryptographic erasure because deduplicated payloads share references
 and the first format derives file keys from one store-scoped root.
 
+## Logical Source-Artifact Ownership
+
+Ingested source artifacts are a separate logical layer over this same boundary.
+Their closed contract lives in
+`schemas/engineering-runtime/source-artifact.schema.json` and reuses the exact
+lifecycle, integrity, and cleanup value sets defined above. It adds no store,
+no namespace, and no `RuntimeArtifactKind` member.
+
+| Rule | Effect |
+|---|---|
+| `payload_store_id` is the constant `runtime-payload-store-v1` | Ownership metadata cannot name a second physical store |
+| `payload_binding` is `metadata_only` or `shared_runtime_payload` | A source artifact either retains no bytes or shares one existing immutable content-addressed object |
+| A shared binding requires captured bytes and a nonzero payload-reference count | Ownership cannot claim bytes that were never admitted |
+| `lifecycle`, `integrity`, and `cleanup` agree exactly as in the table above | Missing, corrupt, and quarantined payloads stay blocked; deleted references stay completed |
+| A nonzero `checkpoint_reference_count` keeps the record active and retained | The current checkpoint remains a retention root for source artifacts too |
+| Only the `expiring` retention class carries `expires_at`, strictly after `collected_at` | Session, task, checkpoint, and user-hold retention keep no expiration timestamp |
+
+This is a frozen contract with schema and kernel-side closure tests. No
+ingestion runtime, migration, or physical retention behavior is claimed here.
+
 ## Checkpoint and Resume
 
 ```mermaid
@@ -332,6 +352,12 @@ Current automated coverage includes:
 - Closed primary tool-output classification for patch, standard output,
   standard error, test-log, generated-file, and report artifacts, with
   fail-closed missing/mismatched/model-output tests.
+- A closed `RuntimeArtifactKind` guard that names every member without a
+  wildcard arm and rejects source-artifact, source-payload, extraction-output,
+  and structural-section kind candidates.
+- Logical source-artifact ownership and retention mutation tests covering store
+  identity, payload binding, retention class, expiration ordering,
+  lifecycle/integrity/cleanup agreement, and checkpoint-rooted release refusal.
 - Separate bounded Linux command stdout/stderr and validation-log candidates,
   including independent large-stream artifact publication and native producer
   assertions.
