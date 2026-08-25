@@ -994,13 +994,9 @@ impl CanonicalSourceArtifactRetention {
             CanonicalSourceArtifactRetentionClass::UntilExpiration => {
                 expires_present && !hold_present
             }
-            CanonicalSourceArtifactRetentionClass::UserHold => {
-                hold_present && !expires_present
-            }
+            CanonicalSourceArtifactRetentionClass::UserHold => hold_present && !expires_present,
             CanonicalSourceArtifactRetentionClass::Ephemeral
-            | CanonicalSourceArtifactRetentionClass::Session => {
-                !expires_present && !hold_present
-            }
+            | CanonicalSourceArtifactRetentionClass::Session => !expires_present && !hold_present,
         }
     }
 }
@@ -1060,7 +1056,10 @@ mod source_artifact_retention_tests {
     fn rejects_unknown_and_missing_fields() {
         let record = base_record();
         let json = serde_json::to_string(&record).expect("serialize");
-        let with_extra = json.replace("{\"schema_version\"", "{\"unknown_field\":true,\"schema_version\"");
+        let with_extra = json.replace(
+            "{\"schema_version\"",
+            "{\"unknown_field\":true,\"schema_version\"",
+        );
         assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&with_extra).is_err());
         let without_owner = json.replace("\"task_id\":\"task-1\",", "");
         assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&without_owner).is_err());
@@ -1117,19 +1116,32 @@ mod source_artifact_retention_tests {
     fn lifecycle_states_serialize_snake_case_and_reject_unknown_values() {
         let mut record = base_record();
         for (state, expected) in [
-            (CanonicalSourceArtifactRetentionLifecycleState::Active, "active"),
-            (CanonicalSourceArtifactRetentionLifecycleState::Released, "released"),
-            (CanonicalSourceArtifactRetentionLifecycleState::Quarantined, "quarantined"),
-            (CanonicalSourceArtifactRetentionLifecycleState::Deleted, "deleted"),
+            (
+                CanonicalSourceArtifactRetentionLifecycleState::Active,
+                "active",
+            ),
+            (
+                CanonicalSourceArtifactRetentionLifecycleState::Released,
+                "released",
+            ),
+            (
+                CanonicalSourceArtifactRetentionLifecycleState::Quarantined,
+                "quarantined",
+            ),
+            (
+                CanonicalSourceArtifactRetentionLifecycleState::Deleted,
+                "deleted",
+            ),
         ] {
             record.lifecycle_state = state;
             let json = serde_json::to_string(&record).expect("serialize");
             assert!(json.contains(&format!("\"lifecycle_state\":\"{expected}\"")));
         }
         let record = base_record();
-        let json = serde_json::to_string(&record)
-            .expect("serialize")
-            .replace("\"lifecycle_state\":\"active\"", "\"lifecycle_state\":\"pending\"");
+        let json = serde_json::to_string(&record).expect("serialize").replace(
+            "\"lifecycle_state\":\"active\"",
+            "\"lifecycle_state\":\"pending\"",
+        );
         assert!(serde_json::from_str::<CanonicalSourceArtifactRetention>(&json).is_err());
     }
 }
