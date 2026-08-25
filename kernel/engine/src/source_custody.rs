@@ -161,8 +161,9 @@ const fn error(code: &'static str, field: &'static str) -> CanonicalRecordError 
 mod tests {
     use super::*;
     use agentmage_kernel_contracts::{
-        ContextSensitivity, PolicyId, RuntimeArtifactId, RuntimeArtifactKind, RuntimeEventRetention,
-        RuntimeRunId, SessionId, SourceCustodyBackend, SourceCustodyBinding, TaskId,
+        ContextSensitivity, PolicyId, RuntimeArtifactId, RuntimeArtifactKind,
+        RuntimeEventRetention, RuntimeRunId, SessionId, SourceCustodyBackend, SourceCustodyBinding,
+        TaskId,
     };
 
     const DIGEST: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
