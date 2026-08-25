@@ -10,6 +10,7 @@ import {
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
   REUSED_SCHEMA_CONTRACTS,
+  SOURCE_ARTIFACT_CLEANUP_BY_CUSTODY_STATE,
   createEngineeringRuntimeValidator,
   schemaDocument,
   synchronize,
@@ -17,6 +18,22 @@ import {
 } from "../scripts/engineering_runtime_schemas.mjs";
 
 const SHA = "a".repeat(64);
+const RETAINED_CUSTODY = Object.freeze({
+  owner_session_id: "session-1",
+  owner_task_id: "task-1",
+  retention: { kind: "session", expires_at_epoch_ms: null },
+  custody_state: "active",
+  cleanup_state: "retained",
+  payload_backend: "runtime_payload_store",
+  payload_artifact_kind: "generated_file",
+  payload_artifact_id: "runtime-artifact-1",
+  payload_sha256: SHA,
+});
+const DETACHED_CUSTODY = Object.freeze({
+  ...RETAINED_CUSTODY,
+  payload_artifact_id: null,
+  payload_sha256: null,
+});
 
 function ajvInstance() {
   const ajv = new Ajv2020({ allErrors: true, strict: true });
@@ -56,6 +73,7 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
     byte_length: 3,
     sha256: SHA,
     collected_at: timestamp,
+    custody: { ...RETAINED_CUSTODY },
     source_artifact_sha256: SHA,
   };
   const validateArtifact = validator("source-artifact");
@@ -67,9 +85,20 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
   assert.equal(validateArtifact({ ...captured, freshness_state: "stale" }), false);
   assert.equal(validateArtifact({ ...captured, byte_length: 200 * 1024 * 1024 }), false);
   assert.equal(validateArtifact({ ...captured, schema_version: 2 }), false);
-  const unavailable = { ...captured, capture_state: "unavailable", byte_length: null, sha256: null };
+  const unavailable = {
+    ...captured,
+    capture_state: "unavailable",
+    byte_length: null,
+    sha256: null,
+    custody: { ...DETACHED_CUSTODY },
+  };
   assert.equal(validateArtifact(unavailable), true, JSON.stringify(validateArtifact.errors));
   assert.equal(validateArtifact({ ...unavailable, byte_length: 3 }), false);
+  assert.equal(
+    validateArtifact({ ...unavailable, custody: { ...RETAINED_CUSTODY } }),
+    false,
+    "an uncaptured source must not name retained payload bytes",
+  );
 
   const origin = {
     schema_version: 1,
@@ -894,6 +923,117 @@ test("context-disposition terminal states forbid ranges and tokens outside admit
       `${state} must not claim admitted tokens`,
     );
   }
+});
+
+test("source-artifact custody keeps ownership and retention on the existing content-addressed store", () => {
+  const validateArtifact = validator("source-artifact");
+  const semanticArtifact = combinedValidator("source-artifact");
+  const base = {
+    schema_version: 1,
+    source_artifact_id: "source-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    reference_id: "reference-1",
+    origin_id: "origin-1",
+    provenance_sha256: SHA,
+    declared_media_type: "text/plain",
+    classification: "internal",
+    freshness_state: "fresh",
+    capture_state: "captured",
+    byte_length: 3,
+    sha256: SHA,
+    collected_at: "2026-08-25T12:00:00Z",
+    custody: { ...RETAINED_CUSTODY },
+    source_artifact_sha256: SHA,
+  };
+  const withCustody = (overrides) => ({ ...base, custody: { ...RETAINED_CUSTODY, ...overrides } });
+
+  assert.equal(validateArtifact(base), true, JSON.stringify(validateArtifact.errors));
+  assert.equal(semanticArtifact(base), true, "retained custody addresses the captured digest");
+  const { custody: _dropped, ...withoutCustody } = base;
+  assert.equal(validateArtifact(withoutCustody), false, "custody is required");
+  assert.equal(validateArtifact(withCustody({ unexpected: true })), false, "custody is closed");
+  assert.equal(
+    validateArtifact(withCustody({ payload_backend: "source_artifact_store" })),
+    false,
+    "a second physical payload store must be rejected",
+  );
+  for (const kind of ["patch", "standard_output", "standard_error", "test_log", "report", "model_output", "source_document"]) {
+    assert.equal(
+      validateArtifact(withCustody({ payload_artifact_kind: kind })),
+      false,
+      `${kind} must not replace the reused generated_file payload kind`,
+    );
+  }
+
+  const cleanupStates = Object.values(SOURCE_ARTIFACT_CLEANUP_BY_CUSTODY_STATE);
+  for (const [custodyState, cleanupState] of Object.entries(SOURCE_ARTIFACT_CLEANUP_BY_CUSTODY_STATE)) {
+    const detached = custodyState === "deleted"
+      ? { payload_artifact_id: null, payload_sha256: null }
+      : {};
+    assert.equal(
+      validateArtifact(withCustody({ custody_state: custodyState, cleanup_state: cleanupState, ...detached })),
+      true,
+      `${custodyState} admits its derived ${cleanupState} disposition`,
+    );
+    for (const rejected of cleanupStates.filter((state) => state !== cleanupState)) {
+      assert.equal(
+        validateArtifact(withCustody({ custody_state: custodyState, cleanup_state: rejected, ...detached })),
+        false,
+        `${custodyState} must not declare ${rejected}`,
+      );
+    }
+  }
+
+  assert.equal(
+    validateArtifact(withCustody({ custody_state: "deleted", cleanup_state: "completed" })),
+    false,
+    "deleted custody must not name retained payload bytes",
+  );
+  assert.equal(
+    validateArtifact(withCustody({ retention: { kind: "ephemeral", expires_at_epoch_ms: null } })),
+    false,
+    "memory-only retention must not name retained payload bytes",
+  );
+  assert.equal(
+    validateArtifact(withCustody({
+      retention: { kind: "ephemeral", expires_at_epoch_ms: null },
+      payload_artifact_id: null,
+      payload_sha256: null,
+    })),
+    true,
+    "memory-only retention without retained bytes is admitted",
+  );
+  assert.equal(
+    validateArtifact(withCustody({ retention: { kind: "until_expiration", expires_at_epoch_ms: null } })),
+    false,
+    "until_expiration retention requires an exact expiration",
+  );
+  assert.equal(
+    validateArtifact(withCustody({ retention: { kind: "until_expiration", expires_at_epoch_ms: 1 } })),
+    true,
+    "until_expiration retention carries its expiration",
+  );
+  assert.equal(
+    validateArtifact(withCustody({ retention: { kind: "session", expires_at_epoch_ms: 1 } })),
+    false,
+    "only until_expiration retention carries an expiration",
+  );
+  assert.equal(
+    semanticArtifact(withCustody({ payload_sha256: "b".repeat(64) })),
+    false,
+    "retained bytes must address the captured source digest",
+  );
+  assert.equal(
+    semanticArtifact(withCustody({ payload_artifact_id: null })),
+    false,
+    "payload identity and content address must be present together",
+  );
+  assert.equal(
+    semanticArtifact(withCustody({ payload_sha256: null })),
+    false,
+    "payload identity and content address must be present together",
+  );
 });
 
 test("context-disposition and context-manifest impose matching reason_code rules for each disposition", () => {

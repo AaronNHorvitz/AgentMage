@@ -1,5 +1,11 @@
 //! Canonical schema-bound records for the complete Engineering Runtime.
 
+use crate::{
+    RuntimeArtifactCleanupState, RuntimeArtifactId, RuntimeArtifactKind,
+    RuntimeArtifactLifecycleState, RuntimeArtifactRef, RuntimeEventRetention,
+    RuntimeEventRetentionKind, SessionId, TaskId,
+};
+
 /// One inclusive-exclusive byte range in an authoritative artifact.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -170,6 +176,132 @@ pub struct CanonicalArtifactTransformation {
     pub warnings: Vec<String>,
     /// Whether identical inputs and implementation reproduce the output.
     pub reproducible: bool,
+}
+
+/// Single admitted physical backend for retained source-artifact bytes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SourceArtifactPayloadBackend {
+    /// The existing encrypted content-addressed runtime payload store.
+    RuntimePayloadStore,
+}
+
+/// Exact existing runtime artifact kind reused for retained source bytes.
+///
+/// Source custody reuses one closed `RuntimeArtifactKind` variant so ingestion cannot
+/// widen the runtime artifact family to describe user-supplied sources.
+pub const SOURCE_ARTIFACT_PAYLOAD_KIND: RuntimeArtifactKind = RuntimeArtifactKind::GeneratedFile;
+
+/// Closed reason one source-artifact custody record is rejected.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SourceArtifactCustodyViolation {
+    /// The payload kind is not the single reused runtime artifact kind.
+    UnsupportedPayloadKind,
+    /// The declared cleanup state is not the disposition derived from custody state.
+    CleanupStateMismatch,
+    /// Only `UntilExpiration` retention carries an expiration.
+    RetentionExpirationMismatch,
+    /// Memory-only retention cannot name retained payload bytes.
+    EphemeralRetentionRetainsPayload,
+    /// Deleted custody cannot name retained payload bytes.
+    DeletedCustodyRetainsPayload,
+    /// Payload identity and content address must be absent or present together.
+    IncompletePayloadReference,
+    /// Retained bytes must address the exact captured source digest.
+    PayloadAddressMismatch,
+}
+
+impl SourceArtifactCustodyViolation {
+    /// Returns the stable content-free code for this violation.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::UnsupportedPayloadKind => "source.custody.payload_kind.unsupported",
+            Self::CleanupStateMismatch => "source.custody.cleanup_state.mismatch",
+            Self::RetentionExpirationMismatch => "source.custody.retention.expiration_mismatch",
+            Self::EphemeralRetentionRetainsPayload => "source.custody.retention.ephemeral_payload",
+            Self::DeletedCustodyRetainsPayload => "source.custody.deleted_payload",
+            Self::IncompletePayloadReference => "source.custody.payload_reference.incomplete",
+            Self::PayloadAddressMismatch => "source.custody.payload_address.mismatch",
+        }
+    }
+}
+
+/// Logical ownership, retention, and payload custody for one source artifact.
+///
+/// Custody is metadata only. It names the owning session and task, the exact retention
+/// assignment already used by runtime events and artifacts, and, when policy retains
+/// bytes, the existing content-addressed runtime payload reference. It defines no second
+/// physical store and no additional artifact kind.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceArtifactCustody {
+    /// Owning local session; knowledge of this identity grants no access by itself.
+    pub owner_session_id: SessionId,
+    /// Owning task.
+    pub owner_task_id: TaskId,
+    /// Exact retention assignment owned by canonical metadata.
+    pub retention: RuntimeEventRetention,
+    /// Current metadata lifecycle state for this logical source artifact.
+    pub custody_state: RuntimeArtifactLifecycleState,
+    /// Content-free cleanup disposition derived from `custody_state`.
+    pub cleanup_state: RuntimeArtifactCleanupState,
+    /// Single admitted physical payload backend.
+    pub payload_backend: SourceArtifactPayloadBackend,
+    /// Existing runtime artifact kind reused for retained bytes.
+    pub payload_artifact_kind: RuntimeArtifactKind,
+    /// Logical runtime artifact identity only while bytes remain retained.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub payload_artifact_id: Option<RuntimeArtifactId>,
+    /// Content address of retained bytes; equals the captured source digest.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub payload_sha256: Option<String>,
+}
+
+impl CanonicalSourceArtifactCustody {
+    /// Validates custody against the captured source digest, or `None` when nothing was captured.
+    ///
+    /// # Errors
+    ///
+    /// Returns the exact first violated custody rule.
+    pub fn validate(
+        &self,
+        captured_sha256: Option<&str>,
+    ) -> Result<(), SourceArtifactCustodyViolation> {
+        if self.payload_artifact_kind != SOURCE_ARTIFACT_PAYLOAD_KIND {
+            return Err(SourceArtifactCustodyViolation::UnsupportedPayloadKind);
+        }
+        if self.cleanup_state != self.custody_state.cleanup_state() {
+            return Err(SourceArtifactCustodyViolation::CleanupStateMismatch);
+        }
+        let expires = self.retention.expires_at_epoch_ms.is_some();
+        if expires != (self.retention.kind == RuntimeEventRetentionKind::UntilExpiration) {
+            return Err(SourceArtifactCustodyViolation::RetentionExpirationMismatch);
+        }
+        match (&self.payload_artifact_id, self.payload_sha256.as_deref()) {
+            (None, None) => Ok(()),
+            (Some(_), Some(address)) => {
+                if self.retention.kind == RuntimeEventRetentionKind::Ephemeral {
+                    return Err(SourceArtifactCustodyViolation::EphemeralRetentionRetainsPayload);
+                }
+                if self.custody_state == RuntimeArtifactLifecycleState::Deleted {
+                    return Err(SourceArtifactCustodyViolation::DeletedCustodyRetainsPayload);
+                }
+                if captured_sha256 != Some(address) {
+                    return Err(SourceArtifactCustodyViolation::PayloadAddressMismatch);
+                }
+                Ok(())
+            }
+            _ => Err(SourceArtifactCustodyViolation::IncompletePayloadReference),
+        }
+    }
+
+    /// Reports whether retained bytes name this exact existing runtime payload reference.
+    #[must_use]
+    pub fn matches_runtime_reference(&self, reference: &RuntimeArtifactRef) -> bool {
+        self.payload_artifact_id.as_ref() == Some(&reference.artifact_id)
+            && self.payload_sha256.as_deref() == Some(reference.payload_sha256.as_str())
+    }
 }
 
 /// Disposition of an artifact in one model context.
@@ -900,4 +1032,200 @@ pub struct CanonicalTerminalResult {
     pub established_by: String,
     /// Digest of this result with this field zeroed.
     pub result_sha256: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        CanonicalSourceArtifactCustody, SOURCE_ARTIFACT_PAYLOAD_KIND,
+        SourceArtifactCustodyViolation, SourceArtifactPayloadBackend,
+    };
+    use crate::{
+        CONTRACT_SCHEMA_VERSION, RuntimeArtifactCleanupState, RuntimeArtifactId,
+        RuntimeArtifactKind, RuntimeArtifactLifecycleState, RuntimeArtifactRef,
+        RuntimeEventRetention, RuntimeEventRetentionKind, SessionId, TaskId,
+    };
+
+    fn digest(seed: char) -> String {
+        seed.to_string().repeat(64)
+    }
+
+    fn retained() -> CanonicalSourceArtifactCustody {
+        CanonicalSourceArtifactCustody {
+            owner_session_id: SessionId::from_raw("session-1"),
+            owner_task_id: TaskId::from_raw("task-1"),
+            retention: RuntimeEventRetention {
+                kind: RuntimeEventRetentionKind::Session,
+                expires_at_epoch_ms: None,
+            },
+            custody_state: RuntimeArtifactLifecycleState::Active,
+            cleanup_state: RuntimeArtifactCleanupState::Retained,
+            payload_backend: SourceArtifactPayloadBackend::RuntimePayloadStore,
+            payload_artifact_kind: SOURCE_ARTIFACT_PAYLOAD_KIND,
+            payload_artifact_id: Some(RuntimeArtifactId::from_raw("runtime-artifact-1")),
+            payload_sha256: Some(digest('a')),
+        }
+    }
+
+    #[test]
+    fn retained_custody_reuses_the_existing_store_kind_and_backend() {
+        let custody = retained();
+
+        assert_eq!(SOURCE_ARTIFACT_PAYLOAD_KIND, RuntimeArtifactKind::GeneratedFile);
+        assert_eq!(custody.validate(Some(&digest('a'))), Ok(()));
+        assert_eq!(
+            serde_json::to_value(custody.payload_backend).expect("backend encodes"),
+            serde_json::json!("runtime_payload_store")
+        );
+        assert_eq!(
+            serde_json::to_value(custody.payload_artifact_kind).expect("kind encodes"),
+            serde_json::json!("generated_file")
+        );
+    }
+
+    #[test]
+    fn custody_cleanup_state_follows_the_single_lifecycle_derivation() {
+        for (custody_state, cleanup_state) in [
+            (RuntimeArtifactLifecycleState::Active, RuntimeArtifactCleanupState::Retained),
+            (RuntimeArtifactLifecycleState::Quarantined, RuntimeArtifactCleanupState::Blocked),
+            (RuntimeArtifactLifecycleState::Released, RuntimeArtifactCleanupState::Eligible),
+            (RuntimeArtifactLifecycleState::Deleted, RuntimeArtifactCleanupState::Completed),
+        ] {
+            assert_eq!(custody_state.cleanup_state(), cleanup_state);
+            let mut custody = retained();
+            custody.custody_state = custody_state;
+            custody.cleanup_state = cleanup_state;
+            if custody_state == RuntimeArtifactLifecycleState::Deleted {
+                custody.payload_artifact_id = None;
+                custody.payload_sha256 = None;
+            }
+            assert_eq!(custody.validate(Some(&digest('a'))), Ok(()));
+
+            custody.cleanup_state = RuntimeArtifactCleanupState::Retained;
+            if custody_state != RuntimeArtifactLifecycleState::Active {
+                assert_eq!(
+                    custody.validate(Some(&digest('a'))),
+                    Err(SourceArtifactCustodyViolation::CleanupStateMismatch)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn custody_rejects_widened_kinds_and_contradictory_retention() {
+        let mut widened = retained();
+        widened.payload_artifact_kind = RuntimeArtifactKind::Patch;
+        assert_eq!(
+            widened.validate(Some(&digest('a'))),
+            Err(SourceArtifactCustodyViolation::UnsupportedPayloadKind)
+        );
+
+        let mut unexpected_expiration = retained();
+        unexpected_expiration.retention.expires_at_epoch_ms = Some(1);
+        assert_eq!(
+            unexpected_expiration.validate(Some(&digest('a'))),
+            Err(SourceArtifactCustodyViolation::RetentionExpirationMismatch)
+        );
+
+        let mut missing_expiration = retained();
+        missing_expiration.retention.kind = RuntimeEventRetentionKind::UntilExpiration;
+        assert_eq!(
+            missing_expiration.validate(Some(&digest('a'))),
+            Err(SourceArtifactCustodyViolation::RetentionExpirationMismatch)
+        );
+
+        let mut expiring = retained();
+        expiring.retention.kind = RuntimeEventRetentionKind::UntilExpiration;
+        expiring.retention.expires_at_epoch_ms = Some(1);
+        assert_eq!(expiring.validate(Some(&digest('a'))), Ok(()));
+    }
+
+    #[test]
+    fn custody_forbids_retained_bytes_without_retention_or_a_matching_address() {
+        let mut ephemeral = retained();
+        ephemeral.retention.kind = RuntimeEventRetentionKind::Ephemeral;
+        assert_eq!(
+            ephemeral.validate(Some(&digest('a'))),
+            Err(SourceArtifactCustodyViolation::EphemeralRetentionRetainsPayload)
+        );
+
+        let mut deleted = retained();
+        deleted.custody_state = RuntimeArtifactLifecycleState::Deleted;
+        deleted.cleanup_state = RuntimeArtifactCleanupState::Completed;
+        assert_eq!(
+            deleted.validate(Some(&digest('a'))),
+            Err(SourceArtifactCustodyViolation::DeletedCustodyRetainsPayload)
+        );
+
+        let mut half = retained();
+        half.payload_sha256 = None;
+        assert_eq!(
+            half.validate(Some(&digest('a'))),
+            Err(SourceArtifactCustodyViolation::IncompletePayloadReference)
+        );
+
+        let mut foreign = retained();
+        foreign.payload_sha256 = Some(digest('b'));
+        assert_eq!(
+            foreign.validate(Some(&digest('a'))),
+            Err(SourceArtifactCustodyViolation::PayloadAddressMismatch)
+        );
+        assert_eq!(
+            retained().validate(None),
+            Err(SourceArtifactCustodyViolation::PayloadAddressMismatch)
+        );
+
+        let mut uncaptured = retained();
+        uncaptured.payload_artifact_id = None;
+        uncaptured.payload_sha256 = None;
+        assert_eq!(uncaptured.validate(None), Ok(()));
+    }
+
+    #[test]
+    fn custody_binds_retained_bytes_to_one_existing_runtime_reference() {
+        let custody = retained();
+        let reference = RuntimeArtifactRef {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            artifact_id: RuntimeArtifactId::from_raw("runtime-artifact-1"),
+            manifest_sha256: digest('c'),
+            payload_sha256: digest('a'),
+            byte_size: 3,
+            media_type: "text/plain".to_owned(),
+        };
+
+        assert!(custody.matches_runtime_reference(&reference));
+
+        let mut other = reference.clone();
+        other.payload_sha256 = digest('b');
+        assert!(!custody.matches_runtime_reference(&other));
+
+        let mut renamed = reference;
+        renamed.artifact_id = RuntimeArtifactId::from_raw("runtime-artifact-2");
+        assert!(!custody.matches_runtime_reference(&renamed));
+    }
+
+    #[test]
+    fn custody_records_reject_unknown_and_absent_fields() {
+        let encoded = serde_json::to_string(&retained()).expect("custody encodes");
+        let decoded: CanonicalSourceArtifactCustody =
+            serde_json::from_str(&encoded).expect("custody decodes");
+        assert_eq!(decoded, retained());
+
+        let mut extra = serde_json::to_value(retained()).expect("custody encodes as value");
+        extra
+            .as_object_mut()
+            .expect("custody is an object")
+            .insert("unexpected".to_owned(), serde_json::Value::Bool(true));
+        assert!(serde_json::from_value::<CanonicalSourceArtifactCustody>(extra).is_err());
+
+        let mut absent = serde_json::to_value(retained()).expect("custody encodes as value");
+        absent
+            .as_object_mut()
+            .expect("custody is an object")
+            .remove("payload_sha256");
+        assert!(serde_json::from_value::<CanonicalSourceArtifactCustody>(absent).is_err());
+
+        let violation = SourceArtifactCustodyViolation::PayloadAddressMismatch;
+        assert_eq!(violation.code(), "source.custody.payload_address.mismatch");
+    }
 }

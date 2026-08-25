@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentmage.dev/schemas/engineering-runtime/source-artifact.schema.json",
   "title": "AgentMage source-artifact",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: custody.payload_artifact_id and custody.payload_sha256 MUST be absent together or present together, and a present custody.payload_sha256 MUST equal the captured sha256 so retained bytes address the existing content-addressed runtime payload store instead of a second physical store.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -19,6 +20,7 @@
     "byte_length",
     "sha256",
     "collected_at",
+    "custody",
     "source_artifact_sha256"
   ],
   "properties": {
@@ -110,6 +112,262 @@
       "type": "string",
       "format": "date-time"
     },
+    "custody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner_session_id",
+        "owner_task_id",
+        "retention",
+        "custody_state",
+        "cleanup_state",
+        "payload_backend",
+        "payload_artifact_kind",
+        "payload_artifact_id",
+        "payload_sha256"
+      ],
+      "properties": {
+        "owner_session_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "owner_task_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "retention": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "expires_at_epoch_ms"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "ephemeral",
+                "session",
+                "until_expiration",
+                "user_hold"
+              ]
+            },
+            "expires_at_epoch_ms": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "until_expiration"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "expires_at_epoch_ms": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "expires_at_epoch_ms": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "custody_state": {
+          "enum": [
+            "active",
+            "quarantined",
+            "released",
+            "deleted"
+          ]
+        },
+        "cleanup_state": {
+          "enum": [
+            "retained",
+            "eligible",
+            "blocked",
+            "completed"
+          ]
+        },
+        "payload_backend": {
+          "const": "runtime_payload_store"
+        },
+        "payload_artifact_kind": {
+          "const": "generated_file"
+        },
+        "payload_artifact_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload_sha256": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "custody_state": {
+                "const": "active"
+              }
+            },
+            "required": [
+              "custody_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cleanup_state": {
+                "const": "retained"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "custody_state": {
+                "const": "quarantined"
+              }
+            },
+            "required": [
+              "custody_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cleanup_state": {
+                "const": "blocked"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "custody_state": {
+                "const": "released"
+              }
+            },
+            "required": [
+              "custody_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cleanup_state": {
+                "const": "eligible"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "custody_state": {
+                "const": "deleted"
+              }
+            },
+            "required": [
+              "custody_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cleanup_state": {
+                "const": "completed"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "custody_state": {
+                "const": "deleted"
+              }
+            },
+            "required": [
+              "custody_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "payload_artifact_id": {
+                "type": "null"
+              },
+              "payload_sha256": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "retention": {
+                "properties": {
+                  "kind": {
+                    "const": "ephemeral"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            },
+            "required": [
+              "retention"
+            ]
+          },
+          "then": {
+            "properties": {
+              "payload_artifact_id": {
+                "type": "null"
+              },
+              "payload_sha256": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
     "source_artifact_sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
@@ -153,6 +411,16 @@
           },
           "sha256": {
             "type": "null"
+          },
+          "custody": {
+            "properties": {
+              "payload_artifact_id": {
+                "type": "null"
+              },
+              "payload_sha256": {
+                "type": "null"
+              }
+            }
           }
         }
       }

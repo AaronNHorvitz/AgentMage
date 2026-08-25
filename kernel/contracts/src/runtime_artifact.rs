@@ -56,6 +56,22 @@ pub enum RuntimeArtifactLifecycleState {
     Deleted,
 }
 
+impl RuntimeArtifactLifecycleState {
+    /// Returns the single content-free cleanup disposition derived from this state.
+    ///
+    /// This total mapping is the only cleanup authority. Source-artifact custody and the
+    /// operator projection both derive their disposition here rather than repeating it.
+    #[must_use]
+    pub const fn cleanup_state(self) -> RuntimeArtifactCleanupState {
+        match self {
+            Self::Active => RuntimeArtifactCleanupState::Retained,
+            Self::Quarantined => RuntimeArtifactCleanupState::Blocked,
+            Self::Released => RuntimeArtifactCleanupState::Eligible,
+            Self::Deleted => RuntimeArtifactCleanupState::Completed,
+        }
+    }
+}
+
 /// Content-free cleanup disposition derived from canonical artifact state.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]

@@ -4,12 +4,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::io::Read;
 
 use agentmage_kernel_contracts::{
-    AgentStateKind, CONTRACT_SCHEMA_VERSION, ContextSensitivity, RuntimeArtifactCleanupState,
-    RuntimeArtifactId, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
-    RuntimeArtifactLifecycleState, RuntimeArtifactManifest, RuntimeArtifactOperatorView,
-    RuntimeArtifactRef, RuntimeContinuationState, RuntimeEventRetentionKind,
-    RuntimePayloadReference, RuntimeResumeBinding, SessionCheckpoint, SessionId, TaskId, from_json,
-    to_canonical_json,
+    AgentStateKind, CONTRACT_SCHEMA_VERSION, ContextSensitivity, RuntimeArtifactId,
+    RuntimeArtifactIntegrityState, RuntimeArtifactKind, RuntimeArtifactLifecycleState,
+    RuntimeArtifactManifest, RuntimeArtifactOperatorView, RuntimeArtifactRef,
+    RuntimeContinuationState, RuntimeEventRetentionKind, RuntimePayloadReference,
+    RuntimeResumeBinding, SessionCheckpoint, SessionId, TaskId, from_json, to_canonical_json,
 };
 use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, params};
 use sha2::{Digest, Sha256};
@@ -762,12 +761,7 @@ pub(crate) fn runtime_artifact_operator_view(
         )
         .map_err(|_| RuntimeArtifactStoreError::Storage)
         .and_then(|count| u32::try_from(count).map_err(|_| RuntimeArtifactStoreError::Integrity))?;
-    let cleanup = match state.lifecycle {
-        RuntimeArtifactLifecycleState::Active => RuntimeArtifactCleanupState::Retained,
-        RuntimeArtifactLifecycleState::Released => RuntimeArtifactCleanupState::Eligible,
-        RuntimeArtifactLifecycleState::Quarantined => RuntimeArtifactCleanupState::Blocked,
-        RuntimeArtifactLifecycleState::Deleted => RuntimeArtifactCleanupState::Completed,
-    };
+    let cleanup = state.lifecycle.cleanup_state();
     Ok(RuntimeArtifactOperatorView {
         schema_version: CONTRACT_SCHEMA_VERSION,
         reference: reference.clone(),

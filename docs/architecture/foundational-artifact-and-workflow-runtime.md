@@ -316,6 +316,34 @@ local, deletable, and provenance-preserving. Artifact tools include:
 Every result includes source and section identity, provenance, classification,
 truncation, omission, index revision, and current digest.
 
+### 8.1 Logical source-artifact ownership and retention
+
+Every source artifact is a logical record over that one existing backend. Its closed
+`custody` block records:
+
+- the owning session and task, which bound visibility, resume, and cleanup;
+- the exact `RuntimeEventRetention` assignment already used by runtime events and
+  artifacts, carrying an expiration only for `until_expiration`;
+- the custody state and the cleanup disposition derived from that state;
+- the single admitted `runtime_payload_store` backend;
+- the reused `generated_file` runtime artifact kind;
+- the logical payload identity and content address, only while bytes remain retained.
+
+| Custody state | Derived cleanup | Retained payload bytes |
+|---|---|---|
+| `active` | `retained` | May remain addressable under policy |
+| `quarantined` | `blocked` | Retained for review and not readable |
+| `released` | `eligible` | Collectable once no reference remains |
+| `deleted` | `completed` | Absent, while identity and provenance persist |
+
+Custody defines no second physical store and no additional artifact kind.
+`RuntimeArtifactKind` is unchanged, retained source bytes reuse `generated_file`, and
+the kernel lifecycle-to-cleanup mapping remains the single cleanup authority for both
+the operator projection and source custody. Memory-only `ephemeral` retention, an
+uncaptured source, and a deleted artifact cannot name payload bytes, and a retained
+content address must equal the captured source digest, so one digest continues to
+identify exactly one stored object.
+
 ## 9. Context Budgeting
 
 The budgeter reserves capacity in this order:

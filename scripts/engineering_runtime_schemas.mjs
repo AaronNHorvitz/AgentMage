@@ -538,6 +538,63 @@ const sourceProvenance = closed({
   provenance_sha256: digest,
 });
 
+export const SOURCE_ARTIFACT_PAYLOAD_BACKEND = "runtime_payload_store";
+export const SOURCE_ARTIFACT_PAYLOAD_KIND = "generated_file";
+export const SOURCE_ARTIFACT_CLEANUP_BY_CUSTODY_STATE = Object.freeze({
+  active: "retained",
+  quarantined: "blocked",
+  released: "eligible",
+  deleted: "completed",
+});
+const custodyStateEnum = { enum: Object.keys(SOURCE_ARTIFACT_CLEANUP_BY_CUSTODY_STATE) };
+const cleanupStateEnum = { enum: ["retained", "eligible", "blocked", "completed"] };
+const retentionKindEnum = { enum: ["ephemeral", "session", "until_expiration", "user_hold"] };
+const detachedPayload = {
+  properties: {
+    payload_artifact_id: { type: "null" },
+    payload_sha256: { type: "null" },
+  },
+};
+
+const sourceRetention = closed({
+  kind: retentionKindEnum,
+  expires_at_epoch_ms: nullable(uint),
+});
+sourceRetention.allOf = [{
+  if: { properties: { kind: { const: "until_expiration" } }, required: ["kind"] },
+  then: { properties: { expires_at_epoch_ms: uint } },
+  else: { properties: { expires_at_epoch_ms: { type: "null" } } },
+}];
+
+const sourceArtifactCustody = closed({
+  owner_session_id: identifier,
+  owner_task_id: identifier,
+  retention: sourceRetention,
+  custody_state: custodyStateEnum,
+  cleanup_state: cleanupStateEnum,
+  payload_backend: { const: SOURCE_ARTIFACT_PAYLOAD_BACKEND },
+  payload_artifact_kind: { const: SOURCE_ARTIFACT_PAYLOAD_KIND },
+  payload_artifact_id: nullable(identifier),
+  payload_sha256: nullable(digest),
+});
+sourceArtifactCustody.allOf = [
+  ...Object.entries(SOURCE_ARTIFACT_CLEANUP_BY_CUSTODY_STATE).map(([custodyState, cleanupState]) => ({
+    if: { properties: { custody_state: { const: custodyState } }, required: ["custody_state"] },
+    then: { properties: { cleanup_state: { const: cleanupState } } },
+  })),
+  {
+    if: { properties: { custody_state: { const: "deleted" } }, required: ["custody_state"] },
+    then: detachedPayload,
+  },
+  {
+    if: {
+      properties: { retention: { properties: { kind: { const: "ephemeral" } }, required: ["kind"] } },
+      required: ["retention"],
+    },
+    then: detachedPayload,
+  },
+];
+
 const sourceArtifact = closed({
   schema_version: supportedSourceVersion,
   source_artifact_id: identifier,
@@ -553,6 +610,7 @@ const sourceArtifact = closed({
   byte_length: nullable(boundedSourceBytes),
   sha256: nullable(digest),
   collected_at: timestamp,
+  custody: sourceArtifactCustody,
   source_artifact_sha256: digest,
 });
 sourceArtifact.allOf = [{
@@ -564,7 +622,13 @@ sourceArtifact.allOf = [{
       freshness_state: { enum: ["fresh", "renamed"] },
     },
   },
-  else: { properties: { byte_length: { type: "null" }, sha256: { type: "null" } } },
+  else: {
+    properties: {
+      byte_length: { type: "null" },
+      sha256: { type: "null" },
+      custody: detachedPayload,
+    },
+  },
 }];
 
 const EXTRACTION_PRODUCING_STATES = ["captured", "parsed", "partially_parsed"];
@@ -704,13 +768,25 @@ function contextManifestSemantic(record) {
   return true;
 }
 
+function sourceArtifactSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  const custody = record.custody;
+  if (!custody || typeof custody !== "object") return false;
+  const retainsIdentity = custody.payload_artifact_id !== null && custody.payload_artifact_id !== undefined;
+  const retainsAddress = custody.payload_sha256 !== null && custody.payload_sha256 !== undefined;
+  if (retainsIdentity !== retainsAddress) return false;
+  return !retainsAddress || custody.payload_sha256 === record.sha256;
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
+  "source-artifact": sourceArtifactSemantic,
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
+  "source-artifact": "custody.payload_artifact_id and custody.payload_sha256 MUST be absent together or present together, and a present custody.payload_sha256 MUST equal the captured sha256 so retained bytes address the existing content-addressed runtime payload store instead of a second physical store.",
   "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
   "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",
