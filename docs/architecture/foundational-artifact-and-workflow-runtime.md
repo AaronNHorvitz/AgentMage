@@ -443,6 +443,18 @@ The policy uses closed classes:
 | `EXTERNAL_SIDE_EFFECT` | No automatic retry after uncertain outcome; reconcile first |
 | `UNKNOWN` | Fail toward approval and no automatic retry |
 
+The kernel encodes these classes as the closed versioned tokens `read_only`,
+`idempotent_write`, `conditional`, `non_idempotent`, `destructive`, `external`,
+and `unknown`. Each class fixes its own repetition rule, reconciliation
+requirement, and per-attempt approval requirement; those rules are derived from
+the class and are rejected when a record restates them differently. Classes are
+totally ordered by restriction, so combining declarations may only select the
+more restrictive class and no proposal can broaden an effect. The taxonomy is
+independent of the authority class and the tool risk level: no class is derived
+from either vocabulary, and the three token sets are disjoint. There is no
+custom, wildcard, inherited, or model-created class; an effect that cannot be
+established is exactly `unknown`.
+
 Error classes distinguish transport, rate, timeout, crash, unavailable service,
 missing command, invalid arguments, authentication, permission, policy denial,
 deterministic verification failure, malformed model output, context overflow,

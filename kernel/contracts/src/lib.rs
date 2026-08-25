@@ -17,6 +17,7 @@ mod conversation;
 mod diagnostics;
 mod display_link;
 mod document_control;
+mod effect;
 mod engineering;
 mod engineering_records;
 mod evidence;
@@ -103,6 +104,9 @@ pub use document_control::{
     DocumentLifecycleState, DocumentNamedParty, DocumentRegister, DocumentRegisterAttachment,
     DocumentRegisterEntry, DocumentRegisterKind, DocumentRegisterStatement, DocumentStatementClass,
     DocumentWorkflowKind, DocumentWorkflowReport,
+};
+pub use effect::{
+    EFFECT_TAXONOMY_VERSION, EffectClass, EffectDeclaration, EffectRepetition, EffectTaxonomyError,
 };
 pub use engineering::{
     AgentLease, AgentLeaseState, ArtifactCaptureDisposition, ArtifactCaptureResult,
