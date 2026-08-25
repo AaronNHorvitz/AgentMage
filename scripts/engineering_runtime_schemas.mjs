@@ -117,6 +117,12 @@ const supportedContextManifestVersion = {
 };
 export const CONTEXT_ADMITTING_DISPOSITIONS = Object.freeze(["included", "summarized", "truncated"]);
 export const CONTEXT_NON_ADMITTING_DISPOSITIONS = Object.freeze(["duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"]);
+export const CONTEXT_COMPLETE_DISPOSITIONS = Object.freeze(["included"]);
+export const CONTEXT_REASON_CODE_REQUIRED_DISPOSITIONS = Object.freeze([
+  "summarized",
+  "truncated",
+  ...CONTEXT_NON_ADMITTING_DISPOSITIONS,
+]);
 const nonAdmittingDispositionConstraint = {
   if: {
     properties: { disposition: { enum: [...CONTEXT_NON_ADMITTING_DISPOSITIONS] } },
@@ -129,14 +135,28 @@ const nonAdmittingDispositionConstraint = {
     },
   },
 };
+const reasonCodeRequiredConstraint = {
+  if: {
+    properties: { disposition: { enum: [...CONTEXT_REASON_CODE_REQUIRED_DISPOSITIONS] } },
+    required: ["disposition"],
+  },
+  then: {
+    properties: { reason_code: identifier },
+    required: ["reason_code"],
+  },
+  else: {
+    properties: { reason_code: { type: "null" } },
+  },
+};
 const contextItem = closed({
   artifact_id: identifier,
   disposition: { enum: [...CONTEXT_ADMITTING_DISPOSITIONS, ...CONTEXT_NON_ADMITTING_DISPOSITIONS] },
   ranges: list(range),
   token_count: uint,
+  reason_code: nullable(identifier),
   reason: nullable(bounded),
 });
-contextItem.allOf = [nonAdmittingDispositionConstraint];
+contextItem.allOf = [nonAdmittingDispositionConstraint, reasonCodeRequiredConstraint];
 const contextManifest = closed({
   schema_version: supportedContextManifestVersion,
   context_manifest_id: identifier,
@@ -499,6 +519,11 @@ const sourceReference = closed({
   reference_sha256: digest,
   collected_at: timestamp,
 });
+sourceReference.allOf = [{
+  if: { properties: { reference_class: { const: "unsupported" } }, required: ["reference_class"] },
+  then: { properties: { support_state: { const: "unsupported" } } },
+  else: { properties: { support_state: { enum: ["supported", "ambient_prohibited"] } } },
+}];
 
 const sourceProvenance = closed({
   schema_version: supportedSourceVersion,
@@ -700,13 +725,33 @@ export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, can
   return semantic === undefined ? true : Boolean(semantic(candidate));
 }
 
+function canonicalSchemaKey(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalSchemaKey).join(",")}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    const keys = Object.keys(value).sort();
+    return `{${keys.map((key) => `${JSON.stringify(key)}:${canonicalSchemaKey(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
 export function createEngineeringRuntimeValidator(schemaName, ajv) {
   if (!(schemaName in ENGINEERING_RUNTIME_SCHEMAS)) {
     throw new Error(`unknown Engineering Runtime schema: ${schemaName}`);
   }
   const document = schemaDocument(schemaName);
   const existing = ajv.getSchema(document.$id);
-  const compiled = existing ?? ajv.compile(document);
+  let compiled;
+  if (existing === undefined) {
+    compiled = ajv.compile(document);
+  } else if (canonicalSchemaKey(existing.schema) === canonicalSchemaKey(document)) {
+    compiled = existing;
+  } else {
+    throw new Error(
+      `refusing to reuse mismatched schema at ${document.$id} for ${schemaName}`,
+    );
+  }
   const semantic = ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS[schemaName];
   const predicate = (candidate) => {
     if (!compiled(candidate)) return false;

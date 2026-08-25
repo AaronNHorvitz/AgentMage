@@ -64,5 +64,36 @@
       "type": "string",
       "format": "date-time"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "reference_class": {
+            "const": "unsupported"
+          }
+        },
+        "required": [
+          "reference_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "support_state": {
+            "const": "unsupported"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "support_state": {
+            "enum": [
+              "supported",
+              "ambient_prohibited"
+            ]
+          }
+        }
+      }
+    }
+  ]
 }

@@ -208,6 +208,8 @@ pub struct CanonicalContextItem {
     pub ranges: Vec<CanonicalByteRange>,
     /// Token count attributed to this item.
     pub token_count: u64,
+    /// Stable deterministic code required for every non-complete disposition.
+    pub reason_code: Option<String>,
     /// Visible reason for a non-complete disposition.
     pub reason: Option<String>,
 }

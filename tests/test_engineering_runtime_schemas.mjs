@@ -506,6 +506,7 @@ test("context-manifest semantic validation reconciles source_artifact_count, art
     disposition: "included",
     ranges: [{ start_byte: 0, end_byte_exclusive: 4 }],
     token_count: 2,
+    reason_code: null,
     reason: null,
     ...overrides,
   });
@@ -603,7 +604,14 @@ test("context-manifest items reject non-admitting dispositions carrying ranges o
   for (const state of ["duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"]) {
     const empty = {
       ...base,
-      items: [{ artifact_id: `artifact-${state}`, disposition: state, ranges: [], token_count: 0, reason: null }],
+      items: [{
+        artifact_id: `artifact-${state}`,
+        disposition: state,
+        ranges: [],
+        token_count: 0,
+        reason_code: `code-${state}`,
+        reason: null,
+      }],
     };
     assert.equal(validateManifest(empty), true, `${state} empty item must pass structural validation`);
     assert.equal(
@@ -631,11 +639,68 @@ test("context-manifest items reject non-admitting dispositions carrying ranges o
         disposition: state,
         ranges: [{ start_byte: 0, end_byte_exclusive: 4 }],
         token_count: 2,
+        reason_code: state === "included" ? null : `code-${state}`,
         reason: null,
       }],
     };
     assert.equal(validateManifest(admitting), true, `${state} admitting item must pass`);
   }
+});
+
+test("context-manifest items require a deterministic reason_code for every non-complete disposition", () => {
+  const validateManifest = validator("context-manifest");
+  const base = {
+    schema_version: CONTEXT_MANIFEST_SCHEMA_VERSION,
+    context_manifest_id: "context-1",
+    session_id: "session-1",
+    turn_id: "turn-1",
+    model_profile_id: "profile-1",
+    source_artifact_count: 1,
+    items: [],
+    total_input_tokens: 0,
+    reserved_output_tokens: 0,
+    safety_margin_tokens: 0,
+    manifest_sha256: SHA,
+  };
+  const admittingRanges = [{ start_byte: 0, end_byte_exclusive: 4 }];
+  const buildItem = (state, reason_code) => {
+    const admitting = state === "included" || state === "summarized" || state === "truncated";
+    return {
+      artifact_id: `artifact-${state}`,
+      disposition: state,
+      ranges: admitting ? admittingRanges : [],
+      token_count: admitting ? 2 : 0,
+      reason_code,
+      reason: null,
+    };
+  };
+  for (const state of ["summarized", "truncated", "duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"]) {
+    assert.equal(
+      validateManifest({ ...base, items: [buildItem(state, null)] }),
+      false,
+      `${state} without reason_code must fail`,
+    );
+    assert.equal(
+      validateManifest({ ...base, items: [buildItem(state, `reason-${state}`)] }),
+      true,
+      `${state} with deterministic reason_code must pass`,
+    );
+    assert.equal(
+      validateManifest({ ...base, items: [buildItem(state, "not a code")] }),
+      false,
+      `${state} with malformed reason_code must fail`,
+    );
+  }
+  assert.equal(
+    validateManifest({ ...base, items: [buildItem("included", null)] }),
+    true,
+    "included item may have null reason_code",
+  );
+  assert.equal(
+    validateManifest({ ...base, items: [buildItem("included", "unexpected-code")] }),
+    false,
+    "included item must not carry a reason_code",
+  );
 });
 
 test("createEngineeringRuntimeValidator is the mandatory public path that binds structural and semantic contracts", () => {
@@ -693,6 +758,97 @@ test("createEngineeringRuntimeValidator is the mandatory public path that binds 
 
   assert.throws(() => createEngineeringRuntimeValidator("nonexistent-schema", ajv));
   assert.throws(() => validateEngineeringRuntimeRecord(() => true, "nonexistent-schema", {}));
+});
+
+test("createEngineeringRuntimeValidator refuses to reuse a mismatched schema registered under the authoritative $id", () => {
+  const ajv = ajvInstance();
+  const document = schemaDocument("context-manifest");
+  const stale = {
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    $id: document.$id,
+    type: "object",
+    additionalProperties: true,
+    properties: {
+      schema_version: { type: "integer", minimum: 1 },
+    },
+  };
+  ajv.addSchema(stale, document.$id);
+  assert.throws(
+    () => createEngineeringRuntimeValidator("context-manifest", ajv),
+    /refusing to reuse mismatched schema/,
+  );
+
+  const fresh = ajvInstance();
+  fresh.compile(document);
+  const validate = createEngineeringRuntimeValidator("context-manifest", fresh);
+  assert.equal(validate.compiled, fresh.getSchema(document.$id));
+  const rejected = {
+    schema_version: 1,
+    context_manifest_id: "context-1",
+    session_id: "session-1",
+    turn_id: "turn-1",
+    model_profile_id: "profile-1",
+    source_artifact_count: 0,
+    items: [],
+    total_input_tokens: 0,
+    reserved_output_tokens: 0,
+    safety_margin_tokens: 0,
+    manifest_sha256: SHA,
+  };
+  assert.equal(
+    validate(rejected),
+    false,
+    "reused authoritative schema must still reject schema_version 1",
+  );
+  assert.equal(
+    validate({ ...rejected, schema_version: CONTEXT_MANIFEST_SCHEMA_VERSION }),
+    true,
+    "reused authoritative schema must still admit the current schema_version",
+  );
+});
+
+test("source-reference records reject contradictory reference_class and support_state combinations", () => {
+  const timestamp = "2026-08-25T12:00:00Z";
+  const validateReference = validator("source-reference");
+  const base = {
+    schema_version: 1,
+    reference_id: "reference-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    reference_display: "supplied editor selection",
+    reference_sha256: SHA,
+    collected_at: timestamp,
+  };
+  const supportedClasses = ["paste", "request_reference", "file_path", "virtual_uri", "remote_uri", "directory", "archive"];
+  for (const reference_class of supportedClasses) {
+    for (const support_state of ["supported", "ambient_prohibited"]) {
+      assert.equal(
+        validateReference({ ...base, reference_class, support_state }),
+        true,
+        `${reference_class}/${support_state} must pass`,
+      );
+    }
+    assert.equal(
+      validateReference({ ...base, reference_class, support_state: "unsupported" }),
+      false,
+      `${reference_class}/unsupported must fail`,
+    );
+  }
+  assert.equal(
+    validateReference({ ...base, reference_class: "unsupported", support_state: "unsupported" }),
+    true,
+    "unsupported/unsupported must pass",
+  );
+  assert.equal(
+    validateReference({ ...base, reference_class: "unsupported", support_state: "supported" }),
+    false,
+    "unsupported/supported must fail",
+  );
+  assert.equal(
+    validateReference({ ...base, reference_class: "unsupported", support_state: "ambient_prohibited" }),
+    false,
+    "unsupported/ambient_prohibited must fail",
+  );
 });
 
 test("context-disposition terminal states forbid ranges and tokens outside admitting states", () => {

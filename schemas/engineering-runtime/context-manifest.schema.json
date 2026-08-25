@@ -53,6 +53,7 @@
           "disposition",
           "ranges",
           "token_count",
+          "reason_code",
           "reason"
         ],
         "properties": {
@@ -100,6 +101,17 @@
             "type": "integer",
             "minimum": 0
           },
+          "reason_code": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "reason": {
             "oneOf": [
               {
@@ -140,6 +152,45 @@
                 },
                 "token_count": {
                   "const": 0
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "disposition": {
+                  "enum": [
+                    "summarized",
+                    "truncated",
+                    "duplicate",
+                    "stale",
+                    "unsupported",
+                    "unavailable",
+                    "restricted",
+                    "omitted"
+                  ]
+                }
+              },
+              "required": [
+                "disposition"
+              ]
+            },
+            "then": {
+              "properties": {
+                "reason_code": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+                }
+              },
+              "required": [
+                "reason_code"
+              ]
+            },
+            "else": {
+              "properties": {
+                "reason_code": {
+                  "type": "null"
                 }
               }
             }
