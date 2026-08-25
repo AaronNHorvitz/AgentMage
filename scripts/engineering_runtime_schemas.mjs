@@ -106,6 +106,11 @@ const artifactIngestionResult = closed({
   terminal: { const: true },
 });
 
+export const CONTEXT_MANIFEST_SCHEMA_VERSION = 2;
+const supportedContextManifestVersion = {
+  type: "integer",
+  const: CONTEXT_MANIFEST_SCHEMA_VERSION,
+};
 const contextItem = closed({
   artifact_id: identifier,
   disposition: { enum: ["included", "summarized", "truncated", "duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"] },
@@ -114,7 +119,7 @@ const contextItem = closed({
   reason: nullable(bounded),
 });
 const contextManifest = closed({
-  schema_version: positive,
+  schema_version: supportedContextManifestVersion,
   context_manifest_id: identifier,
   session_id: identifier,
   turn_id: identifier,
@@ -518,6 +523,8 @@ sourceArtifact.allOf = [{
   else: { properties: { byte_length: { type: "null" }, sha256: { type: "null" } } },
 }];
 
+const EXTRACTION_PRODUCING_STATES = ["captured", "parsed", "partially_parsed"];
+const EXTRACTION_NON_PRODUCING_STATES = ["unsupported", "denied", "unavailable", "failed", "omitted"];
 const extractionResult = closed({
   schema_version: supportedSourceVersion,
   extraction_id: identifier,
@@ -527,13 +534,26 @@ const extractionResult = closed({
   source_sha256: digest,
   output_sha256: nullable(digest),
   media_type: bounded,
-  disposition: { enum: ["captured", "parsed", "partially_parsed", "unsupported", "denied", "unavailable", "failed", "omitted"] },
+  disposition: { enum: [...EXTRACTION_PRODUCING_STATES, ...EXTRACTION_NON_PRODUCING_STATES] },
   section_ids: list(identifier),
   warnings: list(bounded),
   truncated: { type: "boolean" },
   reproducible: { type: "boolean" },
   terminal: { const: true },
 });
+extractionResult.allOf = [{
+  if: {
+    properties: { disposition: { enum: EXTRACTION_PRODUCING_STATES } },
+    required: ["disposition"],
+  },
+  then: { properties: { output_sha256: digest } },
+  else: {
+    properties: {
+      output_sha256: { type: "null" },
+      section_ids: { type: "array", maxItems: 0 },
+    },
+  },
+}];
 
 const structuralSection = closed({
   schema_version: supportedSourceVersion,
@@ -550,6 +570,7 @@ const structuralSection = closed({
   content_sha256: digest,
 });
 
+const CONTEXT_DISPOSITION_NON_ADMITTING_STATES = ["duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"];
 const contextDisposition = closed({
   schema_version: supportedSourceVersion,
   disposition_id: identifier,
@@ -563,6 +584,18 @@ const contextDisposition = closed({
   reason: nullable(bounded),
   terminal: { const: true },
 });
+contextDisposition.allOf = [{
+  if: {
+    properties: { disposition: { enum: CONTEXT_DISPOSITION_NON_ADMITTING_STATES } },
+    required: ["disposition"],
+  },
+  then: {
+    properties: {
+      ranges: { type: "array", maxItems: 0 },
+      token_count: { const: 0 },
+    },
+  },
+}];
 
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
@@ -592,6 +625,31 @@ export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "multi-agent-campaign": multiAgentCampaign,
   "completion-evidence": completionEvidence,
 });
+
+function isOrderedRange(candidate) {
+  return (
+    candidate === null
+    || candidate === undefined
+    || (typeof candidate === "object"
+      && typeof candidate.start_byte === "number"
+      && typeof candidate.end_byte_exclusive === "number"
+      && candidate.start_byte <= candidate.end_byte_exclusive)
+  );
+}
+
+function isOrderedRangeList(candidates) {
+  return Array.isArray(candidates) && candidates.every(isOrderedRange);
+}
+
+export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
+  "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedRange(record.line_range),
+  "context-disposition": (record) => isOrderedRangeList(record.ranges),
+});
+
+export function validateEngineeringRuntimeRecord(compiledSchema, semantic, candidate) {
+  if (!compiledSchema(candidate)) return false;
+  return semantic === undefined ? true : Boolean(semantic(candidate));
+}
 
 export const REUSED_SCHEMA_CONTRACTS = Object.freeze({
   "action-proposal": "schemas/model/closed-proposal.schema.json",

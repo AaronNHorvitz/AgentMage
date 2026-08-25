@@ -104,5 +104,37 @@
     "terminal": {
       "const": true
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "disposition": {
+            "enum": [
+              "duplicate",
+              "stale",
+              "unsupported",
+              "unavailable",
+              "restricted",
+              "omitted"
+            ]
+          }
+        },
+        "required": [
+          "disposition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "ranges": {
+            "type": "array",
+            "maxItems": 0
+          },
+          "token_count": {
+            "const": 0
+          }
+        }
+      }
+    }
+  ]
 }

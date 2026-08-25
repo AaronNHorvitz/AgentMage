@@ -5,10 +5,13 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
 import {
+  CONTEXT_MANIFEST_SCHEMA_VERSION,
   ENGINEERING_RUNTIME_SCHEMAS,
+  ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
   REUSED_SCHEMA_CONTRACTS,
   schemaDocument,
   synchronize,
+  validateEngineeringRuntimeRecord,
 } from "../scripts/engineering_runtime_schemas.mjs";
 
 const SHA = "a".repeat(64);
@@ -17,6 +20,12 @@ function validator(name) {
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   addFormats(ajv);
   return ajv.compile(schemaDocument(name));
+}
+
+function combinedValidator(name) {
+  const compiled = validator(name);
+  const semantic = ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS[name];
+  return (candidate) => validateEngineeringRuntimeRecord(compiled, semantic, candidate);
 }
 
 test("generated Engineering Runtime schemas are current, closed, and compile", () => {
@@ -350,4 +359,155 @@ test("tool observations and terminal results preserve runtime authority", () => 
   assert.equal(validateTerminal(terminal), true, JSON.stringify(validateTerminal.errors));
   assert.equal(validateTerminal({ ...terminal, established_by: "model" }), false);
   assert.equal(validateTerminal({ ...terminal, verification_result_ids: [] }), false);
+});
+
+test("context-manifest binds schema_version to the authoritative Rust contract version", () => {
+  assert.equal(CONTEXT_MANIFEST_SCHEMA_VERSION, 2);
+  const manifest = {
+    schema_version: CONTEXT_MANIFEST_SCHEMA_VERSION,
+    context_manifest_id: "context-1",
+    session_id: "session-1",
+    turn_id: "turn-1",
+    model_profile_id: "profile-1",
+    source_artifact_count: 0,
+    items: [],
+    total_input_tokens: 0,
+    reserved_output_tokens: 0,
+    safety_margin_tokens: 0,
+    manifest_sha256: SHA,
+  };
+  const validateManifest = validator("context-manifest");
+  assert.equal(validateManifest(manifest), true, JSON.stringify(validateManifest.errors));
+  const { schema_version: _dropped, ...withoutVersion } = manifest;
+  assert.equal(validateManifest(withoutVersion), false);
+  for (const rejected of [0, CONTEXT_MANIFEST_SCHEMA_VERSION - 1, CONTEXT_MANIFEST_SCHEMA_VERSION + 1, 999]) {
+    assert.equal(validateManifest({ ...manifest, schema_version: rejected }), false, `version ${rejected} must fail`);
+  }
+});
+
+test("structural sections and context dispositions reject reversed ranges through trusted semantic validation", () => {
+  const section = {
+    schema_version: 1,
+    section_id: "section-1",
+    source_artifact_id: "source-1",
+    extraction_id: "extraction-1",
+    parent_section_id: null,
+    ordinal: 0,
+    kind: "paragraph",
+    byte_range: { start_byte: 0, end_byte_exclusive: 32 },
+    line_range: { start_byte: 1, end_byte_exclusive: 2 },
+    token_count: 8,
+    title: null,
+    content_sha256: SHA,
+  };
+  const validateSection = combinedValidator("structural-section");
+  assert.equal(validateSection(section), true);
+  assert.equal(validateSection({ ...section, byte_range: { start_byte: 32, end_byte_exclusive: 32 } }), true);
+  assert.equal(validateSection({ ...section, byte_range: { start_byte: 10, end_byte_exclusive: 3 } }), false);
+  assert.equal(validateSection({ ...section, line_range: { start_byte: 5, end_byte_exclusive: 1 } }), false);
+
+  const disposition = {
+    schema_version: 1,
+    disposition_id: "disposition-1",
+    context_manifest_id: "context-1",
+    source_artifact_id: "source-1",
+    section_id: null,
+    disposition: "included",
+    ranges: [{ start_byte: 0, end_byte_exclusive: 16 }],
+    token_count: 4,
+    reason_code: "included",
+    reason: null,
+    terminal: true,
+  };
+  const validateDisposition = combinedValidator("context-disposition");
+  assert.equal(validateDisposition(disposition), true);
+  assert.equal(
+    validateDisposition({ ...disposition, ranges: [{ start_byte: 0, end_byte_exclusive: 0 }] }),
+    true,
+    "zero-length ranges are admitted",
+  );
+  assert.equal(
+    validateDisposition({ ...disposition, ranges: [{ start_byte: 12, end_byte_exclusive: 4 }] }),
+    false,
+  );
+});
+
+test("extraction terminal states forbid payload contradicting the declared disposition", () => {
+  const validateExtraction = validator("extraction-result");
+  const base = {
+    schema_version: 1,
+    extraction_id: "extraction-1",
+    source_artifact_id: "source-1",
+    extractor_id: "extractor-1",
+    extractor_version: "1.0.0",
+    source_sha256: SHA,
+    media_type: "text/plain",
+    section_ids: [],
+    warnings: [],
+    truncated: false,
+    reproducible: true,
+    terminal: true,
+  };
+  const producing = { ...base, disposition: "parsed", output_sha256: SHA, section_ids: ["section-1"] };
+  assert.equal(validateExtraction(producing), true, JSON.stringify(validateExtraction.errors));
+  assert.equal(validateExtraction({ ...producing, output_sha256: null }), false);
+  assert.equal(
+    validateExtraction({ ...base, disposition: "partially_parsed", output_sha256: SHA, section_ids: ["section-1"] }),
+    true,
+  );
+  assert.equal(
+    validateExtraction({ ...base, disposition: "captured", output_sha256: SHA, section_ids: [] }),
+    true,
+  );
+  for (const state of ["unavailable", "denied", "unsupported", "failed", "omitted"]) {
+    const consistent = { ...base, disposition: state, output_sha256: null, section_ids: [] };
+    assert.equal(validateExtraction(consistent), true, `${state} consistent payload must pass`);
+    assert.equal(
+      validateExtraction({ ...consistent, output_sha256: SHA }),
+      false,
+      `${state} must not carry output_sha256`,
+    );
+    assert.equal(
+      validateExtraction({ ...consistent, section_ids: ["section-1"] }),
+      false,
+      `${state} must not claim sections`,
+    );
+  }
+});
+
+test("context-disposition terminal states forbid ranges and tokens outside admitting states", () => {
+  const validateDisposition = validator("context-disposition");
+  const base = {
+    schema_version: 1,
+    disposition_id: "disposition-1",
+    context_manifest_id: "context-1",
+    source_artifact_id: "source-1",
+    section_id: null,
+    reason_code: "reason",
+    reason: null,
+    terminal: true,
+  };
+  for (const state of ["included", "summarized", "truncated"]) {
+    const admitted = {
+      ...base,
+      disposition: state,
+      ranges: [{ start_byte: 0, end_byte_exclusive: 16 }],
+      token_count: 4,
+    };
+    assert.equal(validateDisposition(admitted), true, `${state} admitting payload must pass`);
+  }
+  for (const state of ["duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"]) {
+    const empty = { ...base, disposition: state, ranges: [], token_count: 0 };
+    assert.equal(validateDisposition(empty), true, `${state} empty payload must pass`);
+    assert.equal(
+      validateDisposition({ ...empty, ranges: [{ start_byte: 0, end_byte_exclusive: 4 }] }),
+      false,
+      `${state} must not claim admitted ranges`,
+    );
+    assert.equal(
+      validateDisposition({ ...empty, token_count: 1 }),
+      false,
+      `${state} must not claim admitted tokens`,
+    );
+  }
 });
