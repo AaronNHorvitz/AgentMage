@@ -683,7 +683,9 @@ export function createEngineeringRuntimeValidator(schemaName, ajv) {
   if (!(schemaName in ENGINEERING_RUNTIME_SCHEMAS)) {
     throw new Error(`unknown Engineering Runtime schema: ${schemaName}`);
   }
-  const compiled = ajv.compile(schemaDocument(schemaName));
+  const document = schemaDocument(schemaName);
+  const existing = ajv.getSchema(document.$id);
+  const compiled = existing ?? ajv.compile(document);
   const semantic = ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS[schemaName];
   const predicate = (candidate) => {
     if (!compiled(candidate)) return false;
