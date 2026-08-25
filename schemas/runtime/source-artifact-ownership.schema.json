@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/source-artifact-ownership.schema.json",
+  "title": "AgentMage Source Artifact Ownership and Retention",
+  "description": "Logical ownership and retention binding for one captured source artifact. This record layers logical scope over the existing encrypted content-addressed backend. `runtime_artifact_id`, `payload_sha256`, and `byte_length` refer to the physical payload already retained by the canonical runtime-artifact manifest; this contract MUST NOT widen `RuntimeArtifactKind` or introduce a second physical store.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ownership_id",
+    "source_artifact_id",
+    "authority_id",
+    "session_id",
+    "task_id",
+    "request_id",
+    "ownership_scope",
+    "retention_state",
+    "classification",
+    "runtime_artifact_id",
+    "payload_sha256",
+    "byte_length",
+    "expires_at",
+    "released_at",
+    "deletion_effective",
+    "created_at",
+    "last_transition_at",
+    "ownership_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "ownership_id": { "$ref": "#/$defs/identifier" },
+    "source_artifact_id": { "$ref": "#/$defs/identifier" },
+    "authority_id": { "$ref": "#/$defs/identifier" },
+    "session_id": { "$ref": "#/$defs/identifier" },
+    "task_id": { "$ref": "#/$defs/identifier" },
+    "request_id": { "$ref": "#/$defs/identifier" },
+    "ownership_scope": {
+      "enum": [
+        "session_scoped",
+        "task_scoped",
+        "request_scoped",
+        "capability_scoped",
+        "user_hold",
+        "until_expiration"
+      ]
+    },
+    "retention_state": {
+      "enum": ["active", "expired", "released", "deleted"]
+    },
+    "classification": {
+      "enum": ["public", "internal", "confidential", "restricted"]
+    },
+    "runtime_artifact_id": { "$ref": "#/$defs/identifier" },
+    "payload_sha256": { "$ref": "#/$defs/sha256" },
+    "byte_length": { "type": "integer", "minimum": 0, "maximum": 104857600 },
+    "expires_at": {
+      "oneOf": [{ "type": "null" }, { "type": "string", "format": "date-time" }]
+    },
+    "released_at": {
+      "oneOf": [{ "type": "null" }, { "type": "string", "format": "date-time" }]
+    },
+    "deletion_effective": { "type": "boolean" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "last_transition_at": { "type": "string", "format": "date-time" },
+    "ownership_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "ownership_scope": { "const": "until_expiration" } },
+        "required": ["ownership_scope"]
+      },
+      "then": {
+        "properties": {
+          "expires_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "else": {
+        "properties": { "expires_at": { "type": "null" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "retention_state": { "enum": ["released", "deleted"] } },
+        "required": ["retention_state"]
+      },
+      "then": {
+        "properties": {
+          "released_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "else": {
+        "properties": { "released_at": { "type": "null" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "retention_state": { "const": "deleted" } },
+        "required": ["retention_state"]
+      },
+      "then": { "properties": { "deletion_effective": { "const": true } } },
+      "else": { "properties": { "deletion_effective": { "const": false } } }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

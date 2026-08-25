@@ -4,7 +4,8 @@ use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CanonicalArtifactEnvelope, CanonicalArtifactIngestionResult,
     CanonicalArtifactTransformation, CanonicalCapabilityManifest, CanonicalCaptureState,
     CanonicalContextDeliveryReceipt, CanonicalContextManifest, CanonicalDeliveryOutcome,
-    CanonicalModelEndpointProfile, CanonicalModelRouteDecision, CanonicalTerminalOutcome,
+    CanonicalModelEndpointProfile, CanonicalModelRouteDecision, CanonicalSourceArtifactOwnership,
+    CanonicalSourceOwnershipScope, CanonicalSourceRetentionState, CanonicalTerminalOutcome,
     CanonicalTerminalResult, CanonicalToolObservation, CanonicalVerificationOutcome,
     CanonicalVerificationResult, CanonicalWorkflowCheckpoint, CanonicalWorkflowDefinition,
     CanonicalWorkflowLifecycle, CanonicalWorkflowState, VersionedContract, to_canonical_json,
@@ -14,6 +15,7 @@ use sha2::{Digest, Sha256};
 const MAX_SHORT_TEXT: usize = 512;
 const MAX_IDENTIFIER: usize = 128;
 const MAX_LIST: usize = 256;
+const MAX_SOURCE_ARTIFACT_BYTES: u64 = 104_857_600;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
 /// Stable semantic validation failure at the trusted runtime boundary.
@@ -468,6 +470,67 @@ impl ValidateCanonicalRecord for CanonicalVerificationResult {
     }
 }
 
+impl ValidateCanonicalRecord for CanonicalSourceArtifactOwnership {
+    fn validate_canonical(&self) -> Result<(), CanonicalRecordError> {
+        record_version(self)?;
+        identifiers(&[
+            &self.ownership_id,
+            &self.source_artifact_id,
+            &self.authority_id,
+            &self.session_id,
+            &self.task_id,
+            &self.request_id,
+            &self.runtime_artifact_id,
+        ])?;
+        sha(&self.payload_sha256, "payload_sha256")?;
+        if self.byte_length > MAX_SOURCE_ARTIFACT_BYTES {
+            return Err(error(
+                "engineering.ownership.byte_length_bound",
+                "byte_length",
+            ));
+        }
+        let requires_expiration = matches!(
+            self.ownership_scope,
+            CanonicalSourceOwnershipScope::UntilExpiration
+        );
+        if requires_expiration != self.expires_at.is_some() {
+            return Err(error(
+                "engineering.ownership.expires_binding",
+                "expires_at",
+            ));
+        }
+        if let Some(expires_at) = &self.expires_at {
+            timestamp(expires_at, "expires_at")?;
+        }
+        let requires_released = matches!(
+            self.retention_state,
+            CanonicalSourceRetentionState::Released | CanonicalSourceRetentionState::Deleted
+        );
+        if requires_released != self.released_at.is_some() {
+            return Err(error(
+                "engineering.ownership.released_binding",
+                "released_at",
+            ));
+        }
+        if let Some(released_at) = &self.released_at {
+            timestamp(released_at, "released_at")?;
+        }
+        let is_deleted = matches!(
+            self.retention_state,
+            CanonicalSourceRetentionState::Deleted
+        );
+        if self.deletion_effective != is_deleted {
+            return Err(error(
+                "engineering.ownership.deletion_flag",
+                "deletion_effective",
+            ));
+        }
+        timestamp(&self.created_at, "created_at")?;
+        timestamp(&self.last_transition_at, "last_transition_at")?;
+        sha(&self.ownership_sha256, "ownership_sha256")
+    }
+}
+
 impl ValidateCanonicalRecord for CanonicalTerminalResult {
     fn validate_canonical(&self) -> Result<(), CanonicalRecordError> {
         record_version(self)?;
@@ -694,6 +757,77 @@ mod tests {
         assert_eq!(
             result.validate_canonical().unwrap_err().code,
             "engineering.terminal.false_success"
+        );
+    }
+
+    fn ownership() -> CanonicalSourceArtifactOwnership {
+        CanonicalSourceArtifactOwnership {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            ownership_id: "ownership:1".to_owned(),
+            source_artifact_id: "source:1".to_owned(),
+            authority_id: "authority:1".to_owned(),
+            session_id: "session:1".to_owned(),
+            task_id: "task:1".to_owned(),
+            request_id: "request:1".to_owned(),
+            ownership_scope: CanonicalSourceOwnershipScope::UntilExpiration,
+            retention_state: CanonicalSourceRetentionState::Active,
+            classification: CanonicalClassification::Internal,
+            runtime_artifact_id: "runtime-artifact:1".to_owned(),
+            payload_sha256: digest(),
+            byte_length: 1024,
+            expires_at: Some("2026-09-01T12:00:00Z".to_owned()),
+            released_at: None,
+            deletion_effective: false,
+            created_at: "2026-08-25T12:00:00Z".to_owned(),
+            last_transition_at: "2026-08-25T12:00:00Z".to_owned(),
+            ownership_sha256: digest(),
+        }
+    }
+
+    #[test]
+    fn ownership_binds_expiration_release_and_deletion_flags() {
+        let baseline = ownership();
+        assert_eq!(baseline.validate_canonical(), Ok(()));
+
+        let mut missing_expiration = ownership();
+        missing_expiration.expires_at = None;
+        assert_eq!(
+            missing_expiration.validate_canonical().unwrap_err().code,
+            "engineering.ownership.expires_binding"
+        );
+
+        let mut scoped_with_expiration = ownership();
+        scoped_with_expiration.ownership_scope = CanonicalSourceOwnershipScope::SessionScoped;
+        assert_eq!(
+            scoped_with_expiration.validate_canonical().unwrap_err().code,
+            "engineering.ownership.expires_binding"
+        );
+
+        let mut released = ownership();
+        released.ownership_scope = CanonicalSourceOwnershipScope::UserHold;
+        released.expires_at = None;
+        released.retention_state = CanonicalSourceRetentionState::Released;
+        assert_eq!(
+            released.validate_canonical().unwrap_err().code,
+            "engineering.ownership.released_binding"
+        );
+        released.released_at = Some("2026-08-26T12:00:00Z".to_owned());
+        assert_eq!(released.validate_canonical(), Ok(()));
+
+        let mut deleted = released.clone();
+        deleted.retention_state = CanonicalSourceRetentionState::Deleted;
+        assert_eq!(
+            deleted.validate_canonical().unwrap_err().code,
+            "engineering.ownership.deletion_flag"
+        );
+        deleted.deletion_effective = true;
+        assert_eq!(deleted.validate_canonical(), Ok(()));
+
+        let mut oversized = ownership();
+        oversized.byte_length = MAX_SOURCE_ARTIFACT_BYTES + 1;
+        assert_eq!(
+            oversized.validate_canonical().unwrap_err().code,
+            "engineering.ownership.byte_length_bound"
         );
     }
 

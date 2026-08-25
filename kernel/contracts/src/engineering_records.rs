@@ -901,3 +901,86 @@ pub struct CanonicalTerminalResult {
     /// Digest of this result with this field zeroed.
     pub result_sha256: String,
 }
+
+/// Closed logical ownership scope assigned to one captured source artifact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceOwnershipScope {
+    /// Retain only for the lifetime of the owning session.
+    SessionScoped,
+    /// Retain only for the lifetime of the owning task.
+    TaskScoped,
+    /// Retain only for the lifetime of the owning request or turn.
+    RequestScoped,
+    /// Retain until the owning capability instance releases the reference.
+    CapabilityScoped,
+    /// Retain until an explicit user release decision.
+    UserHold,
+    /// Retain until a policy-selected explicit expiration.
+    UntilExpiration,
+}
+
+/// Current logical retention lifecycle for one source-artifact reference.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceRetentionState {
+    /// The reference is current and may back a bounded read under policy.
+    Active,
+    /// The retention window has passed but payload deletion has not yet completed.
+    Expired,
+    /// The owner explicitly released the reference; payload cleanup may still be pending.
+    Released,
+    /// Metadata records already completed payload deletion.
+    Deleted,
+}
+
+/// Logical ownership and retention binding for one captured source artifact.
+///
+/// This record layers logical scope over the existing encrypted content-addressed backend.
+/// `runtime_artifact_id`, `payload_sha256`, and `byte_length` refer to the physical payload
+/// already retained by the canonical runtime-artifact manifest. This contract never widens
+/// [`crate::RuntimeArtifactKind`] and never introduces a second physical store.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceArtifactOwnership {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable ownership record identity.
+    pub ownership_id: String,
+    /// Source artifact identity from the source-artifact contract family.
+    pub source_artifact_id: String,
+    /// Authority under which the source was captured.
+    pub authority_id: String,
+    /// Owning session identity.
+    pub session_id: String,
+    /// Owning task identity.
+    pub task_id: String,
+    /// Owning request or turn identity.
+    pub request_id: String,
+    /// Logical ownership scope.
+    pub ownership_scope: CanonicalSourceOwnershipScope,
+    /// Current retention lifecycle.
+    pub retention_state: CanonicalSourceRetentionState,
+    /// Data classification for the referenced payload.
+    pub classification: CanonicalClassification,
+    /// Existing physical runtime-artifact identity that backs this reference.
+    pub runtime_artifact_id: String,
+    /// SHA-256 digest of the exact physical payload bytes.
+    pub payload_sha256: String,
+    /// Exact physical payload byte length.
+    pub byte_length: u64,
+    /// Exclusive expiration; required iff `ownership_scope` is `until_expiration`.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub expires_at: Option<String>,
+    /// Release time; required iff `retention_state` is `released` or `deleted`.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub released_at: Option<String>,
+    /// Must be true iff `retention_state` is `deleted`.
+    pub deletion_effective: bool,
+    /// Trusted RFC 3339 creation time.
+    pub created_at: String,
+    /// Trusted RFC 3339 time of the last retention or ownership transition.
+    pub last_transition_at: String,
+    /// Digest of the canonical record with this field zeroed.
+    pub ownership_sha256: String,
+}

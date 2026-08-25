@@ -58,6 +58,7 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "runtime-artifact-manifest",
   "runtime-artifact-operator-view",
   "runtime-resume-binding",
+  "source-artifact-ownership",
   "session-environment-capture",
   "write-aware-checkpoint",
   "command-preview",
@@ -823,6 +824,26 @@ function runtimeSemanticErrors(recordType, data) {
     );
     if (!isStrictlySorted(artifactIds)) {
       errors.push("resume artifact identities must be strictly sorted");
+    }
+  } else if (recordType === "source-artifact-ownership") {
+    const createdAt = Date.parse(data.created_at ?? "");
+    const lastAt = Date.parse(data.last_transition_at ?? "");
+    if (Number.isFinite(createdAt) && Number.isFinite(lastAt) && lastAt < createdAt) {
+      errors.push("last_transition_at cannot precede created_at");
+    }
+    if (data.ownership_scope === "until_expiration") {
+      const expiresAt = Date.parse(data.expires_at ?? "");
+      if (Number.isFinite(expiresAt) && Number.isFinite(createdAt) && expiresAt <= createdAt) {
+        errors.push("until_expiration ownership must expire after creation");
+      }
+    }
+    if (
+      (data.retention_state === "released" || data.retention_state === "deleted")
+    ) {
+      const releasedAt = Date.parse(data.released_at ?? "");
+      if (Number.isFinite(releasedAt) && Number.isFinite(createdAt) && releasedAt < createdAt) {
+        errors.push("released_at cannot precede created_at");
+      }
     }
   } else if (recordType === "change-intent-record") {
     for (const field of [

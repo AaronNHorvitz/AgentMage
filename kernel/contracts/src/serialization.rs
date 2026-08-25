@@ -72,6 +72,7 @@ impl_versioned_contract!(
     crate::CanonicalArtifactEnvelope,
     crate::CanonicalArtifactIngestionResult,
     crate::CanonicalArtifactTransformation,
+    crate::CanonicalSourceArtifactOwnership,
     crate::CanonicalCapabilityManifest,
     crate::CanonicalContextDeliveryReceipt,
     crate::CanonicalContextManifest,

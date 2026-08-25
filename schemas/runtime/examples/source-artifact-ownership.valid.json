@@ -1,0 +1,21 @@
+{
+  "schema_version": 2,
+  "ownership_id": "ownership-1",
+  "source_artifact_id": "source-artifact-1",
+  "authority_id": "authority-1",
+  "session_id": "session-1",
+  "task_id": "task-1",
+  "request_id": "request-1",
+  "ownership_scope": "until_expiration",
+  "retention_state": "active",
+  "classification": "internal",
+  "runtime_artifact_id": "runtime-artifact-1",
+  "payload_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "byte_length": 4096,
+  "expires_at": "2026-09-01T12:00:00Z",
+  "released_at": null,
+  "deletion_effective": false,
+  "created_at": "2026-08-25T12:00:00Z",
+  "last_transition_at": "2026-08-25T12:00:00Z",
+  "ownership_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+}

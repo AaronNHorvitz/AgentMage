@@ -361,6 +361,7 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "runtime-artifact-manifest",
     "runtime-artifact-operator-view",
     "runtime-resume-binding",
+    "source-artifact-ownership",
     "session-environment-capture",
     "write-aware-checkpoint",
     "command-preview",
@@ -508,6 +509,158 @@ test("runtime artifact schemas reject path authority and lifecycle drift", () =>
     validateRuntimeRecord(
       "runtime-resume-binding",
       duplicateArtifact,
+      runtimeValidators,
+    ).valid,
+    false,
+  );
+});
+
+test("source-artifact ownership records enforce scope, retention, deletion, and timeline invariants", () => {
+  const load = () =>
+    JSON.parse(
+      fs.readFileSync(
+        path.join(
+          ROOT,
+          "schemas/runtime/examples/source-artifact-ownership.valid.json",
+        ),
+        "utf8",
+      ),
+    );
+
+  const baseline = load();
+  assert.equal(
+    validateRuntimeRecord("source-artifact-ownership", baseline, runtimeValidators)
+      .valid,
+    true,
+  );
+
+  const unknownField = load();
+  unknownField.extra_field = "denied";
+  assert.equal(
+    validateRuntimeRecord("source-artifact-ownership", unknownField, runtimeValidators)
+      .valid,
+    false,
+  );
+
+  const wrongVersion = load();
+  wrongVersion.schema_version = 1;
+  assert.equal(
+    validateRuntimeRecord("source-artifact-ownership", wrongVersion, runtimeValidators)
+      .valid,
+    false,
+  );
+
+  const missingExpiration = load();
+  missingExpiration.expires_at = null;
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-ownership",
+      missingExpiration,
+      runtimeValidators,
+    ).valid,
+    false,
+    "until_expiration scope requires an explicit expires_at",
+  );
+
+  const scopedWithExpiration = load();
+  scopedWithExpiration.ownership_scope = "session_scoped";
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-ownership",
+      scopedWithExpiration,
+      runtimeValidators,
+    ).valid,
+    false,
+    "non-until_expiration scopes forbid expires_at",
+  );
+
+  const expiresBeforeCreated = load();
+  expiresBeforeCreated.expires_at = "2026-08-24T12:00:00Z";
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-ownership",
+      expiresBeforeCreated,
+      runtimeValidators,
+    ).valid,
+    false,
+    "until_expiration timestamps must strictly follow creation",
+  );
+
+  const releasedWithoutTimestamp = load();
+  releasedWithoutTimestamp.ownership_scope = "user_hold";
+  releasedWithoutTimestamp.expires_at = null;
+  releasedWithoutTimestamp.retention_state = "released";
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-ownership",
+      releasedWithoutTimestamp,
+      runtimeValidators,
+    ).valid,
+    false,
+    "released state requires released_at",
+  );
+
+  const releasedActive = load();
+  releasedActive.released_at = "2026-08-26T12:00:00Z";
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-ownership",
+      releasedActive,
+      runtimeValidators,
+    ).valid,
+    false,
+    "active state forbids released_at",
+  );
+
+  const deletedWithoutFlag = load();
+  deletedWithoutFlag.ownership_scope = "user_hold";
+  deletedWithoutFlag.expires_at = null;
+  deletedWithoutFlag.retention_state = "deleted";
+  deletedWithoutFlag.released_at = "2026-08-26T12:00:00Z";
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-ownership",
+      deletedWithoutFlag,
+      runtimeValidators,
+    ).valid,
+    false,
+    "deleted state requires deletion_effective=true",
+  );
+
+  const activeWithDeletionFlag = load();
+  activeWithDeletionFlag.deletion_effective = true;
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-ownership",
+      activeWithDeletionFlag,
+      runtimeValidators,
+    ).valid,
+    false,
+    "non-deleted state forbids deletion_effective=true",
+  );
+
+  const oversized = load();
+  oversized.byte_length = 200 * 1024 * 1024;
+  assert.equal(
+    validateRuntimeRecord("source-artifact-ownership", oversized, runtimeValidators)
+      .valid,
+    false,
+  );
+
+  const shortDigest = load();
+  shortDigest.payload_sha256 = "not-a-digest";
+  assert.equal(
+    validateRuntimeRecord("source-artifact-ownership", shortDigest, runtimeValidators)
+      .valid,
+    false,
+  );
+
+  const lastBeforeCreated = load();
+  lastBeforeCreated.last_transition_at = "2026-08-24T12:00:00Z";
+  assert.equal(
+    validateRuntimeRecord(
+      "source-artifact-ownership",
+      lastBeforeCreated,
       runtimeValidators,
     ).valid,
     false,
