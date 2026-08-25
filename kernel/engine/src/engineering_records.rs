@@ -4,10 +4,13 @@ use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CanonicalArtifactEnvelope, CanonicalArtifactIngestionResult,
     CanonicalArtifactTransformation, CanonicalCapabilityManifest, CanonicalCaptureState,
     CanonicalContextDeliveryReceipt, CanonicalContextManifest, CanonicalDeliveryOutcome,
-    CanonicalModelEndpointProfile, CanonicalModelRouteDecision, CanonicalTerminalOutcome,
-    CanonicalTerminalResult, CanonicalToolObservation, CanonicalVerificationOutcome,
-    CanonicalVerificationResult, CanonicalWorkflowCheckpoint, CanonicalWorkflowDefinition,
-    CanonicalWorkflowLifecycle, CanonicalWorkflowState, VersionedContract, to_canonical_json,
+    CanonicalModelEndpointProfile, CanonicalModelRouteDecision,
+    CanonicalRuntimeArtifactBackendKind, CanonicalSourceArtifactOwnership,
+    CanonicalSourceArtifactOwnershipState, CanonicalSourceArtifactRetention,
+    CanonicalSourceArtifactRetentionKind, CanonicalTerminalOutcome, CanonicalTerminalResult,
+    CanonicalToolObservation, CanonicalVerificationOutcome, CanonicalVerificationResult,
+    CanonicalWorkflowCheckpoint, CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle,
+    CanonicalWorkflowState, VersionedContract, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -468,6 +471,77 @@ impl ValidateCanonicalRecord for CanonicalVerificationResult {
     }
 }
 
+impl ValidateCanonicalRecord for CanonicalSourceArtifactOwnership {
+    fn validate_canonical(&self) -> Result<(), CanonicalRecordError> {
+        record_version(self)?;
+        identifiers(&[
+            &self.ownership_id,
+            &self.source_artifact_id,
+            &self.runtime_artifact_id,
+            &self.request_id,
+            &self.session_id,
+            &self.task_id,
+            &self.authority_id,
+        ])?;
+        sha(&self.payload_sha256, "payload_sha256")?;
+        sha(&self.ownership_sha256, "ownership_sha256")?;
+        if self.admitted_at_epoch_ms == 0 || self.updated_at_epoch_ms < self.admitted_at_epoch_ms {
+            return Err(error(
+                "engineering.source_ownership.time_order",
+                "updated_at_epoch_ms",
+            ));
+        }
+        match self.retention.kind {
+            CanonicalSourceArtifactRetentionKind::UntilExpiration => {
+                let expires = self.retention.expires_at_epoch_ms.ok_or_else(|| {
+                    error(
+                        "engineering.source_ownership.expiration_required",
+                        "retention.expires_at_epoch_ms",
+                    )
+                })?;
+                if expires <= self.admitted_at_epoch_ms {
+                    return Err(error(
+                        "engineering.source_ownership.expiration_order",
+                        "retention.expires_at_epoch_ms",
+                    ));
+                }
+            }
+            _ if self.retention.expires_at_epoch_ms.is_some() => {
+                return Err(error(
+                    "engineering.source_ownership.unexpected_expiration",
+                    "retention.expires_at_epoch_ms",
+                ));
+            }
+            _ => {}
+        }
+        if self.session_exclusive
+            && self.retention.kind != CanonicalSourceArtifactRetentionKind::Session
+        {
+            return Err(error(
+                "engineering.source_ownership.session_scope",
+                "retention.kind",
+            ));
+        }
+        match self.ownership_state {
+            CanonicalSourceArtifactOwnershipState::Active => {
+                if self.reason_code.is_some() {
+                    return Err(error(
+                        "engineering.source_ownership.unexpected_reason",
+                        "reason_code",
+                    ));
+                }
+            }
+            _ => {
+                let reason = self.reason_code.as_deref().ok_or_else(|| {
+                    error("engineering.source_ownership.reason_required", "reason_code")
+                })?;
+                identifier(reason, "reason_code")?;
+            }
+        }
+        Ok(())
+    }
+}
+
 impl ValidateCanonicalRecord for CanonicalTerminalResult {
     fn validate_canonical(&self) -> Result<(), CanonicalRecordError> {
         record_version(self)?;
@@ -694,6 +768,90 @@ mod tests {
         assert_eq!(
             result.validate_canonical().unwrap_err().code,
             "engineering.terminal.false_success"
+        );
+    }
+
+    #[test]
+    fn source_artifact_ownership_binds_to_the_existing_backend_and_retention() {
+        fn base() -> CanonicalSourceArtifactOwnership {
+            CanonicalSourceArtifactOwnership {
+                schema_version: CONTRACT_SCHEMA_VERSION,
+                ownership_id: "ownership:1".to_owned(),
+                source_artifact_id: "source:1".to_owned(),
+                runtime_artifact_id: "runtime-artifact:1".to_owned(),
+                payload_sha256: digest(),
+                runtime_artifact_kind: CanonicalRuntimeArtifactBackendKind::GeneratedFile,
+                request_id: "request:1".to_owned(),
+                session_id: "session:1".to_owned(),
+                task_id: "task:1".to_owned(),
+                authority_id: "authority:1".to_owned(),
+                session_exclusive: true,
+                retention: CanonicalSourceArtifactRetention {
+                    kind: CanonicalSourceArtifactRetentionKind::Session,
+                    expires_at_epoch_ms: None,
+                },
+                ownership_state: CanonicalSourceArtifactOwnershipState::Active,
+                admitted_at_epoch_ms: 1,
+                updated_at_epoch_ms: 2,
+                revision: 0,
+                reason_code: None,
+                ownership_sha256: digest(),
+            }
+        }
+        assert_eq!(base().validate_canonical(), Ok(()));
+
+        let mut expiration_required = base();
+        expiration_required.session_exclusive = false;
+        expiration_required.retention.kind = CanonicalSourceArtifactRetentionKind::UntilExpiration;
+        assert_eq!(
+            expiration_required.validate_canonical().unwrap_err().code,
+            "engineering.source_ownership.expiration_required"
+        );
+
+        let mut before_admission = expiration_required.clone();
+        before_admission.retention.expires_at_epoch_ms = Some(1);
+        assert_eq!(
+            before_admission.validate_canonical().unwrap_err().code,
+            "engineering.source_ownership.expiration_order"
+        );
+
+        let mut user_hold_with_expiration = base();
+        user_hold_with_expiration.session_exclusive = false;
+        user_hold_with_expiration.retention.kind =
+            CanonicalSourceArtifactRetentionKind::UserHold;
+        user_hold_with_expiration.retention.expires_at_epoch_ms = Some(9);
+        assert_eq!(
+            user_hold_with_expiration.validate_canonical().unwrap_err().code,
+            "engineering.source_ownership.unexpected_expiration"
+        );
+
+        let mut session_scope = base();
+        session_scope.retention.kind = CanonicalSourceArtifactRetentionKind::UserHold;
+        assert_eq!(
+            session_scope.validate_canonical().unwrap_err().code,
+            "engineering.source_ownership.session_scope"
+        );
+
+        let mut released_without_reason = base();
+        released_without_reason.ownership_state =
+            CanonicalSourceArtifactOwnershipState::Released;
+        assert_eq!(
+            released_without_reason.validate_canonical().unwrap_err().code,
+            "engineering.source_ownership.reason_required"
+        );
+
+        let mut active_with_reason = base();
+        active_with_reason.reason_code = Some("user-release".to_owned());
+        assert_eq!(
+            active_with_reason.validate_canonical().unwrap_err().code,
+            "engineering.source_ownership.unexpected_reason"
+        );
+
+        let mut stale_update = base();
+        stale_update.updated_at_epoch_ms = 0;
+        assert_eq!(
+            stale_update.validate_canonical().unwrap_err().code,
+            "engineering.source_ownership.time_order"
         );
     }
 

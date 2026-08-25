@@ -216,6 +216,109 @@ pub struct CanonicalContextItem {
     pub reason: Option<String>,
 }
 
+/// Closed runtime-artifact backend kind reused without widening the physical `RuntimeArtifactKind`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalRuntimeArtifactBackendKind {
+    /// A proposed or applied source-code patch.
+    Patch,
+    /// Standard output captured from a bounded command.
+    StandardOutput,
+    /// Standard error captured from a bounded command.
+    StandardError,
+    /// Output produced by a trusted validation or test run.
+    TestLog,
+    /// A generated file whose bytes remain outside the event envelope.
+    GeneratedFile,
+    /// A generated analysis or verification report.
+    Report,
+    /// Bounded model output too large for the event or transcript projection.
+    ModelOutput,
+}
+
+/// Closed retention class for one logical source-artifact reference over the runtime backend.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceArtifactRetentionKind {
+    /// Retain under the owning session lifecycle.
+    Session,
+    /// Retain until the exact policy-selected expiration.
+    UntilExpiration,
+    /// Retain until an explicit user release decision.
+    UserHold,
+}
+
+/// Exact retention assignment for one logical source-artifact reference.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceArtifactRetention {
+    /// Closed retention class.
+    pub kind: CanonicalSourceArtifactRetentionKind,
+    /// Exclusive expiration for `UntilExpiration`; absent for every other class.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub expires_at_epoch_ms: Option<u64>,
+}
+
+/// Closed lifecycle state for one logical source-artifact ownership record.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceArtifactOwnershipState {
+    /// The reference is current and the payload may be opened under policy.
+    Active,
+    /// The reference is retained for inspection but cannot return payload bytes.
+    Quarantined,
+    /// The owning session or an explicit user operation released the reference.
+    Released,
+    /// Canonical metadata records completed payload deletion.
+    Deleted,
+}
+
+/// Logical ownership of one source artifact over the existing encrypted content-addressed backend.
+///
+/// This record binds a source-artifact identity to a `RuntimeArtifact*` payload without widening
+/// `RuntimeArtifactKind` and without introducing a second physical store.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceArtifactOwnership {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable ownership identity.
+    pub ownership_id: String,
+    /// Logical source-artifact identity.
+    pub source_artifact_id: String,
+    /// Runtime-artifact identity of the payload stored in the encrypted content-addressed backend.
+    pub runtime_artifact_id: String,
+    /// Lowercase SHA-256 content address of the exact payload bytes in the backend.
+    pub payload_sha256: String,
+    /// Backend semantic family, restricted to the closed physical `RuntimeArtifactKind` set.
+    pub runtime_artifact_kind: CanonicalRuntimeArtifactBackendKind,
+    /// Request that introduced the source-artifact reference.
+    pub request_id: String,
+    /// Owning local session; knowledge of this identity grants no access by itself.
+    pub session_id: String,
+    /// Owning task.
+    pub task_id: String,
+    /// Authority used to access the source.
+    pub authority_id: String,
+    /// Whether the reference is scoped strictly to its owning session.
+    pub session_exclusive: bool,
+    /// Exact retention assignment.
+    pub retention: CanonicalSourceArtifactRetention,
+    /// Current metadata lifecycle state.
+    pub ownership_state: CanonicalSourceArtifactOwnershipState,
+    /// Trusted admission time in Unix epoch milliseconds.
+    pub admitted_at_epoch_ms: u64,
+    /// Trusted time of the most recent lifecycle transition, in Unix epoch milliseconds.
+    pub updated_at_epoch_ms: u64,
+    /// Monotonic lifecycle revision.
+    pub revision: u64,
+    /// Stable content-free code required for every non-active ownership state.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub reason_code: Option<String>,
+    /// Digest of this canonical record with this field set to all zeroes.
+    pub ownership_sha256: String,
+}
+
 /// Sealed declaration of the context assembled for one model turn.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
