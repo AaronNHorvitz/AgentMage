@@ -555,6 +555,8 @@ const detachedPayload = {
     payload_sha256: { type: "null" },
   },
 };
+// Applied through a property hop, so the object type must be restated for strict compilation.
+const detachedPayloadCustody = { type: "object", ...detachedPayload };
 
 const sourceRetention = closed({
   kind: retentionKindEnum,
@@ -588,7 +590,7 @@ sourceArtifactCustody.allOf = [
   },
   {
     if: {
-      properties: { retention: { properties: { kind: { const: "ephemeral" } }, required: ["kind"] } },
+      properties: { retention: { type: "object", properties: { kind: { const: "ephemeral" } }, required: ["kind"] } },
       required: ["retention"],
     },
     then: detachedPayload,
@@ -626,7 +628,7 @@ sourceArtifact.allOf = [{
     properties: {
       byte_length: { type: "null" },
       sha256: { type: "null" },
-      custody: detachedPayload,
+      custody: detachedPayloadCustody,
     },
   },
 }];
