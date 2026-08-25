@@ -57,6 +57,7 @@ export const RUNTIME_RECORD_TYPES = Object.freeze([
   "runtime-artifact-reference",
   "runtime-artifact-manifest",
   "runtime-artifact-operator-view",
+  "source-artifact-custody",
   "runtime-resume-binding",
   "session-environment-capture",
   "write-aware-checkpoint",
@@ -813,6 +814,16 @@ function runtimeSemanticErrors(recordType, data) {
       data.checkpoint_reference_count !== 0
     ) {
       errors.push("a non-active artifact cannot remain in the current checkpoint");
+    }
+  } else if (recordType === "source-artifact-custody") {
+    if (
+      data.retention?.kind === "until_expiration" &&
+      data.retention.expires_at_epoch_ms <= data.admitted_at_epoch_ms
+    ) {
+      errors.push("source custody expiration must be later than admission");
+    }
+    if (data.updated_at_epoch_ms < data.admitted_at_epoch_ms) {
+      errors.push("source custody update time cannot precede admission");
     }
   } else if (recordType === "runtime-resume-binding") {
     if (data.event_cursor?.run_id !== data.run_id) {

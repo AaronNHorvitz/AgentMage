@@ -360,6 +360,7 @@ test("runtime state event and environment fixtures satisfy closed schemas", () =
     "runtime-artifact-reference",
     "runtime-artifact-manifest",
     "runtime-artifact-operator-view",
+    "source-artifact-custody",
     "runtime-resume-binding",
     "session-environment-capture",
     "write-aware-checkpoint",
@@ -512,6 +513,69 @@ test("runtime artifact schemas reject path authority and lifecycle drift", () =>
     ).valid,
     false,
   );
+});
+
+test("source custody schema rejects a second owner, a second store, and disposal drift", () => {
+  const load = () =>
+    JSON.parse(
+      fs.readFileSync(
+        path.join(
+          ROOT,
+          "schemas/runtime/examples/source-artifact-custody.valid.json",
+        ),
+        "utf8",
+      ),
+    );
+  const invalid = (record) =>
+    assert.equal(
+      validateRuntimeRecord("source-artifact-custody", record, runtimeValidators)
+        .valid,
+      false,
+    );
+
+  const secondOwner = load();
+  secondOwner.run_id = "run-example-1";
+  invalid(secondOwner);
+
+  const absentOwner = load();
+  absentOwner.task_id = null;
+  invalid(absentOwner);
+
+  const secondStore = load();
+  secondStore.store_id = "source-artifact-store";
+  invalid(secondStore);
+
+  const widenedKind = load();
+  widenedKind.payload_kind = "source_capture";
+  invalid(widenedKind);
+
+  const pathBearing = load();
+  pathBearing.payload_path = "/private/runtime/payload";
+  invalid(pathBearing);
+
+  const expiredAtAdmission = load();
+  expiredAtAdmission.retention.expires_at_epoch_ms =
+    expiredAtAdmission.admitted_at_epoch_ms;
+  invalid(expiredAtAdmission);
+
+  const backdated = load();
+  backdated.updated_at_epoch_ms = backdated.admitted_at_epoch_ms - 1;
+  invalid(backdated);
+
+  const heldAfterRelease = load();
+  heldAfterRelease.lifecycle = "released";
+  invalid(heldAfterRelease);
+
+  const ownedDeletion = load();
+  ownedDeletion.lifecycle = "deleted";
+  ownedDeletion.integrity = "deleted";
+  ownedDeletion.hold = "none";
+  invalid(ownedDeletion);
+
+  const unreviewedQuarantine = load();
+  unreviewedQuarantine.lifecycle = "quarantined";
+  unreviewedQuarantine.integrity = "corrupt";
+  invalid(unreviewedQuarantine);
 });
 
 test("validation receipts reject false pass, partial ambiguity, secrets, and unsorted evidence", () => {

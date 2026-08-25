@@ -1,0 +1,35 @@
+{
+  "schema_version": 2,
+  "custody_id": "source-custody-example-1",
+  "source_artifact_id": "source-artifact-example-1",
+  "store_id": "runtime-artifact-store",
+  "payload": {
+    "schema_version": 2,
+    "artifact_id": "runtime-artifact-example-1",
+    "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "payload_sha256": "84d89877f0d4041efb6bf91a16f0248f2fd573e6af05c19f96bedb9f882f7882",
+    "byte_size": 10,
+    "media_type": "text/plain"
+  },
+  "payload_kind": "generated_file",
+  "owner_scope": "task",
+  "session_id": "session-example-1",
+  "task_id": "task-example-1",
+  "run_id": null,
+  "conversation_id": null,
+  "retention": {
+    "kind": "until_expiration",
+    "expires_at_epoch_ms": 9000
+  },
+  "hold": "checkpoint",
+  "policy_id": "policy-example-1",
+  "policy_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "admitted_at_epoch_ms": 1000,
+  "lifecycle": "active",
+  "integrity": "verified",
+  "lifecycle_revision": 1,
+  "reason_code": "source.custody.admitted",
+  "updated_at_epoch_ms": 1000,
+  "active_owner_count": 1,
+  "custody_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+}

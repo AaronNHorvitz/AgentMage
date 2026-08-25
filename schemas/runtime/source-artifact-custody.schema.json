@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/source-artifact-custody.schema.json",
+  "title": "AgentMage Source Artifact Custody",
+  "description": "One logical ownership and retention claim on one immutable payload retained by the single content-addressed runtime artifact store.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "custody_id",
+    "source_artifact_id",
+    "store_id",
+    "payload",
+    "payload_kind",
+    "owner_scope",
+    "session_id",
+    "task_id",
+    "run_id",
+    "conversation_id",
+    "retention",
+    "hold",
+    "policy_id",
+    "policy_sha256",
+    "admitted_at_epoch_ms",
+    "lifecycle",
+    "integrity",
+    "lifecycle_revision",
+    "reason_code",
+    "updated_at_epoch_ms",
+    "active_owner_count",
+    "custody_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "custody_id": { "$ref": "#/$defs/identifier" },
+    "source_artifact_id": { "$ref": "#/$defs/identifier" },
+    "store_id": { "const": "runtime-artifact-store" },
+    "payload": {
+      "$ref": "https://agentmage.dev/schemas/runtime/runtime-artifact-reference.schema.json"
+    },
+    "payload_kind": {
+      "enum": ["standard_output", "generated_file", "model_output"]
+    },
+    "owner_scope": { "enum": ["session", "task", "run", "conversation"] },
+    "session_id": { "$ref": "#/$defs/identifier" },
+    "task_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "run_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "conversation_id": { "$ref": "#/$defs/optionalIdentifier" },
+    "retention": { "$ref": "#/$defs/retention" },
+    "hold": { "enum": ["none", "checkpoint", "user", "review"] },
+    "policy_id": { "$ref": "#/$defs/identifier" },
+    "policy_sha256": { "$ref": "#/$defs/digest" },
+    "admitted_at_epoch_ms": { "type": "integer", "minimum": 1 },
+    "lifecycle": { "enum": ["active", "quarantined", "released", "deleted"] },
+    "integrity": {
+      "enum": ["verified", "quarantined", "missing", "corrupt", "deleted"]
+    },
+    "lifecycle_revision": { "type": "integer", "minimum": 1 },
+    "reason_code": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$"
+    },
+    "updated_at_epoch_ms": { "type": "integer", "minimum": 1 },
+    "active_owner_count": { "type": "integer", "minimum": 0 },
+    "custody_sha256": { "$ref": "#/$defs/digest" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "owner_scope": { "const": "session" } },
+        "required": ["owner_scope"]
+      },
+      "then": {
+        "properties": {
+          "task_id": { "type": "null" },
+          "run_id": { "type": "null" },
+          "conversation_id": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "owner_scope": { "const": "task" } },
+        "required": ["owner_scope"]
+      },
+      "then": {
+        "properties": {
+          "task_id": { "$ref": "#/$defs/identifier" },
+          "run_id": { "type": "null" },
+          "conversation_id": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "owner_scope": { "const": "run" } },
+        "required": ["owner_scope"]
+      },
+      "then": {
+        "properties": {
+          "task_id": { "type": "null" },
+          "run_id": { "$ref": "#/$defs/identifier" },
+          "conversation_id": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "owner_scope": { "const": "conversation" } },
+        "required": ["owner_scope"]
+      },
+      "then": {
+        "properties": {
+          "task_id": { "type": "null" },
+          "run_id": { "type": "null" },
+          "conversation_id": { "$ref": "#/$defs/identifier" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "lifecycle": { "const": "active" } },
+        "required": ["lifecycle"]
+      },
+      "then": {
+        "properties": {
+          "integrity": { "const": "verified" },
+          "hold": { "enum": ["none", "checkpoint", "user"] },
+          "active_owner_count": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "lifecycle": { "const": "quarantined" } },
+        "required": ["lifecycle"]
+      },
+      "then": {
+        "properties": {
+          "integrity": { "enum": ["quarantined", "missing", "corrupt"] },
+          "hold": { "const": "review" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "lifecycle": { "const": "released" } },
+        "required": ["lifecycle"]
+      },
+      "then": {
+        "properties": {
+          "integrity": { "const": "verified" },
+          "hold": { "const": "none" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "lifecycle": { "const": "deleted" } },
+        "required": ["lifecycle"]
+      },
+      "then": {
+        "properties": {
+          "integrity": { "const": "deleted" },
+          "hold": { "const": "none" },
+          "active_owner_count": { "const": 0 }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$"
+    },
+    "optionalIdentifier": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/identifier" }]
+    },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "expires_at_epoch_ms"],
+      "properties": {
+        "kind": { "enum": ["session", "until_expiration", "user_hold"] },
+        "expires_at_epoch_ms": {
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "const": "until_expiration" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "expires_at_epoch_ms": { "type": "integer", "minimum": 1 }
+            }
+          },
+          "else": {
+            "properties": { "expires_at_epoch_ms": { "type": "null" } }
+          }
+        }
+      ]
+    }
+  }
+}
