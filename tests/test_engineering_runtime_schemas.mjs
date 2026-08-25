@@ -150,7 +150,7 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
     ordinal: 0,
     kind: "heading",
     byte_range: { start_byte: 0, end_byte_exclusive: 32 },
-    line_range: { start_byte: 1, end_byte_exclusive: 2 },
+    line_range: { start_line: 1, end_line_exclusive: 2 },
     token_count: 8,
     title: "Overview",
     content_sha256: SHA,
@@ -159,6 +159,11 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
   assert.equal(validateSection(section), true, JSON.stringify(validateSection.errors));
   assert.equal(validateSection({ ...section, kind: "footnote" }), false);
   assert.equal(validateSection({ ...section, schema_version: 99 }), false);
+  assert.equal(
+    validateSection({ ...section, line_range: { start_byte: 1, end_byte_exclusive: 2 } }),
+    false,
+    "byte-named fields inside line_range must be rejected structurally",
+  );
 
   const disposition = {
     schema_version: 1,
@@ -400,7 +405,7 @@ test("structural sections and context dispositions reject reversed ranges throug
     ordinal: 0,
     kind: "paragraph",
     byte_range: { start_byte: 0, end_byte_exclusive: 32 },
-    line_range: { start_byte: 1, end_byte_exclusive: 2 },
+    line_range: { start_line: 1, end_line_exclusive: 2 },
     token_count: 8,
     title: null,
     content_sha256: SHA,
@@ -409,7 +414,21 @@ test("structural sections and context dispositions reject reversed ranges throug
   assert.equal(validateSection(section), true);
   assert.equal(validateSection({ ...section, byte_range: { start_byte: 32, end_byte_exclusive: 32 } }), true);
   assert.equal(validateSection({ ...section, byte_range: { start_byte: 10, end_byte_exclusive: 3 } }), false);
-  assert.equal(validateSection({ ...section, line_range: { start_byte: 5, end_byte_exclusive: 1 } }), false);
+  assert.equal(
+    validateSection({ ...section, line_range: { start_line: 5, end_line_exclusive: 1 } }),
+    false,
+    "reversed line coordinates must be rejected",
+  );
+  assert.equal(
+    validateSection({ ...section, line_range: { start_byte: 1, end_byte_exclusive: 2 } }),
+    false,
+    "byte-named fields inside line_range must be rejected",
+  );
+  assert.equal(
+    validateSection({ ...section, line_range: { start_line: 3, end_line_exclusive: 3 } }),
+    true,
+    "zero-length line ranges are admitted",
+  );
 
   const disposition = {
     schema_version: 1,
@@ -535,6 +554,35 @@ test("context-manifest semantic validation reconciles source_artifact_count, art
     true,
     "zero-length range inside a manifest item is admitted",
   );
+  assert.equal(
+    validateManifest({
+      ...base,
+      items: [buildItem("artifact-1", { token_count: 100 }), buildItem("artifact-2")],
+      total_input_tokens: 4,
+    }),
+    false,
+    "item token_count sum exceeding total_input_tokens must fail",
+  );
+  assert.equal(
+    validateManifest({
+      ...base,
+      source_artifact_count: 1,
+      items: [buildItem("artifact-1", { token_count: 100 })],
+      total_input_tokens: 0,
+    }),
+    false,
+    "single item token_count exceeding total_input_tokens must fail",
+  );
+  assert.equal(
+    validateManifest({ ...base, total_input_tokens: 10 }),
+    true,
+    "total_input_tokens above the item sum (non-artifact input included) remains valid",
+  );
+  assert.equal(
+    validateManifest({ ...base }),
+    true,
+    "total_input_tokens equal to the item sum remains valid",
+  );
 });
 
 test("context-manifest items reject non-admitting dispositions carrying ranges or tokens", () => {
@@ -613,14 +661,14 @@ test("createEngineeringRuntimeValidator is the mandatory public path that binds 
     ordinal: 0,
     kind: "paragraph",
     byte_range: { start_byte: 0, end_byte_exclusive: 32 },
-    line_range: { start_byte: 1, end_byte_exclusive: 2 },
+    line_range: { start_line: 1, end_line_exclusive: 2 },
     token_count: 8,
     title: null,
     content_sha256: SHA,
   };
   assert.equal(validateSection(section), true);
   assert.equal(validateSection({ ...section, byte_range: { start_byte: 32, end_byte_exclusive: 0 } }), false);
-  assert.equal(validateSection({ ...section, line_range: { start_byte: 8, end_byte_exclusive: 2 } }), false);
+  assert.equal(validateSection({ ...section, line_range: { start_line: 8, end_line_exclusive: 2 } }), false);
 
   const validateDisposition = createEngineeringRuntimeValidator("context-disposition", ajv);
   const disposition = {

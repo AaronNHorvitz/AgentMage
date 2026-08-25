@@ -44,6 +44,10 @@ const range = closed({
   start_byte: uint,
   end_byte_exclusive: uint,
 });
+const lineRange = closed({
+  start_line: uint,
+  end_line_exclusive: uint,
+});
 const budgets = closed({
   turns: positive,
   tokens: positive,
@@ -579,7 +583,7 @@ const structuralSection = closed({
   ordinal: uint,
   kind: sectionKindEnum,
   byte_range: range,
-  line_range: nullable(range),
+  line_range: nullable(lineRange),
   token_count: uint,
   title: nullable(bounded),
   content_sha256: digest,
@@ -640,6 +644,17 @@ function isOrderedRange(candidate) {
   );
 }
 
+function isOrderedLineRange(candidate) {
+  return (
+    candidate === null
+    || candidate === undefined
+    || (typeof candidate === "object"
+      && typeof candidate.start_line === "number"
+      && typeof candidate.end_line_exclusive === "number"
+      && candidate.start_line <= candidate.end_line_exclusive)
+  );
+}
+
 function isOrderedRangeList(candidates) {
   return Array.isArray(candidates) && candidates.every(isOrderedRange);
 }
@@ -647,27 +662,33 @@ function isOrderedRangeList(candidates) {
 function contextManifestSemantic(record) {
   if (!record || typeof record !== "object" || !Array.isArray(record.items)) return false;
   if (record.items.length !== record.source_artifact_count) return false;
+  if (!Number.isSafeInteger(record.total_input_tokens) || record.total_input_tokens < 0) return false;
   const seen = new Set();
+  let itemTokenSum = 0;
   for (const item of record.items) {
     if (!item || typeof item !== "object") return false;
     if (typeof item.artifact_id !== "string") return false;
     if (seen.has(item.artifact_id)) return false;
     seen.add(item.artifact_id);
     if (!isOrderedRangeList(item.ranges)) return false;
+    if (!Number.isSafeInteger(item.token_count) || item.token_count < 0) return false;
+    itemTokenSum += item.token_count;
+    if (!Number.isSafeInteger(itemTokenSum)) return false;
+    if (itemTokenSum > record.total_input_tokens) return false;
   }
   return true;
 }
 
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
-  "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedRange(record.line_range),
+  "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
-  "structural-section": "byte_range and line_range MUST satisfy start_byte <= end_byte_exclusive.",
+  "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
   "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive.",
-  "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, and every item ranges entry MUST satisfy start_byte <= end_byte_exclusive.",
+  "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",
 });
 
 export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, candidate) {

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentmage.dev/schemas/engineering-runtime/structural-section.schema.json",
   "title": "AgentMage structural-section",
-  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: byte_range and line_range MUST satisfy start_byte <= end_byte_exclusive.",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -91,15 +91,15 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "start_byte",
-            "end_byte_exclusive"
+            "start_line",
+            "end_line_exclusive"
           ],
           "properties": {
-            "start_byte": {
+            "start_line": {
               "type": "integer",
               "minimum": 0
             },
-            "end_byte_exclusive": {
+            "end_line_exclusive": {
               "type": "integer",
               "minimum": 0
             }
