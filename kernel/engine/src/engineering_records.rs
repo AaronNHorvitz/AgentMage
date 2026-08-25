@@ -533,7 +533,10 @@ impl ValidateCanonicalRecord for CanonicalSourceArtifactOwnership {
             }
             _ => {
                 let reason = self.reason_code.as_deref().ok_or_else(|| {
-                    error("engineering.source_ownership.reason_required", "reason_code")
+                    error(
+                        "engineering.source_ownership.reason_required",
+                        "reason_code",
+                    )
                 })?;
                 identifier(reason, "reason_code")?;
             }
@@ -817,11 +820,13 @@ mod tests {
 
         let mut user_hold_with_expiration = base();
         user_hold_with_expiration.session_exclusive = false;
-        user_hold_with_expiration.retention.kind =
-            CanonicalSourceArtifactRetentionKind::UserHold;
+        user_hold_with_expiration.retention.kind = CanonicalSourceArtifactRetentionKind::UserHold;
         user_hold_with_expiration.retention.expires_at_epoch_ms = Some(9);
         assert_eq!(
-            user_hold_with_expiration.validate_canonical().unwrap_err().code,
+            user_hold_with_expiration
+                .validate_canonical()
+                .unwrap_err()
+                .code,
             "engineering.source_ownership.unexpected_expiration"
         );
 
@@ -833,10 +838,12 @@ mod tests {
         );
 
         let mut released_without_reason = base();
-        released_without_reason.ownership_state =
-            CanonicalSourceArtifactOwnershipState::Released;
+        released_without_reason.ownership_state = CanonicalSourceArtifactOwnershipState::Released;
         assert_eq!(
-            released_without_reason.validate_canonical().unwrap_err().code,
+            released_without_reason
+                .validate_canonical()
+                .unwrap_err()
+                .code,
             "engineering.source_ownership.reason_required"
         );
 
