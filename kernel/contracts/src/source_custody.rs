@@ -377,7 +377,10 @@ pub fn source_custody_disposition(
     if record.lifecycle == RuntimeArtifactLifecycleState::Quarantined {
         return Ok(SourceCustodyDisposition::Blocked);
     }
-    if matches!(record.hold, SourceCustodyHold::Checkpoint | SourceCustodyHold::User) {
+    if matches!(
+        record.hold,
+        SourceCustodyHold::Checkpoint | SourceCustodyHold::User
+    ) {
         return Ok(SourceCustodyDisposition::Retain);
     }
     if record.lifecycle == RuntimeArtifactLifecycleState::Released {

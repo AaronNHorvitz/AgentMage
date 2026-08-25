@@ -92,7 +92,10 @@ fn encode(record: &SourceArtifactCustody) -> Vec<u8> {
 fn one_valid_claim_round_trips_and_retains_its_payload() {
     let record = custody();
     let encoded = to_canonical_json(&record).expect("valid claim must serialize");
-    assert_eq!(from_json::<SourceArtifactCustody>(&encoded), Ok(record.clone()));
+    assert_eq!(
+        from_json::<SourceArtifactCustody>(&encoded),
+        Ok(record.clone())
+    );
     assert_eq!(validate_source_artifact_custody(&record), Ok(()));
     let disposition = source_custody_disposition(&record, 10_000);
     assert_eq!(disposition, Ok(SourceCustodyDisposition::Retain));
@@ -244,7 +247,10 @@ fn lifecycle_integrity_and_hold_states_cannot_contradict_each_other() {
     let mut held_after_release = custody();
     held_after_release.lifecycle = RuntimeArtifactLifecycleState::Released;
     held_after_release.hold = SourceCustodyHold::Checkpoint;
-    assert_eq!(validate_source_artifact_custody(&held_after_release), invalid);
+    assert_eq!(
+        validate_source_artifact_custody(&held_after_release),
+        invalid
+    );
 
     let mut user_hold_after_release = custody();
     user_hold_after_release.lifecycle = RuntimeArtifactLifecycleState::Released;
@@ -265,7 +271,10 @@ fn lifecycle_integrity_and_hold_states_cannot_contradict_each_other() {
 
     let mut uppercase_digest = custody();
     uppercase_digest.custody_sha256 = CUSTODY_SHA256.to_uppercase();
-    assert_eq!(validate_source_artifact_custody(&uppercase_digest), malformed);
+    assert_eq!(
+        validate_source_artifact_custody(&uppercase_digest),
+        malformed
+    );
 
     let mut short_digest = custody();
     short_digest.policy_sha256 = "not-a-digest".to_owned();
@@ -302,12 +311,36 @@ fn every_valid_claim_resolves_to_exactly_one_disposition() {
 
     let cases = [
         (custody(), 10_000, SourceCustodyDisposition::Retain),
-        (expiring(SourceCustodyHold::None), 4_999, SourceCustodyDisposition::Retain),
-        (expiring(SourceCustodyHold::None), 5_000, SourceCustodyDisposition::ReleaseEligible),
-        (expiring(SourceCustodyHold::User), 10_000, SourceCustodyDisposition::Retain),
-        (expiring(SourceCustodyHold::Checkpoint), 10_000, SourceCustodyDisposition::Retain),
-        (released(1), 10_000, SourceCustodyDisposition::ReleaseEligible),
-        (released(0), 10_000, SourceCustodyDisposition::DeleteEligible),
+        (
+            expiring(SourceCustodyHold::None),
+            4_999,
+            SourceCustodyDisposition::Retain,
+        ),
+        (
+            expiring(SourceCustodyHold::None),
+            5_000,
+            SourceCustodyDisposition::ReleaseEligible,
+        ),
+        (
+            expiring(SourceCustodyHold::User),
+            10_000,
+            SourceCustodyDisposition::Retain,
+        ),
+        (
+            expiring(SourceCustodyHold::Checkpoint),
+            10_000,
+            SourceCustodyDisposition::Retain,
+        ),
+        (
+            released(1),
+            10_000,
+            SourceCustodyDisposition::ReleaseEligible,
+        ),
+        (
+            released(0),
+            10_000,
+            SourceCustodyDisposition::DeleteEligible,
+        ),
         (quarantined, 10_000, SourceCustodyDisposition::Blocked),
         (deleted, 10_000, SourceCustodyDisposition::Completed),
     ];
