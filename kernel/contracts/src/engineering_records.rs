@@ -1071,7 +1071,10 @@ mod tests {
     fn retained_custody_reuses_the_existing_store_kind_and_backend() {
         let custody = retained();
 
-        assert_eq!(SOURCE_ARTIFACT_PAYLOAD_KIND, RuntimeArtifactKind::GeneratedFile);
+        assert_eq!(
+            SOURCE_ARTIFACT_PAYLOAD_KIND,
+            RuntimeArtifactKind::GeneratedFile
+        );
         assert_eq!(custody.validate(Some(&digest('a'))), Ok(()));
         assert_eq!(
             serde_json::to_value(custody.payload_backend).expect("backend encodes"),
@@ -1086,10 +1089,22 @@ mod tests {
     #[test]
     fn custody_cleanup_state_follows_the_single_lifecycle_derivation() {
         for (custody_state, cleanup_state) in [
-            (RuntimeArtifactLifecycleState::Active, RuntimeArtifactCleanupState::Retained),
-            (RuntimeArtifactLifecycleState::Quarantined, RuntimeArtifactCleanupState::Blocked),
-            (RuntimeArtifactLifecycleState::Released, RuntimeArtifactCleanupState::Eligible),
-            (RuntimeArtifactLifecycleState::Deleted, RuntimeArtifactCleanupState::Completed),
+            (
+                RuntimeArtifactLifecycleState::Active,
+                RuntimeArtifactCleanupState::Retained,
+            ),
+            (
+                RuntimeArtifactLifecycleState::Quarantined,
+                RuntimeArtifactCleanupState::Blocked,
+            ),
+            (
+                RuntimeArtifactLifecycleState::Released,
+                RuntimeArtifactCleanupState::Eligible,
+            ),
+            (
+                RuntimeArtifactLifecycleState::Deleted,
+                RuntimeArtifactCleanupState::Completed,
+            ),
         ] {
             assert_eq!(custody_state.cleanup_state(), cleanup_state);
             let mut custody = retained();
