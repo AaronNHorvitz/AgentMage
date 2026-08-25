@@ -113,6 +113,8 @@ impl EffectClass {
     ///
     /// A higher rank is never less restrictive in any derived rule. The ranks form a
     /// closed total order so that combining declarations stays deterministic.
+    /// [`Self::Unknown`] holds the highest rank because an unestablished effect is
+    /// never replaced by a concrete class.
     #[must_use]
     pub const fn restriction_rank(self) -> u8 {
         match self {
@@ -121,15 +123,17 @@ impl EffectClass {
             Self::Conditional => 2,
             Self::NonIdempotent => 3,
             Self::External => 4,
-            Self::Unknown => 5,
-            Self::Destructive => 6,
+            Self::Destructive => 5,
+            Self::Unknown => 6,
         }
     }
 
     /// Returns the more restrictive of two declared classes.
     ///
     /// Combining declarations can only raise the restriction rank, so no additional
-    /// declaration source can broaden an effect that is already declared.
+    /// declaration source can broaden an effect that is already declared. Because
+    /// [`Self::Unknown`] outranks every concrete class, it is absorbing: no proposal
+    /// can establish a concrete effect for an unestablished declaration.
     #[must_use]
     pub const fn most_restrictive(self, other: Self) -> Self {
         if other.restriction_rank() > self.restriction_rank() {
@@ -445,6 +449,23 @@ mod tests {
                 assert_eq!(narrowed.effect_class(), combined);
             }
         }
+    }
+
+    #[test]
+    fn unknown_absorbs_every_proposed_class_in_both_operand_orders() {
+        for class in EffectClass::ALL {
+            let unknown = EffectClass::Unknown;
+            assert_eq!(unknown.most_restrictive(class), unknown);
+            assert_eq!(class.most_restrictive(unknown), unknown);
+
+            let narrowed = EffectDeclaration::new(unknown).narrowed_by(class);
+            assert_eq!(narrowed.effect_class(), unknown);
+        }
+
+        let destructive = EffectDeclaration::new(EffectClass::Unknown)
+            .narrowed_by(EffectClass::Destructive)
+            .effect_class();
+        assert_eq!(destructive, EffectClass::Unknown);
     }
 
     #[test]
