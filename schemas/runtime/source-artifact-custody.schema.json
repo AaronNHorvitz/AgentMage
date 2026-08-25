@@ -48,7 +48,10 @@
       "then": {
         "properties": {
           "binding": { "type": "null" },
-          "retention": { "properties": { "kind": { "const": "ephemeral" } } },
+          "retention": {
+            "type": "object",
+            "properties": { "kind": { "const": "ephemeral" } }
+          },
           "checkpoint_rooted": { "const": false }
         }
       },
@@ -56,6 +59,7 @@
         "properties": {
           "binding": { "$ref": "#/$defs/binding" },
           "retention": {
+            "type": "object",
             "properties": {
               "kind": { "enum": ["session", "until_expiration", "user_hold"] }
             }
@@ -67,6 +71,7 @@
       "if": {
         "properties": {
           "retention": {
+            "type": "object",
             "properties": { "kind": { "const": "until_expiration" } },
             "required": ["kind"]
           }
@@ -76,6 +81,7 @@
       "then": {
         "properties": {
           "retention": {
+            "type": "object",
             "properties": {
               "expires_at_epoch_ms": { "type": "integer", "minimum": 1 }
             }
@@ -85,6 +91,7 @@
       "else": {
         "properties": {
           "retention": {
+            "type": "object",
             "properties": { "expires_at_epoch_ms": { "type": "null" } }
           }
         }
