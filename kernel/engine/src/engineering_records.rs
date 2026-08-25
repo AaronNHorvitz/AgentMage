@@ -6,10 +6,10 @@ use agentmage_kernel_contracts::{
     CanonicalContextDeliveryReceipt, CanonicalContextManifest, CanonicalDeliveryOutcome,
     CanonicalModelEndpointProfile, CanonicalModelRouteDecision, CanonicalSourceArtifactOwnership,
     CanonicalSourceArtifactOwnershipState, CanonicalSourceArtifactRetentionKind,
-    CanonicalTerminalOutcome, CanonicalTerminalResult,
-    CanonicalToolObservation, CanonicalVerificationOutcome, CanonicalVerificationResult,
-    CanonicalWorkflowCheckpoint, CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle,
-    CanonicalWorkflowState, VersionedContract, to_canonical_json,
+    CanonicalTerminalOutcome, CanonicalTerminalResult, CanonicalToolObservation,
+    CanonicalVerificationOutcome, CanonicalVerificationResult, CanonicalWorkflowCheckpoint,
+    CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle, CanonicalWorkflowState,
+    VersionedContract, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
