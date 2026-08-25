@@ -573,7 +573,7 @@ mod tests {
     fn a_retained_binding_must_be_representable_by_the_existing_backend() {
         assert_eq!(MIN_SOURCE_CUSTODY_PAYLOAD_BYTES, 1);
         assert_eq!(MAX_SOURCE_CUSTODY_PAYLOAD_BYTES, 67_108_864);
-        assert!(SOURCE_CAPTURE_CEILING > MAX_SOURCE_CUSTODY_PAYLOAD_BYTES);
+        const { assert!(SOURCE_CAPTURE_CEILING > MAX_SOURCE_CUSTODY_PAYLOAD_BYTES) };
 
         let sized = |byte_size: u64| SourceArtifactCustody {
             binding: Some(binding(DIGEST, byte_size)),
