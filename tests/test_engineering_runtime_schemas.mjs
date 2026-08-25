@@ -9,7 +9,10 @@ import {
   ENGINEERING_RUNTIME_SCHEMAS,
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
+  FROZEN_RUNTIME_ARTIFACT_KINDS,
   REUSED_SCHEMA_CONTRACTS,
+  SOURCE_CUSTODY_ARTIFACT_KIND,
+  SOURCE_CUSTODY_BACKEND,
   createEngineeringRuntimeValidator,
   schemaDocument,
   synchronize,
@@ -17,6 +20,52 @@ import {
 } from "../scripts/engineering_runtime_schemas.mjs";
 
 const SHA = "a".repeat(64);
+const SOURCE_TIMESTAMP = "2026-08-25T12:00:00Z";
+const RETAINED_CUSTODY = Object.freeze({
+  backend: "runtime_artifact_store",
+  artifact_kind: "generated_file",
+  binding: { runtime_artifact_id: "runtime-artifact-1", payload_sha256: SHA, byte_size: 3 },
+  owner_session_id: "session-1",
+  owner_task_id: "task-1",
+  owner_run_id: "run-1",
+  retention_class: "session",
+  expires_at: null,
+  state: "active",
+  checkpoint_rooted: false,
+  release_reason_code: null,
+});
+const UNRETAINED_CUSTODY = Object.freeze({
+  ...RETAINED_CUSTODY,
+  binding: null,
+  retention_class: "ephemeral",
+  state: "not_retained",
+});
+
+function sourceArtifactRecord(overrides = {}) {
+  return {
+    schema_version: 1,
+    source_artifact_id: "source-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    reference_id: "reference-1",
+    origin_id: "origin-1",
+    provenance_sha256: SHA,
+    declared_media_type: "text/plain",
+    classification: "internal",
+    freshness_state: "fresh",
+    capture_state: "captured",
+    byte_length: 3,
+    sha256: SHA,
+    collected_at: SOURCE_TIMESTAMP,
+    custody: { ...RETAINED_CUSTODY },
+    source_artifact_sha256: SHA,
+    ...overrides,
+  };
+}
+
+function payloadBinding(payload_sha256, byte_size) {
+  return { runtime_artifact_id: "runtime-artifact-1", payload_sha256, byte_size };
+}
 
 function ajvInstance() {
   const ajv = new Ajv2020({ allErrors: true, strict: true });
@@ -40,24 +89,8 @@ test("generated Engineering Runtime schemas are current, closed, and compile", (
 });
 
 test("source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes", () => {
-  const timestamp = "2026-08-25T12:00:00Z";
-  const captured = {
-    schema_version: 1,
-    source_artifact_id: "source-1",
-    request_id: "request-1",
-    authority_id: "authority-1",
-    reference_id: "reference-1",
-    origin_id: "origin-1",
-    provenance_sha256: SHA,
-    declared_media_type: "text/plain",
-    classification: "internal",
-    freshness_state: "fresh",
-    capture_state: "captured",
-    byte_length: 3,
-    sha256: SHA,
-    collected_at: timestamp,
-    source_artifact_sha256: SHA,
-  };
+  const timestamp = SOURCE_TIMESTAMP;
+  const captured = sourceArtifactRecord();
   const validateArtifact = validator("source-artifact");
   assert.equal(validateArtifact(captured), true, JSON.stringify(validateArtifact.errors));
   const { schema_version: _omitted, ...missingVersion } = captured;
@@ -67,7 +100,13 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
   assert.equal(validateArtifact({ ...captured, freshness_state: "stale" }), false);
   assert.equal(validateArtifact({ ...captured, byte_length: 200 * 1024 * 1024 }), false);
   assert.equal(validateArtifact({ ...captured, schema_version: 2 }), false);
-  const unavailable = { ...captured, capture_state: "unavailable", byte_length: null, sha256: null };
+  const unavailable = {
+    ...captured,
+    capture_state: "unavailable",
+    byte_length: null,
+    sha256: null,
+    custody: { ...UNRETAINED_CUSTODY },
+  };
   assert.equal(validateArtifact(unavailable), true, JSON.stringify(validateArtifact.errors));
   assert.equal(validateArtifact({ ...unavailable, byte_length: 3 }), false);
 
@@ -184,6 +223,146 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
   assert.equal(validateDisposition({ ...disposition, terminal: false }), false);
   const overRanges = Array.from({ length: 257 }, () => ({ start_byte: 0, end_byte_exclusive: 1 }));
   assert.equal(validateDisposition({ ...disposition, ranges: overRanges }), false);
+});
+
+test("source-artifact custody assigns one logical owner and retention over the existing store", () => {
+  const validateArtifact = validator("source-artifact");
+  const semantic = combinedValidator("source-artifact");
+  const retained = sourceArtifactRecord();
+  assert.equal(semantic(retained), true, JSON.stringify(validateArtifact.errors));
+
+  const { custody: _dropped, ...withoutCustody } = retained;
+  assert.equal(validateArtifact(withoutCustody), false, "custody is required");
+  assert.equal(
+    validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, unknown_field: true } }),
+    false,
+    "custody rejects unknown fields",
+  );
+  for (const field of ["owner_session_id", "owner_task_id", "owner_run_id"]) {
+    const { [field]: _removed, ...withoutOwner } = RETAINED_CUSTODY;
+    assert.equal(
+      validateArtifact({ ...retained, custody: withoutOwner }),
+      false,
+      `${field} must identify the owner of every retained source artifact`,
+    );
+  }
+
+  const ephemeral = sourceArtifactRecord({ custody: { ...UNRETAINED_CUSTODY } });
+  assert.equal(semantic(ephemeral), true, "ephemeral capture stays outside the durable store");
+  assert.equal(
+    validateArtifact({ ...retained, custody: { ...UNRETAINED_CUSTODY, state: "active" } }),
+    false,
+    "an ephemeral retention class cannot own an active durable reference",
+  );
+  assert.equal(
+    validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, binding: null } }),
+    false,
+    "an active reference requires an exact payload binding",
+  );
+  assert.equal(
+    validateArtifact({ ...retained, custody: { ...UNRETAINED_CUSTODY, binding: payloadBinding(SHA, 3) } }),
+    false,
+    "an unretained custody cannot name payload bytes",
+  );
+
+  const expiring = { ...RETAINED_CUSTODY, retention_class: "until_expiration", expires_at: SOURCE_TIMESTAMP };
+  assert.equal(validateArtifact({ ...retained, custody: expiring }), true);
+  assert.equal(
+    validateArtifact({ ...retained, custody: { ...expiring, expires_at: null } }),
+    false,
+    "expiring retention requires an exact expiration",
+  );
+  assert.equal(
+    validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, expires_at: SOURCE_TIMESTAMP } }),
+    false,
+    "session retention has no expiration timestamp",
+  );
+
+  for (const state of ["quarantined", "released", "deleted"]) {
+    assert.equal(
+      validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, state } }),
+      false,
+      `${state} requires a stable reason code`,
+    );
+    assert.equal(
+      validateArtifact({
+        ...retained,
+        custody: { ...RETAINED_CUSTODY, state, release_reason_code: "owner-release" },
+      }),
+      true,
+      `${state} with a stable reason code is admitted`,
+    );
+  }
+  assert.equal(
+    validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, release_reason_code: "owner-release" } }),
+    false,
+    "an active reference carries no release reason",
+  );
+
+  const rooted = { ...RETAINED_CUSTODY, checkpoint_rooted: true };
+  assert.equal(validateArtifact({ ...retained, custody: rooted }), true);
+  for (const state of ["released", "deleted"]) {
+    assert.equal(
+      validateArtifact({ ...retained, custody: { ...rooted, state, release_reason_code: "owner-release" } }),
+      false,
+      `a current checkpoint must root the reference against ${state}`,
+    );
+  }
+  assert.equal(
+    validateArtifact({ ...retained, custody: { ...UNRETAINED_CUSTODY, checkpoint_rooted: true } }),
+    false,
+    "an unretained reference cannot root a checkpoint",
+  );
+
+  assert.equal(
+    semantic({ ...retained, custody: { ...RETAINED_CUSTODY, binding: payloadBinding("b".repeat(64), 3) } }),
+    false,
+    "retained payload bytes must repeat the exact source digest",
+  );
+  assert.equal(
+    semantic({ ...retained, custody: { ...RETAINED_CUSTODY, binding: payloadBinding(SHA, 4) } }),
+    false,
+    "retained payload bytes must repeat the exact source length",
+  );
+  const unavailable = sourceArtifactRecord({
+    capture_state: "unavailable",
+    freshness_state: "unavailable",
+    byte_length: null,
+    sha256: null,
+  });
+  assert.equal(validateArtifact(unavailable), true, "the contradiction is semantic, not structural");
+  assert.equal(semantic(unavailable), false, "an uncaptured source cannot retain a payload");
+  assert.equal(semantic({ ...unavailable, custody: { ...UNRETAINED_CUSTODY } }), true);
+});
+
+test("source-artifact custody cannot widen the frozen artifact family or name a second store", () => {
+  const validateArtifact = validator("source-artifact");
+  const retained = sourceArtifactRecord();
+  assert.equal(FROZEN_RUNTIME_ARTIFACT_KINDS.length, 7);
+  assert.equal(FROZEN_RUNTIME_ARTIFACT_KINDS.includes(SOURCE_CUSTODY_ARTIFACT_KIND), true);
+  assert.equal(SOURCE_CUSTODY_BACKEND, "runtime_artifact_store");
+
+  for (const artifact_kind of FROZEN_RUNTIME_ARTIFACT_KINDS) {
+    assert.equal(
+      validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, artifact_kind } }),
+      artifact_kind === SOURCE_CUSTODY_ARTIFACT_KIND,
+      `${artifact_kind} must match the single declared source custody kind`,
+    );
+  }
+  for (const artifact_kind of ["source_artifact", "source_payload", "attachment"]) {
+    assert.equal(
+      validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, artifact_kind } }),
+      false,
+      `${artifact_kind} must not widen the frozen artifact family`,
+    );
+  }
+  for (const backend of ["source_artifact_store", "runtime_artifact_store_v2", "filesystem"]) {
+    assert.equal(
+      validateArtifact({ ...retained, custody: { ...RETAINED_CUSTODY, backend } }),
+      false,
+      `${backend} must not be representable as a second physical store`,
+    );
+  }
 });
 
 test("multi-agent schemas require bounded workers and verifier-owned completion evidence", () => {

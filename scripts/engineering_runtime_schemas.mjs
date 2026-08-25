@@ -538,6 +538,66 @@ const sourceProvenance = closed({
   provenance_sha256: digest,
 });
 
+export const FROZEN_RUNTIME_ARTIFACT_KINDS = Object.freeze(["patch", "standard_output", "standard_error", "test_log", "generated_file", "report", "model_output"]);
+export const SOURCE_CUSTODY_BACKEND = "runtime_artifact_store";
+export const SOURCE_CUSTODY_ARTIFACT_KIND = "generated_file";
+export const SOURCE_RETENTION_CLASSES = Object.freeze(["ephemeral", "session", "until_expiration", "user_hold"]);
+export const SOURCE_DURABLE_RETENTION_CLASSES = Object.freeze(["session", "until_expiration", "user_hold"]);
+export const SOURCE_CUSTODY_STATES = Object.freeze(["not_retained", "active", "quarantined", "released", "deleted"]);
+export const SOURCE_CUSTODY_CLOSED_STATES = Object.freeze(["quarantined", "released", "deleted"]);
+export const SOURCE_CUSTODY_OPENABLE_STATES = Object.freeze(["active", "quarantined"]);
+
+const sourceCustodyBinding = closed({
+  runtime_artifact_id: identifier,
+  payload_sha256: digest,
+  byte_size: boundedSourceBytes,
+});
+const sourceCustody = closed({
+  backend: { const: SOURCE_CUSTODY_BACKEND },
+  artifact_kind: { const: SOURCE_CUSTODY_ARTIFACT_KIND },
+  binding: nullable(sourceCustodyBinding),
+  owner_session_id: identifier,
+  owner_task_id: identifier,
+  owner_run_id: identifier,
+  retention_class: { enum: [...SOURCE_RETENTION_CLASSES] },
+  expires_at: nullable(timestamp),
+  state: { enum: [...SOURCE_CUSTODY_STATES] },
+  checkpoint_rooted: { type: "boolean" },
+  release_reason_code: nullable(identifier),
+});
+sourceCustody.allOf = [
+  {
+    if: { properties: { state: { const: "not_retained" } }, required: ["state"] },
+    then: {
+      properties: {
+        binding: { type: "null" },
+        retention_class: { const: "ephemeral" },
+        checkpoint_rooted: { const: false },
+      },
+    },
+    else: {
+      properties: {
+        binding: { type: "object" },
+        retention_class: { enum: [...SOURCE_DURABLE_RETENTION_CLASSES] },
+      },
+    },
+  },
+  {
+    if: { properties: { retention_class: { const: "until_expiration" } }, required: ["retention_class"] },
+    then: { properties: { expires_at: timestamp } },
+    else: { properties: { expires_at: { type: "null" } } },
+  },
+  {
+    if: { properties: { state: { enum: [...SOURCE_CUSTODY_CLOSED_STATES] } }, required: ["state"] },
+    then: { properties: { release_reason_code: identifier } },
+    else: { properties: { release_reason_code: { type: "null" } } },
+  },
+  {
+    if: { properties: { checkpoint_rooted: { const: true } }, required: ["checkpoint_rooted"] },
+    then: { properties: { state: { enum: [...SOURCE_CUSTODY_OPENABLE_STATES] } } },
+  },
+];
+
 const sourceArtifact = closed({
   schema_version: supportedSourceVersion,
   source_artifact_id: identifier,
@@ -553,6 +613,7 @@ const sourceArtifact = closed({
   byte_length: nullable(boundedSourceBytes),
   sha256: nullable(digest),
   collected_at: timestamp,
+  custody: sourceCustody,
   source_artifact_sha256: digest,
 });
 sourceArtifact.allOf = [{
@@ -704,13 +765,31 @@ function contextManifestSemantic(record) {
   return true;
 }
 
+function sourceArtifactSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  const custody = record.custody;
+  if (!custody || typeof custody !== "object") return false;
+  if (custody.backend !== SOURCE_CUSTODY_BACKEND) return false;
+  if (!FROZEN_RUNTIME_ARTIFACT_KINDS.includes(custody.artifact_kind)) return false;
+  const retained = custody.state !== "not_retained";
+  if (retained !== (custody.binding !== null && custody.binding !== undefined)) return false;
+  if (retained && record.capture_state !== "captured") return false;
+  if (!retained) return true;
+  return (
+    custody.binding.payload_sha256 === record.sha256
+    && custody.binding.byte_size === record.byte_length
+  );
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
+  "source-artifact": sourceArtifactSemantic,
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
+  "source-artifact": "custody.backend MUST name the one existing runtime artifact store, custody.artifact_kind MUST remain a member of the frozen RuntimeArtifactKind family, custody.binding MUST be present exactly when custody.state is not not_retained, a retained custody MUST belong to a captured source, and a retained custody.binding MUST repeat the exact source sha256 and byte_length.",
   "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
   "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",

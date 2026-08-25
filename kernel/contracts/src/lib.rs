@@ -41,6 +41,7 @@ mod runtime_artifact;
 mod runtime_event;
 mod runtime_run;
 mod serialization;
+mod source_custody;
 mod task;
 mod tool;
 mod transaction;
@@ -239,6 +240,10 @@ pub use runtime_run::{
 };
 pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,
+};
+pub use source_custody::{
+    SOURCE_ARTIFACT_CUSTODY_SCHEMA_VERSION, SOURCE_CUSTODY_ARTIFACT_KIND, SourceArtifactCustody,
+    SourceCustodyBackend, SourceCustodyBinding, SourceCustodyState,
 };
 pub use task::{
     Action, ActionKind, ActionState, BudgetLimit, BudgetResource, CompletionEvidence,
