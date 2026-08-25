@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentmage.dev/schemas/engineering-runtime/context-manifest.schema.json",
   "title": "AgentMage context-manifest",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: items.length MUST equal source_artifact_count, artifact_id values MUST be unique, and every item ranges entry MUST satisfy start_byte <= end_byte_exclusive.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -111,7 +112,39 @@
               }
             ]
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "disposition": {
+                  "enum": [
+                    "duplicate",
+                    "stale",
+                    "unsupported",
+                    "unavailable",
+                    "restricted",
+                    "omitted"
+                  ]
+                }
+              },
+              "required": [
+                "disposition"
+              ]
+            },
+            "then": {
+              "properties": {
+                "ranges": {
+                  "type": "array",
+                  "maxItems": 0
+                },
+                "token_count": {
+                  "const": 0
+                }
+              }
+            }
+          }
+        ]
       },
       "minItems": 0,
       "maxItems": 4096

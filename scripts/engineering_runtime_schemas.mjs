@@ -111,13 +111,28 @@ const supportedContextManifestVersion = {
   type: "integer",
   const: CONTEXT_MANIFEST_SCHEMA_VERSION,
 };
+export const CONTEXT_ADMITTING_DISPOSITIONS = Object.freeze(["included", "summarized", "truncated"]);
+export const CONTEXT_NON_ADMITTING_DISPOSITIONS = Object.freeze(["duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"]);
+const nonAdmittingDispositionConstraint = {
+  if: {
+    properties: { disposition: { enum: [...CONTEXT_NON_ADMITTING_DISPOSITIONS] } },
+    required: ["disposition"],
+  },
+  then: {
+    properties: {
+      ranges: { type: "array", maxItems: 0 },
+      token_count: { const: 0 },
+    },
+  },
+};
 const contextItem = closed({
   artifact_id: identifier,
-  disposition: { enum: ["included", "summarized", "truncated", "duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"] },
+  disposition: { enum: [...CONTEXT_ADMITTING_DISPOSITIONS, ...CONTEXT_NON_ADMITTING_DISPOSITIONS] },
   ranges: list(range),
   token_count: uint,
   reason: nullable(bounded),
 });
+contextItem.allOf = [nonAdmittingDispositionConstraint];
 const contextManifest = closed({
   schema_version: supportedContextManifestVersion,
   context_manifest_id: identifier,
@@ -570,7 +585,6 @@ const structuralSection = closed({
   content_sha256: digest,
 });
 
-const CONTEXT_DISPOSITION_NON_ADMITTING_STATES = ["duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"];
 const contextDisposition = closed({
   schema_version: supportedSourceVersion,
   disposition_id: identifier,
@@ -584,18 +598,7 @@ const contextDisposition = closed({
   reason: nullable(bounded),
   terminal: { const: true },
 });
-contextDisposition.allOf = [{
-  if: {
-    properties: { disposition: { enum: CONTEXT_DISPOSITION_NON_ADMITTING_STATES } },
-    required: ["disposition"],
-  },
-  then: {
-    properties: {
-      ranges: { type: "array", maxItems: 0 },
-      token_count: { const: 0 },
-    },
-  },
-}];
+contextDisposition.allOf = [nonAdmittingDispositionConstraint];
 
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
@@ -641,14 +644,55 @@ function isOrderedRangeList(candidates) {
   return Array.isArray(candidates) && candidates.every(isOrderedRange);
 }
 
+function contextManifestSemantic(record) {
+  if (!record || typeof record !== "object" || !Array.isArray(record.items)) return false;
+  if (record.items.length !== record.source_artifact_count) return false;
+  const seen = new Set();
+  for (const item of record.items) {
+    if (!item || typeof item !== "object") return false;
+    if (typeof item.artifact_id !== "string") return false;
+    if (seen.has(item.artifact_id)) return false;
+    seen.add(item.artifact_id);
+    if (!isOrderedRangeList(item.ranges)) return false;
+  }
+  return true;
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
+  "context-manifest": contextManifestSemantic,
 });
 
-export function validateEngineeringRuntimeRecord(compiledSchema, semantic, candidate) {
+export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
+  "structural-section": "byte_range and line_range MUST satisfy start_byte <= end_byte_exclusive.",
+  "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive.",
+  "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, and every item ranges entry MUST satisfy start_byte <= end_byte_exclusive.",
+});
+
+export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, candidate) {
+  if (typeof schemaName !== "string" || !(schemaName in ENGINEERING_RUNTIME_SCHEMAS)) {
+    throw new Error(`unknown Engineering Runtime schema: ${schemaName}`);
+  }
   if (!compiledSchema(candidate)) return false;
+  const semantic = ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS[schemaName];
   return semantic === undefined ? true : Boolean(semantic(candidate));
+}
+
+export function createEngineeringRuntimeValidator(schemaName, ajv) {
+  if (!(schemaName in ENGINEERING_RUNTIME_SCHEMAS)) {
+    throw new Error(`unknown Engineering Runtime schema: ${schemaName}`);
+  }
+  const compiled = ajv.compile(schemaDocument(schemaName));
+  const semantic = ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS[schemaName];
+  const predicate = (candidate) => {
+    if (!compiled(candidate)) return false;
+    return semantic === undefined ? true : Boolean(semantic(candidate));
+  };
+  predicate.schemaName = schemaName;
+  predicate.compiled = compiled;
+  predicate.semantic = semantic;
+  return predicate;
 }
 
 export const REUSED_SCHEMA_CONTRACTS = Object.freeze({
@@ -662,12 +706,13 @@ export const REUSED_SCHEMA_CONTRACTS = Object.freeze({
 
 export function schemaDocument(name, schema = ENGINEERING_RUNTIME_SCHEMAS[name]) {
   if (schema === undefined) throw new Error(`unknown Engineering Runtime schema: ${name}`);
-  return {
-    $schema: "https://json-schema.org/draft/2020-12/schema",
-    $id: `${BASE}/${name}.schema.json`,
-    title: `AgentMage ${name}`,
-    ...schema,
-  };
+  const invariant = ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS[name];
+  const description = invariant === undefined
+    ? undefined
+    : `Semantic invariants enforced by createEngineeringRuntimeValidator: ${invariant}`;
+  const header = { $schema: "https://json-schema.org/draft/2020-12/schema", $id: `${BASE}/${name}.schema.json`, title: `AgentMage ${name}` };
+  if (description !== undefined) header.description = description;
+  return { ...header, ...schema };
 }
 
 function render(value) {

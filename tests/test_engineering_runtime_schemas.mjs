@@ -7,8 +7,10 @@ import addFormats from "ajv-formats";
 import {
   CONTEXT_MANIFEST_SCHEMA_VERSION,
   ENGINEERING_RUNTIME_SCHEMAS,
+  ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
   REUSED_SCHEMA_CONTRACTS,
+  createEngineeringRuntimeValidator,
   schemaDocument,
   synchronize,
   validateEngineeringRuntimeRecord,
@@ -16,16 +18,19 @@ import {
 
 const SHA = "a".repeat(64);
 
-function validator(name) {
+function ajvInstance() {
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   addFormats(ajv);
-  return ajv.compile(schemaDocument(name));
+  return ajv;
+}
+
+function validator(name) {
+  return ajvInstance().compile(schemaDocument(name));
 }
 
 function combinedValidator(name) {
   const compiled = validator(name);
-  const semantic = ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS[name];
-  return (candidate) => validateEngineeringRuntimeRecord(compiled, semantic, candidate);
+  return (candidate) => validateEngineeringRuntimeRecord(compiled, name, candidate);
 }
 
 test("generated Engineering Runtime schemas are current, closed, and compile", () => {
@@ -473,6 +478,173 @@ test("extraction terminal states forbid payload contradicting the declared dispo
       `${state} must not claim sections`,
     );
   }
+});
+
+test("context-manifest semantic validation reconciles source_artifact_count, artifact_id uniqueness, and ordered ranges", () => {
+  const validateManifest = combinedValidator("context-manifest");
+  const buildItem = (id, overrides = {}) => ({
+    artifact_id: id,
+    disposition: "included",
+    ranges: [{ start_byte: 0, end_byte_exclusive: 4 }],
+    token_count: 2,
+    reason: null,
+    ...overrides,
+  });
+  const base = {
+    schema_version: CONTEXT_MANIFEST_SCHEMA_VERSION,
+    context_manifest_id: "context-1",
+    session_id: "session-1",
+    turn_id: "turn-1",
+    model_profile_id: "profile-1",
+    source_artifact_count: 2,
+    items: [buildItem("artifact-1"), buildItem("artifact-2")],
+    total_input_tokens: 4,
+    reserved_output_tokens: 0,
+    safety_margin_tokens: 0,
+    manifest_sha256: SHA,
+  };
+  assert.equal(validateManifest(base), true);
+  assert.equal(
+    validateManifest({ ...base, source_artifact_count: 2, items: [buildItem("artifact-1")] }),
+    false,
+    "item count below declared source_artifact_count must fail",
+  );
+  assert.equal(
+    validateManifest({ ...base, source_artifact_count: 1 }),
+    false,
+    "item count above declared source_artifact_count must fail",
+  );
+  assert.equal(
+    validateManifest({ ...base, items: [buildItem("artifact-1"), buildItem("artifact-1")] }),
+    false,
+    "duplicate artifact_id must fail",
+  );
+  assert.equal(
+    validateManifest({
+      ...base,
+      items: [buildItem("artifact-1"), buildItem("artifact-2", { ranges: [{ start_byte: 12, end_byte_exclusive: 4 }] })],
+    }),
+    false,
+    "reversed range inside a manifest item must fail",
+  );
+  assert.equal(
+    validateManifest({
+      ...base,
+      items: [buildItem("artifact-1"), buildItem("artifact-2", { ranges: [{ start_byte: 4, end_byte_exclusive: 4 }] })],
+    }),
+    true,
+    "zero-length range inside a manifest item is admitted",
+  );
+});
+
+test("context-manifest items reject non-admitting dispositions carrying ranges or tokens", () => {
+  const validateManifest = validator("context-manifest");
+  const base = {
+    schema_version: CONTEXT_MANIFEST_SCHEMA_VERSION,
+    context_manifest_id: "context-1",
+    session_id: "session-1",
+    turn_id: "turn-1",
+    model_profile_id: "profile-1",
+    source_artifact_count: 1,
+    items: [],
+    total_input_tokens: 0,
+    reserved_output_tokens: 0,
+    safety_margin_tokens: 0,
+    manifest_sha256: SHA,
+  };
+  for (const state of ["duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"]) {
+    const empty = {
+      ...base,
+      items: [{ artifact_id: `artifact-${state}`, disposition: state, ranges: [], token_count: 0, reason: null }],
+    };
+    assert.equal(validateManifest(empty), true, `${state} empty item must pass structural validation`);
+    assert.equal(
+      validateManifest({
+        ...empty,
+        items: [{ ...empty.items[0], ranges: [{ start_byte: 0, end_byte_exclusive: 4 }] }],
+      }),
+      false,
+      `${state} item must not carry ranges`,
+    );
+    assert.equal(
+      validateManifest({
+        ...empty,
+        items: [{ ...empty.items[0], token_count: 1 }],
+      }),
+      false,
+      `${state} item must not carry nonzero token_count`,
+    );
+  }
+  for (const state of ["included", "summarized", "truncated"]) {
+    const admitting = {
+      ...base,
+      items: [{
+        artifact_id: `artifact-${state}`,
+        disposition: state,
+        ranges: [{ start_byte: 0, end_byte_exclusive: 4 }],
+        token_count: 2,
+        reason: null,
+      }],
+    };
+    assert.equal(validateManifest(admitting), true, `${state} admitting item must pass`);
+  }
+});
+
+test("createEngineeringRuntimeValidator is the mandatory public path that binds structural and semantic contracts", () => {
+  const ajv = ajvInstance();
+  for (const name of Object.keys(ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS)) {
+    const document = schemaDocument(name);
+    assert.equal(
+      typeof document.description === "string" && document.description.startsWith("Semantic invariants"),
+      true,
+      `${name} schema document must publish its semantic invariant`,
+    );
+    const validate = createEngineeringRuntimeValidator(name, ajv);
+    assert.equal(validate.schemaName, name);
+    assert.equal(validate.semantic, ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS[name]);
+  }
+  const validateSection = createEngineeringRuntimeValidator("structural-section", ajv);
+  const section = {
+    schema_version: 1,
+    section_id: "section-1",
+    source_artifact_id: "source-1",
+    extraction_id: "extraction-1",
+    parent_section_id: null,
+    ordinal: 0,
+    kind: "paragraph",
+    byte_range: { start_byte: 0, end_byte_exclusive: 32 },
+    line_range: { start_byte: 1, end_byte_exclusive: 2 },
+    token_count: 8,
+    title: null,
+    content_sha256: SHA,
+  };
+  assert.equal(validateSection(section), true);
+  assert.equal(validateSection({ ...section, byte_range: { start_byte: 32, end_byte_exclusive: 0 } }), false);
+  assert.equal(validateSection({ ...section, line_range: { start_byte: 8, end_byte_exclusive: 2 } }), false);
+
+  const validateDisposition = createEngineeringRuntimeValidator("context-disposition", ajv);
+  const disposition = {
+    schema_version: 1,
+    disposition_id: "disposition-1",
+    context_manifest_id: "context-1",
+    source_artifact_id: "source-1",
+    section_id: null,
+    disposition: "included",
+    ranges: [{ start_byte: 0, end_byte_exclusive: 16 }],
+    token_count: 4,
+    reason_code: "included",
+    reason: null,
+    terminal: true,
+  };
+  assert.equal(validateDisposition(disposition), true);
+  assert.equal(
+    validateDisposition({ ...disposition, ranges: [{ start_byte: 16, end_byte_exclusive: 0 }] }),
+    false,
+    "reversed disposition range is rejected via the mandatory public path",
+  );
+
+  assert.throws(() => createEngineeringRuntimeValidator("nonexistent-schema", ajv));
+  assert.throws(() => validateEngineeringRuntimeRecord(() => true, "nonexistent-schema", {}));
 });
 
 test("context-disposition terminal states forbid ranges and tokens outside admitting states", () => {
