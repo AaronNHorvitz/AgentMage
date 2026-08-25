@@ -439,7 +439,7 @@ test("structural sections and context dispositions reject reversed ranges throug
     disposition: "included",
     ranges: [{ start_byte: 0, end_byte_exclusive: 16 }],
     token_count: 4,
-    reason_code: "included",
+    reason_code: null,
     reason: null,
     terminal: true,
   };
@@ -745,7 +745,7 @@ test("createEngineeringRuntimeValidator is the mandatory public path that binds 
     disposition: "included",
     ranges: [{ start_byte: 0, end_byte_exclusive: 16 }],
     token_count: 4,
-    reason_code: "included",
+    reason_code: null,
     reason: null,
     terminal: true,
   };
@@ -859,21 +859,29 @@ test("context-disposition terminal states forbid ranges and tokens outside admit
     context_manifest_id: "context-1",
     source_artifact_id: "source-1",
     section_id: null,
-    reason_code: "reason",
     reason: null,
     terminal: true,
   };
-  for (const state of ["included", "summarized", "truncated"]) {
+  const admittedIncluded = {
+    ...base,
+    disposition: "included",
+    ranges: [{ start_byte: 0, end_byte_exclusive: 16 }],
+    token_count: 4,
+    reason_code: null,
+  };
+  assert.equal(validateDisposition(admittedIncluded), true, "included admitting payload must pass");
+  for (const state of ["summarized", "truncated"]) {
     const admitted = {
       ...base,
       disposition: state,
       ranges: [{ start_byte: 0, end_byte_exclusive: 16 }],
       token_count: 4,
+      reason_code: "reason",
     };
     assert.equal(validateDisposition(admitted), true, `${state} admitting payload must pass`);
   }
   for (const state of ["duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"]) {
-    const empty = { ...base, disposition: state, ranges: [], token_count: 0 };
+    const empty = { ...base, disposition: state, ranges: [], token_count: 0, reason_code: "reason" };
     assert.equal(validateDisposition(empty), true, `${state} empty payload must pass`);
     assert.equal(
       validateDisposition({ ...empty, ranges: [{ start_byte: 0, end_byte_exclusive: 4 }] }),
@@ -885,5 +893,68 @@ test("context-disposition terminal states forbid ranges and tokens outside admit
       false,
       `${state} must not claim admitted tokens`,
     );
+  }
+});
+
+test("context-disposition and context-manifest impose matching reason_code rules for each disposition", () => {
+  const validateDisposition = validator("context-disposition");
+  const validateManifest = validator("context-manifest");
+  const dispositionBase = {
+    schema_version: 1,
+    disposition_id: "disposition-1",
+    context_manifest_id: "context-1",
+    source_artifact_id: "source-1",
+    section_id: null,
+    reason: null,
+    terminal: true,
+  };
+  const manifestBase = {
+    schema_version: CONTEXT_MANIFEST_SCHEMA_VERSION,
+    context_manifest_id: "context-1",
+    session_id: "session-1",
+    turn_id: "turn-1",
+    model_profile_id: "model-1",
+    source_artifact_count: 1,
+    items: [],
+    total_input_tokens: 32,
+    reserved_output_tokens: 8,
+    safety_margin_tokens: 4,
+    manifest_sha256: SHA,
+  };
+  for (const state of ["included", "summarized", "truncated", "duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"]) {
+    const admitting = state === "included" || state === "summarized" || state === "truncated";
+    const ranges = admitting ? [{ start_byte: 0, end_byte_exclusive: 16 }] : [];
+    const tokens = admitting ? 4 : 0;
+    const dispositionWithNull = {
+      ...dispositionBase,
+      disposition: state,
+      ranges,
+      token_count: tokens,
+      reason_code: null,
+    };
+    const dispositionWithCode = {
+      ...dispositionWithNull,
+      reason_code: "code",
+    };
+    const manifestItem = {
+      artifact_id: "source-1",
+      disposition: state,
+      ranges,
+      token_count: tokens,
+      reason_code: null,
+      reason: null,
+    };
+    const manifestItemWithCode = { ...manifestItem, reason_code: "code" };
+    if (state === "included") {
+      assert.equal(validateDisposition(dispositionWithNull), true, `disposition ${state} accepts reason_code=null`);
+      assert.equal(validateDisposition(dispositionWithCode), false, `disposition ${state} rejects reason_code string`);
+      assert.equal(validateManifest({ ...manifestBase, items: [manifestItem] }), true, `manifest ${state} accepts reason_code=null`);
+      assert.equal(validateManifest({ ...manifestBase, items: [manifestItemWithCode] }), false, `manifest ${state} rejects reason_code string`);
+    } else {
+      assert.equal(validateDisposition(dispositionWithNull), false, `disposition ${state} rejects reason_code=null`);
+      assert.equal(validateDisposition(dispositionWithCode), true, `disposition ${state} accepts reason_code string`);
+      assert.equal(validateManifest({ ...manifestBase, items: [manifestItem] }), false, `manifest ${state} rejects reason_code=null`);
+      assert.equal(validateManifest({ ...manifestBase, items: [manifestItemWithCode] }), true, `manifest ${state} accepts reason_code string`);
+    }
   }
 });

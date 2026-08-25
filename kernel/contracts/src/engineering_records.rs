@@ -208,9 +208,11 @@ pub struct CanonicalContextItem {
     pub ranges: Vec<CanonicalByteRange>,
     /// Token count attributed to this item.
     pub token_count: u64,
-    /// Stable deterministic code required for every non-complete disposition.
+    /// Stable deterministic code required for every non-complete disposition; null when included.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub reason_code: Option<String>,
     /// Visible reason for a non-complete disposition.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub reason: Option<String>,
 }
 

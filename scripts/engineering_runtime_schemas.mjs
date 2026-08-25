@@ -623,11 +623,11 @@ const contextDisposition = closed({
   disposition: dispositionEnum,
   ranges: list(range),
   token_count: uint,
-  reason_code: identifier,
+  reason_code: nullable(identifier),
   reason: nullable(bounded),
   terminal: { const: true },
 });
-contextDisposition.allOf = [nonAdmittingDispositionConstraint];
+contextDisposition.allOf = [nonAdmittingDispositionConstraint, reasonCodeRequiredConstraint];
 
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
@@ -712,7 +712,7 @@ export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
   "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
-  "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive.",
+  "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",
 });
 

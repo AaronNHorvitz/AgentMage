@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentmage.dev/schemas/engineering-runtime/context-disposition.schema.json",
   "title": "AgentMage context-disposition",
-  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive.",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -87,8 +87,15 @@
       "minimum": 0
     },
     "reason_code": {
-      "type": "string",
-      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "reason": {
       "oneOf": [
@@ -133,6 +140,45 @@
           },
           "token_count": {
             "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "disposition": {
+            "enum": [
+              "summarized",
+              "truncated",
+              "duplicate",
+              "stale",
+              "unsupported",
+              "unavailable",
+              "restricted",
+              "omitted"
+            ]
+          }
+        },
+        "required": [
+          "disposition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reason_code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        },
+        "required": [
+          "reason_code"
+        ]
+      },
+      "else": {
+        "properties": {
+          "reason_code": {
+            "type": "null"
           }
         }
       }
