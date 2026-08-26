@@ -364,8 +364,8 @@ mod tests {
 
     use agentmage_capability_read_only::{GIT_INSPECTION_TOOL_ID, ReadOnlyToolKind};
     use agentmage_kernel_contracts::{
-        ActionId, ContractPayload, CorrelationId, EffectClass, GrantOperation, ToolCall, ToolCallId,
-        ToolId, ToolRiskLevel, WorkspaceId, WorkspacePath,
+        ActionId, ContractPayload, CorrelationId, EffectClass, GrantOperation, ToolCall,
+        ToolCallId, ToolId, ToolRiskLevel, WorkspaceId, WorkspacePath,
     };
     use agentmage_kernel_engine::command_runner::{
         CommandBounds, CommandRequest, CommandRisk, CommandSpec, CommandWorkingDirectory,

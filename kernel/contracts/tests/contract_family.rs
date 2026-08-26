@@ -5,15 +5,14 @@ use agentmage_kernel_contracts::{
     CancellationSignal, CapabilityGrant, ContractError, ContractPayload, CorrelationId,
     DataSensitivity, EFFECT_TAXONOMY_VERSION, EffectClass, EffectDeclaration, ErrorCategory,
     ErrorId, EvidenceId, EvidenceKind, EvidenceReference, GrantClass, GrantId, GrantNonce,
-    GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
-    OperationAttemptId, OperationBinding, OperationEffectBinding, OperationOutcome, Plan, PlanId,
-    PlanState, PlanStep, PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage, PromptRole,
-    Receipt, ReceiptId, RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId,
-    SchemaReference, SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId,
-    TaskStatus, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
-    ValidationIssue, ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId,
-    WorkPacketState, WorkspaceId, WorkspacePath, WorkspacePathErrorKind, from_json,
-    to_canonical_json,
+    GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget, OperationAttemptId,
+    OperationBinding, OperationEffectBinding, OperationOutcome, Plan, PlanId, PlanState, PlanStep,
+    PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage, PromptRole, Receipt, ReceiptId,
+    RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId, SchemaReference, SessionId,
+    StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall, ToolCallId,
+    ToolDefinition, ToolId, ToolResult, ToolRiskLevel, ValidationIssue, ValidationSeverity,
+    VersionedContract, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId, WorkspacePath,
+    WorkspacePathErrorKind, from_json, to_canonical_json,
 };
 use std::fmt::Debug;
 
