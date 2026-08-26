@@ -394,6 +394,41 @@ Repair is bounded:
 4. permit at most the profile's single targeted model repair when policy allows;
 5. emit structured failure evidence and diagnose or replan.
 
+The ladder is ordered so that every deterministic step is exhausted before any
+model repair is requested. The normalization allowlist removes only an outer
+wrapper: a leading byte-order mark, surrounding whitespace, and exactly one
+complete fenced code block with an optional short alphanumeric language tag. It
+never inserts, substitutes, reorders, or invents bytes, never repairs the inside
+of a payload, and leaves non-text candidates unchanged. It runs exactly once per
+candidate, so nested wrappers stay unrepaired instead of being unwrapped by an
+unbounded loop. Each candidate is validated as received and, only when
+normalization changed it, once more in normalized form.
+
+Deterministic normalization consumes no repair budget, so a wrapper-only defect
+never costs the model repair. The model repair itself is one candidate, bound to
+the exact profile that produced the response, and permitted only before any
+effect attempt for that response. It is refused when the permission belongs to
+another profile, when an effect attempt already ran, or when the profile's policy
+withholds it; a refused permission narrows the ladder and never widens it, and a
+second model repair is never available at any profile. Replay and no-progress
+detection compare normalized bytes, so a wrapper-only rewrite of an already
+examined candidate is a repeated attempt rather than new progress. Advisory
+classification also reads normalized bytes, so a fenced structured failure is
+never downgraded to display-only prose.
+
+Every closed outcome carries the exact ladder step that admitted a proposal or a
+content-free reason code:
+
+| Reason code | Meaning |
+|---|---|
+| `model.response.missing` | No candidate was offered |
+| `model.response.invalid` | The only candidate failed exact and normalized validation |
+| `model.response.replayed` | A candidate repeated an already examined normalized form |
+| `model.response.repair-exhausted` | The single model repair ran and failed validation |
+| `model.response.repair-not-permitted` | Profile policy withholds the model repair |
+| `model.response.repair-after-effect` | An effect attempt already ran for this response |
+| `model.response.repair-profile-mismatch` | The permission belongs to another exact profile |
+
 Malformed or truncated calls are never silently discarded.
 
 ### 10.4 Deterministic preflight
@@ -463,7 +498,10 @@ failures.
 
 Budgets are independent for step, tool, error class, workflow recovery, model
 repair, replanning, elapsed time, and inference. An identical action, error, and
-state fingerprint without progress cannot consume an unlimited budget.
+state fingerprint without progress cannot consume an unlimited budget. The model
+repair budget is at most one candidate per response and is charged only by an
+actual model repair; the deterministic normalization of Section 10.3 never
+charges it, and no budget admits a second model repair.
 
 ### 10.8 Premature stop and no progress
 
@@ -511,7 +549,9 @@ evaluation corpus measures them.
 
 Profiles never alter side-effect classification, approval, grant scope,
 idempotency, executor authority, evidence requirements, or deterministic
-completion.
+completion. Tuning repair attempts is narrowing only: a profile may withhold the
+single model repair of Section 10.3, and no profile adds a second one or skips
+deterministic normalization.
 
 ## 12. Persistence Schema Families
 
