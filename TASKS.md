@@ -1055,7 +1055,7 @@ an effect or treating approval as reusable authority.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 5.2.1 - Define closed effect and failure taxonomies**
-  - [ ] **Sub-task 5.2.1.1:** Implement read-only, idempotent-write, conditional,
+  - [x] **Sub-task 5.2.1.1:** Implement read-only, idempotent-write, conditional,
     non-idempotent, destructive, external, and unknown effect classes independent of
     `AuthorityClass` and `ToolRiskLevel`.
   - [ ] **Sub-task 5.2.1.2:** Implement malformed-input, preflight, policy, approval, dependency,
