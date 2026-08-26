@@ -214,6 +214,50 @@ reference collection unlinks verified ciphertext but does not claim independent
 per-payload cryptographic erasure because deduplicated payloads share references
 and the first format derives file keys from one store-scoped root.
 
+## Logical Source-Artifact Ownership and Retention
+
+Ingested source artifacts are owned logically, not physically. `CanonicalSourceArtifactCustody`
+and the `custody` object inside `schemas/engineering-runtime/source-artifact.schema.json`
+assign one owner, one retention class, and one lifecycle to a source artifact **over this same
+encrypted content-addressed backend**. They define no second physical store, no second payload
+namespace, and no additional `RuntimeArtifactKind`.
+
+| Custody field | Meaning | Excluded authority |
+|---|---|---|
+| `owner_session_id`, `owner_task_id` | Logical owner of the retention decision | Knowledge of either identity is not read authority |
+| `payload_store_id` | Exactly `agentmage-runtime-payload-store-v1` | Any other declared store fails closed |
+| `payload_custody` | `memory_only` or `backend_retained` | Custody never opens or names a native path |
+| `backing_artifact_id`, `backing_artifact_kind`, `backing_payload_sha256` | The one existing immutable artifact retaining the bytes | Present only for `backend_retained` custody |
+| `retention_class`, `retention_expires_at` | `ephemeral`, `session`, `until_expiration`, or `user_hold` | Only `until_expiration` may carry an expiration |
+| `lifecycle_state`, `cleanup_state`, `checkpoint_rooted` | Current logical state and its derived cleanup disposition | Cleanup is derived, never independently asserted |
+
+`backing_artifact_kind` is the existing closed `RuntimeArtifactKind` family. The paired total
+functions `backing_runtime_artifact_kind` and `source_backing_artifact_kind` make that a
+compile-time bijection, so widening either family breaks the build instead of quietly creating a
+second artifact taxonomy.
+
+Deterministic custody rules, enforced by
+`agentmage_kernel_engine::engineering_records::validate_source_artifact_custody` and by the
+published schema:
+
+1. A retained payload names exactly one backing artifact, kind, and content address; a
+   memory-only payload names none.
+2. A retained content address must equal the captured source digest, so logical ownership can
+   never point at a second physical payload.
+3. Bytes that were never captured cannot claim durable retention.
+4. `ephemeral` retention never reaches the durable store.
+5. Only `until_expiration` carries an expiration. That expiration must also be strictly later
+   than `collected_at`; the ordering comparison is the published schema semantic invariant,
+   while the kernel validator checks the expiration's binding and shape.
+6. A current checkpoint is a retention root: a checkpoint-rooted artifact cannot be released,
+   quarantined, or deleted.
+7. `quarantined` and `deleted` are payload states; a memory-only artifact cannot claim them.
+8. `cleanup_state` is exactly the value derived from `lifecycle_state`: `active`/`retained`,
+   `released`/`eligible`, `quarantined`/`blocked`, `deleted`/`completed`.
+
+These are frozen contracts and deterministic validation only. No ingestion runtime, extractor,
+or native source-retention path is claimed by this record.
+
 ## Checkpoint and Resume
 
 ```mermaid
@@ -404,6 +448,11 @@ Current automated coverage includes:
   binds all 25 applicable data, access, operations, test, crash-recovery, and
   audit controls to exact source and retained evidence. Neither record claims
   independent human or cryptographic review.
+- Logical source-artifact custody rejection of a declared second payload store, an unbound or
+  contradictory backing payload, content-address drift, durable retention of uncaptured bytes,
+  ephemeral durable retention, a misbound expiration, a released checkpoint root, payloadless
+  quarantine or deletion, an unknown custody field, and derived-cleanup drift. The paired
+  backing-family functions also hold the runtime artifact taxonomy closed at compile time.
 - Fedora journal and artifact pressure measurements retained by Story 50.2.
 
 Still open before Story 22.2 can pass:

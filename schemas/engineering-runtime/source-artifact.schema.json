@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentmage.dev/schemas/engineering-runtime/source-artifact.schema.json",
   "title": "AgentMage source-artifact",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: custody.backing_payload_sha256 MUST equal the top-level sha256 whenever custody.payload_custody is backend_retained, so logical ownership never names a second physical payload. custody.retention_expires_at, when present, MUST be strictly later than collected_at.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -19,6 +20,7 @@
     "byte_length",
     "sha256",
     "collected_at",
+    "custody",
     "source_artifact_sha256"
   ],
   "properties": {
@@ -110,6 +112,318 @@
       "type": "string",
       "format": "date-time"
     },
+    "custody": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner_session_id",
+        "owner_task_id",
+        "payload_store_id",
+        "payload_custody",
+        "backing_artifact_id",
+        "backing_artifact_kind",
+        "backing_payload_sha256",
+        "retention_class",
+        "retention_expires_at",
+        "lifecycle_state",
+        "cleanup_state",
+        "checkpoint_rooted"
+      ],
+      "properties": {
+        "owner_session_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "owner_task_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "payload_store_id": {
+          "const": "agentmage-runtime-payload-store-v1"
+        },
+        "payload_custody": {
+          "enum": [
+            "memory_only",
+            "backend_retained"
+          ]
+        },
+        "backing_artifact_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "backing_artifact_kind": {
+          "oneOf": [
+            {
+              "enum": [
+                "patch",
+                "standard_output",
+                "standard_error",
+                "test_log",
+                "generated_file",
+                "report",
+                "model_output"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "backing_payload_sha256": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retention_class": {
+          "enum": [
+            "ephemeral",
+            "session",
+            "until_expiration",
+            "user_hold"
+          ]
+        },
+        "retention_expires_at": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lifecycle_state": {
+          "enum": [
+            "active",
+            "released",
+            "quarantined",
+            "deleted"
+          ]
+        },
+        "cleanup_state": {
+          "enum": [
+            "retained",
+            "eligible",
+            "blocked",
+            "completed"
+          ]
+        },
+        "checkpoint_rooted": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "payload_custody": {
+                "const": "backend_retained"
+              }
+            },
+            "required": [
+              "payload_custody"
+            ]
+          },
+          "then": {
+            "properties": {
+              "backing_artifact_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "backing_artifact_kind": {
+                "enum": [
+                  "patch",
+                  "standard_output",
+                  "standard_error",
+                  "test_log",
+                  "generated_file",
+                  "report",
+                  "model_output"
+                ]
+              },
+              "backing_payload_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "backing_artifact_id": {
+                "type": "null"
+              },
+              "backing_artifact_kind": {
+                "type": "null"
+              },
+              "backing_payload_sha256": {
+                "type": "null"
+              },
+              "lifecycle_state": {
+                "enum": [
+                  "active",
+                  "released"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "retention_class": {
+                "const": "ephemeral"
+              }
+            },
+            "required": [
+              "retention_class"
+            ]
+          },
+          "then": {
+            "properties": {
+              "payload_custody": {
+                "const": "memory_only"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "retention_class": {
+                "const": "until_expiration"
+              }
+            },
+            "required": [
+              "retention_class"
+            ]
+          },
+          "then": {
+            "properties": {
+              "retention_expires_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "retention_expires_at": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "checkpoint_rooted": {
+                "const": true
+              }
+            },
+            "required": [
+              "checkpoint_rooted"
+            ]
+          },
+          "then": {
+            "properties": {
+              "lifecycle_state": {
+                "const": "active"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "lifecycle_state": {
+                "const": "active"
+              }
+            },
+            "required": [
+              "lifecycle_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cleanup_state": {
+                "const": "retained"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "lifecycle_state": {
+                "const": "released"
+              }
+            },
+            "required": [
+              "lifecycle_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cleanup_state": {
+                "const": "eligible"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "lifecycle_state": {
+                "const": "quarantined"
+              }
+            },
+            "required": [
+              "lifecycle_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cleanup_state": {
+                "const": "blocked"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "lifecycle_state": {
+                "const": "deleted"
+              }
+            },
+            "required": [
+              "lifecycle_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cleanup_state": {
+                "const": "completed"
+              }
+            }
+          }
+        }
+      ]
+    },
     "source_artifact_sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
@@ -153,6 +467,13 @@
           },
           "sha256": {
             "type": "null"
+          },
+          "custody": {
+            "properties": {
+              "payload_custody": {
+                "const": "memory_only"
+              }
+            }
           }
         }
       }

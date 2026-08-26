@@ -6,10 +6,13 @@ import addFormats from "ajv-formats";
 
 import {
   CONTEXT_MANIFEST_SCHEMA_VERSION,
+  CUSTODY_CLEANUP_BY_LIFECYCLE,
   ENGINEERING_RUNTIME_SCHEMAS,
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
   REUSED_SCHEMA_CONTRACTS,
+  RUNTIME_ARTIFACT_KINDS,
+  SOURCE_ARTIFACT_PAYLOAD_STORE_ID,
   createEngineeringRuntimeValidator,
   schemaDocument,
   synchronize,
@@ -17,6 +20,20 @@ import {
 } from "../scripts/engineering_runtime_schemas.mjs";
 
 const SHA = "a".repeat(64);
+const MEMORY_ONLY_CUSTODY = Object.freeze({
+  owner_session_id: "session-1",
+  owner_task_id: "task-1",
+  payload_store_id: SOURCE_ARTIFACT_PAYLOAD_STORE_ID,
+  payload_custody: "memory_only",
+  backing_artifact_id: null,
+  backing_artifact_kind: null,
+  backing_payload_sha256: null,
+  retention_class: "session",
+  retention_expires_at: null,
+  lifecycle_state: "active",
+  cleanup_state: "retained",
+  checkpoint_rooted: false,
+});
 
 function ajvInstance() {
   const ajv = new Ajv2020({ allErrors: true, strict: true });
@@ -56,6 +73,7 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
     byte_length: 3,
     sha256: SHA,
     collected_at: timestamp,
+    custody: { ...MEMORY_ONLY_CUSTODY },
     source_artifact_sha256: SHA,
   };
   const validateArtifact = validator("source-artifact");
@@ -894,6 +912,239 @@ test("context-disposition terminal states forbid ranges and tokens outside admit
       `${state} must not claim admitted tokens`,
     );
   }
+});
+
+test("source-artifact custody assigns logical ownership and retention over the one existing payload store", () => {
+  const validateArtifact = validator("source-artifact");
+  const collectedAt = "2026-08-25T12:00:00Z";
+  const artifact = (custody, overrides = {}) => ({
+    schema_version: 1,
+    source_artifact_id: "source-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    reference_id: "reference-1",
+    origin_id: "origin-1",
+    provenance_sha256: SHA,
+    declared_media_type: "text/plain",
+    classification: "internal",
+    freshness_state: "fresh",
+    capture_state: "captured",
+    byte_length: 3,
+    sha256: SHA,
+    collected_at: collectedAt,
+    custody: { ...MEMORY_ONLY_CUSTODY, ...custody },
+    source_artifact_sha256: SHA,
+    ...overrides,
+  });
+
+  const retained = {
+    payload_custody: "backend_retained",
+    backing_artifact_id: "artifact-1",
+    backing_artifact_kind: "generated_file",
+    backing_payload_sha256: SHA,
+  };
+  assert.equal(validateArtifact(artifact({})), true, JSON.stringify(validateArtifact.errors));
+  assert.equal(
+    validateArtifact(artifact(retained)),
+    true,
+    JSON.stringify(validateArtifact.errors),
+  );
+
+  assert.equal(
+    validateArtifact(artifact({ payload_store_id: "second-payload-store" })),
+    false,
+    "a second physical payload store must be rejected",
+  );
+  assert.equal(
+    validateArtifact(artifact({ ...retained, backing_artifact_kind: "source_document" })),
+    false,
+    "custody must not widen the closed runtime artifact family",
+  );
+  for (const kind of RUNTIME_ARTIFACT_KINDS) {
+    assert.equal(
+      validateArtifact(artifact({ ...retained, backing_artifact_kind: kind })),
+      true,
+      `${kind} is an existing runtime artifact family`,
+    );
+  }
+  assert.equal(
+    validateArtifact(artifact({ ...retained, backing_payload_sha256: null })),
+    false,
+    "retained custody must name its exact content address",
+  );
+  assert.equal(
+    validateArtifact(artifact({ ...retained, backing_artifact_id: null })),
+    false,
+    "retained custody must name its exact backing artifact",
+  );
+  assert.equal(
+    validateArtifact(artifact({ backing_payload_sha256: SHA })),
+    false,
+    "memory-only custody must not claim a retained payload",
+  );
+
+  assert.equal(
+    validateArtifact(artifact({ ...retained, retention_class: "ephemeral" })),
+    false,
+    "ephemeral retention must never reach the durable payload store",
+  );
+  assert.equal(
+    validateArtifact(artifact({ retention_class: "ephemeral" })),
+    true,
+    "ephemeral memory-only custody is admitted",
+  );
+  assert.equal(
+    validateArtifact(artifact({ retention_class: "until_expiration" })),
+    false,
+    "expiring retention requires an expiration",
+  );
+  assert.equal(
+    validateArtifact(
+      artifact({ retention_class: "until_expiration", retention_expires_at: "2026-08-26T12:00:00Z" }),
+    ),
+    true,
+    "expiring retention with an expiration is admitted",
+  );
+  assert.equal(
+    validateArtifact(artifact({ retention_expires_at: "2026-08-26T12:00:00Z" })),
+    false,
+    "non-expiring retention must not carry an expiration",
+  );
+  assert.equal(
+    validateArtifact(artifact({ retention_class: "user_hold" })),
+    true,
+    "user-hold retention has no expiration",
+  );
+
+  for (const [lifecycle, cleanup] of Object.entries(CUSTODY_CLEANUP_BY_LIFECYCLE)) {
+    const backendState = { ...retained, lifecycle_state: lifecycle, cleanup_state: cleanup };
+    assert.equal(
+      validateArtifact(artifact(backendState)),
+      true,
+      `${lifecycle} custody derives ${cleanup}`,
+    );
+    assert.equal(
+      validateArtifact(artifact({ ...backendState, cleanup_state: "retained", lifecycle_state: lifecycle })),
+      lifecycle === "active",
+      `${lifecycle} must not restate a drifted cleanup state`,
+    );
+  }
+  assert.equal(
+    validateArtifact(artifact({ lifecycle_state: "quarantined", cleanup_state: "blocked" })),
+    false,
+    "memory-only custody has no payload to quarantine",
+  );
+  assert.equal(
+    validateArtifact(artifact({ lifecycle_state: "released", cleanup_state: "eligible" })),
+    true,
+    "memory-only custody may be released",
+  );
+  assert.equal(
+    validateArtifact(
+      artifact({ ...retained, checkpoint_rooted: true, lifecycle_state: "released", cleanup_state: "eligible" }),
+    ),
+    false,
+    "a current checkpoint is a retention root and blocks release",
+  );
+  assert.equal(
+    validateArtifact(artifact({ ...retained, checkpoint_rooted: true })),
+    true,
+    "an active checkpoint-rooted artifact is admitted",
+  );
+
+  assert.equal(
+    validateArtifact(
+      artifact(retained, { capture_state: "unavailable", byte_length: null, sha256: null }),
+    ),
+    false,
+    "uncaptured bytes must not claim durable retention",
+  );
+  assert.equal(
+    validateArtifact(
+      artifact({}, { capture_state: "unavailable", byte_length: null, sha256: null, freshness_state: "unavailable" }),
+    ),
+    true,
+    "uncaptured sources remain memory-only",
+  );
+
+  const { custody: _dropped, ...withoutCustody } = artifact({});
+  assert.equal(validateArtifact(withoutCustody), false, "custody is required");
+  assert.equal(
+    validateArtifact(artifact({ native_path: "/private/payloads/source-1" })),
+    false,
+    "custody must not admit an unknown path-bearing field",
+  );
+});
+
+test("source-artifact custody semantics reject content-address drift and non-advancing expiration", () => {
+  const validateArtifact = combinedValidator("source-artifact");
+  const collectedAt = "2026-08-25T12:00:00Z";
+  const base = {
+    schema_version: 1,
+    source_artifact_id: "source-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    reference_id: "reference-1",
+    origin_id: "origin-1",
+    provenance_sha256: SHA,
+    declared_media_type: "text/plain",
+    classification: "internal",
+    freshness_state: "fresh",
+    capture_state: "captured",
+    byte_length: 3,
+    sha256: SHA,
+    collected_at: collectedAt,
+    custody: {
+      ...MEMORY_ONLY_CUSTODY,
+      payload_custody: "backend_retained",
+      backing_artifact_id: "artifact-1",
+      backing_artifact_kind: "generated_file",
+      backing_payload_sha256: SHA,
+    },
+    source_artifact_sha256: SHA,
+  };
+  assert.equal(validateArtifact(base), true);
+  assert.equal(
+    validateArtifact({ ...base, custody: { ...base.custody, backing_payload_sha256: "b".repeat(64) } }),
+    false,
+    "retained custody must not name a second physical payload",
+  );
+  assert.equal(
+    validateArtifact({
+      ...base,
+      custody: {
+        ...base.custody,
+        retention_class: "until_expiration",
+        retention_expires_at: collectedAt,
+      },
+    }),
+    false,
+    "expiration equal to creation must fail",
+  );
+  assert.equal(
+    validateArtifact({
+      ...base,
+      custody: {
+        ...base.custody,
+        retention_class: "until_expiration",
+        retention_expires_at: "2026-08-24T12:00:00Z",
+      },
+    }),
+    false,
+    "expiration before creation must fail",
+  );
+  assert.equal(
+    validateArtifact({
+      ...base,
+      custody: {
+        ...base.custody,
+        retention_class: "until_expiration",
+        retention_expires_at: "2026-08-25T12:00:01Z",
+      },
+    }),
+    true,
+    "expiration later than creation is admitted",
+  );
 });
 
 test("context-disposition and context-manifest impose matching reason_code rules for each disposition", () => {

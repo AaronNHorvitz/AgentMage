@@ -4,10 +4,13 @@ use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CanonicalArtifactEnvelope, CanonicalArtifactIngestionResult,
     CanonicalArtifactTransformation, CanonicalCapabilityManifest, CanonicalCaptureState,
     CanonicalContextDeliveryReceipt, CanonicalContextManifest, CanonicalDeliveryOutcome,
-    CanonicalModelEndpointProfile, CanonicalModelRouteDecision, CanonicalTerminalOutcome,
-    CanonicalTerminalResult, CanonicalToolObservation, CanonicalVerificationOutcome,
-    CanonicalVerificationResult, CanonicalWorkflowCheckpoint, CanonicalWorkflowDefinition,
-    CanonicalWorkflowLifecycle, CanonicalWorkflowState, VersionedContract, to_canonical_json,
+    CanonicalModelEndpointProfile, CanonicalModelRouteDecision, CanonicalSourceArtifactCustody,
+    CanonicalSourceLifecycleState, CanonicalSourcePayloadCustody, CanonicalSourceRetentionClass,
+    CanonicalTerminalOutcome, CanonicalTerminalResult, CanonicalToolObservation,
+    CanonicalVerificationOutcome, CanonicalVerificationResult, CanonicalWorkflowCheckpoint,
+    CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle, CanonicalWorkflowState,
+    SOURCE_ARTIFACT_PAYLOAD_STORE_ID, VersionedContract, canonical_source_cleanup_state,
+    to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -503,6 +506,103 @@ impl ValidateCanonicalRecord for CanonicalTerminalResult {
     }
 }
 
+/// Rejects logical source custody that contradicts its capture envelope or the one payload store.
+///
+/// Ownership and retention are logical assignments over the existing encrypted
+/// content-addressed payload store. The check therefore fails closed on a declared second
+/// store, a retained payload whose content address is not the captured source digest, durable
+/// retention of bytes that were never captured, ephemeral retention that reaches the durable
+/// store, an expiration bound to a non-expiring class, release of a current checkpoint root,
+/// a payload lifecycle claimed without a payload, and any cleanup state that is not the one
+/// derived from the lifecycle state.
+///
+/// # Errors
+///
+/// Returns the first stable `engineering.custody.*` failure, or an envelope failure when the
+/// capture envelope itself is inconsistent.
+pub fn validate_source_artifact_custody(
+    envelope: &CanonicalArtifactEnvelope,
+    custody: &CanonicalSourceArtifactCustody,
+) -> Result<(), CanonicalRecordError> {
+    envelope.validate_canonical()?;
+    identifier(&custody.owner_session_id, "custody.owner_session_id")?;
+    identifier(&custody.owner_task_id, "custody.owner_task_id")?;
+    if custody.payload_store_id != SOURCE_ARTIFACT_PAYLOAD_STORE_ID {
+        return Err(error(
+            "engineering.custody.second_store",
+            "custody.payload_store_id",
+        ));
+    }
+
+    let retained = custody.payload_custody == CanonicalSourcePayloadCustody::BackendRetained;
+    if retained != custody.backing_artifact_id.is_some()
+        || retained != custody.backing_artifact_kind.is_some()
+        || retained != custody.backing_payload_sha256.is_some()
+    {
+        return Err(error(
+            "engineering.custody.backing_binding",
+            "custody.payload_custody",
+        ));
+    }
+    if let Some(backing_artifact_id) = &custody.backing_artifact_id {
+        identifier(backing_artifact_id, "custody.backing_artifact_id")?;
+    }
+    if let Some(backing_payload_sha256) = &custody.backing_payload_sha256 {
+        sha(backing_payload_sha256, "custody.backing_payload_sha256")?;
+        if envelope.capture_state != CanonicalCaptureState::Captured {
+            return Err(error(
+                "engineering.custody.uncaptured_retention",
+                "custody.payload_custody",
+            ));
+        }
+        if envelope.sha256.as_deref() != Some(backing_payload_sha256.as_str()) {
+            return Err(error(
+                "engineering.custody.content_address_drift",
+                "custody.backing_payload_sha256",
+            ));
+        }
+    }
+
+    if retained && custody.retention_class == CanonicalSourceRetentionClass::Ephemeral {
+        return Err(error(
+            "engineering.custody.ephemeral_retention",
+            "custody.retention_class",
+        ));
+    }
+    let expiring = custody.retention_class == CanonicalSourceRetentionClass::UntilExpiration;
+    if expiring != custody.retention_expires_at.is_some() {
+        return Err(error(
+            "engineering.custody.expiration_binding",
+            "custody.retention_expires_at",
+        ));
+    }
+    if let Some(expires_at) = &custody.retention_expires_at {
+        timestamp(expires_at, "custody.retention_expires_at")?;
+    }
+
+    let active = custody.lifecycle_state == CanonicalSourceLifecycleState::Active;
+    let released = custody.lifecycle_state == CanonicalSourceLifecycleState::Released;
+    if custody.checkpoint_rooted && !active {
+        return Err(error(
+            "engineering.custody.checkpoint_root_released",
+            "custody.lifecycle_state",
+        ));
+    }
+    if !retained && !active && !released {
+        return Err(error(
+            "engineering.custody.payloadless_lifecycle",
+            "custody.lifecycle_state",
+        ));
+    }
+    if custody.cleanup_state != canonical_source_cleanup_state(custody.lifecycle_state) {
+        return Err(error(
+            "engineering.custody.cleanup_drift",
+            "custody.cleanup_state",
+        ));
+    }
+    Ok(())
+}
+
 fn record_version<T: VersionedContract>(record: &T) -> Result<(), CanonicalRecordError> {
     if record.schema_version() == CONTRACT_SCHEMA_VERSION {
         Ok(())
@@ -631,10 +731,259 @@ pub const fn zero_sha256() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use agentmage_kernel_contracts::{CanonicalArtifactOrigin, CanonicalClassification};
+    use agentmage_kernel_contracts::{
+        CanonicalArtifactOrigin, CanonicalBackingArtifactKind, CanonicalClassification,
+        CanonicalSourceCleanupState, RuntimeArtifactKind, backing_runtime_artifact_kind,
+        source_backing_artifact_kind,
+    };
 
     fn digest() -> String {
         "a".repeat(64)
+    }
+
+    fn captured_envelope() -> CanonicalArtifactEnvelope {
+        CanonicalArtifactEnvelope {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            artifact_id: "artifact:1".to_owned(),
+            request_id: "request:1".to_owned(),
+            authority_id: "authority:1".to_owned(),
+            origin: CanonicalArtifactOrigin::File,
+            media_type: "text/plain".to_owned(),
+            classification: CanonicalClassification::Internal,
+            capture_state: CanonicalCaptureState::Captured,
+            byte_length: Some(4_096),
+            sha256: Some(digest()),
+            collected_at: "2026-08-25T12:00:00Z".to_owned(),
+        }
+    }
+
+    fn memory_only_custody() -> CanonicalSourceArtifactCustody {
+        CanonicalSourceArtifactCustody {
+            owner_session_id: "session:1".to_owned(),
+            owner_task_id: "task:1".to_owned(),
+            payload_store_id: SOURCE_ARTIFACT_PAYLOAD_STORE_ID.to_owned(),
+            payload_custody: CanonicalSourcePayloadCustody::MemoryOnly,
+            backing_artifact_id: None,
+            backing_artifact_kind: None,
+            backing_payload_sha256: None,
+            retention_class: CanonicalSourceRetentionClass::Session,
+            retention_expires_at: None,
+            lifecycle_state: CanonicalSourceLifecycleState::Active,
+            cleanup_state: CanonicalSourceCleanupState::Retained,
+            checkpoint_rooted: false,
+        }
+    }
+
+    fn retained_custody() -> CanonicalSourceArtifactCustody {
+        CanonicalSourceArtifactCustody {
+            payload_custody: CanonicalSourcePayloadCustody::BackendRetained,
+            backing_artifact_id: Some("artifact:1".to_owned()),
+            backing_artifact_kind: Some(CanonicalBackingArtifactKind::GeneratedFile),
+            backing_payload_sha256: Some(digest()),
+            ..memory_only_custody()
+        }
+    }
+
+    #[test]
+    fn owned_source_custody_reuses_the_existing_payload_store() {
+        let envelope = captured_envelope();
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &memory_only_custody()),
+            Ok(())
+        );
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &retained_custody()),
+            Ok(())
+        );
+
+        let mut second_store = retained_custody();
+        second_store.payload_store_id = "agentmage-source-store-v1".to_owned();
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &second_store)
+                .unwrap_err()
+                .code,
+            "engineering.custody.second_store"
+        );
+
+        let mut unbound = retained_custody();
+        unbound.backing_payload_sha256 = None;
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &unbound)
+                .unwrap_err()
+                .code,
+            "engineering.custody.backing_binding"
+        );
+
+        let mut memory_claiming_payload = memory_only_custody();
+        memory_claiming_payload.backing_artifact_id = Some("artifact:1".to_owned());
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &memory_claiming_payload)
+                .unwrap_err()
+                .code,
+            "engineering.custody.backing_binding"
+        );
+
+        let mut drifted = retained_custody();
+        drifted.backing_payload_sha256 = Some("b".repeat(64));
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &drifted)
+                .unwrap_err()
+                .code,
+            "engineering.custody.content_address_drift"
+        );
+
+        let uncaptured = CanonicalArtifactEnvelope {
+            capture_state: CanonicalCaptureState::Unavailable,
+            byte_length: None,
+            sha256: None,
+            ..captured_envelope()
+        };
+        assert_eq!(
+            validate_source_artifact_custody(&uncaptured, &retained_custody())
+                .unwrap_err()
+                .code,
+            "engineering.custody.uncaptured_retention"
+        );
+        assert_eq!(
+            validate_source_artifact_custody(&uncaptured, &memory_only_custody()),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn owned_source_retention_lifecycle_and_cleanup_cannot_drift() {
+        let envelope = captured_envelope();
+
+        let mut ephemeral = retained_custody();
+        ephemeral.retention_class = CanonicalSourceRetentionClass::Ephemeral;
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &ephemeral)
+                .unwrap_err()
+                .code,
+            "engineering.custody.ephemeral_retention"
+        );
+        let mut ephemeral_memory = memory_only_custody();
+        ephemeral_memory.retention_class = CanonicalSourceRetentionClass::Ephemeral;
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &ephemeral_memory),
+            Ok(())
+        );
+
+        let mut expiring = retained_custody();
+        expiring.retention_class = CanonicalSourceRetentionClass::UntilExpiration;
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &expiring)
+                .unwrap_err()
+                .code,
+            "engineering.custody.expiration_binding"
+        );
+        expiring.retention_expires_at = Some("2026-09-25T12:00:00Z".to_owned());
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &expiring),
+            Ok(())
+        );
+
+        let mut held = retained_custody();
+        held.retention_class = CanonicalSourceRetentionClass::UserHold;
+        held.retention_expires_at = Some("2026-09-25T12:00:00Z".to_owned());
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &held)
+                .unwrap_err()
+                .code,
+            "engineering.custody.expiration_binding"
+        );
+
+        let mut released_root = retained_custody();
+        released_root.checkpoint_rooted = true;
+        released_root.lifecycle_state = CanonicalSourceLifecycleState::Released;
+        released_root.cleanup_state = CanonicalSourceCleanupState::Eligible;
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &released_root)
+                .unwrap_err()
+                .code,
+            "engineering.custody.checkpoint_root_released"
+        );
+
+        let mut quarantined_memory = memory_only_custody();
+        quarantined_memory.lifecycle_state = CanonicalSourceLifecycleState::Quarantined;
+        quarantined_memory.cleanup_state = CanonicalSourceCleanupState::Blocked;
+        assert_eq!(
+            validate_source_artifact_custody(&envelope, &quarantined_memory)
+                .unwrap_err()
+                .code,
+            "engineering.custody.payloadless_lifecycle"
+        );
+
+        for (lifecycle, cleanup) in [
+            (
+                CanonicalSourceLifecycleState::Active,
+                CanonicalSourceCleanupState::Retained,
+            ),
+            (
+                CanonicalSourceLifecycleState::Released,
+                CanonicalSourceCleanupState::Eligible,
+            ),
+            (
+                CanonicalSourceLifecycleState::Quarantined,
+                CanonicalSourceCleanupState::Blocked,
+            ),
+            (
+                CanonicalSourceLifecycleState::Deleted,
+                CanonicalSourceCleanupState::Completed,
+            ),
+        ] {
+            let mut derived = retained_custody();
+            derived.lifecycle_state = lifecycle;
+            derived.cleanup_state = cleanup;
+            assert_eq!(canonical_source_cleanup_state(lifecycle), cleanup);
+            assert_eq!(
+                validate_source_artifact_custody(&envelope, &derived),
+                Ok(())
+            );
+
+            let mut restated = derived.clone();
+            restated.cleanup_state = CanonicalSourceCleanupState::Eligible;
+            if cleanup != CanonicalSourceCleanupState::Eligible {
+                assert_eq!(
+                    validate_source_artifact_custody(&envelope, &restated)
+                        .unwrap_err()
+                        .code,
+                    "engineering.custody.cleanup_drift"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn backing_families_remain_one_closed_runtime_artifact_taxonomy() {
+        for kind in [
+            RuntimeArtifactKind::Patch,
+            RuntimeArtifactKind::StandardOutput,
+            RuntimeArtifactKind::StandardError,
+            RuntimeArtifactKind::TestLog,
+            RuntimeArtifactKind::GeneratedFile,
+            RuntimeArtifactKind::Report,
+            RuntimeArtifactKind::ModelOutput,
+        ] {
+            assert_eq!(
+                backing_runtime_artifact_kind(source_backing_artifact_kind(kind)),
+                kind
+            );
+        }
+        for backing in [
+            CanonicalBackingArtifactKind::Patch,
+            CanonicalBackingArtifactKind::StandardOutput,
+            CanonicalBackingArtifactKind::StandardError,
+            CanonicalBackingArtifactKind::TestLog,
+            CanonicalBackingArtifactKind::GeneratedFile,
+            CanonicalBackingArtifactKind::Report,
+            CanonicalBackingArtifactKind::ModelOutput,
+        ] {
+            assert_eq!(
+                source_backing_artifact_kind(backing_runtime_artifact_kind(backing)),
+                backing
+            );
+        }
     }
 
     #[test]

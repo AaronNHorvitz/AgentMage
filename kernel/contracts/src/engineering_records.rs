@@ -172,6 +172,178 @@ pub struct CanonicalArtifactTransformation {
     pub reproducible: bool,
 }
 
+/// Identity of the one physical store that retains logically owned source payloads.
+///
+/// Source-artifact custody is a logical assignment over the existing encrypted
+/// content-addressed runtime payload store. No second physical store exists, so any other
+/// declared store identity fails closed.
+pub const SOURCE_ARTIFACT_PAYLOAD_STORE_ID: &str = "agentmage-runtime-payload-store-v1";
+
+/// Where the exact bytes of one source artifact currently live.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourcePayloadCustody {
+    /// Bytes exist only in process memory for the current request.
+    MemoryOnly,
+    /// Bytes are retained by the existing encrypted content-addressed payload store.
+    BackendRetained,
+}
+
+/// Closed retention class assigned to one logically owned source artifact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceRetentionClass {
+    /// Keep only in process memory for the current run.
+    Ephemeral,
+    /// Retain under the owning session lifecycle.
+    Session,
+    /// Retain until the exact policy-selected expiration.
+    UntilExpiration,
+    /// Retain until an explicit user release decision.
+    UserHold,
+}
+
+/// Current logical lifecycle state of one owned source artifact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceLifecycleState {
+    /// The logical reference is current and may resolve bytes under policy.
+    Active,
+    /// The owner released the logical reference.
+    Released,
+    /// Payload integrity is uncertain and operator review is required.
+    Quarantined,
+    /// Canonical metadata records completed payload deletion.
+    Deleted,
+}
+
+/// Content-free cleanup disposition derived from the logical lifecycle state.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceCleanupState {
+    /// The artifact is still owned and must remain retained.
+    Retained,
+    /// The artifact has no active logical reference and may be collected.
+    Eligible,
+    /// Integrity loss requires operator review before cleanup can be trusted.
+    Blocked,
+    /// Canonical metadata records completed payload deletion.
+    Completed,
+}
+
+/// Existing closed runtime artifact family that may back a retained source payload.
+///
+/// The variants mirror `RuntimeArtifactKind` exactly. Source custody selects from that family
+/// and never widens it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalBackingArtifactKind {
+    /// A proposed or applied source-code patch.
+    Patch,
+    /// Standard output captured from a bounded command.
+    StandardOutput,
+    /// Standard error captured from a bounded command.
+    StandardError,
+    /// Output produced by a trusted validation or test run.
+    TestLog,
+    /// A generated file whose bytes remain outside the event envelope.
+    GeneratedFile,
+    /// A generated analysis or verification report.
+    Report,
+    /// Bounded model output too large for the event or transcript projection.
+    ModelOutput,
+}
+
+/// Logical ownership and retention assignment for one source artifact.
+///
+/// The record carries no native path, payload byte, or read authority. It names the owning
+/// session and task, the single physical payload store, the exact existing backing artifact
+/// when bytes are retained, and the closed retention, lifecycle, and cleanup assignment.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceArtifactCustody {
+    /// Owning session; this identity is not read authority.
+    pub owner_session_id: String,
+    /// Owning task.
+    pub owner_task_id: String,
+    /// Must equal `SOURCE_ARTIFACT_PAYLOAD_STORE_ID`.
+    pub payload_store_id: String,
+    /// Where the exact bytes currently live.
+    pub payload_custody: CanonicalSourcePayloadCustody,
+    /// Backing runtime artifact identity, present only for a retained payload.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub backing_artifact_id: Option<String>,
+    /// Existing runtime artifact family, present only for a retained payload.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub backing_artifact_kind: Option<CanonicalBackingArtifactKind>,
+    /// Content address of the backing payload, present only for a retained payload.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub backing_payload_sha256: Option<String>,
+    /// Closed retention class.
+    pub retention_class: CanonicalSourceRetentionClass,
+    /// Trusted RFC 3339 expiration, present only for expiring retention.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub retention_expires_at: Option<String>,
+    /// Current logical lifecycle state.
+    pub lifecycle_state: CanonicalSourceLifecycleState,
+    /// Cleanup disposition derived from the lifecycle state.
+    pub cleanup_state: CanonicalSourceCleanupState,
+    /// Whether a current resumable checkpoint names this artifact as a retention root.
+    pub checkpoint_rooted: bool,
+}
+
+/// Maps one backing family onto the existing closed `RuntimeArtifactKind`.
+///
+/// The exhaustive match is the compile-time proof that source custody reuses the existing
+/// runtime artifact family. Widening either enum breaks this mapping instead of silently
+/// creating a second artifact taxonomy.
+#[must_use]
+pub const fn backing_runtime_artifact_kind(
+    kind: CanonicalBackingArtifactKind,
+) -> crate::RuntimeArtifactKind {
+    match kind {
+        CanonicalBackingArtifactKind::Patch => crate::RuntimeArtifactKind::Patch,
+        CanonicalBackingArtifactKind::StandardOutput => crate::RuntimeArtifactKind::StandardOutput,
+        CanonicalBackingArtifactKind::StandardError => crate::RuntimeArtifactKind::StandardError,
+        CanonicalBackingArtifactKind::TestLog => crate::RuntimeArtifactKind::TestLog,
+        CanonicalBackingArtifactKind::GeneratedFile => crate::RuntimeArtifactKind::GeneratedFile,
+        CanonicalBackingArtifactKind::Report => crate::RuntimeArtifactKind::Report,
+        CanonicalBackingArtifactKind::ModelOutput => crate::RuntimeArtifactKind::ModelOutput,
+    }
+}
+
+/// Maps one existing `RuntimeArtifactKind` onto the backing family.
+///
+/// Together with [`backing_runtime_artifact_kind`] this makes the two families a closed
+/// compile-time bijection.
+#[must_use]
+pub const fn source_backing_artifact_kind(
+    kind: crate::RuntimeArtifactKind,
+) -> CanonicalBackingArtifactKind {
+    match kind {
+        crate::RuntimeArtifactKind::Patch => CanonicalBackingArtifactKind::Patch,
+        crate::RuntimeArtifactKind::StandardOutput => CanonicalBackingArtifactKind::StandardOutput,
+        crate::RuntimeArtifactKind::StandardError => CanonicalBackingArtifactKind::StandardError,
+        crate::RuntimeArtifactKind::TestLog => CanonicalBackingArtifactKind::TestLog,
+        crate::RuntimeArtifactKind::GeneratedFile => CanonicalBackingArtifactKind::GeneratedFile,
+        crate::RuntimeArtifactKind::Report => CanonicalBackingArtifactKind::Report,
+        crate::RuntimeArtifactKind::ModelOutput => CanonicalBackingArtifactKind::ModelOutput,
+    }
+}
+
+/// Returns the only cleanup disposition that one logical lifecycle state may declare.
+#[must_use]
+pub const fn canonical_source_cleanup_state(
+    lifecycle: CanonicalSourceLifecycleState,
+) -> CanonicalSourceCleanupState {
+    match lifecycle {
+        CanonicalSourceLifecycleState::Active => CanonicalSourceCleanupState::Retained,
+        CanonicalSourceLifecycleState::Released => CanonicalSourceCleanupState::Eligible,
+        CanonicalSourceLifecycleState::Quarantined => CanonicalSourceCleanupState::Blocked,
+        CanonicalSourceLifecycleState::Deleted => CanonicalSourceCleanupState::Completed,
+    }
+}
+
 /// Disposition of an artifact in one model context.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]

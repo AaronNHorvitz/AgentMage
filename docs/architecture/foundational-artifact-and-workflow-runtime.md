@@ -294,6 +294,16 @@ graph, index revision, references, and cleanup eligibility. Paths carry no
 authority. A source-artifact manifest may persist without the raw source when
 hashes, bounded excerpts, and provenance are sufficient.
 
+That ownership and retention assignment is frozen as the `custody` object of the
+versioned source-artifact record and its `CanonicalSourceArtifactCustody` kernel
+contract. Custody names the owning session and task, the single existing payload
+store, the one existing immutable backing artifact when bytes are retained, and
+the closed retention, lifecycle, and cleanup state. It adds no second physical
+store and no additional `RuntimeArtifactKind`; a retained content address must
+equal the captured source digest, and a current checkpoint remains a retention
+root. [`runtime-artifact-lifecycle.md`](runtime-artifact-lifecycle.md) records
+the complete rule set and its deterministic validator.
+
 Cache reuse requires matching source digest, extractor and canonicalizer
 versions, limits, policy, and trust/sensitivity state. Source changes or policy
 narrowing invalidate dependent sections, summaries, indexes, context manifests,

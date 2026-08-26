@@ -538,6 +538,89 @@ const sourceProvenance = closed({
   provenance_sha256: digest,
 });
 
+export const SOURCE_ARTIFACT_PAYLOAD_STORE_ID = "agentmage-runtime-payload-store-v1";
+export const RUNTIME_ARTIFACT_KINDS = Object.freeze([
+  "patch",
+  "standard_output",
+  "standard_error",
+  "test_log",
+  "generated_file",
+  "report",
+  "model_output",
+]);
+export const CUSTODY_CLEANUP_BY_LIFECYCLE = Object.freeze({
+  active: "retained",
+  released: "eligible",
+  quarantined: "blocked",
+  deleted: "completed",
+});
+const backingArtifactKind = { enum: [...RUNTIME_ARTIFACT_KINDS] };
+const payloadCustodyEnum = { enum: ["memory_only", "backend_retained"] };
+const retentionClassEnum = { enum: ["ephemeral", "session", "until_expiration", "user_hold"] };
+const custodyLifecycleEnum = { enum: ["active", "released", "quarantined", "deleted"] };
+const custodyCleanupEnum = { enum: ["retained", "eligible", "blocked", "completed"] };
+
+const sourceArtifactCustody = closed({
+  owner_session_id: identifier,
+  owner_task_id: identifier,
+  payload_store_id: { const: SOURCE_ARTIFACT_PAYLOAD_STORE_ID },
+  payload_custody: payloadCustodyEnum,
+  backing_artifact_id: nullable(identifier),
+  backing_artifact_kind: nullable(backingArtifactKind),
+  backing_payload_sha256: nullable(digest),
+  retention_class: retentionClassEnum,
+  retention_expires_at: nullable(timestamp),
+  lifecycle_state: custodyLifecycleEnum,
+  cleanup_state: custodyCleanupEnum,
+  checkpoint_rooted: { type: "boolean" },
+});
+sourceArtifactCustody.allOf = [
+  {
+    if: {
+      properties: { payload_custody: { const: "backend_retained" } },
+      required: ["payload_custody"],
+    },
+    then: {
+      properties: {
+        backing_artifact_id: identifier,
+        backing_artifact_kind: backingArtifactKind,
+        backing_payload_sha256: digest,
+      },
+    },
+    else: {
+      properties: {
+        backing_artifact_id: { type: "null" },
+        backing_artifact_kind: { type: "null" },
+        backing_payload_sha256: { type: "null" },
+        lifecycle_state: { enum: ["active", "released"] },
+      },
+    },
+  },
+  {
+    if: {
+      properties: { retention_class: { const: "ephemeral" } },
+      required: ["retention_class"],
+    },
+    then: { properties: { payload_custody: { const: "memory_only" } } },
+  },
+  {
+    if: {
+      properties: { retention_class: { const: "until_expiration" } },
+      required: ["retention_class"],
+    },
+    then: { properties: { retention_expires_at: timestamp } },
+    else: { properties: { retention_expires_at: { type: "null" } } },
+  },
+  {
+    if: { properties: { checkpoint_rooted: { const: true } }, required: ["checkpoint_rooted"] },
+    then: { properties: { lifecycle_state: { const: "active" } } },
+  },
+  ...Object.entries(CUSTODY_CLEANUP_BY_LIFECYCLE).map(([lifecycle, cleanup]) => ({
+    if: { properties: { lifecycle_state: { const: lifecycle } }, required: ["lifecycle_state"] },
+    then: { properties: { cleanup_state: { const: cleanup } } },
+  })),
+];
+
 const sourceArtifact = closed({
   schema_version: supportedSourceVersion,
   source_artifact_id: identifier,
@@ -553,6 +636,7 @@ const sourceArtifact = closed({
   byte_length: nullable(boundedSourceBytes),
   sha256: nullable(digest),
   collected_at: timestamp,
+  custody: sourceArtifactCustody,
   source_artifact_sha256: digest,
 });
 sourceArtifact.allOf = [{
@@ -564,7 +648,13 @@ sourceArtifact.allOf = [{
       freshness_state: { enum: ["fresh", "renamed"] },
     },
   },
-  else: { properties: { byte_length: { type: "null" }, sha256: { type: "null" } } },
+  else: {
+    properties: {
+      byte_length: { type: "null" },
+      sha256: { type: "null" },
+      custody: { properties: { payload_custody: { const: "memory_only" } } },
+    },
+  },
 }];
 
 const EXTRACTION_PRODUCING_STATES = ["captured", "parsed", "partially_parsed"];
@@ -704,16 +794,36 @@ function contextManifestSemantic(record) {
   return true;
 }
 
+function sourceArtifactSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  const custody = record.custody;
+  if (!custody || typeof custody !== "object") return false;
+  if (custody.payload_custody === "backend_retained" && custody.backing_payload_sha256 !== record.sha256) {
+    return false;
+  }
+  const expiration = custody.retention_expires_at;
+  if (expiration !== null && expiration !== undefined) {
+    const expiresAt = Date.parse(expiration);
+    const collectedAt = Date.parse(record.collected_at);
+    if (!Number.isFinite(expiresAt) || !Number.isFinite(collectedAt) || expiresAt <= collectedAt) {
+      return false;
+    }
+  }
+  return true;
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
+  "source-artifact": sourceArtifactSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
   "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
   "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",
+  "source-artifact": "custody.backing_payload_sha256 MUST equal the top-level sha256 whenever custody.payload_custody is backend_retained, so logical ownership never names a second physical payload. custody.retention_expires_at, when present, MUST be strictly later than collected_at.",
 });
 
 export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, candidate) {
