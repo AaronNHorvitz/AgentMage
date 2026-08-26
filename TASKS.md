@@ -704,9 +704,36 @@ artifact, and recovery contracts remain authoritative.
     migration rules only; no retry executor, reconciler, or supervisor is implemented, and it makes
     no macOS, release, or workflow-runtime implementation claim.
 - [ ] **Task 1.2.3 - Reconcile interface and ownership boundaries**
-  - [ ] **Sub-task 1.2.3.1:** Amend `language-build-matrix.json`, its validator, diagrams, and
+  - [x] **Sub-task 1.2.3.1:** Amend `language-build-matrix.json`, its validator, diagrams, and
     evidence together to permit only current-request references delivered to the AgentMage Chat
-    Participant; retain the prohibition on ambient extension workspace reads.
+    Participant; retain the prohibition on ambient extension workspace reads. Evidence:
+    `architecture/language-build-matrix.json`, its validator in `scripts/architecture_decision.py`,
+    the mutation evidence in `tests/test_architecture_decision.py`, and the architecture description
+    in `docs/architecture/foundational-artifact-and-workflow-runtime.md` are amended together as
+    Decision 0042 section 2 requires. The new `vscode_contract.request_reference_contract` permits
+    exactly one thing: bounded resolution of a reference explicitly supplied to the active AgentMage
+    participant request, through stable VS Code APIs, for that request only. The closed reference
+    set is the request-attached file, selection, URI, and editor context; `resolution_authority`
+    stays `rust-host`; and an unresolvable reference is declared unsupported or unavailable rather
+    than reported as bytes. The permission is narrower than a workspace read and replaces none:
+    `workspace-read` and `workspace-write` both remain in `extension_prohibited_authority`, and
+    `ambient_workspace_read_permitted`, `ambient_enumeration_permitted`,
+    `independent_path_selection_permitted`, `background_indexing_permitted`,
+    `policy_bypassing_read_permitted`, `reference_persistence_permitted`, and
+    `proposed_api_required` each must remain false. The validator also rejects unknown keys, so the
+    contract cannot be widened by addition. Six focused mutation tests prove the narrowing fails
+    closed: every ambient capability flag is rejected when switched on, every exact scope value is
+    rejected when changed, the reference-kind set is rejected when extended, reduced, replaced, or
+    emptied, the contract is rejected when removed or widened with a new key, and the declared
+    `request-bound-reference-resolution` authority is rejected when dropped. The architecture,
+    documentation, schema, supply-chain, traceability, workspace test, and diff gates pass. Known
+    pre-existing gate drift, unchanged by this sub-task: `evidence:story1.1-artifacts:check` already
+    failed at the unchanged parent revision `626a92146ff9769f83d36a599a813befb98c819c` with
+    checksum mismatches for `architecture/dependency-rules.json`,
+    `architecture/language-build-matrix.json`, `architecture/build-contract.json`, and
+    `package.json`; that Story 1.1 evidence regeneration is separate work and is not performed here.
+    This is a contract change only; the participant resolution path is not implemented, and this
+    closure makes no macOS, release, or ingestion-runtime implementation claim.
   - [ ] **Sub-task 1.2.3.2:** Record stable, Preview, proposed, and private Visual Studio Code API
     surfaces; guarantee the stable participant path and label provider compatibility best effort.
   - [ ] **Sub-task 1.2.3.3:** Record Rust, TypeScript, kernel, capability, platform, shell, MCP, and
