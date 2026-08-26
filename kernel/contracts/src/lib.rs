@@ -8,6 +8,7 @@ mod agent_restart;
 mod agent_state;
 mod agent_verifier;
 mod approval;
+mod attempt;
 mod boundary;
 mod claim;
 mod classification;
@@ -58,6 +59,12 @@ pub use agent_verifier::{
     PostconditionResult, VerifierCandidate, VerifierDisposition, VerifierSource,
 };
 pub use approval::ApprovalRequest;
+pub use attempt::{
+    ATTEMPT_ADMISSION_VERSION, AttemptAdmissionError, AttemptApprovalState, AttemptBudgetState,
+    AttemptCallIdentityState, AttemptDenial, AttemptGrantState, AttemptIdempotencyIdentity,
+    AttemptPrecondition, AttemptPreflightState, AttemptReconciliationState, NewAttemptDecision,
+    NewAttemptDisposition, NewAttemptFacts,
+};
 pub use boundary::{
     BoundaryFailure, BoundaryKind, BoundaryOutcomeKind, CancellationReason, CancellationSignal,
 };

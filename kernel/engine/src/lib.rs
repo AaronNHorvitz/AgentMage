@@ -17,6 +17,8 @@ pub mod agent_verifier;
 pub mod approval;
 /// Metadata-only attachment classification and exact workspace path resolution.
 pub mod attachment;
+/// Deterministic, non-authoritative admission of one new operation attempt.
+pub mod attempt_admission;
 /// Sealed classification and denial of descriptive artifacts as authority.
 pub mod authority;
 /// Kernel-owned authority-transaction ordering and recovery contract.
