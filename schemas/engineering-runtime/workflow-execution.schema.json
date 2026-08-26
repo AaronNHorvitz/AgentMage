@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/workflow-execution.schema.json",
+  "title": "AgentMage workflow-execution",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "execution_id",
+    "workflow_id",
+    "workflow_version",
+    "definition_sha256",
+    "plan_id",
+    "plan_revision",
+    "task_id",
+    "session_id",
+    "policy_sha256",
+    "lifecycle",
+    "sequence",
+    "started_at",
+    "established_by",
+    "execution_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "execution_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "workflow_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "workflow_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "definition_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "plan_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "lifecycle": {
+      "enum": [
+        "created",
+        "validating",
+        "ready",
+        "running",
+        "verifying",
+        "waiting_for_dependency",
+        "waiting_for_approval",
+        "paused",
+        "reconciling",
+        "recovering",
+        "succeeded",
+        "no_op",
+        "blocked",
+        "failed",
+        "cancelled",
+        "timed_out",
+        "resource_exhausted",
+        "uncertain"
+      ]
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "established_by": {
+      "const": "agentmage-runtime"
+    },
+    "execution_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

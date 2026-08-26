@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/step-execution.schema.json",
+  "title": "AgentMage step-execution",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: attempt_ids and verification_ids MUST NOT repeat an identity, and ended_at, when present, MUST NOT precede started_at.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "step_execution_id",
+    "execution_id",
+    "plan_step_id",
+    "policy_id",
+    "state",
+    "attempt_ids",
+    "verification_ids",
+    "sequence",
+    "started_at",
+    "ended_at",
+    "established_by",
+    "step_execution_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "step_execution_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "execution_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "plan_step_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "state": {
+      "enum": [
+        "ready",
+        "preflighting",
+        "awaiting_approval",
+        "running",
+        "verifying",
+        "reconciling",
+        "completed",
+        "deferred",
+        "blocked",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "attempt_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 64
+    },
+    "verification_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 32
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "established_by": {
+      "const": "agentmage-runtime"
+    },
+    "step_execution_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

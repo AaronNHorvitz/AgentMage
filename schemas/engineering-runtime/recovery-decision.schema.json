@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/recovery-decision.schema.json",
+  "title": "AgentMage recovery-decision",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: An uncertain outcome MUST decide reconcile_then_decide. retry_new_attempt MUST carry a classified transient failure class and a confirmed outcome, so the runtime never reopens a destructive, external, or unconfirmed operation on its own authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "decision_id",
+    "step_execution_id",
+    "attempt_id",
+    "policy_id",
+    "failure_class",
+    "uncertain_outcome",
+    "decision",
+    "reason_code",
+    "decided_at",
+    "established_by",
+    "decision_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "decision_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "step_execution_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "failure_class": {
+      "enum": [
+        "transport",
+        "rate",
+        "timeout",
+        "crash",
+        "unavailable_service",
+        "missing_command",
+        "invalid_arguments",
+        "authentication",
+        "permission",
+        "policy_denial",
+        "deterministic_verification_failure",
+        "malformed_model_output",
+        "context_overflow",
+        "user_rejection"
+      ]
+    },
+    "uncertain_outcome": {
+      "type": "boolean"
+    },
+    "decision": {
+      "enum": [
+        "retry_new_attempt",
+        "reconcile_then_decide",
+        "request_approval",
+        "request_user_decision",
+        "replan",
+        "defer",
+        "stop"
+      ]
+    },
+    "reason_code": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "established_by": {
+      "const": "agentmage-runtime"
+    },
+    "decision_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "uncertain_outcome": {
+            "const": true
+          }
+        },
+        "required": [
+          "uncertain_outcome"
+        ]
+      },
+      "then": {
+        "properties": {
+          "decision": {
+            "const": "reconcile_then_decide"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "retry_new_attempt"
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "then": {
+        "properties": {
+          "failure_class": {
+            "enum": [
+              "transport",
+              "rate",
+              "timeout",
+              "unavailable_service"
+            ]
+          },
+          "uncertain_outcome": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/terminal-diagnostic.schema.json",
+  "title": "AgentMage terminal-diagnostic",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: evidence_artifact_ids MUST NOT repeat an identity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "diagnostic_id",
+    "execution_id",
+    "terminal_result_id",
+    "diagnostic_code",
+    "failure_class",
+    "safe_next_action_code",
+    "evidence_artifact_ids",
+    "disclosure",
+    "reported_at",
+    "established_by",
+    "diagnostic_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "diagnostic_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "execution_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "terminal_result_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "diagnostic_code": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "failure_class": {
+      "oneOf": [
+        {
+          "enum": [
+            "transport",
+            "rate",
+            "timeout",
+            "crash",
+            "unavailable_service",
+            "missing_command",
+            "invalid_arguments",
+            "authentication",
+            "permission",
+            "policy_denial",
+            "deterministic_verification_failure",
+            "malformed_model_output",
+            "context_overflow",
+            "user_rejection"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "safe_next_action_code": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence_artifact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 64
+    },
+    "disclosure": {
+      "enum": [
+        "content_free_codes",
+        "content_free_codes_with_artifact_reference"
+      ]
+    },
+    "reported_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "established_by": {
+      "const": "agentmage-runtime"
+    },
+    "diagnostic_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "disclosure": {
+            "const": "content_free_codes"
+          }
+        },
+        "required": [
+          "disclosure"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence_artifact_ids": {
+            "type": "array",
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "failure_class": {
+            "type": "null"
+          }
+        },
+        "required": [
+          "failure_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "safe_next_action_code": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

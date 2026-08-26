@@ -15,6 +15,13 @@ import {
   SOURCE_LOCATOR_UNRESOLVED_STATES,
   SOURCE_RETENTION_PHYSICAL_STORE,
   SOURCE_RETENTION_SCHEMA_VERSION,
+  ATTEMPT_STATES,
+  EXECUTION_ENVELOPE_SCHEMA_VERSION,
+  EXECUTION_FAILURE_CLASSES,
+  EXECUTION_TRANSIENT_FAILURE_CLASSES,
+  PROTECTED_EXECUTION_CONTRACTS,
+  PROTECTED_EXECUTION_FIELDS,
+  RECOVERY_DECISIONS,
   STEP_APPROVAL_REQUIRING_EFFECTS,
   STEP_AUTOMATIC_RETRY_CLASSES,
   STEP_EFFECT_CLASSES,
@@ -49,9 +56,9 @@ function combinedValidator(name) {
 }
 
 test("generated Engineering Runtime schemas are current, closed, and compile", () => {
-  assert.equal(synchronize(), 29);
+  assert.equal(synchronize(), 36);
   assert.equal(Object.keys(REUSED_SCHEMA_CONTRACTS).length, 6);
-  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 29);
+  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 36);
 });
 
 test("source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes", () => {
@@ -1677,4 +1684,394 @@ test("step-execution-policy rejects missing, malformed, oversized, and duplicate
     assert.equal(validate(repeated), false, `a repeated ${field} must fail semantic validation`);
   }
   assert.ok(ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS["step-execution-policy"].includes("effect_class"));
+});
+
+const ENVELOPE_TIMESTAMP = "2026-08-26T12:00:00Z";
+const ENVELOPE_END = "2026-08-26T12:05:00Z";
+const RUNTIME_AUTHORITY = "agentmage-runtime";
+
+const ENVELOPE_FIXTURES = {
+  "workflow-execution": {
+    schema_version: 1,
+    execution_id: "execution-1",
+    workflow_id: "workflow-1",
+    workflow_version: 1,
+    definition_sha256: SHA,
+    plan_id: "plan-0001",
+    plan_revision: 3,
+    task_id: "task-0001",
+    session_id: "session-0001",
+    policy_sha256: SHA,
+    lifecycle: "running",
+    sequence: 7,
+    started_at: ENVELOPE_TIMESTAMP,
+    established_by: RUNTIME_AUTHORITY,
+    execution_sha256: SHA,
+  },
+  "step-execution": {
+    schema_version: 1,
+    step_execution_id: "step-execution-1",
+    execution_id: "execution-1",
+    plan_step_id: "plan-0001:step:0002",
+    policy_id: "policy-1",
+    state: "running",
+    attempt_ids: ["attempt-1"],
+    verification_ids: ["verification-1"],
+    sequence: 2,
+    started_at: ENVELOPE_TIMESTAMP,
+    ended_at: null,
+    established_by: RUNTIME_AUTHORITY,
+    step_execution_sha256: SHA,
+  },
+  "call-envelope": {
+    schema_version: 1,
+    call_id: "call-1",
+    step_execution_id: "step-execution-1",
+    tool_call_id: "tool-call-1",
+    tool_id: "cargo-test",
+    tool_version: "1.0.0",
+    tool_schema_sha256: SHA,
+    validated_arguments_sha256: SHA,
+    validation_state: "validated",
+    repair_count: 0,
+    rejection_reason_code: null,
+    proposed_at: ENVELOPE_TIMESTAMP,
+    established_by: RUNTIME_AUTHORITY,
+    call_sha256: SHA,
+  },
+  "operation-attempt": {
+    schema_version: 1,
+    attempt_id: "attempt-1",
+    call_id: "call-1",
+    step_execution_id: "step-execution-1",
+    attempt_ordinal: 1,
+    supersedes_attempt_id: null,
+    grant_id: "grant-1",
+    grant_sha256: SHA,
+    executor_identity: "executor-1",
+    sandbox_identity: "sandbox-1",
+    state: "started",
+    started_at: ENVELOPE_TIMESTAMP,
+    ended_at: null,
+    receipt_id: null,
+    receipt_sha256: null,
+    observation_id: null,
+    established_by: RUNTIME_AUTHORITY,
+    attempt_sha256: SHA,
+  },
+  "verification-envelope": {
+    schema_version: 1,
+    verification_id: "verification-1",
+    step_execution_id: "step-execution-1",
+    attempt_id: "attempt-1",
+    verification_result_id: "verification-result-1",
+    verifier_policy_id: "verifier-policy-1",
+    required: true,
+    current: true,
+    observed_at: ENVELOPE_TIMESTAMP,
+    established_by: RUNTIME_AUTHORITY,
+    verification_sha256: SHA,
+  },
+  "recovery-decision": {
+    schema_version: 1,
+    decision_id: "decision-1",
+    step_execution_id: "step-execution-1",
+    attempt_id: "attempt-1",
+    policy_id: "policy-1",
+    failure_class: "timeout",
+    uncertain_outcome: false,
+    decision: "retry_new_attempt",
+    reason_code: "transient_timeout",
+    decided_at: ENVELOPE_TIMESTAMP,
+    established_by: RUNTIME_AUTHORITY,
+    decision_sha256: SHA,
+  },
+  "terminal-diagnostic": {
+    schema_version: 1,
+    diagnostic_id: "diagnostic-1",
+    execution_id: "execution-1",
+    terminal_result_id: "terminal-result-1",
+    diagnostic_code: "verifier_evidence_absent",
+    failure_class: "deterministic_verification_failure",
+    safe_next_action_code: "rerun_verifier",
+    evidence_artifact_ids: ["artifact-1"],
+    disclosure: "content_free_codes_with_artifact_reference",
+    reported_at: ENVELOPE_TIMESTAMP,
+    established_by: RUNTIME_AUTHORITY,
+    diagnostic_sha256: SHA,
+  },
+};
+
+const ENVELOPE_NAMES = Object.keys(ENVELOPE_FIXTURES);
+
+function envelope(name, overrides = {}) {
+  return { ...ENVELOPE_FIXTURES[name], ...overrides };
+}
+
+test("execution envelopes are admitted, versioned, and established only by the runtime", () => {
+  assert.equal(EXECUTION_ENVELOPE_SCHEMA_VERSION, 1);
+  assert.equal(ENVELOPE_NAMES.length, 7);
+  for (const name of ENVELOPE_NAMES) {
+    const validate = combinedValidator(name);
+    assert.equal(validate(envelope(name)), true, `${name} must be admitted`);
+    const structural = validator(name);
+    for (const rejected of [0, 2, 999, "1", null]) {
+      assert.equal(structural(envelope(name, { schema_version: rejected })), false);
+    }
+    // Only the runtime establishes execution truth; a model proposal never does.
+    assert.equal(
+      structural(envelope(name, { established_by: "model" })),
+      false,
+      `${name} must not be established by a model`,
+    );
+  }
+});
+
+test("execution envelopes reference the protected contracts by identity and never restate them", () => {
+  const referenced = new Set();
+  for (const name of ENVELOPE_NAMES) {
+    const schema = ENGINEERING_RUNTIME_SCHEMAS[name];
+    assert.equal(schema.additionalProperties, false, `${name} must be closed`);
+    const structural = validator(name);
+    for (const owned of PROTECTED_EXECUTION_FIELDS) {
+      assert.equal(
+        structural(envelope(name, { [owned]: "x" })),
+        false,
+        `${name} must not admit ${owned}, which an existing contract owns`,
+      );
+    }
+    for (const field of Object.keys(schema.properties)) {
+      referenced.add(field);
+    }
+  }
+  // Each protected contract is reachable by identity somewhere in the family.
+  for (const [contract, identityField] of Object.entries(PROTECTED_EXECUTION_CONTRACTS)) {
+    assert.ok(
+      referenced.has(identityField),
+      `${contract} must remain reachable through ${identityField}`,
+    );
+  }
+});
+
+test("workflow and step executions bind the existing plan and step identities", () => {
+  const execution = ENGINEERING_RUNTIME_SCHEMAS["workflow-execution"];
+  assert.ok(execution.required.includes("plan_id"));
+  assert.ok(execution.required.includes("plan_revision"));
+  const step = ENGINEERING_RUNTIME_SCHEMAS["step-execution"];
+  assert.ok(step.required.includes("plan_step_id"));
+  assert.ok(step.required.includes("policy_id"), "a step execution names its companion policy");
+  const validate = combinedValidator("step-execution");
+  assert.equal(
+    validate(envelope("step-execution", { attempt_ids: ["attempt-1", "attempt-1"] })),
+    false,
+    "a repeated attempt identity must fail",
+  );
+  assert.equal(
+    validate(envelope("step-execution", { ended_at: "2026-08-26T11:00:00Z" })),
+    false,
+    "a step cannot end before it starts",
+  );
+  assert.equal(validate(envelope("step-execution", { ended_at: ENVELOPE_END })), true);
+});
+
+test("call envelope carries only the digest of validated arguments and explains every rejection", () => {
+  const validate = combinedValidator("call-envelope");
+  assert.equal(
+    validate(envelope("call-envelope", { validation_state: "rejected" })),
+    false,
+    "a rejected call must not report validated arguments",
+  );
+  assert.equal(
+    validate(envelope("call-envelope", {
+      validation_state: "rejected",
+      validated_arguments_sha256: null,
+      rejection_reason_code: "schema_invalid",
+    })),
+    true,
+  );
+  assert.equal(
+    validate(envelope("call-envelope", { repair_count: 2 })),
+    false,
+    "only a repaired call may report a repair",
+  );
+  assert.equal(
+    validate(envelope("call-envelope", {
+      validation_state: "repaired_then_validated",
+      repair_count: 1,
+    })),
+    true,
+  );
+  assert.equal(
+    validate(envelope("call-envelope", {
+      validation_state: "repaired_then_validated",
+      repair_count: 0,
+    })),
+    false,
+    "a repaired call must report at least one repair",
+  );
+});
+
+test("operation attempts are new attempts that resolve to an executor receipt", () => {
+  const validate = combinedValidator("operation-attempt");
+  assert.deepEqual([...ATTEMPT_STATES], [
+    "started",
+    "succeeded",
+    "failed",
+    "denied",
+    "cancelled",
+    "timed_out",
+    "uncertain",
+  ]);
+  // A first attempt follows nothing; every later attempt names what it supersedes.
+  assert.equal(
+    validate(envelope("operation-attempt", { supersedes_attempt_id: "attempt-0" })),
+    false,
+    "the first attempt supersedes nothing",
+  );
+  const second = envelope("operation-attempt", {
+    attempt_id: "attempt-2",
+    attempt_ordinal: 2,
+    supersedes_attempt_id: "attempt-1",
+  });
+  assert.equal(validate(second), true);
+  assert.equal(
+    validate({ ...second, supersedes_attempt_id: null }),
+    false,
+    "a later attempt must name what it follows",
+  );
+  assert.equal(
+    validate({ ...second, supersedes_attempt_id: "attempt-2" }),
+    false,
+    "an attempt cannot supersede itself",
+  );
+  assert.equal(
+    validate(envelope("operation-attempt", { attempt_ordinal: 0 })),
+    false,
+    "attempts are one-based",
+  );
+  // A started attempt has not ended and carries no receipt yet.
+  for (const field of ["receipt_id", "receipt_sha256"]) {
+    assert.equal(
+      validate(envelope("operation-attempt", { [field]: field === "receipt_id" ? "receipt-1" : SHA })),
+      false,
+      `a started attempt must not carry ${field}`,
+    );
+  }
+  // Success resolves to an executor receipt, never to a model claim.
+  assert.equal(
+    validate(envelope("operation-attempt", { state: "succeeded", ended_at: ENVELOPE_END })),
+    false,
+    "a succeeded attempt must carry its receipt",
+  );
+  assert.equal(
+    validate(envelope("operation-attempt", {
+      state: "succeeded",
+      ended_at: ENVELOPE_END,
+      receipt_id: "receipt-1",
+      receipt_sha256: SHA,
+    })),
+    true,
+  );
+  assert.equal(
+    validate(envelope("operation-attempt", {
+      state: "failed",
+      ended_at: "2026-08-26T11:00:00Z",
+    })),
+    false,
+    "an attempt cannot end before it starts",
+  );
+});
+
+test("recovery decisions reconcile an uncertain outcome and retry only a classified transient failure", () => {
+  const validate = combinedValidator("recovery-decision");
+  assert.deepEqual(
+    [...EXECUTION_TRANSIENT_FAILURE_CLASSES],
+    ["transport", "rate", "timeout", "unavailable_service"],
+  );
+  for (const decision of RECOVERY_DECISIONS) {
+    const candidate = envelope("recovery-decision", { uncertain_outcome: true, decision });
+    assert.equal(
+      validate(candidate),
+      decision === "reconcile_then_decide",
+      `an uncertain outcome must reconcile before deciding, not ${decision}`,
+    );
+  }
+  for (const failure of EXECUTION_FAILURE_CLASSES) {
+    const candidate = envelope("recovery-decision", {
+      failure_class: failure,
+      decision: "retry_new_attempt",
+    });
+    assert.equal(
+      validate(candidate),
+      EXECUTION_TRANSIENT_FAILURE_CLASSES.includes(failure),
+      `${failure} must not be retried automatically unless it is transient`,
+    );
+  }
+  assert.equal(
+    validate(envelope("recovery-decision", {
+      failure_class: "user_rejection",
+      decision: "stop",
+      reason_code: "user_rejected",
+    })),
+    true,
+  );
+  assert.ok(
+    ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS["recovery-decision"].includes("retry_new_attempt"),
+  );
+});
+
+test("terminal diagnostics stay content free", () => {
+  const validate = combinedValidator("terminal-diagnostic");
+  assert.equal(
+    validate(envelope("terminal-diagnostic", { disclosure: "content_free_codes" })),
+    false,
+    "a codes-only disclosure carries no artifact reference",
+  );
+  assert.equal(
+    validate(envelope("terminal-diagnostic", {
+      disclosure: "content_free_codes",
+      evidence_artifact_ids: [],
+    })),
+    true,
+  );
+  assert.equal(
+    validate(envelope("terminal-diagnostic", {
+      evidence_artifact_ids: ["artifact-1", "artifact-1"],
+    })),
+    false,
+    "a repeated artifact identity must fail",
+  );
+  const structural = validator("terminal-diagnostic");
+  // The diagnostic names codes, never prose.
+  for (const prose of ["message", "detail", "model_output", "explanation", "stack_trace"]) {
+    assert.equal(
+      structural(envelope("terminal-diagnostic", { [prose]: "something happened" })),
+      false,
+      `a terminal diagnostic must not admit ${prose}`,
+    );
+  }
+});
+
+test("execution envelopes reject missing, malformed, and unknown fields", () => {
+  for (const name of ENVELOPE_NAMES) {
+    const structural = validator(name);
+    const record = envelope(name);
+    for (const field of Object.keys(record)) {
+      const { [field]: _removed, ...missing } = record;
+      assert.equal(structural(missing), false, `${name} missing ${field} must fail`);
+    }
+    assert.equal(
+      structural(envelope(name, { source_absolute_path: "/home/user/secret.txt" })),
+      false,
+      `${name} must not admit an absolute path`,
+    );
+  }
+  assert.equal(validator("workflow-execution")(envelope("workflow-execution", { lifecycle: "done" })), false);
+  assert.equal(validator("step-execution")(envelope("step-execution", { state: "finished" })), false);
+  assert.equal(validator("operation-attempt")(envelope("operation-attempt", { state: "replayed" })), false);
+  assert.equal(validator("recovery-decision")(envelope("recovery-decision", { failure_class: "unlucky" })), false);
+  assert.equal(validator("recovery-decision")(envelope("recovery-decision", { decision: "replay" })), false);
+  assert.equal(validator("terminal-diagnostic")(envelope("terminal-diagnostic", { disclosure: "model_prose" })), false);
+  assert.equal(validator("workflow-execution")(envelope("workflow-execution", { started_at: "yesterday" })), false);
+  assert.equal(validator("call-envelope")(envelope("call-envelope", { call_sha256: "short" })), false);
 });

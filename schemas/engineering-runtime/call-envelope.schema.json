@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/call-envelope.schema.json",
+  "title": "AgentMage call-envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "call_id",
+    "step_execution_id",
+    "tool_call_id",
+    "tool_id",
+    "tool_version",
+    "tool_schema_sha256",
+    "validated_arguments_sha256",
+    "validation_state",
+    "repair_count",
+    "rejection_reason_code",
+    "proposed_at",
+    "established_by",
+    "call_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "call_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "step_execution_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "tool_call_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "tool_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "tool_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "tool_schema_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "validated_arguments_sha256": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "validation_state": {
+      "enum": [
+        "validated",
+        "repaired_then_validated",
+        "rejected"
+      ]
+    },
+    "repair_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "rejection_reason_code": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "proposed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "established_by": {
+      "const": "agentmage-runtime"
+    },
+    "call_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "validation_state": {
+            "const": "rejected"
+          }
+        },
+        "required": [
+          "validation_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "validated_arguments_sha256": {
+            "type": "null"
+          },
+          "rejection_reason_code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "validated_arguments_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "rejection_reason_code": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "validation_state": {
+            "const": "repaired_then_validated"
+          }
+        },
+        "required": [
+          "validation_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "repair_count": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "repair_count": {
+            "const": 0
+          }
+        }
+      }
+    }
+  ]
+}

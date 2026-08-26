@@ -1332,6 +1332,415 @@ pub struct CanonicalTerminalResult {
     pub result_sha256: String,
 }
 
+/// The single authority permitted to establish execution truth.
+///
+/// The enum has exactly one variant, so no record in this family can attribute an
+/// execution fact to a model, a client, or any other source.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum CanonicalExecutionAuthority {
+    /// The AgentMage runtime.
+    #[serde(rename = "agentmage-runtime")]
+    AgentmageRuntime,
+}
+
+/// One bounded workflow execution.
+///
+/// The envelope references the existing [`crate::Plan`] by identity and revision and
+/// never restates the plan's steps.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalWorkflowExecution {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable execution identity.
+    pub execution_id: String,
+    /// Workflow being executed.
+    pub workflow_id: String,
+    /// Workflow version.
+    pub workflow_version: u64,
+    /// Digest of the immutable definition this execution runs.
+    pub definition_sha256: String,
+    /// Existing plan this execution serves.
+    pub plan_id: crate::PlanId,
+    /// Exact plan revision.
+    pub plan_revision: u32,
+    /// Owning task.
+    pub task_id: crate::TaskId,
+    /// Owning session.
+    pub session_id: crate::SessionId,
+    /// Digest of the policy set in force.
+    pub policy_sha256: String,
+    /// Current lifecycle state, reused from the existing closed family.
+    pub lifecycle: CanonicalWorkflowLifecycle,
+    /// Monotonic sequence for ordering.
+    pub sequence: u64,
+    /// Trusted start time.
+    pub started_at: String,
+    /// Authority that established this record.
+    pub established_by: CanonicalExecutionAuthority,
+    /// Digest of this execution with this field zeroed.
+    pub execution_sha256: String,
+}
+
+/// Lifecycle state of one bounded step execution.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalStepExecutionState {
+    /// Dependencies are satisfied.
+    Ready,
+    /// Deterministic preflights are running.
+    Preflighting,
+    /// A required approval is outstanding.
+    AwaitingApproval,
+    /// An attempt is in progress.
+    Running,
+    /// Verifier evidence is being collected.
+    Verifying,
+    /// A possible effect is being reconciled.
+    Reconciling,
+    /// The step completed with current verifier evidence.
+    Completed,
+    /// Completion was deferred under an explicit recorded policy.
+    Deferred,
+    /// The step is visibly blocked.
+    Blocked,
+    /// The step failed.
+    Failed,
+    /// The step was cancelled.
+    Cancelled,
+}
+
+/// One bounded step execution, keyed to the existing plan step.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalStepExecution {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable step-execution identity.
+    pub step_execution_id: String,
+    /// Owning workflow execution.
+    pub execution_id: String,
+    /// The existing plan step being executed.
+    pub plan_step_id: crate::PlanStepId,
+    /// Companion policy governing this step.
+    pub policy_id: String,
+    /// Current step-execution state.
+    pub state: CanonicalStepExecutionState,
+    /// Attempts opened for this step, in order.
+    pub attempt_ids: Vec<String>,
+    /// Verifications bound to this step.
+    pub verification_ids: Vec<String>,
+    /// Monotonic sequence for ordering.
+    pub sequence: u64,
+    /// Trusted start time.
+    pub started_at: String,
+    /// Trusted end time once the step is terminal.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub ended_at: Option<String>,
+    /// Authority that established this record.
+    pub established_by: CanonicalExecutionAuthority,
+    /// Digest of this step execution with this field zeroed.
+    pub step_execution_sha256: String,
+}
+
+/// Outcome of validating one proposed call.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalCallValidationState {
+    /// The proposed call validated as authored.
+    Validated,
+    /// One permitted targeted repair was applied before validation succeeded.
+    RepairedThenValidated,
+    /// The call was rejected and never became an attempt.
+    Rejected,
+}
+
+/// One validated call proposed for a step.
+///
+/// The envelope binds the existing [`crate::ToolCall`] by identity and carries only the
+/// digest of its validated arguments, never the argument values.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalCallEnvelope {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable call identity.
+    pub call_id: String,
+    /// Owning step execution.
+    pub step_execution_id: String,
+    /// Existing tool call this envelope admits.
+    pub tool_call_id: crate::ToolCallId,
+    /// Tool identity.
+    pub tool_id: String,
+    /// Exact tool version.
+    pub tool_version: String,
+    /// Digest of the exact tool schema used to validate.
+    pub tool_schema_sha256: String,
+    /// Digest of the validated arguments; absent for a rejected call.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub validated_arguments_sha256: Option<String>,
+    /// Validation outcome.
+    pub validation_state: CanonicalCallValidationState,
+    /// Permitted targeted repairs applied; zero unless the call was repaired.
+    pub repair_count: u32,
+    /// Stable content-free code required for a rejected call.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub rejection_reason_code: Option<String>,
+    /// Trusted proposal time.
+    pub proposed_at: String,
+    /// Authority that established this record.
+    pub established_by: CanonicalExecutionAuthority,
+    /// Digest of this call with this field zeroed.
+    pub call_sha256: String,
+}
+
+/// Terminal or in-flight state of one operation attempt.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalAttemptState {
+    /// The attempt is in progress.
+    Started,
+    /// The attempt succeeded and resolved to an executor receipt.
+    Succeeded,
+    /// The attempt failed.
+    Failed,
+    /// Current policy denied the attempt.
+    Denied,
+    /// The attempt was cancelled.
+    Cancelled,
+    /// The attempt timed out.
+    TimedOut,
+    /// The attempt may have produced an effect that is not yet confirmed.
+    Uncertain,
+}
+
+/// One operation attempt.
+///
+/// The attempt binds the existing capability grant and operation receipt by identity and
+/// digest and never restates their contents. Attempt ordinals are one-based and strictly
+/// increasing, so a further attempt is always a new attempt and never a replay of an
+/// earlier one.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalOperationAttempt {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable attempt identity.
+    pub attempt_id: String,
+    /// Call this attempt executes.
+    pub call_id: String,
+    /// Owning step execution.
+    pub step_execution_id: String,
+    /// One-based attempt ordinal.
+    pub attempt_ordinal: u32,
+    /// Attempt this one follows; absent only for the first attempt.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub supersedes_attempt_id: Option<String>,
+    /// Existing capability grant consumed by this attempt.
+    pub grant_id: crate::GrantId,
+    /// Digest of the exact consumed grant.
+    pub grant_sha256: String,
+    /// Trusted executor identity.
+    pub executor_identity: String,
+    /// Sandbox identity when the attempt ran confined.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub sandbox_identity: Option<String>,
+    /// Current attempt state.
+    pub state: CanonicalAttemptState,
+    /// Trusted start time.
+    pub started_at: String,
+    /// Trusted end time once the attempt is terminal.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub ended_at: Option<String>,
+    /// Existing operation receipt this attempt resolved to.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub receipt_id: Option<crate::ReceiptId>,
+    /// Digest of the exact receipt.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub receipt_sha256: Option<String>,
+    /// Tool observation recorded for this attempt.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub observation_id: Option<String>,
+    /// Authority that established this record.
+    pub established_by: CanonicalExecutionAuthority,
+    /// Digest of this attempt with this field zeroed.
+    pub attempt_sha256: String,
+}
+
+/// Binds one verification to the step execution it judges.
+///
+/// The verdict itself stays in the existing verification result; this envelope carries
+/// only the binding.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalVerificationEnvelope {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable verification-binding identity.
+    pub verification_id: String,
+    /// Step execution being verified.
+    pub step_execution_id: String,
+    /// Attempt being verified, when the verification targets one.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub attempt_id: Option<String>,
+    /// Existing verification result carrying the verdict.
+    pub verification_result_id: String,
+    /// Verifier policy that required this verification.
+    pub verifier_policy_id: String,
+    /// Whether completion depends on this verification.
+    pub required: bool,
+    /// Whether the evidence is current for the observed state.
+    pub current: bool,
+    /// Trusted observation time.
+    pub observed_at: String,
+    /// Authority that established this record.
+    pub established_by: CanonicalExecutionAuthority,
+    /// Digest of this binding with this field zeroed.
+    pub verification_sha256: String,
+}
+
+/// Deterministic failure family observed for one attempt.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalFailureClass {
+    /// Transport-level failure.
+    Transport,
+    /// Rate limiting.
+    Rate,
+    /// Operation exceeded its time bound.
+    Timeout,
+    /// Executor or child process crashed.
+    Crash,
+    /// A required service was unavailable.
+    UnavailableService,
+    /// A required command was absent.
+    MissingCommand,
+    /// Arguments were invalid.
+    InvalidArguments,
+    /// Authentication failed.
+    Authentication,
+    /// Permission was insufficient.
+    Permission,
+    /// Current policy denied the operation.
+    PolicyDenial,
+    /// A deterministic verifier failed.
+    DeterministicVerificationFailure,
+    /// Model output could not be parsed into a valid call.
+    MalformedModelOutput,
+    /// Context exceeded its budget.
+    ContextOverflow,
+    /// The user rejected the operation.
+    UserRejection,
+}
+
+impl CanonicalFailureClass {
+    /// Whether this failure family is classified transient.
+    ///
+    /// Only a transient failure may be reopened by the runtime on its own authority.
+    /// The match is exhaustive, so a new failure family must decide this explicitly.
+    #[must_use]
+    pub const fn is_transient(self) -> bool {
+        match self {
+            Self::Transport | Self::Rate | Self::Timeout | Self::UnavailableService => true,
+            Self::Crash
+            | Self::MissingCommand
+            | Self::InvalidArguments
+            | Self::Authentication
+            | Self::Permission
+            | Self::PolicyDenial
+            | Self::DeterministicVerificationFailure
+            | Self::MalformedModelOutput
+            | Self::ContextOverflow
+            | Self::UserRejection => false,
+        }
+    }
+}
+
+/// What the runtime decided after a non-success.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalRecoveryAction {
+    /// Open a fresh attempt. Never a replay of the previous one.
+    RetryNewAttempt,
+    /// Reconcile the observed state before deciding anything else.
+    ReconcileThenDecide,
+    /// Request the approval this effect requires.
+    RequestApproval,
+    /// Ask the user for a decision.
+    RequestUserDecision,
+    /// Replan the work.
+    Replan,
+    /// Defer under an explicit recorded policy.
+    Defer,
+    /// Stop with a terminal diagnostic.
+    Stop,
+}
+
+/// The runtime's recorded decision after a non-success.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalRecoveryDecision {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable decision identity.
+    pub decision_id: String,
+    /// Step execution this decision governs.
+    pub step_execution_id: String,
+    /// Attempt whose outcome prompted the decision.
+    pub attempt_id: String,
+    /// Companion policy in force.
+    pub policy_id: String,
+    /// Observed failure family.
+    pub failure_class: CanonicalFailureClass,
+    /// Whether the attempt may have produced an effect that is not yet confirmed.
+    pub uncertain_outcome: bool,
+    /// Decided action.
+    pub decision: CanonicalRecoveryAction,
+    /// Stable content-free reason code.
+    pub reason_code: String,
+    /// Trusted decision time.
+    pub decided_at: String,
+    /// Authority that established this record.
+    pub established_by: CanonicalExecutionAuthority,
+    /// Digest of this decision with this field zeroed.
+    pub decision_sha256: String,
+}
+
+/// One content-free terminal diagnostic.
+///
+/// The record names deterministic codes and artifact references. It admits no message,
+/// model prose, prompt, credential, or environment value.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalTerminalDiagnostic {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable diagnostic identity.
+    pub diagnostic_id: String,
+    /// Workflow execution this diagnostic terminates.
+    pub execution_id: String,
+    /// Existing terminal result this diagnostic explains.
+    pub terminal_result_id: String,
+    /// Deterministic diagnostic code.
+    pub diagnostic_code: String,
+    /// Observed failure family; absent for a successful terminal outcome.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub failure_class: Option<CanonicalFailureClass>,
+    /// Deterministic code for a safe next action; never free prose.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub safe_next_action_code: Option<String>,
+    /// Separately classified evidence artifacts.
+    pub evidence_artifact_ids: Vec<String>,
+    /// What this diagnostic is permitted to disclose.
+    pub disclosure: CanonicalDiagnosticDisclosure,
+    /// Trusted report time.
+    pub reported_at: String,
+    /// Authority that established this record.
+    pub established_by: CanonicalExecutionAuthority,
+    /// Digest of this diagnostic with this field zeroed.
+    pub diagnostic_sha256: String,
+}
+
 #[cfg(test)]
 mod source_retention_tests {
     use super::{
@@ -1849,6 +2258,387 @@ mod step_execution_policy_tests {
             assert!(
                 serde_json::from_str::<CanonicalDiagnosticDisclosure>(candidate).is_err(),
                 "{candidate} must not be an admitted diagnostic disclosure",
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+mod execution_envelope_tests {
+    use super::{
+        CanonicalAttemptState, CanonicalCallEnvelope, CanonicalCallValidationState,
+        CanonicalDiagnosticDisclosure, CanonicalExecutionAuthority, CanonicalFailureClass,
+        CanonicalOperationAttempt, CanonicalRecoveryAction, CanonicalRecoveryDecision,
+        CanonicalStepExecution, CanonicalStepExecutionState, CanonicalTerminalDiagnostic,
+        CanonicalVerificationEnvelope, CanonicalWorkflowExecution, CanonicalWorkflowLifecycle,
+    };
+    use crate::{GrantId, PlanId, PlanStepId, ReceiptId, SessionId, TaskId, ToolCallId};
+
+    const ALL_FAILURE_CLASSES: [CanonicalFailureClass; 14] = [
+        CanonicalFailureClass::Transport,
+        CanonicalFailureClass::Rate,
+        CanonicalFailureClass::Timeout,
+        CanonicalFailureClass::Crash,
+        CanonicalFailureClass::UnavailableService,
+        CanonicalFailureClass::MissingCommand,
+        CanonicalFailureClass::InvalidArguments,
+        CanonicalFailureClass::Authentication,
+        CanonicalFailureClass::Permission,
+        CanonicalFailureClass::PolicyDenial,
+        CanonicalFailureClass::DeterministicVerificationFailure,
+        CanonicalFailureClass::MalformedModelOutput,
+        CanonicalFailureClass::ContextOverflow,
+        CanonicalFailureClass::UserRejection,
+    ];
+
+    fn digest() -> String {
+        "a".repeat(64)
+    }
+
+    fn workflow_execution() -> CanonicalWorkflowExecution {
+        CanonicalWorkflowExecution {
+            schema_version: 1,
+            execution_id: "execution-1".to_owned(),
+            workflow_id: "workflow-1".to_owned(),
+            workflow_version: 1,
+            definition_sha256: digest(),
+            plan_id: PlanId::from_raw("plan-0001"),
+            plan_revision: 3,
+            task_id: TaskId::from_raw("task-0001"),
+            session_id: SessionId::from_raw("session-0001"),
+            policy_sha256: digest(),
+            lifecycle: CanonicalWorkflowLifecycle::Running,
+            sequence: 7,
+            started_at: "2026-08-26T12:00:00Z".to_owned(),
+            established_by: CanonicalExecutionAuthority::AgentmageRuntime,
+            execution_sha256: digest(),
+        }
+    }
+
+    fn step_execution() -> CanonicalStepExecution {
+        CanonicalStepExecution {
+            schema_version: 1,
+            step_execution_id: "step-execution-1".to_owned(),
+            execution_id: "execution-1".to_owned(),
+            plan_step_id: PlanStepId::from_raw("plan-0001:step:0002"),
+            policy_id: "policy-1".to_owned(),
+            state: CanonicalStepExecutionState::Running,
+            attempt_ids: vec!["attempt-1".to_owned()],
+            verification_ids: vec!["verification-1".to_owned()],
+            sequence: 2,
+            started_at: "2026-08-26T12:00:00Z".to_owned(),
+            ended_at: None,
+            established_by: CanonicalExecutionAuthority::AgentmageRuntime,
+            step_execution_sha256: digest(),
+        }
+    }
+
+    fn call_envelope() -> CanonicalCallEnvelope {
+        CanonicalCallEnvelope {
+            schema_version: 1,
+            call_id: "call-1".to_owned(),
+            step_execution_id: "step-execution-1".to_owned(),
+            tool_call_id: ToolCallId::from_raw("tool-call-1"),
+            tool_id: "cargo-test".to_owned(),
+            tool_version: "1.0.0".to_owned(),
+            tool_schema_sha256: digest(),
+            validated_arguments_sha256: Some(digest()),
+            validation_state: CanonicalCallValidationState::Validated,
+            repair_count: 0,
+            rejection_reason_code: None,
+            proposed_at: "2026-08-26T12:00:00Z".to_owned(),
+            established_by: CanonicalExecutionAuthority::AgentmageRuntime,
+            call_sha256: digest(),
+        }
+    }
+
+    fn operation_attempt() -> CanonicalOperationAttempt {
+        CanonicalOperationAttempt {
+            schema_version: 1,
+            attempt_id: "attempt-1".to_owned(),
+            call_id: "call-1".to_owned(),
+            step_execution_id: "step-execution-1".to_owned(),
+            attempt_ordinal: 1,
+            supersedes_attempt_id: None,
+            grant_id: GrantId::from_raw("grant-1"),
+            grant_sha256: digest(),
+            executor_identity: "executor-1".to_owned(),
+            sandbox_identity: Some("sandbox-1".to_owned()),
+            state: CanonicalAttemptState::Started,
+            started_at: "2026-08-26T12:00:00Z".to_owned(),
+            ended_at: None,
+            receipt_id: None,
+            receipt_sha256: None,
+            observation_id: None,
+            established_by: CanonicalExecutionAuthority::AgentmageRuntime,
+            attempt_sha256: digest(),
+        }
+    }
+
+    fn verification_envelope() -> CanonicalVerificationEnvelope {
+        CanonicalVerificationEnvelope {
+            schema_version: 1,
+            verification_id: "verification-1".to_owned(),
+            step_execution_id: "step-execution-1".to_owned(),
+            attempt_id: Some("attempt-1".to_owned()),
+            verification_result_id: "verification-result-1".to_owned(),
+            verifier_policy_id: "verifier-policy-1".to_owned(),
+            required: true,
+            current: true,
+            observed_at: "2026-08-26T12:00:00Z".to_owned(),
+            established_by: CanonicalExecutionAuthority::AgentmageRuntime,
+            verification_sha256: digest(),
+        }
+    }
+
+    fn recovery_decision() -> CanonicalRecoveryDecision {
+        CanonicalRecoveryDecision {
+            schema_version: 1,
+            decision_id: "decision-1".to_owned(),
+            step_execution_id: "step-execution-1".to_owned(),
+            attempt_id: "attempt-1".to_owned(),
+            policy_id: "policy-1".to_owned(),
+            failure_class: CanonicalFailureClass::Timeout,
+            uncertain_outcome: false,
+            decision: CanonicalRecoveryAction::RetryNewAttempt,
+            reason_code: "transient_timeout".to_owned(),
+            decided_at: "2026-08-26T12:00:00Z".to_owned(),
+            established_by: CanonicalExecutionAuthority::AgentmageRuntime,
+            decision_sha256: digest(),
+        }
+    }
+
+    fn terminal_diagnostic() -> CanonicalTerminalDiagnostic {
+        CanonicalTerminalDiagnostic {
+            schema_version: 1,
+            diagnostic_id: "diagnostic-1".to_owned(),
+            execution_id: "execution-1".to_owned(),
+            terminal_result_id: "terminal-result-1".to_owned(),
+            diagnostic_code: "verifier_evidence_absent".to_owned(),
+            failure_class: Some(CanonicalFailureClass::DeterministicVerificationFailure),
+            safe_next_action_code: Some("rerun_verifier".to_owned()),
+            evidence_artifact_ids: vec!["artifact-1".to_owned()],
+            disclosure: CanonicalDiagnosticDisclosure::ContentFreeCodesWithArtifactReference,
+            reported_at: "2026-08-26T12:00:00Z".to_owned(),
+            established_by: CanonicalExecutionAuthority::AgentmageRuntime,
+            diagnostic_sha256: digest(),
+        }
+    }
+
+    /// Every envelope in the family, encoded once for the shared boundary assertions.
+    fn encoded_family() -> Vec<(&'static str, String)> {
+        vec![
+            (
+                "workflow-execution",
+                serde_json::to_string(&workflow_execution()).expect("serializes"),
+            ),
+            (
+                "step-execution",
+                serde_json::to_string(&step_execution()).expect("serializes"),
+            ),
+            (
+                "call-envelope",
+                serde_json::to_string(&call_envelope()).expect("serializes"),
+            ),
+            (
+                "operation-attempt",
+                serde_json::to_string(&operation_attempt()).expect("serializes"),
+            ),
+            (
+                "verification-envelope",
+                serde_json::to_string(&verification_envelope()).expect("serializes"),
+            ),
+            (
+                "recovery-decision",
+                serde_json::to_string(&recovery_decision()).expect("serializes"),
+            ),
+            (
+                "terminal-diagnostic",
+                serde_json::to_string(&terminal_diagnostic()).expect("serializes"),
+            ),
+        ]
+    }
+
+    #[test]
+    fn every_envelope_round_trips_and_is_established_only_by_the_runtime() {
+        assert_eq!(encoded_family().len(), 7);
+        assert_eq!(
+            serde_json::to_string(&CanonicalExecutionAuthority::AgentmageRuntime)
+                .expect("authority serializes"),
+            "\"agentmage-runtime\"",
+        );
+        for candidate in ["\"model\"", "\"client\"", "\"user\"", "\"extension\""] {
+            assert!(
+                serde_json::from_str::<CanonicalExecutionAuthority>(candidate).is_err(),
+                "{candidate} must never establish execution truth",
+            );
+        }
+        assert_eq!(
+            serde_json::from_str::<CanonicalWorkflowExecution>(&encoded_family()[0].1)
+                .expect("deserializes"),
+            workflow_execution(),
+        );
+        assert_eq!(
+            serde_json::from_str::<CanonicalOperationAttempt>(&encoded_family()[3].1)
+                .expect("deserializes"),
+            operation_attempt(),
+        );
+        assert_eq!(
+            serde_json::from_str::<CanonicalRecoveryDecision>(&encoded_family()[5].1)
+                .expect("deserializes"),
+            recovery_decision(),
+        );
+    }
+
+    #[test]
+    fn no_envelope_restates_content_the_protected_contracts_own() {
+        // Each of these belongs to Plan, ToolCall, CapabilityGrant, OperationReceipt, or
+        // VerifiedCompletion. The family reaches those by identity and digest only.
+        for (name, encoded) in encoded_family() {
+            let value: serde_json::Value =
+                serde_json::from_str(&encoded).expect("envelope is an object");
+            let object = value.as_object().expect("envelope is an object");
+            for owned_elsewhere in [
+                "steps",
+                "description",
+                "ordinal",
+                "depends_on",
+                "expected_evidence",
+                "arguments",
+                "tool_arguments",
+                "parameters",
+                "scope",
+                "capability",
+                "granted_operations",
+                "exit_code",
+                "stdout",
+                "stderr",
+                "resource_usage",
+                "preserved_invariants",
+                "observed_evidence_sha256s",
+            ] {
+                assert!(
+                    !object.contains_key(owned_elsewhere),
+                    "{name} must not restate {owned_elsewhere}",
+                );
+            }
+            for key in object.keys() {
+                for forbidden in ["absolute_path", "secret", "credential", "prompt"] {
+                    assert!(
+                        !key.contains(forbidden),
+                        "{name} field {key} must not expose a {forbidden} surface",
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn the_protected_contracts_stay_reachable_by_their_own_identity_types() {
+        // The envelopes key off the existing identity types, so a second identity
+        // encoding for a protected contract cannot appear without changing these fields.
+        let execution = workflow_execution();
+        assert_eq!(execution.plan_id, PlanId::from_raw("plan-0001"));
+        assert_eq!(
+            step_execution().plan_step_id,
+            PlanStepId::from_raw("plan-0001:step:0002"),
+        );
+        assert_eq!(
+            call_envelope().tool_call_id,
+            ToolCallId::from_raw("tool-call-1")
+        );
+        assert_eq!(operation_attempt().grant_id, GrantId::from_raw("grant-1"));
+        let mut succeeded = operation_attempt();
+        succeeded.state = CanonicalAttemptState::Succeeded;
+        succeeded.ended_at = Some("2026-08-26T12:05:00Z".to_owned());
+        succeeded.receipt_id = Some(ReceiptId::from_raw("receipt-1"));
+        succeeded.receipt_sha256 = Some(digest());
+        let encoded = serde_json::to_string(&succeeded).expect("serializes");
+        let decoded: CanonicalOperationAttempt =
+            serde_json::from_str(&encoded).expect("deserializes");
+        assert_eq!(decoded.receipt_id, Some(ReceiptId::from_raw("receipt-1")));
+    }
+
+    #[test]
+    fn only_a_classified_transient_failure_is_transient() {
+        let mut transient = 0_usize;
+        for failure in ALL_FAILURE_CLASSES {
+            if failure.is_transient() {
+                transient += 1;
+            }
+        }
+        assert_eq!(transient, 4, "exactly four failure families are transient");
+        for failure in [
+            CanonicalFailureClass::Transport,
+            CanonicalFailureClass::Rate,
+            CanonicalFailureClass::Timeout,
+            CanonicalFailureClass::UnavailableService,
+        ] {
+            assert!(failure.is_transient(), "{failure:?} must be transient");
+        }
+        // A destructive or user-owned outcome is never reopened by the runtime alone.
+        for failure in [
+            CanonicalFailureClass::UserRejection,
+            CanonicalFailureClass::PolicyDenial,
+            CanonicalFailureClass::Permission,
+            CanonicalFailureClass::DeterministicVerificationFailure,
+            CanonicalFailureClass::Crash,
+        ] {
+            assert!(!failure.is_transient(), "{failure:?} must not be transient");
+        }
+    }
+
+    #[test]
+    fn unknown_and_missing_envelope_fields_are_rejected() {
+        let encoded = serde_json::to_string(&operation_attempt()).expect("serializes");
+        let widened = encoded.replace(
+            "\"attempt_id\"",
+            "\"replayed_from\":\"attempt-0\",\"attempt_id\"",
+        );
+        assert!(
+            serde_json::from_str::<CanonicalOperationAttempt>(&widened).is_err(),
+            "a replay field must never deserialize into an attempt",
+        );
+        let dropped = encoded.replace("\"receipt_sha256\":null,", "");
+        assert!(
+            serde_json::from_str::<CanonicalOperationAttempt>(&dropped).is_err(),
+            "a required optional field must be present and explicit",
+        );
+        let diagnostic = serde_json::to_string(&terminal_diagnostic()).expect("serializes");
+        let with_prose = diagnostic.replace(
+            "\"diagnostic_code\"",
+            "\"message\":\"the model thinks it worked\",\"diagnostic_code\"",
+        );
+        assert!(
+            serde_json::from_str::<CanonicalTerminalDiagnostic>(&with_prose).is_err(),
+            "a terminal diagnostic must never carry prose",
+        );
+    }
+
+    #[test]
+    fn unknown_envelope_states_do_not_deserialize() {
+        for candidate in ["\"replayed\"", "\"retried\"", "\"resumed\""] {
+            assert!(
+                serde_json::from_str::<CanonicalAttemptState>(candidate).is_err(),
+                "{candidate} must not be an admitted attempt state",
+            );
+        }
+        for candidate in ["\"replay\"", "\"retry_same_attempt\"", "\"ignore\""] {
+            assert!(
+                serde_json::from_str::<CanonicalRecoveryAction>(candidate).is_err(),
+                "{candidate} must not be an admitted recovery action",
+            );
+        }
+        for candidate in ["\"unlucky\"", "\"flaky\"", "\"unknown\""] {
+            assert!(
+                serde_json::from_str::<CanonicalFailureClass>(candidate).is_err(),
+                "{candidate} must not be an admitted failure class",
+            );
+        }
+        for candidate in ["\"finished\"", "\"replaying\"", "\"skipped\""] {
+            assert!(
+                serde_json::from_str::<CanonicalStepExecutionState>(candidate).is_err(),
+                "{candidate} must not be an admitted step-execution state",
             );
         }
     }

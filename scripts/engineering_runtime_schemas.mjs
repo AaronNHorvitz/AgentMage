@@ -1006,6 +1006,297 @@ stepExecutionPolicy.allOf = [
   },
 ];
 
+export const EXECUTION_ENVELOPE_SCHEMA_VERSION = 1;
+// The five contracts this family must never replace. Each envelope reaches them by
+// identity and digest only, so execution truth composes with them instead of
+// restating — and eventually contradicting — what they already own.
+export const PROTECTED_EXECUTION_CONTRACTS = Object.freeze({
+  Plan: "plan_id",
+  ToolCall: "tool_call_id",
+  CapabilityGrant: "grant_id",
+  OperationReceipt: "receipt_id",
+  VerifiedCompletion: "verification_result_id",
+});
+// Content those contracts own. No envelope in this family may admit any of it.
+export const PROTECTED_EXECUTION_FIELDS = Object.freeze([
+  "steps",
+  "description",
+  "ordinal",
+  "depends_on",
+  "expected_evidence",
+  "arguments",
+  "tool_arguments",
+  "parameters",
+  "scope",
+  "capability",
+  "granted_operations",
+  "exit_code",
+  "stdout",
+  "stderr",
+  "resource_usage",
+  "preserved_invariants",
+  "observed_evidence_sha256s",
+]);
+// Deterministic failure families from the runtime retry table.
+export const EXECUTION_FAILURE_CLASSES = Object.freeze([
+  "transport",
+  "rate",
+  "timeout",
+  "crash",
+  "unavailable_service",
+  "missing_command",
+  "invalid_arguments",
+  "authentication",
+  "permission",
+  "policy_denial",
+  "deterministic_verification_failure",
+  "malformed_model_output",
+  "context_overflow",
+  "user_rejection",
+]);
+// Only a classified transient failure may be retried by the runtime on its own.
+export const EXECUTION_TRANSIENT_FAILURE_CLASSES = Object.freeze([
+  "transport",
+  "rate",
+  "timeout",
+  "unavailable_service",
+]);
+export const RECOVERY_DECISIONS = Object.freeze([
+  "retry_new_attempt",
+  "reconcile_then_decide",
+  "request_approval",
+  "request_user_decision",
+  "replan",
+  "defer",
+  "stop",
+]);
+export const ATTEMPT_STATES = Object.freeze([
+  "started",
+  "succeeded",
+  "failed",
+  "denied",
+  "cancelled",
+  "timed_out",
+  "uncertain",
+]);
+// Only the runtime establishes execution truth. A model proposal never does.
+const RUNTIME_AUTHORITY = "agentmage-runtime";
+
+// One bounded workflow execution. It references the existing Plan by identity and
+// revision and never restates the plan's steps.
+const workflowExecution = closed({
+  schema_version: { type: "integer", const: EXECUTION_ENVELOPE_SCHEMA_VERSION },
+  execution_id: identifier,
+  workflow_id: identifier,
+  workflow_version: positive,
+  definition_sha256: digest,
+  plan_id: identifier,
+  plan_revision: uint,
+  task_id: identifier,
+  session_id: identifier,
+  policy_sha256: digest,
+  lifecycle: { enum: ["created", "validating", "ready", "running", "verifying", "waiting_for_dependency", "waiting_for_approval", "paused", "reconciling", "recovering", "succeeded", "no_op", "blocked", "failed", "cancelled", "timed_out", "resource_exhausted", "uncertain"] },
+  sequence: uint,
+  started_at: timestamp,
+  established_by: { const: RUNTIME_AUTHORITY },
+  execution_sha256: digest,
+});
+
+// One bounded step execution, keyed to the existing PlanStepId and governed by the
+// companion step-execution policy.
+const stepExecution = closed({
+  schema_version: { type: "integer", const: EXECUTION_ENVELOPE_SCHEMA_VERSION },
+  step_execution_id: identifier,
+  execution_id: identifier,
+  plan_step_id: identifier,
+  policy_id: identifier,
+  state: { enum: ["ready", "preflighting", "awaiting_approval", "running", "verifying", "reconciling", "completed", "deferred", "blocked", "failed", "cancelled"] },
+  attempt_ids: list(identifier, 0, 64),
+  verification_ids: list(identifier, 0, 32),
+  sequence: uint,
+  started_at: timestamp,
+  ended_at: nullable(timestamp),
+  established_by: { const: RUNTIME_AUTHORITY },
+  step_execution_sha256: digest,
+});
+
+// One validated call proposed for a step. The call envelope binds the existing
+// ToolCall by identity and carries only the digest of its validated arguments, never
+// the argument values.
+const callEnvelope = closed({
+  schema_version: { type: "integer", const: EXECUTION_ENVELOPE_SCHEMA_VERSION },
+  call_id: identifier,
+  step_execution_id: identifier,
+  tool_call_id: identifier,
+  tool_id: identifier,
+  tool_version: bounded,
+  tool_schema_sha256: digest,
+  validated_arguments_sha256: nullable(digest),
+  validation_state: { enum: ["validated", "repaired_then_validated", "rejected"] },
+  repair_count: uint,
+  rejection_reason_code: nullable(identifier),
+  proposed_at: timestamp,
+  established_by: { const: RUNTIME_AUTHORITY },
+  call_sha256: digest,
+});
+callEnvelope.allOf = [
+  // A rejected call never produced validated arguments and always says why.
+  {
+    if: { properties: { validation_state: { const: "rejected" } }, required: ["validation_state"] },
+    then: {
+      properties: {
+        validated_arguments_sha256: { type: "null" },
+        rejection_reason_code: identifier,
+      },
+    },
+    else: {
+      properties: {
+        validated_arguments_sha256: digest,
+        rejection_reason_code: { type: "null" },
+      },
+    },
+  },
+  // Only a repaired call may report a repair.
+  {
+    if: {
+      properties: { validation_state: { const: "repaired_then_validated" } },
+      required: ["validation_state"],
+    },
+    then: { properties: { repair_count: positive } },
+    else: { properties: { repair_count: { const: 0 } } },
+  },
+];
+
+// One operation attempt. The attempt binds the existing CapabilityGrant and
+// OperationReceipt by identity and digest and never restates their contents.
+const operationAttempt = closed({
+  schema_version: { type: "integer", const: EXECUTION_ENVELOPE_SCHEMA_VERSION },
+  attempt_id: identifier,
+  call_id: identifier,
+  step_execution_id: identifier,
+  // One-based and strictly increasing. Attempt two is a new attempt, never a replay.
+  attempt_ordinal: positive,
+  supersedes_attempt_id: nullable(identifier),
+  grant_id: identifier,
+  grant_sha256: digest,
+  executor_identity: identifier,
+  sandbox_identity: nullable(identifier),
+  state: { enum: [...ATTEMPT_STATES] },
+  started_at: timestamp,
+  ended_at: nullable(timestamp),
+  receipt_id: nullable(identifier),
+  receipt_sha256: nullable(digest),
+  observation_id: nullable(identifier),
+  established_by: { const: RUNTIME_AUTHORITY },
+  attempt_sha256: digest,
+});
+operationAttempt.allOf = [
+  // A started attempt has not ended and cannot yet carry a receipt.
+  {
+    if: { properties: { state: { const: "started" } }, required: ["state"] },
+    then: {
+      properties: {
+        ended_at: { type: "null" },
+        receipt_id: { type: "null" },
+        receipt_sha256: { type: "null" },
+      },
+    },
+    else: { properties: { ended_at: timestamp } },
+  },
+  // A succeeded attempt resolves to an executor receipt, never to a model claim.
+  {
+    if: { properties: { state: { const: "succeeded" } }, required: ["state"] },
+    then: {
+      properties: { receipt_id: identifier, receipt_sha256: digest },
+    },
+  },
+  // The first attempt supersedes nothing; every later attempt names what it follows.
+  {
+    if: { properties: { attempt_ordinal: { const: 1 } }, required: ["attempt_ordinal"] },
+    then: { properties: { supersedes_attempt_id: { type: "null" } } },
+    else: { properties: { supersedes_attempt_id: identifier } },
+  },
+];
+
+// Binds one verification to the step execution it judges. The verdict itself stays in
+// the existing verification-result record.
+const verificationEnvelope = closed({
+  schema_version: { type: "integer", const: EXECUTION_ENVELOPE_SCHEMA_VERSION },
+  verification_id: identifier,
+  step_execution_id: identifier,
+  attempt_id: nullable(identifier),
+  verification_result_id: identifier,
+  verifier_policy_id: identifier,
+  required: { type: "boolean" },
+  current: { type: "boolean" },
+  observed_at: timestamp,
+  established_by: { const: RUNTIME_AUTHORITY },
+  verification_sha256: digest,
+});
+
+// What the runtime decided after a non-success, and why.
+const recoveryDecision = closed({
+  schema_version: { type: "integer", const: EXECUTION_ENVELOPE_SCHEMA_VERSION },
+  decision_id: identifier,
+  step_execution_id: identifier,
+  attempt_id: identifier,
+  policy_id: identifier,
+  failure_class: { enum: [...EXECUTION_FAILURE_CLASSES] },
+  // True when the attempt may have produced an effect the runtime cannot yet confirm.
+  uncertain_outcome: { type: "boolean" },
+  decision: { enum: [...RECOVERY_DECISIONS] },
+  reason_code: identifier,
+  decided_at: timestamp,
+  established_by: { const: RUNTIME_AUTHORITY },
+  decision_sha256: digest,
+});
+recoveryDecision.allOf = [
+  // An outcome the runtime cannot confirm is reconciled before anything else is decided.
+  {
+    if: { properties: { uncertain_outcome: { const: true } }, required: ["uncertain_outcome"] },
+    then: { properties: { decision: { const: "reconcile_then_decide" } } },
+  },
+  // The runtime opens a fresh attempt on its own only for a classified transient failure
+  // with a confirmed outcome. Every other failure needs approval, replanning, or a stop.
+  {
+    if: { properties: { decision: { const: "retry_new_attempt" } }, required: ["decision"] },
+    then: {
+      properties: {
+        failure_class: { enum: [...EXECUTION_TRANSIENT_FAILURE_CLASSES] },
+        uncertain_outcome: { const: false },
+      },
+    },
+  },
+];
+
+// One content-free terminal diagnostic.
+const terminalDiagnostic = closed({
+  schema_version: { type: "integer", const: EXECUTION_ENVELOPE_SCHEMA_VERSION },
+  diagnostic_id: identifier,
+  execution_id: identifier,
+  terminal_result_id: identifier,
+  diagnostic_code: identifier,
+  failure_class: nullable({ enum: [...EXECUTION_FAILURE_CLASSES] }),
+  safe_next_action_code: nullable(identifier),
+  evidence_artifact_ids: list(identifier, 0, 64),
+  disclosure: { enum: [...STEP_DIAGNOSTIC_DISCLOSURES] },
+  reported_at: timestamp,
+  established_by: { const: RUNTIME_AUTHORITY },
+  diagnostic_sha256: digest,
+});
+terminalDiagnostic.allOf = [
+  // A codes-only disclosure carries no artifact reference at all.
+  {
+    if: { properties: { disclosure: { const: "content_free_codes" } }, required: ["disclosure"] },
+    then: { properties: { evidence_artifact_ids: { type: "array", maxItems: 0 } } },
+  },
+  // A successful terminal outcome names no failure class.
+  {
+    if: { properties: { failure_class: { type: "null" } }, required: ["failure_class"] },
+    then: { properties: { safe_next_action_code: { type: "null" } } },
+  },
+];
+
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
   "artifact-transformation": artifactTransformation,
@@ -1022,6 +1313,13 @@ export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "source-retention": sourceRetention,
   "source-locator": sourceLocator,
   "step-execution-policy": stepExecutionPolicy,
+  "workflow-execution": workflowExecution,
+  "step-execution": stepExecution,
+  "call-envelope": callEnvelope,
+  "operation-attempt": operationAttempt,
+  "verification-envelope": verificationEnvelope,
+  "recovery-decision": recoveryDecision,
+  "terminal-diagnostic": terminalDiagnostic,
   "workflow-definition": workflowDefinition,
   "workflow-state": workflowState,
   "workflow-checkpoint": workflowCheckpoint,
@@ -1162,6 +1460,54 @@ function stepExecutionPolicySemantic(record) {
   return !(record.retry_class === "never" && budgets.attempts !== 1);
 }
 
+function isOrderedInstant(startedAt, endedAt) {
+  if (endedAt === null || endedAt === undefined) return true;
+  if (typeof startedAt !== "string" || typeof endedAt !== "string") return false;
+  const start = Date.parse(startedAt);
+  const end = Date.parse(endedAt);
+  return Number.isFinite(start) && Number.isFinite(end) && start <= end;
+}
+
+function stepExecutionSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  if (!hasUniqueIdentities(record.attempt_ids)) return false;
+  if (!hasUniqueIdentities(record.verification_ids)) return false;
+  return isOrderedInstant(record.started_at, record.ended_at);
+}
+
+function operationAttemptSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  // An attempt can never follow itself, so a superseding chain cannot close into a loop.
+  if (
+    record.supersedes_attempt_id !== null
+    && record.supersedes_attempt_id !== undefined
+    && record.supersedes_attempt_id === record.attempt_id
+  ) {
+    return false;
+  }
+  return isOrderedInstant(record.started_at, record.ended_at);
+}
+
+function recoveryDecisionSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  if (!EXECUTION_FAILURE_CLASSES.includes(record.failure_class)) return false;
+  if (!RECOVERY_DECISIONS.includes(record.decision)) return false;
+  // An outcome the runtime cannot confirm is reconciled before anything else is decided.
+  if (record.uncertain_outcome === true && record.decision !== "reconcile_then_decide") {
+    return false;
+  }
+  if (record.decision !== "retry_new_attempt") return true;
+  return (
+    EXECUTION_TRANSIENT_FAILURE_CLASSES.includes(record.failure_class)
+    && record.uncertain_outcome === false
+  );
+}
+
+function terminalDiagnosticSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  return hasUniqueIdentities(record.evidence_artifact_ids);
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
@@ -1169,6 +1515,10 @@ export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "source-retention": sourceRetentionSemantic,
   "source-locator": sourceLocatorSemantic,
   "step-execution-policy": stepExecutionPolicySemantic,
+  "step-execution": stepExecutionSemantic,
+  "operation-attempt": operationAttemptSemantic,
+  "recovery-decision": recoveryDecisionSemantic,
+  "terminal-diagnostic": terminalDiagnosticSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
@@ -1178,6 +1528,10 @@ export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
   "source-retention": "retention_class MUST agree with lifecycle_state: memory_only and policy_persisted permit only active or quarantined, released requires released, and deleted requires deleted. physical_binding, when present, MUST name an existing RuntimeArtifactKind and a non-negative byte_length; a source-specific physical family is prohibited.",
   "source-locator": "locator_kind MUST carry exactly its own payload fields and no others. complete, partial, and truncated require every declared payload; encrypted, unsupported, and unavailable MUST carry no payload at all. byte_range and line_range MUST be ordered, cell_reference row and column MUST be one-indexed, and image_region width and height MUST be positive.",
   "step-execution-policy": "effect_class MUST admit its retry_class under the closed effect/retry matrix, and an effect class that fails toward approval MUST NOT carry an automatic retry class. required_preflight_ids and required_verifier_ids MUST NOT repeat an identity. plan_revision MUST be a non-negative integer, budgets.attempts MUST be at least one, and a retry_class of never MUST allow exactly one attempt.",
+  "step-execution": "attempt_ids and verification_ids MUST NOT repeat an identity, and ended_at, when present, MUST NOT precede started_at.",
+  "operation-attempt": "supersedes_attempt_id MUST NOT equal attempt_id, and ended_at, when present, MUST NOT precede started_at.",
+  "recovery-decision": "An uncertain outcome MUST decide reconcile_then_decide. retry_new_attempt MUST carry a classified transient failure class and a confirmed outcome, so the runtime never reopens a destructive, external, or unconfirmed operation on its own authority.",
+  "terminal-diagnostic": "evidence_artifact_ids MUST NOT repeat an identity.",
 });
 
 export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, candidate) {
