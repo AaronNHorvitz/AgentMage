@@ -104,12 +104,18 @@ const fn malformed_request(facts: &NewAttemptFacts) -> Option<AttemptDenial> {
         return Some(AttemptDenial::OrdinalInvalid);
     }
     if facts.attempt_ordinal == 1
-        && !matches!(facts.reconciliation, AttemptReconciliationState::NoPriorEffect)
+        && !matches!(
+            facts.reconciliation,
+            AttemptReconciliationState::NoPriorEffect
+        )
     {
         return Some(AttemptDenial::FirstAttemptWithPriorEffect);
     }
     if !matches!(facts.effect.repetition(), EffectRepetition::IdentityBound)
-        && !matches!(facts.idempotency_identity, AttemptIdempotencyIdentity::Absent)
+        && !matches!(
+            facts.idempotency_identity,
+            AttemptIdempotencyIdentity::Absent
+        )
     {
         return Some(AttemptDenial::IdempotencyIdentityNotApplicable);
     }
@@ -127,12 +133,18 @@ const fn preflight_denial(preflight: AttemptPreflightState) -> Option<AttemptDen
 
 const fn reconciliation_denial(facts: &NewAttemptFacts) -> Option<AttemptDenial> {
     if facts.effect.changes_state()
-        && matches!(facts.reconciliation, AttemptReconciliationState::CompletedVerified)
+        && matches!(
+            facts.reconciliation,
+            AttemptReconciliationState::CompletedVerified
+        )
     {
         return Some(AttemptDenial::EffectAlreadyCompleted);
     }
     if facts.effect.requires_reconciliation()
-        && matches!(facts.reconciliation, AttemptReconciliationState::Unreconciled)
+        && matches!(
+            facts.reconciliation,
+            AttemptReconciliationState::Unreconciled
+        )
     {
         return Some(AttemptDenial::EffectUnreconciled);
     }
@@ -312,9 +324,15 @@ mod tests {
     #[test]
     fn story_5_2_every_unestablished_or_stale_precondition_fails_closed() {
         let preflight = [
-            (AttemptPreflightState::CurrentDenied, AttemptDenial::PreflightDenied),
+            (
+                AttemptPreflightState::CurrentDenied,
+                AttemptDenial::PreflightDenied,
+            ),
             (AttemptPreflightState::Stale, AttemptDenial::PreflightStale),
-            (AttemptPreflightState::Absent, AttemptDenial::PreflightAbsent),
+            (
+                AttemptPreflightState::Absent,
+                AttemptDenial::PreflightAbsent,
+            ),
         ];
         for (state, denial) in preflight {
             let mut facts = eligible(EffectClass::Conditional);
@@ -323,8 +341,14 @@ mod tests {
         }
 
         let budgets = [
-            (AttemptBudgetState::Exhausted, AttemptDenial::BudgetExhausted),
-            (AttemptBudgetState::Undeclared, AttemptDenial::BudgetUndeclared),
+            (
+                AttemptBudgetState::Exhausted,
+                AttemptDenial::BudgetExhausted,
+            ),
+            (
+                AttemptBudgetState::Undeclared,
+                AttemptDenial::BudgetUndeclared,
+            ),
         ];
         for (state, denial) in budgets {
             let mut facts = eligible(EffectClass::Conditional);
@@ -333,9 +357,18 @@ mod tests {
         }
 
         let identities = [
-            (AttemptCallIdentityState::Reused, AttemptDenial::CallIdentityReused),
-            (AttemptCallIdentityState::Absent, AttemptDenial::CallIdentityAbsent),
-            (AttemptCallIdentityState::Unverified, AttemptDenial::CallIdentityUnverified),
+            (
+                AttemptCallIdentityState::Reused,
+                AttemptDenial::CallIdentityReused,
+            ),
+            (
+                AttemptCallIdentityState::Absent,
+                AttemptDenial::CallIdentityAbsent,
+            ),
+            (
+                AttemptCallIdentityState::Unverified,
+                AttemptDenial::CallIdentityUnverified,
+            ),
         ];
         for (state, denial) in identities {
             let mut facts = eligible(EffectClass::Conditional);
@@ -346,7 +379,10 @@ mod tests {
         let grants = [
             (AttemptGrantState::MultiUse, AttemptDenial::GrantMultiUse),
             (AttemptGrantState::Reused, AttemptDenial::GrantReused),
-            (AttemptGrantState::NotCurrent, AttemptDenial::GrantNotCurrent),
+            (
+                AttemptGrantState::NotCurrent,
+                AttemptDenial::GrantNotCurrent,
+            ),
             (AttemptGrantState::Absent, AttemptDenial::GrantAbsent),
         ];
         for (state, denial) in grants {
@@ -536,7 +572,10 @@ mod tests {
 
         let mut parent = grant(GrantStatus::Issued, 1, 0);
         parent.grant_class = GrantClass::SessionRead;
-        assert_eq!(observe_attempt_grant(&parent, operation, false), AttemptGrantState::Absent);
+        assert_eq!(
+            observe_attempt_grant(&parent, operation, false),
+            AttemptGrantState::Absent
+        );
     }
 
     #[test]

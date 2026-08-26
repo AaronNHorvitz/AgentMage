@@ -601,7 +601,10 @@ mod tests {
     fn approval_requirement_narrows_and_is_never_waived_by_registration() {
         for class in EffectClass::ALL {
             let mut value = facts(class);
-            assert_eq!(value.requires_fresh_approval(), class.requires_fresh_approval());
+            assert_eq!(
+                value.requires_fresh_approval(),
+                class.requires_fresh_approval()
+            );
 
             value.registration_requires_approval = true;
             assert!(value.requires_fresh_approval());
