@@ -461,19 +461,71 @@ mod tests {
 
     /// The exact default disposition and pre-dispatch status of every class.
     const DEFAULTS: [(FailureClass, FailureDisposition, bool); 14] = [
-        (FailureClass::MalformedInput, FailureDisposition::FreshAttempt, false),
-        (FailureClass::Preflight, FailureDisposition::FreshAttempt, false),
-        (FailureClass::PolicyDenied, FailureDisposition::Terminal, false),
-        (FailureClass::ApprovalRequired, FailureDisposition::UserDecision, false),
-        (FailureClass::DependencyUnavailable, FailureDisposition::FreshAttempt, false),
-        (FailureClass::Transient, FailureDisposition::FreshAttempt, false),
-        (FailureClass::Conflict, FailureDisposition::AfterReconciliation, true),
-        (FailureClass::Timeout, FailureDisposition::AfterReconciliation, true),
-        (FailureClass::Cancellation, FailureDisposition::Terminal, true),
-        (FailureClass::Crash, FailureDisposition::AfterReconciliation, true),
-        (FailureClass::UncertainEffect, FailureDisposition::UserDecision, true),
-        (FailureClass::Verification, FailureDisposition::AfterReconciliation, true),
-        (FailureClass::ResourceExhausted, FailureDisposition::Terminal, true),
+        (
+            FailureClass::MalformedInput,
+            FailureDisposition::FreshAttempt,
+            false,
+        ),
+        (
+            FailureClass::Preflight,
+            FailureDisposition::FreshAttempt,
+            false,
+        ),
+        (
+            FailureClass::PolicyDenied,
+            FailureDisposition::Terminal,
+            false,
+        ),
+        (
+            FailureClass::ApprovalRequired,
+            FailureDisposition::UserDecision,
+            false,
+        ),
+        (
+            FailureClass::DependencyUnavailable,
+            FailureDisposition::FreshAttempt,
+            false,
+        ),
+        (
+            FailureClass::Transient,
+            FailureDisposition::FreshAttempt,
+            false,
+        ),
+        (
+            FailureClass::Conflict,
+            FailureDisposition::AfterReconciliation,
+            true,
+        ),
+        (
+            FailureClass::Timeout,
+            FailureDisposition::AfterReconciliation,
+            true,
+        ),
+        (
+            FailureClass::Cancellation,
+            FailureDisposition::Terminal,
+            true,
+        ),
+        (
+            FailureClass::Crash,
+            FailureDisposition::AfterReconciliation,
+            true,
+        ),
+        (
+            FailureClass::UncertainEffect,
+            FailureDisposition::UserDecision,
+            true,
+        ),
+        (
+            FailureClass::Verification,
+            FailureDisposition::AfterReconciliation,
+            true,
+        ),
+        (
+            FailureClass::ResourceExhausted,
+            FailureDisposition::Terminal,
+            true,
+        ),
         (FailureClass::Internal, FailureDisposition::Terminal, true),
     ];
 
@@ -610,7 +662,10 @@ mod tests {
             assert_eq!(declaration.taxonomy_version(), FAILURE_TAXONOMY_VERSION);
             assert_eq!(declaration.failure_class(), class);
             assert_eq!(declaration.disposition(), class.disposition());
-            assert_eq!(declaration.requires_reconciliation(), class.requires_reconciliation());
+            assert_eq!(
+                declaration.requires_reconciliation(),
+                class.requires_reconciliation()
+            );
 
             for disposition in FailureDisposition::ALL {
                 let mut drifted = encoded.clone();
