@@ -150,6 +150,7 @@
       "display",
       "interaction",
       "provider-registration",
+      "request-bound-reference-resolution",
       "authenticated-ipc-client"
     ],
     "extension_prohibited_authority": [
@@ -160,7 +161,27 @@
       "tool-execution",
       "grant-minting",
       "secret-store"
-    ]
+    ],
+    "request_reference_contract": {
+      "permitted_source": "chat-participant-request-references",
+      "permitted_api_channel": "stable",
+      "scope": "current-request-only",
+      "permitted_reference_kinds": [
+        "request-attached-file",
+        "request-attached-selection",
+        "request-attached-uri",
+        "request-attached-editor-context"
+      ],
+      "resolution_authority": "rust-host",
+      "ambient_workspace_read_permitted": false,
+      "ambient_enumeration_permitted": false,
+      "independent_path_selection_permitted": false,
+      "background_indexing_permitted": false,
+      "policy_bypassing_read_permitted": false,
+      "reference_persistence_permitted": false,
+      "proposed_api_required": false,
+      "unresolvable_reference_disposition": "declared-unsupported-or-unavailable"
+    }
   },
   "planned_runtime_contract": {
     "language": "rust",

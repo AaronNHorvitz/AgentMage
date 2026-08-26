@@ -88,14 +88,22 @@ It does not parse PDF, DOCX, or XLSX semantics, choose workflow transitions,
 classify side effects, execute tools, retain canonical state, or decide
 completion.
 
-The current `architecture/language-build-matrix.json` contract prohibits every
-extension workspace read. That remains current implementation truth until Story
-1.2 changes the contract, its validator, and mutation evidence together. The
-target permission is narrower than a generic workspace read: it permits only
-bounded resolution of a reference explicitly supplied to the active AgentMage
-participant request through stable VS Code APIs. Ambient enumeration, arbitrary
-path selection, background indexing, and reads outside the current request and
-policy remain prohibited.
+Story 1.2 has now narrowed `architecture/language-build-matrix.json` together
+with its validator and mutation evidence. The contract's
+`vscode_contract.request_reference_contract` permits exactly one thing: bounded
+resolution of a reference explicitly supplied to the active AgentMage participant
+request, through stable VS Code APIs, for that request only. The closed reference
+set is the request-attached file, selection, URI, and editor context; the Rust
+host remains the resolution authority; and a reference that cannot be resolved is
+declared unsupported or unavailable rather than reported as bytes.
+
+The permission is narrower than a generic workspace read, and `workspace-read`
+and `workspace-write` both remain in `extension_prohibited_authority`. Ambient
+workspace reads, ambient enumeration, arbitrary path selection, background
+indexing, policy-bypassing reads, persistence beyond the current request, and any
+dependency on proposed APIs all remain prohibited, and the validator fails closed
+if any one of them is switched on. This is a contract change only: the
+participant resolution path itself is not implemented by this change.
 
 ### 4.2 Rust runtime responsibilities
 

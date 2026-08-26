@@ -47,6 +47,34 @@ PROHIBITED_EXTENSION_AUTHORITY = {
     "grant-minting",
     "secret-store",
 }
+# Story 1.2 narrows the extension's read surface to references the user supplied with
+# the current participant request. The permission is narrower than a workspace read:
+# every ambient capability below stays prohibited, and `workspace-read` itself remains
+# in PROHIBITED_EXTENSION_AUTHORITY.
+REQUEST_REFERENCE_KINDS = [
+    "request-attached-file",
+    "request-attached-selection",
+    "request-attached-uri",
+    "request-attached-editor-context",
+]
+REQUEST_REFERENCE_EXACT_VALUES = {
+    "permitted_source": "chat-participant-request-references",
+    "permitted_api_channel": "stable",
+    "scope": "current-request-only",
+    "resolution_authority": "rust-host",
+    "unresolvable_reference_disposition": "declared-unsupported-or-unavailable",
+}
+# Each of these must remain false. Setting any one of them to true would turn a
+# request-bound resolution back into an ambient workspace read.
+REQUEST_REFERENCE_PROHIBITED_FLAGS = [
+    "ambient_workspace_read_permitted",
+    "ambient_enumeration_permitted",
+    "independent_path_selection_permitted",
+    "background_indexing_permitted",
+    "policy_bypassing_read_permitted",
+    "reference_persistence_permitted",
+    "proposed_api_required",
+]
 
 
 def load_matrix(path: Path = MATRIX_PATH) -> dict[str, Any]:
@@ -68,6 +96,40 @@ def _unique_by_id(records: Any, label: str, failures: list[str]) -> dict[str, An
             failures.append(f"duplicate {label} id: {record_id}")
         indexed[record_id] = record
     return indexed
+
+
+def _validate_request_reference_contract(contract: Any) -> list[str]:
+    """Validate the narrowed request-bound reference permission.
+
+    The extension may resolve only references the user supplied with the current
+    AgentMage participant request, through stable APIs. Ambient enumeration, arbitrary
+    path selection, background indexing, policy-bypassing reads, and persistence beyond
+    the request stay prohibited, so this permission can never widen into a general
+    workspace read.
+    """
+    failures: list[str] = []
+    if not isinstance(contract, dict):
+        return ["vscode_contract.request_reference_contract must be an object"]
+
+    for key, expected in sorted(REQUEST_REFERENCE_EXACT_VALUES.items()):
+        if contract.get(key) != expected:
+            failures.append(f"request reference {key} must equal {expected}")
+
+    if contract.get("permitted_reference_kinds") != REQUEST_REFERENCE_KINDS:
+        failures.append("request reference kinds must be the exact closed current-request set")
+
+    for flag in REQUEST_REFERENCE_PROHIBITED_FLAGS:
+        if contract.get(flag) is not False:
+            failures.append(f"request reference {flag} must remain false")
+
+    unknown = set(contract) - set(REQUEST_REFERENCE_EXACT_VALUES) - set(
+        REQUEST_REFERENCE_PROHIBITED_FLAGS
+    ) - {"permitted_reference_kinds"}
+    if unknown:
+        failures.append(
+            "unknown request reference contract keys: " + ", ".join(sorted(unknown))
+        )
+    return failures
 
 
 def validate_matrix(matrix: Any) -> list[str]:
@@ -165,6 +227,11 @@ def validate_matrix(matrix: Any) -> list[str]:
             failures.append(
                 "VS Code extension missing prohibited authority: " + ", ".join(sorted(missing))
             )
+        if "request-bound-reference-resolution" not in vscode.get("extension_authority", []):
+            failures.append(
+                "the VS Code extension must declare request-bound-reference-resolution authority"
+            )
+        failures.extend(_validate_request_reference_contract(vscode.get("request_reference_contract")))
 
     runtime = matrix.get("planned_runtime_contract")
     expected_runtime = {
