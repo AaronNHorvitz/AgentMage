@@ -22,6 +22,7 @@ mod engineering;
 mod engineering_records;
 mod evidence;
 mod executive;
+mod failure;
 mod frontier;
 mod frontier_import;
 mod grant;
@@ -132,6 +133,10 @@ pub use executive::{
     ExecutiveRecordStatus, ExecutiveSourceReference, ExecutiveSourceStore, ExecutiveTracker,
     ExecutiveTrackerEntry, ExecutiveTrackerKind, ExecutiveView, ExecutiveViewItem,
     ExecutiveViewKind,
+};
+pub use failure::{
+    FAILURE_TAXONOMY_VERSION, FailureClass, FailureDeclaration, FailureDisposition,
+    FailureTaxonomyError,
 };
 pub use frontier::{
     FrontierAcceptanceState, FrontierClarificationClass, FrontierRecommendationReceipt,

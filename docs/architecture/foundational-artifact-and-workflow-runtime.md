@@ -455,11 +455,49 @@ from either vocabulary, and the three token sets are disjoint. There is no
 custom, wildcard, inherited, or model-created class; an effect that cannot be
 established is exactly `unknown`.
 
-Error classes distinguish transport, rate, timeout, crash, unavailable service,
-missing command, invalid arguments, authentication, permission, policy denial,
-deterministic verification failure, malformed model output, context overflow,
-and user rejection. Backoff and jitter apply only to classified transient
-failures.
+Observed conditions such as transport errors, rate limits, unavailable services,
+missing commands, invalid arguments, authentication and permission errors,
+policy denials, deterministic verification failures, malformed model output,
+context overflow, and user rejection are classified into exactly one closed
+failure class. The kernel encodes fourteen versioned tokens, and each token
+fixes one default disposition and whether an effect attempt may already have
+started:
+
+| Failure class | Default disposition | Effect may have started |
+|---|---|---|
+| `malformed_input` | `fresh_attempt` | no |
+| `preflight` | `fresh_attempt` | no |
+| `policy_denied` | `terminal` | no |
+| `approval_required` | `user_decision` | no |
+| `dependency_unavailable` | `fresh_attempt` | no |
+| `transient` | `fresh_attempt` | no |
+| `conflict` | `after_reconciliation` | yes |
+| `timeout` | `after_reconciliation` | yes |
+| `cancellation` | `terminal` | yes |
+| `crash` | `after_reconciliation` | yes |
+| `uncertain_effect` | `user_decision` | yes |
+| `verification` | `after_reconciliation` | yes |
+| `resource_exhausted` | `terminal` | yes |
+| `internal` | `terminal` | yes |
+
+The four dispositions `fresh_attempt`, `after_reconciliation`, `user_decision`,
+and `terminal` are totally ordered by restriction and bind one to one with the
+recorded per-attempt retry dispositions of the tool-observation record. A class
+whose effect may already have started never returns a disposition weaker than
+`after_reconciliation`. The six classes that report no started effect are
+admitted only when the attempt either never reached the operation or is
+established to have changed no state; an outcome that is merely assumed to be
+state-preserving is `uncertain_effect`.
+
+The effective disposition of a failed attempt is the more restrictive of the
+failure default and the floor fixed by its effect class, so a `non_idempotent`,
+`destructive`, `external`, or `unknown` effect never returns anything weaker
+than `user_decision`. Only `malformed_input` permits one bounded model repair,
+and that repair attempts no effect. Every rule is derived from the class: a
+record that restates the disposition, the started-effect flag, the new-attempt
+flag, the user-decision flag, or the repair flag differently is rejected rather
+than admitted, and there is no custom, wildcard, inherited, or model-created
+class. Backoff and jitter apply only to classified transient failures.
 
 Budgets are independent for step, tool, error class, workflow recovery, model
 repair, replanning, elapsed time, and inference. An identical action, error, and
