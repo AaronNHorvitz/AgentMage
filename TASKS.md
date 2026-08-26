@@ -676,8 +676,33 @@ artifact, and recovery contracts remain authoritative.
     supply-chain, traceability, and diff gates pass. This contract closure defines envelopes only
     and makes no macOS, release, or workflow-runtime implementation claim; no supervisor, executor,
     verifier, or recovery loop is implemented by this sub-task.
-  - [ ] **Sub-task 1.2.2.3:** Define compatibility and migration rules that preserve the current
+  - [x] **Sub-task 1.2.2.3:** Define compatibility and migration rules that preserve the current
     zero-hidden-retry contract and make every permitted retry a new attempt rather than replay.
+    Evidence: the closed `retry-admission` schema in `schemas/engineering-runtime`, its generator,
+    structural constraints, and semantic validator in `scripts/engineering_runtime_schemas.mjs`, the
+    exported closed `RETRY_COMPATIBILITY_RULES` and `RETRY_MIGRATION_RULES` tables, and the
+    Rust-owned `CanonicalRetryAdmission` contract with `opens_new_attempt`. An admission names both
+    attempts and the recovery decision that permitted the successor, so no retry occurs without a
+    recorded runtime decision. No identity crosses from the prior attempt to the successor: attempt,
+    call, tool-call, and grant identities must all differ, so a permitted retry is a new attempt and
+    never a replay of an effect that already ran. Attempt ordinals form an ordered chain rather than
+    a repeated identity, required reconciliation must be recorded as completed before the successor
+    is admitted, and an approval required per attempt must name the successor's own approval, so a
+    prior approval never covers a later attempt. The record carries no receipt and no replay surface
+    at all, and schema plus Rust property-surface tests reject every `receipt`, `replay`,
+    `reuse_grant`, `exit_code`, and `arguments` field; only the runtime may admit a retry. The
+    migration rules keep current behavior valid without change: a runtime that performs no retry
+    emits no admission and that absence is conformant rather than an implied replay; every record is
+    `schema_version` 1 and additive, so no existing contract changes shape and no existing caller is
+    affected; an unrecognized version is refused rather than coerced; and a reader that does not
+    understand `retry-admission` refuses the successor attempt instead of falling back to treating
+    it as a replay. Five focused schema tests and four focused Rust tests cover identity-replay,
+    ordinal-chain, approval, reconciliation, receipt-surface, authority, required-field,
+    unknown-field, and unsupported-version failures and assert both rule tables are closed and
+    complete. The complete local workspace test, strict-Clippy, formatting, documentation, schema,
+    supply-chain, traceability, and diff gates pass. This contract closure defines admission and
+    migration rules only; no retry executor, reconciler, or supervisor is implemented, and it makes
+    no macOS, release, or workflow-runtime implementation claim.
 - [ ] **Task 1.2.3 - Reconcile interface and ownership boundaries**
   - [ ] **Sub-task 1.2.3.1:** Amend `language-build-matrix.json`, its validator, diagrams, and
     evidence together to permit only current-request references delivered to the AgentMage Chat
