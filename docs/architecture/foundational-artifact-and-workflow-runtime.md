@@ -215,6 +215,49 @@ Content never disappears silently. Each request yields a context manifest that
 reconciles every offered reference with one admitted, rejected, unavailable,
 cancelled, or omitted disposition.
 
+#### 7.2.1 Authoritative section provenance
+
+`schemas/engineering-runtime/structural-section.schema.json` is the single
+authoritative locator contract. Every section carries the closed locator set
+below; a locator that does not apply is exactly `null` and is never omitted,
+inferred, or restated in prose.
+
+| Locator | Field | Coordinates | Authority |
+|---|---|---|---|
+| Byte | `byte_range` | `start_byte`, `end_byte_exclusive` | Required on every section; canonical extracted bytes |
+| Line | `line_range` | `start_line`, `end_line_exclusive` | Text and log sources |
+| Page | `page_range` | `start_page`, `end_page_exclusive`, one-based | Any section of a paginated source |
+| Sheet | `sheet` | `sheet_index`, `sheet_name` | `sheet`, `cell`, and `table` sections only |
+| Cell | `cell_range` | `start_row`, `end_row_exclusive`, `start_column`, `end_column_exclusive` | `cell` and `table` sections only, always with `sheet` |
+| Image region | `image_region` | `page`, `unit`, `x`, `y`, `width`, `height` | `image_region` sections only |
+
+`page`, `sheet`, `cell`, and `image_region` sections must carry their own
+locator, and the `sheet`, `cell_range`, and `image_region` locators are rejected
+on any unrelated section kind. Every range is inclusive-exclusive, ordered on
+each axis, and integral in its declared unit; a zero-length range is admitted
+and a reversed range fails closed.
+
+Each section also declares exactly one `provenance_state`:
+
+| State | Meaning | Required payload |
+|---|---|---|
+| `complete` | Whole section was extracted | `content_sha256`; `reason_code` is null |
+| `partial` | Only part of the section was extracted | `content_sha256` and a `reason_code` |
+| `truncated` | Extraction stopped at a declared limit | `content_sha256` and a `reason_code` |
+| `encrypted` | Content is protected and was not decrypted | `content_sha256` null, `token_count` zero, `reason_code` |
+| `unsupported` | The format or feature is not supported | `content_sha256` null, `token_count` zero, `reason_code` |
+| `unavailable` | The source could not be read | `content_sha256` null, `token_count` zero, `reason_code` |
+
+`extraction-result` carries the matching source-level states. `encrypted` joins
+`unsupported`, `denied`, `unavailable`, `failed`, and `omitted` as a terminal
+non-producing disposition that claims no output digest and no sections, and
+only `captured` and `partially_parsed` may report `truncated`. The separate
+`artifact-ingestion-result` envelope keeps its existing terminal dispositions;
+protected content is reported through the extraction and section contracts
+rather than by widening that envelope. A locator or state is evidence of where
+content was found and how completely it was read; it never asserts that unread
+content was ingested.
+
 ### 7.3 Type detection and source safety
 
 Detection uses bounded magic-byte, container, media-type, and structural probes;

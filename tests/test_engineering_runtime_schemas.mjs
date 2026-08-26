@@ -9,7 +9,11 @@ import {
   ENGINEERING_RUNTIME_SCHEMAS,
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
+  EXTRACTION_NON_PRODUCING_STATES,
+  EXTRACTION_TRUNCATION_CAPABLE_STATES,
   REUSED_SCHEMA_CONTRACTS,
+  SECTION_CONTENT_ABSENT_STATES,
+  SECTION_CONTENT_BEARING_STATES,
   createEngineeringRuntimeValidator,
   schemaDocument,
   synchronize,
@@ -151,7 +155,13 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
     kind: "heading",
     byte_range: { start_byte: 0, end_byte_exclusive: 32 },
     line_range: { start_line: 1, end_line_exclusive: 2 },
+    page_range: null,
+    sheet: null,
+    cell_range: null,
+    image_region: null,
     token_count: 8,
+    provenance_state: "complete",
+    reason_code: null,
     title: "Overview",
     content_sha256: SHA,
   };
@@ -159,6 +169,8 @@ test("source-artifact family schemas reject missing, extra, malformed, stale, ov
   assert.equal(validateSection(section), true, JSON.stringify(validateSection.errors));
   assert.equal(validateSection({ ...section, kind: "footnote" }), false);
   assert.equal(validateSection({ ...section, schema_version: 99 }), false);
+  assert.equal(validateSection({ ...section, provenance_state: "degraded" }), false);
+  assert.equal(validateSection({ ...section, page_range: { start_page: 0, end_page_exclusive: 1 } }), false);
   assert.equal(
     validateSection({ ...section, line_range: { start_byte: 1, end_byte_exclusive: 2 } }),
     false,
@@ -406,7 +418,13 @@ test("structural sections and context dispositions reject reversed ranges throug
     kind: "paragraph",
     byte_range: { start_byte: 0, end_byte_exclusive: 32 },
     line_range: { start_line: 1, end_line_exclusive: 2 },
+    page_range: null,
+    sheet: null,
+    cell_range: null,
+    image_region: null,
     token_count: 8,
+    provenance_state: "complete",
+    reason_code: null,
     title: null,
     content_sha256: SHA,
   };
@@ -727,7 +745,13 @@ test("createEngineeringRuntimeValidator is the mandatory public path that binds 
     kind: "paragraph",
     byte_range: { start_byte: 0, end_byte_exclusive: 32 },
     line_range: { start_line: 1, end_line_exclusive: 2 },
+    page_range: null,
+    sheet: null,
+    cell_range: null,
+    image_region: null,
     token_count: 8,
+    provenance_state: "complete",
+    reason_code: null,
     title: null,
     content_sha256: SHA,
   };
@@ -956,5 +980,288 @@ test("context-disposition and context-manifest impose matching reason_code rules
       assert.equal(validateManifest({ ...manifestBase, items: [manifestItem] }), false, `manifest ${state} rejects reason_code=null`);
       assert.equal(validateManifest({ ...manifestBase, items: [manifestItemWithCode] }), true, `manifest ${state} accepts reason_code string`);
     }
+  }
+});
+
+function sectionFixture(overrides = {}) {
+  return {
+    schema_version: 1,
+    section_id: "section-1",
+    source_artifact_id: "source-1",
+    extraction_id: "extraction-1",
+    parent_section_id: null,
+    ordinal: 0,
+    kind: "paragraph",
+    byte_range: { start_byte: 0, end_byte_exclusive: 32 },
+    line_range: { start_line: 1, end_line_exclusive: 2 },
+    page_range: null,
+    sheet: null,
+    cell_range: null,
+    image_region: null,
+    token_count: 8,
+    provenance_state: "complete",
+    reason_code: null,
+    title: null,
+    content_sha256: SHA,
+    ...overrides,
+  };
+}
+
+test("structural sections bind each authoritative locator to its declared section kind", () => {
+  const validateSection = combinedValidator("structural-section");
+  const page = { start_page: 3, end_page_exclusive: 4 };
+  const sheet = { sheet_index: 0, sheet_name: "Q3" };
+  const cell = { start_row: 2, end_row_exclusive: 3, start_column: 1, end_column_exclusive: 4 };
+  const region = { page: 3, unit: "point", x: 72, y: 144, width: 200, height: 100 };
+
+  assert.equal(validateSection(sectionFixture({ kind: "page", page_range: page })), true);
+  assert.equal(
+    validateSection(sectionFixture({ kind: "page" })),
+    false,
+    "a page section must carry page_range",
+  );
+  assert.equal(validateSection(sectionFixture({ kind: "sheet", sheet })), true);
+  assert.equal(
+    validateSection(sectionFixture({ kind: "sheet" })),
+    false,
+    "a sheet section must carry its sheet locator",
+  );
+  assert.equal(validateSection(sectionFixture({ kind: "cell", sheet, cell_range: cell })), true);
+  assert.equal(
+    validateSection(sectionFixture({ kind: "cell", cell_range: cell })),
+    false,
+    "a cell section must also carry its sheet locator",
+  );
+  assert.equal(
+    validateSection(sectionFixture({ kind: "cell", sheet })),
+    false,
+    "a cell section must carry cell_range",
+  );
+  assert.equal(validateSection(sectionFixture({ kind: "image_region", image_region: region })), true);
+  assert.equal(
+    validateSection(sectionFixture({ kind: "image_region" })),
+    false,
+    "an image_region section must carry image_region",
+  );
+
+  assert.equal(
+    validateSection(sectionFixture({ kind: "paragraph", sheet })),
+    false,
+    "a paragraph must not claim sheet provenance",
+  );
+  assert.equal(
+    validateSection(sectionFixture({ kind: "heading", cell_range: cell, sheet })),
+    false,
+    "a heading must not claim cell provenance",
+  );
+  assert.equal(
+    validateSection(sectionFixture({ kind: "page", page_range: page, image_region: region })),
+    false,
+    "a page must not claim image-region provenance",
+  );
+  assert.equal(
+    validateSection(sectionFixture({ kind: "paragraph", page_range: page })),
+    true,
+    "page provenance is admitted for any section kind",
+  );
+  assert.equal(
+    validateSection(sectionFixture({ kind: "table", sheet, cell_range: cell })),
+    true,
+    "a spreadsheet table carries sheet and cell provenance",
+  );
+});
+
+test("structural section locators reject reversed and malformed coordinates", () => {
+  const structural = validator("structural-section");
+  const semantic = combinedValidator("structural-section");
+  const sheet = { sheet_index: 0, sheet_name: null };
+
+  assert.equal(
+    semantic(sectionFixture({ kind: "page", page_range: { start_page: 9, end_page_exclusive: 4 } })),
+    false,
+    "reversed page coordinates must be rejected",
+  );
+  assert.equal(
+    semantic(sectionFixture({ kind: "page", page_range: { start_page: 4, end_page_exclusive: 4 } })),
+    true,
+    "zero-length page ranges are admitted",
+  );
+  assert.equal(
+    structural(sectionFixture({ kind: "page", page_range: { start_page: 0, end_page_exclusive: 4 } })),
+    false,
+    "page numbering starts at one",
+  );
+  assert.equal(
+    semantic(sectionFixture({
+      kind: "cell",
+      sheet,
+      cell_range: { start_row: 8, end_row_exclusive: 2, start_column: 0, end_column_exclusive: 1 },
+    })),
+    false,
+    "reversed cell rows must be rejected",
+  );
+  assert.equal(
+    semantic(sectionFixture({
+      kind: "cell",
+      sheet,
+      cell_range: { start_row: 0, end_row_exclusive: 1, start_column: 8, end_column_exclusive: 2 },
+    })),
+    false,
+    "reversed cell columns must be rejected",
+  );
+  assert.equal(
+    structural(sectionFixture({
+      kind: "cell",
+      sheet,
+      cell_range: { start_row: 0, end_row_exclusive: 1, start_column: 0 },
+    })),
+    false,
+    "a partial cell_range must be rejected structurally",
+  );
+  assert.equal(
+    structural(sectionFixture({
+      kind: "image_region",
+      image_region: { page: 1, unit: "inch", x: 0, y: 0, width: 1, height: 1 },
+    })),
+    false,
+    "an undeclared image unit must be rejected",
+  );
+  assert.equal(
+    structural(sectionFixture({
+      kind: "image_region",
+      image_region: { page: null, unit: "pixel", x: 0, y: 0, width: 1, height: 1 },
+    })),
+    true,
+    "a paginated source is not required for image-region provenance",
+  );
+});
+
+test("structural section provenance states separate content-bearing from content-absent evidence", () => {
+  const validateSection = validator("structural-section");
+  assert.deepEqual([...SECTION_CONTENT_BEARING_STATES], ["complete", "partial", "truncated"]);
+  assert.deepEqual([...SECTION_CONTENT_ABSENT_STATES], ["encrypted", "unsupported", "unavailable"]);
+
+  for (const state of SECTION_CONTENT_BEARING_STATES) {
+    const reason_code = state === "complete" ? null : `section-${state}`;
+    assert.equal(
+      validateSection(sectionFixture({ provenance_state: state, reason_code })),
+      true,
+      `${state} content-bearing section must pass`,
+    );
+    assert.equal(
+      validateSection(sectionFixture({ provenance_state: state, reason_code, content_sha256: null })),
+      false,
+      `${state} must carry content_sha256`,
+    );
+  }
+  assert.equal(
+    validateSection(sectionFixture({ provenance_state: "complete", reason_code: "unexpected" })),
+    false,
+    "a complete section must not carry a reason_code",
+  );
+  assert.equal(
+    validateSection(sectionFixture({ provenance_state: "partial", reason_code: null })),
+    false,
+    "a partial section must carry a reason_code",
+  );
+  assert.equal(
+    validateSection(sectionFixture({ provenance_state: "truncated", reason_code: "not a code" })),
+    false,
+    "a malformed reason_code must be rejected",
+  );
+
+  for (const state of SECTION_CONTENT_ABSENT_STATES) {
+    const absent = sectionFixture({
+      provenance_state: state,
+      reason_code: `section-${state}`,
+      token_count: 0,
+      content_sha256: null,
+    });
+    assert.equal(validateSection(absent), true, `${state} content-absent section must pass`);
+    assert.equal(
+      validateSection({ ...absent, content_sha256: SHA }),
+      false,
+      `${state} must not claim extracted content`,
+    );
+    assert.equal(
+      validateSection({ ...absent, token_count: 1 }),
+      false,
+      `${state} must not claim admitted tokens`,
+    );
+    assert.equal(
+      validateSection({ ...absent, reason_code: null }),
+      false,
+      `${state} must carry a reason_code`,
+    );
+  }
+});
+
+test("extraction results expose encrypted sources and forbid contradictory truncation", () => {
+  const validateExtraction = validator("extraction-result");
+  assert.equal(EXTRACTION_NON_PRODUCING_STATES.includes("encrypted"), true);
+  assert.deepEqual([...EXTRACTION_TRUNCATION_CAPABLE_STATES], ["captured", "partially_parsed"]);
+  const base = {
+    schema_version: 1,
+    extraction_id: "extraction-1",
+    source_artifact_id: "source-1",
+    extractor_id: "extractor-1",
+    extractor_version: "1.0.0",
+    source_sha256: SHA,
+    output_sha256: null,
+    media_type: "application/pdf",
+    disposition: "encrypted",
+    section_ids: [],
+    warnings: ["password-protected"],
+    truncated: false,
+    reproducible: true,
+    terminal: true,
+  };
+  assert.equal(validateExtraction(base), true, JSON.stringify(validateExtraction.errors));
+  assert.equal(
+    validateExtraction({ ...base, output_sha256: SHA }),
+    false,
+    "an encrypted source produces no output digest",
+  );
+  assert.equal(
+    validateExtraction({ ...base, section_ids: ["section-1"] }),
+    false,
+    "an encrypted source claims no sections",
+  );
+  assert.equal(
+    validateExtraction({ ...base, truncated: true }),
+    false,
+    "an encrypted source cannot report truncated content",
+  );
+
+  for (const state of EXTRACTION_NON_PRODUCING_STATES) {
+    assert.equal(
+      validateExtraction({ ...base, disposition: state, truncated: true }),
+      false,
+      `${state} must not report truncation`,
+    );
+  }
+  assert.equal(
+    validateExtraction({
+      ...base,
+      disposition: "parsed",
+      output_sha256: SHA,
+      section_ids: ["section-1"],
+      truncated: true,
+    }),
+    false,
+    "a complete parse must not report truncation",
+  );
+  for (const state of EXTRACTION_TRUNCATION_CAPABLE_STATES) {
+    assert.equal(
+      validateExtraction({
+        ...base,
+        disposition: state,
+        output_sha256: SHA,
+        section_ids: state === "captured" ? [] : ["section-1"],
+        truncated: true,
+      }),
+      true,
+      `${state} may report truncation`,
+    );
   }
 });

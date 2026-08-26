@@ -67,6 +67,7 @@
         "captured",
         "parsed",
         "partially_parsed",
+        "encrypted",
         "unsupported",
         "denied",
         "unavailable",
@@ -135,6 +136,28 @@
           "section_ids": {
             "type": "array",
             "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "disposition": {
+            "enum": [
+              "captured",
+              "partially_parsed"
+            ]
+          }
+        },
+        "required": [
+          "disposition"
+        ]
+      },
+      "else": {
+        "properties": {
+          "truncated": {
+            "const": false
           }
         }
       }

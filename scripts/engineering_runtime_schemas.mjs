@@ -48,6 +48,28 @@ const lineRange = closed({
   start_line: uint,
   end_line_exclusive: uint,
 });
+const pageRange = closed({
+  start_page: positive,
+  end_page_exclusive: positive,
+});
+const sheetLocator = closed({
+  sheet_index: uint,
+  sheet_name: nullable(bounded),
+});
+const cellRange = closed({
+  start_row: uint,
+  end_row_exclusive: uint,
+  start_column: uint,
+  end_column_exclusive: uint,
+});
+const imageRegion = closed({
+  page: nullable(positive),
+  unit: { enum: ["pixel", "point"] },
+  x: uint,
+  y: uint,
+  width: uint,
+  height: uint,
+});
 const budgets = closed({
   turns: positive,
   tokens: positive,
@@ -498,6 +520,23 @@ const classificationEnum = { enum: ["public", "internal", "confidential", "restr
 const dispositionEnum = { enum: ["included", "summarized", "truncated", "duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"] };
 const sectionKindEnum = { enum: ["document_root", "heading", "paragraph", "list_item", "table", "code_block", "image_region", "page", "sheet", "cell", "log_cluster", "unknown"] };
 
+export const SECTION_CONTENT_BEARING_STATES = Object.freeze(["complete", "partial", "truncated"]);
+export const SECTION_CONTENT_ABSENT_STATES = Object.freeze(["encrypted", "unsupported", "unavailable"]);
+const sectionProvenanceStateEnum = {
+  enum: [...SECTION_CONTENT_BEARING_STATES, ...SECTION_CONTENT_ABSENT_STATES],
+};
+export const SECTION_REQUIRED_LOCATORS = Object.freeze({
+  page: Object.freeze(["page_range"]),
+  sheet: Object.freeze(["sheet"]),
+  cell: Object.freeze(["sheet", "cell_range"]),
+  image_region: Object.freeze(["image_region"]),
+});
+export const SECTION_LOCATOR_KINDS = Object.freeze({
+  sheet: Object.freeze(["sheet", "cell", "table"]),
+  cell_range: Object.freeze(["cell", "table"]),
+  image_region: Object.freeze(["image_region"]),
+});
+
 const origin = closed({
   schema_version: supportedSourceVersion,
   origin_id: identifier,
@@ -567,8 +606,9 @@ sourceArtifact.allOf = [{
   else: { properties: { byte_length: { type: "null" }, sha256: { type: "null" } } },
 }];
 
-const EXTRACTION_PRODUCING_STATES = ["captured", "parsed", "partially_parsed"];
-const EXTRACTION_NON_PRODUCING_STATES = ["unsupported", "denied", "unavailable", "failed", "omitted"];
+export const EXTRACTION_PRODUCING_STATES = Object.freeze(["captured", "parsed", "partially_parsed"]);
+export const EXTRACTION_NON_PRODUCING_STATES = Object.freeze(["encrypted", "unsupported", "denied", "unavailable", "failed", "omitted"]);
+export const EXTRACTION_TRUNCATION_CAPABLE_STATES = Object.freeze(["captured", "partially_parsed"]);
 const extractionResult = closed({
   schema_version: supportedSourceVersion,
   extraction_id: identifier,
@@ -585,19 +625,28 @@ const extractionResult = closed({
   reproducible: { type: "boolean" },
   terminal: { const: true },
 });
-extractionResult.allOf = [{
-  if: {
-    properties: { disposition: { enum: EXTRACTION_PRODUCING_STATES } },
-    required: ["disposition"],
-  },
-  then: { properties: { output_sha256: digest } },
-  else: {
-    properties: {
-      output_sha256: { type: "null" },
-      section_ids: { type: "array", maxItems: 0 },
+extractionResult.allOf = [
+  {
+    if: {
+      properties: { disposition: { enum: [...EXTRACTION_PRODUCING_STATES] } },
+      required: ["disposition"],
+    },
+    then: { properties: { output_sha256: digest } },
+    else: {
+      properties: {
+        output_sha256: { type: "null" },
+        section_ids: { type: "array", maxItems: 0 },
+      },
     },
   },
-}];
+  {
+    if: {
+      properties: { disposition: { enum: [...EXTRACTION_TRUNCATION_CAPABLE_STATES] } },
+      required: ["disposition"],
+    },
+    else: { properties: { truncated: { const: false } } },
+  },
+];
 
 const structuralSection = closed({
   schema_version: supportedSourceVersion,
@@ -609,10 +658,34 @@ const structuralSection = closed({
   kind: sectionKindEnum,
   byte_range: range,
   line_range: nullable(lineRange),
+  page_range: nullable(pageRange),
+  sheet: nullable(sheetLocator),
+  cell_range: nullable(cellRange),
+  image_region: nullable(imageRegion),
   token_count: uint,
+  provenance_state: sectionProvenanceStateEnum,
+  reason_code: nullable(identifier),
   title: nullable(bounded),
-  content_sha256: digest,
+  content_sha256: nullable(digest),
 });
+structuralSection.allOf = [
+  {
+    if: {
+      properties: { provenance_state: { enum: [...SECTION_CONTENT_BEARING_STATES] } },
+      required: ["provenance_state"],
+    },
+    then: { properties: { content_sha256: digest } },
+    else: { properties: { content_sha256: { type: "null" }, token_count: { const: 0 } } },
+  },
+  {
+    if: {
+      properties: { provenance_state: { const: "complete" } },
+      required: ["provenance_state"],
+    },
+    then: { properties: { reason_code: { type: "null" } } },
+    else: { properties: { reason_code: identifier } },
+  },
+];
 
 const contextDisposition = closed({
   schema_version: supportedSourceVersion,
@@ -684,6 +757,49 @@ function isOrderedRangeList(candidates) {
   return Array.isArray(candidates) && candidates.every(isOrderedRange);
 }
 
+function isOrderedPageRange(candidate) {
+  return (
+    candidate === null
+    || candidate === undefined
+    || (typeof candidate === "object"
+      && typeof candidate.start_page === "number"
+      && typeof candidate.end_page_exclusive === "number"
+      && candidate.start_page <= candidate.end_page_exclusive)
+  );
+}
+
+function isOrderedCellRange(candidate) {
+  return (
+    candidate === null
+    || candidate === undefined
+    || (typeof candidate === "object"
+      && typeof candidate.start_row === "number"
+      && typeof candidate.end_row_exclusive === "number"
+      && typeof candidate.start_column === "number"
+      && typeof candidate.end_column_exclusive === "number"
+      && candidate.start_row <= candidate.end_row_exclusive
+      && candidate.start_column <= candidate.end_column_exclusive)
+  );
+}
+
+function structuralSectionSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  if (!isOrderedRange(record.byte_range) || !isOrderedLineRange(record.line_range)) return false;
+  if (!isOrderedPageRange(record.page_range) || !isOrderedCellRange(record.cell_range)) return false;
+  const required = Object.hasOwn(SECTION_REQUIRED_LOCATORS, record.kind)
+    ? SECTION_REQUIRED_LOCATORS[record.kind]
+    : [];
+  for (const locator of required) {
+    if (record[locator] === null || record[locator] === undefined) return false;
+  }
+  for (const [locator, kinds] of Object.entries(SECTION_LOCATOR_KINDS)) {
+    if (record[locator] !== null && record[locator] !== undefined && !kinds.includes(record.kind)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function contextManifestSemantic(record) {
   if (!record || typeof record !== "object" || !Array.isArray(record.items)) return false;
   if (record.items.length !== record.source_artifact_count) return false;
@@ -705,13 +821,13 @@ function contextManifestSemantic(record) {
 }
 
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
-  "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
+  "structural-section": structuralSectionSemantic,
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
-  "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
+  "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive; line_range, page_range, and cell_range, when present, MUST be ordered on every axis; page, sheet, cell, and image_region sections MUST carry their authoritative locator; and the sheet, cell_range, and image_region locators MUST NOT appear on an unrelated section kind.",
   "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",
 });

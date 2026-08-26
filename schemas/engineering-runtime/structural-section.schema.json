@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agentmage.dev/schemas/engineering-runtime/structural-section.schema.json",
   "title": "AgentMage structural-section",
-  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: byte_range MUST satisfy start_byte <= end_byte_exclusive; line_range, page_range, and cell_range, when present, MUST be ordered on every axis; page, sheet, cell, and image_region sections MUST carry their authoritative locator; and the sheet, cell_range, and image_region locators MUST NOT appear on an unrelated section kind.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -15,7 +15,13 @@
     "kind",
     "byte_range",
     "line_range",
+    "page_range",
+    "sheet",
+    "cell_range",
+    "image_region",
     "token_count",
+    "provenance_state",
+    "reason_code",
     "title",
     "content_sha256"
   ],
@@ -110,9 +116,177 @@
         }
       ]
     },
+    "page_range": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "start_page",
+            "end_page_exclusive"
+          ],
+          "properties": {
+            "start_page": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "end_page_exclusive": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sheet": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sheet_index",
+            "sheet_name"
+          ],
+          "properties": {
+            "sheet_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "sheet_name": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 512
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cell_range": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "start_row",
+            "end_row_exclusive",
+            "start_column",
+            "end_column_exclusive"
+          ],
+          "properties": {
+            "start_row": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "end_row_exclusive": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "start_column": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "end_column_exclusive": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "image_region": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "page",
+            "unit",
+            "x",
+            "y",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "page": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "unit": {
+              "enum": [
+                "pixel",
+                "point"
+              ]
+            },
+            "x": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "token_count": {
       "type": "integer",
       "minimum": 0
+    },
+    "provenance_state": {
+      "enum": [
+        "complete",
+        "partial",
+        "truncated",
+        "encrypted",
+        "unsupported",
+        "unavailable"
+      ]
+    },
+    "reason_code": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "title": {
       "oneOf": [
@@ -127,8 +301,78 @@
       ]
     },
     "content_sha256": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{64}$"
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "provenance_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "provenance_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "content_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "content_sha256": {
+            "type": "null"
+          },
+          "token_count": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "provenance_state": {
+            "const": "complete"
+          }
+        },
+        "required": [
+          "provenance_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reason_code": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "reason_code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        }
+      }
+    }
+  ]
 }
