@@ -587,9 +587,25 @@ artifact, and recovery contracts remain authoritative.
     contradiction, reason-code, anti-widening, and second-store failures. The complete local
     workspace test, strict-Clippy, formatting, documentation, schema, traceability, and diff gates
     pass; this contract closure makes no macOS, release, or ingestion-runtime implementation claim.
-  - [ ] **Sub-task 1.2.1.3:** Define authoritative byte, line, page, sheet, cell, image-region, and
+  - [x] **Sub-task 1.2.1.3:** Define authoritative byte, line, page, sheet, cell, image-region, and
     section provenance plus explicit partial, truncated, encrypted, unsupported, and unavailable
-    states.
+    states. Evidence: the closed `source-locator` schema in `schemas/engineering-runtime`, its
+    generator, per-kind structural constraints, and semantic validator in
+    `scripts/engineering_runtime_schemas.mjs`, and the Rust-owned `CanonicalSourceLocator` contract
+    define all seven authoritative coordinate spaces as one closed `locator_kind` discriminant.
+    Each kind carries exactly its own payload; every foreign payload and every omitted declared
+    payload fails closed, so a byte locator can never assert a page and a cell locator always names
+    its worksheet. `complete`, `partial`, and `truncated` retain the known position, while
+    `encrypted`, `unsupported`, and `unavailable` are structurally forbidden from carrying any
+    payload at all, so unreadable content can never be reported with an invented position. Every
+    non-complete state requires a deterministic `reason_code`. Semantic validation additionally
+    rejects reversed byte and line ranges, zero-indexed cell rows or columns, and zero-width or
+    zero-height image regions that the structural schema admits. Six focused schema tests and four
+    focused Rust tests cover required-field, unknown-field, malformed, oversized, one-indexing,
+    unsupported-version, cross-payload contamination, unresolved-position, reason-code, and
+    degenerate-coordinate failures. The complete local workspace test, strict-Clippy, formatting,
+    documentation, schema, traceability, and diff gates pass; this contract closure makes no macOS,
+    release, or extraction-runtime implementation claim.
 - [ ] **Task 1.2.2 - Freeze verified-workflow contracts**
   - [ ] **Sub-task 1.2.2.1:** Define a companion step-execution policy keyed to existing
     `PlanStepId`, including preflight, side-effect, approval, idempotency, verifier, retry, budget,

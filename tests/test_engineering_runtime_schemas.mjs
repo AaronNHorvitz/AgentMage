@@ -8,6 +8,11 @@ import {
   CONTEXT_MANIFEST_SCHEMA_VERSION,
   ENGINEERING_RUNTIME_SCHEMAS,
   RUNTIME_ARTIFACT_KINDS,
+  SOURCE_LOCATOR_KINDS,
+  SOURCE_LOCATOR_PAYLOAD_FIELDS,
+  SOURCE_LOCATOR_RESOLVED_STATES,
+  SOURCE_LOCATOR_SCHEMA_VERSION,
+  SOURCE_LOCATOR_UNRESOLVED_STATES,
   SOURCE_RETENTION_PHYSICAL_STORE,
   SOURCE_RETENTION_SCHEMA_VERSION,
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
@@ -37,9 +42,9 @@ function combinedValidator(name) {
 }
 
 test("generated Engineering Runtime schemas are current, closed, and compile", () => {
-  assert.equal(synchronize(), 27);
+  assert.equal(synchronize(), 28);
   assert.equal(Object.keys(REUSED_SCHEMA_CONTRACTS).length, 6);
-  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 27);
+  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 28);
 });
 
 test("source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes", () => {
@@ -1234,4 +1239,172 @@ test("source-retention carries protected metadata only as a digest", () => {
       `${name} must not expose a path or URI surface`,
     );
   }
+});
+
+const LOCATOR_PAYLOAD_VALUES = {
+  byte_range: { start_byte: 0, end_byte_exclusive: 128 },
+  line_range: { start_line: 0, end_line_exclusive: 12 },
+  page_number: 3,
+  sheet_name: "Q3 Summary",
+  cell_reference: { sheet_row: 4, sheet_column: 7 },
+  image_region: { origin_x: 10, origin_y: 20, width: 640, height: 480 },
+  section_id: "section-1",
+};
+const ALL_LOCATOR_PAYLOADS = Object.keys(LOCATOR_PAYLOAD_VALUES);
+
+function locator(kind, availability_state = "complete") {
+  const carried = SOURCE_LOCATOR_PAYLOAD_FIELDS[kind];
+  const resolved = SOURCE_LOCATOR_RESOLVED_STATES.includes(availability_state);
+  const payloads = Object.fromEntries(
+    ALL_LOCATOR_PAYLOADS.map((field) => [
+      field,
+      resolved && carried.includes(field) ? LOCATOR_PAYLOAD_VALUES[field] : null,
+    ]),
+  );
+  return {
+    schema_version: SOURCE_LOCATOR_SCHEMA_VERSION,
+    locator_id: "locator-1",
+    source_artifact_id: "source-1",
+    provenance_id: "provenance-1",
+    extraction_id: "extraction-1",
+    locator_kind: kind,
+    availability_state,
+    ...payloads,
+    reason_code: availability_state === "complete" ? null : "declared_bound_reached",
+    observed_at: "2026-08-25T12:00:00Z",
+    locator_sha256: SHA,
+  };
+}
+
+test("source-locator binds schema_version and admits every authoritative coordinate space", () => {
+  assert.equal(SOURCE_LOCATOR_SCHEMA_VERSION, 1);
+  assert.deepEqual(SOURCE_LOCATOR_KINDS, [
+    "byte",
+    "line",
+    "page",
+    "sheet",
+    "cell",
+    "image_region",
+    "section",
+  ]);
+  const validate = combinedValidator("source-locator");
+  for (const kind of SOURCE_LOCATOR_KINDS) {
+    assert.equal(validate(locator(kind)), true, `${kind} locator must be admitted`);
+  }
+  const structural = validator("source-locator");
+  const record = locator("byte");
+  const { schema_version: _dropped, ...withoutVersion } = record;
+  assert.equal(structural(withoutVersion), false);
+  for (const rejected of [0, 2, 999, "1", null]) {
+    assert.equal(structural({ ...record, schema_version: rejected }), false);
+  }
+});
+
+test("source-locator carries exactly the payload of its declared kind", () => {
+  const validate = combinedValidator("source-locator");
+  for (const kind of SOURCE_LOCATOR_KINDS) {
+    const carried = SOURCE_LOCATOR_PAYLOAD_FIELDS[kind];
+    for (const foreign of ALL_LOCATOR_PAYLOADS.filter((f) => !carried.includes(f))) {
+      assert.equal(
+        validate({ ...locator(kind), [foreign]: LOCATOR_PAYLOAD_VALUES[foreign] }),
+        false,
+        `${kind} locator must not carry ${foreign}`,
+      );
+    }
+    for (const required of carried) {
+      assert.equal(
+        validate({ ...locator(kind), [required]: null }),
+        false,
+        `${kind} locator must populate ${required}`,
+      );
+    }
+  }
+});
+
+test("source-locator forbids naming a position it never resolved", () => {
+  const validate = combinedValidator("source-locator");
+  assert.deepEqual(SOURCE_LOCATOR_UNRESOLVED_STATES, ["encrypted", "unsupported", "unavailable"]);
+  for (const state of SOURCE_LOCATOR_UNRESOLVED_STATES) {
+    for (const kind of SOURCE_LOCATOR_KINDS) {
+      const record = locator(kind, state);
+      assert.equal(validate(record), true, `${kind}/${state} with no payload must be admitted`);
+      for (const field of ALL_LOCATOR_PAYLOADS) {
+        assert.equal(
+          validate({ ...record, [field]: LOCATOR_PAYLOAD_VALUES[field] }),
+          false,
+          `${state} must not claim ${field}`,
+        );
+      }
+    }
+  }
+  for (const state of ["partial", "truncated"]) {
+    assert.equal(
+      validate(locator("byte", state)),
+      true,
+      `${state} keeps its known position`,
+    );
+  }
+});
+
+test("source-locator requires a deterministic reason_code for every non-complete state", () => {
+  const validate = combinedValidator("source-locator");
+  assert.equal(validate({ ...locator("byte"), reason_code: "declared_bound_reached" }), false);
+  for (const state of ["partial", "truncated", "encrypted", "unsupported", "unavailable"]) {
+    assert.equal(
+      validate({ ...locator("byte", state), reason_code: null }),
+      false,
+      `${state} requires a reason_code`,
+    );
+  }
+});
+
+test("source-locator semantic validation rejects reversed ranges and degenerate coordinates", () => {
+  const validate = combinedValidator("source-locator");
+  const structural = validator("source-locator");
+  const degenerate = [
+    ["byte", { byte_range: { start_byte: 128, end_byte_exclusive: 0 } }],
+    ["line", { line_range: { start_line: 12, end_line_exclusive: 4 } }],
+    ["cell", { cell_reference: { sheet_row: 0, sheet_column: 7 } }],
+    ["cell", { cell_reference: { sheet_row: 4, sheet_column: 0 } }],
+    ["image_region", { image_region: { origin_x: 0, origin_y: 0, width: 0, height: 480 } }],
+    ["image_region", { image_region: { origin_x: 0, origin_y: 0, width: 640, height: 0 } }],
+  ];
+  for (const [kind, override] of degenerate) {
+    const candidate = { ...locator(kind), ...override };
+    assert.equal(validate(candidate), false, `${kind} ${JSON.stringify(override)} must fail`);
+  }
+  const reversed = { ...locator("byte"), byte_range: { start_byte: 128, end_byte_exclusive: 0 } };
+  assert.equal(structural(reversed), true, "reversed range is structurally well formed");
+  assert.equal(
+    ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS["source-locator"](reversed),
+    false,
+    "semantic validation must reject the reversed range",
+  );
+  assert.ok(ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS["source-locator"].includes("locator_kind"));
+});
+
+test("source-locator rejects missing, extra, malformed, and out-of-range fields", () => {
+  const validate = validator("source-locator");
+  const record = locator("page");
+  for (const field of Object.keys(record)) {
+    const { [field]: _removed, ...missing } = record;
+    assert.equal(validate(missing), false, `missing ${field} must fail`);
+  }
+  assert.equal(validate({ ...record, source_path: "/home/user/report.pdf" }), false);
+  assert.equal(validate({ ...record, locator_kind: "paragraph" }), false);
+  assert.equal(validate({ ...record, availability_state: "redacted" }), false);
+  assert.equal(validate({ ...record, observed_at: "yesterday" }), false);
+  assert.equal(validate({ ...record, locator_sha256: "short" }), false);
+  assert.equal(validate({ ...record, page_number: 0 }), false, "pages are one-indexed");
+  assert.equal(validate({ ...record, page_number: -1 }), false);
+  assert.equal(
+    validate({ ...locator("sheet"), sheet_name: "x".repeat(513) }),
+    false,
+    "oversized sheet name must fail",
+  );
+  assert.equal(
+    validate({ ...locator("byte"), byte_range: { start_byte: 0, end_byte_exclusive: 1, extra: 1 } }),
+    false,
+    "unknown range field must fail",
+  );
 });

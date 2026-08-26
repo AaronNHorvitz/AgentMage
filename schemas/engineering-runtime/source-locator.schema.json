@@ -1,0 +1,855 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/source-locator.schema.json",
+  "title": "AgentMage source-locator",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: locator_kind MUST carry exactly its own payload fields and no others. complete, partial, and truncated require every declared payload; encrypted, unsupported, and unavailable MUST carry no payload at all. byte_range and line_range MUST be ordered, cell_reference row and column MUST be one-indexed, and image_region width and height MUST be positive.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "locator_id",
+    "source_artifact_id",
+    "provenance_id",
+    "extraction_id",
+    "locator_kind",
+    "availability_state",
+    "byte_range",
+    "line_range",
+    "page_number",
+    "sheet_name",
+    "cell_reference",
+    "image_region",
+    "section_id",
+    "reason_code",
+    "observed_at",
+    "locator_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "locator_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "source_artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "provenance_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "extraction_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "locator_kind": {
+      "enum": [
+        "byte",
+        "line",
+        "page",
+        "sheet",
+        "cell",
+        "image_region",
+        "section"
+      ]
+    },
+    "availability_state": {
+      "enum": [
+        "complete",
+        "partial",
+        "truncated",
+        "encrypted",
+        "unsupported",
+        "unavailable"
+      ]
+    },
+    "byte_range": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "start_byte",
+            "end_byte_exclusive"
+          ],
+          "properties": {
+            "start_byte": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "end_byte_exclusive": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "line_range": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "start_line",
+            "end_line_exclusive"
+          ],
+          "properties": {
+            "start_line": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "end_line_exclusive": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "page_number": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sheet_name": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cell_reference": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sheet_row",
+            "sheet_column"
+          ],
+          "properties": {
+            "sheet_row": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "sheet_column": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "image_region": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "origin_x",
+            "origin_y",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "origin_x": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "origin_y": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "section_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reason_code": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "locator_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "availability_state": {
+            "enum": [
+              "encrypted",
+              "unsupported",
+              "unavailable"
+            ]
+          }
+        },
+        "required": [
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "byte_range": {
+            "type": "null"
+          },
+          "line_range": {
+            "type": "null"
+          },
+          "page_number": {
+            "type": "null"
+          },
+          "sheet_name": {
+            "type": "null"
+          },
+          "cell_reference": {
+            "type": "null"
+          },
+          "image_region": {
+            "type": "null"
+          },
+          "section_id": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "availability_state": {
+            "const": "complete"
+          }
+        },
+        "required": [
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reason_code": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "reason_code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "byte"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "required": [
+          "byte_range"
+        ],
+        "properties": {
+          "line_range": {
+            "type": "null"
+          },
+          "page_number": {
+            "type": "null"
+          },
+          "sheet_name": {
+            "type": "null"
+          },
+          "cell_reference": {
+            "type": "null"
+          },
+          "image_region": {
+            "type": "null"
+          },
+          "section_id": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "line"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "required": [
+          "line_range"
+        ],
+        "properties": {
+          "byte_range": {
+            "type": "null"
+          },
+          "page_number": {
+            "type": "null"
+          },
+          "sheet_name": {
+            "type": "null"
+          },
+          "cell_reference": {
+            "type": "null"
+          },
+          "image_region": {
+            "type": "null"
+          },
+          "section_id": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "page"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "required": [
+          "page_number"
+        ],
+        "properties": {
+          "byte_range": {
+            "type": "null"
+          },
+          "line_range": {
+            "type": "null"
+          },
+          "sheet_name": {
+            "type": "null"
+          },
+          "cell_reference": {
+            "type": "null"
+          },
+          "image_region": {
+            "type": "null"
+          },
+          "section_id": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "sheet"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "required": [
+          "sheet_name"
+        ],
+        "properties": {
+          "byte_range": {
+            "type": "null"
+          },
+          "line_range": {
+            "type": "null"
+          },
+          "page_number": {
+            "type": "null"
+          },
+          "cell_reference": {
+            "type": "null"
+          },
+          "image_region": {
+            "type": "null"
+          },
+          "section_id": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "cell"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "required": [
+          "sheet_name",
+          "cell_reference"
+        ],
+        "properties": {
+          "byte_range": {
+            "type": "null"
+          },
+          "line_range": {
+            "type": "null"
+          },
+          "page_number": {
+            "type": "null"
+          },
+          "image_region": {
+            "type": "null"
+          },
+          "section_id": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "image_region"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "required": [
+          "image_region"
+        ],
+        "properties": {
+          "byte_range": {
+            "type": "null"
+          },
+          "line_range": {
+            "type": "null"
+          },
+          "page_number": {
+            "type": "null"
+          },
+          "sheet_name": {
+            "type": "null"
+          },
+          "cell_reference": {
+            "type": "null"
+          },
+          "section_id": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "section"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "required": [
+          "section_id"
+        ],
+        "properties": {
+          "byte_range": {
+            "type": "null"
+          },
+          "line_range": {
+            "type": "null"
+          },
+          "page_number": {
+            "type": "null"
+          },
+          "sheet_name": {
+            "type": "null"
+          },
+          "cell_reference": {
+            "type": "null"
+          },
+          "image_region": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "byte"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "byte_range": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "line"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "line_range": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "page"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "page_number": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "sheet"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sheet_name": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "cell"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "sheet_name": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "cell"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "cell_reference": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "image_region"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "image_region": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "locator_kind": {
+            "const": "section"
+          },
+          "availability_state": {
+            "enum": [
+              "complete",
+              "partial",
+              "truncated"
+            ]
+          }
+        },
+        "required": [
+          "locator_kind",
+          "availability_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "section_id": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

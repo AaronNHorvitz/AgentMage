@@ -711,6 +711,122 @@ sourceRetention.allOf = [
   },
 ];
 
+export const SOURCE_LOCATOR_SCHEMA_VERSION = 1;
+// Each locator kind is authoritative for exactly one coordinate space. The payload field
+// listed here MUST be present for a resolvable state and every other payload MUST be null.
+export const SOURCE_LOCATOR_PAYLOAD_FIELDS = Object.freeze({
+  byte: ["byte_range"],
+  line: ["line_range"],
+  page: ["page_number"],
+  sheet: ["sheet_name"],
+  cell: ["sheet_name", "cell_reference"],
+  image_region: ["image_region"],
+  section: ["section_id"],
+});
+export const SOURCE_LOCATOR_KINDS = Object.freeze(Object.keys(SOURCE_LOCATOR_PAYLOAD_FIELDS));
+// States that name an exact position. Every other state cannot honestly carry one.
+export const SOURCE_LOCATOR_RESOLVED_STATES = Object.freeze(["complete", "partial", "truncated"]);
+export const SOURCE_LOCATOR_UNRESOLVED_STATES = Object.freeze([
+  "encrypted",
+  "unsupported",
+  "unavailable",
+]);
+
+const cellReference = closed({
+  sheet_row: positive,
+  sheet_column: positive,
+});
+
+const imageRegion = closed({
+  origin_x: uint,
+  origin_y: uint,
+  width: positive,
+  height: positive,
+});
+
+const SOURCE_LOCATOR_ALL_PAYLOADS = Object.freeze([
+  "byte_range",
+  "line_range",
+  "page_number",
+  "sheet_name",
+  "cell_reference",
+  "image_region",
+  "section_id",
+]);
+
+const sourceLocator = closed({
+  schema_version: { type: "integer", const: SOURCE_LOCATOR_SCHEMA_VERSION },
+  locator_id: identifier,
+  source_artifact_id: identifier,
+  provenance_id: identifier,
+  extraction_id: nullable(identifier),
+  locator_kind: { enum: [...SOURCE_LOCATOR_KINDS] },
+  availability_state: {
+    enum: [...SOURCE_LOCATOR_RESOLVED_STATES, ...SOURCE_LOCATOR_UNRESOLVED_STATES],
+  },
+  byte_range: nullable(range),
+  line_range: nullable(lineRange),
+  page_number: nullable(positive),
+  sheet_name: nullable(bounded),
+  cell_reference: nullable(cellReference),
+  image_region: nullable(imageRegion),
+  section_id: nullable(identifier),
+  reason_code: nullable(identifier),
+  observed_at: timestamp,
+  locator_sha256: digest,
+});
+
+const nullPayloads = (fields) => Object.fromEntries(fields.map((field) => [field, { type: "null" }]));
+
+sourceLocator.allOf = [
+  // An unresolved state cannot name a position in content it never read.
+  {
+    if: {
+      properties: { availability_state: { enum: [...SOURCE_LOCATOR_UNRESOLVED_STATES] } },
+      required: ["availability_state"],
+    },
+    then: { properties: nullPayloads(SOURCE_LOCATOR_ALL_PAYLOADS) },
+  },
+  // Only a complete locator may omit a deterministic reason_code.
+  {
+    if: {
+      properties: { availability_state: { const: "complete" } },
+      required: ["availability_state"],
+    },
+    then: { properties: { reason_code: { type: "null" } } },
+    else: { properties: { reason_code: identifier } },
+  },
+  // Each resolved kind carries exactly its own payload and nothing else.
+  ...SOURCE_LOCATOR_KINDS.map((kind) => ({
+    if: {
+      properties: {
+        locator_kind: { const: kind },
+        availability_state: { enum: [...SOURCE_LOCATOR_RESOLVED_STATES] },
+      },
+      required: ["locator_kind", "availability_state"],
+    },
+    then: {
+      required: [...SOURCE_LOCATOR_PAYLOAD_FIELDS[kind]],
+      properties: nullPayloads(
+        SOURCE_LOCATOR_ALL_PAYLOADS.filter(
+          (field) => !SOURCE_LOCATOR_PAYLOAD_FIELDS[kind].includes(field),
+        ),
+      ),
+    },
+  })),
+  // A resolved locator must actually populate its declared payload.
+  ...SOURCE_LOCATOR_KINDS.flatMap((kind) => SOURCE_LOCATOR_PAYLOAD_FIELDS[kind].map((field) => ({
+    if: {
+      properties: {
+        locator_kind: { const: kind },
+        availability_state: { enum: [...SOURCE_LOCATOR_RESOLVED_STATES] },
+      },
+      required: ["locator_kind", "availability_state"],
+    },
+    then: { properties: { [field]: { not: { type: "null" } } } },
+  }))),
+];
+
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
   "artifact-transformation": artifactTransformation,
@@ -725,6 +841,7 @@ export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "structural-section": structuralSection,
   "context-disposition": contextDisposition,
   "source-retention": sourceRetention,
+  "source-locator": sourceLocator,
   "workflow-definition": workflowDefinition,
   "workflow-state": workflowState,
   "workflow-checkpoint": workflowCheckpoint,
@@ -805,11 +922,45 @@ function sourceRetentionSemantic(record) {
   return Number.isSafeInteger(binding.byte_length) && binding.byte_length >= 0;
 }
 
+function sourceLocatorSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  const payloads = SOURCE_LOCATOR_PAYLOAD_FIELDS[record.locator_kind];
+  if (payloads === undefined) return false;
+  const resolved = SOURCE_LOCATOR_RESOLVED_STATES.includes(record.availability_state);
+  if (!resolved && !SOURCE_LOCATOR_UNRESOLVED_STATES.includes(record.availability_state)) {
+    return false;
+  }
+  for (const field of SOURCE_LOCATOR_ALL_PAYLOADS) {
+    const present = record[field] !== null && record[field] !== undefined;
+    const expected = resolved && payloads.includes(field);
+    if (present !== expected) return false;
+  }
+  if (!resolved) return true;
+  if (!isOrderedRange(record.byte_range)) return false;
+  if (!isOrderedLineRange(record.line_range)) return false;
+  const cell = record.cell_reference;
+  if (cell !== null && cell !== undefined) {
+    if (!Number.isSafeInteger(cell.sheet_row) || cell.sheet_row < 1) return false;
+    if (!Number.isSafeInteger(cell.sheet_column) || cell.sheet_column < 1) return false;
+  }
+  const region = record.image_region;
+  if (region !== null && region !== undefined) {
+    for (const field of ["origin_x", "origin_y"]) {
+      if (!Number.isSafeInteger(region[field]) || region[field] < 0) return false;
+    }
+    for (const field of ["width", "height"]) {
+      if (!Number.isSafeInteger(region[field]) || region[field] < 1) return false;
+    }
+  }
+  return true;
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
   "source-retention": sourceRetentionSemantic,
+  "source-locator": sourceLocatorSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
@@ -817,6 +968,7 @@ export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
   "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",
   "source-retention": "retention_class MUST agree with lifecycle_state: memory_only and policy_persisted permit only active or quarantined, released requires released, and deleted requires deleted. physical_binding, when present, MUST name an existing RuntimeArtifactKind and a non-negative byte_length; a source-specific physical family is prohibited.",
+  "source-locator": "locator_kind MUST carry exactly its own payload fields and no others. complete, partial, and truncated require every declared payload; encrypted, unsupported, and unavailable MUST carry no payload at all. byte_range and line_range MUST be ordered, cell_reference row and column MUST be one-indexed, and image_region width and height MUST be positive.",
 });
 
 export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, candidate) {

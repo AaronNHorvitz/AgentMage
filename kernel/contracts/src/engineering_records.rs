@@ -430,6 +430,132 @@ pub struct CanonicalSourceRetention {
     pub source_retention_sha256: String,
 }
 
+/// Coordinate space a source locator is authoritative for.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceLocatorKind {
+    /// Authoritative byte offsets in the exact source bytes.
+    Byte,
+    /// Authoritative line offsets in a text source.
+    Line,
+    /// Authoritative page number in a paginated document.
+    Page,
+    /// Authoritative worksheet within a spreadsheet.
+    Sheet,
+    /// Authoritative cell within a named worksheet.
+    Cell,
+    /// Authoritative pixel region within an image.
+    ImageRegion,
+    /// Authoritative extracted structural section.
+    Section,
+}
+
+/// Whether a locator names a real position and why it may not.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceAvailabilityState {
+    /// The exact position is known and the content behind it was read completely.
+    Complete,
+    /// The position is known and only part of the content behind it was read.
+    Partial,
+    /// The position is known and the content behind it was cut at a declared bound.
+    Truncated,
+    /// The content could not be decrypted, so no position may be claimed.
+    Encrypted,
+    /// The format is not supported, so no position may be claimed.
+    Unsupported,
+    /// The content could not be reached, so no position may be claimed.
+    Unavailable,
+}
+
+/// One-indexed cell coordinate inside a named worksheet.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalCellReference {
+    /// One-indexed row.
+    pub sheet_row: u64,
+    /// One-indexed column.
+    pub sheet_column: u64,
+}
+
+/// Pixel region inside an image source.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalImageRegion {
+    /// Left pixel offset.
+    pub origin_x: u64,
+    /// Top pixel offset.
+    pub origin_y: u64,
+    /// Region width in pixels; never zero.
+    pub width: u64,
+    /// Region height in pixels; never zero.
+    pub height: u64,
+}
+
+/// One inclusive-exclusive line range in a text source.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalLineRange {
+    /// First included line offset.
+    pub start_line: u64,
+    /// First excluded line offset.
+    pub end_line_exclusive: u64,
+}
+
+/// Authoritative position of extracted content inside one source artifact.
+///
+/// A locator carries exactly the payload of its declared
+/// [`CanonicalSourceLocatorKind`]. An unresolved availability state carries no payload
+/// at all, so encrypted, unsupported, and unavailable content can never be reported
+/// with an invented position.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceLocator {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable locator identity.
+    pub locator_id: String,
+    /// Source artifact this locator addresses.
+    pub source_artifact_id: String,
+    /// Provenance record that admitted this locator.
+    pub provenance_id: String,
+    /// Extraction that produced the locator, when one exists.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub extraction_id: Option<String>,
+    /// Authoritative coordinate space.
+    pub locator_kind: CanonicalSourceLocatorKind,
+    /// Whether the position is known, and why it may not be.
+    pub availability_state: CanonicalSourceAvailabilityState,
+    /// Byte payload; present only for a resolved byte locator.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub byte_range: Option<CanonicalByteRange>,
+    /// Line payload; present only for a resolved line locator.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub line_range: Option<CanonicalLineRange>,
+    /// Page payload; present only for a resolved page locator.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub page_number: Option<u64>,
+    /// Worksheet payload; present for a resolved sheet or cell locator.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub sheet_name: Option<String>,
+    /// Cell payload; present only for a resolved cell locator.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub cell_reference: Option<CanonicalCellReference>,
+    /// Image payload; present only for a resolved image-region locator.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub image_region: Option<CanonicalImageRegion>,
+    /// Section payload; present only for a resolved section locator.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub section_id: Option<String>,
+    /// Stable content-free code required for every non-complete state.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub reason_code: Option<String>,
+    /// Trusted observation time.
+    pub observed_at: String,
+    /// Digest of the canonical locator with this field zeroed.
+    pub locator_sha256: String,
+}
+
 /// Reference to one closed input or output schema.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -1183,6 +1309,142 @@ mod source_retention_tests {
             assert!(
                 serde_json::from_str::<CanonicalPhysicalArtifactKind>(&candidate).is_err(),
                 "{widened} must not be an admitted physical family",
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+mod source_locator_tests {
+    use super::{
+        CanonicalByteRange, CanonicalCellReference, CanonicalImageRegion, CanonicalLineRange,
+        CanonicalSourceAvailabilityState, CanonicalSourceLocator, CanonicalSourceLocatorKind,
+    };
+
+    fn unresolved(
+        kind: CanonicalSourceLocatorKind,
+        availability_state: CanonicalSourceAvailabilityState,
+    ) -> CanonicalSourceLocator {
+        CanonicalSourceLocator {
+            schema_version: 1,
+            locator_id: "locator-1".to_owned(),
+            source_artifact_id: "source-1".to_owned(),
+            provenance_id: "provenance-1".to_owned(),
+            extraction_id: Some("extraction-1".to_owned()),
+            locator_kind: kind,
+            availability_state,
+            byte_range: None,
+            line_range: None,
+            page_number: None,
+            sheet_name: None,
+            cell_reference: None,
+            image_region: None,
+            section_id: None,
+            reason_code: Some("payload_encrypted".to_owned()),
+            observed_at: "2026-08-25T12:00:00Z".to_owned(),
+            locator_sha256: "a".repeat(64),
+        }
+    }
+
+    #[test]
+    fn every_coordinate_space_round_trips_with_its_own_payload() {
+        let mut byte_locator = unresolved(
+            CanonicalSourceLocatorKind::Byte,
+            CanonicalSourceAvailabilityState::Complete,
+        );
+        byte_locator.reason_code = None;
+        byte_locator.byte_range = Some(CanonicalByteRange {
+            start_byte: 0,
+            end_byte_exclusive: 128,
+        });
+        let mut cell_locator = unresolved(
+            CanonicalSourceLocatorKind::Cell,
+            CanonicalSourceAvailabilityState::Complete,
+        );
+        cell_locator.reason_code = None;
+        cell_locator.sheet_name = Some("Q3 Summary".to_owned());
+        cell_locator.cell_reference = Some(CanonicalCellReference {
+            sheet_row: 4,
+            sheet_column: 7,
+        });
+        let mut image_locator = unresolved(
+            CanonicalSourceLocatorKind::ImageRegion,
+            CanonicalSourceAvailabilityState::Truncated,
+        );
+        image_locator.image_region = Some(CanonicalImageRegion {
+            origin_x: 10,
+            origin_y: 20,
+            width: 640,
+            height: 480,
+        });
+        let mut line_locator = unresolved(
+            CanonicalSourceLocatorKind::Line,
+            CanonicalSourceAvailabilityState::Partial,
+        );
+        line_locator.line_range = Some(CanonicalLineRange {
+            start_line: 0,
+            end_line_exclusive: 12,
+        });
+        for record in [byte_locator, cell_locator, image_locator, line_locator] {
+            let encoded = serde_json::to_string(&record).expect("locator serializes");
+            let decoded: CanonicalSourceLocator =
+                serde_json::from_str(&encoded).expect("locator deserializes");
+            assert_eq!(decoded, record);
+        }
+    }
+
+    #[test]
+    fn unresolved_states_round_trip_without_any_position() {
+        for state in [
+            CanonicalSourceAvailabilityState::Encrypted,
+            CanonicalSourceAvailabilityState::Unsupported,
+            CanonicalSourceAvailabilityState::Unavailable,
+        ] {
+            let record = unresolved(CanonicalSourceLocatorKind::Page, state);
+            let encoded = serde_json::to_string(&record).expect("locator serializes");
+            let decoded: CanonicalSourceLocator =
+                serde_json::from_str(&encoded).expect("locator deserializes");
+            assert_eq!(decoded, record);
+            assert!(decoded.byte_range.is_none());
+            assert!(decoded.page_number.is_none());
+            assert!(decoded.section_id.is_none());
+        }
+    }
+
+    #[test]
+    fn unknown_and_missing_fields_are_rejected() {
+        let encoded = serde_json::to_string(&unresolved(
+            CanonicalSourceLocatorKind::Byte,
+            CanonicalSourceAvailabilityState::Unavailable,
+        ))
+        .expect("locator serializes");
+        let widened = encoded.replace(
+            "\"locator_id\"",
+            "\"source_absolute_path\":\"/home/user/report.pdf\",\"locator_id\"",
+        );
+        assert!(
+            serde_json::from_str::<CanonicalSourceLocator>(&widened).is_err(),
+            "an absolute path must never deserialize into a locator",
+        );
+        let dropped = encoded.replace("\"section_id\":null,", "");
+        assert!(
+            serde_json::from_str::<CanonicalSourceLocator>(&dropped).is_err(),
+            "a required optional payload field must be present and explicit",
+        );
+    }
+
+    #[test]
+    fn unknown_locator_kinds_and_states_do_not_deserialize() {
+        for candidate in ["\"paragraph\"", "\"token\"", "\"offset\""] {
+            assert!(
+                serde_json::from_str::<CanonicalSourceLocatorKind>(candidate).is_err(),
+                "{candidate} must not be an admitted coordinate space",
+            );
+        }
+        for candidate in ["\"redacted\"", "\"missing\"", "\"stale\""] {
+            assert!(
+                serde_json::from_str::<CanonicalSourceAvailabilityState>(candidate).is_err(),
+                "{candidate} must not be an admitted availability state",
             );
         }
     }
