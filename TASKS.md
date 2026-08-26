@@ -734,8 +734,29 @@ artifact, and recovery contracts remain authoritative.
     `package.json`; that Story 1.1 evidence regeneration is separate work and is not performed here.
     This is a contract change only; the participant resolution path is not implemented, and this
     closure makes no macOS, release, or ingestion-runtime implementation claim.
-  - [ ] **Sub-task 1.2.3.2:** Record stable, Preview, proposed, and private Visual Studio Code API
+  - [x] **Sub-task 1.2.3.2:** Record stable, Preview, proposed, and private Visual Studio Code API
     surfaces; guarantee the stable participant path and label provider compatibility best effort.
+    Evidence: `architecture/vscode-api-surfaces.json`, its validator
+    `scripts/vscode_api_surfaces.py`, and the mutation evidence in
+    `tests/test_vscode_api_surfaces.py`, wired into `requirements:current-check` so the gate runs
+    with `npm run docs:check`. All four channels are recorded: only `stable` may carry the supported
+    path, while `preview`, `proposed`, and `private` are each marked not permitted for it and each
+    requires the full Decision 0042 section 4 experiment control set of feature flag, version guard,
+    fallback, and separate non-support claim. The stable participant path is guaranteed and closed
+    to exactly `chat-participant`, `chat-request-references`, `language-model-chat-provider`, and
+    `chat-progress-and-cancellation`; a guarantee may rest only on a stable channel and may declare
+    no degradation, so a guaranteed surface cannot be moved onto an experimental channel without
+    failing the gate. Label provider compatibility is best effort only: it stays off the supported
+    path and must state its degradation rather than fail silently, and every recorded surface must
+    disclose its absence. Eleven focused mutation tests cover supported-path permission flips,
+    guaranteed surfaces on each of the three experimental channels, a shrunk or widened guaranteed
+    path, label provider promoted to guaranteed or onto the supported path, blank or `none`
+    best-effort degradation, withdrawn absence disclosure, short, padded, and emptied experiment
+    control sets, surfaces widened by an unknown key, and repointed decision and supported-path
+    identities. The architecture, documentation, schema, supply-chain, traceability, and diff gates
+    pass. This records API surfaces and support classes only; no participant, provider, or label
+    provider implementation is delivered here, and this closure makes no macOS, release, or
+    Visual Studio Code runtime implementation claim.
   - [ ] **Sub-task 1.2.3.3:** Record Rust, TypeScript, kernel, capability, platform, shell, MCP, and
     parser ownership and add architecture tests that reject duplicate context managers, stores,
     runtime loops, policy engines, dispatchers, or verifiers.
