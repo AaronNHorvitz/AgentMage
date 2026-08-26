@@ -3,15 +3,17 @@ use agentmage_kernel_contracts::{
     AuthorityClass, AuthorityTransactionId, BoundaryFailure, BoundaryKind, BoundaryOutcomeKind,
     BudgetLimit, BudgetResource, CONTRACT_SCHEMA_VERSION, CancellationId, CancellationReason,
     CancellationSignal, CapabilityGrant, ContractError, ContractPayload, CorrelationId,
-    DataSensitivity, ErrorCategory, ErrorId, EvidenceId, EvidenceKind, EvidenceReference,
-    GrantClass, GrantId, GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus,
-    GrantTarget, OperationAttemptId, OperationBinding, OperationOutcome, Plan, PlanId, PlanState,
-    PlanStep, PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage, PromptRole, Receipt,
-    ReceiptId, RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId, SchemaReference,
-    SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId, TaskStatus, ToolCall,
-    ToolCallId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel, ValidationIssue,
-    ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId, WorkPacketState, WorkspaceId,
-    WorkspacePath, WorkspacePathErrorKind, from_json, to_canonical_json,
+    DataSensitivity, EFFECT_TAXONOMY_VERSION, EffectClass, EffectDeclaration, ErrorCategory,
+    ErrorId, EvidenceId, EvidenceKind, EvidenceReference, GrantClass, GrantId, GrantNonce,
+    GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+    OperationAttemptId, OperationBinding, OperationEffectBinding, OperationOutcome, Plan, PlanId,
+    PlanState, PlanStep, PlanStepId, PlanStepState, Prompt, PromptId, PromptMessage, PromptRole,
+    Receipt, ReceiptId, RequiredGrantTemplate, RetryDisposition, RollbackPlan, SchemaId,
+    SchemaReference, SessionId, StateChange, StopCondition, StopConditionKind, Task, TaskId,
+    TaskStatus, ToolCall, ToolCallId, ToolDefinition, ToolId, ToolResult, ToolRiskLevel,
+    ValidationIssue, ValidationSeverity, VersionedContract, WorkPacket, WorkPacketId,
+    WorkPacketState, WorkspaceId, WorkspacePath, WorkspacePathErrorKind, from_json,
+    to_canonical_json,
 };
 use std::fmt::Debug;
 
@@ -86,6 +88,10 @@ where
         let error = from_json::<T>(&bytes).expect_err("omitted optional key must fail closed");
         assert_eq!(error.code, "contract.field.missing", "missing key: {key}");
     }
+}
+
+fn effect_binding(value: serde_json::Value) -> Option<OperationEffectBinding> {
+    serde_json::from_value(value).ok()
 }
 
 fn fixture_entry<T>(name: &str, value: &T) -> serde_json::Value
@@ -534,4 +540,74 @@ fn complete_contract_family_preserves_linked_identities() {
     assert_eq!(result.tool_call_id, call_id);
     assert_eq!(receipt.correlation_id, correlation_id);
     assert_eq!(receipt.tool_call_id, Some(result.tool_call_id));
+
+    let declared = tool.declared_effects[0].operation();
+    let effect = OperationEffectBinding::new(declared);
+    let expected = EffectDeclaration::for_operation(declared);
+    assert_eq!(tool.declared_effects.len(), 1);
+    assert_eq!(effect.operation(), declared);
+    assert_eq!(effect.effect_class(), EffectClass::ReadOnly);
+    assert_eq!(effect.declaration(), expected);
+}
+
+#[test]
+fn every_canonical_operation_carries_exactly_one_closed_effect_class() {
+    let mut mapped = std::collections::BTreeMap::new();
+    for operation in GrantOperation::ALL {
+        let binding = OperationEffectBinding::new(operation);
+        let class = binding.effect_class();
+        let expected = EffectDeclaration::for_operation(operation);
+        assert!(
+            mapped.insert(operation, class).is_none(),
+            "an operation may not map twice"
+        );
+        assert_ne!(
+            class,
+            EffectClass::Unknown,
+            "a registered operation may not be left unestablished"
+        );
+        assert_eq!(binding.declaration(), expected);
+        let encoded = serde_json::to_value(binding).expect("binding must encode");
+        let decoded = serde_json::from_value::<OperationEffectBinding>(encoded);
+        assert_eq!(decoded.ok(), Some(binding));
+    }
+    assert_eq!(mapped.len(), GrantOperation::ALL.len());
+
+    for candidate in ["all", "any", "custom", "inherit", "*", "model_declared"] {
+        let invented = serde_json::json!({
+            "taxonomy_version": EFFECT_TAXONOMY_VERSION,
+            "operation": "workspace_read",
+            "effect_class": candidate
+        });
+        assert!(effect_binding(invented).is_none());
+
+        let unmapped = serde_json::json!({
+            "taxonomy_version": EFFECT_TAXONOMY_VERSION,
+            "operation": candidate,
+            "effect_class": "read_only"
+        });
+        assert!(effect_binding(unmapped).is_none());
+    }
+
+    let inherited = serde_json::json!({
+        "taxonomy_version": EFFECT_TAXONOMY_VERSION,
+        "operation": "git_push",
+        "effect_class": "read_only"
+    });
+    assert!(effect_binding(inherited).is_none());
+
+    let omitted = serde_json::json!({
+        "taxonomy_version": EFFECT_TAXONOMY_VERSION,
+        "operation": "git_push"
+    });
+    assert!(effect_binding(omitted).is_none());
+
+    let stated = serde_json::json!({
+        "taxonomy_version": EFFECT_TAXONOMY_VERSION,
+        "operation": "git_push",
+        "effect_class": "external"
+    });
+    let restated = effect_binding(stated).expect("a restated binding must match the map");
+    let push = OperationEffectBinding::new(GrantOperation::GitPush);
+    assert_eq!(restated, push);
 }

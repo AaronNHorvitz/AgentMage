@@ -364,8 +364,8 @@ mod tests {
 
     use agentmage_capability_read_only::{GIT_INSPECTION_TOOL_ID, ReadOnlyToolKind};
     use agentmage_kernel_contracts::{
-        ActionId, ContractPayload, CorrelationId, GrantOperation, ToolCall, ToolCallId, ToolId,
-        ToolRiskLevel, WorkspaceId, WorkspacePath,
+        ActionId, ContractPayload, CorrelationId, EffectClass, GrantOperation, ToolCall, ToolCallId,
+        ToolId, ToolRiskLevel, WorkspaceId, WorkspacePath,
     };
     use agentmage_kernel_engine::command_runner::{
         CommandBounds, CommandRequest, CommandRisk, CommandSpec, CommandWorkingDirectory,
@@ -637,6 +637,18 @@ mod tests {
                     | GrantOperation::Deploy
             )
         }));
+
+        for definition in &definitions {
+            let declared = definition.declared_effects[0].operation();
+            let binding = registry
+                .effect_binding(&definition.tool_id, &definition.tool_version)
+                .expect("every registered tool maps exactly once");
+            let class = binding.effect_class();
+            assert_eq!(definition.declared_effects.len(), 1);
+            assert_eq!(binding.operation(), declared);
+            assert_eq!(class, EffectClass::for_operation(declared));
+            assert_ne!(class, EffectClass::Unknown);
+        }
 
         let model_tools = model_visible_coding_tools(&registry).expect("model-visible projection");
         assert_eq!(model_tools.len(), definitions.len());

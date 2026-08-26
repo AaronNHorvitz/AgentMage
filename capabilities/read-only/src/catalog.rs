@@ -200,7 +200,9 @@ fn sha256_hex(value: &[u8]) -> String {
 mod tests {
     use std::collections::BTreeSet;
 
-    use agentmage_kernel_contracts::{GrantOperation, ToolId, ToolRiskLevel};
+    use agentmage_kernel_contracts::{
+        EffectClass, GrantOperation, OperationEffectBinding, ToolId, ToolRiskLevel,
+    };
 
     use super::{
         READ_ONLY_INPUT_SCHEMA_JSON, READ_ONLY_OUTPUT_SCHEMA_JSON, READ_ONLY_TOOL_VERSION,
@@ -230,6 +232,9 @@ mod tests {
                 definition.declared_effects[0].operation(),
                 GrantOperation::WorkspaceRead
             );
+            let effect = OperationEffectBinding::new(GrantOperation::WorkspaceRead);
+            assert_eq!(effect.effect_class(), EffectClass::ReadOnly);
+            assert!(!effect.declaration().changes_state());
             assert!(definition.required_grant.single_use);
             assert_eq!(
                 read_only_tool_kind(&definition.tool_id, &definition.tool_version),

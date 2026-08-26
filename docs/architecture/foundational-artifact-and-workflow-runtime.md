@@ -455,6 +455,30 @@ from either vocabulary, and the three token sets are disjoint. There is no
 custom, wildcard, inherited, or model-created class; an effect that cannot be
 established is exactly `unknown`.
 
+Every canonical operation maps to exactly one class through a total kernel-owned
+map:
+
+| Class | Canonical operations |
+|---|---|
+| `read_only` | `workspace_read`, `database_read`, `model_inference` |
+| `idempotent_write` | `git_fetch`, `draft_create` |
+| `conditional` | `workspace_write`, `git_clone`, `git_worktree_create`, `git_branch_fast_forward` |
+| `non_idempotent` | `command_execute`, `git_commit` |
+| `destructive` | `workspace_delete`, `git_worktree_remove`, `administration` |
+| `external` | `network_access`, `git_push`, `publish`, `send`, `upload`, `deploy`, `database_write`, `credential_access` |
+
+`model_inference` is read-only because a local inference changes no persisted
+state; repeated inference is bounded by declared budgets rather than by this
+taxonomy. No canonical operation maps to `unknown`.
+
+The map has no default, wildcard, or inherited entry, so an operation can carry
+neither zero classes nor two. Registration resolves the class from the one
+declared operation, so a tool definition, an MCP manifest, or a model proposal
+can restate a binding but can never omit, invent, widen, or re-point one; a
+restated binding that differs from the map is rejected as
+`effect.taxonomy.operation_effect_mismatch`, and a definition that declares no
+operation is rejected as `tool.definition.effects.omitted`.
+
 Error classes distinguish transport, rate, timeout, crash, unavailable service,
 missing command, invalid arguments, authentication, permission, policy denial,
 deterministic verification failure, malformed model output, context overflow,

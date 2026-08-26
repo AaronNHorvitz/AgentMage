@@ -4,9 +4,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, ContractError, ErrorCategory, ErrorId, OperationOutcome,
-    RetryDisposition, RuntimeToolAttemptState, SchemaReference, StateChange, ToolCall,
-    ToolDefinition, ToolId, ToolResult, ValidationIssue, ValidationSeverity,
+    CONTRACT_SCHEMA_VERSION, ContractError, ErrorCategory, ErrorId, OperationEffectBinding,
+    OperationOutcome, RetryDisposition, RuntimeToolAttemptState, SchemaReference, StateChange,
+    ToolCall, ToolDefinition, ToolId, ToolResult, ValidationIssue, ValidationSeverity,
 };
 use serde::de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor};
 use sha2::{Digest, Sha256};
@@ -96,6 +96,7 @@ pub struct PreGrantDispatchReceipt {
 /// Exact-version registry of non-executable tool definitions.
 struct RegisteredTool {
     definition: ToolDefinition,
+    effect: OperationEffectBinding,
     implementation: Box<dyn Tool>,
 }
 
@@ -113,6 +114,10 @@ impl ToolRegistry {
     }
 
     /// Registers one exact declarative definition.
+    ///
+    /// Validation admits exactly one canonical operation, so registration binds the
+    /// kernel-derived effect class of that operation exactly once. The definition
+    /// cannot supply, omit, or widen its own class.
     pub fn register_tool(&mut self, tool: Box<dyn Tool>) -> Result<(), ToolRegistryError> {
         let definition = tool.definition().clone();
         let issues = validate_definition(&definition);
@@ -123,14 +128,31 @@ impl ToolRegistry {
         if self.tools.contains_key(&key) {
             return Err(ToolRegistryError::AlreadyRegistered);
         }
+        let effect = OperationEffectBinding::new(definition.required_grant.operation.operation());
         self.tools.insert(
             key,
             RegisteredTool {
                 definition,
+                effect,
                 implementation: tool,
             },
         );
         Ok(())
+    }
+
+    /// Returns the one effect binding derived for an exact registered tool.
+    ///
+    /// The binding is derived from the closed operation taxonomy at registration and
+    /// is not readable from, or writable by, the definition, a manifest, or a model.
+    #[must_use]
+    pub fn effect_binding(
+        &self,
+        tool_id: &ToolId,
+        tool_version: &str,
+    ) -> Option<OperationEffectBinding> {
+        self.tools
+            .get(&(tool_id.clone(), tool_version.to_owned()))
+            .map(|registered| registered.effect)
     }
 
     /// Returns one exact registered definition.
@@ -478,7 +500,13 @@ fn validate_definition(definition: &ToolDefinition) -> Vec<ValidationIssue> {
     validate_text("description", &definition.description, &mut issues);
     validate_schema("input_schema", &definition.input_schema, &mut issues);
     validate_schema("output_schema", &definition.output_schema, &mut issues);
-    if definition.declared_effects.len() != 1 {
+    if definition.declared_effects.is_empty() {
+        issues.push(issue(
+            "tool.definition.effects.omitted",
+            "declared_effects",
+            "A tool must declare its one canonical operation and cannot omit it",
+        ));
+    } else if definition.declared_effects.len() != 1 {
         issues.push(issue(
             "tool.definition.effects.invalid",
             "declared_effects",
@@ -784,10 +812,10 @@ mod tests {
         ToolDispatcher, ToolRegistry, ToolRegistryError, sha256_hex,
     };
     use agentmage_kernel_contracts::{
-        ActionId, CONTRACT_SCHEMA_VERSION, ContractPayload, CorrelationId, GrantOperation,
-        OperationBinding, OperationOutcome, RequiredGrantTemplate, RuntimeToolAttemptState,
-        SchemaId, SchemaReference, StateChange, ToolCall, ToolCallId, ToolDefinition, ToolId,
-        ToolRiskLevel,
+        ActionId, CONTRACT_SCHEMA_VERSION, ContractPayload, CorrelationId, EffectClass,
+        EffectDeclaration, GrantOperation, OperationBinding, OperationOutcome,
+        RequiredGrantTemplate, RuntimeToolAttemptState, SchemaId, SchemaReference, StateChange,
+        ToolCall, ToolCallId, ToolDefinition, ToolId, ToolRiskLevel,
     };
     use serde_json::{Value, json};
 
@@ -979,6 +1007,89 @@ mod tests {
             panic!("invalid definition must fail");
         };
         assert_eq!(issues.len(), 2);
+    }
+
+    #[test]
+    fn registration_maps_each_operation_to_exactly_one_derived_effect_class() {
+        let mut registry = ToolRegistry::new();
+        for (identity, operation, class) in [
+            (
+                "fixture.read",
+                GrantOperation::WorkspaceRead,
+                EffectClass::ReadOnly,
+            ),
+            (
+                "fixture.write",
+                GrantOperation::WorkspaceWrite,
+                EffectClass::Conditional,
+            ),
+            (
+                "fixture.delete",
+                GrantOperation::WorkspaceDelete,
+                EffectClass::Destructive,
+            ),
+        ] {
+            let mut candidate = definition(identity);
+            candidate.declared_effects = vec![OperationBinding::new(operation)];
+            candidate.required_grant.operation = OperationBinding::new(operation);
+            registry
+                .register_tool(Box::new(FakeTool {
+                    definition: candidate,
+                }))
+                .expect("exact definition must register");
+            let binding = registry
+                .effect_binding(&ToolId::from_raw(identity), "1.0.0")
+                .expect("a registered operation must map exactly once");
+            assert_eq!(binding.operation(), operation);
+            assert_eq!(binding.effect_class(), class);
+            assert_eq!(
+                binding.declaration(),
+                EffectDeclaration::for_operation(operation)
+            );
+        }
+        assert!(
+            registry
+                .effect_binding(&ToolId::from_raw("fixture.read"), "2.0.0")
+                .is_none()
+        );
+
+        let mut omitted = definition("fixture.omitted");
+        omitted.declared_effects.clear();
+        let Err(ToolRegistryError::InvalidDefinition { issues }) =
+            registry.register_tool(Box::new(FakeTool {
+                definition: omitted,
+            }))
+        else {
+            panic!("an omitted operation must fail closed");
+        };
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue.code.as_str() == "tool.definition.effects.omitted")
+        );
+
+        let mut doubled = definition("fixture.doubled");
+        doubled.declared_effects = vec![
+            OperationBinding::new(GrantOperation::WorkspaceRead),
+            OperationBinding::new(GrantOperation::WorkspaceWrite),
+        ];
+        let Err(ToolRegistryError::InvalidDefinition { issues }) =
+            registry.register_tool(Box::new(FakeTool {
+                definition: doubled,
+            }))
+        else {
+            panic!("two declared operations must fail closed");
+        };
+        assert!(
+            issues
+                .iter()
+                .any(|issue| issue.code.as_str() == "tool.definition.effects.invalid")
+        );
+        assert!(
+            registry
+                .effect_binding(&ToolId::from_raw("fixture.doubled"), "1.0.0")
+                .is_none()
+        );
     }
 
     #[test]

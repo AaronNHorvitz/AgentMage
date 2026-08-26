@@ -6,10 +6,15 @@
 //! vocabularies share no token, so no classification can substitute for another.
 //! There is no custom, wildcard, inherited, or model-created variant: an effect that
 //! cannot be established is exactly [`EffectClass::Unknown`] and fails closed.
+//!
+//! Every canonical [`GrantOperation`] maps to exactly one class through
+//! [`EffectClass::for_operation`]. The map is total and kernel-owned, so a registered
+//! tool operation can neither omit its class nor carry two, and no manifest, record,
+//! or model proposal can add, remove, or re-point an entry.
 
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::CanonicalEffectClass;
+use crate::{CanonicalEffectClass, GrantOperation, StateChange};
 
 /// Current version of the canonical effect taxonomy.
 pub const EFFECT_TAXONOMY_VERSION: u16 = 1;
@@ -75,6 +80,57 @@ impl EffectClass {
         Self::External,
         Self::Unknown,
     ];
+
+    /// Returns the one effect class fixed for one canonical operation.
+    ///
+    /// The map is total and closed: every [`GrantOperation`] appears in exactly one
+    /// arm and there is no default, wildcard, or inherited arm, so a new operation
+    /// cannot compile without an explicit class and no operation can carry two.
+    /// No canonical operation maps to [`Self::Unknown`]; that class stays reserved
+    /// for an effect this taxonomy cannot establish.
+    ///
+    /// [`GrantOperation::ModelInference`] is read-only because a local inference
+    /// changes no persisted state; repeated inference is bounded by declared budgets
+    /// rather than by this taxonomy.
+    #[must_use]
+    pub const fn for_operation(operation: GrantOperation) -> Self {
+        match operation {
+            GrantOperation::WorkspaceRead
+            | GrantOperation::DatabaseRead
+            | GrantOperation::ModelInference => Self::ReadOnly,
+            GrantOperation::GitFetch | GrantOperation::DraftCreate => Self::IdempotentWrite,
+            GrantOperation::WorkspaceWrite
+            | GrantOperation::GitClone
+            | GrantOperation::GitWorktreeCreate
+            | GrantOperation::GitBranchFastForward => Self::Conditional,
+            GrantOperation::CommandExecute | GrantOperation::GitCommit => Self::NonIdempotent,
+            GrantOperation::WorkspaceDelete
+            | GrantOperation::GitWorktreeRemove
+            | GrantOperation::Administration => Self::Destructive,
+            GrantOperation::NetworkAccess
+            | GrantOperation::GitPush
+            | GrantOperation::Publish
+            | GrantOperation::Send
+            | GrantOperation::Upload
+            | GrantOperation::Deploy
+            | GrantOperation::DatabaseWrite
+            | GrantOperation::CredentialAccess => Self::External,
+        }
+    }
+
+    /// Reports whether one observed state-change disposition is admissible here.
+    ///
+    /// A read-only attempt can neither report a change nor report an uncertain
+    /// change, so an untrusted record claiming either for a read-only class fails
+    /// closed. Any class may report that state did not change, because an attempt
+    /// may be denied before it runs.
+    #[must_use]
+    pub const fn admits_observed_change(self, observed: StateChange) -> bool {
+        match observed {
+            StateChange::NotChanged => true,
+            StateChange::Changed | StateChange::Uncertain => self.changes_state(),
+        }
+    }
 
     /// Returns the one repetition rule fixed for this class.
     #[must_use]
@@ -185,6 +241,8 @@ pub enum EffectTaxonomyError {
     ReconciliationMismatch,
     /// The approval rule does not equal the canonical rule for the class.
     ApprovalMismatch,
+    /// The class does not equal the canonical class mapped to the named operation.
+    OperationEffectMismatch,
 }
 
 impl EffectTaxonomyError {
@@ -197,6 +255,7 @@ impl EffectTaxonomyError {
             Self::StateChangeMismatch => "effect.taxonomy.state_change_mismatch",
             Self::ReconciliationMismatch => "effect.taxonomy.reconciliation_mismatch",
             Self::ApprovalMismatch => "effect.taxonomy.approval_mismatch",
+            Self::OperationEffectMismatch => "effect.taxonomy.operation_effect_mismatch",
         }
     }
 }
@@ -229,6 +288,12 @@ impl EffectDeclaration {
             requires_reconciliation: effect_class.requires_reconciliation(),
             requires_fresh_approval: effect_class.requires_fresh_approval(),
         }
+    }
+
+    /// Creates the current canonical declaration for one canonical operation.
+    #[must_use]
+    pub const fn for_operation(operation: GrantOperation) -> Self {
+        Self::new(EffectClass::for_operation(operation))
     }
 
     /// Validates and constructs one fully specified declaration.
@@ -304,6 +369,95 @@ impl EffectDeclaration {
     }
 }
 
+/// Versioned binding of one canonical operation to its one canonical effect class.
+///
+/// The class is derived from the operation and is never supplied by the record's
+/// author. Deserialization rejects an omitted class, a class outside the closed
+/// taxonomy, and any class that differs from the canonical mapping, so an untrusted
+/// manifest or model proposal may restate one binding but can never introduce a
+/// custom, wildcard, inherited, or invented one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct OperationEffectBinding {
+    taxonomy_version: u16,
+    operation: GrantOperation,
+    effect_class: EffectClass,
+}
+
+impl OperationEffectBinding {
+    /// Creates the current canonical binding for one canonical operation.
+    #[must_use]
+    pub const fn new(operation: GrantOperation) -> Self {
+        Self {
+            taxonomy_version: EFFECT_TAXONOMY_VERSION,
+            operation,
+            effect_class: EffectClass::for_operation(operation),
+        }
+    }
+
+    /// Validates and constructs one fully specified binding.
+    pub fn from_parts(
+        taxonomy_version: u16,
+        operation: GrantOperation,
+        effect_class: EffectClass,
+    ) -> Result<Self, EffectTaxonomyError> {
+        if taxonomy_version != EFFECT_TAXONOMY_VERSION {
+            return Err(EffectTaxonomyError::UnsupportedVersion);
+        }
+        if effect_class != EffectClass::for_operation(operation) {
+            return Err(EffectTaxonomyError::OperationEffectMismatch);
+        }
+        Ok(Self::new(operation))
+    }
+
+    /// Returns the exact taxonomy version.
+    #[must_use]
+    pub const fn taxonomy_version(self) -> u16 {
+        self.taxonomy_version
+    }
+
+    /// Returns the exact bound canonical operation.
+    #[must_use]
+    pub const fn operation(self) -> GrantOperation {
+        self.operation
+    }
+
+    /// Returns the one effect class mapped to the bound operation.
+    #[must_use]
+    pub const fn effect_class(self) -> EffectClass {
+        self.effect_class
+    }
+
+    /// Returns the full declaration, including every rule fixed by the class.
+    #[must_use]
+    pub const fn declaration(self) -> EffectDeclaration {
+        EffectDeclaration::new(self.effect_class)
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct CurrentOperationEffectBinding {
+    taxonomy_version: u16,
+    operation: GrantOperation,
+    effect_class: EffectClass,
+}
+
+impl<'de> Deserialize<'de> for OperationEffectBinding {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let current = CurrentOperationEffectBinding::deserialize(deserializer)?;
+        Self::from_parts(
+            current.taxonomy_version,
+            current.operation,
+            current.effect_class,
+        )
+        .map_err(|error| serde::de::Error::custom(error.code()))
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct CurrentEffectDeclaration {
@@ -335,13 +489,13 @@ impl<'de> Deserialize<'de> for EffectDeclaration {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeSet;
+    use std::collections::{BTreeMap, BTreeSet};
 
     use super::{
         EFFECT_TAXONOMY_VERSION, EffectClass, EffectDeclaration, EffectRepetition,
-        EffectTaxonomyError,
+        EffectTaxonomyError, OperationEffectBinding,
     };
-    use crate::{AuthorityClass, CanonicalEffectClass, ToolRiskLevel};
+    use crate::{AuthorityClass, CanonicalEffectClass, GrantOperation, StateChange, ToolRiskLevel};
 
     const CANONICAL: [CanonicalEffectClass; 7] = [
         CanonicalEffectClass::ReadOnly,
@@ -371,6 +525,17 @@ mod tests {
 
     fn parse_class(candidate: &str) -> Result<EffectClass, serde_json::Error> {
         serde_json::from_value(serde_json::Value::from(candidate))
+    }
+
+    fn bind(value: serde_json::Value) -> Result<OperationEffectBinding, serde_json::Error> {
+        serde_json::from_value(value)
+    }
+
+    fn checked(
+        operation: GrantOperation,
+        class: EffectClass,
+    ) -> Result<OperationEffectBinding, EffectTaxonomyError> {
+        OperationEffectBinding::from_parts(EFFECT_TAXONOMY_VERSION, operation, class)
     }
 
     /// Asserts one combined class is at least as restrictive as one source class;
@@ -525,6 +690,7 @@ mod tests {
             EffectTaxonomyError::StateChangeMismatch.code(),
             EffectTaxonomyError::ReconciliationMismatch.code(),
             EffectTaxonomyError::ApprovalMismatch.code(),
+            EffectTaxonomyError::OperationEffectMismatch.code(),
         ];
         let unique: BTreeSet<&str> = codes.into_iter().collect();
         assert_eq!(unique.len(), codes.len());
@@ -591,5 +757,141 @@ mod tests {
         let mut smuggled = encoded;
         smuggled["capability_grant"] = serde_json::json!({"claimed": true});
         assert!(parse(smuggled).is_err());
+    }
+
+    #[test]
+    fn every_canonical_operation_maps_to_exactly_one_effect_class() {
+        let mut mapped = BTreeMap::new();
+        for operation in GrantOperation::ALL {
+            let binding = OperationEffectBinding::new(operation);
+            let class = binding.effect_class();
+            assert!(mapped.insert(operation, class).is_none());
+            assert_eq!(binding.operation(), operation);
+            assert_eq!(binding.taxonomy_version(), EFFECT_TAXONOMY_VERSION);
+            assert_eq!(class, EffectClass::for_operation(operation));
+            assert_eq!(binding.declaration(), EffectDeclaration::new(class));
+            assert_eq!(binding.declaration().repetition(), class.repetition());
+            assert_ne!(class, EffectClass::Unknown, "no operation is unknown");
+        }
+        assert_eq!(mapped.len(), GrantOperation::ALL.len());
+
+        let mut covered = BTreeSet::new();
+        for class in mapped.values() {
+            covered.insert(token(*class));
+        }
+        let mut concrete = BTreeSet::new();
+        for class in EffectClass::ALL {
+            if class != EffectClass::Unknown {
+                concrete.insert(token(class));
+            }
+        }
+        assert_eq!(covered, concrete);
+
+        let read = EffectClass::for_operation(GrantOperation::WorkspaceRead);
+        let delete = EffectClass::for_operation(GrantOperation::WorkspaceDelete);
+        let commit = EffectClass::for_operation(GrantOperation::GitCommit);
+        let push = EffectClass::for_operation(GrantOperation::GitPush);
+        let fetch = EffectClass::for_operation(GrantOperation::GitFetch);
+        let advance = EffectClass::for_operation(GrantOperation::GitBranchFastForward);
+        assert_eq!(read, EffectClass::ReadOnly);
+        assert_eq!(delete, EffectClass::Destructive);
+        assert_eq!(commit, EffectClass::NonIdempotent);
+        assert_eq!(push, EffectClass::External);
+        assert_eq!(fetch, EffectClass::IdempotentWrite);
+        assert_eq!(advance, EffectClass::Conditional);
+    }
+
+    #[test]
+    fn operation_bindings_reject_custom_wildcard_inherited_or_omitted_classes() {
+        for operation in GrantOperation::ALL {
+            let binding = OperationEffectBinding::new(operation);
+            let canonical = binding.effect_class();
+            let encoded = serde_json::to_value(binding).expect("must encode");
+            assert_eq!(bind(encoded.clone()).ok(), Some(binding));
+
+            for class in EffectClass::ALL {
+                let admitted = checked(operation, class);
+                assert_eq!(admitted.is_ok(), class == canonical);
+                if class == canonical {
+                    continue;
+                }
+                let mismatch = EffectTaxonomyError::OperationEffectMismatch;
+                assert_eq!(admitted, Err(mismatch));
+                let mut drifted = encoded.clone();
+                drifted["effect_class"] = serde_json::to_value(class).expect("class");
+                assert!(bind(drifted).is_err());
+            }
+
+            for candidate in [
+                "all",
+                "any",
+                "custom",
+                "inherit",
+                "*",
+                "none",
+                "safe",
+                "write",
+                "read",
+                "side_effect",
+                "model_declared",
+                "",
+            ] {
+                let mut drifted = encoded.clone();
+                drifted["effect_class"] = serde_json::Value::from(candidate);
+                assert!(bind(drifted).is_err());
+            }
+
+            let mut omitted = encoded.clone();
+            let object = omitted.as_object_mut().expect("binding is an object");
+            assert!(object.remove("effect_class").is_some());
+            assert!(bind(omitted).is_err());
+
+            let mut stale = encoded.clone();
+            stale["taxonomy_version"] = serde_json::json!(EFFECT_TAXONOMY_VERSION + 1);
+            assert!(bind(stale).is_err());
+
+            let legacy = OperationEffectBinding::from_parts(0, operation, canonical);
+            assert_eq!(legacy, Err(EffectTaxonomyError::UnsupportedVersion));
+
+            let mut smuggled = encoded;
+            smuggled["capability_grant"] = serde_json::json!({"claimed": true});
+            assert!(bind(smuggled).is_err());
+        }
+
+        let bare = serde_json::from_str::<OperationEffectBinding>("\"git_push\"");
+        assert!(bare.is_err());
+        let unmapped = serde_json::json!({
+            "taxonomy_version": EFFECT_TAXONOMY_VERSION,
+            "operation": "git_force_push",
+            "effect_class": "read_only"
+        });
+        assert!(bind(unmapped).is_err());
+    }
+
+    #[test]
+    fn observed_state_change_claims_cannot_exceed_the_mapped_effect_class() {
+        for operation in GrantOperation::ALL {
+            let class = EffectClass::for_operation(operation);
+            assert!(class.admits_observed_change(StateChange::NotChanged));
+            assert_eq!(
+                class.admits_observed_change(StateChange::Changed),
+                class.changes_state()
+            );
+            assert_eq!(
+                class.admits_observed_change(StateChange::Uncertain),
+                class.changes_state()
+            );
+        }
+
+        let read_only = EffectClass::ReadOnly;
+        assert!(!read_only.admits_observed_change(StateChange::Changed));
+        assert!(!read_only.admits_observed_change(StateChange::Uncertain));
+        for class in EffectClass::ALL {
+            assert!(class.admits_observed_change(StateChange::NotChanged));
+            assert_eq!(
+                class.admits_observed_change(StateChange::Changed),
+                class != EffectClass::ReadOnly
+            );
+        }
     }
 }

@@ -3,8 +3,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, GrantOperation, McpConnection, McpDiscovery, McpManifest,
-    McpResponseClass, McpToolManifest, McpTransportKind, StateChange, ToolDefinition, ToolId,
+    CONTRACT_SCHEMA_VERSION, EffectClass, GrantOperation, McpConnection, McpDiscovery, McpManifest,
+    McpResponseClass, McpToolManifest, McpTransportKind, OperationEffectBinding, StateChange,
+    ToolDefinition, ToolId,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -349,6 +350,17 @@ fn validate_read_only_tool(tool: &McpToolManifest) -> Result<(), McpRegistryErro
     {
         return Err(McpRegistryError::WriteCapabilityDenied);
     }
+    // The manifest states its own side effect, but the kernel derives the effect class
+    // from the one declared operation. A stated effect the derived class does not admit
+    // is denied rather than believed.
+    let effect = OperationEffectBinding::new(definition.declared_effects[0].operation());
+    let class = effect.effect_class();
+    if class != EffectClass::ReadOnly
+        || effect.declaration().changes_state()
+        || !class.admits_observed_change(tool.side_effect)
+    {
+        return Err(McpRegistryError::WriteCapabilityDenied);
+    }
     let mut registry = ToolRegistry::new();
     registry
         .register_tool(Box::new(ManifestTool(definition.clone())))
@@ -673,6 +685,31 @@ mod tests {
         assert_eq!(
             seal_mcp_manifest(secret),
             Err(McpRegistryError::InvalidManifest)
+        );
+    }
+
+    #[test]
+    fn sprint_80_manifest_side_effect_claims_do_not_establish_the_effect_class() {
+        let admitted = manifest();
+        let declared = admitted.tools[0].definition.declared_effects[0].operation();
+        let effect = OperationEffectBinding::new(declared);
+        let class = effect.effect_class();
+        assert_eq!(class, EffectClass::ReadOnly);
+        assert!(!effect.declaration().changes_state());
+        assert!(!class.admits_observed_change(StateChange::Changed));
+
+        let writing = GrantOperation::WorkspaceWrite;
+        let denied = OperationEffectBinding::new(writing);
+        assert_ne!(denied.effect_class(), EffectClass::ReadOnly);
+
+        let mut claimed = manifest();
+        claimed.tools[0].definition.declared_effects = vec![OperationBinding::new(writing)];
+        claimed.tools[0].definition.required_grant.operation = OperationBinding::new(writing);
+        claimed.tools[0].side_effect = StateChange::NotChanged;
+        claimed.manifest_sha256 = ZERO_SHA256.to_owned();
+        assert_eq!(
+            seal_mcp_manifest(claimed),
+            Err(McpRegistryError::WriteCapabilityDenied)
         );
     }
 

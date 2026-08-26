@@ -107,6 +107,7 @@ pub use document_control::{
 };
 pub use effect::{
     EFFECT_TAXONOMY_VERSION, EffectClass, EffectDeclaration, EffectRepetition, EffectTaxonomyError,
+    OperationEffectBinding,
 };
 pub use engineering::{
     AgentLease, AgentLeaseState, ArtifactCaptureDisposition, ArtifactCaptureResult,
