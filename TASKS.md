@@ -641,9 +641,41 @@ artifact, and recovery contracts remain authoritative.
     `626a92146ff9769f83d36a599a813befb98c819c` and are unrelated pre-existing drift that this
     sub-task neither caused nor repaired. This contract closure makes no macOS, release, or
     workflow-runtime implementation claim.
-  - [ ] **Sub-task 1.2.2.2:** Define workflow, step, call, operation-attempt, verification,
+  - [x] **Sub-task 1.2.2.2:** Define workflow, step, call, operation-attempt, verification,
     recovery-decision, and terminal-diagnostic envelopes without replacing `Plan`, `ToolCall`,
-    `CapabilityGrant`, `OperationReceipt`, or `VerifiedCompletion`.
+    `CapabilityGrant`, `OperationReceipt`, or `VerifiedCompletion`. Evidence: the seven closed
+    `workflow-execution`, `step-execution`, `call-envelope`, `operation-attempt`,
+    `verification-envelope`, `recovery-decision`, and `terminal-diagnostic` schemas in
+    `schemas/engineering-runtime`, their generator, structural constraints, and semantic validators
+    in `scripts/engineering_runtime_schemas.mjs`, and the matching Rust-owned contracts in
+    `kernel/contracts/src/engineering_records.rs`. The family replaces none of the five protected
+    contracts: each is reached only by its existing identity type — `PlanId`, `PlanStepId`,
+    `ToolCallId`, `GrantId`, and `ReceiptId` — so a second identity encoding cannot appear without
+    changing those fields, and schema plus Rust property-surface tests reject every field those
+    contracts own, including plan `steps`, `description`, `ordinal`, `depends_on`, and
+    `expected_evidence`, call `arguments` and `parameters`, grant `scope` and `granted_operations`,
+    receipt `exit_code`, `stdout`, `stderr`, and `resource_usage`, and completion
+    `preserved_invariants` and `observed_evidence_sha256s`. `CanonicalExecutionAuthority` has
+    exactly one variant, so no envelope can attribute an execution fact to a model, client, or
+    extension. Decision 0042 section 5 remains structural: attempt ordinals are one-based and
+    strictly increasing, the first attempt supersedes nothing, every later attempt names what it
+    follows, no attempt supersedes itself, a started attempt carries no receipt, and a succeeded
+    attempt resolves to an executor receipt rather than a model claim; a recovery decision on an
+    unconfirmed outcome must reconcile before deciding anything else, and `retry_new_attempt` is
+    admitted only for a classified transient failure with a confirmed outcome, so a destructive,
+    denied, rejected, or unconfirmed operation is never reopened by the runtime alone.
+    `CanonicalFailureClass::is_transient` matches exhaustively, so a new failure family must decide
+    transience explicitly. A call envelope carries only the digest of its validated arguments, a
+    rejected call reports no arguments and always names its reason, and only a repaired call may
+    report a repair. A terminal diagnostic carries deterministic codes and separately classified
+    artifact references and admits no message, prose, or stack trace, and a codes-only disclosure
+    carries no artifact reference at all. Eight focused schema tests and six focused Rust tests
+    cover required-field, unknown-field, malformed, ordering, one-based-ordinal, self-supersede,
+    duplicate-identity, authority, transience, disclosure, and protected-contract-boundary
+    failures. The complete local workspace test, strict-Clippy, formatting, documentation, schema,
+    supply-chain, traceability, and diff gates pass. This contract closure defines envelopes only
+    and makes no macOS, release, or workflow-runtime implementation claim; no supervisor, executor,
+    verifier, or recovery loop is implemented by this sub-task.
   - [ ] **Sub-task 1.2.2.3:** Define compatibility and migration rules that preserve the current
     zero-hidden-retry contract and make every permitted retry a new attempt rather than replay.
 - [ ] **Task 1.2.3 - Reconcile interface and ownership boundaries**
