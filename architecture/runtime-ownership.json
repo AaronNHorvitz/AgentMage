@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "decision_id": "ADR-0042",
+  "status": "accepted",
+  "singleton_roles": [
+    {
+      "id": "context-manager",
+      "owners": ["kernel-engine"]
+    },
+    {
+      "id": "operational-store",
+      "owners": ["kernel-engine"]
+    },
+    {
+      "id": "runtime-loop",
+      "owners": ["kernel-engine"]
+    },
+    {
+      "id": "policy-engine",
+      "owners": ["kernel-engine"]
+    },
+    {
+      "id": "tool-dispatcher",
+      "owners": ["kernel-engine"]
+    },
+    {
+      "id": "completion-verifier",
+      "owners": ["kernel-engine"]
+    }
+  ],
+  "layers": [
+    {
+      "id": "kernel",
+      "modules": ["kernel-contracts", "kernel-engine"],
+      "languages": ["rust"],
+      "may_own_singleton_roles": true,
+      "implemented": true
+    },
+    {
+      "id": "capability",
+      "modules": [
+        "capability-knowledge",
+        "capability-read-only",
+        "capability-repository-map"
+      ],
+      "languages": ["rust"],
+      "may_own_singleton_roles": false,
+      "implemented": true
+    },
+    {
+      "id": "platform",
+      "modules": [
+        "platform-linux",
+        "platform-linux-native-inference",
+        "platform-macos",
+        "platform-windows"
+      ],
+      "languages": ["rust", "swift"],
+      "may_own_singleton_roles": false,
+      "implemented": true
+    },
+    {
+      "id": "shell",
+      "modules": ["shell-host", "shell-vscode"],
+      "languages": ["rust", "typescript"],
+      "may_own_singleton_roles": false,
+      "implemented": true
+    },
+    {
+      "id": "parser",
+      "modules": ["capability-knowledge"],
+      "languages": ["rust"],
+      "may_own_singleton_roles": false,
+      "implemented": true
+    },
+    {
+      "id": "mcp",
+      "modules": [],
+      "languages": [],
+      "may_own_singleton_roles": false,
+      "implemented": false
+    }
+  ],
+  "unassigned_modules": [
+    "documentation",
+    "fixture-corpus",
+    "packaging-linux",
+    "packaging-macos",
+    "release-xtask"
+  ]
+}
