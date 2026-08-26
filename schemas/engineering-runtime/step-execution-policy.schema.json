@@ -1,0 +1,526 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/step-execution-policy.schema.json",
+  "title": "AgentMage step-execution-policy",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: effect_class MUST admit its retry_class under the closed effect/retry matrix, and an effect class that fails toward approval MUST NOT carry an automatic retry class. required_preflight_ids and required_verifier_ids MUST NOT repeat an identity. plan_revision MUST be a non-negative integer, budgets.attempts MUST be at least one, and a retry_class of never MUST allow exactly one attempt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_id",
+    "plan_id",
+    "plan_step_id",
+    "plan_revision",
+    "preflight_policy_id",
+    "required_preflight_ids",
+    "side_effect_policy_id",
+    "effect_class",
+    "approval_policy_id",
+    "approval_requirement",
+    "idempotency_policy_id",
+    "idempotency_key_requirement",
+    "verifier_policy_id",
+    "verification_requirement",
+    "required_verifier_ids",
+    "deferral_reason_code",
+    "retry_policy_id",
+    "retry_class",
+    "budget_policy_id",
+    "budgets",
+    "diagnostic_policy_id",
+    "diagnostic_disclosure",
+    "recorded_at",
+    "policy_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "plan_step_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "plan_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "preflight_policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "required_preflight_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 1,
+      "maxItems": 32
+    },
+    "side_effect_policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "effect_class": {
+      "enum": [
+        "read_only",
+        "idempotent_write",
+        "conditional",
+        "non_idempotent",
+        "destructive",
+        "external",
+        "unknown"
+      ]
+    },
+    "approval_policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "approval_requirement": {
+      "enum": [
+        "not_required",
+        "required_once",
+        "required_per_attempt"
+      ]
+    },
+    "idempotency_policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "idempotency_key_requirement": {
+      "enum": [
+        "not_applicable",
+        "required",
+        "verified_desired_state"
+      ]
+    },
+    "verifier_policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "verification_requirement": {
+      "enum": [
+        "verifier_evidence_required",
+        "policy_deferred"
+      ]
+    },
+    "required_verifier_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "minItems": 0,
+      "maxItems": 32
+    },
+    "deferral_reason_code": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "retry_policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "retry_class": {
+      "enum": [
+        "never",
+        "recoverable_read",
+        "conditional_after_reconciliation",
+        "user_decision_required"
+      ]
+    },
+    "budget_policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turns",
+        "tokens",
+        "duration_ms",
+        "tool_calls",
+        "attempts",
+        "no_progress_events",
+        "output_bytes",
+        "memory_bytes",
+        "cost_minor_units"
+      ],
+      "properties": {
+        "turns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tokens": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "tool_calls": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "no_progress_events": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "output_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memory_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cost_minor_units": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "diagnostic_policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "diagnostic_disclosure": {
+      "enum": [
+        "content_free_codes",
+        "content_free_codes_with_artifact_reference"
+      ]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "policy_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "read_only"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "retry_class": {
+            "enum": [
+              "never",
+              "recoverable_read"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "idempotent_write"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "retry_class": {
+            "enum": [
+              "never",
+              "conditional_after_reconciliation"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "conditional"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "retry_class": {
+            "enum": [
+              "never",
+              "conditional_after_reconciliation"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "non_idempotent"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "retry_class": {
+            "enum": [
+              "never",
+              "user_decision_required"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "destructive"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "retry_class": {
+            "enum": [
+              "never",
+              "user_decision_required"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "external"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "retry_class": {
+            "enum": [
+              "never",
+              "user_decision_required"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "unknown"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "retry_class": {
+            "enum": [
+              "never",
+              "user_decision_required"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "retry_class": {
+            "const": "never"
+          }
+        },
+        "required": [
+          "retry_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "budgets": {
+            "type": "object",
+            "properties": {
+              "attempts": {
+                "const": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "destructive"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval_requirement": {
+            "const": "required_per_attempt"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "enum": [
+              "non_idempotent",
+              "destructive",
+              "external",
+              "unknown"
+            ]
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval_requirement": {
+            "enum": [
+              "required_once",
+              "required_per_attempt"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "idempotent_write"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "idempotency_key_requirement": {
+            "enum": [
+              "required",
+              "verified_desired_state"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect_class": {
+            "const": "read_only"
+          }
+        },
+        "required": [
+          "effect_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "idempotency_key_requirement": {
+            "const": "not_applicable"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verification_requirement": {
+            "const": "verifier_evidence_required"
+          }
+        },
+        "required": [
+          "verification_requirement"
+        ]
+      },
+      "then": {
+        "properties": {
+          "required_verifier_ids": {
+            "type": "array",
+            "minItems": 1
+          },
+          "deferral_reason_code": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "required_verifier_ids": {
+            "type": "array",
+            "maxItems": 0
+          },
+          "deferral_reason_code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        }
+      }
+    }
+  ]
+}

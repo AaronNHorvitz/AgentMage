@@ -626,6 +626,174 @@ pub enum CanonicalRetryClass {
     UserDecisionRequired,
 }
 
+impl CanonicalEffectClass {
+    /// Retry classes this effect class admits.
+    ///
+    /// This is the closed effect/retry matrix from Decision 0042. The match is
+    /// exhaustive, so adding an effect class without deciding its retry rule stops
+    /// compiling rather than defaulting to a permissive one.
+    #[must_use]
+    pub const fn permitted_retry_classes(self) -> &'static [CanonicalRetryClass] {
+        match self {
+            Self::ReadOnly => &[
+                CanonicalRetryClass::Never,
+                CanonicalRetryClass::RecoverableRead,
+            ],
+            Self::IdempotentWrite | Self::Conditional => &[
+                CanonicalRetryClass::Never,
+                CanonicalRetryClass::ConditionalAfterReconciliation,
+            ],
+            Self::NonIdempotent | Self::Destructive | Self::External | Self::Unknown => &[
+                CanonicalRetryClass::Never,
+                CanonicalRetryClass::UserDecisionRequired,
+            ],
+        }
+    }
+
+    /// Whether the runtime may open a fresh attempt on its own authority.
+    #[must_use]
+    pub const fn permits_automatic_retry(self) -> bool {
+        match self {
+            Self::ReadOnly | Self::IdempotentWrite | Self::Conditional => true,
+            Self::NonIdempotent | Self::Destructive | Self::External | Self::Unknown => false,
+        }
+    }
+
+    /// Whether a recorded approval is mandatory before any attempt.
+    ///
+    /// [`Self::Unknown`] is included deliberately: an unclassified effect fails toward
+    /// approval rather than past it.
+    #[must_use]
+    pub const fn requires_approval(self) -> bool {
+        match self {
+            Self::NonIdempotent | Self::Destructive | Self::External | Self::Unknown => true,
+            Self::ReadOnly | Self::IdempotentWrite | Self::Conditional => false,
+        }
+    }
+}
+
+impl CanonicalRetryClass {
+    /// Whether this class lets the runtime retry without a human decision.
+    #[must_use]
+    pub const fn is_automatic(self) -> bool {
+        match self {
+            Self::RecoverableRead | Self::ConditionalAfterReconciliation => true,
+            Self::Never | Self::UserDecisionRequired => false,
+        }
+    }
+}
+
+/// Whether one plan step needs a recorded approval, and how often.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalApprovalRequirement {
+    /// The step may run without an approval record.
+    NotRequired,
+    /// One approval covers the step.
+    RequiredOnce,
+    /// Every attempt needs its own fresh, narrow approval.
+    RequiredPerAttempt,
+}
+
+/// How a step proves that a further attempt cannot duplicate an effect.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalIdempotencyRequirement {
+    /// The step changes nothing, so an idempotency key would be a false claim.
+    NotApplicable,
+    /// A verified idempotency key is required before a further attempt.
+    Required,
+    /// The desired end state is verified instead of carrying a key.
+    VerifiedDesiredState,
+}
+
+/// How one plan step is permitted to reach completion.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalVerificationRequirement {
+    /// Completion resolves only to current verifier evidence.
+    VerifierEvidenceRequired,
+    /// Policy records an explicit permitted deferral with its reason.
+    PolicyDeferred,
+}
+
+/// What a terminal diagnostic for this step is allowed to disclose.
+///
+/// Neither variant admits model prose, prompts, credentials, or environment values.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalDiagnosticDisclosure {
+    /// Deterministic content-free codes only.
+    ContentFreeCodes,
+    /// Deterministic codes plus a reference to a separately classified artifact.
+    ContentFreeCodesWithArtifactReference,
+}
+
+/// Execution policy for one existing plan step.
+///
+/// This is a companion record, not a replacement. It is keyed by the existing
+/// [`crate::PlanStepId`] and carries execution policy only: the step's description,
+/// ordinal, dependencies, and state stay in [`crate::PlanStep`], arguments stay in the
+/// tool call, authority stays in the capability grant, observed outcome stays in the
+/// operation receipt, and completion stays in verified completion. The record names the
+/// eight policy identities that govern the step and restates none of those surfaces.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalStepExecutionPolicy {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable policy identity.
+    pub policy_id: String,
+    /// Plan the governed step belongs to.
+    pub plan_id: crate::PlanId,
+    /// The existing plan step this policy governs.
+    pub plan_step_id: crate::PlanStepId,
+    /// Exact plan revision that proposed the step, so a replanned step cannot silently
+    /// inherit a policy written for different work.
+    pub plan_revision: u32,
+    /// Preflight policy identity.
+    pub preflight_policy_id: String,
+    /// Deterministic preflights that must return typed facts before an attempt.
+    pub required_preflight_ids: Vec<String>,
+    /// Side-effect policy identity.
+    pub side_effect_policy_id: String,
+    /// Declared effect class, reused from the existing closed family.
+    pub effect_class: CanonicalEffectClass,
+    /// Approval policy identity.
+    pub approval_policy_id: String,
+    /// Whether an approval must exist, and how often.
+    pub approval_requirement: CanonicalApprovalRequirement,
+    /// Idempotency policy identity.
+    pub idempotency_policy_id: String,
+    /// How a further attempt proves it cannot duplicate an effect.
+    pub idempotency_key_requirement: CanonicalIdempotencyRequirement,
+    /// Verifier policy identity.
+    pub verifier_policy_id: String,
+    /// How this step is permitted to reach completion.
+    pub verification_requirement: CanonicalVerificationRequirement,
+    /// Verifiers whose current evidence completion resolves to.
+    pub required_verifier_ids: Vec<String>,
+    /// Stable content-free code required for a recorded completion deferral.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub deferral_reason_code: Option<String>,
+    /// Retry policy identity.
+    pub retry_policy_id: String,
+    /// Declared retry class, reused from the existing closed family.
+    pub retry_class: CanonicalRetryClass,
+    /// Budget policy identity.
+    pub budget_policy_id: String,
+    /// Exact step budgets, reused from the existing closed budget contract.
+    pub budgets: CanonicalExecutionBudgets,
+    /// Diagnostic policy identity.
+    pub diagnostic_policy_id: String,
+    /// What a terminal diagnostic for this step may disclose.
+    pub diagnostic_disclosure: CanonicalDiagnosticDisclosure,
+    /// Trusted record time.
+    pub recorded_at: String,
+    /// Digest of the canonical policy with this field zeroed.
+    pub policy_sha256: String,
+}
+
 /// One closed workflow step.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -1445,6 +1613,242 @@ mod source_locator_tests {
             assert!(
                 serde_json::from_str::<CanonicalSourceAvailabilityState>(candidate).is_err(),
                 "{candidate} must not be an admitted availability state",
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+mod step_execution_policy_tests {
+    use super::{
+        CanonicalApprovalRequirement, CanonicalDiagnosticDisclosure, CanonicalEffectClass,
+        CanonicalExecutionBudgets, CanonicalIdempotencyRequirement, CanonicalRetryClass,
+        CanonicalStepExecutionPolicy, CanonicalVerificationRequirement,
+    };
+    use crate::{EvidenceKind, PlanId, PlanStep, PlanStepId, PlanStepState};
+
+    const ALL_EFFECT_CLASSES: [CanonicalEffectClass; 7] = [
+        CanonicalEffectClass::ReadOnly,
+        CanonicalEffectClass::IdempotentWrite,
+        CanonicalEffectClass::Conditional,
+        CanonicalEffectClass::NonIdempotent,
+        CanonicalEffectClass::Destructive,
+        CanonicalEffectClass::External,
+        CanonicalEffectClass::Unknown,
+    ];
+
+    const ALL_RETRY_CLASSES: [CanonicalRetryClass; 4] = [
+        CanonicalRetryClass::Never,
+        CanonicalRetryClass::RecoverableRead,
+        CanonicalRetryClass::ConditionalAfterReconciliation,
+        CanonicalRetryClass::UserDecisionRequired,
+    ];
+
+    fn budgets() -> CanonicalExecutionBudgets {
+        CanonicalExecutionBudgets {
+            turns: 4,
+            tokens: 32_000,
+            duration_ms: 60_000,
+            tool_calls: 8,
+            attempts: 1,
+            no_progress_events: 2,
+            output_bytes: 1_048_576,
+            memory_bytes: 268_435_456,
+            cost_minor_units: 0,
+        }
+    }
+
+    fn policy_for(plan_step_id: PlanStepId) -> CanonicalStepExecutionPolicy {
+        CanonicalStepExecutionPolicy {
+            schema_version: 1,
+            policy_id: "policy-1".to_owned(),
+            plan_id: PlanId::from_raw("plan-0001"),
+            plan_step_id,
+            plan_revision: 3,
+            preflight_policy_id: "preflight-policy-1".to_owned(),
+            required_preflight_ids: vec![
+                "workspace-trust".to_owned(),
+                "repository-clean".to_owned(),
+            ],
+            side_effect_policy_id: "side-effect-policy-1".to_owned(),
+            effect_class: CanonicalEffectClass::ReadOnly,
+            approval_policy_id: "approval-policy-1".to_owned(),
+            approval_requirement: CanonicalApprovalRequirement::NotRequired,
+            idempotency_policy_id: "idempotency-policy-1".to_owned(),
+            idempotency_key_requirement: CanonicalIdempotencyRequirement::NotApplicable,
+            verifier_policy_id: "verifier-policy-1".to_owned(),
+            verification_requirement: CanonicalVerificationRequirement::VerifierEvidenceRequired,
+            required_verifier_ids: vec!["exit-status".to_owned()],
+            deferral_reason_code: None,
+            retry_policy_id: "retry-policy-1".to_owned(),
+            retry_class: CanonicalRetryClass::Never,
+            budget_policy_id: "budget-policy-1".to_owned(),
+            budgets: budgets(),
+            diagnostic_policy_id: "diagnostic-policy-1".to_owned(),
+            diagnostic_disclosure: CanonicalDiagnosticDisclosure::ContentFreeCodes,
+            recorded_at: "2026-08-26T12:00:00Z".to_owned(),
+            policy_sha256: "a".repeat(64),
+        }
+    }
+
+    fn plan_step() -> PlanStep {
+        PlanStep {
+            plan_step_id: PlanStepId::from_raw("plan-0001:step:0002"),
+            ordinal: 2,
+            description: "Regenerate the traceability report".to_owned(),
+            depends_on: vec![PlanStepId::from_raw("plan-0001:step:0001")],
+            expected_evidence: vec![EvidenceKind::Validation],
+            state: PlanStepState::Ready,
+        }
+    }
+
+    #[test]
+    fn policy_is_keyed_to_the_existing_plan_step_identity() {
+        let step = plan_step();
+        let policy = policy_for(step.plan_step_id.clone());
+        assert_eq!(policy.plan_step_id, step.plan_step_id);
+        let encoded = serde_json::to_string(&policy).expect("policy serializes");
+        let decoded: CanonicalStepExecutionPolicy =
+            serde_json::from_str(&encoded).expect("policy deserializes");
+        assert_eq!(decoded, policy);
+        // The existing identity crosses the wire as its own bare value, so the companion
+        // record introduces no second step-identity encoding.
+        let value: serde_json::Value = serde_json::from_str(&encoded).expect("policy is an object");
+        assert_eq!(
+            value["plan_step_id"],
+            serde_json::Value::String(step.plan_step_id.as_str().to_owned()),
+        );
+    }
+
+    #[test]
+    fn the_policy_restates_no_plan_step_tool_grant_receipt_or_completion_state() {
+        let value =
+            serde_json::to_value(policy_for(plan_step().plan_step_id)).expect("policy serializes");
+        let object = value.as_object().expect("policy is an object");
+        assert!(
+            object.contains_key("plan_step_id"),
+            "the policy is keyed to the plan step"
+        );
+        // Each of these belongs to a contract this record must never replace.
+        for owned_elsewhere in [
+            "description",
+            "ordinal",
+            "depends_on",
+            "expected_evidence",
+            "state",
+            "arguments",
+            "tool_arguments",
+            "grant_id",
+            "capability_grant",
+            "receipt_id",
+            "exit_status",
+            "changed_resources",
+            "completed",
+            "verified_completion",
+        ] {
+            assert!(
+                !object.contains_key(owned_elsewhere),
+                "{owned_elsewhere} belongs to an existing contract and must stay there",
+            );
+        }
+        // Policy identities are content-free: no path, URI, command, or credential surface.
+        for key in object.keys() {
+            for forbidden in [
+                "path",
+                "uri",
+                "url",
+                "command",
+                "secret",
+                "token",
+                "credential",
+            ] {
+                assert!(
+                    !key.contains(forbidden),
+                    "policy field {key} must not expose a {forbidden} surface",
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn every_effect_class_admits_only_its_own_retry_classes() {
+        for effect in ALL_EFFECT_CLASSES {
+            let permitted = effect.permitted_retry_classes();
+            assert!(
+                permitted.contains(&CanonicalRetryClass::Never),
+                "{effect:?} must always admit declining a further attempt",
+            );
+            for retry in ALL_RETRY_CLASSES {
+                if permitted.contains(&retry) && retry.is_automatic() {
+                    assert!(
+                        effect.permits_automatic_retry(),
+                        "{effect:?} admits automatic {retry:?} but forbids automatic retry",
+                    );
+                }
+            }
+            // An effect that fails toward approval is never retried by the runtime alone.
+            if effect.requires_approval() {
+                assert!(
+                    !effect.permits_automatic_retry(),
+                    "{effect:?} must not self-retry"
+                );
+                for retry in permitted {
+                    assert!(
+                        !retry.is_automatic(),
+                        "{effect:?} must not admit automatic {retry:?}",
+                    );
+                }
+            }
+        }
+        assert!(CanonicalEffectClass::Unknown.requires_approval());
+        assert!(!CanonicalEffectClass::Unknown.permits_automatic_retry());
+        assert!(CanonicalEffectClass::Destructive.requires_approval());
+        assert!(CanonicalEffectClass::External.requires_approval());
+    }
+
+    #[test]
+    fn unknown_and_missing_fields_are_rejected() {
+        let encoded = serde_json::to_string(&policy_for(plan_step().plan_step_id))
+            .expect("policy serializes");
+        let widened = encoded.replace(
+            "\"policy_id\"",
+            "\"command_line\":\"rm -rf /\",\"policy_id\"",
+        );
+        assert!(
+            serde_json::from_str::<CanonicalStepExecutionPolicy>(&widened).is_err(),
+            "a command line must never deserialize into a step policy",
+        );
+        let dropped = encoded.replace("\"deferral_reason_code\":null,", "");
+        assert!(
+            serde_json::from_str::<CanonicalStepExecutionPolicy>(&dropped).is_err(),
+            "a required optional field must be present and explicit",
+        );
+    }
+
+    #[test]
+    fn unknown_requirement_values_do_not_deserialize() {
+        for candidate in ["\"optional\"", "\"best_effort\"", "\"required\""] {
+            assert!(
+                serde_json::from_str::<CanonicalApprovalRequirement>(candidate).is_err(),
+                "{candidate} must not be an admitted approval requirement",
+            );
+        }
+        for candidate in ["\"assumed\"", "\"skipped\"", "\"none\""] {
+            assert!(
+                serde_json::from_str::<CanonicalIdempotencyRequirement>(candidate).is_err(),
+                "{candidate} must not be an admitted idempotency requirement",
+            );
+        }
+        for candidate in ["\"model_asserted\"", "\"self_reported\"", "\"assumed\""] {
+            assert!(
+                serde_json::from_str::<CanonicalVerificationRequirement>(candidate).is_err(),
+                "{candidate} must not be an admitted verification requirement",
+            );
+        }
+        for candidate in ["\"full_transcript\"", "\"model_prose\"", "\"raw_output\""] {
+            assert!(
+                serde_json::from_str::<CanonicalDiagnosticDisclosure>(candidate).is_err(),
+                "{candidate} must not be an admitted diagnostic disclosure",
             );
         }
     }

@@ -195,13 +195,34 @@ contextDeliveryReceipt.allOf = [{
   else: { properties: { required_unseen_artifact_ids: { type: "array", minItems: 1 } } },
 }];
 
+// Closed effect and retry families shared by the workflow step definition and the
+// companion step-execution policy. Keeping one source of truth means widening either
+// family widens both surfaces at once and the two can never drift apart.
+export const STEP_EFFECT_CLASSES = Object.freeze([
+  "read_only",
+  "idempotent_write",
+  "conditional",
+  "non_idempotent",
+  "destructive",
+  "external",
+  "unknown",
+]);
+export const STEP_RETRY_CLASSES = Object.freeze([
+  "never",
+  "recoverable_read",
+  "conditional_after_reconciliation",
+  "user_decision_required",
+]);
+const effectClass = { enum: [...STEP_EFFECT_CLASSES] };
+const retryClass = { enum: [...STEP_RETRY_CLASSES] };
+
 const workflowStep = closed({
   step_id: identifier,
   depends_on: list(identifier),
   model_role: nullable(identifier),
   tool_id: nullable(identifier),
-  effect_class: { enum: ["read_only", "idempotent_write", "conditional", "non_idempotent", "destructive", "external", "unknown"] },
-  retry_class: { enum: ["never", "recoverable_read", "conditional_after_reconciliation", "user_decision_required"] },
+  effect_class: effectClass,
+  retry_class: retryClass,
   verifier_ids: list(identifier, 1, 32),
   budgets,
 });
@@ -827,6 +848,164 @@ sourceLocator.allOf = [
   }))),
 ];
 
+export const STEP_EXECUTION_POLICY_SCHEMA_VERSION = 1;
+// Retry classes that let the runtime open a fresh attempt on its own authority.
+// Every other class needs a human decision, or no further attempt at all.
+export const STEP_AUTOMATIC_RETRY_CLASSES = Object.freeze([
+  "recoverable_read",
+  "conditional_after_reconciliation",
+]);
+// Decision 0042 section 5 and the runtime retry table as one closed matrix. An effect
+// class admits exactly these retry classes and no others, so a destructive, external,
+// non-idempotent, or unclassified step can never be scheduled for an automatic retry.
+export const STEP_EFFECT_RETRY_MATRIX = Object.freeze({
+  read_only: Object.freeze(["never", "recoverable_read"]),
+  idempotent_write: Object.freeze(["never", "conditional_after_reconciliation"]),
+  conditional: Object.freeze(["never", "conditional_after_reconciliation"]),
+  non_idempotent: Object.freeze(["never", "user_decision_required"]),
+  destructive: Object.freeze(["never", "user_decision_required"]),
+  external: Object.freeze(["never", "user_decision_required"]),
+  unknown: Object.freeze(["never", "user_decision_required"]),
+});
+// Effect classes that must never reach an executor without a recorded approval. An
+// unclassified effect is included deliberately: it fails toward approval, not past it.
+export const STEP_APPROVAL_REQUIRING_EFFECTS = Object.freeze([
+  "non_idempotent",
+  "destructive",
+  "external",
+  "unknown",
+]);
+export const STEP_APPROVAL_REQUIREMENTS = Object.freeze([
+  "not_required",
+  "required_once",
+  "required_per_attempt",
+]);
+export const STEP_IDEMPOTENCY_REQUIREMENTS = Object.freeze([
+  "not_applicable",
+  "required",
+  "verified_desired_state",
+]);
+export const STEP_VERIFICATION_REQUIREMENTS = Object.freeze([
+  "verifier_evidence_required",
+  "policy_deferred",
+]);
+// Terminal diagnostics carry deterministic codes and artifact references only. Neither
+// disclosure admits model prose, prompts, credentials, or environment values.
+export const STEP_DIAGNOSTIC_DISCLOSURES = Object.freeze([
+  "content_free_codes",
+  "content_free_codes_with_artifact_reference",
+]);
+// The eight policy identities this companion record is required to name.
+export const STEP_EXECUTION_POLICY_IDENTITIES = Object.freeze([
+  "preflight_policy_id",
+  "side_effect_policy_id",
+  "approval_policy_id",
+  "idempotency_policy_id",
+  "verifier_policy_id",
+  "retry_policy_id",
+  "budget_policy_id",
+  "diagnostic_policy_id",
+]);
+
+// A companion record keyed to one existing PlanStepId. It carries execution policy and
+// nothing else: the step's own description, ordinal, dependencies, and state stay in
+// Plan/PlanStep, arguments stay in ToolCall, authority stays in CapabilityGrant,
+// observed outcome stays in OperationReceipt, and completion stays in
+// VerifiedCompletion. This record replaces none of them.
+const stepExecutionPolicy = closed({
+  schema_version: { type: "integer", const: STEP_EXECUTION_POLICY_SCHEMA_VERSION },
+  policy_id: identifier,
+  plan_id: identifier,
+  plan_step_id: identifier,
+  // Policy is bound to the exact plan revision that proposed the step, so a replanned
+  // step cannot silently inherit a policy written for different work.
+  plan_revision: uint,
+  preflight_policy_id: identifier,
+  required_preflight_ids: list(identifier, 1, 32),
+  side_effect_policy_id: identifier,
+  effect_class: effectClass,
+  approval_policy_id: identifier,
+  approval_requirement: { enum: [...STEP_APPROVAL_REQUIREMENTS] },
+  idempotency_policy_id: identifier,
+  idempotency_key_requirement: { enum: [...STEP_IDEMPOTENCY_REQUIREMENTS] },
+  verifier_policy_id: identifier,
+  verification_requirement: { enum: [...STEP_VERIFICATION_REQUIREMENTS] },
+  required_verifier_ids: list(identifier, 0, 32),
+  deferral_reason_code: nullable(identifier),
+  retry_policy_id: identifier,
+  retry_class: retryClass,
+  budget_policy_id: identifier,
+  budgets,
+  diagnostic_policy_id: identifier,
+  diagnostic_disclosure: { enum: [...STEP_DIAGNOSTIC_DISCLOSURES] },
+  recorded_at: timestamp,
+  policy_sha256: digest,
+});
+
+stepExecutionPolicy.allOf = [
+  // Each effect class admits exactly its own retry classes.
+  ...STEP_EFFECT_CLASSES.map((effect) => ({
+    if: { properties: { effect_class: { const: effect } }, required: ["effect_class"] },
+    then: { properties: { retry_class: { enum: [...STEP_EFFECT_RETRY_MATRIX[effect]] } } },
+  })),
+  // A step that is never retried gets exactly one attempt.
+  {
+    if: { properties: { retry_class: { const: "never" } }, required: ["retry_class"] },
+    then: { properties: { budgets: { type: "object", properties: { attempts: { const: 1 } } } } },
+  },
+  // A destructive step needs a fresh narrow approval for every attempt.
+  {
+    if: { properties: { effect_class: { const: "destructive" } }, required: ["effect_class"] },
+    then: { properties: { approval_requirement: { const: "required_per_attempt" } } },
+  },
+  // Non-idempotent, external, and unclassified effects fail toward approval.
+  {
+    if: {
+      properties: { effect_class: { enum: [...STEP_APPROVAL_REQUIRING_EFFECTS] } },
+      required: ["effect_class"],
+    },
+    then: {
+      properties: { approval_requirement: { enum: ["required_once", "required_per_attempt"] } },
+    },
+  },
+  // An idempotent write is retried only against a verified key or a verified desired state.
+  {
+    if: {
+      properties: { effect_class: { const: "idempotent_write" } },
+      required: ["effect_class"],
+    },
+    then: {
+      properties: {
+        idempotency_key_requirement: { enum: ["required", "verified_desired_state"] },
+      },
+    },
+  },
+  // A read changes nothing, so claiming an idempotency key would be a false claim.
+  {
+    if: { properties: { effect_class: { const: "read_only" } }, required: ["effect_class"] },
+    then: { properties: { idempotency_key_requirement: { const: "not_applicable" } } },
+  },
+  // Completion resolves to verifier evidence, or to exactly one recorded deferral reason.
+  {
+    if: {
+      properties: { verification_requirement: { const: "verifier_evidence_required" } },
+      required: ["verification_requirement"],
+    },
+    then: {
+      properties: {
+        required_verifier_ids: { type: "array", minItems: 1 },
+        deferral_reason_code: { type: "null" },
+      },
+    },
+    else: {
+      properties: {
+        required_verifier_ids: { type: "array", maxItems: 0 },
+        deferral_reason_code: identifier,
+      },
+    },
+  },
+];
+
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
   "artifact-transformation": artifactTransformation,
@@ -842,6 +1021,7 @@ export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "context-disposition": contextDisposition,
   "source-retention": sourceRetention,
   "source-locator": sourceLocator,
+  "step-execution-policy": stepExecutionPolicy,
   "workflow-definition": workflowDefinition,
   "workflow-state": workflowState,
   "workflow-checkpoint": workflowCheckpoint,
@@ -955,12 +1135,40 @@ function sourceLocatorSemantic(record) {
   return true;
 }
 
+function hasUniqueIdentities(values) {
+  return Array.isArray(values) && new Set(values).size === values.length;
+}
+
+function stepExecutionPolicySemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  const permitted = STEP_EFFECT_RETRY_MATRIX[record.effect_class];
+  if (permitted === undefined) return false;
+  if (!permitted.includes(record.retry_class)) return false;
+  // Belt and braces over the structural matrix: an effect class that fails toward
+  // approval can never be paired with a retry the runtime performs by itself.
+  if (
+    STEP_AUTOMATIC_RETRY_CLASSES.includes(record.retry_class)
+    && STEP_APPROVAL_REQUIRING_EFFECTS.includes(record.effect_class)
+  ) {
+    return false;
+  }
+  // A repeated identity would make a required preflight or verifier look satisfied twice.
+  if (!hasUniqueIdentities(record.required_preflight_ids)) return false;
+  if (!hasUniqueIdentities(record.required_verifier_ids)) return false;
+  if (!Number.isSafeInteger(record.plan_revision) || record.plan_revision < 0) return false;
+  const budgets = record.budgets;
+  if (!budgets || typeof budgets !== "object") return false;
+  if (!Number.isSafeInteger(budgets.attempts) || budgets.attempts < 1) return false;
+  return !(record.retry_class === "never" && budgets.attempts !== 1);
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
   "source-retention": sourceRetentionSemantic,
   "source-locator": sourceLocatorSemantic,
+  "step-execution-policy": stepExecutionPolicySemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
@@ -969,6 +1177,7 @@ export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",
   "source-retention": "retention_class MUST agree with lifecycle_state: memory_only and policy_persisted permit only active or quarantined, released requires released, and deleted requires deleted. physical_binding, when present, MUST name an existing RuntimeArtifactKind and a non-negative byte_length; a source-specific physical family is prohibited.",
   "source-locator": "locator_kind MUST carry exactly its own payload fields and no others. complete, partial, and truncated require every declared payload; encrypted, unsupported, and unavailable MUST carry no payload at all. byte_range and line_range MUST be ordered, cell_reference row and column MUST be one-indexed, and image_region width and height MUST be positive.",
+  "step-execution-policy": "effect_class MUST admit its retry_class under the closed effect/retry matrix, and an effect class that fails toward approval MUST NOT carry an automatic retry class. required_preflight_ids and required_verifier_ids MUST NOT repeat an identity. plan_revision MUST be a non-negative integer, budgets.attempts MUST be at least one, and a retry_class of never MUST allow exactly one attempt.",
 });
 
 export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, candidate) {

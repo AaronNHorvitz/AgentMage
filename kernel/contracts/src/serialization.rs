@@ -79,6 +79,7 @@ impl_versioned_contract!(
     crate::CanonicalModelRouteDecision,
     crate::CanonicalSourceLocator,
     crate::CanonicalSourceRetention,
+    crate::CanonicalStepExecutionPolicy,
     crate::CanonicalTerminalResult,
     crate::CanonicalToolObservation,
     crate::CanonicalVerificationResult,

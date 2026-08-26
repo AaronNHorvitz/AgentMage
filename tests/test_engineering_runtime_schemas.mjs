@@ -15,6 +15,13 @@ import {
   SOURCE_LOCATOR_UNRESOLVED_STATES,
   SOURCE_RETENTION_PHYSICAL_STORE,
   SOURCE_RETENTION_SCHEMA_VERSION,
+  STEP_APPROVAL_REQUIRING_EFFECTS,
+  STEP_AUTOMATIC_RETRY_CLASSES,
+  STEP_EFFECT_CLASSES,
+  STEP_EFFECT_RETRY_MATRIX,
+  STEP_EXECUTION_POLICY_IDENTITIES,
+  STEP_EXECUTION_POLICY_SCHEMA_VERSION,
+  STEP_RETRY_CLASSES,
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
   REUSED_SCHEMA_CONTRACTS,
@@ -42,9 +49,9 @@ function combinedValidator(name) {
 }
 
 test("generated Engineering Runtime schemas are current, closed, and compile", () => {
-  assert.equal(synchronize(), 28);
+  assert.equal(synchronize(), 29);
   assert.equal(Object.keys(REUSED_SCHEMA_CONTRACTS).length, 6);
-  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 28);
+  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 29);
 });
 
 test("source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes", () => {
@@ -1407,4 +1414,267 @@ test("source-locator rejects missing, extra, malformed, and out-of-range fields"
     false,
     "unknown range field must fail",
   );
+});
+
+const POLICY_TIMESTAMP = "2026-08-26T12:00:00Z";
+const POLICY_BUDGETS = {
+  turns: 4,
+  tokens: 32000,
+  duration_ms: 60000,
+  tool_calls: 8,
+  attempts: 1,
+  no_progress_events: 2,
+  output_bytes: 1048576,
+  memory_bytes: 268435456,
+  cost_minor_units: 0,
+};
+
+function policy(overrides = {}) {
+  return {
+    schema_version: 1,
+    policy_id: "policy-1",
+    plan_id: "plan-0001",
+    plan_step_id: "plan-0001:step:0002",
+    plan_revision: 3,
+    preflight_policy_id: "preflight-policy-1",
+    required_preflight_ids: ["workspace-trust", "repository-clean"],
+    side_effect_policy_id: "side-effect-policy-1",
+    effect_class: "read_only",
+    approval_policy_id: "approval-policy-1",
+    approval_requirement: "not_required",
+    idempotency_policy_id: "idempotency-policy-1",
+    idempotency_key_requirement: "not_applicable",
+    verifier_policy_id: "verifier-policy-1",
+    verification_requirement: "verifier_evidence_required",
+    required_verifier_ids: ["exit-status"],
+    deferral_reason_code: null,
+    retry_policy_id: "retry-policy-1",
+    retry_class: "never",
+    budget_policy_id: "budget-policy-1",
+    budgets: { ...POLICY_BUDGETS },
+    diagnostic_policy_id: "diagnostic-policy-1",
+    diagnostic_disclosure: "content_free_codes",
+    recorded_at: POLICY_TIMESTAMP,
+    policy_sha256: SHA,
+    ...overrides,
+  };
+}
+
+// Smallest admitted policy for one effect class, so a matrix case fails for the reason
+// under test rather than for an unrelated approval or idempotency rule.
+function policyFor(effect, overrides = {}) {
+  let approval = "not_required";
+  if (effect === "destructive") approval = "required_per_attempt";
+  else if (STEP_APPROVAL_REQUIRING_EFFECTS.includes(effect)) approval = "required_once";
+  const idempotency = effect === "idempotent_write" ? "required" : "not_applicable";
+  return policy({
+    effect_class: effect,
+    approval_requirement: approval,
+    idempotency_key_requirement: idempotency,
+    ...overrides,
+  });
+}
+
+test("step-execution-policy binds schema_version and names eight identities keyed to the existing plan step", () => {
+  assert.equal(STEP_EXECUTION_POLICY_SCHEMA_VERSION, 1);
+  const validate = combinedValidator("step-execution-policy");
+  assert.equal(validate(policy()), true);
+  const schema = ENGINEERING_RUNTIME_SCHEMAS["step-execution-policy"];
+  assert.ok(schema.required.includes("plan_step_id"), "the policy is keyed to the plan step");
+  assert.ok(schema.required.includes("plan_revision"), "policy is bound to an exact revision");
+  assert.equal(STEP_EXECUTION_POLICY_IDENTITIES.length, 8);
+  for (const identity of STEP_EXECUTION_POLICY_IDENTITIES) {
+    assert.ok(schema.required.includes(identity), `${identity} must be required`);
+    const { [identity]: _dropped, ...missing } = policy();
+    assert.equal(validate(missing), false, `${identity} must be mandatory`);
+  }
+  const structural = validator("step-execution-policy");
+  for (const rejected of [0, 2, 999, "1", null]) {
+    assert.equal(structural(policy({ schema_version: rejected })), false);
+  }
+});
+
+test("step-execution-policy is a companion record and restates no plan, tool, grant, receipt, or completion state", () => {
+  const structural = validator("step-execution-policy");
+  for (const ownedElsewhere of [
+    "description",
+    "ordinal",
+    "depends_on",
+    "expected_evidence",
+    "state",
+    "arguments",
+    "tool_arguments",
+    "grant_id",
+    "capability_grant",
+    "receipt_id",
+    "exit_status",
+    "changed_resources",
+    "completed",
+    "verified_completion",
+  ]) {
+    assert.equal(
+      structural(policy({ [ownedElsewhere]: "x" })),
+      false,
+      `${ownedElsewhere} belongs to an existing contract and must not be admitted`,
+    );
+  }
+  const schema = ENGINEERING_RUNTIME_SCHEMAS["step-execution-policy"];
+  assert.equal(schema.additionalProperties, false);
+  for (const field of Object.keys(schema.properties)) {
+    for (const forbidden of ["path", "uri", "url", "command", "secret", "token", "credential"]) {
+      assert.ok(!field.includes(forbidden), `${field} must not expose a ${forbidden} surface`);
+    }
+  }
+});
+
+test("step-execution-policy admits exactly the retry classes its effect class permits", () => {
+  const validate = combinedValidator("step-execution-policy");
+  assert.deepEqual(Object.keys(STEP_EFFECT_RETRY_MATRIX), [...STEP_EFFECT_CLASSES]);
+  for (const effect of STEP_EFFECT_CLASSES) {
+    const permitted = STEP_EFFECT_RETRY_MATRIX[effect];
+    for (const retry of STEP_RETRY_CLASSES) {
+      const attempts = retry === "never" ? 1 : 3;
+      const candidate = policyFor(effect, {
+        retry_class: retry,
+        budgets: { ...POLICY_BUDGETS, attempts },
+      });
+      assert.equal(
+        validate(candidate),
+        permitted.includes(retry),
+        `${effect} with ${retry} must be ${permitted.includes(retry)}`,
+      );
+    }
+  }
+});
+
+test("step-execution-policy never automatically retries a destructive, external, non-idempotent, or unclassified effect", () => {
+  const validate = combinedValidator("step-execution-policy");
+  assert.deepEqual(
+    [...STEP_APPROVAL_REQUIRING_EFFECTS],
+    ["non_idempotent", "destructive", "external", "unknown"],
+  );
+  assert.deepEqual(
+    [...STEP_AUTOMATIC_RETRY_CLASSES],
+    ["recoverable_read", "conditional_after_reconciliation"],
+  );
+  for (const effect of STEP_APPROVAL_REQUIRING_EFFECTS) {
+    for (const retry of STEP_AUTOMATIC_RETRY_CLASSES) {
+      assert.equal(
+        validate(policyFor(effect, {
+          retry_class: retry,
+          budgets: { ...POLICY_BUDGETS, attempts: 3 },
+        })),
+        false,
+        `${effect} must never carry automatic ${retry}`,
+      );
+    }
+    assert.equal(
+      validate(policyFor(effect, { approval_requirement: "not_required" })),
+      false,
+      `${effect} must fail toward approval`,
+    );
+  }
+  assert.equal(
+    validate(policyFor("destructive", { approval_requirement: "required_once" })),
+    false,
+    "a destructive step needs a fresh narrow approval for every attempt",
+  );
+});
+
+test("step-execution-policy retries an idempotent write only against a verified key or desired state", () => {
+  const validate = combinedValidator("step-execution-policy");
+  assert.equal(
+    validate(policyFor("idempotent_write", { idempotency_key_requirement: "not_applicable" })),
+    false,
+  );
+  for (const requirement of ["required", "verified_desired_state"]) {
+    assert.equal(
+      validate(policyFor("idempotent_write", { idempotency_key_requirement: requirement })),
+      true,
+      `${requirement} must admit an idempotent write`,
+    );
+    assert.equal(
+      validate(policyFor("read_only", { idempotency_key_requirement: requirement })),
+      false,
+      "a read changes nothing and cannot claim an idempotency key",
+    );
+  }
+});
+
+test("step-execution-policy resolves completion to verifier evidence or exactly one recorded deferral", () => {
+  const validate = combinedValidator("step-execution-policy");
+  assert.equal(validate(policy({ required_verifier_ids: [] })), false, "evidence needs a verifier");
+  assert.equal(
+    validate(policy({ deferral_reason_code: "deferred_to_release_gate" })),
+    false,
+    "a verified step must not also record a deferral",
+  );
+  const deferred = policy({
+    verification_requirement: "policy_deferred",
+    required_verifier_ids: [],
+    deferral_reason_code: "deferred_to_release_gate",
+  });
+  assert.equal(validate(deferred), true);
+  assert.equal(
+    validate({ ...deferred, deferral_reason_code: null }),
+    false,
+    "a deferral must record its reason",
+  );
+  assert.equal(
+    validate({ ...deferred, required_verifier_ids: ["exit-status"] }),
+    false,
+    "a deferred step must not also claim verifier evidence",
+  );
+});
+
+test("step-execution-policy gives an unretried step exactly one attempt", () => {
+  const validate = combinedValidator("step-execution-policy");
+  assert.equal(validate(policy({ budgets: { ...POLICY_BUDGETS, attempts: 2 } })), false);
+  const retried = policyFor("read_only", {
+    retry_class: "recoverable_read",
+    budgets: { ...POLICY_BUDGETS, attempts: 3 },
+  });
+  assert.equal(validate(retried), true);
+  assert.equal(
+    validate({ ...retried, budgets: { ...POLICY_BUDGETS, attempts: 0 } }),
+    false,
+    "every step gets at least one attempt",
+  );
+});
+
+test("step-execution-policy rejects missing, malformed, oversized, and duplicated identities", () => {
+  const structural = validator("step-execution-policy");
+  const validate = combinedValidator("step-execution-policy");
+  const record = policy();
+  for (const field of Object.keys(record)) {
+    const { [field]: _removed, ...missing } = record;
+    assert.equal(structural(missing), false, `missing ${field} must fail`);
+  }
+  assert.equal(structural(policy({ effect_class: "maybe_safe" })), false);
+  assert.equal(structural(policy({ retry_class: "always" })), false);
+  assert.equal(structural(policy({ approval_requirement: "best_effort" })), false);
+  assert.equal(structural(policy({ verification_requirement: "model_asserted" })), false);
+  assert.equal(structural(policy({ diagnostic_disclosure: "model_prose" })), false);
+  assert.equal(structural(policy({ recorded_at: "yesterday" })), false);
+  assert.equal(structural(policy({ policy_sha256: "short" })), false);
+  assert.equal(structural(policy({ plan_revision: -1 })), false);
+  assert.equal(
+    structural(policy({ required_preflight_ids: [] })),
+    false,
+    "every step declares at least one deterministic preflight",
+  );
+  assert.equal(
+    structural(policy({ required_preflight_ids: ["x".repeat(129)] })),
+    false,
+    "oversized identity must fail",
+  );
+  assert.equal(structural(policy({ budgets: { ...POLICY_BUDGETS, extra: 1 } })), false);
+  for (const field of ["required_preflight_ids", "required_verifier_ids"]) {
+    const repeated = field === "required_preflight_ids"
+      ? policy({ required_preflight_ids: ["workspace-trust", "workspace-trust"] })
+      : policy({ required_verifier_ids: ["exit-status", "exit-status"] });
+    assert.equal(structural(repeated), true, `a repeated ${field} is structurally well formed`);
+    assert.equal(validate(repeated), false, `a repeated ${field} must fail semantic validation`);
+  }
+  assert.ok(ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS["step-execution-policy"].includes("effect_class"));
 });

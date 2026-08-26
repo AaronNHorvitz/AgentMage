@@ -127,7 +127,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "7e23134b2adf1e1bd2bbba524b92d48676b4e0c624fe2075c0035a4788aaf929"
+          "content": "628565be2151433c30ef100277771bbc63b889c25995b72be8c7115fff65f8eb"
         }
       ],
       "integrity": null,
@@ -147,7 +147,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "44b80b94968102e0aa5bd60558720a0ae20931c46bf12d5be5b677a78c3d2f34"
+          "content": "48b1078cd035739204573a9bde5e0cbff0e305c6bedf18e4b8cd6537081afd44"
         }
       ],
       "integrity": null,
@@ -167,7 +167,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "a568fb4e74556290127611ecc4cbbad4a6e3d3f9cb5cd612933240e6978ba19e"
+          "content": "d90318c9ad8152bb847e5a5e0b8cf157841f7299c70887ccf9ce99d34f349c3d"
         }
       ],
       "integrity": null,
@@ -207,7 +207,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "b2768265d8b189f132b50ef66dad4e67f687fd4d2bc9e154978998f99d6e7559"
+          "content": "efaba57d4a77f3716f31e2efbb5d298f58b963305aebd93433620e1dee6c36ef"
         }
       ],
       "integrity": null,
@@ -2507,7 +2507,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "04454ac97945920777c2c4aa45a106f5cb2acf02993ab5c6d24212a43019323a"
+          "content": "3f6ae7646e7930f927e83190b19aa54a5c6560586977520637667223afbe42a7"
         }
       ],
       "integrity": null,
@@ -2527,7 +2527,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "e7eaa8e56bf224d4dd30d6bf0c80877dfb8d11ea7f8ac64259100662a7aaf556"
+          "content": "a6319a2acd025ff36578d89f870d31a5a860b250b8025eada558188714a84f8d"
         }
       ],
       "integrity": null,
@@ -13115,11 +13115,11 @@
     "Cargo.lock": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e",
     "Cargo.toml": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "e7eaa8e56bf224d4dd30d6bf0c80877dfb8d11ea7f8ac64259100662a7aaf556",
+    "package.json": "a6319a2acd025ff36578d89f870d31a5a860b250b8025eada558188714a84f8d",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",
-    "shells/vscode/package.json": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16",
+    "shells/vscode/package.json": "c2d7612804f9bcb2e0a3c5f4615a2d7d3ef2181f93e32b5e83fa854ec1bc1ecb",
     "supply-chain/cargo-external-catalog.json": "73339375071827cc539fc7a6753faae9b920a7e313da52131b0f597cdf9d8adc"
   },
   "platform_status": {
