@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "decision_id": "ADR-0042",
+  "status": "accepted",
+  "supported_path": "agentmage-chat-participant",
+  "channels": [
+    {
+      "id": "stable",
+      "permitted_for_supported_path": true,
+      "requires_experiment_controls": false
+    },
+    {
+      "id": "preview",
+      "permitted_for_supported_path": false,
+      "requires_experiment_controls": true
+    },
+    {
+      "id": "proposed",
+      "permitted_for_supported_path": false,
+      "requires_experiment_controls": true
+    },
+    {
+      "id": "private",
+      "permitted_for_supported_path": false,
+      "requires_experiment_controls": true
+    }
+  ],
+  "experiment_controls": [
+    "feature-flag",
+    "version-guard",
+    "fallback",
+    "separate-non-support-claim"
+  ],
+  "surfaces": [
+    {
+      "id": "chat-participant",
+      "channel": "stable",
+      "support": "guaranteed",
+      "supported_path_member": true,
+      "degradation": "none",
+      "absence_disclosed": true
+    },
+    {
+      "id": "chat-request-references",
+      "channel": "stable",
+      "support": "guaranteed",
+      "supported_path_member": true,
+      "degradation": "none",
+      "absence_disclosed": true
+    },
+    {
+      "id": "language-model-chat-provider",
+      "channel": "stable",
+      "support": "guaranteed",
+      "supported_path_member": true,
+      "degradation": "none",
+      "absence_disclosed": true
+    },
+    {
+      "id": "chat-progress-and-cancellation",
+      "channel": "stable",
+      "support": "guaranteed",
+      "supported_path_member": true,
+      "degradation": "none",
+      "absence_disclosed": true
+    },
+    {
+      "id": "label-provider",
+      "channel": "proposed",
+      "support": "best-effort",
+      "supported_path_member": false,
+      "degradation": "render-the-unresolved-reference-identity",
+      "absence_disclosed": true
+    }
+  ]
+}
