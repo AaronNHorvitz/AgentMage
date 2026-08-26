@@ -580,7 +580,10 @@ mod tests {
         }
 
         let scopes = RetryBudgetKey::ALL.map(RetryBudgetKey::scope);
-        assert_eq!(BTreeSet::from(scopes), BTreeSet::from(RetryBudgetScope::ALL));
+        assert_eq!(
+            BTreeSet::from(scopes),
+            BTreeSet::from(RetryBudgetScope::ALL)
+        );
 
         let categories = RetryBudgetKey::ALL
             .into_iter()
@@ -645,7 +648,10 @@ mod tests {
             policy.limits().to_vec(),
             0,
         );
-        assert_eq!(mismatched.err(), Some(RetryBudgetError::DeclaredTotalMismatch));
+        assert_eq!(
+            mismatched.err(),
+            Some(RetryBudgetError::DeclaredTotalMismatch)
+        );
     }
 
     #[test]
@@ -700,7 +706,10 @@ mod tests {
         assert_eq!(denied.declared_total(), 0);
         assert_eq!(closed.state(&denied, key), BudgetState::AtLimit);
         assert!(!closed.admits(&denied, key));
-        assert_eq!(closed.consume(&denied, key).err(), Some(RetryBudgetError::Exhausted));
+        assert_eq!(
+            closed.consume(&denied, key).err(),
+            Some(RetryBudgetError::Exhausted)
+        );
     }
 
     #[test]
