@@ -465,6 +465,29 @@ Budgets are independent for step, tool, error class, workflow recovery, model
 repair, replanning, elapsed time, and inference. An identical action, error, and
 state fingerprint without progress cannot consume an unlimited budget.
 
+The kernel encodes the recovery budgets as one closed versioned policy whose
+separate keys are `parser_repair`, `step_attempt`, one `error_class` budget per
+closed error category, `workflow`, and `replan`. A declaration maps every key
+exactly once; there is no custom, wildcard, aggregate, inherited, or
+model-created budget key, and a record that omits, duplicates, or reorders a key
+is rejected. Charging one budget changes only that counter, so no scope borrows,
+refills, or inherits capacity from a neighboring scope. A ceiling of zero is a
+valid declaration that admits nothing.
+
+Ceilings and counters move only through checked arithmetic. A declared total
+that would overflow, a restated total that disagrees with its ceilings, and a
+counter that already exceeds its ceiling each fail closed instead of admitting
+one more attempt. The checked sum of the declared ceilings is the exact bound
+within which a workflow governed by that revision terminates.
+
+Each policy revision carries one immutable identity of policy identifier and
+contract version. A ledger records the identity it was opened against and
+answers only for that identity: against any other revision it reports an
+unestablished budget state and refuses every charge, so a later declaration
+cannot widen a ceiling that a running workflow is already spending against.
+Every exhaustion, drift, and identity mismatch returns its own stable
+content-free reason code.
+
 ### 10.8 Premature stop and no progress
 
 The supervisor detects no actionable call with open work, false `done`, empty

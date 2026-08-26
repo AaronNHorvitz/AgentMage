@@ -59,7 +59,13 @@ pub struct ValidationIssue {
 }
 
 /// Broad category for a typed AgentMage error.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+///
+/// The category set is closed. Deterministic policy keys per-error-class budgets by
+/// this vocabulary, so a new category is a versioned contract change rather than an
+/// open extension point.
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorCategory {
     /// Input failed a closed contract.
@@ -78,6 +84,20 @@ pub enum ErrorCategory {
     Uncertain,
     /// An internal invariant failed without exposing private state.
     Internal,
+}
+
+impl ErrorCategory {
+    /// Every error category in stable contract order.
+    pub const ALL: [Self; 8] = [
+        Self::Validation,
+        Self::Policy,
+        Self::Dependency,
+        Self::Resource,
+        Self::Cancellation,
+        Self::Timeout,
+        Self::Uncertain,
+        Self::Internal,
+    ];
 }
 
 /// Whether and under what condition an error may be retried.

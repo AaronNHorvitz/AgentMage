@@ -38,6 +38,7 @@ mod platform;
 mod platform_path;
 mod prompt;
 mod reasoning;
+mod retry_budget;
 mod runtime_artifact;
 mod runtime_event;
 mod runtime_run;
@@ -225,6 +226,11 @@ pub use reasoning::{
     ClarificationImpact, ClarificationQuestion, ClarificationState, ContradictionRecord,
     HypothesisRecord, HypothesisStatus, IndependentVerificationRequest,
     IndependentVerificationResult, ProblemFact, ProblemFrame, VerificationDisposition,
+};
+pub use retry_budget::{
+    RETRY_BUDGET_POLICY_VERSION, RetryBudgetConsumption, RetryBudgetError, RetryBudgetKey,
+    RetryBudgetLedger, RetryBudgetLimit, RetryBudgetPolicy, RetryBudgetPolicyIdentity,
+    RetryBudgetScope,
 };
 pub use runtime_artifact::{
     RuntimeArtifactCleanupState, RuntimeArtifactIntegrityState, RuntimeArtifactKind,
