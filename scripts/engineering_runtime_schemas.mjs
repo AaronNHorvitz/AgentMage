@@ -1297,6 +1297,83 @@ terminalDiagnostic.allOf = [
   },
 ];
 
+export const RETRY_ADMISSION_SCHEMA_VERSION = 1;
+// The identity pairs a successor attempt must not share with the attempt it follows.
+// Reusing any one of them would make a retry a replay of an effect that already ran.
+export const RETRY_FRESH_IDENTITY_PAIRS = Object.freeze([
+  Object.freeze(["prior_attempt_id", "successor_attempt_id"]),
+  Object.freeze(["prior_call_id", "successor_call_id"]),
+  Object.freeze(["prior_tool_call_id", "successor_tool_call_id"]),
+  Object.freeze(["prior_grant_id", "successor_grant_id"]),
+]);
+// The compatibility rules that keep the existing zero-hidden-retry behavior valid.
+// Each rule is enforced by the structural schema, the semantic validator, or both.
+export const RETRY_COMPATIBILITY_RULES = Object.freeze({
+  fresh_attempt_identity: "A permitted retry opens a new operation-attempt identity. The successor never reuses the prior attempt identity.",
+  fresh_call_identity: "A permitted retry issues a new call and a new tool-call identity. The prior validated call is never re-dispatched.",
+  fresh_grant: "A permitted retry consumes a newly issued capability grant. A consumed grant is never replayed.",
+  fresh_approval_when_required: "When policy requires approval per attempt, the successor names its own approval. A prior approval never covers a later attempt.",
+  no_receipt_replay: "A retry admission carries no receipt. The successor attempt has not run, so no prior receipt may be presented as its outcome.",
+  monotonic_attempt_ordinal: "The successor ordinal is exactly one greater than the prior ordinal, so attempts form an ordered chain rather than a repeated identity.",
+  reconcile_before_reattempt: "When reconciliation is required, it is recorded as completed before the successor is admitted.",
+  admission_requires_a_recorded_decision: "Every admission names the recovery decision that permitted it, so no retry occurs without a recorded runtime decision.",
+});
+// How existing behavior and existing readers migrate onto this contract.
+export const RETRY_MIGRATION_RULES = Object.freeze({
+  absent_admission_is_no_retry: "A runtime that performs no retry emits no retry-admission record. Absence is conformant and is never read as an implied replay.",
+  additive_only: "Every record in this family is schema_version 1 and additive. No existing contract changes shape, so an existing caller keeps working unchanged.",
+  unsupported_version_fails_closed: "An unrecognized schema_version is refused rather than coerced, so a newer admission is never reinterpreted under older rules.",
+  downgrade_refuses_rather_than_replays: "A reader that does not understand retry-admission refuses the successor attempt. It never falls back to treating the successor as a replay of the prior attempt.",
+  existing_zero_retry_behavior_remains_valid: "The current zero-hidden-retry runtime stays conformant without change, because this contract adds an admission requirement rather than a retry capability.",
+});
+
+// Admits exactly one successor attempt after a prior attempt.
+//
+// The record names both attempts and the recovery decision that permitted the successor.
+// It carries no receipt, because the successor has not run.
+const retryAdmission = closed({
+  schema_version: { type: "integer", const: RETRY_ADMISSION_SCHEMA_VERSION },
+  admission_id: identifier,
+  step_execution_id: identifier,
+  policy_id: identifier,
+  decision_id: identifier,
+  prior_attempt_id: identifier,
+  prior_attempt_ordinal: positive,
+  prior_call_id: identifier,
+  prior_tool_call_id: identifier,
+  prior_grant_id: identifier,
+  successor_attempt_id: identifier,
+  successor_attempt_ordinal: positive,
+  successor_call_id: identifier,
+  successor_tool_call_id: identifier,
+  successor_grant_id: identifier,
+  approval_requirement: { enum: [...STEP_APPROVAL_REQUIREMENTS] },
+  successor_approval_id: nullable(identifier),
+  reconciliation_required: { type: "boolean" },
+  reconciled: { type: "boolean" },
+  admitted_at: timestamp,
+  established_by: { const: RUNTIME_AUTHORITY },
+  admission_sha256: digest,
+});
+retryAdmission.allOf = [
+  // A per-attempt approval covers exactly one attempt, so the successor names its own.
+  {
+    if: {
+      properties: { approval_requirement: { const: "required_per_attempt" } },
+      required: ["approval_requirement"],
+    },
+    then: { properties: { successor_approval_id: identifier } },
+  },
+  // A retry that requires reconciliation is admitted only once it has reconciled.
+  {
+    if: {
+      properties: { reconciliation_required: { const: true } },
+      required: ["reconciliation_required"],
+    },
+    then: { properties: { reconciled: { const: true } } },
+  },
+];
+
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
   "artifact-transformation": artifactTransformation,
@@ -1320,6 +1397,7 @@ export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "verification-envelope": verificationEnvelope,
   "recovery-decision": recoveryDecision,
   "terminal-diagnostic": terminalDiagnostic,
+  "retry-admission": retryAdmission,
   "workflow-definition": workflowDefinition,
   "workflow-state": workflowState,
   "workflow-checkpoint": workflowCheckpoint,
@@ -1508,6 +1586,28 @@ function terminalDiagnosticSemantic(record) {
   return hasUniqueIdentities(record.evidence_artifact_ids);
 }
 
+function retryAdmissionSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  // No identity crosses from the prior attempt to the successor. Reusing any one of
+  // them would make this a replay of an effect that already ran.
+  for (const [prior, successor] of RETRY_FRESH_IDENTITY_PAIRS) {
+    const previous = record[prior];
+    const next = record[successor];
+    if (typeof previous !== "string" || typeof next !== "string") return false;
+    if (previous === next) return false;
+  }
+  // Attempts form an ordered chain rather than a repeated identity.
+  if (!Number.isSafeInteger(record.prior_attempt_ordinal)) return false;
+  if (!Number.isSafeInteger(record.successor_attempt_ordinal)) return false;
+  if (record.prior_attempt_ordinal < 1) return false;
+  if (record.successor_attempt_ordinal !== record.prior_attempt_ordinal + 1) return false;
+  if (record.reconciliation_required === true && record.reconciled !== true) return false;
+  if (record.approval_requirement === "required_per_attempt") {
+    return typeof record.successor_approval_id === "string";
+  }
+  return true;
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
@@ -1519,6 +1619,7 @@ export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "operation-attempt": operationAttemptSemantic,
   "recovery-decision": recoveryDecisionSemantic,
   "terminal-diagnostic": terminalDiagnosticSemantic,
+  "retry-admission": retryAdmissionSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
@@ -1532,6 +1633,7 @@ export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
   "operation-attempt": "supersedes_attempt_id MUST NOT equal attempt_id, and ended_at, when present, MUST NOT precede started_at.",
   "recovery-decision": "An uncertain outcome MUST decide reconcile_then_decide. retry_new_attempt MUST carry a classified transient failure class and a confirmed outcome, so the runtime never reopens a destructive, external, or unconfirmed operation on its own authority.",
   "terminal-diagnostic": "evidence_artifact_ids MUST NOT repeat an identity.",
+  "retry-admission": "No identity may cross from the prior attempt to the successor: attempt, call, tool-call, and grant identities MUST all differ, so a permitted retry is a new attempt and never a replay. successor_attempt_ordinal MUST equal prior_attempt_ordinal plus one, required reconciliation MUST be recorded as completed, and an approval required per attempt MUST name the successor's own approval.",
 });
 
 export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, candidate) {

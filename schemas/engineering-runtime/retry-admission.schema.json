@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/retry-admission.schema.json",
+  "title": "AgentMage retry-admission",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: No identity may cross from the prior attempt to the successor: attempt, call, tool-call, and grant identities MUST all differ, so a permitted retry is a new attempt and never a replay. successor_attempt_ordinal MUST equal prior_attempt_ordinal plus one, required reconciliation MUST be recorded as completed, and an approval required per attempt MUST name the successor's own approval.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "admission_id",
+    "step_execution_id",
+    "policy_id",
+    "decision_id",
+    "prior_attempt_id",
+    "prior_attempt_ordinal",
+    "prior_call_id",
+    "prior_tool_call_id",
+    "prior_grant_id",
+    "successor_attempt_id",
+    "successor_attempt_ordinal",
+    "successor_call_id",
+    "successor_tool_call_id",
+    "successor_grant_id",
+    "approval_requirement",
+    "successor_approval_id",
+    "reconciliation_required",
+    "reconciled",
+    "admitted_at",
+    "established_by",
+    "admission_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "admission_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "step_execution_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "policy_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "decision_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "prior_attempt_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "prior_attempt_ordinal": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "prior_call_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "prior_tool_call_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "prior_grant_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "successor_attempt_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "successor_attempt_ordinal": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "successor_call_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "successor_tool_call_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "successor_grant_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "approval_requirement": {
+      "enum": [
+        "not_required",
+        "required_once",
+        "required_per_attempt"
+      ]
+    },
+    "successor_approval_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reconciliation_required": {
+      "type": "boolean"
+    },
+    "reconciled": {
+      "type": "boolean"
+    },
+    "admitted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "established_by": {
+      "const": "agentmage-runtime"
+    },
+    "admission_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "approval_requirement": {
+            "const": "required_per_attempt"
+          }
+        },
+        "required": [
+          "approval_requirement"
+        ]
+      },
+      "then": {
+        "properties": {
+          "successor_approval_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "reconciliation_required": {
+            "const": true
+          }
+        },
+        "required": [
+          "reconciliation_required"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reconciled": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
+}

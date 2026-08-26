@@ -1741,6 +1741,103 @@ pub struct CanonicalTerminalDiagnostic {
     pub diagnostic_sha256: String,
 }
 
+/// Admits exactly one successor attempt after a prior attempt.
+///
+/// This is the compatibility boundary that keeps the existing zero-hidden-retry
+/// behavior valid. A permitted retry is a new attempt: it carries a new attempt, call,
+/// tool-call, and grant identity, and a new approval when policy requires one per
+/// attempt. Nothing is replayed. The record carries no receipt, because the successor
+/// attempt has not run.
+///
+/// A runtime that performs no retry emits no admission at all, so the current
+/// zero-retry behavior stays conformant without change.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalRetryAdmission {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable admission identity.
+    pub admission_id: String,
+    /// Step execution this admission belongs to.
+    pub step_execution_id: String,
+    /// Companion policy in force.
+    pub policy_id: String,
+    /// Recovery decision that permitted this retry.
+    pub decision_id: String,
+    /// Attempt being followed.
+    pub prior_attempt_id: String,
+    /// One-based ordinal of the attempt being followed.
+    pub prior_attempt_ordinal: u32,
+    /// Call the prior attempt executed.
+    pub prior_call_id: String,
+    /// Tool call the prior attempt executed.
+    pub prior_tool_call_id: crate::ToolCallId,
+    /// Grant the prior attempt consumed.
+    pub prior_grant_id: crate::GrantId,
+    /// Newly opened attempt.
+    pub successor_attempt_id: String,
+    /// One-based ordinal of the newly opened attempt.
+    pub successor_attempt_ordinal: u32,
+    /// Newly issued call.
+    pub successor_call_id: String,
+    /// Newly issued tool call.
+    pub successor_tool_call_id: crate::ToolCallId,
+    /// Newly issued grant.
+    pub successor_grant_id: crate::GrantId,
+    /// Approval requirement carried by the governing policy.
+    pub approval_requirement: CanonicalApprovalRequirement,
+    /// Approval covering the successor attempt when policy requires one per attempt.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub successor_approval_id: Option<String>,
+    /// Whether deterministic reconciliation is required before the successor runs.
+    pub reconciliation_required: bool,
+    /// Whether that reconciliation completed.
+    pub reconciled: bool,
+    /// Trusted admission time.
+    pub admitted_at: String,
+    /// Authority that established this record.
+    pub established_by: CanonicalExecutionAuthority,
+    /// Digest of this admission with this field zeroed.
+    pub admission_sha256: String,
+}
+
+impl CanonicalRetryAdmission {
+    /// Whether this admission opens a genuinely new attempt rather than replaying one.
+    ///
+    /// Every identity that could carry an already-executed effect forward must differ
+    /// between the prior attempt and the successor, the ordinals must form an ordered
+    /// chain, required reconciliation must have completed, and a per-attempt approval
+    /// must name the successor's own approval.
+    #[must_use]
+    pub fn opens_new_attempt(&self) -> bool {
+        if self.prior_attempt_id == self.successor_attempt_id {
+            return false;
+        }
+        if self.prior_call_id == self.successor_call_id {
+            return false;
+        }
+        if self.prior_tool_call_id == self.successor_tool_call_id {
+            return false;
+        }
+        if self.prior_grant_id == self.successor_grant_id {
+            return false;
+        }
+        if self.successor_attempt_ordinal != self.prior_attempt_ordinal.saturating_add(1) {
+            return false;
+        }
+        if self.reconciliation_required && !self.reconciled {
+            return false;
+        }
+        if matches!(
+            self.approval_requirement,
+            CanonicalApprovalRequirement::RequiredPerAttempt
+        ) {
+            return self.successor_approval_id.is_some();
+        }
+        true
+    }
+}
+
 #[cfg(test)]
 mod source_retention_tests {
     use super::{
@@ -2641,5 +2738,141 @@ mod execution_envelope_tests {
                 "{candidate} must not be an admitted step-execution state",
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod retry_admission_tests {
+    use super::{
+        CanonicalApprovalRequirement, CanonicalExecutionAuthority, CanonicalRetryAdmission,
+    };
+    use crate::{GrantId, ToolCallId};
+
+    fn admission() -> CanonicalRetryAdmission {
+        CanonicalRetryAdmission {
+            schema_version: 1,
+            admission_id: "admission-1".to_owned(),
+            step_execution_id: "step-execution-1".to_owned(),
+            policy_id: "policy-1".to_owned(),
+            decision_id: "decision-1".to_owned(),
+            prior_attempt_id: "attempt-1".to_owned(),
+            prior_attempt_ordinal: 1,
+            prior_call_id: "call-1".to_owned(),
+            prior_tool_call_id: ToolCallId::from_raw("tool-call-1"),
+            prior_grant_id: GrantId::from_raw("grant-1"),
+            successor_attempt_id: "attempt-2".to_owned(),
+            successor_attempt_ordinal: 2,
+            successor_call_id: "call-2".to_owned(),
+            successor_tool_call_id: ToolCallId::from_raw("tool-call-2"),
+            successor_grant_id: GrantId::from_raw("grant-2"),
+            approval_requirement: CanonicalApprovalRequirement::NotRequired,
+            successor_approval_id: None,
+            reconciliation_required: false,
+            reconciled: false,
+            admitted_at: "2026-08-26T12:00:00Z".to_owned(),
+            established_by: CanonicalExecutionAuthority::AgentmageRuntime,
+            admission_sha256: "a".repeat(64),
+        }
+    }
+
+    #[test]
+    fn a_permitted_retry_is_a_new_attempt_and_round_trips() {
+        let record = admission();
+        assert!(record.opens_new_attempt());
+        let encoded = serde_json::to_string(&record).expect("admission serializes");
+        let decoded: CanonicalRetryAdmission =
+            serde_json::from_str(&encoded).expect("admission deserializes");
+        assert_eq!(decoded, record);
+        assert!(decoded.opens_new_attempt());
+    }
+
+    #[test]
+    fn reusing_any_prior_identity_is_a_replay_and_is_refused() {
+        // Each of these would carry an already-executed effect forward into the retry.
+        let mut replayed_attempt = admission();
+        replayed_attempt.successor_attempt_id = replayed_attempt.prior_attempt_id.clone();
+        assert!(
+            !replayed_attempt.opens_new_attempt(),
+            "attempt identity replayed"
+        );
+
+        let mut replayed_call = admission();
+        replayed_call.successor_call_id = replayed_call.prior_call_id.clone();
+        assert!(!replayed_call.opens_new_attempt(), "call identity replayed");
+
+        let mut replayed_tool_call = admission();
+        replayed_tool_call.successor_tool_call_id = replayed_tool_call.prior_tool_call_id.clone();
+        assert!(
+            !replayed_tool_call.opens_new_attempt(),
+            "tool call replayed"
+        );
+
+        let mut replayed_grant = admission();
+        replayed_grant.successor_grant_id = replayed_grant.prior_grant_id.clone();
+        assert!(
+            !replayed_grant.opens_new_attempt(),
+            "consumed grant replayed"
+        );
+    }
+
+    #[test]
+    fn attempts_form_an_ordered_chain_and_honour_approval_and_reconciliation() {
+        for ordinal in [1_u32, 2, 3, 99] {
+            let mut record = admission();
+            record.successor_attempt_ordinal = ordinal;
+            assert_eq!(
+                record.opens_new_attempt(),
+                ordinal == 2,
+                "successor ordinal {ordinal} must follow prior ordinal 1 by exactly one",
+            );
+        }
+        let mut unreconciled = admission();
+        unreconciled.reconciliation_required = true;
+        assert!(
+            !unreconciled.opens_new_attempt(),
+            "a retry requiring reconciliation must reconcile first",
+        );
+        unreconciled.reconciled = true;
+        assert!(unreconciled.opens_new_attempt());
+
+        let mut per_attempt = admission();
+        per_attempt.approval_requirement = CanonicalApprovalRequirement::RequiredPerAttempt;
+        assert!(
+            !per_attempt.opens_new_attempt(),
+            "a prior approval never covers a later attempt",
+        );
+        per_attempt.successor_approval_id = Some("approval-2".to_owned());
+        assert!(per_attempt.opens_new_attempt());
+    }
+
+    #[test]
+    fn an_admission_carries_no_receipt_and_no_replay_surface() {
+        let value = serde_json::to_value(admission()).expect("admission serializes");
+        let object = value.as_object().expect("admission is an object");
+        assert!(
+            object.contains_key("decision_id"),
+            "a retry needs a recorded decision"
+        );
+        for key in object.keys() {
+            assert!(
+                !key.contains("receipt"),
+                "{key} must not present an outcome"
+            );
+            assert!(!key.contains("replay"), "{key} must not name a replay");
+        }
+        let encoded = serde_json::to_string(&admission()).expect("admission serializes");
+        let widened = encoded.replace(
+            "\"admission_id\"",
+            "\"replay_of_receipt_id\":\"receipt-1\",\"admission_id\"",
+        );
+        assert!(
+            serde_json::from_str::<CanonicalRetryAdmission>(&widened).is_err(),
+            "a replayed receipt must never deserialize into an admission",
+        );
+        let dropped = encoded.replace("\"successor_approval_id\":null,", "");
+        assert!(
+            serde_json::from_str::<CanonicalRetryAdmission>(&dropped).is_err(),
+            "a required optional field must be present and explicit",
+        );
     }
 }

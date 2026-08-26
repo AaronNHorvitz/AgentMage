@@ -87,6 +87,7 @@ impl_versioned_contract!(
     crate::CanonicalVerificationEnvelope,
     crate::CanonicalRecoveryDecision,
     crate::CanonicalTerminalDiagnostic,
+    crate::CanonicalRetryAdmission,
     crate::CanonicalTerminalResult,
     crate::CanonicalToolObservation,
     crate::CanonicalVerificationResult,

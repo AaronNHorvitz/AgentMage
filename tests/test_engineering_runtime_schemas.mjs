@@ -16,6 +16,10 @@ import {
   SOURCE_RETENTION_PHYSICAL_STORE,
   SOURCE_RETENTION_SCHEMA_VERSION,
   ATTEMPT_STATES,
+  RETRY_ADMISSION_SCHEMA_VERSION,
+  RETRY_COMPATIBILITY_RULES,
+  RETRY_FRESH_IDENTITY_PAIRS,
+  RETRY_MIGRATION_RULES,
   EXECUTION_ENVELOPE_SCHEMA_VERSION,
   EXECUTION_FAILURE_CLASSES,
   EXECUTION_TRANSIENT_FAILURE_CLASSES,
@@ -56,9 +60,9 @@ function combinedValidator(name) {
 }
 
 test("generated Engineering Runtime schemas are current, closed, and compile", () => {
-  assert.equal(synchronize(), 36);
+  assert.equal(synchronize(), 37);
   assert.equal(Object.keys(REUSED_SCHEMA_CONTRACTS).length, 6);
-  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 36);
+  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 37);
 });
 
 test("source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes", () => {
@@ -2074,4 +2078,163 @@ test("execution envelopes reject missing, malformed, and unknown fields", () => 
   assert.equal(validator("terminal-diagnostic")(envelope("terminal-diagnostic", { disclosure: "model_prose" })), false);
   assert.equal(validator("workflow-execution")(envelope("workflow-execution", { started_at: "yesterday" })), false);
   assert.equal(validator("call-envelope")(envelope("call-envelope", { call_sha256: "short" })), false);
+});
+
+function retryAdmission(overrides = {}) {
+  return {
+    schema_version: 1,
+    admission_id: "admission-1",
+    step_execution_id: "step-execution-1",
+    policy_id: "policy-1",
+    decision_id: "decision-1",
+    prior_attempt_id: "attempt-1",
+    prior_attempt_ordinal: 1,
+    prior_call_id: "call-1",
+    prior_tool_call_id: "tool-call-1",
+    prior_grant_id: "grant-1",
+    successor_attempt_id: "attempt-2",
+    successor_attempt_ordinal: 2,
+    successor_call_id: "call-2",
+    successor_tool_call_id: "tool-call-2",
+    successor_grant_id: "grant-2",
+    approval_requirement: "not_required",
+    successor_approval_id: null,
+    reconciliation_required: false,
+    reconciled: false,
+    admitted_at: ENVELOPE_TIMESTAMP,
+    established_by: RUNTIME_AUTHORITY,
+    admission_sha256: SHA,
+    ...overrides,
+  };
+}
+
+test("retry admission opens a new attempt and never replays a prior identity", () => {
+  assert.equal(RETRY_ADMISSION_SCHEMA_VERSION, 1);
+  const validate = combinedValidator("retry-admission");
+  assert.equal(validate(retryAdmission()), true);
+  assert.equal(RETRY_FRESH_IDENTITY_PAIRS.length, 4);
+  // Reusing any prior identity would make the retry a replay of an effect that ran.
+  for (const [prior, successor] of RETRY_FRESH_IDENTITY_PAIRS) {
+    const record = retryAdmission();
+    assert.equal(
+      validate({ ...record, [successor]: record[prior] }),
+      false,
+      `${successor} must not reuse ${prior}`,
+    );
+  }
+});
+
+test("retry admission keeps attempts an ordered chain rather than a repeated identity", () => {
+  const validate = combinedValidator("retry-admission");
+  for (const ordinal of [1, 2, 4, 99]) {
+    assert.equal(
+      validate(retryAdmission({ successor_attempt_ordinal: ordinal })),
+      ordinal === 2,
+      `successor ordinal ${ordinal} must follow prior ordinal 1 by exactly one`,
+    );
+  }
+  assert.equal(
+    validate(retryAdmission({ prior_attempt_ordinal: 3, successor_attempt_ordinal: 4 })),
+    true,
+  );
+  assert.equal(
+    validator("retry-admission")(retryAdmission({ prior_attempt_ordinal: 0 })),
+    false,
+    "attempt ordinals are one-based",
+  );
+});
+
+test("retry admission requires a fresh approval per attempt and reconciliation before reattempt", () => {
+  const validate = combinedValidator("retry-admission");
+  assert.equal(
+    validate(retryAdmission({ approval_requirement: "required_per_attempt" })),
+    false,
+    "a per-attempt approval must name the successor's own approval",
+  );
+  assert.equal(
+    validate(retryAdmission({
+      approval_requirement: "required_per_attempt",
+      successor_approval_id: "approval-2",
+    })),
+    true,
+  );
+  assert.equal(
+    validate(retryAdmission({ reconciliation_required: true })),
+    false,
+    "a retry requiring reconciliation must record it as completed",
+  );
+  assert.equal(
+    validate(retryAdmission({ reconciliation_required: true, reconciled: true })),
+    true,
+  );
+});
+
+test("retry admission carries no receipt and no replay surface", () => {
+  const structural = validator("retry-admission");
+  const schema = ENGINEERING_RUNTIME_SCHEMAS["retry-admission"];
+  assert.equal(schema.additionalProperties, false);
+  // The successor has not run, so no receipt or observed outcome may be presented.
+  for (const forbidden of [
+    "receipt_id",
+    "receipt_sha256",
+    "successor_receipt_id",
+    "replay_of",
+    "replayed_from",
+    "reuse_grant",
+    "exit_code",
+    "arguments",
+  ]) {
+    assert.equal(
+      structural(retryAdmission({ [forbidden]: "x" })),
+      false,
+      `a retry admission must not admit ${forbidden}`,
+    );
+  }
+  for (const field of Object.keys(schema.properties)) {
+    assert.ok(!field.includes("receipt"), `${field} must not present an outcome`);
+    assert.ok(!field.includes("replay"), `${field} must not name a replay`);
+  }
+  // Only the runtime admits a retry.
+  assert.equal(structural(retryAdmission({ established_by: "model" })), false);
+  const record = retryAdmission();
+  for (const field of Object.keys(record)) {
+    const { [field]: _removed, ...missing } = record;
+    assert.equal(structural(missing), false, `missing ${field} must fail`);
+  }
+  for (const rejected of [0, 2, 999, "1", null]) {
+    assert.equal(structural(retryAdmission({ schema_version: rejected })), false);
+  }
+});
+
+test("retry compatibility and migration rules are closed, complete, and enforced", () => {
+  const compatibility = Object.keys(RETRY_COMPATIBILITY_RULES);
+  assert.deepEqual(compatibility, [
+    "fresh_attempt_identity",
+    "fresh_call_identity",
+    "fresh_grant",
+    "fresh_approval_when_required",
+    "no_receipt_replay",
+    "monotonic_attempt_ordinal",
+    "reconcile_before_reattempt",
+    "admission_requires_a_recorded_decision",
+  ]);
+  const migration = Object.keys(RETRY_MIGRATION_RULES);
+  assert.deepEqual(migration, [
+    "absent_admission_is_no_retry",
+    "additive_only",
+    "unsupported_version_fails_closed",
+    "downgrade_refuses_rather_than_replays",
+    "existing_zero_retry_behavior_remains_valid",
+  ]);
+  for (const rules of [RETRY_COMPATIBILITY_RULES, RETRY_MIGRATION_RULES]) {
+    for (const [name, text] of Object.entries(rules)) {
+      assert.equal(typeof text, "string", `${name} must state its rule`);
+      assert.ok(text.length > 40, `${name} must state its rule in full`);
+    }
+  }
+  // Every admission names the recovery decision that permitted it.
+  assert.ok(ENGINEERING_RUNTIME_SCHEMAS["retry-admission"].required.includes("decision_id"));
+  assert.ok(ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS["retry-admission"].includes("never a replay"));
+  // Additive only: every record in this family is version 1 and no reused contract moved.
+  assert.equal(Object.keys(REUSED_SCHEMA_CONTRACTS).length, 6);
 });
