@@ -757,9 +757,32 @@ artifact, and recovery contracts remain authoritative.
     pass. This records API surfaces and support classes only; no participant, provider, or label
     provider implementation is delivered here, and this closure makes no macOS, release, or
     Visual Studio Code runtime implementation claim.
-  - [ ] **Sub-task 1.2.3.3:** Record Rust, TypeScript, kernel, capability, platform, shell, MCP, and
+  - [x] **Sub-task 1.2.3.3:** Record Rust, TypeScript, kernel, capability, platform, shell, MCP, and
     parser ownership and add architecture tests that reject duplicate context managers, stores,
-    runtime loops, policy engines, dispatchers, or verifiers.
+    runtime loops, policy engines, dispatchers, or verifiers. Evidence:
+    `architecture/runtime-ownership.json`, its validator `scripts/runtime_ownership.py`, and the
+    mutation evidence in `tests/test_runtime_ownership.py`, wired into `requirements:current-check`
+    so the gate runs with `npm run docs:check`. Ownership is recorded across the kernel, capability,
+    platform, shell, parser, and MCP layers with their Rust, Swift, and TypeScript modules, and is
+    cross-checked against `architecture/module-inventory.json`, so the record cannot drift into
+    naming modules that do not exist and layer languages cannot diverge from the inventory. Every
+    inventory module must carry an explicit ownership decision, placed in a layer or listed as
+    unassigned, and cannot be both. MCP is recorded honestly as unimplemented and must declare no
+    modules. The six singleton runtime roles are closed to `context-manager`, `operational-store`,
+    `runtime-loop`, `policy-engine`, `tool-dispatcher`, and `completion-verifier`; each names its
+    owners as a list that must contain exactly one entry, so a second claimant is directly
+    expressible and directly rejected; only the kernel layer may own a singleton role; and no
+    runtime module may be claimed by two layers. Fifteen focused mutation tests reject a duplicate
+    context manager, store, runtime loop, policy engine, dispatcher, and verifier specifically,
+    covering a second owner appended to each of the six roles, each role moved to a capability,
+    platform, or shell module, each role emptied or dropped, a duplicate role entry, an invented
+    seventh role, a runtime module claimed by two layers, ownership permission flipped on each
+    layer, an unimplemented layer claiming modules, unknown owner and module names, a module missing
+    an ownership decision, a module both owned and unassigned, diverging layer languages, and a
+    layer widened by an unknown key. The architecture, documentation, schema, supply-chain,
+    traceability, and diff gates pass. This records ownership and adds architecture tests only; it
+    delivers no MCP adapter or parser implementation and makes no macOS, release, or runtime
+    implementation claim.
 - [ ] **Task 1.2.4 - Review dependencies and migration risk**
   - [ ] **Sub-task 1.2.4.1:** Evaluate parser, MIME detection, tokenization, archive, OCR, and
     database dependencies for license, provenance, maintenance, unsafe-code, platform, and resource
