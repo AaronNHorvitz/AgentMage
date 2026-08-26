@@ -607,9 +607,40 @@ artifact, and recovery contracts remain authoritative.
     documentation, schema, traceability, and diff gates pass; this contract closure makes no macOS,
     release, or extraction-runtime implementation claim.
 - [ ] **Task 1.2.2 - Freeze verified-workflow contracts**
-  - [ ] **Sub-task 1.2.2.1:** Define a companion step-execution policy keyed to existing
+  - [x] **Sub-task 1.2.2.1:** Define a companion step-execution policy keyed to existing
     `PlanStepId`, including preflight, side-effect, approval, idempotency, verifier, retry, budget,
-    and diagnostic policy identities.
+    and diagnostic policy identities. Evidence: the closed `step-execution-policy` schema in
+    `schemas/engineering-runtime`, its generator, structural constraints, and semantic validator in
+    `scripts/engineering_runtime_schemas.mjs`, and the Rust-owned `CanonicalStepExecutionPolicy`
+    contract key the policy by the existing `PlanStepId` and bind it to an exact `plan_revision`, so
+    a replanned step cannot silently inherit a policy written for different work. The record names
+    all eight required policy identities and carries execution policy only: it is a companion, not a
+    replacement, and schema plus Rust property-surface tests reject `description`, `ordinal`,
+    `depends_on`, `expected_evidence`, and `state` belonging to `PlanStep`, `arguments` belonging to
+    `ToolCall`, `grant_id` belonging to `CapabilityGrant`, `receipt_id`, `exit_status`, and
+    `changed_resources` belonging to `OperationReceipt`, `completed` and `verified_completion`
+    belonging to `VerifiedCompletion`, and every path, URI, command, and credential surface. The
+    effect and retry families are hoisted to one source of truth shared with the existing workflow
+    step definition, so widening either family widens both surfaces at once; the generated
+    `workflow-definition` schema is byte-identical across that refactor. Decision 0042 section 5 is
+    structural: a closed effect/retry matrix admits exactly the retry classes each effect class
+    permits, so destructive, external, non-idempotent, and unclassified effects can never be
+    scheduled for an automatic retry; destructive effects require a fresh approval per attempt;
+    non-idempotent, external, and unclassified effects fail toward approval; an idempotent write is
+    retried only against a verified key or verified desired state; a read cannot claim an
+    idempotency key; completion resolves to verifier evidence or to exactly one recorded deferral
+    reason, never both; and a `never` retry class allows exactly one attempt.
+    `CanonicalEffectClass::permitted_retry_classes`, `permits_automatic_retry`, and
+    `requires_approval` match exhaustively, so adding an effect class without deciding its retry and
+    approval rules stops compiling. Eight focused schema tests and five focused Rust tests cover
+    required-field, unknown-field, malformed, oversized, one-attempt, unsupported-version, matrix,
+    approval, idempotency, deferral, duplicate-identity, and companion-boundary failures. The
+    complete local workspace test, strict-Clippy, formatting, documentation, schema, supply-chain,
+    traceability, and diff gates pass; `kernel-architecture-report:check` and
+    `kernel-contract-reference:check` fail identically at the unchanged parent revision
+    `626a92146ff9769f83d36a599a813befb98c819c` and are unrelated pre-existing drift that this
+    sub-task neither caused nor repaired. This contract closure makes no macOS, release, or
+    workflow-runtime implementation claim.
   - [ ] **Sub-task 1.2.2.2:** Define workflow, step, call, operation-attempt, verification,
     recovery-decision, and terminal-diagnostic envelopes without replacing `Plan`, `ToolCall`,
     `CapabilityGrant`, `OperationReceipt`, or `VerifiedCompletion`.
