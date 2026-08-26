@@ -629,6 +629,88 @@ const contextDisposition = closed({
 });
 contextDisposition.allOf = [nonAdmittingDispositionConstraint, reasonCodeRequiredConstraint];
 
+export const SOURCE_RETENTION_SCHEMA_VERSION = 1;
+// Exact existing RuntimeArtifactKind variants. Source retention reuses this closed set;
+// adding a source-specific physical family here would widen the kernel contract.
+export const RUNTIME_ARTIFACT_KINDS = Object.freeze([
+  "patch",
+  "standard_output",
+  "standard_error",
+  "test_log",
+  "generated_file",
+  "report",
+  "model_output",
+]);
+export const SOURCE_RETENTION_PHYSICAL_STORE = "runtime_artifact_backend";
+export const SOURCE_RETENTION_PERSISTING_CLASSES = Object.freeze(["policy_persisted"]);
+export const SOURCE_RETENTION_NON_PERSISTING_CLASSES = Object.freeze([
+  "memory_only",
+  "released",
+  "deleted",
+]);
+
+const physicalArtifactBinding = closed({
+  artifact_kind: { enum: [...RUNTIME_ARTIFACT_KINDS] },
+  artifact_id: identifier,
+  payload_sha256: digest,
+  byte_length: boundedSourceBytes,
+});
+
+const sourceRetention = closed({
+  schema_version: { type: "integer", const: SOURCE_RETENTION_SCHEMA_VERSION },
+  retention_id: identifier,
+  source_artifact_id: identifier,
+  request_id: identifier,
+  authority_id: identifier,
+  owner_class: { enum: ["session", "task", "request"] },
+  owner_id: identifier,
+  retention_class: {
+    enum: [...SOURCE_RETENTION_PERSISTING_CLASSES, ...SOURCE_RETENTION_NON_PERSISTING_CLASSES],
+  },
+  retention_policy_id: nullable(identifier),
+  retention_expires_at: nullable(timestamp),
+  physical_store: { const: SOURCE_RETENTION_PHYSICAL_STORE },
+  physical_binding: nullable(physicalArtifactBinding),
+  encryption_state: { enum: ["not_persisted", "encrypted_at_rest"] },
+  protected_metadata_sha256: digest,
+  lifecycle_state: { enum: ["active", "quarantined", "released", "deleted"] },
+  reason_code: nullable(identifier),
+  recorded_at: timestamp,
+  source_retention_sha256: digest,
+});
+sourceRetention.allOf = [
+  {
+    if: {
+      properties: { retention_class: { enum: [...SOURCE_RETENTION_PERSISTING_CLASSES] } },
+      required: ["retention_class"],
+    },
+    then: {
+      properties: {
+        physical_binding: physicalArtifactBinding,
+        retention_policy_id: identifier,
+        retention_expires_at: timestamp,
+        encryption_state: { const: "encrypted_at_rest" },
+      },
+    },
+    else: {
+      properties: {
+        physical_binding: { type: "null" },
+        retention_policy_id: { type: "null" },
+        retention_expires_at: { type: "null" },
+        encryption_state: { const: "not_persisted" },
+      },
+    },
+  },
+  {
+    if: {
+      properties: { lifecycle_state: { const: "active" } },
+      required: ["lifecycle_state"],
+    },
+    then: { properties: { reason_code: { type: "null" } } },
+    else: { properties: { reason_code: identifier } },
+  },
+];
+
 export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "artifact-envelope": artifactEnvelope,
   "artifact-transformation": artifactTransformation,
@@ -642,6 +724,7 @@ export const ENGINEERING_RUNTIME_SCHEMAS = Object.freeze({
   "extraction-result": extractionResult,
   "structural-section": structuralSection,
   "context-disposition": contextDisposition,
+  "source-retention": sourceRetention,
   "workflow-definition": workflowDefinition,
   "workflow-state": workflowState,
   "workflow-checkpoint": workflowCheckpoint,
@@ -704,16 +787,36 @@ function contextManifestSemantic(record) {
   return true;
 }
 
+const SOURCE_RETENTION_LIFECYCLE_BY_CLASS = Object.freeze({
+  memory_only: ["active", "quarantined"],
+  policy_persisted: ["active", "quarantined"],
+  released: ["released"],
+  deleted: ["deleted"],
+});
+
+function sourceRetentionSemantic(record) {
+  if (!record || typeof record !== "object") return false;
+  const permitted = SOURCE_RETENTION_LIFECYCLE_BY_CLASS[record.retention_class];
+  if (permitted === undefined) return false;
+  if (!permitted.includes(record.lifecycle_state)) return false;
+  const binding = record.physical_binding;
+  if (binding === null || binding === undefined) return true;
+  if (!RUNTIME_ARTIFACT_KINDS.includes(binding.artifact_kind)) return false;
+  return Number.isSafeInteger(binding.byte_length) && binding.byte_length >= 0;
+}
+
 export const ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS = Object.freeze({
   "structural-section": (record) => isOrderedRange(record.byte_range) && isOrderedLineRange(record.line_range),
   "context-disposition": (record) => isOrderedRangeList(record.ranges),
   "context-manifest": contextManifestSemantic,
+  "source-retention": sourceRetentionSemantic,
 });
 
 export const ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS = Object.freeze({
   "structural-section": "byte_range MUST satisfy start_byte <= end_byte_exclusive and line_range, when present, MUST satisfy start_line <= end_line_exclusive.",
   "context-disposition": "Every entry in ranges MUST satisfy start_byte <= end_byte_exclusive. reason_code MUST be null when disposition is included and MUST be a non-null identifier for every non-complete disposition.",
   "context-manifest": "items.length MUST equal source_artifact_count, artifact_id values MUST be unique, every item ranges entry MUST satisfy start_byte <= end_byte_exclusive, and the sum of item token_count MUST NOT exceed total_input_tokens.",
+  "source-retention": "retention_class MUST agree with lifecycle_state: memory_only and policy_persisted permit only active or quarantined, released requires released, and deleted requires deleted. physical_binding, when present, MUST name an existing RuntimeArtifactKind and a non-negative byte_length; a source-specific physical family is prohibited.",
 });
 
 export function validateEngineeringRuntimeRecord(compiledSchema, schemaName, candidate) {

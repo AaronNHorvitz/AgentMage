@@ -294,6 +294,142 @@ pub struct CanonicalContextDeliveryReceipt {
     pub receipt_sha256: String,
 }
 
+/// Logical owner family for one retained source artifact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceOwnerClass {
+    /// The owning local session releases the source when it ends.
+    Session,
+    /// The owning task releases the source when it reaches a terminal state.
+    Task,
+    /// The single originating request releases the source when the turn ends.
+    Request,
+}
+
+/// Closed retention decision for one logical source artifact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceRetentionClass {
+    /// Default behavior; source bytes never reach durable storage.
+    MemoryOnly,
+    /// Explicit policy approved encrypted persistence for resume or retention.
+    PolicyPersisted,
+    /// The owner released the logical reference.
+    Released,
+    /// Canonical metadata records completed payload deletion.
+    Deleted,
+}
+
+/// Payload encryption state for one logical source artifact.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceEncryptionState {
+    /// No durable payload exists for this source.
+    NotPersisted,
+    /// The durable payload is encrypted at rest by the runtime artifact backend.
+    EncryptedAtRest,
+}
+
+/// Current lifecycle state for one logical source-retention record.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalSourceRetentionLifecycle {
+    /// The logical reference is current.
+    Active,
+    /// The reference is retained for inspection but returns no payload bytes.
+    Quarantined,
+    /// The owner released the reference.
+    Released,
+    /// Canonical metadata records completed payload deletion.
+    Deleted,
+}
+
+/// Existing physical payload family reused without widening `RuntimeArtifactKind`.
+///
+/// Every variant mirrors one existing [`crate::RuntimeArtifactKind`] variant. A logical
+/// source artifact never introduces a new physical family and never creates a second
+/// physical store.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalPhysicalArtifactKind {
+    /// Mirrors `RuntimeArtifactKind::Patch`.
+    Patch,
+    /// Mirrors `RuntimeArtifactKind::StandardOutput`.
+    StandardOutput,
+    /// Mirrors `RuntimeArtifactKind::StandardError`.
+    StandardError,
+    /// Mirrors `RuntimeArtifactKind::TestLog`.
+    TestLog,
+    /// Mirrors `RuntimeArtifactKind::GeneratedFile`.
+    GeneratedFile,
+    /// Mirrors `RuntimeArtifactKind::Report`.
+    Report,
+    /// Mirrors `RuntimeArtifactKind::ModelOutput`.
+    ModelOutput,
+}
+
+/// Binding from one logical source artifact to the single existing physical backend.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalPhysicalArtifactBinding {
+    /// Existing physical payload family; never a new source-specific kind.
+    pub artifact_kind: CanonicalPhysicalArtifactKind,
+    /// Physical runtime artifact identity owned by the existing backend.
+    pub artifact_id: String,
+    /// Lowercase SHA-256 content address of the encrypted payload.
+    pub payload_sha256: String,
+    /// Exact durable payload size.
+    pub byte_length: u64,
+}
+
+/// Logical ownership and retention for one source artifact.
+///
+/// The record carries no absolute path and no original URI. Protected metadata is
+/// represented only by [`Self::protected_metadata_sha256`] and never becomes
+/// model-visible.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalSourceRetention {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable retention-record identity.
+    pub retention_id: String,
+    /// Logical source artifact governed by this record.
+    pub source_artifact_id: String,
+    /// Originating request.
+    pub request_id: String,
+    /// Governing authority identity.
+    pub authority_id: String,
+    /// Logical owner family.
+    pub owner_class: CanonicalSourceOwnerClass,
+    /// Logical owner identity; knowledge of this identity grants no access.
+    pub owner_id: String,
+    /// Closed retention decision.
+    pub retention_class: CanonicalSourceRetentionClass,
+    /// Deterministic policy that approved persistence; null when memory-only.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub retention_policy_id: Option<String>,
+    /// Trusted expiry for a persisted payload; null when memory-only.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub retention_expires_at: Option<String>,
+    /// Binding to the existing backend; null unless the payload is persisted.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub physical_binding: Option<CanonicalPhysicalArtifactBinding>,
+    /// Durable payload encryption state.
+    pub encryption_state: CanonicalSourceEncryptionState,
+    /// Digest of protected path and URI metadata; the values themselves never appear.
+    pub protected_metadata_sha256: String,
+    /// Current lifecycle state.
+    pub lifecycle_state: CanonicalSourceRetentionLifecycle,
+    /// Stable content-free code required for every non-active lifecycle state.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub reason_code: Option<String>,
+    /// Trusted record time.
+    pub recorded_at: String,
+    /// Digest of the canonical record with this field zeroed.
+    pub source_retention_sha256: String,
+}
+
 /// Reference to one closed input or output schema.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -900,4 +1036,154 @@ pub struct CanonicalTerminalResult {
     pub established_by: String,
     /// Digest of this result with this field zeroed.
     pub result_sha256: String,
+}
+
+#[cfg(test)]
+mod source_retention_tests {
+    use super::{
+        CanonicalPhysicalArtifactBinding, CanonicalPhysicalArtifactKind,
+        CanonicalSourceEncryptionState, CanonicalSourceOwnerClass, CanonicalSourceRetention,
+        CanonicalSourceRetentionClass, CanonicalSourceRetentionLifecycle,
+    };
+    use crate::RuntimeArtifactKind;
+
+    fn memory_only() -> CanonicalSourceRetention {
+        CanonicalSourceRetention {
+            schema_version: 1,
+            retention_id: "retention-1".to_owned(),
+            source_artifact_id: "source-1".to_owned(),
+            request_id: "request-1".to_owned(),
+            authority_id: "authority-1".to_owned(),
+            owner_class: CanonicalSourceOwnerClass::Session,
+            owner_id: "session-1".to_owned(),
+            retention_class: CanonicalSourceRetentionClass::MemoryOnly,
+            retention_policy_id: None,
+            retention_expires_at: None,
+            physical_binding: None,
+            encryption_state: CanonicalSourceEncryptionState::NotPersisted,
+            protected_metadata_sha256: "c".repeat(64),
+            lifecycle_state: CanonicalSourceRetentionLifecycle::Active,
+            reason_code: None,
+            recorded_at: "2026-08-25T12:00:00Z".to_owned(),
+            source_retention_sha256: "a".repeat(64),
+        }
+    }
+
+    /// Every physical family a retained source may name must already exist in the
+    /// kernel-owned `RuntimeArtifactKind`. Adding a source-specific variant to either
+    /// enum without the other fails this mapping.
+    #[test]
+    fn physical_kinds_mirror_the_existing_runtime_artifact_kind() {
+        let pairs = [
+            (
+                CanonicalPhysicalArtifactKind::Patch,
+                RuntimeArtifactKind::Patch,
+            ),
+            (
+                CanonicalPhysicalArtifactKind::StandardOutput,
+                RuntimeArtifactKind::StandardOutput,
+            ),
+            (
+                CanonicalPhysicalArtifactKind::StandardError,
+                RuntimeArtifactKind::StandardError,
+            ),
+            (
+                CanonicalPhysicalArtifactKind::TestLog,
+                RuntimeArtifactKind::TestLog,
+            ),
+            (
+                CanonicalPhysicalArtifactKind::GeneratedFile,
+                RuntimeArtifactKind::GeneratedFile,
+            ),
+            (
+                CanonicalPhysicalArtifactKind::Report,
+                RuntimeArtifactKind::Report,
+            ),
+            (
+                CanonicalPhysicalArtifactKind::ModelOutput,
+                RuntimeArtifactKind::ModelOutput,
+            ),
+        ];
+        assert_eq!(pairs.len(), 7);
+        for (logical, physical) in pairs {
+            assert_eq!(
+                serde_json::to_string(&logical).expect("logical kind serializes"),
+                serde_json::to_string(&physical).expect("physical kind serializes"),
+                "logical source kinds must not diverge from RuntimeArtifactKind",
+            );
+        }
+        // Exhaustive match: a new RuntimeArtifactKind variant stops compiling here.
+        for physical in pairs.map(|(_, physical)| physical) {
+            let _mapped = match physical {
+                RuntimeArtifactKind::Patch => CanonicalPhysicalArtifactKind::Patch,
+                RuntimeArtifactKind::StandardOutput => {
+                    CanonicalPhysicalArtifactKind::StandardOutput
+                }
+                RuntimeArtifactKind::StandardError => CanonicalPhysicalArtifactKind::StandardError,
+                RuntimeArtifactKind::TestLog => CanonicalPhysicalArtifactKind::TestLog,
+                RuntimeArtifactKind::GeneratedFile => CanonicalPhysicalArtifactKind::GeneratedFile,
+                RuntimeArtifactKind::Report => CanonicalPhysicalArtifactKind::Report,
+                RuntimeArtifactKind::ModelOutput => CanonicalPhysicalArtifactKind::ModelOutput,
+            };
+        }
+    }
+
+    #[test]
+    fn memory_only_retention_round_trips_without_durable_binding() {
+        let record = memory_only();
+        let encoded = serde_json::to_string(&record).expect("record serializes");
+        let decoded: CanonicalSourceRetention =
+            serde_json::from_str(&encoded).expect("record deserializes");
+        assert_eq!(decoded, record);
+        assert!(decoded.physical_binding.is_none());
+    }
+
+    #[test]
+    fn persisted_retention_round_trips_with_an_existing_physical_family() {
+        let mut record = memory_only();
+        record.retention_class = CanonicalSourceRetentionClass::PolicyPersisted;
+        record.retention_policy_id = Some("policy-1".to_owned());
+        record.retention_expires_at = Some("2026-09-25T12:00:00Z".to_owned());
+        record.encryption_state = CanonicalSourceEncryptionState::EncryptedAtRest;
+        record.physical_binding = Some(CanonicalPhysicalArtifactBinding {
+            artifact_kind: CanonicalPhysicalArtifactKind::GeneratedFile,
+            artifact_id: "artifact-1".to_owned(),
+            payload_sha256: "b".repeat(64),
+            byte_length: 4096,
+        });
+        let encoded = serde_json::to_string(&record).expect("record serializes");
+        assert!(encoded.contains("\"generated_file\""));
+        let decoded: CanonicalSourceRetention =
+            serde_json::from_str(&encoded).expect("record deserializes");
+        assert_eq!(decoded, record);
+    }
+
+    #[test]
+    fn unknown_and_missing_fields_are_rejected() {
+        let encoded = serde_json::to_string(&memory_only()).expect("record serializes");
+        let widened = encoded.replace(
+            "\"retention_id\"",
+            "\"source_absolute_path\":\"/home/user/secret.txt\",\"retention_id\"",
+        );
+        assert!(
+            serde_json::from_str::<CanonicalSourceRetention>(&widened).is_err(),
+            "an absolute path must never deserialize into the retention record",
+        );
+        let dropped = encoded.replace("\"reason_code\":null,", "");
+        assert!(
+            serde_json::from_str::<CanonicalSourceRetention>(&dropped).is_err(),
+            "a required optional field must be present and explicit",
+        );
+    }
+
+    #[test]
+    fn source_specific_physical_kinds_do_not_deserialize() {
+        for widened in ["source_payload", "source_artifact", "attachment"] {
+            let candidate = format!("\"{widened}\"");
+            assert!(
+                serde_json::from_str::<CanonicalPhysicalArtifactKind>(&candidate).is_err(),
+                "{widened} must not be an admitted physical family",
+            );
+        }
+    }
 }

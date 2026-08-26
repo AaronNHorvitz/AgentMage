@@ -7,6 +7,9 @@ import addFormats from "ajv-formats";
 import {
   CONTEXT_MANIFEST_SCHEMA_VERSION,
   ENGINEERING_RUNTIME_SCHEMAS,
+  RUNTIME_ARTIFACT_KINDS,
+  SOURCE_RETENTION_PHYSICAL_STORE,
+  SOURCE_RETENTION_SCHEMA_VERSION,
   ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS,
   ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS,
   REUSED_SCHEMA_CONTRACTS,
@@ -34,9 +37,9 @@ function combinedValidator(name) {
 }
 
 test("generated Engineering Runtime schemas are current, closed, and compile", () => {
-  assert.equal(synchronize(), 26);
+  assert.equal(synchronize(), 27);
   assert.equal(Object.keys(REUSED_SCHEMA_CONTRACTS).length, 6);
-  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 26);
+  assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 27);
 });
 
 test("source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes", () => {
@@ -956,5 +959,279 @@ test("context-disposition and context-manifest impose matching reason_code rules
       assert.equal(validateManifest({ ...manifestBase, items: [manifestItem] }), false, `manifest ${state} rejects reason_code=null`);
       assert.equal(validateManifest({ ...manifestBase, items: [manifestItemWithCode] }), true, `manifest ${state} accepts reason_code string`);
     }
+  }
+});
+
+const RETENTION_TIMESTAMP = "2026-08-25T12:00:00Z";
+const PAYLOAD_SHA = "b".repeat(64);
+const PROTECTED_SHA = "c".repeat(64);
+
+function memoryOnlyRetention() {
+  return {
+    schema_version: SOURCE_RETENTION_SCHEMA_VERSION,
+    retention_id: "retention-1",
+    source_artifact_id: "source-1",
+    request_id: "request-1",
+    authority_id: "authority-1",
+    owner_class: "session",
+    owner_id: "session-1",
+    retention_class: "memory_only",
+    retention_policy_id: null,
+    retention_expires_at: null,
+    physical_store: SOURCE_RETENTION_PHYSICAL_STORE,
+    physical_binding: null,
+    encryption_state: "not_persisted",
+    protected_metadata_sha256: PROTECTED_SHA,
+    lifecycle_state: "active",
+    reason_code: null,
+    recorded_at: RETENTION_TIMESTAMP,
+    source_retention_sha256: SHA,
+  };
+}
+
+function persistedRetention() {
+  return {
+    ...memoryOnlyRetention(),
+    retention_id: "retention-2",
+    retention_class: "policy_persisted",
+    retention_policy_id: "policy-1",
+    retention_expires_at: "2026-09-25T12:00:00Z",
+    physical_binding: {
+      artifact_kind: "generated_file",
+      artifact_id: "artifact-1",
+      payload_sha256: PAYLOAD_SHA,
+      byte_length: 4096,
+    },
+    encryption_state: "encrypted_at_rest",
+  };
+}
+
+test("source-retention binds schema_version to the authoritative Rust contract version", () => {
+  assert.equal(SOURCE_RETENTION_SCHEMA_VERSION, 1);
+  const validate = validator("source-retention");
+  const record = memoryOnlyRetention();
+  assert.equal(validate(record), true, JSON.stringify(validate.errors));
+  const { schema_version: _dropped, ...withoutVersion } = record;
+  assert.equal(validate(withoutVersion), false, "missing schema_version must fail");
+  for (const rejected of [0, SOURCE_RETENTION_SCHEMA_VERSION + 1, 2, 999, "1", null]) {
+    assert.equal(
+      validate({ ...record, schema_version: rejected }),
+      false,
+      `version ${JSON.stringify(rejected)} must fail`,
+    );
+  }
+});
+
+test("source-retention rejects missing, extra, malformed, and oversized fields", () => {
+  const validate = validator("source-retention");
+  const record = memoryOnlyRetention();
+  for (const field of Object.keys(record)) {
+    const { [field]: _removed, ...missing } = record;
+    assert.equal(validate(missing), false, `missing ${field} must fail`);
+  }
+  assert.equal(
+    validate({ ...record, source_uri: "file:///home/user/secret.txt" }),
+    false,
+    "unknown field must fail",
+  );
+  assert.equal(validate({ ...record, protected_metadata_sha256: "not-a-digest" }), false);
+  assert.equal(validate({ ...record, recorded_at: "2026-13-45" }), false);
+  assert.equal(validate({ ...record, owner_class: "workspace" }), false);
+  assert.equal(validate({ ...record, retention_class: "forever" }), false);
+  assert.equal(validate({ ...record, lifecycle_state: "archived" }), false);
+  const persisted = persistedRetention();
+  assert.equal(validate(persisted), true, JSON.stringify(validate.errors));
+  assert.equal(
+    validate({
+      ...persisted,
+      physical_binding: { ...persisted.physical_binding, byte_length: 104857601 },
+    }),
+    false,
+    "oversized payload must fail",
+  );
+  assert.equal(
+    validate({
+      ...persisted,
+      physical_binding: { ...persisted.physical_binding, byte_length: -1 },
+    }),
+    false,
+    "negative payload must fail",
+  );
+});
+
+test("source-retention cannot widen RuntimeArtifactKind or name a second physical store", () => {
+  const validate = validator("source-retention");
+  const persisted = persistedRetention();
+  assert.deepEqual(RUNTIME_ARTIFACT_KINDS, [
+    "patch",
+    "standard_output",
+    "standard_error",
+    "test_log",
+    "generated_file",
+    "report",
+    "model_output",
+  ]);
+  for (const kind of RUNTIME_ARTIFACT_KINDS) {
+    assert.equal(
+      validate({ ...persisted, physical_binding: { ...persisted.physical_binding, artifact_kind: kind } }),
+      true,
+      `existing kind ${kind} must be accepted`,
+    );
+  }
+  for (const widened of ["source_payload", "source_artifact", "attachment", "ingested_source", ""]) {
+    assert.equal(
+      validate({ ...persisted, physical_binding: { ...persisted.physical_binding, artifact_kind: widened } }),
+      false,
+      `source-specific kind ${widened} must be rejected`,
+    );
+  }
+  for (const store of ["source_store", "ingestion_store", "runtime_artifact_backend_v2", ""]) {
+    assert.equal(
+      validate({ ...persisted, physical_store: store }),
+      false,
+      `second physical store ${store} must be rejected`,
+    );
+  }
+  assert.equal(
+    validate({
+      ...persisted,
+      physical_binding: { ...persisted.physical_binding, source_kind: "paste" },
+    }),
+    false,
+    "unknown binding field must fail",
+  );
+});
+
+test("source-retention forbids persistence contradicting the declared retention class", () => {
+  const validate = validator("source-retention");
+  const memoryOnly = memoryOnlyRetention();
+  const persisted = persistedRetention();
+  assert.equal(
+    validate({ ...memoryOnly, physical_binding: persisted.physical_binding }),
+    false,
+    "memory-only must not bind a durable payload",
+  );
+  assert.equal(
+    validate({ ...memoryOnly, encryption_state: "encrypted_at_rest" }),
+    false,
+    "memory-only must not claim encryption at rest",
+  );
+  assert.equal(
+    validate({ ...memoryOnly, retention_policy_id: "policy-1" }),
+    false,
+    "memory-only must not carry a retention policy",
+  );
+  assert.equal(
+    validate({ ...memoryOnly, retention_expires_at: RETENTION_TIMESTAMP }),
+    false,
+    "memory-only must not carry an expiry",
+  );
+  assert.equal(
+    validate({ ...persisted, physical_binding: null }),
+    false,
+    "persisted retention requires a durable binding",
+  );
+  assert.equal(
+    validate({ ...persisted, retention_policy_id: null }),
+    false,
+    "persisted retention requires an approving policy",
+  );
+  assert.equal(
+    validate({ ...persisted, retention_expires_at: null }),
+    false,
+    "persisted retention requires an expiry",
+  );
+  assert.equal(
+    validate({ ...persisted, encryption_state: "not_persisted" }),
+    false,
+    "persisted retention must be encrypted at rest",
+  );
+});
+
+test("source-retention requires a deterministic reason_code for every non-active lifecycle state", () => {
+  const validate = validator("source-retention");
+  const record = memoryOnlyRetention();
+  assert.equal(validate({ ...record, lifecycle_state: "active", reason_code: null }), true);
+  assert.equal(
+    validate({ ...record, lifecycle_state: "active", reason_code: "owner_released" }),
+    false,
+    "active must not carry a reason_code",
+  );
+  assert.equal(
+    validate({ ...record, lifecycle_state: "quarantined", reason_code: null }),
+    false,
+    "quarantined requires a reason_code",
+  );
+  assert.equal(
+    validate({ ...record, lifecycle_state: "quarantined", reason_code: "integrity_failed" }),
+    true,
+  );
+});
+
+test("source-retention semantic validation reconciles retention_class with lifecycle_state", () => {
+  const validate = combinedValidator("source-retention");
+  const structural = validator("source-retention");
+  const record = memoryOnlyRetention();
+  assert.equal(validate(record), true);
+  const releasedShape = {
+    ...record,
+    retention_class: "released",
+    lifecycle_state: "released",
+    reason_code: "owner_released",
+  };
+  assert.equal(validate(releasedShape), true);
+  const deletedShape = {
+    ...record,
+    retention_class: "deleted",
+    lifecycle_state: "deleted",
+    reason_code: "retention_expired",
+  };
+  assert.equal(validate(deletedShape), true);
+  const contradictions = [
+    { retention_class: "released", lifecycle_state: "active", reason_code: null },
+    { retention_class: "deleted", lifecycle_state: "quarantined", reason_code: "integrity_failed" },
+    { retention_class: "memory_only", lifecycle_state: "deleted", reason_code: "retention_expired" },
+    { retention_class: "memory_only", lifecycle_state: "released", reason_code: "owner_released" },
+  ];
+  for (const contradiction of contradictions) {
+    const candidate = { ...record, ...contradiction };
+    assert.equal(
+      validate(candidate),
+      false,
+      `${contradiction.retention_class}/${contradiction.lifecycle_state} must fail combined validation`,
+    );
+    if (structural(candidate)) {
+      assert.equal(
+        ENGINEERING_RUNTIME_SEMANTIC_VALIDATORS["source-retention"](candidate),
+        false,
+        "semantic validator must reject what the structural schema admits",
+      );
+    }
+  }
+  assert.ok(ENGINEERING_RUNTIME_SEMANTIC_INVARIANTS["source-retention"].includes("retention_class"));
+});
+
+test("source-retention carries protected metadata only as a digest", () => {
+  const validate = validator("source-retention");
+  const record = memoryOnlyRetention();
+  for (const leaked of [
+    "absolute_path",
+    "source_path",
+    "original_uri",
+    "workspace_path",
+    "file_uri",
+  ]) {
+    assert.equal(
+      validate({ ...record, [leaked]: "/home/user/private/report.docx" }),
+      false,
+      `${leaked} must never be an admitted field`,
+    );
+  }
+  const properties = ENGINEERING_RUNTIME_SCHEMAS["source-retention"].properties;
+  for (const name of Object.keys(properties)) {
+    assert.ok(
+      !/(^|_)(path|uri|url|filename)(_|$)/.test(name),
+      `${name} must not expose a path or URI surface`,
+    );
   }
 });

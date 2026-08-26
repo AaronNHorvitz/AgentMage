@@ -568,9 +568,25 @@ artifact, and recovery contracts remain authoritative.
     range-order, source-count, duplicate-identity, and token-accounting failures. The complete
     local documentation, schema, workspace-test, strict-Clippy, formatting, and diff gates pass;
     this contract closure makes no macOS, release, or later ingestion-runtime implementation claim.
-  - [ ] **Sub-task 1.2.1.2:** Define logical source-artifact ownership and retention over the
+  - [x] **Sub-task 1.2.1.2:** Define logical source-artifact ownership and retention over the
     existing encrypted content-addressed backend without widening `RuntimeArtifactKind` or creating
-    a second physical store.
+    a second physical store. Evidence: the closed `source-retention` schema in
+    `schemas/engineering-runtime`, its generator, structural constraints, and semantic validator in
+    `scripts/engineering_runtime_schemas.mjs`, and the Rust-owned `CanonicalSourceRetention`
+    contract bind one logical owner class, one closed retention class, and one nullable binding to
+    the single existing runtime artifact backend. `physical_store` is pinned to
+    `runtime_artifact_backend` and `physical_binding.artifact_kind` admits only the exact seven
+    existing `RuntimeArtifactKind` variants, so a source-specific physical family or a second store
+    fails closed; the Rust mapping test matches every variant exhaustively, so widening either enum
+    alone stops compiling. Memory-only retention is the default and rejects any durable binding,
+    approving policy, expiry, or at-rest encryption claim, while policy-approved persistence
+    requires all four together, per Decision 0042. Protected path and URI metadata appear only as
+    `protected_metadata_sha256`, and a property-surface test rejects any admitted path, URI, URL, or
+    filename field. Seven focused schema tests and five focused Rust tests cover required-field,
+    unknown-field, malformed, oversized, negative, unsupported-version, retention/lifecycle
+    contradiction, reason-code, anti-widening, and second-store failures. The complete local
+    workspace test, strict-Clippy, formatting, documentation, schema, traceability, and diff gates
+    pass; this contract closure makes no macOS, release, or ingestion-runtime implementation claim.
   - [ ] **Sub-task 1.2.1.3:** Define authoritative byte, line, page, sheet, cell, image-region, and
     section provenance plus explicit partial, truncated, encrypted, unsupported, and unavailable
     states.

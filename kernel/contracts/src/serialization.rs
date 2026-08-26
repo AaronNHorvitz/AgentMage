@@ -77,6 +77,7 @@ impl_versioned_contract!(
     crate::CanonicalContextManifest,
     crate::CanonicalModelEndpointProfile,
     crate::CanonicalModelRouteDecision,
+    crate::CanonicalSourceRetention,
     crate::CanonicalTerminalResult,
     crate::CanonicalToolObservation,
     crate::CanonicalVerificationResult,

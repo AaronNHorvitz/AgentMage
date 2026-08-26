@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/engineering-runtime/source-retention.schema.json",
+  "title": "AgentMage source-retention",
+  "description": "Semantic invariants enforced by createEngineeringRuntimeValidator: retention_class MUST agree with lifecycle_state: memory_only and policy_persisted permit only active or quarantined, released requires released, and deleted requires deleted. physical_binding, when present, MUST name an existing RuntimeArtifactKind and a non-negative byte_length; a source-specific physical family is prohibited.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "retention_id",
+    "source_artifact_id",
+    "request_id",
+    "authority_id",
+    "owner_class",
+    "owner_id",
+    "retention_class",
+    "retention_policy_id",
+    "retention_expires_at",
+    "physical_store",
+    "physical_binding",
+    "encryption_state",
+    "protected_metadata_sha256",
+    "lifecycle_state",
+    "reason_code",
+    "recorded_at",
+    "source_retention_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "retention_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "source_artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "authority_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "owner_class": {
+      "enum": [
+        "session",
+        "task",
+        "request"
+      ]
+    },
+    "owner_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "retention_class": {
+      "enum": [
+        "policy_persisted",
+        "memory_only",
+        "released",
+        "deleted"
+      ]
+    },
+    "retention_policy_id": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "retention_expires_at": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "physical_store": {
+      "const": "runtime_artifact_backend"
+    },
+    "physical_binding": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifact_kind",
+            "artifact_id",
+            "payload_sha256",
+            "byte_length"
+          ],
+          "properties": {
+            "artifact_kind": {
+              "enum": [
+                "patch",
+                "standard_output",
+                "standard_error",
+                "test_log",
+                "generated_file",
+                "report",
+                "model_output"
+              ]
+            },
+            "artifact_id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "payload_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 104857600
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "encryption_state": {
+      "enum": [
+        "not_persisted",
+        "encrypted_at_rest"
+      ]
+    },
+    "protected_metadata_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "lifecycle_state": {
+      "enum": [
+        "active",
+        "quarantined",
+        "released",
+        "deleted"
+      ]
+    },
+    "reason_code": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_retention_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "retention_class": {
+            "enum": [
+              "policy_persisted"
+            ]
+          }
+        },
+        "required": [
+          "retention_class"
+        ]
+      },
+      "then": {
+        "properties": {
+          "physical_binding": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "artifact_kind",
+              "artifact_id",
+              "payload_sha256",
+              "byte_length"
+            ],
+            "properties": {
+              "artifact_kind": {
+                "enum": [
+                  "patch",
+                  "standard_output",
+                  "standard_error",
+                  "test_log",
+                  "generated_file",
+                  "report",
+                  "model_output"
+                ]
+              },
+              "artifact_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "payload_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "byte_length": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 104857600
+              }
+            }
+          },
+          "retention_policy_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "retention_expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "encryption_state": {
+            "const": "encrypted_at_rest"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "physical_binding": {
+            "type": "null"
+          },
+          "retention_policy_id": {
+            "type": "null"
+          },
+          "retention_expires_at": {
+            "type": "null"
+          },
+          "encryption_state": {
+            "const": "not_persisted"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lifecycle_state": {
+            "const": "active"
+          }
+        },
+        "required": [
+          "lifecycle_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "reason_code": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "reason_code": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          }
+        }
+      }
+    }
+  ]
+}
