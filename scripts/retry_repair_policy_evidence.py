@@ -25,12 +25,25 @@ COMMANDS: Final = (
         "tool_call_repair::tests",
         "--locked",
     ),
+    (
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "--test",
+        "retry_admission",
+        "--locked",
+    ),
     ("npm", "run", "engineering-runtime:schemas:check"),
 )
 MARKERS: Final = (
     "normalization_is_ordered_bounded_and_does_not_invent_values ... ok",
     "model_repair_is_single_profile_bound_and_never_an_effect_attempt ... ok",
     "test result: ok. 2 passed; 0 failed",
+    "fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_grant ... ok",
+    "conditional_retry_requires_current_safe_effect_reconciliation ... ok",
+    "per_attempt_approval_must_be_current_exact_and_different_from_prior ... ok",
+    "test result: ok. 3 passed; 0 failed",
     "call envelope carries only the digest of validated arguments and explains every rejection",
     "pass 52",
     "fail 0",
@@ -66,6 +79,7 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-retry-repair-policy-evidence",
         "story_id": "5.2",
         "task_id": "5.2.2.1",
+        "coverage_task_ids": ["5.2.2.1", "5.2.2.2"],
         "generated_on": "2026-08-30",
         "status": "pass-local-contract-evidence",
         "normalization_contract": {
@@ -100,10 +114,25 @@ def expected_report() -> dict[str, Any]:
             "repair_already_used",
             "effect_attempt_already_exists",
         ],
+        "fresh_attempt_contract": {
+            "current_complete_preflight_required": True,
+            "conditional_effect_reconciliation_required": True,
+            "unsafe_or_stale_reconciliation_admitted": False,
+            "remaining_attempt_budget_required": True,
+            "fresh_call_and_attempt_identities_required": True,
+            "successor_grant_revision": 1,
+            "successor_grant_use_limit": 1,
+            "successor_grant_use_count": 0,
+            "successor_grant_status": "issued",
+            "fresh_per_attempt_approval_required_when_configured": True,
+            "grant_consumed_or_effect_dispatched_by_compiler": False,
+        },
         "commands": [command_text(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
         "artifacts": [
             artifact("kernel/engine/src/tool_call_repair.rs"),
+            artifact("kernel/engine/src/retry_admission.rs"),
+            artifact("kernel/engine/tests/retry_admission.rs"),
             artifact("scripts/engineering_runtime_schemas.mjs"),
             artifact("schemas/engineering-runtime/call-envelope.schema.json"),
             artifact("tests/test_engineering_runtime_schemas.mjs"),
@@ -185,7 +214,7 @@ def main() -> int:
         for failure in failures:
             print(f"retry-repair policy evidence validation failed: {failure}", file=sys.stderr)
         return 1
-    print("Sub-task 5.2.2.1 deterministic normalization and repair evidence validated")
+    print("Task 5.2.2 retry and repair evidence validated through Sub-task 5.2.2.2")
     return 0
 
 

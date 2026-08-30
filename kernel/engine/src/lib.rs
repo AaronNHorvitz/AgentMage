@@ -119,6 +119,8 @@ pub mod repository_cache;
 pub mod repository_inspection;
 /// Content-minimized repository state, exact Git plans, and owned-worktree lifecycle.
 pub mod repository_safety;
+/// Deterministic compilation of all prerequisites for one genuinely fresh attempt.
+pub mod retry_admission;
 /// Integrity-protected review packets and authority-free logical commit plans.
 pub mod review_packet;
 /// Stateful resource budgets and explicit sticky stop conditions.

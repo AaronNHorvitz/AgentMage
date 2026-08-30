@@ -1396,9 +1396,25 @@ an effect or treating approval as reusable authority.
     hash-binds implementation, schema, tests, and raw results; mutation tests reject normalization,
     binding, repair-limit, effect-attempt, and product-truth widening with zero model inference,
     authority minting, tool effects, network calls, platform claims, or release claims.
-  - [ ] **Sub-task 5.2.2.2:** Permit a new attempt only after current preflight, effect
+  - [x] **Sub-task 5.2.2.2:** Permit a new attempt only after current preflight, effect
     reconciliation, remaining budget, fresh call identity, fresh single-use grant, and fresh
-    approval when the operation requires one.
+    approval when the operation requires one. Evidence: the pure `retry_admission` compiler binds
+    the candidate admission to the exact step policy and recovery decision and returns no record
+    until all required preflight identities are complete under the current policy digest and
+    freshness window. It derives remaining attempt capacity with checked ordinal progression from
+    the immutable policy budget, requires a new attempt, call, tool-call, and grant identity, and
+    accepts only a current revision-1 `issued` operation grant with use limit 1 and use count 0.
+    Conditional retries require current content-bound reconciliation for the immediately preceding
+    attempt with a `safe_for_fresh_attempt` disposition; missing, stale, uncertain, or already-met
+    state cannot admit a successor. A `required_per_attempt` policy additionally binds the exact
+    successor approval to the tool call, grant, policy, and common expiration window and rejects
+    reuse of the prior approval. The compiler neither consumes the grant nor dispatches an effect;
+    those remain atomic authority-transaction responsibilities. Three focused integration tests
+    exercise the passing paths and prerequisite denials. The refreshed
+    [`retry-repair-policy-report.json`](artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json)
+    covers Sub-tasks 5.2.2.1 and 5.2.2.2, hash-binds both implementations and their tests, retains
+    three passing command results, and rejects preflight, reconciliation, budget, identity, grant,
+    approval, effect, and product-truth widening.
   - [ ] **Sub-task 5.2.2.3:** Deny automatic new attempts for non-idempotent, destructive, external,
     uncertain, and unknown effects and deny replay of any call, consumed grant, approval, receipt,
     idempotency key, or operation-attempt identity.

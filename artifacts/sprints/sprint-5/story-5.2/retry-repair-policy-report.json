@@ -6,6 +6,16 @@
       "sha256": "b35964bd72cfcccc6a8b13a2f95cf74ff3cecd442df4606341621fbe53e4b6db"
     },
     {
+      "byte_length": 12689,
+      "path": "kernel/engine/src/retry_admission.rs",
+      "sha256": "ef2b9d0a87c2bc841a6a0aeb2032d531aada32f413fedd75973dac0f83a74371"
+    },
+    {
+      "byte_length": 14324,
+      "path": "kernel/engine/tests/retry_admission.rs",
+      "sha256": "94864961fdcc428d82625aafbb0eab85b7bc78e302c9737cd8da2e1a0c2d5ceb"
+    },
+    {
       "byte_length": 68694,
       "path": "scripts/engineering_runtime_schemas.mjs",
       "sha256": "c90d7cfdf3e3ca3e4583a2e714660ce45584f4c2e875c2094964b440e5af96d9"
@@ -21,24 +31,29 @@
       "sha256": "d93cbc70d573eb9548ca1b122cf5ea9876524737529e716ea238a757d01ed92d"
     },
     {
-      "byte_length": 6820,
+      "byte_length": 8121,
       "path": "scripts/retry_repair_policy_evidence.py",
-      "sha256": "f70f8857a5a2a4d969dbeb16ae0910488e1a00daa197c58f48e28500586b3522"
+      "sha256": "efb49175a33b8b1b09749e232774b1fb772a7c10f9e47ca8987d7f8dd9c5409d"
     },
     {
-      "byte_length": 2295,
+      "byte_length": 3180,
       "path": "tests/test_retry_repair_policy_evidence.py",
-      "sha256": "7fd50d9e9d4801727708197191fd5ca9f6ef5a54678a6b7910a03198f1036c84"
+      "sha256": "8c2772fd2c46cb4bfbf4d9130e4fea0bf2073feef7224de1cd21ef89c26b4495"
     },
     {
-      "byte_length": 8907,
+      "byte_length": 9596,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-results.log",
-      "sha256": "a12bdfd7e2a1305561882b04372be39b1b33cc051b7d3fc498a426e1df4804d4"
+      "sha256": "03514623e9cac80e8db04545a375e01f02452a8c675b74be9630fec6857e1a55"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine tool_call_repair::tests --locked",
+    "cargo test -p agentmage-kernel-engine --test retry_admission --locked",
     "npm run engineering-runtime:schemas:check"
+  ],
+  "coverage_task_ids": [
+    "5.2.2.1",
+    "5.2.2.2"
   ],
   "denied_conditions": [
     "empty_or_incomplete_fragments",
@@ -51,6 +66,19 @@
     "repair_already_used",
     "effect_attempt_already_exists"
   ],
+  "fresh_attempt_contract": {
+    "conditional_effect_reconciliation_required": true,
+    "current_complete_preflight_required": true,
+    "fresh_call_and_attempt_identities_required": true,
+    "fresh_per_attempt_approval_required_when_configured": true,
+    "grant_consumed_or_effect_dispatched_by_compiler": false,
+    "remaining_attempt_budget_required": true,
+    "successor_grant_revision": 1,
+    "successor_grant_status": "issued",
+    "successor_grant_use_count": 0,
+    "successor_grant_use_limit": 1,
+    "unsafe_or_stale_reconciliation_admitted": false
+  },
   "generated_on": "2026-08-30",
   "model_repair_contract": {
     "call_envelope_repair_count_values": [
@@ -91,6 +119,10 @@
     "normalization_is_ordered_bounded_and_does_not_invent_values ... ok",
     "model_repair_is_single_profile_bound_and_never_an_effect_attempt ... ok",
     "test result: ok. 2 passed; 0 failed",
+    "fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_grant ... ok",
+    "conditional_retry_requires_current_safe_effect_reconciliation ... ok",
+    "per_attempt_approval_must_be_current_exact_and_different_from_prior ... ok",
+    "test result: ok. 3 passed; 0 failed",
     "call envelope carries only the digest of validated arguments and explains every rejection",
     "pass 52",
     "fail 0"
