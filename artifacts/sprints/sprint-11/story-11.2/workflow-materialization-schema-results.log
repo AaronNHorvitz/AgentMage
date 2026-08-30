@@ -5,7 +5,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::workflow_mater
 running 1 test
 test operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 700 filtered out; finished in 0.07s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 702 filtered out; finished in 0.07s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -115,7 +115,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_up
 running 1 test
 test operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 700 filtered out; finished in 0.07s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 702 filtered out; finished in 0.07s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -225,7 +225,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_r
 running 1 test
 test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 700 filtered out; finished in 16.99s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 702 filtered out; finished in 17.05s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 

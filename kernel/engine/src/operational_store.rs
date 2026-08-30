@@ -13,8 +13,9 @@ use std::time::Duration;
 
 use agentmage_kernel_contracts::{
     ActionState, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
-    CapabilityGrant, GrantId, GrantNonce, GrantStatus, OperationOutcome, Receipt, RuntimeEvent,
-    RuntimeResumeBinding, SessionCheckpoint, StrictLocalStorageObservation, from_json,
+    CONTRACT_SCHEMA_VERSION, CapabilityGrant, GrantId, GrantNonce, GrantStatus, OperationOutcome,
+    Receipt, RuntimeEvent, RuntimeEventCursor, RuntimeEventPersistenceClass, RuntimeResumeBinding,
+    RuntimeRunId, SessionCheckpoint, SessionId, StrictLocalStorageObservation, from_json,
     to_canonical_json,
 };
 use rusqlite::{
@@ -411,6 +412,29 @@ pub struct DerivedJsonLinesExportReceipt {
     pub export_sha256: String,
 }
 
+/// One canonical workflow-state projection bound to an exact correctness event.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct WorkflowStateMaterialization {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Unique immutable projection-record identity.
+    pub fingerprint_record_id: String,
+    /// Optional exact workflow step-execution identity.
+    pub step_execution_id: Option<String>,
+    /// Complete deterministic workflow-state digest.
+    pub fingerprint_sha256: String,
+    /// One-based occurrence of this fingerprint.
+    pub occurrence: u64,
+    /// Repeat count after the first occurrence.
+    pub repeat_count: u64,
+    /// Runtime run that owns this projection.
+    pub run_id: RuntimeRunId,
+    /// Session that owns the runtime run.
+    pub session_id: SessionId,
+    /// Exact correctness event that establishes this projection.
+    pub event_cursor: RuntimeEventCursor,
+}
+
 #[derive(Serialize)]
 struct DerivedExportHeader<'a> {
     record_type: &'static str,
@@ -465,6 +489,8 @@ pub enum OperationalStoreError {
     PersistenceFailure,
     /// A session checkpoint was malformed, ephemeral, or inconsistent with authority state.
     CheckpointRejected,
+    /// A workflow projection was malformed or not bound to its exact correctness event.
+    WorkflowProjectionRejected,
     /// A prior persistence ambiguity requires process restart and recovery.
     Poisoned,
 }
@@ -488,6 +514,7 @@ impl OperationalStoreError {
             Self::ConcurrentWriter => "operational_store.writer.concurrent",
             Self::PersistenceFailure => "operational_store.persistence.failed",
             Self::CheckpointRejected => "operational_store.checkpoint.rejected",
+            Self::WorkflowProjectionRejected => "operational_store.workflow_projection.rejected",
             Self::Poisoned => "operational_store.poisoned",
         }
     }
@@ -1293,6 +1320,60 @@ impl OperationalStore {
                 runtime_resume_binding: Some(binding),
                 runtime_events,
                 write_checkpoints,
+                ..SnapshotContinuity::default()
+            },
+        );
+        match result {
+            Ok(()) => {
+                self.generation = next_generation;
+                Ok(())
+            }
+            Err(error) => {
+                self.poisoned = true;
+                Err(error)
+            }
+        }
+    }
+
+    fn persist_authority_with_workflow_checkpoint(
+        &mut self,
+        issuer: &GrantIssuer,
+        coordinator: &AuthorityTransactionCoordinator,
+        checkpoint: &SessionCheckpoint,
+        binding: &RuntimeResumeBinding,
+        runtime_event: &RuntimeEvent,
+        workflow_state: &[WorkflowStateMaterialization],
+    ) -> Result<(), OperationalStoreError> {
+        if self.poisoned || workflow_state.is_empty() {
+            return Err(if self.poisoned {
+                OperationalStoreError::Poisoned
+            } else {
+                OperationalStoreError::WorkflowProjectionRejected
+            });
+        }
+        validate_checkpoint_authority_binding(issuer, coordinator, checkpoint, &[])?;
+        verify_runtime_resume_binding(binding)
+            .map_err(|_| OperationalStoreError::CheckpointRejected)?;
+        validate_workflow_state_batch(runtime_event, binding, workflow_state)?;
+        let next_generation = self
+            .generation
+            .checked_add(1)
+            .ok_or(OperationalStoreError::PersistenceFailure)?;
+        let state_sha256 = authority_state_sha256(issuer, coordinator)?;
+        let result = persist_snapshot(
+            &mut self.connection,
+            self.generation,
+            next_generation,
+            &state_sha256,
+            issuer,
+            coordinator,
+            SnapshotContinuity {
+                session_checkpoint: Some(checkpoint),
+                runtime_resume_binding: Some(binding),
+                runtime_events: std::slice::from_ref(runtime_event),
+                workflow_state,
+                runtime_resume_binding_after_events: true,
+                ..SnapshotContinuity::default()
             },
         );
         match result {
@@ -1844,6 +1925,52 @@ impl DurableAuthorityRuntime {
                 binding,
                 std::slice::from_ref(&event),
                 &[],
+            );
+        result.map_err(|error| self.poison(error))?;
+        self.reconcile_runtime_journal()?;
+        Ok(())
+    }
+
+    /// Atomically appends one correctness event and publishes its workflow state, checkpoint,
+    /// exact event cursor, and existing artifact references, or retains none of them.
+    pub fn checkpoint_runtime_session_with_workflow_state(
+        &mut self,
+        checkpoint: &SessionCheckpoint,
+        binding: &RuntimeResumeBinding,
+        event: RuntimeEvent,
+        workflow_state: &[WorkflowStateMaterialization],
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        verify_runtime_resume_binding(binding)
+            .map_err(|error| DurableAuthorityError::RuntimeArtifact(error.into()))?;
+        validate_workflow_state_batch(&event, binding, workflow_state)
+            .map_err(DurableAuthorityError::Store)?;
+        self.flush_runtime_events()?;
+        let cursor = {
+            let store = self.lock_store()?;
+            current_cursor(&store, &binding.run_id)
+                .map_err(DurableAuthorityError::RuntimeJournal)?
+                .ok_or(DurableAuthorityError::RuntimeArtifact(
+                    RuntimeArtifactStoreError::NotFound,
+                ))?
+        };
+        if cursor.run_id != event.run_id
+            || cursor.sequence.checked_add(1) != Some(event.sequence)
+            || cursor.event_sha256 != event.previous_event_sha256
+        {
+            return Err(DurableAuthorityError::RuntimeJournal(
+                RuntimeJournalError::OrderingMismatch,
+            ));
+        }
+        let result = self
+            .lock_store()?
+            .persist_authority_with_workflow_checkpoint(
+                &self.issuer,
+                &self.coordinator,
+                checkpoint,
+                binding,
+                &event,
+                workflow_state,
             );
         result.map_err(|error| self.poison(error))?;
         self.reconcile_runtime_journal()?;
@@ -3383,6 +3510,8 @@ struct SnapshotContinuity<'a> {
     runtime_resume_binding: Option<&'a RuntimeResumeBinding>,
     runtime_events: &'a [RuntimeEvent],
     write_checkpoints: &'a [WriteAwareCheckpoint],
+    workflow_state: &'a [WorkflowStateMaterialization],
+    runtime_resume_binding_after_events: bool,
 }
 
 fn persist_snapshot(
@@ -3458,7 +3587,10 @@ fn persist_snapshot(
                 ],
             )
             .map_err(|_| OperationalStoreError::PersistenceFailure)?;
-        if let Some(binding) = continuity.runtime_resume_binding {
+        if let Some(binding) = continuity
+            .runtime_resume_binding
+            .filter(|_| !continuity.runtime_resume_binding_after_events)
+        {
             persist_runtime_resume_binding(&transaction, checkpoint, binding).map_err(|error| {
                 match error {
                     RuntimeArtifactStoreError::Storage => OperationalStoreError::PersistenceFailure,
@@ -3484,10 +3616,107 @@ fn persist_snapshot(
             OperationalStoreError::IntegrityFailure
         }
     })?;
+    persist_workflow_state_materializations(&transaction, continuity.workflow_state)?;
+    if let (Some(checkpoint), Some(binding)) = (
+        continuity.session_checkpoint,
+        continuity
+            .runtime_resume_binding
+            .filter(|_| continuity.runtime_resume_binding_after_events),
+    ) {
+        persist_runtime_resume_binding(&transaction, checkpoint, binding).map_err(|error| {
+            match error {
+                RuntimeArtifactStoreError::Storage => OperationalStoreError::PersistenceFailure,
+                RuntimeArtifactStoreError::Contract(_)
+                | RuntimeArtifactStoreError::NotAuthorized
+                | RuntimeArtifactStoreError::NotFound => OperationalStoreError::CheckpointRejected,
+                RuntimeArtifactStoreError::Payload(_) | RuntimeArtifactStoreError::Integrity => {
+                    OperationalStoreError::IntegrityFailure
+                }
+            }
+        })?;
+    }
     persist_write_checkpoints(&transaction, next_generation, continuity.write_checkpoints)?;
     transaction
         .commit()
         .map_err(|_| OperationalStoreError::PersistenceFailure)
+}
+
+fn validate_workflow_state_batch(
+    event: &RuntimeEvent,
+    binding: &RuntimeResumeBinding,
+    workflow_state: &[WorkflowStateMaterialization],
+) -> Result<(), OperationalStoreError> {
+    let event_cursor = RuntimeEventCursor {
+        run_id: event.run_id.clone(),
+        event_id: event.event_id.clone(),
+        sequence: event.sequence,
+        event_sha256: event.event_sha256.clone(),
+    };
+    if workflow_state.is_empty()
+        || event.persistence != RuntimeEventPersistenceClass::Correctness
+        || binding.run_id != event.run_id
+        || binding.session_id != event.session_id
+        || binding.event_cursor != event_cursor
+    {
+        return Err(OperationalStoreError::WorkflowProjectionRejected);
+    }
+    let mut identities = BTreeSet::new();
+    for state in workflow_state {
+        if state.schema_version != CONTRACT_SCHEMA_VERSION
+            || !valid_lifecycle_identifier(&state.fingerprint_record_id)
+            || state
+                .step_execution_id
+                .as_deref()
+                .is_some_and(|value| !valid_lifecycle_identifier(value))
+            || !valid_sha256_text(&state.fingerprint_sha256)
+            || state.occurrence == 0
+            || state.occurrence.checked_sub(1) != Some(state.repeat_count)
+            || state.run_id != event.run_id
+            || state.session_id != event.session_id
+            || state.event_cursor != event_cursor
+            || !identities.insert(&state.fingerprint_record_id)
+        {
+            return Err(OperationalStoreError::WorkflowProjectionRejected);
+        }
+    }
+    Ok(())
+}
+
+fn persist_workflow_state_materializations(
+    transaction: &Transaction<'_>,
+    workflow_state: &[WorkflowStateMaterialization],
+) -> Result<(), OperationalStoreError> {
+    for state in workflow_state {
+        let record_json = serde_json::to_vec(state)
+            .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?;
+        let record_sha256 = sha256_hex(&record_json);
+        transaction
+            .execute(
+                "INSERT INTO workflow_state_fingerprints(
+                     fingerprint_record_id, step_execution_id, fingerprint_sha256,
+                     occurrence, repeat_count, run_id, session_id, event_sequence, event_id,
+                     record_sha256, record_json
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+                params![
+                    &state.fingerprint_record_id,
+                    state.step_execution_id.as_deref(),
+                    &state.fingerprint_sha256,
+                    i64::try_from(state.occurrence)
+                        .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?,
+                    i64::try_from(state.repeat_count)
+                        .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?,
+                    state.run_id.as_str(),
+                    state.session_id.as_str(),
+                    i64::try_from(state.event_cursor.sequence)
+                        .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?,
+                    state.event_cursor.event_id.as_str(),
+                    record_sha256,
+                    record_json,
+                ],
+            )
+            .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+    }
+    Ok(())
 }
 
 fn persist_write_checkpoints(
@@ -5176,12 +5405,12 @@ mod tests {
         CheckpointFileIdentity, CloudSynchronizationMarker, ContextSensitivity, CorrelationId,
         DataSensitivity, EvidenceId, GrantId, GrantNonce, GrantOperation, GrantTarget,
         HeldWorkspaceRoot, ModelProfileId, PathPlatform, PlanId, PlanStepId, PolicyId,
-        RepositorySnapshotId, RuntimeEvent, RuntimeEventCursor, RuntimeEventId, RuntimeEventKind,
-        RuntimeEventPersistenceClass, RuntimeEventRetention, RuntimeEventRetentionKind,
-        RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId, RuntimeTurnId, SessionCheckpoint,
-        SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
-        TaskId, ToolCallId, WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectIdentity,
-        WorkspaceScopePath,
+        RepositorySnapshotId, RuntimeArtifactId, RuntimeArtifactRef, RuntimeEvent,
+        RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass,
+        RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeOperationId, RuntimeResumeBinding,
+        RuntimeRunId, RuntimeTurnId, SessionCheckpoint, SessionCheckpointId, SessionId,
+        StorageFilesystemClass, StrictLocalStorageObservation, TaskId, ToolCallId,
+        WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectIdentity, WorkspaceScopePath,
     };
     use rusqlite::params;
     use serde_json::Value;
@@ -5196,8 +5425,8 @@ mod tests {
         OperationalStore, OperationalStoreError, OperationalStoreKeyError,
         OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
         RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
-        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
-        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        SCHEMA_VERSION, WorkflowStateMaterialization, ZERO_SHA256, is_linux_held_descriptor_path,
+        open_connection, prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
         verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
@@ -6614,6 +6843,239 @@ mod tests {
                     |row| row.get::<_, i64>(0),
                 )
                 .expect("rolled-back checkpoint event count"),
+            0
+        );
+        drop(store);
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn workflow_state_event_checkpoint_cursor_and_artifact_reference_commit_atomically() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let (checkpoint, _, start_event, checkpoint_event) = atomic_checkpoint_publication();
+        let event_cursor = RuntimeEventCursor {
+            run_id: checkpoint_event.run_id.clone(),
+            event_id: checkpoint_event.event_id.clone(),
+            sequence: checkpoint_event.sequence,
+            event_sha256: checkpoint_event.event_sha256.clone(),
+        };
+        let artifact = RuntimeArtifactRef {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            artifact_id: RuntimeArtifactId::from_raw("workflow-atomic-artifact-1"),
+            manifest_sha256: hash('7'),
+            payload_sha256: hash('8'),
+            byte_size: 17,
+            media_type: "text/plain".to_owned(),
+        };
+        let binding = crate::runtime_artifact::seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            run_id: checkpoint_event.run_id.clone(),
+            event_cursor: event_cursor.clone(),
+            artifacts: vec![artifact.clone()],
+            binding_sha256: ZERO_SHA256.to_owned(),
+        })
+        .expect("event-bound checkpoint binding");
+        let projection = WorkflowStateMaterialization {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            fingerprint_record_id: "workflow-atomic-fingerprint-1".to_owned(),
+            step_execution_id: Some("workflow-atomic-step-1".to_owned()),
+            fingerprint_sha256: hash('9'),
+            occurrence: 1,
+            repeat_count: 0,
+            run_id: checkpoint_event.run_id.clone(),
+            session_id: checkpoint.session_id.clone(),
+            event_cursor,
+        };
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey([65; 32]), 500)
+                .expect("durable runtime");
+        runtime
+            .record_runtime_event(start_event)
+            .expect("run start");
+        {
+            let store = runtime.store.lock().expect("store lock");
+            store
+                .connection
+                .execute(
+                    "INSERT INTO runtime_payloads VALUES (?1, 17, 'active', 1, 4000, 4000)",
+                    [&artifact.payload_sha256],
+                )
+                .expect("existing payload authority");
+            store
+                .connection
+                .execute(
+                    "INSERT INTO runtime_artifacts VALUES (
+                        ?1, ?2, ?3, 17, 'text/plain', 'report', 'private', 'session', NULL,
+                        ?4, ?5, ?6, NULL, NULL, NULL, ?7, ?8, 4000, X'7b7d'
+                     )",
+                    params![
+                        artifact.artifact_id.as_str(),
+                        &artifact.manifest_sha256,
+                        &artifact.payload_sha256,
+                        checkpoint.session_id.as_str(),
+                        checkpoint.task_id.as_str(),
+                        checkpoint_event.run_id.as_str(),
+                        checkpoint.policy_id.as_str(),
+                        &checkpoint.policy_sha256,
+                    ],
+                )
+                .expect("existing artifact authority");
+            store
+                .connection
+                .execute(
+                    "INSERT INTO runtime_artifact_states VALUES (
+                        ?1, 1, 'active', 'verified', 'artifact.published', 4000, ?2
+                     )",
+                    params![artifact.artifact_id.as_str(), hash('a')],
+                )
+                .expect("existing verified artifact state");
+        }
+
+        runtime
+            .checkpoint_runtime_session_with_workflow_state(
+                &checkpoint,
+                &binding,
+                checkpoint_event,
+                std::slice::from_ref(&projection),
+            )
+            .expect("atomic workflow publication");
+
+        let store = runtime.store.lock().expect("published store");
+        for (table, expected) in [
+            ("session_checkpoints", 1_i64),
+            ("runtime_resume_bindings", 1),
+            ("runtime_resume_artifacts", 1),
+            ("workflow_state_fingerprints", 1),
+        ] {
+            let sql = format!("SELECT COUNT(*) FROM {table}");
+            assert_eq!(
+                store
+                    .connection
+                    .query_row(&sql, [], |row| row.get::<_, i64>(0))
+                    .expect("atomic publication count"),
+                expected,
+                "{table}"
+            );
+        }
+        assert_eq!(
+            store
+                .connection
+                .query_row(
+                    "SELECT event_sequence, event_id FROM workflow_state_fingerprints
+                     WHERE fingerprint_record_id = ?1",
+                    [&projection.fingerprint_record_id],
+                    |row| Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?)),
+                )
+                .expect("workflow projection event"),
+            (
+                i64::try_from(binding.event_cursor.sequence).expect("event sequence"),
+                binding.event_cursor.event_id.as_str().to_owned(),
+            )
+        );
+        drop(store);
+        drop(runtime);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn workflow_projection_failure_retains_no_event_checkpoint_cursor_or_state() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let (checkpoint, _, start_event, checkpoint_event) = atomic_checkpoint_publication();
+        let event_cursor = RuntimeEventCursor {
+            run_id: checkpoint_event.run_id.clone(),
+            event_id: checkpoint_event.event_id.clone(),
+            sequence: checkpoint_event.sequence,
+            event_sha256: checkpoint_event.event_sha256.clone(),
+        };
+        let binding = crate::runtime_artifact::seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            run_id: checkpoint_event.run_id.clone(),
+            event_cursor: event_cursor.clone(),
+            artifacts: Vec::new(),
+            binding_sha256: ZERO_SHA256.to_owned(),
+        })
+        .expect("event-bound checkpoint binding");
+        let projection = WorkflowStateMaterialization {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            fingerprint_record_id: "workflow-atomic-rollback-1".to_owned(),
+            step_execution_id: None,
+            fingerprint_sha256: hash('b'),
+            occurrence: 2,
+            repeat_count: 1,
+            run_id: checkpoint_event.run_id.clone(),
+            session_id: checkpoint.session_id.clone(),
+            event_cursor,
+        };
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey([66; 32]), 500)
+                .expect("durable runtime");
+        runtime
+            .record_runtime_event(start_event)
+            .expect("run start");
+        let generation_before = runtime.generation().expect("generation before fault");
+        {
+            let store = runtime.store.lock().expect("store lock");
+            store
+                .connection
+                .execute_batch(
+                    "CREATE TRIGGER fail_workflow_projection
+                     BEFORE INSERT ON workflow_state_fingerprints
+                     BEGIN
+                        SELECT RAISE(ABORT, 'injected workflow projection failure');
+                     END;",
+                )
+                .expect("projection fault trigger");
+        }
+
+        assert_eq!(
+            runtime
+                .checkpoint_runtime_session_with_workflow_state(
+                    &checkpoint,
+                    &binding,
+                    checkpoint_event,
+                    std::slice::from_ref(&projection),
+                )
+                .expect_err("projection failure must roll back every publication"),
+            DurableAuthorityError::Store(OperationalStoreError::PersistenceFailure)
+        );
+        let store = runtime.store.lock().expect("store after rollback");
+        assert_eq!(store.generation(), generation_before);
+        for table in [
+            "session_checkpoints",
+            "runtime_resume_bindings",
+            "runtime_resume_artifacts",
+            "workflow_state_fingerprints",
+        ] {
+            let sql = format!("SELECT COUNT(*) FROM {table}");
+            assert_eq!(
+                store
+                    .connection
+                    .query_row(&sql, [], |row| row.get::<_, i64>(0))
+                    .expect("rolled-back table count"),
+                0,
+                "{table}"
+            );
+        }
+        assert_eq!(
+            store
+                .connection
+                .query_row(
+                    "SELECT COUNT(*) FROM runtime_events WHERE sequence = 1",
+                    [],
+                    |row| row.get::<_, i64>(0),
+                )
+                .expect("rolled-back event count"),
             0
         );
         drop(store);

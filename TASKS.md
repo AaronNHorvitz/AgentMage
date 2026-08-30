@@ -1991,7 +1991,7 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     and [`source-lifecycle-transactions-results.log`](artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log)
     make no typed-publication, exhaustive source crash-campaign, Story, Sprint, platform, packaging,
     or release-completion claim.
-- [ ] **Task 11.2.2 - Add workflow materializations**
+- [x] **Task 11.2.2 - Add workflow materializations**
   - [x] **Sub-task 11.2.2.1:** Add plan-step policy, attempt, preflight, tool-call, idempotency-key,
     approval, receipt, verification, consumed-budget, recovery-decision, state-fingerprint, and
     terminal-diagnostic records keyed to existing run/session/event identities. Evidence: migration
@@ -2032,8 +2032,23 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     and [`workflow-attempt-invariants-results.log`](artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-results.log)
     leave atomic event/projection/checkpoint publication, exhaustive workflow crash coverage,
     Story, Sprint, platform, packaging, and release completion to later tasks.
-  - [ ] **Sub-task 11.2.2.3:** Commit correctness events, materialized workflow state, checkpoint
-    cursor, and referenced artifacts in one canonical transaction or retain none.
+  - [x] **Sub-task 11.2.2.3:** Commit correctness events, materialized workflow state, checkpoint
+    cursor, and referenced artifacts in one canonical transaction or retain none. Evidence: the
+    typed `WorkflowStateMaterialization` and
+    `checkpoint_runtime_session_with_workflow_state` path reuse the operational store's immediate
+    SQLCipher snapshot and generation compare-and-swap. The transaction appends the exact
+    correctness event, inserts its bounded workflow-state projection, and only then persists the
+    checkpoint binding whose cursor names that newly appended event plus its ordered existing
+    artifact-reference set before one commit. Exact run, session, event identity, sequence, digest,
+    occurrence counters, record identities, and artifact metadata are checked before publication.
+    The success test co-commits one event, state row, checkpoint, new-event cursor, and existing
+    artifact reference; an injected projection failure retains none of those rows and leaves the
+    prior generation unchanged. The predecessor checkpoint/reopen proof, strict Clippy, and five
+    evidence mutation/overclaim tests pass. Retained
+    [`workflow-atomic-publication-report.json`](artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-report.json)
+    and [`workflow-atomic-publication-results.log`](artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-results.log)
+    make no exhaustive workflow crash-campaign, Story, Sprint, platform, packaging, or release
+    completion claim.
 - [ ] **Task 11.2.3 - Implement migrations and compatibility**
   - [ ] **Sub-task 11.2.3.1:** Add forward migrations, fixture snapshots, schema hashes, rollback
     tests, interrupted-migration recovery, future-schema refusal, and occupied-destination handling.

@@ -1,0 +1,72 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 392450,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "4733c3ee04e46ab0f55a4464e15bf76f880146f4e52fa09c923f81730bac7375"
+    },
+    {
+      "byte_length": 1847,
+      "path": "docs/verification/story-11-2-workflow-atomic-publication-evidence.md",
+      "sha256": "ee6d3dd4b15cab5f30394f0e00d3754a5e5ec720eac6f229e470a0d7ced1d702"
+    },
+    {
+      "byte_length": 8089,
+      "path": "scripts/workflow_atomic_publication_evidence.py",
+      "sha256": "f388eb3ac12a3c3005c5030c5e13c4f9fb0865fb97570255c4cdd42e2c3dcb14"
+    },
+    {
+      "byte_length": 1753,
+      "path": "tests/test_workflow_atomic_publication_evidence.py",
+      "sha256": "8a911a800e4e80428e8b8b9af56d3ac07d8d3416aa7ec9ea883859bb94f62701"
+    },
+    {
+      "byte_length": 12908,
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-results.log",
+      "sha256": "e5c48218d2f55b60e1284c0adfc6e560f3f393530ffc81c4851feb104e6e2095"
+    }
+  ],
+  "canonical_store": "operational-store",
+  "commands": [
+    "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_state_event_checkpoint_cursor_and_artifact_reference_commit_atomically --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_projection_failure_retains_no_event_checkpoint_cursor_or_state --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::correctness_event_checkpoint_and_binding_survive_one_atomic_reopen --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "failure_contract": {
+    "artifact_reference_exact": true,
+    "generation_compare_and_swap": true,
+    "injected_projection_failure_retains_none": true,
+    "new_event_cursor_exact": true,
+    "single_immediate_sqlcipher_transaction": true,
+    "writer_poisoned_after_ambiguous_storage_failure": true
+  },
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "atomic_event_projection_checkpoint_commit_complete": true,
+    "attempt_and_idempotency_invariants_complete": true,
+    "full_workflow_crash_campaign_complete": false,
+    "release_claim": "none",
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "workflow_metadata_materializations_complete": true
+  },
+  "record_type": "agentmage-workflow-atomic-publication-evidence",
+  "required_markers": [
+    "workflow_state_event_checkpoint_cursor_and_artifact_reference_commit_atomically ... ok",
+    "workflow_projection_failure_retains_no_event_checkpoint_cursor_or_state ... ok",
+    "correctness_event_checkpoint_and_binding_survive_one_atomic_reopen ... ok"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-atomic-publication",
+  "story_id": "11.2",
+  "task_id": "11.2.2.3",
+  "transaction_members": [
+    "correctness_event",
+    "workflow_state_materialization",
+    "session_checkpoint",
+    "new_event_cursor",
+    "referenced_runtime_artifacts"
+  ]
+}
