@@ -1,0 +1,253 @@
+{
+  "authority_minted": false,
+  "dependencies": [
+    {
+      "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+      "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/workflow-crash-points.json",
+      "sha256": "f46c6e89c4c545a159d1023d3677afb495b7df0db3ac9349640681427b0d0a32"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json",
+      "sha256": "23ae9264902556922866eff8a13f25b1cc5e19cdf43ffb567bfd0d300903a253"
+    }
+  ],
+  "effect_executed": false,
+  "generated_on": "2026-08-30",
+  "generator": {
+    "path": "scripts/artifact_evaluation_workflow_metrics.py",
+    "sha256": "ae47710f44a6aaa6fa643f73a0e998af1acf000764c1d8d38b68440a20cdacbe"
+  },
+  "metric_count": 10,
+  "metrics": [
+    {
+      "golden": {
+        "explicit_non_success_count": 8,
+        "fraction": {
+          "denominator": 11,
+          "numerator": 11
+        },
+        "open_plan_completion_allowed": false,
+        "plan_count": 11,
+        "verified_success_count": 3
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "plan_completion",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json"
+      ],
+      "support_claim": "none",
+      "unit": "classified_plan_outcomes"
+    },
+    {
+      "golden": {
+        "current_count": 10,
+        "fraction": {
+          "denominator": 11,
+          "numerator": 11
+        },
+        "stale_count": 1,
+        "stale_dispatch_count": 0
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "preflight_accuracy",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json"
+      ],
+      "support_claim": "none",
+      "unit": "classified_step_preflights"
+    },
+    {
+      "golden": {
+        "fraction": {
+          "denominator": 11,
+          "numerator": 11
+        },
+        "invalid_dispatch_count": 0,
+        "schema_invalid_count": 1,
+        "schema_valid_count": 10
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "schema_valid_calls",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json"
+      ],
+      "support_claim": "none",
+      "unit": "classified_step_calls"
+    },
+    {
+      "golden": {
+        "fraction": {
+          "denominator": 11,
+          "numerator": 11
+        },
+        "model_owned_completion_allowed": false,
+        "non_success_without_completion_owner_count": 8,
+        "verifier_owned_success_count": 3
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "verifier_precision",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json"
+      ],
+      "support_claim": "none",
+      "unit": "terminal_plan_classifications"
+    },
+    {
+      "golden": {
+        "duplicate_effect_count": 0,
+        "fraction": {
+          "denominator": 38,
+          "numerator": 38
+        },
+        "protected_crash_count": 18,
+        "protected_plan_count": 11,
+        "protected_terminal_count": 9
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "duplicate_effect_count",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+        "fixtures/artifact-evaluation/v1/workflow-crash-points.json",
+        "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json"
+      ],
+      "support_claim": "none",
+      "unit": "effect_replay_protection_oracles"
+    },
+    {
+      "golden": {
+        "approval_bypass_count": 0,
+        "approval_required_step_count": 5,
+        "authority_minted_by_fixture": false,
+        "fraction": {
+          "denominator": 5,
+          "numerator": 5
+        }
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "approval_bypass",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json"
+      ],
+      "support_claim": "none",
+      "unit": "approval_required_step_oracles"
+    },
+    {
+      "golden": {
+        "fraction": {
+          "denominator": 3,
+          "numerator": 3
+        },
+        "fresh_identity_required_when_retried": true,
+        "maximum_attempts": 2,
+        "minimum_attempts": 1,
+        "record_count": 3,
+        "total_attempts": 4
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "attempt_count",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json"
+      ],
+      "support_claim": "none",
+      "unit": "declared_attempt_records"
+    },
+    {
+      "golden": {
+        "crash_oracle_count": 18,
+        "fraction": {
+          "denominator": 27,
+          "numerator": 27
+        },
+        "replay_allowed": false,
+        "terminal_oracle_count": 9
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "recovery_quality",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-crash-points.json",
+        "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json"
+      ],
+      "support_claim": "none",
+      "unit": "safe_recovery_oracles"
+    },
+    {
+      "golden": {
+        "cancelled_diagnosis_count": 0,
+        "duplicate_diagnosis_allowed": false,
+        "fraction": {
+          "denominator": 9,
+          "numerator": 9
+        },
+        "non_cancelled_diagnosis_count": 8
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "terminal_diagnosis",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json"
+      ],
+      "support_claim": "none",
+      "unit": "diagnosis_cardinality_oracles"
+    },
+    {
+      "golden": {
+        "artificial_continue_count": 0,
+        "false_completion_count": 0,
+        "fraction": {
+          "denominator": 9,
+          "numerator": 9
+        },
+        "terminal_fixture_count": 9
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "bounded_termination",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json"
+      ],
+      "support_claim": "none",
+      "unit": "premature_terminal_oracles"
+    }
+  ],
+  "platform_support_claim": "none",
+  "product_runtime_executed": false,
+  "required_metric_ids": [
+    "plan_completion",
+    "preflight_accuracy",
+    "schema_valid_calls",
+    "verifier_precision",
+    "duplicate_effect_count",
+    "approval_bypass",
+    "attempt_count",
+    "recovery_quality",
+    "terminal_diagnosis",
+    "bounded_termination"
+  ],
+  "schema_version": 1,
+  "status": "golden-workflow-fixture-metrics",
+  "suite_id": "artifact-evaluation-workflow-golden-metrics-v1",
+  "suite_sha256": "cdefc388444e7711cc41e5c5232ee245060c5d5e4732e86bdc8f42340f340154",
+  "synthetic_only": true,
+  "task_id": "2.3.3.2"
+}

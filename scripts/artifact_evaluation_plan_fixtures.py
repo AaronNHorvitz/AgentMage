@@ -94,7 +94,7 @@ def fixtures() -> list[dict[str, Any]]:
                 {"revision": 1, "proposal_sha256": sha256_bytes(b"synthetic exact repaired proposal"), "state": "schema_valid"},
             ],
         ),
-        fixture("transient_read_failure", [step("read", retry="recoverable_read")], {"admission": "admitted", "terminal_state": "verified_success", "attempt_count": 2, "fresh_attempt_ids_required": True, "automatic_retry_permitted": True}),
+        fixture("transient_read_failure", [step("read", retry="recoverable_read")], {"admission": "admitted", "terminal_state": "verified_success", "attempt_count": 2, "fresh_attempt_ids_required": True, "automatic_retry_permitted": True, "completion_owner": "deterministic_verifier"}),
         fixture("conditional_conflict", [step("conditional-write", effect="conditional", retry="conditional_after_reconciliation", approval="required_once")], {"admission": "blocked_pending_reconciliation", "terminal_state": "conflict", "reason_code": "conditional_preimage_conflict", "automatic_retry_permitted": False, "fresh_approval_after_reconciliation": True}),
         fixture("non_idempotent_effect", [step("non-idempotent", effect="non_idempotent", retry="user_decision_required", approval="required_per_attempt")], {"admission": "blocked_pending_user", "terminal_state": "approval_required", "automatic_retry_permitted": False, "fresh_approval_per_attempt": True}),
         fixture("uncertain_effect", [step("conditional-write", effect="conditional", retry="conditional_after_reconciliation", approval="required_once")], {"admission": "admitted", "terminal_state": "uncertain", "reason_code": "effect_outcome_uncertain", "automatic_retry_permitted": False, "reconciliation_required": True}),

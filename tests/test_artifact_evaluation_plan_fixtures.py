@@ -32,6 +32,7 @@ class ArtifactEvaluationPlanFixtureTests(unittest.TestCase):
         self.assertEqual(result["attempt_count"], 2)
         self.assertTrue(result["fresh_attempt_ids_required"])
         self.assertTrue(result["automatic_retry_permitted"])
+        self.assertEqual(result["completion_owner"], "deterministic_verifier")
 
     def test_effect_classes_never_gain_unsafe_automatic_retry(self) -> None:
         for category in ("conditional_conflict", "non_idempotent_effect", "uncertain_effect", "destructive_request", "external_effect"):

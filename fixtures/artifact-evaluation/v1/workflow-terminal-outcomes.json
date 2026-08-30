@@ -20,7 +20,7 @@
         "verified_completion": false
       },
       "fixture_id": "workflow-terminal-empty-output-v1",
-      "fixture_sha256": "82968250ded9da66b9c598ba0d086bb92916e55261fcfeb996eacec41e2d0bd4",
+      "fixture_sha256": "9dbb2efeaddb4c6a2e6c672e38d934f8d79f25c7efc71aecc9db1a57af2dd370",
       "limits": {
         "model_turns": 3,
         "repeated_state_count": 3,
@@ -33,7 +33,7 @@
         "provider_output_empty"
       ],
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "product_runtime_executed": false,
       "real_provider_contacted": false,
       "repeated_state_count": 0,
@@ -70,7 +70,7 @@
         "verified_completion": false
       },
       "fixture_id": "workflow-terminal-reasoning-only-output-v1",
-      "fixture_sha256": "a2b214a1d54e7d8538300c5ae1bc87ac492eebfc376800adaea06e5e42bf884c",
+      "fixture_sha256": "385cf3cff7988c33f5f7db84786d9fa84c1cc70a9284d03280b32c58ff860cd8",
       "limits": {
         "model_turns": 3,
         "repeated_state_count": 3,
@@ -84,7 +84,7 @@
         "proposal_absent"
       ],
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "product_runtime_executed": false,
       "real_provider_contacted": false,
       "repeated_state_count": 0,
@@ -121,7 +121,7 @@
         "verified_completion": false
       },
       "fixture_id": "workflow-terminal-false-completion-v1",
-      "fixture_sha256": "d82b57fa10936d86511064b46c7a279a1ad39af8ab05eeffa2d7e1ebe801e14f",
+      "fixture_sha256": "27b92f0a8865ab0cf8f4e280d2cfc07b231d9b76d1727d56c89f97b297bc64c9",
       "limits": {
         "model_turns": 3,
         "repeated_state_count": 3,
@@ -135,7 +135,7 @@
         "verification_evidence_absent"
       ],
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "product_runtime_executed": false,
       "real_provider_contacted": false,
       "repeated_state_count": 0,
@@ -172,7 +172,7 @@
         "verified_completion": false
       },
       "fixture_id": "workflow-terminal-open-plan-completion-v1",
-      "fixture_sha256": "771035e61ee60d2a7a3a50d5696f4fa1fed0f91704aea025fa219b0b59876f1a",
+      "fixture_sha256": "2d7f4ddcf94d7c776cc3f508e6bade8d8aa07f5b299c764dff8b449b9fc54082",
       "limits": {
         "model_turns": 3,
         "repeated_state_count": 3,
@@ -186,7 +186,7 @@
         "required_step_open"
       ],
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "product_runtime_executed": false,
       "real_provider_contacted": false,
       "repeated_state_count": 0,
@@ -223,7 +223,7 @@
         "verified_completion": false
       },
       "fixture_id": "workflow-terminal-post-error-stop-v1",
-      "fixture_sha256": "27f3539cbfeb94a76233173f1afb6b6e468c21e8ebc972eba232ae1fe9c26000",
+      "fixture_sha256": "000bc590b70d386b44d7ffb150c6e6c92f2472eb1fe82e47ab9a988d0e35e5d5",
       "limits": {
         "model_turns": 3,
         "repeated_state_count": 3,
@@ -237,7 +237,7 @@
         "provider_output_stopped"
       ],
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "product_runtime_executed": false,
       "real_provider_contacted": false,
       "repeated_state_count": 0,
@@ -274,7 +274,7 @@
         "verified_completion": false
       },
       "fixture_id": "workflow-terminal-repeated-state-loop-v1",
-      "fixture_sha256": "17f2cad9f6f95f8b8ec69c0c8c2237f910b633aa15d9c296dac57a62fffafce3",
+      "fixture_sha256": "5800e6f571cf906572ee6a9b4a6f147ae9cb9e3348a6e9bc1d708353ed960d51",
       "limits": {
         "model_turns": 3,
         "repeated_state_count": 3,
@@ -288,7 +288,7 @@
         "state_fingerprint_01"
       ],
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "product_runtime_executed": false,
       "real_provider_contacted": false,
       "repeated_state_count": 3,
@@ -325,7 +325,7 @@
         "verified_completion": false
       },
       "fixture_id": "workflow-terminal-budget-exhaustion-v1",
-      "fixture_sha256": "146292e541107810c50a355e9c75087351cef034bb45126a9a193bfb46a43270",
+      "fixture_sha256": "6179c42a01502495bca578cd5835c69b2a9fd114760533e4802f5e933f80af28",
       "limits": {
         "model_turns": 3,
         "repeated_state_count": 3,
@@ -340,7 +340,7 @@
         "model_turn_03"
       ],
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "product_runtime_executed": false,
       "real_provider_contacted": false,
       "repeated_state_count": 0,
@@ -379,7 +379,7 @@
         "verified_completion": false
       },
       "fixture_id": "workflow-terminal-cancellation-v1",
-      "fixture_sha256": "cac872bdb2e8995549b30e1f07156b1b7c7d0ffc87129b5e9b0461ca88b01f24",
+      "fixture_sha256": "5ab48ddad2ddeca6b9e15e95e8572c41e1d233aa7a231be935630aa59f712fe7",
       "limits": {
         "model_turns": 3,
         "repeated_state_count": 3,
@@ -392,7 +392,7 @@
         "cancellation_observed"
       ],
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "product_runtime_executed": false,
       "real_provider_contacted": false,
       "repeated_state_count": 0,
@@ -416,7 +416,7 @@
         "verified_completion": false
       },
       "fixture_id": "workflow-terminal-provider-disconnect-v1",
-      "fixture_sha256": "025419b1cefa14123ab54184a8b0af08a4e6480a95d4d5f8feb7e50c97657a93",
+      "fixture_sha256": "3dbad7d00647ed9c471fb8ff00240377863d8eea3e7b80ee8f3bdc96fe021884",
       "limits": {
         "model_turns": 3,
         "repeated_state_count": 3,
@@ -430,7 +430,7 @@
         "proposal_incomplete"
       ],
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "product_runtime_executed": false,
       "real_provider_contacted": false,
       "repeated_state_count": 0,
@@ -458,7 +458,7 @@
   },
   "plan_dependency": {
     "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
-    "sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0"
+    "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
   },
   "product_runtime_executed": false,
   "real_provider_contacted": false,
@@ -476,7 +476,7 @@
   "schema_version": 1,
   "status": "synthetic-premature-terminal-contract",
   "suite_id": "artifact-evaluation-workflow-terminal-outcomes-v1",
-  "suite_sha256": "0a9c53ce9d69b25441596a8b2281a5e504e624c53fa7cca21074acd43eccd9f3",
+  "suite_sha256": "12bc1a65a95249819fec42611b14fdb0aaf4ad5e5da1f07d906c0397a9f0f691",
   "synthetic_only": true,
   "task_id": "2.3.2.3",
   "terminal_result_vocabulary": [

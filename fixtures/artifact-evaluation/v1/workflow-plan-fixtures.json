@@ -196,11 +196,12 @@
         "admission": "admitted",
         "attempt_count": 2,
         "automatic_retry_permitted": true,
+        "completion_owner": "deterministic_verifier",
         "fresh_attempt_ids_required": true,
         "terminal_state": "verified_success"
       },
       "fixture_id": "workflow-plan-transient-read-failure-v1",
-      "fixture_sha256": "911a40f2bf0f318c1e9ff09a163ba84b8e4fea6cbb9fb62d52c925e97c338c6d",
+      "fixture_sha256": "ab58be7dda177bebe67efa321f313588ce5b957c3d64edf672c91ea7d8d8c247",
       "plan_id": "plan-transient-read-failure-v1",
       "plan_revision": 0,
       "proposal_revisions": [],
@@ -387,7 +388,7 @@
   "generated_on": "2026-08-30",
   "generator": {
     "path": "scripts/artifact_evaluation_plan_fixtures.py",
-    "sha256": "5ed1e28c06624405dc4650a8155ee33980914d23cd6dc89c8a249a61a6eff8c0"
+    "sha256": "6dc5a83a12804ccb8d168973e065fb506bdb039cd2d14d41d37d9a85f1d07c94"
   },
   "product_runtime_executed": false,
   "required_categories": [
@@ -406,7 +407,7 @@
   "schema_version": 1,
   "status": "synthetic-plan-fixture-contract",
   "suite_id": "artifact-evaluation-workflow-plans-v1",
-  "suite_sha256": "552d44be60c392121865817a735d443a8246bf601273b6e0c1fa2d7e548824d1",
+  "suite_sha256": "d007935bcf7a24f055202bb6a49b96cee347fa283d811d52aedd2aec5f278977",
   "synthetic_only": true,
   "task_id": "2.3.2.1"
 }

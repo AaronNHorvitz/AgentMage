@@ -28,9 +28,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-before-proposal-v1",
-      "fixture_sha256": "fb26ca89f79b4941b18647269fd170035db67377545198513ca210a6862052d4",
+      "fixture_sha256": "8e9c362996fc4a82ed7f161fe4bbed4d4954abd66added0e9dd027693226e039",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "before",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -52,9 +52,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-after-proposal-v1",
-      "fixture_sha256": "285fce2bb4a70be431711e816f1286a7faaefaa4eaf62dc4d6763d526e425d11",
+      "fixture_sha256": "16f910555c0522eec38c410b181039411235f047e9580f8a8e7d954c4cf23e1c",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "after",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -76,9 +76,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-before-validation-v1",
-      "fixture_sha256": "345baa6b7300d8dfc8157db6b8977e139d6e43dee3c79c24030322aa0be16442",
+      "fixture_sha256": "a5359dc78be61890971b3dc5ab7b9634a964e84376bcf509f98d4b5be791aae1",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "before",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -101,9 +101,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-after-validation-v1",
-      "fixture_sha256": "23311c49f8e1da171a0f2a87d3e22b3f9e88bdf676d28e705232cd0700e7e14a",
+      "fixture_sha256": "31696ad731a67c31901ecf03f850002a147f8ecbfa9cdd4da8aac48017893b8c",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "after",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -126,9 +126,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-before-approval-v1",
-      "fixture_sha256": "06092a4b455ada95e53ab9ccc14e0b50e814d591fdf1a79b9518e4962dc4b9df",
+      "fixture_sha256": "cabd741784c00547c83c67681b0dd456e3188b35fba9464b2251ca5e3b999161",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "before",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -152,9 +152,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-after-approval-v1",
-      "fixture_sha256": "6aef98ea01ca2a6fc23a4ff12001ebc27598a43673dc4773995f00d962892f15",
+      "fixture_sha256": "6e7aa14519e13fa6fde5c50fd5e43b547ed99fb0b5ee27e73eb309037dc00ded",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "after",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -178,9 +178,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-before-dispatch-v1",
-      "fixture_sha256": "364fb99f4d56b6ec9b22033e7ff386852fd3e7e75ba5762e6a0284ea049e5ad2",
+      "fixture_sha256": "d2ecfbc2ac88d6aa1d6f750d3c64bafaaaef39b528e84a14c229cca36c13ffb5",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "before",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -205,9 +205,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-after-dispatch-v1",
-      "fixture_sha256": "d64bdbe965a0e72edfe9dd77c241dcc52bc96ab9ef57555059b5f9709b411f45",
+      "fixture_sha256": "27b75c70e336558dccc5f5960b2a771b26489ef05f800f9487d06bb2ae5f3ee8",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "after",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -232,9 +232,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-before-effect-observation-v1",
-      "fixture_sha256": "d4c0bb9bd0b66774ed0819bc068f260934aa6f01708bcd50c2ae4295896f5679",
+      "fixture_sha256": "ac061b0b4ffe10a880ec880bd9bdde4393b0bd927ce8b1b6cdbeb456d799a4ac",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "before",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -260,9 +260,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-after-effect-observation-v1",
-      "fixture_sha256": "46734aba9707c3aeea7bba3f8f0869b59f07cd5b18233e4cf5d6995a4281461a",
+      "fixture_sha256": "04126fd85a28d1a1a0a42faf36c4b2d6af1e1251e6e84f1c0f03caa6d287ddd6",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "after",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -288,9 +288,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-before-receipt-v1",
-      "fixture_sha256": "f03bff5b7aea53eea0ab06bd1fd4bc6aaabcd849ae90db4e68a0730230d05658",
+      "fixture_sha256": "8e93c4a8a5717105a4d018d823234cbbe7e316475bccfcf3e36c682857f71e2e",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "before",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -317,9 +317,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-after-receipt-v1",
-      "fixture_sha256": "28703bb0824e6282bcb0d3a999e735ec608edf726ac48026c0c74b58f5d02efe",
+      "fixture_sha256": "4e24dbd4fc862967245c12d60bb87e915bacf6b05a24e6ec37dd27ae891baf55",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "after",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -346,9 +346,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-before-verification-v1",
-      "fixture_sha256": "bbbf9c4269f082c5cc650123b72374129825eb01fe566ad6c3082421aa07feb6",
+      "fixture_sha256": "4b50921144d16cbfef513c9a2f5a9ff7dab3e6683c166c4b3a5d234095e6eb31",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "before",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -376,9 +376,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-after-verification-v1",
-      "fixture_sha256": "0ecb48550ed57313ed4856571e543a007e5ec1806bcf7f8f205ca27eaff25ba3",
+      "fixture_sha256": "a16fb6ee3527ef97f02289e0e8459f9545aabf858c3b53153679382e4a2ae2f4",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "after",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -406,9 +406,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-before-checkpoint-v1",
-      "fixture_sha256": "46834288ee7909dcb5d5fe753545fd3577fdb332387fb4f3454fc2f4644a79d3",
+      "fixture_sha256": "748b532a34a4939d292083875b85be7e0b0ccd6220c88f415b600a9038a7ed5e",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "before",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -437,9 +437,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-after-checkpoint-v1",
-      "fixture_sha256": "4be2e13ccf3c580c59a053603d2afd72b13546bb834c01a1f753e0edcb479310",
+      "fixture_sha256": "262edfcfd223fc4a93e4492c6a8ff311c744a4a2aebb011dd82577d7f5467737",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "after",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -468,9 +468,9 @@
         "terminal_event_durable": false
       },
       "fixture_id": "workflow-crash-before-terminal-event-commit-v1",
-      "fixture_sha256": "719098113e57741b5983e2a64977dea53af998f1272dda2f55c91d99fa5dad96",
+      "fixture_sha256": "0e06eda770b6ae321334607cf09a3e569112788d6941cf3a1e87fa1eeaac02d0",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "before",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -500,9 +500,9 @@
         "terminal_event_durable": true
       },
       "fixture_id": "workflow-crash-after-terminal-event-commit-v1",
-      "fixture_sha256": "7da82425a5f4bd57191889858e041c59b479e7dfe82dc7cba98eeaf95997387c",
+      "fixture_sha256": "576897fc7e3f7abc36e29427f53ab2d25788901d87ba17737ad5959ae0e5b6df",
       "plan_fixture_id": "workflow-plan-success-v1",
-      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "plan_suite_sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c",
       "position": "after",
       "process_terminated": false,
       "synthetic_crash_only": true
@@ -515,7 +515,7 @@
   },
   "plan_dependency": {
     "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
-    "sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0"
+    "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
   },
   "positions": [
     "before",
@@ -526,7 +526,7 @@
   "schema_version": 1,
   "status": "synthetic-crash-point-contract",
   "suite_id": "artifact-evaluation-workflow-crash-points-v1",
-  "suite_sha256": "3b41a1af61cc6cbbadb0773b429eb52b8a30248e33a02122b6f48073c531bf5c",
+  "suite_sha256": "74c71d44779668e2369298fe92b9368524a540c6210e4cbf92db3d2751673425",
   "synthetic_only": true,
   "task_id": "2.3.2.2"
 }
