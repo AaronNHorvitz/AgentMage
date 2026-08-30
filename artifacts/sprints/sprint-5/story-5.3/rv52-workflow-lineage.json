@@ -1,0 +1,161 @@
+{
+  "edges": [
+    {
+      "from": "rv52-synthetic-graph-01",
+      "relation": "evidence-precedes",
+      "to": "rv52-synthetic-event-01"
+    },
+    {
+      "from": "rv52-synthetic-event-01",
+      "relation": "evidence-precedes",
+      "to": "rv52-synthetic-attempt-01"
+    },
+    {
+      "from": "rv52-synthetic-attempt-01",
+      "relation": "evidence-precedes",
+      "to": "rv52-synthetic-grant-01"
+    },
+    {
+      "from": "rv52-synthetic-grant-01",
+      "relation": "evidence-precedes",
+      "to": "rv52-synthetic-effect-01"
+    },
+    {
+      "from": "rv52-synthetic-effect-01",
+      "relation": "evidence-precedes",
+      "to": "rv52-synthetic-receipt-01"
+    },
+    {
+      "from": "rv52-synthetic-receipt-01",
+      "relation": "evidence-precedes",
+      "to": "rv52-synthetic-verification-01"
+    },
+    {
+      "from": "rv52-synthetic-verification-01",
+      "relation": "evidence-precedes",
+      "to": "rv52-synthetic-terminal-state-01"
+    },
+    {
+      "from": "rv52-synthetic-terminal-state-01",
+      "relation": "evidence-precedes",
+      "to": "rv52-synthetic-no-replay-01"
+    }
+  ],
+  "execution_truth": {
+    "lineage_is_native_evidence": false,
+    "lineage_is_runtime_receipt": false,
+    "runtime_effect_executed": false
+  },
+  "fixture_class": "synthetic-authority-free-contract",
+  "identity_contract": {
+    "all_identities_unique": true,
+    "attempt_predecessor_chain_is_ordered": true,
+    "grant_is_single_use": true,
+    "receipt_is_single_issue": true,
+    "replayed_identity_is_admitted": false,
+    "terminal_state_requires_verification": true,
+    "verification_is_current_and_receipt_bound": true
+  },
+  "nodes": [
+    {
+      "evidence_marker": "admits_an_exact_closed_graph_and_exposes_no_execution_authority ... ok",
+      "kind": "graph",
+      "ordinal": 1,
+      "status": "PASS_LOCAL_CONTRACT",
+      "synthetic_identity": "rv52-synthetic-graph-01"
+    },
+    {
+      "evidence_marker": "fingerprint_is_deterministic_complete_and_boundary_preserving ... ok",
+      "kind": "event",
+      "ordinal": 2,
+      "status": "PASS_LOCAL_CONTRACT",
+      "synthetic_identity": "rv52-synthetic-event-01"
+    },
+    {
+      "evidence_marker": "issues_the_complete_identity_chain_without_execution_authority ... ok",
+      "kind": "attempt",
+      "ordinal": 3,
+      "status": "PASS_LOCAL_CONTRACT",
+      "synthetic_identity": "rv52-synthetic-attempt-01"
+    },
+    {
+      "evidence_marker": "fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_grant ... ok",
+      "kind": "grant",
+      "ordinal": 4,
+      "status": "PASS_LOCAL_CONTRACT",
+      "synthetic_identity": "rv52-synthetic-grant-01"
+    },
+    {
+      "evidence_marker": "effect_classes_require_conservative_approval_and_idempotency_policy ... ok",
+      "kind": "effect",
+      "ordinal": 5,
+      "status": "PASS_LOCAL_CONTRACT",
+      "synthetic_identity": "rv52-synthetic-effect-01"
+    },
+    {
+      "evidence_marker": "approvals_receipts_and_verifications_are_fresh_single_issue_identities ... ok",
+      "kind": "receipt",
+      "ordinal": 6,
+      "status": "PASS_LOCAL_CONTRACT",
+      "synthetic_identity": "rv52-synthetic-receipt-01"
+    },
+    {
+      "evidence_marker": "exact_current_deterministic_evidence_is_admitted_without_authority ... ok",
+      "kind": "verification",
+      "ordinal": 7,
+      "status": "PASS_LOCAL_CONTRACT",
+      "synthetic_identity": "rv52-synthetic-verification-01"
+    },
+    {
+      "evidence_marker": "changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states ... ok",
+      "kind": "terminal_state",
+      "ordinal": 8,
+      "status": "PASS_LOCAL_CONTRACT",
+      "synthetic_identity": "rv52-synthetic-terminal-state-01"
+    },
+    {
+      "evidence_marker": "complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok",
+      "kind": "no_replay",
+      "ordinal": 9,
+      "status": "PASS_LOCAL_CONTRACT",
+      "synthetic_identity": "rv52-synthetic-no-replay-01"
+    }
+  ],
+  "protocol_id": "RV-52",
+  "record_type": "agentmage-rv52-workflow-lineage",
+  "schema_version": 1,
+  "sources": [
+    {
+      "byte_length": 15851,
+      "path": "kernel/engine/src/workflow_definition.rs",
+      "sha256": "d2ea313c9959fd4c366612c062f462a466b1b92b33e625f5dd1597202d9b39f1"
+    },
+    {
+      "byte_length": 17154,
+      "path": "kernel/engine/src/workflow_progress.rs",
+      "sha256": "9c6f63d953fed91495184a09fd9c701997955fd82ff434bfa54096fa83d1833d"
+    },
+    {
+      "byte_length": 21638,
+      "path": "kernel/engine/src/workflow_identity.rs",
+      "sha256": "4df7175f9c2943f5db2a42229af4e0257ecfbc35633421ca5fda68a464315d96"
+    },
+    {
+      "byte_length": 26088,
+      "path": "kernel/engine/src/retry_admission.rs",
+      "sha256": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e"
+    },
+    {
+      "byte_length": 16584,
+      "path": "kernel/engine/src/workflow_verifier.rs",
+      "sha256": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124"
+    },
+    {
+      "byte_length": 7656,
+      "path": "kernel/engine/src/workflow_terminal.rs",
+      "sha256": "41d76ee842328b768d4cf8680e1ac72952ca792aa8e904827f1bb3fc32236e90"
+    }
+  ],
+  "story_id": "5.3",
+  "task_id": "5.3.3.2"
+}

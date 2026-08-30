@@ -1,0 +1,144 @@
+{
+  "acceptance_tests": [
+    {
+      "id": "AT-TIO-001",
+      "owner": "16.4",
+      "status": "NOT_EXECUTED_OWNER_OPEN"
+    },
+    {
+      "id": "AT-TIO-002",
+      "owner": "16.4",
+      "status": "NOT_EXECUTED_OWNER_OPEN"
+    },
+    {
+      "id": "AT-RESUME-002",
+      "owner": "11.3",
+      "status": "NOT_EXECUTED_OWNER_OPEN"
+    },
+    {
+      "id": "AT-OBS-002",
+      "owner": "21.4",
+      "status": "NOT_EXECUTED_OWNER_OPEN"
+    }
+  ],
+  "applicable_results": [
+    {
+      "evidence": "ordered graph, state fingerprint, current verification, and distinct terminal outcomes",
+      "scenario": "graph-event-and-terminal-lineage",
+      "status": "PASS_LOCAL_CONTRACT"
+    },
+    {
+      "evidence": "fresh attempt identities, current single-use grant admission, conservative effect class, and single-issue receipt identity",
+      "scenario": "attempt-grant-effect-receipt-lineage",
+      "status": "PASS_LOCAL_CONTRACT"
+    },
+    {
+      "evidence": "missing, duplicated, reordered, corrupt, stale, and replayed contract inputs fail closed before authority or success",
+      "scenario": "drop-duplicate-reorder-corrupt-and-replay",
+      "status": "PASS_LOCAL_CONTRACT"
+    },
+    {
+      "evidence": "uncertain effects remain sticky and cannot open an automatic successor or verified success",
+      "scenario": "uncertain-effect-reconciliation",
+      "status": "PASS_LOCAL_CONTRACT"
+    }
+  ],
+  "artifacts": [
+    {
+      "byte_length": 160606,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
+    },
+    {
+      "byte_length": 2220,
+      "path": "docs/verification/story-5-3-rv52-evidence.md",
+      "sha256": "50783151452647b6bd5c209201338a76a615ce3556c16621eb296a0fa0214226"
+    },
+    {
+      "byte_length": 11722,
+      "path": "scripts/workflow_rv52_evidence.py",
+      "sha256": "255435c19e3f0389c99a8856ba801eba4c046c3d17a75ab3c4557f1ee1acf67a"
+    },
+    {
+      "byte_length": 2752,
+      "path": "tests/test_workflow_rv52_evidence.py",
+      "sha256": "ca93456cd84d67a6c3ba72cd317fb8e2696c6f0a088b53e32dca45d82eea7d19"
+    },
+    {
+      "byte_length": 5239,
+      "path": "artifacts/sprints/sprint-5/story-5.3/rv52-workflow-lineage.json",
+      "sha256": "cd8f1c03e6b02b42a73a7bda9d509e969548d41964c9d71b285f156dc11a7ae8"
+    },
+    {
+      "byte_length": 8933,
+      "path": "artifacts/sprints/sprint-5/story-5.3/rv52-applicable-results.log",
+      "sha256": "862422ebe92bd2b79f4c0e582f183ce24963f4797d0870f812137f2455518cc7"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test workflow_definition --locked",
+    "cargo test -p agentmage-kernel-engine --test workflow_identity --locked",
+    "cargo test -p agentmage-kernel-engine --test retry_admission --locked",
+    "cargo test -p agentmage-kernel-engine --test workflow_verifier --locked",
+    "cargo test -p agentmage-kernel-engine workflow_progress::tests --locked",
+    "cargo clippy -p agentmage-kernel-engine -p agentmage-kernel-contracts --all-targets --all-features --locked -- -D warnings"
+  ],
+  "decision_id": "ADR-0043",
+  "generated_on": "2026-08-30",
+  "lineage_kinds": [
+    "graph",
+    "event",
+    "attempt",
+    "grant",
+    "effect",
+    "receipt",
+    "verification",
+    "terminal_state",
+    "no_replay"
+  ],
+  "product_truth": {
+    "later_story_acceptance_claim": false,
+    "model_inference_executed": false,
+    "native_platform_campaign": false,
+    "protocol_complete": false,
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "protocol_complete": false,
+  "protocol_id": "RV-52",
+  "record_type": "agentmage-rv52-applicability",
+  "remaining_protocol_scenarios": [
+    {
+      "owner": "11.3",
+      "scenario": "client-loss-host-restart-and-current-reconstruction",
+      "status": "BLOCKED_LATER_STORY"
+    },
+    {
+      "owner": "16.4",
+      "scenario": "large-artifact-backed-output-and-resource-pressure",
+      "status": "BLOCKED_LATER_STORY"
+    },
+    {
+      "owner": "16.4",
+      "scenario": "exactly-one-terminal-observation-per-live-call",
+      "status": "BLOCKED_LATER_STORY"
+    },
+    {
+      "owner": "21.4",
+      "scenario": "retention-inspector-and-observability-non-authority",
+      "status": "BLOCKED_LATER_STORY"
+    },
+    {
+      "owner": "22.5",
+      "scenario": "complete-installed-source-to-terminal-workflow",
+      "status": "BLOCKED_LATER_STORY"
+    }
+  ],
+  "schema_version": 1,
+  "status": "PARTIAL_LOCAL_CONTRACT_EVIDENCE",
+  "story_id": "5.3",
+  "task_id": "5.3.3.2"
+}
