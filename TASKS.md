@@ -547,7 +547,7 @@ automatic fallback, cloud dependency, model tool authority, or model completion 
 - [ ] **Story AC 1.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the empty product builds reproducibly from pinned inputs, contains only manifest-declared components, and preserves one-way kernel/platform/capability/shell dependency boundaries.
 - [ ] **Story AC 1.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then removing any optional component degrades only its declared capability; removing a required security primitive blocks startup with a non-secret diagnostic.
 
-#### [ ] Story 1.2 - Foundational Artifact and Workflow Contracts
+#### [x] Story 1.2 - Foundational Artifact and Workflow Contracts
 
 **User-facing value:** As a user, I need files and multi-step work to cross every interface through
 one stable runtime contract so that no input disappears and no client invents execution authority.
@@ -557,7 +557,7 @@ artifact, and recovery contracts remain authoritative.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 1.2.1 - Freeze source-artifact contracts**
+- [x] **Task 1.2.1 - Freeze source-artifact contracts**
   - [x] **Sub-task 1.2.1.1:** Define closed, versioned source-artifact, origin, reference,
     provenance, extraction-result, structural-section, context-disposition, and context-manifest
     schemas with missing, extra, malformed, stale, oversized, and unsupported-version rejection.
@@ -606,7 +606,7 @@ artifact, and recovery contracts remain authoritative.
     degenerate-coordinate failures. The complete local workspace test, strict-Clippy, formatting,
     documentation, schema, traceability, and diff gates pass; this contract closure makes no macOS,
     release, or extraction-runtime implementation claim.
-- [ ] **Task 1.2.2 - Freeze verified-workflow contracts**
+- [x] **Task 1.2.2 - Freeze verified-workflow contracts**
   - [x] **Sub-task 1.2.2.1:** Define a companion step-execution policy keyed to existing
     `PlanStepId`, including preflight, side-effect, approval, idempotency, verifier, retry, budget,
     and diagnostic policy identities. Evidence: the closed `step-execution-policy` schema in
@@ -703,7 +703,7 @@ artifact, and recovery contracts remain authoritative.
     supply-chain, traceability, and diff gates pass. This contract closure defines admission and
     migration rules only; no retry executor, reconciler, or supervisor is implemented, and it makes
     no macOS, release, or workflow-runtime implementation claim.
-- [ ] **Task 1.2.3 - Reconcile interface and ownership boundaries**
+- [x] **Task 1.2.3 - Reconcile interface and ownership boundaries**
   - [x] **Sub-task 1.2.3.1:** Amend `language-build-matrix.json`, its validator, diagrams, and
     evidence together to permit only current-request references delivered to the AgentMage Chat
     Participant; retain the prohibition on ambient extension workspace reads. Evidence:
@@ -841,7 +841,7 @@ artifact, and recovery contracts remain authoritative.
     architecture, current-requirements, documentation, schema, supply-chain, artifact-scan, full
     product, and diff gates pass. All features remain disabled, OCR remains deferred, every native
     campaign remains not run, and macOS remains explicitly `blocked-post-ga`.
-- [ ] **Task 1.2.5 - Verify and evidence the contract boundary**
+- [x] **Task 1.2.5 - Verify and evidence the contract boundary**
   - [x] **Sub-task 1.2.5.1:** Run schema mutation, dependency-direction, forbidden-duplicate-owner,
     API-surface, capability-absence, and current-versus-planned-truth tests. Evidence: the generated
     `artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json` records all six required
@@ -857,22 +857,37 @@ artifact, and recovery contracts remain authoritative.
     requirements, documentation, schema, supply-chain, artifact-scan, full product, and diff gates
     pass. This is local contract evidence only: it enables no capability and supplies no native
     platform campaign, external review, support, or release evidence.
-  - [ ] **Sub-task 1.2.5.2:** Retain machine-readable contract indexes, dependency dispositions,
+  - [x] **Sub-task 1.2.5.2:** Retain machine-readable contract indexes, dependency dispositions,
     diagrams, migration notes, raw test results, and a security mapping to `RV-03`, `RV-04`,
-    `RV-08`, `RV-11`, `RV-12`, and `RV-17`.
+    `RV-08`, `RV-11`, `RV-12`, and `RV-17`. Evidence: the generated
+    `artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json` retains seven exact,
+    SHA-256-bound groups for machine-readable contracts, dependency dispositions and supply-chain
+    records, diagrams, migration/rollback/placement notes, raw local results, security mapping, and
+    gate implementation. `raw-contract-boundary-results.log` is the captured synthetic-only output
+    of `contract-boundary:check`; the validator requires every schema, dependency, ownership, API,
+    status, and boundary success marker and rejects traceback, failed-suite, or Node failure output.
+    `security-evidence-map.json` binds the current `SECURITY-REVIEW.md` and maps exactly `RV-03`,
+    `RV-04`, `RV-08`, `RV-11`, `RV-12`, and `RV-17`, distinguishing the local contract control from
+    the precise native, integrated, corpus-size, crash, or independent-review campaign still open.
+    Twelve focused mutation tests reject missing output markers, failure markers, protocol reorder or
+    completion, empty remaining work, stale hashes, artifact removal, raw-log substitution, and
+    native/external/support/release overclaims. The contract, architecture, requirements,
+    documentation, schema, supply-chain, artifact-scan, full product, and diff gates pass. All six
+    protocols remain incomplete; no native-platform, external-review, support, or release claim is
+    made.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 1.2.AC1:** Given any supported or unsupported source and workflow envelope, when it
+- [x] **Story AC 1.2.AC1:** Given any supported or unsupported source and workflow envelope, when it
   is decoded, then exactly one versioned result or precise fail-closed error is produced and no
   unknown field silently changes behavior.
-- [ ] **Story AC 1.2.AC2:** Given the dependency graph, when forbidden ownership edges are injected,
+- [x] **Story AC 1.2.AC2:** Given the dependency graph, when forbidden ownership edges are injected,
   then the build rejects every second context manager, store, runtime loop, policy engine,
   dispatcher, and completion authority.
-- [ ] **Story AC 1.2.AC3:** Given a Chat request, when references are resolved, then only references
+- [x] **Story AC 1.2.AC3:** Given a Chat request, when references are resolved, then only references
   explicitly supplied to the AgentMage participant are readable and every unavailable or non-text
   part is visible to the user.
-- [ ] **Story AC 1.2.AC4:** Given an existing zero-retry run, when the new contracts are absent or
+- [x] **Story AC 1.2.AC4:** Given an existing zero-retry run, when the new contracts are absent or
   disabled, then behavior and evidence remain byte-compatible and no implicit retry appears.
 
 #### Sprint Acceptance Criteria
@@ -882,7 +897,7 @@ artifact, and recovery contracts remain authoritative.
 - [x] **Sprint AC 1.AC3:** Dependency resolution is reproducible from lock files and approved artifacts. Evidence: [`locked-resolution-report.json`](artifacts/sprints/sprint-1/story-1.1/locked-resolution-report.json) records identical clean Cargo/npm graphs from two offline locked resolutions and fail-closed substituted, missing, revoked, and wrong-platform inputs; Swift remains `BLOCKED-MACOS` without weakening the demonstrated shared/Linux dependency result.
 - [ ] **Sprint AC 1.AC4:** No required Mac end-user dependency assumes Homebrew, Rosetta, ambient Python, ambient Git, Xcode command-line tools, Docker Desktop, or administrator access.
 - [ ] **Sprint AC 1.AC5:** Missing optional dependencies degrade only their declared capabilities.
-- [ ] **Sprint AC 1.AC6:** Decision 0042 contracts, ownership checks, API-surface matrix, dependency
+- [x] **Sprint AC 1.AC6:** Decision 0042 contracts, ownership checks, API-surface matrix, dependency
   dispositions, and backward-compatible migration plan pass with no duplicate runtime owner.
 
 **Gate decision:** Sprint 1 is PASS only when Stories 1.1 and 1.2, every numbered task/sub-task,

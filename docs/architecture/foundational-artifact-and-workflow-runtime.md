@@ -640,6 +640,21 @@ truth merely because its architecture has been planned.
 This is local contract evidence only. It supplies no native-platform campaign,
 external review, support, or release evidence.
 
+The Task 1.2.5.2 [contract evidence
+index](../../artifacts/sprints/sprint-1/story-1.2/contract-evidence-index.json)
+retains exact hashes for the machine-readable contract indexes, dependency
+dispositions and supply-chain records, architecture diagrams, migration and
+placement notes, raw local test output, gate implementations, and its [security
+mapping](../../artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json).
+The raw result is synthetic local output from `contract-boundary:check`; success
+markers, failure-marker absence, and its SHA-256 are enforced.
+
+The security map covers `RV-03`, `RV-04`, `RV-08`, `RV-11`, `RV-12`, and
+`RV-17` in exact order. Each entry distinguishes the contract control actually
+demonstrated from the native, integrated, corpus-size, crash, or independent
+review work still required. Every protocol remains incomplete; the index makes
+no native-platform, external-review, support, or release claim.
+
 The two epics must prove:
 
 - no untrusted artifact or model output creates policy or authority;

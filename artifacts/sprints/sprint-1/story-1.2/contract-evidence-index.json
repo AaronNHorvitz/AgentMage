@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "record_type": "foundational-contract-evidence-index",
+  "decision_id": "ADR-0042",
+  "story_id": "1.2",
+  "task_id": "1.2.5.2",
+  "generated_on": "2026-08-29",
+  "status": "complete-local-index-external-protocols-open",
+  "groups": [
+    {
+      "id": "machine-readable-contract-indexes",
+      "artifacts": [
+        {
+          "path": "architecture/engineering-runtime-change-manifest.json",
+          "sha256": "eae7f80ef42f86f70b637e552204c6064c58bf5b5cb0b626a3da79a596be171c"
+        },
+        {
+          "path": "architecture/runtime-ownership.json",
+          "sha256": "09988850a2a014c42ec7077dd7f21918f1b6012f711d43f39b594bd484c69e24"
+        },
+        {
+          "path": "architecture/vscode-api-surfaces.json",
+          "sha256": "e8ead87ad4d071dc5e459881a435fcf0f7d321785da6bd812ade3d5c85ff94d2"
+        },
+        {
+          "path": "architecture/status-model.json",
+          "sha256": "8249814efec43cd48c97eb7afed4091165ccc2a7a72942f630882646835bd444"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+          "sha256": "927f018fe55f4aae4f97af5d773dfb7d8904afb60652de7245fc90c7ed69242a"
+        }
+      ]
+    },
+    {
+      "id": "dependency-dispositions",
+      "artifacts": [
+        {
+          "path": "architecture/dependency-dispositions.json",
+          "sha256": "85b07e08b86125146503a204bc9dad22baa3354dc19c404b51375e3b4443f9d2"
+        },
+        {
+          "path": "supply-chain/dependency-provenance.json",
+          "sha256": "507e29703019585e97a1a033f4cf1a6aae09151b8e1231f74b5bac6454a94e4a"
+        },
+        {
+          "path": "supply-chain/sbom.cdx.json",
+          "sha256": "d8087aa67916a00932c5bb459e750c8bdf531618b475d30e02d881d239052487"
+        }
+      ]
+    },
+    {
+      "id": "diagrams",
+      "artifacts": [
+        {
+          "path": "docs/architecture/foundational-artifact-and-workflow-runtime.md",
+          "sha256": "d0fcebf4dabf213defc0962e677559560f87caeefba2e7c08be46dc33d89e1e4"
+        },
+        {
+          "path": "docs/architecture/dependency-direction.md",
+          "sha256": "a0008ae43f3cc8a3382a01fc3f3adb4b5a8f4a1aa7529eb9dafca4bbb5b2c22f"
+        },
+        {
+          "path": "RUNTIME-BOUNDARIES.md",
+          "sha256": "e7cf50297db4c0fdb9f4e510da43af2e001b09451e0d1d03cde75d20184cb40e"
+        }
+      ]
+    },
+    {
+      "id": "migration-notes",
+      "artifacts": [
+        {
+          "path": "architecture/schema-evolution-and-rollback.json",
+          "sha256": "4cbbd8f1151f132812f6faa7280020a16de6c97944d9ef62d0e3e877e5b422b2"
+        },
+        {
+          "path": "architecture/rollback-design.json",
+          "sha256": "891d9db9981582d5a6ded9d73ceb83eb2556811a5313637cb20183670d185c96"
+        },
+        {
+          "path": "architecture/parser-ocr-platform-placement.json",
+          "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+        }
+      ]
+    },
+    {
+      "id": "raw-local-results",
+      "artifacts": [
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+          "sha256": "18036b700a2d4e124c4b5ad3f8f60a33cf96ee9ebbfe0ce73913148bd0d9fbe1"
+        }
+      ]
+    },
+    {
+      "id": "security-mapping",
+      "artifacts": [
+        {
+          "path": "SECURITY-REVIEW.md",
+          "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
+          "sha256": "0dad5b1d406cd0ac225e52e1998b7eeacb0dcc49ac7a720e7efd1d3ffddc206f"
+        }
+      ]
+    },
+    {
+      "id": "gate-implementation",
+      "artifacts": [
+        {
+          "path": "scripts/contract_boundary_gate.py",
+          "sha256": "ae019cd7816e18dc9c3f2449584173a640c0116d57103f729cc51ea1f64262e7"
+        },
+        {
+          "path": "scripts/contract_evidence_index.py",
+          "sha256": "fd12489b7d6b39b5385c3ef3e50c44de9457a2646b0059629374f4b3fecfb99c"
+        },
+        {
+          "path": "tests/test_contract_boundary_gate.py",
+          "sha256": "8536c2df61bada35d9444a0f241ed3700a64c4fb0cb57b484b88ca967b58c891"
+        },
+        {
+          "path": "tests/test_contract_evidence_index.py",
+          "sha256": "d0d780f8b041d6c454ba1d4f544fa17a345590053e967bf07d44b07f8f5e57c2"
+        }
+      ]
+    }
+  ],
+  "raw_result": {
+    "command": "npm run contract-boundary:check",
+    "data_class": "synthetic-local-contract-tests-only",
+    "artifact": {
+      "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+      "sha256": "18036b700a2d4e124c4b5ad3f8f60a33cf96ee9ebbfe0ce73913148bd0d9fbe1"
+    },
+    "required_markers": [
+      "Validated 37 Engineering Runtime schemas and 6 reused contracts.",
+      "tests 51",
+      "dependency rule validation passed",
+      "Ran 8 tests",
+      "runtime ownership validation passed",
+      "Ran 15 tests",
+      "vscode api surface validation passed",
+      "Ran 11 tests",
+      "status model validation passed",
+      "Ran 27 tests",
+      "Task 1.2.5.1 contract boundary gate passed locally"
+    ]
+  },
+  "security_protocols": [
+    "RV-03",
+    "RV-04",
+    "RV-08",
+    "RV-11",
+    "RV-12",
+    "RV-17"
+  ],
+  "product_truth": {
+    "synthetic_data_only": true,
+    "local_contract_evidence_retained": true,
+    "protocol_complete": false,
+    "native_platform_evidence": false,
+    "external_review_complete": false,
+    "platform_support_claimed": false,
+    "release_readiness": false
+  }
+}

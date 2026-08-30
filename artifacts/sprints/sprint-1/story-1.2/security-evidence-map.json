@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "record_type": "foundational-contract-security-evidence-map",
+  "decision_id": "ADR-0042",
+  "task_id": "1.2.5.2",
+  "generated_on": "2026-08-29",
+  "security_review": {
+    "path": "SECURITY-REVIEW.md",
+    "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
+  },
+  "protocols": [
+    {
+      "protocol_id": "RV-03",
+      "title": "Sandbox and Ambient-Access Resistance",
+      "status": "partial-local-contract-evidence",
+      "contribution": "placement-and-authority-contract-only",
+      "demonstrated": "Parser/OCR placement denies worker network, ambient workspace, credentials, host parsing, TypeScript fallback, and launch outside the platform adapter; mutation gates reject widening.",
+      "remaining": "Run native canary and escape campaigns for every admitted worker and platform; macOS requires its post-GA professional sandbox review. No native RV-03 pass is claimed here.",
+      "evidence": [
+        {
+          "path": "architecture/parser-ocr-platform-placement.json",
+          "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+          "sha256": "927f018fe55f4aae4f97af5d773dfb7d8904afb60652de7245fc90c7ed69242a"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+          "sha256": "18036b700a2d4e124c4b5ad3f8f60a33cf96ee9ebbfe0ce73913148bd0d9fbe1"
+        }
+      ],
+      "protocol_complete": false
+    },
+    {
+      "protocol_id": "RV-04",
+      "title": "Path and Race Safety",
+      "status": "partial-local-contract-evidence",
+      "contribution": "cross-locus-path-contract-only",
+      "demonstrated": "The placement record forbids paths as authority or cross-locus reinterpretation and requires workspace-side remote hosts with digest-bound byte transfer.",
+      "remaining": "Run the required 500-fixture path, alias, link, normalization, rename, replacement, and mount-race campaign for each implemented ingestion path and native platform.",
+      "evidence": [
+        {
+          "path": "architecture/parser-ocr-platform-placement.json",
+          "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+        },
+        {
+          "path": "RUNTIME-BOUNDARIES.md",
+          "sha256": "e7cf50297db4c0fdb9f4e510da43af2e001b09451e0d1d03cde75d20184cb40e"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+          "sha256": "927f018fe55f4aae4f97af5d773dfb7d8904afb60652de7245fc90c7ed69242a"
+        }
+      ],
+      "protocol_complete": false
+    },
+    {
+      "protocol_id": "RV-08",
+      "title": "Data Minimization and Secret Leakage",
+      "status": "partial-local-contract-evidence",
+      "contribution": "byte-crossing-and-diagnostic-contract-only",
+      "demonstrated": "Source bytes cannot enter arguments, environment, plaintext shared temporary files, unvalidated output, or default raw return; diagnostics and receipts remain bounded and content-free.",
+      "remaining": "Inject synthetic secrets through every implemented ingress, parser, OCR, cache, journal, diagnostic, export, backup, temporary, crash, and model-context surface and scan all retained locations.",
+      "evidence": [
+        {
+          "path": "architecture/parser-ocr-platform-placement.json",
+          "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+        },
+        {
+          "path": "architecture/schema-evolution-and-rollback.json",
+          "sha256": "4cbbd8f1151f132812f6faa7280020a16de6c97944d9ef62d0e3e877e5b422b2"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+          "sha256": "927f018fe55f4aae4f97af5d773dfb7d8904afb60652de7245fc90c7ed69242a"
+        }
+      ],
+      "protocol_complete": false
+    },
+    {
+      "protocol_id": "RV-11",
+      "title": "Prompt Injection and Authority Escalation",
+      "status": "partial-local-contract-evidence",
+      "contribution": "ownership-and-absence-regression-only",
+      "demonstrated": "Dependency, ownership, API-surface, and capability-absence mutations cannot move parser content into policy, grant, effect, completion, TypeScript, or fallback authority.",
+      "remaining": "Run at least 200 labeled attacks against every newly implemented source, filename, parser warning, OCR result, tool result, model output, and user-content surface; this story does not claim that campaign complete.",
+      "evidence": [
+        {
+          "path": "architecture/runtime-ownership.json",
+          "sha256": "09988850a2a014c42ec7077dd7f21918f1b6012f711d43f39b594bd484c69e24"
+        },
+        {
+          "path": "architecture/vscode-api-surfaces.json",
+          "sha256": "e8ead87ad4d071dc5e459881a435fcf0f7d321785da6bd812ade3d5c85ff94d2"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+          "sha256": "927f018fe55f4aae4f97af5d773dfb7d8904afb60652de7245fc90c7ed69242a"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+          "sha256": "18036b700a2d4e124c4b5ad3f8f60a33cf96ee9ebbfe0ce73913148bd0d9fbe1"
+        }
+      ],
+      "protocol_complete": false
+    },
+    {
+      "protocol_id": "RV-12",
+      "title": "Grant Mutation and Replay",
+      "status": "partial-local-contract-evidence",
+      "contribution": "schema-and-single-owner-regression-only",
+      "demonstrated": "Closed runtime schemas, dependency direction, singleton ownership, and current-truth gates preserve the existing grant, policy, dispatcher, and verifier authorities without adding a replay path.",
+      "remaining": "Run at least 500 integrated mutations including concurrent and crash-interrupted consumption across the implemented artifact/workflow paths and native platforms, retaining stable denials and audit events.",
+      "evidence": [
+        {
+          "path": "architecture/engineering-runtime-change-manifest.json",
+          "sha256": "eae7f80ef42f86f70b637e552204c6064c58bf5b5cb0b626a3da79a596be171c"
+        },
+        {
+          "path": "architecture/runtime-ownership.json",
+          "sha256": "09988850a2a014c42ec7077dd7f21918f1b6012f711d43f39b594bd484c69e24"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+          "sha256": "927f018fe55f4aae4f97af5d773dfb7d8904afb60652de7245fc90c7ed69242a"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
+          "sha256": "18036b700a2d4e124c4b5ad3f8f60a33cf96ee9ebbfe0ce73913148bd0d9fbe1"
+        }
+      ],
+      "protocol_complete": false
+    },
+    {
+      "protocol_id": "RV-17",
+      "title": "Crash Recovery and State Integrity",
+      "status": "partial-local-contract-evidence",
+      "contribution": "migration-and-cancellation-plan-only",
+      "demonstrated": "The migration plan requires verified old-or-new generations, reconciliation before retry, no effect replay, no stale cache publication, and no later-user-data overwrite; worker cancellation requires reap before terminal state.",
+      "remaining": "After runtime implementation, inject crashes before and after every durable transition and during grant, worker, model, receipt, checkpoint, migration, and shutdown boundaries; retain the required 100-of-100 recovery results.",
+      "evidence": [
+        {
+          "path": "architecture/schema-evolution-and-rollback.json",
+          "sha256": "4cbbd8f1151f132812f6faa7280020a16de6c97944d9ef62d0e3e877e5b422b2"
+        },
+        {
+          "path": "architecture/parser-ocr-platform-placement.json",
+          "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+        },
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
+          "sha256": "927f018fe55f4aae4f97af5d773dfb7d8904afb60652de7245fc90c7ed69242a"
+        }
+      ],
+      "protocol_complete": false
+    }
+  ],
+  "product_truth": {
+    "synthetic_data_only": true,
+    "local_contract_evidence_retained": true,
+    "protocol_complete": false,
+    "native_platform_evidence": false,
+    "external_review_complete": false,
+    "platform_support_claimed": false,
+    "release_readiness": false
+  }
+}
