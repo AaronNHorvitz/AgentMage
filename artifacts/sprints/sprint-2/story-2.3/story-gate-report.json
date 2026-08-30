@@ -1,0 +1,243 @@
+{
+  "acceptance_criteria": [
+    {
+      "criterion_id": "2.3.AC1",
+      "evidence_sha256": "8fb245c4cbb7a1f59472cf630d7d50746f60fcec13b00a438e50f97e4407d46c",
+      "status": "pass-local-public-synthetic-artifact-corpus"
+    },
+    {
+      "criterion_id": "2.3.AC2",
+      "evidence_sha256": "559bc9c2696e797c94f58284fffc42374f014ba69660812b8b5cfc2324107229",
+      "status": "pass-local-public-synthetic-workflow-corpus"
+    },
+    {
+      "criterion_id": "2.3.AC3",
+      "evidence_sha256": "5a425161456b603593f96e90a45ff9b62cbf73b75795ca9c7864adb2ff172a1a",
+      "status": "pass-local-clean-root-reproducibility-and-security"
+    }
+  ],
+  "blockers": [
+    "story-2.1-acceptance-gate-open",
+    "story-2.2-acceptance-gate-open",
+    "supported-platform-installed-product-evidence-incomplete"
+  ],
+  "blocking_controls": [
+    "G-DOD-10"
+  ],
+  "current_public_synthetic_corpus_scope_complete": true,
+  "dependencies": [
+    {
+      "status": "complete",
+      "story_id": "1.2"
+    },
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "2.1"
+    },
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "2.2"
+    }
+  ],
+  "dependency_substitution_permitted": false,
+  "independent_review": {
+    "artifacts": [
+      {
+        "byte_length": 11336,
+        "path": "scripts/artifact_evaluation_text_log_fixtures.py",
+        "sha256": "a45e55dbd6dd78848294b05fc110de5a626d3e28e74ce14a1b9e7d968de47917"
+      },
+      {
+        "byte_length": 15485,
+        "path": "scripts/artifact_evaluation_document_fixtures.py",
+        "sha256": "5c176284fbd9c03197c56db1c2bea284fc2766765b9fe6e2a66cc78b2d781bc6"
+      },
+      {
+        "byte_length": 11424,
+        "path": "scripts/artifact_evaluation_lifecycle_scenarios.py",
+        "sha256": "9b29f0dfe177dd872df3b32ee1529f21ff4fd7e7ee232420fe58bed26d3f7e9d"
+      },
+      {
+        "byte_length": 9300,
+        "path": "scripts/artifact_evaluation_plan_fixtures.py",
+        "sha256": "6dc5a83a12804ccb8d168973e065fb506bdb039cd2d14d41d37d9a85f1d07c94"
+      },
+      {
+        "byte_length": 7298,
+        "path": "scripts/artifact_evaluation_crash_fixtures.py",
+        "sha256": "477513e80c0327c9cede746a75553ed227a5efa510542c61fa5d4afaf02068bf"
+      },
+      {
+        "byte_length": 12168,
+        "path": "scripts/artifact_evaluation_terminal_fixtures.py",
+        "sha256": "d793bb880608a74ed18baefb4dc81051f4df3a62ef1928537532e0c4a2f96715"
+      },
+      {
+        "byte_length": 14200,
+        "path": "scripts/artifact_evaluation_artifact_metrics.py",
+        "sha256": "815f4c8428ebff9ab23b6cec146e52772ff78cda42529757a1cfa07b06d98a75"
+      },
+      {
+        "byte_length": 13713,
+        "path": "scripts/artifact_evaluation_workflow_metrics.py",
+        "sha256": "a55499349d1f94e6173ec861b9af600eda6709bcc637b4e756df74c6f331ea45"
+      },
+      {
+        "byte_length": 9970,
+        "path": "scripts/artifact_evaluation_golden_gate.py",
+        "sha256": "de0ba596b1d6f90f73d16648dcd8d5b39d12f2ac7b193084d43feae650ee2159"
+      },
+      {
+        "byte_length": 11907,
+        "path": "scripts/artifact_evaluation_reproducibility.py",
+        "sha256": "476fdad5ea932dd48d33735657e62897433a30368ee20fe58db62c3ba9a181c5"
+      },
+      {
+        "byte_length": 17426,
+        "path": "scripts/artifact_evaluation_fuzz_registration.py",
+        "sha256": "fed30edb2f60104417028642e358eaddf3bf2b5881044567116090a0b7650740"
+      },
+      {
+        "byte_length": 30345,
+        "path": "scripts/fixture_security_scan.py",
+        "sha256": "b40fbbbc535905d3a88171df5bd19e1a2cf7b4f3bf2e065d208b5d4b545e8e2b"
+      },
+      {
+        "byte_length": 11861,
+        "path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+        "sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e"
+      },
+      {
+        "byte_length": 4419,
+        "path": "fixtures/artifact-evaluation/v1/text-reference-corpus-v1.zip",
+        "sha256": "368dc07ffc9bb1ffb6a5856b475c3bfbe1ada31e09d46d22b84c487b6e35115b"
+      },
+      {
+        "byte_length": 14155,
+        "path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+        "sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94"
+      },
+      {
+        "byte_length": 17598,
+        "path": "fixtures/artifact-evaluation/v1/document-variant-corpus-v1.zip",
+        "sha256": "22bdfddd651c165edd1fd51a91d8c6203b9aa5a76896ed485d10e2ce1b3aaa33"
+      },
+      {
+        "byte_length": 28379,
+        "path": "fixtures/artifact-evaluation/v1/lifecycle-scenarios.json",
+        "sha256": "274a0c7a7444a3e48f1622b789943ba76e90a9afcae75cf0147c947aa8645118"
+      },
+      {
+        "byte_length": 12755,
+        "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+        "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
+      },
+      {
+        "byte_length": 19208,
+        "path": "fixtures/artifact-evaluation/v1/workflow-crash-points.json",
+        "sha256": "f46c6e89c4c545a159d1023d3677afb495b7df0db3ac9349640681427b0d0a32"
+      },
+      {
+        "byte_length": 17460,
+        "path": "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json",
+        "sha256": "23ae9264902556922866eff8a13f25b1cc5e19cdf43ffb567bfd0d300903a253"
+      },
+      {
+        "byte_length": 8123,
+        "path": "fixtures/artifact-evaluation/v1/artifact-golden-metrics.json",
+        "sha256": "c6721c4066fd28041e4024690ca359176952f019131012724bbd7bfed218e539"
+      },
+      {
+        "byte_length": 7851,
+        "path": "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json",
+        "sha256": "8b9f3c9ac8876bf7c582c69196c20e26316c5be911681401190043a63221320c"
+      },
+      {
+        "byte_length": 16723,
+        "path": "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
+        "sha256": "c22ba15dab03558b39dc6967ea066197c5dd6237a6804c8caaff39a3af4bfe0d"
+      },
+      {
+        "byte_length": 7649,
+        "path": "fixtures/artifact-evaluation/v1/reproducibility-report.json",
+        "sha256": "46efc8e90d5584e1aacbdef9d3f0f93db3a38a702fe9ed9834c9492eed1ae2cd"
+      }
+    ],
+    "external_human_review_status": "not-performed",
+    "finding_count": 0,
+    "findings": [],
+    "review_type": "automated-independent-aggregate-review",
+    "reviewed_commit": "0a8c3150e77a49a30ed24fba5d0b6a4d33370401",
+    "reviewed_tree": "387314bbe04e69da2d4288d76abaa0ae09a2a7d2",
+    "reviewer_id": "agentmage-story-2.3-independent-gate-v1"
+  },
+  "installed_product_claim": "none",
+  "platform_evidence_substituted": false,
+  "product_acceptance_claim": "none",
+  "product_runtime_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "0a8c3150e77a49a30ed24fba5d0b6a4d33370401",
+  "reviewed_tree": "387314bbe04e69da2d4288d76abaa0ae09a2a7d2",
+  "schema_version": 1,
+  "sprint_completion_claim": false,
+  "status": "blocked-open-dependencies-and-platform",
+  "story_checkbox_complete": false,
+  "story_id": "2.3",
+  "sub_task_count": 12,
+  "task_count": 4,
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "status": "pass-fixtures-mint-no-authority"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "status": "pass-no-production-tool-attempt"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "status": "pass-public-synthetic-data-only"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "status": "pass-clean-root-generation-no-user-file-effects"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "status": "blocked-supported-platform-installed-product-matrix"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "status": "pass-automated-independent-aggregate-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "status": "pass-current-story-scope"
+    }
+  ],
+  "validator_results_sha256": "fea5516883e422b5b01796e3d0339adf8212b23aca2c451f7d817b2fecbeb6ad"
+}

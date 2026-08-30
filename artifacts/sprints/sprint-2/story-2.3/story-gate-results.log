@@ -1,0 +1,10 @@
+$ python3 scripts/artifact_evaluation_artifact_metrics.py
+Validated 10 artifact golden metrics
+$ python3 scripts/artifact_evaluation_workflow_metrics.py
+Validated 10 workflow golden metrics
+$ python3 scripts/artifact_evaluation_golden_gate.py
+Validated versioned golden gate with 77 visible outcomes
+$ python3 scripts/artifact_evaluation_reproducibility.py
+Validated 11 byte-identical outputs across two clean roots
+$ python3 scripts/fixture_security_scan.py
+Sprint 2 fixtures and generated artifacts passed the security scan

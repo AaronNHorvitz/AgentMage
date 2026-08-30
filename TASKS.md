@@ -1059,6 +1059,17 @@ data or real external effects.
   then identities and metrics match and no private data, credential, active content, or real effect
   is present. Evidence: the clean-root reproducibility gate creates two independent empty temporary roots, copies only the 13 pinned generator/support/prerequisite sources into each, and regenerates the complete 11-output evaluation set under isolated Python. Both independent output identity ledgers have the same set SHA-256 and match byte-for-byte for the two corpus archives, all fixture/provenance summaries, both ten-metric goldens, and the aggregate versioned manifest. The report contains only stable relative paths, lengths, and hashes; temporary roots, timings, environment values, and payloads are not retained. The recursive security scan independently inspects every controlled fixture and non-cyclic Sprint 2 evidence file plus all ZIP/Office packages and nested entries, finding zero unapproved active content, credential shapes, private paths, executable payloads, remote references, or raw canaries. Exact identity-bound hostile exceptions remain inert and unfetched. Both gates assert synthetic data only, zero network, active-content, product-runtime, and product-effect execution, and no product/support claim. Clean-root reproduction, security exception-mutation tests, and the full repository gate pass.
 
+**Story gate evidence:** All four tasks, all 12 sub-tasks, and all three criteria pass in the
+current public-synthetic corpus scope. The independent
+[`story_2_3_gate.py`](scripts/story_2_3_gate.py) aggregate reviews immutable commit `0a8c3150`
+and tree `387314bb`, verifies 24 exact generator, fixture, and metric artifacts, and
+reruns five criterion-spanning validators. Story 2.3 remains `BLOCKED`: dependency Stories 2.1
+and 2.2 retain open acceptance gates, while `G-DOD-10` retains supported-platform and
+installed-product execution. The gate prohibits dependency or platform substitution, makes no
+product-runtime, installed-product, product-acceptance, Sprint, release, cross-platform, or
+external-human-review claim, and leaves the Story checkbox open. See the retained
+[`story-gate-report.json`](artifacts/sprints/sprint-2/story-2.3/story-gate-report.json).
+
 #### Sprint Acceptance Criteria
 
 - [x] **Sprint AC 2.AC1:** Recreating the corpus yields identical expected hashes where determinism is required. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) independently confirms two byte-identical corpus regenerations against checked artifacts and two clean fake-boundary runs with all ten reconciliation comparisons exact.

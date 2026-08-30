@@ -96,7 +96,7 @@
     {
       "byte_length": 6672,
       "path": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
-      "sha256": "f8e3c449b10a751b33904da1a3dcc8fcba798c318513d7e6bdc2d2d014fcceaf"
+      "sha256": "ba3282e261c5d90f2935f2e4151bf882dafcdd36c536f2aa8041ec9c895c2ce8"
     }
   ],
   "manual_campaign": {
@@ -400,7 +400,7 @@
     }
   ],
   "registry_id": "agentmage-artifact-workflow-fuzz-targets-v1",
-  "registry_sha256": "bc74884d984efe6a3fc8f876d1a920d479ee8690fc4bfd3d394919e3a802bdd1",
+  "registry_sha256": "11e998a7d36dfaa18874321d070865edffa27f58c38bba2362634050042be236",
   "registry_version": "1.0.0",
   "release_claim": "none",
   "schema_version": 1,
