@@ -20,7 +20,7 @@
     "macos_implementation_claim": "none",
     "shared_contracts": "verified-local"
   },
-  "reference_revision": "497d4234d2495c227256c40b35c8dfc2d441ba5f",
+  "reference_revision": "21d2a33b594fa67ec981de8ff300eaf2b01acdfc",
   "schema_version": 1,
   "sources": [
     {
@@ -37,15 +37,15 @@
     },
     {
       "path": "kernel/contracts/src/grant.rs",
-      "sha256": "c6baa52e28356c2374cb0fadcc973eb694c447606de9af623a715c23daee4924"
+      "sha256": "d19d8a394eac5679f7d77260aaa61f6f4394286486962540fbdb7fba67b9e918"
     },
     {
       "path": "kernel/engine/src/grants.rs",
-      "sha256": "6768d4e40a2497de0153ca0739b39e395f732e5ea92ea4cc486b36df887ef98c"
+      "sha256": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291"
     },
     {
       "path": "kernel/engine/src/policy.rs",
-      "sha256": "cd27dd54b1029d2cc78939c582c6d671dddc5792f21496b72b3fdfb5e2bce6f7"
+      "sha256": "6ac01435ca83a2f5d40c3cd062b2c3319a0a04447b26a7dd40831312e674c7e4"
     },
     {
       "path": "kernel/engine/tests/adversarial_grant_corpus.rs",

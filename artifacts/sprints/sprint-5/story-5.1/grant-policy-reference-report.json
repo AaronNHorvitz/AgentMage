@@ -23,16 +23,16 @@
     "macos_implementation_claim": "none",
     "shared_contracts": "verified-local"
   },
-  "reference_revision": "9872e609e0b0f29194bc8b5eee2cce8e957a8d2f",
+  "reference_revision": "21d2a33b594fa67ec981de8ff300eaf2b01acdfc",
   "schema_version": 1,
   "sources": [
     {
       "path": "docs/architecture/grant-policy-reference.md",
-      "sha256": "f14a878f359761761619dbbe1eb16df217fc36573989f1c1249b89170c7d4eb8"
+      "sha256": "e52fb14dbea883398a4d2f4b2bab028705c428f44eefe408ccbdce15fef89be0"
     },
     {
       "path": "kernel/contracts/src/grant.rs",
-      "sha256": "c6baa52e28356c2374cb0fadcc973eb694c447606de9af623a715c23daee4924"
+      "sha256": "d19d8a394eac5679f7d77260aaa61f6f4394286486962540fbdb7fba67b9e918"
     },
     {
       "path": "kernel/contracts/src/operation.rs",
@@ -40,7 +40,7 @@
     },
     {
       "path": "kernel/engine/src/policy.rs",
-      "sha256": "cd27dd54b1029d2cc78939c582c6d671dddc5792f21496b72b3fdfb5e2bce6f7"
+      "sha256": "6ac01435ca83a2f5d40c3cd062b2c3319a0a04447b26a7dd40831312e674c7e4"
     },
     {
       "path": "scripts/grant_policy_reference.py",
