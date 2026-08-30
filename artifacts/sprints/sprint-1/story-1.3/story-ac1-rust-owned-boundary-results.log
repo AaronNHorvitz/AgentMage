@@ -1,0 +1,20 @@
+$ cargo test -p agentmage-kernel-contracts --test engineering_runtime_record_types --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running tests/engineering_runtime_record_types.rs (target/debug/deps/engineering_runtime_record_types-111fa984dc6ae74e)
+
+running 3 tests
+test schema_required_nullable_fields_cannot_be_omitted ... ok
+test every_runtime_record_family_rejects_unsupported_versions ... ok
+test all_nine_runtime_record_families_match_their_admitted_schema_shape ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+$ cargo test -p agentmage-kernel-engine --test engineering_runtime_record_corpus every_declared_schema_failure_fails_before_canonical_publication -- --exact
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+
+running 1 test
+test every_declared_schema_failure_fails_before_canonical_publication ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+$ python3 scripts/engineering_runtime_record_evidence.py
+Task 1.3.3.1 canonical record evidence validated

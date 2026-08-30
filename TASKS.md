@@ -928,7 +928,15 @@ results cannot acquire different meanings in different interfaces.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 1.3.AC1:** Given any canonical runtime record, when it crosses a client or module boundary, then one versioned Rust-owned schema defines its complete meaning and unknown data fails closed.
+- [x] **Story AC 1.3.AC1:** Given any canonical runtime record, when it crosses a client or module
+  boundary, then one versioned Rust-owned schema defines its complete meaning and unknown data fails
+  closed. Evidence: a criterion-specific regression proves all nine canonical record families have
+  matching closed Rust types and generated JSON schema field sets at canonical version 2, including
+  required nullable fields. Missing, extra, malformed, oversized, and unsupported-version records
+  fail before canonical publication; cyclic workflow and stale cross-record identities fail at the
+  semantic Rust boundary. Five mutation/omission/overclaim tests pass. This closes the current
+  public-synthetic Rust/JSON contract-boundary scope, not installed-product, native-platform,
+  real-model, independent-review, Story, Sprint, packaging, or release gates.
 - [ ] **Story AC 1.3.AC2:** Given identical admitted inputs, when records are produced through different clients, then identities and deterministic fields match and no client becomes state authority.
 - [ ] **Story AC 1.3.AC3:** Given malformed, stale, or unsupported records, when admission runs, then execution is blocked before model, tool, or effect dispatch with a non-secret diagnostic.
 

@@ -28,7 +28,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "dc59274096178f38aa2d8e1532866bd2a0a51d7b0993002903d13280eaca1835"
+          "sha256": "70d7db4c8ea14f4d59f0c13771a3fe68d399b67eebcd95ead1ed8ce0d1bd860b"
         }
       ]
     },
@@ -88,7 +88,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "b43ef7eb405195eb9e93ac3adb93fd3269fd119db834bf2fb0f8492666e8aca3"
+          "sha256": "ff57654579ac30315e2d503fe47bf5d3475c69a4bc0d627664db6276d8a43fde"
         }
       ]
     },
@@ -101,7 +101,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/security-evidence-map.json",
-          "sha256": "b1578c295358f3bd9f229a47317b13cb44fb9edf2ac26b676605a6af86496422"
+          "sha256": "1257fe4d7bc228377aed7afa2caf2b122f620efd96601ebd17e3502cd8e8e26e"
         }
       ]
     },
@@ -132,7 +132,7 @@
     "data_class": "synthetic-local-contract-tests-only",
     "artifact": {
       "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-      "sha256": "b43ef7eb405195eb9e93ac3adb93fd3269fd119db834bf2fb0f8492666e8aca3"
+      "sha256": "ff57654579ac30315e2d503fe47bf5d3475c69a4bc0d627664db6276d8a43fde"
     },
     "required_markers": [
       "Validated 37 Engineering Runtime schemas and 6 reused contracts.",
