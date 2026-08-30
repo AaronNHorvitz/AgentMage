@@ -1,0 +1,195 @@
+{
+  "acceptance_criteria": [
+    {
+      "adapter_api_version": 1,
+      "criterion_id": "7.1.AC1",
+      "declared_linux_manifest_count": 2,
+      "installed_runtime_component_manifest_count": 0,
+      "operating_system_branches_in_kernel_selector": 0,
+      "required_capability_count": 10,
+      "startup_failure_class_count": 11,
+      "status": "partial-shared-boundary-blocked-native-platforms"
+    },
+    {
+      "criterion_id": "7.1.AC2",
+      "equivalent_available_contract_result_count": 3,
+      "macos_evidence_substituted": false,
+      "macos_execution_status": "blocked-macos",
+      "maintainer_credentials_recorded": false,
+      "mapped_security_requirement_count": 10,
+      "private_environment_values_recorded": false,
+      "status": "pass-available-platform-evidence-blocked-macos"
+    }
+  ],
+  "blockers": [
+    "sub-task-7.1.1.1-native-linux-and-macos-adapters-open",
+    "sub-task-7.1.1.2-macos-release-manifest-open",
+    "sub-task-7.1.1.4-native-startup-probes-open",
+    "sub-task-7.1.1.6-macos-result-recorder-open",
+    "sub-task-7.1.1.7-macos-conformance-open",
+    "sub-task-7.1.2.2-reference-release-manifests-incomplete",
+    "sub-task-7.1.3.1-macos-conformance-open",
+    "sub-task-7.1.3.2-native-primitive-corruption-open",
+    "sub-task-7.1.3.3-macos-helper-entitlement-mutations-open",
+    "sub-task-7.1.3.4-release-package-and-macos-manifest-open",
+    "g-dod-12-independent-critical-boundary-review-not-performed",
+    "supported-platform-installed-product-evidence-incomplete"
+  ],
+  "current_shared_linux_contract_scope_complete": true,
+  "independent_review": {
+    "artifacts": [
+      {
+        "byte_length": 7638,
+        "path": "docs/architecture/platform-adapter-contract.md",
+        "sha256": "98455f2e3f7871fbeeac856b19dd4a85b2292878049c149ba1c7f8fc5429ed53"
+      },
+      {
+        "byte_length": 12172,
+        "path": "kernel/contracts/src/platform.rs",
+        "sha256": "00d135598a9e7d7b1f28f457e8305a85a020107ffe0f0d29e7ca206d933c8042"
+      },
+      {
+        "byte_length": 24626,
+        "path": "kernel/engine/src/platform_startup.rs",
+        "sha256": "5c7f437007afe2784355869e743e61be65a6bbfbde475f149bcdb6dfb4506d2b"
+      },
+      {
+        "byte_length": 4747,
+        "path": "kernel/engine/tests/platform_adapter_conformance.rs",
+        "sha256": "43be8fff79e866d85f5c393e01102af8f45c2b71101879b8bf36b1e933e05c6e"
+      },
+      {
+        "byte_length": 1205,
+        "path": "release/platform-manifests/README.md",
+        "sha256": "03edbe9a7f00122cdf3a1c14f5f7f7e55989624451e8cc00739166878f3e1ac9"
+      },
+      {
+        "byte_length": 3675,
+        "path": "release/platform-manifests/v1/fedora-x86_64.json",
+        "sha256": "193fd58398c74c7a0b011beb1b23addc51b8e9b270ee666ea809b51f0504897c"
+      },
+      {
+        "byte_length": 3679,
+        "path": "release/platform-manifests/v1/ubuntu-x86_64.json",
+        "sha256": "5416b0d26c7887df9f54043c6faaa2595ebd4c63c00b880ca0d17d53d8ff4366"
+      },
+      {
+        "byte_length": 5550,
+        "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+        "sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db"
+      },
+      {
+        "byte_length": 4142,
+        "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
+        "sha256": "09c76cc71f8b6751d74d7118935aeb90a431378550833587543e057321a43b5c"
+      },
+      {
+        "byte_length": 11459,
+        "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
+        "sha256": "158b8fa7342c276577082e9e60b00de3f80ec19e1bacd7c8d01c2be9863b79ed"
+      },
+      {
+        "byte_length": 23383,
+        "path": "scripts/platform_manifest_artifact.py",
+        "sha256": "0129e11b46cba745b2e093c9b7b5244129bde7c249bfac4ea82a130d1d6b00c3"
+      },
+      {
+        "byte_length": 17584,
+        "path": "scripts/platform_result_recorder.py",
+        "sha256": "b87cdcc57dd9c906d10f4013c4b2046cbe3925af02a3b07d11c528ef4ee5a0fd"
+      },
+      {
+        "byte_length": 16683,
+        "path": "scripts/story_7_1_security_evidence.py",
+        "sha256": "a53e67552c7c765a7840b92f4508c6634a950421b92c6822065af58d78fec021"
+      },
+      {
+        "byte_length": 6384,
+        "path": "tests/test_platform_manifest_artifact.py",
+        "sha256": "8c95802f7784a00f615ce6a4e834f6ee86157ef12fc7d3366635f0fb542e78a2"
+      },
+      {
+        "byte_length": 8072,
+        "path": "tests/test_platform_result_recorder.py",
+        "sha256": "bda9daa387442245d9e4b3f7a69f4bedc11c8c18f74295e2022841ba82dbdf51"
+      },
+      {
+        "byte_length": 2517,
+        "path": "tests/test_story_7_1_security_evidence.py",
+        "sha256": "ae3b0d47600fb2fdd5aad824a7403721e4208c7c721b038f9cac6c0d4d967aa3"
+      }
+    ],
+    "external_human_review_status": "not-performed",
+    "finding_count": 0,
+    "findings": [],
+    "review_type": "automated-aggregate-review-not-external-human-review",
+    "reviewed_commit": "d250940fd79657d90bb0e7fcb565f6ef4b814457",
+    "reviewed_tree": "88d0562139ceef2da0e7561ec7e0f35991057485",
+    "reviewer_id": "agentmage-story-7.1-automated-aggregate-v1"
+  },
+  "installed_product_claim": "none",
+  "macos_evidence_substituted": false,
+  "product_acceptance_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "d250940fd79657d90bb0e7fcb565f6ef4b814457",
+  "reviewed_tree": "88d0562139ceef2da0e7561ec7e0f35991057485",
+  "schema_version": 1,
+  "sprint_completion_claim": false,
+  "status": "blocked-native-platforms-and-external-review",
+  "story_checkbox_complete": false,
+  "story_id": "7.1",
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "status": "blocked-native-platform-and-installed-product-evidence"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "status": "pass-current-shared-linux-contract-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "status": "blocked-independent-critical-boundary-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "status": "pass-current-shared-linux-contract-scope"
+    }
+  ]
+}
