@@ -1,0 +1,6 @@
+$ python3 scripts/story_5_2_ac1_evidence.py
+Story acceptance criterion 5.2.AC1 deterministic retry disposition validated
+$ python3 scripts/story_5_2_ac2_evidence.py
+Story acceptance criterion 5.2.AC2 no-replay recovery validated
+$ python3 scripts/story_5_2_ac3_evidence.py
+Story acceptance criterion 5.2.AC3 bounded termination validated

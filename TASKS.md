@@ -1568,6 +1568,17 @@ an effect or treating approval as reusable authority.
   repeated-state, and diagnosis criterion with synthetic state, not installed-product,
   cross-platform, independent-review, Story, Sprint, packaging, or release gates.
 
+**Story gate evidence:** All four tasks, all 12 sub-tasks, and all three criteria pass in the
+current Linux contract, retry-admission, and workflow-supervision scope. The independent
+[`story_5_2_gate.py`](scripts/story_5_2_gate.py) aggregate reviews immutable commit `eee6b97c`
+and tree `1da6266a`, verifies 16 exact implementation/evidence artifacts, and reruns all three
+criterion validators. Story 5.2 remains `BLOCKED`: dependency Stories 2.3 and 5.1 retain open
+acceptance gates, while `G-DOD-10` retains supported-platform and installed-product execution.
+The gate prohibits dependency or platform substitution, makes no installed-product,
+product-acceptance, Sprint, release, cross-platform, or external-human-review claim, and leaves the
+Story checkbox open. See the retained
+[`story-gate-report.json`](artifacts/sprints/sprint-5/story-5.2/story-gate-report.json).
+
 #### Sprint Acceptance Criteria
 
 - [x] **Sprint AC 5.AC1:** `AT-AUTH-001` passes with zero unauthorized executions. Evidence: the Sprint gate reconciles all 560 seeded grant mutations and 28 authority-escalation attempts with zero admissions in the shared/Linux in-memory boundary. No production-executor claim is made.

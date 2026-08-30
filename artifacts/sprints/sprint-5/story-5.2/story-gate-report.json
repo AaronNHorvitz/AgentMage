@@ -1,0 +1,202 @@
+{
+  "acceptance_criteria": [
+    {
+      "acceptance_truth_sha256": "2e70e8a85bc0a15a9fc2214b8566ddb6155d55b2ab23c72c671a3fb6814c587f",
+      "criterion_id": "5.2.AC1",
+      "status": "pass-local-current-contract-policy"
+    },
+    {
+      "acceptance_truth_sha256": "ce14a1c888227db39c9f4c0cdb06dbd070679704f811e2a0b415a06fe36dfacb",
+      "criterion_id": "5.2.AC2",
+      "status": "pass-local-current-retry-admission"
+    },
+    {
+      "acceptance_truth_sha256": "a3fa29e32d180f889dfe9f86b242437cdb5700d6293030f887cb394b79b9e44f",
+      "criterion_id": "5.2.AC3",
+      "status": "pass-local-current-supervision"
+    }
+  ],
+  "blockers": [
+    "story-2.3-acceptance-gate-open",
+    "story-5.1-acceptance-gate-open",
+    "supported-platform-installed-product-evidence-incomplete"
+  ],
+  "blocking_controls": [
+    "G-DOD-10"
+  ],
+  "current_linux_contract_policy_and_supervision_scope_complete": true,
+  "dependencies": [
+    {
+      "status": "complete",
+      "story_id": "1.2"
+    },
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "2.3"
+    },
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "5.1"
+    }
+  ],
+  "dependency_substitution_permitted": false,
+  "independent_review": {
+    "artifacts": [
+      {
+        "byte_length": 128088,
+        "path": "kernel/contracts/src/engineering_records.rs",
+        "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+      },
+      {
+        "byte_length": 52216,
+        "path": "kernel/engine/src/tooling.rs",
+        "sha256": "67f0bc19387bfdb3f40cd8e5cdb959e4de2d6e7827a109ff1f28bb1e0c4be7ba"
+      },
+      {
+        "byte_length": 16731,
+        "path": "kernel/engine/src/tool_call_repair.rs",
+        "sha256": "d44af7103ffa8aaaa1696a610e4d0a5f4ae48ed537215ef70090759d3c4f311d"
+      },
+      {
+        "byte_length": 26088,
+        "path": "kernel/engine/src/retry_admission.rs",
+        "sha256": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e"
+      },
+      {
+        "byte_length": 56131,
+        "path": "kernel/engine/tests/retry_admission.rs",
+        "sha256": "e232630fff660d92da5980b00c543253af51e17c49a98d788c3792b57dfa582b"
+      },
+      {
+        "byte_length": 18790,
+        "path": "kernel/engine/src/workflow_budget.rs",
+        "sha256": "073471b4773e882438f64900daf107ecd58e7d3a7e70528b6e13aa31ced4f49b"
+      },
+      {
+        "byte_length": 17154,
+        "path": "kernel/engine/src/workflow_progress.rs",
+        "sha256": "9c6f63d953fed91495184a09fd9c701997955fd82ff434bfa54096fa83d1833d"
+      },
+      {
+        "byte_length": 20394,
+        "path": "kernel/engine/src/workflow_termination.rs",
+        "sha256": "3a3c922ac81df779506d7ad85c07d3cd849f8fcbac1c765ca6da14d2dd6457e1"
+      },
+      {
+        "byte_length": 4258,
+        "path": "docs/verification/story-5-2-policy-evidence.md",
+        "sha256": "ce0104013972cf1b9bc4303ae2aa2bef5f48f0479632b6e01c3ad32b2059a864"
+      },
+      {
+        "byte_length": 8029,
+        "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json",
+        "sha256": "5d5bd3f2c9030f8f2cc2690a86490812fe00983075cdabb15440c8dc42fd2694"
+      },
+      {
+        "byte_length": 6904,
+        "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json",
+        "sha256": "6adf60ec22f35483a20d3ebae6b525f4f0ccebfc785a77cc55dd7bcd0f38bb7e"
+      },
+      {
+        "byte_length": 4651,
+        "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-report.json",
+        "sha256": "4fdc42d07d550964c57ed560f1977fb8b4c5dbc1653cbb3016e8aa262c56a4d7"
+      },
+      {
+        "byte_length": 8937,
+        "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
+        "sha256": "00c55900ca368ae810eae661a4cf87cbeec961ed4b6606c1c97033ae81deaef7"
+      },
+      {
+        "byte_length": 4542,
+        "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-report.json",
+        "sha256": "81e304ae380459b997f47c551b6957c6116d556492b2d1828486acccaf9d69bd"
+      },
+      {
+        "byte_length": 4771,
+        "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-report.json",
+        "sha256": "a732dd2b833a845c6d8d5ed604477df35508d54a028d3da55561313b153704a9"
+      },
+      {
+        "byte_length": 4086,
+        "path": "artifacts/sprints/sprint-5/story-5.2/story-ac3-bounded-termination-report.json",
+        "sha256": "503e187ad3ad1ccdb637c2826fee40091c0932c9183745d718a9bdd92904e591"
+      }
+    ],
+    "external_human_review_status": "not-performed",
+    "finding_count": 0,
+    "findings": [],
+    "review_type": "automated-independent-aggregate-review",
+    "reviewed_commit": "eee6b97c8d9cca728f8811c5435f81e1fd2c3ed0",
+    "reviewed_tree": "1da6266abced763075c831a24e540fff7c801f66",
+    "reviewer_id": "agentmage-story-5.2-independent-gate-v1"
+  },
+  "installed_product_claim": "none",
+  "platform_evidence_substituted": false,
+  "product_acceptance_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "eee6b97c8d9cca728f8811c5435f81e1fd2c3ed0",
+  "reviewed_tree": "1da6266abced763075c831a24e540fff7c801f66",
+  "schema_version": 1,
+  "sprint_completion_claim": false,
+  "status": "blocked-open-dependencies-and-platform",
+  "story_checkbox_complete": false,
+  "story_id": "5.2",
+  "sub_task_count": 12,
+  "task_count": 4,
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "status": "pass-no-production-tool-attempt"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "status": "pass-synthetic-data-no-new-persistence"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "status": "pass-no-user-owned-file-effects"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "status": "blocked-supported-platform-installed-product-matrix"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "status": "pass-automated-independent-aggregate-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "status": "pass-current-story-scope"
+    }
+  ],
+  "validator_results_sha256": "a459acfead903ba9d84b8397b275dcdf10a56f1155762d34424f308021640eb8"
+}
