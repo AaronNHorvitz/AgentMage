@@ -1,5 +1,8 @@
-/// Interface-only marker for the unimplemented macOS platform boundary.
+/// Source-level marker for the retained macOS platform boundary.
 public enum AgentMageMacOSPlatformBoundary {
-    /// This value must remain blocked until implementation and Mac evidence exist.
+    /// Native execution remains blocked until Apple Silicon evidence exists.
     public static let implementationStatus = "blocked-macos"
+
+    /// Repository-controlled host admission source is present but not native evidence.
+    public static let kernelHostSourceStatus = "implemented-source-unverified"
 }
