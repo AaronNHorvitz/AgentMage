@@ -36,6 +36,11 @@ REVIEWED_PATHS = (
     "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
     "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
     "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
+    "schemas/platform/macos-release-manifest.schema.json",
+    "release/platform-manifests/macos/v1/contract-fixture.json",
+    "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
+    "scripts/macos_release_manifest_contract.mjs",
+    "tests/test_macos_release_manifest_contract.mjs",
     "scripts/platform_manifest_artifact.py",
     "scripts/platform_result_recorder.py",
     "scripts/story_7_1_security_evidence.py",
@@ -46,7 +51,6 @@ REVIEWED_PATHS = (
 G_DOD_IDS = tuple(f"G-DOD-{index:02d}" for index in range(1, 14))
 BLOCKERS = (
     "sub-task-7.1.1.1-native-linux-and-macos-adapters-open",
-    "sub-task-7.1.1.2-macos-release-manifest-open",
     "sub-task-7.1.1.4-native-startup-probes-open",
     "sub-task-7.1.1.6-macos-result-recorder-open",
     "sub-task-7.1.1.7-macos-conformance-open",
@@ -114,7 +118,8 @@ def reviewed_artifacts() -> list[dict[str, Any]]:
 
 def checklist_failures(text: str) -> list[str]:
     required_checked = (
-        "  - [x] **Sub-task 7.1.1.3**", "  - [x] **Sub-task 7.1.1.5**",
+        "  - [x] **Sub-task 7.1.1.2**", "  - [x] **Sub-task 7.1.1.3**",
+        "  - [x] **Sub-task 7.1.1.5**",
         "  - [x] **Sub-task 7.1.1.8:**", "  - [x] **Sub-task 7.1.2.1:**",
         "  - [x] **Sub-task 7.1.2.3:**", "  - [x] **Sub-task 7.1.2.4:**",
         "  - [x] **Sub-task 7.1.3.5 - Product security evidence:**",
@@ -123,7 +128,7 @@ def checklist_failures(text: str) -> list[str]:
         "### [ ] Sprint 7 - Platform Adapter Contract and Release Manifests",
         "#### [ ] Story 7.1 - Platform Adapter Contract and Release Manifests",
         "- [ ] **Task 7.1.1 - Implement the bounded story**",
-        "  - [ ] **Sub-task 7.1.1.1**", "  - [ ] **Sub-task 7.1.1.2**",
+        "  - [ ] **Sub-task 7.1.1.1**",
         "  - [ ] **Sub-task 7.1.1.4**", "  - [ ] **Sub-task 7.1.1.6**",
         "  - [ ] **Sub-task 7.1.1.7**", "- [ ] **Task 7.1.2 - Produce reviewable artifacts**",
         "  - [ ] **Sub-task 7.1.2.2:**", "- [ ] **Task 7.1.3 - Verify and close the story**",
@@ -156,6 +161,7 @@ def build_report() -> dict[str, Any]:
     base = ROOT / "artifacts/sprints/sprint-7/story-7.1"
     platform = read_json(base / "platform-contract-report.json")
     security = read_json(base / "security-evidence-map.json")
+    macos_manifest = read_json(base / "macos-release-manifest-contract.json")
     return {
         "schema_version": 1,
         "story_id": "7.1",
@@ -171,6 +177,7 @@ def build_report() -> dict[str, Any]:
                 "startup_failure_class_count": platform["api"]["startup_failure_class_count"],
                 "operating_system_branches_in_kernel_selector": platform["api"]["operating_system_branches_in_kernel_selector"],
                 "declared_linux_manifest_count": len(platform["manifests"]),
+                "frozen_macos_manifest_contract_field_count": macos_manifest["field_closure"]["top_level_field_count"],
                 "installed_runtime_component_manifest_count": 0,
             },
             {
@@ -226,6 +233,7 @@ def validate_report(value: Any, *, verify_current: bool = True) -> list[str]:
         or criteria[0].get("startup_failure_class_count") != 11
         or criteria[0].get("operating_system_branches_in_kernel_selector") != 0
         or criteria[0].get("declared_linux_manifest_count") != 2
+        or criteria[0].get("frozen_macos_manifest_contract_field_count") != 16
         or criteria[0].get("installed_runtime_component_manifest_count") != 0
         or criteria[1].get("equivalent_available_contract_result_count") != 3
         or criteria[1].get("mapped_security_requirement_count") != 10

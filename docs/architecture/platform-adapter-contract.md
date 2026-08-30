@@ -9,9 +9,10 @@ contain a production signing key, signed release manifest, supported package,
 or integrated product workflow. Synthetic manifests used by tests make no
 release or platform-support claim.
 
-macOS field requirements remain frozen but unimplemented. Windows remains a
-later independent platform increment. Evidence from one platform cannot satisfy
-another platform's gate.
+macOS field requirements are frozen in a closed, synthetic-only schema and
+contract fixture, but native components and execution remain unimplemented.
+Windows remains a later independent platform increment. Evidence from one
+platform cannot satisfy another platform's gate.
 
 ## Independent Trust Boundary
 

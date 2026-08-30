@@ -30,6 +30,7 @@ REVIEWED_PATHS = (
     "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
     "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
     "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+    "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
 )
 
 
@@ -102,6 +103,7 @@ def build_report() -> dict[str, Any]:
     story = read_json(ROOT / "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json")
     platform = read_json(ROOT / "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json")
     recorder = read_json(ROOT / "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json")
+    macos_manifest = read_json(ROOT / "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json")
     return {
         "schema_version": 1,
         "sprint_id": 7,
@@ -115,6 +117,7 @@ def build_report() -> dict[str, Any]:
                 "available_reference_contract_result_count": 2,
                 "required_reference_platform_count": 3,
                 "deterministic_fake_result_count": 1,
+                "frozen_macos_manifest_contract_field_count": macos_manifest["field_closure"]["top_level_field_count"],
             },
             {
                 "criterion_id": "7.AC2",
@@ -198,6 +201,7 @@ def validate_report(value: Any, *, verify_current: bool = True) -> list[str]:
         criteria[0].get("available_reference_contract_result_count") != 2
         or criteria[0].get("required_reference_platform_count") != 3
         or criteria[0].get("deterministic_fake_result_count") != 1
+        or criteria[0].get("frozen_macos_manifest_contract_field_count") != 16
         or criteria[1].get("unavailable_or_invalid_capability_case_count") != 20
         or criteria[1].get("native_primitive_corruption_case_count") != 0
         or criteria[2].get("required_capability_count") != 10

@@ -301,7 +301,7 @@
     "protocol_complete": false,
     "protocol_id": "RV-51",
     "remaining_protocol_scenario_count": 4,
-    "report_sha256": "0737b2ed99919f2250d1df48804a268e0f846c275ea1bcf6082453034d49ef1e",
+    "report_sha256": "9185fb3a34bd27b0e84ddfbe0e58f150f8351799f437abfb2da6ab48e8fef492",
     "resource_observation_count": 10,
     "source_identity_count": 26,
     "status": "partial-local-fixture-evidence"

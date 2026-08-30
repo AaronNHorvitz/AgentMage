@@ -168,6 +168,8 @@
     "evidence:story7.1-platform-contract:check": "python3 scripts/platform_manifest_artifact.py",
     "evidence:story7.1-security:build": "python3 scripts/story_7_1_security_evidence.py --write --source-revision HEAD",
     "evidence:story7.1-security:check": "python3 scripts/story_7_1_security_evidence.py",
+    "evidence:story7.1-macos-manifest:build": "node scripts/macos_release_manifest_contract.mjs --write --source-revision HEAD && node --test tests/test_macos_release_manifest_contract.mjs",
+    "evidence:story7.1-macos-manifest:check": "node scripts/macos_release_manifest_contract.mjs && node --test tests/test_macos_release_manifest_contract.mjs",
     "evidence:story7.1-gate:build": "python3 scripts/story_7_1_gate.py --write && python3 -m unittest tests.test_story_7_1_gate",
     "evidence:story7.1-gate:check": "python3 -m unittest tests.test_story_7_1_gate",
     "evidence:sprint7-gate:build": "python3 scripts/sprint_7_gate.py --write && python3 -m unittest tests.test_sprint_7_gate",
@@ -420,7 +422,7 @@
     "traceability:build": "python3 scripts/traceability_report.py",
     "traceability:check": "python3 scripts/traceability_report.py --check",
     "traceability:clean": "python3 scripts/verify_clean_traceability.py",
-    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate && npm run task-graph:check && npm run requirements:current-check && npm run schemas:check && npm run dependency-dispositions:check && npm run schema-evolution:check && npm run parser-ocr-placement:check && npm run contract-evidence:check && npm run evidence:story6.1-gate:check && npm run evidence:sprint6-gate:check && npm run evidence:story7.1-gate:check && npm run evidence:sprint7-gate:check"
+    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate && npm run task-graph:check && npm run requirements:current-check && npm run schemas:check && npm run dependency-dispositions:check && npm run schema-evolution:check && npm run parser-ocr-placement:check && npm run contract-evidence:check && npm run evidence:story6.1-gate:check && npm run evidence:sprint6-gate:check && npm run evidence:story7.1-macos-manifest:check && npm run evidence:story7.1-gate:check && npm run evidence:sprint7-gate:check"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "11.16.0",
