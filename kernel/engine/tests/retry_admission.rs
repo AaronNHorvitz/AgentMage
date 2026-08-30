@@ -5,20 +5,57 @@ use agentmage_kernel_contracts::{
     CanonicalRecoveryAction, CanonicalRecoveryDecision, CanonicalRetryAdmission,
     CanonicalRetryClass, CanonicalStepExecutionPolicy, CanonicalVerificationRequirement,
     CapabilityGrant, ContractPayload, CorrelationId, DataSensitivity, GrantClass, GrantId,
-    GrantNonce, GrantOperation, GrantStatus, OperationBinding, PlanId, PlanStepId, SchemaId,
-    SchemaReference, SessionId, TaskId, ToolCall, ToolCallId, ToolId,
+    GrantNonce, GrantOperation, GrantPreimage, GrantSideEffect, GrantStatus, GrantTarget,
+    OperationBinding, PlanId, PlanStepId, SchemaId, SchemaReference, SessionId, TaskId, ToolCall,
+    ToolCallId, ToolId,
 };
 use agentmage_kernel_engine::retry_admission::{
     CurrentAttemptApproval, CurrentEffectReconciliation, CurrentPreflightEvidence,
     EffectReconciliationDisposition, FreshAttemptAdmissionError, FreshAttemptAdmissionInput,
     FreshSingleUseGrant, PriorExecutionIdentityLedger, compile_fresh_attempt_admission,
 };
+use sha2::{Digest, Sha256};
+use std::fmt::Write as _;
 
-const POLICY_SHA256: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
+const PRIOR_SHA256: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const OTHER_SHA256: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
+fn record_sha256(value: &impl serde::Serialize) -> String {
+    let bytes = serde_json::to_vec(value).expect("record serialization");
+    let mut output = String::with_capacity(64);
+    for byte in Sha256::digest(bytes) {
+        let _ = write!(output, "{byte:02x}");
+    }
+    output
+}
+
+fn seal_policy(mut value: CanonicalStepExecutionPolicy) -> CanonicalStepExecutionPolicy {
+    value.policy_sha256 = ZERO_SHA256.to_owned();
+    value.policy_sha256 = record_sha256(&value);
+    value
+}
+
+fn seal_decision(mut value: CanonicalRecoveryDecision) -> CanonicalRecoveryDecision {
+    value.decision_sha256 = ZERO_SHA256.to_owned();
+    value.decision_sha256 = record_sha256(&value);
+    value
+}
+
+fn seal_admission(mut value: CanonicalRetryAdmission) -> CanonicalRetryAdmission {
+    value.admission_sha256 = ZERO_SHA256.to_owned();
+    value.admission_sha256 = record_sha256(&value);
+    value
+}
+
+fn seal_approval(mut value: ApprovalRequest) -> ApprovalRequest {
+    value.confirmation_sha256 = ZERO_SHA256.to_owned();
+    value.confirmation_sha256 = record_sha256(&value);
+    value
+}
+
 fn policy(retry_class: CanonicalRetryClass) -> CanonicalStepExecutionPolicy {
-    CanonicalStepExecutionPolicy {
+    seal_policy(CanonicalStepExecutionPolicy {
         schema_version: 1,
         policy_id: "policy-1".to_owned(),
         plan_id: PlanId::from_raw("plan-1"),
@@ -53,12 +90,12 @@ fn policy(retry_class: CanonicalRetryClass) -> CanonicalStepExecutionPolicy {
         diagnostic_policy_id: "diagnostic-policy-1".to_owned(),
         diagnostic_disclosure: CanonicalDiagnosticDisclosure::ContentFreeCodes,
         recorded_at: "2026-08-30T00:00:00Z".to_owned(),
-        policy_sha256: POLICY_SHA256.to_owned(),
-    }
+        policy_sha256: ZERO_SHA256.to_owned(),
+    })
 }
 
 fn decision() -> CanonicalRecoveryDecision {
-    CanonicalRecoveryDecision {
+    seal_decision(CanonicalRecoveryDecision {
         schema_version: 1,
         decision_id: "decision-1".to_owned(),
         step_execution_id: "step-execution-1".to_owned(),
@@ -70,12 +107,12 @@ fn decision() -> CanonicalRecoveryDecision {
         reason_code: "transport-transient".to_owned(),
         decided_at: "2026-08-30T00:00:01Z".to_owned(),
         established_by: CanonicalExecutionAuthority::AgentmageRuntime,
-        decision_sha256: OTHER_SHA256.to_owned(),
-    }
+        decision_sha256: ZERO_SHA256.to_owned(),
+    })
 }
 
 fn admission(required: CanonicalApprovalRequirement) -> CanonicalRetryAdmission {
-    CanonicalRetryAdmission {
+    seal_admission(CanonicalRetryAdmission {
         schema_version: 1,
         admission_id: "admission-1".to_owned(),
         step_execution_id: "step-execution-1".to_owned(),
@@ -98,11 +135,14 @@ fn admission(required: CanonicalApprovalRequirement) -> CanonicalRetryAdmission 
         reconciled: false,
         admitted_at: "2026-08-30T00:00:02Z".to_owned(),
         established_by: CanonicalExecutionAuthority::AgentmageRuntime,
-        admission_sha256: OTHER_SHA256.to_owned(),
-    }
+        admission_sha256: ZERO_SHA256.to_owned(),
+    })
 }
 
-fn grant(required: CanonicalApprovalRequirement) -> CapabilityGrant {
+fn grant(
+    required: CanonicalApprovalRequirement,
+    policy: &CanonicalStepExecutionPolicy,
+) -> CapabilityGrant {
     CapabilityGrant {
         schema_version: 1,
         grant_id: GrantId::from_raw("grant-2"),
@@ -133,13 +173,13 @@ fn grant(required: CanonicalApprovalRequirement) -> CapabilityGrant {
         parent_grant_id: Some(GrantId::from_raw("parent-1")),
         parent_grant_sha256: Some(OTHER_SHA256.to_owned()),
         preview_sha256: OTHER_SHA256.to_owned(),
-        policy_sha256: POLICY_SHA256.to_owned(),
+        policy_sha256: policy.policy_sha256.clone(),
         status: GrantStatus::Issued,
     }
 }
 
-fn approval() -> ApprovalRequest {
-    ApprovalRequest {
+fn approval(policy: &CanonicalStepExecutionPolicy) -> ApprovalRequest {
+    seal_approval(ApprovalRequest {
         schema_version: 1,
         approval_id: ApprovalId::from_raw("approval-2"),
         proposed_grant_id: GrantId::from_raw("grant-2"),
@@ -176,15 +216,15 @@ fn approval() -> ApprovalRequest {
         rollback_description: "No effect".to_owned(),
         issued_at_epoch_ms: 1_000,
         expires_at_epoch_ms: 2_000,
-        policy_sha256: POLICY_SHA256.to_owned(),
-        confirmation_sha256: OTHER_SHA256.to_owned(),
-    }
+        policy_sha256: policy.policy_sha256.clone(),
+        confirmation_sha256: ZERO_SHA256.to_owned(),
+    })
 }
 
-fn preflight() -> CurrentPreflightEvidence {
+fn preflight(policy: &CanonicalStepExecutionPolicy) -> CurrentPreflightEvidence {
     CurrentPreflightEvidence::new(
         "step-execution-1".to_owned(),
-        POLICY_SHA256.to_owned(),
+        policy.policy_sha256.clone(),
         vec!["workspace-current".to_owned()],
         1_000,
         2_000,
@@ -200,7 +240,7 @@ fn prior_ledger() -> PriorExecutionIdentityLedger {
         vec!["grant-1".to_owned()],
         vec!["approval-1".to_owned()],
         vec!["receipt-1".to_owned()],
-        vec![POLICY_SHA256.to_owned()],
+        vec![PRIOR_SHA256.to_owned()],
     )
     .expect("closed prior-use ledger")
 }
@@ -266,15 +306,15 @@ fn compile_with_controls(
 fn fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_grant() {
     let policy = policy(CanonicalRetryClass::RecoverableRead);
     let decision = decision();
-    let preflight = preflight();
-    let grant = grant(CanonicalApprovalRequirement::NotRequired);
+    let current_preflight = preflight(&policy);
+    let current_grant = grant(CanonicalApprovalRequirement::NotRequired, &policy);
     let result = compile(
         admission(CanonicalApprovalRequirement::NotRequired),
         &policy,
         &decision,
-        &preflight,
+        &current_preflight,
         None,
-        &grant,
+        &current_grant,
         None,
         None,
     )
@@ -283,7 +323,7 @@ fn fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_gran
 
     let stale_preflight = CurrentPreflightEvidence::new(
         "step-execution-1".to_owned(),
-        POLICY_SHA256.to_owned(),
+        policy.policy_sha256.clone(),
         vec!["workspace-current".to_owned()],
         1_000,
         1_500,
@@ -296,7 +336,7 @@ fn fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_gran
             &decision,
             &stale_preflight,
             None,
-            &grant,
+            &current_grant,
             None,
             None,
         ),
@@ -305,28 +345,31 @@ fn fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_gran
 
     let mut exhausted = policy.clone();
     exhausted.budgets.attempts = 1;
+    let exhausted = seal_policy(exhausted);
+    let exhausted_preflight = preflight(&exhausted);
+    let exhausted_grant = grant(CanonicalApprovalRequirement::NotRequired, &exhausted);
     assert_eq!(
         compile(
             admission(CanonicalApprovalRequirement::NotRequired),
             &exhausted,
             &decision,
-            &preflight,
+            &exhausted_preflight,
             None,
-            &grant,
+            &exhausted_grant,
             None,
             None,
         ),
         Err(FreshAttemptAdmissionError::AttemptBudgetExhausted),
     );
 
-    let mut used = grant.clone();
+    let mut used = current_grant.clone();
     used.use_count = 1;
     assert_eq!(
         compile(
             admission(CanonicalApprovalRequirement::NotRequired),
             &policy,
             &decision,
-            &preflight,
+            &current_preflight,
             None,
             &used,
             None,
@@ -334,14 +377,14 @@ fn fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_gran
         ),
         Err(FreshAttemptAdmissionError::GrantNotFreshSingleUse),
     );
-    let mut reusable = grant.clone();
+    let mut reusable = current_grant.clone();
     reusable.use_limit = 2;
     assert_eq!(
         compile(
             admission(CanonicalApprovalRequirement::NotRequired),
             &policy,
             &decision,
-            &preflight,
+            &current_preflight,
             None,
             &reusable,
             None,
@@ -355,12 +398,14 @@ fn fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_gran
 fn conditional_retry_requires_current_safe_effect_reconciliation() {
     let mut policy = policy(CanonicalRetryClass::ConditionalAfterReconciliation);
     policy.effect_class = CanonicalEffectClass::Conditional;
+    let policy = seal_policy(policy);
     let decision = decision();
-    let preflight = preflight();
-    let grant = grant(CanonicalApprovalRequirement::NotRequired);
+    let preflight = preflight(&policy);
+    let grant = grant(CanonicalApprovalRequirement::NotRequired, &policy);
     let mut candidate = admission(CanonicalApprovalRequirement::NotRequired);
     candidate.reconciliation_required = true;
     candidate.reconciled = true;
+    let candidate = seal_admission(candidate);
     assert_eq!(
         compile(
             candidate.clone(),
@@ -376,7 +421,7 @@ fn conditional_retry_requires_current_safe_effect_reconciliation() {
     );
     let evidence = CurrentEffectReconciliation::new(
         "attempt-1".to_owned(),
-        POLICY_SHA256.to_owned(),
+        policy.policy_sha256.clone(),
         OTHER_SHA256.to_owned(),
         EffectReconciliationDisposition::SafeForFreshAttempt,
         1_250,
@@ -403,10 +448,11 @@ fn conditional_retry_requires_current_safe_effect_reconciliation() {
 fn per_attempt_approval_must_be_current_exact_and_different_from_prior() {
     let mut policy = policy(CanonicalRetryClass::RecoverableRead);
     policy.approval_requirement = CanonicalApprovalRequirement::RequiredPerAttempt;
+    let policy = seal_policy(policy);
     let decision = decision();
-    let preflight = preflight();
-    let grant = grant(CanonicalApprovalRequirement::RequiredPerAttempt);
-    let approval = approval();
+    let preflight = preflight(&policy);
+    let grant = grant(CanonicalApprovalRequirement::RequiredPerAttempt, &policy);
+    let approval = approval(&policy);
     let prior = ApprovalId::from_raw("approval-1");
     assert!(
         compile(
@@ -440,8 +486,9 @@ fn per_attempt_approval_must_be_current_exact_and_different_from_prior() {
 #[test]
 fn unsafe_and_uncertain_effects_never_receive_automatic_new_attempts() {
     let decision = decision();
-    let preflight = preflight();
-    let grant = grant(CanonicalApprovalRequirement::NotRequired);
+    let base_policy = policy(CanonicalRetryClass::RecoverableRead);
+    let preflight = preflight(&base_policy);
+    let grant = grant(CanonicalApprovalRequirement::NotRequired, &base_policy);
     for effect_class in [
         CanonicalEffectClass::NonIdempotent,
         CanonicalEffectClass::Destructive,
@@ -450,6 +497,7 @@ fn unsafe_and_uncertain_effects_never_receive_automatic_new_attempts() {
     ] {
         let mut unsafe_policy = policy(CanonicalRetryClass::RecoverableRead);
         unsafe_policy.effect_class = effect_class;
+        let unsafe_policy = seal_policy(unsafe_policy);
         assert_eq!(
             compile(
                 admission(CanonicalApprovalRequirement::NotRequired),
@@ -466,9 +514,10 @@ fn unsafe_and_uncertain_effects_never_receive_automatic_new_attempts() {
         );
     }
 
-    let policy = policy(CanonicalRetryClass::RecoverableRead);
+    let policy = base_policy;
     let mut uncertain = decision;
     uncertain.uncertain_outcome = true;
+    let uncertain = seal_decision(uncertain);
     assert_eq!(
         compile(
             admission(CanonicalApprovalRequirement::NotRequired),
@@ -488,8 +537,8 @@ fn unsafe_and_uncertain_effects_never_receive_automatic_new_attempts() {
 fn complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt() {
     let base_policy = policy(CanonicalRetryClass::RecoverableRead);
     let decision = decision();
-    let preflight = preflight();
-    let base_grant = grant(CanonicalApprovalRequirement::NotRequired);
+    let preflight = preflight(&base_policy);
+    let base_grant = grant(CanonicalApprovalRequirement::NotRequired, &base_policy);
 
     for ledger in [
         PriorExecutionIdentityLedger::new(
@@ -584,8 +633,12 @@ fn complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt() {
 
     let mut approval_policy = policy(CanonicalRetryClass::RecoverableRead);
     approval_policy.approval_requirement = CanonicalApprovalRequirement::RequiredPerAttempt;
-    let approval_grant = grant(CanonicalApprovalRequirement::RequiredPerAttempt);
-    let approval = approval();
+    let approval_policy = seal_policy(approval_policy);
+    let approval_grant = grant(
+        CanonicalApprovalRequirement::RequiredPerAttempt,
+        &approval_policy,
+    );
+    let approval = approval(&approval_policy);
     let prior_approval = ApprovalId::from_raw("approval-1");
     let approval_ledger = PriorExecutionIdentityLedger::new(
         vec![],
@@ -620,15 +673,17 @@ fn required_idempotency_key_must_be_fresh_and_digest_bound() {
     let mut policy = policy(CanonicalRetryClass::ConditionalAfterReconciliation);
     policy.effect_class = CanonicalEffectClass::IdempotentWrite;
     policy.idempotency_key_requirement = CanonicalIdempotencyRequirement::Required;
+    let policy = seal_policy(policy);
     let decision = decision();
-    let preflight = preflight();
-    let grant = grant(CanonicalApprovalRequirement::NotRequired);
+    let preflight = preflight(&policy);
+    let grant = grant(CanonicalApprovalRequirement::NotRequired, &policy);
     let mut candidate = admission(CanonicalApprovalRequirement::NotRequired);
     candidate.reconciliation_required = true;
     candidate.reconciled = true;
+    let candidate = seal_admission(candidate);
     let reconciliation = CurrentEffectReconciliation::new(
         "attempt-1".to_owned(),
-        POLICY_SHA256.to_owned(),
+        policy.policy_sha256.clone(),
         OTHER_SHA256.to_owned(),
         EffectReconciliationDisposition::SafeForFreshAttempt,
         1_250,
@@ -652,7 +707,7 @@ fn required_idempotency_key_must_be_fresh_and_digest_bound() {
         )
         .is_ok()
     );
-    for digest in [None, Some("invalid"), Some(POLICY_SHA256)] {
+    for digest in [None, Some("invalid"), Some(PRIOR_SHA256)] {
         assert_eq!(
             compile_with_controls(
                 candidate.clone(),
@@ -670,4 +725,528 @@ fn required_idempotency_key_must_be_fresh_and_digest_bound() {
             Err(FreshAttemptAdmissionError::FreshIdempotencyEvidenceRequired),
         );
     }
+}
+
+fn deny_before_dispatch(
+    result: Result<CanonicalRetryAdmission, FreshAttemptAdmissionError>,
+    expected: FreshAttemptAdmissionError,
+    dispatch_probe: &mut u64,
+    case: &str,
+) {
+    if result.is_ok() {
+        *dispatch_probe += 1;
+    }
+    assert_eq!(result, Err(expected), "mutation case {case}");
+    assert_eq!(*dispatch_probe, 0, "{case} reached dispatch");
+}
+
+#[test]
+fn every_effect_failure_and_budget_mutation_denies_before_dispatch() {
+    let base_policy = policy(CanonicalRetryClass::RecoverableRead);
+    let base_decision = decision();
+    let current_preflight = preflight(&base_policy);
+    let current_grant = grant(CanonicalApprovalRequirement::NotRequired, &base_policy);
+    let mut dispatch_probe = 0_u64;
+
+    for effect_class in [
+        CanonicalEffectClass::IdempotentWrite,
+        CanonicalEffectClass::Conditional,
+        CanonicalEffectClass::NonIdempotent,
+        CanonicalEffectClass::Destructive,
+        CanonicalEffectClass::External,
+        CanonicalEffectClass::Unknown,
+    ] {
+        let mut changed = base_policy.clone();
+        changed.effect_class = effect_class;
+        deny_before_dispatch(
+            compile(
+                admission(CanonicalApprovalRequirement::NotRequired),
+                &changed,
+                &base_decision,
+                &current_preflight,
+                None,
+                &current_grant,
+                None,
+                None,
+            ),
+            FreshAttemptAdmissionError::IntegrityMismatch,
+            &mut dispatch_probe,
+            "effect_class",
+        );
+    }
+    for retry_class in [
+        CanonicalRetryClass::Never,
+        CanonicalRetryClass::ConditionalAfterReconciliation,
+        CanonicalRetryClass::UserDecisionRequired,
+    ] {
+        let mut changed = base_policy.clone();
+        changed.retry_class = retry_class;
+        deny_before_dispatch(
+            compile(
+                admission(CanonicalApprovalRequirement::NotRequired),
+                &changed,
+                &base_decision,
+                &current_preflight,
+                None,
+                &current_grant,
+                None,
+                None,
+            ),
+            FreshAttemptAdmissionError::IntegrityMismatch,
+            &mut dispatch_probe,
+            "retry_class",
+        );
+    }
+
+    for failure_class in [
+        CanonicalFailureClass::Rate,
+        CanonicalFailureClass::Timeout,
+        CanonicalFailureClass::Crash,
+        CanonicalFailureClass::UnavailableService,
+        CanonicalFailureClass::MissingCommand,
+        CanonicalFailureClass::InvalidArguments,
+        CanonicalFailureClass::Authentication,
+        CanonicalFailureClass::Permission,
+        CanonicalFailureClass::PolicyDenial,
+        CanonicalFailureClass::DeterministicVerificationFailure,
+        CanonicalFailureClass::MalformedModelOutput,
+        CanonicalFailureClass::ContextOverflow,
+        CanonicalFailureClass::UserRejection,
+    ] {
+        let mut changed = base_decision.clone();
+        changed.failure_class = failure_class;
+        deny_before_dispatch(
+            compile(
+                admission(CanonicalApprovalRequirement::NotRequired),
+                &base_policy,
+                &changed,
+                &current_preflight,
+                None,
+                &current_grant,
+                None,
+                None,
+            ),
+            FreshAttemptAdmissionError::IntegrityMismatch,
+            &mut dispatch_probe,
+            "failure_class",
+        );
+    }
+    let mut uncertain = base_decision.clone();
+    uncertain.uncertain_outcome = true;
+    deny_before_dispatch(
+        compile(
+            admission(CanonicalApprovalRequirement::NotRequired),
+            &base_policy,
+            &uncertain,
+            &current_preflight,
+            None,
+            &current_grant,
+            None,
+            None,
+        ),
+        FreshAttemptAdmissionError::IntegrityMismatch,
+        &mut dispatch_probe,
+        "uncertain_outcome",
+    );
+
+    for budget_field in 0..9 {
+        let mut changed = base_policy.clone();
+        match budget_field {
+            0 => changed.budgets.turns += 1,
+            1 => changed.budgets.tokens += 1,
+            2 => changed.budgets.duration_ms += 1,
+            3 => changed.budgets.tool_calls += 1,
+            4 => changed.budgets.attempts += 1,
+            5 => changed.budgets.no_progress_events += 1,
+            6 => changed.budgets.output_bytes += 1,
+            7 => changed.budgets.memory_bytes += 1,
+            8 => changed.budgets.cost_minor_units += 1,
+            _ => unreachable!("closed budget field"),
+        }
+        deny_before_dispatch(
+            compile(
+                admission(CanonicalApprovalRequirement::NotRequired),
+                &changed,
+                &base_decision,
+                &current_preflight,
+                None,
+                &current_grant,
+                None,
+                None,
+            ),
+            FreshAttemptAdmissionError::IntegrityMismatch,
+            &mut dispatch_probe,
+            "budget_field",
+        );
+    }
+    assert_eq!(dispatch_probe, 0);
+}
+
+#[test]
+fn every_approval_field_mutation_denies_before_dispatch() {
+    let mut required_policy = policy(CanonicalRetryClass::RecoverableRead);
+    required_policy.approval_requirement = CanonicalApprovalRequirement::RequiredPerAttempt;
+    let required_policy = seal_policy(required_policy);
+    let recovery = decision();
+    let current_preflight = preflight(&required_policy);
+    let current_grant = grant(
+        CanonicalApprovalRequirement::RequiredPerAttempt,
+        &required_policy,
+    );
+    let base = approval(&required_policy);
+    let prior = ApprovalId::from_raw("approval-1");
+    let target: GrantTarget = serde_json::from_value(serde_json::json!({
+        "target_kind": "held_object",
+        "path": {"workspace_id": "workspace-1", "components": ["file.txt"]},
+        "authorization_id": "authorization-1",
+        "adapter_instance_id": "adapter-1",
+        "platform": "deterministic_fake",
+        "object_kind": "regular_file",
+        "object_identity": {
+            "platform": "deterministic_fake",
+            "mount_identity_sha256": vec![1_u8; 32],
+            "object_identity_sha256": vec![2_u8; 32]
+        },
+        "preimage": {"byte_len": 1, "content_sha256": vec![3_u8; 32]}
+    }))
+    .expect("synthetic held target");
+    let mut mutations: Vec<(&str, ApprovalRequest)> = Vec::new();
+    macro_rules! mutation {
+        ($name:literal, $change:expr) => {{
+            let mut value = base.clone();
+            $change(&mut value);
+            mutations.push(($name, value));
+        }};
+    }
+    mutation!("schema_version", |v: &mut ApprovalRequest| v
+        .schema_version +=
+        1);
+    mutation!("approval_id", |v: &mut ApprovalRequest| v.approval_id =
+        ApprovalId::from_raw("approval-x"));
+    mutation!("proposed_grant_id", |v: &mut ApprovalRequest| v
+        .proposed_grant_id =
+        GrantId::from_raw("grant-x"));
+    mutation!("parent_grant_id", |v: &mut ApprovalRequest| v
+        .parent_grant_id =
+        GrantId::from_raw("parent-x"));
+    mutation!("parent_grant_sha256", |v: &mut ApprovalRequest| v
+        .parent_grant_sha256 =
+        PRIOR_SHA256.to_owned());
+    mutation!("actor_id", |v: &mut ApprovalRequest| v.actor_id =
+        ActorId::from_raw("actor-x"));
+    mutation!("session_id", |v: &mut ApprovalRequest| v.session_id =
+        SessionId::from_raw("session-x"));
+    mutation!("task_id", |v: &mut ApprovalRequest| v.task_id =
+        TaskId::from_raw("task-x"));
+    mutation!("action_kind", |v: &mut ApprovalRequest| v.action_kind =
+        ActionKind::KernelDecision);
+    mutation!("operation", |v: &mut ApprovalRequest| v.operation =
+        OperationBinding::new(GrantOperation::WorkspaceWrite));
+    mutation!("tool_call", |v: &mut ApprovalRequest| v
+        .tool_call
+        .tool_call_id =
+        ToolCallId::from_raw("tool-call-x"));
+    mutation!("targets", |v: &mut ApprovalRequest| v
+        .targets
+        .push(target.clone()));
+    mutation!("excluded_targets", |v: &mut ApprovalRequest| v
+        .excluded_targets
+        .push(target.clone()));
+    mutation!("sensitivity", |v: &mut ApprovalRequest| v.sensitivity =
+        DataSensitivity::Restricted);
+    mutation!("preimages", |v: &mut ApprovalRequest| v.preimages.push(
+        GrantPreimage {
+            target_index: 0,
+            content_sha256: OTHER_SHA256.to_owned(),
+            observed_revision: None
+        }
+    ));
+    mutation!("expected_side_effects", |v: &mut ApprovalRequest| v
+        .expected_side_effects
+        .push(GrantSideEffect {
+            operation: OperationBinding::new(GrantOperation::WorkspaceWrite),
+            target_indexes: vec![0],
+            details_sha256: OTHER_SHA256.to_owned()
+        }));
+    mutation!("rollback_description", |v: &mut ApprovalRequest| v
+        .rollback_description =
+        "Changed recovery".to_owned());
+    mutation!("issued_at_epoch_ms", |v: &mut ApprovalRequest| v
+        .issued_at_epoch_ms +=
+        1);
+    mutation!("expires_at_epoch_ms", |v: &mut ApprovalRequest| v
+        .expires_at_epoch_ms +=
+        1);
+    mutation!("policy_sha256", |v: &mut ApprovalRequest| v.policy_sha256 =
+        PRIOR_SHA256.to_owned());
+    mutation!("confirmation_sha256", |v: &mut ApprovalRequest| v
+        .confirmation_sha256 =
+        PRIOR_SHA256.to_owned());
+
+    let mut dispatch_probe = 0_u64;
+    for (case, changed) in mutations {
+        deny_before_dispatch(
+            compile(
+                admission(CanonicalApprovalRequirement::RequiredPerAttempt),
+                &required_policy,
+                &recovery,
+                &current_preflight,
+                None,
+                &current_grant,
+                Some(&changed),
+                Some(&prior),
+            ),
+            FreshAttemptAdmissionError::FreshApprovalRequired,
+            &mut dispatch_probe,
+            case,
+        );
+    }
+    assert_eq!(dispatch_probe, 0);
+}
+
+#[test]
+fn every_preflight_and_reconciliation_field_mutation_denies_before_dispatch() {
+    let mut policy = policy(CanonicalRetryClass::ConditionalAfterReconciliation);
+    policy.effect_class = CanonicalEffectClass::Conditional;
+    let policy = seal_policy(policy);
+    let recovery = decision();
+    let current_preflight = preflight(&policy);
+    let current_grant = grant(CanonicalApprovalRequirement::NotRequired, &policy);
+    let mut candidate = admission(CanonicalApprovalRequirement::NotRequired);
+    candidate.reconciliation_required = true;
+    candidate.reconciled = true;
+    let candidate = seal_admission(candidate);
+    let current_reconciliation = CurrentEffectReconciliation::new(
+        "attempt-1".to_owned(),
+        policy.policy_sha256.clone(),
+        OTHER_SHA256.to_owned(),
+        EffectReconciliationDisposition::SafeForFreshAttempt,
+        1_250,
+        2_000,
+    )
+    .expect("current reconciliation");
+    let preflight_cases = [
+        CurrentPreflightEvidence::new(
+            "step-execution-x".to_owned(),
+            policy.policy_sha256.clone(),
+            vec!["workspace-current".to_owned()],
+            1_000,
+            2_000,
+        )
+        .expect("changed step"),
+        CurrentPreflightEvidence::new(
+            "step-execution-1".to_owned(),
+            PRIOR_SHA256.to_owned(),
+            vec!["workspace-current".to_owned()],
+            1_000,
+            2_000,
+        )
+        .expect("changed policy"),
+        CurrentPreflightEvidence::new(
+            "step-execution-1".to_owned(),
+            policy.policy_sha256.clone(),
+            vec!["workspace-other".to_owned()],
+            1_000,
+            2_000,
+        )
+        .expect("changed result"),
+        CurrentPreflightEvidence::new(
+            "step-execution-1".to_owned(),
+            policy.policy_sha256.clone(),
+            vec!["workspace-current".to_owned()],
+            1_501,
+            2_000,
+        )
+        .expect("future observation"),
+        CurrentPreflightEvidence::new(
+            "step-execution-1".to_owned(),
+            policy.policy_sha256.clone(),
+            vec!["workspace-current".to_owned()],
+            1_000,
+            1_500,
+        )
+        .expect("expired observation"),
+    ];
+    let mut dispatch_probe = 0_u64;
+    for (index, changed) in preflight_cases.iter().enumerate() {
+        let expected = if index == 0 {
+            FreshAttemptAdmissionError::BindingMismatch
+        } else {
+            FreshAttemptAdmissionError::PreflightNotCurrent
+        };
+        deny_before_dispatch(
+            compile(
+                candidate.clone(),
+                &policy,
+                &recovery,
+                changed,
+                Some(&current_reconciliation),
+                &current_grant,
+                None,
+                None,
+            ),
+            expected,
+            &mut dispatch_probe,
+            "preflight_field",
+        );
+    }
+    let reconciliation_cases = [
+        CurrentEffectReconciliation::new(
+            "attempt-x".to_owned(),
+            policy.policy_sha256.clone(),
+            OTHER_SHA256.to_owned(),
+            EffectReconciliationDisposition::SafeForFreshAttempt,
+            1_250,
+            2_000,
+        )
+        .expect("changed attempt"),
+        CurrentEffectReconciliation::new(
+            "attempt-1".to_owned(),
+            PRIOR_SHA256.to_owned(),
+            OTHER_SHA256.to_owned(),
+            EffectReconciliationDisposition::SafeForFreshAttempt,
+            1_250,
+            2_000,
+        )
+        .expect("changed policy"),
+        CurrentEffectReconciliation::new(
+            "attempt-1".to_owned(),
+            policy.policy_sha256.clone(),
+            PRIOR_SHA256.to_owned(),
+            EffectReconciliationDisposition::EffectUncertain,
+            1_250,
+            2_000,
+        )
+        .expect("changed observation and disposition"),
+        CurrentEffectReconciliation::new(
+            "attempt-1".to_owned(),
+            policy.policy_sha256.clone(),
+            OTHER_SHA256.to_owned(),
+            EffectReconciliationDisposition::DesiredStateAlreadyPresent,
+            1_250,
+            2_000,
+        )
+        .expect("changed disposition"),
+        CurrentEffectReconciliation::new(
+            "attempt-1".to_owned(),
+            policy.policy_sha256.clone(),
+            OTHER_SHA256.to_owned(),
+            EffectReconciliationDisposition::SafeForFreshAttempt,
+            1_501,
+            2_000,
+        )
+        .expect("future observation"),
+        CurrentEffectReconciliation::new(
+            "attempt-1".to_owned(),
+            policy.policy_sha256.clone(),
+            OTHER_SHA256.to_owned(),
+            EffectReconciliationDisposition::SafeForFreshAttempt,
+            1_000,
+            1_500,
+        )
+        .expect("expired observation"),
+    ];
+    for changed in &reconciliation_cases {
+        deny_before_dispatch(
+            compile(
+                candidate.clone(),
+                &policy,
+                &recovery,
+                &current_preflight,
+                Some(changed),
+                &current_grant,
+                None,
+                None,
+            ),
+            FreshAttemptAdmissionError::ReconciliationNotCurrent,
+            &mut dispatch_probe,
+            "reconciliation_field",
+        );
+    }
+    assert_eq!(dispatch_probe, 0);
+}
+
+#[test]
+fn every_attempt_identity_field_mutation_denies_before_dispatch() {
+    let policy = policy(CanonicalRetryClass::RecoverableRead);
+    let recovery = decision();
+    let current_preflight = preflight(&policy);
+    let current_grant = grant(CanonicalApprovalRequirement::NotRequired, &policy);
+    let base = admission(CanonicalApprovalRequirement::NotRequired);
+    let mut mutations: Vec<(&str, CanonicalRetryAdmission)> = Vec::new();
+    macro_rules! mutation {
+        ($name:literal, $change:expr) => {{
+            let mut value = base.clone();
+            $change(&mut value);
+            mutations.push(($name, value));
+        }};
+    }
+    mutation!("admission_id", |v: &mut CanonicalRetryAdmission| v
+        .admission_id =
+        "admission-x".to_owned());
+    mutation!("step_execution_id", |v: &mut CanonicalRetryAdmission| v
+        .step_execution_id =
+        "step-execution-x".to_owned());
+    mutation!("policy_id", |v: &mut CanonicalRetryAdmission| v.policy_id =
+        "policy-x".to_owned());
+    mutation!("decision_id", |v: &mut CanonicalRetryAdmission| v
+        .decision_id =
+        "decision-x".to_owned());
+    mutation!("prior_attempt_id", |v: &mut CanonicalRetryAdmission| v
+        .prior_attempt_id =
+        "attempt-x".to_owned());
+    mutation!(
+        "prior_attempt_ordinal",
+        |v: &mut CanonicalRetryAdmission| v.prior_attempt_ordinal += 1
+    );
+    mutation!("prior_call_id", |v: &mut CanonicalRetryAdmission| v
+        .prior_call_id =
+        "call-x".to_owned());
+    mutation!("prior_tool_call_id", |v: &mut CanonicalRetryAdmission| v
+        .prior_tool_call_id =
+        ToolCallId::from_raw("tool-call-x"));
+    mutation!("prior_grant_id", |v: &mut CanonicalRetryAdmission| v
+        .prior_grant_id =
+        GrantId::from_raw("grant-x"));
+    mutation!("successor_attempt_id", |v: &mut CanonicalRetryAdmission| {
+        v.successor_attempt_id = "attempt-x".to_owned()
+    });
+    mutation!(
+        "successor_attempt_ordinal",
+        |v: &mut CanonicalRetryAdmission| v.successor_attempt_ordinal += 1
+    );
+    mutation!("successor_call_id", |v: &mut CanonicalRetryAdmission| v
+        .successor_call_id =
+        "call-x".to_owned());
+    mutation!(
+        "successor_tool_call_id",
+        |v: &mut CanonicalRetryAdmission| v.successor_tool_call_id =
+            ToolCallId::from_raw("tool-call-x")
+    );
+    mutation!("successor_grant_id", |v: &mut CanonicalRetryAdmission| v
+        .successor_grant_id =
+        GrantId::from_raw("grant-x"));
+    mutation!(
+        "successor_approval_id",
+        |v: &mut CanonicalRetryAdmission| v.successor_approval_id = Some("approval-x".to_owned())
+    );
+    let mut dispatch_probe = 0_u64;
+    for (case, changed) in mutations {
+        deny_before_dispatch(
+            compile(
+                changed,
+                &policy,
+                &recovery,
+                &current_preflight,
+                None,
+                &current_grant,
+                None,
+                None,
+            ),
+            FreshAttemptAdmissionError::IntegrityMismatch,
+            &mut dispatch_probe,
+            case,
+        );
+    }
+    assert_eq!(dispatch_probe, 0);
 }

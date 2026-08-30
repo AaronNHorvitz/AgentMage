@@ -1483,8 +1483,22 @@ an effect or treating approval as reusable authority.
     three modules and three focused test commands, and rejects termination-source, reason, action,
     authority, continuation, retry, and product-truth widening.
 - [ ] **Task 5.2.4 - Verify policy and retain evidence**
-  - [ ] **Sub-task 5.2.4.1:** Mutate every effect, failure, budget, approval, preflight,
-    reconciliation, and attempt-identity field; require exact denial before dispatch.
+  - [x] **Sub-task 5.2.4.1:** Mutate every effect, failure, budget, approval, preflight,
+    reconciliation, and attempt-identity field; require exact denial before dispatch. Evidence: the
+    fresh-attempt compiler now verifies the canonical SHA-256 preimages of the complete governing
+    step policy, recovery decision, successor admission, and approval snapshot before semantic
+    admission. Approval checking additionally binds all actor, session, task, parent, operation,
+    action, tool/version/argument, target, exclusion, sensitivity, preimage, side-effect, rollback,
+    lifetime, policy, grant, and attempt fields to the exact successor grant and admission. The
+    expanded integration corpus applies 79 single-boundary mutations: all six alternate effect
+    classes and three retry classes; all 13 alternate failure classes plus uncertainty; all nine
+    budget fields; all 21 approval fields; all five preflight fields; all six reconciliation
+    fields; and all 15 prior/successor attempt-identity fields. Every case asserts its exact typed
+    denial and a zero-valued dispatch probe. The six valid/retry-denial integration cases remain
+    green after fixtures were changed to compute real canonical seals instead of placeholder
+    hashes. The enrolled retry/repair report and its eight evidence tests now retain exact mutation
+    counts, all four digest checks, zero dispatches, and unchanged no-effect/no-authority product
+    truth.
   - [ ] **Sub-task 5.2.4.2:** Race eligible attempts and prove at most one exact attempt enters
     execution, no effect executes twice, and uncertainty cannot be converted into success or retry.
   - [ ] **Sub-task 5.2.4.3:** Retain decision tables, tool-coverage maps, state diagrams, mutation

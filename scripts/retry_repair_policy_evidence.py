@@ -46,7 +46,11 @@ MARKERS: Final = (
     "unsafe_and_uncertain_effects_never_receive_automatic_new_attempts ... ok",
     "complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok",
     "required_idempotency_key_must_be_fresh_and_digest_bound ... ok",
-    "test result: ok. 6 passed; 0 failed",
+    "every_effect_failure_and_budget_mutation_denies_before_dispatch ... ok",
+    "every_approval_field_mutation_denies_before_dispatch ... ok",
+    "every_preflight_and_reconciliation_field_mutation_denies_before_dispatch ... ok",
+    "every_attempt_identity_field_mutation_denies_before_dispatch ... ok",
+    "test result: ok. 10 passed; 0 failed",
     "call envelope carries only the digest of validated arguments and explains every rejection",
     "pass 52",
     "fail 0",
@@ -81,8 +85,8 @@ def expected_report() -> dict[str, Any]:
         "schema_version": 1,
         "record_type": "agentmage-retry-repair-policy-evidence",
         "story_id": "5.2",
-        "task_id": "5.2.2.1",
-        "coverage_task_ids": ["5.2.2.1", "5.2.2.2", "5.2.2.3"],
+        "task_id": "5.2.4.1",
+        "coverage_task_ids": ["5.2.2.1", "5.2.2.2", "5.2.2.3", "5.2.4.1"],
         "generated_on": "2026-08-30",
         "status": "pass-local-contract-evidence",
         "normalization_contract": {
@@ -147,6 +151,21 @@ def expected_report() -> dict[str, Any]:
             ],
             "any_successor_receipt_before_execution_admitted": False,
             "required_idempotency_key_must_be_fresh": True,
+        },
+        "mutation_contract": {
+            "effect_and_retry_field_mutations": 9,
+            "failure_and_uncertainty_field_mutations": 14,
+            "budget_field_mutations": 9,
+            "approval_field_mutations": 21,
+            "preflight_field_mutations": 5,
+            "reconciliation_field_mutations": 6,
+            "attempt_identity_field_mutations": 15,
+            "total_mutations": 79,
+            "canonical_policy_digest_verified": True,
+            "canonical_decision_digest_verified": True,
+            "canonical_admission_digest_verified": True,
+            "canonical_approval_digest_verified": True,
+            "dispatches_after_mutation": 0,
         },
         "commands": [command_text(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
@@ -235,7 +254,7 @@ def main() -> int:
         for failure in failures:
             print(f"retry-repair policy evidence validation failed: {failure}", file=sys.stderr)
         return 1
-    print("Task 5.2.2 retry and repair evidence validated")
+    print("Retry, repair, and mutation evidence validated through Sub-task 5.2.4.1")
     return 0
 
 

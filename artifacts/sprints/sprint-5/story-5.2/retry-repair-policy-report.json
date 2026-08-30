@@ -6,14 +6,14 @@
       "sha256": "b35964bd72cfcccc6a8b13a2f95cf74ff3cecd442df4606341621fbe53e4b6db"
     },
     {
-      "byte_length": 17881,
+      "byte_length": 21420,
       "path": "kernel/engine/src/retry_admission.rs",
-      "sha256": "fcef9b911e873981aa7196ba08df602ab3162d83351f12a7571c16c47b91d3d8"
+      "sha256": "a768aad4a99c392d79132a5d4d7d667790581938741cc75b868f22649109e834"
     },
     {
-      "byte_length": 22630,
+      "byte_length": 43611,
       "path": "kernel/engine/tests/retry_admission.rs",
-      "sha256": "610fe676e05f4062c096e72e9f031b6848b48b799bd1e2aecfe5c543b24d0b20"
+      "sha256": "fc3d0d4cba86261f8cc6e06e0fc23ca68eb82ce302c885cb3ef3f4328edaa828"
     },
     {
       "byte_length": 68694,
@@ -31,19 +31,19 @@
       "sha256": "d93cbc70d573eb9548ca1b122cf5ea9876524737529e716ea238a757d01ed92d"
     },
     {
-      "byte_length": 8963,
+      "byte_length": 9991,
       "path": "scripts/retry_repair_policy_evidence.py",
-      "sha256": "11ac96a685c1883412211c3d3540e4cb4b728cae259bf27196323d867afd3bfa"
+      "sha256": "3f5c5594c2faaca7bded0ed4f326cf90b0ec1fb19f6f4130aa24f45e429923de"
     },
     {
-      "byte_length": 4088,
+      "byte_length": 4809,
       "path": "tests/test_retry_repair_policy_evidence.py",
-      "sha256": "46dc843b5433c293f06a7bf4329047473b653f17478f2ac7f0494f9997192ce4"
+      "sha256": "4b3da5352579ba6d7a9e55fdce950eb97ac5d276270fba75d561bceac900c6b1"
     },
     {
-      "byte_length": 9825,
+      "byte_length": 10234,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-results.log",
-      "sha256": "3897aa373087982b8f51f98907668a705882c389c7b2a393ca6de86dc242d613"
+      "sha256": "1347a1c562043ac6adce7b5d5351f8dc3263ca40b364fe806220b0e4fd898061"
     }
   ],
   "commands": [
@@ -54,7 +54,8 @@
   "coverage_task_ids": [
     "5.2.2.1",
     "5.2.2.2",
-    "5.2.2.3"
+    "5.2.2.3",
+    "5.2.4.1"
   ],
   "denied_conditions": [
     "empty_or_incomplete_fragments",
@@ -111,6 +112,21 @@
     "prior_schema_rejection_required": true,
     "repair_admission_contains_grant_or_executor_authority": false
   },
+  "mutation_contract": {
+    "approval_field_mutations": 21,
+    "attempt_identity_field_mutations": 15,
+    "budget_field_mutations": 9,
+    "canonical_admission_digest_verified": true,
+    "canonical_approval_digest_verified": true,
+    "canonical_decision_digest_verified": true,
+    "canonical_policy_digest_verified": true,
+    "dispatches_after_mutation": 0,
+    "effect_and_retry_field_mutations": 9,
+    "failure_and_uncertainty_field_mutations": 14,
+    "preflight_field_mutations": 5,
+    "reconciliation_field_mutations": 6,
+    "total_mutations": 79
+  },
   "normalization_contract": {
     "complete_contiguous_fragments_required": true,
     "exact_schema_validation_precedes_model_repair": true,
@@ -144,7 +160,11 @@
     "unsafe_and_uncertain_effects_never_receive_automatic_new_attempts ... ok",
     "complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok",
     "required_idempotency_key_must_be_fresh_and_digest_bound ... ok",
-    "test result: ok. 6 passed; 0 failed",
+    "every_effect_failure_and_budget_mutation_denies_before_dispatch ... ok",
+    "every_approval_field_mutation_denies_before_dispatch ... ok",
+    "every_preflight_and_reconciliation_field_mutation_denies_before_dispatch ... ok",
+    "every_attempt_identity_field_mutation_denies_before_dispatch ... ok",
+    "test result: ok. 10 passed; 0 failed",
     "call envelope carries only the digest of validated arguments and explains every rejection",
     "pass 52",
     "fail 0"
@@ -152,5 +172,5 @@
   "schema_version": 1,
   "status": "pass-local-contract-evidence",
   "story_id": "5.2",
-  "task_id": "5.2.2.1"
+  "task_id": "5.2.4.1"
 }

@@ -60,6 +60,19 @@ class RetryRepairPolicyEvidenceTests(unittest.TestCase):
         changed["fresh_attempt_contract"]["required_idempotency_key_must_be_fresh"] = False
         self.assertIn("widened", validate_report(changed)[0])
 
+    def test_mutation_coverage_or_dispatch_widening_is_rejected(self) -> None:
+        report = expected_report()
+        self.assertEqual(report["mutation_contract"]["total_mutations"], 79)
+        changed = copy.deepcopy(report)
+        changed["mutation_contract"]["approval_field_mutations"] -= 1
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(report)
+        changed["mutation_contract"]["canonical_decision_digest_verified"] = False
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(report)
+        changed["mutation_contract"]["dispatches_after_mutation"] = 1
+        self.assertIn("widened", validate_report(changed)[0])
+
     def test_product_truth_cannot_be_promoted(self) -> None:
         changed = copy.deepcopy(expected_report())
         changed["product_truth"]["model_inference_executed"] = True

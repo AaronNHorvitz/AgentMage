@@ -1,12 +1,18 @@
 //! Pure fresh-attempt admission after current evidence and authority checks.
 
 use std::collections::BTreeSet;
+use std::fmt::Write as _;
 
 use agentmage_kernel_contracts::{
     ApprovalId, ApprovalRequest, CanonicalApprovalRequirement, CanonicalIdempotencyRequirement,
     CanonicalRecoveryAction, CanonicalRecoveryDecision, CanonicalRetryAdmission,
     CanonicalRetryClass, CanonicalStepExecutionPolicy, CapabilityGrant, GrantClass, GrantStatus,
 };
+
+use serde::Serialize;
+use sha2::{Digest, Sha256};
+
+const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
 /// Current deterministic results for every preflight required by one step policy.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -221,6 +227,8 @@ pub enum FreshAttemptAdmissionError {
     InvalidReconciliationEvidence,
     /// Prior-use identity evidence is malformed, duplicated, or oversized.
     InvalidIdentityLedger,
+    /// A canonical policy, decision, admission, or approval digest does not match its exact bytes.
+    IntegrityMismatch,
     /// Candidate, decision, and policy identities do not describe the same step.
     BindingMismatch,
     /// The recovery decision does not permit a new attempt.
@@ -268,6 +276,13 @@ pub fn compile_fresh_attempt_admission(
         presented_successor_receipt_id,
         now_epoch_ms,
     } = input;
+
+    if !policy_integrity(policy)
+        || !decision_integrity(decision)
+        || !admission_integrity(&candidate)
+    {
+        return Err(FreshAttemptAdmissionError::IntegrityMismatch);
+    }
 
     if candidate.policy_id != policy.policy_id
         || candidate.step_execution_id != preflight.step_execution_id
@@ -383,14 +398,38 @@ pub fn compile_fresh_attempt_admission(
         let Some(approval) = successor_approval.map(|value| value.approval) else {
             return Err(FreshAttemptAdmissionError::FreshApprovalRequired);
         };
-        if approval.approval_id.as_str() != successor_approval_id
+        if !approval_integrity(approval)
+            || approval.approval_id.as_str() != successor_approval_id
             || prior_approval_id.is_some_and(|prior| prior == &approval.approval_id)
             || approval.proposed_grant_id != grant.grant_id
             || grant.approval_id.as_ref() != Some(&approval.approval_id)
+            || approval.parent_grant_id.as_str()
+                != grant
+                    .parent_grant_id
+                    .as_ref()
+                    .map_or("", agentmage_kernel_contracts::GrantId::as_str)
+            || approval.parent_grant_sha256.as_str()
+                != grant.parent_grant_sha256.as_deref().unwrap_or_default()
+            || approval.actor_id != grant.actor_id
+            || approval.session_id != grant.session_id
+            || approval.task_id != grant.task_id
+            || grant.action_kind != Some(approval.action_kind)
+            || grant.action_id.as_ref() != Some(&approval.tool_call.action_id)
+            || approval.operation != grant.operation
+            || grant.tool_id.as_ref() != Some(&approval.tool_call.tool_id)
+            || grant.tool_version.as_deref() != Some(approval.tool_call.tool_version.as_str())
+            || approval.tool_call.arguments.sha256 != grant.argument_sha256
+            || approval.targets != grant.targets
+            || approval.excluded_targets != grant.excluded_targets
+            || approval.sensitivity != grant.sensitivity
+            || approval.preimages != grant.preimages
+            || approval.expected_side_effects != grant.expected_side_effects
+            || approval.rollback_description != grant.rollback_description
             || approval.policy_sha256 != policy.policy_sha256
             || approval.tool_call.tool_call_id != candidate.successor_tool_call_id
             || approval.issued_at_epoch_ms > now_epoch_ms
             || now_epoch_ms >= approval.expires_at_epoch_ms
+            || approval.issued_at_epoch_ms != grant.issued_at_epoch_ms
             || approval.expires_at_epoch_ms != grant.expires_at_epoch_ms
         {
             return Err(FreshAttemptAdmissionError::FreshApprovalRequired);
@@ -417,6 +456,51 @@ pub fn compile_fresh_attempt_admission(
     }
 
     Ok(candidate)
+}
+
+fn policy_integrity(policy: &CanonicalStepExecutionPolicy) -> bool {
+    if !valid_sha256(&policy.policy_sha256) {
+        return false;
+    }
+    let mut candidate = policy.clone();
+    candidate.policy_sha256 = ZERO_SHA256.to_owned();
+    record_sha256(&candidate).is_some_and(|digest| digest == policy.policy_sha256)
+}
+
+fn decision_integrity(decision: &CanonicalRecoveryDecision) -> bool {
+    if !valid_sha256(&decision.decision_sha256) {
+        return false;
+    }
+    let mut candidate = decision.clone();
+    candidate.decision_sha256 = ZERO_SHA256.to_owned();
+    record_sha256(&candidate).is_some_and(|digest| digest == decision.decision_sha256)
+}
+
+fn admission_integrity(admission: &CanonicalRetryAdmission) -> bool {
+    if !valid_sha256(&admission.admission_sha256) {
+        return false;
+    }
+    let mut candidate = admission.clone();
+    candidate.admission_sha256 = ZERO_SHA256.to_owned();
+    record_sha256(&candidate).is_some_and(|digest| digest == admission.admission_sha256)
+}
+
+fn approval_integrity(approval: &ApprovalRequest) -> bool {
+    if !valid_sha256(&approval.confirmation_sha256) {
+        return false;
+    }
+    let mut candidate = approval.clone();
+    candidate.confirmation_sha256 = ZERO_SHA256.to_owned();
+    record_sha256(&candidate).is_some_and(|digest| digest == approval.confirmation_sha256)
+}
+
+fn record_sha256(value: &impl Serialize) -> Option<String> {
+    let bytes = serde_json::to_vec(value).ok()?;
+    let mut output = String::with_capacity(64);
+    for byte in Sha256::digest(bytes) {
+        let _ = write!(output, "{byte:02x}");
+    }
+    Some(output)
 }
 
 fn valid_identifier(value: &str) -> bool {
