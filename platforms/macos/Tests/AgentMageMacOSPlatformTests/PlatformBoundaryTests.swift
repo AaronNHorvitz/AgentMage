@@ -8,4 +8,8 @@ func macOSScaffoldRemainsBlocked() {
         AgentMageMacOSPlatformBoundary.kernelHostSourceStatus
             == "implemented-source-unverified"
     )
+    #expect(
+        AgentMageMacOSPlatformBoundary.bridgeSourceStatus
+            == "implemented-source-unverified"
+    )
 }
