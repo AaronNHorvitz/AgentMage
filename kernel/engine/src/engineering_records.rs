@@ -938,6 +938,7 @@ impl CanonicalRuntimeRecordSet<'_> {
             .map(|step| (step.step_id.as_str(), step))
             .collect::<std::collections::BTreeMap<_, _>>();
         let mut observation_ids = std::collections::BTreeSet::new();
+        let mut observed_attempt_ids = std::collections::BTreeSet::new();
         for observation in self.observations {
             observation.validate_canonical()?;
             let Some(step) = steps.get(observation.step_id.as_str()) else {
@@ -953,12 +954,24 @@ impl CanonicalRuntimeRecordSet<'_> {
                     .attempt_ids
                     .contains(&observation.attempt_id)
                 || !observation_ids.insert(observation.observation_id.as_str())
+                || !observed_attempt_ids.insert(observation.attempt_id.as_str())
             {
                 return Err(error(
                     "engineering.record.observation_binding",
                     "observations",
                 ));
             }
+        }
+        if !self
+            .workflow_state
+            .attempt_ids
+            .iter()
+            .all(|attempt_id| observed_attempt_ids.contains(attempt_id.as_str()))
+        {
+            return Err(error(
+                "engineering.record.missing_observation",
+                "workflow_state.attempt_ids",
+            ));
         }
 
         let mut verification_ids = std::collections::BTreeSet::new();
@@ -1820,6 +1833,15 @@ mod tests {
         assert_eq!(
             wrong_request.validate().unwrap_err().code,
             "engineering.record.binding_mismatch"
+        );
+
+        let missing_observation = CanonicalRuntimeRecordSet {
+            observations: &[],
+            ..set
+        };
+        assert_eq!(
+            missing_observation.validate().unwrap_err().code,
+            "engineering.record.missing_observation"
         );
     }
 

@@ -75,7 +75,7 @@
         },
         {
           "path": "kernel/engine/src/engineering_records.rs",
-          "sha256": "e23949decda463708ffbe1bcaeed2129e7a655879a682ed3f37736142eb066c5"
+          "sha256": "419b20fb68b14480f526af998e1acd02bb70b780e1305421c6e942e68bb7d7de"
         },
         {
           "path": "scripts/engineering_runtime_schemas.mjs",
@@ -354,7 +354,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-gate-results.log",
-          "sha256": "f241e996374e6db8127b70c215605f4a384111617b51b7358231d00c37a75335"
+          "sha256": "7e992a63732a25d4361b07318e100fb6b6b5ba511c1d13eced21e5b83d36a986"
         }
       ]
     }
