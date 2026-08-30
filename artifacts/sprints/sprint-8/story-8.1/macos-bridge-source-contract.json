@@ -1,0 +1,64 @@
+{
+  "claims": {
+    "audit_token_verified": false,
+    "designated_requirement_verified": false,
+    "macos_support": false,
+    "package_or_release": false,
+    "task_complete": false
+  },
+  "contract": {
+    "bridge_refusal_count": 9,
+    "handshake_bytes": 68,
+    "protocol_version": 1,
+    "replay_consumed_atomically": true,
+    "request_maximum_bytes": 65536,
+    "response_maximum_bytes": 4194304,
+    "socket_mode": "0600",
+    "socket_parent_mode": "0700",
+    "socket_refusal_count": 8,
+    "socket_relative_path": "Library/Application Support/AgentMage/ipc/host.sock"
+  },
+  "execution": {
+    "app_group_socket_bound": false,
+    "apple_silicon_execution_performed": false,
+    "native_handshake_performed": false,
+    "signed_bridge_executed": false,
+    "swift_build_performed": false,
+    "swift_tests_performed": false
+  },
+  "record_type": "macos-bridge-source-contract",
+  "remaining_blockers": [
+    "Apple Silicon Swift build and tests have not run.",
+    "A signed native bridge executable is not yet integrated with the Visual Studio Code shell.",
+    "A native App Group Unix socket has not been bound or inspected.",
+    "Audit-token and designated-requirement verification remain task 8.1.1.3.",
+    "Physical MacBook Pro M5 qualification has not run."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/AppGroupSocketBoundary.swift",
+      "sha256": "50bdf4eea7b379390270e08329aa5a7c4b26bb57f811f3f1474161fb8ef904ba"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSBridgeProtocol.swift",
+      "sha256": "6b79602be3f413fc70ff0c54df2ea859cfc46520e4fb6062bd575255e3338999"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSBridgeProtocolTests.swift",
+      "sha256": "f440515ea04cb258652d1546d7f8c20bd1b2d760c7bc8e0b343baaed357dc28b"
+    },
+    {
+      "path": "scripts/macos_bridge_source_contract.py",
+      "sha256": "acf491d4f7e63937f53abff0cef6bfb1163dd40208472506d6698dd0e638b491"
+    },
+    {
+      "path": "tests/test_macos_bridge_source_contract.py",
+      "sha256": "9c404b78b65c77273c59c0682bff9d2ef9f1542a020fd1097819f82f11f9f671"
+    }
+  ],
+  "source_revision": "4c7f3231824894162de133d62e6b229780da6dd9",
+  "source_tree": "36a156a84044bb94695cf576d6b3893eceeb09b3",
+  "status": "partial-source-only-blocked-macos",
+  "task_id": "8.1.1.2"
+}
