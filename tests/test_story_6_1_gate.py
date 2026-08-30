@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import copy
+import json
 import unittest
 
-from scripts.story_6_1_gate import BLOCKERS, REVIEWED_COMMIT, REVIEWED_PATHS, build_report, validate_report
+from scripts.story_6_1_gate import BLOCKERS, REPORT_PATH, REVIEWED_COMMIT, REVIEWED_PATHS, build_report, validate_report
 
 
 class Story61GateTests(unittest.TestCase):
@@ -12,6 +13,7 @@ class Story61GateTests(unittest.TestCase):
         cls.report = build_report()
 
     def test_current_non_macos_criteria_are_exact(self) -> None:
+        self.assertEqual(json.loads(REPORT_PATH.read_text(encoding="utf-8")), self.report)
         criteria = self.report["acceptance_criteria"]
         self.assertEqual([item["criterion_id"] for item in criteria], ["6.1.AC1", "6.1.AC2"])
         self.assertEqual(criteria[0]["generated_case_count"], 640)

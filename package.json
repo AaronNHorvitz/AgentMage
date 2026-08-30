@@ -158,6 +158,10 @@
     "evidence:story6.1-boundary-review:check": "python3 scripts/path_boundary_review.py",
     "evidence:story6.1-security:build": "python3 scripts/story_6_1_security_evidence.py --write --source-revision HEAD",
     "evidence:story6.1-security:check": "python3 scripts/story_6_1_security_evidence.py",
+    "evidence:story6.1-gate:build": "python3 scripts/story_6_1_gate.py --write && python3 -m unittest tests.test_story_6_1_gate",
+    "evidence:story6.1-gate:check": "python3 -m unittest tests.test_story_6_1_gate",
+    "evidence:sprint6-gate:build": "python3 scripts/sprint_6_gate.py --write && python3 -m unittest tests.test_sprint_6_gate",
+    "evidence:sprint6-gate:check": "python3 -m unittest tests.test_sprint_6_gate",
     "evidence:story6.1-platform-conformance:build": "python3 scripts/path_platform_conformance.py --write --source-revision HEAD",
     "evidence:story6.1-platform-conformance:check": "python3 scripts/path_platform_conformance.py",
     "evidence:story7.1-platform-contract:build": "python3 scripts/platform_manifest_artifact.py --write --source-revision HEAD",
@@ -412,7 +416,7 @@
     "traceability:build": "python3 scripts/traceability_report.py",
     "traceability:check": "python3 scripts/traceability_report.py --check",
     "traceability:clean": "python3 scripts/verify_clean_traceability.py",
-    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate && npm run task-graph:check && npm run requirements:current-check && npm run schemas:check && npm run dependency-dispositions:check && npm run schema-evolution:check && npm run parser-ocr-placement:check && npm run contract-evidence:check"
+    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate && npm run task-graph:check && npm run requirements:current-check && npm run schemas:check && npm run dependency-dispositions:check && npm run schema-evolution:check && npm run parser-ocr-placement:check && npm run contract-evidence:check && npm run evidence:story6.1-gate:check && npm run evidence:sprint6-gate:check"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "11.16.0",

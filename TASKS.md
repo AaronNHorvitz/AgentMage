@@ -1800,15 +1800,38 @@ claim, and leaves the Story checkbox open. See the retained
 - [ ] **Story AC 6.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every accepted tool path contains only canonical workspace identity plus normalized relative components and resolves to the same held object through use.
 - [ ] **Story AC 6.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then every denial identifies the unsafe component without exposing unrelated absolute paths or probing prohibited filesystem locations.
 
+**Current story-gate evidence:** The independent [`story_6_1_gate.py`](scripts/story_6_1_gate.py)
+aggregate reviews immutable commit `43330dfd0aea0d811de288b59281f1f52150fe83` and tree
+`eb39e0650f507bde4bf89071492650d1fb64e038`, verifies 15 exact contract, fixture, platform,
+review, and security artifacts, and publishes the retained
+[`story-gate-report.json`](artifacts/sprints/sprint-6/story-6.1/story-gate-report.json) with SHA-256
+`3261c0f770d3ffae2fb7f672870831b0cfd5f5c4fa08b8e03089f4855b628938`. Both criteria pass
+their current non-macOS scope, while macOS bookmark/alias/collision/mount execution keeps the
+criteria, Story, and three platform-dependent sub-tasks open. The gate prohibits evidence
+substitution and makes no installed-product, product-acceptance, Sprint, release, or external-human
+review claim.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 6.AC1:** `AT-PATH-001` passes on every reference platform.
 - [ ] **Sprint AC 6.AC2:** Valid fixture paths resolve unambiguously and invalid paths fail closed.
 - [ ] **Sprint AC 6.AC3:** Symlink, alias, rename, mount, case, and Unicode attacks cannot escape the workspace.
-- [ ] **Sprint AC 6.AC4:** Display links cannot be replayed as tool arguments.
+- [x] **Sprint AC 6.AC4:** Display links cannot be replayed as tool arguments. Evidence: 128
+  generated display links in base and rendered line-target form are denied across five authority
+  surfaces for 1,280 exact rejections, with zero grants and zero filesystem observations.
 - [ ] **Sprint AC 6.AC5:** Path denials produce receipts without exposing unrelated absolute paths.
 
 **Gate decision:** Sprint 6 is PASS only when Story 6.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current sprint-gate evidence:** The independent [`sprint_6_gate.py`](scripts/sprint_6_gate.py)
+aggregate reviews immutable commit `5e792e806e1a61bc6dabbfb9db10cc9d6c127991` and tree
+`25a113afa2ca0a9a2b9a7f6260f3f2526a3f8bdc`, verifies nine exact Story 6.1 gate and path
+evidence artifacts, and publishes the retained
+[`sprint-gate-report.json`](artifacts/sprints/sprint-6/sprint-gate-report.json) with SHA-256
+`120a7cb1bf8d0f982df4fac58191cb73e40aad2ccd733a019e4c1b998bdc791d`. The platform-neutral
+display-link replay criterion passes; the other four criteria retain their required macOS evidence,
+and Sprint 6 remains `BLOCKED-MACOS` without substitution or product/release overclaim. Both gates
+and their focused tests are enrolled in the mandatory documentation gate.
 ### [ ] Sprint 7 - Platform Adapter Contract and Release Manifests
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
