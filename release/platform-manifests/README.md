@@ -19,3 +19,9 @@ The trusted manifest verifier is implemented in the kernel. Package generation,
 trusted-key distribution, signing ceremony, rollback policy, and end-user
 installation remain later release work. Runtime code may activate an adapter
 only through the shared independent fail-closed startup boundary.
+
+The separate `macos/v1/` contract fixture freezes the required Apple Silicon
+manifest field closure before implementation. Its `com.example` identifiers,
+`AAAAAAAAAA` Team ID, and repeated synthetic hashes are deliberately invalid as
+release evidence. It cannot activate a platform adapter or satisfy any build,
+signing, notarization, installation, M5, or support gate.

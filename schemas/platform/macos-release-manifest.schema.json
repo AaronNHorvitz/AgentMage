@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/platform/macos-release-manifest-v1.json",
+  "title": "AgentMage macOS release manifest contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "manifest_id",
+    "status",
+    "identity_class",
+    "platform",
+    "toolchain",
+    "vscode",
+    "code_identity",
+    "entitlements",
+    "component_hashes",
+    "package",
+    "credential_values_present",
+    "private_environment_values_present",
+    "macos_execution_performed",
+    "release_claim"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "record_type": { "const": "macos-release-manifest" },
+    "manifest_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{7,127}$" },
+    "status": { "enum": ["contract-fixture", "signed-release"] },
+    "identity_class": { "enum": ["synthetic-contract-fixture", "release-derived"] },
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family", "minimum_macos_version", "tested_macos_build", "architecture"],
+      "properties": {
+        "family": { "const": "macos" },
+        "minimum_macos_version": { "type": "string", "pattern": "^[0-9]{1,2}\\.[0-9]{1,2}(?:\\.[0-9]{1,2})?$" },
+        "tested_macos_build": { "$ref": "#/$defs/identity" },
+        "architecture": { "const": "arm64" }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["apple_sdk", "swift_toolchain"],
+      "properties": {
+        "apple_sdk": { "$ref": "#/$defs/identity" },
+        "swift_toolchain": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "build", "sha256"],
+          "properties": {
+            "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(?:\\.[0-9]+)?$" },
+            "build": { "type": "string", "minLength": 8, "maxLength": 128 },
+            "sha256": { "$ref": "#/$defs/sha256" }
+          }
+        }
+      }
+    },
+    "vscode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "commit", "sha256"],
+      "properties": {
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "code_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["team_id", "bundle_identifiers", "app_group_identifier", "designated_requirements"],
+      "properties": {
+        "team_id": { "type": "string", "pattern": "^[A-Z0-9]{10}$" },
+        "bundle_identifiers": { "$ref": "#/$defs/componentStrings" },
+        "app_group_identifier": { "type": "string", "pattern": "^group\\.[A-Za-z0-9.-]{8,191}$" },
+        "designated_requirements": { "$ref": "#/$defs/componentStrings" }
+      }
+    },
+    "entitlements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kernel_host", "vscode_bridge", "xpc_tool_helper", "metal_inference_service"],
+      "properties": {
+        "kernel_host": { "$ref": "#/$defs/entitlementSet" },
+        "vscode_bridge": { "$ref": "#/$defs/entitlementSet" },
+        "xpc_tool_helper": { "$ref": "#/$defs/entitlementSet" },
+        "metal_inference_service": { "$ref": "#/$defs/entitlementSet" }
+      }
+    },
+    "component_hashes": { "$ref": "#/$defs/componentHashes" },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "sha256"],
+      "properties": {
+        "format": { "const": "pkg" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "credential_values_present": { "const": false },
+    "private_environment_values_present": { "const": false },
+    "macos_execution_performed": { "type": "boolean" },
+    "release_claim": { "enum": ["none", "signed-package-candidate"] }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^(?!0{64}$)[0-9a-f]{64}$" },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "sha256"],
+      "properties": {
+        "id": { "type": "string", "minLength": 8, "maxLength": 128 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "componentStrings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kernel_host", "vscode_bridge", "xpc_tool_helper", "metal_inference_service"],
+      "properties": {
+        "kernel_host": { "type": "string", "minLength": 8, "maxLength": 512 },
+        "vscode_bridge": { "type": "string", "minLength": 8, "maxLength": 512 },
+        "xpc_tool_helper": { "type": "string", "minLength": 8, "maxLength": 512 },
+        "metal_inference_service": { "type": "string", "minLength": 8, "maxLength": 512 }
+      }
+    },
+    "componentHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kernel_host", "vscode_bridge", "xpc_tool_helper", "metal_inference_service"],
+      "properties": {
+        "kernel_host": { "$ref": "#/$defs/sha256" },
+        "vscode_bridge": { "$ref": "#/$defs/sha256" },
+        "xpc_tool_helper": { "$ref": "#/$defs/sha256" },
+        "metal_inference_service": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "entitlementSet": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "com.apple.security.app-sandbox",
+          "com.apple.security.application-groups",
+          "com.apple.security.files.bookmarks.app-scope",
+          "com.apple.security.files.user-selected.read-only",
+          "com.apple.security.inherit",
+          "keychain-access-groups"
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "contract-fixture" } } },
+      "then": {
+        "properties": {
+          "identity_class": { "const": "synthetic-contract-fixture" },
+          "macos_execution_performed": { "const": false },
+          "release_claim": { "const": "none" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "signed-release" } } },
+      "then": {
+        "properties": {
+          "identity_class": { "const": "release-derived" },
+          "macos_execution_performed": { "const": true },
+          "release_claim": { "const": "signed-package-candidate" }
+        }
+      }
+    }
+  ]
+}

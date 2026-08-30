@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "record_type": "macos-release-manifest",
+  "manifest_id": "agentmage-macos-arm64-v1-contract-fixture",
+  "status": "contract-fixture",
+  "identity_class": "synthetic-contract-fixture",
+  "platform": {
+    "family": "macos",
+    "minimum_macos_version": "15.0",
+    "tested_macos_build": {
+      "id": "synthetic-macos-15-build",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "architecture": "arm64"
+  },
+  "toolchain": {
+    "apple_sdk": {
+      "id": "synthetic-macosx15.0-sdk",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    "swift_toolchain": {
+      "version": "6.0",
+      "build": "synthetic-swift-6.0-build",
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  },
+  "vscode": {
+    "version": "1.132.0",
+    "commit": "df53daabb18cd157bdb08c7f01c34df936cf12f4",
+    "sha256": "4444444444444444444444444444444444444444444444444444444444444444"
+  },
+  "code_identity": {
+    "team_id": "AAAAAAAAAA",
+    "bundle_identifiers": {
+      "kernel_host": "com.example.agentmage.contractfixture.host",
+      "vscode_bridge": "com.example.agentmage.contractfixture.bridge",
+      "xpc_tool_helper": "com.example.agentmage.contractfixture.tool",
+      "metal_inference_service": "com.example.agentmage.contractfixture.inference"
+    },
+    "app_group_identifier": "group.com.example.agentmage.contractfixture",
+    "designated_requirements": {
+      "kernel_host": "anchor apple generic and identifier com.example.agentmage.contractfixture.host and certificate leaf[subject.OU] = AAAAAAAAAA",
+      "vscode_bridge": "anchor apple generic and identifier com.example.agentmage.contractfixture.bridge and certificate leaf[subject.OU] = AAAAAAAAAA",
+      "xpc_tool_helper": "anchor apple generic and identifier com.example.agentmage.contractfixture.tool and certificate leaf[subject.OU] = AAAAAAAAAA",
+      "metal_inference_service": "anchor apple generic and identifier com.example.agentmage.contractfixture.inference and certificate leaf[subject.OU] = AAAAAAAAAA"
+    }
+  },
+  "entitlements": {
+    "kernel_host": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.application-groups",
+      "com.apple.security.files.bookmarks.app-scope",
+      "com.apple.security.files.user-selected.read-only",
+      "keychain-access-groups"
+    ],
+    "vscode_bridge": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.application-groups"
+    ],
+    "xpc_tool_helper": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.application-groups",
+      "com.apple.security.files.bookmarks.app-scope",
+      "com.apple.security.inherit"
+    ],
+    "metal_inference_service": [
+      "com.apple.security.app-sandbox"
+    ]
+  },
+  "component_hashes": {
+    "kernel_host": "5555555555555555555555555555555555555555555555555555555555555555",
+    "vscode_bridge": "6666666666666666666666666666666666666666666666666666666666666666",
+    "xpc_tool_helper": "7777777777777777777777777777777777777777777777777777777777777777",
+    "metal_inference_service": "8888888888888888888888888888888888888888888888888888888888888888"
+  },
+  "package": {
+    "format": "pkg",
+    "sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+  },
+  "credential_values_present": false,
+  "private_environment_values_present": false,
+  "macos_execution_performed": false,
+  "release_claim": "none"
+}
