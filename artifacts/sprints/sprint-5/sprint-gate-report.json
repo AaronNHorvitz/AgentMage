@@ -8,7 +8,7 @@
       "criterion_id": "5.AC1",
       "mutation_seed_count": 560,
       "production_executor_claim": "none",
-      "status": "pass-shared-linux-in-memory"
+      "status": "pass-current-linux-in-memory"
     },
     {
       "accepted_scenario_count": 4,
@@ -17,7 +17,7 @@
       "maximum_effect_count": 1,
       "maximum_worker_start_count": 1,
       "replay_success_count": 0,
-      "status": "pass-shared-linux-in-memory"
+      "status": "pass-current-linux-in-memory"
     },
     {
       "admitted_mutation_count": 0,
@@ -26,7 +26,7 @@
       "mutation_seed_count": 560,
       "post_approval_mutation_count": 4,
       "post_approval_worker_start_count": 0,
-      "status": "pass-shared-linux-in-memory"
+      "status": "pass-current-linux-in-memory"
     },
     {
       "admitted_authority_count": 0,
@@ -34,138 +34,184 @@
       "criterion_id": "5.AC4",
       "escalation_kind_count": 4,
       "source_count": 7,
-      "status": "pass-shared-linux-contract-boundary"
+      "status": "pass-current-linux-contract-boundary"
     },
     {
       "approval_forbidden_authority_field_count": 0,
       "criterion_id": "5.AC5",
       "grant_operation_count": 22,
-      "status": "pass-shared-linux-contract-and-policy",
+      "status": "pass-current-linux-contract-and-policy",
       "strict_denied_by_absence_count": 0,
       "strict_explicit_denial_count": 21
+    },
+    {
+      "criterion_id": "5.AC6",
+      "effect_class_count": 7,
+      "failure_class_count": 14,
+      "old_authority_object_reused": false,
+      "old_call_replayed": false,
+      "one_effect_class_per_registered_operation": true,
+      "operation_failure_pair_count": 308,
+      "prior_identity_family_count": 7,
+      "registered_operation_count": 22,
+      "status": "pass-current-linux-contract-and-retry-policy",
+      "uncertain_outcome_retried": false
     }
   ],
   "independent_review": {
-    "disposition": "pass-shared-linux-sprint-blocked-macos",
+    "disposition": "pass-current-linux-sprint-blocked-open-dependencies-and-platform",
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
     "reviewed_artifacts": [
       {
+        "byte_length": 10529,
         "path": "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json",
-        "sha256": "0cadc6ffaa10ac27c0942171df75aec7fcdd2b3e84e815753196248757ca3614"
+        "sha256": "dbb20e4fa018d0b1b091c1cc332006aada1749a45f14c4850ca0183401883e30"
       },
       {
+        "byte_length": 16178,
         "path": "scripts/story_5_1_gate.py",
-        "sha256": "dde5a2c96d2ff6ab04376f7d6b87184aa78d44e812eeb50bef46df904bac6073"
+        "sha256": "27f7fd3abc9c20cbe920aa7de587cf93eec70cc95cc9c2472dfb047f23fc3f21"
       },
       {
+        "byte_length": 4176,
         "path": "tests/test_story_5_1_gate.py",
-        "sha256": "86ed0e1d60e5e136f4bca48b3aa83dac87f2bb2a2f367e9ed702dff26b80a4b0"
+        "sha256": "b7f92263e76322d73ebedc97de7403c3376f40df60a40a4eb78c0ed6356af970"
       },
       {
-        "path": "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json",
-        "sha256": "63fce6110a2fc74fdea0895302326566371cc6d8bbc22ed77affde6fa3253aed"
+        "byte_length": 6732,
+        "path": "artifacts/sprints/sprint-5/story-5.2/story-gate-report.json",
+        "sha256": "2f88e7cf7b9747fa6ffb8cc4da7735cec11904236a7e23d72ce4ce67da493538"
       },
       {
-        "path": "artifacts/sprints/sprint-5/story-5.1/grant-state-report.json",
-        "sha256": "a8c302a45534fc9e219a92a73182044ada566fe380a920d204500f9121a616bf"
+        "byte_length": 15004,
+        "path": "scripts/story_5_2_gate.py",
+        "sha256": "c487050766499bead148ad9fd1345a12996953bb33d0955671c1df47899fe26e"
       },
       {
-        "path": "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
-        "sha256": "5dfa245406b6a3258107cf1a33a37dd0377525e63fe2055c3f5fbef0e01a8def"
+        "byte_length": 4307,
+        "path": "tests/test_story_5_2_gate.py",
+        "sha256": "9d803c7c8b45bb4e700496dbdab9ca300243a216124d4b32953a2db905802586"
       },
       {
-        "path": "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
-        "sha256": "40332e8b38631d6a8b91936faf95a90fe4551b9dedb53588c80e54913ba4aa46"
+        "byte_length": 9489,
+        "path": "artifacts/sprints/sprint-5/story-5.3/story-gate-report.json",
+        "sha256": "90d0622b391eb98562677a8f638dd87bf751f38d4c8a9dc979d4f541d63cad2f"
       },
       {
-        "path": "artifacts/sprints/sprint-5/story-5.1/grant-race-replay-report.json",
-        "sha256": "24143943e7ff28a4767877f3de05ef480bb98875d59f07e63978f31afc0009cd"
+        "byte_length": 16256,
+        "path": "scripts/story_5_3_gate.py",
+        "sha256": "084cba24b89db354427b33d3c5a84d6c83b59e588247501e91d8826a9b658b8f"
       },
       {
-        "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
-        "sha256": "d4887aa4421150bed4b2aa942a41f14b8008e51b9fb81e04acc3acffcc0b03a4"
+        "byte_length": 4330,
+        "path": "tests/test_story_5_3_gate.py",
+        "sha256": "f20ac2826e88cee73e31046042fd24b7da1cd608b5b1f59fe3d33fdc55fcf66a"
       },
       {
-        "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
-        "sha256": "be3ffa6989e00890b5f74795ba3287fd64dd970e81e9df1286c4a822bd25d73c"
+        "byte_length": 4542,
+        "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-report.json",
+        "sha256": "81e304ae380459b997f47c551b6957c6116d556492b2d1828486acccaf9d69bd"
       },
       {
-        "path": "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
-        "sha256": "0a297d7fe39f428a39c54d62cedcb79668c404e728e2b0285da56fff3476bf94"
-      },
-      {
-        "path": "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
-        "sha256": "e9a1c51033c1b130aa36b0ab243ccc7f0cc6d946bc9bbd88709d724850116c73"
-      },
-      {
-        "path": "fixtures/grants/adversarial/v1/manifest.json",
-        "sha256": "11251ece511c248e8ee6ad34e87b8a6ee6ddd771075c4f0e5321856c4644802a"
+        "byte_length": 4771,
+        "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-report.json",
+        "sha256": "a732dd2b833a845c6d8d5ed604477df35508d54a028d3da55561313b153704a9"
       }
     ],
-    "reviewed_commit": "132a6d3158661f06f88fff250cd702d264eedcb8",
-    "reviewed_tree": "b3e12be4b72ae648abe08abb4fea2b00c0c12d32",
-    "reviewer_id": "agentmage-sprint-5-independent-gate-v1"
+    "reviewed_commit": "1d5a9bb0274e048303d028fd88993085d9c386e2",
+    "reviewed_tree": "0751b6cac4c443d4624a4d138639d7ed93cedcab",
+    "reviewer_id": "agentmage-sprint-5-independent-gate-v2"
   },
-  "macos": {
+  "installed_product_claim": "none",
+  "platform": {
     "evidence_substitution": "prohibited",
     "execution_performed": false,
-    "status": "blocked-macos",
+    "status": "blocked-supported-platform-installed-product-matrix",
     "support_claim": "none"
   },
   "product_acceptance_claim": "none",
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "132a6d3158661f06f88fff250cd702d264eedcb8",
-  "reviewed_tree": "b3e12be4b72ae648abe08abb4fea2b00c0c12d32",
-  "schema_version": 1,
+  "reviewed_commit": "1d5a9bb0274e048303d028fd88993085d9c386e2",
+  "reviewed_tree": "0751b6cac4c443d4624a4d138639d7ed93cedcab",
+  "schema_version": 2,
   "sprint_id": 5,
-  "status": "blocked-macos",
+  "status": "blocked-open-dependencies-and-platform",
   "story_gates": [
     {
       "acceptance_criteria_failed": 0,
       "acceptance_criteria_passed": 2,
-      "dod_blocking_controls": [
+      "blockers": [
+        "macos-execution-evidence-unavailable"
+      ],
+      "blocking_controls": [
         "G-DOD-10"
       ],
-      "dod_control_ids": [
-        "G-DOD-01",
-        "G-DOD-02",
-        "G-DOD-03",
-        "G-DOD-04",
-        "G-DOD-05",
-        "G-DOD-06",
-        "G-DOD-07",
-        "G-DOD-08",
-        "G-DOD-09",
-        "G-DOD-10",
-        "G-DOD-11",
-        "G-DOD-12",
-        "G-DOD-13"
-      ],
-      "only_blocker": "macos-execution-evidence-unavailable",
-      "shared_linux_story_work_complete": true,
+      "current_linux_scope_complete": true,
       "status": "blocked-macos",
       "story_checkbox_complete": false,
       "story_id": "5.1"
+    },
+    {
+      "acceptance_criteria_failed": 0,
+      "acceptance_criteria_passed": 3,
+      "blockers": [
+        "story-2.3-acceptance-gate-open",
+        "story-5.1-acceptance-gate-open",
+        "supported-platform-installed-product-evidence-incomplete"
+      ],
+      "blocking_controls": [
+        "G-DOD-10"
+      ],
+      "current_linux_scope_complete": true,
+      "status": "blocked-open-dependencies-and-platform",
+      "story_checkbox_complete": false,
+      "story_id": "5.2"
+    },
+    {
+      "acceptance_criteria_failed": 0,
+      "acceptance_criteria_passed": 3,
+      "blockers": [
+        "story-1.3-acceptance-gate-open",
+        "story-2.4-acceptance-gate-open",
+        "story-5.2-acceptance-gate-open",
+        "supported-platform-installed-product-evidence-incomplete"
+      ],
+      "blocking_controls": [
+        "G-DOD-10"
+      ],
+      "current_linux_scope_complete": true,
+      "status": "blocked-open-dependencies-and-platform",
+      "story_checkbox_complete": false,
+      "story_id": "5.3"
     }
   ],
   "summary": {
     "acceptance_criteria_failed": 0,
-    "acceptance_criteria_passed": 5,
+    "acceptance_criteria_passed": 6,
     "blocking_control_count": 1,
     "blocking_controls": [
       "G-DOD-10"
     ],
-    "blocking_story_count": 1,
+    "blocking_story_count": 3,
     "blocking_story_ids": [
-      "5.1"
+      "5.1",
+      "5.2",
+      "5.3"
     ],
-    "shared_linux_sprint_work_complete": true,
+    "current_linux_sprint_scope_complete": true,
+    "open_dependency_ids": [
+      "1.3",
+      "2.3",
+      "2.4",
+      "5.1",
+      "5.2"
+    ],
     "sprint_checkbox_complete": false,
-    "story_gate_count": 1
+    "story_gate_count": 3
   },
   "universal_definition_of_done": {
     "all_non_platform_controls_pass_or_not_applicable": true,
@@ -187,7 +233,7 @@
       "G-DOD-12",
       "G-DOD-13"
     ],
-    "macos_evidence_substitution": "prohibited",
-    "story_count": 1
+    "platform_evidence_substitution": "prohibited",
+    "story_count": 3
   }
 }
