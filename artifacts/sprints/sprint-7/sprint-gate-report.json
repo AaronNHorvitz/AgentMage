@@ -1,0 +1,145 @@
+{
+  "acceptance_criteria": [
+    {
+      "available_reference_contract_result_count": 2,
+      "criterion_id": "7.AC1",
+      "deterministic_fake_result_count": 1,
+      "required_reference_platform_count": 3,
+      "status": "blocked-native-platforms"
+    },
+    {
+      "criterion_id": "7.AC2",
+      "native_primitive_corruption_case_count": 0,
+      "status": "partial-shared-failure-matrix-blocked-native-platforms",
+      "unavailable_or_invalid_capability_case_count": 20
+    },
+    {
+      "criterion_id": "7.AC3",
+      "operating_system_branches_in_kernel_selector": 0,
+      "required_capability_count": 10,
+      "status": "pass-current-shared-boundary"
+    },
+    {
+      "ambient_environment_values_recorded": false,
+      "criterion_id": "7.AC4",
+      "forbidden_environment_field_count": 13,
+      "macos_execution_status": "blocked-macos",
+      "status": "partial-non-macos-recorder-blocked-macos",
+      "synthetic_environment_record_count": 2
+    },
+    {
+      "available_contract_scope_passed": true,
+      "criterion_id": "7.AC5",
+      "macos_platform_acceptance_result_count": 0,
+      "release_package_acceptance_result_count": 0,
+      "status": "blocked-native-platforms-and-packaging"
+    }
+  ],
+  "automated_aggregate_review": {
+    "external_human_review_status": "not-performed",
+    "finding_count": 0,
+    "reviewed_artifacts": [
+      {
+        "path": "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json",
+        "sha256": "c01b78817cdf7242a4eac526456e040bf0f19d236a325e60205575aeefce1c5d"
+      },
+      {
+        "path": "scripts/story_7_1_gate.py",
+        "sha256": "c7b5b5726e3a744f85bd4f95526e9e2580d3cd27258209da900489e93867f629"
+      },
+      {
+        "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
+        "sha256": "09c76cc71f8b6751d74d7118935aeb90a431378550833587543e057321a43b5c"
+      },
+      {
+        "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
+        "sha256": "5bf8de29e69e8f07220bbe9aa3d24112f2d79c64039b1b10cc409d87613d3310"
+      },
+      {
+        "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
+        "sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db"
+      }
+    ],
+    "reviewed_commit": "4587ba4d1bc49d3201078ecf4ecfa0ad996b526b",
+    "reviewed_tree": "9414c8dcbeba33bb4f1ec53e47b038b449ed7eb9",
+    "reviewer_id": "agentmage-sprint-7-automated-aggregate-v1"
+  },
+  "installed_product_claim": "none",
+  "macos_evidence_substituted": false,
+  "native_mechanism_evidence_substituted": false,
+  "product_acceptance_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "4587ba4d1bc49d3201078ecf4ecfa0ad996b526b",
+  "reviewed_tree": "9414c8dcbeba33bb4f1ec53e47b038b449ed7eb9",
+  "schema_version": 1,
+  "sprint_id": 7,
+  "status": "blocked-native-platforms-and-external-review",
+  "story_gates": [
+    {
+      "blockers": [
+        "sub-task-7.1.1.1-native-linux-and-macos-adapters-open",
+        "sub-task-7.1.1.2-macos-release-manifest-open",
+        "sub-task-7.1.1.4-native-startup-probes-open",
+        "sub-task-7.1.1.6-macos-result-recorder-open",
+        "sub-task-7.1.1.7-macos-conformance-open",
+        "sub-task-7.1.2.2-reference-release-manifests-incomplete",
+        "sub-task-7.1.3.1-macos-conformance-open",
+        "sub-task-7.1.3.2-native-primitive-corruption-open",
+        "sub-task-7.1.3.3-macos-helper-entitlement-mutations-open",
+        "sub-task-7.1.3.4-release-package-and-macos-manifest-open",
+        "g-dod-12-independent-critical-boundary-review-not-performed",
+        "supported-platform-installed-product-evidence-incomplete"
+      ],
+      "current_shared_linux_contract_scope_complete": true,
+      "status": "blocked-native-platforms-and-external-review",
+      "story_checkbox_complete": false,
+      "story_id": "7.1"
+    }
+  ],
+  "summary": {
+    "acceptance_criteria_blocked": 2,
+    "acceptance_criteria_partial": 2,
+    "acceptance_criteria_passed": 1,
+    "blockers": [
+      "sub-task-7.1.1.1-native-linux-and-macos-adapters-open",
+      "sub-task-7.1.1.2-macos-release-manifest-open",
+      "sub-task-7.1.1.4-native-startup-probes-open",
+      "sub-task-7.1.1.6-macos-result-recorder-open",
+      "sub-task-7.1.1.7-macos-conformance-open",
+      "sub-task-7.1.2.2-reference-release-manifests-incomplete",
+      "sub-task-7.1.3.1-macos-conformance-open",
+      "sub-task-7.1.3.2-native-primitive-corruption-open",
+      "sub-task-7.1.3.3-macos-helper-entitlement-mutations-open",
+      "sub-task-7.1.3.4-release-package-and-macos-manifest-open",
+      "g-dod-12-independent-critical-boundary-review-not-performed",
+      "supported-platform-installed-product-evidence-incomplete"
+    ],
+    "blocking_story_ids": [
+      "7.1"
+    ],
+    "current_shared_linux_contract_scope_complete": true,
+    "sprint_checkbox_complete": false
+  },
+  "universal_definition_of_done": {
+    "blocking_controls": [
+      "G-DOD-10",
+      "G-DOD-12"
+    ],
+    "control_ids": [
+      "G-DOD-01",
+      "G-DOD-02",
+      "G-DOD-03",
+      "G-DOD-04",
+      "G-DOD-05",
+      "G-DOD-06",
+      "G-DOD-07",
+      "G-DOD-08",
+      "G-DOD-09",
+      "G-DOD-10",
+      "G-DOD-11",
+      "G-DOD-12",
+      "G-DOD-13"
+    ],
+    "native_or_macos_evidence_substitution": "prohibited"
+  }
+}

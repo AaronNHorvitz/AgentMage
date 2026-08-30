@@ -9,9 +9,9 @@ Validated 16 identity-bound artifact admission fixtures
 Ran 8 tests in 0.014s
 
 OK
-✔ all admission cases use the authoritative closed Engineering Runtime records (49.948454ms)
-✔ unavailable and unsupported records cannot be changed into captured records without bytes (8.011889ms)
-✔ stale provenance cannot masquerade as a captured current source artifact (6.737538ms)
+✔ all admission cases use the authoritative closed Engineering Runtime records (47.629617ms)
+✔ unavailable and unsupported records cannot be changed into captured records without bytes (8.228269ms)
+✔ stale provenance cannot masquerade as a captured current source artifact (6.988095ms)
 ℹ tests 3
 ℹ suites 0
 ℹ pass 3
@@ -19,7 +19,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 112.65257
+ℹ duration_ms 116.671377
 $ npm run engineering-runtime:artifact-adversarial-fixtures:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:artifact-adversarial-fixtures:check
@@ -31,8 +31,8 @@ Validated 10 inert hostile artifact fixtures
 Ran 8 tests in 0.031s
 
 OK
-✔ hostile cases remain valid source records while their content stays untrusted (49.65198ms)
-✔ replacement and cancellation cannot masquerade as captured sources (8.00245ms)
+✔ hostile cases remain valid source records while their content stays untrusted (49.610758ms)
+✔ replacement and cancellation cannot masquerade as captured sources (7.983137ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -40,7 +40,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 104.629092
+ℹ duration_ms 103.829675
 $ npm run engineering-runtime:artifact-lineage-fixtures:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:artifact-lineage-fixtures:check
@@ -52,8 +52,8 @@ Validated lineage for 26 sources and 21 ranges
 Ran 7 tests in 0.023s
 
 OK
-✔ lineage records satisfy every authoritative Engineering Runtime schema (65.910533ms)
-✔ no fixture context disposition claims model delivery (0.130715ms)
+✔ lineage records satisfy every authoritative Engineering Runtime schema (66.132309ms)
+✔ no fixture context disposition claims model delivery (0.128814ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -61,7 +61,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 118.45815
+ℹ duration_ms 115.828028
 $ npm run engineering-runtime:context-accounting-fixtures:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:context-accounting-fixtures:check
@@ -73,8 +73,8 @@ Validated 8 complete context-accounting manifests
 Ran 6 tests in 0.020s
 
 OK
-✔ every scenario emits one authoritative complete context manifest (27.468455ms)
-✔ non-admitting dispositions never smuggle ranges or tokens (0.542069ms)
+✔ every scenario emits one authoritative complete context manifest (24.61157ms)
+✔ non-admitting dispositions never smuggle ranges or tokens (0.521611ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -82,7 +82,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 73.639181
+ℹ duration_ms 73.374517
 $ npm run engineering-runtime:context-delivery-fixtures:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:context-delivery-fixtures:check
@@ -94,8 +94,8 @@ Validated 8 reconstructible context-delivery receipts
 Ran 6 tests in 0.010s
 
 OK
-✔ all reconstruction receipts satisfy the authoritative delivery schema (22.564501ms)
-✔ blocked receipts name required unseen authority and never allow completion (0.370424ms)
+✔ all reconstruction receipts satisfy the authoritative delivery schema (27.124532ms)
+✔ blocked receipts name required unseen authority and never allow completion (0.416016ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -103,7 +103,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 79.20929
+ℹ duration_ms 75.043868
 $ npm run engineering-runtime:artifact-resource-gate:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:artifact-resource-gate:check
@@ -112,7 +112,7 @@ $ npm run engineering-runtime:artifact-resource-gate:check
 Validated 10 resource ceilings and 4 cleanup boundaries
 .......
 ----------------------------------------------------------------------
-Ran 7 tests in 0.214s
+Ran 7 tests in 0.240s
 
 OK
 $ python3 scripts/fixture_security_scan.py
