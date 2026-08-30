@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "record_type": "engineering-runtime-schema-evolution-plan",
+  "decision_id": "ADR-0042",
+  "task_id": "1.2.4.2",
+  "status": "accepted-plan-not-implemented",
+  "published_on": "2026-08-29",
+  "authorities": [
+    {
+      "path": "ENGINEERING-RUNTIME.md",
+      "sha256": "ff7711040d89cef1aa259d66e77bdc63467928e9f140a918957963116ebb3f53"
+    },
+    {
+      "path": "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md",
+      "sha256": "937f75604dd9b84d3f60a2566d480047385fcc5a43eb6532294f143715805837"
+    },
+    {
+      "path": "architecture/rollback-design.json",
+      "sha256": "891d9db9981582d5a6ded9d73ceb83eb2556811a5313637cb20183670d185c96"
+    }
+  ],
+  "version_axes": [
+    "protocol",
+    "record-schema",
+    "event",
+    "store",
+    "cache",
+    "workflow-definition",
+    "capability-manifest",
+    "checkpoint"
+  ],
+  "additive_records": {
+    "closed_records": true,
+    "unknown_fields_rejected": true,
+    "unknown_versions_rejected": true,
+    "new_optional_field_in_place_allowed": false,
+    "new_required_field_in_place_allowed": false,
+    "semantic_reinterpretation_in_place_allowed": false,
+    "version_increment_required": true,
+    "new_record_identity_required": true,
+    "old_decoder_fixture_retained": true,
+    "migration_is_pure": true,
+    "migration_preserves_source_identity": true,
+    "migration_preserves_unknown_source_bytes": true,
+    "migration_effect_authority": "none",
+    "write_policy": "new-writes-use-current-version; old-records-migrate-copy-on-write-after-validation",
+    "read_policy": "exact-version-decoder-or-explicit-admitted-migration-or-unsupported",
+    "removal_policy": "remove-only-after-retention-window-and-supported-reader-floor-prove-no-live-reference"
+  },
+  "event_compatibility": {
+    "journal_model": "append-only-hash-chained",
+    "event_identity_fields": [
+      "event_id",
+      "event_version",
+      "event_type",
+      "aggregate_id",
+      "sequence",
+      "payload_sha256",
+      "prior_event_sha256"
+    ],
+    "ordering": "strict-per-aggregate-sequence",
+    "duplicate_policy": "same-identity-and-bytes-idempotent; otherwise-corruption",
+    "unknown_event_type": "stop-before-event-and-return-unsupported",
+    "unknown_event_version": "stop-before-event-and-return-unsupported",
+    "unknown_event_field": "reject-event",
+    "gap_or_reorder": "corruption-no-replay",
+    "migration": "pure-old-event-to-new-projection-with-original-event-retained",
+    "effect_replay_allowed": false,
+    "terminal_reinterpretation_allowed": false,
+    "checkpoint_rule": "resume-only-when-checkpoint-reader-event-and-store-ranges-all-admitted",
+    "writer_rule": "emit-one-current-version-and-never-down-convert-for-an-older-client"
+  },
+  "cache_invalidation": {
+    "cache_is_authoritative": false,
+    "key_inputs": [
+      "source-content-sha256",
+      "extractor-identity",
+      "extractor-version",
+      "canonicalization-version",
+      "schema-version",
+      "policy-digest",
+      "redaction-profile-digest",
+      "model-profile-identity",
+      "tokenizer-identity",
+      "index-version"
+    ],
+    "invalidation_triggers": [
+      "source-content-change",
+      "extractor-identity-or-version-change",
+      "canonicalization-or-schema-change",
+      "policy-or-redaction-change",
+      "model-profile-or-tokenizer-change",
+      "index-version-change",
+      "classification-or-retention-change",
+      "integrity-or-decryption-failure",
+      "component-revocation"
+    ],
+    "stale_read_policy": "miss-never-serve",
+    "rebuild_policy": "bounded-cancellable-and-published-only-after-complete-verification",
+    "rebuild_failure": "explicit-unavailable-or-failed-no-stale-fallback",
+    "publication": "atomic-new-generation",
+    "old_generation_retention": "retain-while-referenced-by-admitted-checkpoint-or-active-reader",
+    "garbage_collection": "after-reference-proof-and-retention-policy",
+    "cleanup_failure": "bounded-residue-recorded-for-retry-without-serving-it"
+  },
+  "unsupported_clients": {
+    "negotiation": "exact-protocol-and-readable-version-ranges-before-session-state-or-effects",
+    "required_exchange": [
+      "protocol-version-range",
+      "record-version-ranges",
+      "event-version-ranges",
+      "store-reader-version",
+      "capability-manifest-version",
+      "client-build-identity"
+    ],
+    "no_overlap_result": "unsupported-client",
+    "result_fields": [
+      "reason-code",
+      "server-supported-range",
+      "client-offered-range",
+      "minimum-required-build",
+      "safe-recovery-action"
+    ],
+    "before_effect_required": true,
+    "before_persistent_session_write_required": true,
+    "field_dropping_allowed": false,
+    "silent_downgrade_allowed": false,
+    "legacy_fallback_allowed": false,
+    "read_only_fallback_allowed": false,
+    "export_path": "separate-user-approved-versioned-export-never-live-store-access",
+    "diagnostics": "bounded-content-free"
+  },
+  "store_migration": {
+    "owner": "kernel-engine-operational-store",
+    "second_store_allowed": false,
+    "preconditions": [
+      "exclusive-migration-lease",
+      "exact-active-store-identity",
+      "source-schema-integrity",
+      "target-schema-known",
+      "disk-and-resource-budget",
+      "encrypted-backup-identity",
+      "reader-and-writer-compatibility"
+    ],
+    "states": [
+      "idle",
+      "preflight",
+      "backup-verified",
+      "migrating-candidate",
+      "candidate-verified",
+      "activation-committed",
+      "postcheck-verified",
+      "complete",
+      "blocked",
+      "recovery-required"
+    ],
+    "strategy": "transactional-or-copy-on-write-candidate-with-atomic-generation-selection",
+    "interruption_rule": "select-exact-verified-old-or-complete-new-generation-never-partial",
+    "forward_only_default": true,
+    "reverse_migration_default": "unsupported",
+    "source_backup_immutable": true,
+    "later_user_data_overwrite_allowed": false,
+    "uncertain_activation": "reconcile-generation-marker-before-any-retry",
+    "failure_evidence": "bounded-content-free-receipt"
+  },
+  "downgrade_behavior": {
+    "binary_and_data_are_separate": true,
+    "target_reverified": true,
+    "target_support_required": true,
+    "target_not_revoked_required": true,
+    "current_store_readability_required": true,
+    "unreadable_store_result": "block-target-launch-preserve-current-store",
+    "automatic_reverse_migration_allowed": false,
+    "blind_backup_restore_allowed": false,
+    "later_user_data_overwrite_allowed": false,
+    "explicit_reverse_path_requirements": [
+      "separately-versioned-migrator",
+      "losslessness-proof",
+      "exact-preimage-backup",
+      "interruption-and-corruption-tests",
+      "fresh-local-user-approval",
+      "post-rollback-verification"
+    ],
+    "unsupported_target_action": "remain-on-current-or-enter-local-safe-mode",
+    "remote_trigger_allowed": false,
+    "silent_rollback_allowed": false
+  },
+  "required_test_cases": [
+    "additive-new-record-round-trip",
+    "old-record-pure-migration",
+    "unknown-field-rejection",
+    "unknown-record-version-refusal",
+    "unknown-event-type-stop-before-event",
+    "unknown-event-version-stop-before-event",
+    "event-gap-reorder-and-conflict-refusal",
+    "event-replay-starts-no-effect",
+    "cache-key-each-input-invalidates",
+    "stale-cache-never-served-on-rebuild-failure",
+    "unsupported-client-refused-before-write-or-effect",
+    "migration-interruption-selects-old-or-new",
+    "uncertain-activation-reconciled-before-retry",
+    "downgrade-unreadable-store-blocked",
+    "reverse-migration-requires-losslessness-and-approval",
+    "later-user-data-never-overwritten"
+  ],
+  "implementation_truth": {
+    "plan_published": true,
+    "migration_runtime_implemented": false,
+    "reverse_migration_implemented": false,
+    "compatibility_campaign_executed": false,
+    "native_platform_evidence": false,
+    "release_readiness": false
+  }
+}

@@ -526,6 +526,37 @@ retention, sensitivity, foreign-key and ownership constraints, content digests,
 and corruption tests. SQLite is authoritative for state; artifact payload bytes
 remain in the private content-addressed store.
 
+The machine-readable [schema-evolution and rollback
+plan](../../architecture/schema-evolution-and-rollback.json) closes the Task
+1.2.4.2 design boundary. Closed records never gain an optional or required
+field, or changed semantics, in place: a new schema identity and version are
+required. An old record is readable only by its exact decoder, a pure admitted
+migration that retains the source bytes and identity, or an explicit
+unsupported result. Migration has no tool or effect authority.
+
+Events remain append-only and hash-chained. An unknown event type or version
+stops projection before that event; gaps, reordering, and identity/byte
+conflicts are corruption, and projection never replays an effect or
+reinterprets a terminal state. Cache generations are disposable and keyed by
+source, extractor, canonicalization, schema, policy, redaction, model profile,
+tokenizer, and index identities. A stale entry is a miss, including when a
+bounded rebuild fails.
+
+Protocol and readable-version ranges are negotiated before persistent session
+state or effects. A client with no compatible range receives a bounded
+`unsupported-client` result; fields are not dropped and there is no silent,
+legacy, or read-only fallback into the live store. Store migration remains
+owned by the existing operational store and selects either the exact verified
+old generation or the complete verified new generation after interruption.
+Downgrading a binary does not downgrade data: an older binary unable to read
+the current store is blocked without overwriting it. Reverse migration is
+unsupported unless a separately versioned, lossless, interruption-tested path
+with an exact backup and fresh local approval is admitted.
+
+The plan is not migration-runtime, native-platform, compatibility-campaign, or
+release evidence. Those claims remain open until their owning implementation
+and execution gates pass.
+
 ## 13. Dependency Evaluation
 
 No crate is admitted by this architecture document. Each candidate requires a

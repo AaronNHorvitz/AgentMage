@@ -800,8 +800,25 @@ artifact, and recovery contracts remain authoritative.
     current-requirements, documentation, supply-chain, artifact-scan, full product, and diff gates
     pass. This review adds no dependency, changes no lockfile, enables no parser or OCR capability,
     admits no model, and claims no native-platform, support, or release evidence.
-  - [ ] **Sub-task 1.2.4.2:** Publish a schema-evolution and rollback plan for additive records,
-    event compatibility, cache invalidation, unsupported clients, and downgrade behavior.
+  - [x] **Sub-task 1.2.4.2:** Publish a schema-evolution and rollback plan for additive records,
+    event compatibility, cache invalidation, unsupported clients, and downgrade behavior. Evidence:
+    `architecture/schema-evolution-and-rollback.json` publishes the closed plan and binds it to the
+    current Engineering Runtime, Decision 0042, and signed-update rollback authorities by exact
+    SHA-256. It requires a new identity and version for every record change, pure effect-free
+    migration or an explicit unsupported result, stop-before-unknown event handling, hash-chained
+    ordering without effect replay, complete cache-key invalidation with no stale fallback, and
+    client version negotiation before persistent state or effects. Store migration remains inside
+    the existing operational-store authority, selects only an exact verified old generation or a
+    complete verified new generation after interruption, and reconciles uncertain activation before
+    retry. Binary downgrade is separate from data: an unreadable target is blocked without restoring
+    over later user data, and a reverse path requires separate versioning, losslessness proof, an
+    exact backup, interruption evidence, fresh local approval, and post-rollback verification. The
+    fail-closed validator `scripts/schema_evolution_plan.py` and 16 focused mutation tests in
+    `tests/test_schema_evolution_plan.py` reject widened fields, in-place changes, effect replay,
+    incomplete cache keys, client fallback, a second store, lost recovery states, silent rollback,
+    and implementation overclaims. The architecture, current-requirements, documentation, schema,
+    supply-chain, artifact-scan, full product, and diff gates pass. This publishes a plan only; no
+    migration runtime, reverse migrator, native-platform campaign, or release evidence is claimed.
   - [ ] **Sub-task 1.2.4.3:** Decide Rust host and parser/OCR process placement, package features,
     cancellation, fallback, and byte-crossing behavior separately for Fedora, Ubuntu, Windows 11,
     macOS, WSL, Remote SSH, and Dev Containers; retain unavailable native evidence as blocked.
