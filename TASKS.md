@@ -1668,6 +1668,17 @@ and verification so that model confidence, exit zero, or plausible text cannot b
   installed-product, cross-platform, independent-review, Story, Sprint, packaging, or release
   gates.
 
+**Story gate evidence:** All three tasks, all seven sub-tasks, and all three criteria pass in the
+current Linux workflow-contract, verifier, and synchronized admission scope. The independent
+[`story_5_3_gate.py`](scripts/story_5_3_gate.py) aggregate reviews immutable commit `c3a7bad7`
+and tree `e23510dc`, verifies 29 exact implementation, test, review, and evidence artifacts, and
+reruns all three criterion validators. Story 5.3 remains `BLOCKED`: dependency Stories 1.3, 2.4,
+and 5.2 retain open acceptance gates, while `G-DOD-10` retains supported-platform and
+installed-product execution. The gate prohibits dependency or platform substitution, makes no
+installed-product, product-acceptance, Sprint, release, cross-platform, or external-human-review
+claim, and leaves the Story checkbox open. See the retained
+[`story-gate-report.json`](artifacts/sprints/sprint-5/story-5.3/story-gate-report.json).
+
 ### [ ] Sprint 6 - Canonical Workspace Paths
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

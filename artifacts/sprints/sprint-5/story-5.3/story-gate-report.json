@@ -1,0 +1,268 @@
+{
+  "acceptance_criteria": [
+    {
+      "acceptance_truth_sha256": "7cdfae2742e8e13913261c781d24ee92525bdb7f2543cbab23ec7d8148e9c298",
+      "criterion_id": "5.3.AC1",
+      "status": "pass-local-current-workflow-admission"
+    },
+    {
+      "acceptance_truth_sha256": "5155e33e5ef0ced084484aa6b3d2c14627770b90d6368a9fa156d796b089952d",
+      "criterion_id": "5.3.AC2",
+      "status": "pass-local-current-verifier-completion"
+    },
+    {
+      "acceptance_truth_sha256": "fcb72ff6b668637085febcd5b79359d2bdcea80d2022dd0705897741860df622",
+      "criterion_id": "5.3.AC3",
+      "status": "pass-local-current-no-replay-recovery"
+    }
+  ],
+  "blockers": [
+    "story-1.3-acceptance-gate-open",
+    "story-2.4-acceptance-gate-open",
+    "story-5.2-acceptance-gate-open",
+    "supported-platform-installed-product-evidence-incomplete"
+  ],
+  "blocking_controls": [
+    "G-DOD-10"
+  ],
+  "current_linux_workflow_contract_and_verifier_scope_complete": true,
+  "dependencies": [
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "1.3"
+    },
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "2.4"
+    },
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "5.2"
+    }
+  ],
+  "dependency_substitution_permitted": false,
+  "independent_review": {
+    "artifacts": [
+      {
+        "byte_length": 73730,
+        "path": "kernel/engine/src/engineering_records.rs",
+        "sha256": "51338875c4b81e0f04a402c3236b6718e8d273b0e2d5e8745fe07a88a8215c57"
+      },
+      {
+        "byte_length": 15851,
+        "path": "kernel/engine/src/workflow_definition.rs",
+        "sha256": "d2ea313c9959fd4c366612c062f462a466b1b92b33e625f5dd1597202d9b39f1"
+      },
+      {
+        "byte_length": 21638,
+        "path": "kernel/engine/src/workflow_identity.rs",
+        "sha256": "4df7175f9c2943f5db2a42229af4e0257ecfbc35633421ca5fda68a464315d96"
+      },
+      {
+        "byte_length": 18790,
+        "path": "kernel/engine/src/workflow_budget.rs",
+        "sha256": "073471b4773e882438f64900daf107ecd58e7d3a7e70528b6e13aa31ced4f49b"
+      },
+      {
+        "byte_length": 17154,
+        "path": "kernel/engine/src/workflow_progress.rs",
+        "sha256": "9c6f63d953fed91495184a09fd9c701997955fd82ff434bfa54096fa83d1833d"
+      },
+      {
+        "byte_length": 16584,
+        "path": "kernel/engine/src/workflow_verifier.rs",
+        "sha256": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124"
+      },
+      {
+        "byte_length": 7656,
+        "path": "kernel/engine/src/workflow_terminal.rs",
+        "sha256": "41d76ee842328b768d4cf8680e1ac72952ca792aa8e904827f1bb3fc32236e90"
+      },
+      {
+        "byte_length": 26088,
+        "path": "kernel/engine/src/retry_admission.rs",
+        "sha256": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e"
+      },
+      {
+        "byte_length": 14049,
+        "path": "kernel/engine/tests/workflow_definition.rs",
+        "sha256": "f5d65b9ab109bb43f48ca2d52b1f1bb19095cd4a4455bf97e70993d527ec1b2d"
+      },
+      {
+        "byte_length": 18929,
+        "path": "kernel/engine/tests/workflow_identity.rs",
+        "sha256": "a09e3813ed0a082ae0d6760bd574f23f92bfbd2e253fac55a4c4fed054546d89"
+      },
+      {
+        "byte_length": 6584,
+        "path": "kernel/engine/tests/workflow_budget_independence.rs",
+        "sha256": "2ed2d1578352915d1e096902f91765e8f957b9b985a2a57e3bab3205a325405a"
+      },
+      {
+        "byte_length": 16731,
+        "path": "kernel/engine/tests/workflow_verifier.rs",
+        "sha256": "4213f6d341a4da43e9d0337a62312a8eda9c4593e0f6162bb3f833fc1bad3192"
+      },
+      {
+        "byte_length": 56131,
+        "path": "kernel/engine/tests/retry_admission.rs",
+        "sha256": "e232630fff660d92da5980b00c543253af51e17c49a98d788c3792b57dfa582b"
+      },
+      {
+        "byte_length": 2568,
+        "path": "docs/verification/story-5-3-workflow-definition-evidence.md",
+        "sha256": "cddeeb44a5ddede635715681a8cd80cbb58c90298ed08a32976c1d1f64a60da9"
+      },
+      {
+        "byte_length": 2353,
+        "path": "docs/verification/story-5-3-workflow-identity-evidence.md",
+        "sha256": "23eb720fdc2fa1f64225fcf28d58b71d4a22eceb57f646a907a01ff7128c452c"
+      },
+      {
+        "byte_length": 2012,
+        "path": "docs/verification/story-5-3-workflow-budget-evidence.md",
+        "sha256": "7705564d352a0dcfd9a213a7037853dd6edc179b5af4beba7e19028f853e9f43"
+      },
+      {
+        "byte_length": 2084,
+        "path": "docs/verification/story-5-3-workflow-verifier-evidence.md",
+        "sha256": "9317d4f537340b0595e5c1496e50bb86a3e19ac0457308344e5f80e2bed5dc46"
+      },
+      {
+        "byte_length": 1813,
+        "path": "docs/verification/story-5-3-workflow-terminal-evidence.md",
+        "sha256": "468775a9777fb8c77bbbd74b651900fcc124d00cba5e45dddcb605e758adf273"
+      },
+      {
+        "byte_length": 1582,
+        "path": "docs/verification/story-5-3-workflow-adversarial-evidence.md",
+        "sha256": "cf6fba51b873fd96931147a51f430d6075abbcea43bd3771dc3549fbc8da8b8d"
+      },
+      {
+        "byte_length": 3522,
+        "path": "artifacts/sprints/sprint-5/story-5.3/workflow-definition-report.json",
+        "sha256": "ee69f810b6787f27602655d2061305f94c48adf681c5c3b874b4a5301e0b4ef8"
+      },
+      {
+        "byte_length": 3896,
+        "path": "artifacts/sprints/sprint-5/story-5.3/workflow-identity-report.json",
+        "sha256": "5472040ce24cc5f2da42e323df5070bd73302c72edd80c62c9119001473984ac"
+      },
+      {
+        "byte_length": 3349,
+        "path": "artifacts/sprints/sprint-5/story-5.3/workflow-budget-independence-report.json",
+        "sha256": "bdadbd49c8fd9d2eb8fda6f4d938fe74e8be0beb9d1889d99048f6c2be839d30"
+      },
+      {
+        "byte_length": 3216,
+        "path": "artifacts/sprints/sprint-5/story-5.3/workflow-verifier-report.json",
+        "sha256": "fa1d4d974b8b7f1a78feeb14970133b426b19b0b5edf672ac68c0aa42d7e8a2e"
+      },
+      {
+        "byte_length": 3921,
+        "path": "artifacts/sprints/sprint-5/story-5.3/workflow-terminal-report.json",
+        "sha256": "1a85e618a5baa84c9cfd66d30392fc98aedd40ebcf552be4d2cca307c3c6c58f"
+      },
+      {
+        "byte_length": 6813,
+        "path": "artifacts/sprints/sprint-5/story-5.3/workflow-adversarial-report.json",
+        "sha256": "6c531e971e39b77ed5d3322395feb6fd785ac1710f46855d17c4a27e35927af9"
+      },
+      {
+        "byte_length": 4652,
+        "path": "artifacts/sprints/sprint-5/story-5.3/rv52-applicability.json",
+        "sha256": "09b99b9908d9a8b825bdbdae1691a9ea99a63a78979b7d6c978881d8113cd2d4"
+      },
+      {
+        "byte_length": 5804,
+        "path": "artifacts/sprints/sprint-5/story-5.3/story-ac1-runtime-owned-transitions-report.json",
+        "sha256": "3bf412b5a4a3ad477f740c64062557d266d1a6b1439734bb27d94b9e6dec4ef1"
+      },
+      {
+        "byte_length": 5058,
+        "path": "artifacts/sprints/sprint-5/story-5.3/story-ac2-verifier-owned-completion-report.json",
+        "sha256": "1c3a08ab750a67a358cb4fec4e5095f864f1afc269cf8ab2dbb9902c1dba7f1e"
+      },
+      {
+        "byte_length": 5785,
+        "path": "artifacts/sprints/sprint-5/story-5.3/story-ac3-uncertain-effect-blocking-report.json",
+        "sha256": "cb2a969be83644fbdb1f4cfc5cad6aaf97f86e8d5a470f3b8cca7c5e5d964cb8"
+      }
+    ],
+    "external_human_review_status": "not-performed",
+    "finding_count": 0,
+    "findings": [],
+    "review_type": "automated-independent-aggregate-review",
+    "reviewed_commit": "c3a7bad782664fcfb6bbff9dca94d28d5ba45356",
+    "reviewed_tree": "e23510dcd1b4684aa571cac51a3349d8cc1d0f62",
+    "reviewer_id": "agentmage-story-5.3-independent-gate-v1"
+  },
+  "installed_product_claim": "none",
+  "platform_evidence_substituted": false,
+  "product_acceptance_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "c3a7bad782664fcfb6bbff9dca94d28d5ba45356",
+  "reviewed_tree": "e23510dcd1b4684aa571cac51a3349d8cc1d0f62",
+  "schema_version": 1,
+  "sprint_completion_claim": false,
+  "status": "blocked-open-dependencies-and-platform",
+  "story_checkbox_complete": false,
+  "story_id": "5.3",
+  "sub_task_count": 7,
+  "task_count": 3,
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "status": "pass-no-production-tool-attempt"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "status": "pass-synthetic-data-no-new-persistence"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "status": "pass-no-user-owned-file-effects"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "status": "blocked-supported-platform-installed-product-matrix"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "status": "pass-automated-independent-aggregate-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "status": "pass-current-story-scope"
+    }
+  ],
+  "validator_results_sha256": "6c615254b5ba1c5fa2eccd295a5ee0164d60a1a1dee5d72b04289e7d5e244522"
+}

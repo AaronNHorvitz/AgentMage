@@ -1,0 +1,6 @@
+$ python3 scripts/story_5_3_ac1_evidence.py
+Story acceptance criterion 5.3.AC1 runtime-owned workflow transitions validated
+$ python3 scripts/story_5_3_ac2_evidence.py
+Story acceptance criterion 5.3.AC2 verifier-owned completion validated
+$ python3 scripts/story_5_3_ac3_evidence.py
+Story acceptance criterion 5.3.AC3 uncertain and ineligible effects validated
