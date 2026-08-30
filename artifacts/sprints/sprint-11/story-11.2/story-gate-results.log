@@ -1,0 +1,6 @@
+$ python3 scripts/story_11_2_ac1_evidence.py
+Story acceptance criterion 11.2.AC1 crash recovery validated
+$ python3 scripts/story_11_2_ac2_evidence.py
+Story acceptance criterion 11.2.AC2 invalidation and stale-result refusal validated
+$ python3 scripts/story_11_2_ac3_evidence.py
+Story acceptance criterion 11.2.AC3 lifecycle and restricted-data reconciliation validated
