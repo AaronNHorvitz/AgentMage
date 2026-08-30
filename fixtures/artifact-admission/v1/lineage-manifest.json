@@ -1,0 +1,3826 @@
+{
+  "cases": [
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "paste",
+      "disposition_link": "disposition-source-admission-paste-1",
+      "fixture_id": "admission-paste-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-paste-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-paste-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 34,
+            "start_byte": 0
+          },
+          "derivative_sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+          "disposition_id": "disposition-source-admission-paste-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-paste-1",
+          "range_id": "range-source-admission-paste-1-root",
+          "retention_id": "retention-source-admission-paste-1",
+          "section_id": "section-source-admission-paste-1-root",
+          "source_range": {
+            "end_byte_exclusive": 34,
+            "start_byte": 0
+          },
+          "source_sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+          "transformation_id": "transformation-source-admission-paste-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-paste-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "text/plain",
+          "output_sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-paste-1-root"
+          ],
+          "source_artifact_id": "source-admission-paste-1",
+          "source_sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 34,
+              "start_byte": 0
+            },
+            "content_sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+            "extraction_id": "extraction-source-admission-paste-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-paste-1-root",
+            "source_artifact_id": "source-admission-paste-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-paste-1",
+          "input_sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+          "output_sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 34,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-paste-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-paste-1",
+      "source_artifact_id": "source-admission-paste-1",
+      "source_byte_identity": {
+        "byte_length": 34,
+        "sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-paste-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-paste-1-root",
+          "source_artifact_id": "source-admission-paste-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-paste-1",
+          "provenance_id": "provenance-admission-paste-1",
+          "provenance_sha256": "b3d70fa0ea7034a90d4f7b0dc7bb0b81fb198912f58b1be3cb9522838610780f",
+          "reference_id": "reference-admission-paste-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-paste-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "48de4432d0d068719ba52d76ba2e5d5634f31335551354b0d9aac3326214446d",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-paste-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-paste-1",
+          "source_retention_sha256": "6adc0fd263d290adb8c0549c397a6486b5f5175ae060c72b9bf463eeb47f2ec1"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-paste-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-paste-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "local_file",
+      "disposition_link": "disposition-source-admission-local-file-1",
+      "fixture_id": "admission-local-file-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-local-file-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-local-file-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 59,
+            "start_byte": 0
+          },
+          "derivative_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "disposition_id": "disposition-source-admission-local-file-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-local-file-1",
+          "range_id": "range-source-admission-local-file-1-root",
+          "retention_id": "retention-source-admission-local-file-1",
+          "section_id": "section-source-admission-local-file-1-root",
+          "source_range": {
+            "end_byte_exclusive": 59,
+            "start_byte": 0
+          },
+          "source_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "transformation_id": "transformation-source-admission-local-file-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-local-file-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "text/plain",
+          "output_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-local-file-1-root"
+          ],
+          "source_artifact_id": "source-admission-local-file-1",
+          "source_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 59,
+              "start_byte": 0
+            },
+            "content_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+            "extraction_id": "extraction-source-admission-local-file-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-local-file-1-root",
+            "source_artifact_id": "source-admission-local-file-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-local-file-1",
+          "input_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "output_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 59,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-local-file-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-local-file-1",
+      "source_artifact_id": "source-admission-local-file-1",
+      "source_byte_identity": {
+        "byte_length": 59,
+        "sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-local-file-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-local-file-1-root",
+          "source_artifact_id": "source-admission-local-file-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-local-file-1",
+          "provenance_id": "provenance-admission-local-file-1",
+          "provenance_sha256": "d2a1e549498e91d7fbe8bba77bd0d9bb824e6cff2458d2f2ea70dd9a2e482053",
+          "reference_id": "reference-admission-local-file-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-local-file-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "184bfe415ff614c6f59c5ebfdebd9a728b2f2cb0af8c913ee8000813718fa618",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-local-file-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-local-file-1",
+          "source_retention_sha256": "4495963f417f13f647a5577b5d7efa6f94922ccedbe8833052b7a83e49157df0"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-local-file-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-local-file-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "virtual_uri",
+      "disposition_link": "disposition-source-admission-virtual-uri-1",
+      "fixture_id": "admission-virtual-uri-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-virtual-uri-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-virtual-uri-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 62,
+            "start_byte": 0
+          },
+          "derivative_sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+          "disposition_id": "disposition-source-admission-virtual-uri-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-virtual-uri-1",
+          "range_id": "range-source-admission-virtual-uri-1-root",
+          "retention_id": "retention-source-admission-virtual-uri-1",
+          "section_id": "section-source-admission-virtual-uri-1-root",
+          "source_range": {
+            "end_byte_exclusive": 62,
+            "start_byte": 0
+          },
+          "source_sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+          "transformation_id": "transformation-source-admission-virtual-uri-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-virtual-uri-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "text/markdown",
+          "output_sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-virtual-uri-1-root"
+          ],
+          "source_artifact_id": "source-admission-virtual-uri-1",
+          "source_sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 62,
+              "start_byte": 0
+            },
+            "content_sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+            "extraction_id": "extraction-source-admission-virtual-uri-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-virtual-uri-1-root",
+            "source_artifact_id": "source-admission-virtual-uri-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-virtual-uri-1",
+          "input_sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+          "output_sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 62,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-virtual-uri-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-virtual-uri-1",
+      "source_artifact_id": "source-admission-virtual-uri-1",
+      "source_byte_identity": {
+        "byte_length": 62,
+        "sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-virtual-uri-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-virtual-uri-1-root",
+          "source_artifact_id": "source-admission-virtual-uri-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-virtual-uri-1",
+          "provenance_id": "provenance-admission-virtual-uri-1",
+          "provenance_sha256": "9e7253d0e58854ac14b97f09ac18e12ad3d4a709fbf7e8aa1a0e48fd05fc939c",
+          "reference_id": "reference-admission-virtual-uri-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-virtual-uri-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "3a8332b0b21065b53296f083a8b16acc9e588297a7e486514478278c72653a47",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-virtual-uri-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-virtual-uri-1",
+          "source_retention_sha256": "e965b62ddd3ff9cbadf1f3d2ce5b6036ba7d3c96c24ec5985744172f12e7bc2e"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-virtual-uri-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-virtual-uri-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "remote_uri",
+      "disposition_link": "disposition-source-admission-remote-uri-1",
+      "fixture_id": "admission-remote-uri-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-remote-uri-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-remote-uri-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 72,
+            "start_byte": 0
+          },
+          "derivative_sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+          "disposition_id": "disposition-source-admission-remote-uri-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-remote-uri-1",
+          "range_id": "range-source-admission-remote-uri-1-root",
+          "retention_id": "retention-source-admission-remote-uri-1",
+          "section_id": "section-source-admission-remote-uri-1-root",
+          "source_range": {
+            "end_byte_exclusive": 72,
+            "start_byte": 0
+          },
+          "source_sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+          "transformation_id": "transformation-source-admission-remote-uri-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-remote-uri-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/json",
+          "output_sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-remote-uri-1-root"
+          ],
+          "source_artifact_id": "source-admission-remote-uri-1",
+          "source_sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 72,
+              "start_byte": 0
+            },
+            "content_sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+            "extraction_id": "extraction-source-admission-remote-uri-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-remote-uri-1-root",
+            "source_artifact_id": "source-admission-remote-uri-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-remote-uri-1",
+          "input_sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+          "output_sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 72,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-remote-uri-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-remote-uri-1",
+      "source_artifact_id": "source-admission-remote-uri-1",
+      "source_byte_identity": {
+        "byte_length": 72,
+        "sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-remote-uri-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-remote-uri-1-root",
+          "source_artifact_id": "source-admission-remote-uri-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-remote-uri-1",
+          "provenance_id": "provenance-admission-remote-uri-1",
+          "provenance_sha256": "cbb7813a7e34f115acdb760f2e322354bbc2558fafc845605fd98f5303e35df4",
+          "reference_id": "reference-admission-remote-uri-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-remote-uri-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "d163ba73a4dcb3b79add8db344576910d956bc478b161b0f82e21e0deaf3f5e8",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-remote-uri-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-remote-uri-1",
+          "source_retention_sha256": "5d66608c4bbf634fc2e19f0bf8a9d23d4f6c22cf4d1dfe8f47795b5a37eaea5b"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-remote-uri-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-remote-uri-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "directory",
+      "disposition_link": "disposition-source-admission-directory-1",
+      "fixture_id": "admission-directory-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-directory-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-directory-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 263,
+            "start_byte": 0
+          },
+          "derivative_sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+          "disposition_id": "disposition-source-admission-directory-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-directory-1",
+          "range_id": "range-source-admission-directory-1-root",
+          "retention_id": "retention-source-admission-directory-1",
+          "section_id": "section-source-admission-directory-1-root",
+          "source_range": {
+            "end_byte_exclusive": 263,
+            "start_byte": 0
+          },
+          "source_sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+          "transformation_id": "transformation-source-admission-directory-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-directory-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/json",
+          "output_sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-directory-1-root"
+          ],
+          "source_artifact_id": "source-admission-directory-1",
+          "source_sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 263,
+              "start_byte": 0
+            },
+            "content_sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+            "extraction_id": "extraction-source-admission-directory-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-directory-1-root",
+            "source_artifact_id": "source-admission-directory-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-directory-1",
+          "input_sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+          "output_sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 263,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-directory-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-directory-1",
+      "source_artifact_id": "source-admission-directory-1",
+      "source_byte_identity": {
+        "byte_length": 263,
+        "sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-directory-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-directory-1-root",
+          "source_artifact_id": "source-admission-directory-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-directory-1",
+          "provenance_id": "provenance-admission-directory-1",
+          "provenance_sha256": "61f27c89b58b4ca2879a474f9a1e4f05ccb1d89d5b6cb9e271ec9d39455ec789",
+          "reference_id": "reference-admission-directory-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-directory-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "9e47a4275364ff812bdec49eb8771e0404c7566079aafab59f7297ffd8fd7faa",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-directory-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-directory-1",
+          "source_retention_sha256": "5c8175d35de6efc5eb38019e09d3cd8d5cc294b884d618b938700471743dc32e"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-directory-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-directory-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "archive",
+      "disposition_link": "disposition-source-admission-archive-1",
+      "fixture_id": "admission-archive-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-archive-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-archive-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 407,
+            "start_byte": 0
+          },
+          "derivative_sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+          "disposition_id": "disposition-source-admission-archive-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-archive-1",
+          "range_id": "range-source-admission-archive-1-root",
+          "retention_id": "retention-source-admission-archive-1",
+          "section_id": "section-source-admission-archive-1-root",
+          "source_range": {
+            "end_byte_exclusive": 407,
+            "start_byte": 0
+          },
+          "source_sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+          "transformation_id": "transformation-source-admission-archive-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-archive-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/zip",
+          "output_sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-archive-1-root"
+          ],
+          "source_artifact_id": "source-admission-archive-1",
+          "source_sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 407,
+              "start_byte": 0
+            },
+            "content_sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+            "extraction_id": "extraction-source-admission-archive-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-archive-1-root",
+            "source_artifact_id": "source-admission-archive-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-archive-1",
+          "input_sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+          "output_sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 407,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-archive-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-archive-1",
+      "source_artifact_id": "source-admission-archive-1",
+      "source_byte_identity": {
+        "byte_length": 407,
+        "sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-archive-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-archive-1-root",
+          "source_artifact_id": "source-admission-archive-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-archive-1",
+          "provenance_id": "provenance-admission-archive-1",
+          "provenance_sha256": "1728bec49bbb385423b22cf0b364207a58544eccfa721bdbfdd29405e34e5ae7",
+          "reference_id": "reference-admission-archive-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-archive-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "7af144a6e2ef773f395a44829282176e64fbb578459505569d2e881a07b459b0",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-archive-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-archive-1",
+          "source_retention_sha256": "d90eea29faacae777f90f92f661f919461438f3920315bf291d725d59ed31f75"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-archive-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-archive-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "text",
+      "disposition_link": "disposition-source-admission-text-1",
+      "fixture_id": "admission-text-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-text-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-text-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 101,
+            "start_byte": 0
+          },
+          "derivative_sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+          "disposition_id": "disposition-source-admission-text-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-text-1",
+          "range_id": "range-source-admission-text-1-root",
+          "retention_id": "retention-source-admission-text-1",
+          "section_id": "section-source-admission-text-1-root",
+          "source_range": {
+            "end_byte_exclusive": 101,
+            "start_byte": 0
+          },
+          "source_sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+          "transformation_id": "transformation-source-admission-text-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-text-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "text/plain",
+          "output_sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-text-1-root"
+          ],
+          "source_artifact_id": "source-admission-text-1",
+          "source_sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 101,
+              "start_byte": 0
+            },
+            "content_sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+            "extraction_id": "extraction-source-admission-text-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-text-1-root",
+            "source_artifact_id": "source-admission-text-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-text-1",
+          "input_sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+          "output_sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 101,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-text-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-text-1",
+      "source_artifact_id": "source-admission-text-1",
+      "source_byte_identity": {
+        "byte_length": 101,
+        "sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-text-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-text-1-root",
+          "source_artifact_id": "source-admission-text-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-text-1",
+          "provenance_id": "provenance-admission-text-1",
+          "provenance_sha256": "d54e1ecaf0ee6854922c7ef505682373e454573ad261622ba65ddea3ade19850",
+          "reference_id": "reference-admission-text-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-text-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "7ab4b362411763c6dfc03c92c83947a7383bffce08b642c5798a414b93ed8aad",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-text-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-text-1",
+          "source_retention_sha256": "e620b8d01839f2272cb39eb501509981653a49a7e211a906741daf8adb513ceb"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-text-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-text-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "log",
+      "disposition_link": "disposition-source-admission-log-1",
+      "fixture_id": "admission-log-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-log-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-log-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 162,
+            "start_byte": 0
+          },
+          "derivative_sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+          "disposition_id": "disposition-source-admission-log-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-log-1",
+          "range_id": "range-source-admission-log-1-root",
+          "retention_id": "retention-source-admission-log-1",
+          "section_id": "section-source-admission-log-1-root",
+          "source_range": {
+            "end_byte_exclusive": 162,
+            "start_byte": 0
+          },
+          "source_sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+          "transformation_id": "transformation-source-admission-log-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-log-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "text/plain",
+          "output_sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-log-1-root"
+          ],
+          "source_artifact_id": "source-admission-log-1",
+          "source_sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 162,
+              "start_byte": 0
+            },
+            "content_sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+            "extraction_id": "extraction-source-admission-log-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-log-1-root",
+            "source_artifact_id": "source-admission-log-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-log-1",
+          "input_sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+          "output_sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 162,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-log-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-log-1",
+      "source_artifact_id": "source-admission-log-1",
+      "source_byte_identity": {
+        "byte_length": 162,
+        "sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-log-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-log-1-root",
+          "source_artifact_id": "source-admission-log-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-log-1",
+          "provenance_id": "provenance-admission-log-1",
+          "provenance_sha256": "9cb80870631bd018eb80e0c230f6b97fd620e1fda383aef2b173b5abe909fbd6",
+          "reference_id": "reference-admission-log-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-log-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "2ebc729459d142c841cfb1ae400c82a15c5c2ed752d9b7ba50cf37fb9585eceb",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-log-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-log-1",
+          "source_retention_sha256": "20ac222147e2cf6c50aa5f20c81a27f100416bc282fed6cc694db69cd274f81c"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-log-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-log-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "pdf",
+      "disposition_link": "disposition-source-admission-pdf-1",
+      "fixture_id": "admission-pdf-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-pdf-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-pdf-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 617,
+            "start_byte": 0
+          },
+          "derivative_sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+          "disposition_id": "disposition-source-admission-pdf-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-pdf-1",
+          "range_id": "range-source-admission-pdf-1-root",
+          "retention_id": "retention-source-admission-pdf-1",
+          "section_id": "section-source-admission-pdf-1-root",
+          "source_range": {
+            "end_byte_exclusive": 617,
+            "start_byte": 0
+          },
+          "source_sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+          "transformation_id": "transformation-source-admission-pdf-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-pdf-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/pdf",
+          "output_sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-pdf-1-root"
+          ],
+          "source_artifact_id": "source-admission-pdf-1",
+          "source_sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 617,
+              "start_byte": 0
+            },
+            "content_sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+            "extraction_id": "extraction-source-admission-pdf-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-pdf-1-root",
+            "source_artifact_id": "source-admission-pdf-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-pdf-1",
+          "input_sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+          "output_sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 617,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-pdf-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-pdf-1",
+      "source_artifact_id": "source-admission-pdf-1",
+      "source_byte_identity": {
+        "byte_length": 617,
+        "sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-pdf-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-pdf-1-root",
+          "source_artifact_id": "source-admission-pdf-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-pdf-1",
+          "provenance_id": "provenance-admission-pdf-1",
+          "provenance_sha256": "95539b0e54e1bcbeb49bbc9e9377002428e1efda7695672db3601fbf36df8bbc",
+          "reference_id": "reference-admission-pdf-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-pdf-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "f81e79e366c48d9c0dff418c3d0fc9603407c7cbed905b08605b9d131754167d",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-pdf-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-pdf-1",
+          "source_retention_sha256": "6e4392af3971874b4a2a659a336ef4c8eb223568bc2431ebd46c05e5fad62ab4"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-pdf-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-pdf-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "docx",
+      "disposition_link": "disposition-source-admission-docx-1",
+      "fixture_id": "admission-docx-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-docx-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-docx-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 1409,
+            "start_byte": 0
+          },
+          "derivative_sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+          "disposition_id": "disposition-source-admission-docx-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-docx-1",
+          "range_id": "range-source-admission-docx-1-root",
+          "retention_id": "retention-source-admission-docx-1",
+          "section_id": "section-source-admission-docx-1-root",
+          "source_range": {
+            "end_byte_exclusive": 1409,
+            "start_byte": 0
+          },
+          "source_sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+          "transformation_id": "transformation-source-admission-docx-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-docx-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "output_sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-docx-1-root"
+          ],
+          "source_artifact_id": "source-admission-docx-1",
+          "source_sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 1409,
+              "start_byte": 0
+            },
+            "content_sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+            "extraction_id": "extraction-source-admission-docx-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-docx-1-root",
+            "source_artifact_id": "source-admission-docx-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-docx-1",
+          "input_sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+          "output_sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 1409,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-docx-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-docx-1",
+      "source_artifact_id": "source-admission-docx-1",
+      "source_byte_identity": {
+        "byte_length": 1409,
+        "sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-docx-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-docx-1-root",
+          "source_artifact_id": "source-admission-docx-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-docx-1",
+          "provenance_id": "provenance-admission-docx-1",
+          "provenance_sha256": "402ce9a05bf3926cb09786fc147153cb5dd42fc29b2f1c1ca3f9972541330bf6",
+          "reference_id": "reference-admission-docx-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-docx-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "d8b84d329ee63b0a95bc0b5d15b03d56350439bf7006b6f5dbda0ef1bcd95414",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-docx-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-docx-1",
+          "source_retention_sha256": "4c3e9451081a6acb37e279aa5edda5de6e2e3bd305a9b8a4da5dd0baaab05c07"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-docx-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-docx-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "spreadsheet",
+      "disposition_link": "disposition-source-admission-spreadsheet-1",
+      "fixture_id": "admission-spreadsheet-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-spreadsheet-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-spreadsheet-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 2479,
+            "start_byte": 0
+          },
+          "derivative_sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+          "disposition_id": "disposition-source-admission-spreadsheet-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-spreadsheet-1",
+          "range_id": "range-source-admission-spreadsheet-1-root",
+          "retention_id": "retention-source-admission-spreadsheet-1",
+          "section_id": "section-source-admission-spreadsheet-1-root",
+          "source_range": {
+            "end_byte_exclusive": 2479,
+            "start_byte": 0
+          },
+          "source_sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+          "transformation_id": "transformation-source-admission-spreadsheet-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-spreadsheet-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "output_sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-spreadsheet-1-root"
+          ],
+          "source_artifact_id": "source-admission-spreadsheet-1",
+          "source_sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 2479,
+              "start_byte": 0
+            },
+            "content_sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+            "extraction_id": "extraction-source-admission-spreadsheet-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-spreadsheet-1-root",
+            "source_artifact_id": "source-admission-spreadsheet-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-spreadsheet-1",
+          "input_sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+          "output_sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 2479,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-spreadsheet-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-spreadsheet-1",
+      "source_artifact_id": "source-admission-spreadsheet-1",
+      "source_byte_identity": {
+        "byte_length": 2479,
+        "sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-spreadsheet-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-spreadsheet-1-root",
+          "source_artifact_id": "source-admission-spreadsheet-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-spreadsheet-1",
+          "provenance_id": "provenance-admission-spreadsheet-1",
+          "provenance_sha256": "11509269ec60ba7ad602053d2edbdc64726f2af5f5ddae35b1b82e7a79769cfa",
+          "reference_id": "reference-admission-spreadsheet-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-spreadsheet-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "fce77f4ef0e7edb83b1fb174c83f35b1116cb464c9bc817dbfac641a5d441abb",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-spreadsheet-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-spreadsheet-1",
+          "source_retention_sha256": "ebe0d309fbd09fc1934c02b1b78ef9ceb48ff8af61de5d4ab29ab2945472b9dc"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-spreadsheet-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-spreadsheet-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "image_ocr",
+      "disposition_link": "disposition-source-admission-image-ocr-1",
+      "fixture_id": "admission-image-ocr-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-image-ocr-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-image-ocr-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 82,
+            "start_byte": 0
+          },
+          "derivative_sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+          "disposition_id": "disposition-source-admission-image-ocr-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-image-ocr-1",
+          "range_id": "range-source-admission-image-ocr-1-root",
+          "retention_id": "retention-source-admission-image-ocr-1",
+          "section_id": "section-source-admission-image-ocr-1-root",
+          "source_range": {
+            "end_byte_exclusive": 82,
+            "start_byte": 0
+          },
+          "source_sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+          "transformation_id": "transformation-source-admission-image-ocr-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-image-ocr-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "image/png",
+          "output_sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-image-ocr-1-root"
+          ],
+          "source_artifact_id": "source-admission-image-ocr-1",
+          "source_sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 82,
+              "start_byte": 0
+            },
+            "content_sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+            "extraction_id": "extraction-source-admission-image-ocr-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-image-ocr-1-root",
+            "source_artifact_id": "source-admission-image-ocr-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-image-ocr-1",
+          "input_sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+          "output_sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 82,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-image-ocr-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-image-ocr-1",
+      "source_artifact_id": "source-admission-image-ocr-1",
+      "source_byte_identity": {
+        "byte_length": 82,
+        "sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-admission-image-ocr-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-admission-image-ocr-1-root",
+          "source_artifact_id": "source-admission-image-ocr-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-image-ocr-1",
+          "provenance_id": "provenance-admission-image-ocr-1",
+          "provenance_sha256": "e5febaa47819dbe9e6ef3d7c58ac79cd5ab453de8f3ebe063ba6bb08ade091ea",
+          "reference_id": "reference-admission-image-ocr-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-image-ocr-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "af0aa37bf1125515978a6c2551069e2011662d61fef699306d988b14ce208406",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-image-ocr-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-image-ocr-1",
+          "source_retention_sha256": "f255012490e3ca91f9d7b570ec8556e4ea1802fd77c9a95c3f4fae12972d5e79"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-image-ocr-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-image-ocr-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "duplicate",
+      "disposition_link": "disposition-source-admission-duplicate-1",
+      "fixture_id": "admission-duplicate-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-admission-duplicate-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-admission-duplicate-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 59,
+            "start_byte": 0
+          },
+          "derivative_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "disposition_id": "disposition-source-admission-duplicate-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-admission-duplicate-1",
+          "range_id": "range-source-admission-duplicate-1-root",
+          "retention_id": "retention-source-admission-duplicate-1",
+          "section_id": "section-source-admission-duplicate-1-root",
+          "source_range": {
+            "end_byte_exclusive": 59,
+            "start_byte": 0
+          },
+          "source_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "transformation_id": "transformation-source-admission-duplicate-1",
+          "warning_codes": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-admission-duplicate-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "text/plain",
+          "output_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-admission-duplicate-1-root"
+          ],
+          "source_artifact_id": "source-admission-duplicate-1",
+          "source_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 59,
+              "start_byte": 0
+            },
+            "content_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+            "extraction_id": "extraction-source-admission-duplicate-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-admission-duplicate-1-root",
+            "source_artifact_id": "source-admission-duplicate-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-admission-duplicate-1",
+          "input_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "output_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 59,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-admission-duplicate-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "fixture_identity_projection_only_no_product_parser_claim"
+          ]
+        }
+      },
+      "retention_link": "retention-source-admission-duplicate-1",
+      "source_artifact_id": "source-admission-duplicate-1",
+      "source_byte_identity": {
+        "byte_length": 59,
+        "sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "duplicate",
+          "disposition_id": "disposition-source-admission-duplicate-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "duplicate_content",
+          "schema_version": 1,
+          "section_id": "section-source-admission-duplicate-1-root",
+          "source_artifact_id": "source-admission-duplicate-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-duplicate-1",
+          "provenance_id": "provenance-admission-duplicate-1",
+          "provenance_sha256": "d79d0eec30ff7ef073d3ea5b8bf73a0487ce96a8bcb1fc1ac6f50b70baeaa583",
+          "reference_id": "reference-admission-duplicate-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-duplicate-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "1b44c9ad67a9b0e24d241598a6306f116c72ab430e81ab1d23aab3d4a4f4022c",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-duplicate-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-duplicate-1",
+          "source_retention_sha256": "2f80e2fc9013c8f716e1fc11d83894cae2730170492f2a02c618dbd8d69f3717"
+        }
+      },
+      "structure_links": [
+        "section-source-admission-duplicate-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-admission-duplicate-1"
+      },
+      "warning_links": [
+        "fixture_identity_projection_only_no_product_parser_claim"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "failed",
+      "category": "stale",
+      "disposition_link": "disposition-source-admission-stale-1",
+      "fixture_id": "admission-stale-1",
+      "parser_link": {
+        "product_parser_executed": false,
+        "reason_code": "source_not_captured_no_derivative_created",
+        "state": "not_created"
+      },
+      "provenance_link": "provenance-admission-stale-1",
+      "ranges": [],
+      "records": {
+        "extraction": null,
+        "sections": [],
+        "transformation": null
+      },
+      "retention_link": "retention-source-admission-stale-1",
+      "source_artifact_id": "source-admission-stale-1",
+      "source_byte_identity": {
+        "byte_length": 31,
+        "sha256": "f2d6df2f4fceb34bd4ba515541038957a0adf11ae8e25fc0baec00f530190fe6"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "stale",
+          "disposition_id": "disposition-source-admission-stale-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "source_not_current",
+          "schema_version": 1,
+          "section_id": null,
+          "source_artifact_id": "source-admission-stale-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "stale",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-stale-1",
+          "provenance_id": "provenance-admission-stale-1",
+          "provenance_sha256": "eef2651fd68f1686521c9c1f98352f8c13d3586463d5080e99282d3df0afbe2f",
+          "reference_id": "reference-admission-stale-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-stale-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "b0005de844ea5d1a511c5843ce2030c018774137b5464ca19401759c15d047e2",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-stale-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-stale-1",
+          "source_retention_sha256": "689f4b58cc8a797565e7caca43ab9114c9bc6790d1c873c2a06af19f752e261a"
+        }
+      },
+      "structure_links": [],
+      "transformation_link": {
+        "reason_code": "source_not_captured_no_derivative_created",
+        "state": "not_created"
+      },
+      "warning_links": [
+        "source_not_captured_no_derivative_created"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "unavailable",
+      "category": "inaccessible",
+      "disposition_link": "disposition-source-admission-inaccessible-1",
+      "fixture_id": "admission-inaccessible-1",
+      "parser_link": {
+        "product_parser_executed": false,
+        "reason_code": "source_not_captured_no_derivative_created",
+        "state": "not_created"
+      },
+      "provenance_link": "provenance-admission-inaccessible-1",
+      "ranges": [],
+      "records": {
+        "extraction": null,
+        "sections": [],
+        "transformation": null
+      },
+      "retention_link": "retention-source-admission-inaccessible-1",
+      "source_artifact_id": "source-admission-inaccessible-1",
+      "source_byte_identity": null,
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "unavailable",
+          "disposition_id": "disposition-source-admission-inaccessible-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "source_unavailable",
+          "schema_version": 1,
+          "section_id": null,
+          "source_artifact_id": "source-admission-inaccessible-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "unavailable",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-inaccessible-1",
+          "provenance_id": "provenance-admission-inaccessible-1",
+          "provenance_sha256": "1be1b3511e7508e92f23924b269aaaf7289533a78ce138dda2558b13681cf4fc",
+          "reference_id": "reference-admission-inaccessible-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-inaccessible-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "40a2d342c4e4c3fb5a7f3a2c5e78c2920c3bcb7e0fcdabd3fe8ebcbdc267b86a",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-inaccessible-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-inaccessible-1",
+          "source_retention_sha256": "bfa3ff0c90fd6d77420e197a3725b9765868db32405d73ded06729f0e9281c87"
+        }
+      },
+      "structure_links": [],
+      "transformation_link": {
+        "reason_code": "source_not_captured_no_derivative_created",
+        "state": "not_created"
+      },
+      "warning_links": [
+        "source_not_captured_no_derivative_created"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "unsupported",
+      "category": "unsupported",
+      "disposition_link": "disposition-source-admission-unsupported-1",
+      "fixture_id": "admission-unsupported-1",
+      "parser_link": {
+        "product_parser_executed": false,
+        "reason_code": "source_not_captured_no_derivative_created",
+        "state": "not_created"
+      },
+      "provenance_link": "provenance-admission-unsupported-1",
+      "ranges": [],
+      "records": {
+        "extraction": null,
+        "sections": [],
+        "transformation": null
+      },
+      "retention_link": "retention-source-admission-unsupported-1",
+      "source_artifact_id": "source-admission-unsupported-1",
+      "source_byte_identity": null,
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "unsupported",
+          "disposition_id": "disposition-source-admission-unsupported-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "source_unsupported",
+          "schema_version": 1,
+          "section_id": null,
+          "source_artifact_id": "source-admission-unsupported-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "unsupported",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-unsupported-1",
+          "provenance_id": "provenance-admission-unsupported-1",
+          "provenance_sha256": "77b4cc5bf9dbb31ff8cf7b0a6c37da9906e5532b814d96e3ac3ac1876d28ea0b",
+          "reference_id": "reference-admission-unsupported-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-unsupported-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "active",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "e92fb99babc433b0a1605880dbd86d13c80d2ee09d1602cf43111688d4a90164",
+          "reason_code": null,
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-admission-unsupported-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-unsupported-1",
+          "source_retention_sha256": "441444c34fab11467d7a9641d3da41a07501fb35750e46409bd329e420ee84fd"
+        }
+      },
+      "structure_links": [],
+      "transformation_link": {
+        "reason_code": "source_not_captured_no_derivative_created",
+        "state": "not_created"
+      },
+      "warning_links": [
+        "source_not_captured_no_derivative_created"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "malformed_package",
+      "disposition_link": "disposition-source-adversarial-malformed_package-1",
+      "fixture_id": "adversarial-malformed_package-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-adversarial-malformed_package-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-adversarial-malformed_package-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 35,
+            "start_byte": 0
+          },
+          "derivative_sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+          "disposition_id": "disposition-source-adversarial-malformed_package-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-adversarial-malformed_package-1",
+          "range_id": "range-source-adversarial-malformed_package-1-root",
+          "retention_id": "retention-source-adversarial-malformed_package-1",
+          "section_id": "section-source-adversarial-malformed_package-1-root",
+          "source_range": {
+            "end_byte_exclusive": 35,
+            "start_byte": 0
+          },
+          "source_sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+          "transformation_id": "transformation-source-adversarial-malformed_package-1",
+          "warning_codes": [
+            "malformed_container"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-adversarial-malformed_package-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/zip",
+          "output_sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-adversarial-malformed_package-1-root"
+          ],
+          "source_artifact_id": "source-adversarial-malformed_package-1",
+          "source_sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "malformed_container"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 35,
+              "start_byte": 0
+            },
+            "content_sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+            "extraction_id": "extraction-source-adversarial-malformed_package-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-adversarial-malformed_package-1-root",
+            "source_artifact_id": "source-adversarial-malformed_package-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-adversarial-malformed_package-1",
+          "input_sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+          "output_sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 35,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-adversarial-malformed_package-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "malformed_container"
+          ]
+        }
+      },
+      "retention_link": "retention-source-adversarial-malformed_package-1",
+      "source_artifact_id": "source-adversarial-malformed_package-1",
+      "source_byte_identity": {
+        "byte_length": 35,
+        "sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-adversarial-malformed_package-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-adversarial-malformed_package-1-root",
+          "source_artifact_id": "source-adversarial-malformed_package-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-malformed_package-1",
+          "provenance_id": "provenance-adversarial-malformed_package-1",
+          "provenance_sha256": "199ad04bcea76f64ccf80678d8a7ef4b0f01523bfea1c150692793b40e0a7ffc",
+          "reference_id": "reference-adversarial-malformed_package-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-malformed_package-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "dc91b09e350d23cef9cbebf90a7843f6fc648b237aa5f373515fa8e80c2fc930",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-malformed_package-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-malformed_package-1",
+          "source_retention_sha256": "84a0d844dd02218a6f00e75eeb6be9f5718aa04f861d1698cc1937184972c543"
+        }
+      },
+      "structure_links": [
+        "section-source-adversarial-malformed_package-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-adversarial-malformed_package-1"
+      },
+      "warning_links": [
+        "malformed_container"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "active_content",
+      "disposition_link": "disposition-source-adversarial-active_content-1",
+      "fixture_id": "adversarial-active_content-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-adversarial-active_content-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-adversarial-active_content-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 579,
+            "start_byte": 0
+          },
+          "derivative_sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+          "disposition_id": "disposition-source-adversarial-active_content-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-adversarial-active_content-1",
+          "range_id": "range-source-adversarial-active_content-1-root",
+          "retention_id": "retention-source-adversarial-active_content-1",
+          "section_id": "section-source-adversarial-active_content-1-root",
+          "source_range": {
+            "end_byte_exclusive": 579,
+            "start_byte": 0
+          },
+          "source_sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+          "transformation_id": "transformation-source-adversarial-active_content-1",
+          "warning_codes": [
+            "active_content_present"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-adversarial-active_content-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/vnd.ms-word.document.macroEnabled.12",
+          "output_sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-adversarial-active_content-1-root"
+          ],
+          "source_artifact_id": "source-adversarial-active_content-1",
+          "source_sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "active_content_present"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 579,
+              "start_byte": 0
+            },
+            "content_sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+            "extraction_id": "extraction-source-adversarial-active_content-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-adversarial-active_content-1-root",
+            "source_artifact_id": "source-adversarial-active_content-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-adversarial-active_content-1",
+          "input_sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+          "output_sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 579,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-adversarial-active_content-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "active_content_present"
+          ]
+        }
+      },
+      "retention_link": "retention-source-adversarial-active_content-1",
+      "source_artifact_id": "source-adversarial-active_content-1",
+      "source_byte_identity": {
+        "byte_length": 579,
+        "sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-adversarial-active_content-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-adversarial-active_content-1-root",
+          "source_artifact_id": "source-adversarial-active_content-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-active_content-1",
+          "provenance_id": "provenance-adversarial-active_content-1",
+          "provenance_sha256": "f2608da9d6079a832e9aa33bf477b3971293603b42f1f8a2306f7dbe06c76c93",
+          "reference_id": "reference-adversarial-active_content-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-active_content-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "e789e1bea3ed098efd390c57d020ff104fe9fba1ca38d6d5296381e90ec05987",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-active_content-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-active_content-1",
+          "source_retention_sha256": "becff0303e8fd4900b9364a984b6667d1ecc7761b20f987a979c925bada6df5d"
+        }
+      },
+      "structure_links": [
+        "section-source-adversarial-active_content-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-adversarial-active_content-1"
+      },
+      "warning_links": [
+        "active_content_present"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "external_relationship",
+      "disposition_link": "disposition-source-adversarial-external_relationship-1",
+      "fixture_id": "adversarial-external_relationship-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-adversarial-external_relationship-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-adversarial-external_relationship-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 448,
+            "start_byte": 0
+          },
+          "derivative_sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+          "disposition_id": "disposition-source-adversarial-external_relationship-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-adversarial-external_relationship-1",
+          "range_id": "range-source-adversarial-external_relationship-1-root",
+          "retention_id": "retention-source-adversarial-external_relationship-1",
+          "section_id": "section-source-adversarial-external_relationship-1-root",
+          "source_range": {
+            "end_byte_exclusive": 448,
+            "start_byte": 0
+          },
+          "source_sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+          "transformation_id": "transformation-source-adversarial-external_relationship-1",
+          "warning_codes": [
+            "external_relationship_present"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-adversarial-external_relationship-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "output_sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-adversarial-external_relationship-1-root"
+          ],
+          "source_artifact_id": "source-adversarial-external_relationship-1",
+          "source_sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "external_relationship_present"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 448,
+              "start_byte": 0
+            },
+            "content_sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+            "extraction_id": "extraction-source-adversarial-external_relationship-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-adversarial-external_relationship-1-root",
+            "source_artifact_id": "source-adversarial-external_relationship-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-adversarial-external_relationship-1",
+          "input_sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+          "output_sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 448,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-adversarial-external_relationship-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "external_relationship_present"
+          ]
+        }
+      },
+      "retention_link": "retention-source-adversarial-external_relationship-1",
+      "source_artifact_id": "source-adversarial-external_relationship-1",
+      "source_byte_identity": {
+        "byte_length": 448,
+        "sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-adversarial-external_relationship-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-adversarial-external_relationship-1-root",
+          "source_artifact_id": "source-adversarial-external_relationship-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-external_relationship-1",
+          "provenance_id": "provenance-adversarial-external_relationship-1",
+          "provenance_sha256": "07ce736c29702c2deaefaf1e34ca46697a83af8ce82783068e2f70b16406999a",
+          "reference_id": "reference-adversarial-external_relationship-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-external_relationship-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "b3969f51bbca7bb884e798b76008b8aa1ddd4b20ad2a025ef567cdb5d179637f",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-external_relationship-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-external_relationship-1",
+          "source_retention_sha256": "f751b05ddd379d8300ac92403a1caf8a795fef9c78e54b1938d65b00d1cc876f"
+        }
+      },
+      "structure_links": [
+        "section-source-adversarial-external_relationship-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-adversarial-external_relationship-1"
+      },
+      "warning_links": [
+        "external_relationship_present"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "archive_traversal",
+      "disposition_link": "disposition-source-adversarial-archive_traversal-1",
+      "fixture_id": "adversarial-archive_traversal-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-adversarial-archive_traversal-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-adversarial-archive_traversal-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 309,
+            "start_byte": 0
+          },
+          "derivative_sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+          "disposition_id": "disposition-source-adversarial-archive_traversal-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-adversarial-archive_traversal-1",
+          "range_id": "range-source-adversarial-archive_traversal-1-root",
+          "retention_id": "retention-source-adversarial-archive_traversal-1",
+          "section_id": "section-source-adversarial-archive_traversal-1-root",
+          "source_range": {
+            "end_byte_exclusive": 309,
+            "start_byte": 0
+          },
+          "source_sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+          "transformation_id": "transformation-source-adversarial-archive_traversal-1",
+          "warning_codes": [
+            "unsafe_archive_path"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-adversarial-archive_traversal-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/zip",
+          "output_sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-adversarial-archive_traversal-1-root"
+          ],
+          "source_artifact_id": "source-adversarial-archive_traversal-1",
+          "source_sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "unsafe_archive_path"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 309,
+              "start_byte": 0
+            },
+            "content_sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+            "extraction_id": "extraction-source-adversarial-archive_traversal-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-adversarial-archive_traversal-1-root",
+            "source_artifact_id": "source-adversarial-archive_traversal-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-adversarial-archive_traversal-1",
+          "input_sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+          "output_sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 309,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-adversarial-archive_traversal-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "unsafe_archive_path"
+          ]
+        }
+      },
+      "retention_link": "retention-source-adversarial-archive_traversal-1",
+      "source_artifact_id": "source-adversarial-archive_traversal-1",
+      "source_byte_identity": {
+        "byte_length": 309,
+        "sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-adversarial-archive_traversal-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-adversarial-archive_traversal-1-root",
+          "source_artifact_id": "source-adversarial-archive_traversal-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-archive_traversal-1",
+          "provenance_id": "provenance-adversarial-archive_traversal-1",
+          "provenance_sha256": "d685e6e153dd70aeebffa70d746a54c5e06496d660c509af5ffca84a828ca398",
+          "reference_id": "reference-adversarial-archive_traversal-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-archive_traversal-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "96f4ebbf2bdecb44a5ebed05feeab2f2b32cb56f34c9accbd17b3b79c62125c3",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-archive_traversal-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-archive_traversal-1",
+          "source_retention_sha256": "63d14fd8a1bced113f3cc60164314252aa5e1d9e8887d39cc0333d3308f28c9e"
+        }
+      },
+      "structure_links": [
+        "section-source-adversarial-archive_traversal-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-adversarial-archive_traversal-1"
+      },
+      "warning_links": [
+        "unsafe_archive_path"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "decompression_bomb",
+      "disposition_link": "disposition-source-adversarial-decompression_bomb-1",
+      "fixture_id": "adversarial-decompression_bomb-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-adversarial-decompression_bomb-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-adversarial-decompression_bomb-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 2190,
+            "start_byte": 0
+          },
+          "derivative_sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+          "disposition_id": "disposition-source-adversarial-decompression_bomb-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-adversarial-decompression_bomb-1",
+          "range_id": "range-source-adversarial-decompression_bomb-1-root",
+          "retention_id": "retention-source-adversarial-decompression_bomb-1",
+          "section_id": "section-source-adversarial-decompression_bomb-1-root",
+          "source_range": {
+            "end_byte_exclusive": 2190,
+            "start_byte": 0
+          },
+          "source_sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+          "transformation_id": "transformation-source-adversarial-decompression_bomb-1",
+          "warning_codes": [
+            "decompression_limit_exceeded"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-adversarial-decompression_bomb-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/zip",
+          "output_sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-adversarial-decompression_bomb-1-root"
+          ],
+          "source_artifact_id": "source-adversarial-decompression_bomb-1",
+          "source_sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "decompression_limit_exceeded"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 2190,
+              "start_byte": 0
+            },
+            "content_sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+            "extraction_id": "extraction-source-adversarial-decompression_bomb-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-adversarial-decompression_bomb-1-root",
+            "source_artifact_id": "source-adversarial-decompression_bomb-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-adversarial-decompression_bomb-1",
+          "input_sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+          "output_sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 2190,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-adversarial-decompression_bomb-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "decompression_limit_exceeded"
+          ]
+        }
+      },
+      "retention_link": "retention-source-adversarial-decompression_bomb-1",
+      "source_artifact_id": "source-adversarial-decompression_bomb-1",
+      "source_byte_identity": {
+        "byte_length": 2190,
+        "sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-adversarial-decompression_bomb-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-adversarial-decompression_bomb-1-root",
+          "source_artifact_id": "source-adversarial-decompression_bomb-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-decompression_bomb-1",
+          "provenance_id": "provenance-adversarial-decompression_bomb-1",
+          "provenance_sha256": "dffa290e2147181acb5503f2ac79ac616d9d3eff2dc63c031463520f30bf4ad4",
+          "reference_id": "reference-adversarial-decompression_bomb-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-decompression_bomb-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "08715ac82dc16d193fdebee00e04ef5de3057998e10851b18fed9f7cf894ea08",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-decompression_bomb-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-decompression_bomb-1",
+          "source_retention_sha256": "9af50cb5734df7e661ce094025759083f41461e2c4d66cb238e6dc8f2e0eaa14"
+        }
+      },
+      "structure_links": [
+        "section-source-adversarial-decompression_bomb-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-adversarial-decompression_bomb-1"
+      },
+      "warning_links": [
+        "decompression_limit_exceeded"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "mixed_encoding",
+      "disposition_link": "disposition-source-adversarial-mixed_encoding-1",
+      "fixture_id": "adversarial-mixed_encoding-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-adversarial-mixed_encoding-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-adversarial-mixed_encoding-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 44,
+            "start_byte": 0
+          },
+          "derivative_sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+          "disposition_id": "disposition-source-adversarial-mixed_encoding-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-adversarial-mixed_encoding-1",
+          "range_id": "range-source-adversarial-mixed_encoding-1-root",
+          "retention_id": "retention-source-adversarial-mixed_encoding-1",
+          "section_id": "section-source-adversarial-mixed_encoding-1-root",
+          "source_range": {
+            "end_byte_exclusive": 44,
+            "start_byte": 0
+          },
+          "source_sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+          "transformation_id": "transformation-source-adversarial-mixed_encoding-1",
+          "warning_codes": [
+            "mixed_encoding_unsupported"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-adversarial-mixed_encoding-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "text/plain",
+          "output_sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-adversarial-mixed_encoding-1-root"
+          ],
+          "source_artifact_id": "source-adversarial-mixed_encoding-1",
+          "source_sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "mixed_encoding_unsupported"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 44,
+              "start_byte": 0
+            },
+            "content_sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+            "extraction_id": "extraction-source-adversarial-mixed_encoding-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-adversarial-mixed_encoding-1-root",
+            "source_artifact_id": "source-adversarial-mixed_encoding-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-adversarial-mixed_encoding-1",
+          "input_sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+          "output_sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 44,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-adversarial-mixed_encoding-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "mixed_encoding_unsupported"
+          ]
+        }
+      },
+      "retention_link": "retention-source-adversarial-mixed_encoding-1",
+      "source_artifact_id": "source-adversarial-mixed_encoding-1",
+      "source_byte_identity": {
+        "byte_length": 44,
+        "sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-adversarial-mixed_encoding-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-adversarial-mixed_encoding-1-root",
+          "source_artifact_id": "source-adversarial-mixed_encoding-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-mixed_encoding-1",
+          "provenance_id": "provenance-adversarial-mixed_encoding-1",
+          "provenance_sha256": "7500da2dba5c4ace30c67e45da3bc393889f0f31336d5174d197d32c9c814653",
+          "reference_id": "reference-adversarial-mixed_encoding-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-mixed_encoding-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "d92ea6f5e866ea4ee0f96ad9f0a29176556919d8972e7f585049b9b70c284faf",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-mixed_encoding-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-mixed_encoding-1",
+          "source_retention_sha256": "65275a98a629c6b15f1dcd8473f0c6c01e68e6e993b2cb536eaa8f4ffe64c9fd"
+        }
+      },
+      "structure_links": [
+        "section-source-adversarial-mixed_encoding-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-adversarial-mixed_encoding-1"
+      },
+      "warning_links": [
+        "mixed_encoding_unsupported"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "failed",
+      "category": "concurrent_replacement",
+      "disposition_link": "disposition-source-adversarial-concurrent_replacement-1",
+      "fixture_id": "adversarial-concurrent_replacement-1",
+      "parser_link": {
+        "product_parser_executed": false,
+        "reason_code": "source_replaced",
+        "state": "not_created"
+      },
+      "provenance_link": "provenance-adversarial-concurrent_replacement-1",
+      "ranges": [],
+      "records": {
+        "extraction": null,
+        "sections": [],
+        "transformation": null
+      },
+      "retention_link": "retention-source-adversarial-concurrent_replacement-1",
+      "source_artifact_id": "source-adversarial-concurrent_replacement-1",
+      "source_byte_identity": {
+        "byte_length": 42,
+        "sha256": "1ccc8645a61c3e49c50c131072846a1a7f6e4f3b89acbbc4f140c421813e980d"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "stale",
+          "disposition_id": "disposition-source-adversarial-concurrent_replacement-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "source_not_current",
+          "schema_version": 1,
+          "section_id": null,
+          "source_artifact_id": "source-adversarial-concurrent_replacement-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "stale",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-concurrent_replacement-1",
+          "provenance_id": "provenance-adversarial-concurrent_replacement-1",
+          "provenance_sha256": "0264f78c11b8fdec6b1af468a86b0d66914dc653fae7f9251a58c9e1e3fbba79",
+          "reference_id": "reference-adversarial-concurrent_replacement-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-concurrent_replacement-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "c303c440b4512367d3ada7cbde2ad03edcc4736d111530da75fdf84cca9ddf51",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-concurrent_replacement-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-concurrent_replacement-1",
+          "source_retention_sha256": "6f6d8017b556ac944f0b918ca0a4ecd7fcfde0f3a844aed21222abd01847a998"
+        }
+      },
+      "structure_links": [],
+      "transformation_link": {
+        "reason_code": "source_replaced",
+        "state": "not_created"
+      },
+      "warning_links": [
+        "source_replaced"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "truncation",
+      "disposition_link": "disposition-source-adversarial-truncation-1",
+      "fixture_id": "adversarial-truncation-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-adversarial-truncation-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-adversarial-truncation-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 2049,
+            "start_byte": 0
+          },
+          "derivative_sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+          "disposition_id": "disposition-source-adversarial-truncation-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-adversarial-truncation-1",
+          "range_id": "range-source-adversarial-truncation-1-root",
+          "retention_id": "retention-source-adversarial-truncation-1",
+          "section_id": "section-source-adversarial-truncation-1-root",
+          "source_range": {
+            "end_byte_exclusive": 2049,
+            "start_byte": 0
+          },
+          "source_sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+          "transformation_id": "transformation-source-adversarial-truncation-1",
+          "warning_codes": [
+            "source_truncated"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-adversarial-truncation-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "text/plain",
+          "output_sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-adversarial-truncation-1-root"
+          ],
+          "source_artifact_id": "source-adversarial-truncation-1",
+          "source_sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "source_truncated"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 2049,
+              "start_byte": 0
+            },
+            "content_sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+            "extraction_id": "extraction-source-adversarial-truncation-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-adversarial-truncation-1-root",
+            "source_artifact_id": "source-adversarial-truncation-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-adversarial-truncation-1",
+          "input_sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+          "output_sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 2049,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-adversarial-truncation-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "source_truncated"
+          ]
+        }
+      },
+      "retention_link": "retention-source-adversarial-truncation-1",
+      "source_artifact_id": "source-adversarial-truncation-1",
+      "source_byte_identity": {
+        "byte_length": 2049,
+        "sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-adversarial-truncation-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-adversarial-truncation-1-root",
+          "source_artifact_id": "source-adversarial-truncation-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-truncation-1",
+          "provenance_id": "provenance-adversarial-truncation-1",
+          "provenance_sha256": "93ba8687dbd81b52fb0ad54bc3abd228b85770fc84f6efa0f5a92afa6efef9ee",
+          "reference_id": "reference-adversarial-truncation-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-truncation-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "7e28b8a3acfb5bdedd65ce17b874c64092f420f493320690487f6b8f0b77d2de",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-truncation-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-truncation-1",
+          "source_retention_sha256": "70afb232306727732c89a4a9e186b8728ec2648db2f6f85ca5710557b23acc95"
+        }
+      },
+      "structure_links": [
+        "section-source-adversarial-truncation-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-adversarial-truncation-1"
+      },
+      "warning_links": [
+        "source_truncated"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "failed",
+      "category": "cancellation",
+      "disposition_link": "disposition-source-adversarial-cancellation-1",
+      "fixture_id": "adversarial-cancellation-1",
+      "parser_link": {
+        "product_parser_executed": false,
+        "reason_code": "ingestion_cancelled",
+        "state": "not_created"
+      },
+      "provenance_link": "provenance-adversarial-cancellation-1",
+      "ranges": [],
+      "records": {
+        "extraction": null,
+        "sections": [],
+        "transformation": null
+      },
+      "retention_link": "retention-source-adversarial-cancellation-1",
+      "source_artifact_id": "source-adversarial-cancellation-1",
+      "source_byte_identity": {
+        "byte_length": 1856,
+        "sha256": "3852c17d98ce6e8484e95bbbffa755798de439118ef15a80ed11d921c342daec"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-adversarial-cancellation-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": null,
+          "source_artifact_id": "source-adversarial-cancellation-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-cancellation-1",
+          "provenance_id": "provenance-adversarial-cancellation-1",
+          "provenance_sha256": "c07ba1f519b89a1378605e3957060f541e5d4f639d02ecbe7ea993b2556979bc",
+          "reference_id": "reference-adversarial-cancellation-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-cancellation-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "444feb96316cbf207dc425bfd2155874e1e157b7df5cafc5e30d7a689d6a6e2d",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-cancellation-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-cancellation-1",
+          "source_retention_sha256": "cf020222361872ace24ba26fc67dac1417e8acfc064cb9c86c031a4ee7c042ed"
+        }
+      },
+      "structure_links": [],
+      "transformation_link": {
+        "reason_code": "ingestion_cancelled",
+        "state": "not_created"
+      },
+      "warning_links": [
+        "ingestion_cancelled"
+      ]
+    },
+    {
+      "accounting_terminal": true,
+      "capture_state": "captured",
+      "category": "parser_failure",
+      "disposition_link": "disposition-source-adversarial-parser_failure-1",
+      "fixture_id": "adversarial-parser_failure-1",
+      "parser_link": {
+        "extraction_id": "extraction-source-adversarial-parser_failure-1",
+        "extractor_id": "fixture.byte_identity_projector",
+        "extractor_version": "1.0.0",
+        "product_parser_executed": false,
+        "state": "fixture_identity_projection"
+      },
+      "provenance_link": "provenance-adversarial-parser_failure-1",
+      "ranges": [
+        {
+          "derivative_range": {
+            "end_byte_exclusive": 66,
+            "start_byte": 0
+          },
+          "derivative_sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+          "disposition_id": "disposition-source-adversarial-parser_failure-1",
+          "parser_id": "fixture.byte_identity_projector",
+          "provenance_id": "provenance-adversarial-parser_failure-1",
+          "range_id": "range-source-adversarial-parser_failure-1-root",
+          "retention_id": "retention-source-adversarial-parser_failure-1",
+          "section_id": "section-source-adversarial-parser_failure-1-root",
+          "source_range": {
+            "end_byte_exclusive": 66,
+            "start_byte": 0
+          },
+          "source_sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+          "transformation_id": "transformation-source-adversarial-parser_failure-1",
+          "warning_codes": [
+            "parser_failed"
+          ]
+        }
+      ],
+      "records": {
+        "extraction": {
+          "disposition": "captured",
+          "extraction_id": "extraction-source-adversarial-parser_failure-1",
+          "extractor_id": "fixture.byte_identity_projector",
+          "extractor_version": "1.0.0",
+          "media_type": "application/pdf",
+          "output_sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+          "reproducible": true,
+          "schema_version": 1,
+          "section_ids": [
+            "section-source-adversarial-parser_failure-1-root"
+          ],
+          "source_artifact_id": "source-adversarial-parser_failure-1",
+          "source_sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+          "terminal": true,
+          "truncated": false,
+          "warnings": [
+            "parser_failed"
+          ]
+        },
+        "sections": [
+          {
+            "byte_range": {
+              "end_byte_exclusive": 66,
+              "start_byte": 0
+            },
+            "content_sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+            "extraction_id": "extraction-source-adversarial-parser_failure-1",
+            "kind": "document_root",
+            "line_range": null,
+            "ordinal": 0,
+            "parent_section_id": null,
+            "schema_version": 1,
+            "section_id": "section-source-adversarial-parser_failure-1-root",
+            "source_artifact_id": "source-adversarial-parser_failure-1",
+            "title": null,
+            "token_count": 0
+          }
+        ],
+        "transformation": {
+          "artifact_id": "source-adversarial-parser_failure-1",
+          "input_sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+          "output_sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+          "reproducible": true,
+          "schema_version": 2,
+          "source_ranges": [
+            {
+              "end_byte_exclusive": 66,
+              "start_byte": 0
+            }
+          ],
+          "transformation_id": "transformation-source-adversarial-parser_failure-1",
+          "transformer_id": "fixture.byte_identity_projector",
+          "transformer_version": "1.0.0",
+          "warnings": [
+            "parser_failed"
+          ]
+        }
+      },
+      "retention_link": "retention-source-adversarial-parser_failure-1",
+      "source_artifact_id": "source-adversarial-parser_failure-1",
+      "source_byte_identity": {
+        "byte_length": 66,
+        "sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c"
+      },
+      "source_records": {
+        "context_disposition": {
+          "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+          "disposition": "omitted",
+          "disposition_id": "disposition-source-adversarial-parser_failure-1",
+          "ranges": [],
+          "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+          "reason_code": "fixture_only_not_model_delivered",
+          "schema_version": 1,
+          "section_id": "section-source-adversarial-parser_failure-1-root",
+          "source_artifact_id": "source-adversarial-parser_failure-1",
+          "terminal": true,
+          "token_count": 0
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-parser_failure-1",
+          "provenance_id": "provenance-adversarial-parser_failure-1",
+          "provenance_sha256": "b4d92bb7b91e6c12090d2ba8e6b2278f34f827eaec5fdef7d07e8b0ebfb7b145",
+          "reference_id": "reference-adversarial-parser_failure-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-parser_failure-1"
+        },
+        "source_retention": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "encryption_state": "not_persisted",
+          "lifecycle_state": "quarantined",
+          "owner_class": "request",
+          "owner_id": "request-artifact-admission-v1",
+          "physical_binding": null,
+          "physical_store": "runtime_artifact_backend",
+          "protected_metadata_sha256": "0c8eeab787aebaccda19cf90f18b99078585c7f4892346eec0fbd89bb1fa9399",
+          "reason_code": "hostile_fixture_quarantined",
+          "recorded_at": "2026-08-29T00:00:00Z",
+          "request_id": "request-artifact-admission-v1",
+          "retention_class": "memory_only",
+          "retention_expires_at": null,
+          "retention_id": "retention-source-adversarial-parser_failure-1",
+          "retention_policy_id": null,
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-parser_failure-1",
+          "source_retention_sha256": "58433ca90e85fdbb4651f5c1fce0b0ad35e6ebf31b56f9a774bd281c23189d1e"
+        }
+      },
+      "structure_links": [
+        "section-source-adversarial-parser_failure-1-root"
+      ],
+      "transformation_link": {
+        "state": "recorded",
+        "transformation_id": "transformation-source-adversarial-parser_failure-1"
+      },
+      "warning_links": [
+        "parser_failed"
+      ]
+    }
+  ],
+  "context_manifest_id": "context-artifact-lineage-fixtures-v1",
+  "generated_on": "2026-08-29",
+  "generator": {
+    "path": "scripts/engineering_artifact_lineage_fixtures.py",
+    "sha256": "1e54897c239a5cfc629d9ad5591ca93cede2242447b2706e8cdd6156b36bd268"
+  },
+  "manifest_id": "engineering-artifact-lineage-v1",
+  "manifest_sha256": "13a24bd797eb638d6c5b0daef7bdb89d1d5d3696d96c0d852a1c357107f4e230",
+  "model_delivery_claim": "none",
+  "product_parser_support_claim": "none",
+  "range_count": 21,
+  "schema_version": 1,
+  "source_count": 26,
+  "source_manifests": [
+    {
+      "path": "fixtures/artifact-admission/v1/manifest.json",
+      "sha256": "166645d2ed0dce2fca6060876704e6b873f3d8fc2999390a6eab2896cd728350"
+    },
+    {
+      "path": "fixtures/artifact-admission/v1/adversarial-manifest.json",
+      "sha256": "b1e81d786937ca26ba726a6b68dcd2101819f12c94468639ff979fd6a7c37bb0"
+    }
+  ],
+  "status": "synthetic-lineage-contract",
+  "synthetic_only": true,
+  "task_id": "2.4.2.1"
+}
