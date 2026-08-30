@@ -1430,7 +1430,7 @@ an effect or treating approval as reusable authority.
     paths plus every unsafe effect, uncertainty, identity family, receipt state, and idempotency-key
     denial. The enrolled `retry-repair-policy` gate now covers all of Task 5.2.2 and mutation-tests
     every matrix and replay-ledger claim without consuming authority or executing an effect.
-- [ ] **Task 5.2.3 - Bind budgets and repeated-state detection**
+- [x] **Task 5.2.3 - Bind budgets and repeated-state detection**
   - [x] **Sub-task 5.2.3.1:** Define separate parser-repair, step-attempt, per-error-class, workflow,
     and replan budgets with checked arithmetic and immutable policy identity. Evidence: the
     `workflow_budget` policy stores parser-repair, step-attempt, total workflow-work, and replan
@@ -1465,8 +1465,23 @@ an effect or treating approval as reusable authority.
     unchanged counters on denial. The enrolled workflow-supervision evidence now hash-binds both
     supervision modules and their raw results; six evidence tests reject fingerprint, cycle,
     authority, accounting, identity, and product-truth widening.
-  - [ ] **Sub-task 5.2.3.3:** Make exhaustion, policy denial, and repeated-state termination produce
-    a non-secret reason and safe next action without consuming further authority.
+  - [x] **Sub-task 5.2.3.3:** Make exhaustion, policy denial, and repeated-state termination produce
+    a non-secret reason and safe next action without consuming further authority. Evidence: the
+    `workflow_termination` boundary constructs terminal records only from an actual budget limit or
+    checked-counter failure, one of seven closed policy-denial classes, or the exact terminal
+    repeated-state decision. Nonterminal progress and non-exhaustion budget errors are refused.
+    Reasons are typed and expose only stable ASCII codes, budget dimensions, or closed denial
+    classes; caller text, fingerprints, identities, candidate content, and secret values cannot
+    enter the terminal record. Each reason maps deterministically to a descriptive safe next action
+    for budget review, narrowed proposal validation, fresh preflight or approval, effect
+    reconciliation, fresh attempt construction, state correction, or return with a no-progress
+    finding. The record's private construction surface reports authority consumption, automatic
+    continuation, and automatic retry as false. Four focused Rust tests cover exact budget and
+    policy mappings, unchanged ledger and detector state, terminal-only conversion, sticky repeat
+    handling, all seven denial classes, content-free rendering, and absence of grant or permit
+    surfaces. The enrolled workflow-supervision report now covers all of Task 5.2.3, hash-binds all
+    three modules and three focused test commands, and rejects termination-source, reason, action,
+    authority, continuation, retry, and product-truth widening.
 - [ ] **Task 5.2.4 - Verify policy and retain evidence**
   - [ ] **Sub-task 5.2.4.1:** Mutate every effect, failure, budget, approval, preflight,
     reconciliation, and attempt-identity field; require exact denial before dispatch.

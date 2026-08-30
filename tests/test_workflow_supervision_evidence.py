@@ -48,6 +48,17 @@ class WorkflowSupervisionEvidenceTests(unittest.TestCase):
         changed["repeated_state_contract"]["decision_contains_authority"] = True
         self.assertIn("widened", validate_report(changed)[0])
 
+    def test_termination_reason_action_and_authority_widening_is_rejected(self) -> None:
+        changed = copy.deepcopy(expected_report())
+        changed["termination_contract"]["caller_text_in_reason"] = True
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["termination_contract"]["nonterminal_input_can_terminate"] = True
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["termination_contract"]["authority_consumed"] = True
+        self.assertIn("widened", validate_report(changed)[0])
+
     def test_product_truth_and_raw_results_fail_closed(self) -> None:
         changed = copy.deepcopy(expected_report())
         changed["product_truth"]["runtime_effect_executed"] = True

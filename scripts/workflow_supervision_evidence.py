@@ -33,6 +33,14 @@ COMMANDS: Final = (
         "workflow_progress::tests",
         "--locked",
     ),
+    (
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "workflow_termination::tests",
+        "--locked",
+    ),
 )
 MARKERS: Final = (
     "every_dimension_is_separate_and_every_error_class_is_exact ... ok",
@@ -43,6 +51,10 @@ MARKERS: Final = (
     "incomplete_malformed_or_oversized_state_fails_closed ... ok",
     "non_adjacent_repeated_state_stops_at_the_exact_policy_limit ... ok",
     "policy_identity_is_immutable_and_substitution_changes_nothing ... ok",
+    "exhausted_and_saturated_budgets_are_inert_and_do_not_change_usage ... ok",
+    "every_policy_denial_has_one_exact_safe_nonexecuting_action ... ok",
+    "only_exact_repeated_state_stop_terminates_and_detector_remains_unchanged ... ok",
+    "terminal_output_has_no_caller_text_identity_or_authority_surface ... ok",
 )
 FAILURE_CLASSES: Final = (
     "malformed_input",
@@ -85,7 +97,7 @@ def expected_report() -> dict[str, Any]:
         "schema_version": 1,
         "record_type": "agentmage-workflow-supervision-evidence",
         "story_id": "5.2",
-        "task_id": "5.2.3.2",
+        "task_id": "5.2.3.3",
         "generated_on": "2026-08-30",
         "status": "pass-local-contract-evidence",
         "budget_dimensions": [
@@ -126,11 +138,27 @@ def expected_report() -> dict[str, Any]:
             "detector_bound_to_policy_id_and_sha256": True,
             "decision_contains_authority": False,
         },
+        "termination_contract": {
+            "terminal_sources": [
+                "budget_exhaustion",
+                "counter_saturation",
+                "policy_denial",
+                "repeated_state_limit",
+            ],
+            "caller_text_in_reason": False,
+            "stable_reason_codes": True,
+            "safe_next_actions_are_descriptive": True,
+            "nonterminal_input_can_terminate": False,
+            "authority_consumed": False,
+            "automatic_continuation_allowed": False,
+            "automatic_retry_allowed": False,
+        },
         "commands": [" ".join(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
         "artifacts": [
             artifact("kernel/engine/src/workflow_budget.rs"),
             artifact("kernel/engine/src/workflow_progress.rs"),
+            artifact("kernel/engine/src/workflow_termination.rs"),
             artifact("scripts/workflow_supervision_evidence.py"),
             artifact("tests/test_workflow_supervision_evidence.py"),
             artifact(RAW_PATH.relative_to(ROOT).as_posix()),
@@ -199,7 +227,7 @@ def main() -> int:
         for failure in failures:
             print(f"workflow supervision evidence validation failed: {failure}", file=sys.stderr)
         return 1
-    print("Workflow supervision evidence validated through Sub-task 5.2.3.2")
+    print("Workflow supervision evidence validated through Sub-task 5.2.3.3")
     return 0
 
 

@@ -21,19 +21,24 @@
       "sha256": "9c6f63d953fed91495184a09fd9c701997955fd82ff434bfa54096fa83d1833d"
     },
     {
-      "byte_length": 7009,
+      "byte_length": 14526,
+      "path": "kernel/engine/src/workflow_termination.rs",
+      "sha256": "9dd0adf3998ed5da32f12afd88c830ba9742a7a944cd183af2f7a433bc18b5a3"
+    },
+    {
+      "byte_length": 8125,
       "path": "scripts/workflow_supervision_evidence.py",
-      "sha256": "a10559acb3a0902aba00a313bc19054c8cacdb6485cf234b7019173673de96b3"
+      "sha256": "707eceb28966c8b41ce1c48c4726accb4b14fb5610d21f4d4bc6874a9ae47a34"
     },
     {
-      "byte_length": 3082,
+      "byte_length": 3734,
       "path": "tests/test_workflow_supervision_evidence.py",
-      "sha256": "e11290d5c4b77d316d0bf2cef2c9bd269467117d6a90c0ede45f01235bd7a668"
+      "sha256": "38dda3631f66c4f8911b8c79eeb368cb24f38a4cfc045b6885c558614c8debd0"
     },
     {
-      "byte_length": 7180,
+      "byte_length": 10814,
       "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-results.log",
-      "sha256": "4ab0ad4e1f930b26529611006d37d86ae2312b96d630acae345734d581691cec"
+      "sha256": "5e3ba1a44987505acd81d2a91a05e51251c8913ec87ffd93884f046f1a220cf4"
     }
   ],
   "budget_dimensions": [
@@ -45,7 +50,8 @@
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine workflow_budget::tests --locked",
-    "cargo test -p agentmage-kernel-engine workflow_progress::tests --locked"
+    "cargo test -p agentmage-kernel-engine workflow_progress::tests --locked",
+    "cargo test -p agentmage-kernel-engine workflow_termination::tests --locked"
   ],
   "failure_classes": [
     "malformed_input",
@@ -102,10 +108,29 @@
     "fingerprint_is_deterministic_complete_and_boundary_preserving ... ok",
     "incomplete_malformed_or_oversized_state_fails_closed ... ok",
     "non_adjacent_repeated_state_stops_at_the_exact_policy_limit ... ok",
-    "policy_identity_is_immutable_and_substitution_changes_nothing ... ok"
+    "policy_identity_is_immutable_and_substitution_changes_nothing ... ok",
+    "exhausted_and_saturated_budgets_are_inert_and_do_not_change_usage ... ok",
+    "every_policy_denial_has_one_exact_safe_nonexecuting_action ... ok",
+    "only_exact_repeated_state_stop_terminates_and_detector_remains_unchanged ... ok",
+    "terminal_output_has_no_caller_text_identity_or_authority_surface ... ok"
   ],
   "schema_version": 1,
   "status": "pass-local-contract-evidence",
   "story_id": "5.2",
-  "task_id": "5.2.3.2"
+  "task_id": "5.2.3.3",
+  "termination_contract": {
+    "authority_consumed": false,
+    "automatic_continuation_allowed": false,
+    "automatic_retry_allowed": false,
+    "caller_text_in_reason": false,
+    "nonterminal_input_can_terminate": false,
+    "safe_next_actions_are_descriptive": true,
+    "stable_reason_codes": true,
+    "terminal_sources": [
+      "budget_exhaustion",
+      "counter_saturation",
+      "policy_denial",
+      "repeated_state_limit"
+    ]
+  }
 }
