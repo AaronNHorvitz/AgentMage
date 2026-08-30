@@ -1,0 +1,179 @@
+{
+  "acceptance_criteria": [
+    {
+      "admitted_escape_count": 0,
+      "available_adapter_result_count": 3,
+      "criterion_id": "6.1.AC1",
+      "equivalent_policy_decision_count": 3,
+      "generated_case_count": 640,
+      "out_of_root_access_count": 0,
+      "status": "pass-current-non-macos-blocked-macos"
+    },
+    {
+      "criterion_id": "6.1.AC2",
+      "display_link_filesystem_observation_count": 0,
+      "display_link_rejection_count": 1280,
+      "mapped_security_requirement_count": 6,
+      "product_requirements_complete": 0,
+      "status": "pass-current-non-macos-blocked-macos"
+    }
+  ],
+  "blockers": [
+    "sub-task-6.1.1.6-macos-path-adapter-open",
+    "sub-task-6.1.3.2-macos-alias-attack-execution-open",
+    "sub-task-6.1.3.4-macos-conformance-execution-open",
+    "supported-macos-installed-product-evidence-incomplete"
+  ],
+  "current_non_macos_story_scope_complete": true,
+  "independent_review": {
+    "artifacts": [
+      {
+        "byte_length": 18112,
+        "path": "kernel/contracts/src/path.rs",
+        "sha256": "32134f7e4ba693009f9fbfc8741ea22f4744081e4b0e78a02431728237aee4ea"
+      },
+      {
+        "byte_length": 17192,
+        "path": "kernel/contracts/src/platform_path.rs",
+        "sha256": "7119a512a165b00ee1e88186bf55cd4d60b7b293aa3954a17215019cd5d9107b"
+      },
+      {
+        "byte_length": 7260,
+        "path": "kernel/contracts/src/display_link.rs",
+        "sha256": "5a7ce651ad075d629ec95be3c0db3934f8ace321f666f6058546777faadb1d0b"
+      },
+      {
+        "byte_length": 73417,
+        "path": "platforms/linux/src/lib.rs",
+        "sha256": "18f4bba6155d03c31d600cb7fa5a815cb5190bca083314ea2c19735958df8335"
+      },
+      {
+        "byte_length": 6661,
+        "path": "docs/architecture/path-authority-contract.md",
+        "sha256": "6c293f922ef8eaa20d578b51835a03e37ec3e2e65fb31af6b935a82883bfbd2a"
+      },
+      {
+        "byte_length": 555,
+        "path": "fixtures/paths/v1/manifest.json",
+        "sha256": "af735922f5d25b5936533d5b0da0f7b5e77b5d428bdc27c8244d3eb18921010d"
+      },
+      {
+        "byte_length": 25012,
+        "path": "fixtures/paths/v1/display-link-corpus.json",
+        "sha256": "0c1dc48adb718e01c8003ebf4de464854caa4af5f57d219c69ef5e240553a29b"
+      },
+      {
+        "byte_length": 28,
+        "path": "fixtures/paths/v1/logical-input.txt",
+        "sha256": "793c05f449e8b7fcc87d32c1686df8ac0554da638f937309a28b453789f2bd19"
+      },
+      {
+        "byte_length": 2426,
+        "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
+        "sha256": "36386ffa93c9a063235af7f8cdcf7480c946e009746c13d133015914f40d1a3a"
+      },
+      {
+        "byte_length": 2310,
+        "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
+        "sha256": "0d8244fb334d20c0fef660eea7d1ecdf9cb067c079cbc9f11150b75f77c0dfde"
+      },
+      {
+        "byte_length": 2487,
+        "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
+        "sha256": "3261ef541a7a9df123a29a0ab0ef078fe142e1583b91ad05494dd645968fa1dc"
+      },
+      {
+        "byte_length": 3096,
+        "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
+        "sha256": "73720eda040ff86d3d72b22a6ddbeb16638e6a059e7da4a02fcee631760e1ab5"
+      },
+      {
+        "byte_length": 2891,
+        "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
+        "sha256": "e3b0e459a6517fc96445beb97fa84fb5bbb76e2ad118e62bc04ef4bb4845a6a9"
+      },
+      {
+        "byte_length": 4405,
+        "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
+        "sha256": "58378a6e3ecad6600b2c35596d802c94b6c0b2ef1f6630bc6821caddf1bb327d"
+      },
+      {
+        "byte_length": 10758,
+        "path": "artifacts/sprints/sprint-6/story-6.1/security-evidence-map.json",
+        "sha256": "5ceba1175886e750d0e3182e93c1cb2783a04190264dd61534566667c32462ca"
+      }
+    ],
+    "external_human_review_status": "not-performed",
+    "finding_count": 0,
+    "findings": [],
+    "review_type": "automated-independent-aggregate-review",
+    "reviewed_commit": "43330dfd0aea0d811de288b59281f1f52150fe83",
+    "reviewed_tree": "eb39e0650f507bde4bf89071492650d1fb64e038",
+    "reviewer_id": "agentmage-story-6.1-independent-gate-v1"
+  },
+  "installed_product_claim": "none",
+  "macos_evidence_substituted": false,
+  "product_acceptance_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "43330dfd0aea0d811de288b59281f1f52150fe83",
+  "reviewed_tree": "eb39e0650f507bde4bf89071492650d1fb64e038",
+  "schema_version": 1,
+  "sprint_completion_claim": false,
+  "status": "blocked-macos",
+  "story_checkbox_complete": false,
+  "story_id": "6.1",
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "status": "blocked-macos"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "status": "pass-current-non-macos-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "status": "pass-automated-independent-current-scope-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "status": "pass-current-non-macos-story-scope"
+    }
+  ]
+}
