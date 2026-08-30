@@ -2153,9 +2153,18 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
   when stale, or launch a replay driver. Five mutation/omission/overclaim tests pass. This closes the
   current encrypted operational-store criterion on Linux, not physical-fault, cross-platform,
   installed-product, independent-review, Story, Sprint, packaging, or release evidence.
-- [ ] **Story AC 11.2.AC2:** Given changed source, parser, policy, model, plan, tool, or environment
+- [x] **Story AC 11.2.AC2:** Given changed source, parser, policy, model, plan, tool, or environment
   identity, when resume is requested, then every affected context or attempt is invalidated or
-  blocked and no stale result becomes current.
+  blocked and no stale result becomes current. Evidence: an integrated durable-runtime regression
+  checkpoints one completed read, independently changes all seven named identity dimensions in a
+  contract-valid sealed request, and requires `InvalidBoundaryResult` before any second model turn
+  or tool execution. The completed tool count remains exactly one in every case. The
+  [`story-ac2-invalidation-acceptance-report.json`](artifacts/sprints/sprint-11/story-11.2/story-ac2-invalidation-acceptance-report.json)
+  also reconciles source refresh/dependency-closure invalidation, stale-derivative exclusion from
+  all current views, exact parser/cache identity fields, and immutable attempt/idempotency/receipt
+  linkage. Five mutation/omission/overclaim tests and strict Clippy pass. This closes the current
+  durable runtime and encrypted-store criterion on Linux, not every later active parser/adapter,
+  cross-platform, installed-product, independent-review, Story, Sprint, packaging, or release gate.
 - [ ] **Story AC 11.2.AC3:** Given backup, restore, retention, and deletion, when lifecycle checks
   run, then source and workflow records reconcile with payload references and raw restricted data
   appears in no unauthorized surface.

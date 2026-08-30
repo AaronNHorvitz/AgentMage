@@ -2284,6 +2284,140 @@ fn durable_checkpoint_resumes_without_replaying_the_completed_effect() {
 }
 
 #[test]
+fn story_11_2_changed_source_parser_policy_model_plan_tool_and_environment_block_resume() {
+    let baseline_profile = profile("story-11-2-resume-identity");
+    let registry = registry_for_operation(GrantOperation::WorkspaceRead);
+    let mut request = request(baseline_profile.clone(), &registry);
+    request.mode = RuntimeSessionMode::DurableReadOnly;
+    request.request_sha256 = "0".repeat(64);
+    let request = seal_runtime_run_request(request).expect("durable request seals");
+    let journal = Arc::new(Mutex::new(Vec::new()));
+    let artifacts = Arc::new(Mutex::new(Vec::new()));
+    let checkpoint = Arc::new(Mutex::new(None));
+    let executions = Arc::new(AtomicUsize::new(0));
+    let mut first = ReusableRuntimeCoordinator::new_with_durable_state(
+        request.clone(),
+        FakeModel::new(baseline_profile, [ModelScript::Tool]),
+        FakeContext,
+        registry,
+        FakeToolBoundary {
+            script: PermissionScript::Allow,
+            executions: Arc::clone(&executions),
+            emit_evidence: true,
+            outcome: OperationOutcome::Succeeded,
+            state_change: StateChange::NotChanged,
+            tool_output_bytes: 0,
+            tool_output_kind: Some(RuntimeArtifactKind::Report),
+            artifact_candidates: Vec::new(),
+            journal: Arc::clone(&journal),
+            journal_flushes: Arc::new(AtomicUsize::new(0)),
+            artifacts: Arc::clone(&artifacts),
+            checkpoint: Arc::clone(&checkpoint),
+        },
+        FakeVerifier {
+            verifier_id: VerifierId::from_raw("verifier-story-11-2-resume"),
+            source: VerifierSource::DeterministicPostcondition,
+        },
+        FakeClock { now: 6_200 },
+    )
+    .expect("durable coordinator builds");
+    first.start().expect("run starts");
+    first.run_turn(None).expect("tool turn checkpoints");
+    assert_eq!(executions.load(Ordering::SeqCst), 1);
+    let cursor = runtime_event_cursor(
+        journal
+            .lock()
+            .expect("journal remains available")
+            .last()
+            .expect("checkpoint marker exists"),
+    );
+    let retained_journal = journal.lock().expect("journal remains available").clone();
+    let retained_artifacts = artifacts
+        .lock()
+        .expect("artifacts remain available")
+        .clone();
+    let retained_checkpoint = checkpoint
+        .lock()
+        .expect("checkpoint remains available")
+        .clone();
+    drop(first);
+
+    for identity in [
+        "source",
+        "parser",
+        "policy",
+        "model",
+        "plan",
+        "tool",
+        "environment",
+    ] {
+        let mut candidate = request.clone();
+        candidate.event_cursor = Some(cursor.clone());
+        match identity {
+            "source" => candidate.repository_snapshot_sha256 = "d".repeat(64),
+            "parser" => candidate
+                .work_packet
+                .authoritative_evidence
+                .push(evidence("parser-output-changed", EvidenceKind::Validation)),
+            "policy" => candidate.policy_sha256 = "d".repeat(64),
+            "model" => {
+                let changed = profile("story-11-2-resume-model-changed");
+                candidate.context_budget = changed.context.clone();
+                candidate.model_profile = changed;
+            }
+            "plan" => candidate.work_packet.revision += 1,
+            "tool" => {
+                candidate.tool_catalog_id = ToolCatalogId::from_raw("catalog-changed");
+                candidate.tool_catalog_sha256 = runtime_tool_catalog_sha256(
+                    &candidate.tool_catalog_id,
+                    &candidate.visible_tools,
+                )
+                .expect("changed catalog digest");
+            }
+            "environment" => candidate.workspace_snapshot_sha256 = "d".repeat(64),
+            _ => unreachable!(),
+        }
+        candidate.request_sha256 = "0".repeat(64);
+        let candidate = seal_runtime_run_request(candidate).expect("changed request seals");
+        let candidate_profile = candidate.model_profile.clone();
+        let result = ReusableRuntimeCoordinator::new_with_durable_state(
+            candidate,
+            FakeModel::new(candidate_profile, [ModelScript::Completion]),
+            FakeContext,
+            registry_for_operation(GrantOperation::WorkspaceRead),
+            FakeToolBoundary {
+                script: PermissionScript::Allow,
+                executions: Arc::clone(&executions),
+                emit_evidence: true,
+                outcome: OperationOutcome::Succeeded,
+                state_change: StateChange::NotChanged,
+                tool_output_bytes: 0,
+                tool_output_kind: Some(RuntimeArtifactKind::Report),
+                artifact_candidates: Vec::new(),
+                journal: Arc::new(Mutex::new(retained_journal.clone())),
+                journal_flushes: Arc::new(AtomicUsize::new(0)),
+                artifacts: Arc::new(Mutex::new(retained_artifacts.clone())),
+                checkpoint: Arc::new(Mutex::new(retained_checkpoint.clone())),
+            },
+            FakeVerifier {
+                verifier_id: VerifierId::from_raw(format!("verifier-story-11-2-{identity}")),
+                source: VerifierSource::DeterministicPostcondition,
+            },
+            FakeClock { now: 6_300 },
+        );
+        assert!(
+            matches!(result, Err(RuntimeLoopError::InvalidBoundaryResult)),
+            "changed {identity} identity must fail before resume"
+        );
+        assert_eq!(
+            executions.load(Ordering::SeqCst),
+            1,
+            "changed {identity} identity cannot replay the completed tool"
+        );
+    }
+}
+
+#[test]
 fn ephemeral_mode_cannot_accidentally_attach_a_durable_journal() {
     let profile = profile("runtime-loop-ephemeral-journal");
     let registry = registry_for_operation(GrantOperation::WorkspaceRead);
