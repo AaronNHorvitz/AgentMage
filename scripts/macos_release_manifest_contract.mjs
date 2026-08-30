@@ -235,13 +235,13 @@ export function validateReport(value, verifyCurrent = true) {
     value?.status !== "pass-frozen-contract-only" ||
     !/^[0-9a-f]{40}$/.test(value?.source_revision ?? "")
   ) failures.push("macOS manifest contract report identity changed");
-  if (JSON.stringify(value?.field_closure) !== JSON.stringify({
-    top_level_field_count: 16,
-    component_count: 4,
-    designated_requirement_count: 4,
-    entitlement_assignment_count: 12,
-    component_hash_count: 4,
-  })) failures.push("macOS manifest field closure changed");
+  if (
+    value?.field_closure?.top_level_field_count !== 16 ||
+    value?.field_closure?.component_count !== 4 ||
+    value?.field_closure?.designated_requirement_count !== 4 ||
+    value?.field_closure?.entitlement_assignment_count !== 12 ||
+    value?.field_closure?.component_hash_count !== 4
+  ) failures.push("macOS manifest field closure changed");
   if (JSON.stringify(value?.blockers) !== JSON.stringify(BLOCKERS)) {
     failures.push("macOS manifest blockers changed");
   }
