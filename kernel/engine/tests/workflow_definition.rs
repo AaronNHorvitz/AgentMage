@@ -363,6 +363,7 @@ fn terminal_state_family_is_closed_and_nonterminal_states_do_not_leak_into_it() 
         (CanonicalWorkflowLifecycle::Succeeded, true),
         (CanonicalWorkflowLifecycle::NoOp, true),
         (CanonicalWorkflowLifecycle::Blocked, true),
+        (CanonicalWorkflowLifecycle::Denied, true),
         (CanonicalWorkflowLifecycle::Failed, true),
         (CanonicalWorkflowLifecycle::Cancelled, true),
         (CanonicalWorkflowLifecycle::TimedOut, true),

@@ -521,6 +521,7 @@ impl ValidateCanonicalRecord for CanonicalWorkflowState {
             CanonicalWorkflowLifecycle::Succeeded
                 | CanonicalWorkflowLifecycle::NoOp
                 | CanonicalWorkflowLifecycle::Blocked
+                | CanonicalWorkflowLifecycle::Denied
                 | CanonicalWorkflowLifecycle::Failed
                 | CanonicalWorkflowLifecycle::Cancelled
                 | CanonicalWorkflowLifecycle::TimedOut
@@ -1060,6 +1061,7 @@ fn workflow_transition_allowed(
             State::Ready
                 | State::WaitingForDependency
                 | State::Blocked
+                | State::Denied
                 | State::Failed
                 | State::Cancelled
                 | State::TimedOut
@@ -1067,7 +1069,7 @@ fn workflow_transition_allowed(
         ),
         State::Ready => matches!(
             to,
-            State::Running | State::Paused | State::Blocked | State::Cancelled
+            State::Running | State::Paused | State::Blocked | State::Denied | State::Cancelled
         ),
         State::Running => matches!(
             to,
@@ -1077,6 +1079,7 @@ fn workflow_transition_allowed(
                 | State::Paused
                 | State::Reconciling
                 | State::Blocked
+                | State::Denied
                 | State::Failed
                 | State::Cancelled
                 | State::TimedOut
@@ -1089,6 +1092,7 @@ fn workflow_transition_allowed(
                 | State::NoOp
                 | State::Running
                 | State::Blocked
+                | State::Denied
                 | State::Failed
                 | State::Cancelled
                 | State::TimedOut
@@ -1106,7 +1110,12 @@ fn workflow_transition_allowed(
         ),
         State::WaitingForApproval => matches!(
             to,
-            State::Running | State::Paused | State::Blocked | State::Cancelled | State::TimedOut
+            State::Running
+                | State::Paused
+                | State::Blocked
+                | State::Denied
+                | State::Cancelled
+                | State::TimedOut
         ),
         State::Paused => matches!(to, State::Ready | State::Running | State::Cancelled),
         State::Reconciling => matches!(
@@ -1115,6 +1124,7 @@ fn workflow_transition_allowed(
                 | State::Recovering
                 | State::Verifying
                 | State::Blocked
+                | State::Denied
                 | State::Failed
                 | State::Cancelled
                 | State::Uncertain
@@ -1125,6 +1135,7 @@ fn workflow_transition_allowed(
                 | State::Running
                 | State::Verifying
                 | State::Blocked
+                | State::Denied
                 | State::Failed
                 | State::Cancelled
                 | State::Uncertain
@@ -1132,6 +1143,7 @@ fn workflow_transition_allowed(
         State::Succeeded
         | State::NoOp
         | State::Blocked
+        | State::Denied
         | State::Failed
         | State::Cancelled
         | State::TimedOut
@@ -1491,6 +1503,7 @@ mod tests {
             CanonicalWorkflowLifecycle::Succeeded
                 | CanonicalWorkflowLifecycle::NoOp
                 | CanonicalWorkflowLifecycle::Blocked
+                | CanonicalWorkflowLifecycle::Denied
                 | CanonicalWorkflowLifecycle::Failed
                 | CanonicalWorkflowLifecycle::Cancelled
                 | CanonicalWorkflowLifecycle::TimedOut

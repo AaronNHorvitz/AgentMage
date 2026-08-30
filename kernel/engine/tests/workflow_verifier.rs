@@ -1,7 +1,11 @@
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CanonicalRetryDisposition, CanonicalStateChange,
-    CanonicalToolObservation, CanonicalToolOutcome, CanonicalVerificationOutcome,
-    CanonicalVerificationResult,
+    CanonicalTerminalOutcome, CanonicalToolObservation, CanonicalToolOutcome,
+    CanonicalVerificationOutcome, CanonicalVerificationResult,
+};
+use agentmage_kernel_engine::workflow_terminal::{
+    WorkflowNonSuccess, WorkflowNonSuccessKind, WorkflowTerminalError,
+    resolve_non_success_terminal, resolve_verified_terminal,
 };
 use agentmage_kernel_engine::workflow_verifier::{
     RequiredWorkflowObservation, WorkflowVerifierError, WorkflowVerifierInput,
@@ -350,5 +354,119 @@ fn exit_zero_persuasive_output_and_tampered_results_never_establish_completion()
             &policy.required_current_evidence_sha256s
         ),
         Err(WorkflowVerifierError::VerificationBindingMismatch)
+    );
+}
+
+#[test]
+fn changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states() {
+    let changed_observation = observation();
+    let changed_policy = policy(&changed_observation);
+    let changed_results = verification_results(&changed_policy);
+    let changed = evaluate(
+        &changed_policy,
+        std::slice::from_ref(&changed_observation),
+        &changed_results,
+        &changed_policy.expected_state_sha256,
+        &changed_policy.required_current_evidence_sha256s,
+    )
+    .expect("changed evidence verifies");
+    let success = resolve_verified_terminal("terminal:synthetic:success", &changed)
+        .expect("verified success resolves");
+    assert_eq!(success.outcome, CanonicalTerminalOutcome::VerifiedSuccess);
+    assert_eq!(success.diagnostic_code, None);
+    assert_eq!(success.safe_next_action, None);
+
+    let mut unchanged_observation = observation();
+    unchanged_observation.state_change = CanonicalStateChange::NotChanged;
+    unchanged_observation.receipt_sha256 = ZERO_SHA256.to_owned();
+    unchanged_observation.receipt_sha256 = sha256(&unchanged_observation);
+    let unchanged_policy = policy(&unchanged_observation);
+    let unchanged_results = verification_results(&unchanged_policy);
+    let unchanged = evaluate(
+        &unchanged_policy,
+        std::slice::from_ref(&unchanged_observation),
+        &unchanged_results,
+        &unchanged_policy.expected_state_sha256,
+        &unchanged_policy.required_current_evidence_sha256s,
+    )
+    .expect("unchanged evidence verifies");
+    let no_op = resolve_verified_terminal("terminal:synthetic:no-op", &unchanged)
+        .expect("verified no-op resolves");
+    assert_eq!(no_op.outcome, CanonicalTerminalOutcome::VerifiedNoOp);
+    assert_ne!(success.result_sha256, no_op.result_sha256);
+}
+
+#[test]
+fn all_seven_non_success_states_remain_exact_and_diagnostic() {
+    let verification_ids = vec!["verification:synthetic:failed".to_owned()];
+    let cases = [
+        (
+            WorkflowNonSuccessKind::Blocked,
+            CanonicalTerminalOutcome::Blocked,
+        ),
+        (
+            WorkflowNonSuccessKind::Denied,
+            CanonicalTerminalOutcome::Denied,
+        ),
+        (
+            WorkflowNonSuccessKind::Failed,
+            CanonicalTerminalOutcome::Failed,
+        ),
+        (
+            WorkflowNonSuccessKind::Cancelled,
+            CanonicalTerminalOutcome::Cancelled,
+        ),
+        (
+            WorkflowNonSuccessKind::TimedOut,
+            CanonicalTerminalOutcome::TimedOut,
+        ),
+        (
+            WorkflowNonSuccessKind::ResourceExhausted,
+            CanonicalTerminalOutcome::ResourceExhausted,
+        ),
+        (
+            WorkflowNonSuccessKind::Uncertain,
+            CanonicalTerminalOutcome::Uncertain,
+        ),
+    ];
+    for (index, (kind, expected)) in cases.into_iter().enumerate() {
+        let result = resolve_non_success_terminal(
+            &format!("terminal:synthetic:non-success:{index}"),
+            WorkflowNonSuccess {
+                workflow_id: "workflow:synthetic:1",
+                kind,
+                verification_result_ids: &verification_ids,
+                last_verified_state_sha256: &digest('6'),
+                diagnostic_code: "workflow.stopped",
+                safe_next_action: "Inspect the deterministic evidence and address the named state.",
+            },
+        )
+        .expect("closed non-success resolves");
+        assert_eq!(result.outcome, expected);
+        assert_eq!(result.diagnostic_code.as_deref(), Some("workflow.stopped"));
+        assert!(result.safe_next_action.is_some());
+        assert_eq!(result.established_by, "agentmage-runtime-verifier");
+    }
+}
+
+#[test]
+fn malformed_non_success_cannot_collapse_into_a_success_or_generic_failure() {
+    let duplicate = vec![
+        "verification:synthetic:1".to_owned(),
+        "verification:synthetic:1".to_owned(),
+    ];
+    assert_eq!(
+        resolve_non_success_terminal(
+            "terminal:synthetic:invalid",
+            WorkflowNonSuccess {
+                workflow_id: "workflow:synthetic:1",
+                kind: WorkflowNonSuccessKind::Failed,
+                verification_result_ids: &duplicate,
+                last_verified_state_sha256: "not-a-digest",
+                diagnostic_code: "",
+                safe_next_action: "Inspect evidence.",
+            }
+        ),
+        Err(WorkflowTerminalError::InvalidNonSuccess)
     );
 }

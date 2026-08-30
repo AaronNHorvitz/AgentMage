@@ -1,14 +1,14 @@
 {
   "artifacts": [
     {
-      "byte_length": 8028,
+      "byte_length": 8029,
       "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json",
-      "sha256": "60413a12eb7c7db08787572c5189ee4fe65b8b19104ac910e6b0f0dc0fde0303"
+      "sha256": "1f55ddb3b7c2862f83db9558d84118a961829d4a78c52917f72b8fbaac6c8288"
     },
     {
       "byte_length": 6817,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json",
-      "sha256": "f750e4348a59a517f0a5518bfd3de23bc27d4fc29a50aff8af8009e0e3c26e46"
+      "sha256": "b78216d3611fe8251748b38dd37d76f0acb3f1616a108faacaf36b11e20f8fe2"
     },
     {
       "byte_length": 4565,

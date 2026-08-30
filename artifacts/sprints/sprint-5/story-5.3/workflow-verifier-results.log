@@ -1,13 +1,19 @@
 $ cargo test -p agentmage-kernel-engine --test workflow_verifier --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.85s
      Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
 
-running 4 tests
+running 7 tests
+test malformed_non_success_cannot_collapse_into_a_success_or_generic_failure ... ok
+test all_seven_non_success_states_remain_exact_and_diagnostic ... ok
 test exact_current_deterministic_evidence_is_admitted_without_authority ... ok
 test expected_output_state_observation_receipt_and_evidence_bind_independently ... ok
-test every_postcondition_invariant_and_prohibited_effect_is_fail_closed ... ok
 test exit_zero_persuasive_output_and_tampered_results_never_establish_completion ... ok
+test every_postcondition_invariant_and_prohibited_effect_is_fail_closed ... ok
+test changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Checking agentmage-kernel-contracts v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/contracts)
+    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 11.08s

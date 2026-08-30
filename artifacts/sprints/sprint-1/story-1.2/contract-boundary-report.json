@@ -46,7 +46,7 @@
   "sources": [
     {
       "path": "TASKS.md",
-      "sha256": "e22033f30708b9df5c9d78d2bce69538a73fb9f6ab4aa434d87cba16a8d559e2"
+      "sha256": "b2941ca0d36e4f9b59f19c35a3d1ee6797dc5d6d5615b9ab6d685e2f49e5752a"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -74,7 +74,7 @@
     },
     {
       "path": "architecture/schema-evolution-and-rollback.json",
-      "sha256": "d8bf3d28c8ddb116f1419cca7cf3acd7820e7d8c2cdea7c513b5f893b9e2ce86"
+      "sha256": "d73e903d655c6e408c277a42104868bc3dcd94a265947bd25c6e4630fcb29d99"
     },
     {
       "path": "architecture/parser-ocr-platform-placement.json",
@@ -82,7 +82,7 @@
     },
     {
       "path": "scripts/engineering_runtime_schemas.mjs",
-      "sha256": "c90d7cfdf3e3ca3e4583a2e714660ce45584f4c2e875c2094964b440e5af96d9"
+      "sha256": "f264ed932ae7c84bb70f5e9ff88c8be9f587f7ec917be133a08c88254ef7fd46"
     },
     {
       "path": "scripts/dependency_rules.py",
@@ -106,7 +106,7 @@
     },
     {
       "path": "tests/test_engineering_runtime_schemas.mjs",
-      "sha256": "d93cbc70d573eb9548ca1b122cf5ea9876524737529e716ea238a757d01ed92d"
+      "sha256": "e6735a11fd369444635b9e4feba391c7116d947d0ed74841cb663f16c0e5adc7"
     },
     {
       "path": "tests/test_dependency_rules.py",
@@ -130,7 +130,7 @@
     },
     {
       "path": "schemas/engineering-runtime/*.schema.json",
-      "sha256": "3636e8a73db606d10ce50f203c411a6e650a9e20da2f30fd8a8251b01e71d398"
+      "sha256": "eab1bbc57a2757875fe86ded9f7e072ff0bc5691be7afcbd50827fa4ff99b4c4"
     }
   ],
   "product_truth": {

@@ -175,6 +175,8 @@ pub mod workflow_definition;
 pub mod workflow_identity;
 /// Complete state fingerprints and policy-bound repeated no-progress detection.
 pub mod workflow_progress;
+/// Verifier-owned construction of the closed workflow terminal outcome family.
+pub mod workflow_terminal;
 /// Non-secret terminal reasons and inert safe next actions for workflow supervision.
 pub mod workflow_termination;
 /// Deterministic evaluation of exact workflow evidence without completion authority.

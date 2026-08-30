@@ -420,6 +420,15 @@ test("tool observations and terminal results preserve runtime authority", () => 
   assert.equal(validateTerminal(terminal), true, JSON.stringify(validateTerminal.errors));
   assert.equal(validateTerminal({ ...terminal, established_by: "model" }), false);
   assert.equal(validateTerminal({ ...terminal, verification_result_ids: [] }), false);
+  const denied = {
+    ...terminal,
+    outcome: "denied",
+    verification_result_ids: [],
+    diagnostic_code: "workflow.denied",
+    safe_next_action: "Review the denied policy or authority requirement.",
+  };
+  assert.equal(validateTerminal(denied), true, JSON.stringify(validateTerminal.errors));
+  assert.equal(validateTerminal({ ...denied, diagnostic_code: null }), false);
 });
 
 test("context-manifest binds schema_version to the authoritative Rust contract version", () => {

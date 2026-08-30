@@ -170,7 +170,7 @@
     },
     {
       "path": "kernel/engine/src/engineering_records.rs",
-      "sha256": "419b20fb68b14480f526af998e1acd02bb70b780e1305421c6e942e68bb7d7de"
+      "sha256": "51338875c4b81e0f04a402c3236b6718e8d273b0e2d5e8745fe07a88a8215c57"
     },
     {
       "path": "kernel/engine/tests/engineering_runtime_record_corpus.rs",
@@ -190,11 +190,11 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-evidence-index.json",
-      "sha256": "977413e1935eace4e229b10d5f86798003a7133bd0362980a47651f766989f7f"
+      "sha256": "116b2e15449fc0815d23ce34d5e74273f3af1e11df7d1fb0dd87da353bb2507d"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
-      "sha256": "c5e0d07de223b3604a5cebf3038a1d36d896adf94c1a267f15e1f37a267ec6f4"
+      "sha256": "169104db821bf4300296250668afbcc0a4533a159389ce9ce72990a7c6adf53f"
     }
   ],
   "limitations": [

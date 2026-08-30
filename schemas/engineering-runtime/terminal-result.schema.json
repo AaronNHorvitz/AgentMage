@@ -34,6 +34,7 @@
         "verified_success",
         "verified_no_op",
         "blocked",
+        "denied",
         "failed",
         "cancelled",
         "timed_out",

@@ -1031,6 +1031,8 @@ pub enum CanonicalWorkflowLifecycle {
     NoOp,
     /// Workflow is blocked.
     Blocked,
+    /// Policy or authority denied the workflow operation.
+    Denied,
     /// Workflow failed.
     Failed,
     /// Workflow was cancelled and cleaned up.
@@ -1464,6 +1466,8 @@ pub enum CanonicalTerminalOutcome {
     VerifiedNoOp,
     /// A prerequisite blocked completion.
     Blocked,
+    /// Policy or authority denied the workflow operation.
+    Denied,
     /// Workflow failed.
     Failed,
     /// Workflow was cancelled and cleaned.

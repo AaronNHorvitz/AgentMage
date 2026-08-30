@@ -260,6 +260,7 @@ pub const fn workflow_lifecycle_is_terminal(state: CanonicalWorkflowLifecycle) -
         CanonicalWorkflowLifecycle::Succeeded
             | CanonicalWorkflowLifecycle::NoOp
             | CanonicalWorkflowLifecycle::Blocked
+            | CanonicalWorkflowLifecycle::Denied
             | CanonicalWorkflowLifecycle::Failed
             | CanonicalWorkflowLifecycle::Cancelled
             | CanonicalWorkflowLifecycle::TimedOut

@@ -1,14 +1,14 @@
 {
   "artifacts": [
     {
-      "byte_length": 15802,
+      "byte_length": 15851,
       "path": "kernel/engine/src/workflow_definition.rs",
-      "sha256": "8d4debb08bc697221f43a1bfb8379bc35db964613093077c6de677a8775d6f26"
+      "sha256": "d2ea313c9959fd4c366612c062f462a466b1b92b33e625f5dd1597202d9b39f1"
     },
     {
-      "byte_length": 13997,
+      "byte_length": 14049,
       "path": "kernel/engine/tests/workflow_definition.rs",
-      "sha256": "f16ed2c2992087545eb621fdc0933d8e13a94da79c0e1beadefb52f9c2671353"
+      "sha256": "f5d65b9ab109bb43f48ca2d52b1f1bb19095cd4a4455bf97e70993d527ec1b2d"
     },
     {
       "byte_length": 2568,
@@ -28,7 +28,7 @@
     {
       "byte_length": 1102,
       "path": "artifacts/sprints/sprint-5/story-5.3/workflow-definition-results.log",
-      "sha256": "4ddaca6ad17e654ebbcb813ee5fce9570f773cc6bac76521a4ce02945062721b"
+      "sha256": "9cd0260faed3596192915358fd459fbf8b8d25035ac3b63f86935c1590ea11ab"
     }
   ],
   "commands": [

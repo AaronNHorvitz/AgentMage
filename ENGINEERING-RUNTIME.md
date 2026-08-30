@@ -186,7 +186,7 @@ The runtime owns the workflow lifecycle:
 created -> validating -> ready -> running -> verifying
         -> waiting_for_dependency | waiting_for_approval | paused
         -> reconciling | recovering
-        -> succeeded | no_op | blocked | failed | cancelled
+        -> succeeded | no_op | blocked | denied | failed | cancelled
         -> timed_out | resource_exhausted | uncertain
 ```
 

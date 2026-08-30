@@ -1,5 +1,5 @@
 $ cargo test -p agentmage-kernel-engine --test workflow_definition --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
 
 running 8 tests

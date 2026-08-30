@@ -1,0 +1,112 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 126426,
+      "path": "kernel/contracts/src/engineering_records.rs",
+      "sha256": "7c45c6873a70622badb159f9dc5c4423b4062ddf17cef001ae9049e89ddf9b09"
+    },
+    {
+      "byte_length": 7656,
+      "path": "kernel/engine/src/workflow_terminal.rs",
+      "sha256": "41d76ee842328b768d4cf8680e1ac72952ca792aa8e904827f1bb3fc32236e90"
+    },
+    {
+      "byte_length": 16584,
+      "path": "kernel/engine/src/workflow_verifier.rs",
+      "sha256": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124"
+    },
+    {
+      "byte_length": 16731,
+      "path": "kernel/engine/tests/workflow_verifier.rs",
+      "sha256": "4213f6d341a4da43e9d0337a62312a8eda9c4593e0f6162bb3f833fc1bad3192"
+    },
+    {
+      "byte_length": 2871,
+      "path": "schemas/engineering-runtime/terminal-result.schema.json",
+      "sha256": "089a78cfa05e46d857b4ac5c7fb122837eaab6cd29855e82f48dfd0ef1053d46"
+    },
+    {
+      "byte_length": 2220,
+      "path": "schemas/engineering-runtime/workflow-state.schema.json",
+      "sha256": "438fa7bbedf6e4beaf2edf0e4b209743a7bb467f1ecca8d242da4d9634864d9e"
+    },
+    {
+      "byte_length": 1813,
+      "path": "docs/verification/story-5-3-workflow-terminal-evidence.md",
+      "sha256": "468775a9777fb8c77bbbd74b651900fcc124d00cba5e45dddcb605e758adf273"
+    },
+    {
+      "byte_length": 6787,
+      "path": "scripts/workflow_terminal_evidence.py",
+      "sha256": "dd7b7d15051d7a3d2a0e4b2503b41983ec9cb6ad9ebc23b592d86fdea331d9f9"
+    },
+    {
+      "byte_length": 1349,
+      "path": "tests/test_workflow_terminal_evidence.py",
+      "sha256": "52291be355ca2f6729dacfa2cc43ad15e64fc3a4eae853609ea11c282635effb"
+    },
+    {
+      "byte_length": 6831,
+      "path": "artifacts/sprints/sprint-5/story-5.3/workflow-terminal-results.log",
+      "sha256": "0ba4fc793d5d470934bf2208718fc93609a89dc364a0f640748932315b4c417c"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test workflow_verifier --locked",
+    "cargo clippy -p agentmage-kernel-engine -p agentmage-kernel-contracts --all-targets --all-features --locked -- -D warnings",
+    "npm run engineering-runtime:schemas:check"
+  ],
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "model_inference_executed": false,
+    "network_calls": 0,
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "record_type": "agentmage-workflow-terminal-evidence",
+  "requirements": [
+    "AM-WKF-001",
+    "AM-VER-001",
+    "AT-VER-001"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-contract-evidence",
+  "story_id": "5.3",
+  "task_id": "5.3.2.2",
+  "terminal_contract": {
+    "changed_evidence_maps_only_to_verified_success": true,
+    "denied_is_distinct_from_blocked_and_failed": true,
+    "non_success_diagnostic_is_required": true,
+    "non_success_kind_is_closed": true,
+    "non_success_safe_next_action_is_required": true,
+    "success_requires_opaque_current_evidence_proof": true,
+    "terminal_establisher_is_runtime_verifier": true,
+    "terminal_result_is_integrity_bound": true,
+    "uncertain_is_distinct_from_failed": true,
+    "unchanged_evidence_maps_only_to_verified_no_op": true
+  },
+  "terminal_outcomes": [
+    "verified_success",
+    "verified_no_op",
+    "blocked",
+    "denied",
+    "failed",
+    "cancelled",
+    "timed_out",
+    "resource_exhausted",
+    "uncertain"
+  ],
+  "test_contract": {
+    "clippy_warnings_allowed": 0,
+    "focused_markers": 4,
+    "required_markers": [
+      "changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states ... ok",
+      "all_seven_non_success_states_remain_exact_and_diagnostic ... ok",
+      "malformed_non_success_cannot_collapse_into_a_success_or_generic_failure ... ok",
+      "tool observations and terminal results preserve runtime authority"
+    ]
+  }
+}

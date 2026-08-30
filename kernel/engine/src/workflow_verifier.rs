@@ -137,6 +137,7 @@ pub struct VerifiedWorkflowEvidence {
     verified_state_sha256: String,
     verification_result_ids: Vec<String>,
     observation_receipt_sha256s: Vec<String>,
+    observed_state_change: CanonicalStateChange,
 }
 
 impl VerifiedWorkflowEvidence {
@@ -174,6 +175,10 @@ impl VerifiedWorkflowEvidence {
     #[must_use]
     pub fn observation_receipt_sha256s(&self) -> &[String] {
         &self.observation_receipt_sha256s
+    }
+
+    pub(crate) const fn observed_state_change(&self) -> CanonicalStateChange {
+        self.observed_state_change
     }
 }
 
@@ -226,6 +231,15 @@ pub fn evaluate_workflow_evidence(
             .iter()
             .map(|observation| observation.receipt_sha256.clone())
             .collect(),
+        observed_state_change: if input
+            .observations
+            .iter()
+            .any(|observation| observation.state_change == CanonicalStateChange::Changed)
+        {
+            CanonicalStateChange::Changed
+        } else {
+            CanonicalStateChange::NotChanged
+        },
     })
 }
 
