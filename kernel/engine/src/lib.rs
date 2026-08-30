@@ -167,6 +167,8 @@ pub mod verified_context;
 pub mod work_packet;
 /// Narrowing-only authority intersection for future workflow callers.
 pub mod workflow_authority;
+/// Immutable multi-dimensional workflow-supervision policy and checked budget accounting.
+pub mod workflow_budget;
 /// Exact-preimage shadow changes, review previews, and bounded write grants.
 pub mod write_approval;
 /// Content-free write checkpoints, privacy gates, recovery decisions, and audit receipts.

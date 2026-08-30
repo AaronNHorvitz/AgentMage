@@ -1,0 +1,82 @@
+{
+  "accounting_contract": {
+    "all_failure_classes_required_exactly_once": true,
+    "caller_supplied_policy_sha256": false,
+    "checked_addition": true,
+    "inclusive_limits": true,
+    "ledger_bound_to_policy_id_and_sha256": true,
+    "policy_sha256_content_derived": true,
+    "primary_and_workflow_charge_atomic": true,
+    "rejected_charge_mutates_usage": false
+  },
+  "artifacts": [
+    {
+      "byte_length": 17460,
+      "path": "kernel/engine/src/workflow_budget.rs",
+      "sha256": "dbacdb06fd757f4eab9412b123daa74e5d29a7f3e0694d0d2a780d81cf79a5d9"
+    },
+    {
+      "byte_length": 5595,
+      "path": "scripts/workflow_supervision_evidence.py",
+      "sha256": "d78dc6b23df9b9cbc8368aa6c1e5bfec00d5897aaa650a0876bd349e81ad214b"
+    },
+    {
+      "byte_length": 2405,
+      "path": "tests/test_workflow_supervision_evidence.py",
+      "sha256": "1a7d2b0ff48197699b1c23b761a03dd2ce7a9f929191cc28521e855a24bcb4e6"
+    },
+    {
+      "byte_length": 3588,
+      "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-results.log",
+      "sha256": "8418c16adeff7f251579b6429124fa96896c31f2cda39ccdb19e91ce0a7f0d07"
+    }
+  ],
+  "budget_dimensions": [
+    "parser_repair",
+    "step_attempt",
+    "per_error_class",
+    "workflow_work",
+    "replan"
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine workflow_budget::tests --locked"
+  ],
+  "failure_classes": [
+    "malformed_input",
+    "preflight",
+    "policy",
+    "approval",
+    "dependency",
+    "transient",
+    "conflict",
+    "timeout",
+    "cancellation",
+    "crash",
+    "uncertain_effect",
+    "verification",
+    "resource",
+    "internal"
+  ],
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "authority_consumed": false,
+    "native_platform_claim": "none",
+    "network_calls": 0,
+    "product_support_claim": "none",
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "synthetic_data_only": true
+  },
+  "record_type": "agentmage-workflow-supervision-evidence",
+  "required_markers": [
+    "every_dimension_is_separate_and_every_error_class_is_exact ... ok",
+    "missing_or_duplicate_error_classes_cannot_form_a_policy ... ok",
+    "checked_arithmetic_and_total_budget_fail_without_partial_consumption ... ok",
+    "content_identity_is_immutable_and_substitution_is_denied ... ok",
+    "test result: ok. 4 passed; 0 failed"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-contract-evidence",
+  "story_id": "5.2",
+  "task_id": "5.2.3.1"
+}

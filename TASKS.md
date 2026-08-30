@@ -1431,8 +1431,22 @@ an effect or treating approval as reusable authority.
     denial. The enrolled `retry-repair-policy` gate now covers all of Task 5.2.2 and mutation-tests
     every matrix and replay-ledger claim without consuming authority or executing an effect.
 - [ ] **Task 5.2.3 - Bind budgets and repeated-state detection**
-  - [ ] **Sub-task 5.2.3.1:** Define separate parser-repair, step-attempt, per-error-class, workflow,
-    and replan budgets with checked arithmetic and immutable policy identity.
+  - [x] **Sub-task 5.2.3.1:** Define separate parser-repair, step-attempt, per-error-class, workflow,
+    and replan budgets with checked arithmetic and immutable policy identity. Evidence: the
+    `workflow_budget` policy stores parser-repair, step-attempt, total workflow-work, and replan
+    ceilings independently and requires exactly one separate limit for each of all 14 closed
+    workflow failure classes. Policy fields are private and its SHA-256 identity is derived
+    internally from the versioned domain tag, policy ID, every scalar ceiling, and the complete
+    class-ordered limit table; callers cannot supply or mutate that digest. A ledger permanently
+    binds both policy ID and digest. Every event uses checked addition and atomically charges its
+    primary dimension plus total workflow work only after both inclusive limits pass, so overflow,
+    exhaustion, or policy substitution leaves every counter unchanged. Four focused Rust tests
+    cover dimension independence, exhaustive class coverage, inclusive maxima, overflow, atomic
+    total-budget failure, and content-identity substitution. The enrolled
+    [`workflow-supervision-report.json`](artifacts/sprints/sprint-5/story-5.2/workflow-supervision-report.json)
+    hash-binds implementation, tests, and raw results, while five evidence tests reject dimension,
+    class, arithmetic, atomicity, identity, and product-truth widening without runtime effects,
+    authority consumption, network calls, platform claims, or release claims.
   - [ ] **Sub-task 5.2.3.2:** Define deterministic state fingerprints over plan, step, observations,
     proposal, tool, policy, receipts, artifacts, and verifier state; stop repeated no-progress loops.
   - [ ] **Sub-task 5.2.3.3:** Make exhaustion, policy denial, and repeated-state termination produce
