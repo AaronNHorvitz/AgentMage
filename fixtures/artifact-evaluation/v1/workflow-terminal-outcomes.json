@@ -1,0 +1,489 @@
+{
+  "authority_minted": false,
+  "effect_executed": false,
+  "fixture_count": 9,
+  "fixtures": [
+    {
+      "authority_minted": false,
+      "category": "empty_output",
+      "effect_executed": false,
+      "expected": {
+        "artificial_continue_required": false,
+        "automatic_retry_allowed": false,
+        "bounded_termination": true,
+        "diagnostic_count": 1,
+        "effect_replay_allowed": false,
+        "false_completion_allowed": false,
+        "reason_code": "model_output_empty",
+        "safe_resume_action": "start_fresh_attempt_with_current_bindings",
+        "terminal_result": "failed",
+        "verified_completion": false
+      },
+      "fixture_id": "workflow-terminal-empty-output-v1",
+      "fixture_sha256": "82968250ded9da66b9c598ba0d086bb92916e55261fcfeb996eacec41e2d0bd4",
+      "limits": {
+        "model_turns": 3,
+        "repeated_state_count": 3,
+        "tool_attempts": 2
+      },
+      "model_completion_claimed": false,
+      "model_turns_consumed": 1,
+      "observed_states": [
+        "plan_validated",
+        "provider_output_empty"
+      ],
+      "plan_fixture_id": "workflow-plan-success-v1",
+      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "product_runtime_executed": false,
+      "real_provider_contacted": false,
+      "repeated_state_count": 0,
+      "synthetic_only": true,
+      "terminal_diagnostic": {
+        "approval_requirement": "none",
+        "attempts": 1,
+        "blocked_retry_reason": "fresh_attempt_required",
+        "evidence_ids": [
+          "synthetic-evidence-empty-output-v1"
+        ],
+        "exhausted_budgets": [],
+        "failed_step": "inspect",
+        "last_verified_state": "plan_validated",
+        "reason_code": "model_output_empty",
+        "safe_resume_action": "start_fresh_attempt_with_current_bindings",
+        "uncertainty": false
+      }
+    },
+    {
+      "authority_minted": false,
+      "category": "reasoning_only_output",
+      "effect_executed": false,
+      "expected": {
+        "artificial_continue_required": false,
+        "automatic_retry_allowed": false,
+        "bounded_termination": true,
+        "diagnostic_count": 1,
+        "effect_replay_allowed": false,
+        "false_completion_allowed": false,
+        "reason_code": "model_proposal_absent",
+        "safe_resume_action": "start_fresh_attempt_with_current_bindings",
+        "terminal_result": "failed",
+        "verified_completion": false
+      },
+      "fixture_id": "workflow-terminal-reasoning-only-output-v1",
+      "fixture_sha256": "a2b214a1d54e7d8538300c5ae1bc87ac492eebfc376800adaea06e5e42bf884c",
+      "limits": {
+        "model_turns": 3,
+        "repeated_state_count": 3,
+        "tool_attempts": 2
+      },
+      "model_completion_claimed": false,
+      "model_turns_consumed": 1,
+      "observed_states": [
+        "plan_validated",
+        "reasoning_present",
+        "proposal_absent"
+      ],
+      "plan_fixture_id": "workflow-plan-success-v1",
+      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "product_runtime_executed": false,
+      "real_provider_contacted": false,
+      "repeated_state_count": 0,
+      "synthetic_only": true,
+      "terminal_diagnostic": {
+        "approval_requirement": "none",
+        "attempts": 1,
+        "blocked_retry_reason": "fresh_attempt_required",
+        "evidence_ids": [
+          "synthetic-evidence-reasoning-only-output-v1"
+        ],
+        "exhausted_budgets": [],
+        "failed_step": "inspect",
+        "last_verified_state": "plan_validated",
+        "reason_code": "model_proposal_absent",
+        "safe_resume_action": "start_fresh_attempt_with_current_bindings",
+        "uncertainty": false
+      }
+    },
+    {
+      "authority_minted": false,
+      "category": "false_completion",
+      "effect_executed": false,
+      "expected": {
+        "artificial_continue_required": false,
+        "automatic_retry_allowed": false,
+        "bounded_termination": true,
+        "diagnostic_count": 1,
+        "effect_replay_allowed": false,
+        "false_completion_allowed": false,
+        "reason_code": "completion_evidence_missing",
+        "safe_resume_action": "supply_current_deterministic_verification",
+        "terminal_result": "blocked",
+        "verified_completion": false
+      },
+      "fixture_id": "workflow-terminal-false-completion-v1",
+      "fixture_sha256": "d82b57fa10936d86511064b46c7a279a1ad39af8ab05eeffa2d7e1ebe801e14f",
+      "limits": {
+        "model_turns": 3,
+        "repeated_state_count": 3,
+        "tool_attempts": 2
+      },
+      "model_completion_claimed": true,
+      "model_turns_consumed": 1,
+      "observed_states": [
+        "plan_validated",
+        "model_completion_claimed",
+        "verification_evidence_absent"
+      ],
+      "plan_fixture_id": "workflow-plan-success-v1",
+      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "product_runtime_executed": false,
+      "real_provider_contacted": false,
+      "repeated_state_count": 0,
+      "synthetic_only": true,
+      "terminal_diagnostic": {
+        "approval_requirement": "none",
+        "attempts": 1,
+        "blocked_retry_reason": "fresh_attempt_required",
+        "evidence_ids": [
+          "synthetic-evidence-false-completion-v1"
+        ],
+        "exhausted_budgets": [],
+        "failed_step": "inspect",
+        "last_verified_state": "plan_validated",
+        "reason_code": "completion_evidence_missing",
+        "safe_resume_action": "supply_current_deterministic_verification",
+        "uncertainty": false
+      }
+    },
+    {
+      "authority_minted": false,
+      "category": "open_plan_completion",
+      "effect_executed": false,
+      "expected": {
+        "artificial_continue_required": false,
+        "automatic_retry_allowed": false,
+        "bounded_termination": true,
+        "diagnostic_count": 1,
+        "effect_replay_allowed": false,
+        "false_completion_allowed": false,
+        "reason_code": "plan_step_incomplete",
+        "safe_resume_action": "resolve_open_required_step_under_fresh_attempt",
+        "terminal_result": "blocked",
+        "verified_completion": false
+      },
+      "fixture_id": "workflow-terminal-open-plan-completion-v1",
+      "fixture_sha256": "771035e61ee60d2a7a3a50d5696f4fa1fed0f91704aea025fa219b0b59876f1a",
+      "limits": {
+        "model_turns": 3,
+        "repeated_state_count": 3,
+        "tool_attempts": 2
+      },
+      "model_completion_claimed": true,
+      "model_turns_consumed": 1,
+      "observed_states": [
+        "plan_validated",
+        "model_completion_claimed",
+        "required_step_open"
+      ],
+      "plan_fixture_id": "workflow-plan-success-v1",
+      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "product_runtime_executed": false,
+      "real_provider_contacted": false,
+      "repeated_state_count": 0,
+      "synthetic_only": true,
+      "terminal_diagnostic": {
+        "approval_requirement": "none",
+        "attempts": 1,
+        "blocked_retry_reason": "fresh_attempt_required",
+        "evidence_ids": [
+          "synthetic-evidence-open-plan-completion-v1"
+        ],
+        "exhausted_budgets": [],
+        "failed_step": "inspect",
+        "last_verified_state": "plan_validated",
+        "reason_code": "plan_step_incomplete",
+        "safe_resume_action": "resolve_open_required_step_under_fresh_attempt",
+        "uncertainty": false
+      }
+    },
+    {
+      "authority_minted": false,
+      "category": "post_error_stop",
+      "effect_executed": false,
+      "expected": {
+        "artificial_continue_required": false,
+        "automatic_retry_allowed": false,
+        "bounded_termination": true,
+        "diagnostic_count": 1,
+        "effect_replay_allowed": false,
+        "false_completion_allowed": false,
+        "reason_code": "step_error_terminal",
+        "safe_resume_action": "diagnose_error_before_fresh_attempt",
+        "terminal_result": "failed",
+        "verified_completion": false
+      },
+      "fixture_id": "workflow-terminal-post-error-stop-v1",
+      "fixture_sha256": "27f3539cbfeb94a76233173f1afb6b6e468c21e8ebc972eba232ae1fe9c26000",
+      "limits": {
+        "model_turns": 3,
+        "repeated_state_count": 3,
+        "tool_attempts": 2
+      },
+      "model_completion_claimed": false,
+      "model_turns_consumed": 1,
+      "observed_states": [
+        "plan_validated",
+        "tool_error_observed",
+        "provider_output_stopped"
+      ],
+      "plan_fixture_id": "workflow-plan-success-v1",
+      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "product_runtime_executed": false,
+      "real_provider_contacted": false,
+      "repeated_state_count": 0,
+      "synthetic_only": true,
+      "terminal_diagnostic": {
+        "approval_requirement": "none",
+        "attempts": 1,
+        "blocked_retry_reason": "fresh_attempt_required",
+        "evidence_ids": [
+          "synthetic-evidence-post-error-stop-v1"
+        ],
+        "exhausted_budgets": [],
+        "failed_step": "inspect",
+        "last_verified_state": "tool_error_observed",
+        "reason_code": "step_error_terminal",
+        "safe_resume_action": "diagnose_error_before_fresh_attempt",
+        "uncertainty": false
+      }
+    },
+    {
+      "authority_minted": false,
+      "category": "repeated_state_loop",
+      "effect_executed": false,
+      "expected": {
+        "artificial_continue_required": false,
+        "automatic_retry_allowed": false,
+        "bounded_termination": true,
+        "diagnostic_count": 1,
+        "effect_replay_allowed": false,
+        "false_completion_allowed": false,
+        "reason_code": "repeated_state_limit_reached",
+        "safe_resume_action": "revise_plan_before_fresh_attempt",
+        "terminal_result": "stalled",
+        "verified_completion": false
+      },
+      "fixture_id": "workflow-terminal-repeated-state-loop-v1",
+      "fixture_sha256": "17f2cad9f6f95f8b8ec69c0c8c2237f910b633aa15d9c296dac57a62fffafce3",
+      "limits": {
+        "model_turns": 3,
+        "repeated_state_count": 3,
+        "tool_attempts": 2
+      },
+      "model_completion_claimed": false,
+      "model_turns_consumed": 1,
+      "observed_states": [
+        "state_fingerprint_01",
+        "state_fingerprint_01",
+        "state_fingerprint_01"
+      ],
+      "plan_fixture_id": "workflow-plan-success-v1",
+      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "product_runtime_executed": false,
+      "real_provider_contacted": false,
+      "repeated_state_count": 3,
+      "synthetic_only": true,
+      "terminal_diagnostic": {
+        "approval_requirement": "none",
+        "attempts": 1,
+        "blocked_retry_reason": "fresh_attempt_required",
+        "evidence_ids": [
+          "synthetic-evidence-repeated-state-loop-v1"
+        ],
+        "exhausted_budgets": [],
+        "failed_step": "inspect",
+        "last_verified_state": "state_fingerprint_01",
+        "reason_code": "repeated_state_limit_reached",
+        "safe_resume_action": "revise_plan_before_fresh_attempt",
+        "uncertainty": false
+      }
+    },
+    {
+      "authority_minted": false,
+      "category": "budget_exhaustion",
+      "effect_executed": false,
+      "expected": {
+        "artificial_continue_required": false,
+        "automatic_retry_allowed": false,
+        "bounded_termination": true,
+        "diagnostic_count": 1,
+        "effect_replay_allowed": false,
+        "false_completion_allowed": false,
+        "reason_code": "model_turn_budget_exhausted",
+        "safe_resume_action": "revise_budget_or_plan_before_fresh_attempt",
+        "terminal_result": "exhausted",
+        "verified_completion": false
+      },
+      "fixture_id": "workflow-terminal-budget-exhaustion-v1",
+      "fixture_sha256": "146292e541107810c50a355e9c75087351cef034bb45126a9a193bfb46a43270",
+      "limits": {
+        "model_turns": 3,
+        "repeated_state_count": 3,
+        "tool_attempts": 2
+      },
+      "model_completion_claimed": false,
+      "model_turns_consumed": 3,
+      "observed_states": [
+        "plan_validated",
+        "model_turn_01",
+        "model_turn_02",
+        "model_turn_03"
+      ],
+      "plan_fixture_id": "workflow-plan-success-v1",
+      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "product_runtime_executed": false,
+      "real_provider_contacted": false,
+      "repeated_state_count": 0,
+      "synthetic_only": true,
+      "terminal_diagnostic": {
+        "approval_requirement": "none",
+        "attempts": 1,
+        "blocked_retry_reason": "fresh_attempt_required",
+        "evidence_ids": [
+          "synthetic-evidence-budget-exhaustion-v1"
+        ],
+        "exhausted_budgets": [
+          "model_turns"
+        ],
+        "failed_step": "inspect",
+        "last_verified_state": "plan_validated",
+        "reason_code": "model_turn_budget_exhausted",
+        "safe_resume_action": "revise_budget_or_plan_before_fresh_attempt",
+        "uncertainty": false
+      }
+    },
+    {
+      "authority_minted": false,
+      "category": "cancellation",
+      "effect_executed": false,
+      "expected": {
+        "artificial_continue_required": false,
+        "automatic_retry_allowed": false,
+        "bounded_termination": true,
+        "diagnostic_count": 0,
+        "effect_replay_allowed": false,
+        "false_completion_allowed": false,
+        "reason_code": "user_cancelled",
+        "safe_resume_action": null,
+        "terminal_result": "cancelled",
+        "verified_completion": false
+      },
+      "fixture_id": "workflow-terminal-cancellation-v1",
+      "fixture_sha256": "cac872bdb2e8995549b30e1f07156b1b7c7d0ffc87129b5e9b0461ca88b01f24",
+      "limits": {
+        "model_turns": 3,
+        "repeated_state_count": 3,
+        "tool_attempts": 2
+      },
+      "model_completion_claimed": false,
+      "model_turns_consumed": 1,
+      "observed_states": [
+        "plan_validated",
+        "cancellation_observed"
+      ],
+      "plan_fixture_id": "workflow-plan-success-v1",
+      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "product_runtime_executed": false,
+      "real_provider_contacted": false,
+      "repeated_state_count": 0,
+      "synthetic_only": true,
+      "terminal_diagnostic": null
+    },
+    {
+      "authority_minted": false,
+      "category": "provider_disconnect",
+      "effect_executed": false,
+      "expected": {
+        "artificial_continue_required": false,
+        "automatic_retry_allowed": false,
+        "bounded_termination": true,
+        "diagnostic_count": 1,
+        "effect_replay_allowed": false,
+        "false_completion_allowed": false,
+        "reason_code": "provider_disconnected",
+        "safe_resume_action": "await_provider_recovery_then_start_fresh_attempt",
+        "terminal_result": "failed",
+        "verified_completion": false
+      },
+      "fixture_id": "workflow-terminal-provider-disconnect-v1",
+      "fixture_sha256": "025419b1cefa14123ab54184a8b0af08a4e6480a95d4d5f8feb7e50c97657a93",
+      "limits": {
+        "model_turns": 3,
+        "repeated_state_count": 3,
+        "tool_attempts": 2
+      },
+      "model_completion_claimed": false,
+      "model_turns_consumed": 1,
+      "observed_states": [
+        "plan_validated",
+        "provider_stream_disconnected",
+        "proposal_incomplete"
+      ],
+      "plan_fixture_id": "workflow-plan-success-v1",
+      "plan_suite_sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0",
+      "product_runtime_executed": false,
+      "real_provider_contacted": false,
+      "repeated_state_count": 0,
+      "synthetic_only": true,
+      "terminal_diagnostic": {
+        "approval_requirement": "none",
+        "attempts": 1,
+        "blocked_retry_reason": "fresh_attempt_required",
+        "evidence_ids": [
+          "synthetic-evidence-provider-disconnect-v1"
+        ],
+        "exhausted_budgets": [],
+        "failed_step": "inspect",
+        "last_verified_state": "plan_validated",
+        "reason_code": "provider_disconnected",
+        "safe_resume_action": "await_provider_recovery_then_start_fresh_attempt",
+        "uncertainty": false
+      }
+    }
+  ],
+  "generated_on": "2026-08-30",
+  "generator": {
+    "path": "scripts/artifact_evaluation_terminal_fixtures.py",
+    "sha256": "d793bb880608a74ed18baefb4dc81051f4df3a62ef1928537532e0c4a2f96715"
+  },
+  "plan_dependency": {
+    "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+    "sha256": "dabb16645d5ec0c373323b08e0a505dc3263681d8f56aea408f5c4fa8fc8c4c0"
+  },
+  "product_runtime_executed": false,
+  "real_provider_contacted": false,
+  "required_categories": [
+    "empty_output",
+    "reasoning_only_output",
+    "false_completion",
+    "open_plan_completion",
+    "post_error_stop",
+    "repeated_state_loop",
+    "budget_exhaustion",
+    "cancellation",
+    "provider_disconnect"
+  ],
+  "schema_version": 1,
+  "status": "synthetic-premature-terminal-contract",
+  "suite_id": "artifact-evaluation-workflow-terminal-outcomes-v1",
+  "suite_sha256": "0a9c53ce9d69b25441596a8b2281a5e504e624c53fa7cca21074acd43eccd9f3",
+  "synthetic_only": true,
+  "task_id": "2.3.2.3",
+  "terminal_result_vocabulary": [
+    "blocked",
+    "cancelled",
+    "exhausted",
+    "failed",
+    "stalled"
+  ]
+}
