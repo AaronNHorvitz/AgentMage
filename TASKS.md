@@ -1631,7 +1631,18 @@ and verification so that model confidence, exit zero, or plausible text cannot b
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 5.3.AC1:** Given an admitted workflow, when it executes, then only runtime-owned legal transitions occur within exact policy, authority, approval, and budget bounds.
+- [x] **Story AC 5.3.AC1:** Given an admitted workflow, when it executes, then only runtime-owned
+  legal transitions occur within exact policy, authority, approval, and budget bounds. Evidence: a
+  criterion-specific executable gate proves the closed 18-state workflow table admits only legal,
+  identity-preserving, monotonic transitions and makes all eight terminal states absorbing. Exact
+  graph and step-policy admission binds current preflights, effect/retry classes, approval,
+  idempotency, verifiers, and budgets; synchronized attempt admission requires fresh identities and
+  a single-use grant. Six independent budget dimensions fail without partial charge. The retained
+  eight-family adversarial campaign records zero dispatches for stale preflight, approval bypass,
+  and grant reuse. Five mutation/omission/overclaim tests pass. This closes the current pure
+  workflow-contract and synchronized in-runtime admission scope with synthetic data, not native
+  effect, durable cross-process, installed-product, cross-platform, independent-review, Story,
+  Sprint, packaging, or release gates.
 - [ ] **Story AC 5.3.AC2:** Given exit zero, persuasive model text, or tool output without current postcondition evidence, when completion is evaluated, then verified success is refused.
 - [ ] **Story AC 5.3.AC3:** Given any uncertain or ineligible effect, when recovery or retry is considered, then no effect replays and the workflow remains visibly blocked pending deterministic reconciliation or user disposition.
 
