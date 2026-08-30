@@ -54,6 +54,7 @@ MARKERS: Final = (
     "exhausted_and_saturated_budgets_are_inert_and_do_not_change_usage ... ok",
     "every_policy_denial_has_one_exact_safe_nonexecuting_action ... ok",
     "only_exact_repeated_state_stop_terminates_and_detector_remains_unchanged ... ok",
+    "story_5_2_declared_budget_or_no_progress_terminates_once_without_effect ... ok",
     "terminal_output_has_no_caller_text_identity_or_authority_surface ... ok",
 )
 FAILURE_CLASSES: Final = (

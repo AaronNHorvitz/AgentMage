@@ -40,7 +40,7 @@
     {
       "byte_length": 2213,
       "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-results.log",
-      "sha256": "333a0ceff85cec6dba64073f0be4c6071e226cf6f108478a2e986332e5558e7c"
+      "sha256": "c014736e0689e2b4e6f126f1ee3b0635696b013f0aa7630d6027de7dfd436ed3"
     }
   ],
   "commands": [
@@ -102,7 +102,7 @@
     {
       "byte_length": 8937,
       "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-      "sha256": "d70b686e593e5c521d752da9392747350843e5ec444b11a214b45933b9707294"
+      "sha256": "00c55900ca368ae810eae661a4cf87cbeec961ed4b6606c1c97033ae81deaef7"
     }
   ],
   "schema_version": 1,

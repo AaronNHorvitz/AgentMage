@@ -167,7 +167,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "9ac985a797454978c5096086035d70684c9f4b9d081d35a0a0d55a0090b832af"
+          "content": "1f380e8f2b8d0c9c327f00559aede7a6c922a7943df0007468cb7198be47d218"
         }
       ],
       "integrity": null,
@@ -2527,7 +2527,7 @@
       "hashes": [
         {
           "algorithm": "SHA-256",
-          "content": "93524384eab65b8b68269f1c7c55d84a8d08de86e6858f46ceacf338983bec45"
+          "content": "829a956c293ce406d218e39f4941f8332f694c24cca790c48ace7ec8d0dfd741"
         }
       ],
       "integrity": null,
@@ -13115,7 +13115,7 @@
     "Cargo.lock": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e",
     "Cargo.toml": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b",
     "package-lock.json": "9a227c91b67969a1f3ec50a7d3cfe7f2fbf8337f903444f39bfc73df3dd33fc5",
-    "package.json": "93524384eab65b8b68269f1c7c55d84a8d08de86e6858f46ceacf338983bec45",
+    "package.json": "829a956c293ce406d218e39f4941f8332f694c24cca790c48ace7ec8d0dfd741",
     "platforms/macos/Package.resolved": "5b5e7b222df13b8f50caf4f16a31cddc336aaffca1859dae1513e29eeeb0b71d",
     "platforms/macos/Package.swift": "180ad855bcc16e5c395ed3490b8f1d7be5fa552e20ecaac551220cdfe1d72948",
     "rust-toolchain.toml": "e3a213e0d222e94d213cafbc20932eb3f76c643b4dd63756acf95192df2aa310",

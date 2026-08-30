@@ -1556,9 +1556,17 @@ an effect or treating approval as reusable authority.
   This closes the current pure retry-admission and synchronized in-runtime gate criterion without
   native tool, provider, or model execution, not cross-process crash durability, installed-product,
   cross-platform, independent-review, Story, Sprint, packaging, or release gates.
-- [ ] **Story AC 5.2.AC3:** Given repeated failures or no-progress state, when a declared budget is
+- [x] **Story AC 5.2.AC3:** Given repeated failures or no-progress state, when a declared budget is
   reached, then the workflow terminates within that bound with one actionable diagnosis and no
-  additional effect.
+  additional effect. Evidence: a criterion-specific product regression reaches and then rejects the
+  next charge for parser repair, model repair, step attempt, replan, all 14 per-failure-class limits,
+  and independent total workflow work: 19 exhaustion cases leave usage unchanged and return one
+  closed reason plus one descriptive next action. A complete state reaches its exact two-repeat
+  no-progress bound only after two preterminal decisions; its diagnosis then remains sticky.
+  Automatic continuation/retry, authority consumption, and additional effects remain zero. Five
+  evidence mutation/omission/overclaim tests pass. This closes the current deterministic budget,
+  repeated-state, and diagnosis criterion with synthetic state, not installed-product,
+  cross-platform, independent-review, Story, Sprint, packaging, or release gates.
 
 #### Sprint Acceptance Criteria
 

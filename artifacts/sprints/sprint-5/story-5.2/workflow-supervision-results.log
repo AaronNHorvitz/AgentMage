@@ -4,11 +4,11 @@ $ cargo test -p agentmage-kernel-engine workflow_budget::tests --locked
 
 running 4 tests
 test workflow_budget::tests::missing_or_duplicate_error_classes_cannot_form_a_policy ... ok
-test workflow_budget::tests::content_identity_is_immutable_and_substitution_is_denied ... ok
 test workflow_budget::tests::every_dimension_is_separate_and_every_error_class_is_exact ... ok
+test workflow_budget::tests::content_identity_is_immutable_and_substitution_is_denied ... ok
 test workflow_budget::tests::checked_arithmetic_and_total_budget_fail_without_partial_consumption ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 691 filtered out; finished in 0.00s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 703 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -80,7 +80,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -99,6 +99,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
 
@@ -115,7 +121,7 @@ test workflow_progress::tests::policy_identity_is_immutable_and_substitution_cha
 test workflow_progress::tests::non_adjacent_repeated_state_stops_at_the_exact_policy_limit ... ok
 test workflow_progress::tests::fingerprint_is_deterministic_complete_and_boundary_preserving ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 691 filtered out; finished in 0.00s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 703 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -187,7 +193,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -206,6 +212,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
 
@@ -216,13 +228,14 @@ $ cargo test -p agentmage-kernel-engine workflow_termination::tests --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
-running 4 tests
+running 5 tests
 test workflow_termination::tests::every_policy_denial_has_one_exact_safe_nonexecuting_action ... ok
 test workflow_termination::tests::terminal_output_has_no_caller_text_identity_or_authority_surface ... ok
 test workflow_termination::tests::exhausted_and_saturated_budgets_are_inert_and_do_not_change_usage ... ok
 test workflow_termination::tests::only_exact_repeated_state_stop_terminates_and_detector_remains_unchanged ... ok
+test workflow_termination::tests::story_5_2_declared_budget_or_no_progress_terminates_once_without_effect ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 691 filtered out; finished in 0.00s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 702 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -294,7 +307,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -313,6 +326,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
 

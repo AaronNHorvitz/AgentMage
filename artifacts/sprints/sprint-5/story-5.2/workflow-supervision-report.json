@@ -21,14 +21,14 @@
       "sha256": "9c6f63d953fed91495184a09fd9c701997955fd82ff434bfa54096fa83d1833d"
     },
     {
-      "byte_length": 14604,
+      "byte_length": 20394,
       "path": "kernel/engine/src/workflow_termination.rs",
-      "sha256": "e943f7a84597620cd103d646773abaea9b6b4d9fd6bacc12a11101ec611a5f8a"
+      "sha256": "3a3c922ac81df779506d7ad85c07d3cd849f8fcbac1c765ca6da14d2dd6457e1"
     },
     {
-      "byte_length": 8153,
+      "byte_length": 8239,
       "path": "scripts/workflow_supervision_evidence.py",
-      "sha256": "897097fc5abd6314c306d55e207bd1382bcfe302b2bbd4128d510f0380c9a454"
+      "sha256": "26c19a541bc26f1ad776cc99422ccc4d2aade1c3a8017e2db50e8eb8e922d33a"
     },
     {
       "byte_length": 3734,
@@ -36,9 +36,9 @@
       "sha256": "daa4e30bf6d08d142043581489329009d24712969b47d53966638dd7436726df"
     },
     {
-      "byte_length": 12767,
+      "byte_length": 13504,
       "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-results.log",
-      "sha256": "154408d333ed2e8a68aca235f6f80eb62dc43ae440f1a8a2277141b9e5c7559f"
+      "sha256": "e1304c51b84525e6de7794e3ac68ed2cb878b473b004cf1a9ad19d2403689578"
     }
   ],
   "budget_dimensions": [
@@ -113,6 +113,7 @@
     "exhausted_and_saturated_budgets_are_inert_and_do_not_change_usage ... ok",
     "every_policy_denial_has_one_exact_safe_nonexecuting_action ... ok",
     "only_exact_repeated_state_stop_terminates_and_detector_remains_unchanged ... ok",
+    "story_5_2_declared_budget_or_no_progress_terminates_once_without_effect ... ok",
     "terminal_output_has_no_caller_text_identity_or_authority_surface ... ok"
   ],
   "schema_version": 1,

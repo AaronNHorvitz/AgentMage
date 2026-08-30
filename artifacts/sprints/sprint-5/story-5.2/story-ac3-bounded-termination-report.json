@@ -1,0 +1,102 @@
+{
+  "acceptance_truth": {
+    "additional_effect_count": 0,
+    "automatic_continuation_allowed": false,
+    "automatic_retry_allowed": false,
+    "budget_dimension_count": 6,
+    "budget_termination_case_count": 19,
+    "current_supervision_scope_complete": true,
+    "failure_class_count": 14,
+    "independent_review_complete": false,
+    "independent_total_work_limit_cases": 1,
+    "model_inference_executed": false,
+    "native_platform_complete": false,
+    "no_progress_repeat_limit": 2,
+    "one_actionable_diagnosis_per_termination": true,
+    "preterminal_progress_decision_count": 2,
+    "primary_or_error_class_limit_cases": 18,
+    "rejected_budget_charge_mutations": 0,
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "terminal_diagnosis_sticky": true
+  },
+  "artifacts": [
+    {
+      "byte_length": 1163,
+      "path": "docs/verification/story-5-2-ac3-bounded-termination.md",
+      "sha256": "001cc9c7bf2bce1615f0535fe8e3af52ebcd93ee830f1dd4cd612190576c0ab8"
+    },
+    {
+      "byte_length": 9064,
+      "path": "scripts/story_5_2_ac3_evidence.py",
+      "sha256": "aa21206160a00d67005d580e013891e7b40b0f5cb3463e25df433c03eb2a73bc"
+    },
+    {
+      "byte_length": 2864,
+      "path": "tests/test_story_5_2_ac3_evidence.py",
+      "sha256": "0b293eb781f205bdd8dab972dd4f42ed6b9473e2abd812e87eebdb775ee5dc82"
+    },
+    {
+      "byte_length": 992,
+      "path": "artifacts/sprints/sprint-5/story-5.2/story-ac3-bounded-termination-results.log",
+      "sha256": "47670093b0db9cf18e695ceee1f569856027fabbf2e4588a811a0ceea4f542ec"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --lib workflow_termination::tests::story_5_2_declared_budget_or_no_progress_terminates_once_without_effect -- --exact",
+    "python3 scripts/workflow_supervision_evidence.py",
+    "python3 scripts/story_5_2_policy_evidence.py"
+  ],
+  "criterion_id": "5.2.AC3",
+  "generated_on": "2026-08-30",
+  "limitations": [
+    "the criterion closes the current deterministic budget, repeated-state, and terminal-diagnosis scope",
+    "the campaign uses synthetic state and executes no workflow, model, tool, or provider effect",
+    "installed-product and cross-platform supervision evidence remain later gates",
+    "independent review, Story, Sprint, packaging, and release completion are not claimed"
+  ],
+  "record_type": "agentmage-story-acceptance-evidence",
+  "required_markers": [
+    "test workflow_termination::tests::story_5_2_declared_budget_or_no_progress_terminates_once_without_effect ... ok",
+    "Workflow supervision evidence validated through Sub-task 5.2.3.3",
+    "Story 5.2 policy evidence validated through Sub-task 5.2.4.3"
+  ],
+  "retained_evidence": [
+    {
+      "byte_length": 18790,
+      "path": "kernel/engine/src/workflow_budget.rs",
+      "sha256": "073471b4773e882438f64900daf107ecd58e7d3a7e70528b6e13aa31ced4f49b"
+    },
+    {
+      "byte_length": 17154,
+      "path": "kernel/engine/src/workflow_progress.rs",
+      "sha256": "9c6f63d953fed91495184a09fd9c701997955fd82ff434bfa54096fa83d1833d"
+    },
+    {
+      "byte_length": 20394,
+      "path": "kernel/engine/src/workflow_termination.rs",
+      "sha256": "3a3c922ac81df779506d7ad85c07d3cd849f8fcbac1c765ca6da14d2dd6457e1"
+    },
+    {
+      "byte_length": 4651,
+      "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-report.json",
+      "sha256": "4fdc42d07d550964c57ed560f1977fb8b4c5dbc1653cbb3016e8aa262c56a4d7"
+    },
+    {
+      "byte_length": 13504,
+      "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-results.log",
+      "sha256": "e1304c51b84525e6de7794e3ac68ed2cb878b473b004cf1a9ad19d2403689578"
+    },
+    {
+      "byte_length": 8937,
+      "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
+      "sha256": "00c55900ca368ae810eae661a4cf87cbeec961ed4b6606c1c97033ae81deaef7"
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass-local-current-supervision-scope",
+  "story_id": "5.2"
+}
