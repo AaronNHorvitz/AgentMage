@@ -1879,11 +1879,11 @@ and their focused tests are enrolled in the mandatory documentation gate.
 - [ ] **Story AC 7.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then linux evidence cannot satisfy Mac gates, Mac evidence cannot satisfy Linux gates, and all result bundles identify exact hardware/software context without secrets.
 
 **Current story-gate evidence:** The automated [`story_7_1_gate.py`](scripts/story_7_1_gate.py)
-aggregate reviews immutable commit `d250940fd79657d90bb0e7fcb565f6ef4b814457` and tree
-`88d0562139ceef2da0e7561ec7e0f35991057485`, verifies 16 exact contract, manifest, result,
+aggregate reviews immutable commit `26b138409a79777bd112b4dcf00dd920335ed77d` and tree
+`3fe49073e79af6da51a1d67711c9d5a8a96baa82`, verifies 16 exact contract, manifest, result,
 test, and security artifacts, and publishes the retained
 [`story-gate-report.json`](artifacts/sprints/sprint-7/story-7.1/story-gate-report.json) with SHA-256
-`c5242840981fb0406ccb7e28603c5f7b51da686d083143d4beb6a6da8f022240`. Available-platform
+`c01b78817cdf7242a4eac526456e040bf0f19d236a325e60205575aeefce1c5d`. Available-platform
 evidence separation passes; shared boundary closure is partial because installed runtime components
 do not yet resolve to release-derived manifests. Native Linux mechanisms, macOS manifests and
 execution, release-package evidence, installed-product evidence, and independent external
