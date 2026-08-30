@@ -71,15 +71,15 @@
     },
     {
       "path": "scripts/macos_kernel_host_source_contract.py",
-      "sha256": "8397f56f86096b3fd4dd9528ce327a544ac32c752bdb51472863fbffc6af297b"
+      "sha256": "1e3da1cda0582a86c6166d59c08793cbba0e94ead6543d2571677024521ee688"
     },
     {
       "path": "tests/test_macos_kernel_host_source_contract.py",
       "sha256": "59f747ef169ef60d8ca700152cccb4232b4b07a5ca1ffe86972fe791a3bacf86"
     }
   ],
-  "source_revision": "c08c939fb628781a0c78b15b50b92b4a00b7dd71",
-  "source_tree": "078aac7a1b15d7ecaf53884314dd7898c7abe1f0",
+  "source_revision": "3cecf9f7fe07500d20c707c1f78f4acb4ad39c4d",
+  "source_tree": "3e1a07d8a09c66219f8615e02a14f4592b960b73",
   "status": "partial-source-only-blocked-macos",
   "task_id": "8.1.1.1"
 }

@@ -174,7 +174,7 @@
     "evidence:story7.1-gate:check": "python3 -m unittest tests.test_story_7_1_gate",
     "evidence:sprint7-gate:build": "python3 scripts/sprint_7_gate.py --write && python3 -m unittest tests.test_sprint_7_gate",
     "evidence:sprint7-gate:check": "python3 -m unittest tests.test_sprint_7_gate",
-    "evidence:story8.1-kernel-host-source:build": "python3 scripts/macos_kernel_host_source_contract.py --write --source-revision HEAD && python3 -m unittest tests.test_macos_kernel_host_source_contract",
+    "evidence:story8.1-kernel-host-source:build": "python3 scripts/macos_kernel_host_source_contract.py --write && python3 -m unittest tests.test_macos_kernel_host_source_contract",
     "evidence:story8.1-kernel-host-source:check": "python3 scripts/macos_kernel_host_source_contract.py && python3 -m unittest tests.test_macos_kernel_host_source_contract",
     "evidence:story9.1-linux-controls:build": "python3 scripts/linux_sandbox_evidence.py --write --source-revision HEAD",
     "evidence:story9.1-linux-controls:check": "python3 scripts/linux_sandbox_evidence.py",
