@@ -22,15 +22,16 @@ cannot cross extraction identity, a context disposition cannot name a section fr
 and persisted retention cannot separate the physical artifact from its payload digest or size.
 
 Focused encrypted SQLCipher tests prove the exact table closure, migration history from schema 1
-through schema 12, recovery of an interrupted migration campaign, one complete synthetic normalized
+through the current schema 13, recovery of an interrupted migration campaign, one complete synthetic normalized
 family over exactly one pre-existing runtime payload, and rejection of unsupported-reference,
 non-producing-extraction, nonterminal-disposition, and mismatched-retention mutations. Strict Clippy
 also passes.
 
 ## Deliberately open scope
 
-This is a structural schema increment. Typed publication, content-hash deduplication semantics,
-refresh and transitive invalidation, expiry/deletion/hold/garbage-collection transactions, complete
+This is a structural schema increment. It does not itself claim typed publication or content-hash
+deduplication semantics; the latter is covered by the separate Sub-task 11.2.1.2 evidence. Refresh
+and transitive invalidation, expiry/deletion/hold/garbage-collection transactions, complete
 migration matrices, backup/export/restore expansion, and exhaustive crash campaigns remain assigned
-to Sub-tasks 11.2.1.2 through 11.2.4.3. Story, Sprint, platform, and release completion are not
+to Sub-tasks 11.2.1.3 through 11.2.4.3. Story, Sprint, platform, and release completion are not
 claimed.

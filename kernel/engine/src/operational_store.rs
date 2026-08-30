@@ -76,7 +76,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 12;
+const SCHEMA_VERSION: i64 = 13;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -165,6 +165,8 @@ const MIGRATION_11_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0011-engineering-runtime.sql");
 const MIGRATION_12_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0012-source-artifact-materializations.sql");
+const MIGRATION_13_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0013-source-content-deduplication.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -3242,6 +3244,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 12_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 12;
+    }
+    if version == 12 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_13_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (13, ?1)",
+                [sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -3274,6 +3297,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (10, sha256_hex(MIGRATION_10_SCHEMA_SQL.as_bytes())),
             (11, sha256_hex(MIGRATION_11_SCHEMA_SQL.as_bytes())),
             (12, sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())),
+            (13, sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -5095,11 +5119,12 @@ mod tests {
         MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, MIGRATION_4_SCHEMA_SQL,
         MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, MIGRATION_7_SCHEMA_SQL,
         MIGRATION_8_SCHEMA_SQL, MIGRATION_9_SCHEMA_SQL, MIGRATION_10_SCHEMA_SQL,
-        MIGRATION_11_SCHEMA_SQL, MIGRATION_12_SCHEMA_SQL, OperationalStore, OperationalStoreError,
-        OperationalStoreKeyError, OperationalStoreKeyLifecycle, OperationalStoreKeyProvider,
-        RetentionAssignment, RetentionDisposition, RetentionHoldKind, RetentionRecordFamily,
-        RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path,
-        open_connection, prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        MIGRATION_11_SCHEMA_SQL, MIGRATION_12_SCHEMA_SQL, MIGRATION_13_SCHEMA_SQL,
+        OperationalStore, OperationalStoreError, OperationalStoreKeyError,
+        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
+        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
+        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
+        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
         verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
@@ -7105,6 +7130,347 @@ mod tests {
     }
 
     #[test]
+    fn source_content_deduplication_preserves_every_logical_identity() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([12; 32]))
+            .expect("version thirteen store");
+        let payload_sha256 = sha256_hex(b"one shared source payload");
+        let record = b"{}".as_slice();
+
+        for (suffix, policy_sha256) in [("a", hash('1')), ("b", hash('2'))] {
+            store
+                .connection
+                .execute(
+                    "INSERT INTO runtime_runs VALUES (
+                        ?1, ?2, ?3, ?4, ?5, ?6, ?7, 0, ?8, ?9, 1, 0,
+                        NULL, NULL, 1000, 1000
+                     )",
+                    params![
+                        format!("run-source-{suffix}"),
+                        format!("session-source-{suffix}"),
+                        format!("task-source-{suffix}"),
+                        format!("correlation-source-{suffix}"),
+                        format!("policy-source-{suffix}"),
+                        &policy_sha256,
+                        sha256_hex(format!("catalog-{suffix}").as_bytes()),
+                        format!("event-source-{suffix}"),
+                        sha256_hex(format!("event-{suffix}").as_bytes()),
+                    ],
+                )
+                .expect("runtime owner");
+        }
+        store
+            .connection
+            .execute(
+                "INSERT INTO runtime_payloads VALUES (?1, 25, 'active', 2, 1000, 1000)",
+                [&payload_sha256],
+            )
+            .expect("one content-addressed physical payload");
+        for (suffix, sensitivity, retention_kind, expires_at) in [
+            ("a", "internal", "until_expiration", 2000_i64),
+            ("b", "restricted", "user_hold", 0_i64),
+        ] {
+            store
+                .connection
+                .execute(
+                    "INSERT INTO runtime_artifacts(
+                        artifact_id, manifest_sha256, payload_sha256, byte_size, media_type,
+                        artifact_kind, sensitivity, retention_kind, retention_expires_at_epoch_ms,
+                        session_id, task_id, producer_run_id, producer_turn_id,
+                        producer_operation_id, receipt_id, policy_id, policy_sha256,
+                        created_at_epoch_ms, manifest_json
+                     ) VALUES (
+                        ?1, ?2, ?3, 25, 'text/plain', 'report', ?4, ?5, ?6,
+                        ?7, ?8, ?9, NULL, NULL, NULL, ?10, ?11, 1000, ?12
+                     )",
+                    params![
+                        format!("runtime-artifact-source-{suffix}"),
+                        sha256_hex(format!("runtime-manifest-{suffix}").as_bytes()),
+                        &payload_sha256,
+                        sensitivity,
+                        retention_kind,
+                        (expires_at != 0).then_some(expires_at),
+                        format!("session-source-{suffix}"),
+                        format!("task-source-{suffix}"),
+                        format!("run-source-{suffix}"),
+                        format!("policy-source-{suffix}"),
+                        if suffix == "a" { hash('1') } else { hash('2') },
+                        record,
+                    ],
+                )
+                .expect("distinct logical runtime artifact over shared bytes");
+        }
+
+        let transaction = store
+            .connection
+            .transaction()
+            .expect("deduplicated source transaction");
+        let insert_source = |suffix: &str,
+                             authority: &str,
+                             origin_class: &str,
+                             reference_class: &str,
+                             classification: &str,
+                             freshness: &str,
+                             retention_policy: &str|
+         -> rusqlite::Result<()> {
+            transaction.execute(
+                "INSERT INTO source_origins VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    format!("origin-source-{suffix}"),
+                    format!("request-source-{suffix}"),
+                    authority,
+                    origin_class,
+                    "2026-08-30T00:00:00Z",
+                    sha256_hex(format!("origin-{suffix}").as_bytes()),
+                    record,
+                ],
+            )?;
+            transaction.execute(
+                "INSERT INTO source_references VALUES (?1, ?2, ?3, ?4, 'supported', ?5, ?6, ?7)",
+                params![
+                    format!("reference-source-{suffix}"),
+                    format!("request-source-{suffix}"),
+                    authority,
+                    reference_class,
+                    sha256_hex(format!("reference-{suffix}").as_bytes()),
+                    "2026-08-30T00:00:00Z",
+                    record,
+                ],
+            )?;
+            let provenance_sha256 = sha256_hex(format!("provenance-{suffix}").as_bytes());
+            transaction.execute(
+                "INSERT INTO source_manifests VALUES (
+                    ?1, ?2, ?3, ?4, ?5, ?6, ?7, 'text/plain', ?8, ?9, 'captured',
+                    ?10, ?11, 25, ?12, ?13, ?14
+                 )",
+                params![
+                    format!("source-artifact-{suffix}"),
+                    format!("request-source-{suffix}"),
+                    authority,
+                    format!("reference-source-{suffix}"),
+                    format!("origin-source-{suffix}"),
+                    format!("provenance-source-{suffix}"),
+                    &provenance_sha256,
+                    classification,
+                    freshness,
+                    format!("runtime-artifact-source-{suffix}"),
+                    &payload_sha256,
+                    "2026-08-30T00:00:00Z",
+                    sha256_hex(format!("source-manifest-{suffix}").as_bytes()),
+                    record,
+                ],
+            )?;
+            transaction.execute(
+                "INSERT INTO source_provenance VALUES (
+                    ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10
+                 )",
+                params![
+                    format!("provenance-source-{suffix}"),
+                    format!("source-artifact-{suffix}"),
+                    format!("reference-source-{suffix}"),
+                    format!("origin-source-{suffix}"),
+                    classification,
+                    freshness,
+                    "2026-08-30T00:00:00Z",
+                    "2026-08-30T00:00:00Z",
+                    &provenance_sha256,
+                    record,
+                ],
+            )?;
+            transaction.execute(
+                "INSERT INTO source_retentions VALUES (
+                    ?1, ?2, ?3, ?4, 'session', ?5, 'policy_persisted', ?6,
+                    '2026-08-31T00:00:00Z', ?7, ?8, 25, 'encrypted_at_rest', ?9,
+                    'active', NULL, 1, ?10, ?11, ?12
+                 )",
+                params![
+                    format!("retention-source-{suffix}"),
+                    format!("source-artifact-{suffix}"),
+                    format!("request-source-{suffix}"),
+                    authority,
+                    format!("session-source-{suffix}"),
+                    retention_policy,
+                    format!("runtime-artifact-source-{suffix}"),
+                    &payload_sha256,
+                    sha256_hex(format!("protected-metadata-{suffix}").as_bytes()),
+                    "2026-08-30T00:00:00Z",
+                    sha256_hex(format!("retention-{suffix}").as_bytes()),
+                    record,
+                ],
+            )?;
+            Ok(())
+        };
+        insert_source(
+            "a",
+            "authority-source-a",
+            "file",
+            "file_path",
+            "internal",
+            "fresh",
+            "retention-policy-source-a",
+        )
+        .expect("first logical source");
+        insert_source(
+            "b",
+            "authority-source-b",
+            "uri",
+            "remote_uri",
+            "restricted",
+            "renamed",
+            "retention-policy-source-b",
+        )
+        .expect("second distinct logical source");
+        transaction.commit().expect("deduplicated sources commit");
+
+        let counts: (i64, i64, i64, i64) = store
+            .connection
+            .query_row(
+                "SELECT
+                    (SELECT COUNT(*) FROM runtime_payloads),
+                    (SELECT active_reference_count FROM runtime_payloads WHERE payload_sha256 = ?1),
+                    (SELECT COUNT(*) FROM runtime_artifacts WHERE payload_sha256 = ?1),
+                    (SELECT COUNT(*) FROM source_manifests WHERE payload_sha256 = ?1)",
+                [&payload_sha256],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+            )
+            .expect("deduplication counts");
+        assert_eq!(counts, (1, 2, 2, 2));
+        let identities: (i64, i64, i64, i64, i64) = store
+            .connection
+            .query_row(
+                "SELECT COUNT(DISTINCT origin_id), COUNT(DISTINCT authority_id),
+                        COUNT(DISTINCT classification), COUNT(DISTINCT freshness_state),
+                        COUNT(DISTINCT physical_artifact_id)
+                 FROM source_manifests WHERE payload_sha256 = ?1",
+                [&payload_sha256],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                    ))
+                },
+            )
+            .expect("logical identity counts");
+        assert_eq!(identities, (2, 2, 2, 2, 2));
+        let retention_identities: i64 = store
+            .connection
+            .query_row(
+                "SELECT COUNT(DISTINCT retention_policy_id) FROM source_retentions
+                 WHERE payload_sha256 = ?1",
+                [&payload_sha256],
+                |row| row.get(0),
+            )
+            .expect("retention identity count");
+        assert_eq!(retention_identities, 2);
+
+        let duplicate = store
+            .connection
+            .transaction()
+            .expect("duplicate physical identity transaction");
+        duplicate
+            .execute(
+                "INSERT INTO source_origins VALUES (
+                    'origin-duplicate', 'request-duplicate', 'authority-duplicate',
+                    'file', '2026-08-30T00:00:03Z', ?1, ?2
+                 )",
+                params![sha256_hex(b"origin-duplicate"), record],
+            )
+            .expect("duplicate origin fixture");
+        duplicate
+            .execute(
+                "INSERT INTO source_references VALUES (
+                    'reference-duplicate', 'request-duplicate', 'authority-duplicate',
+                    'file_path', 'supported', ?1, '2026-08-30T00:00:03Z', ?2
+                 )",
+                params![sha256_hex(b"reference-duplicate"), record],
+            )
+            .expect("duplicate reference fixture");
+        assert!(
+            duplicate
+                .execute(
+                    "INSERT INTO source_manifests VALUES (
+                        'source-artifact-duplicate', 'request-duplicate', 'authority-duplicate',
+                        'reference-duplicate', 'origin-duplicate', 'provenance-duplicate', ?1,
+                        'text/plain', 'confidential', 'fresh', 'captured',
+                        'runtime-artifact-source-a', ?2, 25, '2026-08-30T00:00:03Z', ?3, ?4
+                     )",
+                    params![
+                        sha256_hex(b"provenance-duplicate"),
+                        &payload_sha256,
+                        sha256_hex(b"manifest-duplicate"),
+                        record,
+                    ],
+                )
+                .is_err(),
+            "one physical artifact identity cannot merge two logical sources"
+        );
+        drop(duplicate);
+
+        assert!(
+            store
+                .connection
+                .execute(
+                    "UPDATE source_provenance SET classification = 'internal'
+                     WHERE provenance_id = 'provenance-source-b'",
+                    [],
+                )
+                .is_err(),
+            "classification and freshness identity are immutable"
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "UPDATE source_retentions SET authority_id = 'authority-source-a'
+                     WHERE retention_id = 'retention-source-b'",
+                    [],
+                )
+                .is_err(),
+            "retention cannot merge into another authority identity"
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "UPDATE source_origins SET authority_id = 'authority-source-a'
+                     WHERE origin_id = 'origin-source-b'",
+                    [],
+                )
+                .is_err(),
+            "origin identity is immutable"
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "UPDATE source_references SET request_id = 'request-source-a'
+                     WHERE reference_id = 'reference-source-b'",
+                    [],
+                )
+                .is_err(),
+            "reference identity is immutable"
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "UPDATE source_retentions
+                     SET retention_policy_id = 'retention-policy-source-a'
+                     WHERE retention_id = 'retention-source-b'",
+                    [],
+                )
+                .is_err(),
+            "active persisted retention policy identity is immutable"
+        );
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
     fn encrypted_repository_cache_is_exact_bounded_and_noncanonical() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
@@ -7332,7 +7698,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_twelve_with_exact_history() {
+    fn version_one_upgrades_through_thirteen_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -7367,6 +7733,7 @@ mod tests {
                 (10, sha256_hex(MIGRATION_10_SCHEMA_SQL.as_bytes())),
                 (11, sha256_hex(MIGRATION_11_SCHEMA_SQL.as_bytes())),
                 (12, sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())),
+                (13, sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -8034,7 +8401,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 12));
+                assert_eq!((version, history), (SCHEMA_VERSION, 13));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
