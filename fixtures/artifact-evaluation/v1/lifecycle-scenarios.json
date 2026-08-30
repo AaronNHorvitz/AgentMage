@@ -1,0 +1,657 @@
+{
+  "dependencies": [
+    {
+      "path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+      "sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+      "sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94"
+    },
+    {
+      "path": "fixtures/artifact-admission/v1/context-accounting-manifests.json",
+      "sha256": "dd32688df89ce2e9334b99cb7934d23dbc85a3236807b80a091471a59b91e7ca"
+    }
+  ],
+  "generated_on": "2026-08-30",
+  "generator": {
+    "path": "scripts/artifact_evaluation_lifecycle_scenarios.py",
+    "sha256": "9b29f0dfe177dd872df3b32ee1529f21ff4fd7e7ee232420fe58bed26d3f7e9d"
+  },
+  "network_access": false,
+  "product_runtime_executed": false,
+  "required_categories": [
+    "combined_artifact_token_overflow",
+    "model_profile_change",
+    "cancellation",
+    "crash",
+    "restart",
+    "cache_stale",
+    "refresh",
+    "retention",
+    "deletion"
+  ],
+  "scenario_count": 9,
+  "scenarios": [
+    {
+      "category": "combined_artifact_token_overflow",
+      "context_binding": {
+        "accounting_suite_sha256": "dd32688df89ce2e9334b99cb7934d23dbc85a3236807b80a091471a59b91e7ca",
+        "context_manifest_id": "context-token_budget_overflow-v1",
+        "context_manifest_sha256": "5869c51b80e830048d2e80e06d45548cf76401683f5db726cfc02073c68f0fb1",
+        "scenario_id": "token_budget_overflow"
+      },
+      "events": [
+        {
+          "event_kind": "sources_admitted",
+          "event_sha256": "c0d63a32c63c8fa0898ec2bca154a5714e47ceaac0890f151cbb7d23806a93ba",
+          "previous_event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "scenario_id": "artifact-evaluation-combined_artifact_token_overflow-v1",
+          "sequence": 1
+        },
+        {
+          "event_kind": "combined_budget_measured",
+          "event_sha256": "3d8564b53617031879ebeba30439b691cd87505aaf9f86e3b498169dfb520cef",
+          "previous_event_sha256": "c0d63a32c63c8fa0898ec2bca154a5714e47ceaac0890f151cbb7d23806a93ba",
+          "scenario_id": "artifact-evaluation-combined_artifact_token_overflow-v1",
+          "sequence": 2
+        },
+        {
+          "event_kind": "overflow_detected",
+          "event_sha256": "6a09f687bdad490bd080d9fbb0a229d11df27bf6e126991765f46603170753ff",
+          "previous_event_sha256": "3d8564b53617031879ebeba30439b691cd87505aaf9f86e3b498169dfb520cef",
+          "scenario_id": "artifact-evaluation-combined_artifact_token_overflow-v1",
+          "sequence": 3
+        },
+        {
+          "event_kind": "bounded_context_published",
+          "event_sha256": "746ae566f265640d444aded3b3be9e266670c9029a9646f7e8d016d4da13993d",
+          "previous_event_sha256": "6a09f687bdad490bd080d9fbb0a229d11df27bf6e126991765f46603170753ff",
+          "scenario_id": "artifact-evaluation-combined_artifact_token_overflow-v1",
+          "sequence": 4
+        }
+      ],
+      "expected": {
+        "all_sources_accounted": true,
+        "completion_allowed": false,
+        "reason_code": "combined_context_overflow_visible",
+        "terminal_state": "partial"
+      },
+      "prohibited_effects": {
+        "active_content_executions": 0,
+        "external_relationship_fetches": 0,
+        "false_completions": 0,
+        "network_calls": 0,
+        "source_mutations": 0,
+        "undeclared_persistent_writes": 0
+      },
+      "scenario_id": "artifact-evaluation-combined_artifact_token_overflow-v1",
+      "scenario_sha256": "ab5308c161aca3839c19a08e15d71a7692702065b81850d9f65e53beb3f7a4c0",
+      "source_fixtures": [
+        {
+          "byte_length": 26214400,
+          "category": "bounded_25_mib_log",
+          "fixture_id": "eval-log-25mib-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+          "manifest_sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e",
+          "sha256": "326f3ebf5ad9dd60d9e6d20cc2a93ded5bda72b3c327d0603d9e874a43449200"
+        },
+        {
+          "byte_length": 617,
+          "category": "pdf_digital",
+          "fixture_id": "eval-pdf-digital-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "manifest_sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94",
+          "sha256": "a1f807e3c039eb707bcbaf19e4a2b8a0be2c992ba629b434824af0b83cc08991"
+        },
+        {
+          "byte_length": 1409,
+          "category": "docx_structured",
+          "fixture_id": "eval-docx-structured-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "manifest_sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94",
+          "sha256": "bfae3d024c5e759cd1ea82af5bbe88a0ca57664dea8143ce9730418bbbd73598"
+        },
+        {
+          "byte_length": 2479,
+          "category": "xlsx_structured",
+          "fixture_id": "eval-xlsx-structured-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "manifest_sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94",
+          "sha256": "6cccaf7afc0cf8652cf1c028ec40fef4a1a65f401fd6d666fb5baa7b8a5de53f"
+        }
+      ]
+    },
+    {
+      "category": "model_profile_change",
+      "context_binding": {
+        "accounting_suite_sha256": "dd32688df89ce2e9334b99cb7934d23dbc85a3236807b80a091471a59b91e7ca",
+        "context_manifest_id": "context-model_profile_change-v1",
+        "context_manifest_sha256": "dec1c31568547f242d4cc53f6071b1a5c9955184f05eed4adc874fd66ec4224b",
+        "scenario_id": "model_profile_change"
+      },
+      "events": [
+        {
+          "event_kind": "prior_profile_bound",
+          "event_sha256": "a88d553a18e1a9196709ebb3795075ff4503d5adc21f034411edd9e6ab230c3e",
+          "previous_event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "scenario_id": "artifact-evaluation-model_profile_change-v1",
+          "sequence": 1
+        },
+        {
+          "event_kind": "profile_changed",
+          "event_sha256": "d11c04d97ed841f9d46a422599c741ad9b795e85d8ed40e303a6666142b27b90",
+          "previous_event_sha256": "a88d553a18e1a9196709ebb3795075ff4503d5adc21f034411edd9e6ab230c3e",
+          "scenario_id": "artifact-evaluation-model_profile_change-v1",
+          "sequence": 2
+        },
+        {
+          "event_kind": "prior_context_invalidated",
+          "event_sha256": "80ed14f50487e81d28b83fec4768c049fccef3d8e7dd63cd64a7608d4b2c7f24",
+          "previous_event_sha256": "d11c04d97ed841f9d46a422599c741ad9b795e85d8ed40e303a6666142b27b90",
+          "scenario_id": "artifact-evaluation-model_profile_change-v1",
+          "sequence": 3
+        },
+        {
+          "event_kind": "fresh_manifest_required",
+          "event_sha256": "b924b1123957b9586cb9d2bd76743700e36e3ef199fc160ec20cc7c96a2817ea",
+          "previous_event_sha256": "80ed14f50487e81d28b83fec4768c049fccef3d8e7dd63cd64a7608d4b2c7f24",
+          "scenario_id": "artifact-evaluation-model_profile_change-v1",
+          "sequence": 4
+        }
+      ],
+      "expected": {
+        "completion_allowed": false,
+        "reason_code": "model_profile_binding_changed",
+        "stale_context_reused": false,
+        "terminal_state": "stale"
+      },
+      "prohibited_effects": {
+        "active_content_executions": 0,
+        "external_relationship_fetches": 0,
+        "false_completions": 0,
+        "network_calls": 0,
+        "source_mutations": 0,
+        "undeclared_persistent_writes": 0
+      },
+      "scenario_id": "artifact-evaluation-model_profile_change-v1",
+      "scenario_sha256": "ae2a0a00325d5312fd94887807666097159d9222616c1f6f789ddd268e6946f2",
+      "source_fixtures": [
+        {
+          "byte_length": 26214400,
+          "category": "bounded_25_mib_log",
+          "fixture_id": "eval-log-25mib-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+          "manifest_sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e",
+          "sha256": "326f3ebf5ad9dd60d9e6d20cc2a93ded5bda72b3c327d0603d9e874a43449200"
+        },
+        {
+          "byte_length": 617,
+          "category": "pdf_digital",
+          "fixture_id": "eval-pdf-digital-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "manifest_sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94",
+          "sha256": "a1f807e3c039eb707bcbaf19e4a2b8a0be2c992ba629b434824af0b83cc08991"
+        }
+      ]
+    },
+    {
+      "category": "cancellation",
+      "context_binding": null,
+      "events": [
+        {
+          "event_kind": "source_admitted",
+          "event_sha256": "6c7a709b480e38946b26634af91aafa819b4b60f62ded7d5dde1b5bcaf65eb63",
+          "previous_event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "scenario_id": "artifact-evaluation-cancellation-v1",
+          "sequence": 1
+        },
+        {
+          "event_kind": "extraction_started",
+          "event_sha256": "8b3b826885332889a867a9864f9587f840c3511c6b9e26e0c6dd5909b736f507",
+          "previous_event_sha256": "6c7a709b480e38946b26634af91aafa819b4b60f62ded7d5dde1b5bcaf65eb63",
+          "scenario_id": "artifact-evaluation-cancellation-v1",
+          "sequence": 2
+        },
+        {
+          "event_kind": "cancellation_requested",
+          "event_sha256": "57549b3926a7bf76af48a6a25207504f754af200b543412931eea7a9a98ce665",
+          "previous_event_sha256": "8b3b826885332889a867a9864f9587f840c3511c6b9e26e0c6dd5909b736f507",
+          "scenario_id": "artifact-evaluation-cancellation-v1",
+          "sequence": 3
+        },
+        {
+          "event_kind": "owned_state_cleaned",
+          "event_sha256": "1d383a63916da976126d094c5fadfb1f85b9fab01fed7e4dfd00e753ac103e78",
+          "previous_event_sha256": "57549b3926a7bf76af48a6a25207504f754af200b543412931eea7a9a98ce665",
+          "scenario_id": "artifact-evaluation-cancellation-v1",
+          "sequence": 4
+        },
+        {
+          "event_kind": "cancelled_terminal",
+          "event_sha256": "56c12a55ec854334173301bf4f2fd1614a0e5474a99c8983bccac894c3379fa1",
+          "previous_event_sha256": "1d383a63916da976126d094c5fadfb1f85b9fab01fed7e4dfd00e753ac103e78",
+          "scenario_id": "artifact-evaluation-cancellation-v1",
+          "sequence": 5
+        }
+      ],
+      "expected": {
+        "completion_allowed": false,
+        "derivative_published": false,
+        "reason_code": "user_cancellation",
+        "residue_count": 0,
+        "terminal_state": "cancelled"
+      },
+      "prohibited_effects": {
+        "active_content_executions": 0,
+        "external_relationship_fetches": 0,
+        "false_completions": 0,
+        "network_calls": 0,
+        "source_mutations": 0,
+        "undeclared_persistent_writes": 0
+      },
+      "scenario_id": "artifact-evaluation-cancellation-v1",
+      "scenario_sha256": "fa8fa989e22c2c82cab480bfb2138bd736e6e078cb6e519278891f9a1f7cd28e",
+      "source_fixtures": [
+        {
+          "byte_length": 1409,
+          "category": "docx_structured",
+          "fixture_id": "eval-docx-structured-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "manifest_sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94",
+          "sha256": "bfae3d024c5e759cd1ea82af5bbe88a0ca57664dea8143ce9730418bbbd73598"
+        }
+      ]
+    },
+    {
+      "category": "crash",
+      "context_binding": null,
+      "events": [
+        {
+          "event_kind": "source_admitted",
+          "event_sha256": "22e6eb51eed009cce1822fd930613e7af6d5c19fac987eacec3b5f633d818c01",
+          "previous_event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "scenario_id": "artifact-evaluation-crash-v1",
+          "sequence": 1
+        },
+        {
+          "event_kind": "checkpoint_committed",
+          "event_sha256": "c199ec5ddb76702c05df578ee920341836ffbb3df13adf10af060f24d7f5ecb5",
+          "previous_event_sha256": "22e6eb51eed009cce1822fd930613e7af6d5c19fac987eacec3b5f633d818c01",
+          "scenario_id": "artifact-evaluation-crash-v1",
+          "sequence": 2
+        },
+        {
+          "event_kind": "worker_crashed",
+          "event_sha256": "dc36c11e4ec1893f9310dc4413d2ce009ce690da0dec4ec2195bdd1d5bfcbc7c",
+          "previous_event_sha256": "c199ec5ddb76702c05df578ee920341836ffbb3df13adf10af060f24d7f5ecb5",
+          "scenario_id": "artifact-evaluation-crash-v1",
+          "sequence": 3
+        },
+        {
+          "event_kind": "outcome_marked_uncertain",
+          "event_sha256": "78165e9b2f7f6dbd9848fc85e0ababa9f0cc733b971747a96836f7a5a6ae2c51",
+          "previous_event_sha256": "dc36c11e4ec1893f9310dc4413d2ce009ce690da0dec4ec2195bdd1d5bfcbc7c",
+          "scenario_id": "artifact-evaluation-crash-v1",
+          "sequence": 4
+        }
+      ],
+      "expected": {
+        "completion_allowed": false,
+        "effect_replayed": false,
+        "reason_code": "worker_crash_requires_reconciliation",
+        "terminal_state": "uncertain"
+      },
+      "prohibited_effects": {
+        "active_content_executions": 0,
+        "external_relationship_fetches": 0,
+        "false_completions": 0,
+        "network_calls": 0,
+        "source_mutations": 0,
+        "undeclared_persistent_writes": 0
+      },
+      "scenario_id": "artifact-evaluation-crash-v1",
+      "scenario_sha256": "33b50aa472155f3b9a8aefeaef1096dad2b731f55d4b09af1ae025b0ec5cf3b3",
+      "source_fixtures": [
+        {
+          "byte_length": 1036,
+          "category": "pdf_mixed",
+          "fixture_id": "eval-pdf-mixed-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "manifest_sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94",
+          "sha256": "1f77774ec37908d35cd4b252705f408c1a4f5c6337536e770309fd0df1b9f0ce"
+        }
+      ]
+    },
+    {
+      "category": "restart",
+      "context_binding": null,
+      "events": [
+        {
+          "event_kind": "checkpoint_reopened",
+          "event_sha256": "127ae7bb902b5157a856c3f248a788817b4d427692f1c16d900f63fb037dab76",
+          "previous_event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "scenario_id": "artifact-evaluation-restart-v1",
+          "sequence": 1
+        },
+        {
+          "event_kind": "source_identity_revalidated",
+          "event_sha256": "956b571eea5a230d9ba479d918e8b26f91431648b6a9a6b03a8c2f555cbc534d",
+          "previous_event_sha256": "127ae7bb902b5157a856c3f248a788817b4d427692f1c16d900f63fb037dab76",
+          "scenario_id": "artifact-evaluation-restart-v1",
+          "sequence": 2
+        },
+        {
+          "event_kind": "prior_attempt_reconciled",
+          "event_sha256": "65940ca7ec6d3dab85ad35107e1ed5bc816bbde6338430d109f9253e976a46be",
+          "previous_event_sha256": "956b571eea5a230d9ba479d918e8b26f91431648b6a9a6b03a8c2f555cbc534d",
+          "scenario_id": "artifact-evaluation-restart-v1",
+          "sequence": 3
+        },
+        {
+          "event_kind": "fresh_attempt_admitted",
+          "event_sha256": "d4c0c9381d5b4be1ead3ae28f622cd00d58197b9607e4593a152d78751b839ff",
+          "previous_event_sha256": "65940ca7ec6d3dab85ad35107e1ed5bc816bbde6338430d109f9253e976a46be",
+          "scenario_id": "artifact-evaluation-restart-v1",
+          "sequence": 4
+        },
+        {
+          "event_kind": "partial_result_rebuilt",
+          "event_sha256": "3f6902b74e4901100cc6601a6e5b2b1e8b8bd3f8649aeda689617a3de7fb8980",
+          "previous_event_sha256": "d4c0c9381d5b4be1ead3ae28f622cd00d58197b9607e4593a152d78751b839ff",
+          "scenario_id": "artifact-evaluation-restart-v1",
+          "sequence": 5
+        }
+      ],
+      "expected": {
+        "completion_allowed": false,
+        "effect_replayed": false,
+        "reason_code": "restart_rebuilt_from_current_source",
+        "source_revalidated": true,
+        "terminal_state": "partial"
+      },
+      "prohibited_effects": {
+        "active_content_executions": 0,
+        "external_relationship_fetches": 0,
+        "false_completions": 0,
+        "network_calls": 0,
+        "source_mutations": 0,
+        "undeclared_persistent_writes": 0
+      },
+      "scenario_id": "artifact-evaluation-restart-v1",
+      "scenario_sha256": "5e445cc643b0fdb0254472887057956e8de20874bbb619393fdf05f9da81a36d",
+      "source_fixtures": [
+        {
+          "byte_length": 1036,
+          "category": "pdf_mixed",
+          "fixture_id": "eval-pdf-mixed-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "manifest_sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94",
+          "sha256": "1f77774ec37908d35cd4b252705f408c1a4f5c6337536e770309fd0df1b9f0ce"
+        }
+      ]
+    },
+    {
+      "category": "cache_stale",
+      "context_binding": null,
+      "events": [
+        {
+          "event_kind": "cache_key_loaded",
+          "event_sha256": "867d9f88773e66ee66a6afaee91eb45dda0c6db3a0a044c22729a3b85aaa0497",
+          "previous_event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "scenario_id": "artifact-evaluation-cache_stale-v1",
+          "sequence": 1
+        },
+        {
+          "event_kind": "current_source_observed",
+          "event_sha256": "dbdcd60b85573de39988975823f4802f9cf0c2bb6a465229ca6cdf3fcceb5bcd",
+          "previous_event_sha256": "867d9f88773e66ee66a6afaee91eb45dda0c6db3a0a044c22729a3b85aaa0497",
+          "scenario_id": "artifact-evaluation-cache_stale-v1",
+          "sequence": 2
+        },
+        {
+          "event_kind": "source_hash_mismatch",
+          "event_sha256": "500736cb9496af380f9b990a1d1d349c2f2a979cd1599a8d92060053d8e6da46",
+          "previous_event_sha256": "dbdcd60b85573de39988975823f4802f9cf0c2bb6a465229ca6cdf3fcceb5bcd",
+          "scenario_id": "artifact-evaluation-cache_stale-v1",
+          "sequence": 3
+        },
+        {
+          "event_kind": "cache_entry_invalidated",
+          "event_sha256": "38f78b822cfec224cc210669d50ca7e71ac8e0e7d8aecff17db411efe7342fa5",
+          "previous_event_sha256": "500736cb9496af380f9b990a1d1d349c2f2a979cd1599a8d92060053d8e6da46",
+          "scenario_id": "artifact-evaluation-cache_stale-v1",
+          "sequence": 4
+        }
+      ],
+      "expected": {
+        "cached_derivative_used": false,
+        "completion_allowed": false,
+        "reason_code": "cache_source_identity_changed",
+        "terminal_state": "stale"
+      },
+      "prohibited_effects": {
+        "active_content_executions": 0,
+        "external_relationship_fetches": 0,
+        "false_completions": 0,
+        "network_calls": 0,
+        "source_mutations": 0,
+        "undeclared_persistent_writes": 0
+      },
+      "scenario_id": "artifact-evaluation-cache_stale-v1",
+      "scenario_sha256": "868061f0034ef2ef394ad4365a4a0868e0a6051a670265c4e3a917712b0dddea",
+      "source_fixtures": [
+        {
+          "byte_length": 41,
+          "category": "stale",
+          "fixture_id": "eval-stale-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+          "manifest_sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e",
+          "sha256": "ef7e3a0de8eacc5e22c66f5f6470f464784e042ef5792da7843ea59cc93b6327"
+        }
+      ]
+    },
+    {
+      "category": "refresh",
+      "context_binding": null,
+      "events": [
+        {
+          "event_kind": "stale_entry_invalidated",
+          "event_sha256": "d2716cfbc2944d3e6f3cf2b3c5070f210645bcf58d772667e106db160ab854aa",
+          "previous_event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "scenario_id": "artifact-evaluation-refresh-v1",
+          "sequence": 1
+        },
+        {
+          "event_kind": "current_source_captured",
+          "event_sha256": "0a9bac9dd7379ec61d16f47cda9ae86bef16e42e0b0eb7746d8a144e8a79df1e",
+          "previous_event_sha256": "d2716cfbc2944d3e6f3cf2b3c5070f210645bcf58d772667e106db160ab854aa",
+          "scenario_id": "artifact-evaluation-refresh-v1",
+          "sequence": 2
+        },
+        {
+          "event_kind": "fresh_derivative_created",
+          "event_sha256": "d7107d8f28afa8cec46a3ac663afa55019efe0a49b3fc32e5977a732a6837e80",
+          "previous_event_sha256": "0a9bac9dd7379ec61d16f47cda9ae86bef16e42e0b0eb7746d8a144e8a79df1e",
+          "scenario_id": "artifact-evaluation-refresh-v1",
+          "sequence": 3
+        },
+        {
+          "event_kind": "cache_key_rebound",
+          "event_sha256": "91bda0f320f688882365255aca1d485b92df7e8c3104c030f90800a797a60871",
+          "previous_event_sha256": "d7107d8f28afa8cec46a3ac663afa55019efe0a49b3fc32e5977a732a6837e80",
+          "scenario_id": "artifact-evaluation-refresh-v1",
+          "sequence": 4
+        }
+      ],
+      "expected": {
+        "completion_allowed": true,
+        "prior_derivative_used": false,
+        "reason_code": "fresh_source_rebound",
+        "terminal_state": "captured"
+      },
+      "prohibited_effects": {
+        "active_content_executions": 0,
+        "external_relationship_fetches": 0,
+        "false_completions": 0,
+        "network_calls": 0,
+        "source_mutations": 0,
+        "undeclared_persistent_writes": 0
+      },
+      "scenario_id": "artifact-evaluation-refresh-v1",
+      "scenario_sha256": "3637e684bd7e6c7d1de6a8e3588dd6b230ca5c40ac0193023300e75ac037430c",
+      "source_fixtures": [
+        {
+          "byte_length": 41,
+          "category": "stale",
+          "fixture_id": "eval-stale-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+          "manifest_sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e",
+          "sha256": "ef7e3a0de8eacc5e22c66f5f6470f464784e042ef5792da7843ea59cc93b6327"
+        }
+      ]
+    },
+    {
+      "category": "retention",
+      "context_binding": null,
+      "events": [
+        {
+          "event_kind": "memory_only_source_active",
+          "event_sha256": "6eea1edb1eabdd990107aeca95befb506fb7d6ec3e6321cd2f11cc1ce2e8b085",
+          "previous_event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "scenario_id": "artifact-evaluation-retention-v1",
+          "sequence": 1
+        },
+        {
+          "event_kind": "retention_policy_checked",
+          "event_sha256": "883f33220ef9a3aa44c9018eadb183e6c2e38e9ee55349b553597cfe3c73394b",
+          "previous_event_sha256": "6eea1edb1eabdd990107aeca95befb506fb7d6ec3e6321cd2f11cc1ce2e8b085",
+          "scenario_id": "artifact-evaluation-retention-v1",
+          "sequence": 2
+        },
+        {
+          "event_kind": "encrypted_persistence_not_authorized",
+          "event_sha256": "d0c5af77a7603b3c31e7147506331bdd4f52e33c8a220ea7a2f7c5bf608fb707",
+          "previous_event_sha256": "883f33220ef9a3aa44c9018eadb183e6c2e38e9ee55349b553597cfe3c73394b",
+          "scenario_id": "artifact-evaluation-retention-v1",
+          "sequence": 3
+        },
+        {
+          "event_kind": "memory_source_expired",
+          "event_sha256": "1c9d7638d2cfc2ac9274c5c54e3c9169e605b43592b5722ad0406ec561a97c4a",
+          "previous_event_sha256": "d0c5af77a7603b3c31e7147506331bdd4f52e33c8a220ea7a2f7c5bf608fb707",
+          "scenario_id": "artifact-evaluation-retention-v1",
+          "sequence": 4
+        },
+        {
+          "event_kind": "owned_state_cleaned",
+          "event_sha256": "4d98cc53bce2ca5720104d4a3282fbf863b10cbaa5051a525b10e2fd1bcf7772",
+          "previous_event_sha256": "1c9d7638d2cfc2ac9274c5c54e3c9169e605b43592b5722ad0406ec561a97c4a",
+          "scenario_id": "artifact-evaluation-retention-v1",
+          "sequence": 5
+        }
+      ],
+      "expected": {
+        "completion_allowed": false,
+        "persisted_payload_count": 0,
+        "reason_code": "memory_only_retention_expired",
+        "residue_count": 0,
+        "terminal_state": "expired"
+      },
+      "prohibited_effects": {
+        "active_content_executions": 0,
+        "external_relationship_fetches": 0,
+        "false_completions": 0,
+        "network_calls": 0,
+        "source_mutations": 0,
+        "undeclared_persistent_writes": 0
+      },
+      "scenario_id": "artifact-evaluation-retention-v1",
+      "scenario_sha256": "9bc9e951cf961f1b67617720a0cd487799a96d3c9873b8ab25870c20c614276f",
+      "source_fixtures": [
+        {
+          "byte_length": 2479,
+          "category": "xlsx_structured",
+          "fixture_id": "eval-xlsx-structured-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "manifest_sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94",
+          "sha256": "6cccaf7afc0cf8652cf1c028ec40fef4a1a65f401fd6d666fb5baa7b8a5de53f"
+        }
+      ]
+    },
+    {
+      "category": "deletion",
+      "context_binding": null,
+      "events": [
+        {
+          "event_kind": "deletion_requested",
+          "event_sha256": "d6d80197524f00f509cbe6d359c01e4308c09c871444a3f5d7d4bcb0c3ec17ea",
+          "previous_event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "scenario_id": "artifact-evaluation-deletion-v1",
+          "sequence": 1
+        },
+        {
+          "event_kind": "active_references_invalidated",
+          "event_sha256": "26c89090ddb8ad0dac549895afb2b50690a2b28cfdc2bb1f348685df3f7a7958",
+          "previous_event_sha256": "d6d80197524f00f509cbe6d359c01e4308c09c871444a3f5d7d4bcb0c3ec17ea",
+          "scenario_id": "artifact-evaluation-deletion-v1",
+          "sequence": 2
+        },
+        {
+          "event_kind": "owned_payload_removed",
+          "event_sha256": "f7500382e6b2aa0b6996b6cad501659f373f6d3771fe8c1efca9568bba2d779b",
+          "previous_event_sha256": "26c89090ddb8ad0dac549895afb2b50690a2b28cfdc2bb1f348685df3f7a7958",
+          "scenario_id": "artifact-evaluation-deletion-v1",
+          "sequence": 3
+        },
+        {
+          "event_kind": "cache_entries_removed",
+          "event_sha256": "ff0beca91ccd171329584ce45687d00e4a305c6f8129c6a7d3b1c0f3a1ba839c",
+          "previous_event_sha256": "f7500382e6b2aa0b6996b6cad501659f373f6d3771fe8c1efca9568bba2d779b",
+          "scenario_id": "artifact-evaluation-deletion-v1",
+          "sequence": 4
+        },
+        {
+          "event_kind": "deletion_verified",
+          "event_sha256": "00690c5ff38509b9a6debf0985f5be6b64ff6a4a2cb277873e5b24d8a2ee5984",
+          "previous_event_sha256": "ff0beca91ccd171329584ce45687d00e4a305c6f8129c6a7d3b1c0f3a1ba839c",
+          "scenario_id": "artifact-evaluation-deletion-v1",
+          "sequence": 5
+        }
+      ],
+      "expected": {
+        "completion_allowed": false,
+        "reason_code": "source_deleted",
+        "remaining_reference_count": 0,
+        "resurrection_allowed": false,
+        "terminal_state": "deleted"
+      },
+      "prohibited_effects": {
+        "active_content_executions": 0,
+        "external_relationship_fetches": 0,
+        "false_completions": 0,
+        "network_calls": 0,
+        "source_mutations": 0,
+        "undeclared_persistent_writes": 0
+      },
+      "scenario_id": "artifact-evaluation-deletion-v1",
+      "scenario_sha256": "9ab02fbf108af4fa1855cb850608a4dc5464cc1e95725fc307d8aec23b1a7b02",
+      "source_fixtures": [
+        {
+          "byte_length": 1409,
+          "category": "docx_structured",
+          "fixture_id": "eval-docx-structured-v1",
+          "manifest_path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "manifest_sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94",
+          "sha256": "bfae3d024c5e759cd1ea82af5bbe88a0ca57664dea8143ce9730418bbbd73598"
+        }
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "status": "synthetic-scenario-contract",
+  "suite_id": "artifact-evaluation-lifecycle-scenarios-v1",
+  "suite_sha256": "39e9206b6d8ad97a7b3357c025dd143f0feb47d869a23c3c4eca47bb20e0a05e",
+  "synthetic_only": true,
+  "task_id": "2.3.1.3"
+}

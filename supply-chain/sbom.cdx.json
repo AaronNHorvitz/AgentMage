@@ -3722,7 +3722,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "3ed45f6c966325fa7b72d8c9ae80232dd4819582d6c49d8e2ecfbf5d578dc73b"
+          "content": "901f93cdebae7d5af4846f1599738a9d4a5ef03ec65af0362bd376e0723fb78a"
         }
       ],
       "licenses": [
@@ -18415,7 +18415,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:588e5954-59ae-5fb4-afe3-1d7852a6989d",
+  "serialNumber": "urn:uuid:54c92918-d69f-52c9-ac58-981e00248d1c",
   "specVersion": "1.6",
   "version": 1
 }
