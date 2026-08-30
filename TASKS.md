@@ -1878,15 +1878,39 @@ and their focused tests are enrolled in the mandatory documentation gate.
 - [ ] **Story AC 7.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then product logic contains no operating-system branch outside the adapter boundary, and every runtime component resolves to one declared platform manifest.
 - [ ] **Story AC 7.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then linux evidence cannot satisfy Mac gates, Mac evidence cannot satisfy Linux gates, and all result bundles identify exact hardware/software context without secrets.
 
+**Current story-gate evidence:** The automated [`story_7_1_gate.py`](scripts/story_7_1_gate.py)
+aggregate reviews immutable commit `d250940fd79657d90bb0e7fcb565f6ef4b814457` and tree
+`88d0562139ceef2da0e7561ec7e0f35991057485`, verifies 16 exact contract, manifest, result,
+test, and security artifacts, and publishes the retained
+[`story-gate-report.json`](artifacts/sprints/sprint-7/story-7.1/story-gate-report.json) with SHA-256
+`c5242840981fb0406ccb7e28603c5f7b51da686d083143d4beb6a6da8f022240`. Available-platform
+evidence separation passes; shared boundary closure is partial because installed runtime components
+do not yet resolve to release-derived manifests. Native Linux mechanisms, macOS manifests and
+execution, release-package evidence, installed-product evidence, and independent external
+critical-boundary review remain blocking. The automated aggregate explicitly does not substitute
+for that external review and makes no product, Sprint, release, or macOS support claim.
+
 #### Sprint Acceptance Criteria
 
 - [ ] **Sprint AC 7.AC1:** Each reference platform selects only its declared adapter.
 - [ ] **Sprint AC 7.AC2:** Missing signing, sandbox, secret-store, path, resource, or network primitives prevent startup.
-- [ ] **Sprint AC 7.AC3:** Capability packs contain no operating-system branch that bypasses an adapter.
+- [x] **Sprint AC 7.AC3:** Capability packs contain no operating-system branch that bypasses an adapter. Evidence: the versioned platform API closes over all ten required capabilities, the production kernel selector contains zero operating-system branch tokens, and activation can return only the manifest-bound `VerifiedPlatformAdapter` wrapper.
 - [ ] **Sprint AC 7.AC4:** Platform result records contain enough identity to reproduce a failure without secrets.
 - [ ] **Sprint AC 7.AC5:** The platform portion of `AT-PLAT-001` passes before packaging-specific work begins.
 
 **Gate decision:** Sprint 7 is PASS only when Story 7.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
+
+**Current sprint-gate evidence:** The automated [`sprint_7_gate.py`](scripts/sprint_7_gate.py)
+aggregate reviews immutable commit `d3f040046b9afdcf6bc4539946c91a78ee4fc4a6` and tree
+`7c95344ade9409865cc99525536f26689eb28a81`, verifies the exact Story 7.1 gate and four
+supporting evidence artifacts, and publishes the retained
+[`sprint-gate-report.json`](artifacts/sprints/sprint-7/sprint-gate-report.json) with SHA-256
+`efd9870e3cf6ac1caac011169c1c696df66a0b57989de2676e42ed333b346770`. The adapter-bypass
+criterion passes its shared boundary: ten required capabilities, one verified manifest-bound
+activation wrapper, and zero operating-system branch tokens in the production kernel selector.
+Two criteria remain partial and two remain blocked on native platform, packaging, installed-product,
+and external-review evidence, leaving Sprint 7 `BLOCKED-NATIVE-PLATFORMS-AND-EXTERNAL-REVIEW`.
+Both aggregate gates and their focused tests are enrolled in the mandatory documentation gate.
 ### [ ] Sprint 8 - macOS Security Topology and Packaging
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
