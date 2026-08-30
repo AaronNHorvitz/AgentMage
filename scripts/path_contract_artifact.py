@@ -187,7 +187,9 @@ def validate_sources(root: Path = ROOT) -> dict[str, Any]:
         failures.append("public Linux constructor does not select automatic resolution")
     if "pub enum ResolverPreference" in linux_source or "pub fn fallback_adapter" in linux_source:
         failures.append("Linux fallback selection became public")
-    if "impl LinuxAuthorizedWorkspace" in linux_source:
+    if "fn authorize_workspace_root(" not in linux_source:
+        failures.append("Linux workspace authorization boundary is absent")
+    if re.search(r"(?m)^\s*pub\s+fn\s+authorize_workspace_root\s*\(", linux_source):
         failures.append("ambient Linux workspace authorization constructor became public")
     if "PathAdapterErrorKind::UnsupportedPrimitive" not in linux_source:
         failures.append("Linux strict-resolution failure is absent")
