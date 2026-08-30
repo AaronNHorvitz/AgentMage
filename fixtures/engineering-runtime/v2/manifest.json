@@ -35,7 +35,8 @@
       "path": "valid/artifact-envelope.json",
       "expected_boundary": "admit",
       "expected_code": null,
-      "sha256": "400b8a2b98e2fb921183f2ae92ebd4c09447c28bc4a404e1149a07b82beb5573"
+      "sha256": "400b8a2b98e2fb921183f2ae92ebd4c09447c28bc4a404e1149a07b82beb5573",
+      "canonical_sha256": "1dd051d66269964daa1cb651670f987880c019c229445cf35fc0f121c8954a1c"
     },
     {
       "case_id": "artifact-transformation:valid",
@@ -44,7 +45,8 @@
       "path": "valid/artifact-transformation.json",
       "expected_boundary": "admit",
       "expected_code": null,
-      "sha256": "b49ba0f866ec135dc215cfcd356a4ec6e1cbf79b2dd1cf70f28f982b1ecbc709"
+      "sha256": "b49ba0f866ec135dc215cfcd356a4ec6e1cbf79b2dd1cf70f28f982b1ecbc709",
+      "canonical_sha256": "b9226a7fb0cdfb86a2ecf02209604b4a19e73d8f92e05676f9fca9e3b9fbb738"
     },
     {
       "case_id": "artifact-ingestion-result:valid",
@@ -53,7 +55,8 @@
       "path": "valid/artifact-ingestion-result.json",
       "expected_boundary": "admit",
       "expected_code": null,
-      "sha256": "8106d9468586cfaa0388380692f664fcfdf58b419f5303d8f34503f406020b17"
+      "sha256": "8106d9468586cfaa0388380692f664fcfdf58b419f5303d8f34503f406020b17",
+      "canonical_sha256": "58cf5611b37aea201b44671c92642fe11d77fce264d18c260939c9c94be65a37"
     },
     {
       "case_id": "context-manifest:valid",
@@ -62,7 +65,8 @@
       "path": "valid/context-manifest.json",
       "expected_boundary": "admit",
       "expected_code": null,
-      "sha256": "511448d0f1275d5616588eef772b0da4ab5e42b5ff426d6a6ee6b01c1e38ecc8"
+      "sha256": "511448d0f1275d5616588eef772b0da4ab5e42b5ff426d6a6ee6b01c1e38ecc8",
+      "canonical_sha256": "027a12fb6b70839087807840f4586426c65963b10531e95ec7bbd278014d2e7d"
     },
     {
       "case_id": "workflow-definition:valid",
@@ -71,7 +75,8 @@
       "path": "valid/workflow-definition.json",
       "expected_boundary": "admit",
       "expected_code": null,
-      "sha256": "d72d7614809a71d38a4b2c646d3007c2487c4ff9275a17fa5456e19b90fab933"
+      "sha256": "d72d7614809a71d38a4b2c646d3007c2487c4ff9275a17fa5456e19b90fab933",
+      "canonical_sha256": "39f35c3bcc79e964287e553e7d4209f85407b1642e09a6c9aa9328591c34b86d"
     },
     {
       "case_id": "workflow-state:valid",
@@ -80,7 +85,8 @@
       "path": "valid/workflow-state.json",
       "expected_boundary": "admit",
       "expected_code": null,
-      "sha256": "ad3a4d9baeef5382e7d68880ddfb45ee2d71790aa42120ff7264f95f273301b7"
+      "sha256": "ad3a4d9baeef5382e7d68880ddfb45ee2d71790aa42120ff7264f95f273301b7",
+      "canonical_sha256": "b4755f2291f5f068101c686da4b632505d42a9781533e169d96e4fe243986391"
     },
     {
       "case_id": "tool-observation:valid",
@@ -89,7 +95,8 @@
       "path": "valid/tool-observation.json",
       "expected_boundary": "admit",
       "expected_code": null,
-      "sha256": "16c6e4f85900000303c738c14a3b42185c1ea32f33b98a7e871b6eaa173492d9"
+      "sha256": "16c6e4f85900000303c738c14a3b42185c1ea32f33b98a7e871b6eaa173492d9",
+      "canonical_sha256": "03ff1b86428998f9539fd8fced316cb8dc185a167f112c810825693653dc437a"
     },
     {
       "case_id": "verification-result:valid",
@@ -98,7 +105,8 @@
       "path": "valid/verification-result.json",
       "expected_boundary": "admit",
       "expected_code": null,
-      "sha256": "7757d052aac902a9ea385b0b5cbe8b10936ba827a042fec89bb6f8c273868493"
+      "sha256": "7757d052aac902a9ea385b0b5cbe8b10936ba827a042fec89bb6f8c273868493",
+      "canonical_sha256": "cde3fb8bbbe17ae09bc7e603efabc6142aaff99388b8c460ea5658c96c9f7a27"
     },
     {
       "case_id": "terminal-result:valid",
@@ -107,7 +115,8 @@
       "path": "valid/terminal-result.json",
       "expected_boundary": "admit",
       "expected_code": null,
-      "sha256": "e47dc98ef1d55e905931e45a1b37014f1c04b3db3907887974d9567b12e0dc4d"
+      "sha256": "e47dc98ef1d55e905931e45a1b37014f1c04b3db3907887974d9567b12e0dc4d",
+      "canonical_sha256": "0f75ec7186beacab2cdbe7f61d7dea517ea92cab97a3e2ce75773b6770240ef2"
     },
     {
       "case_id": "artifact-envelope:missing",
@@ -116,7 +125,8 @@
       "path": "invalid/missing/artifact-envelope.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "b0b7cfe47ab9bbb35966d8619942a5ec4c647672585836c4e6139386ed561824"
+      "sha256": "b0b7cfe47ab9bbb35966d8619942a5ec4c647672585836c4e6139386ed561824",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-envelope:extra",
@@ -125,7 +135,8 @@
       "path": "invalid/extra/artifact-envelope.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "8cc1a06755d1c396392811fbb5fb124c003cf3502f38facc9856eb91a9f521c6"
+      "sha256": "8cc1a06755d1c396392811fbb5fb124c003cf3502f38facc9856eb91a9f521c6",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-envelope:malformed",
@@ -134,7 +145,8 @@
       "path": "invalid/malformed/artifact-envelope.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "32477231d10cb76e164193b2f1d3c0127c80d1c3b328e5a1b011165e483966df"
+      "sha256": "32477231d10cb76e164193b2f1d3c0127c80d1c3b328e5a1b011165e483966df",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-envelope:oversized",
@@ -143,7 +155,8 @@
       "path": "invalid/oversized/artifact-envelope.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "13454e9ff1d4cbde2a6aae86e2224bfdc13610e47ff67f538e9c328be83e7995"
+      "sha256": "13454e9ff1d4cbde2a6aae86e2224bfdc13610e47ff67f538e9c328be83e7995",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-envelope:unsupported-version",
@@ -152,7 +165,8 @@
       "path": "invalid/unsupported-version/artifact-envelope.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "91e1a1e1ad57299be77183b38dc1202500efbc17f68111b72c376ef81184d562"
+      "sha256": "91e1a1e1ad57299be77183b38dc1202500efbc17f68111b72c376ef81184d562",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-transformation:missing",
@@ -161,7 +175,8 @@
       "path": "invalid/missing/artifact-transformation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "8a761ef1b912e35f712837f129e101a159321fa03861592127e46784db64b926"
+      "sha256": "8a761ef1b912e35f712837f129e101a159321fa03861592127e46784db64b926",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-transformation:extra",
@@ -170,7 +185,8 @@
       "path": "invalid/extra/artifact-transformation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "9a91efdb954173cfb2a383b1b71caa807090aa4a8ffe35fb2d6978eabe80e5f7"
+      "sha256": "9a91efdb954173cfb2a383b1b71caa807090aa4a8ffe35fb2d6978eabe80e5f7",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-transformation:malformed",
@@ -179,7 +195,8 @@
       "path": "invalid/malformed/artifact-transformation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "e1585f48e157a6419230b922eef2d2facd1fc016649609749ef02122a476cfd5"
+      "sha256": "e1585f48e157a6419230b922eef2d2facd1fc016649609749ef02122a476cfd5",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-transformation:oversized",
@@ -188,7 +205,8 @@
       "path": "invalid/oversized/artifact-transformation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "54ae963615dd7b35fbafd23d79567d9a8e838bacee43750b9936263293ac64d4"
+      "sha256": "54ae963615dd7b35fbafd23d79567d9a8e838bacee43750b9936263293ac64d4",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-transformation:unsupported-version",
@@ -197,7 +215,8 @@
       "path": "invalid/unsupported-version/artifact-transformation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "4740d158074690fd186068c07b36d40323090e248e32f556f7c157fb8073092d"
+      "sha256": "4740d158074690fd186068c07b36d40323090e248e32f556f7c157fb8073092d",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-ingestion-result:missing",
@@ -206,7 +225,8 @@
       "path": "invalid/missing/artifact-ingestion-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "84fa8e468701013e838df8f27ee7aafa7e9d7a96e4b82bd2b1c8d25dc7fd87a1"
+      "sha256": "84fa8e468701013e838df8f27ee7aafa7e9d7a96e4b82bd2b1c8d25dc7fd87a1",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-ingestion-result:extra",
@@ -215,7 +235,8 @@
       "path": "invalid/extra/artifact-ingestion-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "376ad5a723566bbc0617c528715396e0c72c7943051721ce92fcfd10d86e7f35"
+      "sha256": "376ad5a723566bbc0617c528715396e0c72c7943051721ce92fcfd10d86e7f35",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-ingestion-result:malformed",
@@ -224,7 +245,8 @@
       "path": "invalid/malformed/artifact-ingestion-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "1fe30bb67d2199331aa47d6239385746ebf08139b627ba4a3d34fc3ba2e24532"
+      "sha256": "1fe30bb67d2199331aa47d6239385746ebf08139b627ba4a3d34fc3ba2e24532",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-ingestion-result:oversized",
@@ -233,7 +255,8 @@
       "path": "invalid/oversized/artifact-ingestion-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "6cd0f1f611c5897c11b0ccae0df01f36a2e4b4be298dc7702dddc298fa0eae56"
+      "sha256": "6cd0f1f611c5897c11b0ccae0df01f36a2e4b4be298dc7702dddc298fa0eae56",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-ingestion-result:unsupported-version",
@@ -242,7 +265,8 @@
       "path": "invalid/unsupported-version/artifact-ingestion-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "b5f02505c2e8b73fdd9fa1dc63f6bee53ab28abf62cadd092c6bbfa780e122ea"
+      "sha256": "b5f02505c2e8b73fdd9fa1dc63f6bee53ab28abf62cadd092c6bbfa780e122ea",
+      "canonical_sha256": null
     },
     {
       "case_id": "context-manifest:missing",
@@ -251,7 +275,8 @@
       "path": "invalid/missing/context-manifest.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "e7bb775239071365544aeb0f89717fb3972fce97d874edb4d04fd3e4c836b405"
+      "sha256": "e7bb775239071365544aeb0f89717fb3972fce97d874edb4d04fd3e4c836b405",
+      "canonical_sha256": null
     },
     {
       "case_id": "context-manifest:extra",
@@ -260,7 +285,8 @@
       "path": "invalid/extra/context-manifest.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "ca5effc0b4dc10b7270dcd3b984573e3e5dff3882a41625eb4735e8bb3013786"
+      "sha256": "ca5effc0b4dc10b7270dcd3b984573e3e5dff3882a41625eb4735e8bb3013786",
+      "canonical_sha256": null
     },
     {
       "case_id": "context-manifest:malformed",
@@ -269,7 +295,8 @@
       "path": "invalid/malformed/context-manifest.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "61ce036455ed1b9261f6059aafbfd4efedb8571e276a5429c05871c5e74e3e4b"
+      "sha256": "61ce036455ed1b9261f6059aafbfd4efedb8571e276a5429c05871c5e74e3e4b",
+      "canonical_sha256": null
     },
     {
       "case_id": "context-manifest:oversized",
@@ -278,7 +305,8 @@
       "path": "invalid/oversized/context-manifest.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "d356a338cf886fe4807881e289f6e9a4f671fceb98b475cb234f2e8192c4f829"
+      "sha256": "d356a338cf886fe4807881e289f6e9a4f671fceb98b475cb234f2e8192c4f829",
+      "canonical_sha256": null
     },
     {
       "case_id": "context-manifest:unsupported-version",
@@ -287,7 +315,8 @@
       "path": "invalid/unsupported-version/context-manifest.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "4a8502b1c6d9b20306409066a23d0ffce667bf0f27489712c1bc4617062ede68"
+      "sha256": "4a8502b1c6d9b20306409066a23d0ffce667bf0f27489712c1bc4617062ede68",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-definition:missing",
@@ -296,7 +325,8 @@
       "path": "invalid/missing/workflow-definition.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "7029a970c54607a9a021ee88a1113c4d6993ec52b0a77b93573fd600f8d2e1ac"
+      "sha256": "7029a970c54607a9a021ee88a1113c4d6993ec52b0a77b93573fd600f8d2e1ac",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-definition:extra",
@@ -305,7 +335,8 @@
       "path": "invalid/extra/workflow-definition.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "fb0f04590c14ab23ae740043cb0eb1558cd2f307c71d87221865b78085e02343"
+      "sha256": "fb0f04590c14ab23ae740043cb0eb1558cd2f307c71d87221865b78085e02343",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-definition:malformed",
@@ -314,7 +345,8 @@
       "path": "invalid/malformed/workflow-definition.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "a364fa85fad015c3d2f0dcc35db79cd725255ee277ac99bb6fbd77d367c68756"
+      "sha256": "a364fa85fad015c3d2f0dcc35db79cd725255ee277ac99bb6fbd77d367c68756",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-definition:oversized",
@@ -323,7 +355,8 @@
       "path": "invalid/oversized/workflow-definition.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "e5bf928d871c1ac69fb5601d4b5fd57016f6478893ba302f414d8190e8ff68b7"
+      "sha256": "e5bf928d871c1ac69fb5601d4b5fd57016f6478893ba302f414d8190e8ff68b7",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-definition:unsupported-version",
@@ -332,7 +365,8 @@
       "path": "invalid/unsupported-version/workflow-definition.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "23b336a4a627a572a8cd70364dd037908e07b1686831545a5686bee67880dfdf"
+      "sha256": "23b336a4a627a572a8cd70364dd037908e07b1686831545a5686bee67880dfdf",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-state:missing",
@@ -341,7 +375,8 @@
       "path": "invalid/missing/workflow-state.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "e12d6417004cdbb65a32e167c85677e6df2d7f63b4ba56c64e6c3b5250290367"
+      "sha256": "e12d6417004cdbb65a32e167c85677e6df2d7f63b4ba56c64e6c3b5250290367",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-state:extra",
@@ -350,7 +385,8 @@
       "path": "invalid/extra/workflow-state.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "f32d262f073c7d54e9e61064c44dd6395dc003a0f5977af3b4e61903491e6fc9"
+      "sha256": "f32d262f073c7d54e9e61064c44dd6395dc003a0f5977af3b4e61903491e6fc9",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-state:malformed",
@@ -359,7 +395,8 @@
       "path": "invalid/malformed/workflow-state.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "707ec4967b7fcd74bca04bd5f4dee9c5e5b2ab27a8b3db8bf294e5744c7ff9db"
+      "sha256": "707ec4967b7fcd74bca04bd5f4dee9c5e5b2ab27a8b3db8bf294e5744c7ff9db",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-state:oversized",
@@ -368,7 +405,8 @@
       "path": "invalid/oversized/workflow-state.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "9d62eb7abe31b431f826afbe355e4541ffcb8b22a0691260d87da5b7b6a7a72a"
+      "sha256": "9d62eb7abe31b431f826afbe355e4541ffcb8b22a0691260d87da5b7b6a7a72a",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-state:unsupported-version",
@@ -377,7 +415,8 @@
       "path": "invalid/unsupported-version/workflow-state.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "7fbeaf9b8bb401c0ac1f72e5f568a80c14548b71b89976437bf20aab8306567c"
+      "sha256": "7fbeaf9b8bb401c0ac1f72e5f568a80c14548b71b89976437bf20aab8306567c",
+      "canonical_sha256": null
     },
     {
       "case_id": "tool-observation:missing",
@@ -386,7 +425,8 @@
       "path": "invalid/missing/tool-observation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "cd6c95aa18acf8560a5b40a58f0d2e6276d7655979cea1f8bcd412272210f5b1"
+      "sha256": "cd6c95aa18acf8560a5b40a58f0d2e6276d7655979cea1f8bcd412272210f5b1",
+      "canonical_sha256": null
     },
     {
       "case_id": "tool-observation:extra",
@@ -395,7 +435,8 @@
       "path": "invalid/extra/tool-observation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "64be3ea65b3f8d07b3b3c7ca60856465e5405c9afc75bf751341a2f99f8bc3c2"
+      "sha256": "64be3ea65b3f8d07b3b3c7ca60856465e5405c9afc75bf751341a2f99f8bc3c2",
+      "canonical_sha256": null
     },
     {
       "case_id": "tool-observation:malformed",
@@ -404,7 +445,8 @@
       "path": "invalid/malformed/tool-observation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "e0afb4ed681b399f097bb75306d1f82aec165cc733124710e22070bc7bf833a9"
+      "sha256": "e0afb4ed681b399f097bb75306d1f82aec165cc733124710e22070bc7bf833a9",
+      "canonical_sha256": null
     },
     {
       "case_id": "tool-observation:oversized",
@@ -413,7 +455,8 @@
       "path": "invalid/oversized/tool-observation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "4294978a57993c3c1e78a4471950021ec944a860652acd9134ab7bbde860315d"
+      "sha256": "4294978a57993c3c1e78a4471950021ec944a860652acd9134ab7bbde860315d",
+      "canonical_sha256": null
     },
     {
       "case_id": "tool-observation:unsupported-version",
@@ -422,7 +465,8 @@
       "path": "invalid/unsupported-version/tool-observation.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "6c2458918ebfd4e37eaa41a4ed6cc86d78632577d4477df016864b31e76ce967"
+      "sha256": "6c2458918ebfd4e37eaa41a4ed6cc86d78632577d4477df016864b31e76ce967",
+      "canonical_sha256": null
     },
     {
       "case_id": "verification-result:missing",
@@ -431,7 +475,8 @@
       "path": "invalid/missing/verification-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "8392bb5e0bed131fabfb1b94d0e5000e2c5caca823edddb8a771dfb77e0de930"
+      "sha256": "8392bb5e0bed131fabfb1b94d0e5000e2c5caca823edddb8a771dfb77e0de930",
+      "canonical_sha256": null
     },
     {
       "case_id": "verification-result:extra",
@@ -440,7 +485,8 @@
       "path": "invalid/extra/verification-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "8529ee5a1ab8fd8b8c2ce7d884257a1d512879c6b7b957dabffce4e3e8e52e8c"
+      "sha256": "8529ee5a1ab8fd8b8c2ce7d884257a1d512879c6b7b957dabffce4e3e8e52e8c",
+      "canonical_sha256": null
     },
     {
       "case_id": "verification-result:malformed",
@@ -449,7 +495,8 @@
       "path": "invalid/malformed/verification-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "dee214b9feb3c3900f17e30158317448f69c59b9da6b19c897e4b4e9347b4cda"
+      "sha256": "dee214b9feb3c3900f17e30158317448f69c59b9da6b19c897e4b4e9347b4cda",
+      "canonical_sha256": null
     },
     {
       "case_id": "verification-result:oversized",
@@ -458,7 +505,8 @@
       "path": "invalid/oversized/verification-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "ee946b9789c6439b52249cf6ed1f1fc260e482fb4325f812ee310cc5d8a496a5"
+      "sha256": "ee946b9789c6439b52249cf6ed1f1fc260e482fb4325f812ee310cc5d8a496a5",
+      "canonical_sha256": null
     },
     {
       "case_id": "verification-result:unsupported-version",
@@ -467,7 +515,8 @@
       "path": "invalid/unsupported-version/verification-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "904dc56081d7663c3fece510a548a96734e9860d816a478cdbe059de0ea3af54"
+      "sha256": "904dc56081d7663c3fece510a548a96734e9860d816a478cdbe059de0ea3af54",
+      "canonical_sha256": null
     },
     {
       "case_id": "terminal-result:missing",
@@ -476,7 +525,8 @@
       "path": "invalid/missing/terminal-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "a9e8a02b4985816f99f807e3f516c9d951dee40973c8c6be7f50840f7ce61d8c"
+      "sha256": "a9e8a02b4985816f99f807e3f516c9d951dee40973c8c6be7f50840f7ce61d8c",
+      "canonical_sha256": null
     },
     {
       "case_id": "terminal-result:extra",
@@ -485,7 +535,8 @@
       "path": "invalid/extra/terminal-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "e24fac25e18718893853d82f27ff61f459566905e3ac5e8fef62be32e9b3ba42"
+      "sha256": "e24fac25e18718893853d82f27ff61f459566905e3ac5e8fef62be32e9b3ba42",
+      "canonical_sha256": null
     },
     {
       "case_id": "terminal-result:malformed",
@@ -494,7 +545,8 @@
       "path": "invalid/malformed/terminal-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "b76bbd788f5dcc16068c9ff6d1823de9a046a377e3d0266e78cc3ad7fe4c786b"
+      "sha256": "b76bbd788f5dcc16068c9ff6d1823de9a046a377e3d0266e78cc3ad7fe4c786b",
+      "canonical_sha256": null
     },
     {
       "case_id": "terminal-result:oversized",
@@ -503,7 +555,8 @@
       "path": "invalid/oversized/terminal-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "d285c8030d8743af79076a490d3fd32b17ac325252ee978f6d09ee9f8e009e93"
+      "sha256": "d285c8030d8743af79076a490d3fd32b17ac325252ee978f6d09ee9f8e009e93",
+      "canonical_sha256": null
     },
     {
       "case_id": "terminal-result:unsupported-version",
@@ -512,7 +565,8 @@
       "path": "invalid/unsupported-version/terminal-result.json",
       "expected_boundary": "reject-schema",
       "expected_code": "contract.validation.failed",
-      "sha256": "b636b27faf514f8a4be5544bdf65c8250c461717180d73d52164062ed9bb306a"
+      "sha256": "b636b27faf514f8a4be5544bdf65c8250c461717180d73d52164062ed9bb306a",
+      "canonical_sha256": null
     },
     {
       "case_id": "workflow-definition:cyclic",
@@ -521,7 +575,8 @@
       "path": "invalid/cyclic/workflow-definition.json",
       "expected_boundary": "reject-semantic",
       "expected_code": "engineering.workflow.dependency_cycle",
-      "sha256": "18c85d66d4b026273f97a6099f39a711c3e957d129a45a6a14eb59beea1242c1"
+      "sha256": "e71e37634f682492f26e9392b95c7ebd497681c5a57e680841a10f8b393f4247",
+      "canonical_sha256": null
     },
     {
       "case_id": "artifact-envelope:stale",
@@ -530,7 +585,8 @@
       "path": "invalid/stale/artifact-envelope.json",
       "expected_boundary": "admit-individual-reject-record-set",
       "expected_code": "engineering.record.binding_mismatch",
-      "sha256": "2490c9455578f795fcd1dcefcb0f70ea5201a64223e344bef7a7c0c9660d6595"
+      "sha256": "2490c9455578f795fcd1dcefcb0f70ea5201a64223e344bef7a7c0c9660d6595",
+      "canonical_sha256": null
     }
   ]
 }

@@ -324,7 +324,12 @@ function invalidCases(valid) {
   }
 
   const cyclic = clone(valid["workflow-definition"]);
-  cyclic.steps[0].depends_on = ["step:1"];
+  cyclic.steps.push({
+    ...clone(cyclic.steps[0]),
+    step_id: "step:2",
+    depends_on: ["step:1"],
+  });
+  cyclic.steps[0].depends_on = ["step:2"];
   cases.push({
     schemaName: "workflow-definition",
     category: "cyclic",
@@ -370,6 +375,9 @@ export function expectedFiles() {
       expected_boundary: "admit",
       expected_code: null,
       sha256: digest(bytes),
+      canonical_sha256: digest(
+        Buffer.from(JSON.stringify(valid[schemaName]), "utf8"),
+      ),
     });
   }
   for (const item of invalidCases(valid)) {
@@ -384,6 +392,7 @@ export function expectedFiles() {
       expected_boundary: item.expectedBoundary ?? "reject-schema",
       expected_code: item.expectedCode ?? "contract.validation.failed",
       sha256: digest(bytes),
+      canonical_sha256: null,
     });
   }
   const manifest = {

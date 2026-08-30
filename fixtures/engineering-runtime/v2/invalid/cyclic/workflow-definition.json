@@ -16,6 +16,30 @@
     {
       "step_id": "step:1",
       "depends_on": [
+        "step:2"
+      ],
+      "model_role": null,
+      "tool_id": "tool:1",
+      "effect_class": "read_only",
+      "retry_class": "recoverable_read",
+      "verifier_ids": [
+        "verifier:1"
+      ],
+      "budgets": {
+        "turns": 1,
+        "tokens": 1,
+        "duration_ms": 1,
+        "tool_calls": 1,
+        "attempts": 1,
+        "no_progress_events": 1,
+        "output_bytes": 1,
+        "memory_bytes": 1,
+        "cost_minor_units": 0
+      }
+    },
+    {
+      "step_id": "step:2",
+      "depends_on": [
         "step:1"
       ],
       "model_role": null,
