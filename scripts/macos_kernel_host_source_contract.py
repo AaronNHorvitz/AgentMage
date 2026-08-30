@@ -151,17 +151,35 @@ def validate_sources(root: Path = ROOT) -> list[str]:
     return failures
 
 
-def build_report(root: Path = ROOT) -> dict[str, Any]:
+def resolve_revision(source_revision: str, root: Path = ROOT) -> tuple[str, str]:
+    revision = git("rev-parse", source_revision, root=root)
+    tree = git("rev-parse", f"{revision}^{{tree}}", root=root)
+    for relative in SOURCE_PATHS:
+        committed = subprocess.run(
+            ["git", "show", f"{revision}:{relative}"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+        ).stdout
+        if committed != (root / relative).read_bytes():
+            raise ValueError(f"reviewed macOS kernel-host source changed: {relative}")
+    return revision, tree
+
+
+def build_report(
+    root: Path = ROOT, *, source_revision: str = "HEAD"
+) -> dict[str, Any]:
     failures = validate_sources(root)
     if failures:
         raise ValueError("; ".join(failures))
+    revision, tree = resolve_revision(source_revision, root)
     return {
         "schema_version": 1,
         "record_type": "macos-kernel-host-source-contract",
         "task_id": "8.1.1.1",
         "status": "partial-source-only-blocked-macos",
-        "source_revision": git("rev-parse", "HEAD", root=root),
-        "source_tree": git("rev-parse", "HEAD^{tree}", root=root),
+        "source_revision": revision,
+        "source_tree": tree,
         "source_files": [
             {"path": relative, "sha256": sha256_file(root / relative)}
             for relative in SOURCE_PATHS
@@ -206,16 +224,24 @@ def canonical_bytes(report: dict[str, Any]) -> bytes:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--source-revision", default="HEAD")
     arguments = parser.parse_args()
     try:
-        expected = canonical_bytes(build_report())
+        if arguments.write:
+            source_revision = arguments.source_revision
+        else:
+            retained = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
+            source_revision = retained.get("source_revision")
+            if not isinstance(source_revision, str):
+                raise ValueError("retained report has no source revision")
+        expected = canonical_bytes(build_report(source_revision=source_revision))
     except (OSError, subprocess.CalledProcessError, ValueError) as error:
         print(f"macOS kernel-host source contract failed: {error}")
         return 1
     if arguments.write:
         REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
         REPORT_PATH.write_bytes(expected)
-    elif not REPORT_PATH.is_file() or REPORT_PATH.read_bytes() != expected:
+    elif REPORT_PATH.read_bytes() != expected:
         print("macOS kernel-host source report is missing or stale")
         return 1
     print("macOS kernel-host source contract passed without native or release promotion")
