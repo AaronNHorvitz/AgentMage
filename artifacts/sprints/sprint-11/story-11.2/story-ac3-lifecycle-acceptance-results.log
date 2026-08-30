@@ -1,0 +1,6 @@
+$ python3 scripts/storage_new_family_lifecycle_evidence.py
+Sub-task 11.2.3.3 storage new-family lifecycle validated
+$ python3 scripts/source_lifecycle_transactions_evidence.py
+Sub-task 11.2.1.3 atomic source lifecycle transactions validated
+$ python3 scripts/storage_security_evidence.py
+Sub-task 11.2.4.3 retained storage security evidence validated

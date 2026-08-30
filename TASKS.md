@@ -2165,9 +2165,18 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
   linkage. Five mutation/omission/overclaim tests and strict Clippy pass. This closes the current
   durable runtime and encrypted-store criterion on Linux, not every later active parser/adapter,
   cross-platform, installed-product, independent-review, Story, Sprint, packaging, or release gate.
-- [ ] **Story AC 11.2.AC3:** Given backup, restore, retention, and deletion, when lifecycle checks
+- [x] **Story AC 11.2.AC3:** Given backup, restore, retention, and deletion, when lifecycle checks
   run, then source and workflow records reconcile with payload references and raw restricted data
-  appears in no unauthorized surface.
+  appears in no unauthorized surface. Evidence: the
+  [`story-ac3-lifecycle-acceptance-report.json`](artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-report.json)
+  reconciles whole-store backup/fresh-candidate restore for all 31 source/workflow families,
+  atomic source/runtime-artifact release and deletion, held expiry, shared-payload preservation,
+  content-free export coverage, and encrypted main/WAL/SHM/backup/export/diagnostic canary scans.
+  Upstream reports and five mutation/omission/overclaim tests require zero unauthorized raw-value
+  matches, zero retained raw canary, and synthetic data only. This closes the current encrypted
+  operational-store criterion on Linux, not complete uninstall, separately managed copies,
+  physical remanence, later active surfaces, cross-platform or installed-product execution,
+  independent review, Story, Sprint, packaging, or release readiness.
 
 #### Sprint Acceptance Criteria
 

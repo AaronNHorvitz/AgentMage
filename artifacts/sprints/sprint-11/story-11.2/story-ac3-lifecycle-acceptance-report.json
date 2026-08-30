@@ -1,0 +1,132 @@
+{
+  "acceptance_truth": {
+    "all_later_active_surfaces_complete": false,
+    "complete_product_uninstall_and_external_copy_cleanup": false,
+    "content_free_export_coverage_complete": true,
+    "cross_platform_complete": false,
+    "current_encrypted_operational_store_scope_complete": true,
+    "fresh_candidate_restore_complete": true,
+    "independent_review_complete": false,
+    "physical_remanence_complete": false,
+    "private_user_data_used": false,
+    "raw_canary_retained": false,
+    "release_claim": "none",
+    "retention_hold_expiry_release_delete_complete": true,
+    "shared_payload_preservation_complete": true,
+    "source_and_payload_reference_reconciliation_complete": true,
+    "source_workflow_family_count": 31,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "unauthorized_raw_restricted_data_matches": 0,
+    "whole_store_backup_complete": true
+  },
+  "artifacts": [
+    {
+      "byte_length": 1248,
+      "path": "docs/verification/story-11-2-ac3-lifecycle-acceptance.md",
+      "sha256": "32cb15fccc0371e729f8389022a8a8bba2f41d57e03a8221bf54b7af84ed0168"
+    },
+    {
+      "byte_length": 9897,
+      "path": "scripts/story_11_2_ac3_evidence.py",
+      "sha256": "0a3a40befe05b18e094146e3638efbba0f3ac347679aacae76a452023641630d"
+    },
+    {
+      "byte_length": 3042,
+      "path": "tests/test_story_11_2_ac3_evidence.py",
+      "sha256": "831bf007dfcc13818ee1fb69745e77768ec2909bf8e617239e7fba2285448a6e"
+    },
+    {
+      "byte_length": 351,
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac3-lifecycle-acceptance-results.log",
+      "sha256": "f3b9c54a98cb11fcad2cd916c67a723fd1c2d74e2440045e10e3c5bf6c4a9dcf"
+    }
+  ],
+  "commands": [
+    "python3 scripts/storage_new_family_lifecycle_evidence.py",
+    "python3 scripts/source_lifecycle_transactions_evidence.py",
+    "python3 scripts/storage_security_evidence.py"
+  ],
+  "criterion_id": "11.2.AC3",
+  "generated_on": "2026-08-30",
+  "limitations": [
+    "complete product uninstall and separately managed copies remain later gates",
+    "physical remanence and later active logging, model-context, and adapter surfaces are not represented",
+    "native cross-platform, installed-package, independent-review, Story, Sprint, packaging, and release completion are not claimed"
+  ],
+  "record_type": "agentmage-story-acceptance-evidence",
+  "required_markers": [
+    "Sub-task 11.2.3.3 storage new-family lifecycle validated",
+    "Sub-task 11.2.1.3 atomic source lifecycle transactions validated",
+    "Sub-task 11.2.4.3 retained storage security evidence validated"
+  ],
+  "retained_evidence": [
+    {
+      "byte_length": 422400,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "22bc943e41474e766ff02043064102b4185557582f0be67160315c896e4fd5f2"
+    },
+    {
+      "byte_length": 69345,
+      "path": "kernel/engine/src/source_lifecycle.rs",
+      "sha256": "b34c1c3b248cd91aef81c955e06cc49b2793bdf8816c6b34ef722eee28955b31"
+    },
+    {
+      "byte_length": 167641,
+      "path": "kernel/engine/src/runtime_artifact.rs",
+      "sha256": "a45dd60b5882cff330cb711bec7b1ecc5bac3413eb17f35d5dc530fbb0938ad4"
+    },
+    {
+      "byte_length": 3953,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
+      "sha256": "d5f35c2c1bf29cf78472a95ff7c7d7c25d0a121eaee5253477930b08cad6b501"
+    },
+    {
+      "byte_length": 29701,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
+      "sha256": "ba96a41dc219d5764184109fe2215556bb1e9ba9edfd1b634139e01ab133007e"
+    },
+    {
+      "byte_length": 4455,
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json",
+      "sha256": "1d35d6611b00833c6ae364f686e413ccd85988336edbec0b98824ce34c06de02"
+    },
+    {
+      "byte_length": 17401,
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
+      "sha256": "3384dd78464552014c0f8b45e86334d084676cfc0a80a429fb0bdd065b979dd4"
+    },
+    {
+      "byte_length": 6455,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "sha256": "a918998ea96a0a3c730af13d7a18193fffec3aade9bba89ebac6df82776637e6"
+    },
+    {
+      "byte_length": 455,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-results.log",
+      "sha256": "80edda9a29d8df14a8315c1f4fa90ee86689f1ef1475328b92007a6aaca7f930"
+    },
+    {
+      "byte_length": 4286,
+      "path": "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json",
+      "sha256": "644669b4da500aa86f343fbb7416598a00774a57b4f9e2c43b05dc8343e418b8"
+    },
+    {
+      "byte_length": 4356,
+      "path": "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json",
+      "sha256": "26286bc6d0d535d59b27d961a7aa96beba8aa74f0ab97f40d87961861becedb4"
+    }
+  ],
+  "scanned_surface_classes": [
+    "sqlcipher-main",
+    "sqlcipher-wal",
+    "sqlcipher-shm",
+    "encrypted-backup",
+    "content-free-export",
+    "receipt-and-diagnostic-strings"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-current-encrypted-operational-store-scope",
+  "story_id": "11.2"
+}
