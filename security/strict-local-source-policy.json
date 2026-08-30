@@ -429,7 +429,9 @@
   ],
   "vscode_manifest_profile": {
     "activation_events": [
-      "onStartupFinished"
+      "onCommand:agentmage.openVerifiedChat",
+      "onStartupFinished",
+      "onView:agentmage.sessions"
     ],
     "allowed_top_level_keys": [
       "activationEvents",
@@ -453,8 +455,66 @@
       "vendor"
     ],
     "contribution_keys": [
-      "languageModelChatProviders"
+      "commands",
+      "languageModelChatProviders",
+      "menus",
+      "views",
+      "viewsContainers"
     ],
+    "contributions": {
+      "commands": [
+        {
+          "command": "agentmage.openVerifiedChat",
+          "title": "Open Verified Chat",
+          "category": "AgentMage",
+          "icon": "$(comment-discussion)"
+        },
+        {
+          "command": "agentmage.newVerifiedSession",
+          "title": "New Verified Session",
+          "category": "AgentMage",
+          "icon": "$(add)"
+        }
+      ],
+      "viewsContainers": {
+        "activitybar": [
+          {
+            "id": "agentmage",
+            "title": "AgentMage",
+            "icon": "media/agentmage.svg"
+          }
+        ]
+      },
+      "views": {
+        "agentmage": [
+          {
+            "id": "agentmage.sessions",
+            "name": "Sessions",
+            "type": "webview"
+          }
+        ]
+      },
+      "menus": {
+        "view/title": [
+          {
+            "command": "agentmage.openVerifiedChat",
+            "when": "view == agentmage.sessions",
+            "group": "navigation"
+          },
+          {
+            "command": "agentmage.newVerifiedSession",
+            "when": "view == agentmage.sessions",
+            "group": "navigation"
+          }
+        ]
+      },
+      "languageModelChatProviders": [
+        {
+          "vendor": "agentmage",
+          "displayName": "AgentMage"
+        }
+      ]
+    },
     "extension_kind": [
       "ui"
     ],

@@ -55,6 +55,7 @@ REQUIRED_FILES = (
     "architecture/rollback-design.json",
     "architecture/signed-update-design.json",
     "architecture/dependency-classes.json",
+    "architecture/dependency-dispositions.json",
     "architecture/optional-component-inventory.json",
     "architecture/artifact-scan-policy.json",
     "supply-chain/dependency-provenance.json",

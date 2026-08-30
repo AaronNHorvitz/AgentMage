@@ -709,7 +709,6 @@ const vscode=acquireVsCodeApi(),composer=document.getElementById('composer'),mes
 </script></body></html>`;
 }
 
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

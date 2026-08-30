@@ -1,0 +1,470 @@
+{
+  "schema_version": 1,
+  "decision_id": "ADR-0042",
+  "task_id": "1.2.4.1",
+  "status": "review-complete-no-admission-expansion",
+  "reviewed_on": "2026-08-29",
+  "effective_until": "identity-or-evidence-change",
+  "authorities": [
+    "PRD.md",
+    "Agent-Scaffolding-Inventory.md",
+    "SECURITY-REVIEW.md",
+    "MODEL-PROVENANCE-POLICY.md",
+    "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md"
+  ],
+  "families": [
+    "parser",
+    "mime-detection",
+    "tokenization",
+    "archive",
+    "ocr",
+    "database"
+  ],
+  "dispositions": [
+    "accepted",
+    "deferred",
+    "rejected"
+  ],
+  "platform_truth": {
+    "first_ga_targets": [
+      "fedora-x86_64",
+      "ubuntu-x86_64",
+      "windows-11-x86_64"
+    ],
+    "release_qualified_targets": [],
+    "macos": "blocked-post-ga"
+  },
+  "candidates": [
+    {
+      "id": "archive-general-formats",
+      "family": "archive",
+      "disposition": "deferred",
+      "purpose": "TAR, 7z, RAR, nested, or native archive formats beyond bounded ZIP containers",
+      "components": [],
+      "license": "Unknown until an exact format implementation and codec closure are selected.",
+      "provenance": {
+        "source_url": "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md",
+        "source_sha256": "937f75604dd9b84d3f60a2566d480047385fcc5a43eb6532294f143715805837",
+        "retrieved_on": "2026-08-29",
+        "release_date": "not-selected",
+        "authority": "repository architecture decision"
+      },
+      "maintenance": "Unknown until a named immutable candidate is selected.",
+      "unsafe_code": "Native codecs and FFI are unreviewed and therefore not admitted.",
+      "platforms": {
+        "fedora-x86_64": "architecture-only",
+        "ubuntu-x86_64": "architecture-only",
+        "windows-11-x86_64": "architecture-only",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "entry-count", "expanded-bytes", "ratio", "recursion-depth", "path-safety"],
+      "packaging": "Absent; no native library, executable, codec, or format database is packaged.",
+      "cancellation": "Admission requires cooperative cancellation plus supervisor termination and scratch cleanup.",
+      "absence_behavior": "Unsupported archive formats receive a visible unsupported disposition.",
+      "rationale": "No first-GA requirement currently justifies a broader native archive attack surface.",
+      "re_review_triggers": ["named-format-requirement", "immutable-candidate-selected", "hostile-corpus-ready"]
+    },
+    {
+      "id": "archive-zip-8.6.0",
+      "family": "archive",
+      "disposition": "accepted",
+      "purpose": "Bounded ZIP and OOXML container inspection with default features disabled and only zlib-rs deflate enabled",
+      "components": [
+        {"name": "zip", "version": "8.6.0", "checksum_sha256": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"}
+      ],
+      "license": "MIT; retained license and transitive catalog are owned by the existing supply-chain records.",
+      "provenance": {
+        "source_url": "https://static.crates.io/crates/zip/zip-8.6.0.crate",
+        "source_sha256": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-04-25",
+        "authority": "crates.io immutable package and existing locked provenance"
+      },
+      "maintenance": "Current exact release; any version or feature change requires renewed review.",
+      "unsafe_code": "Direct source contains unsafe sites; use remains behind bounded Rust capability contracts and later parser isolation evidence.",
+      "platforms": {
+        "fedora-x86_64": "native-evidence-pending",
+        "ubuntu-x86_64": "native-evidence-pending",
+        "windows-11-x86_64": "native-evidence-pending",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "entry-count", "expanded-bytes", "ratio", "recursion-depth", "path-safety"],
+      "packaging": "Already locked; no additional dependency or feature is enabled by this review.",
+      "cancellation": "Check cancellation between bounded entry reads; terminate an isolated worker at its deadline.",
+      "absence_behavior": "Required OOXML/ZIP extraction blocks visibly; unrelated formats remain unaffected.",
+      "rationale": "The existing exact feature set satisfies bounded ZIP/OOXML container needs without admitting extract-all behavior.",
+      "re_review_triggers": ["version-change", "feature-change", "codec-change", "security-advisory", "platform-package-change"]
+    },
+    {
+      "id": "database-rusqlite-0.40.2",
+      "family": "database",
+      "disposition": "accepted",
+      "purpose": "Single canonical SQLCipher-backed operational store and disposable FTS5 lexical indexes",
+      "components": [
+        {"name": "rusqlite", "version": "0.40.2", "checksum_sha256": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3"}
+      ],
+      "license": "MIT; native SQLite and SQLCipher closure remains recorded in the existing SBOM and provenance graph.",
+      "provenance": {
+        "source_url": "https://static.crates.io/crates/rusqlite/rusqlite-0.40.2.crate",
+        "source_sha256": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-08-08",
+        "authority": "crates.io immutable package and existing locked provenance"
+      },
+      "maintenance": "Current exact release; native SQLCipher, crypto linkage, and compile options remain platform-evidence obligations.",
+      "unsafe_code": "Native C and FFI boundary is explicit, already present, and requires independent review and native crash/corruption evidence before release.",
+      "platforms": {
+        "fedora-x86_64": "native-evidence-pending",
+        "ubuntu-x86_64": "native-evidence-pending",
+        "windows-11-x86_64": "native-evidence-pending",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "single-sqlite-authority", "transaction-size", "busy-timeout", "disk-space", "integrity-check"],
+      "packaging": "Already locked with bundled-sqlcipher; ambient sqlite3 and a second database are prohibited.",
+      "cancellation": "Use interrupt/progress facilities and transaction rollback; crash recovery reconciles journal, WAL, and artifact references.",
+      "absence_behavior": "Required encrypted-store loss blocks startup and never falls back to plaintext or another database.",
+      "rationale": "It preserves the accepted single operational authority and avoids a second persistence system.",
+      "re_review_triggers": ["version-change", "sqlite-version-change", "sqlcipher-change", "crypto-linkage-change", "compile-option-change", "security-advisory"]
+    },
+    {
+      "id": "database-tantivy-0.26.1",
+      "family": "database",
+      "disposition": "rejected",
+      "purpose": "Alternative artifact search index",
+      "components": [],
+      "license": "MIT, but acceptable licensing does not overcome the duplicate persistence boundary.",
+      "provenance": {
+        "source_url": "https://static.crates.io/crates/tantivy/tantivy-0.26.1.crate",
+        "source_sha256": "edde6a10743fff00a4e1a8c9ef020bf5f3cbad301b7d2d39f2b07f123c4eac07",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-04-21",
+        "authority": "crates.io immutable package and official docs.rs documentation"
+      },
+      "maintenance": "Maintained, but its separate locks, writers, segments, merges, and memory budget are unnecessary for first GA.",
+      "unsafe_code": "Direct unsafe and memory-mapped/background worker paths expand the review boundary.",
+      "platforms": {
+        "fedora-x86_64": "architecture-only",
+        "ubuntu-x86_64": "architecture-only",
+        "windows-11-x86_64": "architecture-only",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "single-sqlite-authority"],
+      "packaging": "Absent and prohibited for first GA.",
+      "cancellation": "Background merge and writer cancellation would require a separate recovery protocol.",
+      "absence_behavior": "SQLite FTS5 remains the bounded disposable lexical index.",
+      "rationale": "It would create a second persistence, locking, encryption, cleanup, and recovery surface without measured need.",
+      "re_review_triggers": ["accepted-adr-proves-fts5-insufficient"]
+    },
+    {
+      "id": "mime-file-format-0.29.0",
+      "family": "mime-detection",
+      "disposition": "deferred",
+      "purpose": "Pure-Rust bounded-prefix media-type hinting",
+      "components": [],
+      "license": "Upstream metadata uses legacy MIT/Apache-2.0 while the artifact contains both license texts; normalization is not yet approved.",
+      "provenance": {
+        "source_url": "https://static.crates.io/crates/file-format/file-format-0.29.0.crate",
+        "source_sha256": "55d9ccda37e95b4f0978a3074b4a9939979103a7256459cfb449c9c84d1adf23",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-03-27",
+        "authority": "crates.io immutable package and upstream repository"
+      },
+      "maintenance": "Current candidate with no dependencies or build script; still requires a measured spoof/polyglot corpus.",
+      "unsafe_code": "The candidate forbids unsafe, but transitive and future-feature reviews remain required before admission.",
+      "platforms": {
+        "fedora-x86_64": "architecture-only",
+        "ubuntu-x86_64": "architecture-only",
+        "windows-11-x86_64": "architecture-only",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "extension-advisory-only", "bounded-prefix"],
+      "packaging": "Absent; no dependency is added by this review.",
+      "cancellation": "A bounded in-memory prefix probe must finish within the ingress deadline.",
+      "absence_behavior": "The in-tree closed detector returns an explicit unknown or ambiguous type.",
+      "rationale": "Promising candidate, deferred until license normalization and hostile-corpus comparison pass.",
+      "re_review_triggers": ["license-normalization-approved", "spoof-polyglot-corpus-passes", "dependency-admission-gate"]
+    },
+    {
+      "id": "mime-in-tree-bounded-probes-v1",
+      "family": "mime-detection",
+      "disposition": "accepted",
+      "purpose": "Closed Rust-owned bounded magic-byte, declared-type, container, and structural probe reconciliation",
+      "components": [],
+      "license": "Repository Apache-2.0; no additional package or signature database.",
+      "provenance": {
+        "source_url": "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md",
+        "source_sha256": "937f75604dd9b84d3f60a2566d480047385fcc5a43eb6532294f143715805837",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-08-21",
+        "authority": "accepted repository architecture decision"
+      },
+      "maintenance": "Owned in-tree with closed signatures and versioned behavior.",
+      "unsafe_code": "Repository Rust policy forbids unsafe; parser implementations remain separately reviewed.",
+      "platforms": {
+        "fedora-x86_64": "native-evidence-pending",
+        "ubuntu-x86_64": "native-evidence-pending",
+        "windows-11-x86_64": "native-evidence-pending",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "extension-advisory-only", "bounded-prefix"],
+      "packaging": "Repository-internal contract only; no libmagic, file command, updater, or external database.",
+      "cancellation": "Bounded prefix probes complete synchronously before the ingress deadline.",
+      "absence_behavior": "Unknown, conflicting, truncated, or ambiguous types remain explicit and cannot select a parser silently.",
+      "rationale": "It provides deterministic fail-visible type admission without ambient platform drift.",
+      "re_review_triggers": ["signature-set-change", "new-format", "parser-selection-change", "security-finding"]
+    },
+    {
+      "id": "ocr-cloud-service",
+      "family": "ocr",
+      "disposition": "rejected",
+      "purpose": "Remote cloud OCR as a parsing fallback",
+      "components": [],
+      "license": "Not applicable; the service class is prohibited for the strict-local foundational path.",
+      "provenance": {
+        "source_url": "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md",
+        "source_sha256": "937f75604dd9b84d3f60a2566d480047385fcc5a43eb6532294f143715805837",
+        "retrieved_on": "2026-08-29",
+        "release_date": "not-applicable",
+        "authority": "accepted no-silent-transmission architecture"
+      },
+      "maintenance": "Not applicable because the service class is rejected.",
+      "unsafe_code": "Remote disclosure, credential, retention, and endpoint risk replaces rather than removes native-code risk.",
+      "platforms": {
+        "fedora-x86_64": "architecture-only",
+        "ubuntu-x86_64": "architecture-only",
+        "windows-11-x86_64": "architecture-only",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "model-provenance", "confidence", "language", "process-isolation", "residue"],
+      "packaging": "No service adapter, credential, endpoint, or fallback is registered.",
+      "cancellation": "No request is permitted, so no remote cancellation ambiguity is introduced.",
+      "absence_behavior": "Scanned content remains visibly OCR-unavailable until an admitted local worker exists.",
+      "rationale": "A silent cloud fallback violates strict-local completeness and disclosure policy.",
+      "re_review_triggers": ["none-within-strict-local-profile"]
+    },
+    {
+      "id": "ocr-tesseract-5.5.3",
+      "family": "ocr",
+      "disposition": "deferred",
+      "purpose": "Optional isolated local OCR worker with exact language-model data",
+      "components": [],
+      "license": "Tesseract Apache-2.0 and Leptonica BSD-2-Clause; codecs and tessdata require separate exact review.",
+      "provenance": {
+        "source_url": "https://api.github.com/repos/tesseract-ocr/tesseract/releases/latest",
+        "source_sha256": "2b6b27514cffd11dfb5ac80d2e691273b7b7625606f93213260e89ee2a8a5776",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-08-29-reviewed-latest",
+        "authority": "official upstream release and security advisories"
+      },
+      "maintenance": "5.5.3 is the minimum evaluation candidate because two 2026 advisories affect earlier releases.",
+      "unsafe_code": "Native C/C++, Leptonica, codecs, model files, and process behavior require isolated native review and fuzzing.",
+      "platforms": {
+        "fedora-x86_64": "architecture-only",
+        "ubuntu-x86_64": "architecture-only",
+        "windows-11-x86_64": "architecture-only",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "model-provenance", "confidence", "language", "process-isolation", "residue", "page-count", "image-pixels"],
+      "packaging": "Absent until exact binaries/source, Leptonica/codecs, tessdata hashes/licenses, and per-platform removal evidence pass.",
+      "cancellation": "Use engine deadline monitoring plus a hard supervisor timeout, descendant kill, and scratch cleanup.",
+      "absence_behavior": "OCR-eligible pages remain explicit scanned candidates with no recognized text.",
+      "rationale": "Quality may justify native OCR later, but current provenance, packaging, accuracy, and native evidence are incomplete.",
+      "re_review_triggers": ["story-60.2", "exact-tessdata-selected", "native-package-ready", "accuracy-threshold-set", "advisory-change"]
+    },
+    {
+      "id": "parser-calamine-0.36.1",
+      "family": "parser",
+      "disposition": "deferred",
+      "purpose": "Spreadsheet parsing alternative for later XLS/XLSX fidelity work",
+      "components": [],
+      "license": "MIT; transitive and format-specific obligations remain unadmitted.",
+      "provenance": {
+        "source_url": "https://static.crates.io/crates/calamine/calamine-0.36.1.crate",
+        "source_sha256": "5fa68281b1a76b54a62156474adb06bb380a67e07dd60656e3217152b42183f3",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-07-27",
+        "authority": "crates.io immutable package"
+      },
+      "maintenance": "Current candidate; hostile workbook, formula, encryption, and fidelity evidence is not complete.",
+      "unsafe_code": "No direct unsafe was observed in the immutable source scan; transitive and parser-isolation review remains required.",
+      "platforms": {
+        "fedora-x86_64": "architecture-only",
+        "ubuntu-x86_64": "architecture-only",
+        "windows-11-x86_64": "architecture-only",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "row-count", "cell-count", "string-bytes"],
+      "packaging": "Absent and deferred to the owning spreadsheet story.",
+      "cancellation": "Admission requires bounded parsing in a terminable parser worker.",
+      "absence_behavior": "Current bounded ZIP/XML spreadsheet path remains; unsupported legacy formats are explicit.",
+      "rationale": "The current story freezes seams and does not need an additional spreadsheet parser.",
+      "re_review_triggers": ["story-62.2", "fidelity-corpus-ready", "hostile-workbook-corpus-ready"]
+    },
+    {
+      "id": "parser-lopdf-0.44.0",
+      "family": "parser",
+      "disposition": "accepted",
+      "purpose": "Existing bounded PDF extraction with explicit partial, encrypted, malformed, and OCR-required states",
+      "components": [
+        {"name": "lopdf", "version": "0.44.0", "checksum_sha256": "5e2ec995d822e05cabc3f06d196ee43650af3fe4fe38012cacb35e0c3d113b68"}
+      ],
+      "license": "MIT; retained by existing supply-chain evidence.",
+      "provenance": {
+        "source_url": "https://static.crates.io/crates/lopdf/lopdf-0.44.0.crate",
+        "source_sha256": "5e2ec995d822e05cabc3f06d196ee43650af3fe4fe38012cacb35e0c3d113b68",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-07-10",
+        "authority": "crates.io immutable package and existing locked provenance"
+      },
+      "maintenance": "Current exact release; known extraction limitations must remain visible rather than complete.",
+      "unsafe_code": "No direct unsafe was found in the immutable source scan; malformed-input isolation and transitive review remain required.",
+      "platforms": {
+        "fedora-x86_64": "native-evidence-pending",
+        "ubuntu-x86_64": "native-evidence-pending",
+        "windows-11-x86_64": "native-evidence-pending",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "page-count", "object-count", "decoded-bytes"],
+      "packaging": "Already locked with default features disabled; this review adds no renderer or OCR component.",
+      "cancellation": "Use bounded parser work and terminate the isolated worker on deadline.",
+      "absence_behavior": "PDF extraction blocks or reports partial/unsupported without silent OCR or text invention.",
+      "rationale": "Reuse preserves the current bounded PDF path without adding a second parser.",
+      "re_review_triggers": ["version-change", "feature-change", "security-advisory", "fidelity-regression", "platform-package-change"]
+    },
+    {
+      "id": "parser-quick-xml-0.41.0",
+      "family": "parser",
+      "disposition": "accepted",
+      "purpose": "Existing bounded streaming XML parsing for admitted OOXML containers",
+      "components": [
+        {"name": "quick-xml", "version": "0.41.0", "checksum_sha256": "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1"}
+      ],
+      "license": "MIT; retained by existing supply-chain evidence.",
+      "provenance": {
+        "source_url": "https://static.crates.io/crates/quick-xml/quick-xml-0.41.0.crate",
+        "source_sha256": "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-06-29",
+        "authority": "crates.io immutable package and existing locked provenance"
+      },
+      "maintenance": "Maintained; the pinned version remains until a separate upgrade review.",
+      "unsafe_code": "Direct source contains narrowly scoped unsafe sites; entity/network resolution remains absent and parser isolation is still required.",
+      "platforms": {
+        "fedora-x86_64": "native-evidence-pending",
+        "ubuntu-x86_64": "native-evidence-pending",
+        "windows-11-x86_64": "native-evidence-pending",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "event-count", "nesting-depth", "text-bytes"],
+      "packaging": "Already locked with default features disabled; no external entity resolver or native XML library.",
+      "cancellation": "Check cancellation between bounded streaming events and terminate the worker on deadline.",
+      "absence_behavior": "Affected OOXML extraction blocks visibly while unrelated text ingestion remains available.",
+      "rationale": "The streaming parser fits the existing bounded ZIP/XML path and adds no ambient authority.",
+      "re_review_triggers": ["version-change", "feature-change", "entity-behavior-change", "security-advisory"]
+    },
+    {
+      "id": "parser-tree-sitter-locked-family",
+      "family": "parser",
+      "disposition": "accepted",
+      "purpose": "Existing deterministic structural source parsing for the exact admitted language grammar set",
+      "components": [
+        {"name": "tree-sitter", "version": "0.26.12", "checksum_sha256": "83c567a8e18ae93f20982c90370b16fd24023aeaf52f6052b96957ab253a0fec"},
+        {"name": "tree-sitter-javascript", "version": "0.25.0", "checksum_sha256": "68204f2abc0627a90bdf06e605f5c470aa26fdcb2081ea553a04bdad756693f5"},
+        {"name": "tree-sitter-python", "version": "0.25.0", "checksum_sha256": "6bf85fd39652e740bf60f46f4cda9492c3a9ad75880575bf14960f775cb74a1c"},
+        {"name": "tree-sitter-rust", "version": "0.24.2", "checksum_sha256": "439e577dbe07423ec2582ac62c7531120dbfccfa6e5f92406f93dd271a120e45"},
+        {"name": "tree-sitter-swift", "version": "0.7.3", "checksum_sha256": "fe36052155b9dd69ca82b3b8f1b4ccfb2d867125ac1a4db1dd7331829242668c"},
+        {"name": "tree-sitter-typescript", "version": "0.23.2", "checksum_sha256": "6c5f76ed8d947a75cc446d5fccd8b602ebf0cde64ccf2ffa434d873d7a575eff"}
+      ],
+      "license": "MIT for the current exact base and grammar components; retained by existing supply-chain evidence.",
+      "provenance": {
+        "source_url": "https://static.crates.io/crates/tree-sitter/tree-sitter-0.26.12.crate",
+        "source_sha256": "83c567a8e18ae93f20982c90370b16fd24023aeaf52f6052b96957ab253a0fec",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-08-08",
+        "authority": "crates.io immutable base and grammar packages plus existing locked provenance"
+      },
+      "maintenance": "Current exact family; every grammar and ABI change is independently re-reviewed.",
+      "unsafe_code": "Generated C parsers and Rust FFI are a contained native boundary; dynamic grammar loading is prohibited.",
+      "platforms": {
+        "fedora-x86_64": "native-evidence-pending",
+        "ubuntu-x86_64": "native-evidence-pending",
+        "windows-11-x86_64": "native-evidence-pending",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "node-count", "tree-depth", "output-bytes"],
+      "packaging": "Exact grammars are statically locked; no dynamic grammar, plugin, or runtime download.",
+      "cancellation": "Use parser progress callbacks plus a hard worker deadline and termination.",
+      "absence_behavior": "Unsupported languages remain explicit and do not fall back to an ambient parser.",
+      "rationale": "It reuses the existing exact structural parser family without widening languages or authority.",
+      "re_review_triggers": ["base-version-change", "grammar-change", "abi-change", "language-set-change", "security-advisory"]
+    },
+    {
+      "id": "tokenization-huggingface-0.23.1",
+      "family": "tokenization",
+      "disposition": "rejected",
+      "purpose": "Universal model-independent exact token counter",
+      "components": [],
+      "license": "Apache-2.0, but licensing alone does not establish exact model/runtime parity.",
+      "provenance": {
+        "source_url": "https://static.crates.io/crates/tokenizers/tokenizers-0.23.1.crate",
+        "source_sha256": "44e5bea67576e04b6ff8564c5d9e09c2ef0cf476502245f2f120e497769d3112",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-04-27",
+        "authority": "crates.io immutable package and official upstream source"
+      },
+      "maintenance": "Maintained, but default native/parallel features and vocabulary/model coupling exceed the required boundary.",
+      "unsafe_code": "Direct unsafe plus optional C/C++ tokenizer paths and broad algorithm surface require a separate admission.",
+      "platforms": {
+        "fedora-x86_64": "architecture-only",
+        "ubuntu-x86_64": "architecture-only",
+        "windows-11-x86_64": "architecture-only",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "exact-profile-identity", "token-expansion"],
+      "packaging": "Absent and prohibited as a universal first-GA counting authority.",
+      "cancellation": "No accepted exact-profile cancellation and parity evidence exists.",
+      "absence_behavior": "Exact route-owned token counting remains authoritative; conservative estimates remain disclosed preflight only.",
+      "rationale": "A compatible tokenizer cannot establish exact admitted model, template, codec, and runtime parity.",
+      "re_review_triggers": ["exact-admitted-profile-requires-library", "parity-corpus-passes", "minimal-feature-review-passes"]
+    },
+    {
+      "id": "tokenization-profile-owned-exact-counter",
+      "family": "tokenization",
+      "disposition": "accepted",
+      "purpose": "Exact token counting by the admitted model runtime and family codec, with conservative disclosed estimates before admission",
+      "components": [],
+      "license": "No new package; exact tokenizer, vocabulary, template, codec, and model licenses belong to each admitted profile.",
+      "provenance": {
+        "source_url": "MODEL-GATEWAY.md",
+        "source_sha256": "c84f6df2226f5771a4684516127c7ac9644e9d6220713748f3aae69d3b264d8a",
+        "retrieved_on": "2026-08-29",
+        "release_date": "2026-08-22",
+        "authority": "normative candidate-neutral Model Gateway specification"
+      },
+      "maintenance": "Profile identity changes invalidate token and context qualification evidence.",
+      "unsafe_code": "No new tokenizer boundary; the selected runtime remains independently qualified.",
+      "platforms": {
+        "fedora-x86_64": "native-evidence-pending",
+        "ubuntu-x86_64": "native-evidence-pending",
+        "windows-11-x86_64": "native-evidence-pending",
+        "macos-apple-silicon": "blocked-post-ga"
+      },
+      "resource_controls": ["input-bytes", "memory", "cpu-time", "wall-time", "cancellation", "cleanup", "exact-profile-identity", "context-limit", "uncertainty-disclosure"],
+      "packaging": "No global tokenizer package; token assets ship only inside an admitted exact profile closure.",
+      "cancellation": "Counting is bounded by request and route deadlines; runtime loss blocks exact-fit claims.",
+      "absence_behavior": "A conservative tested estimate is visibly uncertain and cannot establish exact fit or required-context completion.",
+      "rationale": "This preserves candidate neutrality and binds counting to the bytes and runtime that actually execute.",
+      "re_review_triggers": ["model-change", "tokenizer-change", "template-change", "codec-change", "runtime-change", "context-change"]
+    }
+  ],
+  "product_truth": {
+    "adds_dependency": false,
+    "changes_lockfile": false,
+    "enables_capability": false,
+    "admits_ocr": false,
+    "enables_model": false,
+    "claims_native_evidence": false,
+    "claims_platform_support": false,
+    "claims_release_readiness": false
+  }
+}

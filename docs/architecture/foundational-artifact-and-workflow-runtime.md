@@ -544,6 +544,28 @@ Pure Rust is preferred where it satisfies quality and packaging requirements.
 Native PDF/OCR helpers remain optional, isolated, feature-gated adapters with a
 pure-Rust or explicit unsupported fallback.
 
+The machine-readable [dependency disposition
+record](../../architecture/dependency-dispositions.json) closes the bounded
+Task 1.2.4.1 review as of 2026-08-29. It retains only the already locked
+Tree-sitter, `lopdf`, `quick-xml`, `zip`, and SQLCipher-backed `rusqlite`
+components plus in-tree MIME probes and exact profile-owned token counting.
+Every accepted Cargo identity is cross-checked against the existing locked
+provenance graph; the record does not create a second dependency authority.
+
+`file-format` and Tesseract remain deferred pending their owning license,
+hostile-corpus, model-data, packaging, cancellation, accuracy, and native
+platform gates. Broader archive formats and `calamine` remain deferred until a
+named format requirement reaches its owning story. A universal Hugging Face
+tokenizer, Tantivy as a first-GA index, and cloud OCR are rejected for this
+boundary: exact route tokenization and SQLite FTS5 preserve smaller, singular
+authorities. Unknown or unavailable functionality remains visible; there is no
+silent parser, tokenizer, index, or remote fallback.
+
+This review adds no dependency, changes no lockfile, enables no ingestion or
+OCR capability, admits no model, and supplies no native-platform, support, or
+release evidence. Every version, feature, upstream, license, advisory,
+platform-package, resource, or behavior change triggers a new review.
+
 ## 14. Security and Privacy Gates
 
 The two epics must prove:

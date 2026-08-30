@@ -91,6 +91,12 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
             "VS Code activation events changed",
             audit.audit_vscode_manifest(self.policy, activation, set()),
         )
+        activation = copy.deepcopy(manifest)
+        activation["activationEvents"].append("onUri")
+        self.assertIn(
+            "VS Code activation events changed",
+            audit.audit_vscode_manifest(self.policy, activation, set()),
+        )
         install_script = copy.deepcopy(manifest)
         install_script["scripts"]["postinstall"] = "node download-runtime.mjs"
         self.assertIn(
@@ -99,6 +105,14 @@ class StrictLocalSourceAuditTests(unittest.TestCase):
         )
         contribution = copy.deepcopy(manifest)
         contribution["contributes"]["commands"] = [{"command": "agentmage.update"}]
+        self.assertIn(
+            "VS Code contribution surface changed",
+            audit.audit_vscode_manifest(self.policy, contribution, set()),
+        )
+        contribution = copy.deepcopy(manifest)
+        contribution["contributes"]["commands"].append(
+            {"command": "agentmage.remote", "title": "Remote Agent"}
+        )
         self.assertIn(
             "VS Code contribution surface changed",
             audit.audit_vscode_manifest(self.policy, contribution, set()),

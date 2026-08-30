@@ -784,9 +784,22 @@ artifact, and recovery contracts remain authoritative.
     delivers no MCP adapter or parser implementation and makes no macOS, release, or runtime
     implementation claim.
 - [ ] **Task 1.2.4 - Review dependencies and migration risk**
-  - [ ] **Sub-task 1.2.4.1:** Evaluate parser, MIME detection, tokenization, archive, OCR, and
+  - [x] **Sub-task 1.2.4.1:** Evaluate parser, MIME detection, tokenization, archive, OCR, and
     database dependencies for license, provenance, maintenance, unsafe-code, platform, and resource
-    implications; record accepted, rejected, and deferred candidates.
+    implications; record accepted, rejected, and deferred candidates. Evidence:
+    `architecture/dependency-dispositions.json` records a closed, sorted inventory spanning all six
+    required families, with exact accepted, deferred, and rejected dispositions and separate
+    license, provenance, maintenance, unsafe-code, platform, packaging, cancellation, absence, and
+    resource-control findings. Every upstream is pinned to its retrieval date, effective window,
+    exact source artifact or official response, and SHA-256 digest. The fail-closed validator in
+    `scripts/dependency_dispositions.py` reconciles every accepted Cargo component to the existing
+    lock-derived provenance graph and refuses status promotion, package smuggling, widened platform
+    claims, a second database authority, non-profile token counting, extension-authoritative MIME,
+    or incomplete archive and OCR controls. Thirteen focused mutation tests in
+    `tests/test_dependency_dispositions.py` exercise those refusals. The dependency, architecture,
+    current-requirements, documentation, supply-chain, artifact-scan, full product, and diff gates
+    pass. This review adds no dependency, changes no lockfile, enables no parser or OCR capability,
+    admits no model, and claims no native-platform, support, or release evidence.
   - [ ] **Sub-task 1.2.4.2:** Publish a schema-evolution and rollback plan for additive records,
     event compatibility, cache invalidation, unsupported clients, and downgrade behavior.
   - [ ] **Sub-task 1.2.4.3:** Decide Rust host and parser/OCR process placement, package features,

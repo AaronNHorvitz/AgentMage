@@ -84,6 +84,7 @@ def load_policy(path: Path = POLICY_PATH) -> dict[str, Any]:
         "allowed_top_level_keys",
         "chat_provider_keys",
         "contribution_keys",
+        "contributions",
         "extension_kind",
         "main",
         "runtime_packages",
@@ -107,6 +108,11 @@ def load_policy(path: Path = POLICY_PATH) -> dict[str, Any]:
             raise StrictLocalSourceAuditError(
                 f"strict-local VS Code manifest list is invalid: {key}"
             )
+    contributions = manifest.get("contributions")
+    if not isinstance(contributions, dict) or not contributions:
+        raise StrictLocalSourceAuditError(
+            "strict-local VS Code contributions are invalid"
+        )
     if not isinstance(manifest.get("main"), str) or not manifest["main"]:
         raise StrictLocalSourceAuditError("strict-local VS Code entry point is invalid")
     scripts = manifest.get("scripts")
@@ -365,7 +371,12 @@ def audit_vscode_manifest(
     failures: list[str] = []
     if sorted(manifest) != profile["allowed_top_level_keys"]:
         failures.append("VS Code manifest surface changed")
-    if manifest.get("activationEvents") != profile["activation_events"]:
+    activation_events = manifest.get("activationEvents")
+    if (
+        not isinstance(activation_events, list)
+        or any(not isinstance(item, str) for item in activation_events)
+        or sorted(activation_events) != profile["activation_events"]
+    ):
         failures.append("VS Code activation events changed")
     if manifest.get("extensionKind") != profile["extension_kind"]:
         failures.append("VS Code extension execution location changed")
@@ -374,7 +385,11 @@ def audit_vscode_manifest(
     if manifest.get("scripts") != profile["scripts"]:
         failures.append("VS Code package scripts changed")
     contributes = manifest.get("contributes")
-    if not isinstance(contributes, dict) or sorted(contributes) != profile["contribution_keys"]:
+    if (
+        not isinstance(contributes, dict)
+        or sorted(contributes) != profile["contribution_keys"]
+        or contributes != profile["contributions"]
+    ):
         failures.append("VS Code contribution surface changed")
     else:
         providers = contributes.get("languageModelChatProviders")
