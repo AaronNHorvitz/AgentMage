@@ -2,7 +2,7 @@
   "active_content_execution": false,
   "admission_generator": {
     "path": "scripts/engineering_artifact_admission_fixtures.py",
-    "sha256": "3bd8e4695fa01cfe7e8109308c7f6ea54070cc969184c029ba8ca149e927bae2"
+    "sha256": "932f4a5333a9ff11587cc0825c5c10c872dc81319b2da87ad02bfdb89a74d692"
   },
   "archive": {
     "byte_length": 9160,
@@ -822,7 +822,7 @@
     "path": "scripts/engineering_artifact_adversarial_fixtures.py",
     "sha256": "1fd687295faa31bd3024cf70cb1968f3b37a5437af78b76aa45a17c58d4d989b"
   },
-  "manifest_sha256": "1971b4e9e2ed3d7ee6bd22adc0c31f0e38e6b7aeb5623fa735e583b2b528c49f",
+  "manifest_sha256": "178b7dde490e48d384d26c18ff49ebd634c25fdcc318143e6793b19d4203b70e",
   "network_access": false,
   "product_security_claim": "none",
   "required_categories": [

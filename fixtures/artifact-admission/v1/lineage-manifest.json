@@ -3804,7 +3804,7 @@
     "sha256": "1e54897c239a5cfc629d9ad5591ca93cede2242447b2706e8cdd6156b36bd268"
   },
   "manifest_id": "engineering-artifact-lineage-v1",
-  "manifest_sha256": "13a24bd797eb638d6c5b0daef7bdb89d1d5d3696d96c0d852a1c357107f4e230",
+  "manifest_sha256": "b4b1ec3ef7943f32d9347ac4307bedff3f2eeebebb95f904e075283958f00191",
   "model_delivery_claim": "none",
   "product_parser_support_claim": "none",
   "range_count": 21,
@@ -3813,11 +3813,11 @@
   "source_manifests": [
     {
       "path": "fixtures/artifact-admission/v1/manifest.json",
-      "sha256": "166645d2ed0dce2fca6060876704e6b873f3d8fc2999390a6eab2896cd728350"
+      "sha256": "425c82488a2370e2e8a37e011927b1bd69fb12f7d8dfcdb7b6ad83c25bc1c5da"
     },
     {
       "path": "fixtures/artifact-admission/v1/adversarial-manifest.json",
-      "sha256": "b1e81d786937ca26ba726a6b68dcd2101819f12c94468639ff979fd6a7c37bb0"
+      "sha256": "003c994e6a365e33d4c8a7fa3908f461f05c737b95e954d3e50fc3d0c4ffad44"
     }
   ],
   "status": "synthetic-lineage-contract",

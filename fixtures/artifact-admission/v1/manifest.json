@@ -1094,9 +1094,9 @@
   "generated_on": "2026-08-29",
   "generator": {
     "path": "scripts/engineering_artifact_admission_fixtures.py",
-    "sha256": "3bd8e4695fa01cfe7e8109308c7f6ea54070cc969184c029ba8ca149e927bae2"
+    "sha256": "932f4a5333a9ff11587cc0825c5c10c872dc81319b2da87ad02bfdb89a74d692"
   },
-  "manifest_sha256": "cc4db206633bf17ca6e587cf9a01549a1875ac4040ebcadd4f6257966af4cb3a",
+  "manifest_sha256": "b664eac224d83a2908d6eab25ed5fa833d275ab827428dbc22990906ee0bde9c",
   "network_access": false,
   "product_support_claim": "none",
   "required_categories": [

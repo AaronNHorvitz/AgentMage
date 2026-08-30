@@ -373,8 +373,13 @@ def validate_archive(content: bytes, entries: dict[str, bytes]) -> list[str]:
         infos = archive.infolist()
         if [info.filename for info in infos] != list(entries):
             failures.append("artifact admission archive closure or order drifted")
-        if archive.testzip() is not None:
-            failures.append("artifact admission archive contains corrupt bytes")
+        try:
+            corrupt_name = archive.testzip()
+        except (OSError, RuntimeError, zipfile.BadZipFile) as error:
+            failures.append(f"artifact admission archive corruption check failed: {error}")
+            corrupt_name = None
+        if corrupt_name is not None:
+            failures.append(f"artifact admission archive contains corrupt bytes: {corrupt_name}")
         for info in infos:
             mode = info.external_attr >> 16
             if (
@@ -385,7 +390,12 @@ def validate_archive(content: bytes, entries: dict[str, bytes]) -> list[str]:
                 or mode & 0o170000 == 0o120000
             ):
                 failures.append(f"artifact admission archive entry is unsafe: {info.filename}")
-            if entries.get(info.filename) != archive.read(info.filename):
+            try:
+                observed = archive.read(info.filename)
+            except (OSError, RuntimeError, zipfile.BadZipFile) as error:
+                failures.append(f"artifact admission archive entry cannot be read: {info.filename}: {error}")
+                continue
+            if entries.get(info.filename) != observed:
                 failures.append(f"artifact admission archive bytes drifted: {info.filename}")
     return failures
 

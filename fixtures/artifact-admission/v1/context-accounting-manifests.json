@@ -6,7 +6,7 @@
   },
   "lineage_manifest": {
     "path": "fixtures/artifact-admission/v1/lineage-manifest.json",
-    "sha256": "1670543b14ea625c003d54902b4e12f4b84cd41b6183b1ddad84ab2c76ba0bcf"
+    "sha256": "076689752085a1323f6f2be2f38f05ad65a431f004afe4032796a7567022f7e9"
   },
   "model_request_executed": false,
   "product_context_delivery_claim": "none",
@@ -1921,7 +1921,7 @@
   "source_count_per_manifest": 26,
   "status": "synthetic-context-accounting-contract",
   "suite_id": "engineering-context-accounting-v1",
-  "suite_sha256": "9a736bde140b0df6ec3b77912968755958ec1a0d6c2f536804600926b2c8320b",
+  "suite_sha256": "dbc35dd7af402f523345ad0827be1db725ea251abf9d4da4d9612fd072cb1514",
   "synthetic_only": true,
   "task_id": "2.4.2.2"
 }
