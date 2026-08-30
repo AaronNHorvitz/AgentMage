@@ -1,0 +1,85 @@
+{
+  "claims": {
+    "macos_implementation_complete": false,
+    "macos_support": false,
+    "package_or_release": false
+  },
+  "contract": {
+    "architecture": "arm64",
+    "forbidden_entitlements": [
+      "com.apple.security.network.client",
+      "com.apple.security.network.server",
+      "com.apple.security.files.user-selected.read-write",
+      "com.apple.security.files.all",
+      "com.apple.security.cs.allow-jit",
+      "com.apple.security.cs.disable-library-validation"
+    ],
+    "minimum_macos_major_version": 15,
+    "requested_entitlement_count": 5,
+    "requested_entitlements": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.application-groups",
+      "com.apple.security.files.bookmarks.app-scope",
+      "com.apple.security.files.user-selected.read-only",
+      "keychain-access-groups"
+    ],
+    "security_framework_observer_present": true,
+    "startup_refusal_count": 12,
+    "verified_identity_constructible_only_after_admission": true
+  },
+  "execution": {
+    "app_sandbox_execution_performed": false,
+    "apple_silicon_execution_performed": false,
+    "signing_performed": false,
+    "swift_build_performed": false,
+    "swift_tests_performed": false,
+    "swift_toolchain_available": false
+  },
+  "record_type": "macos-kernel-host-source-contract",
+  "remaining_blockers": [
+    "Apple Silicon Swift 6 build and test have not run.",
+    "Developer ID signing and Hardened Runtime observation have not run.",
+    "App Sandbox enforcement and entitlement inspection have not run.",
+    "The shared Rust kernel has not been integrated into a signed macOS host executable.",
+    "Physical MacBook Pro M5 qualification has not run."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "platforms/macos/Configuration/KernelHost.contract-fixture.entitlements",
+      "sha256": "6cd4f989497af7b5eeba5e8031e3cb9c81dfd15e96a328587cff25d937e00299"
+    },
+    {
+      "path": "platforms/macos/README.md",
+      "sha256": "50fbf74150356940a99cfc3e3ea628b07c54454fed8aab292a99f314f660e97c"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/KernelHostAdmission.swift",
+      "sha256": "f90d786495c19337a285814d1c8ed0d4842720544470d08701726c0c5962e4bd"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",
+      "sha256": "7f39d8dcf840ea510897d9c6fd0006af33c33993b53d2a816f5e0a44c94718fc"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/KernelHostAdmissionTests.swift",
+      "sha256": "051d8b6c97f42d7887f8a8e8e13b616b638fff1bca3ff82c833032c7b135309d"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/PlatformBoundaryTests.swift",
+      "sha256": "a4372268b9696040c950594a992980e8ae71581050ca15744926cf3dd1b26129"
+    },
+    {
+      "path": "scripts/macos_kernel_host_source_contract.py",
+      "sha256": "8397f56f86096b3fd4dd9528ce327a544ac32c752bdb51472863fbffc6af297b"
+    },
+    {
+      "path": "tests/test_macos_kernel_host_source_contract.py",
+      "sha256": "59f747ef169ef60d8ca700152cccb4232b4b07a5ca1ffe86972fe791a3bacf86"
+    }
+  ],
+  "source_revision": "c08c939fb628781a0c78b15b50b92b4a00b7dd71",
+  "source_tree": "078aac7a1b15d7ecaf53884314dd7898c7abe1f0",
+  "status": "partial-source-only-blocked-macos",
+  "task_id": "8.1.1.1"
+}
