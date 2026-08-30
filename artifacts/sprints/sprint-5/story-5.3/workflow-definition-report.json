@@ -1,0 +1,98 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 15802,
+      "path": "kernel/engine/src/workflow_definition.rs",
+      "sha256": "8d4debb08bc697221f43a1bfb8379bc35db964613093077c6de677a8775d6f26"
+    },
+    {
+      "byte_length": 13997,
+      "path": "kernel/engine/tests/workflow_definition.rs",
+      "sha256": "f16ed2c2992087545eb621fdc0933d8e13a94da79c0e1beadefb52f9c2671353"
+    },
+    {
+      "byte_length": 2568,
+      "path": "docs/verification/story-5-3-workflow-definition-evidence.md",
+      "sha256": "cddeeb44a5ddede635715681a8cd80cbb58c90298ed08a32976c1d1f64a60da9"
+    },
+    {
+      "byte_length": 6837,
+      "path": "scripts/workflow_definition_evidence.py",
+      "sha256": "2160b100c5a341f1dccdfe52c217f0912c6b913f4948000a4d4c251623676d27"
+    },
+    {
+      "byte_length": 1410,
+      "path": "tests/test_workflow_definition_evidence.py",
+      "sha256": "62e04f6f80d6dc25796d1da1e4c986dd470efff86e5a31ef6a067a89ca5ffa74"
+    },
+    {
+      "byte_length": 1102,
+      "path": "artifacts/sprints/sprint-5/story-5.3/workflow-definition-results.log",
+      "sha256": "4ddaca6ad17e654ebbcb813ee5fce9570f773cc6bac76521a4ce02945062721b"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test workflow_definition --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-30",
+  "graph_contract": {
+    "definition_sha256_verified": true,
+    "dependency_graph_acyclic": true,
+    "dependency_order_closed": true,
+    "entry_frontier_exact": true,
+    "one_execution_surface_per_step_minimum": true,
+    "one_policy_binding_per_step": true
+  },
+  "product_truth": {
+    "execution_authority_created": false,
+    "native_platform_claim": "none",
+    "network_calls": 0,
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "record_type": "agentmage-workflow-definition-evidence",
+  "requirements": [
+    "AM-WKF-001",
+    "AM-VER-001",
+    "AT-WKF-001",
+    "AT-VER-001"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-contract-evidence",
+  "step_policy_contract": {
+    "approval_fails_closed_for_high_effect_classes": true,
+    "budgets_exactly_bound": true,
+    "effect_and_retry_exactly_bound": true,
+    "idempotency_or_desired_state_proof_required_for_effects": true,
+    "policy_identity_reuse_allowed": false,
+    "policy_sha256_verified": true,
+    "postcondition_verifiers_required": true,
+    "preflights_required": true
+  },
+  "story_id": "5.3",
+  "task_id": "5.3.1.1",
+  "terminal_contract": {
+    "absorbing_terminal_states": 8,
+    "lifecycle_states": 18,
+    "nonterminal_states": 10,
+    "unknown_terminal_state_admitted": false
+  },
+  "test_contract": {
+    "clippy_warnings_allowed": 0,
+    "focused_tests": 8,
+    "required_markers": [
+      "admits_an_exact_closed_graph_and_exposes_no_execution_authority ... ok",
+      "definition_digest_and_exact_entry_frontier_fail_closed ... ok",
+      "dependency_order_and_non_executable_steps_are_denied ... ok",
+      "policy_set_must_be_exact_and_identity_unique ... ok",
+      "every_step_policy_surface_is_bound_to_the_definition ... ok",
+      "preflight_postcondition_and_policy_integrity_mutations_are_denied ... ok",
+      "effect_classes_require_conservative_approval_and_idempotency_policy ... ok",
+      "terminal_state_family_is_closed_and_nonterminal_states_do_not_leak_into_it ... ok"
+    ]
+  }
+}

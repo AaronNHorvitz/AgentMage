@@ -169,6 +169,8 @@ pub mod work_packet;
 pub mod workflow_authority;
 /// Immutable multi-dimensional workflow-supervision policy and checked budget accounting.
 pub mod workflow_budget;
+/// Fail-closed admission of immutable workflow graphs and their exact step policies.
+pub mod workflow_definition;
 /// Complete state fingerprints and policy-bound repeated no-progress detection.
 pub mod workflow_progress;
 /// Non-secret terminal reasons and inert safe next actions for workflow supervision.
