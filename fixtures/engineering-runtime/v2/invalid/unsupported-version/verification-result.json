@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "verification_result_id": "verification:1",
+  "workflow_id": "workflow:1",
+  "step_id": "step:1",
+  "verifier_id": "verifier:1",
+  "verifier_version": "1",
+  "subject_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "observed_evidence_sha256s": [
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "preserved_invariants": [
+    "invariant:1"
+  ],
+  "prohibited_effects_observed": [],
+  "outcome": "passed",
+  "current": true,
+  "result_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

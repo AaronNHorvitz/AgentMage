@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "artifact_id": "artifact:1",
+  "request_id": "request:1",
+  "authority_id": "authority:1",
+  "origin": "paste",
+  "media_type": "text/plain",
+  "classification": "internal",
+  "capture_state": "captured",
+  "byte_length": 4,
+  "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "collected_at": "2026-08-29T12:00:00Z",
+  "unexpected": true
+}

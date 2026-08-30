@@ -1,0 +1,17 @@
+{
+  "schema_version": 2,
+  "ingestion_id": "ingestion:1",
+  "artifact_id": "artifact:1",
+  "disposition": "parsed",
+  "source": {
+    "artifact_id": "artifact:1",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "byte_length": 4
+  },
+  "transformation_ids": [
+    "transformation:1"
+  ],
+  "warnings": [],
+  "error_code": null,
+  "terminal": false
+}

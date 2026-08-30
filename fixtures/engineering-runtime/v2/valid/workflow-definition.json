@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "workflow_id": "workflow:1",
+  "workflow_version": 1,
+  "input_schema": {
+    "schema_id": "schema:input",
+    "schema_version": 1,
+    "schema_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "output_schema": {
+    "schema_id": "schema:output",
+    "schema_version": 1,
+    "schema_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "steps": [
+    {
+      "step_id": "step:1",
+      "depends_on": [],
+      "model_role": null,
+      "tool_id": "tool:1",
+      "effect_class": "read_only",
+      "retry_class": "recoverable_read",
+      "verifier_ids": [
+        "verifier:1"
+      ],
+      "budgets": {
+        "turns": 1,
+        "tokens": 1,
+        "duration_ms": 1,
+        "tool_calls": 1,
+        "attempts": 1,
+        "no_progress_events": 1,
+        "output_bytes": 1,
+        "memory_bytes": 1,
+        "cost_minor_units": 0
+      }
+    }
+  ],
+  "entry_step_ids": [
+    "step:1"
+  ],
+  "definition_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

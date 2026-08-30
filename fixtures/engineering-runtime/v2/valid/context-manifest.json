@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "context_manifest_id": "context:1",
+  "session_id": "session:1",
+  "turn_id": "turn:1",
+  "model_profile_id": "model:1",
+  "source_artifact_count": 1,
+  "items": [
+    {
+      "artifact_id": "artifact:1",
+      "disposition": "included",
+      "ranges": [
+        {
+          "start_byte": 0,
+          "end_byte_exclusive": 4
+        }
+      ],
+      "token_count": 1,
+      "reason_code": null,
+      "reason": null
+    }
+  ],
+  "total_input_tokens": 1,
+  "reserved_output_tokens": 1,
+  "safety_margin_tokens": 1,
+  "manifest_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+}

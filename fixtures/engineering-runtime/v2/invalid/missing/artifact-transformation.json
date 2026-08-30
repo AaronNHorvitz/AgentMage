@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "artifact_id": "artifact:1",
+  "transformer_id": "parser:1",
+  "transformer_version": "1",
+  "input_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "output_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_ranges": [
+    {
+      "start_byte": 0,
+      "end_byte_exclusive": 4
+    }
+  ],
+  "warnings": [],
+  "reproducible": true
+}
