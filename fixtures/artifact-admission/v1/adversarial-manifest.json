@@ -1,0 +1,844 @@
+{
+  "active_content_execution": false,
+  "admission_generator": {
+    "path": "scripts/engineering_artifact_admission_fixtures.py",
+    "sha256": "3bd8e4695fa01cfe7e8109308c7f6ea54070cc969184c029ba8ca149e927bae2"
+  },
+  "archive": {
+    "byte_length": 9160,
+    "entry_count": 11,
+    "format": "zip-stored-outer-container",
+    "path": "fixtures/artifact-admission/v1/artifact-adversarial-corpus-v1.zip",
+    "sha256": "3515bc6b3cc0c9f7298660954c3462687d5eb1687167ef7417dbc906d21ea0ff"
+  },
+  "cases": [
+    {
+      "archive_entry": "hostile/malformed/truncated.zip",
+      "artifact_kind": "archive",
+      "capture_expectation": "captured",
+      "category": "malformed_package",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "malformed_container",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": false,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "deny_before_extraction"
+      },
+      "fixture_id": "adversarial-malformed_package-1",
+      "identity_relation": null,
+      "media_type": "application/zip",
+      "offered_byte_identity": {
+        "byte_length": 35,
+        "sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12"
+      },
+      "protected_descriptor_sha256": "dc91b09e350d23cef9cbebf90a7843f6fc648b237aa5f373515fa8e80c2fc930",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "archive",
+          "origin_id": "origin-adversarial-malformed_package-1",
+          "origin_sha256": "7617402eab21aa896b4bd3372e729518e782dd61792632f48fa4e1af545d5498",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 35,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/zip",
+          "freshness_state": "fresh",
+          "origin_id": "origin-adversarial-malformed_package-1",
+          "provenance_sha256": "199ad04bcea76f64ccf80678d8a7ef4b0f01523bfea1c150692793b40e0a7ffc",
+          "reference_id": "reference-adversarial-malformed_package-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+          "source_artifact_id": "source-adversarial-malformed_package-1",
+          "source_artifact_sha256": "41208c873deeeaf8e7d55f6e6c0a962a038efdc2296bf999e1b260812dcceed2"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-malformed_package-1",
+          "provenance_id": "provenance-adversarial-malformed_package-1",
+          "provenance_sha256": "199ad04bcea76f64ccf80678d8a7ef4b0f01523bfea1c150692793b40e0a7ffc",
+          "reference_id": "reference-adversarial-malformed_package-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-malformed_package-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "archive",
+          "reference_display": "synthetic malformed_package fixture",
+          "reference_id": "reference-adversarial-malformed_package-1",
+          "reference_sha256": "dc91b09e350d23cef9cbebf90a7843f6fc648b237aa5f373515fa8e80c2fc930",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": null
+    },
+    {
+      "archive_entry": "hostile/active/macro-container.docm",
+      "artifact_kind": "docx_active",
+      "capture_expectation": "captured",
+      "category": "active_content",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "active_content_present",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": false,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "deny_without_execution"
+      },
+      "fixture_id": "adversarial-active_content-1",
+      "identity_relation": null,
+      "media_type": "application/vnd.ms-word.document.macroEnabled.12",
+      "offered_byte_identity": {
+        "byte_length": 579,
+        "sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3"
+      },
+      "protected_descriptor_sha256": "e789e1bea3ed098efd390c57d020ff104fe9fba1ca38d6d5296381e90ec05987",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-adversarial-active_content-1",
+          "origin_sha256": "39b1d4933094806e5c87bffd392377e7181c24a517387485d44ebef5f41c9799",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 579,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/vnd.ms-word.document.macroEnabled.12",
+          "freshness_state": "fresh",
+          "origin_id": "origin-adversarial-active_content-1",
+          "provenance_sha256": "f2608da9d6079a832e9aa33bf477b3971293603b42f1f8a2306f7dbe06c76c93",
+          "reference_id": "reference-adversarial-active_content-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+          "source_artifact_id": "source-adversarial-active_content-1",
+          "source_artifact_sha256": "1360115bba2c8b2a76d6a3599ad8e8e539345c8b58a975ac8799423b102a0b37"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-active_content-1",
+          "provenance_id": "provenance-adversarial-active_content-1",
+          "provenance_sha256": "f2608da9d6079a832e9aa33bf477b3971293603b42f1f8a2306f7dbe06c76c93",
+          "reference_id": "reference-adversarial-active_content-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-active_content-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic active_content fixture",
+          "reference_id": "reference-adversarial-active_content-1",
+          "reference_sha256": "e789e1bea3ed098efd390c57d020ff104fe9fba1ca38d6d5296381e90ec05987",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": null
+    },
+    {
+      "archive_entry": "hostile/relationships/external.docx",
+      "artifact_kind": "docx_external_relationship",
+      "capture_expectation": "captured",
+      "category": "external_relationship",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "external_relationship_present",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": false,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "deny_without_fetch"
+      },
+      "fixture_id": "adversarial-external_relationship-1",
+      "identity_relation": null,
+      "media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "offered_byte_identity": {
+        "byte_length": 448,
+        "sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7"
+      },
+      "protected_descriptor_sha256": "b3969f51bbca7bb884e798b76008b8aa1ddd4b20ad2a025ef567cdb5d179637f",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-adversarial-external_relationship-1",
+          "origin_sha256": "40b8c1020fd1f1b7578817cbae2e736501f16aabb454a3fe3fec68cab095414a",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 448,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "freshness_state": "fresh",
+          "origin_id": "origin-adversarial-external_relationship-1",
+          "provenance_sha256": "07ce736c29702c2deaefaf1e34ca46697a83af8ce82783068e2f70b16406999a",
+          "reference_id": "reference-adversarial-external_relationship-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+          "source_artifact_id": "source-adversarial-external_relationship-1",
+          "source_artifact_sha256": "d9ec4570344f8c9fefaddf3414d668c42752c07289c8ef5cbe5171f8a3d8a217"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-external_relationship-1",
+          "provenance_id": "provenance-adversarial-external_relationship-1",
+          "provenance_sha256": "07ce736c29702c2deaefaf1e34ca46697a83af8ce82783068e2f70b16406999a",
+          "reference_id": "reference-adversarial-external_relationship-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-external_relationship-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic external_relationship fixture",
+          "reference_id": "reference-adversarial-external_relationship-1",
+          "reference_sha256": "b3969f51bbca7bb884e798b76008b8aa1ddd4b20ad2a025ef567cdb5d179637f",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": null
+    },
+    {
+      "archive_entry": "hostile/archive/traversal.zip",
+      "artifact_kind": "archive",
+      "capture_expectation": "captured",
+      "category": "archive_traversal",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "unsafe_archive_path",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": false,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "deny_before_materialization"
+      },
+      "fixture_id": "adversarial-archive_traversal-1",
+      "identity_relation": null,
+      "media_type": "application/zip",
+      "offered_byte_identity": {
+        "byte_length": 309,
+        "sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394"
+      },
+      "protected_descriptor_sha256": "96f4ebbf2bdecb44a5ebed05feeab2f2b32cb56f34c9accbd17b3b79c62125c3",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "archive",
+          "origin_id": "origin-adversarial-archive_traversal-1",
+          "origin_sha256": "aac134c65750bc4f71a3f9e48659a04549a8194aa4aef69868a2df8eec282ded",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 309,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/zip",
+          "freshness_state": "fresh",
+          "origin_id": "origin-adversarial-archive_traversal-1",
+          "provenance_sha256": "d685e6e153dd70aeebffa70d746a54c5e06496d660c509af5ffca84a828ca398",
+          "reference_id": "reference-adversarial-archive_traversal-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+          "source_artifact_id": "source-adversarial-archive_traversal-1",
+          "source_artifact_sha256": "f6ba96be5ebc2623290855d9368a704fb356d2bac4bc405685b72ed4d0f20799"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-archive_traversal-1",
+          "provenance_id": "provenance-adversarial-archive_traversal-1",
+          "provenance_sha256": "d685e6e153dd70aeebffa70d746a54c5e06496d660c509af5ffca84a828ca398",
+          "reference_id": "reference-adversarial-archive_traversal-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-archive_traversal-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "archive",
+          "reference_display": "synthetic archive_traversal fixture",
+          "reference_id": "reference-adversarial-archive_traversal-1",
+          "reference_sha256": "96f4ebbf2bdecb44a5ebed05feeab2f2b32cb56f34c9accbd17b3b79c62125c3",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": null
+    },
+    {
+      "archive_entry": "hostile/archive/bomb.zip",
+      "artifact_kind": "archive",
+      "capture_expectation": "captured",
+      "category": "decompression_bomb",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "decompression_limit_exceeded",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": false,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "deny_and_cleanup"
+      },
+      "fixture_id": "adversarial-decompression_bomb-1",
+      "identity_relation": null,
+      "media_type": "application/zip",
+      "offered_byte_identity": {
+        "byte_length": 2190,
+        "sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4"
+      },
+      "protected_descriptor_sha256": "08715ac82dc16d193fdebee00e04ef5de3057998e10851b18fed9f7cf894ea08",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "archive",
+          "origin_id": "origin-adversarial-decompression_bomb-1",
+          "origin_sha256": "93f13455fccad8697e9b96ad4bb7feea7d3e6483555c2f7f0cf3d846b81c7fab",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 2190,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/zip",
+          "freshness_state": "fresh",
+          "origin_id": "origin-adversarial-decompression_bomb-1",
+          "provenance_sha256": "dffa290e2147181acb5503f2ac79ac616d9d3eff2dc63c031463520f30bf4ad4",
+          "reference_id": "reference-adversarial-decompression_bomb-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+          "source_artifact_id": "source-adversarial-decompression_bomb-1",
+          "source_artifact_sha256": "32ed28d84404301d9d88504c0678e7c1416bd6a41b63cdc6faae53ba5b9043fb"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-decompression_bomb-1",
+          "provenance_id": "provenance-adversarial-decompression_bomb-1",
+          "provenance_sha256": "dffa290e2147181acb5503f2ac79ac616d9d3eff2dc63c031463520f30bf4ad4",
+          "reference_id": "reference-adversarial-decompression_bomb-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-decompression_bomb-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "archive",
+          "reference_display": "synthetic decompression_bomb fixture",
+          "reference_id": "reference-adversarial-decompression_bomb-1",
+          "reference_sha256": "08715ac82dc16d193fdebee00e04ef5de3057998e10851b18fed9f7cf894ea08",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": {
+        "maximum_decompressed_bytes": 65536,
+        "maximum_ratio": 20
+      }
+    },
+    {
+      "archive_entry": "hostile/text/mixed-encoding.txt",
+      "artifact_kind": "text",
+      "capture_expectation": "captured",
+      "category": "mixed_encoding",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "mixed_encoding_unsupported",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": false,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "fail_with_diagnostic"
+      },
+      "fixture_id": "adversarial-mixed_encoding-1",
+      "identity_relation": null,
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 44,
+        "sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17"
+      },
+      "protected_descriptor_sha256": "d92ea6f5e866ea4ee0f96ad9f0a29176556919d8972e7f585049b9b70c284faf",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-adversarial-mixed_encoding-1",
+          "origin_sha256": "aa60adad309b7f7ba5b150494977a8621a9502fe4e3a6d87528658b64b61f2dd",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 44,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "fresh",
+          "origin_id": "origin-adversarial-mixed_encoding-1",
+          "provenance_sha256": "7500da2dba5c4ace30c67e45da3bc393889f0f31336d5174d197d32c9c814653",
+          "reference_id": "reference-adversarial-mixed_encoding-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+          "source_artifact_id": "source-adversarial-mixed_encoding-1",
+          "source_artifact_sha256": "14ad1a0dd5e34a59dd69fb9494369f2efea0ca956964be6ed666c666de80994d"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-mixed_encoding-1",
+          "provenance_id": "provenance-adversarial-mixed_encoding-1",
+          "provenance_sha256": "7500da2dba5c4ace30c67e45da3bc393889f0f31336d5174d197d32c9c814653",
+          "reference_id": "reference-adversarial-mixed_encoding-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-mixed_encoding-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic mixed_encoding fixture",
+          "reference_id": "reference-adversarial-mixed_encoding-1",
+          "reference_sha256": "d92ea6f5e866ea4ee0f96ad9f0a29176556919d8972e7f585049b9b70c284faf",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": null
+    },
+    {
+      "archive_entry": "hostile/race/observed.txt",
+      "artifact_kind": "text",
+      "capture_expectation": "failed",
+      "category": "concurrent_replacement",
+      "current_archive_entry": "hostile/race/current.txt",
+      "current_byte_identity": {
+        "byte_length": 42,
+        "sha256": "2db800754217824eaff0c7c20abdf445d1a2611dae6675080eeb3f41df29ab71"
+      },
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "source_replaced",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": false,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "fail_stale_without_capture"
+      },
+      "fixture_id": "adversarial-concurrent_replacement-1",
+      "identity_relation": {
+        "kind": "replaced_during_capture",
+        "target_fixture_id": "adversarial-concurrent-replacement-1-current"
+      },
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 42,
+        "sha256": "1ccc8645a61c3e49c50c131072846a1a7f6e4f3b89acbbc4f140c421813e980d"
+      },
+      "protected_descriptor_sha256": "c303c440b4512367d3ada7cbde2ad03edcc4736d111530da75fdf84cca9ddf51",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-adversarial-concurrent_replacement-1",
+          "origin_sha256": "058028108924a47f9c2262d44d0bc83738b728ded7c288b8041a0bc6686dd775",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": null,
+          "capture_state": "failed",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "stale",
+          "origin_id": "origin-adversarial-concurrent_replacement-1",
+          "provenance_sha256": "0264f78c11b8fdec6b1af468a86b0d66914dc653fae7f9251a58c9e1e3fbba79",
+          "reference_id": "reference-adversarial-concurrent_replacement-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": null,
+          "source_artifact_id": "source-adversarial-concurrent_replacement-1",
+          "source_artifact_sha256": "beec05b5a4a26470ceec99ccd59d8a5ee2b55ca9a7bab011bbb3b8aa742a0fc6"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "stale",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-concurrent_replacement-1",
+          "provenance_id": "provenance-adversarial-concurrent_replacement-1",
+          "provenance_sha256": "0264f78c11b8fdec6b1af468a86b0d66914dc653fae7f9251a58c9e1e3fbba79",
+          "reference_id": "reference-adversarial-concurrent_replacement-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-concurrent_replacement-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic concurrent_replacement fixture",
+          "reference_id": "reference-adversarial-concurrent_replacement-1",
+          "reference_sha256": "c303c440b4512367d3ada7cbde2ad03edcc4736d111530da75fdf84cca9ddf51",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": null
+    },
+    {
+      "archive_entry": "hostile/limits/truncation.txt",
+      "artifact_kind": "text",
+      "capture_expectation": "captured",
+      "category": "truncation",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "source_truncated",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": true,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "partial_with_visible_warning"
+      },
+      "fixture_id": "adversarial-truncation-1",
+      "identity_relation": null,
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 2049,
+        "sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb"
+      },
+      "protected_descriptor_sha256": "7e28b8a3acfb5bdedd65ce17b874c64092f420f493320690487f6b8f0b77d2de",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-adversarial-truncation-1",
+          "origin_sha256": "33dccba6bf0a827d0ee3b18002dfe5db3e56d610026d0a1889e6cefc0490aee5",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 2049,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "fresh",
+          "origin_id": "origin-adversarial-truncation-1",
+          "provenance_sha256": "93ba8687dbd81b52fb0ad54bc3abd228b85770fc84f6efa0f5a92afa6efef9ee",
+          "reference_id": "reference-adversarial-truncation-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+          "source_artifact_id": "source-adversarial-truncation-1",
+          "source_artifact_sha256": "c1da4b46772c4d32fa102b67352d1a0497e4b4b8fd27ba84e4b5f072d42457a4"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-truncation-1",
+          "provenance_id": "provenance-adversarial-truncation-1",
+          "provenance_sha256": "93ba8687dbd81b52fb0ad54bc3abd228b85770fc84f6efa0f5a92afa6efef9ee",
+          "reference_id": "reference-adversarial-truncation-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-truncation-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic truncation fixture",
+          "reference_id": "reference-adversarial-truncation-1",
+          "reference_sha256": "7e28b8a3acfb5bdedd65ce17b874c64092f420f493320690487f6b8f0b77d2de",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": {
+        "maximum_included_bytes": 128
+      }
+    },
+    {
+      "archive_entry": "hostile/lifecycle/cancellable.txt",
+      "artifact_kind": "stream",
+      "capture_expectation": "failed",
+      "category": "cancellation",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "ingestion_cancelled",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": false,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "cancel_without_partial_publication"
+      },
+      "fixture_id": "adversarial-cancellation-1",
+      "identity_relation": null,
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 1856,
+        "sha256": "3852c17d98ce6e8484e95bbbffa755798de439118ef15a80ed11d921c342daec"
+      },
+      "protected_descriptor_sha256": "444feb96316cbf207dc425bfd2155874e1e157b7df5cafc5e30d7a689d6a6e2d",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-adversarial-cancellation-1",
+          "origin_sha256": "90d648a9feb1c13936ed633ecc06f68fbcd20f0a9b45119992b358dcc1bde9fb",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": null,
+          "capture_state": "failed",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "fresh",
+          "origin_id": "origin-adversarial-cancellation-1",
+          "provenance_sha256": "c07ba1f519b89a1378605e3957060f541e5d4f639d02ecbe7ea993b2556979bc",
+          "reference_id": "reference-adversarial-cancellation-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": null,
+          "source_artifact_id": "source-adversarial-cancellation-1",
+          "source_artifact_sha256": "a1fb51ba10bdd144155a34da9225064dd30be84375a3b37b9f104de72fd82aa1"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-cancellation-1",
+          "provenance_id": "provenance-adversarial-cancellation-1",
+          "provenance_sha256": "c07ba1f519b89a1378605e3957060f541e5d4f639d02ecbe7ea993b2556979bc",
+          "reference_id": "reference-adversarial-cancellation-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-cancellation-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic cancellation fixture",
+          "reference_id": "reference-adversarial-cancellation-1",
+          "reference_sha256": "444feb96316cbf207dc425bfd2155874e1e157b7df5cafc5e30d7a689d6a6e2d",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": {
+        "cancel_after_bytes": 128
+      }
+    },
+    {
+      "archive_entry": "hostile/parser/broken.pdf",
+      "artifact_kind": "pdf",
+      "capture_expectation": "captured",
+      "category": "parser_failure",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "expected_result": {
+        "active_content_executed": false,
+        "error_code": "parser_failed",
+        "external_relationship_fetched": false,
+        "may_claim_complete": false,
+        "may_publish_partial_derivative": false,
+        "path_materialized": false,
+        "residue_retained": false,
+        "terminal": true,
+        "terminal_state": "fail_without_derivative"
+      },
+      "fixture_id": "adversarial-parser_failure-1",
+      "identity_relation": null,
+      "media_type": "application/pdf",
+      "offered_byte_identity": {
+        "byte_length": 66,
+        "sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c"
+      },
+      "protected_descriptor_sha256": "0c8eeab787aebaccda19cf90f18b99078585c7f4892346eec0fbd89bb1fa9399",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-adversarial-parser_failure-1",
+          "origin_sha256": "fbf164645e1a4e037ecaef166e06c100a8f065732ac5b33915a6af21db4876ed",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 66,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/pdf",
+          "freshness_state": "fresh",
+          "origin_id": "origin-adversarial-parser_failure-1",
+          "provenance_sha256": "b4d92bb7b91e6c12090d2ba8e6b2278f34f827eaec5fdef7d07e8b0ebfb7b145",
+          "reference_id": "reference-adversarial-parser_failure-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+          "source_artifact_id": "source-adversarial-parser_failure-1",
+          "source_artifact_sha256": "6a8023c3a2e048da3b2f23060d014312823e1a50507013b4109309d5589ae463"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-adversarial-parser_failure-1",
+          "provenance_id": "provenance-adversarial-parser_failure-1",
+          "provenance_sha256": "b4d92bb7b91e6c12090d2ba8e6b2278f34f827eaec5fdef7d07e8b0ebfb7b145",
+          "reference_id": "reference-adversarial-parser_failure-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-adversarial-parser_failure-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic parser_failure fixture",
+          "reference_id": "reference-adversarial-parser_failure-1",
+          "reference_sha256": "0c8eeab787aebaccda19cf90f18b99078585c7f4892346eec0fbd89bb1fa9399",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      },
+      "resource_limit": null
+    }
+  ],
+  "corpus_id": "engineering-artifact-adversarial-v1",
+  "generated_on": "2026-08-29",
+  "generator": {
+    "path": "scripts/engineering_artifact_adversarial_fixtures.py",
+    "sha256": "1fd687295faa31bd3024cf70cb1968f3b37a5437af78b76aa45a17c58d4d989b"
+  },
+  "manifest_sha256": "1971b4e9e2ed3d7ee6bd22adc0c31f0e38e6b7aeb5623fa735e583b2b528c49f",
+  "network_access": false,
+  "product_security_claim": "none",
+  "required_categories": [
+    "malformed_package",
+    "active_content",
+    "external_relationship",
+    "archive_traversal",
+    "decompression_bomb",
+    "mixed_encoding",
+    "concurrent_replacement",
+    "truncation",
+    "cancellation",
+    "parser_failure"
+  ],
+  "schema_version": 1,
+  "status": "inert-hostile-ingestion-fixture-corpus",
+  "synthetic_only": true,
+  "task_id": "2.4.1.2"
+}

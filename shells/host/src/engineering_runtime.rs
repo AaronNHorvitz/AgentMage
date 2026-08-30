@@ -1379,6 +1379,7 @@ fn sha256(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use std::fs;
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Mutex};
 
     use agentmage_kernel_contracts::{
@@ -1655,13 +1656,14 @@ mod tests {
         }
     }
 
+    static NEXT_STORE_ID: AtomicU64 = AtomicU64::new(0);
+
     fn store() -> (std::path::PathBuf, SqlCipherEngineeringStore) {
+        let sequence = NEXT_STORE_ID.fetch_add(1, Ordering::Relaxed);
         let directory = std::env::temp_dir().join(format!(
-            "agentmage-verified-turn-{}-{}",
+            "agentmage-verified-turn-{}-{sequence}",
             std::process::id(),
-            std::thread::current().name().unwrap_or("test")
         ));
-        let _ = fs::remove_dir_all(&directory);
         fs::create_dir(&directory).unwrap();
         let observation = StrictLocalStorageObservation {
             filesystem: StorageFilesystemClass::Local,
@@ -1819,6 +1821,7 @@ mod tests {
             }),
             Err(EngineeringRuntimeError::ModelUnavailable)
         );
+        drop(reopened);
         fs::remove_dir_all(directory).unwrap();
     }
 
@@ -2213,6 +2216,7 @@ mod tests {
                 TeamCampaignState::Success,
             ]
         );
+        drop(reopened);
         fs::remove_dir_all(directory).unwrap();
     }
 
@@ -2330,6 +2334,7 @@ mod tests {
                 .skip(1)
                 .all(|event| matches!(event.kind, EngineeringEventKind::ArtifactCaptured { .. }))
         );
+        drop(reopened);
         fs::remove_dir_all(directory).unwrap();
     }
 }
