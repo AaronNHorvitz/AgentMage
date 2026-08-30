@@ -1,0 +1,1135 @@
+{
+  "schema_version": 1,
+  "record_type": "engineering-artifact-rv51-applicability",
+  "decision_id": "ADR-0043",
+  "story_id": "2.4",
+  "task_id": "2.4.3.2",
+  "protocol_id": "RV-51",
+  "generated_on": "2026-08-29",
+  "status": "PARTIAL_LOCAL_FIXTURE_EVIDENCE",
+  "protocol_complete": false,
+  "commands": [
+    "npm run engineering-runtime:artifact-admission-fixtures:check",
+    "npm run engineering-runtime:artifact-adversarial-fixtures:check",
+    "npm run engineering-runtime:artifact-lineage-fixtures:check",
+    "npm run engineering-runtime:context-accounting-fixtures:check",
+    "npm run engineering-runtime:context-delivery-fixtures:check",
+    "npm run engineering-runtime:artifact-resource-gate:check",
+    "python3 scripts/fixture_security_scan.py"
+  ],
+  "required_markers": [
+    "Validated 16 identity-bound artifact admission fixtures",
+    "Validated 10 inert hostile artifact fixtures",
+    "Validated lineage for 26 sources and 21 ranges",
+    "Validated 8 complete context-accounting manifests",
+    "Validated 8 reconstructible context-delivery receipts",
+    "Validated 10 resource ceilings and 4 cleanup boundaries",
+    "Sprint 2 fixtures and generated artifacts passed the security scan"
+  ],
+  "fixture_manifests": [
+    {
+      "kind": "admission",
+      "path": "fixtures/artifact-admission/v1/manifest.json",
+      "sha256": "425c82488a2370e2e8a37e011927b1bd69fb12f7d8dfcdb7b6ad83c25bc1c5da"
+    },
+    {
+      "kind": "adversarial",
+      "path": "fixtures/artifact-admission/v1/adversarial-manifest.json",
+      "sha256": "003c994e6a365e33d4c8a7fa3908f461f05c737b95e954d3e50fc3d0c4ffad44"
+    },
+    {
+      "kind": "lineage",
+      "path": "fixtures/artifact-admission/v1/lineage-manifest.json",
+      "sha256": "076689752085a1323f6f2be2f38f05ad65a431f004afe4032796a7567022f7e9"
+    },
+    {
+      "kind": "accounting",
+      "path": "fixtures/artifact-admission/v1/context-accounting-manifests.json",
+      "sha256": "dd32688df89ce2e9334b99cb7934d23dbc85a3236807b80a091471a59b91e7ca"
+    },
+    {
+      "kind": "delivery",
+      "path": "fixtures/artifact-admission/v1/context-delivery-receipts.json",
+      "sha256": "496e735ed260340f0fa42b10c936e2ce7f7695aa595bced2d984f0eff74f6c09"
+    },
+    {
+      "kind": "resource",
+      "path": "fixtures/artifact-admission/v1/resource-gate-observations.json",
+      "sha256": "161613d5b3043fa33eeaf15d6323bfc6e1f0c0abe1c2fc91fe46e01464d2281a"
+    }
+  ],
+  "parser_identities": [
+    {
+      "parser_id": "fixture.byte_identity_projector",
+      "parser_version": "1.0.0",
+      "state": "fixture_identity_projection",
+      "source_count": 21,
+      "product_parser_executed": false
+    },
+    {
+      "parser_id": null,
+      "parser_version": null,
+      "state": "not_created",
+      "source_count": 5,
+      "reason_counts": {
+        "ingestion_cancelled": 1,
+        "source_not_captured_no_derivative_created": 3,
+        "source_replaced": 1
+      },
+      "product_parser_executed": false
+    }
+  ],
+  "source_hash_count": 26,
+  "source_hashes": [
+    {
+      "fixture_id": "admission-paste-1",
+      "source_artifact_id": "source-admission-paste-1",
+      "capture_state": "captured",
+      "byte_length": 34,
+      "sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974"
+    },
+    {
+      "fixture_id": "admission-local-file-1",
+      "source_artifact_id": "source-admission-local-file-1",
+      "capture_state": "captured",
+      "byte_length": 59,
+      "sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a"
+    },
+    {
+      "fixture_id": "admission-virtual-uri-1",
+      "source_artifact_id": "source-admission-virtual-uri-1",
+      "capture_state": "captured",
+      "byte_length": 62,
+      "sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d"
+    },
+    {
+      "fixture_id": "admission-remote-uri-1",
+      "source_artifact_id": "source-admission-remote-uri-1",
+      "capture_state": "captured",
+      "byte_length": 72,
+      "sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8"
+    },
+    {
+      "fixture_id": "admission-directory-1",
+      "source_artifact_id": "source-admission-directory-1",
+      "capture_state": "captured",
+      "byte_length": 263,
+      "sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d"
+    },
+    {
+      "fixture_id": "admission-archive-1",
+      "source_artifact_id": "source-admission-archive-1",
+      "capture_state": "captured",
+      "byte_length": 407,
+      "sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3"
+    },
+    {
+      "fixture_id": "admission-text-1",
+      "source_artifact_id": "source-admission-text-1",
+      "capture_state": "captured",
+      "byte_length": 101,
+      "sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0"
+    },
+    {
+      "fixture_id": "admission-log-1",
+      "source_artifact_id": "source-admission-log-1",
+      "capture_state": "captured",
+      "byte_length": 162,
+      "sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762"
+    },
+    {
+      "fixture_id": "admission-pdf-1",
+      "source_artifact_id": "source-admission-pdf-1",
+      "capture_state": "captured",
+      "byte_length": 617,
+      "sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780"
+    },
+    {
+      "fixture_id": "admission-docx-1",
+      "source_artifact_id": "source-admission-docx-1",
+      "capture_state": "captured",
+      "byte_length": 1409,
+      "sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c"
+    },
+    {
+      "fixture_id": "admission-spreadsheet-1",
+      "source_artifact_id": "source-admission-spreadsheet-1",
+      "capture_state": "captured",
+      "byte_length": 2479,
+      "sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e"
+    },
+    {
+      "fixture_id": "admission-image-ocr-1",
+      "source_artifact_id": "source-admission-image-ocr-1",
+      "capture_state": "captured",
+      "byte_length": 82,
+      "sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba"
+    },
+    {
+      "fixture_id": "admission-duplicate-1",
+      "source_artifact_id": "source-admission-duplicate-1",
+      "capture_state": "captured",
+      "byte_length": 59,
+      "sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a"
+    },
+    {
+      "fixture_id": "admission-stale-1",
+      "source_artifact_id": "source-admission-stale-1",
+      "capture_state": "failed",
+      "byte_length": 31,
+      "sha256": "f2d6df2f4fceb34bd4ba515541038957a0adf11ae8e25fc0baec00f530190fe6"
+    },
+    {
+      "fixture_id": "admission-inaccessible-1",
+      "source_artifact_id": "source-admission-inaccessible-1",
+      "capture_state": "unavailable",
+      "byte_length": null,
+      "sha256": null
+    },
+    {
+      "fixture_id": "admission-unsupported-1",
+      "source_artifact_id": "source-admission-unsupported-1",
+      "capture_state": "unsupported",
+      "byte_length": null,
+      "sha256": null
+    },
+    {
+      "fixture_id": "adversarial-malformed_package-1",
+      "source_artifact_id": "source-adversarial-malformed_package-1",
+      "capture_state": "captured",
+      "byte_length": 35,
+      "sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12"
+    },
+    {
+      "fixture_id": "adversarial-active_content-1",
+      "source_artifact_id": "source-adversarial-active_content-1",
+      "capture_state": "captured",
+      "byte_length": 579,
+      "sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3"
+    },
+    {
+      "fixture_id": "adversarial-external_relationship-1",
+      "source_artifact_id": "source-adversarial-external_relationship-1",
+      "capture_state": "captured",
+      "byte_length": 448,
+      "sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7"
+    },
+    {
+      "fixture_id": "adversarial-archive_traversal-1",
+      "source_artifact_id": "source-adversarial-archive_traversal-1",
+      "capture_state": "captured",
+      "byte_length": 309,
+      "sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394"
+    },
+    {
+      "fixture_id": "adversarial-decompression_bomb-1",
+      "source_artifact_id": "source-adversarial-decompression_bomb-1",
+      "capture_state": "captured",
+      "byte_length": 2190,
+      "sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4"
+    },
+    {
+      "fixture_id": "adversarial-mixed_encoding-1",
+      "source_artifact_id": "source-adversarial-mixed_encoding-1",
+      "capture_state": "captured",
+      "byte_length": 44,
+      "sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17"
+    },
+    {
+      "fixture_id": "adversarial-concurrent_replacement-1",
+      "source_artifact_id": "source-adversarial-concurrent_replacement-1",
+      "capture_state": "failed",
+      "byte_length": 42,
+      "sha256": "1ccc8645a61c3e49c50c131072846a1a7f6e4f3b89acbbc4f140c421813e980d"
+    },
+    {
+      "fixture_id": "adversarial-truncation-1",
+      "source_artifact_id": "source-adversarial-truncation-1",
+      "capture_state": "captured",
+      "byte_length": 2049,
+      "sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb"
+    },
+    {
+      "fixture_id": "adversarial-cancellation-1",
+      "source_artifact_id": "source-adversarial-cancellation-1",
+      "capture_state": "failed",
+      "byte_length": 1856,
+      "sha256": "3852c17d98ce6e8484e95bbbffa755798de439118ef15a80ed11d921c342daec"
+    },
+    {
+      "fixture_id": "adversarial-parser_failure-1",
+      "source_artifact_id": "source-adversarial-parser_failure-1",
+      "capture_state": "captured",
+      "byte_length": 66,
+      "sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c"
+    }
+  ],
+  "derivative_hash_count": 21,
+  "derivative_hashes": [
+    {
+      "fixture_id": "admission-paste-1",
+      "range_id": "range-source-admission-paste-1-root",
+      "source_sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+      "derivative_sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+      "source_range": {
+        "end_byte_exclusive": 34,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 34,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-local-file-1",
+      "range_id": "range-source-admission-local-file-1-root",
+      "source_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+      "derivative_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+      "source_range": {
+        "end_byte_exclusive": 59,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 59,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-virtual-uri-1",
+      "range_id": "range-source-admission-virtual-uri-1-root",
+      "source_sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+      "derivative_sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+      "source_range": {
+        "end_byte_exclusive": 62,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 62,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-remote-uri-1",
+      "range_id": "range-source-admission-remote-uri-1-root",
+      "source_sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+      "derivative_sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+      "source_range": {
+        "end_byte_exclusive": 72,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 72,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-directory-1",
+      "range_id": "range-source-admission-directory-1-root",
+      "source_sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+      "derivative_sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+      "source_range": {
+        "end_byte_exclusive": 263,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 263,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-archive-1",
+      "range_id": "range-source-admission-archive-1-root",
+      "source_sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+      "derivative_sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+      "source_range": {
+        "end_byte_exclusive": 407,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 407,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-text-1",
+      "range_id": "range-source-admission-text-1-root",
+      "source_sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+      "derivative_sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+      "source_range": {
+        "end_byte_exclusive": 101,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 101,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-log-1",
+      "range_id": "range-source-admission-log-1-root",
+      "source_sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+      "derivative_sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+      "source_range": {
+        "end_byte_exclusive": 162,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 162,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-pdf-1",
+      "range_id": "range-source-admission-pdf-1-root",
+      "source_sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+      "derivative_sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+      "source_range": {
+        "end_byte_exclusive": 617,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 617,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-docx-1",
+      "range_id": "range-source-admission-docx-1-root",
+      "source_sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+      "derivative_sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+      "source_range": {
+        "end_byte_exclusive": 1409,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 1409,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-spreadsheet-1",
+      "range_id": "range-source-admission-spreadsheet-1-root",
+      "source_sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+      "derivative_sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+      "source_range": {
+        "end_byte_exclusive": 2479,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 2479,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-image-ocr-1",
+      "range_id": "range-source-admission-image-ocr-1-root",
+      "source_sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+      "derivative_sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+      "source_range": {
+        "end_byte_exclusive": 82,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 82,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "admission-duplicate-1",
+      "range_id": "range-source-admission-duplicate-1-root",
+      "source_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+      "derivative_sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+      "source_range": {
+        "end_byte_exclusive": 59,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 59,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "adversarial-malformed_package-1",
+      "range_id": "range-source-adversarial-malformed_package-1-root",
+      "source_sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+      "derivative_sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12",
+      "source_range": {
+        "end_byte_exclusive": 35,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 35,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "adversarial-active_content-1",
+      "range_id": "range-source-adversarial-active_content-1-root",
+      "source_sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+      "derivative_sha256": "d8293488f69f8830773eaf2ae5b5537259d4ddf45e7cbe6301e53a33cece95f3",
+      "source_range": {
+        "end_byte_exclusive": 579,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 579,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "adversarial-external_relationship-1",
+      "range_id": "range-source-adversarial-external_relationship-1-root",
+      "source_sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+      "derivative_sha256": "73990c4071835b8cb6321026a11f77232fff8492a27751a0665e3c73d928fba7",
+      "source_range": {
+        "end_byte_exclusive": 448,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 448,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "adversarial-archive_traversal-1",
+      "range_id": "range-source-adversarial-archive_traversal-1-root",
+      "source_sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+      "derivative_sha256": "cf4ee1eb1eb75085dd1d8bdc3cfa4812cf2a8c57a83606908da1b24e78368394",
+      "source_range": {
+        "end_byte_exclusive": 309,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 309,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "adversarial-decompression_bomb-1",
+      "range_id": "range-source-adversarial-decompression_bomb-1-root",
+      "source_sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+      "derivative_sha256": "50eac1302d54afccee349397c1d65191bdc55cbf3a50a58a95c45c13b325faf4",
+      "source_range": {
+        "end_byte_exclusive": 2190,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 2190,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "adversarial-mixed_encoding-1",
+      "range_id": "range-source-adversarial-mixed_encoding-1-root",
+      "source_sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+      "derivative_sha256": "046aaca9cccdc5d34f15c39bc4347acbd74aa630215661bac19dcba6262a2c17",
+      "source_range": {
+        "end_byte_exclusive": 44,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 44,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "adversarial-truncation-1",
+      "range_id": "range-source-adversarial-truncation-1-root",
+      "source_sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+      "derivative_sha256": "9db0947756ab797ccee8a22bd32e213bb36e6efe8f720aaabdc3d5d9e04b30fb",
+      "source_range": {
+        "end_byte_exclusive": 2049,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 2049,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    },
+    {
+      "fixture_id": "adversarial-parser_failure-1",
+      "range_id": "range-source-adversarial-parser_failure-1-root",
+      "source_sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+      "derivative_sha256": "69577246f217df60a970fffd0db8bb1c6408123006f36a2a406d65e3850ea50c",
+      "source_range": {
+        "end_byte_exclusive": 66,
+        "start_byte": 0
+      },
+      "derivative_range": {
+        "end_byte_exclusive": 66,
+        "start_byte": 0
+      },
+      "parser_id": "fixture.byte_identity_projector"
+    }
+  ],
+  "context_receipt_count": 8,
+  "context_receipts": [
+    {
+      "scenario_id": "token_budget_overflow",
+      "context_manifest_id": "context-token_budget_overflow-v1",
+      "context_manifest_sha256": "5869c51b80e830048d2e80e06d45548cf76401683f5db726cfc02073c68f0fb1",
+      "receipt_id": "receipt-token_budget_overflow-v1",
+      "receipt_sha256": "784cd8efbd5d1c08b0ccd58eb4c2f6b908b7a63261b845a7da4692ba23beeabb",
+      "model_visible_set_sha256": "09bda334f1f76613a77ed7aa49aa10a31126a4c858420ce65636a8d347b843b3",
+      "outcome": "blocked",
+      "completion_allowed": false,
+      "required_unseen_artifact_ids": [
+        "source-admission-local-file-1"
+      ]
+    },
+    {
+      "scenario_id": "retrieval",
+      "context_manifest_id": "context-retrieval-v1",
+      "context_manifest_sha256": "397ef5a0671eb25eca296f1019de172fae7567754f3a9b63d7d55e5d436f0c0a",
+      "receipt_id": "receipt-retrieval-v1",
+      "receipt_sha256": "d54ea779cad8c47a3cb56e98392061d2ddaac8f52898cd15e42273bb706fcf8b",
+      "model_visible_set_sha256": "89e04df8df7f994f16f555002877afc68198348bc5948289be3ae4fb4aa2ec72",
+      "outcome": "delivered",
+      "completion_allowed": true,
+      "required_unseen_artifact_ids": []
+    },
+    {
+      "scenario_id": "summary",
+      "context_manifest_id": "context-summary-v1",
+      "context_manifest_sha256": "6beff4983e0fcf980da554bdaebd1181101538238c6d74ccc80470a79e6e3782",
+      "receipt_id": "receipt-summary-v1",
+      "receipt_sha256": "5922a362ff2284b7f5e9b487d04fcc8de7dccd720a08915871f6454dd4c939dd",
+      "model_visible_set_sha256": "918ef44ed198d914dce14cc648d4cb87641752178442ada92cb94c18136c15c0",
+      "outcome": "delivered",
+      "completion_allowed": true,
+      "required_unseen_artifact_ids": []
+    },
+    {
+      "scenario_id": "duplicate",
+      "context_manifest_id": "context-duplicate-v1",
+      "context_manifest_sha256": "f3ef78060e96ab711eb499bcbe117cc018ee1bd49f5f746d910c1dd9aafb03c3",
+      "receipt_id": "receipt-duplicate-v1",
+      "receipt_sha256": "175d4a0dd5257303171426f3780bae362c9473e1ad49b8356f6b51e3c93796d4",
+      "model_visible_set_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outcome": "delivered",
+      "completion_allowed": true,
+      "required_unseen_artifact_ids": []
+    },
+    {
+      "scenario_id": "stale",
+      "context_manifest_id": "context-stale-v1",
+      "context_manifest_sha256": "c01ee2ab4928cd5aca89b633eefc517aae2177ca7de42bf65958dd1bf4c161a0",
+      "receipt_id": "receipt-stale-v1",
+      "receipt_sha256": "39b0045814784716f42e293963e1989c60d1111555b7aea3cc02c480c457f13b",
+      "model_visible_set_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outcome": "blocked",
+      "completion_allowed": false,
+      "required_unseen_artifact_ids": [
+        "source-admission-stale-1"
+      ]
+    },
+    {
+      "scenario_id": "restricted",
+      "context_manifest_id": "context-restricted-v1",
+      "context_manifest_sha256": "278207efb75380b24e8e02a483cb731f25e823af51ea5c283315e3d39335e4a3",
+      "receipt_id": "receipt-restricted-v1",
+      "receipt_sha256": "7e095653a37f5a4e3d455f26f33fc9ed8b924ed129e891480307a436be4766e4",
+      "model_visible_set_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outcome": "blocked",
+      "completion_allowed": false,
+      "required_unseen_artifact_ids": [
+        "source-admission-virtual-uri-1"
+      ]
+    },
+    {
+      "scenario_id": "omitted",
+      "context_manifest_id": "context-omitted-v1",
+      "context_manifest_sha256": "e93509ff6de7ab2e61cee794b5bebeffc15164a0251c3ae133e3ed67c6d4cfe4",
+      "receipt_id": "receipt-omitted-v1",
+      "receipt_sha256": "d5354cba2ba7a43be3c8628563b46624a53cf3bcd6b4d3aeb5df6ec3b7c38f4d",
+      "model_visible_set_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outcome": "delivered",
+      "completion_allowed": true,
+      "required_unseen_artifact_ids": []
+    },
+    {
+      "scenario_id": "model_profile_change",
+      "context_manifest_id": "context-model_profile_change-v1",
+      "context_manifest_sha256": "dec1c31568547f242d4cc53f6071b1a5c9955184f05eed4adc874fd66ec4224b",
+      "receipt_id": "receipt-model_profile_change-v1",
+      "receipt_sha256": "e850ae446818f9cf2ad002c499522fde2145a2b50e152e1c7ea4a179d214ab52",
+      "model_visible_set_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outcome": "blocked",
+      "completion_allowed": false,
+      "required_unseen_artifact_ids": [
+        "source-admission-text-1"
+      ]
+    }
+  ],
+  "resource_observation_count": 10,
+  "resource_observations": [
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 64,
+      "dimension": "bytes",
+      "first_denied_attempt": 65,
+      "overflow_admitted": false,
+      "peak_admitted": 64,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_bytes",
+      "unit": "bytes"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 3,
+      "dimension": "pages",
+      "first_denied_attempt": 4,
+      "overflow_admitted": false,
+      "peak_admitted": 3,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_pages",
+      "unit": "pages"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 4,
+      "dimension": "rows",
+      "first_denied_attempt": 5,
+      "overflow_admitted": false,
+      "peak_admitted": 4,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_rows",
+      "unit": "rows"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 8,
+      "dimension": "cells",
+      "first_denied_attempt": 9,
+      "overflow_admitted": false,
+      "peak_admitted": 8,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_cells",
+      "unit": "cells"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 2,
+      "dimension": "files",
+      "first_denied_attempt": 3,
+      "overflow_admitted": false,
+      "peak_admitted": 2,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_files",
+      "unit": "files"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 2,
+      "dimension": "archive",
+      "first_denied_attempt": 3,
+      "overflow_admitted": false,
+      "peak_admitted": 2,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_archive",
+      "unit": "archive_entries"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 5,
+      "dimension": "time",
+      "first_denied_attempt": 6,
+      "overflow_admitted": false,
+      "peak_admitted": 5,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_time",
+      "unit": "elapsed_milliseconds"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 8192,
+      "dimension": "memory",
+      "first_denied_attempt": 12288,
+      "overflow_admitted": false,
+      "peak_admitted": 8192,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_memory",
+      "unit": "live_allocation_bytes"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 128,
+      "dimension": "disk",
+      "first_denied_attempt": 129,
+      "overflow_admitted": false,
+      "peak_admitted": 128,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_disk",
+      "unit": "materialized_bytes"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 1,
+      "dimension": "processes",
+      "first_denied_attempt": 2,
+      "overflow_admitted": false,
+      "peak_admitted": 1,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_processes",
+      "unit": "live_child_processes"
+    }
+  ],
+  "lifecycle_observations": [
+    {
+      "cleanup_result": "verified_zero_residue",
+      "event": "denial",
+      "owned_root_removed": true,
+      "residue_after_cleanup": 0,
+      "residue_before_cleanup": 1,
+      "terminal_kind": "denied_before_dispatch",
+      "worker_stopped": true
+    },
+    {
+      "cleanup_result": "verified_zero_residue",
+      "event": "timeout",
+      "owned_root_removed": true,
+      "residue_after_cleanup": 0,
+      "residue_before_cleanup": 1,
+      "terminal_kind": "deadline_terminated",
+      "worker_stopped": true
+    },
+    {
+      "cleanup_result": "verified_zero_residue",
+      "event": "crash",
+      "owned_root_removed": true,
+      "residue_after_cleanup": 0,
+      "residue_before_cleanup": 1,
+      "terminal_kind": "worker_exit_73",
+      "worker_stopped": true
+    },
+    {
+      "cleanup_result": "verified_zero_residue",
+      "event": "cancellation",
+      "owned_root_removed": true,
+      "residue_after_cleanup": 0,
+      "residue_before_cleanup": 1,
+      "terminal_kind": "cancel_signal_terminated",
+      "worker_stopped": true
+    }
+  ],
+  "zero_silent_drop": {
+    "supplied_source_count": 26,
+    "lineage_source_count": 26,
+    "lineage_missing_source_artifact_ids": [],
+    "scenario_count": 8,
+    "scenario_results": [
+      {
+        "scenario_id": "token_budget_overflow",
+        "supplied_source_count": 26,
+        "explicit_disposition_count": 26,
+        "missing_source_artifact_ids": [],
+        "unexpected_source_artifact_ids": [],
+        "duplicate_source_artifact_ids": [],
+        "result": "PASS_LOCAL_FIXTURE"
+      },
+      {
+        "scenario_id": "retrieval",
+        "supplied_source_count": 26,
+        "explicit_disposition_count": 26,
+        "missing_source_artifact_ids": [],
+        "unexpected_source_artifact_ids": [],
+        "duplicate_source_artifact_ids": [],
+        "result": "PASS_LOCAL_FIXTURE"
+      },
+      {
+        "scenario_id": "summary",
+        "supplied_source_count": 26,
+        "explicit_disposition_count": 26,
+        "missing_source_artifact_ids": [],
+        "unexpected_source_artifact_ids": [],
+        "duplicate_source_artifact_ids": [],
+        "result": "PASS_LOCAL_FIXTURE"
+      },
+      {
+        "scenario_id": "duplicate",
+        "supplied_source_count": 26,
+        "explicit_disposition_count": 26,
+        "missing_source_artifact_ids": [],
+        "unexpected_source_artifact_ids": [],
+        "duplicate_source_artifact_ids": [],
+        "result": "PASS_LOCAL_FIXTURE"
+      },
+      {
+        "scenario_id": "stale",
+        "supplied_source_count": 26,
+        "explicit_disposition_count": 26,
+        "missing_source_artifact_ids": [],
+        "unexpected_source_artifact_ids": [],
+        "duplicate_source_artifact_ids": [],
+        "result": "PASS_LOCAL_FIXTURE"
+      },
+      {
+        "scenario_id": "restricted",
+        "supplied_source_count": 26,
+        "explicit_disposition_count": 26,
+        "missing_source_artifact_ids": [],
+        "unexpected_source_artifact_ids": [],
+        "duplicate_source_artifact_ids": [],
+        "result": "PASS_LOCAL_FIXTURE"
+      },
+      {
+        "scenario_id": "omitted",
+        "supplied_source_count": 26,
+        "explicit_disposition_count": 26,
+        "missing_source_artifact_ids": [],
+        "unexpected_source_artifact_ids": [],
+        "duplicate_source_artifact_ids": [],
+        "result": "PASS_LOCAL_FIXTURE"
+      },
+      {
+        "scenario_id": "model_profile_change",
+        "supplied_source_count": 26,
+        "explicit_disposition_count": 26,
+        "missing_source_artifact_ids": [],
+        "unexpected_source_artifact_ids": [],
+        "duplicate_source_artifact_ids": [],
+        "result": "PASS_LOCAL_FIXTURE"
+      }
+    ],
+    "zero_silent_drop_result": "PASS_LOCAL_FIXTURE"
+  },
+  "hostile_fixture_results": [
+    {
+      "fixture_id": "adversarial-malformed_package-1",
+      "category": "malformed_package",
+      "terminal_state": "deny_before_extraction",
+      "error_code": "malformed_container",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    },
+    {
+      "fixture_id": "adversarial-active_content-1",
+      "category": "active_content",
+      "terminal_state": "deny_without_execution",
+      "error_code": "active_content_present",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    },
+    {
+      "fixture_id": "adversarial-external_relationship-1",
+      "category": "external_relationship",
+      "terminal_state": "deny_without_fetch",
+      "error_code": "external_relationship_present",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    },
+    {
+      "fixture_id": "adversarial-archive_traversal-1",
+      "category": "archive_traversal",
+      "terminal_state": "deny_before_materialization",
+      "error_code": "unsafe_archive_path",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    },
+    {
+      "fixture_id": "adversarial-decompression_bomb-1",
+      "category": "decompression_bomb",
+      "terminal_state": "deny_and_cleanup",
+      "error_code": "decompression_limit_exceeded",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    },
+    {
+      "fixture_id": "adversarial-mixed_encoding-1",
+      "category": "mixed_encoding",
+      "terminal_state": "fail_with_diagnostic",
+      "error_code": "mixed_encoding_unsupported",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    },
+    {
+      "fixture_id": "adversarial-concurrent_replacement-1",
+      "category": "concurrent_replacement",
+      "terminal_state": "fail_stale_without_capture",
+      "error_code": "source_replaced",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    },
+    {
+      "fixture_id": "adversarial-truncation-1",
+      "category": "truncation",
+      "terminal_state": "partial_with_visible_warning",
+      "error_code": "source_truncated",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    },
+    {
+      "fixture_id": "adversarial-cancellation-1",
+      "category": "cancellation",
+      "terminal_state": "cancel_without_partial_publication",
+      "error_code": "ingestion_cancelled",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    },
+    {
+      "fixture_id": "adversarial-parser_failure-1",
+      "category": "parser_failure",
+      "terminal_state": "fail_without_derivative",
+      "error_code": "parser_failed",
+      "active_content_executed": false,
+      "external_relationship_fetched": false,
+      "residue_retained": false,
+      "may_claim_complete": false
+    }
+  ],
+  "fixture_security": {
+    "path": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
+    "sha256": "f9fc3a27296854214df705f8e3acd855fdc95598a5de96da83d64637b6ed9ac5",
+    "status": "pass",
+    "blocking_finding_count": 0,
+    "raw_sensitive_values_retained": false,
+    "network_calls_performed": 0,
+    "product_support_claim": "none"
+  },
+  "applicable_results": [
+    {
+      "scenario": "complete-source-accounting",
+      "status": "PASS_LOCAL_FIXTURE"
+    },
+    {
+      "scenario": "exact-source-and-derivative-lineage",
+      "status": "PASS_LOCAL_FIXTURE"
+    },
+    {
+      "scenario": "hostile-input-inert-dispositions",
+      "status": "PASS_LOCAL_FIXTURE"
+    },
+    {
+      "scenario": "context-pressure-retrieval-and-required-unseen",
+      "status": "PASS_LOCAL_FIXTURE"
+    },
+    {
+      "scenario": "bounded-resource-and-cleanup-campaign",
+      "status": "PASS_LOCAL_SYNTHETIC_WORKER"
+    },
+    {
+      "scenario": "fixture-secret-and-network-scan",
+      "status": "PASS_LOCAL_FIXTURE_SCAN"
+    }
+  ],
+  "acceptance_tests": [
+    {
+      "id": "AT-CTX-001",
+      "status": "PARTIAL_LOCAL_FIXTURE",
+      "owner": "2.4"
+    },
+    {
+      "id": "AT-CTX-002",
+      "status": "PARTIAL_LOCAL_FIXTURE",
+      "owner": "2.4"
+    },
+    {
+      "id": "AT-CTX-003",
+      "status": "PARTIAL_LOCAL_FIXTURE",
+      "owner": "2.4"
+    },
+    {
+      "id": "AT-CTX-004",
+      "status": "PARTIAL_LOCAL_FIXTURE",
+      "owner": "2.4"
+    }
+  ],
+  "remaining_protocol_scenarios": [
+    {
+      "scenario": "product-parser-execution-for-every-admitted-format",
+      "status": "BLOCKED_LATER_STORY",
+      "owners": [
+        "16.4",
+        "22.3",
+        "60.2",
+        "62.2"
+      ]
+    },
+    {
+      "scenario": "parser-crash-resume-reparse-reorder-and-sentinel-fidelity",
+      "status": "BLOCKED_LATER_STORY",
+      "owners": [
+        "22.3",
+        "22.5"
+      ]
+    },
+    {
+      "scenario": "installed-participant-and-client-delivery",
+      "status": "BLOCKED_LATER_STORY",
+      "owners": [
+        "23.5",
+        "50.4"
+      ]
+    },
+    {
+      "scenario": "complete-at-ctx-001-through-at-ctx-004-product-execution",
+      "status": "BLOCKED_LATER_STORY",
+      "owners": [
+        "22.5",
+        "50.4",
+        "126.2"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
+    },
+    {
+      "path": "scripts/engineering_artifact_rv51_evidence.py",
+      "sha256": "a618838930d035e11c346c450cc3e440e38ca07c5ae3f19f2643c26c89ba0a0d"
+    },
+    {
+      "path": "tests/test_engineering_artifact_rv51_evidence.py",
+      "sha256": "ee072ac97e31807f07dc592193a6f40a6429ac36d557058cc5eefea8cd806bbf"
+    },
+    {
+      "path": "artifacts/sprints/sprint-2/story-2.4/rv51-applicable-results.log",
+      "sha256": "2b2c0b55d3d618c37e55be9912afe64cb0ad4c8babfec4c1fa6a056be2c84ec4"
+    }
+  ],
+  "limitations": [
+    "Identity projection is a fixture-only byte-preserving transform; no product parser executed.",
+    "Synthetic worker cleanup does not substitute for integrated parser crash and resume evidence.",
+    "No installed client, native platform, qualified model, product acceptance, external review, release, or full RV-51 pass is claimed."
+  ]
+}
