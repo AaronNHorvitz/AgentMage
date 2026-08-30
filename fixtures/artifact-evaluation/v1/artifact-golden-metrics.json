@@ -1,0 +1,256 @@
+{
+  "dependencies": [
+    {
+      "path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+      "sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+      "sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94"
+    },
+    {
+      "path": "fixtures/artifact-admission/v1/context-accounting-manifests.json",
+      "sha256": "dd32688df89ce2e9334b99cb7934d23dbc85a3236807b80a091471a59b91e7ca"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/lifecycle-scenarios.json",
+      "sha256": "274a0c7a7444a3e48f1622b789943ba76e90a9afcae75cf0147c947aa8645118"
+    },
+    {
+      "path": "fixtures/artifact-admission/v1/resource-gate-observations.json",
+      "sha256": "161613d5b3043fa33eeaf15d6323bfc6e1f0c0abe1c2fc91fe46e01464d2281a"
+    }
+  ],
+  "generated_on": "2026-08-30",
+  "generator": {
+    "path": "scripts/artifact_evaluation_artifact_metrics.py",
+    "sha256": "d76b02ce7788b1637157b922c70bda609b647a2ff39acd494ee02807a8735d46"
+  },
+  "metric_count": 10,
+  "metrics": [
+    {
+      "golden": {
+        "expected_case_count": 30,
+        "fraction": {
+          "denominator": 30,
+          "numerator": 30
+        },
+        "silent_omission_allowed": false
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "extraction_coverage",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+        "fixtures/artifact-evaluation/v1/document-variant-manifest.json"
+      ],
+      "support_claim": "none",
+      "unit": "fixture_terminal_dispositions"
+    },
+    {
+      "golden": {
+        "expected_binding_count": 14,
+        "fraction": {
+          "denominator": 14,
+          "numerator": 14
+        },
+        "identity_substitution_allowed": false
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "provenance_accuracy",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/document-variant-manifest.json"
+      ],
+      "support_claim": "none",
+      "unit": "source_identity_bindings"
+    },
+    {
+      "golden": {
+        "coordinate_hash_or_state_drift_allowed": false,
+        "expected_section_count": 6,
+        "fraction": {
+          "denominator": 6,
+          "numerator": 6
+        }
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "section_fidelity",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/document-variant-manifest.json"
+      ],
+      "support_claim": "none",
+      "unit": "exact_expected_sections"
+    },
+    {
+      "golden": {
+        "admitting_dispositions": [
+          "included",
+          "summarized",
+          "truncated"
+        ],
+        "expected_item_count": 3,
+        "fraction": {
+          "denominator": 3,
+          "numerator": 3
+        }
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "context_inclusion",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-admission/v1/context-accounting-manifests.json"
+      ],
+      "support_claim": "none",
+      "unit": "admitting_context_items"
+    },
+    {
+      "golden": {
+        "expected_item_count": 205,
+        "fraction": {
+          "denominator": 205,
+          "numerator": 205
+        },
+        "reason_required": true,
+        "silent_omission_allowed": false
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "context_omission",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-admission/v1/context-accounting-manifests.json"
+      ],
+      "support_claim": "none",
+      "unit": "explicit_non_admitting_context_items"
+    },
+    {
+      "golden": {
+        "accounted_input_tokens": 32,
+        "counter_disagreement_allowed": false,
+        "fraction": {
+          "denominator": 8,
+          "numerator": 8
+        },
+        "manifest_count": 8
+      },
+      "measurement_scope": "golden_fixture_oracle",
+      "metric_id": "token_budget_reconciliation",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-admission/v1/context-accounting-manifests.json"
+      ],
+      "support_claim": "none",
+      "unit": "complete_context_manifests"
+    },
+    {
+      "golden": {
+        "first_denied_attempt": 6,
+        "fraction": {
+          "denominator": 1,
+          "numerator": 1
+        },
+        "inclusive_ceiling": 5,
+        "wall_clock_persisted": false
+      },
+      "measurement_scope": "synthetic_logical_resource_boundary_not_product_performance",
+      "metric_id": "latency_boundary",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-admission/v1/resource-gate-observations.json"
+      ],
+      "support_claim": "none",
+      "unit": "elapsed_milliseconds"
+    },
+    {
+      "golden": {
+        "first_denied_attempt": 12288,
+        "fraction": {
+          "denominator": 1,
+          "numerator": 1
+        },
+        "inclusive_ceiling": 8192
+      },
+      "measurement_scope": "synthetic_logical_resource_boundary_not_product_peak_memory",
+      "metric_id": "peak_memory_boundary",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-admission/v1/resource-gate-observations.json"
+      ],
+      "support_claim": "none",
+      "unit": "live_allocation_bytes"
+    },
+    {
+      "golden": {
+        "expected_residue_count": 0,
+        "expected_terminal_state": "cancelled",
+        "false_completion_allowed": false,
+        "fraction": {
+          "denominator": 2,
+          "numerator": 2
+        }
+      },
+      "measurement_scope": "golden_fixture_and_synthetic_local_lifecycle_oracle",
+      "metric_id": "cancellation",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/lifecycle-scenarios.json",
+        "fixtures/artifact-admission/v1/resource-gate-observations.json"
+      ],
+      "support_claim": "none",
+      "unit": "cancellation_oracles"
+    },
+    {
+      "golden": {
+        "expected_residue_count": 0,
+        "fraction": {
+          "denominator": 7,
+          "numerator": 7
+        },
+        "local_lifecycle_observation_count": 4,
+        "scenario_oracle_count": 3
+      },
+      "measurement_scope": "golden_fixture_and_synthetic_local_lifecycle_oracle",
+      "metric_id": "cleanup",
+      "product_measurement_status": "not_executed",
+      "product_observation": null,
+      "source_scope": [
+        "fixtures/artifact-evaluation/v1/lifecycle-scenarios.json",
+        "fixtures/artifact-admission/v1/resource-gate-observations.json"
+      ],
+      "support_claim": "none",
+      "unit": "cleanup_oracles"
+    }
+  ],
+  "platform_support_claim": "none",
+  "product_parser_executed": false,
+  "product_performance_measured": false,
+  "product_runtime_executed": false,
+  "required_metric_ids": [
+    "extraction_coverage",
+    "provenance_accuracy",
+    "section_fidelity",
+    "context_inclusion",
+    "context_omission",
+    "token_budget_reconciliation",
+    "latency_boundary",
+    "peak_memory_boundary",
+    "cancellation",
+    "cleanup"
+  ],
+  "schema_version": 1,
+  "status": "golden-fixture-and-synthetic-local-metrics",
+  "suite_id": "artifact-evaluation-artifact-golden-metrics-v1",
+  "suite_sha256": "ad3891ec0af2c108afe645816824e2f47ed3f2b8fdd8c3007681f9ea0bba0d21",
+  "synthetic_only": true,
+  "task_id": "2.3.3.1"
+}

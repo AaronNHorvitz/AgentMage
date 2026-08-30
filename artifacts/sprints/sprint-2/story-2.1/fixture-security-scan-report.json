@@ -4,13 +4,13 @@
   "macos_support_claim": "none",
   "metrics": {
     "archive_entries_scanned": 92,
-    "files_scanned": 236,
+    "files_scanned": 237,
     "malformed_python_fixtures_skipped": 1,
     "nested_archives_scanned": 4,
     "python_modules_parsed": 5,
     "reserved_invalid_urls": 11,
     "synthetic_canary_occurrences": 6,
-    "text_payloads_scanned": 300
+    "text_payloads_scanned": 301
   },
   "network_calls_performed": 0,
   "product_support_claim": "none",
