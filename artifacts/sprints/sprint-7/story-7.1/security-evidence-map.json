@@ -6,9 +6,9 @@
       "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
-      "bytes": 7638,
+      "bytes": 7731,
       "path": "docs/architecture/platform-adapter-contract.md",
-      "sha256": "98455f2e3f7871fbeeac856b19dd4a85b2292878049c149ba1c7f8fc5429ed53"
+      "sha256": "0dc2a237d197fbec42eee20bb11791a274e2d498db125c46c30644dabe2e9259"
     },
     {
       "bytes": 12172,
@@ -26,9 +26,9 @@
       "sha256": "43be8fff79e866d85f5c393e01102af8f45c2b71101879b8bf36b1e933e05c6e"
     },
     {
-      "bytes": 1205,
+      "bytes": 1576,
       "path": "release/platform-manifests/README.md",
-      "sha256": "03edbe9a7f00122cdf3a1c14f5f7f7e55989624451e8cc00739166878f3e1ac9"
+      "sha256": "2690aa9d1fbfdd4ddbff3701ccd93a046e37e012998a1504fd9425fa81c19ceb"
     },
     {
       "bytes": 3675,
@@ -53,17 +53,32 @@
     {
       "bytes": 4142,
       "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-      "sha256": "09c76cc71f8b6751d74d7118935aeb90a431378550833587543e057321a43b5c"
+      "sha256": "a103fb4cbcd93025801051dfbcb84248f73710493bceb6c5875c640ab93f63b9"
+    },
+    {
+      "bytes": 6520,
+      "path": "schemas/platform/macos-release-manifest.schema.json",
+      "sha256": "f2260141c8a8f17b8b5c787df162ecc152e9de07c6ec1c6ffd3b2f627131548f"
+    },
+    {
+      "bytes": 3484,
+      "path": "release/platform-manifests/macos/v1/contract-fixture.json",
+      "sha256": "2dfc2a4da82511a530dce48653704e5fd5f73bd7ee94efd3763ca64c981a9408"
+    },
+    {
+      "bytes": 2369,
+      "path": "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
+      "sha256": "497a6a0d16cab19547811f676f469f3808672939fbe6da0f397fb4a60dabeb72"
     },
     {
       "bytes": 446026,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "db4bb2ca457a125567718eb6e8fe35e72c56d9f5b20a133e21fd2ad79db49881"
+      "sha256": "2993c3f1617bca6646385177c4a7daa6eee114e8ddb5e42da15a6ed8f8b121a8"
     },
     {
       "bytes": 465835,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "922e83632b91d916fb043b56878f9cfffaef16c7d943415599e6728945778329"
+      "sha256": "e46ed5b33e733ad08c2dab403088a9f1b6673ce01751dc5c1c8dece445b5687b"
     },
     {
       "bytes": 23383,
@@ -76,9 +91,9 @@
       "sha256": "b87cdcc57dd9c906d10f4013c4b2046cbe3925af02a3b07d11c528ef4ee5a0fd"
     },
     {
-      "bytes": 16683,
+      "bytes": 17211,
       "path": "scripts/story_7_1_security_evidence.py",
-      "sha256": "a53e67552c7c765a7840b92f4508c6634a950421b92c6822065af58d78fec021"
+      "sha256": "ae19f1eb78fd3ebd75c3f5f8ee14b66c820ec01935851b48607da11736d857ad"
     },
     {
       "bytes": 6384,
@@ -129,14 +144,15 @@
       "story_contribution": "blocked-managed-platform-assessment"
     },
     {
-      "demonstrated": "Fedora and Ubuntu fixtures freeze architecture, OS build, toolchain, Visual Studio Code, package, and mechanism identity fields; every shared runtime identity mismatch has a typed refusal.",
+      "demonstrated": "Fedora and Ubuntu fixtures freeze architecture, OS build, toolchain, Visual Studio Code, package, and mechanism identity fields; the synthetic-only macOS contract freezes platform, toolchain, Team ID, bundle, App Group, designated-requirement, entitlement, component-hash, and package fields without an execution or release claim; every shared runtime identity mismatch has a typed refusal.",
       "evidence": [
         "release/platform-manifests/v1/fedora-x86_64.json",
         "release/platform-manifests/v1/ubuntu-x86_64.json",
-        "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json"
+        "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
+        "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json"
       ],
       "product_requirement_status": "not-complete",
-      "remaining": "Fixture package digests must be replaced by built packages, native Linux probes must bind them, and the complete macOS manifest and mutation matrix remain open.",
+      "remaining": "Fixture identities must be replaced by release-derived package and native observations, native Linux probes must bind them, and macOS implementation plus native mutation execution remain open.",
       "requirement_id": "SR-PLT-010",
       "story_contribution": "partial-linux-manifest-contract"
     },
@@ -244,7 +260,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "d3f040046b9afdcf6bc4539946c91a78ee4fc4a6",
+  "source_revision": "69572c4f1a6907dea49eddd8a3d808b7c91b031c",
   "status": "pass-non-macos-security-mapping",
   "story_id": "7.1",
   "summary": {
@@ -252,7 +268,7 @@
     "mapped_requirement_count": 10,
     "partial_or_blocked_scope_count": 9,
     "product_requirements_complete": 0,
-    "retained_artifact_count": 19,
+    "retained_artifact_count": 22,
     "story_gate_complete": false
   },
   "task_id": "7.1.3.5"
