@@ -937,7 +937,16 @@ results cannot acquire different meanings in different interfaces.
   semantic Rust boundary. Five mutation/omission/overclaim tests pass. This closes the current
   public-synthetic Rust/JSON contract-boundary scope, not installed-product, native-platform,
   real-model, independent-review, Story, Sprint, packaging, or release gates.
-- [ ] **Story AC 1.3.AC2:** Given identical admitted inputs, when records are produced through different clients, then identities and deterministic fields match and no client becomes state authority.
+- [x] **Story AC 1.3.AC2:** Given identical admitted inputs, when records are produced through
+  different clients, then identities and deterministic fields match and no client becomes state
+  authority. Evidence: a criterion-specific regression runs the shared 56-case public-synthetic
+  corpus through JavaScript schema admission and the Rust public decoder. All nine admitted record
+  families round-trip with exact canonical bytes, SHA-256 identities, content/identity bindings,
+  and enum meaning; the borrowed publication boundary matches the authoritative encoder. Callers
+  validate or borrow records and own no runtime state, persistence, lifecycle transition, or
+  execution authority. Five mutation/omission/overclaim tests pass. This closes the current
+  deterministic Rust/JavaScript caller scope, not installed-client, native-platform, real-model,
+  independent-review, Story, Sprint, packaging, or release gates.
 - [ ] **Story AC 1.3.AC3:** Given malformed, stale, or unsupported records, when admission runs, then execution is blocked before model, tool, or effect dispatch with a non-secret diagnostic.
 
 ### [ ] Sprint 2 - Test Harness and Synthetic Corpus

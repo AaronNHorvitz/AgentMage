@@ -1,0 +1,104 @@
+{
+  "acceptance_truth": {
+    "admitted_record_count": 9,
+    "borrowed_publication_matches_authoritative_encoder": true,
+    "canonical_bytes_match_across_callers": true,
+    "canonical_record_family_count": 9,
+    "canonical_sha256_matches_across_callers": true,
+    "client_owns_lifecycle_transition": false,
+    "client_owns_persistence": false,
+    "client_owns_runtime_state": false,
+    "client_receives_execution_authority": false,
+    "content_and_identity_bindings_preserved": true,
+    "current_rust_javascript_caller_parity_scope_complete": true,
+    "fixture_case_count": 56,
+    "independent_contract_caller_count": 2,
+    "independent_review_complete": false,
+    "installed_client_parity_complete": false,
+    "model_inference_executed": false,
+    "native_platform_complete": false,
+    "network_calls": 0,
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "serialized_enum_meaning_preserved": true,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "artifacts": [
+    {
+      "byte_length": 973,
+      "path": "docs/verification/story-1-3-ac2-cross-client-parity.md",
+      "sha256": "a938533bab748d55863ea69e353b0b3a66987549f9d969565676301b8024179e"
+    },
+    {
+      "byte_length": 7860,
+      "path": "scripts/story_1_3_ac2_evidence.py",
+      "sha256": "8038b2839b308346dc4e469028221158b6419d60644b42458e0a708e7e6ef5d0"
+    },
+    {
+      "byte_length": 2602,
+      "path": "tests/test_story_1_3_ac2_evidence.py",
+      "sha256": "6f3f40df2b9e4f3047e5c3b56316c00f614b5c3d336b29155107100e4fa1c563"
+    },
+    {
+      "byte_length": 1232,
+      "path": "artifacts/sprints/sprint-1/story-1.3/story-ac2-cross-client-parity-results.log",
+      "sha256": "fce1a80df00e3cf2c77bcb18fad9ced686c71805ca18109588546945384e729f"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test engineering_runtime_record_corpus valid_records_round_trip_with_exact_cross_language_canonical_bytes -- --exact",
+    "cargo test -p agentmage-kernel-engine --test engineering_runtime_record_corpus borrowed_record_boundary_matches_the_canonical_contract_encoder_for_every_family -- --exact",
+    "python3 scripts/engineering_runtime_record_evidence.py"
+  ],
+  "criterion_id": "1.3.AC2",
+  "generated_on": "2026-08-30",
+  "limitations": [
+    "the criterion closes the current deterministic Rust and JavaScript contract-caller scope",
+    "callers validate or borrow canonical records and receive no state, persistence, transition, or execution authority",
+    "installed-client, native-platform, real-model, and independent-review evidence remain later gates",
+    "Story, Sprint, packaging, and release completion are not claimed"
+  ],
+  "record_type": "agentmage-story-acceptance-evidence",
+  "required_markers": [
+    "test valid_records_round_trip_with_exact_cross_language_canonical_bytes ... ok",
+    "test borrowed_record_boundary_matches_the_canonical_contract_encoder_for_every_family ... ok",
+    "Task 1.3.3.1 canonical record evidence validated"
+  ],
+  "retained_evidence": [
+    {
+      "byte_length": 128088,
+      "path": "kernel/contracts/src/engineering_records.rs",
+      "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+    },
+    {
+      "byte_length": 73730,
+      "path": "kernel/engine/src/engineering_records.rs",
+      "sha256": "51338875c4b81e0f04a402c3236b6718e8d273b0e2d5e8745fe07a88a8215c57"
+    },
+    {
+      "byte_length": 9960,
+      "path": "kernel/engine/tests/engineering_runtime_record_corpus.rs",
+      "sha256": "f903880fa42f44ec6540a82a162c60dcbe6f52832f101a82727d49bbabd4270d"
+    },
+    {
+      "byte_length": 14524,
+      "path": "scripts/engineering_runtime_fixture_corpus.mjs",
+      "sha256": "27637f757e526822387cfc69c4df1bc1fa7c0a486fb124eaa95d63e4edd731a8"
+    },
+    {
+      "byte_length": 23708,
+      "path": "fixtures/engineering-runtime/v2/manifest.json",
+      "sha256": "3a5dd1e8c5edb96083c6429ed911683fcdf65b73d538117f46e88682231e4b30"
+    },
+    {
+      "byte_length": 17110,
+      "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-evidence-index.json",
+      "sha256": "73be00ba2aea79e50b0df38e5e14df248d86439232381a7f48c1438b88f8ecd1"
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass-local-current-rust-javascript-caller-parity-scope",
+  "story_id": "1.3"
+}
