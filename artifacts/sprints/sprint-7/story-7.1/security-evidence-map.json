@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "bytes": 136944,
+      "bytes": 160606,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
       "bytes": 7638,
@@ -48,22 +48,22 @@
     {
       "bytes": 4405,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-      "sha256": "d0ba8816b71ac1f6e3cba5c7c563356147d1f7e9facbcd677e2f946d94048ba5"
+      "sha256": "58378a6e3ecad6600b2c35596d802c94b6c0b2ef1f6630bc6821caddf1bb327d"
     },
     {
       "bytes": 4142,
       "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-      "sha256": "1e4c38473be9aa1871fb0f05dd1dfa74d119fdd07e12138ef3a7d0315efe78a7"
+      "sha256": "09c76cc71f8b6751d74d7118935aeb90a431378550833587543e057321a43b5c"
     },
     {
-      "bytes": 395040,
+      "bytes": 446026,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "976398bd54cf3809c8d7bcca51b025dfb22f9e28ea13508ff5d21aead46ebfa2"
+      "sha256": "4ab36c7790e1f05686a6d659fe800968556cfb75be3ee11eefa964b0782df9df"
     },
     {
-      "bytes": 410971,
+      "bytes": 465835,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "da8158299a3e2b41cae7ce0cc09716e4625c93e4dcf583d8d0667f29b1780a92"
+      "sha256": "d6d96c204f70ab7bad0ba8bc41388d1f9352eea86a242334f4a02219d6089a69"
     },
     {
       "bytes": 23383,
@@ -244,7 +244,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "79513aebd89cdf9df0db4f995415d0d3156025fa",
+  "source_revision": "562365c41629323dbee5832d8d5aabf4201084ad",
   "status": "pass-non-macos-security-mapping",
   "story_id": "7.1",
   "summary": {
