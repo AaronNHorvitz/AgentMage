@@ -1,0 +1,91 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 16113,
+      "path": "kernel/engine/src/workflow_verifier.rs",
+      "sha256": "9d2f2c7d51356741f9f9d7644fd48c7afb90605765418e359f4e22fd15d7c2a6"
+    },
+    {
+      "byte_length": 12090,
+      "path": "kernel/engine/tests/workflow_verifier.rs",
+      "sha256": "82580a8d708a503fdf5e2c5cdf14c04802671877c56d1e0410363b73f228298e"
+    },
+    {
+      "byte_length": 2084,
+      "path": "docs/verification/story-5-3-workflow-verifier-evidence.md",
+      "sha256": "9317d4f537340b0595e5c1496e50bb86a3e19ac0457308344e5f80e2bed5dc46"
+    },
+    {
+      "byte_length": 6515,
+      "path": "scripts/workflow_verifier_evidence.py",
+      "sha256": "26da064f28785feec068f67320c338f85e7a419ccffa04f69fb74b37ea10afc0"
+    },
+    {
+      "byte_length": 1373,
+      "path": "tests/test_workflow_verifier_evidence.py",
+      "sha256": "5e311ebdc38a39209c23ac87ba52fec2175f97ad0f0b8915de6b926751ce7ca7"
+    },
+    {
+      "byte_length": 853,
+      "path": "artifacts/sprints/sprint-5/story-5.3/workflow-verifier-results.log",
+      "sha256": "d22266c1e19d6cd7dfb59d50bc3e7d7f0c928f6ca4afc7fa47f5b5ed55988234"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test workflow_verifier --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "completion_contract": {
+    "all_required_deterministic_verifiers_must_pass": true,
+    "evidence_must_be_complete_current_and_ordered": true,
+    "exit_zero_has_completion_authority": false,
+    "expected_output_and_state_are_exact": true,
+    "model_or_tool_prose_has_completion_authority": false,
+    "observation_and_receipt_sets_are_exact": true,
+    "opaque_proof_has_execution_authority": false,
+    "policy_and_records_are_integrity_bound": true,
+    "prohibited_effects_must_be_absent": true,
+    "required_invariants_must_be_preserved": true,
+    "terminal_result_issued_by_this_increment": false
+  },
+  "evaluated_surfaces": [
+    "expected_output",
+    "postconditions",
+    "preserved_invariants",
+    "prohibited_effects",
+    "terminal_observations",
+    "receipt_integrity",
+    "current_evidence",
+    "current_state"
+  ],
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "model_inference_executed": false,
+    "network_calls": 0,
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "terminal_result_issued": false
+  },
+  "record_type": "agentmage-workflow-verifier-evidence",
+  "requirements": [
+    "AM-VER-001",
+    "AT-VER-001"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-contract-evidence",
+  "story_id": "5.3",
+  "task_id": "5.3.2.1",
+  "test_contract": {
+    "clippy_warnings_allowed": 0,
+    "focused_tests": 4,
+    "required_markers": [
+      "exact_current_deterministic_evidence_is_admitted_without_authority ... ok",
+      "expected_output_state_observation_receipt_and_evidence_bind_independently ... ok",
+      "every_postcondition_invariant_and_prohibited_effect_is_fail_closed ... ok",
+      "exit_zero_persuasive_output_and_tampered_results_never_establish_completion ... ok"
+    ]
+  }
+}

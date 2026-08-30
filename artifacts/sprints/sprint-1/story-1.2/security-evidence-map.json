@@ -23,11 +23,11 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "4af828cdef0ce4aecaf2ef0ea360b12f20b2b22809f2b4552ae168b6c9553fab"
+          "sha256": "279a311153bdb422c15fd63549ce53a18977c20cf92b789b0ebb74b62efc9d3e"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "197aa4ab4c6bff37de5b84d673cc89d93c21d1b970936ef8591211183174d3c2"
+          "sha256": "0eefa9b5125c97d412b4d7b4c2bc21fcf471125f0ad617bfdd491e3263d11767"
         }
       ],
       "protocol_complete": false
@@ -50,7 +50,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "4af828cdef0ce4aecaf2ef0ea360b12f20b2b22809f2b4552ae168b6c9553fab"
+          "sha256": "279a311153bdb422c15fd63549ce53a18977c20cf92b789b0ebb74b62efc9d3e"
         }
       ],
       "protocol_complete": false
@@ -73,7 +73,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "4af828cdef0ce4aecaf2ef0ea360b12f20b2b22809f2b4552ae168b6c9553fab"
+          "sha256": "279a311153bdb422c15fd63549ce53a18977c20cf92b789b0ebb74b62efc9d3e"
         }
       ],
       "protocol_complete": false
@@ -96,11 +96,11 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "4af828cdef0ce4aecaf2ef0ea360b12f20b2b22809f2b4552ae168b6c9553fab"
+          "sha256": "279a311153bdb422c15fd63549ce53a18977c20cf92b789b0ebb74b62efc9d3e"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "197aa4ab4c6bff37de5b84d673cc89d93c21d1b970936ef8591211183174d3c2"
+          "sha256": "0eefa9b5125c97d412b4d7b4c2bc21fcf471125f0ad617bfdd491e3263d11767"
         }
       ],
       "protocol_complete": false
@@ -123,11 +123,11 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "4af828cdef0ce4aecaf2ef0ea360b12f20b2b22809f2b4552ae168b6c9553fab"
+          "sha256": "279a311153bdb422c15fd63549ce53a18977c20cf92b789b0ebb74b62efc9d3e"
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/raw-contract-boundary-results.log",
-          "sha256": "197aa4ab4c6bff37de5b84d673cc89d93c21d1b970936ef8591211183174d3c2"
+          "sha256": "0eefa9b5125c97d412b4d7b4c2bc21fcf471125f0ad617bfdd491e3263d11767"
         }
       ],
       "protocol_complete": false
@@ -150,7 +150,7 @@
         },
         {
           "path": "artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json",
-          "sha256": "4af828cdef0ce4aecaf2ef0ea360b12f20b2b22809f2b4552ae168b6c9553fab"
+          "sha256": "279a311153bdb422c15fd63549ce53a18977c20cf92b789b0ebb74b62efc9d3e"
         }
       ],
       "protocol_complete": false

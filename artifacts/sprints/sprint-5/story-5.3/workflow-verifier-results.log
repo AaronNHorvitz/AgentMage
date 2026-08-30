@@ -1,0 +1,13 @@
+$ cargo test -p agentmage-kernel-engine --test workflow_verifier --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+
+running 4 tests
+test exact_current_deterministic_evidence_is_admitted_without_authority ... ok
+test expected_output_state_observation_receipt_and_evidence_bind_independently ... ok
+test every_postcondition_invariant_and_prohibited_effect_is_fail_closed ... ok
+test exit_zero_persuasive_output_and_tampered_results_never_establish_completion ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+$ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s

@@ -177,6 +177,8 @@ pub mod workflow_identity;
 pub mod workflow_progress;
 /// Non-secret terminal reasons and inert safe next actions for workflow supervision.
 pub mod workflow_termination;
+/// Deterministic evaluation of exact workflow evidence without completion authority.
+pub mod workflow_verifier;
 /// Exact-preimage shadow changes, review previews, and bounded write grants.
 pub mod write_approval;
 /// Content-free write checkpoints, privacy gates, recovery decisions, and audit receipts.
