@@ -947,7 +947,16 @@ results cannot acquire different meanings in different interfaces.
   execution authority. Five mutation/omission/overclaim tests pass. This closes the current
   deterministic Rust/JavaScript caller scope, not installed-client, native-platform, real-model,
   independent-review, Story, Sprint, packaging, or release gates.
-- [ ] **Story AC 1.3.AC3:** Given malformed, stale, or unsupported records, when admission runs, then execution is blocked before model, tool, or effect dispatch with a non-secret diagnostic.
+- [x] **Story AC 1.3.AC3:** Given malformed, stale, or unsupported records, when admission runs,
+  then execution is blocked before model, tool, or effect dispatch with a non-secret diagnostic.
+  Evidence: a criterion-specific regression proves all 45 schema-invalid fixtures fail before
+  canonical publication, the cyclic workflow fails at semantic validation, and the stale request
+  binding fails at record-set validation. Shared serialization tests require stable typed codes,
+  exclude candidate content from fixed messages, and reject free prose in terminal diagnostics.
+  Five mutation/omission/overclaim tests pass. These pure boundary commands execute no model,
+  tool worker, effect driver, or network call. This closes the current local Rust/JSON admission
+  scope, not installed-client, native-platform, real-model, independent-review, Story, Sprint,
+  packaging, or release gates.
 
 ### [ ] Sprint 2 - Test Harness and Synthetic Corpus
 
