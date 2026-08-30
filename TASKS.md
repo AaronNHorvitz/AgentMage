@@ -842,8 +842,21 @@ artifact, and recovery contracts remain authoritative.
     product, and diff gates pass. All features remain disabled, OCR remains deferred, every native
     campaign remains not run, and macOS remains explicitly `blocked-post-ga`.
 - [ ] **Task 1.2.5 - Verify and evidence the contract boundary**
-  - [ ] **Sub-task 1.2.5.1:** Run schema mutation, dependency-direction, forbidden-duplicate-owner,
-    API-surface, capability-absence, and current-versus-planned-truth tests.
+  - [x] **Sub-task 1.2.5.1:** Run schema mutation, dependency-direction, forbidden-duplicate-owner,
+    API-surface, capability-absence, and current-versus-planned-truth tests. Evidence: the generated
+    `artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json` records all six required
+    check classes as `pass-local`, with SHA-256 bindings for the 37-schema Engineering Runtime
+    bundle, architecture authorities, validators, tests, and current `TASKS.md`. The durable
+    `contract-boundary:check` gate runs 51 closed-schema and semantic-mutation tests, eight
+    dependency-direction tests, 15 singleton-owner and layer mutation tests, 11 stable/experimental
+    API-surface tests, 15 status-model tests, and 12 focused boundary tests. The focused controls
+    reject MCP implementation or module claims, parser features enabled by default, OCR promotion,
+    every widened dependency or placement product-truth field, enabled models, supported platforms,
+    released packages, an integrated workflow, a passing release gate, altered check results, stale
+    source hashes, and native/external/support/release overclaims. The current architecture,
+    requirements, documentation, schema, supply-chain, artifact-scan, full product, and diff gates
+    pass. This is local contract evidence only: it enables no capability and supplies no native
+    platform campaign, external review, support, or release evidence.
   - [ ] **Sub-task 1.2.5.2:** Retain machine-readable contract indexes, dependency dispositions,
     diagrams, migration notes, raw test results, and a security mapping to `RV-03`, `RV-04`,
     `RV-08`, `RV-11`, `RV-12`, and `RV-17`.

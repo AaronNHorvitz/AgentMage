@@ -627,6 +627,19 @@ support, or release evidence.
 
 ## 14. Security and Privacy Gates
 
+The Task 1.2.5.1 [contract-boundary verification
+report](../../artifacts/sprints/sprint-1/story-1.2/contract-boundary-report.json)
+is rebuilt only after six local check classes pass: Engineering Runtime schema
+mutation, dependency direction, forbidden duplicate ownership, VS Code API
+surface, capability absence, and current-versus-planned truth. Its source
+ledger binds the schemas, machine architecture, validators, and mutation tests
+by SHA-256. The gate directly refuses enabling parser, OCR, MCP, model,
+platform, package, remote-placement, fallback, integrated-workflow, or release
+truth merely because its architecture has been planned.
+
+This is local contract evidence only. It supplies no native-platform campaign,
+external review, support, or release evidence.
+
 The two epics must prove:
 
 - no untrusted artifact or model output creates policy or authority;

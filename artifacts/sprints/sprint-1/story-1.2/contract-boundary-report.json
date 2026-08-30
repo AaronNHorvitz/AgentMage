@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "record_type": "contract-boundary-verification-report",
+  "decision_id": "ADR-0042",
+  "task_id": "1.2.5.1",
+  "generated_on": "2026-08-29",
+  "status": "pass-local-with-external-evidence-open",
+  "checks": [
+    {
+      "id": "schema-mutation",
+      "command": "node scripts/engineering_runtime_schemas.mjs && node --test tests/test_engineering_runtime_schemas.mjs",
+      "result": "pass-local",
+      "assertion": "closed Engineering Runtime schemas reject missing, extra, malformed, version, semantic, compatibility, and migration mutations"
+    },
+    {
+      "id": "dependency-direction",
+      "command": "python3 scripts/dependency_rules.py && python3 -m unittest tests.test_dependency_rules",
+      "result": "pass-local",
+      "assertion": "every prohibited reverse edge, undeclared edge, cross-layer edge, package edge, and cycle is rejected"
+    },
+    {
+      "id": "forbidden-duplicate-owner",
+      "command": "python3 scripts/runtime_ownership.py && python3 -m unittest tests.test_runtime_ownership",
+      "result": "pass-local",
+      "assertion": "a second context manager, store, runtime loop, policy engine, dispatcher, verifier, module owner, or role owner is rejected"
+    },
+    {
+      "id": "api-surface",
+      "command": "python3 scripts/vscode_api_surfaces.py && python3 -m unittest tests.test_vscode_api_surfaces",
+      "result": "pass-local",
+      "assertion": "supported-path, experimental-channel, best-effort, degradation, and absence-disclosure mutations fail closed"
+    },
+    {
+      "id": "capability-absence",
+      "command": "python3 -m unittest tests.test_contract_boundary_gate",
+      "result": "pass-local",
+      "assertion": "disabled parser, OCR, MCP, model, platform, package, release, remote-placement, and fallback capabilities cannot be promoted by plan or status mutation"
+    },
+    {
+      "id": "current-versus-planned-truth",
+      "command": "python3 scripts/status_model.py && python3 -m unittest tests.test_status_model tests.test_contract_boundary_gate",
+      "result": "pass-local",
+      "assertion": "current product truth remains separate from accepted plans and rejects implementation, integration, support, platform, model, package, and release overclaims"
+    }
+  ],
+  "sources": [
+    {
+      "path": "TASKS.md",
+      "sha256": "1f4435209103335504d5a6ccaf7baa0e2bfa00b4ae0f1caabb559593058cd885"
+    },
+    {
+      "path": "architecture/dependency-rules.json",
+      "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
+    },
+    {
+      "path": "architecture/module-inventory.json",
+      "sha256": "0fe5e51673cdcef3b99a993b4a93f65a2cd8019579efd3c15aacab565dd38bd0"
+    },
+    {
+      "path": "architecture/runtime-ownership.json",
+      "sha256": "09988850a2a014c42ec7077dd7f21918f1b6012f711d43f39b594bd484c69e24"
+    },
+    {
+      "path": "architecture/vscode-api-surfaces.json",
+      "sha256": "e8ead87ad4d071dc5e459881a435fcf0f7d321785da6bd812ade3d5c85ff94d2"
+    },
+    {
+      "path": "architecture/status-model.json",
+      "sha256": "8249814efec43cd48c97eb7afed4091165ccc2a7a72942f630882646835bd444"
+    },
+    {
+      "path": "architecture/dependency-dispositions.json",
+      "sha256": "85b07e08b86125146503a204bc9dad22baa3354dc19c404b51375e3b4443f9d2"
+    },
+    {
+      "path": "architecture/schema-evolution-and-rollback.json",
+      "sha256": "4cbbd8f1151f132812f6faa7280020a16de6c97944d9ef62d0e3e877e5b422b2"
+    },
+    {
+      "path": "architecture/parser-ocr-platform-placement.json",
+      "sha256": "60c84d48c13e2858ab886a3881c0a7068a553cd6ce8e7570d70afcc02c5eee51"
+    },
+    {
+      "path": "scripts/engineering_runtime_schemas.mjs",
+      "sha256": "5883b3e6a9070453ae06f893166e79633b35daf4549fbddae2e459b69de3973f"
+    },
+    {
+      "path": "scripts/dependency_rules.py",
+      "sha256": "bd2e2da00089b5ea3c550dd067090926b3795b037814ad7dfe341bf31e2eceba"
+    },
+    {
+      "path": "scripts/runtime_ownership.py",
+      "sha256": "47559e5fed1661f1cac91ad00597121e9d2fc3f91722eb6d1d695581eaa53d97"
+    },
+    {
+      "path": "scripts/vscode_api_surfaces.py",
+      "sha256": "4e8b963d9601d39f40ee7e569a7117e2b2643b0c00456ec3de69d8d6e3290475"
+    },
+    {
+      "path": "scripts/status_model.py",
+      "sha256": "9fc7462f43d12189a7f7abbb2790bc40899da857874b8a3854f8d08ae558026c"
+    },
+    {
+      "path": "scripts/contract_boundary_gate.py",
+      "sha256": "ae019cd7816e18dc9c3f2449584173a640c0116d57103f729cc51ea1f64262e7"
+    },
+    {
+      "path": "tests/test_engineering_runtime_schemas.mjs",
+      "sha256": "7abe8418e56cbc6d633c47aaa56849772138a28f29276949f7a0de021c323657"
+    },
+    {
+      "path": "tests/test_dependency_rules.py",
+      "sha256": "f3feb144df9cab33bf5ac928db607692d8f87c2e90c0b65ee6b94db35261753a"
+    },
+    {
+      "path": "tests/test_runtime_ownership.py",
+      "sha256": "209a58dba8fb2d38715013bf0163de3c50913d7dda3d5992a27e79f23c819c5d"
+    },
+    {
+      "path": "tests/test_vscode_api_surfaces.py",
+      "sha256": "6069fc3529ea2b48d81b1b5e72ccc09ae5cd22642663069028e2023ff007045a"
+    },
+    {
+      "path": "tests/test_status_model.py",
+      "sha256": "6de02dd4189b26dcd25d678f09b997cada29d6979c54a6df8595eac0147f7e38"
+    },
+    {
+      "path": "tests/test_contract_boundary_gate.py",
+      "sha256": "8536c2df61bada35d9444a0f241ed3700a64c4fb0cb57b484b88ca967b58c891"
+    },
+    {
+      "path": "schemas/engineering-runtime/*.schema.json",
+      "sha256": "6ab0ec912e508b2d0f3316e322f32a6bdf72547526a878a5972824bb80b2cc8a"
+    }
+  ],
+  "product_truth": {
+    "local_contract_gate_passed": true,
+    "capability_enabled": false,
+    "native_platform_evidence": false,
+    "external_review_complete": false,
+    "platform_support_claimed": false,
+    "release_readiness": false
+  }
+}
