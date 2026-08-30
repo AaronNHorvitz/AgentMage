@@ -1482,7 +1482,7 @@ an effect or treating approval as reusable authority.
     surfaces. The enrolled workflow-supervision report now covers all of Task 5.2.3, hash-binds all
     three modules and three focused test commands, and rejects termination-source, reason, action,
     authority, continuation, retry, and product-truth widening.
-- [ ] **Task 5.2.4 - Verify policy and retain evidence**
+- [x] **Task 5.2.4 - Verify policy and retain evidence**
   - [x] **Sub-task 5.2.4.1:** Mutate every effect, failure, budget, approval, preflight,
     reconciliation, and attempt-identity field; require exact denial before dispatch. Evidence: the
     fresh-attempt compiler now verifies the canonical SHA-256 preimages of the complete governing
@@ -1514,8 +1514,22 @@ an effect or treating approval as reusable authority.
     and the outcome uncertain. The enrolled retry/repair report now retains racer, admission,
     callback, atomic-claim, opaque-permit, and uncertainty truth; nine evidence tests reject
     duplicate-effect, nonatomic, success-conversion, retry, or product-claim widening.
-  - [ ] **Sub-task 5.2.4.3:** Retain decision tables, tool-coverage maps, state diagrams, mutation
-    results, race traces, and mappings to `RV-12`, `RV-17`, and `RV-25`.
+  - [x] **Sub-task 5.2.4.3:** Retain decision tables, tool-coverage maps, state diagrams, mutation
+    results, race traces, and mappings to `RV-12`, `RV-17`, and `RV-25`. Evidence: the
+    human-readable [`Story 5.2 policy evidence`](docs/verification/story-5-2-policy-evidence.md)
+    retains the seven-row effect/retry decision table, categorized coverage of every one of the 22
+    registered operations, exact 79-mutation and 16-racer results, and two validated Mermaid views
+    of fresh-attempt and repeated-state termination. The standard-library-only
+    `story_5_2_policy_evidence.py` checker first revalidates all three underlying evidence families,
+    then emits a deterministic consolidated report hash-binding their machine reports and the
+    review document. Its protocol map marks `RV-12` demonstrated only for the local Story 5.2
+    mutation/replay/race scope, `RV-17` a partial in-process sticky-state contribution pending later
+    durable crash/reopen owners, and `RV-25` a partial prerequisite pending Sprint 105 external
+    provider execution and Sprint 126 rerun. Three focused evidence tests reject missing operation
+    coverage, duplicate dispatch/effect claims, weakened atomicity, protocol promotion, external
+    effect claims, and Story/Sprint/release overclaims. The checker is enrolled in `schemas:check`;
+    all data is synthetic and no native platform, provider, independent review, or release claim is
+    made.
 
 ##### Story Acceptance Criteria
 

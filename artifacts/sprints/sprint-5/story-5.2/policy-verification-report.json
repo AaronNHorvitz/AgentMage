@@ -1,0 +1,341 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 8028,
+      "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json",
+      "sha256": "60413a12eb7c7db08787572c5189ee4fe65b8b19104ac910e6b0f0dc0fde0303"
+    },
+    {
+      "byte_length": 6817,
+      "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json",
+      "sha256": "c71574a5c39e91533a5f1120d08d62ddc98bbb3ccd162a1db7a5950b6da58e45"
+    },
+    {
+      "byte_length": 4545,
+      "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-report.json",
+      "sha256": "9e3c93a65083891b1261fe892596db1d72d3a58f9cc9709d6ff82122ebedebe9"
+    },
+    {
+      "byte_length": 4209,
+      "path": "docs/verification/story-5-2-policy-evidence.md",
+      "sha256": "6b494cb61e5362894f88b74675c5257ea5ffdb3ac2b9157a1f651e15141a91c9"
+    }
+  ],
+  "decision_table": {
+    "effect_classes": [
+      {
+        "approval_required": false,
+        "automatic_retry": true,
+        "class": "read_only",
+        "retry_classes": [
+          "never",
+          "recoverable_read"
+        ]
+      },
+      {
+        "approval_required": false,
+        "automatic_retry": true,
+        "class": "idempotent_write",
+        "retry_classes": [
+          "never",
+          "conditional_after_reconciliation"
+        ]
+      },
+      {
+        "approval_required": false,
+        "automatic_retry": true,
+        "class": "conditional",
+        "retry_classes": [
+          "never",
+          "conditional_after_reconciliation"
+        ]
+      },
+      {
+        "approval_required": true,
+        "automatic_retry": false,
+        "class": "non_idempotent",
+        "retry_classes": [
+          "never",
+          "user_decision_required"
+        ]
+      },
+      {
+        "approval_required": true,
+        "automatic_retry": false,
+        "class": "destructive",
+        "retry_classes": [
+          "never",
+          "user_decision_required"
+        ]
+      },
+      {
+        "approval_required": true,
+        "automatic_retry": false,
+        "class": "external",
+        "retry_classes": [
+          "never",
+          "user_decision_required"
+        ]
+      },
+      {
+        "approval_required": true,
+        "automatic_retry": false,
+        "class": "unknown",
+        "retry_classes": [
+          "never",
+          "user_decision_required"
+        ]
+      }
+    ],
+    "failure_classes": [
+      {
+        "class": "malformed_input",
+        "default_disposition": "reject_before_dispatch"
+      },
+      {
+        "class": "preflight",
+        "default_disposition": "reject_before_dispatch"
+      },
+      {
+        "class": "policy",
+        "default_disposition": "blocked_by_policy"
+      },
+      {
+        "class": "approval",
+        "default_disposition": "await_fresh_approval"
+      },
+      {
+        "class": "dependency",
+        "default_disposition": "await_dependency"
+      },
+      {
+        "class": "transient",
+        "default_disposition": "eligible_fresh_attempt"
+      },
+      {
+        "class": "conflict",
+        "default_disposition": "reconcile_then_decide"
+      },
+      {
+        "class": "timeout",
+        "default_disposition": "reconcile_then_decide"
+      },
+      {
+        "class": "cancellation",
+        "default_disposition": "terminal_cancelled"
+      },
+      {
+        "class": "crash",
+        "default_disposition": "reconcile_then_decide"
+      },
+      {
+        "class": "uncertain_effect",
+        "default_disposition": "reconcile_then_decide"
+      },
+      {
+        "class": "verification",
+        "default_disposition": "terminal_failure"
+      },
+      {
+        "class": "resource",
+        "default_disposition": "terminal_resource_exhausted"
+      },
+      {
+        "class": "internal",
+        "default_disposition": "terminal_failure"
+      }
+    ],
+    "operation_effect_mappings": [
+      {
+        "effect_class": "read_only",
+        "operation": "workspace_read"
+      },
+      {
+        "effect_class": "conditional",
+        "operation": "workspace_write"
+      },
+      {
+        "effect_class": "destructive",
+        "operation": "workspace_delete"
+      },
+      {
+        "effect_class": "unknown",
+        "operation": "command_execute"
+      },
+      {
+        "effect_class": "external",
+        "operation": "network_access"
+      },
+      {
+        "effect_class": "conditional",
+        "operation": "git_clone"
+      },
+      {
+        "effect_class": "conditional",
+        "operation": "git_fetch"
+      },
+      {
+        "effect_class": "conditional",
+        "operation": "git_worktree_create"
+      },
+      {
+        "effect_class": "destructive",
+        "operation": "git_worktree_remove"
+      },
+      {
+        "effect_class": "conditional",
+        "operation": "git_branch_fast_forward"
+      },
+      {
+        "effect_class": "non_idempotent",
+        "operation": "git_commit"
+      },
+      {
+        "effect_class": "external",
+        "operation": "git_push"
+      },
+      {
+        "effect_class": "external",
+        "operation": "publish"
+      },
+      {
+        "effect_class": "external",
+        "operation": "send"
+      },
+      {
+        "effect_class": "external",
+        "operation": "upload"
+      },
+      {
+        "effect_class": "external",
+        "operation": "deploy"
+      },
+      {
+        "effect_class": "read_only",
+        "operation": "database_read"
+      },
+      {
+        "effect_class": "unknown",
+        "operation": "database_write"
+      },
+      {
+        "effect_class": "read_only",
+        "operation": "credential_access"
+      },
+      {
+        "effect_class": "read_only",
+        "operation": "model_inference"
+      },
+      {
+        "effect_class": "read_only",
+        "operation": "draft_create"
+      },
+      {
+        "effect_class": "destructive",
+        "operation": "administration"
+      }
+    ],
+    "registered_operation_count": 22
+  },
+  "generated_on": "2026-08-30",
+  "mutation_results": {
+    "approval_field_mutations": 21,
+    "attempt_identity_field_mutations": 15,
+    "budget_field_mutations": 9,
+    "canonical_admission_digest_verified": true,
+    "canonical_approval_digest_verified": true,
+    "canonical_decision_digest_verified": true,
+    "canonical_policy_digest_verified": true,
+    "dispatches_after_mutation": 0,
+    "effect_and_retry_field_mutations": 9,
+    "failure_and_uncertainty_field_mutations": 14,
+    "preflight_field_mutations": 5,
+    "reconciliation_field_mutations": 6,
+    "total_mutations": 79
+  },
+  "product_truth": {
+    "external_effect_executed": false,
+    "independent_review_claim": "none",
+    "native_platform_claim": "none",
+    "release_claim": "none",
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "race_results": {
+    "concurrent_eligible_attempts": 16,
+    "effect_callback_invocations": 1,
+    "execution_admissions": 1,
+    "execution_permit_cloneable": false,
+    "predecessor_step_attempt_claim_atomic": true,
+    "uncertain_outcome_converted_to_success": false,
+    "uncertain_outcome_retained": true,
+    "uncertain_outcome_retried": false
+  },
+  "record_type": "agentmage-story-5.2-policy-verification-evidence",
+  "review_protocols": [
+    {
+      "product_complete": false,
+      "protocol": "RV-12",
+      "status": "demonstrated-story-scope"
+    },
+    {
+      "product_complete": false,
+      "protocol": "RV-17",
+      "status": "partial-contribution"
+    },
+    {
+      "product_complete": false,
+      "protocol": "RV-25",
+      "status": "partial-prerequisite-only"
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass-local-contract-evidence",
+  "story_id": "5.2",
+  "supervision_results": {
+    "budget_dimensions": [
+      "parser_repair",
+      "step_attempt",
+      "per_error_class",
+      "workflow_work",
+      "replan"
+    ],
+    "repeated_state_contract": {
+      "all_dimensions_required": true,
+      "decision_contains_authority": false,
+      "detector_bound_to_policy_id_and_sha256": true,
+      "exact_repeat_limit": true,
+      "fingerprint_dimensions": [
+        "plan",
+        "step",
+        "observations",
+        "proposal",
+        "tool",
+        "policy",
+        "receipts",
+        "artifacts",
+        "verifier_state"
+      ],
+      "non_adjacent_cycles_detected": true,
+      "ordered_sequences_boundary_separated": true,
+      "terminal_stop_is_sticky": true
+    },
+    "termination_contract": {
+      "authority_consumed": false,
+      "automatic_continuation_allowed": false,
+      "automatic_retry_allowed": false,
+      "caller_text_in_reason": false,
+      "nonterminal_input_can_terminate": false,
+      "safe_next_actions_are_descriptive": true,
+      "stable_reason_codes": true,
+      "terminal_sources": [
+        "budget_exhaustion",
+        "counter_saturation",
+        "policy_denial",
+        "repeated_state_limit"
+      ]
+    }
+  },
+  "task_id": "5.2.4.3"
+}
