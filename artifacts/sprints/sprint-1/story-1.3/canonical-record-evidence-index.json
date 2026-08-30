@@ -1,0 +1,379 @@
+{
+  "schema_version": 1,
+  "record_type": "engineering-runtime-canonical-record-evidence-index",
+  "decision_id": "ADR-0042",
+  "story_id": "1.3",
+  "task_id": "1.3.3.1",
+  "generated_on": "2026-08-29",
+  "status": "pass-local-contract-evidence",
+  "commands": [
+    "npm run engineering-runtime:schemas:check",
+    "npm run engineering-runtime:fixtures:check",
+    "cargo test -p agentmage-kernel-contracts --test engineering_runtime_record_types --locked",
+    "cargo test -p agentmage-kernel-engine --test engineering_runtime_record_corpus --locked",
+    "cargo test -p agentmage-kernel-engine engineering_records::tests --locked",
+    "python3 scripts/additions_only.py",
+    "python3 scripts/dependency_rules.py"
+  ],
+  "required_markers": [
+    "Validated 37 Engineering Runtime schemas and 6 reused contracts.",
+    "Validated 57 deterministic Engineering Runtime fixture files.",
+    "test result: ok. 3 passed; 0 failed",
+    "test result: ok. 4 passed; 0 failed",
+    "test result: ok. 8 passed; 0 failed",
+    "Protected 294 requirement and 1407 checklist baseline entries.",
+    "dependency rule validation passed"
+  ],
+  "groups": [
+    {
+      "id": "schemas",
+      "artifacts": [
+        {
+          "path": "schemas/engineering-runtime/artifact-envelope.schema.json",
+          "sha256": "2b61c3ac3531f086deba5b56c629db3973ab5807de55dead1a510d0fbd5f4bca"
+        },
+        {
+          "path": "schemas/engineering-runtime/artifact-transformation.schema.json",
+          "sha256": "43691659ed7cb3f5e94af842d5bfec66e8d3f538988bb3e8e5defef1487098a4"
+        },
+        {
+          "path": "schemas/engineering-runtime/artifact-ingestion-result.schema.json",
+          "sha256": "329472cd00eaaf30b2ce45ee0aa5042fd4d6e1370186676f693e0a6e2fc47066"
+        },
+        {
+          "path": "schemas/engineering-runtime/context-manifest.schema.json",
+          "sha256": "21fbf0c3cb2f5af06e4c4f82f6c10ee96eb87a949e425e5479a1291aa8a2071d"
+        },
+        {
+          "path": "schemas/engineering-runtime/workflow-definition.schema.json",
+          "sha256": "3299bc35733c93fc0337ecfd979f0c25ab0ebfb65a31bbeba00e396f2879fa42"
+        },
+        {
+          "path": "schemas/engineering-runtime/workflow-state.schema.json",
+          "sha256": "fbf59b7d70f4c4c3b692183ca465eec13a902fcda0034bbae421681a2639c27a"
+        },
+        {
+          "path": "schemas/engineering-runtime/tool-observation.schema.json",
+          "sha256": "3c4b50e1737f17e1616bde37057193c87e6557d4f6eec792d47e7fe8cef51199"
+        },
+        {
+          "path": "schemas/engineering-runtime/verification-result.schema.json",
+          "sha256": "4bd56c5c9f639dca76db70b08193b978b0cfcf5cdfaeeda9cfc29051f6ee3d0c"
+        },
+        {
+          "path": "schemas/engineering-runtime/terminal-result.schema.json",
+          "sha256": "5f4a51f8ce7861f0eb8079f2e968e8c5dc16fbc0a62acf3b94b10147cd1dc2dd"
+        }
+      ]
+    },
+    {
+      "id": "implementations",
+      "artifacts": [
+        {
+          "path": "kernel/contracts/src/engineering_records.rs",
+          "sha256": "f6ed3c61823c418837f5a42784e410d2be6c42f41026e0aa391431b37df3cb55"
+        },
+        {
+          "path": "kernel/engine/src/engineering_records.rs",
+          "sha256": "e23949decda463708ffbe1bcaeed2129e7a655879a682ed3f37736142eb066c5"
+        },
+        {
+          "path": "scripts/engineering_runtime_schemas.mjs",
+          "sha256": "a95cd8be386a11fa6468e0b1773cc60d9cf5d01a663a611c0a1c0c4816386b1f"
+        },
+        {
+          "path": "scripts/engineering_runtime_fixture_corpus.mjs",
+          "sha256": "27637f757e526822387cfc69c4df1bc1fa7c0a486fb124eaa95d63e4edd731a8"
+        },
+        {
+          "path": "scripts/engineering_runtime_record_evidence.py",
+          "sha256": "70efcdc3a239eb6a5c22a3d6453709857d455e5564e8f75c8f404a908da35e7e"
+        }
+      ]
+    },
+    {
+      "id": "fixtures",
+      "artifacts": [
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/cyclic/workflow-definition.json",
+          "sha256": "e71e37634f682492f26e9392b95c7ebd497681c5a57e680841a10f8b393f4247"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/extra/artifact-envelope.json",
+          "sha256": "8cc1a06755d1c396392811fbb5fb124c003cf3502f38facc9856eb91a9f521c6"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/extra/artifact-ingestion-result.json",
+          "sha256": "376ad5a723566bbc0617c528715396e0c72c7943051721ce92fcfd10d86e7f35"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/extra/artifact-transformation.json",
+          "sha256": "9a91efdb954173cfb2a383b1b71caa807090aa4a8ffe35fb2d6978eabe80e5f7"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/extra/context-manifest.json",
+          "sha256": "ca5effc0b4dc10b7270dcd3b984573e3e5dff3882a41625eb4735e8bb3013786"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/extra/terminal-result.json",
+          "sha256": "e24fac25e18718893853d82f27ff61f459566905e3ac5e8fef62be32e9b3ba42"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/extra/tool-observation.json",
+          "sha256": "64be3ea65b3f8d07b3b3c7ca60856465e5405c9afc75bf751341a2f99f8bc3c2"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/extra/verification-result.json",
+          "sha256": "8529ee5a1ab8fd8b8c2ce7d884257a1d512879c6b7b957dabffce4e3e8e52e8c"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/extra/workflow-definition.json",
+          "sha256": "fb0f04590c14ab23ae740043cb0eb1558cd2f307c71d87221865b78085e02343"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/extra/workflow-state.json",
+          "sha256": "f32d262f073c7d54e9e61064c44dd6395dc003a0f5977af3b4e61903491e6fc9"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/malformed/artifact-envelope.json",
+          "sha256": "32477231d10cb76e164193b2f1d3c0127c80d1c3b328e5a1b011165e483966df"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/malformed/artifact-ingestion-result.json",
+          "sha256": "1fe30bb67d2199331aa47d6239385746ebf08139b627ba4a3d34fc3ba2e24532"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/malformed/artifact-transformation.json",
+          "sha256": "e1585f48e157a6419230b922eef2d2facd1fc016649609749ef02122a476cfd5"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/malformed/context-manifest.json",
+          "sha256": "61ce036455ed1b9261f6059aafbfd4efedb8571e276a5429c05871c5e74e3e4b"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/malformed/terminal-result.json",
+          "sha256": "b76bbd788f5dcc16068c9ff6d1823de9a046a377e3d0266e78cc3ad7fe4c786b"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/malformed/tool-observation.json",
+          "sha256": "e0afb4ed681b399f097bb75306d1f82aec165cc733124710e22070bc7bf833a9"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/malformed/verification-result.json",
+          "sha256": "dee214b9feb3c3900f17e30158317448f69c59b9da6b19c897e4b4e9347b4cda"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/malformed/workflow-definition.json",
+          "sha256": "a364fa85fad015c3d2f0dcc35db79cd725255ee277ac99bb6fbd77d367c68756"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/malformed/workflow-state.json",
+          "sha256": "707ec4967b7fcd74bca04bd5f4dee9c5e5b2ab27a8b3db8bf294e5744c7ff9db"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/missing/artifact-envelope.json",
+          "sha256": "b0b7cfe47ab9bbb35966d8619942a5ec4c647672585836c4e6139386ed561824"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/missing/artifact-ingestion-result.json",
+          "sha256": "84fa8e468701013e838df8f27ee7aafa7e9d7a96e4b82bd2b1c8d25dc7fd87a1"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/missing/artifact-transformation.json",
+          "sha256": "8a761ef1b912e35f712837f129e101a159321fa03861592127e46784db64b926"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/missing/context-manifest.json",
+          "sha256": "e7bb775239071365544aeb0f89717fb3972fce97d874edb4d04fd3e4c836b405"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/missing/terminal-result.json",
+          "sha256": "a9e8a02b4985816f99f807e3f516c9d951dee40973c8c6be7f50840f7ce61d8c"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/missing/tool-observation.json",
+          "sha256": "cd6c95aa18acf8560a5b40a58f0d2e6276d7655979cea1f8bcd412272210f5b1"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/missing/verification-result.json",
+          "sha256": "8392bb5e0bed131fabfb1b94d0e5000e2c5caca823edddb8a771dfb77e0de930"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/missing/workflow-definition.json",
+          "sha256": "7029a970c54607a9a021ee88a1113c4d6993ec52b0a77b93573fd600f8d2e1ac"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/missing/workflow-state.json",
+          "sha256": "e12d6417004cdbb65a32e167c85677e6df2d7f63b4ba56c64e6c3b5250290367"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/oversized/artifact-envelope.json",
+          "sha256": "13454e9ff1d4cbde2a6aae86e2224bfdc13610e47ff67f538e9c328be83e7995"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/oversized/artifact-ingestion-result.json",
+          "sha256": "6cd0f1f611c5897c11b0ccae0df01f36a2e4b4be298dc7702dddc298fa0eae56"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/oversized/artifact-transformation.json",
+          "sha256": "54ae963615dd7b35fbafd23d79567d9a8e838bacee43750b9936263293ac64d4"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/oversized/context-manifest.json",
+          "sha256": "d356a338cf886fe4807881e289f6e9a4f671fceb98b475cb234f2e8192c4f829"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/oversized/terminal-result.json",
+          "sha256": "d285c8030d8743af79076a490d3fd32b17ac325252ee978f6d09ee9f8e009e93"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/oversized/tool-observation.json",
+          "sha256": "4294978a57993c3c1e78a4471950021ec944a860652acd9134ab7bbde860315d"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/oversized/verification-result.json",
+          "sha256": "ee946b9789c6439b52249cf6ed1f1fc260e482fb4325f812ee310cc5d8a496a5"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/oversized/workflow-definition.json",
+          "sha256": "e5bf928d871c1ac69fb5601d4b5fd57016f6478893ba302f414d8190e8ff68b7"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/oversized/workflow-state.json",
+          "sha256": "9d62eb7abe31b431f826afbe355e4541ffcb8b22a0691260d87da5b7b6a7a72a"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/stale/artifact-envelope.json",
+          "sha256": "2490c9455578f795fcd1dcefcb0f70ea5201a64223e344bef7a7c0c9660d6595"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/unsupported-version/artifact-envelope.json",
+          "sha256": "91e1a1e1ad57299be77183b38dc1202500efbc17f68111b72c376ef81184d562"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/unsupported-version/artifact-ingestion-result.json",
+          "sha256": "b5f02505c2e8b73fdd9fa1dc63f6bee53ab28abf62cadd092c6bbfa780e122ea"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/unsupported-version/artifact-transformation.json",
+          "sha256": "4740d158074690fd186068c07b36d40323090e248e32f556f7c157fb8073092d"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/unsupported-version/context-manifest.json",
+          "sha256": "4a8502b1c6d9b20306409066a23d0ffce667bf0f27489712c1bc4617062ede68"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/unsupported-version/terminal-result.json",
+          "sha256": "b636b27faf514f8a4be5544bdf65c8250c461717180d73d52164062ed9bb306a"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/unsupported-version/tool-observation.json",
+          "sha256": "6c2458918ebfd4e37eaa41a4ed6cc86d78632577d4477df016864b31e76ce967"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/unsupported-version/verification-result.json",
+          "sha256": "904dc56081d7663c3fece510a548a96734e9860d816a478cdbe059de0ea3af54"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/unsupported-version/workflow-definition.json",
+          "sha256": "23b336a4a627a572a8cd70364dd037908e07b1686831545a5686bee67880dfdf"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/invalid/unsupported-version/workflow-state.json",
+          "sha256": "7fbeaf9b8bb401c0ac1f72e5f568a80c14548b71b89976437bf20aab8306567c"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/manifest.json",
+          "sha256": "3a5dd1e8c5edb96083c6429ed911683fcdf65b73d538117f46e88682231e4b30"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/valid/artifact-envelope.json",
+          "sha256": "400b8a2b98e2fb921183f2ae92ebd4c09447c28bc4a404e1149a07b82beb5573"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/valid/artifact-ingestion-result.json",
+          "sha256": "8106d9468586cfaa0388380692f664fcfdf58b419f5303d8f34503f406020b17"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/valid/artifact-transformation.json",
+          "sha256": "b49ba0f866ec135dc215cfcd356a4ec6e1cbf79b2dd1cf70f28f982b1ecbc709"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/valid/context-manifest.json",
+          "sha256": "511448d0f1275d5616588eef772b0da4ab5e42b5ff426d6a6ee6b01c1e38ecc8"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/valid/terminal-result.json",
+          "sha256": "e47dc98ef1d55e905931e45a1b37014f1c04b3db3907887974d9567b12e0dc4d"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/valid/tool-observation.json",
+          "sha256": "16c6e4f85900000303c738c14a3b42185c1ea32f33b98a7e871b6eaa173492d9"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/valid/verification-result.json",
+          "sha256": "7757d052aac902a9ea385b0b5cbe8b10936ba827a042fec89bb6f8c273868493"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/valid/workflow-definition.json",
+          "sha256": "d72d7614809a71d38a4b2c646d3007c2487c4ff9275a17fa5456e19b90fab933"
+        },
+        {
+          "path": "fixtures/engineering-runtime/v2/valid/workflow-state.json",
+          "sha256": "ad3a4d9baeef5382e7d68880ddfb45ee2d71790aa42120ff7264f95f273301b7"
+        }
+      ]
+    },
+    {
+      "id": "tests",
+      "artifacts": [
+        {
+          "path": "kernel/contracts/tests/engineering_runtime_record_types.rs",
+          "sha256": "87868f9cfd64d08a88996b9ad47b6d26ff9f35f961283c39b2012d07e5ae4a8f"
+        },
+        {
+          "path": "kernel/engine/tests/engineering_runtime_record_corpus.rs",
+          "sha256": "f903880fa42f44ec6540a82a162c60dcbe6f52832f101a82727d49bbabd4270d"
+        },
+        {
+          "path": "tests/test_engineering_runtime_schemas.mjs",
+          "sha256": "d4ca9699b4da5e9beb5ba94d571f97d5e3a480b6cdf31d2609e025f0b77025f1"
+        },
+        {
+          "path": "tests/test_engineering_runtime_fixture_corpus.mjs",
+          "sha256": "16ac791dce59182adcd36900951698e5e9087f3e69378b3b8a21ec869ad526c4"
+        },
+        {
+          "path": "tests/test_engineering_runtime_record_evidence.py",
+          "sha256": "225a97bcf00ffb208325770f638d59b92a21e936d9c32b460f4b7ac22431c02f"
+        }
+      ]
+    },
+    {
+      "id": "raw-results",
+      "artifacts": [
+        {
+          "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-gate-results.log",
+          "sha256": "f241e996374e6db8127b70c215605f4a384111617b51b7358231d00c37a75335"
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "canonical_schemas": 9,
+    "fixture_files": 57,
+    "fixture_cases": 56,
+    "commands": 7
+  },
+  "product_truth": {
+    "synthetic_data_only": true,
+    "schema_gate_passed": true,
+    "serialization_gate_passed": true,
+    "additions_only_gate_passed": true,
+    "dependency_direction_gate_passed": true,
+    "mutation_gate_passed": true,
+    "native_platform_execution_claimed": false,
+    "external_review_claimed": false,
+    "release_readiness_claimed": false
+  }
+}
