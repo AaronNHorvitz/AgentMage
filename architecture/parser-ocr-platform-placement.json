@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "record_type": "parser-ocr-platform-placement",
+  "decision_id": "ADR-0042",
+  "task_id": "1.2.4.3",
+  "status": "accepted-placement-not-implemented",
+  "reviewed_on": "2026-08-29",
+  "authorities": [
+    {
+      "path": "docs/decisions/0042-universal-artifact-ingestion-and-verified-workflow-execution.md",
+      "sha256": "937f75604dd9b84d3f60a2566d480047385fcc5a43eb6532294f143715805837"
+    },
+    {
+      "path": "RUNTIME-BOUNDARIES.md",
+      "sha256": "e7cf50297db4c0fdb9f4e510da43af2e001b09451e0d1d03cde75d20184cb40e"
+    },
+    {
+      "path": "architecture/runtime-ownership.json",
+      "sha256": "09988850a2a014c42ec7077dd7f21918f1b6012f711d43f39b594bd484c69e24"
+    },
+    {
+      "path": "architecture/dependency-dispositions.json",
+      "sha256": "85b07e08b86125146503a204bc9dad22baa3354dc19c404b51375e3b4443f9d2"
+    }
+  ],
+  "global_placement": {
+    "typescript_role": "ui-reference-resolution-bounded-streaming-progress-approval-cancellation-rendering-only",
+    "rust_host_role": "caller-neutral-runtime-transport-and-capability-injection",
+    "parser_owner": "capability-knowledge-rust",
+    "parser_execution": "fresh-operation-scoped-restricted-worker-in-workspace-execution-locus",
+    "ocr_execution": "optional-fresh-operation-scoped-native-worker-in-workspace-execution-locus",
+    "process_launcher_owner": "platform-adapter",
+    "policy_owner": "kernel-engine",
+    "store_owner": "kernel-engine-operational-store",
+    "typescript_parser_allowed": false,
+    "in_process_complex_parser_allowed": false,
+    "ocr_in_host_allowed": false,
+    "worker_network_allowed": false,
+    "ambient_workspace_allowed": false,
+    "credential_access_allowed": false,
+    "second_store_allowed": false
+  },
+  "package_features": {
+    "default_enabled": [],
+    "planned": [
+      "artifact-ingress",
+      "parser-text-log",
+      "parser-pdf",
+      "parser-docx",
+      "parser-xlsx",
+      "ocr-native"
+    ],
+    "admission_rule": "compile-feature-plus-runtime-policy-plus-platform-conformance-plus-package-evidence",
+    "disabled_rule": "no-registration-no-worker-no-socket-no-cache-no-schema-authority-no-support-claim",
+    "ocr_status": "deferred-unavailable",
+    "native_helper_rule": "exact-hash-and-version-package-manifest-required",
+    "dynamic_plugin_discovery_allowed": false,
+    "environment_feature_override_allowed": false
+  },
+  "byte_crossing": {
+    "extension_to_host": "authenticated-versioned-bounded-chunk-frames-with-sequence-length-and-digest",
+    "host_to_worker": "sealed-read-handle-or-private-bounded-stream-bound-to-source-digest",
+    "worker_to_host": "closed-versioned-derivative-and-diagnostics-with-length-and-digest",
+    "source_in_arguments_or_environment_allowed": false,
+    "plaintext_shared_temp_allowed": false,
+    "path_as_authority_allowed": false,
+    "worker_output_trusted_before_validation": false,
+    "raw_source_return_default": false,
+    "crossing_receipt_fields": [
+      "source-id",
+      "source-sha256",
+      "byte-count",
+      "origin-locus",
+      "destination-locus",
+      "transport-identity",
+      "sequence-range",
+      "worker-identity",
+      "result-sha256"
+    ]
+  },
+  "cancellation": {
+    "token_chain": "ui-to-host-to-kernel-to-platform-to-worker",
+    "admission_checkpoints": [
+      "before-byte-transfer",
+      "before-worker-launch",
+      "during-stream",
+      "during-parse-or-ocr",
+      "before-result-publication"
+    ],
+    "cooperative_grace_then_forced_termination": true,
+    "stdout_and_stderr_drained_concurrently": true,
+    "terminal_before_worker_reaped_allowed": false,
+    "partial_derivative_publication_allowed": false,
+    "residue_recorded_and_cleaned": true,
+    "cancelled_result": "explicit-cancelled-no-cache-publication"
+  },
+  "fallback": {
+    "parser_unavailable": "explicit-unsupported-or-unavailable",
+    "parser_failure": "typed-failed-or-partial-with-every-omission-visible",
+    "ocr_unavailable": "explicit-ocr-unavailable; digital-extraction-may-remain-visible-partial",
+    "sandbox_unavailable": "block-feature-before-byte-disclosure-or-worker-launch",
+    "remote_locus_unavailable": "block-request-with-placement-unavailable",
+    "cloud_ocr_allowed": false,
+    "typescript_fallback_allowed": false,
+    "in_host_complex_parser_fallback_allowed": false,
+    "silent_format_downgrade_allowed": false,
+    "local_path_reinterpretation_allowed": false
+  },
+  "platforms": [
+    {
+      "id": "fedora-x86_64",
+      "session_kind": "local-desktop",
+      "ui_locus": "fedora-user-session",
+      "host_locus": "fedora-user-systemd-service",
+      "parser_locus": "fresh-bubblewrap-worker",
+      "ocr_locus": "future-fresh-bubblewrap-native-worker",
+      "sandbox": "bubblewrap-user-namespace-seccomp-cgroup-v2",
+      "ipc": "mode-0600-unix-domain-socket",
+      "source_rule": "request-bytes-cross-local-authenticated-ipc-once; sealed-projection-enters-worker",
+      "remote_rule": "not-applicable",
+      "cache_locus": "fedora-private-encrypted-data-root",
+      "parser_status": "planned-disabled-evidence-pending",
+      "ocr_status": "deferred-unavailable",
+      "native_evidence": "not-run"
+    },
+    {
+      "id": "ubuntu-x86_64",
+      "session_kind": "local-desktop",
+      "ui_locus": "ubuntu-user-session",
+      "host_locus": "ubuntu-user-systemd-service",
+      "parser_locus": "fresh-bubblewrap-worker",
+      "ocr_locus": "future-fresh-bubblewrap-native-worker",
+      "sandbox": "bubblewrap-user-namespace-seccomp-cgroup-v2",
+      "ipc": "mode-0600-unix-domain-socket",
+      "source_rule": "request-bytes-cross-local-authenticated-ipc-once; sealed-projection-enters-worker",
+      "remote_rule": "not-applicable",
+      "cache_locus": "ubuntu-private-encrypted-data-root",
+      "parser_status": "planned-disabled-evidence-pending",
+      "ocr_status": "deferred-unavailable",
+      "native_evidence": "not-run"
+    },
+    {
+      "id": "windows-11-x86_64",
+      "session_kind": "local-desktop",
+      "ui_locus": "windows-user-session",
+      "host_locus": "windows-user-host-process",
+      "parser_locus": "fresh-appcontainer-or-reviewed-restricted-token-worker",
+      "ocr_locus": "future-fresh-appcontainer-or-reviewed-restricted-token-native-worker",
+      "sandbox": "appcontainer-or-reviewed-restricted-token-plus-job-object",
+      "ipc": "access-controlled-named-pipe",
+      "source_rule": "request-bytes-cross-local-authenticated-ipc-once; restricted-handle-or-stream-enters-worker",
+      "remote_rule": "not-applicable",
+      "cache_locus": "windows-private-encrypted-data-root",
+      "parser_status": "planned-disabled-evidence-pending",
+      "ocr_status": "deferred-unavailable",
+      "native_evidence": "not-run"
+    },
+    {
+      "id": "macos-apple-silicon",
+      "session_kind": "local-desktop",
+      "ui_locus": "macos-user-session",
+      "host_locus": "macos-app-group-host",
+      "parser_locus": "future-fresh-sandboxed-helper",
+      "ocr_locus": "future-fresh-sandboxed-native-helper",
+      "sandbox": "app-sandbox-profile-to-be-professionally-reviewed",
+      "ipc": "authenticated-app-group-ipc",
+      "source_rule": "request-bytes-would-cross-local-authenticated-ipc-once; helper-crossing-remains-unproven",
+      "remote_rule": "not-applicable",
+      "cache_locus": "macos-app-group-encrypted-data-root",
+      "parser_status": "blocked-post-ga",
+      "ocr_status": "blocked-post-ga",
+      "native_evidence": "blocked-macos-not-run"
+    },
+    {
+      "id": "wsl",
+      "session_kind": "remote-wsl",
+      "ui_locus": "windows-local-ui",
+      "host_locus": "wsl-distribution-workspace-side",
+      "parser_locus": "fresh-wsl-bubblewrap-worker",
+      "ocr_locus": "future-fresh-wsl-bubblewrap-native-worker",
+      "sandbox": "wsl-linux-bubblewrap-user-namespace-seccomp-cgroup-when-conformant",
+      "ipc": "workspace-side-mode-0600-unix-socket-plus-vscode-remote-channel",
+      "source_rule": "workspace-source-stays-in-wsl; ui-only-attachment-may-cross-once-as-bounded-digest-bound-bytes",
+      "remote_rule": "never-reinterpret-windows-or-wsl-path; negotiate-byte-origin-before-transfer",
+      "cache_locus": "wsl-private-encrypted-data-root-no-windows-mirror",
+      "parser_status": "planned-disabled-evidence-pending",
+      "ocr_status": "deferred-unavailable",
+      "native_evidence": "not-run"
+    },
+    {
+      "id": "remote-ssh",
+      "session_kind": "remote-ssh",
+      "ui_locus": "local-vscode-ui",
+      "host_locus": "ssh-remote-workspace-side",
+      "parser_locus": "fresh-remote-linux-restricted-worker",
+      "ocr_locus": "future-fresh-remote-linux-restricted-native-worker",
+      "sandbox": "remote-linux-controls-must-pass-target-conformance",
+      "ipc": "remote-workspace-private-ipc-plus-vscode-remote-channel",
+      "source_rule": "remote-workspace-source-stays-remote; ui-only-attachment-may-cross-once-as-bounded-digest-bound-bytes",
+      "remote_rule": "no-loopback-listener-no-path-forwarding-no-local-host-access-to-remote-workspace",
+      "cache_locus": "remote-private-encrypted-data-root-only-after-explicit-retention",
+      "parser_status": "planned-disabled-evidence-pending",
+      "ocr_status": "deferred-unavailable",
+      "native_evidence": "not-run"
+    },
+    {
+      "id": "dev-containers",
+      "session_kind": "dev-container",
+      "ui_locus": "local-vscode-ui",
+      "host_locus": "container-workspace-side",
+      "parser_locus": "fresh-container-restricted-worker-without-container-runtime-socket",
+      "ocr_locus": "future-fresh-container-restricted-native-worker",
+      "sandbox": "container-is-not-sufficient; inner-controls-must-pass-target-conformance",
+      "ipc": "container-private-ipc-plus-vscode-remote-channel",
+      "source_rule": "container-workspace-source-stays-in-container; ui-only-attachment-may-cross-once-as-bounded-digest-bound-bytes",
+      "remote_rule": "no-docker-or-podman-socket-no-host-path-reinterpretation-no-loopback-exposure",
+      "cache_locus": "ephemeral-container-private-root-or-explicit-encrypted-volume",
+      "parser_status": "planned-disabled-evidence-pending",
+      "ocr_status": "deferred-unavailable",
+      "native_evidence": "not-run"
+    }
+  ],
+  "required_evidence": [
+    "placement-and-process-inventory",
+    "package-feature-disabled-and-enabled-diffs",
+    "authenticated-ipc-and-byte-crossing-capture",
+    "sandbox-network-and-ambient-authority-denial",
+    "resource-limit-and-cancellation-campaign",
+    "crash-timeout-and-residue-campaign",
+    "malformed-parser-and-ocr-corpus",
+    "remote-origin-and-path-confusion-campaign",
+    "install-upgrade-rollback-uninstall-package-campaign"
+  ],
+  "product_truth": {
+    "placement_decided": true,
+    "features_enabled": false,
+    "parser_worker_implemented": false,
+    "ocr_worker_implemented": false,
+    "remote_placement_implemented": false,
+    "native_evidence_complete": false,
+    "platform_support_claimed": false,
+    "release_readiness": false
+  }
+}

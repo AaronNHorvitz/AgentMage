@@ -597,6 +597,34 @@ OCR capability, admits no model, and supplies no native-platform, support, or
 release evidence. Every version, feature, upstream, license, advisory,
 platform-package, resource, or behavior change triggers a new review.
 
+The Task 1.2.4.3 [parser and OCR platform-placement
+record](../../architecture/parser-ocr-platform-placement.json) places the
+installed Rust host in the workspace execution locus and every complex parser
+or optional OCR engine in a fresh operation-scoped worker launched by the
+platform adapter. TypeScript remains limited to UI reference resolution,
+bounded streaming, progress, approval, cancellation, and rendering; it gains no
+fallback parser. Workers receive a sealed read handle or private digest-bound
+stream, never a path as authority, command-line source bytes, plaintext shared
+temporary file, ambient workspace, credential, or network access.
+
+Fedora and Ubuntu use a user-service host plus Bubblewrap, user namespaces,
+seccomp, and cgroup controls. Windows uses the user host, an access-controlled
+named pipe, and a fresh AppContainer or equivalently reviewed restricted-token
+worker under a Job Object. The planned macOS App Group host and sandboxed
+helpers remain blocked post-GA without native or professional-review evidence.
+For WSL, Remote SSH, and Dev Containers, the host and worker are workspace-side:
+workspace bytes stay there, while a UI-only attachment may cross once as a
+bounded digest-bound stream. Paths are never reinterpreted across loci, no
+loopback listener is opened, and a container runtime socket is never exposed.
+
+All parser features remain disabled by default and OCR remains deferred and
+unavailable. Missing sandbox or execution-locus conformance blocks before byte
+disclosure or launch. Cancellation propagates through UI, host, kernel,
+platform, and worker; after a bounded cooperative grace period the worker is
+terminated and reaped, with no partial derivative or cache publication. This
+placement decision supplies no implementation, native conformance, platform
+support, or release evidence.
+
 ## 14. Security and Privacy Gates
 
 The two epics must prove:
@@ -730,8 +758,6 @@ non-MCP milestone.
   and fidelity comparison?
 - Is SQLite FTS5 sufficient for the measured artifact corpus before optional
   `tantivy` evaluation?
-- Where should the Rust host execute for SSH, WSL, and Dev Container sessions,
-  and which bytes cross the extension-host boundary?
 - Which exact VS Code versions preserve each stable reference kind at the
   participant and provider boundaries?
 - What per-model profile values improve recovery without increasing false

@@ -57,6 +57,7 @@ REQUIRED_FILES = (
     "architecture/dependency-classes.json",
     "architecture/dependency-dispositions.json",
     "architecture/schema-evolution-and-rollback.json",
+    "architecture/parser-ocr-platform-placement.json",
     "architecture/optional-component-inventory.json",
     "architecture/artifact-scan-policy.json",
     "supply-chain/dependency-provenance.json",

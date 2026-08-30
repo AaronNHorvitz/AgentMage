@@ -783,7 +783,7 @@ artifact, and recovery contracts remain authoritative.
     traceability, and diff gates pass. This records ownership and adds architecture tests only; it
     delivers no MCP adapter or parser implementation and makes no macOS, release, or runtime
     implementation claim.
-- [ ] **Task 1.2.4 - Review dependencies and migration risk**
+- [x] **Task 1.2.4 - Review dependencies and migration risk**
   - [x] **Sub-task 1.2.4.1:** Evaluate parser, MIME detection, tokenization, archive, OCR, and
     database dependencies for license, provenance, maintenance, unsafe-code, platform, and resource
     implications; record accepted, rejected, and deferred candidates. Evidence:
@@ -819,9 +819,28 @@ artifact, and recovery contracts remain authoritative.
     and implementation overclaims. The architecture, current-requirements, documentation, schema,
     supply-chain, artifact-scan, full product, and diff gates pass. This publishes a plan only; no
     migration runtime, reverse migrator, native-platform campaign, or release evidence is claimed.
-  - [ ] **Sub-task 1.2.4.3:** Decide Rust host and parser/OCR process placement, package features,
+  - [x] **Sub-task 1.2.4.3:** Decide Rust host and parser/OCR process placement, package features,
     cancellation, fallback, and byte-crossing behavior separately for Fedora, Ubuntu, Windows 11,
     macOS, WSL, Remote SSH, and Dev Containers; retain unavailable native evidence as blocked.
+    Evidence: `architecture/parser-ocr-platform-placement.json` records the complete ordered
+    seven-environment matrix and binds the placement to Decision 0042, the runtime boundaries,
+    ownership inventory, and dependency dispositions by exact SHA-256. The Rust host and fresh
+    operation-scoped workers execute in the workspace locus; the platform adapter alone launches
+    them; the kernel retains policy and store ownership; and TypeScript gains no parser, workflow,
+    policy, or fallback authority. Every byte crossing is authenticated, bounded, sequenced, and
+    digest-bound, with sealed handles or private streams into workers and no path authority,
+    argument/environment bytes, plaintext shared temporary file, ambient workspace, credential,
+    network, unvalidated output, or raw-source return by default. Cancellation propagates through
+    every layer, terminates and reaps an uncooperative worker, records residue, and publishes no
+    partial derivative or cache. WSL, Remote SSH, and Dev Container hosts remain workspace-side;
+    workspace bytes stay remote while UI-only attachments may cross once, and no local/remote path,
+    loopback listener, host mount, or container-runtime socket is substituted. Sixteen focused
+    mutation tests in `tests/test_parser_ocr_placement.py` reject ownership drift, default feature
+    activation, OCR promotion, widened byte authority, partial cancellation, cloud/TypeScript/host
+    fallback, missing platforms, local placement of remote hosts, and evidence overclaims. The
+    architecture, current-requirements, documentation, schema, supply-chain, artifact-scan, full
+    product, and diff gates pass. All features remain disabled, OCR remains deferred, every native
+    campaign remains not run, and macOS remains explicitly `blocked-post-ga`.
 - [ ] **Task 1.2.5 - Verify and evidence the contract boundary**
   - [ ] **Sub-task 1.2.5.1:** Run schema mutation, dependency-direction, forbidden-duplicate-owner,
     API-surface, capability-absence, and current-versus-planned-truth tests.
