@@ -1,0 +1,410 @@
+{
+  "deterministic_oracle_summary": {
+    "coverage_claim": "none",
+    "fixed_seed_oracles_are_real_fuzzing": false,
+    "oracle_count": 8,
+    "passing_oracle_count": 8,
+    "sanitizer_execution_claim": "none",
+    "seed_case_observation_count": 153
+  },
+  "extension_contract": {
+    "baseline_registry_mutated": false,
+    "parent_registry_path": "fuzzing/target-registry.json",
+    "parent_registry_self_sha256": "854695a256092b9154c31708c87fb7c8cc64ebb4e1fc3e19b54a9deea46743f2",
+    "parent_registry_version": "1.0.0",
+    "toolchain_policy_path": "fuzzing/toolchain-policy.json",
+    "toolchain_policy_self_sha256": "008d44fa82f1c323f5d4fd74995f003f1353e9f520b93afb1a9259b6aada33c0",
+    "toolchain_policy_version": "1.0.0"
+  },
+  "external_processes": 0,
+  "generator": {
+    "path": "scripts/artifact_evaluation_fuzz_registration.py",
+    "sha256": "fed30edb2f60104417028642e358eaddf3bf2b5881044567116090a0b7650740"
+  },
+  "input_count": 15,
+  "inputs": [
+    {
+      "byte_length": 23523,
+      "path": "fuzzing/target-registry.json",
+      "sha256": "4d685399bfd3a33a7df0d4373ed4ab53747c18aa94c8325ea33c69d47ae1123d"
+    },
+    {
+      "byte_length": 6312,
+      "path": "fuzzing/toolchain-policy.json",
+      "sha256": "c69dd0923029dc65d213f8b8368e4b2e9c7e462721df0f1d5fb34980e689d305"
+    },
+    {
+      "byte_length": 4453,
+      "path": "fuzzing/seeds/security-failures-v1.json",
+      "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
+    },
+    {
+      "byte_length": 3525,
+      "path": "docs/decisions/0025-final-manual-fuzz-campaign.md",
+      "sha256": "0bbfdafaa7786a22cd2da80b605b5c5f0e3c30ac281f0409e798a54f3e49122a"
+    },
+    {
+      "byte_length": 11861,
+      "path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+      "sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e"
+    },
+    {
+      "byte_length": 14155,
+      "path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+      "sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94"
+    },
+    {
+      "byte_length": 28379,
+      "path": "fixtures/artifact-evaluation/v1/lifecycle-scenarios.json",
+      "sha256": "274a0c7a7444a3e48f1622b789943ba76e90a9afcae75cf0147c947aa8645118"
+    },
+    {
+      "byte_length": 12755,
+      "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+      "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
+    },
+    {
+      "byte_length": 19208,
+      "path": "fixtures/artifact-evaluation/v1/workflow-crash-points.json",
+      "sha256": "f46c6e89c4c545a159d1023d3677afb495b7df0db3ac9349640681427b0d0a32"
+    },
+    {
+      "byte_length": 17460,
+      "path": "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json",
+      "sha256": "23ae9264902556922866eff8a13f25b1cc5e19cdf43ffb567bfd0d300903a253"
+    },
+    {
+      "byte_length": 8123,
+      "path": "fixtures/artifact-evaluation/v1/artifact-golden-metrics.json",
+      "sha256": "5b82461ae84b70b00234068570872b8c5cd7de5e7928285d84756ce1925a2a99"
+    },
+    {
+      "byte_length": 7851,
+      "path": "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json",
+      "sha256": "8b9f3c9ac8876bf7c582c69196c20e26316c5be911681401190043a63221320c"
+    },
+    {
+      "byte_length": 16723,
+      "path": "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
+      "sha256": "8133d0e3ec27f2bb635f984c6653f79ad25bb14ca7575342678ae40a907be04a"
+    },
+    {
+      "byte_length": 7649,
+      "path": "fixtures/artifact-evaluation/v1/reproducibility-report.json",
+      "sha256": "86d83b6641fdd9a69ae63ded35805c749ab51706d181484f599c8f4483482dc9"
+    },
+    {
+      "byte_length": 6672,
+      "path": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
+      "sha256": "f8e3c449b10a751b33904da1a3dcc8fcba798c318513d7e6bdc2d2d014fcceaf"
+    }
+  ],
+  "manual_campaign": {
+    "blocking_gates": [
+      "affected-RV-15",
+      "Sprint-166",
+      "G-GA"
+    ],
+    "campaign_id": "RM-024",
+    "coverage_result": null,
+    "crash_disposition": null,
+    "decision": "0025",
+    "duration_seconds": null,
+    "execution_status": "deferred-not-executed",
+    "manual_supervision_required": true,
+    "real_fuzz_engine_executed": false,
+    "required": true,
+    "sanitizer_result": null,
+    "source_freeze_required_before_execution": true,
+    "synthetic_evidence_substitution_permitted": false
+  },
+  "network_calls": 0,
+  "private_user_data_used": false,
+  "product_runtime_executed": false,
+  "product_support_claim": "none",
+  "raw_payloads_retained": false,
+  "real_credentials_used": false,
+  "registration_count": 8,
+  "registrations": [
+    {
+      "authority_minted": false,
+      "boundary": "artifact-text-and-reference-parser",
+      "deterministic_fault_oracle": {
+        "execution_class": "fixed-seed-oracle-not-fuzzing",
+        "network_effects": 0,
+        "non_success_case_count": 7,
+        "oracle_id": "text_parser_oracle",
+        "oversized_cases_preserved": 1,
+        "seed_case_count": 16,
+        "status": "pass"
+      },
+      "fault_harness": {
+        "engine_id": "agentmage-bounded-fake-fuzzer",
+        "generic_seed_corpus": "fuzzing/seeds/security-failures-v1.json",
+        "malformed_and_fault_replay_required": true,
+        "real_fuzz_equivalence": false,
+        "regression_replay_required": true
+      },
+      "network_calls": 0,
+      "parent_target_ids": [
+        "FT-TEXT-001"
+      ],
+      "product_runtime_executed": false,
+      "promotion_status": "registered-pending-rm-024",
+      "registration_id": "AE-PARSER-TEXT-001",
+      "seed_inputs": [
+        {
+          "path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+          "sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "boundary": "artifact-document-and-package-parser",
+      "deterministic_fault_oracle": {
+        "active_content_executions": 0,
+        "execution_class": "fixed-seed-oracle-not-fuzzing",
+        "hostile_relationship_cases_preserved": 2,
+        "non_success_case_count": 11,
+        "oracle_id": "document_parser_oracle",
+        "seed_case_count": 14,
+        "status": "pass"
+      },
+      "fault_harness": {
+        "engine_id": "agentmage-bounded-fake-fuzzer",
+        "generic_seed_corpus": "fuzzing/seeds/security-failures-v1.json",
+        "malformed_and_fault_replay_required": true,
+        "real_fuzz_equivalence": false,
+        "regression_replay_required": true
+      },
+      "network_calls": 0,
+      "parent_target_ids": [
+        "FT-ARCHIVE-001"
+      ],
+      "product_runtime_executed": false,
+      "promotion_status": "registered-pending-rm-024",
+      "registration_id": "AE-PARSER-DOCUMENT-001",
+      "seed_inputs": [
+        {
+          "path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+          "sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "boundary": "artifact-provenance-and-golden-manifest",
+      "deterministic_fault_oracle": {
+        "changed_identity_allowed": false,
+        "execution_class": "fixed-seed-oracle-not-fuzzing",
+        "non_success_outcomes_preserved": 60,
+        "oracle_id": "provenance_oracle",
+        "required_input_count": 8,
+        "seed_case_count": 77,
+        "status": "pass"
+      },
+      "fault_harness": {
+        "engine_id": "agentmage-bounded-fake-fuzzer",
+        "generic_seed_corpus": "fuzzing/seeds/security-failures-v1.json",
+        "malformed_and_fault_replay_required": true,
+        "real_fuzz_equivalence": false,
+        "regression_replay_required": true
+      },
+      "network_calls": 0,
+      "parent_target_ids": [
+        "FT-MANIFEST-001"
+      ],
+      "product_runtime_executed": false,
+      "promotion_status": "registered-pending-rm-024",
+      "registration_id": "AE-PROVENANCE-001",
+      "seed_inputs": [
+        {
+          "path": "fixtures/artifact-evaluation/v1/lifecycle-scenarios.json",
+          "sha256": "274a0c7a7444a3e48f1622b789943ba76e90a9afcae75cf0147c947aa8645118"
+        },
+        {
+          "path": "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
+          "sha256": "8133d0e3ec27f2bb635f984c6653f79ad25bb14ca7575342678ae40a907be04a"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "boundary": "workflow-plan-decoder",
+      "deterministic_fault_oracle": {
+        "execution_class": "fixed-seed-oracle-not-fuzzing",
+        "explicit_non_success_count": 8,
+        "open_plan_completion_allowed": false,
+        "oracle_id": "plan_oracle",
+        "seed_case_count": 11,
+        "status": "pass",
+        "verified_success_count": 3
+      },
+      "fault_harness": {
+        "engine_id": "agentmage-bounded-fake-fuzzer",
+        "generic_seed_corpus": "fuzzing/seeds/security-failures-v1.json",
+        "malformed_and_fault_replay_required": true,
+        "real_fuzz_equivalence": false,
+        "regression_replay_required": true
+      },
+      "network_calls": 0,
+      "parent_target_ids": [
+        "FT-MODEL-OUTPUT-001"
+      ],
+      "product_runtime_executed": false,
+      "promotion_status": "registered-pending-rm-024",
+      "registration_id": "AE-WORKFLOW-PLAN-001",
+      "seed_inputs": [
+        {
+          "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+          "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "boundary": "workflow-approval-boundary",
+      "deterministic_fault_oracle": {
+        "approval_bypass_count": 0,
+        "authority_minted_by_fixture": false,
+        "execution_class": "fixed-seed-oracle-not-fuzzing",
+        "oracle_id": "approval_oracle",
+        "seed_case_count": 5,
+        "status": "pass"
+      },
+      "fault_harness": {
+        "engine_id": "agentmage-bounded-fake-fuzzer",
+        "generic_seed_corpus": "fuzzing/seeds/security-failures-v1.json",
+        "malformed_and_fault_replay_required": true,
+        "real_fuzz_equivalence": false,
+        "regression_replay_required": true
+      },
+      "network_calls": 0,
+      "parent_target_ids": [
+        "FT-GRANT-001"
+      ],
+      "product_runtime_executed": false,
+      "promotion_status": "registered-pending-rm-024",
+      "registration_id": "AE-WORKFLOW-APPROVAL-001",
+      "seed_inputs": [
+        {
+          "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+          "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "boundary": "workflow-retry-and-attempt-boundary",
+      "deterministic_fault_oracle": {
+        "execution_class": "fixed-seed-oracle-not-fuzzing",
+        "fresh_identity_required_when_retried": true,
+        "maximum_attempts": 2,
+        "oracle_id": "retry_oracle",
+        "seed_case_count": 3,
+        "status": "pass",
+        "total_attempts": 4
+      },
+      "fault_harness": {
+        "engine_id": "agentmage-bounded-fake-fuzzer",
+        "generic_seed_corpus": "fuzzing/seeds/security-failures-v1.json",
+        "malformed_and_fault_replay_required": true,
+        "real_fuzz_equivalence": false,
+        "regression_replay_required": true
+      },
+      "network_calls": 0,
+      "parent_target_ids": [
+        "FT-IPC-001"
+      ],
+      "product_runtime_executed": false,
+      "promotion_status": "registered-pending-rm-024",
+      "registration_id": "AE-WORKFLOW-RETRY-001",
+      "seed_inputs": [
+        {
+          "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+          "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
+        },
+        {
+          "path": "fixtures/artifact-evaluation/v1/workflow-crash-points.json",
+          "sha256": "f46c6e89c4c545a159d1023d3677afb495b7df0db3ac9349640681427b0d0a32"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "boundary": "workflow-crash-and-recovery-boundary",
+      "deterministic_fault_oracle": {
+        "duplicate_effect_count": 0,
+        "execution_class": "fixed-seed-oracle-not-fuzzing",
+        "oracle_id": "crash_oracle",
+        "replay_allowed": false,
+        "safe_recovery_count": 18,
+        "seed_case_count": 18,
+        "status": "pass"
+      },
+      "fault_harness": {
+        "engine_id": "agentmage-bounded-fake-fuzzer",
+        "generic_seed_corpus": "fuzzing/seeds/security-failures-v1.json",
+        "malformed_and_fault_replay_required": true,
+        "real_fuzz_equivalence": false,
+        "regression_replay_required": true
+      },
+      "network_calls": 0,
+      "parent_target_ids": [
+        "FT-IPC-001"
+      ],
+      "product_runtime_executed": false,
+      "promotion_status": "registered-pending-rm-024",
+      "registration_id": "AE-WORKFLOW-CRASH-001",
+      "seed_inputs": [
+        {
+          "path": "fixtures/artifact-evaluation/v1/workflow-crash-points.json",
+          "sha256": "f46c6e89c4c545a159d1023d3677afb495b7df0db3ac9349640681427b0d0a32"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "boundary": "workflow-terminal-transition-boundary",
+      "deterministic_fault_oracle": {
+        "artificial_continue_count": 0,
+        "cancelled_diagnosis_count": 0,
+        "execution_class": "fixed-seed-oracle-not-fuzzing",
+        "false_completion_count": 0,
+        "non_cancelled_diagnosis_count": 8,
+        "oracle_id": "terminal_oracle",
+        "seed_case_count": 9,
+        "status": "pass"
+      },
+      "fault_harness": {
+        "engine_id": "agentmage-bounded-fake-fuzzer",
+        "generic_seed_corpus": "fuzzing/seeds/security-failures-v1.json",
+        "malformed_and_fault_replay_required": true,
+        "real_fuzz_equivalence": false,
+        "regression_replay_required": true
+      },
+      "network_calls": 0,
+      "parent_target_ids": [
+        "FT-IPC-001"
+      ],
+      "product_runtime_executed": false,
+      "promotion_status": "registered-pending-rm-024",
+      "registration_id": "AE-WORKFLOW-TERMINAL-001",
+      "seed_inputs": [
+        {
+          "path": "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json",
+          "sha256": "23ae9264902556922866eff8a13f25b1cc5e19cdf43ffb567bfd0d300903a253"
+        }
+      ]
+    }
+  ],
+  "registry_id": "agentmage-artifact-workflow-fuzz-targets-v1",
+  "registry_sha256": "feaca57b9a7a07ac3aebafba8ae05737aed79247686f2ce75f7fb9d8bbc90277",
+  "registry_version": "1.0.0",
+  "release_claim": "none",
+  "schema_version": 1,
+  "status": "registration-complete-manual-fuzz-deferred",
+  "synthetic_only": true,
+  "task_id": "2.3.4.3"
+}
