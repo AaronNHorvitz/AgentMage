@@ -1,18 +1,32 @@
 {
+  "active_content_executed": false,
+  "coverage_task_ids": [
+    "2.1.3.3",
+    "2.3.4.2"
+  ],
   "findings": [],
   "macos_execution_status": "blocked-macos",
   "macos_support_claim": "none",
   "metrics": {
-    "archive_entries_scanned": 92,
+    "approved_inert_archive_entries": 1,
+    "approved_inert_remote_references": 3,
+    "approved_malformed_archives": 3,
+    "approved_synthetic_canary_occurrences": 10,
+    "archive_containers_scanned": 24,
+    "archive_entries_scanned": 182,
+    "evidence_files_scanned": 30,
     "files_scanned": 240,
+    "fixture_files_scanned": 210,
+    "malformed_archives_inspected_as_blobs": 3,
     "malformed_python_fixtures_skipped": 1,
-    "nested_archives_scanned": 4,
+    "nested_archives_scanned": 18,
     "python_modules_parsed": 5,
     "reserved_invalid_urls": 11,
-    "synthetic_canary_occurrences": 6,
-    "text_payloads_scanned": 304
+    "synthetic_canary_occurrences": 10,
+    "text_payloads_scanned": 370
   },
   "network_calls_performed": 0,
+  "product_runtime_executed": false,
   "product_support_claim": "none",
   "prohibited_categories": [
     "active-formula",
@@ -20,14 +34,84 @@
     "network-behavior",
     "private-path",
     "real-credential",
-    "remote-reference"
+    "remote-reference",
+    "retained-raw-canary"
   ],
   "raw_sensitive_values_retained": false,
   "schema_version": 1,
   "scope": {
+    "all_zip_and_office_packages_recursively_scanned": true,
+    "approved_canary_identities": [
+      {
+        "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip",
+        "sha256": "1b8e7bc3ccb25d72a69b7957f184977694b5873d0e7d421a26827dd88ee17d50"
+      },
+      {
+        "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip!adversarial/secret-canaries/error.txt",
+        "sha256": "bcdd16d67a8faee96ed5997cf6e814d3c47b0eab12876fde849fd03d0bff6582"
+      },
+      {
+        "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip!adversarial/secret-canaries/plain.txt",
+        "sha256": "0f2d6f4b9bdae2692559f1b499f35fa0febb875736784dbaeccd1381a7c6e713"
+      },
+      {
+        "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip!adversarial/secret-canaries/structured.json",
+        "sha256": "504d7e71c5f482a351f269e90d6028a6a3e79d25f8d59ea48bb46931843815fe"
+      },
+      {
+        "path": "fixtures/corpus/v1/agentmage-synthetic-corpus-v1.zip!adversarial/secret-canaries/tool-output.json",
+        "sha256": "adf42a021d7c2bafef900f24d986672adad31922e99cd2ebf91905e1abf4f1e7"
+      },
+      {
+        "path": "fixtures/fake_adapters.py",
+        "sha256": "15dc64560f755eba2465b5bf0553664a053cd50072e69fe494cee8a05c90eb7c"
+      },
+      {
+        "path": "fixtures/test-result-bundle-profile.json",
+        "sha256": "b9de6a5526078f02ab8b9c5c880f6591ffb586b6aee117ef8fc732b2ac33bc60"
+      }
+    ],
+    "approved_inert_archive_entries": [
+      {
+        "path": "fixtures/artifact-admission/v1/artifact-adversarial-corpus-v1.zip!hostile/archive/traversal.zip!../outside.txt",
+        "sha256": "b196108b44cda770aa9a2f79ef76b468d3d965b47bc05b8447e33836ea6f3bca"
+      }
+    ],
+    "approved_inert_office_relationships": [
+      {
+        "path": "fixtures/artifact-admission/v1/artifact-adversarial-corpus-v1.zip!hostile/relationships/external.docx!word/_rels/document.xml.rels",
+        "sha256": "34482c7a948c184a1348a91fce3ccdd9e25fc4d035d693ea062db1cd101d03c9"
+      },
+      {
+        "path": "fixtures/artifact-evaluation/v1/document-variant-corpus-v1.zip!documents/docx/relationship-hostile.docx!word/_rels/document.xml.rels",
+        "sha256": "6c8a16a5a04f75e3406c3493e2bccc36d63ae4af9ff530c2cd0ecbf47688c560"
+      },
+      {
+        "path": "fixtures/artifact-evaluation/v1/document-variant-corpus-v1.zip!documents/xlsx/relationship-hostile.xlsx!xl/externalLinks/_rels/externalLink1.xml.rels",
+        "sha256": "6c8a16a5a04f75e3406c3493e2bccc36d63ae4af9ff530c2cd0ecbf47688c560"
+      }
+    ],
+    "approved_malformed_archives": [
+      {
+        "path": "fixtures/artifact-admission/v1/artifact-adversarial-corpus-v1.zip!hostile/malformed/truncated.zip",
+        "sha256": "02fec2d5fdeb4e39e9ab09f9e761ad18177b306dbeba050761cd4e52e267fb12"
+      },
+      {
+        "path": "fixtures/artifact-evaluation/v1/document-variant-corpus-v1.zip!documents/docx/malformed.docx",
+        "sha256": "9c2efd6a5af124fd595bbc7391454379df079b73f281301c4e6c819bc94e3654"
+      },
+      {
+        "path": "fixtures/artifact-evaluation/v1/document-variant-corpus-v1.zip!documents/xlsx/malformed.xlsx",
+        "sha256": "d19263e02c7287173f43d9936beea4cf2eb28f4b9fd17425a9718b39ab53847d"
+      }
+    ],
+    "archive_depth_limit": 8,
+    "archive_entry_byte_limit": 67108864,
+    "archive_entry_count_limit": 4096,
     "artifact_root": "artifacts/sprints/sprint-2",
     "bytecode_caches_included": false,
-    "corpus_archive_recursively_scanned": true,
+    "controlled_path_count": 240,
+    "controlled_path_set_sha256": "15805e80d5160834cb7793c3514d606ef4bc8dbecb57f85bf307b4f629d97afe",
     "excluded_final_evidence_envelope": [
       "artifacts/sprints/sprint-2/story-2.1/security-evidence-map.json",
       "artifacts/sprints/sprint-2/story-2.1/summary-comparison.json",
@@ -80,15 +164,23 @@
       "observed_categories": [
         "remote-reference"
       ]
+    },
+    {
+      "category": "retained-raw-canary",
+      "detected": true,
+      "observed_categories": [
+        "retained-raw-canary"
+      ]
     }
   ],
   "status": "pass",
   "summary": {
     "blocking_finding_count": 0,
     "only_reserved_invalid_urls_permitted": true,
-    "seeded_categories_detected": 6,
-    "seeded_category_count": 6,
-    "synthetic_canaries_permitted_by_label": true
+    "seeded_categories_detected": 7,
+    "seeded_category_count": 7,
+    "synthetic_canaries_permitted_only_in_approved_source_fixtures": true,
+    "unapproved_raw_canary_count": 0
   },
   "task_id": "2.1.3.3",
   "test_id": "S-002-ST01"

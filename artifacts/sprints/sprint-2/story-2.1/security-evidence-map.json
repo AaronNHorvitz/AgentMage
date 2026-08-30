@@ -50,7 +50,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
-      "sha256": "140207b9a992ab0b9ae114d6cf7cf06f1eb814fbad55350c65bc6f5031f13959"
+      "sha256": "f8e3c449b10a751b33904da1a3dcc8fcba798c318513d7e6bdc2d2d014fcceaf"
     },
     {
       "path": "artifacts/sprints/sprint-2/story-2.1/input-class-fixture-matrix-report.json",
