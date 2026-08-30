@@ -1901,11 +1901,11 @@ for that external review and makes no product, Sprint, release, or macOS support
 **Gate decision:** Sprint 7 is PASS only when Story 7.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Current sprint-gate evidence:** The automated [`sprint_7_gate.py`](scripts/sprint_7_gate.py)
-aggregate reviews immutable commit `4a72965662a03a116429e972ce4988c48fb84a7b` and tree
-`fd7480b570a12174163325e3a11310715f0eb1fd`, verifies the exact Story 7.1 gate and five
+aggregate reviews immutable commit `5dd2c4f8d365dea0648fb9c19675879f5af68192` and tree
+`f7839dd2d685dafcb055605ac2b536434d1666c2`, verifies the exact Story 7.1 gate and five
 supporting evidence artifacts, and publishes the retained
 [`sprint-gate-report.json`](artifacts/sprints/sprint-7/sprint-gate-report.json) with SHA-256
-`62fe7fbfb7ce34e719fced813203cc190c9eadb898561cdf436953215850d3a1`. The adapter-bypass
+`a5ddb8f8792a099b84fc30996dec2b947d0eb3b0035430d3f3b93ec2e167238a`. The adapter-bypass
 criterion passes its shared boundary: ten required capabilities, one verified manifest-bound
 activation wrapper, and zero operating-system branch tokens in the production kernel selector.
 Two criteria remain partial and two remain blocked on native platform, packaging, installed-product,
