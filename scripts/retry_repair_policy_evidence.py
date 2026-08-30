@@ -43,7 +43,10 @@ MARKERS: Final = (
     "fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_grant ... ok",
     "conditional_retry_requires_current_safe_effect_reconciliation ... ok",
     "per_attempt_approval_must_be_current_exact_and_different_from_prior ... ok",
-    "test result: ok. 3 passed; 0 failed",
+    "unsafe_and_uncertain_effects_never_receive_automatic_new_attempts ... ok",
+    "complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok",
+    "required_idempotency_key_must_be_fresh_and_digest_bound ... ok",
+    "test result: ok. 6 passed; 0 failed",
     "call envelope carries only the digest of validated arguments and explains every rejection",
     "pass 52",
     "fail 0",
@@ -79,7 +82,7 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-retry-repair-policy-evidence",
         "story_id": "5.2",
         "task_id": "5.2.2.1",
-        "coverage_task_ids": ["5.2.2.1", "5.2.2.2"],
+        "coverage_task_ids": ["5.2.2.1", "5.2.2.2", "5.2.2.3"],
         "generated_on": "2026-08-30",
         "status": "pass-local-contract-evidence",
         "normalization_contract": {
@@ -126,6 +129,24 @@ def expected_report() -> dict[str, Any]:
             "successor_grant_status": "issued",
             "fresh_per_attempt_approval_required_when_configured": True,
             "grant_consumed_or_effect_dispatched_by_compiler": False,
+            "automatic_retry_denied_effect_classes": [
+                "non_idempotent",
+                "destructive",
+                "external",
+                "uncertain",
+                "unknown",
+            ],
+            "complete_prior_use_ledger": [
+                "call",
+                "tool_call",
+                "grant",
+                "approval",
+                "receipt",
+                "idempotency_key_sha256",
+                "operation_attempt",
+            ],
+            "any_successor_receipt_before_execution_admitted": False,
+            "required_idempotency_key_must_be_fresh": True,
         },
         "commands": [command_text(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
@@ -214,7 +235,7 @@ def main() -> int:
         for failure in failures:
             print(f"retry-repair policy evidence validation failed: {failure}", file=sys.stderr)
         return 1
-    print("Task 5.2.2 retry and repair evidence validated through Sub-task 5.2.2.2")
+    print("Task 5.2.2 retry and repair evidence validated")
     return 0
 
 

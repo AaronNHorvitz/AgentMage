@@ -11,7 +11,7 @@ use agentmage_kernel_contracts::{
 use agentmage_kernel_engine::retry_admission::{
     CurrentAttemptApproval, CurrentEffectReconciliation, CurrentPreflightEvidence,
     EffectReconciliationDisposition, FreshAttemptAdmissionError, FreshAttemptAdmissionInput,
-    FreshSingleUseGrant, compile_fresh_attempt_admission,
+    FreshSingleUseGrant, PriorExecutionIdentityLedger, compile_fresh_attempt_admission,
 };
 
 const POLICY_SHA256: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -192,6 +192,19 @@ fn preflight() -> CurrentPreflightEvidence {
     .expect("current preflight")
 }
 
+fn prior_ledger() -> PriorExecutionIdentityLedger {
+    PriorExecutionIdentityLedger::new(
+        vec!["attempt-1".to_owned()],
+        vec!["call-1".to_owned()],
+        vec!["tool-call-1".to_owned()],
+        vec!["grant-1".to_owned()],
+        vec!["approval-1".to_owned()],
+        vec!["receipt-1".to_owned()],
+        vec![POLICY_SHA256.to_owned()],
+    )
+    .expect("closed prior-use ledger")
+}
+
 #[allow(clippy::too_many_arguments)]
 fn compile(
     candidate: CanonicalRetryAdmission,
@@ -203,6 +216,36 @@ fn compile(
     approval: Option<&ApprovalRequest>,
     prior_approval_id: Option<&ApprovalId>,
 ) -> Result<CanonicalRetryAdmission, FreshAttemptAdmissionError> {
+    let prior_identities = prior_ledger();
+    compile_with_controls(
+        candidate,
+        policy,
+        decision,
+        preflight,
+        reconciliation,
+        grant,
+        approval,
+        prior_approval_id,
+        &prior_identities,
+        None,
+        None,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn compile_with_controls(
+    candidate: CanonicalRetryAdmission,
+    policy: &CanonicalStepExecutionPolicy,
+    decision: &CanonicalRecoveryDecision,
+    preflight: &CurrentPreflightEvidence,
+    reconciliation: Option<&CurrentEffectReconciliation>,
+    grant: &CapabilityGrant,
+    approval: Option<&ApprovalRequest>,
+    prior_approval_id: Option<&ApprovalId>,
+    prior_identities: &PriorExecutionIdentityLedger,
+    successor_idempotency_key_sha256: Option<&str>,
+    presented_successor_receipt_id: Option<&str>,
+) -> Result<CanonicalRetryAdmission, FreshAttemptAdmissionError> {
     compile_fresh_attempt_admission(FreshAttemptAdmissionInput {
         candidate,
         policy,
@@ -212,6 +255,9 @@ fn compile(
         successor_grant: FreshSingleUseGrant::new(grant),
         successor_approval: approval.map(CurrentAttemptApproval::new),
         prior_approval_id,
+        prior_identities,
+        successor_idempotency_key_sha256,
+        presented_successor_receipt_id,
         now_epoch_ms: 1_500,
     })
 }
@@ -389,4 +435,239 @@ fn per_attempt_approval_must_be_current_exact_and_different_from_prior() {
         ),
         Err(FreshAttemptAdmissionError::FreshApprovalRequired),
     );
+}
+
+#[test]
+fn unsafe_and_uncertain_effects_never_receive_automatic_new_attempts() {
+    let decision = decision();
+    let preflight = preflight();
+    let grant = grant(CanonicalApprovalRequirement::NotRequired);
+    for effect_class in [
+        CanonicalEffectClass::NonIdempotent,
+        CanonicalEffectClass::Destructive,
+        CanonicalEffectClass::External,
+        CanonicalEffectClass::Unknown,
+    ] {
+        let mut unsafe_policy = policy(CanonicalRetryClass::RecoverableRead);
+        unsafe_policy.effect_class = effect_class;
+        assert_eq!(
+            compile(
+                admission(CanonicalApprovalRequirement::NotRequired),
+                &unsafe_policy,
+                &decision,
+                &preflight,
+                None,
+                &grant,
+                None,
+                None,
+            ),
+            Err(FreshAttemptAdmissionError::AutomaticRetryForbidden),
+            "{effect_class:?} must never be admitted automatically",
+        );
+    }
+
+    let policy = policy(CanonicalRetryClass::RecoverableRead);
+    let mut uncertain = decision;
+    uncertain.uncertain_outcome = true;
+    assert_eq!(
+        compile(
+            admission(CanonicalApprovalRequirement::NotRequired),
+            &policy,
+            &uncertain,
+            &preflight,
+            None,
+            &grant,
+            None,
+            None,
+        ),
+        Err(FreshAttemptAdmissionError::DecisionNotRetry),
+    );
+}
+
+#[test]
+fn complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt() {
+    let base_policy = policy(CanonicalRetryClass::RecoverableRead);
+    let decision = decision();
+    let preflight = preflight();
+    let base_grant = grant(CanonicalApprovalRequirement::NotRequired);
+
+    for ledger in [
+        PriorExecutionIdentityLedger::new(
+            vec!["attempt-2".to_owned()],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        ),
+        PriorExecutionIdentityLedger::new(
+            vec![],
+            vec!["call-2".to_owned()],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        ),
+        PriorExecutionIdentityLedger::new(
+            vec![],
+            vec![],
+            vec!["tool-call-2".to_owned()],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        ),
+        PriorExecutionIdentityLedger::new(
+            vec![],
+            vec![],
+            vec![],
+            vec!["grant-2".to_owned()],
+            vec![],
+            vec![],
+            vec![],
+        ),
+    ] {
+        let ledger = ledger.expect("single prior identity");
+        assert_eq!(
+            compile_with_controls(
+                admission(CanonicalApprovalRequirement::NotRequired),
+                &base_policy,
+                &decision,
+                &preflight,
+                None,
+                &base_grant,
+                None,
+                None,
+                &ledger,
+                None,
+                None,
+            ),
+            Err(FreshAttemptAdmissionError::ReplayedIdentity),
+        );
+    }
+
+    let ledger = prior_ledger();
+    assert_eq!(
+        compile_with_controls(
+            admission(CanonicalApprovalRequirement::NotRequired),
+            &base_policy,
+            &decision,
+            &preflight,
+            None,
+            &base_grant,
+            None,
+            None,
+            &ledger,
+            None,
+            Some("receipt-1"),
+        ),
+        Err(FreshAttemptAdmissionError::ReplayedIdentity),
+    );
+    assert_eq!(
+        compile_with_controls(
+            admission(CanonicalApprovalRequirement::NotRequired),
+            &base_policy,
+            &decision,
+            &preflight,
+            None,
+            &base_grant,
+            None,
+            None,
+            &ledger,
+            None,
+            Some("receipt-2"),
+        ),
+        Err(FreshAttemptAdmissionError::PrematureReceipt),
+    );
+
+    let mut approval_policy = policy(CanonicalRetryClass::RecoverableRead);
+    approval_policy.approval_requirement = CanonicalApprovalRequirement::RequiredPerAttempt;
+    let approval_grant = grant(CanonicalApprovalRequirement::RequiredPerAttempt);
+    let approval = approval();
+    let prior_approval = ApprovalId::from_raw("approval-1");
+    let approval_ledger = PriorExecutionIdentityLedger::new(
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec!["approval-2".to_owned()],
+        vec![],
+        vec![],
+    )
+    .expect("prior approval ledger");
+    assert_eq!(
+        compile_with_controls(
+            admission(CanonicalApprovalRequirement::RequiredPerAttempt),
+            &approval_policy,
+            &decision,
+            &preflight,
+            None,
+            &approval_grant,
+            Some(&approval),
+            Some(&prior_approval),
+            &approval_ledger,
+            None,
+            None,
+        ),
+        Err(FreshAttemptAdmissionError::ReplayedIdentity),
+    );
+}
+
+#[test]
+fn required_idempotency_key_must_be_fresh_and_digest_bound() {
+    let mut policy = policy(CanonicalRetryClass::ConditionalAfterReconciliation);
+    policy.effect_class = CanonicalEffectClass::IdempotentWrite;
+    policy.idempotency_key_requirement = CanonicalIdempotencyRequirement::Required;
+    let decision = decision();
+    let preflight = preflight();
+    let grant = grant(CanonicalApprovalRequirement::NotRequired);
+    let mut candidate = admission(CanonicalApprovalRequirement::NotRequired);
+    candidate.reconciliation_required = true;
+    candidate.reconciled = true;
+    let reconciliation = CurrentEffectReconciliation::new(
+        "attempt-1".to_owned(),
+        POLICY_SHA256.to_owned(),
+        OTHER_SHA256.to_owned(),
+        EffectReconciliationDisposition::SafeForFreshAttempt,
+        1_250,
+        2_000,
+    )
+    .expect("current reconciliation");
+    let ledger = prior_ledger();
+    assert!(
+        compile_with_controls(
+            candidate.clone(),
+            &policy,
+            &decision,
+            &preflight,
+            Some(&reconciliation),
+            &grant,
+            None,
+            None,
+            &ledger,
+            Some(OTHER_SHA256),
+            None,
+        )
+        .is_ok()
+    );
+    for digest in [None, Some("invalid"), Some(POLICY_SHA256)] {
+        assert_eq!(
+            compile_with_controls(
+                candidate.clone(),
+                &policy,
+                &decision,
+                &preflight,
+                Some(&reconciliation),
+                &grant,
+                None,
+                None,
+                &ledger,
+                digest,
+                None,
+            ),
+            Err(FreshAttemptAdmissionError::FreshIdempotencyEvidenceRequired),
+        );
+    }
 }

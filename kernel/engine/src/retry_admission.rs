@@ -3,9 +3,9 @@
 use std::collections::BTreeSet;
 
 use agentmage_kernel_contracts::{
-    ApprovalId, ApprovalRequest, CanonicalApprovalRequirement, CanonicalRecoveryAction,
-    CanonicalRecoveryDecision, CanonicalRetryAdmission, CanonicalRetryClass,
-    CanonicalStepExecutionPolicy, CapabilityGrant, GrantClass, GrantStatus,
+    ApprovalId, ApprovalRequest, CanonicalApprovalRequirement, CanonicalIdempotencyRequirement,
+    CanonicalRecoveryAction, CanonicalRecoveryDecision, CanonicalRetryAdmission,
+    CanonicalRetryClass, CanonicalStepExecutionPolicy, CapabilityGrant, GrantClass, GrantStatus,
 };
 
 /// Current deterministic results for every preflight required by one step policy.
@@ -133,6 +133,56 @@ impl<'a> CurrentAttemptApproval<'a> {
     }
 }
 
+/// Complete prior-use ledger consulted before issuing any successor identity.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PriorExecutionIdentityLedger {
+    attempt_ids: BTreeSet<String>,
+    call_ids: BTreeSet<String>,
+    tool_call_ids: BTreeSet<String>,
+    grant_ids: BTreeSet<String>,
+    approval_ids: BTreeSet<String>,
+    receipt_ids: BTreeSet<String>,
+    idempotency_key_sha256s: BTreeSet<String>,
+}
+
+impl PriorExecutionIdentityLedger {
+    /// Constructs a closed identity ledger and rejects malformed or repeated entries.
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        attempt_ids: Vec<String>,
+        call_ids: Vec<String>,
+        tool_call_ids: Vec<String>,
+        grant_ids: Vec<String>,
+        approval_ids: Vec<String>,
+        receipt_ids: Vec<String>,
+        idempotency_key_sha256s: Vec<String>,
+    ) -> Result<Self, FreshAttemptAdmissionError> {
+        if !valid_identity_list(&attempt_ids)
+            || !valid_identity_list(&call_ids)
+            || !valid_identity_list(&tool_call_ids)
+            || !valid_identity_list(&grant_ids)
+            || !valid_identity_list(&approval_ids)
+            || !valid_identity_list(&receipt_ids)
+            || idempotency_key_sha256s.len() > 1_024
+            || idempotency_key_sha256s
+                .iter()
+                .any(|digest| !valid_sha256(digest))
+            || !all_unique(&idempotency_key_sha256s)
+        {
+            return Err(FreshAttemptAdmissionError::InvalidIdentityLedger);
+        }
+        Ok(Self {
+            attempt_ids: attempt_ids.into_iter().collect(),
+            call_ids: call_ids.into_iter().collect(),
+            tool_call_ids: tool_call_ids.into_iter().collect(),
+            grant_ids: grant_ids.into_iter().collect(),
+            approval_ids: approval_ids.into_iter().collect(),
+            receipt_ids: receipt_ids.into_iter().collect(),
+            idempotency_key_sha256s: idempotency_key_sha256s.into_iter().collect(),
+        })
+    }
+}
+
 /// Complete non-executing input to one fresh-attempt admission decision.
 #[derive(Debug)]
 pub struct FreshAttemptAdmissionInput<'a> {
@@ -152,6 +202,12 @@ pub struct FreshAttemptAdmissionInput<'a> {
     pub successor_approval: Option<CurrentAttemptApproval<'a>>,
     /// Approval used by the prior attempt, when one existed.
     pub prior_approval_id: Option<&'a ApprovalId>,
+    /// Complete prior-use identity ledger for this step execution.
+    pub prior_identities: &'a PriorExecutionIdentityLedger,
+    /// Fresh idempotency-key digest when the step policy requires one.
+    pub successor_idempotency_key_sha256: Option<&'a str>,
+    /// Any receipt presented for the not-yet-executed successor; this must remain absent.
+    pub presented_successor_receipt_id: Option<&'a str>,
     /// Trusted current time used for every freshness decision.
     pub now_epoch_ms: u64,
 }
@@ -163,10 +219,14 @@ pub enum FreshAttemptAdmissionError {
     InvalidPreflightEvidence,
     /// Supplied reconciliation evidence is malformed.
     InvalidReconciliationEvidence,
+    /// Prior-use identity evidence is malformed, duplicated, or oversized.
+    InvalidIdentityLedger,
     /// Candidate, decision, and policy identities do not describe the same step.
     BindingMismatch,
     /// The recovery decision does not permit a new attempt.
     DecisionNotRetry,
+    /// The effect or retry class forbids automatic admission.
+    AutomaticRetryForbidden,
     /// A prior call, tool call, grant, or attempt identity would be replayed.
     ReplayedIdentity,
     /// Current preflight evidence is missing, stale, or incomplete.
@@ -181,6 +241,10 @@ pub enum FreshAttemptAdmissionError {
     ApprovalRequirementMismatch,
     /// A required per-attempt approval is absent, stale, mismatched, or reused.
     FreshApprovalRequired,
+    /// Required idempotency evidence is missing, malformed, or already used.
+    FreshIdempotencyEvidenceRequired,
+    /// A receipt was presented before the successor attempt executed.
+    PrematureReceipt,
 }
 
 /// Compiles one canonical successor admission only after every current prerequisite passes.
@@ -199,6 +263,9 @@ pub fn compile_fresh_attempt_admission(
         successor_grant,
         successor_approval,
         prior_approval_id,
+        prior_identities,
+        successor_idempotency_key_sha256,
+        presented_successor_receipt_id,
         now_epoch_ms,
     } = input;
 
@@ -217,6 +284,15 @@ pub fn compile_fresh_attempt_admission(
     {
         return Err(FreshAttemptAdmissionError::DecisionNotRetry);
     }
+    if !policy.effect_class.permits_automatic_retry()
+        || !policy.retry_class.is_automatic()
+        || !policy
+            .effect_class
+            .permitted_retry_classes()
+            .contains(&policy.retry_class)
+    {
+        return Err(FreshAttemptAdmissionError::AutomaticRetryForbidden);
+    }
     if !candidate.opens_new_attempt()
         || candidate
             .prior_attempt_ordinal
@@ -224,6 +300,31 @@ pub fn compile_fresh_attempt_admission(
             .is_none_or(|ordinal| ordinal != candidate.successor_attempt_ordinal)
     {
         return Err(FreshAttemptAdmissionError::ReplayedIdentity);
+    }
+    if prior_identities
+        .attempt_ids
+        .contains(&candidate.successor_attempt_id)
+        || prior_identities
+            .call_ids
+            .contains(&candidate.successor_call_id)
+        || prior_identities
+            .tool_call_ids
+            .contains(candidate.successor_tool_call_id.as_str())
+        || prior_identities
+            .grant_ids
+            .contains(candidate.successor_grant_id.as_str())
+        || candidate
+            .successor_approval_id
+            .as_ref()
+            .is_some_and(|id| prior_identities.approval_ids.contains(id))
+    {
+        return Err(FreshAttemptAdmissionError::ReplayedIdentity);
+    }
+    if let Some(receipt_id) = presented_successor_receipt_id {
+        if !valid_identifier(receipt_id) || prior_identities.receipt_ids.contains(receipt_id) {
+            return Err(FreshAttemptAdmissionError::ReplayedIdentity);
+        }
+        return Err(FreshAttemptAdmissionError::PrematureReceipt);
     }
     if preflight.policy_sha256 != policy.policy_sha256
         || preflight.completed_preflight_ids != policy.required_preflight_ids
@@ -298,6 +399,23 @@ pub fn compile_fresh_attempt_admission(
         return Err(FreshAttemptAdmissionError::FreshApprovalRequired);
     }
 
+    match policy.idempotency_key_requirement {
+        CanonicalIdempotencyRequirement::Required => {
+            let Some(digest) = successor_idempotency_key_sha256 else {
+                return Err(FreshAttemptAdmissionError::FreshIdempotencyEvidenceRequired);
+            };
+            if !valid_sha256(digest) || prior_identities.idempotency_key_sha256s.contains(digest) {
+                return Err(FreshAttemptAdmissionError::FreshIdempotencyEvidenceRequired);
+            }
+        }
+        CanonicalIdempotencyRequirement::NotApplicable
+        | CanonicalIdempotencyRequirement::VerifiedDesiredState => {
+            if successor_idempotency_key_sha256.is_some() {
+                return Err(FreshAttemptAdmissionError::FreshIdempotencyEvidenceRequired);
+            }
+        }
+    }
+
     Ok(candidate)
 }
 
@@ -319,4 +437,10 @@ fn valid_sha256(value: &str) -> bool {
 
 fn all_unique(values: &[String]) -> bool {
     values.iter().collect::<BTreeSet<_>>().len() == values.len()
+}
+
+fn valid_identity_list(values: &[String]) -> bool {
+    values.len() <= 1_024
+        && values.iter().all(|value| valid_identifier(value))
+        && all_unique(values)
 }

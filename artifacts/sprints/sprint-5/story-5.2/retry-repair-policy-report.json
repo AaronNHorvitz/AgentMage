@@ -6,14 +6,14 @@
       "sha256": "b35964bd72cfcccc6a8b13a2f95cf74ff3cecd442df4606341621fbe53e4b6db"
     },
     {
-      "byte_length": 12689,
+      "byte_length": 17881,
       "path": "kernel/engine/src/retry_admission.rs",
-      "sha256": "ef2b9d0a87c2bc841a6a0aeb2032d531aada32f413fedd75973dac0f83a74371"
+      "sha256": "fcef9b911e873981aa7196ba08df602ab3162d83351f12a7571c16c47b91d3d8"
     },
     {
-      "byte_length": 14324,
+      "byte_length": 22630,
       "path": "kernel/engine/tests/retry_admission.rs",
-      "sha256": "94864961fdcc428d82625aafbb0eab85b7bc78e302c9737cd8da2e1a0c2d5ceb"
+      "sha256": "610fe676e05f4062c096e72e9f031b6848b48b799bd1e2aecfe5c543b24d0b20"
     },
     {
       "byte_length": 68694,
@@ -31,19 +31,19 @@
       "sha256": "d93cbc70d573eb9548ca1b122cf5ea9876524737529e716ea238a757d01ed92d"
     },
     {
-      "byte_length": 8121,
+      "byte_length": 8963,
       "path": "scripts/retry_repair_policy_evidence.py",
-      "sha256": "efb49175a33b8b1b09749e232774b1fb772a7c10f9e47ca8987d7f8dd9c5409d"
+      "sha256": "11ac96a685c1883412211c3d3540e4cb4b728cae259bf27196323d867afd3bfa"
     },
     {
-      "byte_length": 3180,
+      "byte_length": 4088,
       "path": "tests/test_retry_repair_policy_evidence.py",
-      "sha256": "8c2772fd2c46cb4bfbf4d9130e4fea0bf2073feef7224de1cd21ef89c26b4495"
+      "sha256": "46dc843b5433c293f06a7bf4329047473b653f17478f2ac7f0494f9997192ce4"
     },
     {
-      "byte_length": 9596,
+      "byte_length": 9825,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-results.log",
-      "sha256": "03514623e9cac80e8db04545a375e01f02452a8c675b74be9630fec6857e1a55"
+      "sha256": "3897aa373087982b8f51f98907668a705882c389c7b2a393ca6de86dc242d613"
     }
   ],
   "commands": [
@@ -53,7 +53,8 @@
   ],
   "coverage_task_ids": [
     "5.2.2.1",
-    "5.2.2.2"
+    "5.2.2.2",
+    "5.2.2.3"
   ],
   "denied_conditions": [
     "empty_or_incomplete_fragments",
@@ -67,12 +68,30 @@
     "effect_attempt_already_exists"
   ],
   "fresh_attempt_contract": {
+    "any_successor_receipt_before_execution_admitted": false,
+    "automatic_retry_denied_effect_classes": [
+      "non_idempotent",
+      "destructive",
+      "external",
+      "uncertain",
+      "unknown"
+    ],
+    "complete_prior_use_ledger": [
+      "call",
+      "tool_call",
+      "grant",
+      "approval",
+      "receipt",
+      "idempotency_key_sha256",
+      "operation_attempt"
+    ],
     "conditional_effect_reconciliation_required": true,
     "current_complete_preflight_required": true,
     "fresh_call_and_attempt_identities_required": true,
     "fresh_per_attempt_approval_required_when_configured": true,
     "grant_consumed_or_effect_dispatched_by_compiler": false,
     "remaining_attempt_budget_required": true,
+    "required_idempotency_key_must_be_fresh": true,
     "successor_grant_revision": 1,
     "successor_grant_status": "issued",
     "successor_grant_use_count": 0,
@@ -122,7 +141,10 @@
     "fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_grant ... ok",
     "conditional_retry_requires_current_safe_effect_reconciliation ... ok",
     "per_attempt_approval_must_be_current_exact_and_different_from_prior ... ok",
-    "test result: ok. 3 passed; 0 failed",
+    "unsafe_and_uncertain_effects_never_receive_automatic_new_attempts ... ok",
+    "complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok",
+    "required_idempotency_key_must_be_fresh_and_digest_bound ... ok",
+    "test result: ok. 6 passed; 0 failed",
     "call envelope carries only the digest of validated arguments and explains every rejection",
     "pass 52",
     "fail 0"

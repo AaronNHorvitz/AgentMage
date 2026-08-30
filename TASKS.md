@@ -1379,7 +1379,7 @@ an effect or treating approval as reusable authority.
     retains five passing Rust command results plus seven evidence mutation tests. Missing, duplicate,
     or caller-overridden mappings and any product/runtime/effect/network/release overclaim fail the
     enrolled evidence gate.
-- [ ] **Task 5.2.2 - Compile retry and repair eligibility**
+- [x] **Task 5.2.2 - Compile retry and repair eligibility**
   - [x] **Sub-task 5.2.2.1:** Define deterministic normalization before model repair and permit at
     most one profile-bound model repair without any effect attempt. Evidence: the pure
     `tool_call_repair` boundary requires a non-empty contiguous fragment sequence, uses checked
@@ -1415,9 +1415,21 @@ an effect or treating approval as reusable authority.
     covers Sub-tasks 5.2.2.1 and 5.2.2.2, hash-binds both implementations and their tests, retains
     three passing command results, and rejects preflight, reconciliation, budget, identity, grant,
     approval, effect, and product-truth widening.
-  - [ ] **Sub-task 5.2.2.3:** Deny automatic new attempts for non-idempotent, destructive, external,
+  - [x] **Sub-task 5.2.2.3:** Deny automatic new attempts for non-idempotent, destructive, external,
     uncertain, and unknown effects and deny replay of any call, consumed grant, approval, receipt,
-    idempotency key, or operation-attempt identity.
+    idempotency key, or operation-attempt identity. Evidence: fresh-attempt compilation now admits
+    only a matrix-compatible automatic retry class whose effect class explicitly permits automatic
+    retry. Non-idempotent, destructive, external, and unknown classes are denied before any grant
+    check, while uncertain outcomes and unsafe reconciliation cannot become retry decisions. A
+    bounded, duplicate-free prior-use ledger covers every call, tool-call, grant, approval, receipt,
+    idempotency-key digest, and operation-attempt identity across the complete step history rather
+    than only the immediately preceding attempt. Any successor collision fails as replay; any
+    receipt is premature before execution, and a previously retained receipt is specifically
+    rejected as replay. Policies requiring an idempotency key admit only one canonical fresh digest
+    absent from the ledger. Six focused integration tests exercise safe read and reconciled-write
+    paths plus every unsafe effect, uncertainty, identity family, receipt state, and idempotency-key
+    denial. The enrolled `retry-repair-policy` gate now covers all of Task 5.2.2 and mutation-tests
+    every matrix and replay-ledger claim without consuming authority or executing an effect.
 - [ ] **Task 5.2.3 - Bind budgets and repeated-state detection**
   - [ ] **Sub-task 5.2.3.1:** Define separate parser-repair, step-attempt, per-error-class, workflow,
     and replan budgets with checked arithmetic and immutable policy identity.

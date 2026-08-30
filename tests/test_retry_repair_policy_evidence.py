@@ -46,6 +46,20 @@ class RetryRepairPolicyEvidenceTests(unittest.TestCase):
         changed["fresh_attempt_contract"]["fresh_per_attempt_approval_required_when_configured"] = False
         self.assertIn("widened", validate_report(changed)[0])
 
+    def test_unsafe_effect_or_replay_widening_is_rejected(self) -> None:
+        changed = copy.deepcopy(expected_report())
+        changed["fresh_attempt_contract"]["automatic_retry_denied_effect_classes"].remove("unknown")
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["fresh_attempt_contract"]["complete_prior_use_ledger"].remove("receipt")
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["fresh_attempt_contract"]["any_successor_receipt_before_execution_admitted"] = True
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["fresh_attempt_contract"]["required_idempotency_key_must_be_fresh"] = False
+        self.assertIn("widened", validate_report(changed)[0])
+
     def test_product_truth_cannot_be_promoted(self) -> None:
         changed = copy.deepcopy(expected_report())
         changed["product_truth"]["model_inference_executed"] = True
