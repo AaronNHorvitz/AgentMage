@@ -1447,8 +1447,24 @@ an effect or treating approval as reusable authority.
     hash-binds implementation, tests, and raw results, while five evidence tests reject dimension,
     class, arithmetic, atomicity, identity, and product-truth widening without runtime effects,
     authority consumption, network calls, platform claims, or release claims.
-  - [ ] **Sub-task 5.2.3.2:** Define deterministic state fingerprints over plan, step, observations,
+  - [x] **Sub-task 5.2.3.2:** Define deterministic state fingerprints over plan, step, observations,
     proposal, tool, policy, receipts, artifacts, and verifier state; stop repeated no-progress loops.
+    Evidence: the `workflow_progress` boundary requires lowercase canonical SHA-256 identities for
+    plan, active step, proposal, selected tool/version, effective policy, and verifier state plus
+    bounded ordered observation, receipt, and artifact identity sequences. Its versioned,
+    domain-separated fingerprint encodes every field tag, sequence count, item length, order, and
+    boundary; omission, malformed hashes, oversized sequences, reordering, movement across state
+    dimensions, and mutation of each of all nine required dimensions fail or change the digest.
+    The immutable repeated-state policy derives its own SHA-256 from its ID and exact nonzero limit,
+    and the detector permanently binds both identities. It retains all observed fingerprints, so a
+    non-adjacent A-to-B-to-A cycle counts as no progress; checked occurrence accounting stops at the
+    exact repeat limit and then returns the same sticky stop without changing any other state.
+    Decisions contain no grants, permits, effects, or executable data. Four focused Rust tests cover
+    complete deterministic fingerprints, field and boundary mutations, malformed and oversized
+    state, non-adjacent cycles, exact-limit termination, sticky stop, policy substitution, and
+    unchanged counters on denial. The enrolled workflow-supervision evidence now hash-binds both
+    supervision modules and their raw results; six evidence tests reject fingerprint, cycle,
+    authority, accounting, identity, and product-truth widening.
   - [ ] **Sub-task 5.2.3.3:** Make exhaustion, policy denial, and repeated-state termination produce
     a non-secret reason and safe next action without consuming further authority.
 - [ ] **Task 5.2.4 - Verify policy and retain evidence**

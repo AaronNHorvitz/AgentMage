@@ -37,6 +37,17 @@ class WorkflowSupervisionEvidenceTests(unittest.TestCase):
         changed["accounting_contract"]["caller_supplied_policy_sha256"] = True
         self.assertIn("widened", validate_report(changed)[0])
 
+    def test_fingerprint_or_repeated_state_widening_is_rejected(self) -> None:
+        changed = copy.deepcopy(expected_report())
+        changed["repeated_state_contract"]["fingerprint_dimensions"].remove("verifier_state")
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["repeated_state_contract"]["non_adjacent_cycles_detected"] = False
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["repeated_state_contract"]["decision_contains_authority"] = True
+        self.assertIn("widened", validate_report(changed)[0])
+
     def test_product_truth_and_raw_results_fail_closed(self) -> None:
         changed = copy.deepcopy(expected_report())
         changed["product_truth"]["runtime_effect_executed"] = True

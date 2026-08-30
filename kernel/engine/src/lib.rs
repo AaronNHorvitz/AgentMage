@@ -169,6 +169,8 @@ pub mod work_packet;
 pub mod workflow_authority;
 /// Immutable multi-dimensional workflow-supervision policy and checked budget accounting.
 pub mod workflow_budget;
+/// Complete state fingerprints and policy-bound repeated no-progress detection.
+pub mod workflow_progress;
 /// Exact-preimage shadow changes, review previews, and bounded write grants.
 pub mod write_approval;
 /// Content-free write checkpoints, privacy gates, recovery decisions, and audit receipts.

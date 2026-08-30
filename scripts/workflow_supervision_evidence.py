@@ -16,20 +16,33 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR: Final = ROOT / "artifacts" / "sprints" / "sprint-5" / "story-5.2"
 RAW_PATH: Final = EVIDENCE_DIR / "workflow-supervision-results.log"
 REPORT_PATH: Final = EVIDENCE_DIR / "workflow-supervision-report.json"
-COMMAND: Final = (
-    "cargo",
-    "test",
-    "-p",
-    "agentmage-kernel-engine",
-    "workflow_budget::tests",
-    "--locked",
+COMMANDS: Final = (
+    (
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "workflow_budget::tests",
+        "--locked",
+    ),
+    (
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "workflow_progress::tests",
+        "--locked",
+    ),
 )
 MARKERS: Final = (
     "every_dimension_is_separate_and_every_error_class_is_exact ... ok",
     "missing_or_duplicate_error_classes_cannot_form_a_policy ... ok",
     "checked_arithmetic_and_total_budget_fail_without_partial_consumption ... ok",
     "content_identity_is_immutable_and_substitution_is_denied ... ok",
-    "test result: ok. 4 passed; 0 failed",
+    "fingerprint_is_deterministic_complete_and_boundary_preserving ... ok",
+    "incomplete_malformed_or_oversized_state_fails_closed ... ok",
+    "non_adjacent_repeated_state_stops_at_the_exact_policy_limit ... ok",
+    "policy_identity_is_immutable_and_substitution_changes_nothing ... ok",
 )
 FAILURE_CLASSES: Final = (
     "malformed_input",
@@ -72,7 +85,7 @@ def expected_report() -> dict[str, Any]:
         "schema_version": 1,
         "record_type": "agentmage-workflow-supervision-evidence",
         "story_id": "5.2",
-        "task_id": "5.2.3.1",
+        "task_id": "5.2.3.2",
         "generated_on": "2026-08-30",
         "status": "pass-local-contract-evidence",
         "budget_dimensions": [
@@ -93,10 +106,31 @@ def expected_report() -> dict[str, Any]:
             "policy_sha256_content_derived": True,
             "caller_supplied_policy_sha256": False,
         },
-        "commands": [" ".join(COMMAND)],
+        "repeated_state_contract": {
+            "fingerprint_dimensions": [
+                "plan",
+                "step",
+                "observations",
+                "proposal",
+                "tool",
+                "policy",
+                "receipts",
+                "artifacts",
+                "verifier_state",
+            ],
+            "all_dimensions_required": True,
+            "ordered_sequences_boundary_separated": True,
+            "non_adjacent_cycles_detected": True,
+            "exact_repeat_limit": True,
+            "terminal_stop_is_sticky": True,
+            "detector_bound_to_policy_id_and_sha256": True,
+            "decision_contains_authority": False,
+        },
+        "commands": [" ".join(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
         "artifacts": [
             artifact("kernel/engine/src/workflow_budget.rs"),
+            artifact("kernel/engine/src/workflow_progress.rs"),
             artifact("scripts/workflow_supervision_evidence.py"),
             artifact("tests/test_workflow_supervision_evidence.py"),
             artifact(RAW_PATH.relative_to(ROOT).as_posix()),
@@ -130,18 +164,21 @@ def main() -> int:
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()
     if args.write:
-        result = subprocess.run(
-            COMMAND,
-            cwd=ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            check=False,
-        )
-        raw = f"$ {' '.join(COMMAND)}\n{result.stdout}"
-        if result.returncode != 0:
-            sys.stderr.write(raw)
-            return 1
+        outputs: list[str] = []
+        for command in COMMANDS:
+            result = subprocess.run(
+                command,
+                cwd=ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                check=False,
+            )
+            outputs.append(f"$ {' '.join(command)}\n{result.stdout.rstrip(chr(10))}")
+            if result.returncode != 0:
+                sys.stderr.write(outputs[-1])
+                return 1
+        raw = "\n".join(outputs) + "\n"
         failures = validate_raw(raw)
         if failures:
             for failure in failures:
@@ -162,7 +199,7 @@ def main() -> int:
         for failure in failures:
             print(f"workflow supervision evidence validation failed: {failure}", file=sys.stderr)
         return 1
-    print("Workflow supervision evidence validated through Sub-task 5.2.3.1")
+    print("Workflow supervision evidence validated through Sub-task 5.2.3.2")
     return 0
 
 
