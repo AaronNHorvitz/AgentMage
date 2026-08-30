@@ -1,0 +1,78 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 388991,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "30dca69104d431ff21646c228b3f143866da526d0d175ea798ff11ebfa633e3c"
+    },
+    {
+      "byte_length": 3866,
+      "path": "kernel/engine/fixtures/operational-store/schema-16.json",
+      "sha256": "b91f72a55e590df15877b1fff8e300c4bad0d7797db1a25082d95ba3f4796f8f"
+    },
+    {
+      "byte_length": 1363,
+      "path": "docs/verification/story-11-2-storage-migration-compatibility-evidence.md",
+      "sha256": "33f8b22f47f8daa31b4dcbf1d95ca0252851cb88d1f1b9d894f5792d96e50441"
+    },
+    {
+      "byte_length": 10621,
+      "path": "scripts/storage_migration_compatibility_evidence.py",
+      "sha256": "003d4e6b74c279080deca7e51be8cbb9d3294c810db6b6ac57612b519a32aa10"
+    },
+    {
+      "byte_length": 2533,
+      "path": "tests/test_storage_migration_compatibility_evidence.py",
+      "sha256": "76efd7b274802dff5e5b9e0e6144440d163e4fd9bab8983ab4faee8090a77c4a"
+    },
+    {
+      "byte_length": 29961,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
+      "sha256": "244f331e1fe1f8381f409b907808cf505784d341ba7efe2eea85dd4a57e8a83f"
+    }
+  ],
+  "canonical_store": "operational-store",
+  "commands": [
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_sixteen_schema_matches_fixture_snapshot_and_is_relational --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::failed_version_ --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::future_schema_and_page_corruption_are_refused --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::exclusive_writer_and_encrypted_backup_are_verified --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::encrypted_backup_restores_only_to_a_verified_fresh_candidate --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-30",
+  "migration_count": 16,
+  "operational_schema_version": 16,
+  "product_truth": {
+    "downgrade_record_behavior_complete": false,
+    "fixture_snapshot_complete": true,
+    "forward_migrations_complete": true,
+    "future_schema_refusal_complete": true,
+    "interrupted_migration_recovery_complete": true,
+    "new_family_lifecycle_coverage_complete": false,
+    "occupied_destination_handling_complete": true,
+    "release_claim": "none",
+    "rollback_tests_complete": true,
+    "schema_hashes_complete": true,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "record_type": "agentmage-storage-migration-compatibility-evidence",
+  "required_markers": [
+    "version_sixteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_one_upgrades_through_sixteen_with_exact_history ... ok",
+    "failed_version_two_migration_rolls_back_without_partial_schema ... ok",
+    "failed_version_three_migration_rolls_back_all_alterations ... ok",
+    "future_schema_and_page_corruption_are_refused ... ok",
+    "exclusive_writer_and_encrypted_backup_are_verified ... ok",
+    "encrypted_backup_restores_only_to_a_verified_fresh_candidate ... ok",
+    "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-migration-compatibility",
+  "story_id": "11.2",
+  "task_id": "11.2.3.1"
+}

@@ -36,7 +36,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_twelve_schema_is_normalized_closed_and_relational",
+        "operational_store::tests::version_sixteen_schema_matches_fixture_snapshot_and_is_relational",
         "--locked",
     ),
     (
@@ -77,7 +77,7 @@ COMMANDS: Final = (
     ),
 )
 MARKERS: Final = (
-    "version_twelve_schema_is_normalized_closed_and_relational ... ok",
+    "version_sixteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
     "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
     "version_one_upgrades_through_sixteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",

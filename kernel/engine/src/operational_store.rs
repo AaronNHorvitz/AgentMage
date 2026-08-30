@@ -5417,12 +5417,7 @@ mod tests {
 
     use super::{
         DurableAuthorityError, DurableAuthorityRuntime, MIGRATION_1_SCHEMA_SQL,
-        MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, MIGRATION_4_SCHEMA_SQL,
-        MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, MIGRATION_7_SCHEMA_SQL,
-        MIGRATION_8_SCHEMA_SQL, MIGRATION_9_SCHEMA_SQL, MIGRATION_10_SCHEMA_SQL,
-        MIGRATION_11_SCHEMA_SQL, MIGRATION_12_SCHEMA_SQL, MIGRATION_13_SCHEMA_SQL,
-        MIGRATION_14_SCHEMA_SQL, MIGRATION_15_SCHEMA_SQL, MIGRATION_16_SCHEMA_SQL,
-        OperationalStore, OperationalStoreError, OperationalStoreKeyError,
+        MIGRATION_2_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
         OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
         RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
         SCHEMA_VERSION, WorkflowStateMaterialization, ZERO_SHA256, is_linux_held_descriptor_path,
@@ -7162,11 +7157,15 @@ mod tests {
     }
 
     #[test]
-    fn version_twelve_schema_is_normalized_closed_and_relational() {
+    fn version_sixteen_schema_matches_fixture_snapshot_and_is_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
-            .expect("version two store");
+            .expect("version sixteen store");
+        let fixture: serde_json::Value =
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-16.json"))
+                .expect("schema fixture parses");
+        assert_eq!(fixture["schema_version"].as_i64(), Some(SCHEMA_VERSION));
         let tables: Vec<String> = store
             .connection
             .prepare(
@@ -7180,91 +7179,13 @@ mod tests {
                     .collect::<Result<Vec<_>, _>>()
             })
             .expect("table closure");
-        assert_eq!(
-            tables,
-            [
-                "actions",
-                "answer_claim_ledgers",
-                "checkpoints",
-                "conversation_compactions",
-                "conversation_tags",
-                "conversation_turn_attachments",
-                "conversation_turn_checkpoints",
-                "conversation_turn_citations",
-                "conversation_turn_grants",
-                "conversation_turn_receipts",
-                "conversation_turn_sources",
-                "conversation_turns",
-                "conversations",
-                "decisions",
-                "engineering_artifact_payloads",
-                "engineering_artifacts",
-                "engineering_events",
-                "engineering_sessions",
-                "evidence",
-                "files",
-                "grant_heads",
-                "grant_identities",
-                "grant_revisions",
-                "objectives",
-                "plans",
-                "receipt_integrity_anchors",
-                "receipt_integrity_ledgers",
-                "receipts",
-                "repository_map_cache",
-                "retention",
-                "retention_events",
-                "runtime_artifact_events",
-                "runtime_artifact_states",
-                "runtime_artifacts",
-                "runtime_events",
-                "runtime_payloads",
-                "runtime_resume_artifacts",
-                "runtime_resume_bindings",
-                "runtime_runs",
-                "schema_history",
-                "session_checkpoints",
-                "sessions",
-                "source_cache_inputs",
-                "source_context_dispositions",
-                "source_dependencies",
-                "source_extractions",
-                "source_lexical_indexes",
-                "source_lifecycle_events",
-                "source_manifests",
-                "source_materialization_events",
-                "source_materialization_states",
-                "source_origins",
-                "source_provenance",
-                "source_references",
-                "source_refreshes",
-                "source_released_payloads",
-                "source_retention_deadlines",
-                "source_retention_hold_events",
-                "source_retention_holds",
-                "source_retentions",
-                "source_sections",
-                "store_metadata",
-                "tasks",
-                "transaction_heads",
-                "transaction_identities",
-                "transaction_revisions",
-                "workflow_approvals",
-                "workflow_attempts",
-                "workflow_consumed_budgets",
-                "workflow_idempotency_keys",
-                "workflow_plan_step_policies",
-                "workflow_preflights",
-                "workflow_receipts",
-                "workflow_recovery_decisions",
-                "workflow_state_fingerprints",
-                "workflow_terminal_diagnostics",
-                "workflow_tool_calls",
-                "workflow_verifications",
-                "write_checkpoint_heads",
-                "write_checkpoints",
-            ]
-        );
+        let fixture_tables = fixture["tables"]
+            .as_array()
+            .expect("fixture table array")
+            .iter()
+            .map(|name| name.as_str().expect("fixture table name").to_owned())
+            .collect::<Vec<_>>();
+        assert_eq!(tables, fixture_tables);
 
         let digest = "a".repeat(64);
         let record = b"{}".as_slice();
@@ -8941,27 +8862,24 @@ mod tests {
                     .collect::<Result<Vec<_>, _>>()
             })
             .expect("migration history");
-        assert_eq!(
-            history,
-            [
-                (1, sha256_hex(MIGRATION_1_SCHEMA_SQL.as_bytes())),
-                (2, sha256_hex(MIGRATION_2_SCHEMA_SQL.as_bytes())),
-                (3, sha256_hex(MIGRATION_3_SCHEMA_SQL.as_bytes())),
-                (4, sha256_hex(MIGRATION_4_SCHEMA_SQL.as_bytes())),
-                (5, sha256_hex(MIGRATION_5_SCHEMA_SQL.as_bytes())),
-                (6, sha256_hex(MIGRATION_6_SCHEMA_SQL.as_bytes())),
-                (7, sha256_hex(MIGRATION_7_SCHEMA_SQL.as_bytes())),
-                (8, sha256_hex(MIGRATION_8_SCHEMA_SQL.as_bytes())),
-                (9, sha256_hex(MIGRATION_9_SCHEMA_SQL.as_bytes())),
-                (10, sha256_hex(MIGRATION_10_SCHEMA_SQL.as_bytes())),
-                (11, sha256_hex(MIGRATION_11_SCHEMA_SQL.as_bytes())),
-                (12, sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())),
-                (13, sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())),
-                (14, sha256_hex(MIGRATION_14_SCHEMA_SQL.as_bytes())),
-                (15, sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())),
-                (16, sha256_hex(MIGRATION_16_SCHEMA_SQL.as_bytes())),
-            ]
-        );
+        let fixture: serde_json::Value =
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-16.json"))
+                .expect("schema fixture parses");
+        let fixture_history = fixture["migrations"]
+            .as_array()
+            .expect("fixture migration array")
+            .iter()
+            .map(|migration| {
+                (
+                    migration["version"].as_i64().expect("fixture version"),
+                    migration["sha256"]
+                        .as_str()
+                        .expect("fixture migration digest")
+                        .to_owned(),
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(history, fixture_history);
         drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
     }

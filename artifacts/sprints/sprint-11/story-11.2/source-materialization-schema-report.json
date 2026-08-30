@@ -11,9 +11,9 @@
       "sha256": "5821bc16e3f91dd88faadba445f663a00794c402c0472940380062c5a5051f4e"
     },
     {
-      "byte_length": 392450,
+      "byte_length": 388991,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "4733c3ee04e46ab0f55a4464e15bf76f880146f4e52fa09c923f81730bac7375"
+      "sha256": "30dca69104d431ff21646c228b3f143866da526d0d175ea798ff11ebfa633e3c"
     },
     {
       "byte_length": 2290,
@@ -21,9 +21,9 @@
       "sha256": "f04af91a9de2762dca16359bd8a7f78c72e1c5aa5e3599f0f515540031ff2f44"
     },
     {
-      "byte_length": 8676,
+      "byte_length": 8692,
       "path": "scripts/source_materialization_schema_evidence.py",
-      "sha256": "dba18a99a27009c5393766aec1f19ea087e820c57a57e97b0940a62d3fc50be5"
+      "sha256": "65419b422426376e8923f61c24e6ba9d9386f58cd9d5a89722be34b3ceab39ba"
     },
     {
       "byte_length": 2258,
@@ -31,13 +31,13 @@
       "sha256": "f1ed002bd3a2d443c886fc71afc506cdbdef47d8863623e7a955b497bcdf4a21"
     },
     {
-      "byte_length": 17102,
+      "byte_length": 17118,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log",
-      "sha256": "193d24671fd519ce2a1181a021e286edaa8b2a4cb4e25201e78c5a047942e129"
+      "sha256": "2cfd8843ceff7d7f2b58e9afbd97db8a90ee37c9adf40e7b67702a1ffc2b4bca"
     }
   ],
   "commands": [
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twelve_schema_is_normalized_closed_and_relational --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_sixteen_schema_matches_fixture_snapshot_and_is_relational --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
@@ -79,7 +79,7 @@
   },
   "record_type": "agentmage-source-materialization-schema-evidence",
   "required_markers": [
-    "version_twelve_schema_is_normalized_closed_and_relational ... ok",
+    "version_sixteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
     "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
     "version_one_upgrades_through_sixteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"

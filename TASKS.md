@@ -2050,8 +2050,21 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     make no exhaustive workflow crash-campaign, Story, Sprint, platform, packaging, or release
     completion claim.
 - [ ] **Task 11.2.3 - Implement migrations and compatibility**
-  - [ ] **Sub-task 11.2.3.1:** Add forward migrations, fixture snapshots, schema hashes, rollback
+  - [x] **Sub-task 11.2.3.1:** Add forward migrations, fixture snapshots, schema hashes, rollback
     tests, interrupted-migration recovery, future-schema refusal, and occupied-destination handling.
+    Completed locally on Linux on 2026-08-30. The canonical SQLCipher store now has a retained,
+    machine-validated schema-16 fixture that pins the sorted table inventory and every ordered
+    migration digest independently of the embedded migration implementation. Fresh creation and a
+    version-one fixture upgrade both match it exactly. Existing transaction fault fixtures prove
+    version-two and version-three migration rollback; the seeded subprocess matrix interrupts the
+    migration boundary before and after commit and recovers without replaying a completed
+    transition. Future versions, altered history hashes, and corrupted pages fail closed, while
+    backup and restore refuse occupied destinations without changing their bytes. Strict kernel
+    Clippy and five evidence mutation/overclaim tests pass. Retained
+    [`storage-migration-compatibility-report.json`](artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json)
+    and [`storage-migration-compatibility-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log)
+    make no downgrade-record, complete new-family lifecycle, Story, Sprint, platform, packaging, or
+    release completion claim.
   - [ ] **Sub-task 11.2.3.2:** Define downgrade behavior: older clients refuse unsupported records
     without deleting, rewriting, or partially interpreting them.
   - [ ] **Sub-task 11.2.3.3:** Extend backup, export, restore, retention, erasure, canary, and
