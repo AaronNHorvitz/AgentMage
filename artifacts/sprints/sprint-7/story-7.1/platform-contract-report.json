@@ -14,7 +14,7 @@
     "networked_test_count": 0,
     "ubuntu_contract": "verified-no-network-container",
     "ubuntu_image": "localhost/agentmage-clean-build:ubuntu-x86_64",
-    "ubuntu_image_id": "sha256:8556ead43fd12012e32cf5d397acabda47d6dfd0e800db018599c94e547a7801"
+    "ubuntu_image_id": "sha256:92d587476507b8668199c22f54c49b68d84b61e07527599560645ca61cd9ff18"
   },
   "limitations": [
     "Linux fixtures validate manifest and shared startup semantics, not native mechanism readiness",
@@ -51,7 +51,7 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "1fbd2ad8c038f4134df542a5d263e02882548200",
+  "reference_revision": "be825ddfd28ef3be766f23b057425ed32edd7e35",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -61,7 +61,7 @@
     },
     {
       "path": "kernel/contracts/src/lib.rs",
-      "sha256": "57a994d2db0a7ccbc1cef96f67c2ae4d5fb279a9dd73d4880a71e0fa805d27e8"
+      "sha256": "54656796b4d57c0e9b98aef5f588c619a3ff56c04d0a96feb8926682a5a06c9f"
     },
     {
       "path": "kernel/contracts/src/platform.rs",
@@ -69,7 +69,7 @@
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "4ad11cf4b012a8d503746b6fc63d18b12a4e6956e1d3958d7ed5ea6f83b240cb"
+      "sha256": "e8ebda0b8f212c2f996cbcb7e47c50474ffc75b53b7c08ec8d4376c75500c521"
     },
     {
       "path": "kernel/engine/src/platform_startup.rs",
