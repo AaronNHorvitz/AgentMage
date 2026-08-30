@@ -676,6 +676,265 @@ fn complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt() {
 }
 
 #[test]
+fn story_5_2_prior_effect_recovery_never_replays_authority_or_unsafe_effect() {
+    let read_policy = policy(CanonicalRetryClass::RecoverableRead);
+    let recovery = decision();
+    let read_preflight = preflight(&read_policy);
+    let read_grant = grant(CanonicalApprovalRequirement::NotRequired, &read_policy);
+
+    let replay_ledgers = [
+        PriorExecutionIdentityLedger::new(
+            vec!["attempt-2".to_owned()],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        ),
+        PriorExecutionIdentityLedger::new(
+            vec![],
+            vec!["call-2".to_owned()],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        ),
+        PriorExecutionIdentityLedger::new(
+            vec![],
+            vec![],
+            vec!["tool-call-2".to_owned()],
+            vec![],
+            vec![],
+            vec![],
+            vec![],
+        ),
+        PriorExecutionIdentityLedger::new(
+            vec![],
+            vec![],
+            vec![],
+            vec!["grant-2".to_owned()],
+            vec![],
+            vec![],
+            vec![],
+        ),
+    ];
+    for (index, ledger) in replay_ledgers.into_iter().enumerate() {
+        assert_eq!(
+            compile_with_controls(
+                admission(CanonicalApprovalRequirement::NotRequired),
+                &read_policy,
+                &recovery,
+                &read_preflight,
+                None,
+                &read_grant,
+                None,
+                None,
+                &ledger.expect("one replay identity"),
+                None,
+                None,
+            ),
+            Err(FreshAttemptAdmissionError::ReplayedIdentity),
+            "prior execution identity family {index} must block",
+        );
+    }
+
+    let mut approval_policy = policy(CanonicalRetryClass::RecoverableRead);
+    approval_policy.approval_requirement = CanonicalApprovalRequirement::RequiredPerAttempt;
+    let approval_policy = seal_policy(approval_policy);
+    let approval_preflight = preflight(&approval_policy);
+    let approval_grant = grant(
+        CanonicalApprovalRequirement::RequiredPerAttempt,
+        &approval_policy,
+    );
+    let current_approval = approval(&approval_policy);
+    let prior_approval = ApprovalId::from_raw("approval-1");
+    let approval_ledger = PriorExecutionIdentityLedger::new(
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec!["approval-2".to_owned()],
+        vec![],
+        vec![],
+    )
+    .expect("approval replay ledger");
+    assert_eq!(
+        compile_with_controls(
+            admission(CanonicalApprovalRequirement::RequiredPerAttempt),
+            &approval_policy,
+            &recovery,
+            &approval_preflight,
+            None,
+            &approval_grant,
+            Some(&current_approval),
+            Some(&prior_approval),
+            &approval_ledger,
+            None,
+            None,
+        ),
+        Err(FreshAttemptAdmissionError::ReplayedIdentity),
+    );
+
+    let receipt_ledger = PriorExecutionIdentityLedger::new(
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec!["receipt-2".to_owned()],
+        vec![],
+    )
+    .expect("receipt replay ledger");
+    assert_eq!(
+        compile_with_controls(
+            admission(CanonicalApprovalRequirement::NotRequired),
+            &read_policy,
+            &recovery,
+            &read_preflight,
+            None,
+            &read_grant,
+            None,
+            None,
+            &receipt_ledger,
+            None,
+            Some("receipt-2"),
+        ),
+        Err(FreshAttemptAdmissionError::ReplayedIdentity),
+    );
+
+    let mut keyed_policy = policy(CanonicalRetryClass::ConditionalAfterReconciliation);
+    keyed_policy.effect_class = CanonicalEffectClass::IdempotentWrite;
+    keyed_policy.idempotency_key_requirement = CanonicalIdempotencyRequirement::Required;
+    let keyed_policy = seal_policy(keyed_policy);
+    let keyed_preflight = preflight(&keyed_policy);
+    let keyed_grant = grant(CanonicalApprovalRequirement::NotRequired, &keyed_policy);
+    let mut keyed_candidate = admission(CanonicalApprovalRequirement::NotRequired);
+    keyed_candidate.reconciliation_required = true;
+    keyed_candidate.reconciled = true;
+    let keyed_candidate = seal_admission(keyed_candidate);
+    let safe_reconciliation = CurrentEffectReconciliation::new(
+        "attempt-1".to_owned(),
+        keyed_policy.policy_sha256.clone(),
+        OTHER_SHA256.to_owned(),
+        EffectReconciliationDisposition::SafeForFreshAttempt,
+        1_250,
+        2_000,
+    )
+    .expect("current safe reconciliation");
+    let key_ledger = PriorExecutionIdentityLedger::new(
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec![],
+        vec![OTHER_SHA256.to_owned()],
+    )
+    .expect("idempotency replay ledger");
+    assert_eq!(
+        compile_with_controls(
+            keyed_candidate,
+            &keyed_policy,
+            &recovery,
+            &keyed_preflight,
+            Some(&safe_reconciliation),
+            &keyed_grant,
+            None,
+            None,
+            &key_ledger,
+            Some(OTHER_SHA256),
+            None,
+        ),
+        Err(FreshAttemptAdmissionError::FreshIdempotencyEvidenceRequired),
+    );
+
+    for effect_class in [
+        CanonicalEffectClass::NonIdempotent,
+        CanonicalEffectClass::Destructive,
+        CanonicalEffectClass::External,
+        CanonicalEffectClass::Unknown,
+    ] {
+        let mut unsafe_policy = policy(CanonicalRetryClass::RecoverableRead);
+        unsafe_policy.effect_class = effect_class;
+        let unsafe_policy = seal_policy(unsafe_policy);
+        assert_eq!(
+            compile(
+                admission(CanonicalApprovalRequirement::NotRequired),
+                &unsafe_policy,
+                &recovery,
+                &preflight(&unsafe_policy),
+                None,
+                &grant(CanonicalApprovalRequirement::NotRequired, &unsafe_policy),
+                None,
+                None,
+            ),
+            Err(FreshAttemptAdmissionError::AutomaticRetryForbidden),
+            "{effect_class:?} must remain blocked",
+        );
+    }
+
+    let mut uncertain_recovery = recovery.clone();
+    uncertain_recovery.uncertain_outcome = true;
+    let uncertain_recovery = seal_decision(uncertain_recovery);
+    assert_eq!(
+        compile(
+            admission(CanonicalApprovalRequirement::NotRequired),
+            &read_policy,
+            &uncertain_recovery,
+            &read_preflight,
+            None,
+            &read_grant,
+            None,
+            None,
+        ),
+        Err(FreshAttemptAdmissionError::DecisionNotRetry),
+    );
+
+    let mut conditional_policy = policy(CanonicalRetryClass::ConditionalAfterReconciliation);
+    conditional_policy.effect_class = CanonicalEffectClass::Conditional;
+    let conditional_policy = seal_policy(conditional_policy);
+    let conditional_preflight = preflight(&conditional_policy);
+    let conditional_grant = grant(
+        CanonicalApprovalRequirement::NotRequired,
+        &conditional_policy,
+    );
+    let mut conditional_candidate = admission(CanonicalApprovalRequirement::NotRequired);
+    conditional_candidate.reconciliation_required = true;
+    conditional_candidate.reconciled = true;
+    let conditional_candidate = seal_admission(conditional_candidate);
+    for disposition in [
+        EffectReconciliationDisposition::EffectUncertain,
+        EffectReconciliationDisposition::DesiredStateAlreadyPresent,
+    ] {
+        let unsafe_reconciliation = CurrentEffectReconciliation::new(
+            "attempt-1".to_owned(),
+            conditional_policy.policy_sha256.clone(),
+            OTHER_SHA256.to_owned(),
+            disposition,
+            1_250,
+            2_000,
+        )
+        .expect("current non-admitting reconciliation");
+        assert_eq!(
+            compile(
+                conditional_candidate.clone(),
+                &conditional_policy,
+                &recovery,
+                &conditional_preflight,
+                Some(&unsafe_reconciliation),
+                &conditional_grant,
+                None,
+                None,
+            ),
+            Err(FreshAttemptAdmissionError::ReconciliationNotCurrent),
+            "{disposition:?} must remain blocked",
+        );
+    }
+}
+
+#[test]
 fn required_idempotency_key_must_be_fresh_and_digest_bound() {
     let mut policy = policy(CanonicalRetryClass::ConditionalAfterReconciliation);
     policy.effect_class = CanonicalEffectClass::IdempotentWrite;

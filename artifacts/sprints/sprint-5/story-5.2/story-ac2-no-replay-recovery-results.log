@@ -1,0 +1,23 @@
+$ cargo test -p agentmage-kernel-engine --test retry_admission story_5_2_prior_effect_recovery_never_replays_authority_or_unsafe_effect -- --exact
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+
+running 1 test
+test story_5_2_prior_effect_recovery_never_replays_authority_or_unsafe_effect ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+$ cargo test -p agentmage-kernel-engine --test retry_admission racing_eligible_attempts_execute_once_and_uncertainty_is_sticky -- --exact
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+
+running 1 test
+test racing_eligible_attempts_execute_once_and_uncertainty_is_sticky ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+$ python3 scripts/retry_repair_policy_evidence.py
+Retry, repair, mutation, and race evidence validated through Sub-task 5.2.4.2
+$ python3 scripts/story_5_2_policy_evidence.py
+Task 5.2.1 effect, failure, and registration taxonomy evidence validated
+Retry, repair, mutation, and race evidence validated through Sub-task 5.2.4.2
+Workflow supervision evidence validated through Sub-task 5.2.3.3
+Story 5.2 policy evidence validated through Sub-task 5.2.4.3

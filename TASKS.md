@@ -1545,8 +1545,17 @@ an effect or treating approval as reusable authority.
   current pure contract, registry, and admission-policy criterion without model inference or a tool
   effect, not native provider, cross-platform installed-product, independent-review, Story, Sprint,
   packaging, or release gates.
-- [ ] **Story AC 5.2.AC2:** Given a prior effect attempt, when recovery is considered, then no old
-  call or authority object is replayed and unsafe or uncertain effects remain blocked.
+- [x] **Story AC 5.2.AC2:** Given a prior effect attempt, when recovery is considered, then no old
+  call or authority object is replayed and unsafe or uncertain effects remain blocked. Evidence: a
+  criterion-specific product regression denies reuse across all seven prior-use identity families:
+  operation attempt, call, tool call, grant, approval, receipt, and idempotency key. Automatic
+  recovery remains blocked for all four unsafe effect classes; an uncertain recovery decision and
+  both non-admitting reconciliation dispositions cannot open another attempt. The retained
+  16-racer test admits one exact successor, invokes one synthetic content-free callback, preserves
+  its uncertain outcome, and denies replay. Five evidence mutation/omission/overclaim tests pass.
+  This closes the current pure retry-admission and synchronized in-runtime gate criterion without
+  native tool, provider, or model execution, not cross-process crash durability, installed-product,
+  cross-platform, independent-review, Story, Sprint, packaging, or release gates.
 - [ ] **Story AC 5.2.AC3:** Given repeated failures or no-progress state, when a declared budget is
   reached, then the workflow terminates within that bound with one actionable diagnosis and no
   additional effect.
