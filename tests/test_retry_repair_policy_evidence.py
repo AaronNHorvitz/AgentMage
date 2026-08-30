@@ -73,6 +73,19 @@ class RetryRepairPolicyEvidenceTests(unittest.TestCase):
         changed["mutation_contract"]["dispatches_after_mutation"] = 1
         self.assertIn("widened", validate_report(changed)[0])
 
+    def test_race_or_uncertainty_widening_is_rejected(self) -> None:
+        report = expected_report()
+        self.assertEqual(report["race_contract"]["execution_admissions"], 1)
+        changed = copy.deepcopy(report)
+        changed["race_contract"]["effect_callback_invocations"] = 2
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(report)
+        changed["race_contract"]["predecessor_step_attempt_claim_atomic"] = False
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(report)
+        changed["race_contract"]["uncertain_outcome_converted_to_success"] = True
+        self.assertIn("widened", validate_report(changed)[0])
+
     def test_product_truth_cannot_be_promoted(self) -> None:
         changed = copy.deepcopy(expected_report())
         changed["product_truth"]["model_inference_executed"] = True

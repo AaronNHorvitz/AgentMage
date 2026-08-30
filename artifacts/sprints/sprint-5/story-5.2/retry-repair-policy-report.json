@@ -6,14 +6,14 @@
       "sha256": "b35964bd72cfcccc6a8b13a2f95cf74ff3cecd442df4606341621fbe53e4b6db"
     },
     {
-      "byte_length": 21420,
+      "byte_length": 26088,
       "path": "kernel/engine/src/retry_admission.rs",
-      "sha256": "a768aad4a99c392d79132a5d4d7d667790581938741cc75b868f22649109e834"
+      "sha256": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e"
     },
     {
-      "byte_length": 43611,
+      "byte_length": 47672,
       "path": "kernel/engine/tests/retry_admission.rs",
-      "sha256": "fc3d0d4cba86261f8cc6e06e0fc23ca68eb82ce302c885cb3ef3f4328edaa828"
+      "sha256": "89430f5975a79224d2b883d367eb5cf4d989ba4e5ed2bb29f246526699cfae59"
     },
     {
       "byte_length": 68694,
@@ -31,19 +31,19 @@
       "sha256": "d93cbc70d573eb9548ca1b122cf5ea9876524737529e716ea238a757d01ed92d"
     },
     {
-      "byte_length": 9991,
+      "byte_length": 10593,
       "path": "scripts/retry_repair_policy_evidence.py",
-      "sha256": "3f5c5594c2faaca7bded0ed4f326cf90b0ec1fb19f6f4130aa24f45e429923de"
+      "sha256": "a2f246c72ae103b8f27a1da3e9e4d54953926d4dececb884c792b54b99eb0e3a"
     },
     {
-      "byte_length": 4809,
+      "byte_length": 5529,
       "path": "tests/test_retry_repair_policy_evidence.py",
-      "sha256": "4b3da5352579ba6d7a9e55fdce950eb97ac5d276270fba75d561bceac900c6b1"
+      "sha256": "5594d19048cc1dd325166eca89093de80f33e4b752a99a3d1408096e7558b6e9"
     },
     {
-      "byte_length": 10234,
+      "byte_length": 10316,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-results.log",
-      "sha256": "1347a1c562043ac6adce7b5d5351f8dc3263ca40b364fe806220b0e4fd898061"
+      "sha256": "cc1efa6cdb5bf5e13628c876947803b8d66430b8cc0c6f0da5abdde667c0b692"
     }
   ],
   "commands": [
@@ -55,7 +55,8 @@
     "5.2.2.1",
     "5.2.2.2",
     "5.2.2.3",
-    "5.2.4.1"
+    "5.2.4.1",
+    "5.2.4.2"
   ],
   "denied_conditions": [
     "empty_or_incomplete_fragments",
@@ -149,6 +150,16 @@
     "synthetic_data_only": true,
     "tool_effect_executed": false
   },
+  "race_contract": {
+    "concurrent_eligible_attempts": 16,
+    "effect_callback_invocations": 1,
+    "execution_admissions": 1,
+    "execution_permit_cloneable": false,
+    "predecessor_step_attempt_claim_atomic": true,
+    "uncertain_outcome_converted_to_success": false,
+    "uncertain_outcome_retained": true,
+    "uncertain_outcome_retried": false
+  },
   "record_type": "agentmage-retry-repair-policy-evidence",
   "required_markers": [
     "normalization_is_ordered_bounded_and_does_not_invent_values ... ok",
@@ -164,7 +175,8 @@
     "every_approval_field_mutation_denies_before_dispatch ... ok",
     "every_preflight_and_reconciliation_field_mutation_denies_before_dispatch ... ok",
     "every_attempt_identity_field_mutation_denies_before_dispatch ... ok",
-    "test result: ok. 10 passed; 0 failed",
+    "racing_eligible_attempts_execute_once_and_uncertainty_is_sticky ... ok",
+    "test result: ok. 11 passed; 0 failed",
     "call envelope carries only the digest of validated arguments and explains every rejection",
     "pass 52",
     "fail 0"
@@ -172,5 +184,5 @@
   "schema_version": 1,
   "status": "pass-local-contract-evidence",
   "story_id": "5.2",
-  "task_id": "5.2.4.1"
+  "task_id": "5.2.4.2"
 }

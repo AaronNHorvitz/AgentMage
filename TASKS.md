@@ -1499,8 +1499,21 @@ an effect or treating approval as reusable authority.
     hashes. The enrolled retry/repair report and its eight evidence tests now retain exact mutation
     counts, all four digest checks, zero dispatches, and unchanged no-effect/no-authority product
     truth.
-  - [ ] **Sub-task 5.2.4.2:** Race eligible attempts and prove at most one exact attempt enters
+  - [x] **Sub-task 5.2.4.2:** Race eligible attempts and prove at most one exact attempt enters
     execution, no effect executes twice, and uncertainty cannot be converted into success or retry.
+    Evidence: `compile_execution_ready_attempt` reuses the pure prerequisite compiler and returns an
+    opaque, owned, non-cloneable admitted-attempt proof. The synchronized kernel execution gate
+    atomically claims the `(step_execution_id, prior_attempt_id)` predecessor pair before invoking
+    the effect callback, so differently scheduled or differently named successors cannot both
+    follow the same failed attempt. The gate retains running or exact terminal state and fails
+    closed on unavailable synchronization. A 16-thread barrier race gives every contender an
+    independently valid synthetic admission: exactly one enters, 15 receive the typed
+    `PriorAttemptAlreadyEntered` refusal, and the atomic effect probe reaches exactly one. The
+    winning effect returns `Uncertain`; its content-free receipt and gate state retain uncertainty.
+    A later success-returning replay is refused before callback invocation, leaving the probe at one
+    and the outcome uncertain. The enrolled retry/repair report now retains racer, admission,
+    callback, atomic-claim, opaque-permit, and uncertainty truth; nine evidence tests reject
+    duplicate-effect, nonatomic, success-conversion, retry, or product-claim widening.
   - [ ] **Sub-task 5.2.4.3:** Retain decision tables, tool-coverage maps, state diagrams, mutation
     results, race traces, and mappings to `RV-12`, `RV-17`, and `RV-25`.
 

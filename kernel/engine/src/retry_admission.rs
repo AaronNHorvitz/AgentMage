@@ -1,7 +1,8 @@
 //! Pure fresh-attempt admission after current evidence and authority checks.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write as _;
+use std::sync::{Arc, Mutex};
 
 use agentmage_kernel_contracts::{
     ApprovalId, ApprovalRequest, CanonicalApprovalRequirement, CanonicalIdempotencyRequirement,
@@ -456,6 +457,136 @@ pub fn compile_fresh_attempt_admission(
     }
 
     Ok(candidate)
+}
+
+/// Opaque non-cloneable proof that every fresh-attempt prerequisite passed together.
+#[derive(Debug)]
+pub struct AdmittedFreshAttempt {
+    admission: CanonicalRetryAdmission,
+}
+
+impl AdmittedFreshAttempt {
+    /// Returns the admitted canonical record without exposing an execution constructor.
+    #[must_use]
+    pub const fn admission(&self) -> &CanonicalRetryAdmission {
+        &self.admission
+    }
+}
+
+/// Compiles an opaque execution-ready proof through the same pure admission boundary.
+pub fn compile_execution_ready_attempt(
+    input: FreshAttemptAdmissionInput<'_>,
+) -> Result<AdmittedFreshAttempt, FreshAttemptAdmissionError> {
+    compile_fresh_attempt_admission(input).map(|admission| AdmittedFreshAttempt { admission })
+}
+
+/// Closed outcome reported by the exact admitted effect boundary.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AttemptEffectOutcome {
+    /// The exact successor effect completed successfully.
+    Succeeded,
+    /// The exact successor effect failed with a known non-success outcome.
+    Failed,
+    /// Whether the exact successor effect occurred cannot be established.
+    Uncertain,
+}
+
+/// Content-free receipt proving which exact attempt entered the guarded effect boundary.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AttemptExecutionReceipt {
+    /// Step execution identity.
+    pub step_execution_id: String,
+    /// Predecessor attempt consumed by this successor decision.
+    pub prior_attempt_id: String,
+    /// Exact successor attempt that entered execution.
+    pub successor_attempt_id: String,
+    /// Exact terminal effect outcome, including uncertainty without coercion.
+    pub outcome: AttemptEffectOutcome,
+}
+
+/// Atomic execution-gate refusal.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AttemptExecutionGateError {
+    /// This predecessor step/attempt already admitted one exact successor to execution.
+    PriorAttemptAlreadyEntered,
+    /// Kernel synchronization state is unavailable and therefore fails closed.
+    GateUnavailable,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AttemptExecutionState {
+    Running,
+    Terminal(AttemptEffectOutcome),
+}
+
+/// Process-safe-in-one-runtime gate admitting at most one successor for a predecessor attempt.
+#[derive(Clone, Debug, Default)]
+pub struct SynchronizedAttemptExecutionGate {
+    states: Arc<Mutex<BTreeMap<(String, String), AttemptExecutionState>>>,
+}
+
+impl SynchronizedAttemptExecutionGate {
+    /// Creates an empty gate.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Atomically claims the predecessor and runs one exact effect callback at most once.
+    pub fn execute<F>(
+        &self,
+        admitted: AdmittedFreshAttempt,
+        effect: F,
+    ) -> Result<AttemptExecutionReceipt, AttemptExecutionGateError>
+    where
+        F: FnOnce() -> AttemptEffectOutcome,
+    {
+        let key = (
+            admitted.admission.step_execution_id.clone(),
+            admitted.admission.prior_attempt_id.clone(),
+        );
+        {
+            let mut states = self
+                .states
+                .lock()
+                .map_err(|_| AttemptExecutionGateError::GateUnavailable)?;
+            if states.contains_key(&key) {
+                return Err(AttemptExecutionGateError::PriorAttemptAlreadyEntered);
+            }
+            states.insert(key.clone(), AttemptExecutionState::Running);
+        }
+
+        let outcome = effect();
+        let mut states = self
+            .states
+            .lock()
+            .map_err(|_| AttemptExecutionGateError::GateUnavailable)?;
+        states.insert(key, AttemptExecutionState::Terminal(outcome));
+        Ok(AttemptExecutionReceipt {
+            step_execution_id: admitted.admission.step_execution_id,
+            prior_attempt_id: admitted.admission.prior_attempt_id,
+            successor_attempt_id: admitted.admission.successor_attempt_id,
+            outcome,
+        })
+    }
+
+    /// Returns the terminal result retained for an exact predecessor, if established.
+    pub fn outcome(
+        &self,
+        step_execution_id: &str,
+        prior_attempt_id: &str,
+    ) -> Result<Option<AttemptEffectOutcome>, AttemptExecutionGateError> {
+        let states = self
+            .states
+            .lock()
+            .map_err(|_| AttemptExecutionGateError::GateUnavailable)?;
+        Ok(
+            match states.get(&(step_execution_id.to_owned(), prior_attempt_id.to_owned())) {
+                Some(AttemptExecutionState::Terminal(outcome)) => Some(*outcome),
+                Some(AttemptExecutionState::Running) | None => None,
+            },
+        )
+    }
 }
 
 fn policy_integrity(policy: &CanonicalStepExecutionPolicy) -> bool {

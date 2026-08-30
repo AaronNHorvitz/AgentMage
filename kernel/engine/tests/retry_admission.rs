@@ -10,12 +10,19 @@ use agentmage_kernel_contracts::{
     ToolCallId, ToolId,
 };
 use agentmage_kernel_engine::retry_admission::{
-    CurrentAttemptApproval, CurrentEffectReconciliation, CurrentPreflightEvidence,
-    EffectReconciliationDisposition, FreshAttemptAdmissionError, FreshAttemptAdmissionInput,
-    FreshSingleUseGrant, PriorExecutionIdentityLedger, compile_fresh_attempt_admission,
+    AttemptEffectOutcome, AttemptExecutionGateError, CurrentAttemptApproval,
+    CurrentEffectReconciliation, CurrentPreflightEvidence, EffectReconciliationDisposition,
+    FreshAttemptAdmissionError, FreshAttemptAdmissionInput, FreshSingleUseGrant,
+    PriorExecutionIdentityLedger, SynchronizedAttemptExecutionGate,
+    compile_execution_ready_attempt, compile_fresh_attempt_admission,
 };
 use sha2::{Digest, Sha256};
 use std::fmt::Write as _;
+use std::sync::{
+    Arc, Barrier,
+    atomic::{AtomicUsize, Ordering},
+};
+use std::thread;
 
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const PRIOR_SHA256: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -1249,4 +1256,106 @@ fn every_attempt_identity_field_mutation_denies_before_dispatch() {
         );
     }
     assert_eq!(dispatch_probe, 0);
+}
+
+#[test]
+fn racing_eligible_attempts_execute_once_and_uncertainty_is_sticky() {
+    const RACERS: usize = 16;
+    let policy = policy(CanonicalRetryClass::RecoverableRead);
+    let recovery = decision();
+    let current_preflight = preflight(&policy);
+    let current_grant = grant(CanonicalApprovalRequirement::NotRequired, &policy);
+    let prior_identities = prior_ledger();
+    let mut admitted = Vec::new();
+    for _ in 0..RACERS {
+        admitted.push(
+            compile_execution_ready_attempt(FreshAttemptAdmissionInput {
+                candidate: admission(CanonicalApprovalRequirement::NotRequired),
+                policy: &policy,
+                decision: &recovery,
+                preflight: &current_preflight,
+                reconciliation: None,
+                successor_grant: FreshSingleUseGrant::new(&current_grant),
+                successor_approval: None,
+                prior_approval_id: None,
+                prior_identities: &prior_identities,
+                successor_idempotency_key_sha256: None,
+                presented_successor_receipt_id: None,
+                now_epoch_ms: 1_500,
+            })
+            .expect("each racer independently satisfies pure admission"),
+        );
+    }
+
+    let gate = SynchronizedAttemptExecutionGate::new();
+    let barrier = Arc::new(Barrier::new(RACERS));
+    let effect_probe = Arc::new(AtomicUsize::new(0));
+    let handles: Vec<_> = admitted
+        .into_iter()
+        .map(|permit| {
+            let gate = gate.clone();
+            let barrier = barrier.clone();
+            let effect_probe = effect_probe.clone();
+            thread::spawn(move || {
+                barrier.wait();
+                gate.execute(permit, || {
+                    effect_probe.fetch_add(1, Ordering::SeqCst);
+                    AttemptEffectOutcome::Uncertain
+                })
+            })
+        })
+        .collect();
+    let results: Vec<_> = handles
+        .into_iter()
+        .map(|handle| handle.join().expect("racer joins"))
+        .collect();
+    assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 1);
+    assert_eq!(
+        results
+            .iter()
+            .filter(|result| {
+                **result == Err(AttemptExecutionGateError::PriorAttemptAlreadyEntered)
+            })
+            .count(),
+        RACERS - 1,
+    );
+    assert_eq!(effect_probe.load(Ordering::SeqCst), 1);
+    let receipt = results
+        .iter()
+        .find_map(|result| result.as_ref().ok())
+        .expect("one receipt");
+    assert_eq!(receipt.successor_attempt_id, "attempt-2");
+    assert_eq!(receipt.outcome, AttemptEffectOutcome::Uncertain);
+    assert_eq!(
+        gate.outcome("step-execution-1", "attempt-1"),
+        Ok(Some(AttemptEffectOutcome::Uncertain))
+    );
+
+    let replay = compile_execution_ready_attempt(FreshAttemptAdmissionInput {
+        candidate: admission(CanonicalApprovalRequirement::NotRequired),
+        policy: &policy,
+        decision: &recovery,
+        preflight: &current_preflight,
+        reconciliation: None,
+        successor_grant: FreshSingleUseGrant::new(&current_grant),
+        successor_approval: None,
+        prior_approval_id: None,
+        prior_identities: &prior_identities,
+        successor_idempotency_key_sha256: None,
+        presented_successor_receipt_id: None,
+        now_epoch_ms: 1_500,
+    })
+    .expect("pure admission does not mutate execution state");
+    assert_eq!(
+        gate.execute(replay, || {
+            effect_probe.fetch_add(1, Ordering::SeqCst);
+            AttemptEffectOutcome::Succeeded
+        }),
+        Err(AttemptExecutionGateError::PriorAttemptAlreadyEntered)
+    );
+    assert_eq!(effect_probe.load(Ordering::SeqCst), 1);
+    assert_eq!(
+        gate.outcome("step-execution-1", "attempt-1"),
+        Ok(Some(AttemptEffectOutcome::Uncertain))
+    );
 }

@@ -50,7 +50,8 @@ MARKERS: Final = (
     "every_approval_field_mutation_denies_before_dispatch ... ok",
     "every_preflight_and_reconciliation_field_mutation_denies_before_dispatch ... ok",
     "every_attempt_identity_field_mutation_denies_before_dispatch ... ok",
-    "test result: ok. 10 passed; 0 failed",
+    "racing_eligible_attempts_execute_once_and_uncertainty_is_sticky ... ok",
+    "test result: ok. 11 passed; 0 failed",
     "call envelope carries only the digest of validated arguments and explains every rejection",
     "pass 52",
     "fail 0",
@@ -85,8 +86,14 @@ def expected_report() -> dict[str, Any]:
         "schema_version": 1,
         "record_type": "agentmage-retry-repair-policy-evidence",
         "story_id": "5.2",
-        "task_id": "5.2.4.1",
-        "coverage_task_ids": ["5.2.2.1", "5.2.2.2", "5.2.2.3", "5.2.4.1"],
+        "task_id": "5.2.4.2",
+        "coverage_task_ids": [
+            "5.2.2.1",
+            "5.2.2.2",
+            "5.2.2.3",
+            "5.2.4.1",
+            "5.2.4.2",
+        ],
         "generated_on": "2026-08-30",
         "status": "pass-local-contract-evidence",
         "normalization_contract": {
@@ -166,6 +173,16 @@ def expected_report() -> dict[str, Any]:
             "canonical_admission_digest_verified": True,
             "canonical_approval_digest_verified": True,
             "dispatches_after_mutation": 0,
+        },
+        "race_contract": {
+            "concurrent_eligible_attempts": 16,
+            "execution_admissions": 1,
+            "effect_callback_invocations": 1,
+            "predecessor_step_attempt_claim_atomic": True,
+            "execution_permit_cloneable": False,
+            "uncertain_outcome_retained": True,
+            "uncertain_outcome_converted_to_success": False,
+            "uncertain_outcome_retried": False,
         },
         "commands": [command_text(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
@@ -254,7 +271,7 @@ def main() -> int:
         for failure in failures:
             print(f"retry-repair policy evidence validation failed: {failure}", file=sys.stderr)
         return 1
-    print("Retry, repair, and mutation evidence validated through Sub-task 5.2.4.1")
+    print("Retry, repair, mutation, and race evidence validated through Sub-task 5.2.4.2")
     return 0
 
 
