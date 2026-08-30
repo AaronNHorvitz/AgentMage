@@ -93,8 +93,10 @@ pub struct CanonicalArtifactEnvelope {
     /// Capture state.
     pub capture_state: CanonicalCaptureState,
     /// Exact byte length only when captured.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub byte_length: Option<u64>,
     /// Exact SHA-256 only when captured.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub sha256: Option<String>,
     /// Trusted RFC 3339 collection time.
     pub collected_at: String,
@@ -135,12 +137,14 @@ pub struct CanonicalArtifactIngestionResult {
     /// Terminal disposition.
     pub disposition: CanonicalIngestionDisposition,
     /// Exact source reference when captured.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub source: Option<CanonicalArtifactReference>,
     /// Ordered derivative transformation identities.
     pub transformation_ids: Vec<String>,
     /// Bounded visible warnings.
     pub warnings: Vec<String>,
     /// Stable terminal error code.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub error_code: Option<String>,
     /// Must be true for a published result.
     pub terminal: bool,
@@ -163,6 +167,7 @@ pub struct CanonicalArtifactTransformation {
     /// SHA-256 of the exact input.
     pub input_sha256: String,
     /// SHA-256 of the exact output when one exists.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub output_sha256: Option<String>,
     /// Exact source ranges examined.
     pub source_ranges: Vec<CanonicalByteRange>,
@@ -803,8 +808,10 @@ pub struct CanonicalWorkflowStep {
     /// Dependency step identities.
     pub depends_on: Vec<String>,
     /// Optional model role.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub model_role: Option<String>,
     /// Optional tool identity.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub tool_id: Option<String>,
     /// Effect class.
     pub effect_class: CanonicalEffectClass,
@@ -895,6 +902,7 @@ pub struct CanonicalWorkflowState {
     /// Current lifecycle state.
     pub state: CanonicalWorkflowLifecycle,
     /// Active step, if any.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub active_step_id: Option<String>,
     /// Completed steps.
     pub completed_step_ids: Vec<String>,
@@ -903,6 +911,7 @@ pub struct CanonicalWorkflowState {
     /// Digest of consumed budgets.
     pub consumed_budget_sha256: String,
     /// Terminal result identity only after terminal transition.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub terminal_result_id: Option<String>,
 }
 
@@ -1141,12 +1150,16 @@ pub struct CanonicalToolObservation {
     /// Terminal outcome.
     pub outcome: CanonicalToolOutcome,
     /// Process exit code when applicable.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub exit_code: Option<i32>,
     /// Process signal description when applicable.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub signal: Option<String>,
     /// Exact stdout artifact when present.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub stdout: Option<CanonicalArtifactReference>,
     /// Exact stderr artifact when present.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub stderr: Option<CanonicalArtifactReference>,
     /// Bounded stdout display excerpt.
     pub stdout_excerpt: String,
@@ -1263,6 +1276,7 @@ pub struct CanonicalVerificationResult {
     /// Owning workflow.
     pub workflow_id: String,
     /// Optional owning step.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub step_id: Option<String>,
     /// Verifier identity.
     pub verifier_id: String,
@@ -1323,8 +1337,10 @@ pub struct CanonicalTerminalResult {
     /// Digest of last verified state.
     pub last_verified_state_sha256: String,
     /// Stable diagnostic code on non-success.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub diagnostic_code: Option<String>,
     /// Safe visible next action on non-success.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
     pub safe_next_action: Option<String>,
     /// Must equal `agentmage-runtime-verifier`.
     pub established_by: String,

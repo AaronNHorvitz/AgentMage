@@ -173,29 +173,29 @@ def validate_manifest(manifest: dict[str, Any], root: Path = ROOT) -> list[str]:
         failures.append("complete added-story identity closure is incomplete or reordered")
     for story_id, expected_subtasks in ADDED_STORY_SUBTASK_COUNTS.items():
         block_match = re.search(
-            rf"^#### \[ \] Story {re.escape(story_id)}\b(?P<body>.*?)(?=^#### \[[ x]\] Story |^### \[[ x]\] Sprint |\Z)",
+            rf"^#### \[[ x]\] Story {re.escape(story_id)}\b(?P<body>.*?)(?=^#### \[[ x]\] Story |^### \[[ x]\] Sprint |\Z)",
             tasks,
             re.MULTILINE | re.DOTALL,
         )
         if block_match is None:
-            failures.append(f"added story {story_id} is missing or promoted")
+            failures.append(f"added story {story_id} is missing")
             continue
         body = block_match.group("body")
-        task_ids = re.findall(rf"^\- \[ \] \*\*Task ({re.escape(story_id)}\.\d+)\b", body, re.MULTILINE)
+        task_ids = re.findall(rf"^\- \[[ x]\] \*\*Task ({re.escape(story_id)}\.\d+)\b", body, re.MULTILINE)
         expected_task_ids = [f"{story_id}.{index}" for index in range(1, 4)]
         if task_ids != expected_task_ids:
-            failures.append(f"added story {story_id} does not retain exactly three ordered open tasks")
-        subtask_count = len(re.findall(r"^  - \[ \] \*\*Sub-task ", body, re.MULTILINE))
+            failures.append(f"added story {story_id} does not retain exactly three ordered tasks")
+        subtask_count = len(re.findall(r"^  - \[[ x]\] \*\*Sub-task ", body, re.MULTILINE))
         if subtask_count != expected_subtasks:
             failures.append(
-                f"added story {story_id} expected {expected_subtasks} open sub-tasks, found {subtask_count}"
+                f"added story {story_id} expected {expected_subtasks} sub-tasks, found {subtask_count}"
             )
     for item in mappings:
         requirement_id = item["requirement_id"]
         if f"`{requirement_id}`" not in inventory:
             failures.append(f"{requirement_id}: inventory source is missing")
-        if not re.search(rf"^#### \[ \] Story {re.escape(item['story_id'])}\b", tasks, re.MULTILINE):
-            failures.append(f"{requirement_id}: story {item['story_id']} is missing or promoted")
+        if not re.search(rf"^#### \[[ x]\] Story {re.escape(item['story_id'])}\b", tasks, re.MULTILINE):
+            failures.append(f"{requirement_id}: story {item['story_id']} is missing")
         for task_id in item["task_ids"]:
             if not re.search(rf"\*\*Task {re.escape(task_id)}\b", tasks):
                 failures.append(f"{requirement_id}: task {task_id} is missing")
