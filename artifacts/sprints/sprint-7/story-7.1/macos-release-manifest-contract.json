@@ -1,0 +1,69 @@
+{
+  "artifact_id": "macos-release-manifest-field-contract",
+  "blockers": [
+    "macos-native-components-not-implemented",
+    "release-derived-identities-and-component-hashes-unavailable",
+    "signing-notarization-stapling-and-gatekeeper-not-executed",
+    "apple-silicon-m5-installed-product-evidence-unavailable",
+    "independent-critical-boundary-review-not-performed"
+  ],
+  "credential_values_present": false,
+  "field_closure": {
+    "component_count": 4,
+    "component_hash_count": 4,
+    "designated_requirement_count": 4,
+    "entitlement_assignment_count": 12,
+    "top_level_field_count": 16
+  },
+  "installation_performed": false,
+  "m5_execution_performed": false,
+  "macos_build_performed": false,
+  "notarization_performed": false,
+  "platform": {
+    "architecture": "arm64",
+    "family": "macos",
+    "minimum_macos_version": "15.0",
+    "swift_version": "6.0"
+  },
+  "private_environment_values_present": false,
+  "product_acceptance_claim": "none",
+  "release_claim": "none",
+  "schema_version": 1,
+  "signing_performed": false,
+  "source_revision": "e704e42074fb1eef34a9da243ba0053b99f58c78",
+  "sources": [
+    {
+      "bytes": 1576,
+      "path": "release/platform-manifests/README.md",
+      "sha256": "2690aa9d1fbfdd4ddbff3701ccd93a046e37e012998a1504fd9425fa81c19ceb"
+    },
+    {
+      "bytes": 6520,
+      "path": "schemas/platform/macos-release-manifest.schema.json",
+      "sha256": "f2260141c8a8f17b8b5c787df162ecc152e9de07c6ec1c6ffd3b2f627131548f"
+    },
+    {
+      "bytes": 3484,
+      "path": "release/platform-manifests/macos/v1/contract-fixture.json",
+      "sha256": "2dfc2a4da82511a530dce48653704e5fd5f73bd7ee94efd3763ca64c981a9408"
+    },
+    {
+      "bytes": 11489,
+      "path": "scripts/macos_release_manifest_contract.mjs",
+      "sha256": "a77d4d17d7bbbc794fb902f4f10e9382c4093e3739fa29bec05d07c8162128d3"
+    },
+    {
+      "bytes": 3610,
+      "path": "tests/test_macos_release_manifest_contract.mjs",
+      "sha256": "bf9a99067106e9f55424f09f0a4c5745719bf09303e41f6c0ee7c7238d5dde39"
+    }
+  ],
+  "status": "pass-frozen-contract-only",
+  "synthetic_identity_markers": {
+    "app_group_identifier": "group.com.example.agentmage.contractfixture",
+    "bundle_prefix": "com.example.agentmage.contractfixture.",
+    "identity_class": "synthetic-contract-fixture",
+    "team_id": "AAAAAAAAAA"
+  },
+  "task_id": "7.1.1.2"
+}
