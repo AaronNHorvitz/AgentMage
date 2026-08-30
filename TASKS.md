@@ -2012,9 +2012,26 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     explicitly leave attempt/idempotency invariants, exact outcome reconciliation, atomic
     event/projection/checkpoint commits, typed publication, exhaustive workflow crashes, Story,
     Sprint, platform, packaging, and release completion to their later owners.
-  - [ ] **Sub-task 11.2.2.2:** Enforce unique attempt and idempotency identities, monotonic attempt
+  - [x] **Sub-task 11.2.2.2:** Enforce unique attempt and idempotency identities, monotonic attempt
     numbers, one terminal state, exact receipt linkage, and uncertainty that cannot be rewritten as
-    success.
+    success. Evidence: immutable migration
+    [`0016-workflow-attempt-invariants.sql`](kernel/engine/migrations/operational-store/0016-workflow-attempt-invariants.sql)
+    advances the operational store and exact migration history to schema 16. Unique indexes reject
+    duplicate attempt ordinals for a step, global idempotency-key digests, executor-receipt
+    identities, and attempt-to-receipt assignments. Fail-closed triggers require every attempt to
+    start receipt-free at ordinal one or as the exact next successor of a terminal predecessor;
+    terminalization then requires one immutable workflow receipt matching the same attempt,
+    run/session, outcome, and an existing kernel receipt's exact identity and digest. Attempts and
+    workflow receipts cannot be deleted, terminal outcomes cannot be updated, and therefore an
+    uncertain outcome cannot be rewritten as success. The focused encrypted-store test rejects a
+    duplicate identity, ordinal gap, early retry, duplicate idempotency digest, outcome mismatch,
+    receipt substitution, and uncertainty rewrite before verifying an exact two-attempt terminal
+    chain. Schema-1 upgrade through schema 16, seeded interrupted-migration recovery, strict
+    Clippy, and five evidence mutation/overclaim tests pass. Retained
+    [`workflow-attempt-invariants-report.json`](artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-report.json)
+    and [`workflow-attempt-invariants-results.log`](artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-results.log)
+    leave atomic event/projection/checkpoint publication, exhaustive workflow crash coverage,
+    Story, Sprint, platform, packaging, and release completion to later tasks.
   - [ ] **Sub-task 11.2.2.3:** Commit correctness events, materialized workflow state, checkpoint
     cursor, and referenced artifacts in one canonical transaction or retain none.
 - [ ] **Task 11.2.3 - Implement migrations and compatibility**

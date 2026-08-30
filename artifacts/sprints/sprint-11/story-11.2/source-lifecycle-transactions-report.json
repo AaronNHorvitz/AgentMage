@@ -21,19 +21,19 @@
       "sha256": "b34c1c3b248cd91aef81c955e06cc49b2793bdf8816c6b34ef722eee28955b31"
     },
     {
-      "byte_length": 356384,
+      "byte_length": 372983,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "1c6ed870ab19a2ea0a0535dcf351821cdb018d94a92f39d32b090694d5d2b2c1"
+      "sha256": "4217857bf67e429c7c3d758b04423993019e3069baf6e81ce2f2b6f42ad3aa7d"
     },
     {
       "byte_length": 2828,
       "path": "docs/verification/story-11-2-source-lifecycle-transactions-evidence.md",
-      "sha256": "79306ae8d1ef4556bada713d5f8898c528e71090f9a47f9d210cd24e8aa0b517"
+      "sha256": "b5e3574c6d4000543796edf8700dbc937b58499043db6ee39cf8b1dfa59db8e0"
     },
     {
       "byte_length": 9948,
       "path": "scripts/source_lifecycle_transactions_evidence.py",
-      "sha256": "1869a8251c2eb408ab712176619e51867dfb3a8d0518794ade9ca76454478865"
+      "sha256": "c247573ef86c1bb4adcc5effbb4bd30ac6a91b875ae3b22ebcfe29e5f11ccc88"
     },
     {
       "byte_length": 2373,
@@ -43,18 +43,18 @@
     {
       "byte_length": 17136,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "c05b395edd95d9b3cf42b4558ce5a33dddcff3d5499ce6d4e6e380705e54ce85"
+      "sha256": "0eedc9151902594e9a18a20c58f34c040466a213460781a967c51897b52b5d14"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine source_lifecycle::tests --locked",
     "cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_fifteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
   "generated_on": "2026-08-30",
-  "operational_store_schema_version": 15,
+  "operational_store_schema_version": 16,
   "physical_payload_authority": {
     "artifact_table": "runtime_artifacts",
     "migration": "0007-runtime-artifacts.sql",
@@ -81,7 +81,7 @@
     "refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok",
     "stale_revision_and_active_hold_roll_back_without_runtime_reference_drift ... ok",
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
-    "version_one_upgrades_through_fifteen_with_exact_history ... ok",
+    "version_one_upgrades_through_sixteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

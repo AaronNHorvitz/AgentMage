@@ -23,7 +23,7 @@ payload authority remains with the migration-`0007` runtime artifact service.
 One encrypted-store test creates a complete synthetic runtime owner and exact correctness event,
 then commits one row in all twelve normalized workflow families. It proves that a substituted
 event, a run/session mismatch, and an unknown executor receipt fail closed. It also verifies that no
-workflow payload table exists. Schema-1 upgrade through schema 15, seeded interrupted-migration
+workflow payload table exists. Schema-1 upgrade through schema 16, seeded interrupted-migration
 recovery, and warning-denying kernel Clippy pass.
 
 ## Deliberately open scope

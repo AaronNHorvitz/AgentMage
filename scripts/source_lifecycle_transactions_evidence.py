@@ -30,7 +30,7 @@ COMMANDS: Final = (
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_fifteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history",
         "--locked",
     ),
     (
@@ -47,7 +47,7 @@ MARKERS: Final = (
     "refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok",
     "stale_revision_and_active_hold_roll_back_without_runtime_reference_drift ... ok",
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
-    "version_one_upgrades_through_fifteen_with_exact_history ... ok",
+    "version_one_upgrades_through_sixteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 REQUIRED_MIGRATION_FRAGMENTS: Final = (
@@ -115,7 +115,7 @@ def expected_report() -> dict[str, Any]:
         "task_id": "11.2.1.3",
         "generated_on": "2026-08-30",
         "status": "pass-local-atomic-source-lifecycle",
-        "operational_store_schema_version": 15,
+        "operational_store_schema_version": 16,
         "physical_payload_authority": {
             "migration": "0007-runtime-artifacts.sql",
             "payload_table": "runtime_payloads",

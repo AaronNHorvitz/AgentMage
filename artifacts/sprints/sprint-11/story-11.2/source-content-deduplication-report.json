@@ -16,9 +16,9 @@
       "sha256": "a45dd60b5882cff330cb711bec7b1ecc5bac3413eb17f35d5dc530fbb0938ad4"
     },
     {
-      "byte_length": 356384,
+      "byte_length": 372983,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "1c6ed870ab19a2ea0a0535dcf351821cdb018d94a92f39d32b090694d5d2b2c1"
+      "sha256": "4217857bf67e429c7c3d758b04423993019e3069baf6e81ce2f2b6f42ad3aa7d"
     },
     {
       "byte_length": 1697,
@@ -28,7 +28,7 @@
     {
       "byte_length": 8700,
       "path": "scripts/source_content_deduplication_evidence.py",
-      "sha256": "cee15e0aa20aa51928699b8b7df1f8f64696928ded0d7c2190aa48f9f8c62a77"
+      "sha256": "19ec4601dcfd7107b58dcebc8985a1a3711249572ef107fe2c43c184d8cb9880"
     },
     {
       "byte_length": 1957,
@@ -38,13 +38,13 @@
     {
       "byte_length": 17080,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-results.log",
-      "sha256": "c88c5ea5f96b8f7ac6e55520a268093d294cdaa3e19cf0d9ae9563564eef1e93"
+      "sha256": "08a5562d9ba2264de4646832b28004e622dc65183b28995d4b1aa8d75d71f060"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::source_content_deduplication_preserves_every_logical_identity --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_fifteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
@@ -63,7 +63,7 @@
     ]
   },
   "generated_on": "2026-08-30",
-  "operational_store_schema_version": 15,
+  "operational_store_schema_version": 16,
   "physical_payload_authority": {
     "artifact_table": "runtime_artifacts",
     "migration": "0007-runtime-artifacts.sql",
@@ -88,7 +88,7 @@
   "required_markers": [
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
     "source_content_deduplication_preserves_every_logical_identity ... ok",
-    "version_one_upgrades_through_fifteen_with_exact_history ... ok",
+    "version_one_upgrades_through_sixteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

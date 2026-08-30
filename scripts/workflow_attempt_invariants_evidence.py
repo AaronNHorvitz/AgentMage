@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and validate Sub-task 11.2.1.1 source-materialization schema evidence."""
+"""Build and validate Sub-task 11.2.2.2 workflow-attempt invariant evidence."""
 
 from __future__ import annotations
 
@@ -14,21 +14,10 @@ from typing import Any, Final
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR: Final = ROOT / "artifacts/sprints/sprint-11/story-11.2"
-RAW_PATH: Final = EVIDENCE_DIR / "source-materialization-schema-results.log"
-REPORT_PATH: Final = EVIDENCE_DIR / "source-materialization-schema-report.json"
-MIGRATION_PATH: Final = ROOT / "kernel/engine/migrations/operational-store/0012-source-artifact-materializations.sql"
-TABLES: Final = (
-    "source_manifests",
-    "source_origins",
-    "source_references",
-    "source_extractions",
-    "source_sections",
-    "source_provenance",
-    "source_lexical_indexes",
-    "source_context_dispositions",
-    "source_cache_inputs",
-    "source_retentions",
-    "source_lifecycle_events",
+RAW_PATH: Final = EVIDENCE_DIR / "workflow-attempt-invariants-results.log"
+REPORT_PATH: Final = EVIDENCE_DIR / "workflow-attempt-invariants-report.json"
+MIGRATION_PATH: Final = (
+    ROOT / "kernel/engine/migrations/operational-store/0016-workflow-attempt-invariants.sql"
 )
 COMMANDS: Final = (
     (
@@ -36,15 +25,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_twelve_schema_is_normalized_closed_and_relational",
-        "--locked",
-    ),
-    (
-        "cargo",
-        "test",
-        "-p",
-        "agentmage-kernel-engine",
-        "operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store",
+        "operational_store::tests::workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed",
         "--locked",
     ),
     (
@@ -77,18 +58,31 @@ COMMANDS: Final = (
     ),
 )
 MARKERS: Final = (
-    "version_twelve_schema_is_normalized_closed_and_relational ... ok",
-    "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
+    "workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed ... ok",
     "version_one_upgrades_through_sixteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
+UNIQUE_INDEXES: Final = (
+    "workflow_attempt_step_ordinal_uq",
+    "workflow_idempotency_key_uq",
+    "workflow_receipt_identity_uq",
+    "workflow_receipt_attempt_uq",
+)
+TRIGGERS: Final = (
+    "workflow_attempt_insert_started",
+    "workflow_attempt_insert_chain",
+    "workflow_receipt_exact_existing_authority",
+    "workflow_attempt_terminal_transition",
+    "workflow_attempt_delete_forbidden",
+    "workflow_receipt_update_forbidden",
+    "workflow_receipt_delete_forbidden",
+)
 TRUTH: Final = {
     "synthetic_data_only": True,
-    "schema_materializations_complete": True,
-    "typed_publication_api_complete": False,
-    "content_deduplication_complete": False,
-    "refresh_invalidation_lifecycle_complete": False,
-    "full_crash_campaign_complete": False,
+    "workflow_metadata_materializations_complete": True,
+    "attempt_and_idempotency_invariants_complete": True,
+    "atomic_event_projection_checkpoint_commit_complete": False,
+    "full_workflow_crash_campaign_complete": False,
     "story_completion_claim": False,
     "sprint_completion_claim": False,
     "release_claim": "none",
@@ -107,42 +101,33 @@ def artifact(path: str) -> dict[str, Any]:
 def expected_report() -> dict[str, Any]:
     return {
         "schema_version": 1,
-        "record_type": "agentmage-source-materialization-schema-evidence",
+        "record_type": "agentmage-workflow-attempt-invariants-evidence",
         "story_id": "11.2",
-        "task_id": "11.2.1.1",
+        "task_id": "11.2.2.2",
         "generated_on": "2026-08-30",
-        "status": "pass-local-structural-schema",
-        "materialization_migration_version": 12,
-        "current_operational_store_schema_version": 16,
-        "normalized_tables": list(TABLES),
-        "payload_authority": {
-            "migration": "0007-runtime-artifacts.sql",
-            "payload_table": "runtime_payloads",
-            "artifact_table": "runtime_artifacts",
-            "new_payload_tables": [],
-            "source_rows_store_raw_source_bytes": False,
-        },
-        "structural_contract": {
-            "source_family_count": len(TABLES),
-            "strict_tables": True,
-            "closed_enum_checks": True,
-            "bounded_record_json": True,
-            "foreign_keys_enabled": True,
-            "manifest_provenance_cycle_is_deferred_and_transactional": True,
-            "physical_artifact_payload_and_size_are_jointly_bound": True,
-            "section_parent_stays_in_same_extraction": True,
-            "context_section_stays_in_same_source": True,
-            "retention_lifecycle_family_is_closed": True,
+        "status": "pass-local-storage-invariants",
+        "operational_store_schema_version": 16,
+        "unique_indexes": list(UNIQUE_INDEXES),
+        "append_only_triggers": list(TRIGGERS),
+        "invariant_contract": {
+            "unique_attempt_identity": True,
+            "unique_step_attempt_ordinal": True,
+            "unique_idempotency_key_digest": True,
+            "contiguous_terminal_predecessor_chain": True,
+            "attempts_start_without_receipt": True,
+            "one_terminal_transition": True,
+            "exact_existing_receipt_identity_and_digest": True,
+            "exact_attempt_receipt_outcome_binding": True,
+            "uncertainty_is_terminal_and_immutable": True,
         },
         "commands": [" ".join(command) for command in COMMANDS],
         "required_markers": list(MARKERS),
         "artifacts": [
-            artifact("kernel/engine/migrations/operational-store/0007-runtime-artifacts.sql"),
-            artifact("kernel/engine/migrations/operational-store/0012-source-artifact-materializations.sql"),
+            artifact("kernel/engine/migrations/operational-store/0016-workflow-attempt-invariants.sql"),
             artifact("kernel/engine/src/operational_store.rs"),
-            artifact("docs/verification/story-11-2-source-materialization-schema-evidence.md"),
-            artifact("scripts/source_materialization_schema_evidence.py"),
-            artifact("tests/test_source_materialization_schema_evidence.py"),
+            artifact("docs/verification/story-11-2-workflow-attempt-invariants-evidence.md"),
+            artifact("scripts/workflow_attempt_invariants_evidence.py"),
+            artifact("tests/test_workflow_attempt_invariants_evidence.py"),
             artifact(RAW_PATH.relative_to(ROOT).as_posix()),
         ],
         "product_truth": dict(TRUTH),
@@ -154,17 +139,29 @@ def render(value: dict[str, Any]) -> str:
 
 
 def validate_migration(value: str) -> list[str]:
-    failures = [f"migration missing normalized table: {table}" for table in TABLES if f"CREATE TABLE {table} (" not in value]
-    for prohibited in (
-        "CREATE TABLE source_payloads",
-        "CREATE TABLE source_artifact_payloads",
-        "payload BLOB",
-        "source_bytes BLOB",
+    failures: list[str] = []
+    for index in UNIQUE_INDEXES:
+        if f"CREATE UNIQUE INDEX {index}" not in value:
+            failures.append(f"migration missing unique invariant: {index}")
+    for trigger in TRIGGERS:
+        if f"CREATE TRIGGER {trigger}" not in value:
+            failures.append(f"migration missing append-only invariant: {trigger}")
+    for required in (
+        "prior.attempt_ordinal = NEW.attempt_ordinal - 1",
+        "prior.state <> 'started'",
+        "terminal_receipt.receipt_id = NEW.receipt_id",
+        "terminal_receipt.receipt_sha256 = NEW.receipt_sha256",
+        "terminal_receipt.outcome = NEW.state",
+        "OLD.state <> 'started'",
+        "authority_receipt.receipt_sha256 = NEW.receipt_sha256",
+        "attempt.attempt_id = NEW.attempt_id",
+        "UPDATE workflow_attempts",
+        "workflow_attempt_invariant_migration_guard",
     ):
-        if prohibited in value:
-            failures.append(f"migration creates a prohibited source-byte authority: {prohibited}")
-    if "REFERENCES runtime_artifacts(artifact_id, payload_sha256, byte_size)" not in value:
-        failures.append("migration does not bind source materializations to the existing artifact tuple")
+        if required not in value:
+            failures.append(f"migration missing fail-closed clause: {required}")
+    if "UPDATE workflow_attempts SET state = 'succeeded'" in value:
+        failures.append("migration rewrites an attempt as success")
     return failures
 
 
@@ -178,9 +175,9 @@ def validate_raw(value: str) -> list[str]:
 
 def validate_report(value: Any) -> list[str]:
     if value != expected_report():
-        return ["source-materialization report is stale, incomplete, reordered, or widened"]
+        return ["workflow-attempt report is stale, incomplete, reordered, or widened"]
     if value.get("product_truth") != TRUTH:
-        return ["source-materialization product truth was widened"]
+        return ["workflow-attempt product truth was widened"]
     return []
 
 
@@ -213,7 +210,7 @@ def main() -> int:
         failures = validate_migration(MIGRATION_PATH.read_text(encoding="utf-8")) + validate_raw(raw)
         if failures:
             for failure in failures:
-                print(f"source-materialization evidence build failed: {failure}", file=sys.stderr)
+                print(f"workflow-attempt evidence build failed: {failure}", file=sys.stderr)
             return 1
         EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
         RAW_PATH.write_text(raw, encoding="utf-8")
@@ -224,14 +221,14 @@ def main() -> int:
         report = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
         migration = MIGRATION_PATH.read_text(encoding="utf-8")
     except (OSError, json.JSONDecodeError) as error:
-        print(f"source-materialization evidence validation failed: {error}", file=sys.stderr)
+        print(f"workflow-attempt evidence validation failed: {error}", file=sys.stderr)
         return 1
     failures = validate_migration(migration) + validate_raw(raw) + validate_report(report)
     if failures:
         for failure in failures:
-            print(f"source-materialization evidence validation failed: {failure}", file=sys.stderr)
+            print(f"workflow-attempt evidence validation failed: {failure}", file=sys.stderr)
         return 1
-    print("Sub-task 11.2.1.1 normalized source materializations validated")
+    print("Sub-task 11.2.2.2 workflow attempt invariants validated")
     return 0
 
 

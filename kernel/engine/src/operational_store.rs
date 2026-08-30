@@ -76,7 +76,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 15;
+const SCHEMA_VERSION: i64 = 16;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -171,6 +171,8 @@ const MIGRATION_14_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0014-source-lifecycle-transactions.sql");
 const MIGRATION_15_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0015-workflow-materializations.sql");
+const MIGRATION_16_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0016-workflow-attempt-invariants.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -3311,6 +3313,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 15_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 15;
+    }
+    if version == 15 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_16_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (16, ?1)",
+                [sha256_hex(MIGRATION_16_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -3346,6 +3369,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (13, sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())),
             (14, sha256_hex(MIGRATION_14_SCHEMA_SQL.as_bytes())),
             (15, sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())),
+            (16, sha256_hex(MIGRATION_16_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -5168,11 +5192,12 @@ mod tests {
         MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, MIGRATION_7_SCHEMA_SQL,
         MIGRATION_8_SCHEMA_SQL, MIGRATION_9_SCHEMA_SQL, MIGRATION_10_SCHEMA_SQL,
         MIGRATION_11_SCHEMA_SQL, MIGRATION_12_SCHEMA_SQL, MIGRATION_13_SCHEMA_SQL,
-        MIGRATION_14_SCHEMA_SQL, MIGRATION_15_SCHEMA_SQL, OperationalStore, OperationalStoreError,
-        OperationalStoreKeyError, OperationalStoreKeyLifecycle, OperationalStoreKeyProvider,
-        RetentionAssignment, RetentionDisposition, RetentionHoldKind, RetentionRecordFamily,
-        RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path,
-        open_connection, prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        MIGRATION_14_SCHEMA_SQL, MIGRATION_15_SCHEMA_SQL, MIGRATION_16_SCHEMA_SQL,
+        OperationalStore, OperationalStoreError, OperationalStoreKeyError,
+        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
+        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
+        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
+        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
         verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
@@ -7082,8 +7107,8 @@ mod tests {
             .execute(
                 "INSERT INTO workflow_attempts VALUES (
                     'attempt-workflow-1', 'step-execution-1', 'call-envelope-1', 1, NULL,
-                    'grant-workflow-1', 'succeeded', 'receipt-workflow-1',
-                    'run-workflow-1', 'session-workflow-1', 0, 'event-workflow-1', ?1, ?2
+                    'grant-workflow-1', 'started', NULL,
+                    'run-workflow-1', 'session-workflow-1', 0, 'event-workflow-1', ?1, ?2, NULL
                  )",
                 params![digest("attempt"), record],
             )
@@ -7251,6 +7276,380 @@ mod tests {
                     params![digest("missing-receipt"), digest("bad-receipt-record")],
                 )
                 .is_err()
+        );
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([16; 32]))
+            .expect("version sixteen store");
+        let record = b"{}".as_slice();
+        let digest = |label: &str| sha256_hex(label.as_bytes());
+
+        store
+            .connection
+            .execute(
+                "INSERT INTO sessions VALUES (
+                    'session-invariant-1', 'profile-invariant-1', 'active', 1000, 1000, ?1, ?2
+                 )",
+                params![digest("session-invariant"), record],
+            )
+            .expect("session owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO objectives VALUES (
+                    'objective-invariant-1', 'session-invariant-1', 1, 'active', ?1, ?2
+                 )",
+                params![digest("objective-invariant"), record],
+            )
+            .expect("objective owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO plans VALUES (
+                    'plan-invariant-1', 'objective-invariant-1', 1, 'active', ?1, ?2
+                 )",
+                params![digest("plan-invariant"), record],
+            )
+            .expect("plan owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO tasks VALUES (
+                    'task-invariant-1', 'plan-invariant-1', NULL, 1, 'active', ?1, ?2
+                 )",
+                params![digest("task-invariant"), record],
+            )
+            .expect("task owner");
+        let event_sha256 = digest("event-invariant");
+        store
+            .connection
+            .execute(
+                "INSERT INTO runtime_runs VALUES (
+                    'run-invariant-1', 'session-invariant-1', 'task-invariant-1',
+                    'correlation-invariant-1', 'runtime-policy-invariant-1', ?1, ?2, 0,
+                    'event-invariant-1', ?2, 1, 0, NULL, NULL, 1000, 1000
+                 )",
+                params![digest("request-invariant"), &event_sha256],
+            )
+            .expect("runtime run owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO runtime_events VALUES (
+                    'run-invariant-1', 0, 'event-invariant-1', 1000, 'correctness',
+                    'internal', 'session', NULL, ?1, ?2, NULL, NULL, NULL, NULL, ?3
+                 )",
+                params![&event_sha256, ZERO_SHA256, record],
+            )
+            .expect("runtime event owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO workflow_plan_step_policies VALUES (
+                    'step-policy-invariant-1', 'plan-invariant-1', 'plan-step-invariant-1', 1,
+                    'run-invariant-1', 'session-invariant-1', 0, 'event-invariant-1', ?1, ?2
+                 )",
+                params![digest("step-policy-invariant"), record],
+            )
+            .expect("step policy");
+        for suffix in ["1", "2"] {
+            store
+                .connection
+                .execute(
+                    "INSERT INTO grant_identities VALUES (?1, ?2)",
+                    params![
+                        format!("grant-invariant-{suffix}"),
+                        format!("nonce-invariant-{suffix}")
+                    ],
+                )
+                .expect("grant identity");
+        }
+        store
+            .connection
+            .execute(
+                "INSERT INTO workflow_attempts(
+                    attempt_id, step_execution_id, call_id, attempt_ordinal,
+                    supersedes_attempt_id, grant_id, state, receipt_id, run_id, session_id,
+                    event_sequence, event_id, attempt_sha256, record_json
+                 ) VALUES (
+                    'attempt-invariant-1', 'step-execution-invariant-1', 'call-invariant-1',
+                    1, NULL, 'grant-invariant-1', 'started', NULL, 'run-invariant-1',
+                    'session-invariant-1', 0, 'event-invariant-1', ?1, ?2
+                 )",
+                params![digest("attempt-invariant-1-started"), record],
+            )
+            .expect("initial attempt starts");
+
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO workflow_attempts(
+                        attempt_id, step_execution_id, call_id, attempt_ordinal,
+                        supersedes_attempt_id, grant_id, state, receipt_id, run_id, session_id,
+                        event_sequence, event_id, attempt_sha256, record_json
+                     ) VALUES (
+                        'attempt-invariant-1', 'step-execution-invariant-1', 'call-duplicate',
+                        2, 'attempt-invariant-1', 'grant-invariant-2', 'started', NULL,
+                        'run-invariant-1', 'session-invariant-1', 0, 'event-invariant-1', ?1, ?2
+                     )",
+                    params![digest("attempt-duplicate"), record],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO workflow_attempts(
+                        attempt_id, step_execution_id, call_id, attempt_ordinal,
+                        supersedes_attempt_id, grant_id, state, receipt_id, run_id, session_id,
+                        event_sequence, event_id, attempt_sha256, record_json
+                     ) VALUES (
+                        'attempt-gap', 'step-execution-invariant-1', 'call-gap', 3,
+                        'attempt-invariant-1', 'grant-invariant-2', 'started', NULL,
+                        'run-invariant-1', 'session-invariant-1', 0, 'event-invariant-1', ?1, ?2
+                     )",
+                    params![digest("attempt-gap"), record],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO workflow_attempts(
+                        attempt_id, step_execution_id, call_id, attempt_ordinal,
+                        supersedes_attempt_id, grant_id, state, receipt_id, run_id, session_id,
+                        event_sequence, event_id, attempt_sha256, record_json
+                     ) VALUES (
+                        'attempt-before-terminal', 'step-execution-invariant-1',
+                        'call-before-terminal', 2, 'attempt-invariant-1', 'grant-invariant-2',
+                        'started', NULL, 'run-invariant-1', 'session-invariant-1', 0,
+                        'event-invariant-1', ?1, ?2
+                     )",
+                    params![digest("attempt-before-terminal"), record],
+                )
+                .is_err()
+        );
+
+        store
+            .connection
+            .execute(
+                "INSERT INTO workflow_idempotency_keys VALUES (
+                    'idempotency-invariant-1', 'step-execution-invariant-1',
+                    'attempt-invariant-1', 'step-policy-invariant-1', ?1, NULL, 'fresh',
+                    'run-invariant-1', 'session-invariant-1', 0, 'event-invariant-1', ?2, ?3
+                 )",
+                params![
+                    digest("idempotency-invariant-key"),
+                    digest("idempotency-invariant-record-1"),
+                    record
+                ],
+            )
+            .expect("first idempotency identity");
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO workflow_idempotency_keys VALUES (
+                        'idempotency-invariant-2', 'step-execution-invariant-1',
+                        'attempt-invariant-1', 'step-policy-invariant-1', ?1, NULL, 'fresh',
+                        'run-invariant-1', 'session-invariant-1', 0, 'event-invariant-1', ?2, ?3
+                     )",
+                    params![
+                        digest("idempotency-invariant-key"),
+                        digest("idempotency-invariant-record-2"),
+                        record
+                    ],
+                )
+                .is_err()
+        );
+
+        store
+            .connection
+            .execute(
+                "INSERT INTO transaction_identities VALUES (
+                    'transaction-invariant-1', 'authority-attempt-invariant-1'
+                 )",
+                [],
+            )
+            .expect("transaction identity one");
+        let receipt_one_sha256 = digest("receipt-invariant-1");
+        store
+            .connection
+            .execute(
+                "INSERT INTO receipts VALUES (
+                    1, 'receipt-invariant-1', 'transaction-invariant-1', ?1, ?2, ?3
+                 )",
+                params![&receipt_one_sha256, ZERO_SHA256, record],
+            )
+            .expect("existing receipt one");
+        store
+            .connection
+            .execute(
+                "INSERT INTO workflow_receipts VALUES (
+                    'receipt-record-invariant-1', 'receipt-invariant-1',
+                    'attempt-invariant-1', 'uncertain', ?1, 'run-invariant-1',
+                    'session-invariant-1', 0, 'event-invariant-1', ?2, ?3
+                 )",
+                params![
+                    &receipt_one_sha256,
+                    digest("receipt-record-invariant-1"),
+                    record
+                ],
+            )
+            .expect("uncertain workflow receipt");
+        assert!(
+            store
+                .connection
+                .execute(
+                    "UPDATE workflow_attempts
+                     SET state = 'succeeded', receipt_id = 'receipt-invariant-1',
+                         receipt_sha256 = ?1, attempt_sha256 = ?2, record_json = ?3
+                     WHERE attempt_id = 'attempt-invariant-1'",
+                    params![&receipt_one_sha256, digest("wrong-success"), record],
+                )
+                .is_err()
+        );
+        store
+            .connection
+            .execute(
+                "UPDATE workflow_attempts
+                 SET state = 'uncertain', receipt_id = 'receipt-invariant-1',
+                     receipt_sha256 = ?1, attempt_sha256 = ?2, record_json = ?3
+                 WHERE attempt_id = 'attempt-invariant-1'",
+                params![
+                    &receipt_one_sha256,
+                    digest("attempt-invariant-1-uncertain"),
+                    record
+                ],
+            )
+            .expect("exact uncertain terminal transition");
+        assert!(
+            store
+                .connection
+                .execute(
+                    "UPDATE workflow_attempts
+                     SET state = 'succeeded', attempt_sha256 = ?1
+                     WHERE attempt_id = 'attempt-invariant-1'",
+                    [digest("uncertainty-rewritten")],
+                )
+                .is_err()
+        );
+
+        store
+            .connection
+            .execute(
+                "INSERT INTO workflow_attempts(
+                    attempt_id, step_execution_id, call_id, attempt_ordinal,
+                    supersedes_attempt_id, grant_id, state, receipt_id, run_id, session_id,
+                    event_sequence, event_id, attempt_sha256, record_json
+                 ) VALUES (
+                    'attempt-invariant-2', 'step-execution-invariant-1', 'call-invariant-2',
+                    2, 'attempt-invariant-1', 'grant-invariant-2', 'started', NULL,
+                    'run-invariant-1', 'session-invariant-1', 0, 'event-invariant-1', ?1, ?2
+                 )",
+                params![digest("attempt-invariant-2-started"), record],
+            )
+            .expect("exact monotonic successor");
+        store
+            .connection
+            .execute(
+                "INSERT INTO transaction_identities VALUES (
+                    'transaction-invariant-2', 'authority-attempt-invariant-2'
+                 )",
+                [],
+            )
+            .expect("transaction identity two");
+        let receipt_two_sha256 = digest("receipt-invariant-2");
+        store
+            .connection
+            .execute(
+                "INSERT INTO receipts VALUES (
+                    2, 'receipt-invariant-2', 'transaction-invariant-2', ?1, ?2, ?3
+                 )",
+                params![&receipt_two_sha256, &receipt_one_sha256, record],
+            )
+            .expect("existing receipt two");
+        store
+            .connection
+            .execute(
+                "INSERT INTO workflow_receipts VALUES (
+                    'receipt-record-invariant-2', 'receipt-invariant-2',
+                    'attempt-invariant-2', 'succeeded', ?1, 'run-invariant-1',
+                    'session-invariant-1', 0, 'event-invariant-1', ?2, ?3
+                 )",
+                params![
+                    &receipt_two_sha256,
+                    digest("receipt-record-invariant-2"),
+                    record
+                ],
+            )
+            .expect("successful workflow receipt");
+        assert!(
+            store
+                .connection
+                .execute(
+                    "UPDATE workflow_attempts
+                     SET state = 'succeeded', receipt_id = 'receipt-invariant-1',
+                         receipt_sha256 = ?1, attempt_sha256 = ?2, record_json = ?3
+                     WHERE attempt_id = 'attempt-invariant-2'",
+                    params![&receipt_one_sha256, digest("receipt-substitution"), record],
+                )
+                .is_err()
+        );
+        store
+            .connection
+            .execute(
+                "UPDATE workflow_attempts
+                 SET state = 'succeeded', receipt_id = 'receipt-invariant-2',
+                     receipt_sha256 = ?1, attempt_sha256 = ?2, record_json = ?3
+                 WHERE attempt_id = 'attempt-invariant-2'",
+                params![
+                    &receipt_two_sha256,
+                    digest("attempt-invariant-2-success"),
+                    record
+                ],
+            )
+            .expect("exact successful terminal transition");
+
+        let terminal_rows: Vec<(String, i64, String, String)> = store
+            .connection
+            .prepare(
+                "SELECT attempt_id, attempt_ordinal, state, receipt_id
+                 FROM workflow_attempts ORDER BY attempt_ordinal",
+            )
+            .and_then(|mut statement| {
+                statement
+                    .query_map([], |row| {
+                        Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
+                    })?
+                    .collect()
+            })
+            .expect("terminal attempt chain");
+        assert_eq!(
+            terminal_rows,
+            [
+                (
+                    "attempt-invariant-1".to_owned(),
+                    1,
+                    "uncertain".to_owned(),
+                    "receipt-invariant-1".to_owned(),
+                ),
+                (
+                    "attempt-invariant-2".to_owned(),
+                    2,
+                    "succeeded".to_owned(),
+                    "receipt-invariant-2".to_owned(),
+                ),
+            ]
         );
         drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
@@ -8060,7 +8459,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_fifteen_with_exact_history() {
+    fn version_one_upgrades_through_sixteen_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -8098,6 +8497,7 @@ mod tests {
                 (13, sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())),
                 (14, sha256_hex(MIGRATION_14_SCHEMA_SQL.as_bytes())),
                 (15, sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())),
+                (16, sha256_hex(MIGRATION_16_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -8765,7 +9165,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 15));
+                assert_eq!((version, history), (SCHEMA_VERSION, 16));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))

@@ -35,7 +35,7 @@ filtering, hold-blocked expiry, hold release, expiry, deletion, final collection
 rollback, and active-hold rollback without runtime reference drift. A
 focused runtime-artifact test independently proves that collection preserves a shared payload until
 its last live reference releases, then removes the orphan. The same evidence reruns schema-1 upgrade
-through schema 15, seeded interrupted-migration recovery, and warning-denying Clippy. Five evidence
+through schema 16, seeded interrupted-migration recovery, and warning-denying Clippy. Five evidence
 mutation tests reject missing transaction surfaces, a second payload authority, omitted test
 results, failures, and completion overclaims.
 

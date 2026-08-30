@@ -11,19 +11,19 @@
       "sha256": "4caabc1a09d7cdedc69ffb231d03a467d9c5dd1aa0f706d917682c17f8aaf223"
     },
     {
-      "byte_length": 356384,
+      "byte_length": 372983,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "1c6ed870ab19a2ea0a0535dcf351821cdb018d94a92f39d32b090694d5d2b2c1"
+      "sha256": "4217857bf67e429c7c3d758b04423993019e3069baf6e81ce2f2b6f42ad3aa7d"
     },
     {
       "byte_length": 2103,
       "path": "docs/verification/story-11-2-workflow-materialization-schema-evidence.md",
-      "sha256": "04a480805f12d803b6da45cdb6d1f2c07b321f14de453b0ff658a6d10b5a6cad"
+      "sha256": "bed95f4b316d35e7f9ec48544dc02a34b43fb718ca1bb7c93cfb3f065d36e6fb"
     },
     {
       "byte_length": 9318,
       "path": "scripts/workflow_materialization_schema_evidence.py",
-      "sha256": "273b798ce6a873928d0a5dc519f6ec3f5e9f330e4d4e2228784c9668a32fe145"
+      "sha256": "726c8886a1a467d80d0e0dfec63003ae27d49cfd556879cc36dcd1b5a906de70"
     },
     {
       "byte_length": 2494,
@@ -33,16 +33,16 @@
     {
       "byte_length": 12883,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-results.log",
-      "sha256": "a75cacd244fda5c389ca3ded022f3be05bea191ae8b65a24b727fac8e20233a8"
+      "sha256": "2c4b1520ec3b6f57d9b35d1a5a741f17001a4c2157b6afa01cf651ce0e000e20"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_fifteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
-  "current_operational_store_schema_version": 15,
+  "current_operational_store_schema_version": 16,
   "existing_authorities": {
     "event_table": "runtime_events",
     "metadata_store": "operational-store",
@@ -82,7 +82,7 @@
   "record_type": "agentmage-workflow-materialization-schema-evidence",
   "required_markers": [
     "workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok",
-    "version_one_upgrades_through_fifteen_with_exact_history ... ok",
+    "version_one_upgrades_through_sixteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

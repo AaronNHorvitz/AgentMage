@@ -1,0 +1,88 @@
+{
+  "append_only_triggers": [
+    "workflow_attempt_insert_started",
+    "workflow_attempt_insert_chain",
+    "workflow_receipt_exact_existing_authority",
+    "workflow_attempt_terminal_transition",
+    "workflow_attempt_delete_forbidden",
+    "workflow_receipt_update_forbidden",
+    "workflow_receipt_delete_forbidden"
+  ],
+  "artifacts": [
+    {
+      "byte_length": 6711,
+      "path": "kernel/engine/migrations/operational-store/0016-workflow-attempt-invariants.sql",
+      "sha256": "3f2730d0f49d60ce70bf8bb9f8980e32bae74f31ece544e3d99a839918d20c0d"
+    },
+    {
+      "byte_length": 372983,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "4217857bf67e429c7c3d758b04423993019e3069baf6e81ce2f2b6f42ad3aa7d"
+    },
+    {
+      "byte_length": 1993,
+      "path": "docs/verification/story-11-2-workflow-attempt-invariants-evidence.md",
+      "sha256": "adedcb573bfeceebc5cba6456341dd93cd5fcc6f6ec33ef919f0db4a0d169c6c"
+    },
+    {
+      "byte_length": 8555,
+      "path": "scripts/workflow_attempt_invariants_evidence.py",
+      "sha256": "05d8558b6079b12133e866589a9389681d190b7af744b5b5a64f3a857aa6400d"
+    },
+    {
+      "byte_length": 2091,
+      "path": "tests/test_workflow_attempt_invariants_evidence.py",
+      "sha256": "2f966a72cfcba38380280a8da8ea8c533d4ead99e136a3eeaae5d09dba5360a9"
+    },
+    {
+      "byte_length": 12966,
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-results.log",
+      "sha256": "eff50721a4c9566c7fe0ec793053635e5b7df28c83974313a6ceb59d9b553d5d"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-30",
+  "invariant_contract": {
+    "attempts_start_without_receipt": true,
+    "contiguous_terminal_predecessor_chain": true,
+    "exact_attempt_receipt_outcome_binding": true,
+    "exact_existing_receipt_identity_and_digest": true,
+    "one_terminal_transition": true,
+    "uncertainty_is_terminal_and_immutable": true,
+    "unique_attempt_identity": true,
+    "unique_idempotency_key_digest": true,
+    "unique_step_attempt_ordinal": true
+  },
+  "operational_store_schema_version": 16,
+  "product_truth": {
+    "atomic_event_projection_checkpoint_commit_complete": false,
+    "attempt_and_idempotency_invariants_complete": true,
+    "full_workflow_crash_campaign_complete": false,
+    "release_claim": "none",
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "workflow_metadata_materializations_complete": true
+  },
+  "record_type": "agentmage-workflow-attempt-invariants-evidence",
+  "required_markers": [
+    "workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed ... ok",
+    "version_one_upgrades_through_sixteen_with_exact_history ... ok",
+    "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-storage-invariants",
+  "story_id": "11.2",
+  "task_id": "11.2.2.2",
+  "unique_indexes": [
+    "workflow_attempt_step_ordinal_uq",
+    "workflow_idempotency_key_uq",
+    "workflow_receipt_identity_uq",
+    "workflow_receipt_attempt_uq"
+  ]
+}
