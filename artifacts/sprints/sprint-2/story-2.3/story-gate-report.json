@@ -12,7 +12,7 @@
     },
     {
       "criterion_id": "2.3.AC3",
-      "evidence_sha256": "5a425161456b603593f96e90a45ff9b62cbf73b75795ca9c7864adb2ff172a1a",
+      "evidence_sha256": "bc6562c5595066d14113a4ae2d470611110c2585bb7eb0e84939c7392cff30a8",
       "status": "pass-local-clean-root-reproducibility-and-security"
     }
   ],

@@ -14,8 +14,8 @@
     "approved_synthetic_canary_occurrences": 10,
     "archive_containers_scanned": 24,
     "archive_entries_scanned": 182,
-    "evidence_files_scanned": 32,
-    "files_scanned": 242,
+    "evidence_files_scanned": 34,
+    "files_scanned": 244,
     "fixture_files_scanned": 210,
     "malformed_archives_inspected_as_blobs": 3,
     "malformed_python_fixtures_skipped": 1,
@@ -23,7 +23,7 @@
     "python_modules_parsed": 5,
     "reserved_invalid_urls": 11,
     "synthetic_canary_occurrences": 10,
-    "text_payloads_scanned": 372
+    "text_payloads_scanned": 374
   },
   "network_calls_performed": 0,
   "product_runtime_executed": false,
@@ -110,8 +110,8 @@
     "archive_entry_count_limit": 4096,
     "artifact_root": "artifacts/sprints/sprint-2",
     "bytecode_caches_included": false,
-    "controlled_path_count": 242,
-    "controlled_path_set_sha256": "f1ec5c1b672eb540902b3d073c9cc54fdb994056b52c4a7776311c2ec878efaf",
+    "controlled_path_count": 244,
+    "controlled_path_set_sha256": "99258f7533fd539893416c96e5f95424faeaaab79e023b9f22f9b743d1fdc682",
     "excluded_final_evidence_envelope": [
       "artifacts/sprints/sprint-2/story-2.1/security-evidence-map.json",
       "artifacts/sprints/sprint-2/story-2.1/summary-comparison.json",

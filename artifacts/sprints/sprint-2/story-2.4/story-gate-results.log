@@ -1,0 +1,14 @@
+$ python3 scripts/engineering_artifact_admission_fixtures.py
+Validated 16 identity-bound artifact admission fixtures
+$ python3 scripts/engineering_artifact_adversarial_fixtures.py
+Validated 10 inert hostile artifact fixtures
+$ python3 scripts/engineering_artifact_lineage_fixtures.py
+Validated lineage for 26 sources and 21 ranges
+$ python3 scripts/engineering_context_accounting_fixtures.py
+Validated 8 complete context-accounting manifests
+$ python3 scripts/engineering_context_delivery_fixtures.py
+Validated 8 reconstructible context-delivery receipts
+$ python3 scripts/engineering_artifact_resource_gate.py
+Validated 10 resource ceilings and 4 cleanup boundaries
+$ python3 scripts/engineering_artifact_rv51_evidence.py
+Task 2.4.3.2 applicable RV-51 evidence validated with full protocol blockers open
