@@ -1,0 +1,230 @@
+{
+  "byte_identical": true,
+  "category_counts": {
+    "fixture_identity": 4,
+    "golden": 3,
+    "provenance_ledger": 4,
+    "summary": 6
+  },
+  "clean_root_contract": {
+    "ambient_repository_files_copied": false,
+    "ephemeral_empty_root_required": true,
+    "generator_order_pinned": true,
+    "isolated_python_mode": true,
+    "network_access": false,
+    "only_declared_sources_copied": true,
+    "temporary_root_paths_recorded": false
+  },
+  "clean_run_side_effect_contract": {
+    "external_effects": 0,
+    "network_calls": 0,
+    "product_effects": 0,
+    "product_runtime_executions": 0,
+    "writes_outside_ephemeral_roots": 0
+  },
+  "determinism_declared": true,
+  "generated_on": "2026-08-30",
+  "generator_order": [
+    "scripts/artifact_evaluation_text_log_fixtures.py",
+    "scripts/artifact_evaluation_document_fixtures.py",
+    "scripts/artifact_evaluation_lifecycle_scenarios.py",
+    "scripts/artifact_evaluation_plan_fixtures.py",
+    "scripts/artifact_evaluation_crash_fixtures.py",
+    "scripts/artifact_evaluation_terminal_fixtures.py",
+    "scripts/artifact_evaluation_artifact_metrics.py",
+    "scripts/artifact_evaluation_workflow_metrics.py",
+    "scripts/artifact_evaluation_golden_gate.py"
+  ],
+  "output_count": 11,
+  "outputs": [
+    {
+      "byte_length": 4419,
+      "path": "fixtures/artifact-evaluation/v1/text-reference-corpus-v1.zip",
+      "roles": [
+        "fixture_identity"
+      ],
+      "sha256": "368dc07ffc9bb1ffb6a5856b475c3bfbe1ada31e09d46d22b84c487b6e35115b"
+    },
+    {
+      "byte_length": 11861,
+      "path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+      "roles": [
+        "fixture_identity",
+        "provenance_ledger"
+      ],
+      "sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e"
+    },
+    {
+      "byte_length": 17598,
+      "path": "fixtures/artifact-evaluation/v1/document-variant-corpus-v1.zip",
+      "roles": [
+        "fixture_identity"
+      ],
+      "sha256": "22bdfddd651c165edd1fd51a91d8c6203b9aa5a76896ed485d10e2ce1b3aaa33"
+    },
+    {
+      "byte_length": 14155,
+      "path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+      "roles": [
+        "fixture_identity",
+        "provenance_ledger"
+      ],
+      "sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94"
+    },
+    {
+      "byte_length": 28379,
+      "path": "fixtures/artifact-evaluation/v1/lifecycle-scenarios.json",
+      "roles": [
+        "summary",
+        "provenance_ledger"
+      ],
+      "sha256": "274a0c7a7444a3e48f1622b789943ba76e90a9afcae75cf0147c947aa8645118"
+    },
+    {
+      "byte_length": 12755,
+      "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+      "roles": [
+        "summary"
+      ],
+      "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
+    },
+    {
+      "byte_length": 19208,
+      "path": "fixtures/artifact-evaluation/v1/workflow-crash-points.json",
+      "roles": [
+        "summary"
+      ],
+      "sha256": "f46c6e89c4c545a159d1023d3677afb495b7df0db3ac9349640681427b0d0a32"
+    },
+    {
+      "byte_length": 17460,
+      "path": "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json",
+      "roles": [
+        "summary"
+      ],
+      "sha256": "23ae9264902556922866eff8a13f25b1cc5e19cdf43ffb567bfd0d300903a253"
+    },
+    {
+      "byte_length": 8123,
+      "path": "fixtures/artifact-evaluation/v1/artifact-golden-metrics.json",
+      "roles": [
+        "golden",
+        "summary"
+      ],
+      "sha256": "5b82461ae84b70b00234068570872b8c5cd7de5e7928285d84756ce1925a2a99"
+    },
+    {
+      "byte_length": 7851,
+      "path": "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json",
+      "roles": [
+        "golden",
+        "summary"
+      ],
+      "sha256": "8b9f3c9ac8876bf7c582c69196c20e26316c5be911681401190043a63221320c"
+    },
+    {
+      "byte_length": 16723,
+      "path": "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
+      "roles": [
+        "golden",
+        "provenance_ledger"
+      ],
+      "sha256": "8133d0e3ec27f2bb635f984c6653f79ad25bb14ca7575342678ae40a907be04a"
+    }
+  ],
+  "product_gate_claim": "none",
+  "product_runtime_executed": false,
+  "report_generator": {
+    "path": "scripts/artifact_evaluation_reproducibility.py",
+    "sha256": "476fdad5ea932dd48d33735657e62897433a30368ee20fe58db62c3ba9a181c5"
+  },
+  "report_id": "artifact-evaluation-clean-root-reproducibility-v1",
+  "report_sha256": "7abcd17cfc2ba0e2fa276344f8f70cbe57c4faae9de1402fbb1521368099d1fa",
+  "run_count": 2,
+  "runs": [
+    {
+      "output_count": 11,
+      "output_set_sha256": "486265545295d5bcdd1f0076cbbd6e4bc8aad2947d7b7f1056e5cee40cef5216",
+      "root_class": "ephemeral_empty_root",
+      "run_id": "clean-root-a"
+    },
+    {
+      "output_count": 11,
+      "output_set_sha256": "486265545295d5bcdd1f0076cbbd6e4bc8aad2947d7b7f1056e5cee40cef5216",
+      "root_class": "ephemeral_empty_root",
+      "run_id": "clean-root-b"
+    }
+  ],
+  "schema_version": 1,
+  "source_count": 13,
+  "source_provenance": [
+    {
+      "byte_length": 22906,
+      "path": "scripts/document_fixture_generator.py",
+      "sha256": "8a7c8c3824e6b88801f47b29f5c0e209de35201038bd7f0770e52fe626960638"
+    },
+    {
+      "byte_length": 19639,
+      "path": "scripts/engineering_artifact_admission_fixtures.py",
+      "sha256": "932f4a5333a9ff11587cc0825c5c10c872dc81319b2da87ad02bfdb89a74d692"
+    },
+    {
+      "byte_length": 79539,
+      "path": "fixtures/artifact-admission/v1/context-accounting-manifests.json",
+      "sha256": "dd32688df89ce2e9334b99cb7934d23dbc85a3236807b80a091471a59b91e7ca"
+    },
+    {
+      "byte_length": 6043,
+      "path": "fixtures/artifact-admission/v1/resource-gate-observations.json",
+      "sha256": "161613d5b3043fa33eeaf15d6323bfc6e1f0c0abe1c2fc91fe46e01464d2281a"
+    },
+    {
+      "byte_length": 11336,
+      "path": "scripts/artifact_evaluation_text_log_fixtures.py",
+      "sha256": "a45e55dbd6dd78848294b05fc110de5a626d3e28e74ce14a1b9e7d968de47917"
+    },
+    {
+      "byte_length": 15485,
+      "path": "scripts/artifact_evaluation_document_fixtures.py",
+      "sha256": "5c176284fbd9c03197c56db1c2bea284fc2766765b9fe6e2a66cc78b2d781bc6"
+    },
+    {
+      "byte_length": 11424,
+      "path": "scripts/artifact_evaluation_lifecycle_scenarios.py",
+      "sha256": "9b29f0dfe177dd872df3b32ee1529f21ff4fd7e7ee232420fe58bed26d3f7e9d"
+    },
+    {
+      "byte_length": 9300,
+      "path": "scripts/artifact_evaluation_plan_fixtures.py",
+      "sha256": "6dc5a83a12804ccb8d168973e065fb506bdb039cd2d14d41d37d9a85f1d07c94"
+    },
+    {
+      "byte_length": 7298,
+      "path": "scripts/artifact_evaluation_crash_fixtures.py",
+      "sha256": "477513e80c0327c9cede746a75553ed227a5efa510542c61fa5d4afaf02068bf"
+    },
+    {
+      "byte_length": 12168,
+      "path": "scripts/artifact_evaluation_terminal_fixtures.py",
+      "sha256": "d793bb880608a74ed18baefb4dc81051f4df3a62ef1928537532e0c4a2f96715"
+    },
+    {
+      "byte_length": 14200,
+      "path": "scripts/artifact_evaluation_artifact_metrics.py",
+      "sha256": "815f4c8428ebff9ab23b6cec146e52772ff78cda42529757a1cfa07b06d98a75"
+    },
+    {
+      "byte_length": 13713,
+      "path": "scripts/artifact_evaluation_workflow_metrics.py",
+      "sha256": "a55499349d1f94e6173ec861b9af600eda6709bcc637b4e756df74c6f331ea45"
+    },
+    {
+      "byte_length": 9970,
+      "path": "scripts/artifact_evaluation_golden_gate.py",
+      "sha256": "de0ba596b1d6f90f73d16648dcd8d5b39d12f2ac7b193084d43feae650ee2159"
+    }
+  ],
+  "status": "clean_root_reproducibility_pass",
+  "synthetic_only": true,
+  "task_id": "2.3.4.1"
+}
