@@ -1,0 +1,1124 @@
+{
+  "active_content_execution": false,
+  "archive": {
+    "byte_length": 7823,
+    "entry_count": 14,
+    "format": "zip-stored",
+    "path": "fixtures/artifact-admission/v1/artifact-admission-corpus-v1.zip",
+    "sha256": "cfa4be62b2e74cfae72d25982aadfad79575b25a8ed06f7cfbf3dd9872ddee55"
+  },
+  "cases": [
+    {
+      "archive_entry": "payloads/paste/request.txt",
+      "artifact_kind": "text",
+      "capture_expectation": "captured",
+      "category": "paste",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-paste-1",
+      "identity_relation": null,
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 34,
+        "sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974"
+      },
+      "protected_descriptor_sha256": "48de4432d0d068719ba52d76ba2e5d5634f31335551354b0d9aac3326214446d",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "paste",
+          "origin_id": "origin-admission-paste-1",
+          "origin_sha256": "d67b68ecf258ed983b63523ac72e4a0187dc347e085a9162c01bd60716e52705",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 34,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-paste-1",
+          "provenance_sha256": "b3d70fa0ea7034a90d4f7b0dc7bb0b81fb198912f58b1be3cb9522838610780f",
+          "reference_id": "reference-admission-paste-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "357efdb6766de52f4ef32891aa3366c27e9f8f29a8b6a777d02f58df346f3974",
+          "source_artifact_id": "source-admission-paste-1",
+          "source_artifact_sha256": "6d89f88c0d8274d581c3c15c77c638a25a473795bdef1991b661cc899e77ecd7"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-paste-1",
+          "provenance_id": "provenance-admission-paste-1",
+          "provenance_sha256": "b3d70fa0ea7034a90d4f7b0dc7bb0b81fb198912f58b1be3cb9522838610780f",
+          "reference_id": "reference-admission-paste-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-paste-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "paste",
+          "reference_display": "synthetic paste fixture",
+          "reference_id": "reference-admission-paste-1",
+          "reference_sha256": "48de4432d0d068719ba52d76ba2e5d5634f31335551354b0d9aac3326214446d",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/files/local-note.txt",
+      "artifact_kind": "text",
+      "capture_expectation": "captured",
+      "category": "local_file",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-local-file-1",
+      "identity_relation": null,
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 59,
+        "sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a"
+      },
+      "protected_descriptor_sha256": "184bfe415ff614c6f59c5ebfdebd9a728b2f2cb0af8c913ee8000813718fa618",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-local-file-1",
+          "origin_sha256": "dccc335eadc700f85034e14c75568bc0b7ae0852001d763c9cb5e5aadfecc15d",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 59,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-local-file-1",
+          "provenance_sha256": "d2a1e549498e91d7fbe8bba77bd0d9bb824e6cff2458d2f2ea70dd9a2e482053",
+          "reference_id": "reference-admission-local-file-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "source_artifact_id": "source-admission-local-file-1",
+          "source_artifact_sha256": "c2d0571671f2dd3861245e5d7bfa8870bd667e3162679ba3dc52b489a9c45ed6"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-local-file-1",
+          "provenance_id": "provenance-admission-local-file-1",
+          "provenance_sha256": "d2a1e549498e91d7fbe8bba77bd0d9bb824e6cff2458d2f2ea70dd9a2e482053",
+          "reference_id": "reference-admission-local-file-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-local-file-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic local_file fixture",
+          "reference_id": "reference-admission-local-file-1",
+          "reference_sha256": "184bfe415ff614c6f59c5ebfdebd9a728b2f2cb0af8c913ee8000813718fa618",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/uris/virtual-note.md",
+      "artifact_kind": "text",
+      "capture_expectation": "captured",
+      "category": "virtual_uri",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-virtual-uri-1",
+      "identity_relation": null,
+      "media_type": "text/markdown",
+      "offered_byte_identity": {
+        "byte_length": 62,
+        "sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d"
+      },
+      "protected_descriptor_sha256": "3a8332b0b21065b53296f083a8b16acc9e588297a7e486514478278c72653a47",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "uri",
+          "origin_id": "origin-admission-virtual-uri-1",
+          "origin_sha256": "f0a87576b139cc23c46cefc914a6ed4775b99a42c2695f4b760f3021872f2102",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 62,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/markdown",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-virtual-uri-1",
+          "provenance_sha256": "9e7253d0e58854ac14b97f09ac18e12ad3d4a709fbf7e8aa1a0e48fd05fc939c",
+          "reference_id": "reference-admission-virtual-uri-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "2ba79eb707b96bbb43d32cf8a60dfd52bf1795fc44689f459e98ce2e0a38551d",
+          "source_artifact_id": "source-admission-virtual-uri-1",
+          "source_artifact_sha256": "61086b09529a0330bd00e75c9110ff0f73b843d0ad2461be5bdd8341e62cfcfd"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-virtual-uri-1",
+          "provenance_id": "provenance-admission-virtual-uri-1",
+          "provenance_sha256": "9e7253d0e58854ac14b97f09ac18e12ad3d4a709fbf7e8aa1a0e48fd05fc939c",
+          "reference_id": "reference-admission-virtual-uri-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-virtual-uri-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "virtual_uri",
+          "reference_display": "synthetic virtual_uri fixture",
+          "reference_id": "reference-admission-virtual-uri-1",
+          "reference_sha256": "3a8332b0b21065b53296f083a8b16acc9e588297a7e486514478278c72653a47",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/uris/prestaged-remote.json",
+      "artifact_kind": "structured_text",
+      "capture_expectation": "captured",
+      "category": "remote_uri",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-remote-uri-1",
+      "identity_relation": null,
+      "media_type": "application/json",
+      "offered_byte_identity": {
+        "byte_length": 72,
+        "sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8"
+      },
+      "protected_descriptor_sha256": "d163ba73a4dcb3b79add8db344576910d956bc478b161b0f82e21e0deaf3f5e8",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "uri",
+          "origin_id": "origin-admission-remote-uri-1",
+          "origin_sha256": "29b46f6c0d228c87bb6e0fd1cbbea51d404efd402111219d272a7c03395c6d73",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 72,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/json",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-remote-uri-1",
+          "provenance_sha256": "cbb7813a7e34f115acdb760f2e322354bbc2558fafc845605fd98f5303e35df4",
+          "reference_id": "reference-admission-remote-uri-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "f1d20d9e2efc99bb1f81ce594d8c6d10f139874dc039829c50c2306ae827a7a8",
+          "source_artifact_id": "source-admission-remote-uri-1",
+          "source_artifact_sha256": "9556eef7ce3159dd2b28f64190b21a7f10fd22dc0be89eade4a530f38aeb52fc"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-remote-uri-1",
+          "provenance_id": "provenance-admission-remote-uri-1",
+          "provenance_sha256": "cbb7813a7e34f115acdb760f2e322354bbc2558fafc845605fd98f5303e35df4",
+          "reference_id": "reference-admission-remote-uri-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-remote-uri-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "remote_uri",
+          "reference_display": "synthetic remote_uri fixture",
+          "reference_id": "reference-admission-remote-uri-1",
+          "reference_sha256": "d163ba73a4dcb3b79add8db344576910d956bc478b161b0f82e21e0deaf3f5e8",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/directories/tree-manifest.json",
+      "artifact_kind": "directory_manifest",
+      "capture_expectation": "captured",
+      "category": "directory",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-directory-1",
+      "identity_relation": null,
+      "media_type": "application/json",
+      "offered_byte_identity": {
+        "byte_length": 263,
+        "sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d"
+      },
+      "protected_descriptor_sha256": "9e47a4275364ff812bdec49eb8771e0404c7566079aafab59f7297ffd8fd7faa",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "directory",
+          "origin_id": "origin-admission-directory-1",
+          "origin_sha256": "9f8928dd852d1825396391f452ff3410560fa2cb86d2ff6149d7ed6a65caa2dd",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 263,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/json",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-directory-1",
+          "provenance_sha256": "61f27c89b58b4ca2879a474f9a1e4f05ccb1d89d5b6cb9e271ec9d39455ec789",
+          "reference_id": "reference-admission-directory-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "8502fb3ee79843a016201111f506ec203a62ab362f429695145059169b90961d",
+          "source_artifact_id": "source-admission-directory-1",
+          "source_artifact_sha256": "b1e63098581aacab263883628146e596eb611204c5b113d3703252471340b76f"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-directory-1",
+          "provenance_id": "provenance-admission-directory-1",
+          "provenance_sha256": "61f27c89b58b4ca2879a474f9a1e4f05ccb1d89d5b6cb9e271ec9d39455ec789",
+          "reference_id": "reference-admission-directory-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-directory-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "directory",
+          "reference_display": "synthetic directory fixture",
+          "reference_id": "reference-admission-directory-1",
+          "reference_sha256": "9e47a4275364ff812bdec49eb8771e0404c7566079aafab59f7297ffd8fd7faa",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/documents/reference-bundle.zip",
+      "artifact_kind": "archive",
+      "capture_expectation": "captured",
+      "category": "archive",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-archive-1",
+      "identity_relation": null,
+      "media_type": "application/zip",
+      "offered_byte_identity": {
+        "byte_length": 407,
+        "sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3"
+      },
+      "protected_descriptor_sha256": "7af144a6e2ef773f395a44829282176e64fbb578459505569d2e881a07b459b0",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "archive",
+          "origin_id": "origin-admission-archive-1",
+          "origin_sha256": "df43cad92840c22c8a791e22cf6ca45f03612476c3d320d866cd7fa3849c2480",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 407,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/zip",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-archive-1",
+          "provenance_sha256": "1728bec49bbb385423b22cf0b364207a58544eccfa721bdbfdd29405e34e5ae7",
+          "reference_id": "reference-admission-archive-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "ca2c4ee0c5e73e0d8b8fb5ce661ac89cdd631b4ce82d5e84a3a3dc1ef54f42c3",
+          "source_artifact_id": "source-admission-archive-1",
+          "source_artifact_sha256": "5df680bc251e05e69857fb14da4622b080d6e758b40afd28e65000714d2bba8c"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-archive-1",
+          "provenance_id": "provenance-admission-archive-1",
+          "provenance_sha256": "1728bec49bbb385423b22cf0b364207a58544eccfa721bdbfdd29405e34e5ae7",
+          "reference_id": "reference-admission-archive-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-archive-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "archive",
+          "reference_display": "synthetic archive fixture",
+          "reference_id": "reference-admission-archive-1",
+          "reference_sha256": "7af144a6e2ef773f395a44829282176e64fbb578459505569d2e881a07b459b0",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/documents/meeting-note.txt",
+      "artifact_kind": "text",
+      "capture_expectation": "captured",
+      "category": "text",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-text-1",
+      "identity_relation": null,
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 101,
+        "sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0"
+      },
+      "protected_descriptor_sha256": "7ab4b362411763c6dfc03c92c83947a7383bffce08b642c5798a414b93ed8aad",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-text-1",
+          "origin_sha256": "6bf112cc7aee861f48bf29ced36b7c15ac44cb95e0a7962186a41ee0b1a55a81",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 101,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-text-1",
+          "provenance_sha256": "d54e1ecaf0ee6854922c7ef505682373e454573ad261622ba65ddea3ade19850",
+          "reference_id": "reference-admission-text-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "f76cfec7ddfa6df0c9dfb3257591fb5094bc98ea6f53066c34b5e865e7b55cc0",
+          "source_artifact_id": "source-admission-text-1",
+          "source_artifact_sha256": "f0a13ae8c32b6795ceb783870e5a3de10538eb370639ff472999e9e87be53d16"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-text-1",
+          "provenance_id": "provenance-admission-text-1",
+          "provenance_sha256": "d54e1ecaf0ee6854922c7ef505682373e454573ad261622ba65ddea3ade19850",
+          "reference_id": "reference-admission-text-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-text-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic text fixture",
+          "reference_id": "reference-admission-text-1",
+          "reference_sha256": "7ab4b362411763c6dfc03c92c83947a7383bffce08b642c5798a414b93ed8aad",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/documents/application.log",
+      "artifact_kind": "log",
+      "capture_expectation": "captured",
+      "category": "log",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-log-1",
+      "identity_relation": null,
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 162,
+        "sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762"
+      },
+      "protected_descriptor_sha256": "2ebc729459d142c841cfb1ae400c82a15c5c2ed752d9b7ba50cf37fb9585eceb",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-log-1",
+          "origin_sha256": "bd80e45a253719209bf1814ae14c6c34eda33208f7c3fd5870e046a8afd84b95",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 162,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-log-1",
+          "provenance_sha256": "9cb80870631bd018eb80e0c230f6b97fd620e1fda383aef2b173b5abe909fbd6",
+          "reference_id": "reference-admission-log-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "ee1c8ccb63644d7732df4ea4f1844467ffa9825a69c9f6ea9ec36b0cb981e762",
+          "source_artifact_id": "source-admission-log-1",
+          "source_artifact_sha256": "9b882a96709ddb4c2058d207a559d85a403cea2b0539d108b18a1dfe6554894e"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-log-1",
+          "provenance_id": "provenance-admission-log-1",
+          "provenance_sha256": "9cb80870631bd018eb80e0c230f6b97fd620e1fda383aef2b173b5abe909fbd6",
+          "reference_id": "reference-admission-log-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-log-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic log fixture",
+          "reference_id": "reference-admission-log-1",
+          "reference_sha256": "2ebc729459d142c841cfb1ae400c82a15c5c2ed752d9b7ba50cf37fb9585eceb",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/documents/status-report.pdf",
+      "artifact_kind": "pdf",
+      "capture_expectation": "captured",
+      "category": "pdf",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-pdf-1",
+      "identity_relation": null,
+      "media_type": "application/pdf",
+      "offered_byte_identity": {
+        "byte_length": 617,
+        "sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780"
+      },
+      "protected_descriptor_sha256": "f81e79e366c48d9c0dff418c3d0fc9603407c7cbed905b08605b9d131754167d",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-pdf-1",
+          "origin_sha256": "67d3e50845eaf7add862e24e86998e7bfe6b97811963e48e0b4c604ef6d1b4ea",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 617,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/pdf",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-pdf-1",
+          "provenance_sha256": "95539b0e54e1bcbeb49bbc9e9377002428e1efda7695672db3601fbf36df8bbc",
+          "reference_id": "reference-admission-pdf-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "565bc2412fe5f96e9c85e444cad76505e58453f548fc8b5b33b5683f5bcf3780",
+          "source_artifact_id": "source-admission-pdf-1",
+          "source_artifact_sha256": "7bed6f4cfdff0dcef4c4df1e35fbe03c3f3b7bb8a721b61f83e76499c811a814"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-pdf-1",
+          "provenance_id": "provenance-admission-pdf-1",
+          "provenance_sha256": "95539b0e54e1bcbeb49bbc9e9377002428e1efda7695672db3601fbf36df8bbc",
+          "reference_id": "reference-admission-pdf-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-pdf-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic pdf fixture",
+          "reference_id": "reference-admission-pdf-1",
+          "reference_sha256": "f81e79e366c48d9c0dff418c3d0fc9603407c7cbed905b08605b9d131754167d",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/documents/status-report.docx",
+      "artifact_kind": "docx",
+      "capture_expectation": "captured",
+      "category": "docx",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-docx-1",
+      "identity_relation": null,
+      "media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "offered_byte_identity": {
+        "byte_length": 1409,
+        "sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c"
+      },
+      "protected_descriptor_sha256": "d8b84d329ee63b0a95bc0b5d15b03d56350439bf7006b6f5dbda0ef1bcd95414",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-docx-1",
+          "origin_sha256": "2e96126f7d86354accbaab3201bb4d6b2d59bc1e877a9d4356a94c6c7a6ed940",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 1409,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-docx-1",
+          "provenance_sha256": "402ce9a05bf3926cb09786fc147153cb5dd42fc29b2f1c1ca3f9972541330bf6",
+          "reference_id": "reference-admission-docx-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "f57adfb058775701274120905e1b4dc480640996129e0ff4d420e9ed5ef4b06c",
+          "source_artifact_id": "source-admission-docx-1",
+          "source_artifact_sha256": "d80323316df86db2dbd448951476b9f1b085367c6468163825e702006b3b1111"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-docx-1",
+          "provenance_id": "provenance-admission-docx-1",
+          "provenance_sha256": "402ce9a05bf3926cb09786fc147153cb5dd42fc29b2f1c1ca3f9972541330bf6",
+          "reference_id": "reference-admission-docx-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-docx-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic docx fixture",
+          "reference_id": "reference-admission-docx-1",
+          "reference_sha256": "d8b84d329ee63b0a95bc0b5d15b03d56350439bf7006b6f5dbda0ef1bcd95414",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/documents/project-ledger.xlsx",
+      "artifact_kind": "spreadsheet",
+      "capture_expectation": "captured",
+      "category": "spreadsheet",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-spreadsheet-1",
+      "identity_relation": null,
+      "media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "offered_byte_identity": {
+        "byte_length": 2479,
+        "sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e"
+      },
+      "protected_descriptor_sha256": "fce77f4ef0e7edb83b1fb174c83f35b1116cb464c9bc817dbfac641a5d441abb",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-spreadsheet-1",
+          "origin_sha256": "eb78067cf61f558f7181e5139c7ab2208705bd033417d899fa21462285880c93",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 2479,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-spreadsheet-1",
+          "provenance_sha256": "11509269ec60ba7ad602053d2edbdc64726f2af5f5ddae35b1b82e7a79769cfa",
+          "reference_id": "reference-admission-spreadsheet-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "31f8cecda704c81937c181d0289ec63d5101bf4154241d1ca4d3e86791afbb3e",
+          "source_artifact_id": "source-admission-spreadsheet-1",
+          "source_artifact_sha256": "5692531c487290fecf4a2be5db6681ba2ad15cde1748baf977d6e4a519d127c2"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-spreadsheet-1",
+          "provenance_id": "provenance-admission-spreadsheet-1",
+          "provenance_sha256": "11509269ec60ba7ad602053d2edbdc64726f2af5f5ddae35b1b82e7a79769cfa",
+          "reference_id": "reference-admission-spreadsheet-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-spreadsheet-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic spreadsheet fixture",
+          "reference_id": "reference-admission-spreadsheet-1",
+          "reference_sha256": "fce77f4ef0e7edb83b1fb174c83f35b1116cb464c9bc817dbfac641a5d441abb",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/documents/status-grid.png",
+      "artifact_kind": "image_ocr",
+      "capture_expectation": "captured",
+      "category": "image_ocr",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-image-ocr-1",
+      "identity_relation": null,
+      "media_type": "image/png",
+      "offered_byte_identity": {
+        "byte_length": 82,
+        "sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba"
+      },
+      "protected_descriptor_sha256": "af0aa37bf1125515978a6c2551069e2011662d61fef699306d988b14ce208406",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-image-ocr-1",
+          "origin_sha256": "b3db03a9336979661aa7959616c9f0e8eb7f1a9f3adeb67e4dce5c00bbc6afbf",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 82,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "image/png",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-image-ocr-1",
+          "provenance_sha256": "e5febaa47819dbe9e6ef3d7c58ac79cd5ab453de8f3ebe063ba6bb08ade091ea",
+          "reference_id": "reference-admission-image-ocr-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "d567f1bc0fcee1302e2e29ca268814e26cd7e27635c455c145dd49dacb2051ba",
+          "source_artifact_id": "source-admission-image-ocr-1",
+          "source_artifact_sha256": "2b6555df12ca355e08b89a5f4043095b7a0da6771712d8f173a341b8c50e0c89"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-image-ocr-1",
+          "provenance_id": "provenance-admission-image-ocr-1",
+          "provenance_sha256": "e5febaa47819dbe9e6ef3d7c58ac79cd5ab453de8f3ebe063ba6bb08ade091ea",
+          "reference_id": "reference-admission-image-ocr-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-image-ocr-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic image_ocr fixture",
+          "reference_id": "reference-admission-image-ocr-1",
+          "reference_sha256": "af0aa37bf1125515978a6c2551069e2011662d61fef699306d988b14ce208406",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/files/local-note.txt",
+      "artifact_kind": "text",
+      "capture_expectation": "captured",
+      "category": "duplicate",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-duplicate-1",
+      "identity_relation": {
+        "kind": "same_content",
+        "target_fixture_id": "admission-local-file-1"
+      },
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 59,
+        "sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a"
+      },
+      "protected_descriptor_sha256": "1b44c9ad67a9b0e24d241598a6306f116c72ab430e81ab1d23aab3d4a4f4022c",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-duplicate-1",
+          "origin_sha256": "435b3452177038ad0bc96a8dd363e5be044f4411c35d02714649758c4934a97c",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": 59,
+          "capture_state": "captured",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "fresh",
+          "origin_id": "origin-admission-duplicate-1",
+          "provenance_sha256": "d79d0eec30ff7ef073d3ea5b8bf73a0487ce96a8bcb1fc1ac6f50b70baeaa583",
+          "reference_id": "reference-admission-duplicate-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": "1208734304ae4b1d82faaca3a7d0a71df23a5f35a2af90766a7a8ca5a7807c9a",
+          "source_artifact_id": "source-admission-duplicate-1",
+          "source_artifact_sha256": "97a15fefae4776b6927b109d7638f638b0795a116c8ee7e5984cfcc55f0358b5"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "fresh",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-duplicate-1",
+          "provenance_id": "provenance-admission-duplicate-1",
+          "provenance_sha256": "d79d0eec30ff7ef073d3ea5b8bf73a0487ce96a8bcb1fc1ac6f50b70baeaa583",
+          "reference_id": "reference-admission-duplicate-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-duplicate-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic duplicate fixture",
+          "reference_id": "reference-admission-duplicate-1",
+          "reference_sha256": "1b44c9ad67a9b0e24d241598a6306f116c72ab430e81ab1d23aab3d4a4f4022c",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": "payloads/stale/observed.txt",
+      "artifact_kind": "text",
+      "capture_expectation": "failed",
+      "category": "stale",
+      "current_archive_entry": "payloads/stale/current.txt",
+      "current_byte_identity": {
+        "byte_length": 31,
+        "sha256": "ae1c0199db381257446a68335eb3649ba7c226ddce9a3b8e01f48e39893029e0"
+      },
+      "fixture_id": "admission-stale-1",
+      "identity_relation": {
+        "kind": "replaced_before_capture",
+        "target_fixture_id": "admission-stale-1-current"
+      },
+      "media_type": "text/plain",
+      "offered_byte_identity": {
+        "byte_length": 31,
+        "sha256": "f2d6df2f4fceb34bd4ba515541038957a0adf11ae8e25fc0baec00f530190fe6"
+      },
+      "protected_descriptor_sha256": "b0005de844ea5d1a511c5843ce2030c018774137b5464ca19401759c15d047e2",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-stale-1",
+          "origin_sha256": "476899c53edf19ac172b205cee10d6a0f4d904dac0728d61cf02ea535c6a5c79",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": null,
+          "capture_state": "failed",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "text/plain",
+          "freshness_state": "stale",
+          "origin_id": "origin-admission-stale-1",
+          "provenance_sha256": "eef2651fd68f1686521c9c1f98352f8c13d3586463d5080e99282d3df0afbe2f",
+          "reference_id": "reference-admission-stale-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": null,
+          "source_artifact_id": "source-admission-stale-1",
+          "source_artifact_sha256": "f9656901489698f5bbeaa30ab60c1a5a6bfc1257ec231fbb607cc0fdf4a1f9cb"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "stale",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-stale-1",
+          "provenance_id": "provenance-admission-stale-1",
+          "provenance_sha256": "eef2651fd68f1686521c9c1f98352f8c13d3586463d5080e99282d3df0afbe2f",
+          "reference_id": "reference-admission-stale-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-stale-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic stale fixture",
+          "reference_id": "reference-admission-stale-1",
+          "reference_sha256": "b0005de844ea5d1a511c5843ce2030c018774137b5464ca19401759c15d047e2",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": null,
+      "artifact_kind": "unknown",
+      "capture_expectation": "unavailable",
+      "category": "inaccessible",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-inaccessible-1",
+      "identity_relation": null,
+      "media_type": "application/octet-stream",
+      "offered_byte_identity": null,
+      "protected_descriptor_sha256": "40a2d342c4e4c3fb5a7f3a2c5e78c2920c3bcb7e0fcdabd3fe8ebcbdc267b86a",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "file",
+          "origin_id": "origin-admission-inaccessible-1",
+          "origin_sha256": "cac5ebae08f4fec9635f858efb1242c3a182fbdcdf707c86dfe725c8fe3f37c3",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": null,
+          "capture_state": "unavailable",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/octet-stream",
+          "freshness_state": "unavailable",
+          "origin_id": "origin-admission-inaccessible-1",
+          "provenance_sha256": "1be1b3511e7508e92f23924b269aaaf7289533a78ce138dda2558b13681cf4fc",
+          "reference_id": "reference-admission-inaccessible-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": null,
+          "source_artifact_id": "source-admission-inaccessible-1",
+          "source_artifact_sha256": "0913433793defc936e334ae9ad26ab04cd7893c31f8ab1e4314f5fb9632a454c"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "unavailable",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-inaccessible-1",
+          "provenance_id": "provenance-admission-inaccessible-1",
+          "provenance_sha256": "1be1b3511e7508e92f23924b269aaaf7289533a78ce138dda2558b13681cf4fc",
+          "reference_id": "reference-admission-inaccessible-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-inaccessible-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "file_path",
+          "reference_display": "synthetic inaccessible fixture",
+          "reference_id": "reference-admission-inaccessible-1",
+          "reference_sha256": "40a2d342c4e4c3fb5a7f3a2c5e78c2920c3bcb7e0fcdabd3fe8ebcbdc267b86a",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "supported"
+        }
+      }
+    },
+    {
+      "archive_entry": null,
+      "artifact_kind": "unsupported",
+      "capture_expectation": "unsupported",
+      "category": "unsupported",
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "fixture_id": "admission-unsupported-1",
+      "identity_relation": null,
+      "media_type": "application/x-agentmage-unsupported",
+      "offered_byte_identity": null,
+      "protected_descriptor_sha256": "e92fb99babc433b0a1605880dbd86d13c80d2ee09d1602cf43111688d4a90164",
+      "records": {
+        "origin": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "captured_at": "2026-08-29T00:00:00Z",
+          "origin_class": "unsupported",
+          "origin_id": "origin-admission-unsupported-1",
+          "origin_sha256": "7e81f15a57b6318fd77246c4c6ce8aac7cdce2c7925b227f8382ef43c011e581",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1
+        },
+        "source_artifact": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "byte_length": null,
+          "capture_state": "unsupported",
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "declared_media_type": "application/x-agentmage-unsupported",
+          "freshness_state": "unsupported",
+          "origin_id": "origin-admission-unsupported-1",
+          "provenance_sha256": "77b4cc5bf9dbb31ff8cf7b0a6c37da9906e5532b814d96e3ac3ac1876d28ea0b",
+          "reference_id": "reference-admission-unsupported-1",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "sha256": null,
+          "source_artifact_id": "source-admission-unsupported-1",
+          "source_artifact_sha256": "69a7e3a0dd1d4c0535ec95fbb7de20515963795ad7395cbe67cb585efd517ad9"
+        },
+        "source_provenance": {
+          "classification": "public",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "freshness_state": "unsupported",
+          "observed_at": "2026-08-29T00:00:00Z",
+          "origin_id": "origin-admission-unsupported-1",
+          "provenance_id": "provenance-admission-unsupported-1",
+          "provenance_sha256": "77b4cc5bf9dbb31ff8cf7b0a6c37da9906e5532b814d96e3ac3ac1876d28ea0b",
+          "reference_id": "reference-admission-unsupported-1",
+          "schema_version": 1,
+          "source_artifact_id": "source-admission-unsupported-1"
+        },
+        "source_reference": {
+          "authority_id": "authority-request-artifact-admission-v1",
+          "collected_at": "2026-08-29T00:00:00Z",
+          "reference_class": "unsupported",
+          "reference_display": "synthetic unsupported fixture",
+          "reference_id": "reference-admission-unsupported-1",
+          "reference_sha256": "e92fb99babc433b0a1605880dbd86d13c80d2ee09d1602cf43111688d4a90164",
+          "request_id": "request-artifact-admission-v1",
+          "schema_version": 1,
+          "support_state": "unsupported"
+        }
+      }
+    }
+  ],
+  "corpus_id": "engineering-artifact-admission-v1",
+  "document_fixture_source": {
+    "generator_path": "scripts/document_fixture_generator.py",
+    "generator_sha256": "8a7c8c3824e6b88801f47b29f5c0e209de35201038bd7f0770e52fe626960638",
+    "profile_path": "fixtures/document-fixture-profile.json",
+    "profile_sha256": "e56eb623378904d5543d9337518443c65f744d454909f0c4d6a08381cad01425"
+  },
+  "generated_on": "2026-08-29",
+  "generator": {
+    "path": "scripts/engineering_artifact_admission_fixtures.py",
+    "sha256": "3bd8e4695fa01cfe7e8109308c7f6ea54070cc969184c029ba8ca149e927bae2"
+  },
+  "manifest_sha256": "cc4db206633bf17ca6e587cf9a01549a1875ac4040ebcadd4f6257966af4cb3a",
+  "network_access": false,
+  "product_support_claim": "none",
+  "required_categories": [
+    "paste",
+    "local_file",
+    "virtual_uri",
+    "remote_uri",
+    "directory",
+    "archive",
+    "text",
+    "log",
+    "pdf",
+    "docx",
+    "spreadsheet",
+    "image_ocr",
+    "duplicate",
+    "stale",
+    "inaccessible",
+    "unsupported"
+  ],
+  "schema_version": 1,
+  "status": "synthetic-identity-bound-fixture-corpus",
+  "synthetic_only": true,
+  "task_id": "2.4.1.1"
+}
