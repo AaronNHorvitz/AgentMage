@@ -1,0 +1,115 @@
+{
+  "acceptance_truth": {
+    "all_required_deterministic_verifiers_must_pass": true,
+    "cross_platform_complete": false,
+    "current_verifier_and_terminal_scope_complete": true,
+    "evaluated_surface_count": 8,
+    "exit_zero_has_completion_authority": false,
+    "expected_output_and_current_state_exact": true,
+    "independent_review_complete": false,
+    "installed_product_complete": false,
+    "model_inference_executed": false,
+    "native_tool_effect_executed": false,
+    "network_calls": 0,
+    "non_success_outcome_count": 7,
+    "observations_receipts_and_evidence_current_complete_ordered": true,
+    "persuasive_model_or_tool_text_has_completion_authority": false,
+    "preserved_invariants_pass": true,
+    "prohibited_effects_absent": true,
+    "release_claim": "none",
+    "required_postconditions_pass": true,
+    "sprint_completion_claim": false,
+    "stale_or_contradictory_evidence_establishes_completion": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "verified_no_op_is_distinct": true,
+    "verified_success_requires_opaque_current_evidence_proof": true
+  },
+  "artifacts": [
+    {
+      "byte_length": 1182,
+      "path": "docs/verification/story-5-3-ac2-verifier-owned-completion.md",
+      "sha256": "3e4aef5c1b505d662c0a1df1f75d4be6e661f5c5b895b66a69f1c59422cc5b81"
+    },
+    {
+      "byte_length": 10242,
+      "path": "scripts/story_5_3_ac2_evidence.py",
+      "sha256": "71675a18cfa22793e5c9bf0947eb0854d509989a2ad67a0bd4da0a737191ca5a"
+    },
+    {
+      "byte_length": 2931,
+      "path": "tests/test_story_5_3_ac2_evidence.py",
+      "sha256": "4cbcf46d297011036250a7228d7e44096d11980584a3138ac38712102ad2a4d5"
+    },
+    {
+      "byte_length": 1891,
+      "path": "artifacts/sprints/sprint-5/story-5.3/story-ac2-verifier-owned-completion-results.log",
+      "sha256": "a19264a563d38d6b96feebe8636b02081ca4956fb6b7fe7492ab1e7553113774"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test workflow_verifier exit_zero_persuasive_output_and_tampered_results_never_establish_completion -- --exact",
+    "cargo test -p agentmage-kernel-engine --test workflow_verifier every_postcondition_invariant_and_prohibited_effect_is_fail_closed -- --exact",
+    "cargo test -p agentmage-kernel-engine --test workflow_verifier changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states -- --exact",
+    "python3 scripts/workflow_verifier_evidence.py",
+    "python3 scripts/workflow_terminal_evidence.py",
+    "python3 scripts/workflow_adversarial_campaign.py"
+  ],
+  "criterion_id": "5.3.AC2",
+  "generated_on": "2026-08-30",
+  "limitations": [
+    "the criterion closes the current pure deterministic verifier and terminal-result scope",
+    "no native tool, provider, model, or network effect executes",
+    "installed-product and cross-platform evidence remain later gates",
+    "independent review, Story, Sprint, packaging, and release completion are not claimed"
+  ],
+  "record_type": "agentmage-story-acceptance-evidence",
+  "required_markers": [
+    "test exit_zero_persuasive_output_and_tampered_results_never_establish_completion ... ok",
+    "test every_postcondition_invariant_and_prohibited_effect_is_fail_closed ... ok",
+    "test changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states ... ok",
+    "Deterministic workflow evidence validated through Sub-task 5.3.2.1",
+    "Closed workflow terminal outcomes validated through Sub-task 5.3.2.2",
+    "Eight adversarial workflow families validated through Sub-task 5.3.3.1"
+  ],
+  "retained_evidence": [
+    {
+      "byte_length": 16584,
+      "path": "kernel/engine/src/workflow_verifier.rs",
+      "sha256": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124"
+    },
+    {
+      "byte_length": 7656,
+      "path": "kernel/engine/src/workflow_terminal.rs",
+      "sha256": "41d76ee842328b768d4cf8680e1ac72952ca792aa8e904827f1bb3fc32236e90"
+    },
+    {
+      "byte_length": 16731,
+      "path": "kernel/engine/tests/workflow_verifier.rs",
+      "sha256": "4213f6d341a4da43e9d0337a62312a8eda9c4593e0f6162bb3f833fc1bad3192"
+    },
+    {
+      "byte_length": 2871,
+      "path": "schemas/engineering-runtime/terminal-result.schema.json",
+      "sha256": "089a78cfa05e46d857b4ac5c7fb122837eaab6cd29855e82f48dfd0ef1053d46"
+    },
+    {
+      "byte_length": 3216,
+      "path": "artifacts/sprints/sprint-5/story-5.3/workflow-verifier-report.json",
+      "sha256": "fa1d4d974b8b7f1a78feeb14970133b426b19b0b5edf672ac68c0aa42d7e8a2e"
+    },
+    {
+      "byte_length": 3921,
+      "path": "artifacts/sprints/sprint-5/story-5.3/workflow-terminal-report.json",
+      "sha256": "1a85e618a5baa84c9cfd66d30392fc98aedd40ebcf552be4d2cca307c3c6c58f"
+    },
+    {
+      "byte_length": 6813,
+      "path": "artifacts/sprints/sprint-5/story-5.3/workflow-adversarial-report.json",
+      "sha256": "6c531e971e39b77ed5d3322395feb6fd785ac1710f46855d17c4a27e35927af9"
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass-local-current-verifier-and-terminal-scope",
+  "story_id": "5.3"
+}

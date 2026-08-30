@@ -1643,7 +1643,18 @@ and verification so that model confidence, exit zero, or plausible text cannot b
   workflow-contract and synchronized in-runtime admission scope with synthetic data, not native
   effect, durable cross-process, installed-product, cross-platform, independent-review, Story,
   Sprint, packaging, or release gates.
-- [ ] **Story AC 5.3.AC2:** Given exit zero, persuasive model text, or tool output without current postcondition evidence, when completion is evaluated, then verified success is refused.
+- [x] **Story AC 5.3.AC2:** Given exit zero, persuasive model text, or tool output without current
+  postcondition evidence, when completion is evaluated, then verified success is refused. Evidence:
+  a criterion-specific product regression proves exit zero and persuasive model/tool prose have no
+  completion authority. Only an opaque integrity-bound proof over eight exact surfaces can establish
+  a verified result: expected output, current state, ordered observations, receipts, current
+  evidence, postconditions, preserved invariants, and prohibited-effect absence. Missing, stale,
+  reordered, failed, uncertain, or contradictory evidence is refused; changed proof maps only to
+  verified success, unchanged proof to distinct verified no-op, and all seven non-success outcomes
+  remain distinct. Five mutation/omission/overclaim tests pass. This closes the current pure
+  deterministic verifier and terminal-result scope with synthetic evidence, not native effect,
+  installed-product, cross-platform, independent-review, Story, Sprint, packaging, or release
+  gates.
 - [ ] **Story AC 5.3.AC3:** Given any uncertain or ineligible effect, when recovery or retry is considered, then no effect replays and the workflow remains visibly blocked pending deterministic reconciliation or user disposition.
 
 ### [ ] Sprint 6 - Canonical Workspace Paths
