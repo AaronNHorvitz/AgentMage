@@ -57,7 +57,9 @@ class PublicPolicyBaselineTests(unittest.TestCase):
         ):
             self.assertIn(heading, policy)
         for required_promise in (
-            "No production binary is supported yet.",
+            "AgentMage is currently a pre-alpha, contract-tested scaffold.",
+            "No production binary, model,",
+            "platform, endpoint, or end-user workflow is supported yet.",
             "Use GitHub private vulnerability reporting",
             "establish an initial severity and affected-version disposition",
             "new signed release",

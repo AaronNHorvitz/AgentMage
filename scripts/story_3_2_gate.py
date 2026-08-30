@@ -26,8 +26,8 @@ from scripts.vulnerability_support_workflow import check_artifact as check_workf
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json"
-REVIEWED_COMMIT = "4bb44a1874287937881190a05e6f9bcc9e68e439"
-REVIEWED_TREE = "adbc586ae8c300e68f499099097df0d588101059"
+REVIEWED_COMMIT = "a2221e5ef88e8a9e99433ea482a15cbb65692dd3"
+REVIEWED_TREE = "fdcc8ea0648df7e78a6f3b4b4917cf920822463a"
 REVIEWED_PATHS = (
     "SECURITY.md",
     "support/vulnerability-support-policy.json",
@@ -43,20 +43,20 @@ REVIEWED_PATHS = (
     "fixtures/support/manual-patch/cases.json",
     "fixtures/support/manual-patch/cases/valid.json",
     "fixtures/support/manual-patch/cases/revoked.json",
-    "artifacts/sprints/sprint-3/story-3.2/vulnerability-support-policy-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/support-policy-platform-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/vulnerability-report-evidence-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/manual-patch-metadata-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/emergency-disable-policy-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/manual-patch-verification-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/vulnerability-workflow-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+    "schemas/support/examples/vulnerability-diagnostic-bundle.valid.json",
+    "schemas/support/examples/signed-manual-patch-metadata.valid.json",
+    "schemas/support/examples/emergency-disable-policy.valid.json",
+    "architecture/signed-update-design.json",
+    "architecture/rollback-design.json",
+    "docs/decisions/0005-signed-manual-update-design.md",
+    "docs/decisions/0006-update-rollback-design.md",
+    "docs/decisions/0007-local-emergency-disablement.md",
     "scripts/manual_patch_verifier.py",
     "scripts/vulnerability_support_workflow.py",
     "scripts/story_3_2_security_evidence.py",
-    "tests/test_manual_patch_verifier.py",
-    "tests/test_vulnerability_support_workflow.py",
-    "tests/test_story_3_2_security_evidence.py",
+    "scripts/manual_patch_metadata.py",
+    "scripts/emergency_disable_policy.py",
+    "scripts/vulnerability_report_evidence.py",
 )
 REQUIRED_TASK_MARKERS = (
     "- [x] **Task 3.2.1 - Implement the support contract**",

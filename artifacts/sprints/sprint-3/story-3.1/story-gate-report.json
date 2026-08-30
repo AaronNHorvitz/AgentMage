@@ -28,64 +28,64 @@
       },
       {
         "path": "configuration/permission-bearing-values.json",
-        "sha256": "5bb55c87576297cc2d5768b5bbbf9696dde085b96ed5b1160d8416a2cb3a6de6"
+        "sha256": "9740c135aaba3508e8b090eb8cc218d86bdd18b1225817f22ccb2aa2a346408b"
       },
       {
         "path": "kernel/engine/src/configuration.rs",
         "sha256": "33b6d5d1ffe78c12be86aaf2025260613cabcb23574b0e40d25fa40acb7dbf2c"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json",
-        "sha256": "3e51f4850de60c16cbaefbc068955c54c89a7f35ce839b675436630c175ee2d1"
+        "path": "schemas/configuration/agent-configuration.schema.json",
+        "sha256": "cfd71d4100d4c2f7155df52c9fc19af08be9d76eef855289ca0283d677eadd36"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/profile-catalog-report.json",
-        "sha256": "a38215d15d252960de73f507f30c88d67434a574d6f1aa4ff2e6314d9ae19074"
+        "path": "schemas/configuration/profile-catalog.schema.json",
+        "sha256": "89b42068beb861ce636971c2751cae5a7c81b1d5e062b1ee5d3aadfc5b906a73"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-loader-report.json",
-        "sha256": "064941b4cec0c951dccb0218be4327b24f99d1c3358d5104addce4469d70c1d2"
+        "path": "schemas/configuration/common.schema.json",
+        "sha256": "e84e306d12026d94dee5d5d8b1974b10b9665c89248b15c9df559f795be3e83e"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
-        "sha256": "ecbd37baff3b424d800771e0b01fcd6c1416544d7df952b8b35e7ac9af8a9315"
+        "path": "schemas/configuration/core.schema.json",
+        "sha256": "ec8cbb079108ff6385e47fecf30a35dbeaf5402b9f2677a8ec99862d7230c689"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
-        "sha256": "a52407db54514158283cd5a6c267011ecbc45e5573a2d1fa66b490b7fd7edb69"
+        "path": "fixtures/configuration/migration/v0.valid.json",
+        "sha256": "fee4258b5fcfba1817be772bd7f4af7570f033829a412d2703ad8c049a3f410b"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
-        "sha256": "c2c7f3e0f457f9cfafcd297cf75fcedd5e0cc2b65005e6ae1f1688ed4d89f6aa"
+        "path": "fixtures/configuration/migration/v1.expected.json",
+        "sha256": "13197b0eacea1f6ef0933c2aa789cbb16467cdb96f87c393a9603b7571a1c775"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
-        "sha256": "1f31c7601cf1ca5b672a907394e614a084d3ef2e2deb648646706e27ff9edb1e"
+        "path": "fixtures/configuration/migration/v0.missing-section.invalid.json",
+        "sha256": "6f012e1d4b12f6bb20191b70b050848b5de1487f11ce05f8208f69cb59810689"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
-        "sha256": "c8e2c5b24038302d1291c4b0487e652672aad1c9578554f34eabfa3659591aed"
+        "path": "fixtures/configuration/migration/v0.reserved-version.invalid.json",
+        "sha256": "2f61f504a5ca486cbaad6a958a3b3962e0c75dcdf0d3e6f002c530f05246e704"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-review-artifacts-report.json",
-        "sha256": "16cc6287b9abdce87e774e2eea82c0166eebbd1a450210c6eabd97390068dac7"
+        "path": "fixtures/configuration/migration/v1.not-migratable.invalid.json",
+        "sha256": "13197b0eacea1f6ef0933c2aa789cbb16467cdb96f87c393a9603b7571a1c775"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-        "sha256": "44fca74147fe482ac7a3e36ce4354609a9dec30eea7c8bc12011f267a9d7629a"
+        "path": "architecture/component-inventory-policy.json",
+        "sha256": "1000c8ded45ba53fc51be5260edb782793fee39c77f9a97d37a0605f402bcd01"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/update-rollback-design-report.json",
-        "sha256": "9a17e385f3d5d5fabd96b6eb4d5f10364c937b12765d45894b9191245100338f"
+        "path": "architecture/signed-update-design.json",
+        "sha256": "678e7c5036ae25d6367c902975695d21766a3c9b0b8e47383fd7f0e80c3955b5"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
-        "sha256": "bf4f2185f935433ebe124963f861733f449297bd5d32fbe361b6ac7d37be16da"
+        "path": "architecture/rollback-design.json",
+        "sha256": "891d9db9981582d5a6ded9d73ceb83eb2556811a5313637cb20183670d185c96"
       }
     ],
     "external_human_review_claim": "none",
-    "reviewed_commit": "79eb3b35093a35f1dacc69207ceddfbeecc1727a",
-    "reviewed_tree": "8d072d14b9735804ee7a568f677cccc781aefce0",
+    "reviewed_commit": "a2221e5ef88e8a9e99433ea482a15cbb65692dd3",
+    "reviewed_tree": "fdcc8ea0648df7e78a6f3b4b4917cf920822463a",
     "reviewer_id": "agentmage-story-3.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -95,8 +95,8 @@
   "product_acceptance_claim": "none",
   "product_startup_activation_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "79eb3b35093a35f1dacc69207ceddfbeecc1727a",
-  "reviewed_tree": "8d072d14b9735804ee7a568f677cccc781aefce0",
+  "reviewed_commit": "a2221e5ef88e8a9e99433ea482a15cbb65692dd3",
+  "reviewed_tree": "fdcc8ea0648df7e78a6f3b4b4917cf920822463a",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 9,

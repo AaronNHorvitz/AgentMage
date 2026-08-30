@@ -31,25 +31,25 @@ from scripts.story_3_1_security_evidence import check_map as check_security  # n
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json"
-REVIEWED_COMMIT = "79eb3b35093a35f1dacc69207ceddfbeecc1727a"
-REVIEWED_TREE = "8d072d14b9735804ee7a568f677cccc781aefce0"
+REVIEWED_COMMIT = "a2221e5ef88e8a9e99433ea482a15cbb65692dd3"
+REVIEWED_TREE = "fdcc8ea0648df7e78a6f3b4b4917cf920822463a"
 REVIEWED_PATHS = (
     "configuration/profiles/catalog.json",
     "configuration/profiles/capability-deltas.json",
     "configuration/permission-bearing-values.json",
     "kernel/engine/src/configuration.rs",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-schema-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/profile-catalog-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-loader-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-review-artifacts-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/component-inventory-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/update-rollback-design-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/security-evidence-map.json",
+    "schemas/configuration/agent-configuration.schema.json",
+    "schemas/configuration/profile-catalog.schema.json",
+    "schemas/configuration/common.schema.json",
+    "schemas/configuration/core.schema.json",
+    "fixtures/configuration/migration/v0.valid.json",
+    "fixtures/configuration/migration/v1.expected.json",
+    "fixtures/configuration/migration/v0.missing-section.invalid.json",
+    "fixtures/configuration/migration/v0.reserved-version.invalid.json",
+    "fixtures/configuration/migration/v1.not-migratable.invalid.json",
+    "architecture/component-inventory-policy.json",
+    "architecture/signed-update-design.json",
+    "architecture/rollback-design.json",
 )
 REQUIRED_TASK_MARKERS = (
     "- [x] **Task 3.1.1 - Implement the bounded story**",

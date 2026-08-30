@@ -35,23 +35,23 @@ from scripts.vulnerability_report_evidence import check_artifact as check_diagno
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-3/sprint-gate-report.json"
-REVIEWED_COMMIT = "132a6d3158661f06f88fff250cd702d264eedcb8"
-REVIEWED_TREE = "b3e12be4b72ae648abe08abb4fea2b00c0c12d32"
+REVIEWED_COMMIT = "a2221e5ef88e8a9e99433ea482a15cbb65692dd3"
+REVIEWED_TREE = "fdcc8ea0648df7e78a6f3b4b4917cf920822463a"
 REVIEWED_PATHS = (
-    "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json",
-    "scripts/story_3_1_gate.py",
-    "scripts/story_3_2_gate.py",
-    "tests/test_story_3_1_gate.py",
-    "tests/test_story_3_2_gate.py",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
-    "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/vulnerability-report-evidence-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/vulnerability-workflow-report.json",
-    "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
+    "configuration/profiles/catalog.json",
+    "configuration/profiles/capability-deltas.json",
+    "configuration/permission-bearing-values.json",
+    "schemas/configuration/agent-configuration.schema.json",
+    "schemas/configuration/profile-catalog.schema.json",
+    "fixtures/configuration/migration/v0.valid.json",
+    "fixtures/configuration/migration/v1.expected.json",
+    "support/vulnerability-support-policy.json",
+    "support/vulnerability-report-evidence-policy.json",
+    "fixtures/support/vulnerability-workflow/workflow.valid.json",
+    "fixtures/support/manual-patch/cases.json",
+    "schemas/support/vulnerability-support-policy.schema.json",
+    "schemas/support/vulnerability-report-evidence-policy.schema.json",
+    "schemas/support/vulnerability-diagnostic-bundle.schema.json",
 )
 G_DOD_IDS = tuple(f"G-DOD-{index:02d}" for index in range(1, 14))
 

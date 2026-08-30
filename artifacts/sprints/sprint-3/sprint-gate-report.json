@@ -55,64 +55,64 @@
     "review_type": "automated-independent-aggregate-review",
     "reviewed_artifacts": [
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/story-gate-report.json",
-        "sha256": "8c7358b01c6f78711458ed82d57f5a502df2367a43212eda3b30795d21d3bcca"
+        "path": "configuration/profiles/catalog.json",
+        "sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.2/story-gate-report.json",
-        "sha256": "27e4c1647dff3131dab73474621958a79309a7153c83ab5ac880202d85e99216"
+        "path": "configuration/profiles/capability-deltas.json",
+        "sha256": "da26c74db1dc8cd61fd4f7670391dd09b89906a88e5a9a2da593a5bddbb904d4"
       },
       {
-        "path": "scripts/story_3_1_gate.py",
-        "sha256": "dd356235593d12fbcc10650543eb22710482789e131132a034d406609e33fa1d"
+        "path": "configuration/permission-bearing-values.json",
+        "sha256": "9740c135aaba3508e8b090eb8cc218d86bdd18b1225817f22ccb2aa2a346408b"
       },
       {
-        "path": "scripts/story_3_2_gate.py",
-        "sha256": "c42aa3b5a1186eafe0ac29361adf6de988ec50f309b15e6961e7ab204007a438"
+        "path": "schemas/configuration/agent-configuration.schema.json",
+        "sha256": "cfd71d4100d4c2f7155df52c9fc19af08be9d76eef855289ca0283d677eadd36"
       },
       {
-        "path": "tests/test_story_3_1_gate.py",
-        "sha256": "afa17bb995ad79f2218ed434a37caee05d7581ff8a34f3cec179c78168644f77"
+        "path": "schemas/configuration/profile-catalog.schema.json",
+        "sha256": "89b42068beb861ce636971c2751cae5a7c81b1d5e062b1ee5d3aadfc5b906a73"
       },
       {
-        "path": "tests/test_story_3_2_gate.py",
-        "sha256": "adb0347487d4526790224f36d7d8a090b0c4a8d5243317e4c4431536244740dd"
+        "path": "fixtures/configuration/migration/v0.valid.json",
+        "sha256": "fee4258b5fcfba1817be772bd7f4af7570f033829a412d2703ad8c049a3f410b"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-schema-failure-report.json",
-        "sha256": "c8e2c5b24038302d1291c4b0487e652672aad1c9578554f34eabfa3659591aed"
+        "path": "fixtures/configuration/migration/v1.expected.json",
+        "sha256": "13197b0eacea1f6ef0933c2aa789cbb16467cdb96f87c393a9603b7571a1c775"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-authority-mutation-report.json",
-        "sha256": "ecbd37baff3b424d800771e0b01fcd6c1416544d7df952b8b35e7ac9af8a9315"
+        "path": "support/vulnerability-support-policy.json",
+        "sha256": "b8a63600b4539f9ad58432be198d61149d8e671fca8cee6a74f0d8449fa2831c"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-startup-report.json",
-        "sha256": "c2c7f3e0f457f9cfafcd297cf75fcedd5e0cc2b65005e6ae1f1688ed4d89f6aa"
+        "path": "support/vulnerability-report-evidence-policy.json",
+        "sha256": "4267ac0e32b6cdee6a0244dbfafedefea200da1a266b06323eaebe84d189d17d"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-migration-recovery-report.json",
-        "sha256": "a52407db54514158283cd5a6c267011ecbc45e5573a2d1fa66b490b7fd7edb69"
+        "path": "fixtures/support/vulnerability-workflow/workflow.valid.json",
+        "sha256": "8d2473a3e1ead586074a11af777b329f1d402fd69fb6bdf52c7d04b462202af4"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.1/configuration-result-report.json",
-        "sha256": "1f31c7601cf1ca5b672a907394e614a084d3ef2e2deb648646706e27ff9edb1e"
+        "path": "fixtures/support/manual-patch/cases.json",
+        "sha256": "607b569c5d8c8598e79649f2b02d4c1633b3aa7a69b1fb6f9e70aad38e6f8458"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-report-evidence-report.json",
-        "sha256": "1c7723b408c69bfc8c3e04cbb5baa75ab5d3ec3d826e0fab1a26e000dda7e915"
+        "path": "schemas/support/vulnerability-support-policy.schema.json",
+        "sha256": "0f10a8ba110124df1feb20b26f127d8ab8fa6615ac8dc7a17cc6a94417f25912"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-workflow-report.json",
-        "sha256": "fd1891893baf0d861f7e08d70e82bd8083f6d7ce3be4080e78c14b18efa01eb1"
+        "path": "schemas/support/vulnerability-report-evidence-policy.schema.json",
+        "sha256": "2b1b943d224509d1605ec45ca654b7107659d8e4b7aedb2e38c09a457c1ddc1a"
       },
       {
-        "path": "artifacts/sprints/sprint-3/story-3.2/security-evidence-map.json",
-        "sha256": "ecc1ee34019e83331d5eeac26eb42ea62909a5904605e2711a69d27653496c1e"
+        "path": "schemas/support/vulnerability-diagnostic-bundle.schema.json",
+        "sha256": "d464f02ded4c5dc664d632d10f6a19fefdbc804e432797dea8352aeeb61688a5"
       }
     ],
-    "reviewed_commit": "132a6d3158661f06f88fff250cd702d264eedcb8",
-    "reviewed_tree": "b3e12be4b72ae648abe08abb4fea2b00c0c12d32",
+    "reviewed_commit": "a2221e5ef88e8a9e99433ea482a15cbb65692dd3",
+    "reviewed_tree": "fdcc8ea0648df7e78a6f3b4b4917cf920822463a",
     "reviewer_id": "agentmage-sprint-3-independent-gate-v1"
   },
   "macos": {
@@ -124,8 +124,8 @@
   "product_acceptance_claim": "none",
   "product_startup_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "132a6d3158661f06f88fff250cd702d264eedcb8",
-  "reviewed_tree": "b3e12be4b72ae648abe08abb4fea2b00c0c12d32",
+  "reviewed_commit": "a2221e5ef88e8a9e99433ea482a15cbb65692dd3",
+  "reviewed_tree": "fdcc8ea0648df7e78a6f3b4b4917cf920822463a",
   "schema_version": 1,
   "sprint_id": 3,
   "status": "blocked-macos",

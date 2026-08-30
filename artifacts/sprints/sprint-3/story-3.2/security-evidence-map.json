@@ -2,14 +2,14 @@
   "actual_incident_claim": "none",
   "artifacts": [
     {
-      "bytes": 136944,
+      "bytes": 160606,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
-      "bytes": 5629,
+      "bytes": 6430,
       "path": "SECURITY.md",
-      "sha256": "b51a261676b86f51458421f087e1738d431dee321a2c168e5b3ee4c07c3dff8d"
+      "sha256": "3cfe6fbd2a9192e26766096190c162600ecb9a9db2b263a6c099c117831818ea"
     },
     {
       "bytes": 3147,
@@ -119,17 +119,17 @@
     {
       "bytes": 2547,
       "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-support-policy-report.json",
-      "sha256": "214bb6e19cacbfd8287e891e804f7323d87896c0c8f0591ddfd34090c5f7c0d3"
+      "sha256": "03d05101aff7c042ea7e4b71280616f9758de970e5b5208cbf59f46402f942dd"
     },
     {
-      "bytes": 5082,
+      "bytes": 4860,
       "path": "artifacts/sprints/sprint-3/story-3.2/support-policy-platform-report.json",
-      "sha256": "9786777231ce430f5c3a14fd6ad8b15debb10175dfe7c978255ee3e621ea6dcf"
+      "sha256": "70cee0b32e71a5953099a92b146dbe0c19410ece114107486a5df22f75fdb097"
     },
     {
       "bytes": 2944,
       "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-report-evidence-report.json",
-      "sha256": "1c7723b408c69bfc8c3e04cbb5baa75ab5d3ec3d826e0fab1a26e000dda7e915"
+      "sha256": "d5de46cf5d5092f6c525a1ac1c01b23e84116d1077d2ab993093a8b88dbb1f10"
     },
     {
       "bytes": 2613,
@@ -149,7 +149,7 @@
     {
       "bytes": 6952,
       "path": "artifacts/sprints/sprint-3/story-3.2/vulnerability-workflow-report.json",
-      "sha256": "fd1891893baf0d861f7e08d70e82bd8083f6d7ce3be4080e78c14b18efa01eb1"
+      "sha256": "a94fc8f586d5d5fecfe159dc0c10052c55aad074b2f5e55a1907e2d9f11e3ff9"
     },
     {
       "bytes": 16261,
