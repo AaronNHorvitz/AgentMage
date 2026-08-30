@@ -16,8 +16,11 @@ ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-8/story-8.1/macos-kernel-host-source-contract.json"
 SOURCE_PATHS = (
     "platforms/macos/Configuration/KernelHost.contract-fixture.entitlements",
+    "platforms/macos/README.md",
     "platforms/macos/Sources/AgentMageMacOSPlatform/KernelHostAdmission.swift",
+    "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",
     "platforms/macos/Tests/AgentMageMacOSPlatformTests/KernelHostAdmissionTests.swift",
+    "platforms/macos/Tests/AgentMageMacOSPlatformTests/PlatformBoundaryTests.swift",
     "scripts/macos_kernel_host_source_contract.py",
     "tests/test_macos_kernel_host_source_contract.py",
 )
