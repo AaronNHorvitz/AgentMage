@@ -4,6 +4,7 @@
       "available_reference_contract_result_count": 2,
       "criterion_id": "7.AC1",
       "deterministic_fake_result_count": 1,
+      "frozen_macos_manifest_contract_field_count": 16,
       "required_reference_platform_count": 3,
       "status": "blocked-native-platforms"
     },
@@ -41,27 +42,31 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json",
-        "sha256": "c01b78817cdf7242a4eac526456e040bf0f19d236a325e60205575aeefce1c5d"
+        "sha256": "3c9299e00f738355e5bcad214e42f38e79d9e5dc83b2299ce65cdefca64dbc18"
       },
       {
         "path": "scripts/story_7_1_gate.py",
-        "sha256": "c7b5b5726e3a744f85bd4f95526e9e2580d3cd27258209da900489e93867f629"
+        "sha256": "a80bb6dc71a3289d30e651fc498b86afaf2370e8ad490cad44854ef69bbf2552"
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
-        "sha256": "09c76cc71f8b6751d74d7118935aeb90a431378550833587543e057321a43b5c"
+        "sha256": "a103fb4cbcd93025801051dfbcb84248f73710493bceb6c5875c640ab93f63b9"
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "5bf8de29e69e8f07220bbe9aa3d24112f2d79c64039b1b10cc409d87613d3310"
+        "sha256": "2e07d386883c8e7ef400efd0b36672003c398597811c0c77b104a35aafcba624"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
         "sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db"
+      },
+      {
+        "path": "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
+        "sha256": "497a6a0d16cab19547811f676f469f3808672939fbe6da0f397fb4a60dabeb72"
       }
     ],
-    "reviewed_commit": "4587ba4d1bc49d3201078ecf4ecfa0ad996b526b",
-    "reviewed_tree": "9414c8dcbeba33bb4f1ec53e47b038b449ed7eb9",
+    "reviewed_commit": "4a72965662a03a116429e972ce4988c48fb84a7b",
+    "reviewed_tree": "fd7480b570a12174163325e3a11310715f0eb1fd",
     "reviewer_id": "agentmage-sprint-7-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
@@ -69,8 +74,8 @@
   "native_mechanism_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "4587ba4d1bc49d3201078ecf4ecfa0ad996b526b",
-  "reviewed_tree": "9414c8dcbeba33bb4f1ec53e47b038b449ed7eb9",
+  "reviewed_commit": "4a72965662a03a116429e972ce4988c48fb84a7b",
+  "reviewed_tree": "fd7480b570a12174163325e3a11310715f0eb1fd",
   "schema_version": 1,
   "sprint_id": 7,
   "status": "blocked-native-platforms-and-external-review",
@@ -78,7 +83,6 @@
     {
       "blockers": [
         "sub-task-7.1.1.1-native-linux-and-macos-adapters-open",
-        "sub-task-7.1.1.2-macos-release-manifest-open",
         "sub-task-7.1.1.4-native-startup-probes-open",
         "sub-task-7.1.1.6-macos-result-recorder-open",
         "sub-task-7.1.1.7-macos-conformance-open",
@@ -102,7 +106,6 @@
     "acceptance_criteria_passed": 1,
     "blockers": [
       "sub-task-7.1.1.1-native-linux-and-macos-adapters-open",
-      "sub-task-7.1.1.2-macos-release-manifest-open",
       "sub-task-7.1.1.4-native-startup-probes-open",
       "sub-task-7.1.1.6-macos-result-recorder-open",
       "sub-task-7.1.1.7-macos-conformance-open",
