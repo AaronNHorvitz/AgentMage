@@ -16,8 +16,12 @@ from scripts.story_5_1_gate import (
 
 
 class Story51GateTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.report = build_report()
+
     def test_both_acceptance_criteria_pass_their_bounded_linux_scopes(self) -> None:
-        report = build_report()
+        report = self.report
         self.assertEqual(
             [item["criterion_id"] for item in report["acceptance_criteria"]],
             ["5.1.AC1", "5.1.AC2"],
@@ -27,7 +31,7 @@ class Story51GateTests(unittest.TestCase):
         self.assertEqual(report["acceptance_criteria"][1]["admitted_authority_count"], 0)
 
     def test_gate_is_blocked_only_by_macos_without_substitution(self) -> None:
-        report = build_report()
+        report = self.report
         self.assertEqual(report["status"], "blocked-macos")
         self.assertTrue(report["shared_linux_story_work_complete"])
         self.assertFalse(report["story_checkbox_complete"])
@@ -35,7 +39,7 @@ class Story51GateTests(unittest.TestCase):
         self.assertFalse(report["macos_evidence_substituted"])
 
     def test_review_identity_and_artifact_closure_are_retained(self) -> None:
-        review = build_report()["independent_review"]
+        review = self.report["independent_review"]
         self.assertEqual(review["reviewed_commit"], REVIEWED_COMMIT)
         self.assertEqual(review["reviewed_tree"], REVIEWED_TREE)
         self.assertEqual(len(review["artifacts"]), len(REVIEWED_PATHS))
@@ -51,7 +55,7 @@ class Story51GateTests(unittest.TestCase):
         )
 
     def test_acceptance_security_and_review_mutations_fail_closed(self) -> None:
-        report = build_report()
+        report = self.report
         acceptance = copy.deepcopy(report)
         acceptance["acceptance_criteria"][0]["admitted_mutation_count"] = 1
         authority = copy.deepcopy(report)
@@ -65,7 +69,7 @@ class Story51GateTests(unittest.TestCase):
                 self.assertTrue(validate_report(changed, verify_current=False))
 
     def test_product_release_external_review_and_macos_overclaims_fail_closed(self) -> None:
-        report = build_report()
+        report = self.report
         changes = []
         for key, value in (
             ("product_requirement_completion_claim", "complete"),
@@ -85,7 +89,7 @@ class Story51GateTests(unittest.TestCase):
                 self.assertTrue(validate_report(changed, verify_current=False))
 
     def test_universal_dod_closure_is_exact(self) -> None:
-        dod = build_report()["universal_definition_of_done"]
+        dod = self.report["universal_definition_of_done"]
         self.assertEqual([item["control_id"] for item in dod], list(G_DOD_IDS))
         self.assertEqual(
             [item["control_id"] for item in dod if item["status"] == "blocked-macos"],

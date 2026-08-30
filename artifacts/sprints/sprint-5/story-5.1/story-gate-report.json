@@ -27,7 +27,7 @@
     "artifacts": [
       {
         "path": "docs/architecture/grant-policy-reference.md",
-        "sha256": "f14a878f359761761619dbbe1eb16df217fc36573989f1c1249b89170c7d4eb8"
+        "sha256": "e52fb14dbea883398a4d2f4b2bab028705c428f44eefe408ccbdce15fef89be0"
       },
       {
         "path": "docs/architecture/grant-state-transitions.md",
@@ -51,7 +51,7 @@
       },
       {
         "path": "kernel/contracts/src/grant.rs",
-        "sha256": "c6baa52e28356c2374cb0fadcc973eb694c447606de9af623a715c23daee4924"
+        "sha256": "d19d8a394eac5679f7d77260aaa61f6f4394286486962540fbdb7fba67b9e918"
       },
       {
         "path": "kernel/contracts/src/operation.rs",
@@ -59,19 +59,19 @@
       },
       {
         "path": "kernel/engine/src/approval.rs",
-        "sha256": "ca83dd5fb50f8267472930fc6806ceb009095f31edf87d92994cb26721bef8b3"
+        "sha256": "be34991fb3dff4e6fdd7a74489e2cec8158e63c88cfea71c17f1eff4c3ef66d1"
       },
       {
         "path": "kernel/engine/src/authority.rs",
-        "sha256": "a2481365c5c61cc4e06729564c98af11998fcb3758acc595b82362086ccb094f"
+        "sha256": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8"
       },
       {
         "path": "kernel/engine/src/grants.rs",
-        "sha256": "6768d4e40a2497de0153ca0739b39e395f732e5ea92ea4cc486b36df887ef98c"
+        "sha256": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291"
       },
       {
         "path": "kernel/engine/src/policy.rs",
-        "sha256": "cd27dd54b1029d2cc78939c582c6d671dddc5792f21496b72b3fdfb5e2bce6f7"
+        "sha256": "6ac01435ca83a2f5d40c3cd062b2c3319a0a04447b26a7dd40831312e674c7e4"
       },
       {
         "path": "kernel/engine/tests/adversarial_grant_corpus.rs",
@@ -91,47 +91,47 @@
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/grant-policy-reference-report.json",
-        "sha256": "63fce6110a2fc74fdea0895302326566371cc6d8bbc22ed77affde6fa3253aed"
+        "sha256": "16a601d266aced2c7ad43d4edbd123e316a80408593a541bf86079e1116d603a"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/grant-state-report.json",
-        "sha256": "a8c302a45534fc9e219a92a73182044ada566fe380a920d204500f9121a616bf"
+        "sha256": "65a4c6a39a65f329a6adb3a6092f13cfe8bf3a10d947c56fb1fe19eb95a352ad"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/grant-review-fixture-report.json",
-        "sha256": "5dfa245406b6a3258107cf1a33a37dd0377525e63fe2055c3f5fbef0e01a8def"
+        "sha256": "e1f323da9630db58e5e0126c4e922b746c0bd54784081b3b757f0270e0e93820"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/adversarial-grant-corpus-report.json",
-        "sha256": "40332e8b38631d6a8b91936faf95a90fe4551b9dedb53588c80e54913ba4aa46"
+        "sha256": "fae73070340f5296373ed8febe96c5ed7c8dbfe2b9addcdfdb555cc9eb83c83e"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/grant-race-replay-report.json",
-        "sha256": "24143943e7ff28a4767877f3de05ef480bb98875d59f07e63978f31afc0009cd"
+        "sha256": "a682cfb85a16b9fa7819ecf6fe4711e857bbdbaadf2d894d220c19567741e387"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
-        "sha256": "d4887aa4421150bed4b2aa942a41f14b8008e51b9fb81e04acc3acffcc0b03a4"
+        "sha256": "81df656a49e90be382159dada0922e50a15c1b017097136d5dd9f4b3b7e9e6e7"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
-        "sha256": "be3ffa6989e00890b5f74795ba3287fd64dd970e81e9df1286c4a822bd25d73c"
+        "sha256": "9a6d316f6c05333f511b061fb25571a32718d8db684cd4ac752dfe4636e41d68"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
-        "sha256": "0a297d7fe39f428a39c54d62cedcb79668c404e728e2b0285da56fff3476bf94"
+        "sha256": "fa4c9037d7227756d4cae895ac57ea183dd50d2d083fd77cb60c0872c94e6032"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
-        "sha256": "e9a1c51033c1b130aa36b0ab243ccc7f0cc6d946bc9bbd88709d724850116c73"
+        "sha256": "b81c496faf52ce33de9556a19405d5ec3ace9f8a145ecbe71ae5a67d705a68e9"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "812b5f6b12f5e5de97723751e6bdfc4fc094e112",
-    "reviewed_tree": "1ce707d86d1e3fb9085411226443fbce3b64c15f",
+    "reviewed_commit": "b72b557e2f7a047829e6771c850a69c1777f3ad5",
+    "reviewed_tree": "cf9b72bfd0a63f8666edbb16f8d4cff765e6714a",
     "reviewer_id": "agentmage-story-5.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -141,8 +141,8 @@
   "product_acceptance_claim": "none",
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "812b5f6b12f5e5de97723751e6bdfc4fc094e112",
-  "reviewed_tree": "1ce707d86d1e3fb9085411226443fbce3b64c15f",
+  "reviewed_commit": "b72b557e2f7a047829e6771c850a69c1777f3ad5",
+  "reviewed_tree": "cf9b72bfd0a63f8666edbb16f8d4cff765e6714a",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 8,

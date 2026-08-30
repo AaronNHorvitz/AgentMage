@@ -23,8 +23,8 @@ from scripts.story_5_1_security_evidence import check_map as check_security
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-5/story-5.1/story-gate-report.json"
-REVIEWED_COMMIT = "812b5f6b12f5e5de97723751e6bdfc4fc094e112"
-REVIEWED_TREE = "1ce707d86d1e3fb9085411226443fbce3b64c15f"
+REVIEWED_COMMIT = "b72b557e2f7a047829e6771c850a69c1777f3ad5"
+REVIEWED_TREE = "cf9b72bfd0a63f8666edbb16f8d4cff765e6714a"
 REVIEWED_PATHS = (
     "docs/architecture/grant-policy-reference.md",
     "docs/architecture/grant-state-transitions.md",
