@@ -1655,7 +1655,18 @@ and verification so that model confidence, exit zero, or plausible text cannot b
   deterministic verifier and terminal-result scope with synthetic evidence, not native effect,
   installed-product, cross-platform, independent-review, Story, Sprint, packaging, or release
   gates.
-- [ ] **Story AC 5.3.AC3:** Given any uncertain or ineligible effect, when recovery or retry is considered, then no effect replays and the workflow remains visibly blocked pending deterministic reconciliation or user disposition.
+- [x] **Story AC 5.3.AC3:** Given any uncertain or ineligible effect, when recovery or retry is
+  considered, then no effect replays and the workflow remains visibly blocked pending deterministic
+  reconciliation or user disposition. Evidence: a criterion-specific regression denies automatic
+  successors for non-idempotent, destructive, external, and unknown effects; uncertainty requires
+  both exact safe reconciliation and a separate current user approval. All seven identity families
+  are fresh and prior call or authority reuse fails before dispatch. A 16-contender race admits one
+  exact attempt and one synthetic callback; its uncertain result remains uncertain, cannot become
+  success, and cannot retry. Uncertain remains distinct from failed with a deterministic safe next
+  action. Five mutation/omission/overclaim tests pass. This closes the current retry-identity and
+  synchronized in-runtime gate scope, not native effect, cross-process crash durability,
+  installed-product, cross-platform, independent-review, Story, Sprint, packaging, or release
+  gates.
 
 ### [ ] Sprint 6 - Canonical Workspace Paths
 
