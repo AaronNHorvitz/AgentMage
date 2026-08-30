@@ -51,13 +51,13 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "be825ddfd28ef3be766f23b057425ed32edd7e35",
+  "reference_revision": "a24779d5c2a0bc80dc1b27089aa63fa69b54d18e",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
     {
       "path": "docs/architecture/platform-adapter-contract.md",
-      "sha256": "98455f2e3f7871fbeeac856b19dd4a85b2292878049c149ba1c7f8fc5429ed53"
+      "sha256": "0dc2a237d197fbec42eee20bb11791a274e2d498db125c46c30644dabe2e9259"
     },
     {
       "path": "kernel/contracts/src/lib.rs",
@@ -81,7 +81,7 @@
     },
     {
       "path": "release/platform-manifests/README.md",
-      "sha256": "03edbe9a7f00122cdf3a1c14f5f7f7e55989624451e8cc00739166878f3e1ac9"
+      "sha256": "2690aa9d1fbfdd4ddbff3701ccd93a046e37e012998a1504fd9425fa81c19ceb"
     },
     {
       "path": "release/platform-manifests/v1/fedora-x86_64.json",
