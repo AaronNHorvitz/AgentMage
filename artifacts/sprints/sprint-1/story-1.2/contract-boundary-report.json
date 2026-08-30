@@ -46,7 +46,7 @@
   "sources": [
     {
       "path": "TASKS.md",
-      "sha256": "4802a218ffc9216a11250ec220fcad02801239cc63be70fe7386ed77b7a11bdf"
+      "sha256": "ba0104deb9136e37cf1e34f0c08bb79533c5da12454dc7723395c34dab573d53"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -74,7 +74,7 @@
     },
     {
       "path": "architecture/schema-evolution-and-rollback.json",
-      "sha256": "4cbbd8f1151f132812f6faa7280020a16de6c97944d9ef62d0e3e877e5b422b2"
+      "sha256": "d8bf3d28c8ddb116f1419cca7cf3acd7820e7d8c2cdea7c513b5f893b9e2ce86"
     },
     {
       "path": "architecture/parser-ocr-platform-placement.json",

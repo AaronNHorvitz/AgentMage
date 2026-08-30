@@ -40,6 +40,175 @@ pub trait ValidateCanonicalRecord: VersionedContract {
     fn validate_canonical(&self) -> Result<(), CanonicalRecordError>;
 }
 
+/// Closed canonical Engineering Runtime record families introduced by Story 1.3.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum CanonicalRuntimeRecordKind {
+    /// Immutable source artifact envelope.
+    ArtifactEnvelope,
+    /// Reproducible source-to-derivative transformation.
+    ArtifactTransformation,
+    /// Terminal artifact-ingestion disposition.
+    ArtifactIngestionResult,
+    /// Complete model-context accounting manifest.
+    ContextManifest,
+    /// Immutable workflow graph and policy surface.
+    WorkflowDefinition,
+    /// Current rebuildable workflow projection.
+    WorkflowState,
+    /// Terminal observation of one admitted tool attempt.
+    ToolObservation,
+    /// Current deterministic verifier result.
+    VerificationResult,
+    /// Runtime-verifier-established terminal result.
+    TerminalResult,
+}
+
+/// Existing authority that owns one persisted part of a canonical record.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CanonicalRecordAuthority {
+    /// Private content-addressed runtime artifact payload store.
+    RuntimeArtifactStore,
+    /// SQLCipher operational metadata store.
+    OperationalStore,
+    /// Append-only canonical runtime event journal.
+    RuntimeEventJournal,
+    /// Existing request-bound source-artifact service.
+    SourceArtifactService,
+}
+
+/// Whether a record has a materialized current-state projection.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CanonicalRecordProjection {
+    /// History and immutable artifact references are sufficient; no current row is authoritative.
+    None,
+    /// Current workflow state may be materialized but must rebuild from the runtime journal.
+    RebuildableWorkflowState,
+}
+
+/// Exact persistence route through existing authorities; this record owns no storage itself.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CanonicalRecordAuthorityRoute {
+    /// Canonical record family.
+    pub kind: CanonicalRuntimeRecordKind,
+    /// Owner of complete canonical JSON bytes.
+    pub payload_authority: CanonicalRecordAuthority,
+    /// Owner of immutable identity, digest, lifecycle, retention, and reference metadata.
+    pub metadata_authority: CanonicalRecordAuthority,
+    /// Owner of ordered correctness history.
+    pub history_authority: CanonicalRecordAuthority,
+    /// Owner of authoritative source bytes, if this record directly names them.
+    pub source_bytes_authority: Option<CanonicalRecordAuthority>,
+    /// Optional current-state projection, never a second truth source.
+    pub projection: CanonicalRecordProjection,
+}
+
+/// Returns the single closed persistence route for one canonical record family.
+#[must_use]
+pub const fn canonical_record_authority_route(
+    kind: CanonicalRuntimeRecordKind,
+) -> CanonicalRecordAuthorityRoute {
+    CanonicalRecordAuthorityRoute {
+        kind,
+        payload_authority: CanonicalRecordAuthority::RuntimeArtifactStore,
+        metadata_authority: CanonicalRecordAuthority::OperationalStore,
+        history_authority: CanonicalRecordAuthority::RuntimeEventJournal,
+        source_bytes_authority: match kind {
+            CanonicalRuntimeRecordKind::ArtifactEnvelope => {
+                Some(CanonicalRecordAuthority::SourceArtifactService)
+            }
+            CanonicalRuntimeRecordKind::ArtifactTransformation
+            | CanonicalRuntimeRecordKind::ArtifactIngestionResult
+            | CanonicalRuntimeRecordKind::ContextManifest
+            | CanonicalRuntimeRecordKind::WorkflowDefinition
+            | CanonicalRuntimeRecordKind::WorkflowState
+            | CanonicalRuntimeRecordKind::ToolObservation
+            | CanonicalRuntimeRecordKind::VerificationResult
+            | CanonicalRuntimeRecordKind::TerminalResult => None,
+        },
+        projection: match kind {
+            CanonicalRuntimeRecordKind::WorkflowState => {
+                CanonicalRecordProjection::RebuildableWorkflowState
+            }
+            CanonicalRuntimeRecordKind::ArtifactEnvelope
+            | CanonicalRuntimeRecordKind::ArtifactTransformation
+            | CanonicalRuntimeRecordKind::ArtifactIngestionResult
+            | CanonicalRuntimeRecordKind::ContextManifest
+            | CanonicalRuntimeRecordKind::WorkflowDefinition
+            | CanonicalRuntimeRecordKind::ToolObservation
+            | CanonicalRuntimeRecordKind::VerificationResult
+            | CanonicalRuntimeRecordKind::TerminalResult => CanonicalRecordProjection::None,
+        },
+    }
+}
+
+/// Borrowed canonical record ready for validation and existing-artifact serialization.
+#[derive(Clone, Copy, Debug)]
+pub enum CanonicalRuntimeRecordRef<'a> {
+    /// Artifact envelope record.
+    ArtifactEnvelope(&'a CanonicalArtifactEnvelope),
+    /// Artifact transformation record.
+    ArtifactTransformation(&'a CanonicalArtifactTransformation),
+    /// Artifact ingestion result record.
+    ArtifactIngestionResult(&'a CanonicalArtifactIngestionResult),
+    /// Context manifest record.
+    ContextManifest(&'a CanonicalContextManifest),
+    /// Workflow definition record.
+    WorkflowDefinition(&'a CanonicalWorkflowDefinition),
+    /// Workflow state record.
+    WorkflowState(&'a CanonicalWorkflowState),
+    /// Tool observation record.
+    ToolObservation(&'a CanonicalToolObservation),
+    /// Verification result record.
+    VerificationResult(&'a CanonicalVerificationResult),
+    /// Terminal result record.
+    TerminalResult(&'a CanonicalTerminalResult),
+}
+
+impl CanonicalRuntimeRecordRef<'_> {
+    /// Returns the closed record-family identity.
+    #[must_use]
+    pub const fn kind(self) -> CanonicalRuntimeRecordKind {
+        match self {
+            Self::ArtifactEnvelope(_) => CanonicalRuntimeRecordKind::ArtifactEnvelope,
+            Self::ArtifactTransformation(_) => CanonicalRuntimeRecordKind::ArtifactTransformation,
+            Self::ArtifactIngestionResult(_) => CanonicalRuntimeRecordKind::ArtifactIngestionResult,
+            Self::ContextManifest(_) => CanonicalRuntimeRecordKind::ContextManifest,
+            Self::WorkflowDefinition(_) => CanonicalRuntimeRecordKind::WorkflowDefinition,
+            Self::WorkflowState(_) => CanonicalRuntimeRecordKind::WorkflowState,
+            Self::ToolObservation(_) => CanonicalRuntimeRecordKind::ToolObservation,
+            Self::VerificationResult(_) => CanonicalRuntimeRecordKind::VerificationResult,
+            Self::TerminalResult(_) => CanonicalRuntimeRecordKind::TerminalResult,
+        }
+    }
+
+    /// Returns the existing-authority route for this record.
+    #[must_use]
+    pub const fn authority_route(self) -> CanonicalRecordAuthorityRoute {
+        canonical_record_authority_route(self.kind())
+    }
+
+    /// Validates and serializes exact canonical JSON for the existing artifact authority.
+    pub fn artifact_payload(self) -> Result<Vec<u8>, CanonicalRecordError> {
+        macro_rules! validate_and_encode {
+            ($record:expr) => {{
+                $record.validate_canonical()?;
+                to_canonical_json($record).map_err(|_| error("engineering.record.encode", "record"))
+            }};
+        }
+        match self {
+            Self::ArtifactEnvelope(record) => validate_and_encode!(record),
+            Self::ArtifactTransformation(record) => validate_and_encode!(record),
+            Self::ArtifactIngestionResult(record) => validate_and_encode!(record),
+            Self::ContextManifest(record) => validate_and_encode!(record),
+            Self::WorkflowDefinition(record) => validate_and_encode!(record),
+            Self::WorkflowState(record) => validate_and_encode!(record),
+            Self::ToolObservation(record) => validate_and_encode!(record),
+            Self::VerificationResult(record) => validate_and_encode!(record),
+            Self::TerminalResult(record) => validate_and_encode!(record),
+        }
+    }
+}
+
 /// Returns the SHA-256 of stable compact contract JSON.
 ///
 /// A caller sealing a record must zero its declared seal field first. The helper does not
@@ -1486,6 +1655,116 @@ mod tests {
         assert_eq!(
             canonical_record_sha256(&envelope).expect("digest").len(),
             64
+        );
+    }
+
+    #[test]
+    fn every_canonical_record_family_has_one_existing_authority_route() {
+        use CanonicalRuntimeRecordKind as Kind;
+
+        let kinds = [
+            Kind::ArtifactEnvelope,
+            Kind::ArtifactTransformation,
+            Kind::ArtifactIngestionResult,
+            Kind::ContextManifest,
+            Kind::WorkflowDefinition,
+            Kind::WorkflowState,
+            Kind::ToolObservation,
+            Kind::VerificationResult,
+            Kind::TerminalResult,
+        ];
+        let unique = kinds.into_iter().collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(unique.len(), 9);
+
+        for kind in kinds {
+            let route = canonical_record_authority_route(kind);
+            assert_eq!(route.kind, kind);
+            assert_eq!(
+                route.payload_authority,
+                CanonicalRecordAuthority::RuntimeArtifactStore
+            );
+            assert_eq!(
+                route.metadata_authority,
+                CanonicalRecordAuthority::OperationalStore
+            );
+            assert_eq!(
+                route.history_authority,
+                CanonicalRecordAuthority::RuntimeEventJournal
+            );
+            assert_eq!(
+                route.source_bytes_authority,
+                (kind == Kind::ArtifactEnvelope)
+                    .then_some(CanonicalRecordAuthority::SourceArtifactService)
+            );
+            assert_eq!(
+                route.projection,
+                if kind == Kind::WorkflowState {
+                    CanonicalRecordProjection::RebuildableWorkflowState
+                } else {
+                    CanonicalRecordProjection::None
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn every_canonical_record_validates_before_artifact_serialization() {
+        use CanonicalRuntimeRecordKind as Kind;
+
+        let artifact = artifact();
+        let transformation = transformation();
+        let ingestion = ingestion();
+        let context = context();
+        let definition = workflow_definition();
+        let state = workflow_state(CanonicalWorkflowLifecycle::Succeeded, 5);
+        let observation = observation();
+        let verification = verification();
+        let terminal = terminal_result();
+        let records = [
+            CanonicalRuntimeRecordRef::ArtifactEnvelope(&artifact),
+            CanonicalRuntimeRecordRef::ArtifactTransformation(&transformation),
+            CanonicalRuntimeRecordRef::ArtifactIngestionResult(&ingestion),
+            CanonicalRuntimeRecordRef::ContextManifest(&context),
+            CanonicalRuntimeRecordRef::WorkflowDefinition(&definition),
+            CanonicalRuntimeRecordRef::WorkflowState(&state),
+            CanonicalRuntimeRecordRef::ToolObservation(&observation),
+            CanonicalRuntimeRecordRef::VerificationResult(&verification),
+            CanonicalRuntimeRecordRef::TerminalResult(&terminal),
+        ];
+        let expected = [
+            Kind::ArtifactEnvelope,
+            Kind::ArtifactTransformation,
+            Kind::ArtifactIngestionResult,
+            Kind::ContextManifest,
+            Kind::WorkflowDefinition,
+            Kind::WorkflowState,
+            Kind::ToolObservation,
+            Kind::VerificationResult,
+            Kind::TerminalResult,
+        ];
+
+        for (record, kind) in records.into_iter().zip(expected) {
+            assert_eq!(record.kind(), kind);
+            assert_eq!(record.authority_route().kind, kind);
+            let payload = record.artifact_payload().expect("valid canonical record");
+            let value: serde_json::Value =
+                serde_json::from_slice(&payload).expect("canonical JSON");
+            assert_eq!(
+                value
+                    .get("schema_version")
+                    .and_then(serde_json::Value::as_u64),
+                Some(u64::from(CONTRACT_SCHEMA_VERSION))
+            );
+        }
+
+        let mut malformed_context = context.clone();
+        malformed_context.source_artifact_count = 2;
+        assert_eq!(
+            CanonicalRuntimeRecordRef::ContextManifest(&malformed_context)
+                .artifact_payload()
+                .unwrap_err()
+                .code,
+            "engineering.context.count_invalid"
         );
     }
 

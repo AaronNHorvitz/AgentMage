@@ -132,6 +132,26 @@ New Engineering Runtime schemas live under `schemas/engineering-runtime/`.
 | `VerificationResult` | Current postconditions, preserved invariants, prohibited effects, evidence, and pass or non-pass outcome |
 | `TerminalResult` | Verified success, verified no-op, blocked, failed, cancelled, timed out, resource exhausted, or uncertain |
 
+### 5.1 Existing-authority persistence map
+
+Canonical Engineering Runtime records reuse the authorities already admitted by the runtime. They
+do not introduce another database, artifact service, journal, or client-owned truth source.
+
+| Persisted surface | Existing authority | Rule |
+|---|---|---|
+| Complete canonical JSON bytes | Private content-addressed runtime artifact store | Validate the closed Rust record before canonical serialization and publication. |
+| Identity, digest, lifecycle, retention, and reference metadata | SQLCipher `OperationalStore` | Store only the metadata needed to locate, verify, retain, and reconcile the immutable payload. |
+| Ordered correctness and lifecycle history | Append-only runtime event journal | Record canonical references and transitions; journal order remains authoritative for reconstruction. |
+| Original source bytes named by `ArtifactEnvelope` | Request-bound source-artifact service | Reuse the captured source authority; no canonical record may copy source bytes into a second store. |
+| Current `WorkflowState` row | Rebuildable operational projection | A materialized row is an optimization and must be reconstructible from admitted events and artifacts. |
+| Client rendering | Runtime references and events | Chat, CLI, and future clients receive projections; they never acquire persistence authority. |
+
+[`canonical_record_authority_route`](kernel/engine/src/engineering_records.rs) is the executable,
+closed mapping for all nine record families. `CanonicalRuntimeRecordRef::artifact_payload` enforces
+semantic validation before producing bytes for the existing artifact authority. Actual atomic
+publication, restart reconstruction, and cross-authority transaction evidence remain assigned to
+Stories 11.2, 21.3, and 22.4; this mapping does not claim those later gates complete.
+
 ## 6. Artifact Ingestion and Context Delivery
 
 Decision 0042 remains the architectural authority for universal artifact
