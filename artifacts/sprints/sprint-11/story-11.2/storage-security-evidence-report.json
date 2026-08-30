@@ -1,0 +1,173 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 1702,
+      "path": "docs/verification/story-11-2-storage-security-evidence.md",
+      "sha256": "1b6fb32f267c937b1a934865b6e4893330641bf87fff635ec2b7df718e6a11e1"
+    },
+    {
+      "byte_length": 8070,
+      "path": "scripts/storage_security_evidence.py",
+      "sha256": "5aa9045f342057473e1a9340eae57ed3326cade4dcafd60b5a8ab3312e8bc806"
+    },
+    {
+      "byte_length": 1955,
+      "path": "tests/test_storage_security_evidence.py",
+      "sha256": "0963e5ff3f2077d91811c69c588203c3083c2f99b35b4d1300ddedf2a423e3b9"
+    },
+    {
+      "byte_length": 455,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-results.log",
+      "sha256": "80edda9a29d8df14a8315c1f4fa90ee86689f1ef1475328b92007a6aaca7f930"
+    }
+  ],
+  "commands": [
+    "python3 scripts/storage_migration_compatibility_evidence.py",
+    "python3 scripts/storage_new_family_lifecycle_evidence.py",
+    "python3 scripts/storage_crash_boundary_evidence.py",
+    "python3 scripts/storage_crash_exact_state_evidence.py"
+  ],
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "canary_scans_retained": true,
+    "cleanup_evidence_retained": true,
+    "encrypted_page_scans_retained": true,
+    "independent_review_complete": false,
+    "migration_matrices_retained": true,
+    "private_user_data_used": false,
+    "raw_canary_retained": false,
+    "release_claim": "none",
+    "required_review_mappings_retained": true,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "transaction_traces_retained": true
+  },
+  "record_type": "agentmage-storage-security-evidence",
+  "required_markers": [
+    "Sub-task 11.2.3.1 storage migration compatibility validated",
+    "Sub-task 11.2.3.3 storage new-family lifecycle validated",
+    "Sub-task 11.2.4.1 storage crash boundaries validated",
+    "Sub-task 11.2.4.2 storage crash exact states validated"
+  ],
+  "retained_evidence": [
+    {
+      "byte_length": 3771,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-report.json",
+      "sha256": "61eab91b1ea8959ac3c83e38cdbc903a23938b677262062b79c10abb61139a68"
+    },
+    {
+      "byte_length": 30118,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
+      "sha256": "7fb5a9eb51aed29a21703a077a68a6b33ddeb966a1a128878f3a7a7c20af1911"
+    },
+    {
+      "byte_length": 2952,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-report.json",
+      "sha256": "e8ba3092bf760a56612c6a74b0d1abe13dd91fa59a0ef67fb1880a8243b94188"
+    },
+    {
+      "byte_length": 3953,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json",
+      "sha256": "d5f35c2c1bf29cf78472a95ff7c7d7c25d0a121eaee5253477930b08cad6b501"
+    },
+    {
+      "byte_length": 29701,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
+      "sha256": "ba96a41dc219d5764184109fe2215556bb1e9ba9edfd1b634139e01ab133007e"
+    },
+    {
+      "byte_length": 2135,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json",
+      "sha256": "e84c1090ac43634da7998c1deed70660267c2b879fc1d8a876e3d7983118b400"
+    },
+    {
+      "byte_length": 4394,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-results.log",
+      "sha256": "cccae9256653a9ae2b5cb378ec22ebe0b4823bcc2017e034d01b011b0a099142"
+    },
+    {
+      "byte_length": 2088,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json",
+      "sha256": "d0fa0b39f6f0a1eaa3b98e755caccbe7f2b78ab1bc7ace8780fa003e260285d0"
+    },
+    {
+      "byte_length": 4501,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-results.log",
+      "sha256": "77dcb9162f08f7f841a334160e8469ccf38fb5c6d63078b1b1f313c050f24d1f"
+    },
+    {
+      "byte_length": 4286,
+      "path": "artifacts/sprints/sprint-11/story-11.1/s-011-st01.json",
+      "sha256": "644669b4da500aa86f343fbb7416598a00774a57b4f9e2c43b05dc8343e418b8"
+    },
+    {
+      "byte_length": 4356,
+      "path": "artifacts/sprints/sprint-11/story-11.1/crash-canary-results.json",
+      "sha256": "26286bc6d0d535d59b27d961a7aa96beba8aa74f0ab97f40d87961861becedb4"
+    },
+    {
+      "byte_length": 3976,
+      "path": "artifacts/sprints/sprint-11/story-11.1/s-011-rt01.json",
+      "sha256": "f97ee5b7a5f2ff367f0b74d140a77aed3d1960e707ea99513eaa93b220cb1f5b"
+    },
+    {
+      "byte_length": 3861,
+      "path": "artifacts/sprints/sprint-11/story-11.1/store-lifecycle.json",
+      "sha256": "f626d2900d76050423c2ad3e4da5a4baa0280efde01e6c337d5799856dff641f"
+    },
+    {
+      "byte_length": 24662,
+      "path": "artifacts/sprints/sprint-11/story-11.1/security-evidence-map.json",
+      "sha256": "6191070b3a3908f3df86722c6c1601ca3ffb71eec17e25639e4dc736845c9377"
+    }
+  ],
+  "review_mappings": [
+    {
+      "evidence_categories": [
+        "canary-scans",
+        "content-free-export",
+        "encrypted-page-scans"
+      ],
+      "remaining": "Later active adapters, logging, model context, and OS telemetry.",
+      "review_id": "RV-08",
+      "story_status": "demonstrated-current-storage-scope"
+    },
+    {
+      "evidence_categories": [
+        "migration-matrix",
+        "keyed-backup-restore",
+        "page-corruption",
+        "erasure"
+      ],
+      "remaining": "Live provider operations, rotation, other platforms, and independent cryptographic review.",
+      "review_id": "RV-09",
+      "story_status": "partial-current-storage-scope"
+    },
+    {
+      "evidence_categories": [
+        "retention",
+        "backup-restore",
+        "deletion",
+        "cleanup"
+      ],
+      "remaining": "Complete product uninstall, separately managed copies, and installed-product residue scans.",
+      "review_id": "RV-10",
+      "story_status": "demonstrated-current-storage-scope"
+    },
+    {
+      "evidence_categories": [
+        "subprocess-crash-traces",
+        "exact-old-new-state",
+        "no-replay"
+      ],
+      "remaining": "Physical power loss, torn sectors, later durable families, and full product transition coverage.",
+      "review_id": "RV-17",
+      "story_status": "demonstrated-operational-store-scope"
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass-local-retained-security-evidence",
+  "story_id": "11.2",
+  "task_id": "11.2.4.3"
+}

@@ -2095,7 +2095,7 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     and [`storage-new-family-lifecycle-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log)
     make no exhaustive crash-campaign, Story, Sprint, platform, packaging, or release completion
     claim.
-- [ ] **Task 11.2.4 - Verify crash and recovery semantics**
+- [x] **Task 11.2.4 - Verify crash and recovery semantics**
   - [x] **Sub-task 11.2.4.1:** Crash before and after each manifest, extraction, index, attempt,
     receipt, verification, recovery, checkpoint, retention, and deletion commit. Completed locally
     on Linux on 2026-08-30. The seeded subprocess campaign now covers 16 operational-store
@@ -2125,8 +2125,20 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     and [`storage-crash-exact-state-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-results.log)
     make no retained trace/RV mapping, Story, Sprint, platform, packaging, or release completion
     claim.
-  - [ ] **Sub-task 11.2.4.3:** Retain migration matrices, transaction traces, canary scans,
+  - [x] **Sub-task 11.2.4.3:** Retain migration matrices, transaction traces, canary scans,
     encrypted-page scans, cleanup evidence, and `RV-08` through `RV-10` plus `RV-17` mappings.
+    Completed locally on Linux on 2026-08-30. A machine-validated Story 11.2 index hash-binds the
+    schema-16 migration and downgrade reports, new-family lifecycle evidence, 224-case subprocess
+    crash traces, exact old/new recovery results, Story 11.1 main/WAL/SHM/backup/export canary scans,
+    and retention/deletion/erasure/cleanup records. The map records `RV-08` and `RV-10` as
+    demonstrated for the current storage scope, `RV-09` as partial pending live provider, rotation,
+    cross-platform, and independent cryptographic evidence, and `RV-17` as demonstrated for the
+    operational-store durable boundaries pending physical faults and later families. No raw canary
+    or private user data is retained. Four upstream validators and five evidence
+    hash/mapping/overclaim tests pass. Retained
+    [`storage-security-evidence-report.json`](artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json)
+    and [`storage-security-evidence-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-results.log)
+    make no independent-review, Story, Sprint, platform, packaging, or release completion claim.
 
 ##### Story Acceptance Criteria
 
