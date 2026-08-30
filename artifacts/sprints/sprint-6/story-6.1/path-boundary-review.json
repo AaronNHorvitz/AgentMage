@@ -22,7 +22,7 @@
     "coverage-guided path fuzzing and sanitizer evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "1a68e854e82b2a53852c03b9e96ecee5aab94f1c",
+  "reference_revision": "ae3f8e5cfa7ef8c5dd1f36d351f5d14952f91eb8",
   "release_claim": "none",
   "review_protocol": "RV-04",
   "review_protocol_status": "partial-blocked-platform-and-privileged-tests",
@@ -31,15 +31,15 @@
   "sources": [
     {
       "path": "SECURITY-REVIEW.md",
-      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
       "path": "docs/architecture/path-authority-contract.md",
-      "sha256": "de4283149ea9b2ad6faf0e5abfe52d0076de97dd85020b78e93aa6d9d2977747"
+      "sha256": "6c293f922ef8eaa20d578b51835a03e37ec3e2e65fb31af6b935a82883bfbd2a"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "sha256": "6dd5f55f7f506bf408516135e0dd421caab29e619f4574e8716a5b626ff5cc8e"
+      "sha256": "36386ffa93c9a063235af7f8cdcf7480c946e009746c13d133015914f40d1a3a"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
@@ -47,15 +47,15 @@
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-      "sha256": "901a1b4cd461ab300de71500c1f68f1304fb25e9a050ace4cec42fda508b1f52"
+      "sha256": "3261ef541a7a9df123a29a0ab0ef078fe142e1583b91ad05494dd645968fa1dc"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "sha256": "cbc7ebedd831680d55c34dbe96cbf960f0ebfc19b34c4d5c82f644b2649e1349"
+      "sha256": "73720eda040ff86d3d72b22a6ddbeb16638e6a059e7da4a02fcee631760e1ab5"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "sha256": "056d41a37d3f6f3036b24b804e638799cfb397c5432c7b1bb9ca0f88d6c7b55b"
+      "sha256": "e3b0e459a6517fc96445beb97fa84fb5bbb76e2ad118e62bc04ef4bb4845a6a9"
     },
     {
       "path": "scripts/path_boundary_review.py",
@@ -70,8 +70,8 @@
   "subjects": [
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
-      "sha256": "6dd5f55f7f506bf408516135e0dd421caab29e619f4574e8716a5b626ff5cc8e"
+      "reference_revision": "9a421e0af4c88286154bb8df1cc7b8f79691c88a",
+      "sha256": "36386ffa93c9a063235af7f8cdcf7480c946e009746c13d133015914f40d1a3a"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
@@ -80,18 +80,18 @@
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-      "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
-      "sha256": "901a1b4cd461ab300de71500c1f68f1304fb25e9a050ace4cec42fda508b1f52"
+      "reference_revision": "9a421e0af4c88286154bb8df1cc7b8f79691c88a",
+      "sha256": "3261ef541a7a9df123a29a0ab0ef078fe142e1583b91ad05494dd645968fa1dc"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
-      "sha256": "cbc7ebedd831680d55c34dbe96cbf960f0ebfc19b34c4d5c82f644b2649e1349"
+      "reference_revision": "9a421e0af4c88286154bb8df1cc7b8f79691c88a",
+      "sha256": "73720eda040ff86d3d72b22a6ddbeb16638e6a059e7da4a02fcee631760e1ab5"
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
-      "sha256": "056d41a37d3f6f3036b24b804e638799cfb397c5432c7b1bb9ca0f88d6c7b55b"
+      "reference_revision": "9a421e0af4c88286154bb8df1cc7b8f79691c88a",
+      "sha256": "e3b0e459a6517fc96445beb97fa84fb5bbb76e2ad118e62bc04ef4bb4845a6a9"
     }
   ],
   "task_id": "6.1.3.5",

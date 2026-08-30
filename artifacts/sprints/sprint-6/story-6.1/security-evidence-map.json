@@ -1,14 +1,14 @@
 {
   "artifacts": [
     {
-      "bytes": 80205,
+      "bytes": 160606,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "e19ce4713bb6c918da91049e334e436d9d11f7f4e6e4e09986aa4cd74794dd24"
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
-      "bytes": 5083,
+      "bytes": 6661,
       "path": "docs/architecture/path-authority-contract.md",
-      "sha256": "cc930d6556b413fc58e5d6151b38d3848789a31499730c7d715c3e6d4edf4fa0"
+      "sha256": "6c293f922ef8eaa20d578b51835a03e37ec3e2e65fb31af6b935a82883bfbd2a"
     },
     {
       "bytes": 997,
@@ -36,9 +36,9 @@
       "sha256": "793c05f449e8b7fcc87d32c1686df8ac0554da638f937309a28b453789f2bd19"
     },
     {
-      "bytes": 14868,
+      "bytes": 18112,
       "path": "kernel/contracts/src/path.rs",
-      "sha256": "1534abe465aadc759c95d0de2c8d3dc1681652f7f3c6cad35131bcb8802041a9"
+      "sha256": "32134f7e4ba693009f9fbfc8741ea22f4744081e4b0e78a02431728237aee4ea"
     },
     {
       "bytes": 7260,
@@ -46,9 +46,9 @@
       "sha256": "5a7ce651ad075d629ec95be3c0db3934f8ace321f666f6058546777faadb1d0b"
     },
     {
-      "bytes": 16352,
+      "bytes": 17192,
       "path": "kernel/contracts/src/platform_path.rs",
-      "sha256": "da58365b4d87c8633339a1f7038457944f9e3a349e6ec95c5f13ef82b52c8a62"
+      "sha256": "7119a512a165b00ee1e88186bf55cd4d60b7b293aa3954a17215019cd5d9107b"
     },
     {
       "bytes": 4149,
@@ -61,44 +61,44 @@
       "sha256": "f945976fcc428e87d4eb6ddf1f018da2a034c16665cd1dc6b5c52c94bb268b45"
     },
     {
-      "bytes": 5192,
+      "bytes": 4304,
       "path": "kernel/engine/tests/display_link_authority.rs",
-      "sha256": "c0b8b5c904e5a34c92be22f18bd98d369fed5231278f77b2b5a753a5371bff5b"
+      "sha256": "0a9c418772593510c4e9d8ecbaa787c04a148717e05f06efcc73b5a22491e57d"
     },
     {
-      "bytes": 46814,
+      "bytes": 73417,
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "669ad2faa862b71e171819ced145e31ac606c293787946e42981f82462ad0ca5"
+      "sha256": "18f4bba6155d03c31d600cb7fa5a815cb5190bca083314ea2c19735958df8335"
     },
     {
       "bytes": 2426,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
-      "sha256": "0e1e6139f3d49277052cb25a19f0a90658cba3e2a8b3263f57beccd3ace32a8d"
+      "sha256": "36386ffa93c9a063235af7f8cdcf7480c946e009746c13d133015914f40d1a3a"
     },
     {
       "bytes": 2310,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-corpus-report.json",
-      "sha256": "1465e45d6c4b4b233a086811776262f39e771d0ea4d60bbc7ecb527345842627"
+      "sha256": "0d8244fb334d20c0fef660eea7d1ecdf9cb067c079cbc9f11150b75f77c0dfde"
     },
     {
       "bytes": 2487,
       "path": "artifacts/sprints/sprint-6/story-6.1/display-link-authority-report.json",
-      "sha256": "aa0703950cfe6c8db17df1e1af2c13f6e42abfb03ef2156f0c63c03718cd19c7"
+      "sha256": "3261ef541a7a9df123a29a0ab0ef078fe142e1583b91ad05494dd645968fa1dc"
     },
     {
       "bytes": 3096,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-race-report.json",
-      "sha256": "7ae851af56ef3405c4919c4adcce3525b29507402fad22ec758bb0ce75198521"
+      "sha256": "73720eda040ff86d3d72b22a6ddbeb16638e6a059e7da4a02fcee631760e1ab5"
     },
     {
       "bytes": 2891,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "sha256": "50d6a081d4f0a9408c2a1979638e3645cb2495b8dace89626a88981013b4d2a1"
+      "sha256": "e3b0e459a6517fc96445beb97fa84fb5bbb76e2ad118e62bc04ef4bb4845a6a9"
     },
     {
       "bytes": 4405,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-      "sha256": "c0ae668bbb40d6d5654faf3fbe684b13ea03b8f35dc7a478646d581c422db81d"
+      "sha256": "58378a6e3ecad6600b2c35596d802c94b6c0b2ef1f6630bc6821caddf1bb327d"
     },
     {
       "bytes": 13204,
@@ -230,7 +230,7 @@
     "status": "partial-blocked-platform-and-privileged-tests"
   },
   "schema_version": 1,
-  "source_revision": "617731b671df3378652f771cb94773080d155298",
+  "source_revision": "ae3f8e5cfa7ef8c5dd1f36d351f5d14952f91eb8",
   "status": "pass-shared-fedora-security-mapping",
   "story_id": "6.1",
   "summary": {
