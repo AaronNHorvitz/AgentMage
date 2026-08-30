@@ -200,6 +200,7 @@ def build_suite() -> dict[str, Any]:
     dependencies = [PLAN_PATH, CRASH_PATH, TERMINAL_PATH]
     value = {
         "schema_version": 1,
+        "golden_manifest_version": "1.0.0",
         "suite_id": "artifact-evaluation-workflow-golden-metrics-v1",
         "task_id": "2.3.3.2",
         "generated_on": "2026-08-30",

@@ -18,8 +18,9 @@
   "generated_on": "2026-08-30",
   "generator": {
     "path": "scripts/artifact_evaluation_workflow_metrics.py",
-    "sha256": "ae47710f44a6aaa6fa643f73a0e998af1acf000764c1d8d38b68440a20cdacbe"
+    "sha256": "a55499349d1f94e6173ec861b9af600eda6709bcc637b4e756df74c6f331ea45"
   },
+  "golden_manifest_version": "1.0.0",
   "metric_count": 10,
   "metrics": [
     {
@@ -247,7 +248,7 @@
   "schema_version": 1,
   "status": "golden-workflow-fixture-metrics",
   "suite_id": "artifact-evaluation-workflow-golden-metrics-v1",
-  "suite_sha256": "cdefc388444e7711cc41e5c5232ee245060c5d5e4732e86bdc8f42340f340154",
+  "suite_sha256": "ab9c039200d12c2cd02aeb775e43a9068a44d0ef10ac6e2a45e1232adccd5af1",
   "synthetic_only": true,
   "task_id": "2.3.3.2"
 }

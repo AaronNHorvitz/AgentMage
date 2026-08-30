@@ -1,0 +1,547 @@
+{
+  "effect_executed": false,
+  "expected_side_effects": {
+    "active_content_executions": 0,
+    "approval_bypasses": 0,
+    "authority_minted": false,
+    "duplicate_effects": 0,
+    "external_relationship_fetches": 0,
+    "network_calls": 0,
+    "product_effects_executed": 0
+  },
+  "gate_policy": {
+    "all_required_inputs_present": true,
+    "dependency_hash_match_required": true,
+    "every_outcome_visible": true,
+    "expected_side_effect_drift_allowed": false,
+    "non_success_relabel_as_success_allowed": false,
+    "raw_secret_fields_allowed": false
+  },
+  "generated_on": "2026-08-30",
+  "generator": {
+    "path": "scripts/artifact_evaluation_golden_gate.py",
+    "sha256": "de0ba596b1d6f90f73d16648dcd8d5b39d12f2ac7b193084d43feae650ee2159"
+  },
+  "golden_manifest_version": "1.0.0",
+  "manifest_id": "artifact-evaluation-golden-gate-v1",
+  "manifest_sha256": "c89fb91f25e719b61aab31575fe9ad4a899074b366a10316d1bf2467a4923977",
+  "metric_manifest_versions": {
+    "artifact": "1.0.0",
+    "workflow": "1.0.0"
+  },
+  "non_success_terminal_count": 60,
+  "outcome_count": 77,
+  "outcomes": [
+    {
+      "expected_terminal_state": "captured",
+      "family": "text_reference",
+      "fixture_id": "eval-paste-999-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "text_reference",
+      "fixture_id": "eval-paste-1001-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "text_reference",
+      "fixture_id": "eval-utf8-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "text_reference",
+      "fixture_id": "eval-utf16-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "failed",
+      "family": "text_reference",
+      "fixture_id": "eval-invalid-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "partial",
+      "family": "text_reference",
+      "fixture_id": "eval-mixed-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "text_reference",
+      "fixture_id": "eval-empty-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "text_reference",
+      "fixture_id": "eval-duplicate-original-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "duplicate",
+      "family": "text_reference",
+      "fixture_id": "eval-duplicate-reference-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "stale",
+      "family": "text_reference",
+      "fixture_id": "eval-stale-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "failed",
+      "family": "text_reference",
+      "fixture_id": "eval-replaced-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "text_reference",
+      "fixture_id": "eval-virtual-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "text_reference",
+      "fixture_id": "eval-remote-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "unavailable",
+      "family": "text_reference",
+      "fixture_id": "eval-inaccessible-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "unsupported",
+      "family": "text_reference",
+      "fixture_id": "eval-unknown-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "text_reference",
+      "fixture_id": "eval-log-25mib-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "document_variant",
+      "fixture_id": "eval-pdf-digital-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "partial",
+      "family": "document_variant",
+      "fixture_id": "eval-pdf-scanned-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "partial",
+      "family": "document_variant",
+      "fixture_id": "eval-pdf-mixed-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "unsupported",
+      "family": "document_variant",
+      "fixture_id": "eval-pdf-encrypted-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "failed",
+      "family": "document_variant",
+      "fixture_id": "eval-pdf-malformed-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "denied",
+      "family": "document_variant",
+      "fixture_id": "eval-pdf-oversized-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "document_variant",
+      "fixture_id": "eval-docx-structured-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "failed",
+      "family": "document_variant",
+      "fixture_id": "eval-docx-malformed-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "denied",
+      "family": "document_variant",
+      "fixture_id": "eval-docx-oversized-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "denied",
+      "family": "document_variant",
+      "fixture_id": "eval-docx-relationship-hostile-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "document_variant",
+      "fixture_id": "eval-xlsx-structured-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "failed",
+      "family": "document_variant",
+      "fixture_id": "eval-xlsx-malformed-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "denied",
+      "family": "document_variant",
+      "fixture_id": "eval-xlsx-oversized-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "denied",
+      "family": "document_variant",
+      "fixture_id": "eval-xlsx-relationship-hostile-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "partial",
+      "family": "artifact_lifecycle",
+      "fixture_id": "artifact-evaluation-combined_artifact_token_overflow-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "stale",
+      "family": "artifact_lifecycle",
+      "fixture_id": "artifact-evaluation-model_profile_change-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "cancelled",
+      "family": "artifact_lifecycle",
+      "fixture_id": "artifact-evaluation-cancellation-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "uncertain",
+      "family": "artifact_lifecycle",
+      "fixture_id": "artifact-evaluation-crash-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "partial",
+      "family": "artifact_lifecycle",
+      "fixture_id": "artifact-evaluation-restart-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "stale",
+      "family": "artifact_lifecycle",
+      "fixture_id": "artifact-evaluation-cache_stale-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "captured",
+      "family": "artifact_lifecycle",
+      "fixture_id": "artifact-evaluation-refresh-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "expired",
+      "family": "artifact_lifecycle",
+      "fixture_id": "artifact-evaluation-retention-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "deleted",
+      "family": "artifact_lifecycle",
+      "fixture_id": "artifact-evaluation-deletion-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "verified_success",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-success-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "blocked",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-missing-dependency-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "stale",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-stale-preflight-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "blocked",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-malformed-call-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "verified_success",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-deterministic-repair-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "verified_success",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-transient-read-failure-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "conflict",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-conditional-conflict-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "approval_required",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-non-idempotent-effect-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "uncertain",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-uncertain-effect-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "approval_required",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-destructive-request-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "approval_required",
+      "family": "workflow_plan",
+      "fixture_id": "workflow-plan-external-effect-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-before-proposal-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-after-proposal-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-before-validation-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-after-validation-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-before-approval-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-after-approval-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-before-dispatch-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "uncertain",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-after-dispatch-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "uncertain",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-before-effect-observation-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-after-effect-observation-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-before-receipt-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-after-receipt-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-before-verification-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-after-verification-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-before-checkpoint-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-after-checkpoint-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "recoverable",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-before-terminal-event-commit-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "verified_success",
+      "family": "workflow_crash",
+      "fixture_id": "workflow-crash-after-terminal-event-commit-v1",
+      "success_terminal": true
+    },
+    {
+      "expected_terminal_state": "failed",
+      "family": "workflow_terminal",
+      "fixture_id": "workflow-terminal-empty-output-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "failed",
+      "family": "workflow_terminal",
+      "fixture_id": "workflow-terminal-reasoning-only-output-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "blocked",
+      "family": "workflow_terminal",
+      "fixture_id": "workflow-terminal-false-completion-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "blocked",
+      "family": "workflow_terminal",
+      "fixture_id": "workflow-terminal-open-plan-completion-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "failed",
+      "family": "workflow_terminal",
+      "fixture_id": "workflow-terminal-post-error-stop-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "stalled",
+      "family": "workflow_terminal",
+      "fixture_id": "workflow-terminal-repeated-state-loop-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "exhausted",
+      "family": "workflow_terminal",
+      "fixture_id": "workflow-terminal-budget-exhaustion-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "cancelled",
+      "family": "workflow_terminal",
+      "fixture_id": "workflow-terminal-cancellation-v1",
+      "success_terminal": false
+    },
+    {
+      "expected_terminal_state": "failed",
+      "family": "workflow_terminal",
+      "fixture_id": "workflow-terminal-provider-disconnect-v1",
+      "success_terminal": false
+    }
+  ],
+  "product_gate_claim": "none",
+  "product_runtime_executed": false,
+  "required_inputs": [
+    {
+      "path": "fixtures/artifact-evaluation/v1/text-reference-manifest.json",
+      "required": true,
+      "sha256": "8dcab5bfba945aff46347905c3055a9696eaf78c40aa667fd4a480f2dd4e700e"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/document-variant-manifest.json",
+      "required": true,
+      "sha256": "19d299f2a34ca48e87b3b6076872542fd54b4b3881d69da9a8351ed87733ba94"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/lifecycle-scenarios.json",
+      "required": true,
+      "sha256": "274a0c7a7444a3e48f1622b789943ba76e90a9afcae75cf0147c947aa8645118"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/workflow-plan-fixtures.json",
+      "required": true,
+      "sha256": "2340e780e1e8d50759abcdfff237c2ba5946adee3dd1b3d8122e7f3f51d3402c"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/workflow-crash-points.json",
+      "required": true,
+      "sha256": "f46c6e89c4c545a159d1023d3677afb495b7df0db3ac9349640681427b0d0a32"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/workflow-terminal-outcomes.json",
+      "required": true,
+      "sha256": "23ae9264902556922866eff8a13f25b1cc5e19cdf43ffb567bfd0d300903a253"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/artifact-golden-metrics.json",
+      "required": true,
+      "sha256": "5b82461ae84b70b00234068570872b8c5cd7de5e7928285d84756ce1925a2a99"
+    },
+    {
+      "path": "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json",
+      "required": true,
+      "sha256": "8b9f3c9ac8876bf7c582c69196c20e26316c5be911681401190043a63221320c"
+    }
+  ],
+  "schema_version": 1,
+  "status": "golden_integrity_gate_pass",
+  "success_terminal_count": 17,
+  "synthetic_only": true,
+  "task_id": "2.3.3.3"
+}

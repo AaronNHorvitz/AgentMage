@@ -198,6 +198,7 @@ def build_suite() -> dict[str, Any]:
     dependencies = [TEXT_PATH, DOCUMENT_PATH, CONTEXT_PATH, LIFECYCLE_PATH, RESOURCE_PATH]
     value = {
         "schema_version": 1,
+        "golden_manifest_version": "1.0.0",
         "suite_id": "artifact-evaluation-artifact-golden-metrics-v1",
         "task_id": "2.3.3.1",
         "generated_on": "2026-08-30",

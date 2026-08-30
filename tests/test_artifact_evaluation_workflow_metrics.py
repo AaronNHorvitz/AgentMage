@@ -14,6 +14,7 @@ class ArtifactEvaluationWorkflowMetricTests(unittest.TestCase):
         cls.by_id = {item["metric_id"]: item for item in cls.suite["metrics"]}
 
     def test_required_metric_set_is_exact(self) -> None:
+        self.assertEqual(self.suite["golden_manifest_version"], "1.0.0")
         self.assertEqual(tuple(self.by_id), metrics.METRIC_IDS)
         self.assertEqual(self.suite["metric_count"], 10)
 

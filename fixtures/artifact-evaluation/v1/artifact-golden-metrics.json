@@ -24,8 +24,9 @@
   "generated_on": "2026-08-30",
   "generator": {
     "path": "scripts/artifact_evaluation_artifact_metrics.py",
-    "sha256": "d76b02ce7788b1637157b922c70bda609b647a2ff39acd494ee02807a8735d46"
+    "sha256": "815f4c8428ebff9ab23b6cec146e52772ff78cda42529757a1cfa07b06d98a75"
   },
+  "golden_manifest_version": "1.0.0",
   "metric_count": 10,
   "metrics": [
     {
@@ -250,7 +251,7 @@
   "schema_version": 1,
   "status": "golden-fixture-and-synthetic-local-metrics",
   "suite_id": "artifact-evaluation-artifact-golden-metrics-v1",
-  "suite_sha256": "ad3891ec0af2c108afe645816824e2f47ed3f2b8fdd8c3007681f9ea0bba0d21",
+  "suite_sha256": "2220af719e0ecca50266914ef8e34917f1811d0cc8b3c55c64bc9fceb0ed7a8c",
   "synthetic_only": true,
   "task_id": "2.3.3.1"
 }
