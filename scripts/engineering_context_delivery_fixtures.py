@@ -40,6 +40,12 @@ BLOCKED_SCENARIOS: Final = {
     "restricted",
     "model_profile_change",
 }
+SAFE_REMEDIATIONS: Final = {
+    "token_budget_overflow": "partition_required_source_then_rebuild_context",
+    "stale": "recapture_current_source_then_rebuild_context",
+    "restricted": "resolve_source_policy_then_rebuild_context",
+    "model_profile_change": "rebuild_context_for_current_model_profile",
+}
 
 
 def read_json(path: Path) -> Any:
@@ -146,6 +152,7 @@ def scenario_receipt(scenario: dict[str, Any], entries: dict[str, bytes]) -> dic
         "completion_block_reason": (
             "required_authoritative_content_not_delivered" if blocked else None
         ),
+        "safe_remediation": SAFE_REMEDIATIONS.get(scenario["scenario_id"]),
         "receipt": receipt,
         "execution_claim": "synthetic_delivery_reconstruction_only",
     }
@@ -218,6 +225,9 @@ def validate_suite(value: Any, archive: bytes, entries: dict[str, bytes]) -> lis
             failures.append(f"context completion blocking drifted: {scenario.get('scenario_id')}")
         if blocked and set(receipt.get("required_unseen_artifact_ids", [])) != set(scenario.get("required_authoritative_artifact_ids", [])):
             failures.append(f"required unseen authority is incomplete: {scenario.get('scenario_id')}")
+        expected_remediation = SAFE_REMEDIATIONS.get(scenario.get("scenario_id"))
+        if scenario.get("safe_remediation") != expected_remediation:
+            failures.append(f"safe remediation drifted: {scenario.get('scenario_id')}")
     if value.get("synthetic_only") is not True or value.get("model_request_executed") is not False or value.get("product_delivery_claim") != "none":
         failures.append("context delivery suite makes a product execution or delivery overclaim")
     return failures

@@ -12,7 +12,7 @@
   "generated_on": "2026-08-29",
   "generator": {
     "path": "scripts/engineering_context_delivery_fixtures.py",
-    "sha256": "faf8f50c03acad52fcf2a0829c4e3c66aded775eacf6e1a06ab9037d2972217c"
+    "sha256": "796ff22d57f6e3b47f941d4a089c7f44290dbca3811f9890e03fa14e928f709a"
   },
   "model_request_executed": false,
   "payload_archive": {
@@ -79,6 +79,7 @@
       "required_authoritative_artifact_ids": [
         "source-admission-local-file-1"
       ],
+      "safe_remediation": "partition_required_source_then_rebuild_context",
       "scenario_id": "token_budget_overflow"
     },
     {
@@ -131,6 +132,7 @@
         "schema_version": 1
       },
       "required_authoritative_artifact_ids": [],
+      "safe_remediation": null,
       "scenario_id": "retrieval"
     },
     {
@@ -183,6 +185,7 @@
         "schema_version": 1
       },
       "required_authoritative_artifact_ids": [],
+      "safe_remediation": null,
       "scenario_id": "summary"
     },
     {
@@ -207,6 +210,7 @@
         "schema_version": 1
       },
       "required_authoritative_artifact_ids": [],
+      "safe_remediation": null,
       "scenario_id": "duplicate"
     },
     {
@@ -235,6 +239,7 @@
       "required_authoritative_artifact_ids": [
         "source-admission-stale-1"
       ],
+      "safe_remediation": "recapture_current_source_then_rebuild_context",
       "scenario_id": "stale"
     },
     {
@@ -263,6 +268,7 @@
       "required_authoritative_artifact_ids": [
         "source-admission-virtual-uri-1"
       ],
+      "safe_remediation": "resolve_source_policy_then_rebuild_context",
       "scenario_id": "restricted"
     },
     {
@@ -287,6 +293,7 @@
         "schema_version": 1
       },
       "required_authoritative_artifact_ids": [],
+      "safe_remediation": null,
       "scenario_id": "omitted"
     },
     {
@@ -315,13 +322,14 @@
       "required_authoritative_artifact_ids": [
         "source-admission-text-1"
       ],
+      "safe_remediation": "rebuild_context_for_current_model_profile",
       "scenario_id": "model_profile_change"
     }
   ],
   "schema_version": 1,
   "status": "synthetic-reconstructible-delivery-contract",
   "suite_id": "engineering-context-delivery-v1",
-  "suite_sha256": "20ac60b3b032c3dc500dbb9fd7bbfc79d1c0f46d8465e6d1f6dbefd401f46ff7",
+  "suite_sha256": "d890a7b7b0eabb16330f04ca59fbfcf4c6a5ac7a590077e0d7758354fc101398",
   "synthetic_only": true,
   "task_id": "2.4.2.3"
 }

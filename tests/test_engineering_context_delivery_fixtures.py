@@ -8,6 +8,7 @@ import zipfile
 from scripts.engineering_artifact_admission_fixtures import sha256_bytes, validate_archive
 from scripts.engineering_context_delivery_fixtures import (
     BLOCKED_SCENARIOS,
+    SAFE_REMEDIATIONS,
     build_suite,
     model_visible_set_sha256,
     validate_suite,
@@ -42,6 +43,10 @@ class EngineeringContextDeliveryFixtureTests(unittest.TestCase):
                 scenario["receipt"]["required_unseen_artifact_ids"],
                 scenario["required_authoritative_artifact_ids"],
             )
+            self.assertEqual(
+                scenario["safe_remediation"],
+                SAFE_REMEDIATIONS.get(scenario["scenario_id"]),
+            )
 
     def test_summary_and_source_ranges_are_distinct_and_explicit(self) -> None:
         summary = next(item for item in self.suite["scenarios"] if item["scenario_id"] == "summary")
@@ -64,6 +69,7 @@ class EngineeringContextDeliveryFixtureTests(unittest.TestCase):
             lambda value: value["scenarios"][1]["receipt"]["delivered"][0].update({"sha256": "f" * 64}),
             lambda value: value["scenarios"][0].update({"completion_allowed": True}),
             lambda value: value["scenarios"][4]["receipt"].update({"required_unseen_artifact_ids": []}),
+            lambda value: value["scenarios"][4].update({"safe_remediation": "retry_unchanged"}),
             lambda value: value.update({"product_delivery_claim": "delivered"}),
         )
         for mutate in mutations:

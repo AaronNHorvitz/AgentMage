@@ -24,7 +24,7 @@
   },
   "golden_manifest_version": "1.0.0",
   "manifest_id": "artifact-evaluation-golden-gate-v1",
-  "manifest_sha256": "c89fb91f25e719b61aab31575fe9ad4a899074b366a10316d1bf2467a4923977",
+  "manifest_sha256": "e7c0ff8aac5ae0d7fbe144c02e7e10cc45573df4c31e4ca20fde9eb6e63cbbaf",
   "metric_manifest_versions": {
     "artifact": "1.0.0",
     "workflow": "1.0.0"
@@ -531,7 +531,7 @@
     {
       "path": "fixtures/artifact-evaluation/v1/artifact-golden-metrics.json",
       "required": true,
-      "sha256": "5b82461ae84b70b00234068570872b8c5cd7de5e7928285d84756ce1925a2a99"
+      "sha256": "c6721c4066fd28041e4024690ca359176952f019131012724bbd7bfed218e539"
     },
     {
       "path": "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json",

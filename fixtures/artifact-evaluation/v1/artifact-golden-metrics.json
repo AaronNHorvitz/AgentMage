@@ -18,7 +18,7 @@
     },
     {
       "path": "fixtures/artifact-admission/v1/resource-gate-observations.json",
-      "sha256": "161613d5b3043fa33eeaf15d6323bfc6e1f0c0abe1c2fc91fe46e01464d2281a"
+      "sha256": "1604dd37ce2f79d6bd46b34e4fbcc89ea4fbdaadf27bd40cb9ab9d4bba2ff1db"
     }
   ],
   "generated_on": "2026-08-30",
@@ -251,7 +251,7 @@
   "schema_version": 1,
   "status": "golden-fixture-and-synthetic-local-metrics",
   "suite_id": "artifact-evaluation-artifact-golden-metrics-v1",
-  "suite_sha256": "2220af719e0ecca50266914ef8e34917f1811d0cc8b3c55c64bc9fceb0ed7a8c",
+  "suite_sha256": "8aa7f1a8e47df8fc0d15a353db5202da69786fe67c2b1348a0461580d60ea6ab",
   "synthetic_only": true,
   "task_id": "2.3.3.1"
 }

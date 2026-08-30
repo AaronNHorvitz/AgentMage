@@ -111,7 +111,7 @@
         "golden",
         "summary"
       ],
-      "sha256": "5b82461ae84b70b00234068570872b8c5cd7de5e7928285d84756ce1925a2a99"
+      "sha256": "c6721c4066fd28041e4024690ca359176952f019131012724bbd7bfed218e539"
     },
     {
       "byte_length": 7851,
@@ -129,7 +129,7 @@
         "golden",
         "provenance_ledger"
       ],
-      "sha256": "8133d0e3ec27f2bb635f984c6653f79ad25bb14ca7575342678ae40a907be04a"
+      "sha256": "c22ba15dab03558b39dc6967ea066197c5dd6237a6804c8caaff39a3af4bfe0d"
     }
   ],
   "product_gate_claim": "none",
@@ -139,18 +139,18 @@
     "sha256": "476fdad5ea932dd48d33735657e62897433a30368ee20fe58db62c3ba9a181c5"
   },
   "report_id": "artifact-evaluation-clean-root-reproducibility-v1",
-  "report_sha256": "7abcd17cfc2ba0e2fa276344f8f70cbe57c4faae9de1402fbb1521368099d1fa",
+  "report_sha256": "f75134139662aa2650477ce9d94f1361c64439fd46fdec39821448697346b909",
   "run_count": 2,
   "runs": [
     {
       "output_count": 11,
-      "output_set_sha256": "486265545295d5bcdd1f0076cbbd6e4bc8aad2947d7b7f1056e5cee40cef5216",
+      "output_set_sha256": "6e23dc6c9e4f2c24ba7d3c837e99b143aef8cba0333c3b0af4f0347864a24052",
       "root_class": "ephemeral_empty_root",
       "run_id": "clean-root-a"
     },
     {
       "output_count": 11,
-      "output_set_sha256": "486265545295d5bcdd1f0076cbbd6e4bc8aad2947d7b7f1056e5cee40cef5216",
+      "output_set_sha256": "6e23dc6c9e4f2c24ba7d3c837e99b143aef8cba0333c3b0af4f0347864a24052",
       "root_class": "ephemeral_empty_root",
       "run_id": "clean-root-b"
     }
@@ -176,7 +176,7 @@
     {
       "byte_length": 6043,
       "path": "fixtures/artifact-admission/v1/resource-gate-observations.json",
-      "sha256": "161613d5b3043fa33eeaf15d6323bfc6e1f0c0abe1c2fc91fe46e01464d2281a"
+      "sha256": "1604dd37ce2f79d6bd46b34e4fbcc89ea4fbdaadf27bd40cb9ab9d4bba2ff1db"
     },
     {
       "byte_length": 11336,

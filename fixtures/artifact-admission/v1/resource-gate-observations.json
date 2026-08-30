@@ -10,7 +10,7 @@
     },
     {
       "path": "fixtures/artifact-admission/v1/context-delivery-receipts.json",
-      "sha256": "496e735ed260340f0fa42b10c936e2ce7f7695aa595bced2d984f0eff74f6c09"
+      "sha256": "2c0abb3c194448cf7472c7f887548cdfc8b2d00057075d8d3c5c889f9c3ae1ce"
     }
   ],
   "generated_on": "2026-08-29",
@@ -183,7 +183,7 @@
   "schema_version": 1,
   "status": "synthetic-local-resource-campaign",
   "suite_id": "engineering-artifact-resource-gate-v1",
-  "suite_sha256": "d82b7cf8ecf3ac38d684cd4b11a29030abba638329a5559cf30c0b611471e2c5",
+  "suite_sha256": "7f3d5f4130b6ffb473021a490e44028ae46bec6a67c7ece37933a02b981611cd",
   "synthetic_only": true,
   "task_id": "2.4.3.1"
 }

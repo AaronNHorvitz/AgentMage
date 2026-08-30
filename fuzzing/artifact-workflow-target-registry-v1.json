@@ -76,7 +76,7 @@
     {
       "byte_length": 8123,
       "path": "fixtures/artifact-evaluation/v1/artifact-golden-metrics.json",
-      "sha256": "5b82461ae84b70b00234068570872b8c5cd7de5e7928285d84756ce1925a2a99"
+      "sha256": "c6721c4066fd28041e4024690ca359176952f019131012724bbd7bfed218e539"
     },
     {
       "byte_length": 7851,
@@ -86,12 +86,12 @@
     {
       "byte_length": 16723,
       "path": "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
-      "sha256": "8133d0e3ec27f2bb635f984c6653f79ad25bb14ca7575342678ae40a907be04a"
+      "sha256": "c22ba15dab03558b39dc6967ea066197c5dd6237a6804c8caaff39a3af4bfe0d"
     },
     {
       "byte_length": 7649,
       "path": "fixtures/artifact-evaluation/v1/reproducibility-report.json",
-      "sha256": "86d83b6641fdd9a69ae63ded35805c749ab51706d181484f599c8f4483482dc9"
+      "sha256": "46efc8e90d5584e1aacbdef9d3f0f93db3a38a702fe9ed9834c9492eed1ae2cd"
     },
     {
       "byte_length": 6672,
@@ -225,7 +225,7 @@
         },
         {
           "path": "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
-          "sha256": "8133d0e3ec27f2bb635f984c6653f79ad25bb14ca7575342678ae40a907be04a"
+          "sha256": "c22ba15dab03558b39dc6967ea066197c5dd6237a6804c8caaff39a3af4bfe0d"
         }
       ]
     },
@@ -400,7 +400,7 @@
     }
   ],
   "registry_id": "agentmage-artifact-workflow-fuzz-targets-v1",
-  "registry_sha256": "feaca57b9a7a07ac3aebafba8ae05737aed79247686f2ce75f7fb9d8bbc90277",
+  "registry_sha256": "bc74884d984efe6a3fc8f876d1a920d479ee8690fc4bfd3d394919e3a802bdd1",
   "registry_version": "1.0.0",
   "release_claim": "none",
   "schema_version": 1,

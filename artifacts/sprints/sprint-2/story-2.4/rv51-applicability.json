@@ -50,12 +50,12 @@
     {
       "kind": "delivery",
       "path": "fixtures/artifact-admission/v1/context-delivery-receipts.json",
-      "sha256": "496e735ed260340f0fa42b10c936e2ce7f7695aa595bced2d984f0eff74f6c09"
+      "sha256": "2c0abb3c194448cf7472c7f887548cdfc8b2d00057075d8d3c5c889f9c3ae1ce"
     },
     {
       "kind": "resource",
       "path": "fixtures/artifact-admission/v1/resource-gate-observations.json",
-      "sha256": "161613d5b3043fa33eeaf15d6323bfc6e1f0c0abe1c2fc91fe46e01464d2281a"
+      "sha256": "1604dd37ce2f79d6bd46b34e4fbcc89ea4fbdaadf27bd40cb9ab9d4bba2ff1db"
     }
   ],
   "parser_identities": [
@@ -1124,7 +1124,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-2/story-2.4/rv51-applicable-results.log",
-      "sha256": "a4799f92265d600f38a4b72bde45234eb4485b0963df07fcffeda762b2938523"
+      "sha256": "f1a6cd35a563a87e499bc17220aa58c345477681a376c224d8523817ad01cf84"
     }
   ],
   "limitations": [
