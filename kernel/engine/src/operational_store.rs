@@ -5737,6 +5737,13 @@ mod tests {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
     enum SeededCrashBoundary {
         Transaction,
+        Manifest,
+        Extraction,
+        Index,
+        Attempt,
+        Receipt,
+        Verification,
+        Recovery,
         Checkpoint,
         SessionCheckpoint,
         Migration,
@@ -5748,8 +5755,15 @@ mod tests {
     }
 
     impl SeededCrashBoundary {
-        const ALL: [Self; 9] = [
+        const ALL: [Self; 16] = [
             Self::Transaction,
+            Self::Manifest,
+            Self::Extraction,
+            Self::Index,
+            Self::Attempt,
+            Self::Receipt,
+            Self::Verification,
+            Self::Recovery,
             Self::Checkpoint,
             Self::SessionCheckpoint,
             Self::Migration,
@@ -5763,6 +5777,13 @@ mod tests {
         const fn code(self) -> &'static str {
             match self {
                 Self::Transaction => "transaction",
+                Self::Manifest => "manifest",
+                Self::Extraction => "extraction",
+                Self::Index => "index",
+                Self::Attempt => "attempt",
+                Self::Receipt => "receipt",
+                Self::Verification => "verification",
+                Self::Recovery => "recovery",
                 Self::Checkpoint => "checkpoint",
                 Self::SessionCheckpoint => "session-checkpoint",
                 Self::Migration => "migration",
@@ -5807,7 +5828,7 @@ mod tests {
     }
 
     const SEEDED_CRASH_CHILD_EXIT: i32 = 86;
-    const SEEDED_CRASH_RUNS: u64 = 126;
+    const SEEDED_CRASH_RUNS: u64 = 224;
 
     fn observation() -> StrictLocalStorageObservation {
         StrictLocalStorageObservation {
@@ -9552,6 +9573,281 @@ mod tests {
             .expect("seeded retention assignment commits");
     }
 
+    fn seed_source_crash_authority(store: &OperationalStore) {
+        let digest = |label: &str| sha256_hex(label.as_bytes());
+        store
+            .connection
+            .execute(
+                "INSERT INTO source_origins VALUES (
+                    'seeded-source-origin', 'seeded-source-request', 'seeded-source-authority',
+                    'file', '2026-08-30T00:00:00Z', ?1, X'7b7d'
+                 )",
+                [digest("seeded-source-origin")],
+            )
+            .expect("seeded source origin");
+        store
+            .connection
+            .execute(
+                "INSERT INTO source_references VALUES (
+                    'seeded-source-reference', 'seeded-source-request',
+                    'seeded-source-authority', 'file_path', 'supported', ?1,
+                    '2026-08-30T00:00:00Z', X'7b7d'
+                 )",
+                [digest("seeded-source-reference")],
+            )
+            .expect("seeded source reference");
+    }
+
+    fn insert_seeded_source_manifest(store: &mut OperationalStore) -> rusqlite::Result<()> {
+        let digest = |label: &str| sha256_hex(label.as_bytes());
+        let transaction = store.connection.transaction()?;
+        transaction.execute(
+            "INSERT INTO source_manifests VALUES (
+                'seeded-source-artifact', 'seeded-source-request', 'seeded-source-authority',
+                'seeded-source-reference', 'seeded-source-origin', 'seeded-source-provenance', ?1,
+                'text/plain', 'internal', 'unsupported', 'unsupported', NULL, NULL, NULL,
+                '2026-08-30T00:00:00Z', ?2, X'7b7d'
+             )",
+            params![
+                digest("seeded-source-provenance"),
+                digest("seeded-source-artifact")
+            ],
+        )?;
+        transaction.execute(
+            "INSERT INTO source_provenance VALUES (
+                'seeded-source-provenance', 'seeded-source-artifact',
+                'seeded-source-reference', 'seeded-source-origin', 'internal', 'unsupported',
+                '2026-08-30T00:00:00Z', '2026-08-30T00:00:00Z', ?1, X'7b7d'
+             )",
+            [digest("seeded-source-provenance")],
+        )?;
+        transaction.commit()
+    }
+
+    fn insert_seeded_source_extraction(store: &OperationalStore) -> rusqlite::Result<()> {
+        let digest = |label: &str| sha256_hex(label.as_bytes());
+        store.connection.execute(
+            "INSERT INTO source_extractions VALUES (
+                'seeded-source-extraction', 'seeded-source-artifact', 'seeded-extractor', '1.0.0',
+                ?1, NULL, 'text/plain', 'unsupported', 0, 1, ?2, X'7b7d'
+             )",
+            params![
+                digest("seeded-source-payload"),
+                digest("seeded-source-extraction"),
+            ],
+        )?;
+        Ok(())
+    }
+
+    fn seed_source_index_authority(store: &OperationalStore) {
+        let digest = |label: &str| sha256_hex(label.as_bytes());
+        store
+            .connection
+            .execute(
+                "INSERT INTO source_cache_inputs VALUES (
+                    'seeded-source-cache', 'seeded-source-artifact',
+                    'seeded-source-extraction', ?1, 'seeded-parser', '1.0.0', ?2, ?3, ?4, ?5,
+                    ?6, X'7b7d'
+                 )",
+                params![
+                    digest("seeded-source-payload"),
+                    digest("seeded-parser-configuration"),
+                    digest("seeded-schema"),
+                    digest("seeded-source-policy"),
+                    digest("seeded-cache-key"),
+                    digest("seeded-cache-record"),
+                ],
+            )
+            .expect("seeded source cache authority");
+    }
+
+    fn insert_seeded_source_index(store: &OperationalStore) -> rusqlite::Result<()> {
+        let digest = |label: &str| sha256_hex(label.as_bytes());
+        store.connection.execute(
+            "INSERT INTO source_lexical_indexes VALUES (
+                'seeded-source-index', 'seeded-source-artifact', 'seeded-source-extraction',
+                'seeded-source-cache', 'seeded-indexer', '1.0.0', ?1, 1, 1, ?2, X'7b7d'
+             )",
+            params![digest("seeded-index"), digest("seeded-index-record")],
+        )?;
+        Ok(())
+    }
+
+    fn seed_workflow_crash_authority(store: &OperationalStore) {
+        let digest = |label: &str| sha256_hex(label.as_bytes());
+        for statement in [
+            "INSERT INTO sessions VALUES ('session-store-1', 'seeded-workflow-profile', 'active', 1, 1, ?1, X'7b7d')",
+            "INSERT INTO objectives VALUES ('seeded-workflow-objective', 'session-store-1', 1, 'active', ?1, X'7b7d')",
+            "INSERT INTO plans VALUES ('seeded-workflow-plan', 'seeded-workflow-objective', 1, 'active', ?1, X'7b7d')",
+            "INSERT INTO tasks VALUES ('task-store-1', 'seeded-workflow-plan', NULL, 1, 'active', ?1, X'7b7d')",
+        ] {
+            store
+                .connection
+                .execute(statement, [digest(statement)])
+                .expect("seeded workflow owner");
+        }
+        store
+            .connection
+            .execute(
+                "INSERT INTO grant_identities VALUES ('seeded-workflow-grant', 'seeded-workflow-nonce')",
+                [],
+            )
+            .expect("seeded workflow grant");
+        store
+            .connection
+            .execute(
+                "INSERT INTO transaction_identities VALUES ('seeded-workflow-transaction', 'seeded-workflow-attempt')",
+                [],
+            )
+            .expect("seeded workflow transaction");
+        store
+            .connection
+            .execute(
+                "INSERT INTO receipts VALUES (
+                    1, 'seeded-workflow-authority-receipt', 'seeded-workflow-transaction', ?1,
+                    ?2, X'7b7d'
+                 )",
+                params![digest("seeded-workflow-authority-receipt"), ZERO_SHA256],
+            )
+            .expect("seeded workflow receipt authority");
+        store
+            .connection
+            .execute(
+                "INSERT INTO workflow_plan_step_policies VALUES (
+                    'seeded-workflow-policy', 'seeded-workflow-plan', 'seeded-workflow-step', 1,
+                    'atomic-checkpoint-run-1', 'session-store-1', 0,
+                    'atomic-checkpoint-event-0', ?1, X'7b7d'
+                 )",
+                [digest("seeded-workflow-policy")],
+            )
+            .expect("seeded workflow policy");
+    }
+
+    fn insert_seeded_workflow_attempt(store: &OperationalStore) -> rusqlite::Result<()> {
+        store.connection.execute(
+            "INSERT INTO workflow_attempts VALUES (
+                'seeded-workflow-attempt', 'seeded-workflow-step-execution',
+                'seeded-workflow-call', 1, NULL, 'seeded-workflow-grant', 'started', NULL,
+                'atomic-checkpoint-run-1', 'session-store-1', 0, 'atomic-checkpoint-event-0',
+                ?1, X'7b7d', NULL
+             )",
+            [sha256_hex(b"seeded-workflow-attempt")],
+        )?;
+        Ok(())
+    }
+
+    fn insert_seeded_workflow_record(
+        store: &OperationalStore,
+        boundary: SeededCrashBoundary,
+    ) -> rusqlite::Result<()> {
+        let digest = |label: &str| sha256_hex(label.as_bytes());
+        let (sql, record_sha256) = match boundary {
+            SeededCrashBoundary::Receipt => (
+                "INSERT INTO workflow_receipts VALUES (
+                    'seeded-workflow-receipt', 'seeded-workflow-authority-receipt',
+                    'seeded-workflow-attempt', 'succeeded', ?1, 'atomic-checkpoint-run-1',
+                    'session-store-1', 0, 'atomic-checkpoint-event-0', ?2, X'7b7d'
+                 )",
+                digest("seeded-workflow-receipt-record"),
+            ),
+            SeededCrashBoundary::Verification => (
+                "INSERT INTO workflow_verifications VALUES (
+                    'seeded-workflow-verification', 'seeded-workflow-step-execution',
+                    'seeded-workflow-attempt', 'seeded-verification-result',
+                    'seeded-verifier-policy', 1, 1, 'atomic-checkpoint-run-1',
+                    'session-store-1', 0, 'atomic-checkpoint-event-0', ?1, X'7b7d'
+                 )",
+                digest("seeded-workflow-verification"),
+            ),
+            SeededCrashBoundary::Recovery => (
+                "INSERT INTO workflow_recovery_decisions VALUES (
+                    'seeded-workflow-recovery', 'seeded-workflow-step-execution',
+                    'seeded-workflow-attempt', 'seeded-workflow-policy', 'transport', 0,
+                    'retry_new_attempt', 'atomic-checkpoint-run-1', 'session-store-1', 0,
+                    'atomic-checkpoint-event-0', ?1, X'7b7d'
+                 )",
+                digest("seeded-workflow-recovery"),
+            ),
+            _ => unreachable!("workflow record boundary"),
+        };
+        if boundary == SeededCrashBoundary::Receipt {
+            store.connection.execute(
+                sql,
+                params![digest("seeded-workflow-authority-receipt"), record_sha256],
+            )?;
+        } else {
+            store.connection.execute(sql, [record_sha256])?;
+        }
+        Ok(())
+    }
+
+    fn seeded_new_family_target(boundary: SeededCrashBoundary) -> (&'static str, &'static str) {
+        match boundary {
+            SeededCrashBoundary::Manifest => (
+                "source_manifests",
+                "source_artifact_id = 'seeded-source-artifact'",
+            ),
+            SeededCrashBoundary::Extraction => (
+                "source_extractions",
+                "extraction_id = 'seeded-source-extraction'",
+            ),
+            SeededCrashBoundary::Index => (
+                "source_lexical_indexes",
+                "lexical_index_id = 'seeded-source-index'",
+            ),
+            SeededCrashBoundary::Attempt => (
+                "workflow_attempts",
+                "attempt_id = 'seeded-workflow-attempt'",
+            ),
+            SeededCrashBoundary::Receipt => (
+                "workflow_receipts",
+                "receipt_record_id = 'seeded-workflow-receipt'",
+            ),
+            SeededCrashBoundary::Verification => (
+                "workflow_verifications",
+                "verification_id = 'seeded-workflow-verification'",
+            ),
+            SeededCrashBoundary::Recovery => (
+                "workflow_recovery_decisions",
+                "decision_id = 'seeded-workflow-recovery'",
+            ),
+            _ => unreachable!("new-family target boundary"),
+        }
+    }
+
+    fn insert_seeded_new_family(
+        store: &mut OperationalStore,
+        boundary: SeededCrashBoundary,
+    ) -> rusqlite::Result<()> {
+        match boundary {
+            SeededCrashBoundary::Manifest => insert_seeded_source_manifest(store),
+            SeededCrashBoundary::Extraction => insert_seeded_source_extraction(store),
+            SeededCrashBoundary::Index => insert_seeded_source_index(store),
+            SeededCrashBoundary::Attempt => insert_seeded_workflow_attempt(store),
+            SeededCrashBoundary::Receipt
+            | SeededCrashBoundary::Verification
+            | SeededCrashBoundary::Recovery => insert_seeded_workflow_record(store, boundary),
+            _ => unreachable!("new-family insertion boundary"),
+        }
+    }
+
+    fn open_seeded_family_store(path: &Path, key: [u8; 32]) -> OperationalStore {
+        let connection = open_connection(path, &key).expect("seeded family connection opens");
+        let generation = connection
+            .query_row(
+                "SELECT generation FROM store_metadata WHERE singleton = 1",
+                [],
+                |row| row.get::<_, i64>(0),
+            )
+            .expect("seeded family generation");
+        OperationalStore {
+            connection,
+            path: path.to_path_buf(),
+            generation: u64::try_from(generation).expect("nonnegative seeded generation"),
+            poisoned: false,
+        }
+    }
+
     fn prepare_seeded_crash_fixture(
         boundary: SeededCrashBoundary,
         directory: &Path,
@@ -9561,6 +9857,45 @@ mod tests {
         match boundary {
             SeededCrashBoundary::Migration => create_version_two_store(&store_path, &key),
             SeededCrashBoundary::KeyRetrieval => {}
+            SeededCrashBoundary::Manifest
+            | SeededCrashBoundary::Extraction
+            | SeededCrashBoundary::Index => {
+                let mut store =
+                    OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
+                        .expect("source crash fixture");
+                seed_source_crash_authority(&store);
+                if boundary != SeededCrashBoundary::Manifest {
+                    insert_seeded_source_manifest(&mut store)
+                        .expect("seeded source manifest prerequisite");
+                }
+                if boundary == SeededCrashBoundary::Index {
+                    insert_seeded_source_extraction(&store)
+                        .expect("seeded source extraction prerequisite");
+                    seed_source_index_authority(&store);
+                }
+            }
+            SeededCrashBoundary::Attempt
+            | SeededCrashBoundary::Receipt
+            | SeededCrashBoundary::Verification
+            | SeededCrashBoundary::Recovery => {
+                let (_, _, start_event, _) = atomic_checkpoint_publication();
+                let mut runtime = DurableAuthorityRuntime::open(
+                    &store_path,
+                    &observation(),
+                    &mut TestKey(key),
+                    500,
+                )
+                .expect("workflow crash runtime fixture");
+                runtime
+                    .record_runtime_event(start_event)
+                    .expect("workflow crash runtime event");
+                let store = runtime.store.lock().expect("workflow crash store fixture");
+                seed_workflow_crash_authority(&store);
+                if boundary != SeededCrashBoundary::Attempt {
+                    insert_seeded_workflow_attempt(&store)
+                        .expect("seeded workflow attempt prerequisite");
+                }
+            }
             SeededCrashBoundary::Restore => {
                 let backup_path = directory.join("authority.backup.db");
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
@@ -9619,6 +9954,19 @@ mod tests {
                         ["b".repeat(64)],
                     )
                     .expect("transaction child commits");
+            }
+            SeededCrashBoundary::Manifest
+            | SeededCrashBoundary::Extraction
+            | SeededCrashBoundary::Index
+            | SeededCrashBoundary::Attempt
+            | SeededCrashBoundary::Receipt
+            | SeededCrashBoundary::Verification
+            | SeededCrashBoundary::Recovery => {
+                let mut store = open_seeded_family_store(&store_path, key);
+                if position == SeededCrashPosition::Before {
+                    seeded_crash_stop();
+                }
+                insert_seeded_new_family(&mut store, boundary).expect("new-family child commits");
             }
             SeededCrashBoundary::Checkpoint => {
                 let mut store =
@@ -9791,6 +10139,33 @@ mod tests {
                         |row| row.get(0),
                     )
                     .expect("final transaction result count");
+                assert_eq!(final_count, 1);
+            }
+            SeededCrashBoundary::Manifest
+            | SeededCrashBoundary::Extraction
+            | SeededCrashBoundary::Index
+            | SeededCrashBoundary::Attempt
+            | SeededCrashBoundary::Receipt
+            | SeededCrashBoundary::Verification
+            | SeededCrashBoundary::Recovery => {
+                let mut store = open_seeded_family_store(&store_path, key);
+                let (table, predicate) = seeded_new_family_target(boundary);
+                let sql = format!("SELECT COUNT(*) FROM {table} WHERE {predicate}");
+                let count: i64 = store
+                    .connection
+                    .query_row(&sql, [], |row| row.get(0))
+                    .expect("new-family recovered count");
+                if count == 0 {
+                    insert_seeded_new_family(&mut store, boundary)
+                        .expect("new-family recovery commits once");
+                } else {
+                    assert_eq!(count, 1);
+                }
+                assert!(insert_seeded_new_family(&mut store, boundary).is_err());
+                let final_count: i64 = store
+                    .connection
+                    .query_row(&sql, [], |row| row.get(0))
+                    .expect("new-family final count");
                 assert_eq!(final_count, 1);
             }
             SeededCrashBoundary::Checkpoint => {
@@ -10030,7 +10405,7 @@ mod tests {
             fs::remove_dir_all(directory).expect("seeded crash cleanup");
         }
 
-        assert_eq!(coverage.len(), 18);
+        assert_eq!(coverage.len(), 32);
         for boundary in SeededCrashBoundary::ALL {
             for position in SeededCrashPosition::ALL {
                 assert_eq!(coverage.get(&(boundary, position)), Some(&7));

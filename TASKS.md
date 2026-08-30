@@ -2096,8 +2096,20 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     make no exhaustive crash-campaign, Story, Sprint, platform, packaging, or release completion
     claim.
 - [ ] **Task 11.2.4 - Verify crash and recovery semantics**
-  - [ ] **Sub-task 11.2.4.1:** Crash before and after each manifest, extraction, index, attempt,
-    receipt, verification, recovery, checkpoint, retention, and deletion commit.
+  - [x] **Sub-task 11.2.4.1:** Crash before and after each manifest, extraction, index, attempt,
+    receipt, verification, recovery, checkpoint, retention, and deletion commit. Completed locally
+    on Linux on 2026-08-30. The seeded subprocess campaign now covers 16 operational-store
+    boundaries, including all ten named new-family/lifecycle commits, at both before/after positions
+    with seven deterministic seeds per cell: 224 forced stops and 32 exact boundary-position cells.
+    Every child must exit through the fixed abrupt-stop code. Recovery accepts the old or new commit
+    state, completes an absent target once, rejects duplicate publication, and finishes with exactly
+    one target row. Existing transaction, session-checkpoint, migration, key-retrieval, backup, and
+    restore boundaries remain in the same campaign as regression coverage. Strict kernel Clippy and
+    five evidence mutation/omission/overclaim tests pass. Retained
+    [`storage-crash-boundary-report.json`](artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json)
+    and [`storage-crash-boundary-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-results.log)
+    make no complete cross-table old/new-state matrix, retained trace/RV mapping, Story, Sprint,
+    platform, packaging, or release completion claim.
   - [ ] **Sub-task 11.2.4.2:** Require exact old or new state, no partial publication, no duplicate
     attempt, no stale context represented as current, and no replay driver launch.
   - [ ] **Sub-task 11.2.4.3:** Retain migration matrices, transaction traces, canary scans,

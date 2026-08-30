@@ -1,0 +1,57 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 417838,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "5394fda2852f9e5b68c6822cfec7d48b03cf8ca1aa70101a3fb0b806bdb25f30"
+    },
+    {
+      "byte_length": 1453,
+      "path": "docs/verification/story-11-2-storage-crash-boundary-evidence.md",
+      "sha256": "87eca212923c8ada667128a203c75659c546300990c1f250e93b93bba62f83a3"
+    },
+    {
+      "byte_length": 6545,
+      "path": "scripts/storage_crash_boundary_evidence.py",
+      "sha256": "2f7031e45d007ea8ec47a09f0a95d1e1b0a76a8e4fc1ff1935d52437019819b6"
+    },
+    {
+      "byte_length": 2004,
+      "path": "tests/test_storage_crash_boundary_evidence.py",
+      "sha256": "023fa0e256dfd181a9a5ced8a3532ecee2ca127a4842bacffb3d0c9c480ff9fb"
+    },
+    {
+      "byte_length": 4501,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-results.log",
+      "sha256": "a5cbff611363c02dac055192f936e8e435be647c86342655f0b26ed0f057e81b"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked -- --nocapture",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "before_after_positions_complete": true,
+    "boundary_position_cell_count": 32,
+    "cross_table_old_or_new_matrix_complete": false,
+    "duplicate_target_publication_refused": true,
+    "forced_stop_case_count": 224,
+    "named_new_commit_boundaries_complete": true,
+    "release_claim": "none",
+    "retained_trace_and_rv_mapping_complete": false,
+    "seeds_per_boundary_position": 7,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "record_type": "agentmage-storage-crash-boundary-evidence",
+  "required_markers": [
+    "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
+    "test result: ok. 1 passed; 0 failed"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-crash-boundaries",
+  "story_id": "11.2",
+  "task_id": "11.2.4.1"
+}
