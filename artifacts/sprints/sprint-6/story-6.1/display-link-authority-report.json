@@ -15,7 +15,7 @@
   ],
   "macos_evidence_substituted": false,
   "macos_execution_status": "blocked-macos",
-  "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
+  "reference_revision": "9a421e0af4c88286154bb8df1cc7b8f79691c88a",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -37,15 +37,15 @@
     },
     {
       "path": "kernel/contracts/src/platform_path.rs",
-      "sha256": "0cff7fe61ab00464882b1dfc3a8be15e862bcd0ce0ee8bc1b4fff878fa1d03e1"
+      "sha256": "7119a512a165b00ee1e88186bf55cd4d60b7b293aa3954a17215019cd5d9107b"
     },
     {
       "path": "kernel/engine/src/grants.rs",
-      "sha256": "6768d4e40a2497de0153ca0739b39e395f732e5ea92ea4cc486b36df887ef98c"
+      "sha256": "dd09da4069425ae0bbd4db527a1b472cf936d71e5247eceee60c41d035286291"
     },
     {
       "path": "kernel/engine/src/policy.rs",
-      "sha256": "cd27dd54b1029d2cc78939c582c6d671dddc5792f21496b72b3fdfb5e2bce6f7"
+      "sha256": "6ac01435ca83a2f5d40c3cd062b2c3319a0a04447b26a7dd40831312e674c7e4"
     },
     {
       "path": "kernel/engine/tests/display_link_authority.rs",

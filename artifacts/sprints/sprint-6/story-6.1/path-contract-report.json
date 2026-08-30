@@ -21,13 +21,13 @@
     "macos": "blocked-macos",
     "ubuntu": "not-executed"
   },
-  "reference_revision": "1a4a1152e3d7716e0fbbde4707b2a5676a3f9a38",
+  "reference_revision": "9a421e0af4c88286154bb8df1cc7b8f79691c88a",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
     {
       "path": "docs/architecture/path-authority-contract.md",
-      "sha256": "de4283149ea9b2ad6faf0e5abfe52d0076de97dd85020b78e93aa6d9d2977747"
+      "sha256": "6c293f922ef8eaa20d578b51835a03e37ec3e2e65fb31af6b935a82883bfbd2a"
     },
     {
       "path": "kernel/contracts/src/path.rs",
@@ -35,7 +35,7 @@
     },
     {
       "path": "kernel/contracts/src/platform_path.rs",
-      "sha256": "0cff7fe61ab00464882b1dfc3a8be15e862bcd0ce0ee8bc1b4fff878fa1d03e1"
+      "sha256": "7119a512a165b00ee1e88186bf55cd4d60b7b293aa3954a17215019cd5d9107b"
     },
     {
       "path": "kernel/contracts/src/display_link.rs",
@@ -43,15 +43,15 @@
     },
     {
       "path": "kernel/contracts/src/grant.rs",
-      "sha256": "c6baa52e28356c2374cb0fadcc973eb694c447606de9af623a715c23daee4924"
+      "sha256": "d19d8a394eac5679f7d77260aaa61f6f4394286486962540fbdb7fba67b9e918"
     },
     {
       "path": "platforms/linux/src/lib.rs",
-      "sha256": "8025ebf7da4896d6e25db1b813dbc4d8e3396c57555f16c84b44286d8e99eaa5"
+      "sha256": "18f4bba6155d03c31d600cb7fa5a815cb5190bca083314ea2c19735958df8335"
     },
     {
       "path": "scripts/path_contract_artifact.py",
-      "sha256": "2861992de932ca1c5bbdca22e98140508f0915d2bae4107a5071717e49f15a75"
+      "sha256": "6eff0ea4f78622cfc897e810da4b2de57005756d6c5f55dae346111a2272a03d"
     },
     {
       "path": "tests/test_path_contract_artifact.py",
