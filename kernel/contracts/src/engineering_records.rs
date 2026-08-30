@@ -756,6 +756,38 @@ impl CanonicalEffectClass {
         Self::Unknown,
     ];
 
+    /// Returns the one conservative class fixed for a registered operation.
+    ///
+    /// This match is exhaustive over the canonical operation taxonomy. Callers,
+    /// models, and capability descriptions cannot supply or override the result.
+    #[must_use]
+    pub const fn for_operation(operation: crate::GrantOperation) -> Self {
+        use crate::GrantOperation as Operation;
+        match operation {
+            Operation::WorkspaceRead
+            | Operation::DatabaseRead
+            | Operation::CredentialAccess
+            | Operation::ModelInference
+            | Operation::DraftCreate => Self::ReadOnly,
+            Operation::WorkspaceWrite
+            | Operation::GitClone
+            | Operation::GitFetch
+            | Operation::GitWorktreeCreate
+            | Operation::GitBranchFastForward => Self::Conditional,
+            Operation::WorkspaceDelete
+            | Operation::GitWorktreeRemove
+            | Operation::Administration => Self::Destructive,
+            Operation::GitCommit => Self::NonIdempotent,
+            Operation::NetworkAccess
+            | Operation::GitPush
+            | Operation::Publish
+            | Operation::Send
+            | Operation::Upload
+            | Operation::Deploy => Self::External,
+            Operation::CommandExecute | Operation::DatabaseWrite => Self::Unknown,
+        }
+    }
+
     /// Retry classes this effect class admits.
     ///
     /// This is the closed effect/retry matrix from Decision 0042. The match is
@@ -2500,6 +2532,41 @@ mod step_execution_policy_tests {
                     .is_err(),
                 "unsupported effect class {rejected:?} must fail closed",
             );
+        }
+    }
+
+    #[test]
+    fn every_canonical_operation_has_one_conservative_effect_class() {
+        use crate::GrantOperation as Operation;
+        use CanonicalEffectClass as Effect;
+
+        let expected = [
+            (Operation::WorkspaceRead, Effect::ReadOnly),
+            (Operation::WorkspaceWrite, Effect::Conditional),
+            (Operation::WorkspaceDelete, Effect::Destructive),
+            (Operation::CommandExecute, Effect::Unknown),
+            (Operation::NetworkAccess, Effect::External),
+            (Operation::GitClone, Effect::Conditional),
+            (Operation::GitFetch, Effect::Conditional),
+            (Operation::GitWorktreeCreate, Effect::Conditional),
+            (Operation::GitWorktreeRemove, Effect::Destructive),
+            (Operation::GitBranchFastForward, Effect::Conditional),
+            (Operation::GitCommit, Effect::NonIdempotent),
+            (Operation::GitPush, Effect::External),
+            (Operation::Publish, Effect::External),
+            (Operation::Send, Effect::External),
+            (Operation::Upload, Effect::External),
+            (Operation::Deploy, Effect::External),
+            (Operation::DatabaseRead, Effect::ReadOnly),
+            (Operation::DatabaseWrite, Effect::Unknown),
+            (Operation::CredentialAccess, Effect::ReadOnly),
+            (Operation::ModelInference, Effect::ReadOnly),
+            (Operation::DraftCreate, Effect::ReadOnly),
+            (Operation::Administration, Effect::Destructive),
+        ];
+        assert_eq!(Operation::ALL, expected.map(|(operation, _)| operation));
+        for (operation, effect) in expected {
+            assert_eq!(Effect::for_operation(operation), effect);
         }
     }
 

@@ -42,11 +42,29 @@ COMMANDS: Final = (
         "engineering_records::step_execution_policy_tests::workflow_failure_taxonomy_has_one_exact_conservative_default_per_class",
         "--locked",
     ),
+    (
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-contracts",
+        "engineering_records::step_execution_policy_tests::every_canonical_operation_has_one_conservative_effect_class",
+        "--locked",
+    ),
+    (
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-engine",
+        "tooling::tests::every_registered_operation_maps_exactly_once_and_untrusted_classes_fail_closed",
+        "--locked",
+    ),
 )
 MARKERS: Final = (
     "effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk ... ok",
     "every_effect_class_admits_only_its_own_retry_classes ... ok",
     "workflow_failure_taxonomy_has_one_exact_conservative_default_per_class ... ok",
+    "every_canonical_operation_has_one_conservative_effect_class ... ok",
+    "every_registered_operation_maps_exactly_once_and_untrusted_classes_fail_closed ... ok",
     "test result: ok. 1 passed; 0 failed",
 )
 EFFECT_CLASSES: Final = (
@@ -109,6 +127,30 @@ FAILURE_CLASSES: Final = (
     ("resource", "terminal_resource_exhausted"),
     ("internal", "terminal_failure"),
 )
+OPERATION_EFFECT_MAPPINGS: Final = (
+    ("workspace_read", "read_only"),
+    ("workspace_write", "conditional"),
+    ("workspace_delete", "destructive"),
+    ("command_execute", "unknown"),
+    ("network_access", "external"),
+    ("git_clone", "conditional"),
+    ("git_fetch", "conditional"),
+    ("git_worktree_create", "conditional"),
+    ("git_worktree_remove", "destructive"),
+    ("git_branch_fast_forward", "conditional"),
+    ("git_commit", "non_idempotent"),
+    ("git_push", "external"),
+    ("publish", "external"),
+    ("send", "external"),
+    ("upload", "external"),
+    ("deploy", "external"),
+    ("database_read", "read_only"),
+    ("database_write", "unknown"),
+    ("credential_access", "read_only"),
+    ("model_inference", "read_only"),
+    ("draft_create", "read_only"),
+    ("administration", "destructive"),
+)
 TRUTH: Final = {
     "synthetic_data_only": True,
     "product_runtime_executed": False,
@@ -140,7 +182,7 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-effect-class-taxonomy-evidence",
         "story_id": "5.2",
         "task_id": "5.2.1.1",
-        "coverage_task_ids": ["5.2.1.1", "5.2.1.2"],
+        "coverage_task_ids": ["5.2.1.1", "5.2.1.2", "5.2.1.3"],
         "generated_on": "2026-08-30",
         "status": "pass-local-contract-evidence",
         "taxonomy_version": 1,
@@ -150,6 +192,16 @@ def expected_report() -> dict[str, Any]:
             {"class": failure_class, "default_disposition": disposition}
             for failure_class, disposition in FAILURE_CLASSES
         ],
+        "operation_effect_mappings": [
+            {"operation": operation, "effect_class": effect_class}
+            for operation, effect_class in OPERATION_EFFECT_MAPPINGS
+        ],
+        "registration_contract": {
+            "registered_operation_count": 22,
+            "mappings_per_registered_operation": 1,
+            "caller_supplied_effect_class": False,
+            "untrusted_class_field_admitted": False,
+        },
         "independent_dimensions": {
             "effect_class_count": 7,
             "authority_class_count": 8,
@@ -162,6 +214,7 @@ def expected_report() -> dict[str, Any]:
         "required_markers": list(MARKERS),
         "artifacts": [
             artifact("kernel/contracts/src/engineering_records.rs"),
+            artifact("kernel/engine/src/tooling.rs"),
             artifact("scripts/effect_class_taxonomy_evidence.py"),
             artifact("tests/test_effect_class_taxonomy_evidence.py"),
             artifact(RAW_PATH.relative_to(ROOT).as_posix()),
@@ -240,7 +293,7 @@ def main() -> int:
         for failure in failures:
             print(f"effect-class taxonomy evidence validation failed: {failure}", file=sys.stderr)
         return 1
-    print("Sub-tasks 5.2.1.1-5.2.1.2 effect and failure taxonomy evidence validated")
+    print("Task 5.2.1 effect, failure, and registration taxonomy evidence validated")
     return 0
 
 

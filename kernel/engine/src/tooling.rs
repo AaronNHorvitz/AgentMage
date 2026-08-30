@@ -4,9 +4,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, ContractError, ErrorCategory, ErrorId, OperationOutcome,
-    RetryDisposition, RuntimeToolAttemptState, SchemaReference, StateChange, ToolCall,
-    ToolDefinition, ToolId, ToolResult, ValidationIssue, ValidationSeverity,
+    CONTRACT_SCHEMA_VERSION, CanonicalEffectClass, ContractError, ErrorCategory, ErrorId,
+    OperationOutcome, RetryDisposition, RuntimeToolAttemptState, SchemaReference, StateChange,
+    ToolCall, ToolDefinition, ToolId, ToolResult, ValidationIssue, ValidationSeverity,
 };
 use serde::de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor};
 use sha2::{Digest, Sha256};
@@ -96,6 +96,7 @@ pub struct PreGrantDispatchReceipt {
 /// Exact-version registry of non-executable tool definitions.
 struct RegisteredTool {
     definition: ToolDefinition,
+    effect_class: CanonicalEffectClass,
     implementation: Box<dyn Tool>,
 }
 
@@ -123,10 +124,13 @@ impl ToolRegistry {
         if self.tools.contains_key(&key) {
             return Err(ToolRegistryError::AlreadyRegistered);
         }
+        let effect_class =
+            CanonicalEffectClass::for_operation(definition.declared_effects[0].operation());
         self.tools.insert(
             key,
             RegisteredTool {
                 definition,
+                effect_class,
                 implementation: tool,
             },
         );
@@ -139,6 +143,18 @@ impl ToolRegistry {
         self.tools
             .get(&(tool_id.clone(), tool_version.to_owned()))
             .map(|registered| &registered.definition)
+    }
+
+    /// Returns the one trusted effect class derived at registration.
+    #[must_use]
+    pub fn get_effect_class(
+        &self,
+        tool_id: &ToolId,
+        tool_version: &str,
+    ) -> Option<CanonicalEffectClass> {
+        self.tools
+            .get(&(tool_id.clone(), tool_version.to_owned()))
+            .map(|registered| registered.effect_class)
     }
 
     /// Lists definitions in stable tool-identity and version order.
@@ -784,10 +800,10 @@ mod tests {
         ToolDispatcher, ToolRegistry, ToolRegistryError, sha256_hex,
     };
     use agentmage_kernel_contracts::{
-        ActionId, CONTRACT_SCHEMA_VERSION, ContractPayload, CorrelationId, GrantOperation,
-        OperationBinding, OperationOutcome, RequiredGrantTemplate, RuntimeToolAttemptState,
-        SchemaId, SchemaReference, StateChange, ToolCall, ToolCallId, ToolDefinition, ToolId,
-        ToolRiskLevel,
+        ActionId, CONTRACT_SCHEMA_VERSION, CanonicalEffectClass, ContractPayload, CorrelationId,
+        GrantOperation, OperationBinding, OperationOutcome, RequiredGrantTemplate,
+        RuntimeToolAttemptState, SchemaId, SchemaReference, StateChange, ToolCall, ToolCallId,
+        ToolDefinition, ToolId, ToolRiskLevel,
     };
     use serde_json::{Value, json};
 
@@ -957,6 +973,58 @@ mod tests {
                 .get_tool(&ToolId::from_raw("fixture.alpha"), "2.0.0")
                 .is_none()
         );
+    }
+
+    #[test]
+    fn every_registered_operation_maps_exactly_once_and_untrusted_classes_fail_closed() {
+        let mut registry = ToolRegistry::new();
+        for (index, operation) in GrantOperation::ALL.into_iter().enumerate() {
+            let identity = format!("fixture.operation.{index:02}");
+            let mut candidate = definition(&identity);
+            let binding = OperationBinding::new(operation);
+            candidate.declared_effects = vec![binding];
+            candidate.required_grant.operation = binding;
+            registry
+                .register_tool(Box::new(FakeTool {
+                    definition: candidate,
+                }))
+                .expect("canonical operation must register");
+            assert_eq!(
+                registry.get_effect_class(&ToolId::from_raw(&identity), "1.0.0"),
+                Some(CanonicalEffectClass::for_operation(operation)),
+            );
+        }
+        assert_eq!(registry.list_tools().len(), GrantOperation::ALL.len());
+
+        let mut omitted = definition("fixture.omitted");
+        omitted.declared_effects.clear();
+        assert!(matches!(
+            registry.register_tool(Box::new(FakeTool {
+                definition: omitted
+            })),
+            Err(ToolRegistryError::InvalidDefinition { .. })
+        ));
+        let mut repeated = definition("fixture.repeated");
+        repeated.declared_effects.push(repeated.declared_effects[0]);
+        assert!(matches!(
+            registry.register_tool(Box::new(FakeTool {
+                definition: repeated
+            })),
+            Err(ToolRegistryError::InvalidDefinition { .. })
+        ));
+
+        for rejected in ["custom", "*", "inherited", "model_created"] {
+            let mut candidate = serde_json::to_value(definition("fixture.untrusted"))
+                .expect("definition serializes");
+            candidate
+                .as_object_mut()
+                .expect("definition is an object")
+                .insert("effect_class".to_owned(), json!(rejected));
+            assert!(
+                serde_json::from_value::<ToolDefinition>(candidate).is_err(),
+                "untrusted effect class {rejected:?} must not enter a tool definition",
+            );
+        }
     }
 
     #[test]

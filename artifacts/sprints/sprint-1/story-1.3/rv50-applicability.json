@@ -190,11 +190,11 @@
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-evidence-index.json",
-      "sha256": "538f4d1d1ca7ce5e7a6e394a5f52e853341e7391aca105797db112cb9a368cc0"
+      "sha256": "c215fc7ba38179dc182d6c482389e1750922178fbe0c29102227ec220ff27094"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
-      "sha256": "a93005e7da4c9c73dd6e4ca2b4cb162f1d2709734f45b7eacb751cb24411729f"
+      "sha256": "dac620dd6e0b1fb53df6aefced19e62e3fe4309eabd01c0598c7c7584072e551"
     }
   ],
   "limitations": [

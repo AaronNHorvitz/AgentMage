@@ -1330,7 +1330,7 @@ an effect or treating approval as reusable authority.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 5.2.1 - Define closed effect and failure taxonomies**
+- [x] **Task 5.2.1 - Define closed effect and failure taxonomies**
   - [x] **Sub-task 5.2.1.1:** Implement read-only, idempotent-write, conditional,
     non-idempotent, destructive, external, and unknown effect classes independent of
     `AuthorityClass` and `ToolRiskLevel`. Evidence: the single canonical
@@ -1363,8 +1363,22 @@ an effect or treating approval as reusable authority.
     now covers both Sub-tasks 5.2.1.1 and 5.2.1.2, retains three passing Rust command results, and
     rejects class, disposition, unsafe-retry, approval, evidence, and product-truth mutations while
     recording zero runtime, effect, authority, network, platform-support, or release claims.
-  - [ ] **Sub-task 5.2.1.3:** Reject custom, wildcard, inherited, omitted, or model-created classes
-    and require every registered tool operation to map exactly once.
+  - [x] **Sub-task 5.2.1.3:** Reject custom, wildcard, inherited, omitted, or model-created classes
+    and require every registered tool operation to map exactly once. Evidence: the exhaustive
+    `CanonicalEffectClass::for_operation` contract fixes one conservative effect class for every
+    one of the 22 canonical `GrantOperation` variants; command execution and generic database writes
+    deliberately remain `unknown` rather than receiving inferred retry safety. `ToolRegistry`
+    validates exactly one declared operation, derives and freezes its class internally, and exposes
+    the retained class only as read-only registration metadata—there is no caller, model, or
+    capability-description field that can supply or override it. Focused contract and engine tests
+    execute all 22 mappings through actual registration, reject empty and repeated operation sets,
+    and prove custom, wildcard, inherited, and model-created `effect_class` fields cannot deserialize
+    into a closed `ToolDefinition`. The refreshed
+    [`effect-class-taxonomy-report.json`](artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json)
+    covers all three Task 5.2.1 sub-tasks, hash-binds both contract and registry implementations, and
+    retains five passing Rust command results plus seven evidence mutation tests. Missing, duplicate,
+    or caller-overridden mappings and any product/runtime/effect/network/release overclaim fail the
+    enrolled evidence gate.
 - [ ] **Task 5.2.2 - Compile retry and repair eligibility**
   - [ ] **Sub-task 5.2.2.1:** Define deterministic normalization before model repair and permit at
     most one profile-bound model repair without any effect attempt.

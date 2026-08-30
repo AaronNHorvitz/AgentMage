@@ -7,6 +7,7 @@ from scripts.effect_class_taxonomy_evidence import (
     EFFECT_CLASSES,
     FAILURE_CLASSES,
     MARKERS,
+    OPERATION_EFFECT_MAPPINGS,
     TRUTH,
     expected_report,
     validate_raw,
@@ -42,6 +43,18 @@ class EffectClassTaxonomyEvidenceTests(unittest.TestCase):
         self.assertIn("widened", validate_report(changed)[0])
         changed = copy.deepcopy(expected_report())
         changed["failure_classes"][10]["default_disposition"] = "eligible_fresh_attempt"
+        self.assertIn("widened", validate_report(changed)[0])
+
+    def test_operation_mapping_omission_duplication_and_override_are_rejected(self) -> None:
+        self.assertEqual(len(OPERATION_EFFECT_MAPPINGS), 22)
+        changed = copy.deepcopy(expected_report())
+        changed["operation_effect_mappings"].pop()
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["operation_effect_mappings"].append(changed["operation_effect_mappings"][0])
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["registration_contract"]["caller_supplied_effect_class"] = True
         self.assertIn("widened", validate_report(changed)[0])
 
     def test_product_truth_cannot_be_promoted(self) -> None:
