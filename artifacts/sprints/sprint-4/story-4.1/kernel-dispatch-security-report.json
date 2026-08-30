@@ -18,11 +18,11 @@
   "source_records": [
     {
       "path": "Cargo.lock",
-      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
+      "sha256": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
+      "sha256": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b"
     },
     {
       "path": "kernel/contracts/src/tool.rs",
@@ -30,11 +30,11 @@
     },
     {
       "path": "kernel/engine/Cargo.toml",
-      "sha256": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2"
+      "sha256": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e"
     },
     {
       "path": "kernel/engine/src/tooling.rs",
-      "sha256": "1aff3e7318bc2957da0f59838359b3c71c9697b1514496a1a098b2fecdcb9be8"
+      "sha256": "67f0bc19387bfdb3f40cd8e5cdb959e4de2d6e7827a109ff1f28bb1e0c4be7ba"
     },
     {
       "path": "scripts/kernel_dispatch_security.py",
@@ -45,7 +45,7 @@
       "sha256": "158ee96b773436c76ca36b870baf9edef37f4beb227363cd30d4ad12db323006"
     }
   ],
-  "source_revision": "acbf2ee4d9d2460737d1c23c790550c6c8ed5b3c",
+  "source_revision": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
   "status": "pass-linux-zero-execution",
   "task_id": "4.1.3.3",
   "test_id": "S-004-ST01",

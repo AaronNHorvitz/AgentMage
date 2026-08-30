@@ -19,14 +19,18 @@ from scripts.story_4_1_gate import (
 
 
 class Story41GateTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.report = build_report()
+
     def test_checked_gate_is_current_and_blocked_only_by_macos(self) -> None:
         self.assertEqual(check_report(), [])
         report = read_json(REPORT_PATH)
-        self.assertEqual(report, build_report())
+        self.assertEqual(report, self.report)
         self.assertEqual(report["only_blocker"], "macos-execution-evidence-unavailable")
 
     def test_both_acceptance_criteria_pass_shared_linux(self) -> None:
-        report = build_report()
+        report = self.report
         self.assertEqual(
             [item["criterion_id"] for item in report["acceptance_criteria"]],
             ["4.1.AC1", "4.1.AC2"],
@@ -43,7 +47,7 @@ class Story41GateTests(unittest.TestCase):
         )
 
     def test_architecture_acceptance_is_bounded_to_the_contract_layer(self) -> None:
-        acceptance = build_report()["architecture_acceptance"]
+        acceptance = self.report["architecture_acceptance"]
         self.assertEqual(acceptance["acceptance_test_id"], "AT-ARCH-001")
         self.assertEqual(acceptance["scope"], "implemented-contract-layer")
         self.assertEqual(acceptance["prohibited_observed_edge_count"], 0)
@@ -51,7 +55,7 @@ class Story41GateTests(unittest.TestCase):
         self.assertEqual(acceptance["product_wide_acceptance_claim"], "none")
 
     def test_review_identity_and_artifact_closure_are_retained(self) -> None:
-        review = build_report()["independent_review"]
+        review = self.report["independent_review"]
         self.assertEqual(review["reviewed_commit"], REVIEWED_COMMIT)
         self.assertEqual(review["reviewed_tree"], REVIEWED_TREE)
         self.assertEqual(len(review["artifacts"]), len(REVIEWED_PATHS))
@@ -66,7 +70,7 @@ class Story41GateTests(unittest.TestCase):
         )
 
     def test_acceptance_dod_security_and_architecture_mutations_fail_closed(self) -> None:
-        report = build_report()
+        report = self.report
         acceptance = copy.deepcopy(report)
         acceptance["acceptance_criteria"][0]["status"] = "pass"
         dod = copy.deepcopy(report)
@@ -77,10 +81,10 @@ class Story41GateTests(unittest.TestCase):
         architecture["architecture_acceptance"]["product_wide_acceptance_claim"] = "pass"
         for changed in (acceptance, dod, security, architecture):
             with self.subTest(changed=changed):
-                self.assertTrue(validate_report(changed))
+                self.assertTrue(validate_report(changed, verify_current=False))
 
     def test_product_authority_release_and_macos_overclaims_fail_closed(self) -> None:
-        report = build_report()
+        report = self.report
         changes = []
         for key, value in (
             ("product_acceptance_claim", "pass"),
@@ -94,10 +98,10 @@ class Story41GateTests(unittest.TestCase):
             changes.append(changed)
         for changed in changes:
             with self.subTest(changed=changed):
-                self.assertTrue(validate_report(changed))
+                self.assertTrue(validate_report(changed, verify_current=False))
 
     def test_universal_dod_closure_is_exact(self) -> None:
-        report = build_report()
+        report = self.report
         self.assertEqual(
             [item["control_id"] for item in report["universal_definition_of_done"]],
             list(G_DOD_IDS),

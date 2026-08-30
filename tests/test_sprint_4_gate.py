@@ -17,15 +17,19 @@ from scripts.sprint_4_gate import (
 
 
 class Sprint4GateTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.report = build_report()
+
     def test_checked_sprint_gate_is_current_and_blocked_only_by_macos(self) -> None:
         self.assertEqual(check_report(), [])
-        report = build_report()
+        report = self.report
         self.assertEqual(read_json(REPORT_PATH), report)
         self.assertEqual(report["status"], "blocked-macos")
         self.assertEqual(report["summary"]["blocking_controls"], ["G-DOD-10"])
 
     def test_all_five_sprint_acceptance_criteria_pass_shared_linux(self) -> None:
-        report = build_report()
+        report = self.report
         self.assertEqual(
             [item["criterion_id"] for item in report["acceptance_criteria"]],
             ["4.AC1", "4.AC2", "4.AC3", "4.AC4", "4.AC5"],
@@ -41,14 +45,14 @@ class Sprint4GateTests(unittest.TestCase):
         )
 
     def test_story_gate_preserves_the_macos_blocker(self) -> None:
-        story = build_report()["story_gates"][0]
+        story = self.report["story_gates"][0]
         self.assertEqual(story["story_id"], "4.1")
         self.assertEqual(story["status"], "blocked-macos")
         self.assertEqual(story["dod_control_ids"], list(G_DOD_IDS))
         self.assertEqual(story["dod_blocking_controls"], ["G-DOD-10"])
 
     def test_reviewed_commit_and_artifact_closure_are_retained(self) -> None:
-        report = build_report()
+        report = self.report
         review = report["independent_review"]
         self.assertEqual(report["reviewed_commit"], REVIEWED_COMMIT)
         self.assertEqual(len(review["reviewed_artifacts"]), len(REVIEWED_PATHS))
@@ -67,7 +71,7 @@ class Sprint4GateTests(unittest.TestCase):
         self.assertTrue(sprint_marker_failures(text.replace("### [ ]", "### [x]")))
 
     def test_acceptance_story_and_blocker_mutations_fail_closed(self) -> None:
-        report = build_report()
+        report = self.report
         criterion = copy.deepcopy(report)
         criterion["acceptance_criteria"][0]["prohibited_observed_edge_count"] = 1
         fixture_count = copy.deepcopy(report)
@@ -83,7 +87,7 @@ class Sprint4GateTests(unittest.TestCase):
                 self.assertTrue(validate_report(changed, verify_current=False))
 
     def test_macos_product_authority_release_and_review_overclaims_fail_closed(self) -> None:
-        report = build_report()
+        report = self.report
         macos = copy.deepcopy(report)
         macos["macos"]["status"] = "pass"
         product = copy.deepcopy(report)

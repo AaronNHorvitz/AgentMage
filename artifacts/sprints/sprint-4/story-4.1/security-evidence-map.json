@@ -1,29 +1,29 @@
 {
   "artifacts": [
     {
-      "bytes": 136944,
+      "bytes": 160606,
       "path": "SECURITY-REVIEW.md",
-      "sha256": "2a677fbbc0f4b7294fa87e86a0fd0b9b611f4e5c5f170bd237171fd562188e44"
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
     },
     {
-      "bytes": 4044,
+      "bytes": 4817,
       "path": "architecture/dependency-rules.json",
-      "sha256": "ba5f800b98b17c71eef2ccd95f0e96070498be21ce05326005ff1485df8c01e2"
+      "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
     },
     {
-      "bytes": 22675,
+      "bytes": 23273,
       "path": "docs/architecture/kernel-contract-reference.md",
-      "sha256": "c34ff06c26e266cbbd0ae895739fa4aca6d38daf5506a1ad556069592c6439c8"
+      "sha256": "f3825b04067d57554d0a941aeb0055494e8a5ede02a9a1aaf1474f2b37cd99e0"
     },
     {
-      "bytes": 4937,
+      "bytes": 5469,
       "path": "docs/architecture/kernel-dependency-report.md",
-      "sha256": "536931d0e23545d5e4a974e9020b3e84d2ae2fe11fc31edfad5e2ff2ac7264fe"
+      "sha256": "c78d1637958f28e997e0dafcc136c23514bf238242cd1cf98a566b6e413eb2df"
     },
     {
-      "bytes": 17169,
+      "bytes": 18517,
       "path": "kernel/engine/src/authority.rs",
-      "sha256": "a2481365c5c61cc4e06729564c98af11998fcb3758acc595b82362086ccb094f"
+      "sha256": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8"
     },
     {
       "bytes": 20481,
@@ -31,9 +31,9 @@
       "sha256": "ae4525a7a25175ac079f828deb34dbc3b34578b07c17de3e26edc60fbfe48747"
     },
     {
-      "bytes": 35323,
+      "bytes": 52216,
       "path": "kernel/engine/src/tooling.rs",
-      "sha256": "1aff3e7318bc2957da0f59838359b3c71c9697b1514496a1a098b2fecdcb9be8"
+      "sha256": "67f0bc19387bfdb3f40cd8e5cdb959e4de2d6e7827a109ff1f28bb1e0c4be7ba"
     },
     {
       "bytes": 8704,
@@ -68,7 +68,7 @@
     {
       "bytes": 9920,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-reference-report.json",
-      "sha256": "47ec0b4d74adb64276d16597566057115b934900e438b07b850d16817d2991a9"
+      "sha256": "d7e838d4664733324ace814df37cc9a870e02819fb4fe7a4bcfc4db166814215"
     },
     {
       "bytes": 1827,
@@ -76,19 +76,19 @@
       "sha256": "95d888d65993a60e6870eab3c47def863be84467c2161c4087336230796bc2b8"
     },
     {
-      "bytes": 21454,
+      "bytes": 35336,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-      "sha256": "c477f5962adb066969ac006b04ad19df2d3ae33c4a65a734ff0fe24f36852949"
+      "sha256": "39ac83aaa90e4c15ad398928eb23604beee29bc02de7a0dbfcac706bd8bd6588"
     },
     {
       "bytes": 4896,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-      "sha256": "574e07599780c404fa4f92eb66ed492677201422c5745ae8c9f54134e085c455"
+      "sha256": "511b04dd5188dcd84ffc13ece3803811747a76aa71bf4b1bb28583ed4bc96294"
     },
     {
       "bytes": 4406,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-      "sha256": "2cf0e5be8678cc147ac513b375fdef13a10d356a4ffb78b85ca55bc040744cde"
+      "sha256": "e42fe08d569549c7c390796926fb26aa068da2adba53787312cf6e82b3f76417"
     },
     {
       "bytes": 16032,
@@ -106,9 +106,9 @@
       "sha256": "7f4cf145d30ac6a82bdf80fe0e264e6d4db69e306ca09f37c9aaf6f83cad7278"
     },
     {
-      "bytes": 15707,
+      "bytes": 15934,
       "path": "scripts/kernel_architecture_report.py",
-      "sha256": "85d1bf2266e59c289d4a1903f88f7bf0552ee1cc6531104658de7471632a448b"
+      "sha256": "6390c268bf2b58e0030487c90084b9ba4986f0fb8a5e50b7dff7497f2adb31f7"
     },
     {
       "bytes": 7932,
@@ -141,9 +141,9 @@
       "sha256": "a69a610df0d2ae0aef5246b4779a217e595b06462ec6e377ad1ad5f43e6152a6"
     },
     {
-      "bytes": 1779,
+      "bytes": 1784,
       "path": "tests/test_kernel_architecture_report.py",
-      "sha256": "9652f545721f19950d90e102f02ef1aa5cc853ff962b38f5dfd80c5ab4d10357"
+      "sha256": "73025244fb66718f34798dfeaae56a8c6918adc09492c53195d82452442c4368"
     },
     {
       "bytes": 1389,
@@ -258,7 +258,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "07d5b0e278015533d9baa055714d1fd4e216cc98",
+  "source_revision": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
   "status": "pass-linux-security-mapping",
   "story_id": "4.1",
   "summary": {

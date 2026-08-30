@@ -29,27 +29,35 @@ flowchart BT
     PL -->|"effect mediation only"| KE
     PLI["platform-linux-native-inference"] --> KC
     PW["platform-windows"] --> KC
+    CK["capability-knowledge"] --> KC
     CR["capability-read-only"] --> KC
+    CRM["capability-repository-map"] --> KC
+    SH["shell-host"] --> CK
     SH["shell-host"] --> KC
     SH --> KE
     SH --> PL
     SH --> CR
+    SH --> CRM
 ```
 
-The ten materialized internal product edges are:
+The fourteen materialized internal product edges are:
 
+- `capability-knowledge` -> `kernel-contracts`
 - `capability-read-only` -> `kernel-contracts`
+- `capability-repository-map` -> `kernel-contracts`
 - `kernel-engine` -> `kernel-contracts`
 - `platform-linux` -> `kernel-contracts`
 - `platform-linux` -> `kernel-engine`
 - `platform-linux-native-inference` -> `kernel-contracts`
 - `platform-windows` -> `kernel-contracts`
+- `shell-host` -> `capability-knowledge`
 - `shell-host` -> `capability-read-only`
+- `shell-host` -> `capability-repository-map`
 - `shell-host` -> `kernel-contracts`
 - `shell-host` -> `kernel-engine`
 - `shell-host` -> `platform-linux` under `cfg(target_os = "linux")`
 
-Both the amended fourteen-edge logical graph and this ten-edge materialized graph
+Both the amended eighteen-edge logical graph and this fourteen-edge materialized graph
 are acyclic. Every materialized edge is in the source module's exact allowlist.
 
 ## Declared but Unmaterialized Edges
@@ -71,6 +79,9 @@ The Cargo manifests directly use `serde` and `serde_json` in contracts;
 `ed25519-dalek`, `serde`, `serde_json`, and `sha2` in the kernel engine; and
 `rustix`, `seccompiler`, `sha2`, and `zeroize` in the Linux adapter; and `rustix`,
 `serde`, `serde_json`, `sha2`, and `zeroize` in the Linux inference adapter. The
+knowledge and repository-map capabilities add their locked parsing, archive,
+cryptographic, SQLite, and tree-sitter dependencies while depending on no other
+AgentMage module beyond contracts. The
 Windows adapter currently has only the contracts dependency on non-Windows hosts,
 with target-gated `sha2` and `windows-sys` dependencies. `seccompiler` is a
 pure-Rust classic-BPF policy compiler used to produce the fixed Bubblewrap
@@ -88,10 +99,10 @@ by the supply-chain controls and are not duplicated here.
 
 - `kernel-contracts` has zero internal product dependencies.
 - `kernel-engine` has exactly one internal edge, to `kernel-contracts`.
-- Neither the kernel, Linux adapters, Windows adapter, nor read-only capability imports a shell.
+- Neither the kernel, Linux adapters, Windows adapter, nor any capability imports a shell.
 - The Linux adapter depends inward on contracts and the kernel's consuming
-  effect-mediation interface. The read-only capability depends only on
-  contracts; neither imports the other.
+  effect-mediation interface. Each capability depends only on contracts among
+  AgentMage modules; none imports another capability.
 - Linux inference and Windows each depend inward on contracts without importing
   the kernel engine or a shell.
 - The host shell is the only materialized composition root.

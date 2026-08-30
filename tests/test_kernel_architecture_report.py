@@ -16,10 +16,10 @@ from scripts.kernel_architecture_report import (
 
 
 class KernelArchitectureReportTests(unittest.TestCase):
-    def test_manifest_graph_has_only_the_ten_materialized_product_edges(self) -> None:
+    def test_manifest_graph_has_only_the_fourteen_materialized_product_edges(self) -> None:
         internal, _ = cargo_dependency_records()
         graph = graph_findings(read_json(RULES_PATH), internal)
-        self.assertEqual(graph["observed_product_edge_count"], 10)
+        self.assertEqual(graph["observed_product_edge_count"], 14)
         self.assertEqual(graph["prohibited_observed_edges"], [])
         self.assertIsNone(graph["observed_cycle"])
         self.assertEqual(

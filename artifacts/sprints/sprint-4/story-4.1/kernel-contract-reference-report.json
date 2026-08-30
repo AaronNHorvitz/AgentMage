@@ -323,11 +323,11 @@
     "macos_implementation_claim": "none",
     "macos_reference": "blocked-macos"
   },
-  "reference_revision": "acbf2ee4d9d2460737d1c23c790550c6c8ed5b3c",
+  "reference_revision": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
   "reference_sources": [
     {
       "path": "docs/architecture/kernel-contract-reference.md",
-      "sha256": "c34ff06c26e266cbbd0ae895739fa4aca6d38daf5506a1ad556069592c6439c8"
+      "sha256": "f3825b04067d57554d0a941aeb0055494e8a5ede02a9a1aaf1474f2b37cd99e0"
     },
     {
       "path": "scripts/kernel_contract_reference.py",

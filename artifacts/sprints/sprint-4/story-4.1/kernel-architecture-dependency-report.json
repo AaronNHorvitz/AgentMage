@@ -22,6 +22,294 @@
         "condition": "all",
         "dependency_kind": "product",
         "lock": {
+          "checksum": "9b89e1c441e926b9c82a8d023f6e1b7ae0adcfaa7d621814e4d60789bac751cb",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.11.0"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "chacha20poly1305"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "4aaa26c720c68b866f2c96ef5c1264b3e6f473fe5d4ce61cd44bbe913e553018",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.13.0"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "hkdf"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "5e2ec995d822e05cabc3f06d196ee43650af3fe4fe38012cacb35e0c3d113b68",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.44.0"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "lopdf"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.41.0"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "quick-xml"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.40.2"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "rusqlite"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.229"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "serde"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.151"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "serde_json"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.11.0"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "sha2"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "5fd4f6878c9cb28d874b009da9e8d183b5abc80117c40bbd187a1fde336be6e8",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.1.25"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "unicode-normalization"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "e13c156562582aa81c60cb29407084cdb54c4164760106ab78e6c5b0858cf64e",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.9.0"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "zeroize"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "8.6.0"
+        },
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "zip"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.229"
+        },
+        "manifest": "capabilities/read-only/Cargo.toml",
+        "source": "capability-read-only",
+        "target": "serde"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.151"
+        },
+        "manifest": "capabilities/read-only/Cargo.toml",
+        "source": "capability-read-only",
+        "target": "serde_json"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.11.0"
+        },
+        "manifest": "capabilities/read-only/Cargo.toml",
+        "source": "capability-read-only",
+        "target": "sha2"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.40.2"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "rusqlite"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.229"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "serde"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.151"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "serde_json"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.11.0"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "sha2"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "83c567a8e18ae93f20982c90370b16fd24023aeaf52f6052b96957ab253a0fec",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.26.12"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "tree-sitter"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "68204f2abc0627a90bdf06e605f5c470aa26fdcb2081ea553a04bdad756693f5",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.25.0"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "tree-sitter-javascript"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "6bf85fd39652e740bf60f46f4cda9492c3a9ad75880575bf14960f775cb74a1c",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.25.0"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "tree-sitter-python"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "439e577dbe07423ec2582ac62c7531120dbfccfa6e5f92406f93dd271a120e45",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.24.2"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "tree-sitter-rust"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "fe36052155b9dd69ca82b3b8f1b4ccfb2d867125ac1a4db1dd7331829242668c",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.7.3"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "tree-sitter-swift"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "6c5f76ed8d947a75cc446d5fccd8b602ebf0cde64ccf2ffa434d873d7a575eff",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.23.2"
+        },
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
+        "target": "tree-sitter-typescript"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
           "checksum": "4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba",
           "source": "registry+https://github.com/rust-lang/crates.io-index",
           "version": "1.0.229"
@@ -130,6 +418,30 @@
         "condition": "all",
         "dependency_kind": "product",
         "lock": {
+          "checksum": "9b89e1c441e926b9c82a8d023f6e1b7ae0adcfaa7d621814e4d60789bac751cb",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.11.0"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "chacha20poly1305"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "4aaa26c720c68b866f2c96ef5c1264b3e6f473fe5d4ce61cd44bbe913e553018",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.13.0"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "hkdf"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
           "checksum": "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190",
           "source": "registry+https://github.com/rust-lang/crates.io-index",
           "version": "1.1.4"
@@ -149,6 +461,30 @@
         "manifest": "platforms/linux/Cargo.toml",
         "source": "platform-linux",
         "target": "seccompiler"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "1.0.151"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "serde_json"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "lock": {
+          "checksum": "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba",
+          "source": "registry+https://github.com/rust-lang/crates.io-index",
+          "version": "0.10.6"
+        },
+        "manifest": "platforms/linux/Cargo.toml",
+        "source": "platform-linux",
+        "target": "sha1"
       },
       {
         "condition": "all",
@@ -379,8 +715,8 @@
         "target": "sha2"
       }
     ],
-    "direct_cargo_count": 30,
-    "locked_external_cargo_package_count": 51,
+    "direct_cargo_count": 58,
+    "locked_external_cargo_package_count": 110,
     "swift_external": [],
     "vscode_development": [
       "@eslint/js",
@@ -417,10 +753,18 @@
       }
     ],
     "declared_cycle": null,
-    "declared_edge_count": 14,
+    "declared_edge_count": 18,
     "declared_edges": [
       {
+        "source": "capability-knowledge",
+        "target": "kernel-contracts"
+      },
+      {
         "source": "capability-read-only",
+        "target": "kernel-contracts"
+      },
+      {
+        "source": "capability-repository-map",
         "target": "kernel-contracts"
       },
       {
@@ -453,7 +797,15 @@
       },
       {
         "source": "shell-host",
+        "target": "capability-knowledge"
+      },
+      {
+        "source": "shell-host",
         "target": "capability-read-only"
+      },
+      {
+        "source": "shell-host",
+        "target": "capability-repository-map"
       },
       {
         "source": "shell-host",
@@ -477,13 +829,27 @@
       }
     ],
     "observed_cycle": null,
-    "observed_product_edge_count": 10,
+    "observed_product_edge_count": 14,
     "observed_product_edges": [
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "capabilities/knowledge/Cargo.toml",
+        "source": "capability-knowledge",
+        "target": "kernel-contracts"
+      },
       {
         "condition": "all",
         "dependency_kind": "product",
         "manifest": "capabilities/read-only/Cargo.toml",
         "source": "capability-read-only",
+        "target": "kernel-contracts"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "capabilities/repository-map/Cargo.toml",
+        "source": "capability-repository-map",
         "target": "kernel-contracts"
       },
       {
@@ -526,7 +892,21 @@
         "dependency_kind": "product",
         "manifest": "shells/host/Cargo.toml",
         "source": "shell-host",
+        "target": "capability-knowledge"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "shells/host/Cargo.toml",
+        "source": "shell-host",
         "target": "capability-read-only"
+      },
+      {
+        "condition": "all",
+        "dependency_kind": "product",
+        "manifest": "shells/host/Cargo.toml",
+        "source": "shell-host",
+        "target": "capability-repository-map"
       },
       {
         "condition": "all",
@@ -559,7 +939,7 @@
     "The macOS adapter and host composition edges remain blocked-macos.",
     "External package security and provenance are owned by separate supply-chain evidence."
   ],
-  "module_count": 14,
+  "module_count": 16,
   "platform_status": {
     "linux_manifest_graph": "verified-local",
     "macos_execution": "blocked-macos",
@@ -570,27 +950,35 @@
   "source_records": [
     {
       "path": "Cargo.lock",
-      "sha256": "34daad7cbda9889ba42438a54c108f205d74bffc152c0eea22cf93cb843951af"
+      "sha256": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "a3fbb6ac6d0309db197aeb55bd23428e1bb440d18db47775be8e722b44040e86"
+      "sha256": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b"
     },
     {
       "path": "architecture/dependency-rules.json",
-      "sha256": "ba5f800b98b17c71eef2ccd95f0e96070498be21ce05326005ff1485df8c01e2"
+      "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
     },
     {
       "path": "architecture/module-inventory.json",
-      "sha256": "0c4f651ab29e30a9592c814926658d8596f289fc8584a9c1f8d78c0e4ff55fc8"
+      "sha256": "0fe5e51673cdcef3b99a993b4a93f65a2cd8019579efd3c15aacab565dd38bd0"
+    },
+    {
+      "path": "capabilities/knowledge/Cargo.toml",
+      "sha256": "d1aaf75cd939ed948adce94dc56091873a6611fb8f5f8c6dc3a50acf6d0974de"
     },
     {
       "path": "capabilities/read-only/Cargo.toml",
-      "sha256": "575ed27dd7633f0cb558cea12548e60b24f0ef3447b7743fb57932197feab08a"
+      "sha256": "0779ae133a0b654cbd5686ffbde501f72ed333b271592467af87bba02379d25e"
+    },
+    {
+      "path": "capabilities/repository-map/Cargo.toml",
+      "sha256": "6893bed2643ac73332862345c84f6062bedb6ff506ba7bd3a4036921e6242de6"
     },
     {
       "path": "docs/architecture/kernel-dependency-report.md",
-      "sha256": "536931d0e23545d5e4a974e9020b3e84d2ae2fe11fc31edfad5e2ff2ac7264fe"
+      "sha256": "c78d1637958f28e997e0dafcc136c23514bf238242cd1cf98a566b6e413eb2df"
     },
     {
       "path": "kernel/contracts/Cargo.toml",
@@ -598,7 +986,7 @@
     },
     {
       "path": "kernel/engine/Cargo.toml",
-      "sha256": "17839ab61a20fbaa3eb3fdf8f545021de4bc97887bc84b023f724bb085f1c8b2"
+      "sha256": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e"
     },
     {
       "path": "package-lock.json",
@@ -606,7 +994,7 @@
     },
     {
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "68fecf58c3e9ccf056060099a901b7f80af29400f9a22a173a29d4e26848a9ac"
+      "sha256": "00426eed21bba2bd58421ef75b6d661b7bfe8dc91c0fa931e01fe58d502ccead"
     },
     {
       "path": "platforms/linux-inference/Cargo.toml",
@@ -626,26 +1014,26 @@
     },
     {
       "path": "scripts/kernel_architecture_report.py",
-      "sha256": "85d1bf2266e59c289d4a1903f88f7bf0552ee1cc6531104658de7471632a448b"
+      "sha256": "6390c268bf2b58e0030487c90084b9ba4986f0fb8a5e50b7dff7497f2adb31f7"
     },
     {
       "path": "shells/host/Cargo.toml",
-      "sha256": "af58bcd226a1b2f752c45cb33c30692f2b0c2fe97809190b998a77e2be199b5a"
+      "sha256": "022c2254e404a7c54d790a894e98f6925a9f2b794f0ff37d7022bb4e19c9f923"
     },
     {
       "path": "shells/vscode/package.json",
-      "sha256": "12e6ebe9ff4e5936a4d53f64f19db39d289ba3623bd03678d285a4a6e6661e16"
+      "sha256": "c2d7612804f9bcb2e0a3c5f4615a2d7d3ef2181f93e32b5e83fa854ec1bc1ecb"
     },
     {
       "path": "tests/test_kernel_architecture_report.py",
-      "sha256": "9652f545721f19950d90e102f02ef1aa5cc853ff962b38f5dfd80c5ab4d10357"
+      "sha256": "73025244fb66718f34798dfeaae56a8c6918adc09492c53195d82452442c4368"
     },
     {
       "path": "platforms/windows/Cargo.toml",
       "sha256": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490"
     }
   ],
-  "source_revision": "acbf2ee4d9d2460737d1c23c790550c6c8ed5b3c",
+  "source_revision": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }

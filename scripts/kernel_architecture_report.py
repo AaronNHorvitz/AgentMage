@@ -27,7 +27,9 @@ REPORT_PATH = (
 )
 
 CARGO_MANIFESTS = {
+    "capability-knowledge": "capabilities/knowledge/Cargo.toml",
     "capability-read-only": "capabilities/read-only/Cargo.toml",
+    "capability-repository-map": "capabilities/repository-map/Cargo.toml",
     "kernel-contracts": "kernel/contracts/Cargo.toml",
     "kernel-engine": "kernel/engine/Cargo.toml",
     "platform-linux-native-inference": "platforms/linux-inference/Cargo.toml",
@@ -41,7 +43,9 @@ SOURCE_PATHS = (
     "Cargo.toml",
     "architecture/dependency-rules.json",
     "architecture/module-inventory.json",
+    "capabilities/knowledge/Cargo.toml",
     "capabilities/read-only/Cargo.toml",
+    "capabilities/repository-map/Cargo.toml",
     "docs/architecture/kernel-dependency-report.md",
     "kernel/contracts/Cargo.toml",
     "kernel/engine/Cargo.toml",

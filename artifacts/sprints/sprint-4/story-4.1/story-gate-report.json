@@ -19,7 +19,7 @@
   ],
   "architecture_acceptance": {
     "acceptance_test_id": "AT-ARCH-001",
-    "observed_product_edge_count": 10,
+    "observed_product_edge_count": 14,
     "product_wide_acceptance_claim": "none",
     "prohibited_observed_edge_count": 0,
     "runtime_boundary_trace_count": 5,
@@ -30,19 +30,15 @@
     "artifacts": [
       {
         "path": "architecture/dependency-rules.json",
-        "sha256": "ba5f800b98b17c71eef2ccd95f0e96070498be21ce05326005ff1485df8c01e2"
+        "sha256": "21235f069ba67f3eb1412a379197e336f7bd71490eb4789b96fb224bfb6b1040"
       },
       {
         "path": "docs/architecture/kernel-contract-reference.md",
-        "sha256": "c34ff06c26e266cbbd0ae895739fa4aca6d38daf5506a1ad556069592c6439c8"
-      },
-      {
-        "path": "docs/architecture/kernel-dependency-report.md",
-        "sha256": "536931d0e23545d5e4a974e9020b3e84d2ae2fe11fc31edfad5e2ff2ac7264fe"
+        "sha256": "f3825b04067d57554d0a941aeb0055494e8a5ede02a9a1aaf1474f2b37cd99e0"
       },
       {
         "path": "kernel/engine/src/authority.rs",
-        "sha256": "a2481365c5c61cc4e06729564c98af11998fcb3758acc595b82362086ccb094f"
+        "sha256": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8"
       },
       {
         "path": "kernel/engine/src/propagation.rs",
@@ -50,7 +46,7 @@
       },
       {
         "path": "kernel/engine/src/tooling.rs",
-        "sha256": "1aff3e7318bc2957da0f59838359b3c71c9697b1514496a1a098b2fecdcb9be8"
+        "sha256": "67f0bc19387bfdb3f40cd8e5cdb959e4de2d6e7827a109ff1f28bb1e0c4be7ba"
       },
       {
         "path": "kernel/engine/tests/boundary_workflow.rs",
@@ -167,44 +163,12 @@
       {
         "path": "fixtures/contracts/compatibility/v2/task.v3.unsupported.json",
         "sha256": "b60107db2109729d75ba9a9094b7107279bad92dc997cd9e8613fceff44d287d"
-      },
-      {
-        "path": "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
-        "sha256": "e82239e970873cbf3caeaf4dff076ed5fc68babdf24ed0b77d6391e7419c0cb5"
-      },
-      {
-        "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-package-report.json",
-        "sha256": "4a98bf3f206752b63347bd96a744732fa8c8d2903cacb018936dd8934462c0ae"
-      },
-      {
-        "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-reference-report.json",
-        "sha256": "47ec0b4d74adb64276d16597566057115b934900e438b07b850d16817d2991a9"
-      },
-      {
-        "path": "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
-        "sha256": "95d888d65993a60e6870eab3c47def863be84467c2161c4087336230796bc2b8"
-      },
-      {
-        "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-        "sha256": "c477f5962adb066969ac006b04ad19df2d3ae33c4a65a734ff0fe24f36852949"
-      },
-      {
-        "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-        "sha256": "574e07599780c404fa4f92eb66ed492677201422c5745ae8c9f54134e085c455"
-      },
-      {
-        "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-        "sha256": "2cf0e5be8678cc147ac513b375fdef13a10d356a4ffb78b85ca55bc040744cde"
-      },
-      {
-        "path": "artifacts/sprints/sprint-4/story-4.1/security-evidence-map.json",
-        "sha256": "75204bf62e1c2185a0bb9bd15b5f4b0c30f43680e7e0c6559507b927c7a931ea"
       }
     ],
     "external_human_review_claim": "none",
     "finding_count": 0,
-    "reviewed_commit": "2c11868757e0e2cc533e5fccb86ee76061ac4f04",
-    "reviewed_tree": "de1b2dc1f6bda807b0c32ac5bff231c015573012",
+    "reviewed_commit": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
+    "reviewed_tree": "a982c3da9626813f60d15b0389a6c297a19669d6",
     "reviewer_id": "agentmage-story-4.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -214,8 +178,8 @@
   "positive_authority_path_claim": "none",
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "2c11868757e0e2cc533e5fccb86ee76061ac4f04",
-  "reviewed_tree": "de1b2dc1f6bda807b0c32ac5bff231c015573012",
+  "reviewed_commit": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
+  "reviewed_tree": "a982c3da9626813f60d15b0389a6c297a19669d6",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 7,

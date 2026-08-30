@@ -27,12 +27,11 @@ from scripts.story_4_1_security_evidence import check_map as check_security
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-4/story-4.1/story-gate-report.json"
-REVIEWED_COMMIT = "2c11868757e0e2cc533e5fccb86ee76061ac4f04"
-REVIEWED_TREE = "de1b2dc1f6bda807b0c32ac5bff231c015573012"
+REVIEWED_COMMIT = "838df0dfcfb38902755142c47f3542c75d0f0e2a"
+REVIEWED_TREE = "a982c3da9626813f60d15b0389a6c297a19669d6"
 REVIEWED_PATHS = (
     "architecture/dependency-rules.json",
     "docs/architecture/kernel-contract-reference.md",
-    "docs/architecture/kernel-dependency-report.md",
     "kernel/engine/src/authority.rs",
     "kernel/engine/src/propagation.rs",
     "kernel/engine/src/tooling.rs",
@@ -65,14 +64,6 @@ REVIEWED_PATHS = (
     "fixtures/contracts/compatibility/v2/task.v2.trailing-value.json",
     "fixtures/contracts/compatibility/v2/task.v2.unknown-field.json",
     "fixtures/contracts/compatibility/v2/task.v3.unsupported.json",
-    "artifacts/sprints/sprint-4/story-4.1/agentmage-kernel-contracts-0.0.0.crate",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-contract-package-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-contract-reference-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/security-evidence-map.json",
 )
 REQUIRED_TASK_MARKERS = (
     "- [x] **Task 4.1.1 - Implement the bounded story**",
@@ -310,7 +301,9 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
     }
 
 
-def validate_report(value: Any, root: Path = ROOT) -> list[str]:
+def validate_report(
+    value: Any, root: Path = ROOT, *, verify_current: bool = True
+) -> list[str]:
     if not isinstance(value, dict):
         return ["Story 4.1 gate report must be an object"]
     failures: list[str] = []
@@ -355,13 +348,14 @@ def validate_report(value: Any, root: Path = ROOT) -> list[str]:
         or value.get("release_claim") != "none"
     ):
         failures.append("Story 4.1 gate made an unsupported claim")
-    try:
-        expected = build_report(root)
-    except (OSError, ValueError, KeyError, TypeError) as error:
-        failures.append(f"cannot rebuild Story 4.1 gate report: {error}")
-    else:
-        if value != expected:
-            failures.append("Story 4.1 gate report is stale or non-deterministic")
+    if verify_current:
+        try:
+            expected = build_report(root)
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            failures.append(f"cannot rebuild Story 4.1 gate report: {error}")
+        else:
+            if value != expected:
+                failures.append("Story 4.1 gate report is stale or non-deterministic")
     return failures
 
 

@@ -25,17 +25,17 @@ from scripts.story_4_1_gate import G_DOD_IDS, check_report as check_story_gate
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-4/sprint-gate-report.json"
-REVIEWED_COMMIT = "79eb3b35093a35f1dacc69207ceddfbeecc1727a"
-REVIEWED_TREE = "8d072d14b9735804ee7a568f677cccc781aefce0"
+REVIEWED_COMMIT = "838df0dfcfb38902755142c47f3542c75d0f0e2a"
+REVIEWED_TREE = "a982c3da9626813f60d15b0389a6c297a19669d6"
 REVIEWED_PATHS = (
-    "artifacts/sprints/sprint-4/story-4.1/story-gate-report.json",
-    "scripts/story_4_1_gate.py",
-    "tests/test_story_4_1_gate.py",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-contract-fixture-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-    "artifacts/sprints/sprint-4/story-4.1/security-evidence-map.json",
+    "architecture/dependency-rules.json",
+    "kernel/engine/src/authority.rs",
+    "kernel/engine/src/propagation.rs",
+    "kernel/engine/src/tooling.rs",
+    "kernel/engine/tests/boundary_workflow.rs",
+    "fixtures/contracts/fixture_verifier.rs",
+    "fixtures/contracts/compatibility.json",
+    "fixtures/contracts/v2/manifest.json",
 )
 REQUIRED_SPRINT_MARKERS = (
     "- [x] **Sprint AC 4.AC1:**",
