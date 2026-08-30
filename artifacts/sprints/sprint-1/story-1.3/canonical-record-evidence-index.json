@@ -79,7 +79,7 @@
         },
         {
           "path": "scripts/engineering_runtime_schemas.mjs",
-          "sha256": "a95cd8be386a11fa6468e0b1773cc60d9cf5d01a663a611c0a1c0c4816386b1f"
+          "sha256": "c90d7cfdf3e3ca3e4583a2e714660ce45584f4c2e875c2094964b440e5af96d9"
         },
         {
           "path": "scripts/engineering_runtime_fixture_corpus.mjs",
@@ -337,7 +337,7 @@
         },
         {
           "path": "tests/test_engineering_runtime_schemas.mjs",
-          "sha256": "d4ca9699b4da5e9beb5ba94d571f97d5e3a480b6cdf31d2609e025f0b77025f1"
+          "sha256": "d93cbc70d573eb9548ca1b122cf5ea9876524737529e716ea238a757d01ed92d"
         },
         {
           "path": "tests/test_engineering_runtime_fixture_corpus.mjs",
@@ -354,7 +354,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-gate-results.log",
-          "sha256": "6c6537f60280dc0d3502fdff4cbb94a69f8da352ef7785c3e21b6cdf2e0ee567"
+          "sha256": "1d2af5b348e0324d248c71f4e4cdbc235aadf91b017918d94f167e0a3cd78f4a"
         }
       ]
     }

@@ -46,7 +46,7 @@
   "sources": [
     {
       "path": "TASKS.md",
-      "sha256": "129ef23683136e691e23a7fa9c9b86beec3104ca5fb64777c5551c096c571a70"
+      "sha256": "2542262a1c6f10d318e74c31285494a99094be21b141ffc19e1918870f842d8f"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -82,7 +82,7 @@
     },
     {
       "path": "scripts/engineering_runtime_schemas.mjs",
-      "sha256": "a95cd8be386a11fa6468e0b1773cc60d9cf5d01a663a611c0a1c0c4816386b1f"
+      "sha256": "c90d7cfdf3e3ca3e4583a2e714660ce45584f4c2e875c2094964b440e5af96d9"
     },
     {
       "path": "scripts/dependency_rules.py",
@@ -106,7 +106,7 @@
     },
     {
       "path": "tests/test_engineering_runtime_schemas.mjs",
-      "sha256": "d4ca9699b4da5e9beb5ba94d571f97d5e3a480b6cdf31d2609e025f0b77025f1"
+      "sha256": "d93cbc70d573eb9548ca1b122cf5ea9876524737529e716ea238a757d01ed92d"
     },
     {
       "path": "tests/test_dependency_rules.py",
@@ -130,7 +130,7 @@
     },
     {
       "path": "schemas/engineering-runtime/*.schema.json",
-      "sha256": "faa4d15461537484ff5a35cacd3f56abd781e5cf28223c5dee768127189afe05"
+      "sha256": "3636e8a73db606d10ce50f203c411a6e650a9e20da2f30fd8a8251b01e71d398"
     }
   ],
   "product_truth": {

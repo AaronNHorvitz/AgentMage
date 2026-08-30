@@ -144,8 +144,7 @@
       "then": {
         "properties": {
           "repair_count": {
-            "type": "integer",
-            "minimum": 1
+            "const": 1
           }
         }
       },

@@ -1167,7 +1167,7 @@ callEnvelope.allOf = [
       properties: { validation_state: { const: "repaired_then_validated" } },
       required: ["validation_state"],
     },
-    then: { properties: { repair_count: positive } },
+    then: { properties: { repair_count: { const: 1 } } },
     else: { properties: { repair_count: { const: 0 } } },
   },
 ];

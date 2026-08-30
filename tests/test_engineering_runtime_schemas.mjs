@@ -1936,7 +1936,15 @@ test("call envelope carries only the digest of validated arguments and explains 
       repair_count: 0,
     })),
     false,
-    "a repaired call must report at least one repair",
+    "a repaired call must report exactly one repair",
+  );
+  assert.equal(
+    validate(envelope("call-envelope", {
+      validation_state: "repaired_then_validated",
+      repair_count: 2,
+    })),
+    false,
+    "a repaired call cannot report a second repair",
   );
 });
 

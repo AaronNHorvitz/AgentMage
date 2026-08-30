@@ -1380,8 +1380,22 @@ an effect or treating approval as reusable authority.
     or caller-overridden mappings and any product/runtime/effect/network/release overclaim fail the
     enrolled evidence gate.
 - [ ] **Task 5.2.2 - Compile retry and repair eligibility**
-  - [ ] **Sub-task 5.2.2.1:** Define deterministic normalization before model repair and permit at
-    most one profile-bound model repair without any effect attempt.
+  - [x] **Sub-task 5.2.2.1:** Define deterministic normalization before model repair and permit at
+    most one profile-bound model repair without any effect attempt. Evidence: the pure
+    `tool_call_repair` boundary requires a non-empty contiguous fragment sequence, uses checked
+    arithmetic to enforce 1,024-fragment and 1 MiB limits, and applies only ordered reassembly,
+    leading UTF-8 BOM removal, and outer JSON-whitespace trimming. It preserves the resulting
+    bytes and digest for exact-schema validation and cannot invent argument values. An immutable
+    repair policy binds one exact model-profile digest and one exact tool-schema digest; admission
+    is denied unless normalized bytes already failed that schema, repair remains enabled and
+    unused, both bindings match, and the effect-attempt count is zero. The admitted record has no
+    grant, approval, executor, attempt, or dispatch surface. The call-envelope schema now permits
+    exactly `repair_count` 1 for `repaired_then_validated` and 0 otherwise, explicitly rejecting a
+    second repair. Focused Rust and generated-schema tests pass, while the enrolled
+    [`retry-repair-policy-report.json`](artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json)
+    hash-binds implementation, schema, tests, and raw results; mutation tests reject normalization,
+    binding, repair-limit, effect-attempt, and product-truth widening with zero model inference,
+    authority minting, tool effects, network calls, platform claims, or release claims.
   - [ ] **Sub-task 5.2.2.2:** Permit a new attempt only after current preflight, effect
     reconciliation, remaining budget, fresh call identity, fresh single-use grant, and fresh
     approval when the operation requires one.
