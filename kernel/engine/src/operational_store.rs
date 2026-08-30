@@ -9848,6 +9848,118 @@ mod tests {
         }
     }
 
+    fn seeded_count(store: &OperationalStore, table: &str, predicate: &str) -> i64 {
+        store
+            .connection
+            .query_row(
+                &format!("SELECT COUNT(*) FROM {table} WHERE {predicate}"),
+                [],
+                |row| row.get(0),
+            )
+            .expect("seeded exact-state count")
+    }
+
+    fn assert_seeded_new_family_state(
+        store: &OperationalStore,
+        boundary: SeededCrashBoundary,
+        target_count: i64,
+    ) {
+        assert!(matches!(target_count, 0 | 1), "old or new state only");
+        match boundary {
+            SeededCrashBoundary::Manifest => {
+                assert_eq!(
+                    seeded_count(
+                        store,
+                        "source_provenance",
+                        "provenance_id = 'seeded-source-provenance'",
+                    ),
+                    target_count,
+                    "manifest and provenance publish together",
+                );
+                assert_eq!(
+                    seeded_count(
+                        store,
+                        "source_materialization_states",
+                        "source_artifact_id = 'seeded-source-artifact'",
+                    ),
+                    target_count,
+                    "manifest and lifecycle head publish together",
+                );
+            }
+            SeededCrashBoundary::Extraction => {
+                assert_eq!(
+                    seeded_count(
+                        store,
+                        "source_lexical_indexes",
+                        "source_artifact_id = 'seeded-source-artifact'",
+                    ),
+                    0,
+                    "extraction crash cannot partially publish an index",
+                );
+            }
+            SeededCrashBoundary::Index => {
+                assert_eq!(
+                    seeded_count(
+                        store,
+                        "source_cache_inputs",
+                        "cache_input_id = 'seeded-source-cache'",
+                    ),
+                    1,
+                    "index authority remains exact",
+                );
+            }
+            SeededCrashBoundary::Attempt => {
+                assert_eq!(
+                    seeded_count(
+                        store,
+                        "workflow_attempts",
+                        "step_execution_id = 'seeded-workflow-step-execution'",
+                    ),
+                    target_count,
+                    "attempt identity cannot duplicate",
+                );
+            }
+            SeededCrashBoundary::Receipt => {
+                assert_eq!(
+                    seeded_count(
+                        store,
+                        "workflow_attempts",
+                        "attempt_id = 'seeded-workflow-attempt'",
+                    ),
+                    1,
+                    "receipt crash cannot duplicate its attempt",
+                );
+            }
+            SeededCrashBoundary::Verification | SeededCrashBoundary::Recovery => {
+                assert_eq!(
+                    seeded_count(
+                        store,
+                        "workflow_attempts",
+                        "attempt_id = 'seeded-workflow-attempt'",
+                    ),
+                    1,
+                    "post-attempt crash preserves one attempt",
+                );
+            }
+            _ => unreachable!("new-family exact state boundary"),
+        }
+        let stale_current: i64 = store
+            .connection
+            .query_row(
+                "SELECT
+                    (SELECT COUNT(*) FROM current_source_extractions c
+                     JOIN source_materialization_states m USING(source_artifact_id)
+                     WHERE m.lifecycle_state <> 'current')
+                  + (SELECT COUNT(*) FROM current_source_lexical_indexes c
+                     JOIN source_materialization_states m USING(source_artifact_id)
+                     WHERE m.lifecycle_state <> 'current')",
+                [],
+                |row| row.get(0),
+            )
+            .expect("stale-current projection count");
+        assert_eq!(stale_current, 0, "stale source cannot appear current");
+    }
+
     fn prepare_seeded_crash_fixture(
         boundary: SeededCrashBoundary,
         directory: &Path,
@@ -10155,6 +10267,7 @@ mod tests {
                     .connection
                     .query_row(&sql, [], |row| row.get(0))
                     .expect("new-family recovered count");
+                assert_seeded_new_family_state(&store, boundary, count);
                 if count == 0 {
                     insert_seeded_new_family(&mut store, boundary)
                         .expect("new-family recovery commits once");
@@ -10167,6 +10280,11 @@ mod tests {
                     .query_row(&sql, [], |row| row.get(0))
                     .expect("new-family final count");
                 assert_eq!(final_count, 1);
+                assert_seeded_new_family_state(&store, boundary, final_count);
+                assert!(
+                    !directory.join("effect-driver-launched").exists(),
+                    "recovery never launches an effect driver",
+                );
             }
             SeededCrashBoundary::Checkpoint => {
                 let mut store =

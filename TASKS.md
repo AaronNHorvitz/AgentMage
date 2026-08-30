@@ -2110,8 +2110,21 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     and [`storage-crash-boundary-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-results.log)
     make no complete cross-table old/new-state matrix, retained trace/RV mapping, Story, Sprint,
     platform, packaging, or release completion claim.
-  - [ ] **Sub-task 11.2.4.2:** Require exact old or new state, no partial publication, no duplicate
-    attempt, no stale context represented as current, and no replay driver launch.
+  - [x] **Sub-task 11.2.4.2:** Require exact old or new state, no partial publication, no duplicate
+    attempt, no stale context represented as current, and no replay driver launch. Completed locally
+    on Linux on 2026-08-30. Every new-family crash recovery now rejects target cardinality outside
+    zero or one before completing an absent transition exactly once. Manifest, provenance, and
+    lifecycle-head rows are all-or-none; extraction cannot partially publish an index; index cache
+    authority remains exact; attempt cardinality cannot exceed one; and receipt, verification, and
+    recovery commits preserve exactly one attempt. Current-source views are checked against
+    non-current lifecycle state, duplicate insertion must fail, and no effect-driver launch marker
+    may exist after recovery. The existing transaction, checkpoint, migration, key, backup, restore,
+    retention, and deletion branches retain their exact old/new assertions. Strict kernel Clippy and
+    five evidence mutation/omission/overclaim tests pass. Retained
+    [`storage-crash-exact-state-report.json`](artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json)
+    and [`storage-crash-exact-state-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-results.log)
+    make no retained trace/RV mapping, Story, Sprint, platform, packaging, or release completion
+    claim.
   - [ ] **Sub-task 11.2.4.3:** Retain migration matrices, transaction traces, canary scans,
     encrypted-page scans, cleanup evidence, and `RV-08` through `RV-10` plus `RV-17` mappings.
 

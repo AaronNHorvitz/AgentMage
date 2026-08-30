@@ -116,7 +116,7 @@ running 2 tests
 test operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok
 test operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 703 filtered out; finished in 0.17s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 703 filtered out; finished in 0.16s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -446,7 +446,7 @@ $ cargo test -p agentmage-kernel-engine encrypted_backup_restores_only_to_a_veri
 running 1 test
 test operational_store::tests::encrypted_backup_restores_only_to_a_verified_fresh_candidate ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 704 filtered out; finished in 0.21s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 704 filtered out; finished in 0.22s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 

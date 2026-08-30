@@ -1,0 +1,56 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 422400,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "22bc943e41474e766ff02043064102b4185557582f0be67160315c896e4fd5f2"
+    },
+    {
+      "byte_length": 1470,
+      "path": "docs/verification/story-11-2-storage-crash-exact-state-evidence.md",
+      "sha256": "bd129398e64d9c6cc7d05f0842e69f48936201169930d3521583e58dfdeb663b"
+    },
+    {
+      "byte_length": 6197,
+      "path": "scripts/storage_crash_exact_state_evidence.py",
+      "sha256": "de21fa53654b94bfaae44943c49c9f01a5df3fb64f6195e2cc7b8cffeb6eab2d"
+    },
+    {
+      "byte_length": 1981,
+      "path": "tests/test_storage_crash_exact_state_evidence.py",
+      "sha256": "fdc0163c4a447fb8a8c4a633b2541246e367fe536962922d6488b6518d081d8d"
+    },
+    {
+      "byte_length": 4501,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-results.log",
+      "sha256": "77dcb9162f08f7f841a334160e8469ccf38fb5c6d63078b1b1f313c050f24d1f"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked -- --nocapture",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "duplicate_attempt_refused": true,
+    "exact_old_or_new_state_complete": true,
+    "forced_stop_case_count": 224,
+    "partial_publication_refused": true,
+    "release_claim": "none",
+    "replay_driver_launch_refused": true,
+    "retained_trace_and_rv_mapping_complete": false,
+    "sprint_completion_claim": false,
+    "stale_current_projection_refused": true,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "record_type": "agentmage-storage-crash-exact-state-evidence",
+  "required_markers": [
+    "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
+    "test result: ok. 1 passed; 0 failed"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-crash-exact-state",
+  "story_id": "11.2",
+  "task_id": "11.2.4.2"
+}
