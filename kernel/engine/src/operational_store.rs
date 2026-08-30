@@ -76,7 +76,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 14;
+const SCHEMA_VERSION: i64 = 15;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -169,6 +169,8 @@ const MIGRATION_13_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0013-source-content-deduplication.sql");
 const MIGRATION_14_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0014-source-lifecycle-transactions.sql");
+const MIGRATION_15_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0015-workflow-materializations.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -3288,6 +3290,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 14_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 14;
+    }
+    if version == 14 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_15_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (15, ?1)",
+                [sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -3322,6 +3345,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (12, sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())),
             (13, sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())),
             (14, sha256_hex(MIGRATION_14_SCHEMA_SQL.as_bytes())),
+            (15, sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -5144,11 +5168,11 @@ mod tests {
         MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, MIGRATION_7_SCHEMA_SQL,
         MIGRATION_8_SCHEMA_SQL, MIGRATION_9_SCHEMA_SQL, MIGRATION_10_SCHEMA_SQL,
         MIGRATION_11_SCHEMA_SQL, MIGRATION_12_SCHEMA_SQL, MIGRATION_13_SCHEMA_SQL,
-        MIGRATION_14_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
-        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
-        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
-        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
-        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        MIGRATION_14_SCHEMA_SQL, MIGRATION_15_SCHEMA_SQL, OperationalStore, OperationalStoreError,
+        OperationalStoreKeyError, OperationalStoreKeyLifecycle, OperationalStoreKeyProvider,
+        RetentionAssignment, RetentionDisposition, RetentionHoldKind, RetentionRecordFamily,
+        RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path,
+        open_connection, prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
         verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
@@ -6738,6 +6762,18 @@ mod tests {
                 "transaction_heads",
                 "transaction_identities",
                 "transaction_revisions",
+                "workflow_approvals",
+                "workflow_attempts",
+                "workflow_consumed_budgets",
+                "workflow_idempotency_keys",
+                "workflow_plan_step_policies",
+                "workflow_preflights",
+                "workflow_receipts",
+                "workflow_recovery_decisions",
+                "workflow_state_fingerprints",
+                "workflow_terminal_diagnostics",
+                "workflow_tool_calls",
+                "workflow_verifications",
                 "write_checkpoint_heads",
                 "write_checkpoints",
             ]
@@ -6919,6 +6955,300 @@ mod tests {
                 .execute(
                     "INSERT INTO decisions VALUES ('duplicate-ordinal', 'task-1', 1, 'accepted', ?1, X'00')",
                     [&digest],
+                )
+                .is_err()
+        );
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn workflow_materializations_bind_existing_run_session_event_and_receipt_authorities() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
+            .expect("version fifteen store");
+        let record = b"{}".as_slice();
+        let digest = |label: &str| sha256_hex(label.as_bytes());
+
+        store
+            .connection
+            .execute(
+                "INSERT INTO sessions VALUES (
+                    'session-workflow-1', 'profile-workflow-1', 'active', 1000, 1000, ?1, ?2
+                 )",
+                params![digest("session"), record],
+            )
+            .expect("session owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO objectives VALUES (
+                    'objective-workflow-1', 'session-workflow-1', 1, 'active', ?1, ?2
+                 )",
+                params![digest("objective"), record],
+            )
+            .expect("objective owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO plans VALUES (
+                    'plan-workflow-1', 'objective-workflow-1', 1, 'active', ?1, ?2
+                 )",
+                params![digest("plan"), record],
+            )
+            .expect("plan owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO tasks VALUES (
+                    'task-workflow-1', 'plan-workflow-1', NULL, 1, 'active', ?1, ?2
+                 )",
+                params![digest("task"), record],
+            )
+            .expect("task owner");
+        let event_sha256 = digest("runtime-event");
+        store
+            .connection
+            .execute(
+                "INSERT INTO runtime_runs VALUES (
+                    'run-workflow-1', 'session-workflow-1', 'task-workflow-1',
+                    'correlation-workflow-1', 'policy-runtime-1', ?1, ?2, 0,
+                    'event-workflow-1', ?2, 1, 0, NULL, NULL, 1000, 1000
+                 )",
+                params![digest("runtime-request"), &event_sha256],
+            )
+            .expect("runtime run owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO runtime_events VALUES (
+                    'run-workflow-1', 0, 'event-workflow-1', 1000, 'correctness',
+                    'internal', 'session', NULL, ?1, ?2, NULL, NULL, NULL, NULL, ?3
+                 )",
+                params![&event_sha256, ZERO_SHA256, record],
+            )
+            .expect("exact runtime event owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO grant_identities VALUES ('grant-workflow-1', 'nonce-workflow-1')",
+                [],
+            )
+            .expect("existing grant identity");
+        store
+            .connection
+            .execute(
+                "INSERT INTO transaction_identities VALUES (
+                    'transaction-workflow-1', 'authority-attempt-workflow-1'
+                 )",
+                [],
+            )
+            .expect("existing transaction identity");
+        store
+            .connection
+            .execute(
+                "INSERT INTO receipts VALUES (
+                    1, 'receipt-workflow-1', 'transaction-workflow-1', ?1, ?2, ?3
+                 )",
+                params![digest("receipt"), ZERO_SHA256, record],
+            )
+            .expect("existing receipt authority");
+
+        let transaction = store
+            .connection
+            .transaction()
+            .expect("workflow materialization transaction");
+        transaction
+            .execute(
+                "INSERT INTO workflow_plan_step_policies VALUES (
+                    'step-policy-1', 'plan-workflow-1', 'plan-step-1', 1,
+                    'run-workflow-1', 'session-workflow-1', 0, 'event-workflow-1', ?1, ?2
+                 )",
+                params![digest("step-policy"), record],
+            )
+            .expect("plan-step policy");
+        transaction
+            .execute(
+                "INSERT INTO workflow_tool_calls VALUES (
+                    'call-envelope-1', 'step-execution-1', 'tool-call-1', 'tool-1', '1.0.0',
+                    'validated', ?1, 'run-workflow-1', 'session-workflow-1', 0,
+                    'event-workflow-1', ?2, ?3
+                 )",
+                params![digest("arguments"), digest("call"), record],
+            )
+            .expect("tool call");
+        transaction
+            .execute(
+                "INSERT INTO workflow_attempts VALUES (
+                    'attempt-workflow-1', 'step-execution-1', 'call-envelope-1', 1, NULL,
+                    'grant-workflow-1', 'succeeded', 'receipt-workflow-1',
+                    'run-workflow-1', 'session-workflow-1', 0, 'event-workflow-1', ?1, ?2
+                 )",
+                params![digest("attempt"), record],
+            )
+            .expect("attempt");
+        transaction
+            .execute(
+                "INSERT INTO workflow_preflights VALUES (
+                    'preflight-record-1', 'step-execution-1', 'attempt-workflow-1',
+                    'preflight-1', 'step-policy-1', 'passed', 900, 1100,
+                    'run-workflow-1', 'session-workflow-1', 0, 'event-workflow-1', ?1, ?2
+                 )",
+                params![digest("preflight"), record],
+            )
+            .expect("preflight");
+        transaction
+            .execute(
+                "INSERT INTO workflow_idempotency_keys VALUES (
+                    'idempotency-record-1', 'step-execution-1', 'attempt-workflow-1',
+                    'step-policy-1', ?1, NULL, 'consumed', 'run-workflow-1',
+                    'session-workflow-1', 0, 'event-workflow-1', ?2, ?3
+                 )",
+                params![
+                    digest("idempotency-key"),
+                    digest("idempotency-record"),
+                    record
+                ],
+            )
+            .expect("idempotency key");
+        transaction
+            .execute(
+                "INSERT INTO workflow_approvals VALUES (
+                    'approval-record-1', 'approval-1', 'step-execution-1',
+                    'attempt-workflow-1', 'approved', ?1, 'run-workflow-1',
+                    'session-workflow-1', 0, 'event-workflow-1', ?2, ?3
+                 )",
+                params![digest("approval"), digest("approval-record"), record],
+            )
+            .expect("approval");
+        transaction
+            .execute(
+                "INSERT INTO workflow_receipts VALUES (
+                    'receipt-record-1', 'receipt-workflow-1', 'attempt-workflow-1',
+                    'succeeded', ?1, 'run-workflow-1', 'session-workflow-1', 0,
+                    'event-workflow-1', ?2, ?3
+                 )",
+                params![digest("receipt"), digest("receipt-record"), record],
+            )
+            .expect("receipt materialization");
+        transaction
+            .execute(
+                "INSERT INTO workflow_verifications VALUES (
+                    'verification-1', 'step-execution-1', 'attempt-workflow-1',
+                    'verification-result-1', 'verifier-policy-1', 1, 1,
+                    'run-workflow-1', 'session-workflow-1', 0, 'event-workflow-1', ?1, ?2
+                 )",
+                params![digest("verification"), record],
+            )
+            .expect("verification");
+        transaction
+            .execute(
+                "INSERT INTO workflow_consumed_budgets VALUES (
+                    'consumption-1', 'step-execution-1', 'attempt-workflow-1',
+                    'budget-policy-1', 'attempts', 1, 1, 'run-workflow-1',
+                    'session-workflow-1', 0, 'event-workflow-1', ?1, ?2
+                 )",
+                params![digest("consumption"), record],
+            )
+            .expect("consumed budget");
+        transaction
+            .execute(
+                "INSERT INTO workflow_recovery_decisions VALUES (
+                    'recovery-decision-1', 'step-execution-1', 'attempt-workflow-1',
+                    'step-policy-1', 'transport', 0, 'retry_new_attempt',
+                    'run-workflow-1', 'session-workflow-1', 0, 'event-workflow-1', ?1, ?2
+                 )",
+                params![digest("recovery"), record],
+            )
+            .expect("recovery decision");
+        transaction
+            .execute(
+                "INSERT INTO workflow_state_fingerprints VALUES (
+                    'fingerprint-record-1', 'step-execution-1', ?1, 1, 0,
+                    'run-workflow-1', 'session-workflow-1', 0, 'event-workflow-1', ?2, ?3
+                 )",
+                params![digest("fingerprint"), digest("fingerprint-record"), record],
+            )
+            .expect("state fingerprint");
+        transaction
+            .execute(
+                "INSERT INTO workflow_terminal_diagnostics VALUES (
+                    'diagnostic-1', 'terminal-result-1', 'workflow.complete', NULL, NULL,
+                    'content_free_codes', 'run-workflow-1', 'session-workflow-1', 0,
+                    'event-workflow-1', ?1, ?2
+                 )",
+                params![digest("diagnostic"), record],
+            )
+            .expect("terminal diagnostic");
+        transaction.commit().expect("complete workflow family");
+
+        for table in [
+            "workflow_plan_step_policies",
+            "workflow_attempts",
+            "workflow_preflights",
+            "workflow_tool_calls",
+            "workflow_idempotency_keys",
+            "workflow_approvals",
+            "workflow_receipts",
+            "workflow_verifications",
+            "workflow_consumed_budgets",
+            "workflow_recovery_decisions",
+            "workflow_state_fingerprints",
+            "workflow_terminal_diagnostics",
+        ] {
+            let count: i64 = store
+                .connection
+                .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                    row.get(0)
+                })
+                .expect("workflow materialization count");
+            assert_eq!(count, 1, "{table} must retain one normalized row");
+        }
+        let workflow_payload_tables: i64 = store
+            .connection
+            .query_row(
+                "SELECT COUNT(*) FROM sqlite_schema
+                 WHERE type = 'table' AND name LIKE 'workflow%payload%'",
+                [],
+                |row| row.get(0),
+            )
+            .expect("workflow payload table count");
+        assert_eq!(workflow_payload_tables, 0);
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO workflow_state_fingerprints VALUES (
+                        'bad-event-fingerprint', NULL, ?1, 1, 0, 'run-workflow-1',
+                        'session-workflow-1', 0, 'event-substituted', ?2, X'7b7d'
+                     )",
+                    params![digest("bad-event-fingerprint"), digest("bad-event-record")],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO workflow_plan_step_policies VALUES (
+                        'bad-session-policy', 'plan-workflow-1', 'plan-step-2', 1,
+                        'run-workflow-1', 'session-substituted', 0, 'event-workflow-1', ?1, X'7b7d'
+                     )",
+                    [digest("bad-session-policy")],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO workflow_receipts VALUES (
+                        'bad-receipt-record', 'receipt-missing', 'attempt-workflow-1',
+                        'succeeded', ?1, 'run-workflow-1', 'session-workflow-1', 0,
+                        'event-workflow-1', ?2, X'7b7d'
+                     )",
+                    params![digest("missing-receipt"), digest("bad-receipt-record")],
                 )
                 .is_err()
         );
@@ -7730,7 +8060,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_fourteen_with_exact_history() {
+    fn version_one_upgrades_through_fifteen_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -7767,6 +8097,7 @@ mod tests {
                 (12, sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())),
                 (13, sha256_hex(MIGRATION_13_SCHEMA_SQL.as_bytes())),
                 (14, sha256_hex(MIGRATION_14_SCHEMA_SQL.as_bytes())),
+                (15, sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -8434,7 +8765,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 14));
+                assert_eq!((version, history), (SCHEMA_VERSION, 15));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))

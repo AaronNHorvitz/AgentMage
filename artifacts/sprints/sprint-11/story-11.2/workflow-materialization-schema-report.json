@@ -1,0 +1,103 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 2946,
+      "path": "kernel/engine/migrations/operational-store/0006-runtime-journal.sql",
+      "sha256": "1d42813be51e882bdb0ee17e36ab4c6e498f57a19c3a33e432bbd54e1863547a"
+    },
+    {
+      "byte_length": 14799,
+      "path": "kernel/engine/migrations/operational-store/0015-workflow-materializations.sql",
+      "sha256": "4caabc1a09d7cdedc69ffb231d03a467d9c5dd1aa0f706d917682c17f8aaf223"
+    },
+    {
+      "byte_length": 356384,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "1c6ed870ab19a2ea0a0535dcf351821cdb018d94a92f39d32b090694d5d2b2c1"
+    },
+    {
+      "byte_length": 2103,
+      "path": "docs/verification/story-11-2-workflow-materialization-schema-evidence.md",
+      "sha256": "04a480805f12d803b6da45cdb6d1f2c07b321f14de453b0ff658a6d10b5a6cad"
+    },
+    {
+      "byte_length": 9318,
+      "path": "scripts/workflow_materialization_schema_evidence.py",
+      "sha256": "273b798ce6a873928d0a5dc519f6ec3f5e9f330e4d4e2228784c9668a32fe145"
+    },
+    {
+      "byte_length": 2494,
+      "path": "tests/test_workflow_materialization_schema_evidence.py",
+      "sha256": "453042a3bd98c10f1036744c4d08ff698929b6c35f711ad9a4ce644df5230a96"
+    },
+    {
+      "byte_length": 12883,
+      "path": "artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-results.log",
+      "sha256": "a75cacd244fda5c389ca3ded022f3be05bea191ae8b65a24b727fac8e20233a8"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_fifteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "current_operational_store_schema_version": 15,
+  "existing_authorities": {
+    "event_table": "runtime_events",
+    "metadata_store": "operational-store",
+    "new_event_journals": [],
+    "new_payload_tables": [],
+    "receipt_table": "receipts",
+    "run_table": "runtime_runs",
+    "session_table": "sessions"
+  },
+  "generated_on": "2026-08-30",
+  "materialization_migration_version": 15,
+  "normalized_tables": [
+    "workflow_plan_step_policies",
+    "workflow_attempts",
+    "workflow_preflights",
+    "workflow_tool_calls",
+    "workflow_idempotency_keys",
+    "workflow_approvals",
+    "workflow_receipts",
+    "workflow_verifications",
+    "workflow_consumed_budgets",
+    "workflow_recovery_decisions",
+    "workflow_state_fingerprints",
+    "workflow_terminal_diagnostics"
+  ],
+  "product_truth": {
+    "atomic_event_projection_checkpoint_commit_complete": false,
+    "attempt_and_idempotency_invariants_complete": false,
+    "full_workflow_crash_campaign_complete": false,
+    "release_claim": "none",
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "typed_publication_api_complete": false,
+    "workflow_metadata_materializations_complete": true
+  },
+  "record_type": "agentmage-workflow-materialization-schema-evidence",
+  "required_markers": [
+    "workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok",
+    "version_one_upgrades_through_fifteen_with_exact_history ... ok",
+    "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-structural-schema",
+  "story_id": "11.2",
+  "structural_contract": {
+    "bounded_record_json": true,
+    "closed_enum_checks": true,
+    "exact_run_sequence_event_binding": true,
+    "exact_run_session_binding": true,
+    "existing_grant_binding": true,
+    "existing_plan_binding": true,
+    "existing_receipt_binding": true,
+    "strict_tables": true,
+    "workflow_family_count": 12
+  },
+  "task_id": "11.2.2.1"
+}

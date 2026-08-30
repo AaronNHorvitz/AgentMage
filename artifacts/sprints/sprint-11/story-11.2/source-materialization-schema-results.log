@@ -1,12 +1,11 @@
-$ cargo test -p agentmage-kernel-engine source_lifecycle::tests --locked
+$ cargo test -p agentmage-kernel-engine operational_store::tests::version_twelve_schema_is_normalized_closed_and_relational --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
-running 2 tests
-test source_lifecycle::tests::stale_revision_and_active_hold_roll_back_without_runtime_reference_drift ... ok
-test source_lifecycle::tests::refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok
+running 1 test
+test operational_store::tests::version_twelve_schema_is_normalized_closed_and_relational ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 698 filtered out; finished in 0.15s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 699 filtered out; finished in 0.06s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -109,14 +108,14 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-$ cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked
+$ cargo test -p agentmage-kernel-engine operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
 running 1 test
-test runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state ... ok
+test operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 699 filtered out; finished in 0.08s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 699 filtered out; finished in 0.06s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -226,7 +225,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_up
 running 1 test
 test operational_store::tests::version_one_upgrades_through_fifteen_with_exact_history ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 699 filtered out; finished in 0.07s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 699 filtered out; finished in 0.06s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -336,7 +335,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_r
 running 1 test
 test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 699 filtered out; finished in 15.45s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 699 filtered out; finished in 15.50s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 

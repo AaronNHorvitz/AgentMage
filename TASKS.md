@@ -1992,9 +1992,26 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     make no typed-publication, exhaustive source crash-campaign, Story, Sprint, platform, packaging,
     or release-completion claim.
 - [ ] **Task 11.2.2 - Add workflow materializations**
-  - [ ] **Sub-task 11.2.2.1:** Add plan-step policy, attempt, preflight, tool-call, idempotency-key,
+  - [x] **Sub-task 11.2.2.1:** Add plan-step policy, attempt, preflight, tool-call, idempotency-key,
     approval, receipt, verification, consumed-budget, recovery-decision, state-fingerprint, and
-    terminal-diagnostic records keyed to existing run/session/event identities.
+    terminal-diagnostic records keyed to existing run/session/event identities. Evidence: migration
+    [`0015-workflow-materializations.sql`](kernel/engine/migrations/operational-store/0015-workflow-materializations.sql)
+    advances the immutable SQLCipher schema/history to version 15 and adds twelve normalized
+    `STRICT`, bounded-record families for exactly the named workflow metadata. Every row carries a
+    composite foreign key to one existing runtime run and its exact session plus one exact
+    append-only runtime event identity and sequence. Plan-step policy rows bind the existing plan,
+    attempts bind the existing grant authority, and workflow receipt rows bind the existing kernel
+    receipt rather than creating a second executor-receipt authority. Closed state, disposition,
+    failure, decision, budget-dimension, and disclosure values reject unknown families, while the
+    migration adds no workflow payload table, artifact service, or event journal. One focused
+    encrypted-store test commits one synthetic row in all twelve families and rejects event
+    substitution, run/session mismatch, and unknown receipts; schema-1 upgrade, seeded migration
+    recovery, strict Clippy, and five evidence mutation/overclaim tests pass. The retained
+    [`workflow-materialization-schema-report.json`](artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-report.json)
+    and [`workflow-materialization-schema-results.log`](artifacts/sprints/sprint-11/story-11.2/workflow-materialization-schema-results.log)
+    explicitly leave attempt/idempotency invariants, exact outcome reconciliation, atomic
+    event/projection/checkpoint commits, typed publication, exhaustive workflow crashes, Story,
+    Sprint, platform, packaging, and release completion to their later owners.
   - [ ] **Sub-task 11.2.2.2:** Enforce unique attempt and idempotency identities, monotonic attempt
     numbers, one terminal state, exact receipt linkage, and uncertainty that cannot be rewritten as
     success.

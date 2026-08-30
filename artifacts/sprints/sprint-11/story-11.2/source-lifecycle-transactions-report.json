@@ -21,19 +21,19 @@
       "sha256": "b34c1c3b248cd91aef81c955e06cc49b2793bdf8816c6b34ef722eee28955b31"
     },
     {
-      "byte_length": 342478,
+      "byte_length": 356384,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "820d156e2df39ee66eabad1b0be45d11c2a9ddec5a249872314662e043e94c4c"
+      "sha256": "1c6ed870ab19a2ea0a0535dcf351821cdb018d94a92f39d32b090694d5d2b2c1"
     },
     {
       "byte_length": 2828,
       "path": "docs/verification/story-11-2-source-lifecycle-transactions-evidence.md",
-      "sha256": "89f93c547cd4f574c849f009b92ad5fb75169111f327a2648276b9c3522f4fbd"
+      "sha256": "79306ae8d1ef4556bada713d5f8898c528e71090f9a47f9d210cd24e8aa0b517"
     },
     {
-      "byte_length": 9950,
+      "byte_length": 9948,
       "path": "scripts/source_lifecycle_transactions_evidence.py",
-      "sha256": "c8df4db27fa4641581644e44b48bf92477faedf9a2ecb2998ffd55fe621a6630"
+      "sha256": "1869a8251c2eb408ab712176619e51867dfb3a8d0518794ade9ca76454478865"
     },
     {
       "byte_length": 2373,
@@ -41,20 +41,20 @@
       "sha256": "e0d6adcdd0cb446614a5b7c58b1d5f969d8b6e0d94856265edcb4414b0b579d1"
     },
     {
-      "byte_length": 17138,
+      "byte_length": 17136,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "2e425e723944acec13c30ba869e3d7c456d39e6bbf9fe6b19c17637e9d2f2c8e"
+      "sha256": "c05b395edd95d9b3cf42b4558ce5a33dddcff3d5499ce6d4e6e380705e54ce85"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine source_lifecycle::tests --locked",
     "cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_fourteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_fifteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
   "generated_on": "2026-08-30",
-  "operational_store_schema_version": 14,
+  "operational_store_schema_version": 15,
   "physical_payload_authority": {
     "artifact_table": "runtime_artifacts",
     "migration": "0007-runtime-artifacts.sql",
@@ -81,7 +81,7 @@
     "refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok",
     "stale_revision_and_active_hold_roll_back_without_runtime_reference_drift ... ok",
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
-    "version_one_upgrades_through_fourteen_with_exact_history ... ok",
+    "version_one_upgrades_through_fifteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

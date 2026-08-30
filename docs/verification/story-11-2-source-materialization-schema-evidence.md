@@ -22,8 +22,8 @@ cannot cross extraction identity, a context disposition cannot name a section fr
 and persisted retention cannot separate the physical artifact from its payload digest or size.
 
 Focused encrypted SQLCipher tests prove the exact table closure, migration history from schema 1
-through the current schema 14, recovery of an interrupted migration campaign, one complete synthetic normalized
-family over exactly one pre-existing runtime payload, and rejection of unsupported-reference,
+through the current schema 15, recovery of an interrupted migration campaign, one complete
+synthetic normalized family over exactly one pre-existing runtime payload, and rejection of unsupported-reference,
 non-producing-extraction, nonterminal-disposition, and mismatched-retention mutations. Strict Clippy
 also passes.
 

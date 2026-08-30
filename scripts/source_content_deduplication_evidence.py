@@ -30,7 +30,7 @@ COMMANDS: Final = (
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_fourteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_fifteen_with_exact_history",
         "--locked",
     ),
     (
@@ -46,7 +46,7 @@ COMMANDS: Final = (
 MARKERS: Final = (
     "publication_deduplicates_without_broadening_owner_or_reference_state ... ok",
     "source_content_deduplication_preserves_every_logical_identity ... ok",
-    "version_one_upgrades_through_fourteen_with_exact_history ... ok",
+    "version_one_upgrades_through_fifteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 REQUIRED_MIGRATION_FRAGMENTS: Final = (
@@ -94,7 +94,7 @@ def expected_report() -> dict[str, Any]:
         "task_id": "11.2.1.2",
         "generated_on": "2026-08-30",
         "status": "pass-local-content-deduplication",
-        "operational_store_schema_version": 14,
+        "operational_store_schema_version": 15,
         "physical_payload_authority": {
             "migration": "0007-runtime-artifacts.sql",
             "payload_table": "runtime_payloads",

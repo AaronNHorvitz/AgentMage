@@ -1,0 +1,103 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 5502,
+      "path": "kernel/engine/migrations/operational-store/0007-runtime-artifacts.sql",
+      "sha256": "266f7eba307f96257baae58cc31b9df9c9a8ff40492f5ac274b9d4171e3883a0"
+    },
+    {
+      "byte_length": 14599,
+      "path": "kernel/engine/migrations/operational-store/0012-source-artifact-materializations.sql",
+      "sha256": "5821bc16e3f91dd88faadba445f663a00794c402c0472940380062c5a5051f4e"
+    },
+    {
+      "byte_length": 356384,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "1c6ed870ab19a2ea0a0535dcf351821cdb018d94a92f39d32b090694d5d2b2c1"
+    },
+    {
+      "byte_length": 2290,
+      "path": "docs/verification/story-11-2-source-materialization-schema-evidence.md",
+      "sha256": "de9281f6996f8e4c3e30c0365f11f5a393fe636f9244c845b92a24e285192082"
+    },
+    {
+      "byte_length": 8676,
+      "path": "scripts/source_materialization_schema_evidence.py",
+      "sha256": "7b480d342e0a59d56ba225483e850617be22dfb954a18d961d8c77d3a8039fc9"
+    },
+    {
+      "byte_length": 2258,
+      "path": "tests/test_source_materialization_schema_evidence.py",
+      "sha256": "f1ed002bd3a2d443c886fc71afc506cdbdef47d8863623e7a955b497bcdf4a21"
+    },
+    {
+      "byte_length": 17102,
+      "path": "artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log",
+      "sha256": "5786f405b0cb06f9353ad946a49a37d153ab2cbbb2cd782a78e37ab0109fd5d4"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_twelve_schema_is_normalized_closed_and_relational --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_fifteen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "current_operational_store_schema_version": 15,
+  "generated_on": "2026-08-30",
+  "materialization_migration_version": 12,
+  "normalized_tables": [
+    "source_manifests",
+    "source_origins",
+    "source_references",
+    "source_extractions",
+    "source_sections",
+    "source_provenance",
+    "source_lexical_indexes",
+    "source_context_dispositions",
+    "source_cache_inputs",
+    "source_retentions",
+    "source_lifecycle_events"
+  ],
+  "payload_authority": {
+    "artifact_table": "runtime_artifacts",
+    "migration": "0007-runtime-artifacts.sql",
+    "new_payload_tables": [],
+    "payload_table": "runtime_payloads",
+    "source_rows_store_raw_source_bytes": false
+  },
+  "product_truth": {
+    "content_deduplication_complete": false,
+    "full_crash_campaign_complete": false,
+    "refresh_invalidation_lifecycle_complete": false,
+    "release_claim": "none",
+    "schema_materializations_complete": true,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "typed_publication_api_complete": false
+  },
+  "record_type": "agentmage-source-materialization-schema-evidence",
+  "required_markers": [
+    "version_twelve_schema_is_normalized_closed_and_relational ... ok",
+    "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
+    "version_one_upgrades_through_fifteen_with_exact_history ... ok",
+    "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-structural-schema",
+  "story_id": "11.2",
+  "structural_contract": {
+    "bounded_record_json": true,
+    "closed_enum_checks": true,
+    "context_section_stays_in_same_source": true,
+    "foreign_keys_enabled": true,
+    "manifest_provenance_cycle_is_deferred_and_transactional": true,
+    "physical_artifact_payload_and_size_are_jointly_bound": true,
+    "retention_lifecycle_family_is_closed": true,
+    "section_parent_stays_in_same_extraction": true,
+    "source_family_count": 11,
+    "strict_tables": true
+  },
+  "task_id": "11.2.1.1"
+}
