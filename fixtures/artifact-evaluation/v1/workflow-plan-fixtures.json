@@ -1,0 +1,412 @@
+{
+  "authority_minted": false,
+  "effect_executed": false,
+  "fixture_count": 11,
+  "fixtures": [
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "success",
+      "effect_executed": false,
+      "expected": {
+        "admission": "admitted",
+        "attempt_count": 1,
+        "completion_owner": "deterministic_verifier",
+        "terminal_state": "verified_success"
+      },
+      "fixture_id": "workflow-plan-success-v1",
+      "fixture_sha256": "550c15782fdd47defde337f370c55b809bded6867f87c71a3ee26938357b6cc1",
+      "plan_id": "plan-success-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "not_required",
+          "call_state": "schema_valid",
+          "depends_on": [],
+          "effect_class": "read_only",
+          "preflight_state": "current",
+          "retry_class": "never",
+          "step_id": "inspect"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "missing_dependency",
+      "effect_executed": false,
+      "expected": {
+        "admission": "rejected",
+        "dispatch_count": 0,
+        "reason_code": "plan_dependency_missing",
+        "terminal_state": "blocked"
+      },
+      "fixture_id": "workflow-plan-missing-dependency-v1",
+      "fixture_sha256": "8712b00bf5b4c5f9471618f710a8194cddf82fcc45e2b7efcfed229db3c8457a",
+      "plan_id": "plan-missing-dependency-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "not_required",
+          "call_state": "schema_valid",
+          "depends_on": [
+            "missing-step"
+          ],
+          "effect_class": "read_only",
+          "preflight_state": "current",
+          "retry_class": "never",
+          "step_id": "inspect"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "stale_preflight",
+      "effect_executed": false,
+      "expected": {
+        "admission": "blocked",
+        "dispatch_count": 0,
+        "reason_code": "preflight_stale",
+        "terminal_state": "stale"
+      },
+      "fixture_id": "workflow-plan-stale-preflight-v1",
+      "fixture_sha256": "6ffac69a5846acb50188c9b51332c4f97c672f3abad5639f114eed44a3c47aa1",
+      "plan_id": "plan-stale-preflight-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "not_required",
+          "call_state": "schema_valid",
+          "depends_on": [],
+          "effect_class": "read_only",
+          "preflight_state": "stale",
+          "retry_class": "never",
+          "step_id": "inspect"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "malformed_call",
+      "effect_executed": false,
+      "expected": {
+        "admission": "rejected",
+        "dispatch_count": 0,
+        "reason_code": "call_schema_invalid",
+        "terminal_state": "blocked"
+      },
+      "fixture_id": "workflow-plan-malformed-call-v1",
+      "fixture_sha256": "c2a29396d9bcaca72ff06822b62720d3754ec2d62f83f04260e89e0b15d80c84",
+      "plan_id": "plan-malformed-call-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "not_required",
+          "call_state": "unknown_argument",
+          "depends_on": [],
+          "effect_class": "read_only",
+          "preflight_state": "current",
+          "retry_class": "never",
+          "step_id": "inspect"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "deterministic_repair",
+      "effect_executed": false,
+      "expected": {
+        "admission": "admitted_after_repair",
+        "attempt_count": 1,
+        "completion_owner": "deterministic_verifier",
+        "repair_count": 1,
+        "terminal_state": "verified_success"
+      },
+      "fixture_id": "workflow-plan-deterministic-repair-v1",
+      "fixture_sha256": "729d0276a67e24f43d111613169cc89b521b9b02d7e063b456d77b1f213eb366",
+      "plan_id": "plan-deterministic-repair-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [
+        {
+          "proposal_sha256": "82edb4f1845926361a52fd656a5ec25db61914c3747e0465a33526662beef1e3",
+          "revision": 0,
+          "state": "schema_invalid"
+        },
+        {
+          "proposal_sha256": "4cdaf0213de466dd267e21194051ad091c99782abf7760608196394b332879ee",
+          "revision": 1,
+          "state": "schema_valid"
+        }
+      ],
+      "steps": [
+        {
+          "approval_requirement": "not_required",
+          "call_state": "schema_valid",
+          "depends_on": [],
+          "effect_class": "read_only",
+          "preflight_state": "current",
+          "retry_class": "never",
+          "step_id": "inspect"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "transient_read_failure",
+      "effect_executed": false,
+      "expected": {
+        "admission": "admitted",
+        "attempt_count": 2,
+        "automatic_retry_permitted": true,
+        "fresh_attempt_ids_required": true,
+        "terminal_state": "verified_success"
+      },
+      "fixture_id": "workflow-plan-transient-read-failure-v1",
+      "fixture_sha256": "911a40f2bf0f318c1e9ff09a163ba84b8e4fea6cbb9fb62d52c925e97c338c6d",
+      "plan_id": "plan-transient-read-failure-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "not_required",
+          "call_state": "schema_valid",
+          "depends_on": [],
+          "effect_class": "read_only",
+          "preflight_state": "current",
+          "retry_class": "recoverable_read",
+          "step_id": "read"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "conditional_conflict",
+      "effect_executed": false,
+      "expected": {
+        "admission": "blocked_pending_reconciliation",
+        "automatic_retry_permitted": false,
+        "fresh_approval_after_reconciliation": true,
+        "reason_code": "conditional_preimage_conflict",
+        "terminal_state": "conflict"
+      },
+      "fixture_id": "workflow-plan-conditional-conflict-v1",
+      "fixture_sha256": "e60fb38c2acaec7530472f114eb2a5c63fae1d8986dbdbd425c779161f234b02",
+      "plan_id": "plan-conditional-conflict-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "required_once",
+          "call_state": "schema_valid",
+          "depends_on": [],
+          "effect_class": "conditional",
+          "preflight_state": "current",
+          "retry_class": "conditional_after_reconciliation",
+          "step_id": "conditional-write"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "non_idempotent_effect",
+      "effect_executed": false,
+      "expected": {
+        "admission": "blocked_pending_user",
+        "automatic_retry_permitted": false,
+        "fresh_approval_per_attempt": true,
+        "terminal_state": "approval_required"
+      },
+      "fixture_id": "workflow-plan-non-idempotent-effect-v1",
+      "fixture_sha256": "7dc47b89063a5364dfacdde6367951a28e9dd64722fce164570e3f46a5e9f783",
+      "plan_id": "plan-non-idempotent-effect-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "required_per_attempt",
+          "call_state": "schema_valid",
+          "depends_on": [],
+          "effect_class": "non_idempotent",
+          "preflight_state": "current",
+          "retry_class": "user_decision_required",
+          "step_id": "non-idempotent"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "uncertain_effect",
+      "effect_executed": false,
+      "expected": {
+        "admission": "admitted",
+        "automatic_retry_permitted": false,
+        "reason_code": "effect_outcome_uncertain",
+        "reconciliation_required": true,
+        "terminal_state": "uncertain"
+      },
+      "fixture_id": "workflow-plan-uncertain-effect-v1",
+      "fixture_sha256": "1af91ae1500fa02e6284f90c4330640d81b7ce8e20a05773fade7a34436ed91f",
+      "plan_id": "plan-uncertain-effect-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "required_once",
+          "call_state": "schema_valid",
+          "depends_on": [],
+          "effect_class": "conditional",
+          "preflight_state": "current",
+          "retry_class": "conditional_after_reconciliation",
+          "step_id": "conditional-write"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "destructive_request",
+      "effect_executed": false,
+      "expected": {
+        "admission": "blocked_pending_user",
+        "automatic_retry_permitted": false,
+        "fresh_approval_per_attempt": true,
+        "terminal_state": "approval_required"
+      },
+      "fixture_id": "workflow-plan-destructive-request-v1",
+      "fixture_sha256": "39494b529602ed68a53c66d9064239400bed645b98a458d60afb8de7bf75ac81",
+      "plan_id": "plan-destructive-request-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "required_per_attempt",
+          "call_state": "schema_valid",
+          "depends_on": [],
+          "effect_class": "destructive",
+          "preflight_state": "current",
+          "retry_class": "user_decision_required",
+          "step_id": "delete"
+        }
+      ]
+    },
+    {
+      "authority_minted": false,
+      "budgets": {
+        "attempts": 2,
+        "duration_ms": 1000,
+        "output_bytes": 4096,
+        "tool_calls": 4
+      },
+      "category": "external_effect",
+      "effect_executed": false,
+      "expected": {
+        "admission": "blocked_pending_user",
+        "automatic_retry_permitted": false,
+        "fresh_approval_per_attempt": true,
+        "terminal_state": "approval_required"
+      },
+      "fixture_id": "workflow-plan-external-effect-v1",
+      "fixture_sha256": "7c476492122f87384a499c915b546b83cffeec898596dbd20161742ef7c9e770",
+      "plan_id": "plan-external-effect-v1",
+      "plan_revision": 0,
+      "proposal_revisions": [],
+      "steps": [
+        {
+          "approval_requirement": "required_per_attempt",
+          "call_state": "schema_valid",
+          "depends_on": [],
+          "effect_class": "external",
+          "preflight_state": "current",
+          "retry_class": "user_decision_required",
+          "step_id": "publish"
+        }
+      ]
+    }
+  ],
+  "generated_on": "2026-08-30",
+  "generator": {
+    "path": "scripts/artifact_evaluation_plan_fixtures.py",
+    "sha256": "5ed1e28c06624405dc4650a8155ee33980914d23cd6dc89c8a249a61a6eff8c0"
+  },
+  "product_runtime_executed": false,
+  "required_categories": [
+    "success",
+    "missing_dependency",
+    "stale_preflight",
+    "malformed_call",
+    "deterministic_repair",
+    "transient_read_failure",
+    "conditional_conflict",
+    "non_idempotent_effect",
+    "uncertain_effect",
+    "destructive_request",
+    "external_effect"
+  ],
+  "schema_version": 1,
+  "status": "synthetic-plan-fixture-contract",
+  "suite_id": "artifact-evaluation-workflow-plans-v1",
+  "suite_sha256": "552d44be60c392121865817a735d443a8246bf601273b6e0c1fa2d7e548824d1",
+  "synthetic_only": true,
+  "task_id": "2.3.2.1"
+}

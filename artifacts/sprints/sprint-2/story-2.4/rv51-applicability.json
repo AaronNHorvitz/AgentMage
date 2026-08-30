@@ -1017,7 +1017,7 @@
   ],
   "fixture_security": {
     "path": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
-    "sha256": "2985d3b17d1a13c9bf2d8282a18e4b4f83bc05ba1a353e67daa7a5bcb7a9d606",
+    "sha256": "b1e11a87e0c8ccb4fd5cef1f94436c07bb326440c0b858ddd05865598da90959",
     "status": "pass",
     "blocking_finding_count": 0,
     "raw_sensitive_values_retained": false,
@@ -1124,7 +1124,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-2/story-2.4/rv51-applicable-results.log",
-      "sha256": "fcdcd4e3fa70add4a8b8fe33091bbe635c20e3eae6a9cccabc9f5ee41f22d3fb"
+      "sha256": "8589da61f36cec379b5522ddde1c20a5f23c5d52dc0d012bfccf2a1f25c0d833"
     }
   ],
   "limitations": [
