@@ -1952,9 +1952,9 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 11.2.1 - Add source-artifact materializations**
-  - [ ] **Sub-task 11.2.1.1:** Add normalized source manifest, origin, reference, extraction,
+  - [x] **Sub-task 11.2.1.1:** Add normalized source manifest, origin, reference, extraction,
     section, provenance, lexical-index, context-disposition, cache-input, retention, and lifecycle
-    records over existing encrypted payload references.
+    records over existing encrypted payload references. Evidence: migration [`0012-source-artifact-materializations.sql`](kernel/engine/migrations/operational-store/0012-source-artifact-materializations.sql) adds eleven `STRICT`, relational, digest-shaped, record-bounded materializations and advances the immutable SQLCipher schema/history to version 12. Persisted manifest and retention rows bind the exact existing migration-0007 `runtime_artifacts` identity, payload SHA-256, and byte size as one foreign-key tuple; no source byte or payload table is added. Manifest/provenance insertion is deferred-transaction safe, section parents stay in one extraction, context sections stay in one source, and retention/lifecycle values are closed. Focused tests retain one complete synthetic family over exactly one pre-existing encrypted payload and reject unsupported-reference, non-producing-extraction, nonterminal-disposition, and mismatched-retention mutations; schema-1 upgrade, seeded migration recovery, strict Clippy, and five evidence-integrity/overclaim tests pass. The retained [`source-materialization-schema-report.json`](artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json) and [`source-materialization-schema-results.log`](artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log) explicitly leave typed publication, deduplication, refresh/invalidation, lifecycle transactions, full crash coverage, Story, Sprint, and release completion to their later owners.
   - [ ] **Sub-task 11.2.1.2:** Enforce content-hash deduplication without merging distinct origin,
     classification, authority, freshness, or retention identities.
   - [ ] **Sub-task 11.2.1.3:** Implement atomic refresh, transitive invalidation, expiry, deletion,

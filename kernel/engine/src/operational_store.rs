@@ -76,7 +76,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 11;
+const SCHEMA_VERSION: i64 = 12;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -163,6 +163,8 @@ const MIGRATION_10_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0010-write-checkpoints.sql");
 const MIGRATION_11_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0011-engineering-runtime.sql");
+const MIGRATION_12_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0012-source-artifact-materializations.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -3219,6 +3221,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 11_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 11;
+    }
+    if version == 11 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_12_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (12, ?1)",
+                [sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -3250,6 +3273,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (9, sha256_hex(MIGRATION_9_SCHEMA_SQL.as_bytes())),
             (10, sha256_hex(MIGRATION_10_SCHEMA_SQL.as_bytes())),
             (11, sha256_hex(MIGRATION_11_SCHEMA_SQL.as_bytes())),
+            (12, sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -5071,11 +5095,11 @@ mod tests {
         MIGRATION_2_SCHEMA_SQL, MIGRATION_3_SCHEMA_SQL, MIGRATION_4_SCHEMA_SQL,
         MIGRATION_5_SCHEMA_SQL, MIGRATION_6_SCHEMA_SQL, MIGRATION_7_SCHEMA_SQL,
         MIGRATION_8_SCHEMA_SQL, MIGRATION_9_SCHEMA_SQL, MIGRATION_10_SCHEMA_SQL,
-        MIGRATION_11_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
-        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
-        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
-        SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path, open_connection,
-        prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
+        MIGRATION_11_SCHEMA_SQL, MIGRATION_12_SCHEMA_SQL, OperationalStore, OperationalStoreError,
+        OperationalStoreKeyError, OperationalStoreKeyLifecycle, OperationalStoreKeyProvider,
+        RetentionAssignment, RetentionDisposition, RetentionHoldKind, RetentionRecordFamily,
+        RetentionSensitivity, SCHEMA_VERSION, ZERO_SHA256, is_linux_held_descriptor_path,
+        open_connection, prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
         verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
@@ -6578,7 +6602,7 @@ mod tests {
     }
 
     #[test]
-    fn version_eleven_schema_is_normalized_closed_and_relational() {
+    fn version_twelve_schema_is_normalized_closed_and_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
@@ -6641,6 +6665,17 @@ mod tests {
                 "schema_history",
                 "session_checkpoints",
                 "sessions",
+                "source_cache_inputs",
+                "source_context_dispositions",
+                "source_extractions",
+                "source_lexical_indexes",
+                "source_lifecycle_events",
+                "source_manifests",
+                "source_origins",
+                "source_provenance",
+                "source_references",
+                "source_retentions",
+                "source_sections",
                 "store_metadata",
                 "tasks",
                 "transaction_heads",
@@ -6827,6 +6862,241 @@ mod tests {
                 .execute(
                     "INSERT INTO decisions VALUES ('duplicate-ordinal', 'task-1', 1, 'accepted', ?1, X'00')",
                     [&digest],
+                )
+                .is_err()
+        );
+        drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store = OperationalStore::open(&path, &observation(), &mut TestKey([13; 32]))
+            .expect("version twelve store");
+        let payload_sha256 = hash('a');
+        let record = b"{}".as_slice();
+        store
+            .connection
+            .execute(
+                "INSERT INTO runtime_runs VALUES (
+                    'run-source-1', 'session-source-1', 'task-source-1', 'correlation-source-1',
+                    'policy-source-1', ?1, ?2, 0, 'event-source-1', ?3, 1, 0,
+                    NULL, NULL, 1000, 1000
+                 )",
+                params![hash('1'), hash('2'), hash('3')],
+            )
+            .expect("runtime owner");
+        store
+            .connection
+            .execute(
+                "INSERT INTO runtime_payloads VALUES (?1, 17, 'active', 1, 1000, 1000)",
+                [&payload_sha256],
+            )
+            .expect("existing encrypted payload reference");
+        store
+            .connection
+            .execute(
+                "INSERT INTO runtime_artifacts VALUES (
+                    'runtime-artifact-source-1', ?1, ?2, 17, 'text/plain', 'report',
+                    'internal', 'until_expiration', 2000, 'session-source-1', 'task-source-1',
+                    'run-source-1', NULL, NULL, NULL, 'policy-source-1', ?3, 1000, ?4
+                 )",
+                params![hash('4'), &payload_sha256, hash('5'), record],
+            )
+            .expect("existing runtime artifact reference");
+
+        let transaction = store.connection.transaction().expect("source transaction");
+        transaction
+            .execute(
+                "INSERT INTO source_origins VALUES (
+                    'origin-source-1', 'request-source-1', 'authority-source-1',
+                    'file', '2026-08-30T00:00:00Z', ?1, ?2
+                 )",
+                params![hash('6'), record],
+            )
+            .expect("origin");
+        transaction
+            .execute(
+                "INSERT INTO source_references VALUES (
+                    'reference-source-1', 'request-source-1', 'authority-source-1',
+                    'file_path', 'supported', ?1, '2026-08-30T00:00:00Z', ?2
+                 )",
+                params![hash('7'), record],
+            )
+            .expect("reference");
+        transaction
+            .execute(
+                "INSERT INTO source_manifests VALUES (
+                    'source-artifact-1', 'request-source-1', 'authority-source-1',
+                    'reference-source-1', 'origin-source-1', 'provenance-source-1', ?1,
+                    'text/plain', 'internal', 'fresh', 'captured',
+                    'runtime-artifact-source-1', ?2, 17, '2026-08-30T00:00:00Z', ?3, ?4
+                 )",
+                params![hash('8'), &payload_sha256, hash('9'), record],
+            )
+            .expect("source manifest");
+        transaction
+            .execute(
+                "INSERT INTO source_provenance VALUES (
+                    'provenance-source-1', 'source-artifact-1', 'reference-source-1',
+                    'origin-source-1', 'internal', 'fresh', '2026-08-30T00:00:00Z',
+                    '2026-08-30T00:00:00Z', ?1, ?2
+                 )",
+                params![hash('8'), record],
+            )
+            .expect("provenance");
+        transaction
+            .execute(
+                "INSERT INTO source_extractions VALUES (
+                    'extraction-source-1', 'source-artifact-1', 'extractor-source-1', '1.0.0',
+                    ?1, ?2, 'text/plain', 'parsed', 0, 1, ?3, ?4
+                 )",
+                params![&payload_sha256, hash('0'), hash('1'), record],
+            )
+            .expect("extraction");
+        transaction
+            .execute(
+                "INSERT INTO source_sections VALUES (
+                    'section-source-1', 'source-artifact-1', 'extraction-source-1', NULL, 0,
+                    'document_root', 0, 17, 0, 1, 4, ?1, ?2, ?3
+                 )",
+                params![hash('2'), hash('3'), record],
+            )
+            .expect("section");
+        transaction
+            .execute(
+                "INSERT INTO source_cache_inputs VALUES (
+                    'cache-input-source-1', 'source-artifact-1', 'extraction-source-1', ?1,
+                    'parser-source-1', '1.0.0', ?2, ?3, ?4, ?5, ?6, ?7
+                 )",
+                params![
+                    &payload_sha256,
+                    hash('4'),
+                    hash('5'),
+                    hash('6'),
+                    hash('7'),
+                    hash('8'),
+                    record
+                ],
+            )
+            .expect("cache input");
+        transaction
+            .execute(
+                "INSERT INTO source_lexical_indexes VALUES (
+                    'lexical-index-source-1', 'source-artifact-1', 'extraction-source-1',
+                    'cache-input-source-1', 'indexer-source-1', '1.0.0', ?1, 3, 4, ?2, ?3
+                 )",
+                params![hash('9'), hash('0'), record],
+            )
+            .expect("lexical index");
+        transaction
+            .execute(
+                "INSERT INTO source_context_dispositions VALUES (
+                    'disposition-source-1', 'context-manifest-source-1', 'source-artifact-1',
+                    'section-source-1', 'included', 4, ?1, 1, ?2, ?3
+                 )",
+                params![hash('1'), hash('2'), record],
+            )
+            .expect("context disposition");
+        transaction
+            .execute(
+                "INSERT INTO source_retentions VALUES (
+                    'retention-source-1', 'source-artifact-1', 'request-source-1',
+                    'authority-source-1', 'session', 'session-source-1', 'policy_persisted',
+                    'retention-policy-source-1', '2026-08-31T00:00:00Z',
+                    'runtime-artifact-source-1', ?1, 17, 'encrypted_at_rest', ?2,
+                    'active', NULL, 1, '2026-08-30T00:00:00Z', ?3, ?4
+                 )",
+                params![&payload_sha256, hash('3'), hash('4'), record],
+            )
+            .expect("source retention");
+        transaction
+            .execute(
+                "INSERT INTO source_lifecycle_events VALUES (
+                    'retention-source-1', 1, 'active', NULL, '2026-08-30T00:00:00Z',
+                    ?1, ?2, ?3, ?4
+                 )",
+                params![ZERO_SHA256, hash('4'), hash('5'), record],
+            )
+            .expect("source lifecycle event");
+        transaction
+            .commit()
+            .expect("complete normalized source family");
+
+        for table in [
+            "source_manifests",
+            "source_origins",
+            "source_references",
+            "source_extractions",
+            "source_sections",
+            "source_provenance",
+            "source_lexical_indexes",
+            "source_context_dispositions",
+            "source_cache_inputs",
+            "source_retentions",
+            "source_lifecycle_events",
+        ] {
+            let count: i64 = store
+                .connection
+                .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                    row.get(0)
+                })
+                .expect("source materialization count");
+            assert_eq!(count, 1, "{table} must retain one normalized row");
+        }
+        assert_eq!(
+            store
+                .connection
+                .query_row("SELECT COUNT(*) FROM runtime_payloads", [], |row| row
+                    .get::<_, i64>(0))
+                .expect("one existing payload"),
+            1
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO source_references VALUES (
+                        'reference-invalid', 'request-source-1', 'authority-source-1',
+                        'unsupported', 'supported', ?1, '2026-08-30T00:00:00Z', ?2
+                     )",
+                    params![hash('a'), record],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO source_extractions VALUES (
+                        'extraction-invalid', 'source-artifact-1', 'extractor-source-1', '1.0.0',
+                        ?1, NULL, 'text/plain', 'parsed', 0, 1, ?2, ?3
+                     )",
+                    params![&payload_sha256, hash('b'), record],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "INSERT INTO source_context_dispositions VALUES (
+                        'disposition-invalid', 'context-manifest-source-2', 'source-artifact-1',
+                        NULL, 'included', 0, ?1, 0, ?2, ?3
+                     )",
+                    params![hash('c'), hash('d'), record],
+                )
+                .is_err()
+        );
+        assert!(
+            store
+                .connection
+                .execute(
+                    "UPDATE source_retentions SET payload_sha256 = ?1
+                     WHERE retention_id = 'retention-source-1'",
+                    [hash('f')],
                 )
                 .is_err()
         );
@@ -7062,7 +7332,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_eleven_with_exact_history() {
+    fn version_one_upgrades_through_twelve_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -7096,6 +7366,7 @@ mod tests {
                 (9, sha256_hex(MIGRATION_9_SCHEMA_SQL.as_bytes())),
                 (10, sha256_hex(MIGRATION_10_SCHEMA_SQL.as_bytes())),
                 (11, sha256_hex(MIGRATION_11_SCHEMA_SQL.as_bytes())),
+                (12, sha256_hex(MIGRATION_12_SCHEMA_SQL.as_bytes())),
             ]
         );
         drop(store);
@@ -7763,7 +8034,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 11));
+                assert_eq!((version, history), (SCHEMA_VERSION, 12));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))
