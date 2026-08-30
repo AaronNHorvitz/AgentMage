@@ -6,6 +6,7 @@ import addFormats from "ajv-formats";
 
 import {
   CONTEXT_MANIFEST_SCHEMA_VERSION,
+  ENGINEERING_RUNTIME_RECORD_SCHEMA_VERSION,
   ENGINEERING_RUNTIME_SCHEMAS,
   RUNTIME_ARTIFACT_KINDS,
   SOURCE_LOCATOR_KINDS,
@@ -63,6 +64,30 @@ test("generated Engineering Runtime schemas are current, closed, and compile", (
   assert.equal(synchronize(), 37);
   assert.equal(Object.keys(REUSED_SCHEMA_CONTRACTS).length, 6);
   assert.equal(Object.keys(ENGINEERING_RUNTIME_SCHEMAS).length, 37);
+});
+
+test("canonical runtime record schemas reject every unsupported version", () => {
+  assert.equal(ENGINEERING_RUNTIME_RECORD_SCHEMA_VERSION, 2);
+  for (const name of [
+    "artifact-envelope",
+    "artifact-transformation",
+    "artifact-ingestion-result",
+    "context-manifest",
+    "workflow-definition",
+    "workflow-state",
+    "tool-observation",
+    "verification-result",
+    "terminal-result",
+  ]) {
+    const versionSchema = schemaDocument(name).properties.schema_version;
+    assert.deepEqual(versionSchema, {
+      type: "integer",
+      const: ENGINEERING_RUNTIME_RECORD_SCHEMA_VERSION,
+    });
+    for (const rejected of [0, 1, 3, 999]) {
+      assert.notEqual(rejected, versionSchema.const);
+    }
+  }
 });
 
 test("source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes", () => {
@@ -265,7 +290,7 @@ test("multi-agent schemas require bounded workers and verifier-owned completion 
 
 test("artifact capture and context delivery fail closed", () => {
   const envelope = {
-    schema_version: 1,
+    schema_version: ENGINEERING_RUNTIME_RECORD_SCHEMA_VERSION,
     artifact_id: "artifact-1",
     request_id: "request-1",
     authority_id: "authority-1",
@@ -345,7 +370,7 @@ test("remote endpoint and route records cannot enable or silently fallback", () 
 
 test("tool observations and terminal results preserve runtime authority", () => {
   const observation = {
-    schema_version: 1,
+    schema_version: ENGINEERING_RUNTIME_RECORD_SCHEMA_VERSION,
     observation_id: "observation-1",
     tool_call_id: "call-1",
     attempt_id: "attempt-1",
@@ -380,7 +405,7 @@ test("tool observations and terminal results preserve runtime authority", () => 
   assert.equal(validateObservation({ ...observation, terminal: false }), false);
 
   const terminal = {
-    schema_version: 1,
+    schema_version: ENGINEERING_RUNTIME_RECORD_SCHEMA_VERSION,
     terminal_result_id: "terminal-1",
     workflow_id: "workflow-1",
     outcome: "verified_success",

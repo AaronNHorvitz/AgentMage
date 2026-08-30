@@ -38,7 +38,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "minimum": 1
+      "const": 2
     },
     "observation_id": {
       "type": "string",

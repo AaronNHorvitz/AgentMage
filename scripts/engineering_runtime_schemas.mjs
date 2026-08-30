@@ -17,6 +17,11 @@ const bounded = { type: "string", minLength: 1, maxLength: 512 };
 const timestamp = { type: "string", format: "date-time" };
 const uint = { type: "integer", minimum: 0 };
 const positive = { type: "integer", minimum: 1 };
+export const ENGINEERING_RUNTIME_RECORD_SCHEMA_VERSION = 2;
+const supportedRuntimeRecordVersion = {
+  type: "integer",
+  const: ENGINEERING_RUNTIME_RECORD_SCHEMA_VERSION,
+};
 const nullable = (schema) => ({ oneOf: [schema, { type: "null" }] });
 const list = (items, minItems = 0, maxItems = 256) => ({
   type: "array",
@@ -67,7 +72,7 @@ const evidenceReference = closed({
 });
 
 const artifactEnvelope = closed({
-  schema_version: positive,
+  schema_version: supportedRuntimeRecordVersion,
   artifact_id: identifier,
   request_id: identifier,
   authority_id: identifier,
@@ -86,7 +91,7 @@ artifactEnvelope.allOf = [{
 }];
 
 const artifactTransformation = closed({
-  schema_version: positive,
+  schema_version: supportedRuntimeRecordVersion,
   transformation_id: identifier,
   artifact_id: identifier,
   transformer_id: identifier,
@@ -99,7 +104,7 @@ const artifactTransformation = closed({
 });
 
 const artifactIngestionResult = closed({
-  schema_version: positive,
+  schema_version: supportedRuntimeRecordVersion,
   ingestion_id: identifier,
   artifact_id: identifier,
   disposition: { enum: ["captured", "parsed", "partial", "unsupported", "denied", "unavailable", "failed", "omitted"] },
@@ -110,7 +115,7 @@ const artifactIngestionResult = closed({
   terminal: { const: true },
 });
 
-export const CONTEXT_MANIFEST_SCHEMA_VERSION = 2;
+export const CONTEXT_MANIFEST_SCHEMA_VERSION = ENGINEERING_RUNTIME_RECORD_SCHEMA_VERSION;
 const supportedContextManifestVersion = {
   type: "integer",
   const: CONTEXT_MANIFEST_SCHEMA_VERSION,
@@ -227,7 +232,7 @@ const workflowStep = closed({
   budgets,
 });
 const workflowDefinition = closed({
-  schema_version: positive,
+  schema_version: supportedRuntimeRecordVersion,
   workflow_id: identifier,
   workflow_version: positive,
   input_schema: schemaRef,
@@ -238,7 +243,7 @@ const workflowDefinition = closed({
 });
 
 const workflowState = closed({
-  schema_version: positive,
+  schema_version: supportedRuntimeRecordVersion,
   workflow_id: identifier,
   workflow_version: positive,
   sequence: uint,
@@ -267,7 +272,7 @@ const workflowCheckpoint = closed({
 });
 
 const toolObservation = closed({
-  schema_version: positive,
+  schema_version: supportedRuntimeRecordVersion,
   observation_id: identifier,
   tool_call_id: identifier,
   attempt_id: identifier,
@@ -368,7 +373,7 @@ const capabilityManifest = closed({
 });
 
 const verificationResult = closed({
-  schema_version: positive,
+  schema_version: supportedRuntimeRecordVersion,
   verification_result_id: identifier,
   workflow_id: identifier,
   step_id: nullable(identifier),
@@ -388,7 +393,7 @@ verificationResult.allOf = [{
 }];
 
 const terminalResult = closed({
-  schema_version: positive,
+  schema_version: supportedRuntimeRecordVersion,
   terminal_result_id: identifier,
   workflow_id: identifier,
   outcome: { enum: ["verified_success", "verified_no_op", "blocked", "failed", "cancelled", "timed_out", "resource_exhausted", "uncertain"] },

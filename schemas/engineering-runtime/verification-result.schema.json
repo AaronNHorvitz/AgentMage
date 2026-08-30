@@ -22,7 +22,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "minimum": 1
+      "const": 2
     },
     "verification_result_id": {
       "type": "string",

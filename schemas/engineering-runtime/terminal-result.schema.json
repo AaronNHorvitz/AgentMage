@@ -19,7 +19,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "minimum": 1
+      "const": 2
     },
     "terminal_result_id": {
       "type": "string",

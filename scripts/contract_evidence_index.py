@@ -20,7 +20,7 @@ INDEX_PATH: Final = EVIDENCE_DIR / "contract-evidence-index.json"
 PROTOCOLS: Final = ["RV-03", "RV-04", "RV-08", "RV-11", "RV-12", "RV-17"]
 RAW_MARKERS: Final = [
     "Validated 37 Engineering Runtime schemas and 6 reused contracts.",
-    "tests 51",
+    "generated Engineering Runtime schemas are current, closed, and compile",
     "dependency rule validation passed",
     "Ran 8 tests",
     "runtime ownership validation passed",

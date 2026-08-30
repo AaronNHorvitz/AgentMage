@@ -4,7 +4,7 @@ use agentmage_kernel_contracts::{
     CanonicalArtifactEnvelope, CanonicalArtifactIngestionResult, CanonicalArtifactTransformation,
     CanonicalContextManifest, CanonicalTerminalResult, CanonicalToolObservation,
     CanonicalVerificationResult, CanonicalWorkflowDefinition, CanonicalWorkflowState,
-    VersionedContract,
+    VersionedContract, from_json,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::{Value, json};
@@ -23,8 +23,8 @@ where
         .cloned()
         .collect::<BTreeSet<_>>();
 
-    let record: T =
-        serde_json::from_value(candidate.clone()).expect("Rust type admits schema record");
+    let candidate_bytes = serde_json::to_vec(&candidate).expect("candidate serializes");
+    let record: T = from_json(&candidate_bytes).expect("Rust boundary admits schema record");
     assert_eq!(record.schema_version(), expected_version);
     let encoded = serde_json::to_value(record).expect("Rust type serializes");
     let rust_fields = encoded
@@ -44,14 +44,15 @@ where
         .expect("candidate is an object")
         .insert("unadmitted_field".to_owned(), Value::Bool(true));
     assert!(
-        serde_json::from_value::<T>(widened).is_err(),
+        from_json::<T>(&serde_json::to_vec(&widened).expect("widened candidate serializes"))
+            .is_err(),
         "closed Rust record accepted an unadmitted field",
     );
 }
 
 fn assert_required_nullable<T>(candidate: &Value, fields: &[&str])
 where
-    T: DeserializeOwned,
+    T: DeserializeOwned + Serialize + VersionedContract,
 {
     for field in fields {
         let mut missing = candidate.clone();
@@ -64,15 +65,29 @@ where
             "fixture did not contain {field}",
         );
         assert!(
-            serde_json::from_value::<T>(missing).is_err(),
+            from_json::<T>(&serde_json::to_vec(&missing).expect("missing candidate serializes"))
+                .is_err(),
             "schema-required nullable field {field} was treated as optional",
         );
     }
 }
 
+fn assert_versions_fail_closed<T>(candidate: &Value)
+where
+    T: std::fmt::Debug + DeserializeOwned + Serialize + VersionedContract,
+{
+    for unsupported in [0, 1, 3, u16::MAX] {
+        let mut changed = candidate.clone();
+        changed["schema_version"] = json!(unsupported);
+        let bytes = serde_json::to_vec(&changed).expect("version candidate serializes");
+        let failure = from_json::<T>(&bytes).expect_err("unsupported version must fail closed");
+        assert_eq!(failure.code, "contract.version.unsupported");
+    }
+}
+
 fn artifact_envelope() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "artifact_id": "artifact-1",
         "request_id": "request-1",
         "authority_id": "authority-1",
@@ -88,7 +103,7 @@ fn artifact_envelope() -> Value {
 
 fn artifact_transformation() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "transformation_id": "transformation-1",
         "artifact_id": "artifact-1",
         "transformer_id": "text-parser",
@@ -103,7 +118,7 @@ fn artifact_transformation() -> Value {
 
 fn artifact_ingestion_result() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "ingestion_id": "ingestion-1",
         "artifact_id": "artifact-1",
         "disposition": "parsed",
@@ -140,7 +155,7 @@ fn context_manifest() -> Value {
 
 fn workflow_definition() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "workflow_id": "workflow-1",
         "workflow_version": 1,
         "input_schema": {"schema_id": "input-1", "schema_version": 1, "schema_sha256": DIGEST},
@@ -172,7 +187,7 @@ fn workflow_definition() -> Value {
 
 fn workflow_state() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "workflow_id": "workflow-1",
         "workflow_version": 1,
         "sequence": 0,
@@ -187,7 +202,7 @@ fn workflow_state() -> Value {
 
 fn tool_observation() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "observation_id": "observation-1",
         "tool_call_id": "tool-call-1",
         "attempt_id": "attempt-1",
@@ -221,7 +236,7 @@ fn tool_observation() -> Value {
 
 fn verification_result() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "verification_result_id": "verification-1",
         "workflow_id": "workflow-1",
         "step_id": "step-1",
@@ -239,7 +254,7 @@ fn verification_result() -> Value {
 
 fn terminal_result() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "terminal_result_id": "terminal-1",
         "workflow_id": "workflow-1",
         "outcome": "verified_success",
@@ -257,17 +272,17 @@ fn all_nine_runtime_record_families_match_their_admitted_schema_shape() {
     assert_schema_bound::<CanonicalArtifactEnvelope>(
         include_str!("../../../schemas/engineering-runtime/artifact-envelope.schema.json"),
         artifact_envelope(),
-        1,
+        2,
     );
     assert_schema_bound::<CanonicalArtifactTransformation>(
         include_str!("../../../schemas/engineering-runtime/artifact-transformation.schema.json"),
         artifact_transformation(),
-        1,
+        2,
     );
     assert_schema_bound::<CanonicalArtifactIngestionResult>(
         include_str!("../../../schemas/engineering-runtime/artifact-ingestion-result.schema.json"),
         artifact_ingestion_result(),
-        1,
+        2,
     );
     assert_schema_bound::<CanonicalContextManifest>(
         include_str!("../../../schemas/engineering-runtime/context-manifest.schema.json"),
@@ -277,27 +292,27 @@ fn all_nine_runtime_record_families_match_their_admitted_schema_shape() {
     assert_schema_bound::<CanonicalWorkflowDefinition>(
         include_str!("../../../schemas/engineering-runtime/workflow-definition.schema.json"),
         workflow_definition(),
-        1,
+        2,
     );
     assert_schema_bound::<CanonicalWorkflowState>(
         include_str!("../../../schemas/engineering-runtime/workflow-state.schema.json"),
         workflow_state(),
-        1,
+        2,
     );
     assert_schema_bound::<CanonicalToolObservation>(
         include_str!("../../../schemas/engineering-runtime/tool-observation.schema.json"),
         tool_observation(),
-        1,
+        2,
     );
     assert_schema_bound::<CanonicalVerificationResult>(
         include_str!("../../../schemas/engineering-runtime/verification-result.schema.json"),
         verification_result(),
-        1,
+        2,
     );
     assert_schema_bound::<CanonicalTerminalResult>(
         include_str!("../../../schemas/engineering-runtime/terminal-result.schema.json"),
         terminal_result(),
-        1,
+        2,
     );
 }
 
@@ -336,8 +351,24 @@ fn schema_required_nullable_fields_cannot_be_omitted() {
             .expect("workflow step is an object")
             .remove(field);
         assert!(
-            serde_json::from_value::<CanonicalWorkflowDefinition>(missing).is_err(),
+            from_json::<CanonicalWorkflowDefinition>(
+                &serde_json::to_vec(&missing).expect("workflow candidate serializes"),
+            )
+            .is_err(),
             "schema-required nullable workflow field {field} was treated as optional",
         );
     }
+}
+
+#[test]
+fn every_runtime_record_family_rejects_unsupported_versions() {
+    assert_versions_fail_closed::<CanonicalArtifactEnvelope>(&artifact_envelope());
+    assert_versions_fail_closed::<CanonicalArtifactTransformation>(&artifact_transformation());
+    assert_versions_fail_closed::<CanonicalArtifactIngestionResult>(&artifact_ingestion_result());
+    assert_versions_fail_closed::<CanonicalContextManifest>(&context_manifest());
+    assert_versions_fail_closed::<CanonicalWorkflowDefinition>(&workflow_definition());
+    assert_versions_fail_closed::<CanonicalWorkflowState>(&workflow_state());
+    assert_versions_fail_closed::<CanonicalToolObservation>(&tool_observation());
+    assert_versions_fail_closed::<CanonicalVerificationResult>(&verification_result());
+    assert_versions_fail_closed::<CanonicalTerminalResult>(&terminal_result());
 }

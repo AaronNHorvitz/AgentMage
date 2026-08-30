@@ -20,7 +20,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "minimum": 1
+      "const": 2
     },
     "artifact_id": {
       "type": "string",

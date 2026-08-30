@@ -19,7 +19,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "minimum": 1
+      "const": 2
     },
     "workflow_id": {
       "type": "string",

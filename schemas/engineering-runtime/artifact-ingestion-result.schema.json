@@ -18,7 +18,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "minimum": 1
+      "const": 2
     },
     "ingestion_id": {
       "type": "string",
