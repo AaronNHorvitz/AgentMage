@@ -1066,9 +1066,19 @@ data or real external effects.
 - [x] **Sprint AC 2.AC3:** Fake tools and models can simulate success, denial, malformed output, cancellation, timeout, crash, and uncertain completion. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) verifies the complete seven-adapter by eight-mode matrix: 56 typed cases, all expected outcomes matched, all cleanup passed, and all 56 post-close calls rejected.
 - [x] **Sprint AC 2.AC4:** Test results identify the exact fixture, platform, build, model, runtime, and policy versions. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) retains both synthetic Linux result identities with exact fixture, distribution/version/architecture, build, model, runtime, policy, record, and content hashes while recording no ambient environment values.
 - [x] **Sprint AC 2.AC5:** No fixture contains a real credential or private user file. Evidence: [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) independently requires the recursive fixture/security scan to retain zero blocking findings and no raw sensitive values or network calls while all six seeded prohibited-content categories remain detectable.
-- [ ] **Sprint AC 2.AC6:** Story 2.3 artifact and workflow corpora reproduce, every seeded failure
+- [x] **Sprint AC 2.AC6:** Story 2.3 artifact and workflow corpora reproduce, every seeded failure
   remains non-pass, and no golden manifest permits silent omission, false completion, or duplicate
-  effect.
+  effect. Evidence: [`reproducibility-report.json`](fixtures/artifact-evaluation/v1/reproducibility-report.json)
+  regenerates all 11 declared outputs in two independent empty roots and records the same complete
+  output-set SHA-256 for both runs. The versioned [`golden-manifest-v1.json`](fixtures/artifact-evaluation/v1/golden-manifest-v1.json)
+  binds all eight required inputs and exposes all 77 outcomes, including all 60 seeded non-success
+  terminals; resealed semantic mutations prove missing input, hidden non-pass, false-success,
+  raw-secret, and changed-effect states cannot pass. The workflow golden covers all 38 plan, crash,
+  and premature-terminal cases with zero duplicate effects or approval bypass and no false
+  completion. The recursive security scan reports zero findings across 240 controlled files and 24
+  package containers. The fixed-seed extension registry reconciles 153 deterministic observations
+  but explicitly makes no fuzz-coverage, sanitizer, product-runtime, or support claim; required manual
+  campaign `RM-024` and its affected `RV-15`, Sprint 166, and `G-GA` gates remain open.
 
 **Gate decision:** Sprint 2 is PASS only when Stories 2.1 through 2.3, every numbered task/sub-task,
 every story criterion, every sprint criterion, and the Universal Story Definition of Done are
