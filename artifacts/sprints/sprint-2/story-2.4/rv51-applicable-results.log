@@ -9,9 +9,9 @@ Validated 16 identity-bound artifact admission fixtures
 Ran 8 tests in 0.015s
 
 OK
-✔ all admission cases use the authoritative closed Engineering Runtime records (48.774035ms)
-✔ unavailable and unsupported records cannot be changed into captured records without bytes (9.100445ms)
-✔ stale provenance cannot masquerade as a captured current source artifact (6.75575ms)
+✔ all admission cases use the authoritative closed Engineering Runtime records (48.069252ms)
+✔ unavailable and unsupported records cannot be changed into captured records without bytes (8.151447ms)
+✔ stale provenance cannot masquerade as a captured current source artifact (6.782875ms)
 ℹ tests 3
 ℹ suites 0
 ℹ pass 3
@@ -19,7 +19,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 112.86246
+ℹ duration_ms 114.109602
 $ npm run engineering-runtime:artifact-adversarial-fixtures:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:artifact-adversarial-fixtures:check
@@ -31,8 +31,8 @@ Validated 10 inert hostile artifact fixtures
 Ran 8 tests in 0.031s
 
 OK
-✔ hostile cases remain valid source records while their content stays untrusted (49.227257ms)
-✔ replacement and cancellation cannot masquerade as captured sources (8.066947ms)
+✔ hostile cases remain valid source records while their content stays untrusted (49.620348ms)
+✔ replacement and cancellation cannot masquerade as captured sources (8.011945ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -40,7 +40,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 106.393384
+ℹ duration_ms 106.749932
 $ npm run engineering-runtime:artifact-lineage-fixtures:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:artifact-lineage-fixtures:check
@@ -49,11 +49,11 @@ $ npm run engineering-runtime:artifact-lineage-fixtures:check
 Validated lineage for 26 sources and 21 ranges
 .......
 ----------------------------------------------------------------------
-Ran 7 tests in 0.023s
+Ran 7 tests in 0.024s
 
 OK
-✔ lineage records satisfy every authoritative Engineering Runtime schema (65.703216ms)
-✔ no fixture context disposition claims model delivery (0.139889ms)
+✔ lineage records satisfy every authoritative Engineering Runtime schema (66.677332ms)
+✔ no fixture context disposition claims model delivery (0.126674ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -61,7 +61,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 115.972106
+ℹ duration_ms 113.212403
 $ npm run engineering-runtime:context-accounting-fixtures:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:context-accounting-fixtures:check
@@ -73,8 +73,8 @@ Validated 8 complete context-accounting manifests
 Ran 6 tests in 0.020s
 
 OK
-✔ every scenario emits one authoritative complete context manifest (27.753065ms)
-✔ non-admitting dispositions never smuggle ranges or tokens (0.601768ms)
+✔ every scenario emits one authoritative complete context manifest (24.772105ms)
+✔ non-admitting dispositions never smuggle ranges or tokens (0.521255ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -82,7 +82,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 72.53045
+ℹ duration_ms 72.081986
 $ npm run engineering-runtime:context-delivery-fixtures:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:context-delivery-fixtures:check
@@ -91,11 +91,11 @@ $ npm run engineering-runtime:context-delivery-fixtures:check
 Validated 8 reconstructible context-delivery receipts
 ......
 ----------------------------------------------------------------------
-Ran 6 tests in 0.010s
+Ran 6 tests in 0.011s
 
 OK
-✔ all reconstruction receipts satisfy the authoritative delivery schema (23.218639ms)
-✔ blocked receipts name required unseen authority and never allow completion (0.356497ms)
+✔ all reconstruction receipts satisfy the authoritative delivery schema (22.715101ms)
+✔ blocked receipts name required unseen authority and never allow completion (0.371035ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -103,7 +103,7 @@ OK
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 69.773565
+ℹ duration_ms 72.906063
 $ npm run engineering-runtime:artifact-resource-gate:check
 
 > agentmage-planning-docs@0.0.0 engineering-runtime:artifact-resource-gate:check
@@ -112,7 +112,7 @@ $ npm run engineering-runtime:artifact-resource-gate:check
 Validated 10 resource ceilings and 4 cleanup boundaries
 .......
 ----------------------------------------------------------------------
-Ran 7 tests in 0.241s
+Ran 7 tests in 0.214s
 
 OK
 $ python3 scripts/fixture_security_scan.py

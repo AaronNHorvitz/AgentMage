@@ -1,0 +1,308 @@
+{
+  "acceptance_criteria": [
+    {
+      "acceptance_truth_sha256": "eeb6afdf9cfaaecede591cd5ba8afaa3506ad598fb7f23a9a709d52e437751df",
+      "criterion_id": "1.3.AC1",
+      "status": "pass-local-current-rust-owned-boundary"
+    },
+    {
+      "acceptance_truth_sha256": "7e02c6d3276c8c49266b9fe05f90678044bb5c3554e72b234c9d707855526926",
+      "criterion_id": "1.3.AC2",
+      "status": "pass-local-current-cross-client-parity"
+    },
+    {
+      "acceptance_truth_sha256": "80185eab884039284edd4e1244df12e27a65b38298bab01d609e11a430376ba1",
+      "criterion_id": "1.3.AC3",
+      "status": "pass-local-current-predispatch-rejection"
+    }
+  ],
+  "blockers": [
+    "story-5.3-acceptance-gate-open",
+    "story-11.3-acceptance-gate-open",
+    "story-16.4-acceptance-gate-open",
+    "story-22.5-acceptance-gate-open",
+    "rv-50-supported-platform-installed-product-and-real-model-evidence-incomplete"
+  ],
+  "blocking_controls": [
+    "G-DOD-10"
+  ],
+  "current_local_canonical_record_scope_complete": true,
+  "dependencies": [
+    {
+      "status": "complete",
+      "story_id": "1.2"
+    }
+  ],
+  "dependency_substitution_permitted": false,
+  "independent_review": {
+    "artifacts": [
+      {
+        "byte_length": 128088,
+        "path": "kernel/contracts/src/engineering_records.rs",
+        "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+      },
+      {
+        "byte_length": 13146,
+        "path": "kernel/contracts/src/serialization.rs",
+        "sha256": "e014eb02997caf6a0cb1a40d48d4bc7180b7b6ed443d010bd3f93877dff52197"
+      },
+      {
+        "byte_length": 73730,
+        "path": "kernel/engine/src/engineering_records.rs",
+        "sha256": "51338875c4b81e0f04a402c3236b6718e8d273b0e2d5e8745fe07a88a8215c57"
+      },
+      {
+        "byte_length": 12823,
+        "path": "kernel/contracts/tests/engineering_runtime_record_types.rs",
+        "sha256": "87868f9cfd64d08a88996b9ad47b6d26ff9f35f961283c39b2012d07e5ae4a8f"
+      },
+      {
+        "byte_length": 9960,
+        "path": "kernel/engine/tests/engineering_runtime_record_corpus.rs",
+        "sha256": "f903880fa42f44ec6540a82a162c60dcbe6f52832f101a82727d49bbabd4270d"
+      },
+      {
+        "byte_length": 68724,
+        "path": "scripts/engineering_runtime_schemas.mjs",
+        "sha256": "f264ed932ae7c84bb70f5e9ff88c8be9f587f7ec917be133a08c88254ef7fd46"
+      },
+      {
+        "byte_length": 14524,
+        "path": "scripts/engineering_runtime_fixture_corpus.mjs",
+        "sha256": "27637f757e526822387cfc69c4df1bc1fa7c0a486fb124eaa95d63e4edd731a8"
+      },
+      {
+        "byte_length": 7164,
+        "path": "scripts/engineering_runtime_record_evidence.py",
+        "sha256": "70efcdc3a239eb6a5c22a3d6453709857d455e5564e8f75c8f404a908da35e7e"
+      },
+      {
+        "byte_length": 11971,
+        "path": "scripts/engineering_runtime_rv50_evidence.py",
+        "sha256": "613cf74bd8b643300015211f57c8917d06be7292bd247b20700365506eaef072"
+      },
+      {
+        "byte_length": 82685,
+        "path": "tests/test_engineering_runtime_schemas.mjs",
+        "sha256": "e6735a11fd369444635b9e4feba391c7116d947d0ed74841cb663f16c0e5adc7"
+      },
+      {
+        "byte_length": 2163,
+        "path": "tests/test_engineering_runtime_fixture_corpus.mjs",
+        "sha256": "16ac791dce59182adcd36900951698e5e9087f3e69378b3b8a21ec869ad526c4"
+      },
+      {
+        "byte_length": 1349,
+        "path": "tests/test_engineering_runtime_record_evidence.py",
+        "sha256": "225a97bcf00ffb208325770f638d59b92a21e936d9c32b460f4b7ac22431c02f"
+      },
+      {
+        "byte_length": 2030,
+        "path": "tests/test_engineering_runtime_rv50_evidence.py",
+        "sha256": "f1d1008339ea9c1ec2943ac1991e6a74d3b03a0dfbe50166af43d6cfc4ca9260"
+      },
+      {
+        "byte_length": 23708,
+        "path": "fixtures/engineering-runtime/v2/manifest.json",
+        "sha256": "3a5dd1e8c5edb96083c6429ed911683fcdf65b73d538117f46e88682231e4b30"
+      },
+      {
+        "byte_length": 17110,
+        "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-evidence-index.json",
+        "sha256": "73be00ba2aea79e50b0df38e5e14df248d86439232381a7f48c1438b88f8ecd1"
+      },
+      {
+        "byte_length": 12859,
+        "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-gate-results.log",
+        "sha256": "6f085ea88da72382e2b9b2572f9842f6b541f32744656211413fd8db90979eff"
+      },
+      {
+        "byte_length": 7982,
+        "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
+        "sha256": "1470298df964f41c7eb15d16e3387d69e7545a11b02a6e48f25d3bb4899add61"
+      },
+      {
+        "byte_length": 9101,
+        "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
+        "sha256": "e52bfc3f1c2fe0d77b5753e0f4ccd67109da78a0650724b42dee556bca83cca4"
+      },
+      {
+        "byte_length": 4491,
+        "path": "artifacts/sprints/sprint-1/story-1.3/story-ac1-rust-owned-boundary-report.json",
+        "sha256": "cdbe82feee9ea965b9d73173939a60abcdc25d6ef9305b7a12f64f3ad318f777"
+      },
+      {
+        "byte_length": 4363,
+        "path": "artifacts/sprints/sprint-1/story-1.3/story-ac2-cross-client-parity-report.json",
+        "sha256": "3213bef710429871063824f61c5c6c0d6b6bea8e78ca402005085b99c3e17480"
+      },
+      {
+        "byte_length": 5099,
+        "path": "artifacts/sprints/sprint-1/story-1.3/story-ac3-predispatch-rejection-report.json",
+        "sha256": "924d794316f0ada133f808f4004802f5ff4ca68a96a73c5c1faa392d7612f6f3"
+      },
+      {
+        "byte_length": 973,
+        "path": "docs/verification/story-1-3-ac1-rust-owned-boundary-meaning.md",
+        "sha256": "de74d946bbc912404808e839b65921847127a88f2e089e9cbc852b84aba91bc8"
+      },
+      {
+        "byte_length": 973,
+        "path": "docs/verification/story-1-3-ac2-cross-client-parity.md",
+        "sha256": "a938533bab748d55863ea69e353b0b3a66987549f9d969565676301b8024179e"
+      },
+      {
+        "byte_length": 1145,
+        "path": "docs/verification/story-1-3-ac3-predispatch-rejection.md",
+        "sha256": "59ef72cf8a7df9ba0c1a7498e3dcdd59be57e378a106f298f8bea122646f03bb"
+      },
+      {
+        "byte_length": 2565,
+        "path": "schemas/engineering-runtime/artifact-envelope.schema.json",
+        "sha256": "2b61c3ac3531f086deba5b56c629db3973ab5807de55dead1a510d0fbd5f4bca"
+      },
+      {
+        "byte_length": 2051,
+        "path": "schemas/engineering-runtime/artifact-transformation.schema.json",
+        "sha256": "43691659ed7cb3f5e94af842d5bfec66e8d3f538988bb3e8e5defef1487098a4"
+      },
+      {
+        "byte_length": 2316,
+        "path": "schemas/engineering-runtime/artifact-ingestion-result.schema.json",
+        "sha256": "329472cd00eaaf30b2ce45ee0aa5042fd4d6e1370186676f693e0a6e2fc47066"
+      },
+      {
+        "byte_length": 5685,
+        "path": "schemas/engineering-runtime/context-manifest.schema.json",
+        "sha256": "21fbf0c3cb2f5af06e4c4f82f6c10ee96eb87a949e425e5479a1291aa8a2071d"
+      },
+      {
+        "byte_length": 5656,
+        "path": "schemas/engineering-runtime/workflow-definition.schema.json",
+        "sha256": "3299bc35733c93fc0337ecfd979f0c25ab0ebfb65a31bbeba00e396f2879fa42"
+      },
+      {
+        "byte_length": 2220,
+        "path": "schemas/engineering-runtime/workflow-state.schema.json",
+        "sha256": "438fa7bbedf6e4beaf2edf0e4b209743a7bb467f1ecca8d242da4d9634864d9e"
+      },
+      {
+        "byte_length": 5117,
+        "path": "schemas/engineering-runtime/tool-observation.schema.json",
+        "sha256": "3c4b50e1737f17e1616bde37057193c87e6557d4f6eec792d47e7fe8cef51199"
+      },
+      {
+        "byte_length": 2714,
+        "path": "schemas/engineering-runtime/verification-result.schema.json",
+        "sha256": "4bd56c5c9f639dca76db70b08193b978b0cfcf5cdfaeeda9cfc29051f6ee3d0c"
+      },
+      {
+        "byte_length": 2871,
+        "path": "schemas/engineering-runtime/terminal-result.schema.json",
+        "sha256": "089a78cfa05e46d857b4ac5c7fb122837eaab6cd29855e82f48dfd0ef1053d46"
+      }
+    ],
+    "external_human_review_status": "not-performed",
+    "finding_count": 0,
+    "findings": [],
+    "review_type": "automated-independent-aggregate-review",
+    "reviewed_commit": "752d2b02f1e71b118057701b711a56b63e82b998",
+    "reviewed_tree": "edc15f5b80fefdccc911465a16c73f68d308019d",
+    "reviewer_id": "agentmage-story-1.3-independent-gate-v1"
+  },
+  "installed_product_claim": "none",
+  "later_story_dependencies": [
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "5.3"
+    },
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "11.3"
+    },
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "16.4"
+    },
+    {
+      "status": "blocked-open-acceptance",
+      "story_id": "22.5"
+    }
+  ],
+  "platform_evidence_substituted": false,
+  "product_acceptance_claim": "none",
+  "release_claim": "none",
+  "reviewed_commit": "752d2b02f1e71b118057701b711a56b63e82b998",
+  "reviewed_tree": "edc15f5b80fefdccc911465a16c73f68d308019d",
+  "rv50": {
+    "blocked_external_tuple_count": 5,
+    "evidence_substitution_permitted": false,
+    "later_runtime_scenario_count": 5,
+    "protocol_complete": false,
+    "protocol_id": "RV-50",
+    "report_sha256": "372441d0986f34f1369b9187dfabc01ba0a3bee811af33726131e596be1493dd",
+    "status": "partial-local-contract-evidence"
+  },
+  "schema_version": 1,
+  "sprint_completion_claim": false,
+  "status": "blocked-open-later-stories-and-platform",
+  "story_checkbox_complete": false,
+  "story_id": "1.3",
+  "sub_task_count": 7,
+  "task_count": 3,
+  "universal_definition_of_done": [
+    {
+      "control_id": "G-DOD-01",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-02",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-03",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-04",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-05",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-06",
+      "status": "pass-no-production-tool-or-model-attempt"
+    },
+    {
+      "control_id": "G-DOD-07",
+      "status": "pass-public-synthetic-data-no-new-store"
+    },
+    {
+      "control_id": "G-DOD-08",
+      "status": "pass-no-user-owned-file-effects"
+    },
+    {
+      "control_id": "G-DOD-09",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-10",
+      "status": "blocked-supported-platform-installed-product-matrix"
+    },
+    {
+      "control_id": "G-DOD-11",
+      "status": "pass-current-story-scope"
+    },
+    {
+      "control_id": "G-DOD-12",
+      "status": "pass-automated-independent-aggregate-review"
+    },
+    {
+      "control_id": "G-DOD-13",
+      "status": "pass-current-story-scope"
+    }
+  ],
+  "validator_results_sha256": "45e452e459959aded2377df70e2dd58c47d310fe77aad55e1c1653f8c9d4a63f"
+}

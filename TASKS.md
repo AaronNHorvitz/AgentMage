@@ -958,6 +958,17 @@ results cannot acquire different meanings in different interfaces.
   scope, not installed-client, native-platform, real-model, independent-review, Story, Sprint,
   packaging, or release gates.
 
+**Story gate evidence:** All three tasks, all seven sub-tasks, and all three criteria pass in the
+current local canonical-record scope. The independent [`story_1_3_gate.py`](scripts/story_1_3_gate.py)
+aggregate reviews immutable commit `752d2b02` and tree `edc15f5b`, verifies 33 exact contract,
+schema, fixture, test, documentation, and evidence artifacts, and reruns all three criterion
+validators plus the `RV-50` applicability gate. Story 1.3 remains `BLOCKED`: Stories 5.3, 11.3,
+16.4, and 22.5 retain later runtime acceptance work, `RV-50` remains partial, and `G-DOD-10`
+retains supported-platform, installed-product, and real-model execution. The gate prohibits later
+story or platform substitution, makes no installed-product, product-acceptance, Sprint, release,
+cross-platform, real-model, or external-human-review claim, and leaves the Story checkbox open.
+See the retained [`story-gate-report.json`](artifacts/sprints/sprint-1/story-1.3/story-gate-report.json).
+
 ### [ ] Sprint 2 - Test Harness and Synthetic Corpus
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
