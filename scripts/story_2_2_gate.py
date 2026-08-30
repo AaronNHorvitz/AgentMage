@@ -26,23 +26,15 @@ from scripts.story_2_2_security_evidence import check_all as check_security  # n
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-2/story-2.2/story-gate-report.json"
-REVIEWED_COMMIT = "f00ba138886ca85d3fd242a3ba1a1204fbfc7d11"
-REVIEWED_TREE = "7355b1a244ea32e6457f0cf96eef98060ede0a60"
+REVIEWED_COMMIT = "817414bc9e1086887249dae79b4d9ed6acfc5b3d"
+REVIEWED_TREE = "791385820ce8c9cbde6258f4f4fb06cb30b5212e"
 REVIEWED_PATHS = (
     "fuzzing/target-registry.json",
     "fuzzing/toolchain-policy.json",
     "fuzzing/story-gate-policy.json",
     "fuzzing/seeds/security-failures-v1.json",
     "schemas/testing/fuzz-result.schema.json",
-    "artifacts/sprints/sprint-2/story-2.2/target-registry-report.json",
-    "artifacts/sprints/sprint-2/story-2.2/toolchain-policy-report.json",
-    "artifacts/sprints/sprint-2/story-2.2/fuzz-result-schema-report.json",
-    "artifacts/sprints/sprint-2/story-2.2/gate-policy-report.json",
-    "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
-    "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
-    "artifacts/sprints/sprint-2/story-2.2/rv-15-control-map.json",
-    "artifacts/sprints/sprint-2/story-2.2/reviewer-disposition.json",
-    "artifacts/sprints/sprint-2/story-2.2/security-evidence-map.json",
+    "requirements/registry.json",
     "scripts/fuzz_target_registry.py",
     "scripts/fuzz_toolchain_policy.py",
     "scripts/fuzz_result_contract.py",
@@ -50,6 +42,14 @@ REVIEWED_PATHS = (
     "scripts/seeded_fuzz_failures.py",
     "scripts/fuzz_baseline_reconciliation.py",
     "scripts/story_2_2_security_evidence.py",
+    "tests/test_fuzz_target_registry.py",
+    "tests/test_fuzz_toolchain_policy.py",
+    "tests/test_fuzz_result_contract.py",
+    "tests/test_fuzz_story_gate.py",
+    "tests/test_seeded_fuzz_failures.py",
+    "tests/test_fuzz_baseline_reconciliation.py",
+    "tests/test_story_2_2_security_evidence.py",
+    "tests/test_story_2_2_gate.py",
 )
 G_DOD_IDS = tuple(f"G-DOD-{index:02d}" for index in range(1, 14))
 

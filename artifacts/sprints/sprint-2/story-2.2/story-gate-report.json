@@ -86,40 +86,8 @@
         "sha256": "a7f14114ddab6b41e821b7c396a302c9aa2b3d76e79e7d195fb06e39d072bac0"
       },
       {
-        "path": "artifacts/sprints/sprint-2/story-2.2/target-registry-report.json",
-        "sha256": "bf5ae6d9e56ac5a5bf85609c4930f90c2e89b660015c41b8a7f949cfa26b3f92"
-      },
-      {
-        "path": "artifacts/sprints/sprint-2/story-2.2/toolchain-policy-report.json",
-        "sha256": "fedaf4e99bc0d37b875f6756fb0c1afac6d88c2f8b7eee6e22ecb84caa3014ee"
-      },
-      {
-        "path": "artifacts/sprints/sprint-2/story-2.2/fuzz-result-schema-report.json",
-        "sha256": "5d6c7374a198cbddbea239d2e0fc06e2dd890ca04dd3d6d787b3b54201144ca8"
-      },
-      {
-        "path": "artifacts/sprints/sprint-2/story-2.2/gate-policy-report.json",
-        "sha256": "89f974a4841706b7084b8e80ccb51cca839b2cd8b0a589bb369d6fcb9ef3f742"
-      },
-      {
-        "path": "artifacts/sprints/sprint-2/story-2.2/seeded-failure-report.json",
-        "sha256": "01be5122a376b925c3ae57bff99b610ef0371b019b5c81788a0040a4cd3f61db"
-      },
-      {
-        "path": "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
-        "sha256": "da6e5b015f590d3105a8fa4cfb35dcca24cefb4385daa42c970c62d8032e1792"
-      },
-      {
-        "path": "artifacts/sprints/sprint-2/story-2.2/rv-15-control-map.json",
-        "sha256": "0c9547e25e65f3bf137fbd718a803c90cd3c8cb25d9fe02e2e20b6673fd8dc8f"
-      },
-      {
-        "path": "artifacts/sprints/sprint-2/story-2.2/reviewer-disposition.json",
-        "sha256": "9647294a353402bc10ae7a8ee49cb267ddd9ef26b2519b97d5b9487d2655c9c7"
-      },
-      {
-        "path": "artifacts/sprints/sprint-2/story-2.2/security-evidence-map.json",
-        "sha256": "366c9de02c9a959b9fe59322435dd1a89ee5f847fd449b63927ff9da670d53f8"
+        "path": "requirements/registry.json",
+        "sha256": "dec57536330999a897a50a79992dcc1f5f0fcb2eb4a07f8aad34d2736397ba67"
       },
       {
         "path": "scripts/fuzz_target_registry.py",
@@ -148,10 +116,42 @@
       {
         "path": "scripts/story_2_2_security_evidence.py",
         "sha256": "7c89eefa6b6f284e0e34c2e2ddf4d0484abb7b347753612eb2ecd491cb607614"
+      },
+      {
+        "path": "tests/test_fuzz_target_registry.py",
+        "sha256": "0db3d650a2d8db7aea045ab68e7b1aaf52adc5007eddf49293eb1ad47ae9639a"
+      },
+      {
+        "path": "tests/test_fuzz_toolchain_policy.py",
+        "sha256": "d44f82ace896f81f2ec4f782ec0759d864d9fe3f9771c54255933bd6071b3bb0"
+      },
+      {
+        "path": "tests/test_fuzz_result_contract.py",
+        "sha256": "0a85d0c8f331b00e8f962012a5814b7c36575161e4480c0f8bd96909a8392843"
+      },
+      {
+        "path": "tests/test_fuzz_story_gate.py",
+        "sha256": "1cf9e2a3910eb8e43b888370ed3be065976a49c324f99afaa8e083680dc47320"
+      },
+      {
+        "path": "tests/test_seeded_fuzz_failures.py",
+        "sha256": "ce7b1e5362250ae4d113a2abc12c8980e28c35d3da42ae54d9e509864fc4449f"
+      },
+      {
+        "path": "tests/test_fuzz_baseline_reconciliation.py",
+        "sha256": "d12892be4d62a4ed33b6dd50d1fab829842ef86c1a56ed5bc7400b4a7a7e9d4d"
+      },
+      {
+        "path": "tests/test_story_2_2_security_evidence.py",
+        "sha256": "0cbdc2511e8eb47b1d4909caf8b1ae42c437e286cf6d6e7435246b64e2eb685a"
+      },
+      {
+        "path": "tests/test_story_2_2_gate.py",
+        "sha256": "6a1789d2866f4559a2e9b40fbb74de4b0af9d1da622c06db9fc4619081126790"
       }
     ],
-    "reviewed_commit": "f00ba138886ca85d3fd242a3ba1a1204fbfc7d11",
-    "reviewed_tree": "7355b1a244ea32e6457f0cf96eef98060ede0a60",
+    "reviewed_commit": "817414bc9e1086887249dae79b4d9ed6acfc5b3d",
+    "reviewed_tree": "791385820ce8c9cbde6258f4f4fb06cb30b5212e",
     "reviewer_id": "agentmage-story-2.2-independent-gate-v1"
   },
   "macos": {
@@ -163,8 +163,8 @@
   "product_acceptance_claim": "none",
   "product_boundary_execution_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "f00ba138886ca85d3fd242a3ba1a1204fbfc7d11",
-  "reviewed_tree": "7355b1a244ea32e6457f0cf96eef98060ede0a60",
+  "reviewed_commit": "817414bc9e1086887249dae79b4d9ed6acfc5b3d",
+  "reviewed_tree": "791385820ce8c9cbde6258f4f4fb06cb30b5212e",
   "schema_version": 1,
   "status": "blocked-macos",
   "story_id": "2.2",

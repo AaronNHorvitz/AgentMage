@@ -80,55 +80,116 @@
       "evidence": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
       "network_calls_performed": 0,
       "raw_sensitive_values_retained": false,
-      "seeded_categories_detected": 6,
-      "seeded_category_count": 6,
+      "seeded_categories_detected": 7,
+      "seeded_category_count": 7,
+      "status": "pass"
+    },
+    {
+      "approval_bypass_count": 0,
+      "clean_reproduction_run_count": 2,
+      "criterion_id": "2.AC6",
+      "duplicate_effect_count": 0,
+      "evidence": [
+        "fixtures/artifact-evaluation/v1/reproducibility-report.json",
+        "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
+        "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json",
+        "fuzzing/artifact-workflow-target-registry-v1.json"
+      ],
+      "fixed_seed_observation_count": 153,
+      "fixed_seed_registration_count": 8,
+      "golden_non_success_terminal_count": 60,
+      "golden_outcome_count": 77,
+      "manual_fuzz_campaign_status": "deferred-not-executed",
+      "reproduced_output_count": 11,
+      "reproduced_output_set_sha256": "6e23dc6c9e4f2c24ba7d3c837e99b143aef8cba0333c3b0af4f0347864a24052",
       "status": "pass"
     }
   ],
+  "blockers": [
+    "story-1.3-aggregate-gate-blocked",
+    "story-2.3-aggregate-gate-blocked",
+    "rv-51-product-parser-crash-resume-installed-client-and-native-platform-evidence-incomplete",
+    "supported-platform-installed-product-matrix-incomplete"
+  ],
+  "dependency_substitution_permitted": false,
+  "full_protocol_substitution_permitted": false,
   "independent_review": {
-    "disposition": "pass-shared-linux-foundation-blocked-macos",
+    "disposition": "pass-current-public-synthetic-scope-blocked-dependencies-full-protocol-and-platform",
     "external_human_review_claim": "none",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
     "reviewed_artifacts": [
       {
-        "path": "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
-        "sha256": "1a0334b38adf522268cffb73a55444532922d99f8e4d2a5fafa40f0c8253e3aa"
+        "path": "fixtures/corpus/v1/manifest.json",
+        "sha256": "7961122321fe80f4b799e0c4b28fae8cdfe900e25c1900061719d9ae596330be"
       },
       {
-        "path": "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json",
-        "sha256": "4212858e26f05416ab7f436a481a865a193bf7d08364a91aac0945b2e697b1a2"
+        "path": "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+        "sha256": "7986d5886b5fdc22968fde755ad04a803585c1e055691c7f6a6914864cf8fa75"
       },
       {
-        "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
-        "sha256": "bb2892eedbb1ede8058c9eb6acfdfc44809d2b665b49c148ef8b778df2b039db"
+        "path": "fuzzing/target-registry.json",
+        "sha256": "4d685399bfd3a33a7df0d4373ed4ab53747c18aa94c8325ea33c69d47ae1123d"
       },
       {
-        "path": "artifacts/sprints/sprint-2/story-2.1/story-gate-report.json",
-        "sha256": "9362363b2eef6c04209175db7d502f3abea02e954db22c8a2fec6fc7c9468d6d"
+        "path": "fuzzing/story-gate-policy.json",
+        "sha256": "7e84ddad228fcb5749e0888c41ae77231f82d2282e36d75a4355bc451c4d318d"
       },
       {
-        "path": "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
-        "sha256": "da6e5b015f590d3105a8fa4cfb35dcca24cefb4385daa42c970c62d8032e1792"
+        "path": "fuzzing/toolchain-policy.json",
+        "sha256": "c69dd0923029dc65d213f8b8368e4b2e9c7e462721df0f1d5fb34980e689d305"
       },
       {
-        "path": "artifacts/sprints/sprint-2/story-2.2/story-gate-report.json",
-        "sha256": "647582aaf8fbc10c03b861e8b8730e869ed25007b46bc826b0f2674e42a6e967"
+        "path": "fuzzing/seeds/security-failures-v1.json",
+        "sha256": "5243b111e0831103ddf436715cb015c8968ef2fe9dc18b1b92403a8280977cea"
       },
       {
-        "path": "scripts/story_2_1_gate.py",
-        "sha256": "28c0aacac8184d5dc75776f6dd5090103c69df21011971b78054f1a0c00fe073"
+        "path": "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
+        "sha256": "c22ba15dab03558b39dc6967ea066197c5dd6237a6804c8caaff39a3af4bfe0d"
       },
       {
-        "path": "scripts/story_2_2_gate.py",
-        "sha256": "d0485cf6398cc369429df71c2947e0961946e60fb7c6ff6fb0668f6d81bca546"
+        "path": "fixtures/artifact-evaluation/v1/reproducibility-report.json",
+        "sha256": "46efc8e90d5584e1aacbdef9d3f0f93db3a38a702fe9ed9834c9492eed1ae2cd"
+      },
+      {
+        "path": "fixtures/artifact-evaluation/v1/artifact-golden-metrics.json",
+        "sha256": "c6721c4066fd28041e4024690ca359176952f019131012724bbd7bfed218e539"
+      },
+      {
+        "path": "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json",
+        "sha256": "8b9f3c9ac8876bf7c582c69196c20e26316c5be911681401190043a63221320c"
+      },
+      {
+        "path": "fixtures/artifact-admission/v1/manifest.json",
+        "sha256": "425c82488a2370e2e8a37e011927b1bd69fb12f7d8dfcdb7b6ad83c25bc1c5da"
+      },
+      {
+        "path": "fixtures/artifact-admission/v1/adversarial-manifest.json",
+        "sha256": "003c994e6a365e33d4c8a7fa3908f461f05c737b95e954d3e50fc3d0c4ffad44"
+      },
+      {
+        "path": "fixtures/artifact-admission/v1/context-accounting-manifests.json",
+        "sha256": "dd32688df89ce2e9334b99cb7934d23dbc85a3236807b80a091471a59b91e7ca"
+      },
+      {
+        "path": "fixtures/artifact-admission/v1/context-delivery-receipts.json",
+        "sha256": "2c0abb3c194448cf7472c7f887548cdfc8b2d00057075d8d3c5c889f9c3ae1ce"
+      },
+      {
+        "path": "fixtures/artifact-admission/v1/resource-gate-observations.json",
+        "sha256": "1604dd37ce2f79d6bd46b34e4fbcc89ea4fbdaadf27bd40cb9ab9d4bba2ff1db"
+      },
+      {
+        "path": "fixtures/engineering-runtime/v2/manifest.json",
+        "sha256": "3a5dd1e8c5edb96083c6429ed911683fcdf65b73d538117f46e88682231e4b30"
       }
     ],
-    "reviewed_commit": "65cb5d6bc6ad0729a8d740a97db168e0dce632a1",
-    "reviewed_tree": "83ad144278d08edd284a5dde99f191e24e46306d",
+    "reviewed_commit": "817414bc9e1086887249dae79b4d9ed6acfc5b3d",
+    "reviewed_tree": "791385820ce8c9cbde6258f4f4fb06cb30b5212e",
     "reviewer_id": "agentmage-sprint-2-independent-gate-v1"
   },
+  "installed_product_claim": "none",
   "macos": {
     "evidence_substitution": "prohibited",
     "execution_performed": false,
@@ -136,12 +197,13 @@
     "support_claim": "none"
   },
   "product_acceptance_claim": "none",
+  "product_runtime_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "65cb5d6bc6ad0729a8d740a97db168e0dce632a1",
-  "reviewed_tree": "83ad144278d08edd284a5dde99f191e24e46306d",
+  "reviewed_commit": "817414bc9e1086887249dae79b4d9ed6acfc5b3d",
+  "reviewed_tree": "791385820ce8c9cbde6258f4f4fb06cb30b5212e",
   "schema_version": 1,
   "sprint_id": 2,
-  "status": "blocked-macos",
+  "status": "blocked-open-dependencies-full-protocol-and-platform",
   "story_gates": [
     {
       "acceptance_criteria_failed": 0,
@@ -149,6 +211,7 @@
       "blocking_controls": [
         "G-DOD-10"
       ],
+      "current_local_scope_complete": true,
       "dod_blocking_controls": [
         "G-DOD-10"
       ],
@@ -167,7 +230,6 @@
         "G-DOD-12",
         "G-DOD-13"
       ],
-      "shared_linux_foundation_complete": true,
       "status": "blocked-macos",
       "story_checkbox_complete": false,
       "story_id": "2.1"
@@ -178,6 +240,7 @@
       "blocking_controls": [
         "G-DOD-10"
       ],
+      "current_local_scope_complete": true,
       "dod_blocking_controls": [
         "G-DOD-10"
       ],
@@ -196,27 +259,86 @@
         "G-DOD-12",
         "G-DOD-13"
       ],
-      "shared_linux_foundation_complete": true,
       "status": "blocked-macos",
       "story_checkbox_complete": false,
       "story_id": "2.2"
+    },
+    {
+      "acceptance_criteria_failed": 0,
+      "acceptance_criteria_passed": 3,
+      "blocking_controls": [
+        "G-DOD-10"
+      ],
+      "current_local_scope_complete": true,
+      "dod_blocking_controls": [
+        "G-DOD-10"
+      ],
+      "dod_control_ids": [
+        "G-DOD-01",
+        "G-DOD-02",
+        "G-DOD-03",
+        "G-DOD-04",
+        "G-DOD-05",
+        "G-DOD-06",
+        "G-DOD-07",
+        "G-DOD-08",
+        "G-DOD-09",
+        "G-DOD-10",
+        "G-DOD-11",
+        "G-DOD-12",
+        "G-DOD-13"
+      ],
+      "status": "blocked-open-dependencies-and-platform",
+      "story_checkbox_complete": false,
+      "story_id": "2.3"
+    },
+    {
+      "acceptance_criteria_failed": 0,
+      "acceptance_criteria_passed": 3,
+      "blocking_controls": [
+        "G-DOD-10"
+      ],
+      "current_local_scope_complete": true,
+      "dod_blocking_controls": [
+        "G-DOD-10"
+      ],
+      "dod_control_ids": [
+        "G-DOD-01",
+        "G-DOD-02",
+        "G-DOD-03",
+        "G-DOD-04",
+        "G-DOD-05",
+        "G-DOD-06",
+        "G-DOD-07",
+        "G-DOD-08",
+        "G-DOD-09",
+        "G-DOD-10",
+        "G-DOD-11",
+        "G-DOD-12",
+        "G-DOD-13"
+      ],
+      "status": "blocked-open-dependencies-full-protocol-and-platform",
+      "story_checkbox_complete": false,
+      "story_id": "2.4"
     }
   ],
   "summary": {
     "acceptance_criteria_failed": 0,
-    "acceptance_criteria_passed": 5,
+    "acceptance_criteria_passed": 6,
     "blocking_control_count": 1,
     "blocking_controls": [
       "G-DOD-10"
     ],
-    "blocking_story_count": 2,
+    "blocking_story_count": 4,
     "blocking_story_ids": [
       "2.1",
-      "2.2"
+      "2.2",
+      "2.3",
+      "2.4"
     ],
-    "shared_linux_foundation_complete": true,
+    "current_public_synthetic_scope_complete": true,
     "sprint_checkbox_complete": false,
-    "story_gate_count": 2
+    "story_gate_count": 4
   },
   "universal_definition_of_done": {
     "all_non_platform_controls_pass_or_not_applicable": true,
@@ -238,7 +360,8 @@
       "G-DOD-12",
       "G-DOD-13"
     ],
+    "dependency_or_protocol_evidence_substitution": "prohibited",
     "macos_evidence_substitution": "prohibited",
-    "story_count": 2
+    "story_count": 4
   }
 }

@@ -26,20 +26,30 @@ from scripts.story_2_1_verification import (  # noqa: E402
     check_corpus_report,
 )
 from scripts.story_2_2_gate import check_report as check_story_2_2_gate  # noqa: E402
+from scripts.story_2_3_gate import validate_report as validate_story_2_3_gate  # noqa: E402
+from scripts.story_2_4_gate import validate_report as validate_story_2_4_gate  # noqa: E402
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-2/sprint-gate-report.json"
-REVIEWED_COMMIT = "65cb5d6bc6ad0729a8d740a97db168e0dce632a1"
-REVIEWED_TREE = "83ad144278d08edd284a5dde99f191e24e46306d"
+REVIEWED_COMMIT = "817414bc9e1086887249dae79b4d9ed6acfc5b3d"
+REVIEWED_TREE = "791385820ce8c9cbde6258f4f4fb06cb30b5212e"
 REVIEWED_PATHS = (
-    "artifacts/sprints/sprint-2/story-2.1/corpus-reproducibility-report.json",
-    "artifacts/sprints/sprint-2/story-2.1/adapter-mode-verification-report.json",
-    "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
-    "artifacts/sprints/sprint-2/story-2.1/story-gate-report.json",
-    "artifacts/sprints/sprint-2/story-2.2/baseline-reconciliation-report.json",
-    "artifacts/sprints/sprint-2/story-2.2/story-gate-report.json",
-    "scripts/story_2_1_gate.py",
-    "scripts/story_2_2_gate.py",
+    "fixtures/corpus/v1/manifest.json",
+    "fixtures/story-2.1/later-input-class-fixtures-v1.json",
+    "fuzzing/target-registry.json",
+    "fuzzing/story-gate-policy.json",
+    "fuzzing/toolchain-policy.json",
+    "fuzzing/seeds/security-failures-v1.json",
+    "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
+    "fixtures/artifact-evaluation/v1/reproducibility-report.json",
+    "fixtures/artifact-evaluation/v1/artifact-golden-metrics.json",
+    "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json",
+    "fixtures/artifact-admission/v1/manifest.json",
+    "fixtures/artifact-admission/v1/adversarial-manifest.json",
+    "fixtures/artifact-admission/v1/context-accounting-manifests.json",
+    "fixtures/artifact-admission/v1/context-delivery-receipts.json",
+    "fixtures/artifact-admission/v1/resource-gate-observations.json",
+    "fixtures/engineering-runtime/v2/manifest.json",
 )
 G_DOD_IDS = tuple(f"G-DOD-{index:02d}" for index in range(1, 14))
 
@@ -106,24 +116,43 @@ def reviewed_artifacts(root: Path = ROOT) -> list[dict[str, str]]:
 
 def story_gate_summary(story_id: str, value: dict[str, Any]) -> dict[str, Any]:
     dod = value["universal_definition_of_done"]
+    if "summary" in value:
+        dod_control_ids = [item["control_id"] for item in dod]
+        dod_blocking_controls = [
+            item["control_id"] for item in dod if item["status"] == "blocked-macos"
+        ]
+        summary = value["summary"]
+        criteria_passed = summary["acceptance_criteria_passed"]
+        criteria_failed = summary["acceptance_criteria_failed"]
+        local_scope_complete = summary["shared_linux_foundation_complete"]
+        checkbox_complete = summary["story_checkbox_complete"]
+        blocking_controls = summary["blocking_controls"]
+    else:
+        dod_control_ids = [item["control_id"] for item in dod]
+        dod_blocking_controls = [
+            item["control_id"]
+            for item in dod
+            if item["status"].startswith("blocked-")
+        ]
+        criteria = value["acceptance_criteria"]
+        criteria_passed = sum(item["status"].startswith("pass-") for item in criteria)
+        criteria_failed = len(criteria) - criteria_passed
+        local_scope_complete = value.get(
+            "current_public_synthetic_corpus_scope_complete",
+            value.get("current_public_synthetic_fixture_scope_complete"),
+        )
+        checkbox_complete = value["story_checkbox_complete"]
+        blocking_controls = value["blocking_controls"]
     return {
         "story_id": story_id,
         "status": value["status"],
-        "acceptance_criteria_passed": value["summary"][
-            "acceptance_criteria_passed"
-        ],
-        "acceptance_criteria_failed": value["summary"][
-            "acceptance_criteria_failed"
-        ],
-        "shared_linux_foundation_complete": value["summary"][
-            "shared_linux_foundation_complete"
-        ],
-        "story_checkbox_complete": value["summary"]["story_checkbox_complete"],
-        "blocking_controls": value["summary"]["blocking_controls"],
-        "dod_control_ids": [item["control_id"] for item in dod],
-        "dod_blocking_controls": [
-            item["control_id"] for item in dod if item["status"] == "blocked-macos"
-        ],
+        "acceptance_criteria_passed": criteria_passed,
+        "acceptance_criteria_failed": criteria_failed,
+        "current_local_scope_complete": local_scope_complete,
+        "story_checkbox_complete": checkbox_complete,
+        "blocking_controls": blocking_controls,
+        "dod_control_ids": dod_control_ids,
+        "dod_blocking_controls": dod_blocking_controls,
     }
 
 
@@ -135,6 +164,12 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         *check_fixture_scan(root),
         *check_story_2_1_gate(root),
         *check_story_2_2_gate(root),
+        *validate_story_2_3_gate(read_json(
+            root / "artifacts/sprints/sprint-2/story-2.3/story-gate-report.json"
+        )),
+        *validate_story_2_4_gate(read_json(
+            root / "artifacts/sprints/sprint-2/story-2.4/story-gate-report.json"
+        )),
     ]
     if validation_failures:
         raise ValueError("; ".join(validation_failures))
@@ -164,9 +199,29 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
     story_2_2 = read_json(
         root / "artifacts/sprints/sprint-2/story-2.2/story-gate-report.json"
     )
+    story_2_3 = read_json(
+        root / "artifacts/sprints/sprint-2/story-2.3/story-gate-report.json"
+    )
+    story_2_4 = read_json(
+        root / "artifacts/sprints/sprint-2/story-2.4/story-gate-report.json"
+    )
+    reproducibility = read_json(
+        root / "fixtures/artifact-evaluation/v1/reproducibility-report.json"
+    )
+    golden = read_json(
+        root / "fixtures/artifact-evaluation/v1/golden-manifest-v1.json"
+    )
+    workflow_metrics = read_json(
+        root / "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json"
+    )
+    fuzz_extension = read_json(
+        root / "fuzzing/artifact-workflow-target-registry-v1.json"
+    )
     stories = [
         story_gate_summary("2.1", story_2_1),
         story_gate_summary("2.2", story_2_2),
+        story_gate_summary("2.3", story_2_3),
+        story_gate_summary("2.4", story_2_4),
     ]
     platform_records = platform["synthetic_record_set"]["records"]
     result_identities = [
@@ -189,10 +244,35 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
         }
         for item in platform_records
     ]
+    metrics_by_id = {item["metric_id"]: item for item in workflow_metrics["metrics"]}
+    duplicate_effects = metrics_by_id["duplicate_effect_count"]["golden"][
+        "duplicate_effect_count"
+    ]
+    approval_bypasses = metrics_by_id["approval_bypass"]["golden"][
+        "approval_bypass_count"
+    ]
+    oracle_summary = fuzz_extension["deterministic_oracle_summary"]
+    reproduction_hashes = {item["output_set_sha256"] for item in reproducibility["runs"]}
+    if (
+        reproducibility.get("run_count") != 2
+        or reproducibility.get("output_count") != 11
+        or reproducibility.get("byte_identical") is not True
+        or len(reproduction_hashes) != 1
+        or golden.get("outcome_count") != 77
+        or golden.get("non_success_terminal_count") != 60
+        or golden.get("effect_executed") is not False
+        or duplicate_effects != 0
+        or approval_bypasses != 0
+        or fuzz_extension.get("registration_count") != 8
+        or oracle_summary.get("seed_case_observation_count") != 153
+        or oracle_summary.get("passing_oracle_count") != 8
+        or oracle_summary.get("fixed_seed_oracles_are_real_fuzzing") is not False
+    ):
+        raise ValueError("Sprint 2 Story 2.3 aggregate criterion is incomplete or widened")
     return {
         "schema_version": 1,
         "sprint_id": 2,
-        "status": "blocked-macos",
+        "status": "blocked-open-dependencies-full-protocol-and-platform",
         "reviewed_commit": REVIEWED_COMMIT,
         "reviewed_tree": REVIEWED_TREE,
         "acceptance_criteria": [
@@ -269,23 +349,58 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
                 "network_calls_performed": scan["network_calls_performed"],
                 "evidence": "artifacts/sprints/sprint-2/story-2.1/fixture-security-scan-report.json",
             },
+            {
+                "criterion_id": "2.AC6",
+                "status": "pass",
+                "clean_reproduction_run_count": reproducibility["run_count"],
+                "reproduced_output_count": reproducibility["output_count"],
+                "reproduced_output_set_sha256": next(iter(reproduction_hashes)),
+                "golden_outcome_count": golden["outcome_count"],
+                "golden_non_success_terminal_count": golden[
+                    "non_success_terminal_count"
+                ],
+                "duplicate_effect_count": duplicate_effects,
+                "approval_bypass_count": approval_bypasses,
+                "fixed_seed_registration_count": fuzz_extension[
+                    "registration_count"
+                ],
+                "fixed_seed_observation_count": oracle_summary[
+                    "seed_case_observation_count"
+                ],
+                "manual_fuzz_campaign_status": fuzz_extension["manual_campaign"][
+                    "execution_status"
+                ],
+                "evidence": [
+                    "fixtures/artifact-evaluation/v1/reproducibility-report.json",
+                    "fixtures/artifact-evaluation/v1/golden-manifest-v1.json",
+                    "fixtures/artifact-evaluation/v1/workflow-golden-metrics.json",
+                    "fuzzing/artifact-workflow-target-registry-v1.json",
+                ],
+            },
         ],
         "story_gates": stories,
         "universal_definition_of_done": {
             "control_ids": list(G_DOD_IDS),
-            "story_count": 2,
+            "story_count": 4,
             "all_non_platform_controls_pass_or_not_applicable": True,
             "blocking_controls": ["G-DOD-10"],
             "macos_evidence_substitution": "prohibited",
+            "dependency_or_protocol_evidence_substitution": "prohibited",
         },
+        "blockers": [
+            "story-1.3-aggregate-gate-blocked",
+            "story-2.3-aggregate-gate-blocked",
+            "rv-51-product-parser-crash-resume-installed-client-and-native-platform-evidence-incomplete",
+            "supported-platform-installed-product-matrix-incomplete",
+        ],
         "summary": {
-            "acceptance_criteria_passed": 5,
+            "acceptance_criteria_passed": 6,
             "acceptance_criteria_failed": 0,
-            "story_gate_count": 2,
-            "shared_linux_foundation_complete": True,
+            "story_gate_count": 4,
+            "current_public_synthetic_scope_complete": True,
             "sprint_checkbox_complete": False,
-            "blocking_story_count": 2,
-            "blocking_story_ids": ["2.1", "2.2"],
+            "blocking_story_count": 4,
+            "blocking_story_ids": ["2.1", "2.2", "2.3", "2.4"],
             "blocking_control_count": 1,
             "blocking_controls": ["G-DOD-10"],
         },
@@ -297,7 +412,7 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
             "reviewed_artifacts": reviewed_artifacts(root),
             "finding_count": 0,
             "findings": [],
-            "disposition": "pass-shared-linux-foundation-blocked-macos",
+            "disposition": "pass-current-public-synthetic-scope-blocked-dependencies-full-protocol-and-platform",
             "external_human_review_claim": "none",
         },
         "macos": {
@@ -306,6 +421,10 @@ def build_report(root: Path = ROOT) -> dict[str, Any]:
             "evidence_substitution": "prohibited",
             "support_claim": "none",
         },
+        "dependency_substitution_permitted": False,
+        "full_protocol_substitution_permitted": False,
+        "product_runtime_claim": "none",
+        "installed_product_claim": "none",
         "product_acceptance_claim": "none",
         "release_claim": "none",
     }
@@ -318,7 +437,7 @@ def validate_report(value: Any, root: Path = ROOT) -> list[str]:
     if (
         value.get("schema_version") != 1
         or value.get("sprint_id") != 2
-        or value.get("status") != "blocked-macos"
+        or value.get("status") != "blocked-open-dependencies-full-protocol-and-platform"
         or value.get("reviewed_commit") != REVIEWED_COMMIT
         or value.get("reviewed_tree") != REVIEWED_TREE
     ):
@@ -330,11 +449,15 @@ def validate_report(value: Any, root: Path = ROOT) -> list[str]:
         "2.AC3",
         "2.AC4",
         "2.AC5",
+        "2.AC6",
     ] or any(item.get("status") != "pass" for item in criteria):
         failures.append("Sprint 2 acceptance criteria did not close exactly")
     stories = value.get("story_gates", [])
-    if [item.get("story_id") for item in stories] != ["2.1", "2.2"] or any(
-        item.get("status") != "blocked-macos"
+    if [item.get("story_id") for item in stories] != ["2.1", "2.2", "2.3", "2.4"] or any(
+        not str(item.get("status", "")).startswith("blocked-")
+        or item.get("acceptance_criteria_failed") != 0
+        or item.get("current_local_scope_complete") is not True
+        or item.get("story_checkbox_complete") is not False
         or item.get("blocking_controls") != ["G-DOD-10"]
         or item.get("dod_control_ids") != list(G_DOD_IDS)
         or item.get("dod_blocking_controls") != ["G-DOD-10"]
@@ -343,20 +466,28 @@ def validate_report(value: Any, root: Path = ROOT) -> list[str]:
         failures.append("Sprint 2 story-gate aggregation is invalid")
     if value.get("universal_definition_of_done") != {
         "control_ids": list(G_DOD_IDS),
-        "story_count": 2,
+        "story_count": 4,
         "all_non_platform_controls_pass_or_not_applicable": True,
         "blocking_controls": ["G-DOD-10"],
         "macos_evidence_substitution": "prohibited",
+        "dependency_or_protocol_evidence_substitution": "prohibited",
     }:
         failures.append("Sprint 2 Definition-of-Done aggregation is invalid")
+    if value.get("blockers") != [
+        "story-1.3-aggregate-gate-blocked",
+        "story-2.3-aggregate-gate-blocked",
+        "rv-51-product-parser-crash-resume-installed-client-and-native-platform-evidence-incomplete",
+        "supported-platform-installed-product-matrix-incomplete",
+    ]:
+        failures.append("Sprint 2 dependency, protocol, or platform blocker set is invalid")
     if value.get("summary") != {
-        "acceptance_criteria_passed": 5,
+        "acceptance_criteria_passed": 6,
         "acceptance_criteria_failed": 0,
-        "story_gate_count": 2,
-        "shared_linux_foundation_complete": True,
+        "story_gate_count": 4,
+        "current_public_synthetic_scope_complete": True,
         "sprint_checkbox_complete": False,
-        "blocking_story_count": 2,
-        "blocking_story_ids": ["2.1", "2.2"],
+        "blocking_story_count": 4,
+        "blocking_story_ids": ["2.1", "2.2", "2.3", "2.4"],
         "blocking_control_count": 1,
         "blocking_controls": ["G-DOD-10"],
     }:
@@ -377,9 +508,14 @@ def validate_report(value: Any, root: Path = ROOT) -> list[str]:
         "support_claim": "none",
     }:
         failures.append("Sprint 2 gate made an invalid macOS claim")
-    if value.get("product_acceptance_claim") != "none" or value.get(
-        "release_claim"
-    ) != "none":
+    if (
+        value.get("dependency_substitution_permitted") is not False
+        or value.get("full_protocol_substitution_permitted") is not False
+        or value.get("product_runtime_claim") != "none"
+        or value.get("installed_product_claim") != "none"
+        or value.get("product_acceptance_claim") != "none"
+        or value.get("release_claim") != "none"
+    ):
         failures.append("Sprint 2 gate made a product or release claim")
     try:
         expected = build_report(root)
@@ -418,7 +554,7 @@ def main() -> int:
         for failure in failures:
             print(f"Sprint 2 gate failed: {failure}", file=sys.stderr)
         return 1
-    print("Sprint 2 shared/Linux acceptance passed with macOS blocker preserved")
+    print("Sprint 2 current public-synthetic scope passed with dependency, full-protocol, and platform blockers preserved")
     return 0
 
 

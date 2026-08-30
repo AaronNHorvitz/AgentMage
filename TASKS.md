@@ -1040,7 +1040,13 @@ See the retained [`story-gate-report.json`](artifacts/sprints/sprint-1/story-1.3
 - [x] **Story AC 2.2.AC2:** Given each seeded security failure, when the fuzz harness runs, then it produces a bounded minimized reproducer and a non-pass disposition without exposing secret-canary values. Evidence: the independent [`story-gate-report.json`](artifacts/sprints/sprint-2/story-2.2/story-gate-report.json) confirms all six seeded failures remain non-pass, all six minimized reproducers are retained, all six target gates block, and no secret-canary value is recorded.
 - [x] **Story AC 2.2.AC3:** Given two clean runs with identical inputs and tools, when summaries are generated, then target identity, crash classification, coverage fields, and evidence hashes reconcile exactly. Evidence: the independent [`story-gate-report.json`](artifacts/sprints/sprint-2/story-2.2/story-gate-report.json) confirms both clean runs and all ten input, campaign, result, regression, target, classification, coverage, evidence, non-pass, and timeout-preservation comparisons reconcile exactly without the original development machine.
 
-**Story gate evidence:** All three story criteria and all shared/Linux foundation work pass. The story remains `BLOCKED-MACOS` under `G-DOD-10`; [`story-gate-report.json`](artifacts/sprints/sprint-2/story-2.2/story-gate-report.json) independently reviews pushed evidence commit `5c342303a5c30078d0ac6e7370d77bdf5152e51c`, prohibits Linux or fake-boundary evidence substitution, records no product-boundary execution, macOS support, product acceptance, external-human review, or release claim, and therefore leaves the Story 2.2 checkbox open.
+**Story gate evidence:** All three story criteria and all shared/Linux foundation work pass. The
+story remains `BLOCKED-MACOS` under `G-DOD-10`;
+[`story-gate-report.json`](artifacts/sprints/sprint-2/story-2.2/story-gate-report.json)
+independently reviews commit `817414bc` and tree `79138582`, verifies 21 stable policy, schema,
+generator, and test artifacts, prohibits Linux or fake-boundary evidence substitution, records no
+product-boundary execution, macOS support, product acceptance, external-human review, or release
+claim, and therefore leaves the Story 2.2 checkbox open.
 
 #### [ ] Story 2.3 - Artifact and Workflow Evaluation Corpus
 
@@ -1101,7 +1107,7 @@ current public-synthetic corpus scope. The independent
 [`story_2_3_gate.py`](scripts/story_2_3_gate.py) aggregate reviews immutable commit `0a8c3150`
 and tree `387314bb`, verifies 24 exact generator, fixture, and metric artifacts, and
 reruns five criterion-spanning validators. Story 2.3 remains `BLOCKED`: dependency Stories 2.1
-and 2.2 retain open acceptance gates, while `G-DOD-10` retains supported-platform and
+and 2.2 retain aggregate gates blocked by `G-DOD-10`, which also retains supported-platform and
 installed-product execution. The gate prohibits dependency or platform substitution, makes no
 product-runtime, installed-product, product-acceptance, Sprint, release, cross-platform, or
 external-human-review claim, and leaves the Story checkbox open. See the retained
@@ -1128,11 +1134,20 @@ external-human-review claim, and leaves the Story checkbox open. See the retaine
   but explicitly makes no fuzz-coverage, sanitizer, product-runtime, or support claim; required manual
   campaign `RM-024` and its affected `RV-15`, Sprint 166, and `G-GA` gates remain open.
 
-**Gate decision:** Sprint 2 is PASS only when Stories 2.1 through 2.3, every numbered task/sub-task,
+**Gate decision:** Sprint 2 is PASS only when Stories 2.1 through 2.4, every numbered task/sub-task,
 every story criterion, every sprint criterion, and the Universal Story Definition of Done are
 complete with current evidence. Otherwise it is BLOCKED.
 
-**Current gate evidence:** All five sprint criteria and the shared/Linux foundation pass. Sprint 2 remains `BLOCKED-MACOS`; [`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) aggregates both story gates from pushed evidence commit `d628b91caefacd15256fd4ec3008e4a208070004`, leaves both story and sprint checkboxes open, preserves `G-DOD-10` as the sole shared gate blocker, and prohibits macOS evidence substitution or unsupported product/release claims.
+**Current gate evidence:** All six sprint criteria and all four current public-synthetic story scopes
+pass. The independent [`sprint_2_gate.py`](scripts/sprint_2_gate.py) aggregate reviews immutable
+commit `817414bc` and tree `79138582`, verifies 16 exact corpus, fuzz, artifact, context, and
+Engineering Runtime fixture records, and validates all four current story gates. Sprint 2 remains
+`BLOCKED`: Story 1.3 and Story 2.3 dependency aggregation, four remaining `RV-51` product-protocol
+scenarios, and the supported-platform installed-product matrix remain open; `G-DOD-10` is the sole
+shared Definition-of-Done control blocker. The retained
+[`sprint-gate-report.json`](artifacts/sprints/sprint-2/sprint-gate-report.json) leaves all four story
+and Sprint checkboxes open and prohibits dependency, protocol, Linux/macOS, product-runtime,
+installed-product, product-acceptance, external-human-review, and release substitution or overclaim.
 #### [ ] Story 2.4 - Universal Artifact Admission and Context Accounting Corpus
 
 **User-facing value:** As a user, I need every supplied source and every model-visible range
