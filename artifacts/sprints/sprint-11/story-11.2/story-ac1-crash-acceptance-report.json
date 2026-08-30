@@ -1,0 +1,114 @@
+{
+  "acceptance_truth": {
+    "authority_bearing_partial_state_refused": true,
+    "boundary_count": 16,
+    "boundary_position_cell_count": 32,
+    "cross_platform_complete": false,
+    "current_operational_store_scope_complete": true,
+    "duplicate_state_refused": true,
+    "exact_pre_or_post_state": true,
+    "forced_stop_case_count": 224,
+    "independent_review_complete": false,
+    "orphan_state_refused": true,
+    "physical_power_loss_complete": false,
+    "position_count": 2,
+    "release_claim": "none",
+    "replay_driver_launch_refused": true,
+    "seeds_per_boundary_position": 7,
+    "sprint_completion_claim": false,
+    "stale_current_state_refused": true,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "artifacts": [
+    {
+      "byte_length": 1210,
+      "path": "docs/verification/story-11-2-ac1-crash-acceptance.md",
+      "sha256": "9d6c6496fa7d8c835951b35957374d0825f557f0c70fe3897070b50e870a6480"
+    },
+    {
+      "byte_length": 9116,
+      "path": "scripts/story_11_2_ac1_evidence.py",
+      "sha256": "d1544b736858870afbcff9d1c38a5b6a7439499a34beca95714b768e1f103c5f"
+    },
+    {
+      "byte_length": 2432,
+      "path": "tests/test_story_11_2_ac1_evidence.py",
+      "sha256": "5da4345b69941753eac693e67a53af3a0ebf73f052ed47b16fbf9d0169073edc"
+    },
+    {
+      "byte_length": 217,
+      "path": "artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-results.log",
+      "sha256": "a7b25c7a62a61001195fad90e71265df315029889f3f92c3bb687619207ea738"
+    }
+  ],
+  "commands": [
+    "python3 scripts/storage_crash_boundary_evidence.py",
+    "python3 scripts/storage_crash_exact_state_evidence.py"
+  ],
+  "covered_boundaries": [
+    "transaction",
+    "manifest",
+    "extraction",
+    "index",
+    "attempt",
+    "receipt",
+    "verification",
+    "recovery",
+    "checkpoint",
+    "session-checkpoint",
+    "migration",
+    "key-retrieval",
+    "backup",
+    "restore",
+    "expiry",
+    "deletion"
+  ],
+  "criterion_id": "11.2.AC1",
+  "generated_on": "2026-08-30",
+  "limitations": [
+    "physical power loss and torn sectors are not represented",
+    "native cross-platform and installed-package execution remain separate gates",
+    "independent review, Story, Sprint, packaging, and release completion are not claimed"
+  ],
+  "record_type": "agentmage-story-acceptance-evidence",
+  "required_markers": [
+    "Sub-task 11.2.4.1 storage crash boundaries validated",
+    "Sub-task 11.2.4.2 storage crash exact states validated"
+  ],
+  "retained_evidence": [
+    {
+      "byte_length": 422400,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "22bc943e41474e766ff02043064102b4185557582f0be67160315c896e4fd5f2"
+    },
+    {
+      "byte_length": 2135,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-report.json",
+      "sha256": "e84c1090ac43634da7998c1deed70660267c2b879fc1d8a876e3d7983118b400"
+    },
+    {
+      "byte_length": 4394,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-boundary-results.log",
+      "sha256": "cccae9256653a9ae2b5cb378ec22ebe0b4823bcc2017e034d01b011b0a099142"
+    },
+    {
+      "byte_length": 2088,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-report.json",
+      "sha256": "d0fa0b39f6f0a1eaa3b98e755caccbe7f2b78ab1bc7ace8780fa003e260285d0"
+    },
+    {
+      "byte_length": 4501,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-crash-exact-state-results.log",
+      "sha256": "77dcb9162f08f7f841a334160e8469ccf38fb5c6d63078b1b1f313c050f24d1f"
+    },
+    {
+      "byte_length": 6455,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-security-evidence-report.json",
+      "sha256": "a918998ea96a0a3c730af13d7a18193fffec3aade9bba89ebac6df82776637e6"
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass-local-current-operational-store-scope",
+  "story_id": "11.2"
+}

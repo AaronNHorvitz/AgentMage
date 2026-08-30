@@ -2142,9 +2142,17 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 11.2.AC1:** Given a crash at any new transaction boundary, when the store reopens,
+- [x] **Story AC 11.2.AC1:** Given a crash at any new transaction boundary, when the store reopens,
   then exactly one valid pre- or post-transaction state exists with no orphan, duplicate, or
-  authority-bearing partial record.
+  authority-bearing partial record. Evidence: the criterion-specific
+  [`story-ac1-crash-acceptance-report.json`](artifacts/sprints/sprint-11/story-11.2/story-ac1-crash-acceptance-report.json)
+  independently reconciles the retained 224-stop, 16-boundary, before/after subprocess campaign
+  with its exact-state report and current operational-store assertions. All 32 boundary-position
+  cells have seven seeds. Recovery admits only zero or one target before completion and exactly one
+  afterward; source and workflow rows cannot orphan, duplicate, publish partially, appear current
+  when stale, or launch a replay driver. Five mutation/omission/overclaim tests pass. This closes the
+  current encrypted operational-store criterion on Linux, not physical-fault, cross-platform,
+  installed-product, independent-review, Story, Sprint, packaging, or release evidence.
 - [ ] **Story AC 11.2.AC2:** Given changed source, parser, policy, model, plan, tool, or environment
   identity, when resume is requested, then every affected context or attempt is invalidated or
   blocked and no stale result becomes current.
