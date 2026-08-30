@@ -1,0 +1,355 @@
+{
+  "archive": {
+    "byte_length": 4419,
+    "entry_count": 15,
+    "format": "zip-stored",
+    "path": "fixtures/artifact-evaluation/v1/text-reference-corpus-v1.zip",
+    "sha256": "368dc07ffc9bb1ffb6a5856b475c3bfbe1ada31e09d46d22b84c487b6e35115b"
+  },
+  "bounded_log_recipe": {
+    "algorithm": "repeat-ascii-block-and-prefix-remainder-v1",
+    "block_sha256": "19340854202092fbb87064abe5a7000b167ade3a401d6872d9c3fa2d5dd190d8",
+    "generated_sha256": "326f3ebf5ad9dd60d9e6d20cc2a93ded5bda72b3c327d0603d9e874a43449200",
+    "persisted_in_archive": false,
+    "seed": "agentmage-story-2.3-log-seed-v1",
+    "target_byte_length": 26214400
+  },
+  "case_count": 16,
+  "cases": [
+    {
+      "archive_entry": "payloads/paste-999.txt",
+      "byte_identity": {
+        "byte_length": 999,
+        "sha256": "ba2c8b59489adbc46da6800eae0b44267514d74229cc6ee6296629715f9350d9"
+      },
+      "category": "paste_999",
+      "character_count": 999,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "utf-8",
+      "expected_disposition": "captured",
+      "fixture_id": "eval-paste-999-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/paste-1001.txt",
+      "byte_identity": {
+        "byte_length": 1001,
+        "sha256": "4d1ae084a61ba0bd072540fdec76abbba6cbd68a0b238a1d0bab1442e92639af"
+      },
+      "category": "paste_1001",
+      "character_count": 1001,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "utf-8",
+      "expected_disposition": "captured",
+      "fixture_id": "eval-paste-1001-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/utf8.txt",
+      "byte_identity": {
+        "byte_length": 58,
+        "sha256": "888d706497c6ae01ef8244c06400779f09bedcedab2aab4048761cb10db27312"
+      },
+      "category": "utf8",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "utf-8-valid",
+      "expected_disposition": "captured",
+      "fixture_id": "eval-utf8-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/utf16.txt",
+      "byte_identity": {
+        "byte_length": 88,
+        "sha256": "b7b9d5a35ccb16ffdb2caf250018b6c12fe7b6baace9f206495b0934fff6f52e"
+      },
+      "category": "utf16",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "utf-16-with-bom",
+      "expected_disposition": "captured",
+      "fixture_id": "eval-utf16-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/invalid.bin",
+      "byte_identity": {
+        "byte_length": 33,
+        "sha256": "6447370f8814497bf9b5e191aeb82d2608f2f4298ebafb7f17de376866b646c3"
+      },
+      "category": "invalid_encoding",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "invalid-utf-8",
+      "expected_disposition": "failed",
+      "fixture_id": "eval-invalid-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/mixed.bin",
+      "byte_identity": {
+        "byte_length": 45,
+        "sha256": "a4d6b381be362526523dacf8e85a4e3487a8d37579f5f7ee99ec3ac486cc4b6b"
+      },
+      "category": "mixed_encoding",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "mixed-utf8-utf16-invalid",
+      "expected_disposition": "partial",
+      "fixture_id": "eval-mixed-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/empty.txt",
+      "byte_identity": {
+        "byte_length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "category": "empty",
+      "character_count": 0,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "empty",
+      "expected_disposition": "captured",
+      "fixture_id": "eval-empty-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/duplicate-original.txt",
+      "byte_identity": {
+        "byte_length": 35,
+        "sha256": "65a47d274a5fd1f0a5687c7faf88a223ce6f258e92870acdbcaa2d18fa82d1af"
+      },
+      "category": "duplicate_original",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "utf-8",
+      "expected_disposition": "captured",
+      "fixture_id": "eval-duplicate-original-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/duplicate-reference.txt",
+      "byte_identity": {
+        "byte_length": 35,
+        "sha256": "65a47d274a5fd1f0a5687c7faf88a223ce6f258e92870acdbcaa2d18fa82d1af"
+      },
+      "category": "duplicate_reference",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "utf-8",
+      "expected_disposition": "duplicate",
+      "fixture_id": "eval-duplicate-reference-v1",
+      "generated_from_seed": false,
+      "identity_relation": "same-bytes-distinct-reference",
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/stale-observed.txt",
+      "byte_identity": {
+        "byte_length": 41,
+        "sha256": "ef7e3a0de8eacc5e22c66f5f6470f464784e042ef5792da7843ea59cc93b6327"
+      },
+      "category": "stale",
+      "character_count": null,
+      "current_archive_entry": "payloads/stale-current.txt",
+      "current_byte_identity": {
+        "byte_length": 40,
+        "sha256": "565c36e8c7fb7023ec094d40a07a5cced715612d4d103485977f13ef27d33616"
+      },
+      "encoding_expectation": "utf-8",
+      "expected_disposition": "stale",
+      "fixture_id": "eval-stale-v1",
+      "generated_from_seed": false,
+      "identity_relation": "observed-differs-from-current",
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/replaced-observed.txt",
+      "byte_identity": {
+        "byte_length": 41,
+        "sha256": "45a1d5653214a194743aaffcaa558fa3970c2336faba0617b238077a47bb6d57"
+      },
+      "category": "replaced",
+      "character_count": null,
+      "current_archive_entry": "payloads/replaced-current.txt",
+      "current_byte_identity": {
+        "byte_length": 40,
+        "sha256": "a8b1ef780565a82876afc3643673d9b9bd2fbff25dbd29dd56e335153eddd787"
+      },
+      "encoding_expectation": "utf-8",
+      "expected_disposition": "failed",
+      "fixture_id": "eval-replaced-v1",
+      "generated_from_seed": false,
+      "identity_relation": "object-replaced-after-observation",
+      "network_access": false,
+      "reference_class": "inline",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/virtual.txt",
+      "byte_identity": {
+        "byte_length": 46,
+        "sha256": "9aa18f3a7ae5643ceeb2d04aa0cbca4b13b282c78b950cff6f891bb885d54197"
+      },
+      "category": "virtual_reference",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "utf-8",
+      "expected_disposition": "captured",
+      "fixture_id": "eval-virtual-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "virtual_uri",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": "payloads/remote.txt",
+      "byte_identity": {
+        "byte_length": 55,
+        "sha256": "cb0b9303a81d0ddfbe348db403760ae1b6323b51efae9e10a288b6daffdaff7f"
+      },
+      "category": "remote_reference",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "utf-8",
+      "expected_disposition": "captured",
+      "fixture_id": "eval-remote-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "remote_uri",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": null,
+      "byte_identity": null,
+      "category": "inaccessible_reference",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "unavailable",
+      "expected_disposition": "unavailable",
+      "fixture_id": "eval-inaccessible-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "local_file",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": null,
+      "byte_identity": null,
+      "category": "unknown_reference",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "unknown",
+      "expected_disposition": "unsupported",
+      "fixture_id": "eval-unknown-v1",
+      "generated_from_seed": false,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "unknown",
+      "synthetic_only": true
+    },
+    {
+      "archive_entry": null,
+      "byte_identity": {
+        "byte_length": 26214400,
+        "sha256": "326f3ebf5ad9dd60d9e6d20cc2a93ded5bda72b3c327d0603d9e874a43449200"
+      },
+      "category": "bounded_25_mib_log",
+      "character_count": null,
+      "current_archive_entry": null,
+      "current_byte_identity": null,
+      "encoding_expectation": "ascii",
+      "expected_disposition": "captured",
+      "fixture_id": "eval-log-25mib-v1",
+      "generated_from_seed": true,
+      "identity_relation": null,
+      "network_access": false,
+      "reference_class": "local_file",
+      "synthetic_only": true
+    }
+  ],
+  "corpus_id": "artifact-evaluation-text-reference-v1",
+  "generated_on": "2026-08-29",
+  "generator": {
+    "path": "scripts/artifact_evaluation_text_log_fixtures.py",
+    "sha256": "a45e55dbd6dd78848294b05fc110de5a626d3e28e74ce14a1b9e7d968de47917"
+  },
+  "manifest_sha256": "65e9124f5aef06aba4e5a188c1b73cf3d234adf78cef0eb0f03592aa6947cd77",
+  "network_access": false,
+  "product_parser_support_claim": "none",
+  "required_categories": [
+    "paste_999",
+    "paste_1001",
+    "utf8",
+    "utf16",
+    "invalid_encoding",
+    "mixed_encoding",
+    "empty",
+    "duplicate_original",
+    "duplicate_reference",
+    "stale",
+    "replaced",
+    "virtual_reference",
+    "remote_reference",
+    "inaccessible_reference",
+    "unknown_reference",
+    "bounded_25_mib_log"
+  ],
+  "schema_version": 1,
+  "status": "synthetic-fixture-contract",
+  "synthetic_only": true,
+  "task_id": "2.3.1.1"
+}
