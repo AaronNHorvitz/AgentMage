@@ -1,0 +1,113 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 21638,
+      "path": "kernel/engine/src/workflow_identity.rs",
+      "sha256": "4df7175f9c2943f5db2a42229af4e0257ecfbc35633421ca5fda68a464315d96"
+    },
+    {
+      "byte_length": 18929,
+      "path": "kernel/engine/tests/workflow_identity.rs",
+      "sha256": "a09e3813ed0a082ae0d6760bd574f23f92bfbd2e253fac55a4c4fed054546d89"
+    },
+    {
+      "byte_length": 2353,
+      "path": "docs/verification/story-5-3-workflow-identity-evidence.md",
+      "sha256": "23eb720fdc2fa1f64225fcf28d58b71d4a22eceb57f646a907a01ff7128c452c"
+    },
+    {
+      "byte_length": 7314,
+      "path": "scripts/workflow_identity_evidence.py",
+      "sha256": "172b7b55d7105fa96f9a2cc3a0928b6d080196e94aa43c55ce6b4e642a453509"
+    },
+    {
+      "byte_length": 1447,
+      "path": "tests/test_workflow_identity_evidence.py",
+      "sha256": "ec3b04aa28838e149fccd4ce0adb9284c853e7d070cf7a9c47f4e1231e15c36d"
+    },
+    {
+      "byte_length": 1175,
+      "path": "artifacts/sprints/sprint-5/story-5.3/workflow-identity-results.log",
+      "sha256": "aff9d7583e796709f34be868325d3d8e50c107693d13b33c605bd18289226114"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test workflow_identity --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-30",
+  "identity_families": [
+    "call",
+    "tool_call",
+    "attempt",
+    "grant",
+    "approval",
+    "receipt",
+    "verification"
+  ],
+  "issuance_contract": {
+    "all_identity_roles_globally_disjoint": true,
+    "attempt_chain_exact": true,
+    "failed_issue_is_atomic": true,
+    "identity_proof_contains_execution_authority": false,
+    "one_receipt_per_attempt": true,
+    "one_verification_per_verifier_policy": true,
+    "prior_attempt_must_be_terminal": true,
+    "workflow_scoped_synchronized_ledger": true
+  },
+  "product_truth": {
+    "capability_grant_issued": false,
+    "identity_authority_only": false,
+    "network_calls": 0,
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "race_contract": {
+    "contenders": 16,
+    "duplicate_identity_reservations": 0,
+    "successful_identity_reservations": 1
+  },
+  "record_type": "agentmage-workflow-identity-evidence",
+  "requirements": [
+    "AM-WKF-001",
+    "AM-VER-001",
+    "AT-WKF-001",
+    "AT-VER-001"
+  ],
+  "retry_contract": {
+    "automatic_retry_forbidden_effects": [
+      "non_idempotent",
+      "destructive",
+      "external",
+      "unknown"
+    ],
+    "conditional_retry_requires_safe_reconciliation": true,
+    "policy_digest_tampering_admitted": false,
+    "required_once_approval_is_initial_only": true,
+    "required_per_attempt_approval_is_fresh": true,
+    "uncertain_effect_automatic_retry": false,
+    "uncertain_effect_requires_safe_reconciliation_and_user_approval": true
+  },
+  "schema_version": 1,
+  "status": "pass-local-contract-evidence",
+  "story_id": "5.3",
+  "task_id": "5.3.1.2",
+  "test_contract": {
+    "clippy_warnings_allowed": 0,
+    "focused_tests": 9,
+    "required_markers": [
+      "issues_the_complete_identity_chain_without_execution_authority ... ok",
+      "every_pre_effect_identity_is_globally_fresh_and_failed_issue_is_atomic ... ok",
+      "ordinals_predecessors_and_terminal_order_are_exact ... ok",
+      "automatic_retry_is_forbidden_for_every_high_or_unknown_effect ... ok",
+      "uncertain_effects_cannot_open_a_successor_until_safely_reconciled ... ok",
+      "approvals_receipts_and_verifications_are_fresh_single_issue_identities ... ok",
+      "policy_tampering_cannot_enable_a_retry ... ok",
+      "required_once_approval_is_fresh_initially_and_not_reissued_automatically ... ok",
+      "concurrent_duplicate_issue_has_exactly_one_winner ... ok"
+    ]
+  }
+}
