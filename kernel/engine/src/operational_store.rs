@@ -5120,6 +5120,130 @@ const DERIVED_EXPORT_QUERIES: &[DerivedExportQuery] = &[
         family: "write_checkpoints",
         sql: "SELECT checkpoint_id, sequence, checkpoint_sha256 FROM write_checkpoints",
     },
+    DerivedExportQuery {
+        family: "source_origins",
+        sql: "SELECT origin_id, 0, origin_sha256 FROM source_origins",
+    },
+    DerivedExportQuery {
+        family: "source_references",
+        sql: "SELECT reference_id, 0, reference_sha256 FROM source_references",
+    },
+    DerivedExportQuery {
+        family: "source_manifests",
+        sql: "SELECT source_artifact_id, 0, source_artifact_sha256 FROM source_manifests",
+    },
+    DerivedExportQuery {
+        family: "source_provenance",
+        sql: "SELECT provenance_id, 0, provenance_sha256 FROM source_provenance",
+    },
+    DerivedExportQuery {
+        family: "source_extractions",
+        sql: "SELECT extraction_id, 0, record_sha256 FROM source_extractions",
+    },
+    DerivedExportQuery {
+        family: "source_sections",
+        sql: "SELECT section_id, ordinal, record_sha256 FROM source_sections",
+    },
+    DerivedExportQuery {
+        family: "source_cache_inputs",
+        sql: "SELECT cache_input_id, 0, record_sha256 FROM source_cache_inputs",
+    },
+    DerivedExportQuery {
+        family: "source_lexical_indexes",
+        sql: "SELECT lexical_index_id, 0, record_sha256 FROM source_lexical_indexes",
+    },
+    DerivedExportQuery {
+        family: "source_context_dispositions",
+        sql: "SELECT disposition_id, 0, record_sha256 FROM source_context_dispositions",
+    },
+    DerivedExportQuery {
+        family: "source_retentions",
+        sql: "SELECT retention_id, revision, source_retention_sha256 FROM source_retentions",
+    },
+    DerivedExportQuery {
+        family: "source_lifecycle_events",
+        sql: "SELECT retention_id, revision, event_sha256 FROM source_lifecycle_events",
+    },
+    DerivedExportQuery {
+        family: "source_materialization_states",
+        sql: "SELECT source_artifact_id, revision, head_event_sha256 FROM source_materialization_states",
+    },
+    DerivedExportQuery {
+        family: "source_materialization_events",
+        sql: "SELECT source_artifact_id, revision, event_sha256 FROM source_materialization_events",
+    },
+    DerivedExportQuery {
+        family: "source_dependencies",
+        sql: "SELECT upstream_source_artifact_id || char(0) || dependent_source_artifact_id, 0, dependency_sha256 FROM source_dependencies",
+    },
+    DerivedExportQuery {
+        family: "source_refreshes",
+        sql: "SELECT refresh_id, 0, refresh_sha256 FROM source_refreshes",
+    },
+    DerivedExportQuery {
+        family: "source_retention_deadlines",
+        sql: "SELECT retention_id, 0, deadline_sha256 FROM source_retention_deadlines",
+    },
+    DerivedExportQuery {
+        family: "source_retention_holds",
+        sql: "SELECT retention_id || char(0) || hold_kind, revision, head_event_sha256 FROM source_retention_holds",
+    },
+    DerivedExportQuery {
+        family: "source_retention_hold_events",
+        sql: "SELECT retention_id || char(0) || hold_kind, revision, event_sha256 FROM source_retention_hold_events",
+    },
+    DerivedExportQuery {
+        family: "source_released_payloads",
+        sql: "SELECT retention_id, 0, release_sha256 FROM source_released_payloads",
+    },
+    DerivedExportQuery {
+        family: "workflow_plan_step_policies",
+        sql: "SELECT policy_id, 0, policy_sha256 FROM workflow_plan_step_policies",
+    },
+    DerivedExportQuery {
+        family: "workflow_attempts",
+        sql: "SELECT attempt_id, attempt_ordinal, attempt_sha256 FROM workflow_attempts",
+    },
+    DerivedExportQuery {
+        family: "workflow_preflights",
+        sql: "SELECT preflight_record_id, 0, preflight_sha256 FROM workflow_preflights",
+    },
+    DerivedExportQuery {
+        family: "workflow_tool_calls",
+        sql: "SELECT call_id, 0, call_sha256 FROM workflow_tool_calls",
+    },
+    DerivedExportQuery {
+        family: "workflow_idempotency_keys",
+        sql: "SELECT idempotency_record_id, 0, record_sha256 FROM workflow_idempotency_keys",
+    },
+    DerivedExportQuery {
+        family: "workflow_approvals",
+        sql: "SELECT approval_record_id, 0, record_sha256 FROM workflow_approvals",
+    },
+    DerivedExportQuery {
+        family: "workflow_receipts",
+        sql: "SELECT receipt_record_id, 0, record_sha256 FROM workflow_receipts",
+    },
+    DerivedExportQuery {
+        family: "workflow_verifications",
+        sql: "SELECT verification_id, 0, verification_sha256 FROM workflow_verifications",
+    },
+    DerivedExportQuery {
+        family: "workflow_consumed_budgets",
+        sql: "SELECT consumption_id, 0, consumption_sha256 FROM workflow_consumed_budgets",
+    },
+    DerivedExportQuery {
+        family: "workflow_recovery_decisions",
+        sql: "SELECT decision_id, 0, decision_sha256 FROM workflow_recovery_decisions",
+    },
+    DerivedExportQuery {
+        family: "workflow_state_fingerprints",
+        sql: "SELECT fingerprint_record_id, occurrence, record_sha256 FROM workflow_state_fingerprints",
+    },
+    DerivedExportQuery {
+        family: "workflow_terminal_diagnostics",
+        sql: "SELECT diagnostic_id, 0, diagnostic_sha256 FROM workflow_terminal_diagnostics",
+    },
 ];
 
 fn derived_export_rows(
@@ -5405,7 +5529,7 @@ fn hex_digest(value: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
+    use std::collections::{BTreeMap, BTreeSet};
     use std::env;
     use std::fs::{self, File, OpenOptions};
     use std::io::{Read as _, Seek as _, SeekFrom, Write as _};
@@ -5431,13 +5555,14 @@ mod tests {
     use serde_json::Value;
 
     use super::{
-        DurableAuthorityError, DurableAuthorityRuntime, MIGRATION_1_SCHEMA_SQL,
-        MIGRATION_2_SCHEMA_SQL, OperationalStore, OperationalStoreError, OperationalStoreKeyError,
-        OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
-        RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
-        SCHEMA_VERSION, WorkflowStateMaterialization, ZERO_SHA256, is_linux_held_descriptor_path,
-        open_connection, open_connection_for_supported_schema, prepare_new_store_file, sha256_file,
-        sha256_hex, sqlite_artifact_paths, verify_runtime_configuration,
+        DERIVED_EXPORT_QUERIES, DurableAuthorityError, DurableAuthorityRuntime,
+        MIGRATION_1_SCHEMA_SQL, MIGRATION_2_SCHEMA_SQL, OperationalStore, OperationalStoreError,
+        OperationalStoreKeyError, OperationalStoreKeyLifecycle, OperationalStoreKeyProvider,
+        RetentionAssignment, RetentionDisposition, RetentionHoldKind, RetentionRecordFamily,
+        RetentionSensitivity, SCHEMA_VERSION, WorkflowStateMaterialization, ZERO_SHA256,
+        derived_export_rows, is_linux_held_descriptor_path, open_connection,
+        open_connection_for_supported_schema, prepare_new_store_file, sha256_file, sha256_hex,
+        sqlite_artifact_paths, verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::context_management::finalize_checkpoint;
@@ -6278,6 +6403,70 @@ mod tests {
             .expect("encrypted backup reopens");
         assert_eq!(restored.generation(), backup_receipt.generation);
         drop(restored);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn every_source_and_workflow_family_has_a_content_free_derived_export() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey([63; 32]))
+            .expect("current encrypted store");
+
+        let persisted_families = store
+            .connection
+            .prepare(
+                "SELECT name FROM sqlite_schema
+                 WHERE type = 'table'
+                   AND (name LIKE 'source_%' OR name LIKE 'workflow_%')
+                 ORDER BY name",
+            )
+            .and_then(|mut statement| {
+                statement
+                    .query_map([], |row| row.get::<_, String>(0))?
+                    .collect::<Result<BTreeSet<_>, _>>()
+            })
+            .expect("source and workflow table inventory");
+        let export_queries = DERIVED_EXPORT_QUERIES
+            .iter()
+            .filter(|query| {
+                query.family.starts_with("source_") || query.family.starts_with("workflow_")
+            })
+            .collect::<Vec<_>>();
+        let exported_families = export_queries
+            .iter()
+            .map(|query| query.family.to_owned())
+            .collect::<BTreeSet<_>>();
+
+        assert_eq!(exported_families, persisted_families);
+        assert_eq!(export_queries.len(), persisted_families.len());
+        assert_eq!(persisted_families.len(), 31);
+        for query in export_queries {
+            let normalized = query.sql.to_ascii_lowercase();
+            for prohibited in [
+                "record_json",
+                "payload_sha256",
+                "source_sha256",
+                "content_sha256",
+                "key_sha256",
+                "approval_sha256",
+                "receipt_sha256",
+                "fingerprint_sha256",
+            ] {
+                assert!(
+                    !normalized.contains(prohibited),
+                    "{} derived export must not select {prohibited}",
+                    query.family
+                );
+            }
+            let statement = store
+                .connection
+                .prepare(query.sql)
+                .unwrap_or_else(|error| panic!("{} export must compile: {error}", query.family));
+            assert_eq!(statement.column_count(), 3, "{} export shape", query.family);
+        }
+        assert!(derived_export_rows(&store.connection).is_ok());
+        drop(store);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 
@@ -7628,6 +7817,31 @@ mod tests {
                 .expect("workflow materialization count");
             assert_eq!(count, 1, "{table} must retain one normalized row");
         }
+        let exported_workflow_families = derived_export_rows(&store.connection)
+            .expect("content-free workflow exports")
+            .into_iter()
+            .filter(|row| row.family.starts_with("workflow_"))
+            .map(|row| row.family)
+            .collect::<BTreeSet<_>>();
+        assert_eq!(
+            exported_workflow_families,
+            [
+                "workflow_plan_step_policies",
+                "workflow_attempts",
+                "workflow_preflights",
+                "workflow_tool_calls",
+                "workflow_idempotency_keys",
+                "workflow_approvals",
+                "workflow_receipts",
+                "workflow_verifications",
+                "workflow_consumed_budgets",
+                "workflow_recovery_decisions",
+                "workflow_state_fingerprints",
+                "workflow_terminal_diagnostics",
+            ]
+            .into_iter()
+            .collect()
+        );
         let workflow_payload_tables: i64 = store
             .connection
             .query_row(
@@ -8230,6 +8444,31 @@ mod tests {
                 .expect("source materialization count");
             assert_eq!(count, 1, "{table} must retain one normalized row");
         }
+        let exported_source_families = derived_export_rows(&store.connection)
+            .expect("content-free source exports")
+            .into_iter()
+            .filter(|row| row.family.starts_with("source_"))
+            .map(|row| row.family)
+            .collect::<BTreeSet<_>>();
+        assert_eq!(
+            exported_source_families,
+            [
+                "source_origins",
+                "source_references",
+                "source_manifests",
+                "source_provenance",
+                "source_extractions",
+                "source_sections",
+                "source_cache_inputs",
+                "source_lexical_indexes",
+                "source_context_dispositions",
+                "source_retentions",
+                "source_lifecycle_events",
+                "source_materialization_states",
+            ]
+            .into_iter()
+            .collect()
+        );
         assert_eq!(
             store
                 .connection

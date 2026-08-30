@@ -2049,7 +2049,7 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     and [`workflow-atomic-publication-results.log`](artifacts/sprints/sprint-11/story-11.2/workflow-atomic-publication-results.log)
     make no exhaustive workflow crash-campaign, Story, Sprint, platform, packaging, or release
     completion claim.
-- [ ] **Task 11.2.3 - Implement migrations and compatibility**
+- [x] **Task 11.2.3 - Implement migrations and compatibility**
   - [x] **Sub-task 11.2.3.1:** Add forward migrations, fixture snapshots, schema hashes, rollback
     tests, interrupted-migration recovery, future-schema refusal, and occupied-destination handling.
     Completed locally on Linux on 2026-08-30. The canonical SQLCipher store now has a retained,
@@ -2078,9 +2078,23 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     and [`storage-downgrade-refusal-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-results.log)
     make no reverse-migration, complete new-family lifecycle, Story, Sprint, platform, packaging, or
     release completion claim.
-  - [ ] **Sub-task 11.2.3.3:** Extend backup, export, restore, retention, erasure, canary, and
+  - [x] **Sub-task 11.2.3.3:** Extend backup, export, restore, retention, erasure, canary, and
     diagnostics coverage to every new record family without storing raw secrets or source bytes in
-    evidence.
+    evidence. Completed locally on Linux on 2026-08-30. The content-free derived export now covers
+    exactly all 31 persisted source, source-lifecycle, workflow, and terminal-diagnostic families
+    introduced in schema versions 12 through 15. A schema-derived inventory test rejects omissions
+    and duplicates, compiles every three-column projection, and prohibits raw records, payload and
+    source identities, secret-bearing keys, and content fingerprints. Populated source and workflow
+    fixtures prove their rows export as hashed logical identities, revisions, and canonical record
+    digests only. Existing focused proofs cover whole-store encrypted backup, verified restore to a
+    fresh candidate, atomic source retention/hold/expiry/delete/collection, whole-store
+    cryptographic erasure, and synthetic-canary exclusion from the encrypted store, backup, export,
+    and diagnostic strings. Strict kernel Clippy and five evidence mutation/omission/overclaim tests
+    pass. Retained
+    [`storage-new-family-lifecycle-report.json`](artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-report.json)
+    and [`storage-new-family-lifecycle-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log)
+    make no exhaustive crash-campaign, Story, Sprint, platform, packaging, or release completion
+    claim.
 - [ ] **Task 11.2.4 - Verify crash and recovery semantics**
   - [ ] **Sub-task 11.2.4.1:** Crash before and after each manifest, extraction, index, attempt,
     receipt, verification, recovery, checkpoint, retention, and deletion commit.

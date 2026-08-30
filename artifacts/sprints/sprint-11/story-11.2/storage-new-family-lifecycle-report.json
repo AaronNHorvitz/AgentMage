@@ -1,0 +1,85 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 401331,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "16276fcce8f14b59c624f6a8313ebe1e861ec2e57f6f3e5d37de7909d6297497"
+    },
+    {
+      "byte_length": 69345,
+      "path": "kernel/engine/src/source_lifecycle.rs",
+      "sha256": "b34c1c3b248cd91aef81c955e06cc49b2793bdf8816c6b34ef722eee28955b31"
+    },
+    {
+      "byte_length": 1806,
+      "path": "docs/verification/story-11-2-storage-new-family-lifecycle-evidence.md",
+      "sha256": "bd9dce16cb0aaad867e9739912782d162d9c8e095d124c71916729201bfccb5d"
+    },
+    {
+      "byte_length": 9211,
+      "path": "scripts/storage_new_family_lifecycle_evidence.py",
+      "sha256": "4c83115bc377f052ee9e7f02b050d25f0ba838c5a3132e2b6d1195f4ce016a10"
+    },
+    {
+      "byte_length": 2549,
+      "path": "tests/test_storage_new_family_lifecycle_evidence.py",
+      "sha256": "598d87bde7e8fdbe491e44d03d27641a6b458d43295a7b015e0a8e97976e4ee2"
+    },
+    {
+      "byte_length": 29808,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
+      "sha256": "493f0a31b8502d24f5d408f9e1398fd047ddd05e4e4a16c43eb371e2c550584d"
+    }
+  ],
+  "canonical_store": "operational-store",
+  "commands": [
+    "cargo test -p agentmage-kernel-engine every_source_and_workflow_family_has_a_content_free_derived_export --locked",
+    "cargo test -p agentmage-kernel-engine materializations_bind --locked",
+    "cargo test -p agentmage-kernel-engine refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe --locked",
+    "cargo test -p agentmage-kernel-engine exclusive_writer_and_encrypted_backup_are_verified --locked",
+    "cargo test -p agentmage-kernel-engine encrypted_backup_restores_only_to_a_verified_fresh_candidate --locked",
+    "cargo test -p agentmage-kernel-engine whole_store_cryptographic_erasure_consumes_key_scope_without_overwrite_claim --locked",
+    "cargo test -p agentmage-kernel-engine synthetic_canary_is_absent_from_encrypted_and_derived_artifacts --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "coverage": [
+    "schema-derived-family-inventory",
+    "content-free-derived-export",
+    "encrypted-whole-store-backup",
+    "verified-fresh-candidate-restore",
+    "source-retention-release-delete-collection",
+    "whole-store-cryptographic-erasure",
+    "encrypted-artifact-and-diagnostic-canary-scan"
+  ],
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "content_free_evidence_complete": true,
+    "encrypted_backup_restore_complete": true,
+    "exhaustive_crash_campaign_complete": false,
+    "new_family_count": 31,
+    "new_family_export_coverage_complete": true,
+    "release_claim": "none",
+    "source_retention_erasure_complete": true,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_canary_scan_complete": true,
+    "synthetic_data_only": true,
+    "terminal_diagnostic_export_complete": true,
+    "whole_store_cryptographic_erasure_complete": true
+  },
+  "record_type": "agentmage-storage-new-family-lifecycle-evidence",
+  "required_markers": [
+    "every_source_and_workflow_family_has_a_content_free_derived_export ... ok",
+    "workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok",
+    "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
+    "refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok",
+    "exclusive_writer_and_encrypted_backup_are_verified ... ok",
+    "encrypted_backup_restores_only_to_a_verified_fresh_candidate ... ok",
+    "whole_store_cryptographic_erasure_consumes_key_scope_without_overwrite_claim ... ok",
+    "synthetic_canary_is_absent_from_encrypted_and_derived_artifacts ... ok"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-new-family-lifecycle",
+  "story_id": "11.2",
+  "task_id": "11.2.3.3"
+}
