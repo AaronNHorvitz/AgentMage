@@ -1,0 +1,1927 @@
+{
+  "generated_on": "2026-08-29",
+  "generator": {
+    "path": "scripts/engineering_context_accounting_fixtures.py",
+    "sha256": "6486730d52432a14efc8278828ea6fdfd3b168ca4582e86f48f543d71937bab3"
+  },
+  "lineage_manifest": {
+    "path": "fixtures/artifact-admission/v1/lineage-manifest.json",
+    "sha256": "1670543b14ea625c003d54902b4e12f4b84cd41b6183b1ddad84ab2c76ba0bcf"
+  },
+  "model_request_executed": false,
+  "product_context_delivery_claim": "none",
+  "required_scenarios": [
+    "token_budget_overflow",
+    "retrieval",
+    "summary",
+    "duplicate",
+    "stale",
+    "restricted",
+    "omitted",
+    "model_profile_change"
+  ],
+  "scenarios": [
+    {
+      "accounted_input_tokens": 8,
+      "complete_manifest_count": 1,
+      "context_manifest": {
+        "context_manifest_id": "context-token_budget_overflow-v1",
+        "items": [
+          {
+            "artifact_id": "source-admission-paste-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-local-file-1",
+            "disposition": "truncated",
+            "ranges": [
+              {
+                "end_byte_exclusive": 32,
+                "start_byte": 0
+              }
+            ],
+            "reason": "Only the exact bounded prefix fits after reserved output and safety margin.",
+            "reason_code": "token_budget_exhausted",
+            "token_count": 8
+          },
+          {
+            "artifact_id": "source-admission-virtual-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-remote-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-directory-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-archive-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-text-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-log-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-pdf-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-docx-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-spreadsheet-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-image-ocr-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-duplicate-1",
+            "disposition": "duplicate",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "duplicate_content",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-stale-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-inaccessible-1",
+            "disposition": "unavailable",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unavailable",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-unsupported-1",
+            "disposition": "unsupported",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unsupported",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-malformed_package-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-active_content-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-external_relationship-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-archive_traversal-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-decompression_bomb-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-mixed_encoding-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-concurrent_replacement-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-truncation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-cancellation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-parser_failure-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          }
+        ],
+        "manifest_sha256": "5869c51b80e830048d2e80e06d45548cf76401683f5db726cfc02073c68f0fb1",
+        "model_profile_id": "model-profile-fixture-a",
+        "reserved_output_tokens": 32,
+        "safety_margin_tokens": 16,
+        "schema_version": 2,
+        "session_id": "session-context-accounting-v1",
+        "source_artifact_count": 26,
+        "total_input_tokens": 8,
+        "turn_id": "turn-token_budget_overflow-v1"
+      },
+      "context_window_tokens": 56,
+      "execution_claim": "synthetic_manifest_contract_only",
+      "expected_target_disposition": "truncated",
+      "model_profile_change_invalidates_prior_manifest": false,
+      "prior_model_profile_id": null,
+      "requested_input_tokens": 2048,
+      "scenario_id": "token_budget_overflow",
+      "target_artifact_id": "source-admission-local-file-1",
+      "target_fixture_id": "admission-local-file-1"
+    },
+    {
+      "accounted_input_tokens": 16,
+      "complete_manifest_count": 1,
+      "context_manifest": {
+        "context_manifest_id": "context-retrieval-v1",
+        "items": [
+          {
+            "artifact_id": "source-admission-paste-1",
+            "disposition": "included",
+            "ranges": [
+              {
+                "end_byte_exclusive": 34,
+                "start_byte": 0
+              }
+            ],
+            "reason": null,
+            "reason_code": null,
+            "token_count": 16
+          },
+          {
+            "artifact_id": "source-admission-local-file-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-virtual-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-remote-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-directory-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-archive-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-text-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-log-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-pdf-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-docx-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-spreadsheet-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-image-ocr-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-duplicate-1",
+            "disposition": "duplicate",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "duplicate_content",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-stale-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-inaccessible-1",
+            "disposition": "unavailable",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unavailable",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-unsupported-1",
+            "disposition": "unsupported",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unsupported",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-malformed_package-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-active_content-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-external_relationship-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-archive_traversal-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-decompression_bomb-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-mixed_encoding-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-concurrent_replacement-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-truncation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-cancellation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-parser_failure-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          }
+        ],
+        "manifest_sha256": "397ef5a0671eb25eca296f1019de172fae7567754f3a9b63d7d55e5d436f0c0a",
+        "model_profile_id": "model-profile-fixture-a",
+        "reserved_output_tokens": 32,
+        "safety_margin_tokens": 16,
+        "schema_version": 2,
+        "session_id": "session-context-accounting-v1",
+        "source_artifact_count": 26,
+        "total_input_tokens": 16,
+        "turn_id": "turn-retrieval-v1"
+      },
+      "context_window_tokens": 64,
+      "execution_claim": "synthetic_manifest_contract_only",
+      "expected_target_disposition": "included",
+      "model_profile_change_invalidates_prior_manifest": false,
+      "prior_model_profile_id": null,
+      "requested_input_tokens": 16,
+      "scenario_id": "retrieval",
+      "target_artifact_id": "source-admission-paste-1",
+      "target_fixture_id": "admission-paste-1"
+    },
+    {
+      "accounted_input_tokens": 8,
+      "complete_manifest_count": 1,
+      "context_manifest": {
+        "context_manifest_id": "context-summary-v1",
+        "items": [
+          {
+            "artifact_id": "source-admission-paste-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-local-file-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-virtual-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-remote-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-directory-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-archive-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-text-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-log-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-pdf-1",
+            "disposition": "summarized",
+            "ranges": [
+              {
+                "end_byte_exclusive": 64,
+                "start_byte": 0
+              }
+            ],
+            "reason": "A fixture summary accounts for the source range without claiming parser execution.",
+            "reason_code": "bounded_summary_fixture",
+            "token_count": 8
+          },
+          {
+            "artifact_id": "source-admission-docx-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-spreadsheet-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-image-ocr-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-duplicate-1",
+            "disposition": "duplicate",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "duplicate_content",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-stale-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-inaccessible-1",
+            "disposition": "unavailable",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unavailable",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-unsupported-1",
+            "disposition": "unsupported",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unsupported",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-malformed_package-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-active_content-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-external_relationship-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-archive_traversal-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-decompression_bomb-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-mixed_encoding-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-concurrent_replacement-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-truncation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-cancellation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-parser_failure-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          }
+        ],
+        "manifest_sha256": "6beff4983e0fcf980da554bdaebd1181101538238c6d74ccc80470a79e6e3782",
+        "model_profile_id": "model-profile-fixture-a",
+        "reserved_output_tokens": 32,
+        "safety_margin_tokens": 16,
+        "schema_version": 2,
+        "session_id": "session-context-accounting-v1",
+        "source_artifact_count": 26,
+        "total_input_tokens": 8,
+        "turn_id": "turn-summary-v1"
+      },
+      "context_window_tokens": 56,
+      "execution_claim": "synthetic_manifest_contract_only",
+      "expected_target_disposition": "summarized",
+      "model_profile_change_invalidates_prior_manifest": false,
+      "prior_model_profile_id": null,
+      "requested_input_tokens": 8,
+      "scenario_id": "summary",
+      "target_artifact_id": "source-admission-pdf-1",
+      "target_fixture_id": "admission-pdf-1"
+    },
+    {
+      "accounted_input_tokens": 0,
+      "complete_manifest_count": 1,
+      "context_manifest": {
+        "context_manifest_id": "context-duplicate-v1",
+        "items": [
+          {
+            "artifact_id": "source-admission-paste-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-local-file-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-virtual-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-remote-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-directory-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-archive-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-text-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-log-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-pdf-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-docx-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-spreadsheet-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-image-ocr-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-duplicate-1",
+            "disposition": "duplicate",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "duplicate_content",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-stale-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-inaccessible-1",
+            "disposition": "unavailable",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unavailable",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-unsupported-1",
+            "disposition": "unsupported",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unsupported",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-malformed_package-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-active_content-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-external_relationship-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-archive_traversal-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-decompression_bomb-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-mixed_encoding-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-concurrent_replacement-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-truncation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-cancellation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-parser_failure-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          }
+        ],
+        "manifest_sha256": "f3ef78060e96ab711eb499bcbe117cc018ee1bd49f5f746d910c1dd9aafb03c3",
+        "model_profile_id": "model-profile-fixture-a",
+        "reserved_output_tokens": 32,
+        "safety_margin_tokens": 16,
+        "schema_version": 2,
+        "session_id": "session-context-accounting-v1",
+        "source_artifact_count": 26,
+        "total_input_tokens": 0,
+        "turn_id": "turn-duplicate-v1"
+      },
+      "context_window_tokens": 48,
+      "execution_claim": "synthetic_manifest_contract_only",
+      "expected_target_disposition": "duplicate",
+      "model_profile_change_invalidates_prior_manifest": false,
+      "prior_model_profile_id": null,
+      "requested_input_tokens": 0,
+      "scenario_id": "duplicate",
+      "target_artifact_id": "source-admission-duplicate-1",
+      "target_fixture_id": "admission-duplicate-1"
+    },
+    {
+      "accounted_input_tokens": 0,
+      "complete_manifest_count": 1,
+      "context_manifest": {
+        "context_manifest_id": "context-stale-v1",
+        "items": [
+          {
+            "artifact_id": "source-admission-paste-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-local-file-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-virtual-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-remote-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-directory-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-archive-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-text-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-log-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-pdf-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-docx-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-spreadsheet-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-image-ocr-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-duplicate-1",
+            "disposition": "duplicate",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "duplicate_content",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-stale-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-inaccessible-1",
+            "disposition": "unavailable",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unavailable",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-unsupported-1",
+            "disposition": "unsupported",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unsupported",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-malformed_package-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-active_content-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-external_relationship-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-archive_traversal-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-decompression_bomb-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-mixed_encoding-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-concurrent_replacement-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-truncation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-cancellation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-parser_failure-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          }
+        ],
+        "manifest_sha256": "c01ee2ab4928cd5aca89b633eefc517aae2177ca7de42bf65958dd1bf4c161a0",
+        "model_profile_id": "model-profile-fixture-a",
+        "reserved_output_tokens": 32,
+        "safety_margin_tokens": 16,
+        "schema_version": 2,
+        "session_id": "session-context-accounting-v1",
+        "source_artifact_count": 26,
+        "total_input_tokens": 0,
+        "turn_id": "turn-stale-v1"
+      },
+      "context_window_tokens": 48,
+      "execution_claim": "synthetic_manifest_contract_only",
+      "expected_target_disposition": "stale",
+      "model_profile_change_invalidates_prior_manifest": false,
+      "prior_model_profile_id": null,
+      "requested_input_tokens": 0,
+      "scenario_id": "stale",
+      "target_artifact_id": "source-admission-stale-1",
+      "target_fixture_id": "admission-stale-1"
+    },
+    {
+      "accounted_input_tokens": 0,
+      "complete_manifest_count": 1,
+      "context_manifest": {
+        "context_manifest_id": "context-restricted-v1",
+        "items": [
+          {
+            "artifact_id": "source-admission-paste-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-local-file-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-virtual-uri-1",
+            "disposition": "restricted",
+            "ranges": [],
+            "reason": "Scenario policy denies model inclusion without changing source classification.",
+            "reason_code": "scenario_policy_restricted",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-remote-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-directory-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-archive-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-text-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-log-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-pdf-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-docx-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-spreadsheet-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-image-ocr-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-duplicate-1",
+            "disposition": "duplicate",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "duplicate_content",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-stale-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-inaccessible-1",
+            "disposition": "unavailable",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unavailable",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-unsupported-1",
+            "disposition": "unsupported",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unsupported",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-malformed_package-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-active_content-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-external_relationship-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-archive_traversal-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-decompression_bomb-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-mixed_encoding-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-concurrent_replacement-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-truncation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-cancellation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-parser_failure-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          }
+        ],
+        "manifest_sha256": "278207efb75380b24e8e02a483cb731f25e823af51ea5c283315e3d39335e4a3",
+        "model_profile_id": "model-profile-fixture-a",
+        "reserved_output_tokens": 32,
+        "safety_margin_tokens": 16,
+        "schema_version": 2,
+        "session_id": "session-context-accounting-v1",
+        "source_artifact_count": 26,
+        "total_input_tokens": 0,
+        "turn_id": "turn-restricted-v1"
+      },
+      "context_window_tokens": 48,
+      "execution_claim": "synthetic_manifest_contract_only",
+      "expected_target_disposition": "restricted",
+      "model_profile_change_invalidates_prior_manifest": false,
+      "prior_model_profile_id": null,
+      "requested_input_tokens": 0,
+      "scenario_id": "restricted",
+      "target_artifact_id": "source-admission-virtual-uri-1",
+      "target_fixture_id": "admission-virtual-uri-1"
+    },
+    {
+      "accounted_input_tokens": 0,
+      "complete_manifest_count": 1,
+      "context_manifest": {
+        "context_manifest_id": "context-omitted-v1",
+        "items": [
+          {
+            "artifact_id": "source-admission-paste-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-local-file-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-virtual-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-remote-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-directory-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-archive-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-text-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-log-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The source is deliberately omitted and remains visible in the manifest.",
+            "reason_code": "explicit_scenario_omission",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-pdf-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-docx-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-spreadsheet-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-image-ocr-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-duplicate-1",
+            "disposition": "duplicate",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "duplicate_content",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-stale-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-inaccessible-1",
+            "disposition": "unavailable",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unavailable",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-unsupported-1",
+            "disposition": "unsupported",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unsupported",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-malformed_package-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-active_content-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-external_relationship-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-archive_traversal-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-decompression_bomb-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-mixed_encoding-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-concurrent_replacement-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-truncation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-cancellation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-parser_failure-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          }
+        ],
+        "manifest_sha256": "e93509ff6de7ab2e61cee794b5bebeffc15164a0251c3ae133e3ed67c6d4cfe4",
+        "model_profile_id": "model-profile-fixture-a",
+        "reserved_output_tokens": 32,
+        "safety_margin_tokens": 16,
+        "schema_version": 2,
+        "session_id": "session-context-accounting-v1",
+        "source_artifact_count": 26,
+        "total_input_tokens": 0,
+        "turn_id": "turn-omitted-v1"
+      },
+      "context_window_tokens": 48,
+      "execution_claim": "synthetic_manifest_contract_only",
+      "expected_target_disposition": "omitted",
+      "model_profile_change_invalidates_prior_manifest": false,
+      "prior_model_profile_id": null,
+      "requested_input_tokens": 0,
+      "scenario_id": "omitted",
+      "target_artifact_id": "source-admission-log-1",
+      "target_fixture_id": "admission-log-1"
+    },
+    {
+      "accounted_input_tokens": 0,
+      "complete_manifest_count": 1,
+      "context_manifest": {
+        "context_manifest_id": "context-model_profile_change-v1",
+        "items": [
+          {
+            "artifact_id": "source-admission-paste-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-local-file-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-virtual-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-remote-uri-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-directory-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-archive-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-text-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "Prior token estimates are invalid and no stale context is reused.",
+            "reason_code": "model_profile_changed",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-log-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-pdf-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-docx-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-spreadsheet-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-image-ocr-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-duplicate-1",
+            "disposition": "duplicate",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "duplicate_content",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-stale-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-inaccessible-1",
+            "disposition": "unavailable",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unavailable",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-admission-unsupported-1",
+            "disposition": "unsupported",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_unsupported",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-malformed_package-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-active_content-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-external_relationship-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-archive_traversal-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-decompression_bomb-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-mixed_encoding-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-concurrent_replacement-1",
+            "disposition": "stale",
+            "ranges": [],
+            "reason": "Synthetic lineage fixture; no model delivery or product parser support is claimed.",
+            "reason_code": "source_not_current",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-truncation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-cancellation-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          },
+          {
+            "artifact_id": "source-adversarial-parser_failure-1",
+            "disposition": "omitted",
+            "ranges": [],
+            "reason": "The complete synthetic manifest accounts for this source without selecting it.",
+            "reason_code": "scenario_not_selected",
+            "token_count": 0
+          }
+        ],
+        "manifest_sha256": "dec1c31568547f242d4cc53f6071b1a5c9955184f05eed4adc874fd66ec4224b",
+        "model_profile_id": "model-profile-fixture-b",
+        "reserved_output_tokens": 32,
+        "safety_margin_tokens": 16,
+        "schema_version": 2,
+        "session_id": "session-context-accounting-v1",
+        "source_artifact_count": 26,
+        "total_input_tokens": 0,
+        "turn_id": "turn-model_profile_change-v1"
+      },
+      "context_window_tokens": 48,
+      "execution_claim": "synthetic_manifest_contract_only",
+      "expected_target_disposition": "omitted",
+      "model_profile_change_invalidates_prior_manifest": true,
+      "prior_model_profile_id": "model-profile-fixture-a",
+      "requested_input_tokens": 0,
+      "scenario_id": "model_profile_change",
+      "target_artifact_id": "source-admission-text-1",
+      "target_fixture_id": "admission-text-1"
+    }
+  ],
+  "schema_version": 1,
+  "source_count_per_manifest": 26,
+  "status": "synthetic-context-accounting-contract",
+  "suite_id": "engineering-context-accounting-v1",
+  "suite_sha256": "9a736bde140b0df6ec3b77912968755958ec1a0d6c2f536804600926b2c8320b",
+  "synthetic_only": true,
+  "task_id": "2.4.2.2"
+}
