@@ -1,0 +1,404 @@
+{
+  "archive": {
+    "byte_length": 17598,
+    "entry_count": 11,
+    "format": "zip-stored",
+    "path": "fixtures/artifact-evaluation/v1/document-variant-corpus-v1.zip",
+    "sha256": "22bdfddd651c165edd1fd51a91d8c6203b9aa5a76896ed485d10e2ce1b3aaa33"
+  },
+  "case_count": 14,
+  "cases": [
+    {
+      "archive_entry": "documents/pdf/digital.pdf",
+      "byte_identity": {
+        "byte_length": 617,
+        "sha256": "a1f807e3c039eb707bcbaf19e4a2b8a0be2c992ba629b434824af0b83cc08991"
+      },
+      "category": "pdf_digital",
+      "expected_disposition": "captured",
+      "expected_sections": [
+        {
+          "content_sha256": "2ee841d0bcfd74c5d62b1bfdabec2e0b7f7f796330aa79f91631c49de5eeea25",
+          "coordinate": "pdf-page-1",
+          "section_id": "page-1-text",
+          "state": "exact_text"
+        }
+      ],
+      "fixture_id": "eval-pdf-digital-v1",
+      "format": "pdf",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "a1f807e3c039eb707bcbaf19e4a2b8a0be2c992ba629b434824af0b83cc08991",
+        "warning_codes": []
+      }
+    },
+    {
+      "archive_entry": "documents/pdf/scanned.pdf",
+      "byte_identity": {
+        "byte_length": 664,
+        "sha256": "03101855275c94e10ea84e0ac2654e365a2cd7d35b14ce705512415ffc896809"
+      },
+      "category": "pdf_scanned",
+      "expected_disposition": "partial",
+      "expected_sections": [
+        {
+          "content_sha256": "582c9a7a554b3d3012d96736c812f45d9d811d076f01148d55c1f90488ac35e1",
+          "coordinate": "pdf-page-1",
+          "section_id": "page-1-image",
+          "state": "ocr_required"
+        }
+      ],
+      "fixture_id": "eval-pdf-scanned-v1",
+      "format": "pdf",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "03101855275c94e10ea84e0ac2654e365a2cd7d35b14ce705512415ffc896809",
+        "warning_codes": [
+          "ocr_required"
+        ]
+      }
+    },
+    {
+      "archive_entry": "documents/pdf/mixed.pdf",
+      "byte_identity": {
+        "byte_length": 1036,
+        "sha256": "1f77774ec37908d35cd4b252705f408c1a4f5c6337536e770309fd0df1b9f0ce"
+      },
+      "category": "pdf_mixed",
+      "expected_disposition": "partial",
+      "expected_sections": [
+        {
+          "content_sha256": "ae6c402f73d557d3c1056826837cfbd492ed975688fb96dcb5fc0e64bffb0574",
+          "coordinate": "pdf-page-1",
+          "section_id": "page-1-text",
+          "state": "exact_text"
+        },
+        {
+          "content_sha256": "a89ef844240e4d656e825c2fb70090e9f27e11e67e7c9b75c506e120ea0734c4",
+          "coordinate": "pdf-page-2",
+          "section_id": "page-2-image",
+          "state": "ocr_required"
+        }
+      ],
+      "fixture_id": "eval-pdf-mixed-v1",
+      "format": "pdf",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "1f77774ec37908d35cd4b252705f408c1a4f5c6337536e770309fd0df1b9f0ce",
+        "warning_codes": [
+          "ocr_required_for_page_2"
+        ]
+      }
+    },
+    {
+      "archive_entry": "documents/pdf/encrypted.pdf",
+      "byte_identity": {
+        "byte_length": 573,
+        "sha256": "ec3f39071450f5893da91729865819295c9a0d8efc6bdc02293627876256ee41"
+      },
+      "category": "pdf_encrypted",
+      "expected_disposition": "unsupported",
+      "expected_sections": [],
+      "fixture_id": "eval-pdf-encrypted-v1",
+      "format": "pdf",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "ec3f39071450f5893da91729865819295c9a0d8efc6bdc02293627876256ee41",
+        "warning_codes": [
+          "encrypted_content_no_bypass"
+        ]
+      }
+    },
+    {
+      "archive_entry": "documents/pdf/malformed.pdf",
+      "byte_identity": {
+        "byte_length": 586,
+        "sha256": "d5917e3419959a420c0b8aee2afe145122ee649b8f645e2388da076a7a558e28"
+      },
+      "category": "pdf_malformed",
+      "expected_disposition": "failed",
+      "expected_sections": [],
+      "fixture_id": "eval-pdf-malformed-v1",
+      "format": "pdf",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "d5917e3419959a420c0b8aee2afe145122ee649b8f645e2388da076a7a558e28",
+        "warning_codes": [
+          "malformed_truncated_pdf"
+        ]
+      }
+    },
+    {
+      "archive_entry": null,
+      "byte_identity": {
+        "byte_length": 33554432,
+        "sha256": "1f86a027340f2437e01a23c288f0f413645fe68c772341e301a1d823eb83f694"
+      },
+      "category": "pdf_oversized",
+      "expected_disposition": "denied",
+      "expected_sections": [],
+      "fixture_id": "eval-pdf-oversized-v1",
+      "format": "pdf",
+      "generated_from_seed": true,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "1f86a027340f2437e01a23c288f0f413645fe68c772341e301a1d823eb83f694",
+        "warning_codes": [
+          "source_byte_ceiling_exceeded"
+        ]
+      }
+    },
+    {
+      "archive_entry": "documents/docx/structured.docx",
+      "byte_identity": {
+        "byte_length": 1409,
+        "sha256": "bfae3d024c5e759cd1ea82af5bbe88a0ca57664dea8143ce9730418bbbd73598"
+      },
+      "category": "docx_structured",
+      "expected_disposition": "captured",
+      "expected_sections": [
+        {
+          "content_sha256": "e9da1c7fce031a99920522916a4c6c33b1a77bef7ac05dec3c71218627da35f7",
+          "coordinate": "package:word/document.xml",
+          "section_id": "word-document-root",
+          "state": "exact_structure"
+        }
+      ],
+      "fixture_id": "eval-docx-structured-v1",
+      "format": "docx",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "bfae3d024c5e759cd1ea82af5bbe88a0ca57664dea8143ce9730418bbbd73598",
+        "warning_codes": []
+      }
+    },
+    {
+      "archive_entry": "documents/docx/malformed.docx",
+      "byte_identity": {
+        "byte_length": 1386,
+        "sha256": "9c2efd6a5af124fd595bbc7391454379df079b73f281301c4e6c819bc94e3654"
+      },
+      "category": "docx_malformed",
+      "expected_disposition": "failed",
+      "expected_sections": [],
+      "fixture_id": "eval-docx-malformed-v1",
+      "format": "docx",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "9c2efd6a5af124fd595bbc7391454379df079b73f281301c4e6c819bc94e3654",
+        "warning_codes": [
+          "malformed_truncated_package"
+        ]
+      }
+    },
+    {
+      "archive_entry": null,
+      "byte_identity": {
+        "byte_length": 33554432,
+        "sha256": "b63984b286c34430bb35546f7dc5f276f0543fc651c5d3e7de6270f8fde29b5d"
+      },
+      "category": "docx_oversized",
+      "expected_disposition": "denied",
+      "expected_sections": [],
+      "fixture_id": "eval-docx-oversized-v1",
+      "format": "docx",
+      "generated_from_seed": true,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "b63984b286c34430bb35546f7dc5f276f0543fc651c5d3e7de6270f8fde29b5d",
+        "warning_codes": [
+          "source_byte_ceiling_exceeded"
+        ]
+      }
+    },
+    {
+      "archive_entry": "documents/docx/relationship-hostile.docx",
+      "byte_identity": {
+        "byte_length": 1890,
+        "sha256": "fb7d802d87d37f546cb4eab06df631f924f93b1bc1f713daef2f66ee06ebfc1d"
+      },
+      "category": "docx_relationship_hostile",
+      "expected_disposition": "denied",
+      "expected_sections": [],
+      "fixture_id": "eval-docx-relationship-hostile-v1",
+      "format": "docx",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "fb7d802d87d37f546cb4eab06df631f924f93b1bc1f713daef2f66ee06ebfc1d",
+        "warning_codes": [
+          "external_relationship_blocked"
+        ]
+      }
+    },
+    {
+      "archive_entry": "documents/xlsx/structured.xlsx",
+      "byte_identity": {
+        "byte_length": 2479,
+        "sha256": "6cccaf7afc0cf8652cf1c028ec40fef4a1a65f401fd6d666fb5baa7b8a5de53f"
+      },
+      "category": "xlsx_structured",
+      "expected_disposition": "captured",
+      "expected_sections": [
+        {
+          "content_sha256": "96c5be6d609c9394f908aeaa0cfd7342c74b4dee5a84540368d41528ec099f61",
+          "coordinate": "package:xl/worksheets/sheet1.xml",
+          "section_id": "sheet-ledger",
+          "state": "exact_structure"
+        }
+      ],
+      "fixture_id": "eval-xlsx-structured-v1",
+      "format": "xlsx",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "6cccaf7afc0cf8652cf1c028ec40fef4a1a65f401fd6d666fb5baa7b8a5de53f",
+        "warning_codes": []
+      }
+    },
+    {
+      "archive_entry": "documents/xlsx/malformed.xlsx",
+      "byte_identity": {
+        "byte_length": 2456,
+        "sha256": "d19263e02c7287173f43d9936beea4cf2eb28f4b9fd17425a9718b39ab53847d"
+      },
+      "category": "xlsx_malformed",
+      "expected_disposition": "failed",
+      "expected_sections": [],
+      "fixture_id": "eval-xlsx-malformed-v1",
+      "format": "xlsx",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "d19263e02c7287173f43d9936beea4cf2eb28f4b9fd17425a9718b39ab53847d",
+        "warning_codes": [
+          "malformed_truncated_package"
+        ]
+      }
+    },
+    {
+      "archive_entry": null,
+      "byte_identity": {
+        "byte_length": 33554432,
+        "sha256": "8168d07b80296c15785309cc9fe3c6c22c3091c616990aa24e3ba83aa2253172"
+      },
+      "category": "xlsx_oversized",
+      "expected_disposition": "denied",
+      "expected_sections": [],
+      "fixture_id": "eval-xlsx-oversized-v1",
+      "format": "xlsx",
+      "generated_from_seed": true,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "8168d07b80296c15785309cc9fe3c6c22c3091c616990aa24e3ba83aa2253172",
+        "warning_codes": [
+          "source_byte_ceiling_exceeded"
+        ]
+      }
+    },
+    {
+      "archive_entry": "documents/xlsx/relationship-hostile.xlsx",
+      "byte_identity": {
+        "byte_length": 2994,
+        "sha256": "c1602136d7b157091dddba5c7245989138a220aacb70df6ff4a50f84d381e794"
+      },
+      "category": "xlsx_relationship_hostile",
+      "expected_disposition": "denied",
+      "expected_sections": [],
+      "fixture_id": "eval-xlsx-relationship-hostile-v1",
+      "format": "xlsx",
+      "generated_from_seed": false,
+      "provenance": {
+        "active_content_executed": false,
+        "external_relationship_fetched": false,
+        "generator_id": "artifact-evaluation-document-fixtures",
+        "generator_version": "1.0.0",
+        "source_sha256": "c1602136d7b157091dddba5c7245989138a220aacb70df6ff4a50f84d381e794",
+        "warning_codes": [
+          "external_relationship_blocked"
+        ]
+      }
+    }
+  ],
+  "corpus_id": "artifact-evaluation-document-variants-v1",
+  "generated_on": "2026-08-30",
+  "generator": {
+    "path": "scripts/artifact_evaluation_document_fixtures.py",
+    "sha256": "5c176284fbd9c03197c56db1c2bea284fc2766765b9fe6e2a66cc78b2d781bc6"
+  },
+  "manifest_sha256": "2bbecdf11b256bf02ce1c5aa108043fe657ade726f7ac9448ad7f1aaeeecb12c",
+  "network_access": false,
+  "oversized_recipe": {
+    "algorithm": "stream-repeated-format-block-v1",
+    "persisted_in_archive": false,
+    "seed": "agentmage-story-2.3-document-oversize-v1",
+    "target_byte_length": 33554432
+  },
+  "product_parser_support_claim": "none",
+  "required_categories": [
+    "pdf_digital",
+    "pdf_scanned",
+    "pdf_mixed",
+    "pdf_encrypted",
+    "pdf_malformed",
+    "pdf_oversized",
+    "docx_structured",
+    "docx_malformed",
+    "docx_oversized",
+    "docx_relationship_hostile",
+    "xlsx_structured",
+    "xlsx_malformed",
+    "xlsx_oversized",
+    "xlsx_relationship_hostile"
+  ],
+  "schema_version": 1,
+  "status": "synthetic-document-fixture-contract",
+  "synthetic_only": true,
+  "task_id": "2.3.1.2"
+}
