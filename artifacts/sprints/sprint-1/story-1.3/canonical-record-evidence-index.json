@@ -71,7 +71,7 @@
       "artifacts": [
         {
           "path": "kernel/contracts/src/engineering_records.rs",
-          "sha256": "242a1d7f9238ad59b74db2b62a64f0ced5ebd57abb49ba6379a71b020def9a02"
+          "sha256": "b77111302d4c4e642cc6654a0795c683568d241ff9175f5eeb56dadeb67f43a4"
         },
         {
           "path": "kernel/engine/src/engineering_records.rs",
@@ -354,7 +354,7 @@
       "artifacts": [
         {
           "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-gate-results.log",
-          "sha256": "1f31e47c0687561b6e153b9b304e682654abbed75f4197d5d9e31520a954026a"
+          "sha256": "6e4f3fe5f51dbce8cc7c34eca536c9f7b91e83b8f6cd608239005872c749d824"
         }
       ]
     }

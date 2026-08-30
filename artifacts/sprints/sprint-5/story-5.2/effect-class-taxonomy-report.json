@@ -1,29 +1,34 @@
 {
   "artifacts": [
     {
-      "byte_length": 115217,
+      "byte_length": 123230,
       "path": "kernel/contracts/src/engineering_records.rs",
-      "sha256": "242a1d7f9238ad59b74db2b62a64f0ced5ebd57abb49ba6379a71b020def9a02"
+      "sha256": "b77111302d4c4e642cc6654a0795c683568d241ff9175f5eeb56dadeb67f43a4"
     },
     {
-      "byte_length": 7172,
+      "byte_length": 8436,
       "path": "scripts/effect_class_taxonomy_evidence.py",
-      "sha256": "acf7a9d9eb7f73ff3d47048d7413198a0b6026958ad3214ac731a7849ad70fb0"
+      "sha256": "63319ba338e5d470223b241a10997e17ac7d8657eb4cfa347418e9d9b0a8050d"
     },
     {
-      "byte_length": 1990,
+      "byte_length": 2522,
       "path": "tests/test_effect_class_taxonomy_evidence.py",
-      "sha256": "9c6e11a044adaefbed1cddc6b0fca2fed55efc9b5a6beb9b77e975bf9c34edf4"
+      "sha256": "7dc42badb036ab9a514eb448afb76abfc70d0362100d1b5ceb050a03ebfba46d"
     },
     {
-      "byte_length": 3294,
+      "byte_length": 4956,
       "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-results.log",
-      "sha256": "647c4aefa60d9f59f1c16f86741a5e3e01661dd206f98db53132e6bb69da02a1"
+      "sha256": "0e62074a713286823b58406993c51e38d63c9f81b94ffb6bdb34ecb66b736f73"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-contracts engineering_records::step_execution_policy_tests::effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk --locked",
-    "cargo test -p agentmage-kernel-contracts engineering_records::step_execution_policy_tests::every_effect_class_admits_only_its_own_retry_classes --locked"
+    "cargo test -p agentmage-kernel-contracts engineering_records::step_execution_policy_tests::every_effect_class_admits_only_its_own_retry_classes --locked",
+    "cargo test -p agentmage-kernel-contracts engineering_records::step_execution_policy_tests::workflow_failure_taxonomy_has_one_exact_conservative_default_per_class --locked"
+  ],
+  "coverage_task_ids": [
+    "5.2.1.1",
+    "5.2.1.2"
   ],
   "effect_classes": [
     {
@@ -90,6 +95,64 @@
       ]
     }
   ],
+  "failure_classes": [
+    {
+      "class": "malformed_input",
+      "default_disposition": "reject_before_dispatch"
+    },
+    {
+      "class": "preflight",
+      "default_disposition": "reject_before_dispatch"
+    },
+    {
+      "class": "policy",
+      "default_disposition": "blocked_by_policy"
+    },
+    {
+      "class": "approval",
+      "default_disposition": "await_fresh_approval"
+    },
+    {
+      "class": "dependency",
+      "default_disposition": "await_dependency"
+    },
+    {
+      "class": "transient",
+      "default_disposition": "eligible_fresh_attempt"
+    },
+    {
+      "class": "conflict",
+      "default_disposition": "reconcile_then_decide"
+    },
+    {
+      "class": "timeout",
+      "default_disposition": "reconcile_then_decide"
+    },
+    {
+      "class": "cancellation",
+      "default_disposition": "terminal_cancelled"
+    },
+    {
+      "class": "crash",
+      "default_disposition": "reconcile_then_decide"
+    },
+    {
+      "class": "uncertain_effect",
+      "default_disposition": "reconcile_then_decide"
+    },
+    {
+      "class": "verification",
+      "default_disposition": "terminal_failure"
+    },
+    {
+      "class": "resource",
+      "default_disposition": "terminal_resource_exhausted"
+    },
+    {
+      "class": "internal",
+      "default_disposition": "terminal_failure"
+    }
+  ],
   "generated_on": "2026-08-30",
   "independent_dimensions": {
     "authority_class_count": 8,
@@ -119,11 +182,13 @@
   "required_markers": [
     "effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk ... ok",
     "every_effect_class_admits_only_its_own_retry_classes ... ok",
+    "workflow_failure_taxonomy_has_one_exact_conservative_default_per_class ... ok",
     "test result: ok. 1 passed; 0 failed"
   ],
   "schema_version": 1,
   "status": "pass-local-contract-evidence",
   "story_id": "5.2",
   "task_id": "5.2.1.1",
-  "taxonomy_version": 1
+  "taxonomy_version": 1,
+  "workflow_failure_taxonomy_version": 1
 }

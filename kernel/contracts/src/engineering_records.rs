@@ -638,6 +638,112 @@ pub enum CanonicalRetryClass {
     UserDecisionRequired,
 }
 
+/// Current version of the closed supervisory failure taxonomy.
+pub const WORKFLOW_FAILURE_TAXONOMY_VERSION: u16 = 1;
+
+/// Supervisory failure class used to choose one conservative default disposition.
+///
+/// This taxonomy is deliberately separate from [`CanonicalFailureClass`], which
+/// records lower-level executor and provider causes. A low-level cause cannot mint
+/// retry authority or bypass the supervisory disposition.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalWorkflowFailureClass {
+    /// Input cannot be parsed or validated against its closed contract.
+    MalformedInput,
+    /// A deterministic preflight did not admit the attempt.
+    Preflight,
+    /// Current policy denied the requested operation.
+    Policy,
+    /// Required approval is absent, denied, expired, or stale.
+    Approval,
+    /// A declared dependency is not currently satisfied.
+    Dependency,
+    /// A classified transient condition may be eligible for a fresh attempt.
+    Transient,
+    /// Current state conflicts with the attempt's verified preconditions.
+    Conflict,
+    /// The attempt exceeded its declared time bound.
+    Timeout,
+    /// The user or trusted runtime cancelled the attempt.
+    Cancellation,
+    /// The supervised worker or runtime crashed.
+    Crash,
+    /// Whether an attempted effect occurred cannot be established.
+    UncertainEffect,
+    /// Deterministic verification did not establish the required postcondition.
+    Verification,
+    /// A declared resource ceiling was exhausted.
+    Resource,
+    /// A bounded internal invariant failed without a more specific class.
+    Internal,
+}
+
+/// Conservative action selected from a supervisory failure class before any
+/// operation-specific retry eligibility is considered.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalFailureDisposition {
+    /// Refuse before dispatch and return a typed diagnostic.
+    RejectBeforeDispatch,
+    /// Remain blocked by current policy.
+    BlockedByPolicy,
+    /// Wait for a new exact approval; no prior approval is reusable.
+    AwaitFreshApproval,
+    /// Wait for the named dependency to become current.
+    AwaitDependency,
+    /// Permit later policy to evaluate a fresh attempt; this is not execution authority.
+    EligibleFreshAttempt,
+    /// Reconcile current state before choosing any next action.
+    ReconcileThenDecide,
+    /// Terminate as user/runtime cancellation.
+    TerminalCancelled,
+    /// Terminate with one structured failure diagnosis.
+    TerminalFailure,
+    /// Terminate with the exact exhausted resource diagnosis.
+    TerminalResourceExhausted,
+}
+
+impl CanonicalWorkflowFailureClass {
+    /// Every supervisory failure class in stable taxonomy order.
+    pub const ALL: [Self; 14] = [
+        Self::MalformedInput,
+        Self::Preflight,
+        Self::Policy,
+        Self::Approval,
+        Self::Dependency,
+        Self::Transient,
+        Self::Conflict,
+        Self::Timeout,
+        Self::Cancellation,
+        Self::Crash,
+        Self::UncertainEffect,
+        Self::Verification,
+        Self::Resource,
+        Self::Internal,
+    ];
+
+    /// Exact conservative disposition selected without model interpretation.
+    #[must_use]
+    pub const fn default_disposition(self) -> CanonicalFailureDisposition {
+        match self {
+            Self::MalformedInput | Self::Preflight => {
+                CanonicalFailureDisposition::RejectBeforeDispatch
+            }
+            Self::Policy => CanonicalFailureDisposition::BlockedByPolicy,
+            Self::Approval => CanonicalFailureDisposition::AwaitFreshApproval,
+            Self::Dependency => CanonicalFailureDisposition::AwaitDependency,
+            Self::Transient => CanonicalFailureDisposition::EligibleFreshAttempt,
+            Self::Conflict | Self::Timeout | Self::Crash | Self::UncertainEffect => {
+                CanonicalFailureDisposition::ReconcileThenDecide
+            }
+            Self::Cancellation => CanonicalFailureDisposition::TerminalCancelled,
+            Self::Verification | Self::Internal => CanonicalFailureDisposition::TerminalFailure,
+            Self::Resource => CanonicalFailureDisposition::TerminalResourceExhausted,
+        }
+    }
+}
+
 impl CanonicalEffectClass {
     /// Every effect class in stable taxonomy order.
     pub const ALL: [Self; 7] = [
@@ -2162,8 +2268,9 @@ mod source_locator_tests {
 mod step_execution_policy_tests {
     use super::{
         CanonicalApprovalRequirement, CanonicalDiagnosticDisclosure, CanonicalEffectClass,
-        CanonicalExecutionBudgets, CanonicalIdempotencyRequirement, CanonicalRetryClass,
-        CanonicalStepExecutionPolicy, CanonicalVerificationRequirement,
+        CanonicalExecutionBudgets, CanonicalFailureDisposition, CanonicalIdempotencyRequirement,
+        CanonicalRetryClass, CanonicalStepExecutionPolicy, CanonicalVerificationRequirement,
+        CanonicalWorkflowFailureClass,
     };
     use crate::{
         AuthorityClass, EvidenceKind, PlanId, PlanStep, PlanStepId, PlanStepState, ToolRiskLevel,
@@ -2392,6 +2499,112 @@ mod step_execution_policy_tests {
                 serde_json::from_value::<CanonicalEffectClass>(serde_json::json!(rejected))
                     .is_err(),
                 "unsupported effect class {rejected:?} must fail closed",
+            );
+        }
+    }
+
+    #[test]
+    fn workflow_failure_taxonomy_has_one_exact_conservative_default_per_class() {
+        use CanonicalFailureDisposition as Disposition;
+        use CanonicalWorkflowFailureClass as Failure;
+
+        let expected = [
+            (
+                Failure::MalformedInput,
+                "malformed_input",
+                Disposition::RejectBeforeDispatch,
+            ),
+            (
+                Failure::Preflight,
+                "preflight",
+                Disposition::RejectBeforeDispatch,
+            ),
+            (Failure::Policy, "policy", Disposition::BlockedByPolicy),
+            (
+                Failure::Approval,
+                "approval",
+                Disposition::AwaitFreshApproval,
+            ),
+            (
+                Failure::Dependency,
+                "dependency",
+                Disposition::AwaitDependency,
+            ),
+            (
+                Failure::Transient,
+                "transient",
+                Disposition::EligibleFreshAttempt,
+            ),
+            (
+                Failure::Conflict,
+                "conflict",
+                Disposition::ReconcileThenDecide,
+            ),
+            (
+                Failure::Timeout,
+                "timeout",
+                Disposition::ReconcileThenDecide,
+            ),
+            (
+                Failure::Cancellation,
+                "cancellation",
+                Disposition::TerminalCancelled,
+            ),
+            (Failure::Crash, "crash", Disposition::ReconcileThenDecide),
+            (
+                Failure::UncertainEffect,
+                "uncertain_effect",
+                Disposition::ReconcileThenDecide,
+            ),
+            (
+                Failure::Verification,
+                "verification",
+                Disposition::TerminalFailure,
+            ),
+            (
+                Failure::Resource,
+                "resource",
+                Disposition::TerminalResourceExhausted,
+            ),
+            (Failure::Internal, "internal", Disposition::TerminalFailure),
+        ];
+        assert_eq!(super::WORKFLOW_FAILURE_TAXONOMY_VERSION, 1);
+        assert_eq!(
+            CanonicalWorkflowFailureClass::ALL,
+            expected.map(|(class, _, _)| class)
+        );
+        for (class, name, disposition) in expected {
+            assert_eq!(class.default_disposition(), disposition);
+            let encoded = serde_json::to_string(&class).expect("failure class serializes");
+            assert_eq!(encoded, format!("\"{name}\""));
+            assert_eq!(
+                serde_json::from_str::<CanonicalWorkflowFailureClass>(&encoded)
+                    .expect("failure class deserializes"),
+                class,
+            );
+        }
+        assert_eq!(
+            CanonicalWorkflowFailureClass::Transient.default_disposition(),
+            Disposition::EligibleFreshAttempt,
+        );
+        for class in [
+            Failure::Conflict,
+            Failure::Timeout,
+            Failure::Crash,
+            Failure::UncertainEffect,
+        ] {
+            assert_eq!(
+                class.default_disposition(),
+                Disposition::ReconcileThenDecide
+            );
+        }
+        for rejected in ["custom", "*", "inherited", "model_created", "unknown", ""] {
+            assert!(
+                serde_json::from_value::<CanonicalWorkflowFailureClass>(serde_json::json!(
+                    rejected
+                ))
+                .is_err(),
+                "unsupported failure class {rejected:?} must fail closed",
             );
         }
     }

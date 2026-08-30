@@ -5,6 +5,7 @@ import unittest
 
 from scripts.effect_class_taxonomy_evidence import (
     EFFECT_CLASSES,
+    FAILURE_CLASSES,
     MARKERS,
     TRUTH,
     expected_report,
@@ -32,6 +33,15 @@ class EffectClassTaxonomyEvidenceTests(unittest.TestCase):
         self.assertIn("widened", validate_report(changed)[0])
         changed = copy.deepcopy(expected_report())
         changed["effect_classes"][-1]["approval_required"] = False
+        self.assertIn("widened", validate_report(changed)[0])
+
+    def test_failure_class_or_default_disposition_mutation_is_rejected(self) -> None:
+        self.assertEqual(len(FAILURE_CLASSES), 14)
+        changed = copy.deepcopy(expected_report())
+        changed["failure_classes"][0]["class"] = "custom"
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["failure_classes"][10]["default_disposition"] = "eligible_fresh_attempt"
         self.assertIn("widened", validate_report(changed)[0])
 
     def test_product_truth_cannot_be_promoted(self) -> None:

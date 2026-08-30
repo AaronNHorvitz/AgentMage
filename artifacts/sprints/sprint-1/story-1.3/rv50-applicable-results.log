@@ -1,6 +1,5 @@
 $ cargo test -p agentmage-kernel-engine engineering_records::tests --locked
-   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.83s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
 running 8 tests
@@ -107,7 +106,7 @@ $ cargo test -p agentmage-host runtime_parity_tests --locked
    Compiling agentmage-capability-knowledge v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/capabilities/knowledge)
    Compiling agentmage-platform-linux v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/platforms/linux)
    Compiling agentmage-host v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/shells/host)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.75s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.89s
      Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
 
 running 2 tests
@@ -135,7 +134,7 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
 
 $ cargo test -p agentmage-host headless::tests::replay_resume_cancellation_and_transport_failure_do_not_duplicate_launch --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
      Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
 
 running 1 test

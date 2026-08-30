@@ -1346,9 +1346,23 @@ an effect or treating approval as reusable authority.
     hash-binds the implementation, evidence gate, five mutation tests, and raw Rust results; it
     records zero product runtime, tool effects, authority minting, network calls, platform support,
     or release claims. The evidence checker is enrolled in the mandatory schema gate.
-  - [ ] **Sub-task 5.2.1.2:** Implement malformed-input, preflight, policy, approval, dependency,
+  - [x] **Sub-task 5.2.1.2:** Implement malformed-input, preflight, policy, approval, dependency,
     transient, conflict, timeout, cancellation, crash, uncertain-effect, verification, resource,
-    and internal failure classes with exact default dispositions.
+    and internal failure classes with exact default dispositions. Evidence: the canonical contract
+    adds versioned [`CanonicalWorkflowFailureClass`](kernel/contracts/src/engineering_records.rs)
+    and `CanonicalFailureDisposition` types without replacing the existing lower-level executor and
+    provider cause taxonomy. Exactly 14 supervisory classes map exhaustively to one conservative
+    default: malformed input and preflight reject before dispatch; policy blocks; approval waits for
+    a fresh approval; dependency waits; transient is only eligible for later fresh-attempt
+    evaluation; conflict, timeout, crash, and uncertain effect require reconciliation; cancellation,
+    verification/internal failure, and resource exhaustion terminate with their exact typed result.
+    `EligibleFreshAttempt` explicitly carries no execution or retry authority. A focused Rust test
+    round-trips every exact class, verifies the complete default table, and rejects custom, wildcard,
+    inherited, model-created, unknown, and empty classes. The refreshed
+    [`effect-class-taxonomy-report.json`](artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json)
+    now covers both Sub-tasks 5.2.1.1 and 5.2.1.2, retains three passing Rust command results, and
+    rejects class, disposition, unsafe-retry, approval, evidence, and product-truth mutations while
+    recording zero runtime, effect, authority, network, platform-support, or release claims.
   - [ ] **Sub-task 5.2.1.3:** Reject custom, wildcard, inherited, omitted, or model-created classes
     and require every registered tool operation to map exactly once.
 - [ ] **Task 5.2.2 - Compile retry and repair eligibility**

@@ -34,10 +34,19 @@ COMMANDS: Final = (
         "engineering_records::step_execution_policy_tests::every_effect_class_admits_only_its_own_retry_classes",
         "--locked",
     ),
+    (
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-kernel-contracts",
+        "engineering_records::step_execution_policy_tests::workflow_failure_taxonomy_has_one_exact_conservative_default_per_class",
+        "--locked",
+    ),
 )
 MARKERS: Final = (
     "effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk ... ok",
     "every_effect_class_admits_only_its_own_retry_classes ... ok",
+    "workflow_failure_taxonomy_has_one_exact_conservative_default_per_class ... ok",
     "test result: ok. 1 passed; 0 failed",
 )
 EFFECT_CLASSES: Final = (
@@ -84,6 +93,22 @@ EFFECT_CLASSES: Final = (
         "retry_classes": ["never", "user_decision_required"],
     },
 )
+FAILURE_CLASSES: Final = (
+    ("malformed_input", "reject_before_dispatch"),
+    ("preflight", "reject_before_dispatch"),
+    ("policy", "blocked_by_policy"),
+    ("approval", "await_fresh_approval"),
+    ("dependency", "await_dependency"),
+    ("transient", "eligible_fresh_attempt"),
+    ("conflict", "reconcile_then_decide"),
+    ("timeout", "reconcile_then_decide"),
+    ("cancellation", "terminal_cancelled"),
+    ("crash", "reconcile_then_decide"),
+    ("uncertain_effect", "reconcile_then_decide"),
+    ("verification", "terminal_failure"),
+    ("resource", "terminal_resource_exhausted"),
+    ("internal", "terminal_failure"),
+)
 TRUTH: Final = {
     "synthetic_data_only": True,
     "product_runtime_executed": False,
@@ -115,10 +140,16 @@ def expected_report() -> dict[str, Any]:
         "record_type": "agentmage-effect-class-taxonomy-evidence",
         "story_id": "5.2",
         "task_id": "5.2.1.1",
+        "coverage_task_ids": ["5.2.1.1", "5.2.1.2"],
         "generated_on": "2026-08-30",
         "status": "pass-local-contract-evidence",
         "taxonomy_version": 1,
         "effect_classes": [dict(item) for item in EFFECT_CLASSES],
+        "workflow_failure_taxonomy_version": 1,
+        "failure_classes": [
+            {"class": failure_class, "default_disposition": disposition}
+            for failure_class, disposition in FAILURE_CLASSES
+        ],
         "independent_dimensions": {
             "effect_class_count": 7,
             "authority_class_count": 8,
@@ -209,7 +240,7 @@ def main() -> int:
         for failure in failures:
             print(f"effect-class taxonomy evidence validation failed: {failure}", file=sys.stderr)
         return 1
-    print("Sub-task 5.2.1.1 effect-class taxonomy evidence validated")
+    print("Sub-tasks 5.2.1.1-5.2.1.2 effect and failure taxonomy evidence validated")
     return 0
 
 

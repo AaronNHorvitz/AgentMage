@@ -1,11 +1,11 @@
 $ cargo test -p agentmage-kernel-contracts engineering_records::step_execution_policy_tests::effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_contracts-6eb6c44b4ce1fddc)
 
 running 1 test
 test engineering_records::step_execution_policy_tests::effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.00s
 
      Running tests/contract_family.rs (target/debug/deps/contract_family-e6be84c9440ed9d0)
 
@@ -38,13 +38,52 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
 $ cargo test -p agentmage-kernel-contracts engineering_records::step_execution_policy_tests::every_effect_class_admits_only_its_own_retry_classes --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_contracts-6eb6c44b4ce1fddc)
 
 running 1 test
 test engineering_records::step_execution_policy_tests::every_effect_class_admits_only_its_own_retry_classes ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 65 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.00s
+
+     Running tests/contract_family.rs (target/debug/deps/contract_family-e6be84c9440ed9d0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/engineering_runtime_record_types.rs (target/debug/deps/engineering_runtime_record_types-111fa984dc6ae74e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/grant_target_contract.rs (target/debug/deps/grant_target_contract-c2fbf4cd5e305ded)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests/path_corpus.rs (target/debug/deps/path_corpus-4ba5289de3479052)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/platform_path_contract.rs (target/debug/deps/platform_path_contract-8818aa1a953159c2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+$ cargo test -p agentmage-kernel-contracts engineering_records::step_execution_policy_tests::workflow_failure_taxonomy_has_one_exact_conservative_default_per_class --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_contracts-6eb6c44b4ce1fddc)
+
+running 1 test
+test engineering_records::step_execution_policy_tests::workflow_failure_taxonomy_has_one_exact_conservative_default_per_class ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 66 filtered out; finished in 0.00s
 
      Running tests/contract_family.rs (target/debug/deps/contract_family-e6be84c9440ed9d0)
 
