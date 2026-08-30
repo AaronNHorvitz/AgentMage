@@ -2959,7 +2959,7 @@ fn validate_write_checkpoint_start(
 }
 
 fn open_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalStoreError> {
-    let connection = open_connection(path, key)?;
+    let connection = open_connection_for_supported_schema(path, key, SCHEMA_VERSION)?;
     claim_exclusive_writer(&connection)?;
     verify_runtime_configuration(&connection)?;
     migrate(&connection)?;
@@ -2974,7 +2974,7 @@ fn open_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalSt
 }
 
 fn open_current_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, OperationalStoreError> {
-    let connection = open_connection(path, key)?;
+    let connection = open_connection_for_supported_schema(path, key, SCHEMA_VERSION)?;
     claim_exclusive_writer(&connection)?;
     verify_runtime_configuration(&connection)?;
     let version: i64 = connection
@@ -2992,6 +2992,21 @@ fn open_current_keyed(path: &Path, key: &[u8]) -> Result<OperationalStore, Opera
     };
     let _ = store.load_authority()?;
     Ok(store)
+}
+
+fn open_connection_for_supported_schema(
+    path: &Path,
+    key: &[u8],
+    supported_schema_version: i64,
+) -> Result<Connection, OperationalStoreError> {
+    let connection = open_connection(path, key)?;
+    let retained_schema_version: i64 = connection
+        .pragma_query_value(None, "user_version", |row| row.get(0))
+        .map_err(|_| OperationalStoreError::MigrationFailed)?;
+    if retained_schema_version > supported_schema_version {
+        return Err(OperationalStoreError::MigrationFailed);
+    }
+    Ok(connection)
 }
 
 fn open_connection(path: &Path, key: &[u8]) -> Result<Connection, OperationalStoreError> {
@@ -5421,8 +5436,8 @@ mod tests {
         OperationalStoreKeyLifecycle, OperationalStoreKeyProvider, RetentionAssignment,
         RetentionDisposition, RetentionHoldKind, RetentionRecordFamily, RetentionSensitivity,
         SCHEMA_VERSION, WorkflowStateMaterialization, ZERO_SHA256, is_linux_held_descriptor_path,
-        open_connection, prepare_new_store_file, sha256_file, sha256_hex, sqlite_artifact_paths,
-        verify_runtime_configuration,
+        open_connection, open_connection_for_supported_schema, prepare_new_store_file, sha256_file,
+        sha256_hex, sqlite_artifact_paths, verify_runtime_configuration,
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::context_management::finalize_checkpoint;
@@ -8881,6 +8896,62 @@ mod tests {
             .collect::<Vec<_>>();
         assert_eq!(history, fixture_history);
         drop(store);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn older_client_refuses_current_store_before_writer_claim_and_preserves_records() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let key = [83; 32];
+        let store = OperationalStore::open(&path, &observation(), &mut TestKey(key))
+            .expect("current store opens");
+        let record = br#"{"schema_version":16,"kind":"newer-record"}"#;
+        let record_sha256 = sha256_hex(record);
+        store
+            .connection
+            .execute(
+                "INSERT INTO sessions VALUES (
+                    'newer-session', 'newer-profile', 'active', 1, 1, ?1, ?2
+                )",
+                params![&record_sha256, record],
+            )
+            .expect("newer record fixture");
+        drop(store);
+        assert!(
+            sqlite_artifact_paths(&path)[1..]
+                .iter()
+                .all(|sidecar| !sidecar.exists())
+        );
+        let encrypted_before = fs::read(&path).expect("encrypted preimage");
+
+        assert!(matches!(
+            open_connection_for_supported_schema(&path, &key, SCHEMA_VERSION - 1),
+            Err(OperationalStoreError::MigrationFailed)
+        ));
+
+        assert_eq!(
+            fs::read(&path).expect("encrypted postimage"),
+            encrypted_before
+        );
+        assert!(
+            sqlite_artifact_paths(&path)[1..]
+                .iter()
+                .all(|sidecar| !sidecar.exists())
+        );
+        let current = OperationalStore::open(&path, &observation(), &mut TestKey(key))
+            .expect("current client reopens preserved store");
+        let retained: (String, Vec<u8>) = current
+            .connection
+            .query_row(
+                "SELECT record_sha256, record_json FROM sessions
+                 WHERE session_id = 'newer-session'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .expect("preserved newer record");
+        assert_eq!(retained, (record_sha256, record.to_vec()));
+        drop(current);
         fs::remove_dir_all(directory).expect("cleanup");
     }
 

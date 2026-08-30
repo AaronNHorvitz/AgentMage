@@ -21,9 +21,9 @@
       "sha256": "b34c1c3b248cd91aef81c955e06cc49b2793bdf8816c6b34ef722eee28955b31"
     },
     {
-      "byte_length": 388991,
+      "byte_length": 391772,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "30dca69104d431ff21646c228b3f143866da526d0d175ea798ff11ebfa633e3c"
+      "sha256": "d25b1231c50f17093f6d91b4ba8d1a05bb49c9a2f0d5c9cae92ca4eb9d5fb5df"
     },
     {
       "byte_length": 2828,
@@ -43,7 +43,7 @@
     {
       "byte_length": 17136,
       "path": "artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log",
-      "sha256": "9b463c3c4ce7149737b0161b745624510fb2b47d88d033088f49640524487fbd"
+      "sha256": "617173da75688d992886f92107c71320a4cdc541a3d728cb8c328a272728a670"
     }
   ],
   "commands": [

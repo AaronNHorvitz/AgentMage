@@ -1,0 +1,73 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 391772,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "d25b1231c50f17093f6d91b4ba8d1a05bb49c9a2f0d5c9cae92ca4eb9d5fb5df"
+    },
+    {
+      "byte_length": 12823,
+      "path": "kernel/contracts/tests/engineering_runtime_record_types.rs",
+      "sha256": "87868f9cfd64d08a88996b9ad47b6d26ff9f35f961283c39b2012d07e5ae4a8f"
+    },
+    {
+      "byte_length": 1363,
+      "path": "docs/verification/story-11-2-storage-downgrade-refusal-evidence.md",
+      "sha256": "d17135722a7ee2cb3102ff6bdc60ddb5765e2b3686996bac8d8191590c08545b"
+    },
+    {
+      "byte_length": 7659,
+      "path": "scripts/storage_downgrade_refusal_evidence.py",
+      "sha256": "aab98170475c484704cf2b36875f33a87b9b1acbfcdc4319de80b3223dffa8d4"
+    },
+    {
+      "byte_length": 2216,
+      "path": "tests/test_storage_downgrade_refusal_evidence.py",
+      "sha256": "6f73be53c0b5deb0e078b64e466467a76dcbd3a35d74941b1d2139f3c904ee8d"
+    },
+    {
+      "byte_length": 10148,
+      "path": "artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-results.log",
+      "sha256": "be1a4f3bca79ee175df26076677d2feee3ccd2f36e86cf87cd7dc1b73545d9f6"
+    }
+  ],
+  "canonical_store": "operational-store",
+  "commands": [
+    "cargo test -p agentmage-kernel-engine operational_store::tests::older_client_refuses_current_store_before_writer_claim_and_preserves_records --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::future_schema_and_page_corruption_are_refused --locked",
+    "cargo test -p agentmage-kernel-contracts every_runtime_record_family_rejects_unsupported_versions --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "automatic_reverse_migration_allowed": false,
+    "encrypted_store_byte_preservation_complete": true,
+    "new_family_lifecycle_coverage_complete": false,
+    "partial_interpretation_allowed": false,
+    "record_deletion_or_rewrite_allowed": false,
+    "release_claim": "none",
+    "schema_refusal_before_writer_claim_complete": true,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true,
+    "unsupported_record_family_refusal_complete": true
+  },
+  "record_type": "agentmage-storage-downgrade-refusal-evidence",
+  "refusal_order": [
+    "open-keyed-connection",
+    "read-user-version",
+    "refuse-unsupported-version",
+    "claim-exclusive-writer",
+    "migrate-supported-store",
+    "interpret-records"
+  ],
+  "required_markers": [
+    "older_client_refuses_current_store_before_writer_claim_and_preserves_records ... ok",
+    "future_schema_and_page_corruption_are_refused ... ok",
+    "every_runtime_record_family_rejects_unsupported_versions ... ok"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-downgrade-refusal",
+  "story_id": "11.2",
+  "task_id": "11.2.3.2"
+}

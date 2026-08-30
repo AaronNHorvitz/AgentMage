@@ -2065,8 +2065,19 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     and [`storage-migration-compatibility-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log)
     make no downgrade-record, complete new-family lifecycle, Story, Sprint, platform, packaging, or
     release completion claim.
-  - [ ] **Sub-task 11.2.3.2:** Define downgrade behavior: older clients refuse unsupported records
-    without deleting, rewriting, or partially interpreting them.
+  - [x] **Sub-task 11.2.3.2:** Define downgrade behavior: older clients refuse unsupported records
+    without deleting, rewriting, or partially interpreting them. Completed locally on Linux on
+    2026-08-30. Keyed store open now reads and refuses an unsupported `user_version` before claiming
+    exclusive writer ownership, selecting WAL, running migrations, projecting integrity, or loading
+    records. A simulated client one schema version behind leaves the encrypted store byte-identical,
+    creates no WAL or shared-memory sidecar, and the current client subsequently reads the exact
+    retained digest and record bytes. The cross-family contract test also rejects unsupported
+    versions for every Engineering Runtime record family rather than dropping fields or partially
+    decoding. Strict kernel Clippy and five evidence mutation/ordering/overclaim tests pass. Retained
+    [`storage-downgrade-refusal-report.json`](artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-report.json)
+    and [`storage-downgrade-refusal-results.log`](artifacts/sprints/sprint-11/story-11.2/storage-downgrade-refusal-results.log)
+    make no reverse-migration, complete new-family lifecycle, Story, Sprint, platform, packaging, or
+    release completion claim.
   - [ ] **Sub-task 11.2.3.3:** Extend backup, export, restore, retention, erasure, canary, and
     diagnostics coverage to every new record family without storing raw secrets or source bytes in
     evidence.
