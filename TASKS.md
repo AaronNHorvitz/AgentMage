@@ -1331,9 +1331,21 @@ an effect or treating approval as reusable authority.
 ##### Tasks and Sub-tasks
 
 - [ ] **Task 5.2.1 - Define closed effect and failure taxonomies**
-  - [ ] **Sub-task 5.2.1.1:** Implement read-only, idempotent-write, conditional,
+  - [x] **Sub-task 5.2.1.1:** Implement read-only, idempotent-write, conditional,
     non-idempotent, destructive, external, and unknown effect classes independent of
-    `AuthorityClass` and `ToolRiskLevel`.
+    `AuthorityClass` and `ToolRiskLevel`. Evidence: the single canonical
+    [`CanonicalEffectClass`](kernel/contracts/src/engineering_records.rs) contract now exposes
+    explicit taxonomy version 1 and a stable exhaustive `ALL` set for exactly the seven required
+    classes. Its exhaustive compile-time matrix admits only `never` plus the class-appropriate
+    read or reconciled-new-attempt disposition; non-idempotent, destructive, external, and unknown
+    classes require approval and prohibit automatic retry. A focused Rust contract test round-trips
+    every exact wire name, rejects custom, wildcard, inherited, model-created, and empty values, and
+    verifies unchanged effect semantics across all 224 combinations of seven effect classes, eight
+    independent `AuthorityClass` values, and four independent `ToolRiskLevel` values. The retained
+    [`effect-class-taxonomy-report.json`](artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json)
+    hash-binds the implementation, evidence gate, five mutation tests, and raw Rust results; it
+    records zero product runtime, tool effects, authority minting, network calls, platform support,
+    or release claims. The evidence checker is enrolled in the mandatory schema gate.
   - [ ] **Sub-task 5.2.1.2:** Implement malformed-input, preflight, policy, approval, dependency,
     transient, conflict, timeout, cancellation, crash, uncertain-effect, verification, resource,
     and internal failure classes with exact default dispositions.

@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+import copy
+import unittest
+
+from scripts.effect_class_taxonomy_evidence import (
+    EFFECT_CLASSES,
+    MARKERS,
+    TRUTH,
+    expected_report,
+    validate_raw,
+    validate_report,
+)
+
+
+class EffectClassTaxonomyEvidenceTests(unittest.TestCase):
+    def test_current_report_is_exact_and_closed(self) -> None:
+        self.assertEqual(validate_report(expected_report()), [])
+        self.assertEqual(len(EFFECT_CLASSES), 7)
+
+    def test_class_or_matrix_mutation_is_rejected(self) -> None:
+        changed = copy.deepcopy(expected_report())
+        changed["effect_classes"][0]["class"] = "custom"
+        self.assertIn("stale", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["independent_dimensions"]["authority_or_risk_can_infer_effect"] = True
+        self.assertIn("widened", validate_report(changed)[0])
+
+    def test_unsafe_retry_or_approval_mutation_is_rejected(self) -> None:
+        changed = copy.deepcopy(expected_report())
+        changed["effect_classes"][-1]["automatic_retry"] = True
+        self.assertIn("widened", validate_report(changed)[0])
+        changed = copy.deepcopy(expected_report())
+        changed["effect_classes"][-1]["approval_required"] = False
+        self.assertIn("widened", validate_report(changed)[0])
+
+    def test_product_truth_cannot_be_promoted(self) -> None:
+        changed = copy.deepcopy(expected_report())
+        changed["product_truth"]["product_runtime_executed"] = True
+        self.assertIn("widened", validate_report(changed)[0])
+        self.assertEqual(TRUTH["release_claim"], "none")
+
+    def test_raw_results_require_every_marker_and_reject_failure_output(self) -> None:
+        valid = "\n".join(MARKERS)
+        self.assertEqual(validate_raw(valid), [])
+        self.assertTrue(validate_raw(valid.replace(MARKERS[0], "")))
+        self.assertTrue(validate_raw(f"{valid}\ntest result: FAILED"))
+
+
+if __name__ == "__main__":
+    unittest.main()

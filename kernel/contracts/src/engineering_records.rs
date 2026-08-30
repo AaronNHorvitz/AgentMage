@@ -597,7 +597,14 @@ pub struct CanonicalExecutionBudgets {
     pub cost_minor_units: u64,
 }
 
+/// Current version of the closed effect-class taxonomy.
+pub const EFFECT_CLASS_TAXONOMY_VERSION: u16 = 1;
+
 /// Effect class of one workflow step.
+///
+/// This class describes repeatability and external state semantics only. It is
+/// independent of both [`crate::AuthorityClass`] and [`crate::ToolRiskLevel`];
+/// neither authority nor review risk can infer or widen an effect class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CanonicalEffectClass {
@@ -632,6 +639,17 @@ pub enum CanonicalRetryClass {
 }
 
 impl CanonicalEffectClass {
+    /// Every effect class in stable taxonomy order.
+    pub const ALL: [Self; 7] = [
+        Self::ReadOnly,
+        Self::IdempotentWrite,
+        Self::Conditional,
+        Self::NonIdempotent,
+        Self::Destructive,
+        Self::External,
+        Self::Unknown,
+    ];
+
     /// Retry classes this effect class admits.
     ///
     /// This is the closed effect/retry matrix from Decision 0042. The match is
@@ -2147,17 +2165,9 @@ mod step_execution_policy_tests {
         CanonicalExecutionBudgets, CanonicalIdempotencyRequirement, CanonicalRetryClass,
         CanonicalStepExecutionPolicy, CanonicalVerificationRequirement,
     };
-    use crate::{EvidenceKind, PlanId, PlanStep, PlanStepId, PlanStepState};
-
-    const ALL_EFFECT_CLASSES: [CanonicalEffectClass; 7] = [
-        CanonicalEffectClass::ReadOnly,
-        CanonicalEffectClass::IdempotentWrite,
-        CanonicalEffectClass::Conditional,
-        CanonicalEffectClass::NonIdempotent,
-        CanonicalEffectClass::Destructive,
-        CanonicalEffectClass::External,
-        CanonicalEffectClass::Unknown,
-    ];
+    use crate::{
+        AuthorityClass, EvidenceKind, PlanId, PlanStep, PlanStepId, PlanStepState, ToolRiskLevel,
+    };
 
     const ALL_RETRY_CLASSES: [CanonicalRetryClass; 4] = [
         CanonicalRetryClass::Never,
@@ -2294,7 +2304,7 @@ mod step_execution_policy_tests {
 
     #[test]
     fn every_effect_class_admits_only_its_own_retry_classes() {
-        for effect in ALL_EFFECT_CLASSES {
+        for effect in CanonicalEffectClass::ALL {
             let permitted = effect.permitted_retry_classes();
             assert!(
                 permitted.contains(&CanonicalRetryClass::Never),
@@ -2326,6 +2336,64 @@ mod step_execution_policy_tests {
         assert!(!CanonicalEffectClass::Unknown.permits_automatic_retry());
         assert!(CanonicalEffectClass::Destructive.requires_approval());
         assert!(CanonicalEffectClass::External.requires_approval());
+    }
+
+    #[test]
+    fn effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk() {
+        let expected = [
+            (CanonicalEffectClass::ReadOnly, "read_only"),
+            (CanonicalEffectClass::IdempotentWrite, "idempotent_write"),
+            (CanonicalEffectClass::Conditional, "conditional"),
+            (CanonicalEffectClass::NonIdempotent, "non_idempotent"),
+            (CanonicalEffectClass::Destructive, "destructive"),
+            (CanonicalEffectClass::External, "external"),
+            (CanonicalEffectClass::Unknown, "unknown"),
+        ];
+        assert_eq!(super::EFFECT_CLASS_TAXONOMY_VERSION, 1);
+        assert_eq!(
+            CanonicalEffectClass::ALL,
+            expected.map(|(effect, _)| effect)
+        );
+
+        for (effect, name) in expected {
+            let encoded = serde_json::to_string(&effect).expect("effect class serializes");
+            assert_eq!(encoded, format!("\"{name}\""));
+            assert_eq!(
+                serde_json::from_str::<CanonicalEffectClass>(&encoded)
+                    .expect("effect class deserializes"),
+                effect,
+            );
+            for authority in AuthorityClass::ALL {
+                for risk in [
+                    ToolRiskLevel::Low,
+                    ToolRiskLevel::Moderate,
+                    ToolRiskLevel::High,
+                    ToolRiskLevel::Critical,
+                ] {
+                    let independent = (effect, authority, risk);
+                    let round_trip: (CanonicalEffectClass, AuthorityClass, ToolRiskLevel) =
+                        serde_json::from_str(
+                            &serde_json::to_string(&independent)
+                                .expect("independent classifications serialize"),
+                        )
+                        .expect("independent classifications deserialize");
+                    assert_eq!(round_trip, independent);
+                    assert_eq!(
+                        round_trip.0.permitted_retry_classes(),
+                        effect.permitted_retry_classes()
+                    );
+                    assert_eq!(round_trip.0.requires_approval(), effect.requires_approval());
+                }
+            }
+        }
+
+        for rejected in ["custom", "*", "inherited", "model_created", ""] {
+            assert!(
+                serde_json::from_value::<CanonicalEffectClass>(serde_json::json!(rejected))
+                    .is_err(),
+                "unsupported effect class {rejected:?} must fail closed",
+            );
+        }
     }
 
     #[test]

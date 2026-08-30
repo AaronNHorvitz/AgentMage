@@ -1,0 +1,129 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 115217,
+      "path": "kernel/contracts/src/engineering_records.rs",
+      "sha256": "242a1d7f9238ad59b74db2b62a64f0ced5ebd57abb49ba6379a71b020def9a02"
+    },
+    {
+      "byte_length": 7172,
+      "path": "scripts/effect_class_taxonomy_evidence.py",
+      "sha256": "acf7a9d9eb7f73ff3d47048d7413198a0b6026958ad3214ac731a7849ad70fb0"
+    },
+    {
+      "byte_length": 1990,
+      "path": "tests/test_effect_class_taxonomy_evidence.py",
+      "sha256": "9c6e11a044adaefbed1cddc6b0fca2fed55efc9b5a6beb9b77e975bf9c34edf4"
+    },
+    {
+      "byte_length": 3294,
+      "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-results.log",
+      "sha256": "647c4aefa60d9f59f1c16f86741a5e3e01661dd206f98db53132e6bb69da02a1"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-contracts engineering_records::step_execution_policy_tests::effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk --locked",
+    "cargo test -p agentmage-kernel-contracts engineering_records::step_execution_policy_tests::every_effect_class_admits_only_its_own_retry_classes --locked"
+  ],
+  "effect_classes": [
+    {
+      "approval_required": false,
+      "automatic_retry": true,
+      "class": "read_only",
+      "retry_classes": [
+        "never",
+        "recoverable_read"
+      ]
+    },
+    {
+      "approval_required": false,
+      "automatic_retry": true,
+      "class": "idempotent_write",
+      "retry_classes": [
+        "never",
+        "conditional_after_reconciliation"
+      ]
+    },
+    {
+      "approval_required": false,
+      "automatic_retry": true,
+      "class": "conditional",
+      "retry_classes": [
+        "never",
+        "conditional_after_reconciliation"
+      ]
+    },
+    {
+      "approval_required": true,
+      "automatic_retry": false,
+      "class": "non_idempotent",
+      "retry_classes": [
+        "never",
+        "user_decision_required"
+      ]
+    },
+    {
+      "approval_required": true,
+      "automatic_retry": false,
+      "class": "destructive",
+      "retry_classes": [
+        "never",
+        "user_decision_required"
+      ]
+    },
+    {
+      "approval_required": true,
+      "automatic_retry": false,
+      "class": "external",
+      "retry_classes": [
+        "never",
+        "user_decision_required"
+      ]
+    },
+    {
+      "approval_required": true,
+      "automatic_retry": false,
+      "class": "unknown",
+      "retry_classes": [
+        "never",
+        "user_decision_required"
+      ]
+    }
+  ],
+  "generated_on": "2026-08-30",
+  "independent_dimensions": {
+    "authority_class_count": 8,
+    "authority_or_risk_can_infer_effect": false,
+    "cartesian_cases": 224,
+    "effect_class_count": 7,
+    "tool_risk_level_count": 4
+  },
+  "product_truth": {
+    "authority_minted": false,
+    "native_platform_claim": "none",
+    "network_calls": 0,
+    "product_runtime_executed": false,
+    "product_support_claim": "none",
+    "release_claim": "none",
+    "synthetic_data_only": true,
+    "tool_effect_executed": false
+  },
+  "record_type": "agentmage-effect-class-taxonomy-evidence",
+  "rejected_class_shapes": [
+    "custom",
+    "wildcard",
+    "inherited",
+    "model_created",
+    "empty"
+  ],
+  "required_markers": [
+    "effect_taxonomy_is_closed_versioned_and_independent_of_authority_and_risk ... ok",
+    "every_effect_class_admits_only_its_own_retry_classes ... ok",
+    "test result: ok. 1 passed; 0 failed"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-contract-evidence",
+  "story_id": "5.2",
+  "task_id": "5.2.1.1",
+  "taxonomy_version": 1
+}
