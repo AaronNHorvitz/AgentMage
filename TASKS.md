@@ -1951,7 +1951,7 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 11.2.1 - Add source-artifact materializations**
+- [x] **Task 11.2.1 - Add source-artifact materializations**
   - [x] **Sub-task 11.2.1.1:** Add normalized source manifest, origin, reference, extraction,
     section, provenance, lexical-index, context-disposition, cache-input, retention, and lifecycle
     records over existing encrypted payload references. Evidence: migration [`0012-source-artifact-materializations.sql`](kernel/engine/migrations/operational-store/0012-source-artifact-materializations.sql) adds eleven `STRICT`, relational, digest-shaped, record-bounded materializations and advances the immutable SQLCipher schema/history to version 12. Persisted manifest and retention rows bind the exact existing migration-0007 `runtime_artifacts` identity, payload SHA-256, and byte size as one foreign-key tuple; no source byte or payload table is added. Manifest/provenance insertion is deferred-transaction safe, section parents stay in one extraction, context sections stay in one source, and retention/lifecycle values are closed. Focused tests retain one complete synthetic family over exactly one pre-existing encrypted payload and reject unsupported-reference, non-producing-extraction, nonterminal-disposition, and mismatched-retention mutations; schema-1 upgrade, seeded migration recovery, strict Clippy, and five evidence-integrity/overclaim tests pass. The retained [`source-materialization-schema-report.json`](artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-report.json) and [`source-materialization-schema-results.log`](artifacts/sprints/sprint-11/story-11.2/source-materialization-schema-results.log) do not claim typed publication or deduplication; the latter has its own follow-on evidence. They leave refresh/invalidation, lifecycle transactions, full crash coverage, Story, Sprint, and release completion to their later owners.
@@ -1970,8 +1970,27 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
     [`source-content-deduplication-report.json`](artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-report.json)
     and [`source-content-deduplication-results.log`](artifacts/sprints/sprint-11/story-11.2/source-content-deduplication-results.log)
     explicitly leave refresh/invalidation/lifecycle transactions, Story, Sprint, and release completion open.
-  - [ ] **Sub-task 11.2.1.3:** Implement atomic refresh, transitive invalidation, expiry, deletion,
-    hold, and garbage-collection transactions with no orphan payload or live reference.
+  - [x] **Sub-task 11.2.1.3:** Implement atomic refresh, transitive invalidation, expiry, deletion,
+    hold, and garbage-collection transactions with no orphan payload or live reference. Evidence:
+    migration [`0014-source-lifecycle-transactions.sql`](kernel/engine/migrations/operational-store/0014-source-lifecycle-transactions.sql)
+    advances the immutable SQLCipher schema/history to version 14 and adds revisioned source state,
+    dependency, refresh, deadline, user/legal hold, release, and current-only derivative records
+    without adding a source-byte authority. The kernel [`source_lifecycle.rs`](kernel/engine/src/source_lifecycle.rs)
+    computes and invalidates the complete dependency closure in one immediate transaction, rejects
+    cycles and refresh-identity mismatches, filters stale sections/extractions/cache inputs/lexical
+    indexes/context dispositions, and couples explicit or expiry-driven release to the existing
+    runtime-artifact reference transition. Exact authority/revision checks and active holds fail
+    closed without reference-count drift; logical deletion precedes physical reconciliation, and the
+    migration-0007 collector preserves shared payloads until the last active reference releases.
+    Focused encrypted-store tests cover transitive refresh, stale views, user and legal holds, batch
+    expiry, explicit release, deletion, orphan collection, stale revisions, and rollback; an existing
+    runtime-artifact test independently proves shared-payload preservation and last-reference
+    collection. Schema-1 upgrade, seeded migration recovery, strict Clippy, and five evidence
+    mutation/overclaim tests pass. The retained
+    [`source-lifecycle-transactions-report.json`](artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-report.json)
+    and [`source-lifecycle-transactions-results.log`](artifacts/sprints/sprint-11/story-11.2/source-lifecycle-transactions-results.log)
+    make no typed-publication, exhaustive source crash-campaign, Story, Sprint, platform, packaging,
+    or release-completion claim.
 - [ ] **Task 11.2.2 - Add workflow materializations**
   - [ ] **Sub-task 11.2.2.1:** Add plan-step policy, attempt, preflight, tool-call, idempotency-key,
     approval, receipt, verification, consumed-budget, recovery-decision, state-fingerprint, and

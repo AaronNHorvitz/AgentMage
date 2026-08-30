@@ -1829,7 +1829,7 @@ fn insert_initial_artifact_state(
     Ok(())
 }
 
-fn load_artifact_manifest(
+pub(crate) fn load_artifact_manifest(
     store: &OperationalStore,
     artifact_id: &RuntimeArtifactId,
 ) -> Result<RuntimeArtifactManifest, RuntimeArtifactStoreError> {
@@ -1960,7 +1960,7 @@ fn transition_artifact(
         .map_err(|_| RuntimeArtifactStoreError::Storage)
 }
 
-fn transition_artifact_in_transaction(
+pub(crate) fn transition_artifact_in_transaction(
     transaction: &Transaction<'_>,
     manifest: &RuntimeArtifactManifest,
     lifecycle: RuntimeArtifactLifecycleState,

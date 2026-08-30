@@ -148,6 +148,8 @@ pub mod runtime_projection;
 pub mod runtime_recovery;
 /// Bounded, configuration-bound session environment and provenance capture.
 pub mod session_environment;
+/// Atomic source refresh, invalidation, retention, hold, deletion, and collection.
+pub mod source_lifecycle;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.
 pub mod strict_local;
 /// Deterministic descriptive task intent, complexity, and risk classification.

@@ -52,7 +52,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_thirteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_fourteen_with_exact_history",
         "--locked",
     ),
     (
@@ -79,7 +79,7 @@ COMMANDS: Final = (
 MARKERS: Final = (
     "version_twelve_schema_is_normalized_closed_and_relational ... ok",
     "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
-    "version_one_upgrades_through_thirteen_with_exact_history ... ok",
+    "version_one_upgrades_through_fourteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 TRUTH: Final = {
@@ -113,7 +113,7 @@ def expected_report() -> dict[str, Any]:
         "generated_on": "2026-08-30",
         "status": "pass-local-structural-schema",
         "materialization_migration_version": 12,
-        "current_operational_store_schema_version": 13,
+        "current_operational_store_schema_version": 14,
         "normalized_tables": list(TABLES),
         "payload_authority": {
             "migration": "0007-runtime-artifacts.sql",
