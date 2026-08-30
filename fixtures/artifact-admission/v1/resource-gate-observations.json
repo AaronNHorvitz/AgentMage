@@ -1,0 +1,189 @@
+{
+  "all_owned_roots_removed": true,
+  "all_post_cleanup_residue_counts_zero": true,
+  "all_resource_boundaries_passed": true,
+  "all_workers_stopped": true,
+  "dependencies": [
+    {
+      "path": "fixtures/artifact-admission/v1/adversarial-manifest.json",
+      "sha256": "003c994e6a365e33d4c8a7fa3908f461f05c737b95e954d3e50fc3d0c4ffad44"
+    },
+    {
+      "path": "fixtures/artifact-admission/v1/context-delivery-receipts.json",
+      "sha256": "496e735ed260340f0fa42b10c936e2ce7f7695aa595bced2d984f0eff74f6c09"
+    }
+  ],
+  "generated_on": "2026-08-29",
+  "generator": {
+    "path": "scripts/engineering_artifact_resource_gate.py",
+    "sha256": "87aa331f65721224f4720b92733cbb766aa720a1ed2f3e898361abad07b939e5"
+  },
+  "lifecycle_observation_count": 4,
+  "lifecycle_observations": [
+    {
+      "cleanup_result": "verified_zero_residue",
+      "event": "denial",
+      "owned_root_removed": true,
+      "residue_after_cleanup": 0,
+      "residue_before_cleanup": 1,
+      "terminal_kind": "denied_before_dispatch",
+      "worker_stopped": true
+    },
+    {
+      "cleanup_result": "verified_zero_residue",
+      "event": "timeout",
+      "owned_root_removed": true,
+      "residue_after_cleanup": 0,
+      "residue_before_cleanup": 1,
+      "terminal_kind": "deadline_terminated",
+      "worker_stopped": true
+    },
+    {
+      "cleanup_result": "verified_zero_residue",
+      "event": "crash",
+      "owned_root_removed": true,
+      "residue_after_cleanup": 0,
+      "residue_before_cleanup": 1,
+      "terminal_kind": "worker_exit_73",
+      "worker_stopped": true
+    },
+    {
+      "cleanup_result": "verified_zero_residue",
+      "event": "cancellation",
+      "owned_root_removed": true,
+      "residue_after_cleanup": 0,
+      "residue_before_cleanup": 1,
+      "terminal_kind": "cancel_signal_terminated",
+      "worker_stopped": true
+    }
+  ],
+  "measurement_contract": {
+    "limits_are_inclusive": true,
+    "meter_kind": "request_scoped_exact_logical_meter_with_local_runtime_probes",
+    "next_unit_is_refused_before_effect": true,
+    "reason": "scheduler timing is observed for the gate but excluded from reproducible evidence",
+    "wall_clock_values_are_not_persisted": true
+  },
+  "platform_support_claim": "none",
+  "product_parser_executed": false,
+  "resource_observation_count": 10,
+  "resource_observations": [
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 64,
+      "dimension": "bytes",
+      "first_denied_attempt": 65,
+      "overflow_admitted": false,
+      "peak_admitted": 64,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_bytes",
+      "unit": "bytes"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 3,
+      "dimension": "pages",
+      "first_denied_attempt": 4,
+      "overflow_admitted": false,
+      "peak_admitted": 3,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_pages",
+      "unit": "pages"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 4,
+      "dimension": "rows",
+      "first_denied_attempt": 5,
+      "overflow_admitted": false,
+      "peak_admitted": 4,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_rows",
+      "unit": "rows"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 8,
+      "dimension": "cells",
+      "first_denied_attempt": 9,
+      "overflow_admitted": false,
+      "peak_admitted": 8,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_cells",
+      "unit": "cells"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 2,
+      "dimension": "files",
+      "first_denied_attempt": 3,
+      "overflow_admitted": false,
+      "peak_admitted": 2,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_files",
+      "unit": "files"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 2,
+      "dimension": "archive",
+      "first_denied_attempt": 3,
+      "overflow_admitted": false,
+      "peak_admitted": 2,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_archive",
+      "unit": "archive_entries"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 5,
+      "dimension": "time",
+      "first_denied_attempt": 6,
+      "overflow_admitted": false,
+      "peak_admitted": 5,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_time",
+      "unit": "elapsed_milliseconds"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 8192,
+      "dimension": "memory",
+      "first_denied_attempt": 12288,
+      "overflow_admitted": false,
+      "peak_admitted": 8192,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_memory",
+      "unit": "live_allocation_bytes"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 128,
+      "dimension": "disk",
+      "first_denied_attempt": 129,
+      "overflow_admitted": false,
+      "peak_admitted": 128,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_disk",
+      "unit": "materialized_bytes"
+    },
+    {
+      "boundary_behavior": "inclusive_ceiling_then_refuse_before_next_unit",
+      "ceiling": 1,
+      "dimension": "processes",
+      "first_denied_attempt": 2,
+      "overflow_admitted": false,
+      "peak_admitted": 1,
+      "runtime_probe": true,
+      "terminal_code": "resource_ceiling_processes",
+      "unit": "live_child_processes"
+    }
+  ],
+  "rv51_claim": "not_run",
+  "schema_version": 1,
+  "status": "synthetic-local-resource-campaign",
+  "suite_id": "engineering-artifact-resource-gate-v1",
+  "suite_sha256": "d82b7cf8ecf3ac38d684cd4b11a29030abba638329a5559cf30c0b611471e2c5",
+  "synthetic_only": true,
+  "task_id": "2.4.3.1"
+}
