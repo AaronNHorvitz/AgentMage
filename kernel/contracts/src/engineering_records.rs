@@ -2681,6 +2681,49 @@ mod step_execution_policy_tests {
     }
 
     #[test]
+    fn story_5_2_every_registered_operation_failure_pair_has_one_model_independent_disposition() {
+        use crate::GrantOperation;
+
+        let mut evaluated_pairs = 0_usize;
+        for operation in GrantOperation::ALL {
+            let effect = CanonicalEffectClass::for_operation(operation);
+            let permitted = effect.permitted_retry_classes();
+            assert_eq!(
+                permitted.len(),
+                2,
+                "{operation:?} must have one closed retry pair"
+            );
+            for failure in CanonicalWorkflowFailureClass::ALL {
+                let first = (effect, failure.default_disposition(), permitted);
+                let second = (
+                    CanonicalEffectClass::for_operation(operation),
+                    failure.default_disposition(),
+                    CanonicalEffectClass::for_operation(operation).permitted_retry_classes(),
+                );
+                assert_eq!(
+                    first, second,
+                    "{operation:?}/{failure:?} must be deterministic"
+                );
+                evaluated_pairs += 1;
+            }
+        }
+        assert_eq!(evaluated_pairs, 22 * 14);
+
+        for model_created in ["model_created", "custom", "*", "inherited", ""] {
+            assert!(
+                serde_json::from_value::<CanonicalEffectClass>(serde_json::json!(model_created))
+                    .is_err()
+            );
+            assert!(
+                serde_json::from_value::<CanonicalWorkflowFailureClass>(serde_json::json!(
+                    model_created
+                ))
+                .is_err()
+            );
+        }
+    }
+
+    #[test]
     fn unknown_and_missing_fields_are_rejected() {
         let encoded = serde_json::to_string(&policy_for(plan_step().plan_step_id))
             .expect("policy serializes");

@@ -1,11 +1,11 @@
 $ cargo test -p agentmage-kernel-engine --test workflow_definition --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
      Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
 
 running 8 tests
 test terminal_state_family_is_closed_and_nonterminal_states_do_not_leak_into_it ... ok
-test definition_digest_and_exact_entry_frontier_fail_closed ... ok
 test admits_an_exact_closed_graph_and_exposes_no_execution_authority ... ok
+test definition_digest_and_exact_entry_frontier_fail_closed ... ok
 test dependency_order_and_non_executable_steps_are_denied ... ok
 test policy_set_must_be_exact_and_identity_unique ... ok
 test preflight_postcondition_and_policy_integrity_mutations_are_denied ... ok
@@ -19,12 +19,12 @@ $ cargo test -p agentmage-kernel-engine --test workflow_identity --locked
 
 running 9 tests
 test issues_the_complete_identity_chain_without_execution_authority ... ok
-test approvals_receipts_and_verifications_are_fresh_single_issue_identities ... ok
 test policy_tampering_cannot_enable_a_retry ... ok
+test approvals_receipts_and_verifications_are_fresh_single_issue_identities ... ok
+test uncertain_effects_cannot_open_a_successor_until_safely_reconciled ... ok
+test ordinals_predecessors_and_terminal_order_are_exact ... ok
 test required_once_approval_is_fresh_initially_and_not_reissued_automatically ... ok
 test every_pre_effect_identity_is_globally_fresh_and_failed_issue_is_atomic ... ok
-test ordinals_predecessors_and_terminal_order_are_exact ... ok
-test uncertain_effects_cannot_open_a_successor_until_safely_reconciled ... ok
 test automatic_retry_is_forbidden_for_every_high_or_unknown_effect ... ok
 test concurrent_duplicate_issue_has_exactly_one_winner ... ok
 
@@ -35,18 +35,18 @@ $ cargo test -p agentmage-kernel-engine --test retry_admission --locked
 
 running 11 tests
 test conditional_retry_requires_current_safe_effect_reconciliation ... ok
+test complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok
 test required_idempotency_key_must_be_fresh_and_digest_bound ... ok
+test fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_grant ... ok
 test per_attempt_approval_must_be_current_exact_and_different_from_prior ... ok
 test unsafe_and_uncertain_effects_never_receive_automatic_new_attempts ... ok
-test fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_grant ... ok
-test complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok
 test every_preflight_and_reconciliation_field_mutation_denies_before_dispatch ... ok
-test racing_eligible_attempts_execute_once_and_uncertainty_is_sticky ... ok
 test every_attempt_identity_field_mutation_denies_before_dispatch ... ok
-test every_approval_field_mutation_denies_before_dispatch ... ok
+test racing_eligible_attempts_execute_once_and_uncertainty_is_sticky ... ok
 test every_effect_failure_and_budget_mutation_denies_before_dispatch ... ok
+test every_approval_field_mutation_denies_before_dispatch ... ok
 
-test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 $ cargo test -p agentmage-kernel-engine --test workflow_verifier --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
@@ -62,8 +62,7 @@ test changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states 
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine workflow_progress::tests --locked
-   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.85s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
 running 4 tests
@@ -72,7 +71,7 @@ test workflow_progress::tests::policy_identity_is_immutable_and_substitution_cha
 test workflow_progress::tests::non_adjacent_repeated_state_stops_at_the_exact_policy_limit ... ok
 test workflow_progress::tests::fingerprint_is_deterministic_complete_and_boundary_preserving ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 691 filtered out; finished in 0.00s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 702 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -176,5 +175,4 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 $ cargo clippy -p agentmage-kernel-engine -p agentmage-kernel-contracts --all-targets --all-features --locked -- -D warnings
-    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.25s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s

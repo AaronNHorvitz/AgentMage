@@ -66,9 +66,9 @@
       "sha256": "47554ef572d75b93b560e37dc6437188e3149653ca7fa32fdadaa0a277c55394"
     },
     {
-      "byte_length": 13164,
+      "byte_length": 13057,
       "path": "artifacts/sprints/sprint-5/story-5.3/workflow-adversarial-results.log",
-      "sha256": "c70d6c22702cfa922d70c959ffd19532ec1b9d3388df7a4585460f218c9a5d8c"
+      "sha256": "9dc349fce3d3fb15f689d5c261919642e04406691ae9e8b24a5c14011dd61b40"
     }
   ],
   "attack_families": [

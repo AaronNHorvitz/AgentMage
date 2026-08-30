@@ -1533,9 +1533,18 @@ an effect or treating approval as reusable authority.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 5.2.AC1:** Given any registered operation and failure, when retry policy is
+- [x] **Story AC 5.2.AC1:** Given any registered operation and failure, when retry policy is
   evaluated, then one closed disposition is returned from deterministic state and model output
-  cannot broaden it.
+  cannot broaden it. Evidence: a criterion-specific product regression traverses all 22 registered
+  operations and all 14 closed workflow failure classes. Every one of the 308 pairs repeatedly
+  yields the same operation-derived effect class, failure-derived conservative disposition, and
+  closed retry-class set. Unsupported custom, wildcard, inherited, model-created, unknown, and
+  empty classifications fail deserialization; registry callers cannot override the derived effect.
+  The retained 79-field mutation campaign covers every effect/retry and failure/uncertainty field
+  with zero dispatches. Five evidence mutation/omission/overclaim tests pass. This closes the
+  current pure contract, registry, and admission-policy criterion without model inference or a tool
+  effect, not native provider, cross-platform installed-product, independent-review, Story, Sprint,
+  packaging, or release gates.
 - [ ] **Story AC 5.2.AC2:** Given a prior effect attempt, when recovery is considered, then no old
   call or authority object is replayed and unsafe or uncertain effects remain blocked.
 - [ ] **Story AC 5.2.AC3:** Given repeated failures or no-progress state, when a declared budget is

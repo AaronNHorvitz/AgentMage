@@ -1,18 +1,19 @@
 $ cargo test -p agentmage-kernel-engine engineering_records::tests --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.53s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
 running 8 tests
-test engineering_records::tests::success_and_delivery_records_fail_closed_on_missing_proof ... ok
-test engineering_records::tests::every_canonical_record_family_has_one_existing_authority_route ... ok
-test engineering_records::tests::identity_content_and_graph_mutations_fail_closed ... ok
 test engineering_records::tests::capture_metadata_is_present_if_and_only_if_bytes_were_captured ... ok
-test engineering_records::tests::runtime_record_set_binds_request_task_session_source_workflow_and_proof ... ok
 test engineering_records::tests::canonical_digest_is_stable_and_requires_current_schema ... ok
+test engineering_records::tests::every_canonical_record_family_has_one_existing_authority_route ... ok
+test engineering_records::tests::success_and_delivery_records_fail_closed_on_missing_proof ... ok
+test engineering_records::tests::runtime_record_set_binds_request_task_session_source_workflow_and_proof ... ok
+test engineering_records::tests::identity_content_and_graph_mutations_fail_closed ... ok
 test engineering_records::tests::every_canonical_record_validates_before_artifact_serialization ... ok
 test engineering_records::tests::workflow_transition_table_is_closed_and_terminal_states_are_absorbing ... ok
 
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 687 filtered out; finished in 0.00s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 698 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -129,21 +130,14 @@ test every_declared_schema_failure_fails_before_canonical_publication ... ok
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
 $ cargo test -p agentmage-host runtime_parity_tests --locked
-   Compiling agentmage-kernel-contracts v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/contracts)
-   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-   Compiling agentmage-capability-repository-map v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/capabilities/repository-map)
-   Compiling agentmage-capability-knowledge v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/capabilities/knowledge)
-   Compiling agentmage-capability-read-only v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/capabilities/read-only)
-   Compiling agentmage-platform-linux v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/platforms/linux)
-   Compiling agentmage-host v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/shells/host)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 15.04s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
      Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
 
 running 2 tests
 test runtime_parity_tests::story_50_2_narrow_workflow_authority_rejects_every_broadening_without_execution ... ok
 test runtime_parity_tests::story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 157 filtered out; finished in 0.29s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 157 filtered out; finished in 0.27s
 
      Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
 
