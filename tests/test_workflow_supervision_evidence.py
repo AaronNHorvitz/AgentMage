@@ -11,7 +11,7 @@ class WorkflowSupervisionEvidenceTests(unittest.TestCase):
         report = expected_report()
         self.assertEqual(validate_report(report), [])
         self.assertEqual(len(FAILURE_CLASSES), 14)
-        self.assertEqual(len(report["budget_dimensions"]), 5)
+        self.assertEqual(len(report["budget_dimensions"]), 6)
 
     def test_dimension_or_failure_class_mutation_is_rejected(self) -> None:
         changed = copy.deepcopy(expected_report())

@@ -4,6 +4,10 @@ use std::fmt::Write as _;
 
 use sha2::{Digest, Sha256};
 
+use crate::workflow_budget::{
+    WorkflowBudgetError, WorkflowBudgetEvent, WorkflowBudgetLedger, WorkflowBudgetPolicy,
+};
+
 /// Maximum ordered fragments admitted for one proposed tool call.
 pub const MAX_TOOL_CALL_FRAGMENTS: usize = 1_024;
 /// Maximum assembled bytes admitted for one proposed tool call.
@@ -173,6 +177,15 @@ pub enum ToolCallRepairError {
     EffectAttemptAlreadyExists,
 }
 
+/// Closed failure from a repair operation that must also consume its independent workflow budget.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BudgetedToolCallRepairError {
+    /// The underlying deterministic normalization or model-repair policy denied the operation.
+    Repair(ToolCallRepairError),
+    /// The exact independent parser- or model-repair budget denied the operation.
+    Budget(WorkflowBudgetError),
+}
+
 /// Reassembles and normalizes a complete ordered call using only the closed lossless rules.
 pub fn normalize_tool_call(
     fragments: &[OrderedToolCallFragment],
@@ -226,6 +239,22 @@ pub fn normalize_tool_call(
     })
 }
 
+/// Performs deterministic parser repair only after reserving one independent parser-repair unit.
+///
+/// Normalization is evaluated first because it is pure. Invalid input consumes no budget; a valid
+/// normalization is returned only if the parser-repair and total-work charges both commit.
+pub fn normalize_tool_call_with_budget(
+    fragments: &[OrderedToolCallFragment],
+    budget_policy: &WorkflowBudgetPolicy,
+    budget_ledger: &mut WorkflowBudgetLedger,
+) -> Result<NormalizedToolCall, BudgetedToolCallRepairError> {
+    let normalized = normalize_tool_call(fragments).map_err(BudgetedToolCallRepairError::Repair)?;
+    budget_ledger
+        .consume(budget_policy, WorkflowBudgetEvent::ParserRepair, 1)
+        .map_err(BudgetedToolCallRepairError::Budget)?;
+    Ok(normalized)
+}
+
 /// Admits the one profile-bound repair only after deterministic normalization and schema failure.
 ///
 /// The caller must prove there has been no effect attempt. A successful result is merely a
@@ -265,6 +294,38 @@ pub fn admit_targeted_model_repair(
         normalized_call_sha256: normalized.sha256.clone(),
         repair_ordinal: 1,
     })
+}
+
+/// Admits one targeted model repair only after its independent budget charge commits.
+///
+/// All repair-policy checks run first and are pure. A denied repair consumes no budget, while an
+/// exhausted model-repair or total-work budget returns no admission.
+#[allow(clippy::too_many_arguments)]
+pub fn admit_targeted_model_repair_with_budget(
+    policy: &ModelRepairPolicy,
+    normalized: &NormalizedToolCall,
+    selected_model_profile_sha256: &str,
+    selected_tool_schema_sha256: &str,
+    exact_schema_rejected: bool,
+    previous_repair_count: u8,
+    effect_attempt_count: u32,
+    budget_policy: &WorkflowBudgetPolicy,
+    budget_ledger: &mut WorkflowBudgetLedger,
+) -> Result<TargetedModelRepairAdmission, BudgetedToolCallRepairError> {
+    let admission = admit_targeted_model_repair(
+        policy,
+        normalized,
+        selected_model_profile_sha256,
+        selected_tool_schema_sha256,
+        exact_schema_rejected,
+        previous_repair_count,
+        effect_attempt_count,
+    )
+    .map_err(BudgetedToolCallRepairError::Repair)?;
+    budget_ledger
+        .consume(budget_policy, WorkflowBudgetEvent::ModelRepair, 1)
+        .map_err(BudgetedToolCallRepairError::Budget)?;
+    Ok(admission)
 }
 
 const fn is_json_whitespace(byte: u8) -> bool {

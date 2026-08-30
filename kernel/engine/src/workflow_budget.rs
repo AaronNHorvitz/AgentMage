@@ -1,4 +1,4 @@
-//! Separate, immutable budgets for parser repair and workflow supervision.
+//! Separate, immutable budgets for parser repair, model repair, and workflow supervision.
 
 use std::fmt::Write as _;
 
@@ -22,6 +22,7 @@ pub struct WorkflowBudgetPolicy {
     policy_id: String,
     policy_sha256: String,
     parser_repairs: u64,
+    model_repairs: u64,
     step_attempts: u64,
     per_error_class: [u64; FAILURE_CLASS_COUNT],
     workflow_work: u64,
@@ -33,6 +34,7 @@ impl WorkflowBudgetPolicy {
     pub fn new(
         policy_id: String,
         parser_repairs: u64,
+        model_repairs: u64,
         step_attempts: u64,
         error_limits: &[ErrorClassBudgetLimit],
         workflow_work: u64,
@@ -58,6 +60,7 @@ impl WorkflowBudgetPolicy {
             policy_id,
             policy_sha256: String::new(),
             parser_repairs,
+            model_repairs,
             step_attempts,
             per_error_class,
             workflow_work,
@@ -83,6 +86,12 @@ impl WorkflowBudgetPolicy {
     #[must_use]
     pub const fn parser_repair_limit(&self) -> u64 {
         self.parser_repairs
+    }
+
+    /// Returns the inclusive targeted model-repair limit.
+    #[must_use]
+    pub const fn model_repair_limit(&self) -> u64 {
+        self.model_repairs
     }
 
     /// Returns the inclusive step-attempt limit.
@@ -112,6 +121,7 @@ impl WorkflowBudgetPolicy {
     const fn limit(&self, dimension: WorkflowBudgetDimension) -> u64 {
         match dimension {
             WorkflowBudgetDimension::ParserRepair => self.parser_repairs,
+            WorkflowBudgetDimension::ModelRepair => self.model_repairs,
             WorkflowBudgetDimension::StepAttempt => self.step_attempts,
             WorkflowBudgetDimension::ErrorClass(failure_class) => {
                 self.per_error_class[failure_class_index(failure_class)]
@@ -127,6 +137,8 @@ impl WorkflowBudgetPolicy {
 pub enum WorkflowBudgetEvent {
     /// One deterministic parser-repair operation.
     ParserRepair,
+    /// One admitted targeted model-repair operation.
+    ModelRepair,
     /// One newly opened step attempt.
     StepAttempt,
     /// One observed failure in its exact closed class.
@@ -140,6 +152,8 @@ pub enum WorkflowBudgetEvent {
 pub enum WorkflowBudgetDimension {
     /// Parser repair count.
     ParserRepair,
+    /// Targeted model repair count.
+    ModelRepair,
     /// Step attempt count.
     StepAttempt,
     /// Count for one closed failure class.
@@ -194,6 +208,7 @@ pub struct WorkflowBudgetLedger {
     policy_id: String,
     policy_sha256: String,
     parser_repairs: u64,
+    model_repairs: u64,
     step_attempts: u64,
     per_error_class: [u64; FAILURE_CLASS_COUNT],
     workflow_work: u64,
@@ -208,6 +223,7 @@ impl WorkflowBudgetLedger {
             policy_id: policy.policy_id.clone(),
             policy_sha256: policy.policy_sha256.clone(),
             parser_repairs: 0,
+            model_repairs: 0,
             step_attempts: 0,
             per_error_class: [0; FAILURE_CLASS_COUNT],
             workflow_work: 0,
@@ -268,6 +284,7 @@ impl WorkflowBudgetLedger {
     pub const fn usage(&self, dimension: WorkflowBudgetDimension) -> u64 {
         match dimension {
             WorkflowBudgetDimension::ParserRepair => self.parser_repairs,
+            WorkflowBudgetDimension::ModelRepair => self.model_repairs,
             WorkflowBudgetDimension::StepAttempt => self.step_attempts,
             WorkflowBudgetDimension::ErrorClass(failure_class) => {
                 self.per_error_class[failure_class_index(failure_class)]
@@ -286,6 +303,7 @@ impl WorkflowBudgetLedger {
     fn set_usage(&mut self, dimension: WorkflowBudgetDimension, value: u64) {
         match dimension {
             WorkflowBudgetDimension::ParserRepair => self.parser_repairs = value,
+            WorkflowBudgetDimension::ModelRepair => self.model_repairs = value,
             WorkflowBudgetDimension::StepAttempt => self.step_attempts = value,
             WorkflowBudgetDimension::ErrorClass(failure_class) => {
                 self.per_error_class[failure_class_index(failure_class)] = value;
@@ -299,6 +317,7 @@ impl WorkflowBudgetLedger {
 const fn event_dimension(event: WorkflowBudgetEvent) -> WorkflowBudgetDimension {
     match event {
         WorkflowBudgetEvent::ParserRepair => WorkflowBudgetDimension::ParserRepair,
+        WorkflowBudgetEvent::ModelRepair => WorkflowBudgetDimension::ModelRepair,
         WorkflowBudgetEvent::StepAttempt => WorkflowBudgetDimension::StepAttempt,
         WorkflowBudgetEvent::ErrorClass(failure_class) => {
             WorkflowBudgetDimension::ErrorClass(failure_class)
@@ -328,7 +347,7 @@ const fn failure_class_index(failure_class: CanonicalWorkflowFailureClass) -> us
 
 fn policy_digest(policy: &WorkflowBudgetPolicy) -> String {
     let mut digest = Sha256::new();
-    digest.update(b"agentmage.workflow-budget-policy.v1\0");
+    digest.update(b"agentmage.workflow-budget-policy.v2\0");
     digest.update(
         u64::try_from(policy.policy_id.len())
             .unwrap_or(u64::MAX)
@@ -336,6 +355,7 @@ fn policy_digest(policy: &WorkflowBudgetPolicy) -> String {
     );
     digest.update(policy.policy_id.as_bytes());
     digest.update(policy.parser_repairs.to_be_bytes());
+    digest.update(policy.model_repairs.to_be_bytes());
     digest.update(policy.step_attempts.to_be_bytes());
     for limit in policy.per_error_class {
         digest.update(limit.to_be_bytes());
@@ -373,8 +393,16 @@ mod tests {
     }
 
     fn policy() -> WorkflowBudgetPolicy {
-        WorkflowBudgetPolicy::new("budget-policy-1".to_owned(), 2, 3, &error_limits(2), 20, 2)
-            .expect("complete budget policy")
+        WorkflowBudgetPolicy::new(
+            "budget-policy-1".to_owned(),
+            2,
+            2,
+            3,
+            &error_limits(2),
+            20,
+            2,
+        )
+        .expect("complete budget policy")
     }
 
     #[test]
@@ -385,7 +413,13 @@ mod tests {
             .consume(&policy, WorkflowBudgetEvent::ParserRepair, 2)
             .expect("parser budget");
         assert_eq!(parser.dimension_remaining, 0);
+        assert_eq!(ledger.usage(WorkflowBudgetDimension::ModelRepair), 0);
         assert_eq!(ledger.usage(WorkflowBudgetDimension::StepAttempt), 0);
+        let model = ledger
+            .consume(&policy, WorkflowBudgetEvent::ModelRepair, 2)
+            .expect("model-repair budget");
+        assert_eq!(model.dimension_remaining, 0);
+        assert_eq!(ledger.usage(WorkflowBudgetDimension::ParserRepair), 2);
         ledger
             .consume(&policy, WorkflowBudgetEvent::StepAttempt, 1)
             .expect("step budget");
@@ -401,7 +435,7 @@ mod tests {
                 1
             );
         }
-        assert_eq!(ledger.usage(WorkflowBudgetDimension::WorkflowWork), 18);
+        assert_eq!(ledger.usage(WorkflowBudgetDimension::WorkflowWork), 20);
     }
 
     #[test]
@@ -409,13 +443,13 @@ mod tests {
         let mut missing = error_limits(1);
         missing.pop();
         assert_eq!(
-            WorkflowBudgetPolicy::new("budget-policy-1".to_owned(), 1, 1, &missing, 10, 1),
+            WorkflowBudgetPolicy::new("budget-policy-1".to_owned(), 1, 1, 1, &missing, 10, 1),
             Err(WorkflowBudgetError::InvalidPolicy),
         );
         let mut repeated = error_limits(1);
         repeated[13] = repeated[0];
         assert_eq!(
-            WorkflowBudgetPolicy::new("budget-policy-1".to_owned(), 1, 1, &repeated, 10, 1),
+            WorkflowBudgetPolicy::new("budget-policy-1".to_owned(), 1, 1, 1, &repeated, 10, 1),
             Err(WorkflowBudgetError::InvalidPolicy),
         );
     }
@@ -425,6 +459,7 @@ mod tests {
         let overflow_policy = WorkflowBudgetPolicy::new(
             "overflow-policy".to_owned(),
             u64::MAX,
+            1,
             1,
             &error_limits(1),
             u64::MAX,
@@ -451,7 +486,7 @@ mod tests {
         );
 
         let total_policy =
-            WorkflowBudgetPolicy::new("total-policy".to_owned(), 5, 5, &error_limits(5), 1, 5)
+            WorkflowBudgetPolicy::new("total-policy".to_owned(), 5, 5, 5, &error_limits(5), 1, 5)
                 .expect("total policy");
         let mut total = WorkflowBudgetLedger::new(&total_policy);
         total
@@ -471,9 +506,16 @@ mod tests {
     #[test]
     fn content_identity_is_immutable_and_substitution_is_denied() {
         let policy = policy();
-        let changed =
-            WorkflowBudgetPolicy::new("budget-policy-1".to_owned(), 3, 3, &error_limits(2), 20, 2)
-                .expect("changed policy");
+        let changed = WorkflowBudgetPolicy::new(
+            "budget-policy-1".to_owned(),
+            3,
+            2,
+            3,
+            &error_limits(2),
+            20,
+            2,
+        )
+        .expect("changed policy");
         assert_ne!(policy.policy_sha256(), changed.policy_sha256());
         let mut ledger = WorkflowBudgetLedger::new(&policy);
         assert_eq!(ledger.policy_sha256(), policy.policy_sha256());

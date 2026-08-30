@@ -102,6 +102,7 @@ def expected_report() -> dict[str, Any]:
         "status": "pass-local-contract-evidence",
         "budget_dimensions": [
             "parser_repair",
+            "model_repair",
             "step_attempt",
             "per_error_class",
             "workflow_work",

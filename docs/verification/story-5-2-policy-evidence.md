@@ -1,9 +1,9 @@
 # Story 5.2 Policy and Supervision Evidence
 
 This record consolidates the deterministic local evidence for effect classification, retry and
-repair admission, workflow budgets, repeated-state termination, mutation denial, and execution
-races. It uses synthetic data and makes no native-platform, provider, release, or external-effect
-claim.
+repair admission, independently accounted parser and model repair, workflow budgets,
+repeated-state termination, mutation denial, and execution races. It uses synthetic data and makes
+no native-platform, provider, release, or external-effect claim.
 
 ## Effect and retry decision table
 

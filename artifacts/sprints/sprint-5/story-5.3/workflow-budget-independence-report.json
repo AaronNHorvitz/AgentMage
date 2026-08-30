@@ -1,0 +1,95 @@
+{
+  "accounting_contract": {
+    "exhausted_dimension_mutates_any_counter": false,
+    "invalid_repair_consumes_budget": false,
+    "parser_and_model_repair_use_distinct_counters": true,
+    "policy_digest_binds_every_budget_limit": true,
+    "primary_and_total_work_charge_atomically": true,
+    "repeated_state_stop_mutates_budget_ledger": false,
+    "repeated_state_uses_separate_content_bound_policy": true,
+    "valid_model_repair_charged_before_admission": true,
+    "valid_parser_repair_charged_before_return": true
+  },
+  "artifacts": [
+    {
+      "byte_length": 18790,
+      "path": "kernel/engine/src/workflow_budget.rs",
+      "sha256": "073471b4773e882438f64900daf107ecd58e7d3a7e70528b6e13aa31ced4f49b"
+    },
+    {
+      "byte_length": 17154,
+      "path": "kernel/engine/src/workflow_progress.rs",
+      "sha256": "9c6f63d953fed91495184a09fd9c701997955fd82ff434bfa54096fa83d1833d"
+    },
+    {
+      "byte_length": 16731,
+      "path": "kernel/engine/src/tool_call_repair.rs",
+      "sha256": "d44af7103ffa8aaaa1696a610e4d0a5f4ae48ed537215ef70090759d3c4f311d"
+    },
+    {
+      "byte_length": 6584,
+      "path": "kernel/engine/tests/workflow_budget_independence.rs",
+      "sha256": "2ed2d1578352915d1e096902f91765e8f957b9b985a2a57e3bab3205a325405a"
+    },
+    {
+      "byte_length": 2012,
+      "path": "docs/verification/story-5-3-workflow-budget-evidence.md",
+      "sha256": "7705564d352a0dcfd9a213a7037853dd6edc179b5af4beba7e19028f853e9f43"
+    },
+    {
+      "byte_length": 6410,
+      "path": "scripts/workflow_budget_independence_evidence.py",
+      "sha256": "40b20f747cb2b07281602554b64f3282b8b011a81ae8a1c3c7962abb986ee98a"
+    },
+    {
+      "byte_length": 1394,
+      "path": "tests/test_workflow_budget_independence_evidence.py",
+      "sha256": "ca853ad64f475acf709118af455b598b2fd3599a7e1cc4b97ebf7cf50ea7da64"
+    },
+    {
+      "byte_length": 810,
+      "path": "artifacts/sprints/sprint-5/story-5.3/workflow-budget-independence-results.log",
+      "sha256": "4faffa7e7a5d882129582b3ff8c709a365fa836aefbf475abf063657ba0d5e1d"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test workflow_budget_independence --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-30",
+  "independent_limits": [
+    "parser_repair",
+    "model_repair",
+    "step_attempt",
+    "replan",
+    "repeated_state",
+    "workflow_work"
+  ],
+  "product_truth": {
+    "model_inference_executed": false,
+    "network_calls": 0,
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "record_type": "agentmage-workflow-budget-independence-evidence",
+  "requirements": [
+    "AM-WKF-001",
+    "AT-WKF-001"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-contract-evidence",
+  "story_id": "5.3",
+  "task_id": "5.3.1.3",
+  "test_contract": {
+    "clippy_warnings_allowed": 0,
+    "focused_tests": 3,
+    "required_markers": [
+      "parser_model_attempt_replan_repeat_and_total_limits_are_independent ... ok",
+      "each_exhausted_repair_dimension_denies_without_touching_other_usage ... ok",
+      "invalid_repairs_and_total_work_exhaustion_return_no_admission_and_no_partial_charge ... ok"
+    ]
+  }
+}

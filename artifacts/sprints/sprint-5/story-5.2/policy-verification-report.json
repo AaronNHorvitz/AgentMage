@@ -8,17 +8,17 @@
     {
       "byte_length": 6817,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json",
-      "sha256": "c71574a5c39e91533a5f1120d08d62ddc98bbb3ccd162a1db7a5950b6da58e45"
+      "sha256": "f750e4348a59a517f0a5518bfd3de23bc27d4fc29a50aff8af8009e0e3c26e46"
     },
     {
-      "byte_length": 4545,
+      "byte_length": 4565,
       "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-report.json",
-      "sha256": "9e3c93a65083891b1261fe892596db1d72d3a58f9cc9709d6ff82122ebedebe9"
+      "sha256": "4ee3d217a0cb95f5ae98cf62e79cb237161f0bf1d723a24d7149e4524828ddf4"
     },
     {
-      "byte_length": 4209,
+      "byte_length": 4258,
       "path": "docs/verification/story-5-2-policy-evidence.md",
-      "sha256": "6b494cb61e5362894f88b74675c5257ea5ffdb3ac2b9157a1f651e15141a91c9"
+      "sha256": "ce0104013972cf1b9bc4303ae2aa2bef5f48f0479632b6e01c3ad32b2059a864"
     }
   ],
   "decision_table": {
@@ -296,6 +296,7 @@
   "supervision_results": {
     "budget_dimensions": [
       "parser_repair",
+      "model_repair",
       "step_attempt",
       "per_error_class",
       "workflow_work",

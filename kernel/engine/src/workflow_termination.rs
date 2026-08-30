@@ -224,9 +224,16 @@ mod tests {
 
     #[test]
     fn exhausted_and_saturated_budgets_are_inert_and_do_not_change_usage() {
-        let policy =
-            WorkflowBudgetPolicy::new("budget-policy-1".to_owned(), 1, 1, &error_limits(1), 1, 1)
-                .expect("policy");
+        let policy = WorkflowBudgetPolicy::new(
+            "budget-policy-1".to_owned(),
+            1,
+            1,
+            1,
+            &error_limits(1),
+            1,
+            1,
+        )
+        .expect("policy");
         let mut ledger = WorkflowBudgetLedger::new(&policy);
         ledger
             .consume(&policy, WorkflowBudgetEvent::StepAttempt, 1)

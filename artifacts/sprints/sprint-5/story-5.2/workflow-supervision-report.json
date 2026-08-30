@@ -11,9 +11,9 @@
   },
   "artifacts": [
     {
-      "byte_length": 17460,
+      "byte_length": 18790,
       "path": "kernel/engine/src/workflow_budget.rs",
-      "sha256": "dbacdb06fd757f4eab9412b123daa74e5d29a7f3e0694d0d2a780d81cf79a5d9"
+      "sha256": "073471b4773e882438f64900daf107ecd58e7d3a7e70528b6e13aa31ced4f49b"
     },
     {
       "byte_length": 17154,
@@ -21,28 +21,29 @@
       "sha256": "9c6f63d953fed91495184a09fd9c701997955fd82ff434bfa54096fa83d1833d"
     },
     {
-      "byte_length": 14526,
+      "byte_length": 14604,
       "path": "kernel/engine/src/workflow_termination.rs",
-      "sha256": "9dd0adf3998ed5da32f12afd88c830ba9742a7a944cd183af2f7a433bc18b5a3"
+      "sha256": "e943f7a84597620cd103d646773abaea9b6b4d9fd6bacc12a11101ec611a5f8a"
     },
     {
-      "byte_length": 8125,
+      "byte_length": 8153,
       "path": "scripts/workflow_supervision_evidence.py",
-      "sha256": "707eceb28966c8b41ce1c48c4726accb4b14fb5610d21f4d4bc6874a9ae47a34"
+      "sha256": "897097fc5abd6314c306d55e207bd1382bcfe302b2bbd4128d510f0380c9a454"
     },
     {
       "byte_length": 3734,
       "path": "tests/test_workflow_supervision_evidence.py",
-      "sha256": "38dda3631f66c4f8911b8c79eeb368cb24f38a4cfc045b6885c558614c8debd0"
+      "sha256": "daa4e30bf6d08d142043581489329009d24712969b47d53966638dd7436726df"
     },
     {
-      "byte_length": 10814,
+      "byte_length": 12767,
       "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-results.log",
-      "sha256": "5e3ba1a44987505acd81d2a91a05e51251c8913ec87ffd93884f046f1a220cf4"
+      "sha256": "154408d333ed2e8a68aca235f6f80eb62dc43ae440f1a8a2277141b9e5c7559f"
     }
   ],
   "budget_dimensions": [
     "parser_repair",
+    "model_repair",
     "step_attempt",
     "per_error_class",
     "workflow_work",
