@@ -1,0 +1,190 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 15851,
+      "path": "kernel/engine/src/workflow_definition.rs",
+      "sha256": "d2ea313c9959fd4c366612c062f462a466b1b92b33e625f5dd1597202d9b39f1"
+    },
+    {
+      "byte_length": 21638,
+      "path": "kernel/engine/src/workflow_identity.rs",
+      "sha256": "4df7175f9c2943f5db2a42229af4e0257ecfbc35633421ca5fda68a464315d96"
+    },
+    {
+      "byte_length": 26088,
+      "path": "kernel/engine/src/retry_admission.rs",
+      "sha256": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e"
+    },
+    {
+      "byte_length": 16731,
+      "path": "kernel/engine/src/tool_call_repair.rs",
+      "sha256": "d44af7103ffa8aaaa1696a610e4d0a5f4ae48ed537215ef70090759d3c4f311d"
+    },
+    {
+      "byte_length": 17154,
+      "path": "kernel/engine/src/workflow_progress.rs",
+      "sha256": "9c6f63d953fed91495184a09fd9c701997955fd82ff434bfa54096fa83d1833d"
+    },
+    {
+      "byte_length": 16584,
+      "path": "kernel/engine/src/workflow_verifier.rs",
+      "sha256": "6187389d17470552a35d774977ba581219ac30f0786d6ec5dea773aa6360d124"
+    },
+    {
+      "byte_length": 14049,
+      "path": "kernel/engine/tests/workflow_definition.rs",
+      "sha256": "f5d65b9ab109bb43f48ca2d52b1f1bb19095cd4a4455bf97e70993d527ec1b2d"
+    },
+    {
+      "byte_length": 18929,
+      "path": "kernel/engine/tests/workflow_identity.rs",
+      "sha256": "a09e3813ed0a082ae0d6760bd574f23f92bfbd2e253fac55a4c4fed054546d89"
+    },
+    {
+      "byte_length": 47672,
+      "path": "kernel/engine/tests/retry_admission.rs",
+      "sha256": "89430f5975a79224d2b883d367eb5cf4d989ba4e5ed2bb29f246526699cfae59"
+    },
+    {
+      "byte_length": 16731,
+      "path": "kernel/engine/tests/workflow_verifier.rs",
+      "sha256": "4213f6d341a4da43e9d0337a62312a8eda9c4593e0f6162bb3f833fc1bad3192"
+    },
+    {
+      "byte_length": 1582,
+      "path": "docs/verification/story-5-3-workflow-adversarial-evidence.md",
+      "sha256": "cf6fba51b873fd96931147a51f430d6075abbcea43bd3771dc3549fbc8da8b8d"
+    },
+    {
+      "byte_length": 8489,
+      "path": "scripts/workflow_adversarial_campaign.py",
+      "sha256": "0a44964c51badae5f5c963d42d3e2f8a63120bebd3130040940fc2b064d80f18"
+    },
+    {
+      "byte_length": 1374,
+      "path": "tests/test_workflow_adversarial_campaign.py",
+      "sha256": "47554ef572d75b93b560e37dc6437188e3149653ca7fa32fdadaa0a277c55394"
+    },
+    {
+      "byte_length": 13164,
+      "path": "artifacts/sprints/sprint-5/story-5.3/workflow-adversarial-results.log",
+      "sha256": "c70d6c22702cfa922d70c959ffd19532ec1b9d3388df7a4585460f218c9a5d8c"
+    }
+  ],
+  "attack_families": [
+    {
+      "admitted_dispatches": 0,
+      "admitted_false_successes": 0,
+      "attack": "missing_or_stale_preflight",
+      "required_markers": [
+        "preflight_postcondition_and_policy_integrity_mutations_are_denied ... ok",
+        "every_preflight_and_reconciliation_field_mutation_denies_before_dispatch ... ok"
+      ]
+    },
+    {
+      "admitted_dispatches": 0,
+      "admitted_false_successes": 0,
+      "attack": "malformed_call",
+      "required_markers": [
+        "normalization_is_ordered_bounded_and_does_not_invent_values ... ok",
+        "model_repair_is_single_profile_bound_and_never_an_effect_attempt ... ok"
+      ]
+    },
+    {
+      "admitted_dispatches": 0,
+      "admitted_false_successes": 0,
+      "attack": "approval_bypass",
+      "required_markers": [
+        "approvals_receipts_and_verifications_are_fresh_single_issue_identities ... ok",
+        "every_approval_field_mutation_denies_before_dispatch ... ok"
+      ]
+    },
+    {
+      "admitted_dispatches": 0,
+      "admitted_false_successes": 0,
+      "attack": "grant_reuse",
+      "required_markers": [
+        "every_pre_effect_identity_is_globally_fresh_and_failed_issue_is_atomic ... ok",
+        "complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok"
+      ]
+    },
+    {
+      "admitted_dispatches": 0,
+      "admitted_false_successes": 0,
+      "attack": "retry_loop",
+      "required_markers": [
+        "non_adjacent_repeated_state_stops_at_the_exact_policy_limit ... ok",
+        "unsafe_and_uncertain_effects_never_receive_automatic_new_attempts ... ok"
+      ]
+    },
+    {
+      "admitted_dispatches": 0,
+      "admitted_false_successes": 0,
+      "attack": "false_completion",
+      "required_markers": [
+        "exit_zero_persuasive_output_and_tampered_results_never_establish_completion ... ok"
+      ]
+    },
+    {
+      "admitted_dispatches": 0,
+      "admitted_false_successes": 0,
+      "attack": "uncertain_effect",
+      "required_markers": [
+        "uncertain_effects_cannot_open_a_successor_until_safely_reconciled ... ok",
+        "racing_eligible_attempts_execute_once_and_uncertainty_is_sticky ... ok"
+      ]
+    },
+    {
+      "admitted_dispatches": 0,
+      "admitted_false_successes": 0,
+      "attack": "contradictory_evidence",
+      "required_markers": [
+        "every_postcondition_invariant_and_prohibited_effect_is_fail_closed ... ok",
+        "expected_output_state_observation_receipt_and_evidence_bind_independently ... ok"
+      ]
+    }
+  ],
+  "campaign_contract": {
+    "all_attacks_are_synthetic": true,
+    "all_boundaries_execute_deterministically": true,
+    "attack_family_count": 8,
+    "denied_candidates_execute_effects": false,
+    "denied_candidates_mutate_authority": false,
+    "model_text_or_exit_zero_becomes_success": false,
+    "repeated_state_can_exceed_stop_limit": false,
+    "reused_identity_becomes_fresh": false,
+    "uncertain_effects_become_success": false
+  },
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test workflow_definition --locked",
+    "cargo test -p agentmage-kernel-engine --test workflow_identity --locked",
+    "cargo test -p agentmage-kernel-engine --test retry_admission --locked",
+    "cargo test -p agentmage-kernel-engine --test workflow_verifier --locked",
+    "cargo test -p agentmage-kernel-engine tool_call_repair::tests --locked",
+    "cargo test -p agentmage-kernel-engine workflow_progress::tests --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-30",
+  "product_truth": {
+    "model_inference_executed": false,
+    "native_platform_campaign": false,
+    "network_calls": 0,
+    "release_claim": "none",
+    "runtime_effect_executed": false,
+    "rv52_completion_claim": false,
+    "sprint_completion_claim": false,
+    "story_completion_claim": false,
+    "synthetic_data_only": true
+  },
+  "record_type": "agentmage-workflow-adversarial-campaign",
+  "requirements": [
+    "AM-WKF-001",
+    "AM-VER-001",
+    "AT-WKF-001",
+    "AT-VER-001"
+  ],
+  "schema_version": 1,
+  "status": "pass-local-synthetic-campaign",
+  "story_id": "5.3",
+  "task_id": "5.3.3.1"
+}
