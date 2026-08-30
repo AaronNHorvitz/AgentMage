@@ -1049,9 +1049,9 @@ data or real external effects.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 2.3.AC1:** Given every declared artifact class, when the corpus is enumerated, then
+- [x] **Story AC 2.3.AC1:** Given every declared artifact class, when the corpus is enumerated, then
   normal, boundary, malformed, hostile, oversized, cancellation, restart, and unsupported cases
-  have exact expected accounting and prohibited side effects.
+  have exact expected accounting and prohibited side effects. Evidence: the hash-bound text/reference and document manifests enumerate all 30 declared inline, local, virtual, remote, log, PDF, DOCX, and XLSX cases; the lifecycle suite adds nine combined-set scenarios. Normal capture, 999/1,001-character and 25 MiB boundaries, invalid/mixed encodings, truncated containers, stale/replaced references, inert hostile external relationships, three generated 32 MiB oversize identities, cancellation, crash, restart, refresh/retention/deletion, encrypted input, inaccessible input, and unknown/unsupported references all retain exact expected dispositions. The ten-metric artifact golden reconciles all 39 case/scenario inputs, while the versioned aggregate exposes all 77 artifact and workflow outcomes including every 60 non-success terminal. Network fetch, active-content execution, external-relationship fetch, source mutation, undeclared persistence, product runtime/effect, approval bypass, and false completion remain exactly zero. Focused manifest/metric mutation tests, two clean-root regenerations, the recursive zero-finding security scan, and the full repository gate pass.
 - [ ] **Story AC 2.3.AC2:** Given every workflow failure class, when the fake runtime executes it,
   then the expected fresh attempts, no-replay decision, verifier result, terminal diagnosis, and
   cleanup reconcile exactly.
