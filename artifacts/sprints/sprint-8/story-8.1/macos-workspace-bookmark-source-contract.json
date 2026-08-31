@@ -1,0 +1,84 @@
+{
+  "claims": {
+    "cross_story_path_task_complete": false,
+    "macos_support": false,
+    "package_or_release": false,
+    "task_complete": false,
+    "workspace_write_authority": false
+  },
+  "contract": {
+    "bookmark_authority": "read-only",
+    "bookmark_scope": "app-scoped",
+    "bookmark_store": "keychain-access-group",
+    "failure_count": 22,
+    "maximum_bookmark_bytes": 65536,
+    "maximum_root_entries": 4096,
+    "picker_directories_only": true,
+    "picker_resolves_aliases": false,
+    "picker_selection_count": 1,
+    "resolution_mounting_allowed": false,
+    "resolution_ui_allowed": false,
+    "security_scope_start_stop_balanced": true,
+    "stale_bookmark_refresh_after_revalidation": true
+  },
+  "execution": {
+    "apple_silicon_execution_performed": false,
+    "native_bookmark_created": false,
+    "native_bookmark_resolved": false,
+    "native_keychain_executed": false,
+    "native_picker_executed": false,
+    "native_revocation_executed": false,
+    "native_stale_refresh_executed": false,
+    "swift_build_performed": false,
+    "swift_tests_performed": false
+  },
+  "record_type": "macos-workspace-bookmark-source-contract",
+  "related_open_task_id": "6.1.1.6",
+  "remaining_blockers": [
+    "Apple Silicon Swift 6 build and tests have not run.",
+    "NSOpenPanel and Powerbox selection have not executed in App Sandbox.",
+    "Keychain insert, load, stale replacement, and revocation have not executed.",
+    "Native bookmark move, reboot, alias, collision, and mount-change campaigns have not run.",
+    "The shared Rust path adapter is not integrated with the resolved macOS scope.",
+    "Physical MacBook Pro M5 qualification has not run."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "platforms/macos/Configuration/KernelHost.contract-fixture.entitlements",
+      "sha256": "6cd4f989497af7b5eeba5e8031e3cb9c81dfd15e96a328587cff25d937e00299"
+    },
+    {
+      "path": "platforms/macos/README.md",
+      "sha256": "e318a114aed02678fe0f9834a6cb37b51cbfc2aa3163f35b6df25615de087ec9"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSWorkspaceBookmarks.swift",
+      "sha256": "90ef75d9a609de60a4b7e18fefc920ea052ef994a8c64ce77ac7d7936eb311d3"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",
+      "sha256": "065232e9d71f33945a0af935592b4eac60e3f2dd72229f702f595b18f047514e"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSWorkspaceBookmarksTests.swift",
+      "sha256": "b3771d76a558b587ad13619085c9b6eca49e6da366da09fe408997a82a9ffd81"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/PlatformBoundaryTests.swift",
+      "sha256": "b1d802e8b055d29becaeafb2c9528aaf0fb101fe455e6ae7b1cb7be2364966f5"
+    },
+    {
+      "path": "scripts/macos_workspace_bookmark_source_contract.py",
+      "sha256": "a9ae7909c89e3d19daa1e04f4a0d1796e668b3566f35c160c29d71bb79dc8431"
+    },
+    {
+      "path": "tests/test_macos_workspace_bookmark_source_contract.py",
+      "sha256": "0c39ef43d301aa3170f0944704aee7b35ee1b3dd9a8125b538774a09d3f75ae9"
+    }
+  ],
+  "source_revision": "458a4b2f7937201fc9fbb04530885b4a98fddf2f",
+  "source_tree": "c5fe9bfe292a55416bb7b450433e566789f7b0f7",
+  "status": "partial-source-only-blocked-macos",
+  "task_id": "8.1.1.4"
+}
