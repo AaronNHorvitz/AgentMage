@@ -67,6 +67,8 @@ pub mod frontier_recommendation;
 pub mod frontier_release;
 /// Candidate-neutral disabled gateway tuple identity and admission.
 pub mod gateway_candidate_identity;
+/// Versioned codec capability validation and deterministic no-silent-fallback routing.
+pub mod gateway_routing;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
 /// Deterministic local-only manual handoff construction and denial.

@@ -1,0 +1,111 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 25018,
+      "path": "kernel/engine/src/gateway_candidate_identity.rs",
+      "sha256": "1361215d221414258be8358156806d5fce0acf0ee43c20fa3994a13529a502b4"
+    },
+    {
+      "byte_length": 26200,
+      "path": "kernel/engine/src/gateway_routing.rs",
+      "sha256": "59eb9648b940fad27a30b7c9a59033a4cda25911e8ce01bca33bb60e67b71e9b"
+    },
+    {
+      "byte_length": 25099,
+      "path": "kernel/engine/src/model_gateway.rs",
+      "sha256": "0519b1e616b4c46598941a301da04082691c015e5c10d74109ff2840a2b22542"
+    },
+    {
+      "byte_length": 1653,
+      "path": "docs/architecture/gateway-codec-routing-fallback.md",
+      "sha256": "3b8992c7ba011a6a9b78dd622dae51d9635b78f0903fd6178f6374393c4cc608"
+    },
+    {
+      "byte_length": 5894,
+      "path": "scripts/story_13_6_gateway_routing_evidence.py",
+      "sha256": "03816935cbf419f80749a7b02df20102fbad00fdb73d2f7fdb5653b3749cd296"
+    },
+    {
+      "byte_length": 1443,
+      "path": "tests/test_story_13_6_gateway_routing_evidence.py",
+      "sha256": "980434c7729abdebd85103445f138d72cb7c60a035fe588d505f4a0b78d0ca8a"
+    },
+    {
+      "byte_length": 9359,
+      "path": "artifacts/sprints/sprint-13/story-13.6/gateway-routing-results.log",
+      "sha256": "cac596919e7e73642dc0ee10c6b02ef307cba93b7535934d8261ae105810066a"
+    }
+  ],
+  "codec_semantics": [
+    "message-parts",
+    "streaming",
+    "structured-output",
+    "tool-proposals",
+    "usage",
+    "cancellation",
+    "health",
+    "concurrency",
+    "typed-failures"
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine story_13_6 --locked",
+    "cargo test -p agentmage-kernel-engine model_gateway::tests --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-31",
+  "limitations": [
+    "deterministic fixtures exercise no live remote endpoint and access no credential value",
+    "installed cross-platform and production endpoint qualification remain separate release gates",
+    "a protocol completion event is not represented as workflow completion"
+  ],
+  "product_truth": {
+    "credential_value_accessed": false,
+    "deterministic_route_audit_complete": true,
+    "fallback_enabled_by_default": false,
+    "health_resource_quota_cost_disclosure_gates_complete": true,
+    "live_remote_endpoint_executed": false,
+    "ordered_stream_validation_complete": true,
+    "release_claim": "none",
+    "rv54_routing_slice_complete": true,
+    "silent_cross_remote_transition_count": 0,
+    "silent_local_to_remote_transition_count": 0,
+    "sprint_completion_claim": false,
+    "story_completion_claim": true,
+    "unknown_semantic_fails_visibly": true,
+    "versioned_codec_capability_contract_complete": true
+  },
+  "protocol_id": "RV-54",
+  "record_type": "agentmage-story-13-6-gateway-routing-evidence",
+  "required_markers": [
+    "story_13_6_codec_preserves_supported_ordered_semantics ... ok",
+    "story_13_6_unknown_malformed_and_unsupported_streams_fail_visibly ... ok",
+    "story_13_6_route_selection_audits_health_quota_limits_and_disclosure ... ok",
+    "story_13_6_fallback_is_denied_by_default_and_requires_exact_equivalent_policy ... ok",
+    "story_13_6_health_quota_and_control_drift_cannot_silently_fallback ... ok",
+    "exact_profiles_and_explicit_routes_are_digest_bound ... ok",
+    "strict_local_can_never_fall_back_remotely ... ok",
+    "every_json_protocol_uses_a_closed_shape_and_extracts_text ... ok",
+    "remote_profile_rejects_http_embedded_credentials_and_redirects ... ok",
+    "Finished `dev` profile"
+  ],
+  "routing_gates": [
+    "user-profile",
+    "classification",
+    "disclosure",
+    "role",
+    "capability",
+    "health",
+    "resource",
+    "quota",
+    "cost",
+    "platform",
+    "context",
+    "concurrency",
+    "qualification",
+    "policy",
+    "equivalent-controls"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_CODEC_ROUTING_CONTRACT",
+  "story_id": "13.6"
+}

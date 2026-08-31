@@ -2786,22 +2786,22 @@ and disclosure so that local privacy cannot become remote processing through con
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 13.6.1 - Implement versioned codec contracts**
-  - [ ] **Sub-task 13.6.1.1:** Define adapter capabilities for message parts, streaming, structured output, tool proposals, usage, cancellation, health, concurrency, and typed failures.
-  - [ ] **Sub-task 13.6.1.2:** Preserve every supported canonical field and convert every semantic gap, unknown event, or unsupported operation into an explicit non-success result.
-- [ ] **Task 13.6.2 - Implement deterministic route decisions**
-  - [ ] **Sub-task 13.6.2.1:** Select only currently qualified tuples under exact user profile, classification, disclosure, role, capability, health, resource, quota, cost, and platform policy.
-  - [ ] **Sub-task 13.6.2.2:** Record considered routes, exclusions, selected tuple, reason, limits, disclosure, policy, and qualification digest in each route receipt.
-  - [ ] **Sub-task 13.6.2.3:** Keep fallback disabled by default; require an explicit ordered policy, fresh route decision, independent destination authorization, disclosure, and equivalent controls for every permitted fallback.
-- [ ] **Task 13.6.3 - Execute compatibility and routing tests**
-  - [ ] **Sub-task 13.6.3.1:** Run field/event parity, malformed stream, cancellation, unknown-version, health-flap, quota, and fallback substitution fixtures across fake adapters.
-  - [ ] **Sub-task 13.6.3.2:** Run the routing portions of `RV-54`; retain route receipts and prove zero silent local-to-remote or cross-remote transition.
+- [x] **Task 13.6.1 - Implement versioned codec contracts** Evidence: [`gateway_routing.rs`](kernel/engine/src/gateway_routing.rs) adds an exact version/hash capability contract and contiguous terminal event verifier over the existing bounded JSON gateway codecs.
+  - [x] **Sub-task 13.6.1.1:** Define adapter capabilities for message parts, streaming, structured output, tool proposals, usage, cancellation, health, concurrency, and typed failures. Evidence: `GatewayCodecCapabilities` closes all nine named dimensions, including the typed-failure-map digest and concurrency ceiling.
+  - [x] **Sub-task 13.6.1.2:** Preserve every supported canonical field and convert every semantic gap, unknown event, or unsupported operation into an explicit non-success result. Evidence: supported part, usage, cancellation, and terminal events require exact request identity and contiguous sequence; unknown external events and undeclared semantics return `UnsupportedSemantic`, while incomplete/reordered/post-terminal streams return `MalformedStream`.
+- [x] **Task 13.6.2 - Implement deterministic route decisions** Evidence: `route_gateway` audits every exact candidate in deterministic privacy-class/identity order and emits one hash-bound complete receipt or a typed block.
+  - [x] **Sub-task 13.6.2.1:** Select only currently qualified tuples under exact user profile, classification, disclosure, role, capability, health, resource, quota, cost, and platform policy. Evidence: the request and route contracts independently bind all named gates plus candidate, context, concurrency, qualification, and invariant-control identities; any failed gate receives a stable exclusion code.
+  - [x] **Sub-task 13.6.2.2:** Record considered routes, exclusions, selected tuple, reason, limits, disclosure, policy, and qualification digest in each route receipt. Evidence: `GatewayRouteReceipt` retains the ordered complete audit, candidate digests, eligibility/reasons, exact selection, route/fallback policy, disclosure class, terminal reason, and receipt digest; route inputs retain limits and qualification.
+  - [x] **Sub-task 13.6.2.3:** Keep fallback disabled by default; require an explicit ordered policy, fresh route decision, independent destination authorization, disclosure, and equivalent controls for every permitted fallback. Evidence: a prior-route request without policy is denied; a fallback must start its ordered policy with the prior route, name the independently authorized destination, accept destination disclosure, and match the prior route's invariant-control digest.
+- [x] **Task 13.6.3 - Execute compatibility and routing tests** Evidence: five focused routing tests compose with the four existing gateway codec/endpoint tests and strict Clippy in the retained Story 13.6 report.
+  - [x] **Sub-task 13.6.3.1:** Run field/event parity, malformed stream, cancellation, unknown-version, health-flap, quota, and fallback substitution fixtures across fake adapters. Evidence: deterministic fixtures cover preserved part/usage streams, unknown semantics, non-contiguous streams, unsupported cancellation, unhealthy/quota exclusions, disclosure/limit checks, default fallback denial, explicit fallback, and control-drift substitution.
+  - [x] **Sub-task 13.6.3.2:** Run the routing portions of `RV-54`; retain route receipts and prove zero silent local-to-remote or cross-remote transition. Evidence: [`gateway-routing-report.json`](artifacts/sprints/sprint-13/story-13.6/gateway-routing-report.json) binds the local RV-54 routing slice, exact commands/source, zero silent transitions, false default fallback, no credential-value access, and the explicit non-claim of live remote execution.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 13.6.AC1:** Given a supported external protocol event, when translation occurs, then its canonical meaning and identity are preserved exactly or the operation fails visibly.
-- [ ] **Story AC 13.6.AC2:** Given multiple candidate routes, when routing runs, then only a current qualified policy-compatible tuple is selected with a complete receipt.
-- [ ] **Story AC 13.6.AC3:** Given local or remote route failure, when fallback is absent or unauthorized, then the task blocks without silent destination, disclosure, cost, or authority change.
+- [x] **Story AC 13.6.AC1:** Given a supported external protocol event, when translation occurs, then its canonical meaning and identity are preserved exactly or the operation fails visibly. Evidence: closed capability/event fixtures accept one exact ordered stream and visibly reject unknown, unsupported, malformed, and cancellation-incompatible streams.
+- [x] **Story AC 13.6.AC2:** Given multiple candidate routes, when routing runs, then only a current qualified policy-compatible tuple is selected with a complete receipt. Evidence: health, quota, resource, cost, role, capability, platform, context, concurrency, disclosure, activation, and identity gates exclude ineligible candidates before the deterministic selection and receipt seal.
+- [x] **Story AC 13.6.AC3:** Given local or remote route failure, when fallback is absent or unauthorized, then the task blocks without silent destination, disclosure, cost, or authority change. Evidence: default, unordered, undisclosed, unauthorized, missing-prior, ineligible, and control-drift fallback paths all return `FallbackDenied`; only the complete explicit equivalent-control fixture selects its named destination.
 
 ### [ ] Sprint 14 - Separate Model Installer and Importer
 

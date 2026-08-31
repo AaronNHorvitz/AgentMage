@@ -346,6 +346,8 @@
     "story-13.4:context-profile:evidence:check": "python3 scripts/story_13_4_context_profile_evidence.py && python3 -m unittest tests.test_story_13_4_context_profile_evidence",
     "story-13.5:gateway-identity:evidence:build": "python3 scripts/story_13_5_gateway_identity_evidence.py --write && python3 -m unittest tests.test_story_13_5_gateway_identity_evidence",
     "story-13.5:gateway-identity:evidence:check": "python3 scripts/story_13_5_gateway_identity_evidence.py && python3 -m unittest tests.test_story_13_5_gateway_identity_evidence",
+    "story-13.6:gateway-routing:evidence:build": "python3 scripts/story_13_6_gateway_routing_evidence.py --write && python3 -m unittest tests.test_story_13_6_gateway_routing_evidence",
+    "story-13.6:gateway-routing:evidence:check": "python3 scripts/story_13_6_gateway_routing_evidence.py && python3 -m unittest tests.test_story_13_6_gateway_routing_evidence",
     "engineering-runtime:rv50:evidence:build": "python3 scripts/engineering_runtime_rv50_evidence.py --write && python3 -m unittest tests.test_engineering_runtime_rv50_evidence",
     "engineering-runtime:rv50:evidence:check": "python3 scripts/engineering_runtime_rv50_evidence.py && python3 -m unittest tests.test_engineering_runtime_rv50_evidence",
     "engineering-runtime:rv51:evidence:build": "python3 scripts/engineering_artifact_rv51_evidence.py --write && python3 -m unittest tests.test_engineering_artifact_rv51_evidence",
