@@ -86,7 +86,7 @@
       {
         "byte_length": 12364,
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "40d450e79f99d0b6fef37b128e3271e06e765e7f07281c1acbbcd4a54a364ace"
+        "sha256": "1cf766680f532456c3de9039605b6b22bf6d68aba222d331bdff45a66ddf0f6f"
       },
       {
         "byte_length": 6520,
@@ -148,16 +148,16 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-aggregate-review-not-external-human-review",
-    "reviewed_commit": "efdf7fccc419c0e74981da6bbcd616a2eef0fe5d",
-    "reviewed_tree": "8cfde47dcb6710d039303743cce90b3002423ff0",
+    "reviewed_commit": "09db2d7412073f336632fbc18f4c6be2afa3be0a",
+    "reviewed_tree": "9199a1b4ab0f579c6e661ce1e2cafab25f9acc3a",
     "reviewer_id": "agentmage-story-7.1-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
   "macos_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "efdf7fccc419c0e74981da6bbcd616a2eef0fe5d",
-  "reviewed_tree": "8cfde47dcb6710d039303743cce90b3002423ff0",
+  "reviewed_commit": "09db2d7412073f336632fbc18f4c6be2afa3be0a",
+  "reviewed_tree": "9199a1b4ab0f579c6e661ce1e2cafab25f9acc3a",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-native-platforms-and-external-review",
