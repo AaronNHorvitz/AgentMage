@@ -30,7 +30,7 @@
   "release_claim": "none",
   "schema_version": 1,
   "signing_performed": false,
-  "source_revision": "32422fab922b543be6a4812ca3e24029cc1e898e",
+  "source_revision": "7fdce0907bff4162cf8b6752361011dc36370004",
   "sources": [
     {
       "bytes": 1576,
@@ -48,14 +48,14 @@
       "sha256": "f2465bac1d58004264275f517730c44984168017624bedac47e82e32756ae4f7"
     },
     {
-      "bytes": 11669,
+      "bytes": 11740,
       "path": "scripts/macos_release_manifest_contract.mjs",
-      "sha256": "f763e9edae3747fa8b7dd18f0835a59d42b0069b1532c1fdc0b7b898f0bc4fe8"
+      "sha256": "3853f4f7068fd4bce3a7c5287490a5e331706083ee7ccd1b6e7d504e860e9e7a"
     },
     {
-      "bytes": 3799,
+      "bytes": 3905,
       "path": "tests/test_macos_release_manifest_contract.mjs",
-      "sha256": "52a2d8eb1152c4c238ca6142511e070caa820773d5a12d11cfd76a6ede028e1a"
+      "sha256": "a35b3557156673c2215e5441187e65e4b51ea237aaf2d0954cef5e2e8b96a7b3"
     }
   ],
   "status": "pass-frozen-contract-only",

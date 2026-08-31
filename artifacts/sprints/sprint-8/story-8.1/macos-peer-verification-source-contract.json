@@ -40,7 +40,7 @@
   "source_files": [
     {
       "path": "platforms/macos/README.md",
-      "sha256": "20957afb05ddbbdca31f8a10b85f9315a1a7052812c498bd5fcdd1cb08211375"
+      "sha256": "1d81e6558f20d5cda3727bfc53b3307d6f6b731c929af1dfd74ff3d2d1cbf61a"
     },
     {
       "path": "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSBridgeProtocol.swift",
@@ -52,7 +52,7 @@
     },
     {
       "path": "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",
-      "sha256": "1cf235fe7acbbdf124f602602ea89dde4313fb4b2057b30f65d115ca38523c71"
+      "sha256": "a8ba47f38521ca47cc4ac104d16ef4ef25fd2540c4e482fd6829ec8b301b5d04"
     },
     {
       "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSBridgeProtocolTests.swift",
@@ -64,7 +64,7 @@
     },
     {
       "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/PlatformBoundaryTests.swift",
-      "sha256": "15a5a9da2db5e8e98721529f1942fed347004b9649ffec40398cc34e9d5a68d9"
+      "sha256": "2fde2437bafcf2254bfbe4edba91c757586bbc69ed6d7c2ec3975a4ed32823d7"
     },
     {
       "path": "release/platform-manifests/macos/v1/contract-fixture.json",
@@ -79,8 +79,8 @@
       "sha256": "5866b556691b5861bd65b54db92eab098c1c4ecb9242958abb4ba8dbeed03f8a"
     }
   ],
-  "source_revision": "32422fab922b543be6a4812ca3e24029cc1e898e",
-  "source_tree": "9079640919c33f69860f9b9b5ffaaa317ed3be42",
+  "source_revision": "7fdce0907bff4162cf8b6752361011dc36370004",
+  "source_tree": "c29e57cefeffe21671d1705d6a324bdb7f651ae4",
   "status": "partial-source-only-blocked-macos",
   "task_id": "8.1.1.3"
 }
