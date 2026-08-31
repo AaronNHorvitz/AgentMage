@@ -68,17 +68,17 @@
     {
       "bytes": 2369,
       "path": "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
-      "sha256": "5a02165abb291c9a96c4c8226b233e4a9bfeb377223f75447004e817faa35acd"
+      "sha256": "db315ebaf008402e3b6fdf7ac7dc13699ba67f38cd99b3ece844728d0bbcaeaa"
     },
     {
       "bytes": 446026,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "65b172315b3321267b3f63da22c3d04ea7bc9e21f8d0af54c649fb174968d54d"
+      "sha256": "c8353c2a8d5117a960283dc73c6dc6050321427498309150c3a004722ec93f9b"
     },
     {
       "bytes": 465835,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "8fbb68109eb0d6d79928e6651688dd61e94671ea0db05c7be2fb6385970fe1bc"
+      "sha256": "0dc4f9e187d3ad79f5c038013e8081f3973a12e408fd33b9d536d524961d92c0"
     },
     {
       "bytes": 23383,
@@ -260,7 +260,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "b3276869352a1ad27dcc2be4341916bbe7555c87",
+  "source_revision": "8a4ca550f0408185b8083d22d06aee7dbfd99df1",
   "status": "pass-non-macos-security-mapping",
   "story_id": "7.1",
   "summary": {
