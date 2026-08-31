@@ -1,0 +1,63 @@
+{
+  "claims": {
+    "macos_support": false,
+    "native_acceptance_exists": false,
+    "release_candidate_exists": false,
+    "task_complete": false
+  },
+  "contract": {
+    "acceptance_phase_count": 9,
+    "administrator_group_allowed": false,
+    "credential_authority": false,
+    "elevated_identity_allowed": false,
+    "failed_phase_count": 0,
+    "native_operation_authority": false,
+    "network_authority": false,
+    "residue_allowed": false,
+    "support_promotion_authority": false
+  },
+  "execution": {
+    "independent_review_performed": false,
+    "protected_outputs_observed": false,
+    "signed_package_executed": false,
+    "standard_user_campaign_observed": false
+  },
+  "record_type": "macos-standard-user-acceptance-source-contract",
+  "remaining_blockers": [
+    "No production policy, signed package, release manifest, or successful terminal record exists.",
+    "No pinned physical Apple Silicon image has run the standard-user ceremony.",
+    "No native nine-phase acceptance record or protected command output exists.",
+    "No independent reviewer has reconciled the standard-user acceptance bundle."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "packaging/macos/STANDARD-USER-ACCEPTANCE.md",
+      "sha256": "5dff2859508413a3209ecf46b4d0885f82ec6bb857c05e4cd3f5aa95e08b86fe"
+    },
+    {
+      "path": "packaging/macos/release-runner.sh",
+      "sha256": "24fdc4bc5cccce91aa776bf4dd6d8ad5e554a6ae63351d83370c4eb6c58cffc7"
+    },
+    {
+      "path": "scripts/macos_standard_user_acceptance.py",
+      "sha256": "df9ede3b54095d7566baea27ee7bcd994eda3886b61dc5559634fffe195cf32a"
+    },
+    {
+      "path": "tests/test_macos_standard_user_acceptance.py",
+      "sha256": "cef4b1026e99f7c5acbb3eaa9e306595b515c472781789233a09e344fd3b5b90"
+    },
+    {
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-release-runner-source-contract.json",
+      "sha256": "01507ee63e13fed9139fbc0836ff7d0a147ce90924cf27e126b7ae4bc1f4756f"
+    },
+    {
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-release-reports-source-contract.json",
+      "sha256": "b3cb9cd1e583d7e9cb212177ea41c6d079cca837fcf9fec4b02f759c7326db45"
+    }
+  ],
+  "source_revision": "45948df0633456b87d2ad015aa9172f748b14ec4",
+  "source_tree": "004fde94417841285aaef2f6ef4a56695fa27997",
+  "status": "prepared-source-only-blocked-macos",
+  "task_id": "8.1.3.4"
+}
