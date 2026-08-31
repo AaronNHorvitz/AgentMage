@@ -1,0 +1,61 @@
+{
+  "claims": {
+    "macos_support": false,
+    "release_candidate_exists": false,
+    "release_manifest_exists": false,
+    "signed_reference_package_exists": false,
+    "task_complete": false
+  },
+  "contract": {
+    "component_count": 4,
+    "credential_authority": false,
+    "input_count": 4,
+    "manifest_field_count": 16,
+    "maximum_package_bytes": 17179869184,
+    "native_signature_reverification": false,
+    "network_authority": false,
+    "package_copy_authority": false,
+    "policy_field_count": 22,
+    "terminal_field_count": 18
+  },
+  "execution": {
+    "apple_silicon_execution_observed": false,
+    "component_hashes_verified": false,
+    "independent_review_performed": false,
+    "release_manifest_ingested": false,
+    "signed_package_ingested": false,
+    "terminal_lifecycle_record_ingested": false
+  },
+  "record_type": "macos-signed-reference-package-source-contract",
+  "remaining_blockers": [
+    "No externally signed, notarized, stapled reference package exists.",
+    "No release-approved production policy or successful ceremony terminal record exists.",
+    "No release-derived component/package manifest exists.",
+    "No four-component hash set has been verified against an exact package.",
+    "The ingestor does not replace native signature, notarization, stapling, or Gatekeeper evidence.",
+    "No independent reviewer has retained the external evidence bundle."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "packaging/macos/REFERENCE-PACKAGE.md",
+      "sha256": "3e6afe9d7aa7811421ed9667cbd873453ba98e982db0fb3c9557c82bd464262b"
+    },
+    {
+      "path": "schemas/platform/macos-release-manifest.schema.json",
+      "sha256": "f2260141c8a8f17b8b5c787df162ecc152e9de07c6ec1c6ffd3b2f627131548f"
+    },
+    {
+      "path": "scripts/macos_signed_reference_package.py",
+      "sha256": "0332e0096a32675ca089159996867b740adf536585fc5db295ab36fa3d349446"
+    },
+    {
+      "path": "tests/test_macos_signed_reference_package.py",
+      "sha256": "dec459fcf9115f396cbdb1ead26a3da6948b3b29685749bf18d6d0495a4c4e1a"
+    }
+  ],
+  "source_revision": "dc79b2c87c3a37c04585197021dd3f5b83a270d5",
+  "source_tree": "732ab014ef9ef8a708e4083cd0de67aff5545d44",
+  "status": "prepared-source-only-blocked-macos",
+  "task_id": "8.1.2.1"
+}
