@@ -1,0 +1,66 @@
+{
+  "claims": {
+    "macos_support": false,
+    "native_sandbox_results_exist": false,
+    "release_candidate_exists": false,
+    "task_complete": false
+  },
+  "contract": {
+    "attack_authority": false,
+    "attack_case_count": 36,
+    "attack_class_count": 9,
+    "credential_authority": false,
+    "native_operation_authority": false,
+    "network_authority": false,
+    "package_copy_authority": false,
+    "profile_count": 4,
+    "raw_canary_values_retained": false,
+    "raw_private_paths_retained": false,
+    "support_promotion_authority": false,
+    "workspace_authority": false
+  },
+  "execution": {
+    "hostile_access_cases_executed": false,
+    "independent_review_performed": false,
+    "native_attack_campaign_observed": false,
+    "native_profiles_observed": false,
+    "protected_logs_observed": false,
+    "signed_components_executed": false
+  },
+  "record_type": "macos-sandbox-attack-results-source-contract",
+  "remaining_blockers": [
+    "No external active App Sandbox profile report exists for the four signed components.",
+    "No external 36-case hostile-access campaign or protected raw logs exist.",
+    "No native ambient-home, device, process, environment, credential, network, workspace-write, grant, or cross-user results exist.",
+    "No native zero-access, zero-byte, zero-authority, and zero-residue reconciliation exists.",
+    "No release-approved policy, signed package, release-derived manifest, or successful terminal record exists.",
+    "No independent reviewer has reconciled and retained the sandbox evidence bundle."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "packaging/macos/SANDBOX-ATTACK-RESULTS.md",
+      "sha256": "59f8a6a027f722e85ed63bc4c558e7d16090dcecf308428d9b88359bcd325dc5"
+    },
+    {
+      "path": "scripts/macos_sandbox_attack_results.py",
+      "sha256": "2ca669b06e6a9bd9482feedb5cf2725ee797b2b10e2cda9749d61b7f60ec16ec"
+    },
+    {
+      "path": "scripts/macos_signed_reference_package.py",
+      "sha256": "0332e0096a32675ca089159996867b740adf536585fc5db295ab36fa3d349446"
+    },
+    {
+      "path": "tests/test_macos_ipc_bookmark_receipts.py",
+      "sha256": "31157e5b4e2601fcf7e1eaaa7296d40d63cbe4af97f405a4dcd56f5cb407fd4c"
+    },
+    {
+      "path": "tests/test_macos_sandbox_attack_results.py",
+      "sha256": "ec5a160b21c14d3d8ea5cf5e2eac2f54dc070eca441072597e6343d91d2e74e8"
+    }
+  ],
+  "source_revision": "03b508d92964179c5739e5ed5689bcd8a3f19dca",
+  "source_tree": "a564d38428a355d0ebd4b981e746db956745ab5d",
+  "status": "prepared-source-only-blocked-macos",
+  "task_id": "8.1.2.4"
+}
