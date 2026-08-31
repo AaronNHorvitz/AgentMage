@@ -59,9 +59,7 @@
     ],
     "xpc_tool_helper": [
       "com.apple.security.app-sandbox",
-      "com.apple.security.application-groups",
-      "com.apple.security.files.bookmarks.app-scope",
-      "com.apple.security.inherit"
+      "com.apple.security.files.bookmarks.app-scope"
     ],
     "metal_inference_service": [
       "com.apple.security.app-sandbox"

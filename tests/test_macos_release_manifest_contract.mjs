@@ -57,6 +57,8 @@ test("minimal entitlements exclude network and release promotion", () => {
   for (const mutate of [
     (item) => { item.entitlements.kernel_host.push("com.apple.security.network.client"); },
     (item) => { item.entitlements.kernel_host = ["com.apple.security.app-sandbox"]; },
+    (item) => { item.entitlements.xpc_tool_helper.push("com.apple.security.inherit"); },
+    (item) => { item.entitlements.xpc_tool_helper.push("com.apple.security.application-groups"); },
     (item) => { item.entitlements.metal_inference_service.push("com.apple.security.application-groups"); },
     (item) => { item.status = "signed-release"; },
     (item) => { item.macos_execution_performed = true; },

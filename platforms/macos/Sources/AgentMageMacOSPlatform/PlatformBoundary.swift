@@ -14,4 +14,7 @@ public enum AgentMageMacOSPlatformBoundary {
 
     /// Picker and read-only app-scoped bookmark lifecycle source is not native evidence.
     public static let workspaceBookmarkSourceStatus = "implemented-source-unverified"
+
+    /// Signed stateless XPC tool-helper source is present but not native evidence.
+    public static let toolHelperSourceStatus = "implemented-source-unverified"
 }

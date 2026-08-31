@@ -35,5 +35,19 @@ malformed or missing records fail with content-free classes. This is source and
 synthetic mutation coverage only; no native picker, Keychain, bookmark, move,
 reboot, alias, mount, or revocation lifecycle has executed here.
 
+The tool-helper source defines a private `NSXPCListener` service that verifies
+its own exact signature and two-key sandbox entitlement closure, admits only the
+exact signed host identity, and decodes one closed invocation carrying an
+already-consumed `WorkspaceRead` grant, one bounded read-only bookmark, and one
+digest-bound request. The helper resolves no Keychain state, opens only a
+read-only no-follow workspace descriptor, creates and removes an owner-only
+scratch directory, applies CPU, address-space, file, process, and descriptor
+ceilings, returns a digest-bound bounded result, and rejects replay. Its XPC
+target deliberately does not use sandbox inheritance, an App Group, network,
+user-selected read-write, Keychain, device, or temporary-exception entitlement.
+This is source and synthetic mutation coverage only; no signed XPC target,
+native connection, sandbox enforcement, forced lifecycle, or Rust executor
+composition has executed here.
+
 Native compilation, signing, execution, and support remain `BLOCKED-MACOS` until
 the manual Apple Silicon source check and the required physical-M5 evidence exist.

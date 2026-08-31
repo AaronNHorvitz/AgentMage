@@ -133,6 +133,10 @@ export function validateManifest(value) {
     entitlementValues.some((item) => forbiddenEntitlements.has(item)) ||
     !value.entitlements.kernel_host.includes("com.apple.security.files.user-selected.read-only") ||
     !value.entitlements.kernel_host.includes("keychain-access-groups") ||
+    JSON.stringify(value.entitlements.xpc_tool_helper) !== JSON.stringify([
+      "com.apple.security.app-sandbox",
+      "com.apple.security.files.bookmarks.app-scope",
+    ]) ||
     value.entitlements.metal_inference_service.length !== 1
   ) {
     failures.push("minimal entitlement or no-network contract changed");
@@ -239,7 +243,7 @@ export function validateReport(value, verifyCurrent = true) {
     value?.field_closure?.top_level_field_count !== 16 ||
     value?.field_closure?.component_count !== 4 ||
     value?.field_closure?.designated_requirement_count !== 4 ||
-    value?.field_closure?.entitlement_assignment_count !== 12 ||
+    value?.field_closure?.entitlement_assignment_count !== 10 ||
     value?.field_closure?.component_hash_count !== 4
   ) failures.push("macOS manifest field closure changed");
   if (JSON.stringify(value?.blockers) !== JSON.stringify(BLOCKERS)) {
