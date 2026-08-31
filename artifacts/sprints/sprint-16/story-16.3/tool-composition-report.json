@@ -1,0 +1,105 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 55843,
+      "path": "kernel/engine/src/tool_composition.rs",
+      "sha256": "875a08d2b000cb9d50a6822a54d6903ee802639fcb8c19e30b58c8652ea79977"
+    },
+    {
+      "byte_length": 10833,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "c4425fe083d2152d1c14944fb99dd90ed82d52f1975c2491bd55243a0e6dc9da"
+    },
+    {
+      "byte_length": 15358,
+      "path": "shells/host/src/runtime_tools.rs",
+      "sha256": "51e07dc7af4a4762cf87633c20a73e317b4d70245d636f60c56e175e3a6a4755"
+    },
+    {
+      "byte_length": 27089,
+      "path": "shells/host/src/coding_tools.rs",
+      "sha256": "1402e0d4f5f0622e69d74333c3c4e1d74aaddff7b52151a412b019dd3ce2ccf9"
+    },
+    {
+      "byte_length": 3595,
+      "path": "docs/architecture/tool-preflight-attempt-verification-composition.md",
+      "sha256": "ee2e4ae6e20ac84dcd26f36aa33755f9256340f7d72c9860ac50fc8bcae28a82"
+    },
+    {
+      "byte_length": 4949,
+      "path": "scripts/story_16_3_tool_composition_evidence.py",
+      "sha256": "83044f937ed64c19f0228b72a928f469f3b015b3ec5bae185eef817e5159dbee"
+    },
+    {
+      "byte_length": 1394,
+      "path": "tests/test_story_16_3_tool_composition_evidence.py",
+      "sha256": "e9c5be3b5ab4d25252f926a5d22ed7eaf10f71ccbfbd9c4d001f13f652a21366"
+    },
+    {
+      "byte_length": 8326,
+      "path": "artifacts/sprints/sprint-16/story-16.3/tool-composition-results.log",
+      "sha256": "66b9cdf826b52a809f83eda7aecbb337680ced995874c961d820542af94af221"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine tool_composition::tests --locked",
+    "cargo test -p agentmage-host runtime_tools --locked",
+    "cargo test -p agentmage-host story_48_2_native_catalog_is_exact_local_and_mcp_independent --locked",
+    "cargo clippy -p agentmage-kernel-engine -p agentmage-host --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-31",
+  "limitations": [
+    "the retained campaign exercises deterministic composition ports and host catalog closure",
+    "installed native worker and platform release evidence remain separate gates"
+  ],
+  "preflight_families": [
+    "workspace",
+    "git",
+    "executable",
+    "service",
+    "network-policy",
+    "platform",
+    "storage",
+    "credential-reference",
+    "resource"
+  ],
+  "product_truth": {
+    "coding_native_mapping_count": 21,
+    "crash_boundary_reconciliation_complete": true,
+    "deterministic_verification_complete": true,
+    "duplicate_effect_count": 0,
+    "false_completion_count": 0,
+    "installed_worker_campaign_executed": false,
+    "just_in_time_revalidation_complete": true,
+    "preflight_registry_complete": true,
+    "read_only_native_mapping_count": 17,
+    "release_claim": "none",
+    "single_consumption_single_launch_contract_complete": true
+  },
+  "record_type": "agentmage-story-16-3-tool-composition-evidence",
+  "required_markers": [
+    "story_16_3_registers_all_exact_preflights_and_maps_every_visible_tool ... ok",
+    "story_16_3_preflight_policy_grant_launch_verify_and_cleanup_order_is_exact ... ok",
+    "story_16_3_every_preflight_drift_fails_before_attempt_or_worker ... ok",
+    "story_16_3_post_approval_preflight_policy_and_grant_drift_start_no_worker ... ok",
+    "story_16_3_duplicate_calls_and_failed_consumption_never_launch ... ok",
+    "story_16_3_all_terminal_states_are_explicit_and_never_false_complete ... ok",
+    "story_16_3_receipt_verification_and_cleanup_gaps_force_noncompletion ... ok",
+    "story_16_3_crash_boundaries_restore_one_uncertain_terminal_without_replay ... ok",
+    "story_16_3_every_native_tool_has_one_complete_composition_policy ... ok",
+    "story_48_2_native_catalog_is_exact_local_and_mcp_independent ... ok"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_DETERMINISTIC_COMPOSITION",
+  "story_id": "16.3",
+  "terminal_states": [
+    "succeeded",
+    "no_op",
+    "partial",
+    "denied",
+    "cancelled",
+    "failed",
+    "uncertain",
+    "blocked"
+  ]
+}

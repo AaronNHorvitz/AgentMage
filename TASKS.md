@@ -3116,7 +3116,7 @@ release stories.
   when fake results are compared, then correctness data and evidence are identical and no result is
   represented as production source-artifact execution.
 
-#### [ ] Story 16.3 - Tool Preflight, Attempt, and Verification Composition
+#### [x] Story 16.3 - Tool Preflight, Attempt, and Verification Composition
 
 **User-facing value:** As a user, I need every tool call checked against current machine and project
 facts before execution and verified against exact postconditions afterward.
@@ -3125,39 +3125,52 @@ facts before execution and verified against exact postconditions afterward.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 16.3.1 - Build deterministic preflight registry**
-  - [ ] **Sub-task 16.3.1.1:** Register workspace, Git, executable, service, network-policy,
+- [x] **Task 16.3.1 - Build deterministic preflight registry**
+  - [x] **Sub-task 16.3.1.1:** Register workspace, Git, executable, service, network-policy,
     platform, storage, credential-reference, and resource preflight probes with exact versions,
     freshness, evidence, limits, and failure classes.
-  - [ ] **Sub-task 16.3.1.2:** Bind every runtime-visible tool to required preflights, effect class,
+  - [x] **Sub-task 16.3.1.2:** Bind every runtime-visible tool to required preflights, effect class,
     approval rule, verifier, retry policy, and terminal diagnostic policy.
-  - [ ] **Sub-task 16.3.1.3:** Fail before grant consumption or worker creation when a required
+  - [x] **Sub-task 16.3.1.3:** Fail before grant consumption or worker creation when a required
     observation is missing, stale, ambiguous, out of budget, or inconsistent.
-- [ ] **Task 16.3.2 - Compose call and attempt execution**
-  - [ ] **Sub-task 16.3.2.1:** Assemble exact calls, canonical arguments, targets, preimages,
+- [x] **Task 16.3.2 - Compose call and attempt execution**
+  - [x] **Sub-task 16.3.2.1:** Assemble exact calls, canonical arguments, targets, preimages,
     expected effects, postconditions, and operation-attempt identity before policy evaluation.
-  - [ ] **Sub-task 16.3.2.2:** Consume one current grant immediately before one worker launch and
+  - [x] **Sub-task 16.3.2.2:** Consume one current grant immediately before one worker launch and
     bind result, receipt, artifacts, changed state, and cleanup to that exact attempt.
-  - [ ] **Sub-task 16.3.2.3:** Invoke deterministic verifiers and record observed success, no-op,
+  - [x] **Sub-task 16.3.2.3:** Invoke deterministic verifiers and record observed success, no-op,
     partial, denied, cancelled, failed, uncertain, or blocked state without model interpretation.
-- [ ] **Task 16.3.3 - Verify hostile and recovery paths**
-  - [ ] **Sub-task 16.3.3.1:** Mutate each preflight between observation, approval, grant, and
+- [x] **Task 16.3.3 - Verify hostile and recovery paths**
+  - [x] **Sub-task 16.3.3.1:** Mutate each preflight between observation, approval, grant, and
     dispatch; require stale authority invalidation and zero worker starts.
-  - [ ] **Sub-task 16.3.3.2:** Crash before/during/after worker, receipt, artifact, verification, and
+  - [x] **Sub-task 16.3.3.2:** Crash before/during/after worker, receipt, artifact, verification, and
     checkpoint boundaries; require one terminal attempt record, no replay, and bounded cleanup.
-  - [ ] **Sub-task 16.3.3.3:** Race duplicate calls and retry decisions; require one admitted
+  - [x] **Sub-task 16.3.3.3:** Race duplicate calls and retry decisions; require one admitted
     attempt, zero duplicate guarded effects, and explicit uncertainty when reconciliation cannot
     establish postconditions.
 
+Implementation evidence: `kernel/engine/src/tool_composition.rs` registers the nine exact preflight
+families, derives a digest-bound composition policy for every common native tool, prepares canonical
+call/target/preimage/effect/postcondition identity, revalidates current facts immediately before
+authority consumption, commits one launch identity, consumes once, launches once, invokes a
+deterministic verifier, and retains one terminal receipt. The host proves complete mappings for all
+17 read-only/artifact and all 21 coding definitions. Focused hostile tests cover every non-pass
+preflight, observation/policy/approval/grant drift, duplicate calls and prepared-attempt reuse,
+failed consumption, all eight worker dispositions, missing worker receipts, verification and cleanup
+gaps, seven crash boundaries, restart, tamper, explicit uncertainty, and zero replay. The retained
+[`tool-composition-report.json`](artifacts/sprints/sprint-16/story-16.3/tool-composition-report.json)
+binds source, focused output, host catalog closure, and strict Clippy while explicitly preserving
+installed-worker and platform release campaigns as separate gates.
+
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 16.3.AC1:** Given a proposed tool call, when preflight and policy run, then no
+- [x] **Story AC 16.3.AC1:** Given a proposed tool call, when preflight and policy run, then no
   worker starts until every exact current dependency, schema, grant, approval, limit, and verifier
   requirement passes.
-- [ ] **Story AC 16.3.AC2:** Given one launched attempt, when it terminates or crashes, then one
+- [x] **Story AC 16.3.AC2:** Given one launched attempt, when it terminates or crashes, then one
   receipt, one verification state, and one cleanup result reconcile without replay or false
   completion.
-- [ ] **Story AC 16.3.AC3:** Given changed preconditions or a duplicate request, when dispatch is
+- [x] **Story AC 16.3.AC3:** Given changed preconditions or a duplicate request, when dispatch is
   attempted, then authority invalidates before effect and no competing attempt can broaden scope.
 
 #### Sprint Acceptance Criteria

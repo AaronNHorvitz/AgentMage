@@ -6,7 +6,10 @@ use agentmage_capability_read_only::{
     validate_artifact_request, validate_git_inspection_request, validate_read_only_request,
 };
 use agentmage_kernel_contracts::{ToolDefinition, ValidationIssue, ValidationSeverity};
-use agentmage_kernel_engine::tooling::{Tool, ToolRegistry};
+use agentmage_kernel_engine::{
+    tool_composition::{ToolCompositionError, ToolCompositionRegistry},
+    tooling::{Tool, ToolRegistry},
+};
 
 /// Stable failure while constructing an exact native runtime catalog.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -139,6 +142,14 @@ pub fn read_only_runtime_registry() -> Result<ToolRegistry, NativeToolCatalogErr
     Ok(registry)
 }
 
+/// Builds the exact preflight, effect, approval, verifier, retry, and diagnostic mapping for every
+/// tool currently visible through one native registry.
+pub fn native_tool_composition_registry(
+    registry: &ToolRegistry,
+) -> Result<ToolCompositionRegistry, ToolCompositionError> {
+    ToolCompositionRegistry::for_tools(registry)
+}
+
 #[cfg(test)]
 mod tests {
     use agentmage_capability_read_only::{
@@ -154,7 +165,10 @@ mod tests {
     use agentmage_kernel_engine::runtime_loop::runtime_tool_references;
     use sha2::{Digest, Sha256};
 
-    use super::{read_only_runtime_registry, register_read_only_runtime_tools};
+    use super::{
+        native_tool_composition_registry, read_only_runtime_registry,
+        register_read_only_runtime_tools,
+    };
 
     #[test]
     fn story_23_4_all_existing_read_only_tools_share_the_common_registry() {
@@ -244,6 +258,22 @@ mod tests {
                     .get_tool(&ToolId::from_raw(future), ARTIFACT_TOOL_VERSION)
                     .is_none()
             );
+        }
+    }
+
+    #[test]
+    fn story_16_3_every_native_tool_has_one_complete_composition_policy() {
+        let registry = read_only_runtime_registry().expect("native catalog");
+        let compositions = native_tool_composition_registry(&registry).expect("composition map");
+        assert_eq!(compositions.policies().len(), registry.list_tools().len());
+        for definition in registry.list_tools() {
+            let policy = compositions
+                .get(&definition.tool_id, &definition.tool_version)
+                .expect("exact composition policy");
+            assert!(!policy.required_preflight_ids.is_empty());
+            assert_eq!(policy.tool_id, definition.tool_id);
+            assert_eq!(policy.tool_version, definition.tool_version);
+            assert_eq!(policy.policy_sha256.len(), 64);
         }
     }
 

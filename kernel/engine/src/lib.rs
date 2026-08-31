@@ -162,6 +162,8 @@ pub mod strict_local;
 pub mod task_classification;
 /// Deterministic tool-call normalization and single profile-bound repair admission.
 pub mod tool_call_repair;
+/// Deterministic native-tool preflight, attempt, launch, and verification composition.
+pub mod tool_composition;
 /// Exact tool registration, call validation, and pre-grant dispatch denial.
 pub mod tooling;
 pub mod validation_result;

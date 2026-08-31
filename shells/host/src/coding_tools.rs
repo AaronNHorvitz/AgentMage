@@ -634,6 +634,12 @@ mod tests {
                     | GrantOperation::CommandExecute
             )
         }));
+        let compositions =
+            agentmage_kernel_engine::tool_composition::ToolCompositionRegistry::for_tools(
+                &registry,
+            )
+            .expect("complete coding composition map");
+        assert_eq!(compositions.policies().len(), definitions.len());
         assert!(definitions.iter().all(|definition| {
             !matches!(
                 definition.declared_effects[0].operation(),
