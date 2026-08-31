@@ -16,6 +16,7 @@ REPORT_PATH = ROOT / "artifacts/sprints/sprint-8/story-8.1/macos-bridge-source-c
 SOURCE_PATHS = (
     "platforms/macos/Sources/AgentMageMacOSPlatform/AppGroupSocketBoundary.swift",
     "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSBridgeProtocol.swift",
+    "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSPeerVerification.swift",
     "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSBridgeProtocolTests.swift",
     "scripts/macos_bridge_source_contract.py",
     "tests/test_macos_bridge_source_contract.py",
@@ -171,7 +172,7 @@ def build_report(
             "Apple Silicon Swift build and tests have not run.",
             "A signed native bridge executable is not yet integrated with the Visual Studio Code shell.",
             "A native App Group Unix socket has not been bound or inspected.",
-            "Audit-token and designated-requirement verification remain task 8.1.1.3.",
+            "Audit-token and designated-requirement source is present under task 8.1.1.3, but native verification has not run.",
             "Physical MacBook Pro M5 qualification has not run.",
         ],
     }

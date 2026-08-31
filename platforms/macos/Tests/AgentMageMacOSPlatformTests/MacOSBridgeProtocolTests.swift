@@ -26,6 +26,33 @@ private func socketBaseline() -> AppGroupSocketObservation {
     )
 }
 
+private func verifiedPeer(_ identity: MacOSBridgeIdentity) throws -> VerifiedMacOSBridgePeer {
+    let expected = try MacOSPeerExpectation(
+        bridgeIdentity: identity,
+        designatedRequirement: MacOSPeerExpectation.requirement(for: identity),
+        processIdentifier: 42,
+        effectiveUserIdentifier: 501,
+        effectiveGroupIdentifier: 20
+    )
+    return try MacOSPeerAdmission.admit(
+        observation: MacOSPeerObservation(
+            auditTokenPresent: true,
+            auditTokenByteCount: agentMageMacOSAuditTokenBytes,
+            processIdentifier: 42,
+            effectiveUserIdentifier: 501,
+            effectiveGroupIdentifier: 20,
+            codeSignatureValid: true,
+            designatedRequirementSatisfied: true,
+            bundleIdentifier: identity.bridgeBundleIdentifier,
+            teamIdentifier: identity.teamIdentifier,
+            sandboxEnabled: true,
+            appGroups: [identity.appGroupIdentifier],
+            unexpectedEntitlementKeys: []
+        ),
+        expected: expected
+    )
+}
+
 @Test("fresh exact launch material authenticates once")
 func freshExactLaunchAuthenticatesOnce() throws {
     let identity = try bridgeIdentity()
@@ -42,9 +69,9 @@ func freshExactLaunchAuthenticatesOnce() throws {
         challenge: [UInt8](repeating: 3, count: 32),
         launchSecret: [UInt8](repeating: 4, count: 32)
     )
-    try authenticator.authenticate(observedIdentity: identity, frame: frame)
+    try authenticator.authenticate(verifiedPeer: verifiedPeer(identity), frame: frame)
     #expect(throws: MacOSBridgeFailure.replay) {
-        try authenticator.authenticate(observedIdentity: identity, frame: frame)
+        try authenticator.authenticate(verifiedPeer: verifiedPeer(identity), frame: frame)
     }
 }
 
@@ -68,7 +95,7 @@ func authenticationSubstitutionsFail() throws {
             expectedIdentity: identity,
             challenge: [UInt8](repeating: 3, count: 32),
             launchSecret: [UInt8](repeating: 4, count: 32)
-        ).authenticate(observedIdentity: identity, frame: wrongVersion)
+        ).authenticate(verifiedPeer: verifiedPeer(identity), frame: wrongVersion)
     }
 
     let wrongChallenge = try MacOSHandshakeFrame(
@@ -81,7 +108,7 @@ func authenticationSubstitutionsFail() throws {
             expectedIdentity: identity,
             challenge: [UInt8](repeating: 3, count: 32),
             launchSecret: [UInt8](repeating: 4, count: 32)
-        ).authenticate(observedIdentity: identity, frame: wrongChallenge)
+        ).authenticate(verifiedPeer: verifiedPeer(identity), frame: wrongChallenge)
     }
 
     let wrongIdentity = try MacOSBridgeIdentity(
@@ -95,7 +122,7 @@ func authenticationSubstitutionsFail() throws {
             expectedIdentity: identity,
             challenge: [UInt8](repeating: 3, count: 32),
             launchSecret: [UInt8](repeating: 4, count: 32)
-        ).authenticate(observedIdentity: wrongIdentity, frame: baseline)
+        ).authenticate(verifiedPeer: verifiedPeer(wrongIdentity), frame: baseline)
     }
 
     var wrongResponse = baseline.response
@@ -110,7 +137,7 @@ func authenticationSubstitutionsFail() throws {
             expectedIdentity: identity,
             challenge: [UInt8](repeating: 3, count: 32),
             launchSecret: [UInt8](repeating: 4, count: 32)
-        ).authenticate(observedIdentity: identity, frame: corrupted)
+        ).authenticate(verifiedPeer: verifiedPeer(identity), frame: corrupted)
     }
 }
 

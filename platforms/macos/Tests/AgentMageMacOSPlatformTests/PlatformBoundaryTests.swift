@@ -12,4 +12,8 @@ func macOSScaffoldRemainsBlocked() {
         AgentMageMacOSPlatformBoundary.bridgeSourceStatus
             == "implemented-source-unverified"
     )
+    #expect(
+        AgentMageMacOSPlatformBoundary.peerVerificationSourceStatus
+            == "implemented-source-unverified"
+    )
 }

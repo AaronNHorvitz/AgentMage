@@ -167,15 +167,15 @@ public final class MacOSLaunchCredentials: @unchecked Sendable {
     }
 }
 
-/// One-use host-side authenticator. Native peer observations are supplied by 8.1.1.3.
-public final class MacOSBridgeAuthenticator: @unchecked Sendable {
+/// One-use host-side authenticator reachable only after native peer admission.
+final class MacOSBridgeAuthenticator: @unchecked Sendable {
     private let lock = NSLock()
     private let expectedIdentity: MacOSBridgeIdentity
     private var challenge: [UInt8]
     private var launchSecret: [UInt8]
     private var consumed = false
 
-    public init(
+    init(
         expectedIdentity: MacOSBridgeIdentity,
         challenge: [UInt8],
         launchSecret: [UInt8]
@@ -193,8 +193,8 @@ public final class MacOSBridgeAuthenticator: @unchecked Sendable {
         launchSecret.erase()
     }
 
-    public func authenticate(
-        observedIdentity: MacOSBridgeIdentity,
+    func authenticate(
+        verifiedPeer: VerifiedMacOSBridgePeer,
         frame: MacOSHandshakeFrame
     ) throws {
         lock.lock()
@@ -206,14 +206,14 @@ public final class MacOSBridgeAuthenticator: @unchecked Sendable {
         guard frame.challenge == challenge else {
             throw MacOSBridgeFailure.challengeMismatch
         }
-        guard observedIdentity == expectedIdentity else {
+        guard verifiedPeer.bridgeIdentity == expectedIdentity else {
             throw MacOSBridgeFailure.bridgeIdentityMismatch
         }
         let expectedResponse = MacOSLaunchCredentials.authenticationDigest(
             protocolVersion: frame.protocolVersion,
             challenge: frame.challenge,
             launchSecret: launchSecret,
-            identity: observedIdentity
+            identity: verifiedPeer.bridgeIdentity
         )
         guard Self.constantTimeEqual(frame.response, expectedResponse) else {
             throw MacOSBridgeFailure.authenticationFailed
