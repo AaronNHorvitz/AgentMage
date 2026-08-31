@@ -42,11 +42,11 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json",
-        "sha256": "f6bf54bdc1b1bc7ffa8da551250a9f4e98c2fac88fe6d1c0cad5d5c1c913f30e"
+        "sha256": "8d098f4bf0b89080f630bb6e16e1b7b592022d8acb6a004a9b54385e9ce388ff"
       },
       {
         "path": "scripts/story_7_1_gate.py",
-        "sha256": "5d9db602648a8e8516b893b2c4efdddecfce7fc1c3e30c00c3c62b19635b4bca"
+        "sha256": "952eb200296a670a2222831c5cc388ca9e71c5efabb1cd0980e3036756ef7230"
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
@@ -54,7 +54,7 @@
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "e0cf54e5df88a0c243bdd32c2964b736eea9a7fea12fa9ffff354deb99842066"
+        "sha256": "37ecb45e28205a5e96a47facc055e4c3bed111b80aec56c33071464bcf50fd93"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
@@ -62,11 +62,11 @@
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
-        "sha256": "497a6a0d16cab19547811f676f469f3808672939fbe6da0f397fb4a60dabeb72"
+        "sha256": "5a02165abb291c9a96c4c8226b233e4a9bfeb377223f75447004e817faa35acd"
       }
     ],
-    "reviewed_commit": "7ce3c07d6d8db523398ef43b5c5d981ebbf5714c",
-    "reviewed_tree": "e38c0e8769f3f348d381e9a4d06f9b62ffc43ad2",
+    "reviewed_commit": "0a52fb27166a936b1c57969d5c518ad0ab537760",
+    "reviewed_tree": "0b7b91f9efda553508ed267fd70847b7f6dfc6ae",
     "reviewer_id": "agentmage-sprint-7-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
@@ -74,8 +74,8 @@
   "native_mechanism_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "7ce3c07d6d8db523398ef43b5c5d981ebbf5714c",
-  "reviewed_tree": "e38c0e8769f3f348d381e9a4d06f9b62ffc43ad2",
+  "reviewed_commit": "0a52fb27166a936b1c57969d5c518ad0ab537760",
+  "reviewed_tree": "0b7b91f9efda553508ed267fd70847b7f6dfc6ae",
   "schema_version": 1,
   "sprint_id": 7,
   "status": "blocked-native-platforms-and-external-review",
