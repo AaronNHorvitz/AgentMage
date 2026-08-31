@@ -86,7 +86,7 @@
       {
         "byte_length": 12364,
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "f738909684e7aaf5d82a4e347d64d3547b27171ed42e9cbbd2ead0797965d3bb"
+        "sha256": "82ef837f8f69bb1a9ebce1f17f869369b782a9bc03706c1ffe76d8a33af7e1fd"
       },
       {
         "byte_length": 6520,
@@ -101,17 +101,17 @@
       {
         "byte_length": 2369,
         "path": "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
-        "sha256": "5a02165abb291c9a96c4c8226b233e4a9bfeb377223f75447004e817faa35acd"
+        "sha256": "db315ebaf008402e3b6fdf7ac7dc13699ba67f38cd99b3ece844728d0bbcaeaa"
       },
       {
-        "byte_length": 11669,
+        "byte_length": 11740,
         "path": "scripts/macos_release_manifest_contract.mjs",
-        "sha256": "f763e9edae3747fa8b7dd18f0835a59d42b0069b1532c1fdc0b7b898f0bc4fe8"
+        "sha256": "3853f4f7068fd4bce3a7c5287490a5e331706083ee7ccd1b6e7d504e860e9e7a"
       },
       {
-        "byte_length": 3799,
+        "byte_length": 3905,
         "path": "tests/test_macos_release_manifest_contract.mjs",
-        "sha256": "52a2d8eb1152c4c238ca6142511e070caa820773d5a12d11cfd76a6ede028e1a"
+        "sha256": "a35b3557156673c2215e5441187e65e4b51ea237aaf2d0954cef5e2e8b96a7b3"
       },
       {
         "byte_length": 23383,
@@ -148,16 +148,16 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-aggregate-review-not-external-human-review",
-    "reviewed_commit": "e7b3f13d2852beffba6e51d4859d1bcf73de8569",
-    "reviewed_tree": "16e79168f9cf9837537815401c18b174f69cb46d",
+    "reviewed_commit": "af2e02f72bb5ecc9c3e6c1f008bf6e9d1fa79519",
+    "reviewed_tree": "df0d4941401401ca45180f21f315dbdc8c85ea45",
     "reviewer_id": "agentmage-story-7.1-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
   "macos_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "e7b3f13d2852beffba6e51d4859d1bcf73de8569",
-  "reviewed_tree": "16e79168f9cf9837537815401c18b174f69cb46d",
+  "reviewed_commit": "af2e02f72bb5ecc9c3e6c1f008bf6e9d1fa79519",
+  "reviewed_tree": "df0d4941401401ca45180f21f315dbdc8c85ea45",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-native-platforms-and-external-review",
