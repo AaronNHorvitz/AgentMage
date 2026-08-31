@@ -42,11 +42,11 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json",
-        "sha256": "609c796dc7a8bd0029f36ed3135cf5173b545b91159b09cf174c113d57a3e3ee"
+        "sha256": "0f088be70cee0080b89a8195a7350a07dcac9b8169628dddd4aa5fc566fb71b0"
       },
       {
         "path": "scripts/story_7_1_gate.py",
-        "sha256": "69acb79143907fb3539d892561c64aa41024242e8849dc5e2c10b5bcb4dcf8c8"
+        "sha256": "850835720a4c2bd3185d94bff253446294e037b10da52142d7c82f6d436b75fa"
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
@@ -54,7 +54,7 @@
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/security-evidence-map.json",
-        "sha256": "1cf766680f532456c3de9039605b6b22bf6d68aba222d331bdff45a66ddf0f6f"
+        "sha256": "785219176136040ba19c7c84943e8bacdb95051ccfe2dc5fd0ecc7d855fe3b59"
       },
       {
         "path": "artifacts/sprints/sprint-2/story-2.1/platform-result-recorder-report.json",
@@ -65,8 +65,8 @@
         "sha256": "db315ebaf008402e3b6fdf7ac7dc13699ba67f38cd99b3ece844728d0bbcaeaa"
       }
     ],
-    "reviewed_commit": "5541ab1863fd54f37af9e9cf9ba3ebbe70bffed7",
-    "reviewed_tree": "812ea2d10bafab880a02736651d95805d4e63f60",
+    "reviewed_commit": "ad713f029c539381558512fe94a3cc7c93cbe043",
+    "reviewed_tree": "7ab2992c3aead1acb6df7ab03ae034a1fc4d8e49",
     "reviewer_id": "agentmage-sprint-7-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
@@ -74,8 +74,8 @@
   "native_mechanism_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "5541ab1863fd54f37af9e9cf9ba3ebbe70bffed7",
-  "reviewed_tree": "812ea2d10bafab880a02736651d95805d4e63f60",
+  "reviewed_commit": "ad713f029c539381558512fe94a3cc7c93cbe043",
+  "reviewed_tree": "7ab2992c3aead1acb6df7ab03ae034a1fc4d8e49",
   "schema_version": 1,
   "sprint_id": 7,
   "status": "blocked-native-platforms-and-external-review",
