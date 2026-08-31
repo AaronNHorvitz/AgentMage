@@ -1,0 +1,64 @@
+{
+  "claims": {
+    "macos_support": false,
+    "native_release_reports_exist": false,
+    "release_candidate_exists": false,
+    "task_complete": false
+  },
+  "contract": {
+    "component_count": 4,
+    "credential_authority": false,
+    "native_tool_execution_authority": false,
+    "network_authority": false,
+    "package_copy_authority": false,
+    "report_family_count": 5,
+    "report_field_count": 18,
+    "support_promotion_authority": false
+  },
+  "execution": {
+    "code_signatures_observed": false,
+    "entitlements_observed": false,
+    "gatekeeper_observed": false,
+    "independent_review_performed": false,
+    "native_reports_assembled": false,
+    "notarization_observed": false,
+    "stapling_observed": false
+  },
+  "record_type": "macos-native-release-reports-source-contract",
+  "remaining_blockers": [
+    "No external entitlement report exists for the four signed components.",
+    "No external application, component, or installer code-signing report exists.",
+    "No external accepted notarization submission and issue-free log exist.",
+    "No external stapling and validation reports exist for the exact package.",
+    "No external install-type Gatekeeper acceptance report exists for the exact package.",
+    "No release-approved policy, signed package, release-derived manifest, or successful terminal record exists.",
+    "No independent reviewer has reconciled and retained the native report bundle."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "packaging/macos/RELEASE-REPORTS.md",
+      "sha256": "d8bedf2e260ac55319a902aa990799962fe5ecaf0598093243ada5890e3ed061"
+    },
+    {
+      "path": "packaging/macos/release-runner.sh",
+      "sha256": "498c24735c1490be6987f86d572f360bd56d58aa519774b2fd30c884a159d2f5"
+    },
+    {
+      "path": "scripts/macos_release_reports.py",
+      "sha256": "024cdd26f3b030bd7fd5c6637da7231ef6cde0b50afdcbb796d38f10fa8a18be"
+    },
+    {
+      "path": "scripts/macos_signed_reference_package.py",
+      "sha256": "0332e0096a32675ca089159996867b740adf536585fc5db295ab36fa3d349446"
+    },
+    {
+      "path": "tests/test_macos_release_reports.py",
+      "sha256": "5e0e6eac55a2aedcd72ce1a9969da7281c148cb3ca225ee917b8a2030e4d521f"
+    }
+  ],
+  "source_revision": "efb8efba37cf02dc015d6f008f769320a5f62dfa",
+  "source_tree": "f05ab5997285087e9fecf1ad2db7e79aa09f9645",
+  "status": "prepared-source-only-blocked-macos",
+  "task_id": "8.1.2.2"
+}
