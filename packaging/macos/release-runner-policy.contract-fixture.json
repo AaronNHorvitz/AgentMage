@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "record_type": "macos-release-runner-policy",
+  "status": "contract-fixture",
+  "ceremony_id": "agentmage-macos-release-contract-fixture",
+  "source_revision": "1111111111111111111111111111111111111111",
+  "version": "0.0.0",
+  "expected_macos_build": "synthetic-macos-build",
+  "expected_xcode_build": "synthetic-xcode-build",
+  "architecture": "arm64",
+  "team_id": "AAAAAAAAAA",
+  "application_identity_sha1": "2222222222222222222222222222222222222222",
+  "installer_identity_sha1": "3333333333333333333333333333333333333333",
+  "bundle_identifiers": {
+    "kernel_host": "com.example.agentmage.contractfixture.host",
+    "vscode_bridge": "com.example.agentmage.contractfixture.bridge",
+    "xpc_tool_helper": "com.example.agentmage.contractfixture.tool",
+    "metal_inference_service": "com.example.agentmage.contractfixture.inference"
+  },
+  "app_group_identifier": "group.com.example.agentmage.contractfixture",
+  "keychain_access_group": "AAAAAAAAAA.com.example.agentmage.contractfixture",
+  "entitlements": {
+    "kernel_host": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.application-groups",
+      "com.apple.security.files.bookmarks.app-scope",
+      "com.apple.security.files.user-selected.read-only",
+      "keychain-access-groups"
+    ],
+    "vscode_bridge": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.application-groups"
+    ],
+    "xpc_tool_helper": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.files.bookmarks.app-scope"
+    ],
+    "metal_inference_service": [
+      "com.apple.security.app-sandbox"
+    ]
+  },
+  "previous_package_path": "/nonexistent/agentmage-previous.pkg",
+  "previous_package_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "notary_keychain_profile": "agentmage-release-notary-v1",
+  "credential_values_present": false,
+  "private_environment_values_present": false,
+  "release_claim": "none"
+}
