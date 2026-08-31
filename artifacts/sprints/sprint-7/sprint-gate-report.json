@@ -42,11 +42,11 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json",
-        "sha256": "6a986a87c4f5b9284dc235c09969cc12d70dcb3085ca8e94bba54029c0535f8d"
+        "sha256": "609c796dc7a8bd0029f36ed3135cf5173b545b91159b09cf174c113d57a3e3ee"
       },
       {
         "path": "scripts/story_7_1_gate.py",
-        "sha256": "75c3a9486732ef962437c6c1ddc49d2990581c93b0ce52b64fb317021f711fa2"
+        "sha256": "69acb79143907fb3539d892561c64aa41024242e8849dc5e2c10b5bcb4dcf8c8"
       },
       {
         "path": "artifacts/sprints/sprint-7/story-7.1/platform-contract-report.json",
@@ -65,8 +65,8 @@
         "sha256": "db315ebaf008402e3b6fdf7ac7dc13699ba67f38cd99b3ece844728d0bbcaeaa"
       }
     ],
-    "reviewed_commit": "9c1edbc238c2854610dfaa4c20f3bf89a70fe9bf",
-    "reviewed_tree": "b4b532c56549c94e989c77d0eefc9965472c8ed0",
+    "reviewed_commit": "5541ab1863fd54f37af9e9cf9ba3ebbe70bffed7",
+    "reviewed_tree": "812ea2d10bafab880a02736651d95805d4e63f60",
     "reviewer_id": "agentmage-sprint-7-automated-aggregate-v1"
   },
   "installed_product_claim": "none",
@@ -74,8 +74,8 @@
   "native_mechanism_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "9c1edbc238c2854610dfaa4c20f3bf89a70fe9bf",
-  "reviewed_tree": "b4b532c56549c94e989c77d0eefc9965472c8ed0",
+  "reviewed_commit": "5541ab1863fd54f37af9e9cf9ba3ebbe70bffed7",
+  "reviewed_tree": "812ea2d10bafab880a02736651d95805d4e63f60",
   "schema_version": 1,
   "sprint_id": 7,
   "status": "blocked-native-platforms-and-external-review",
