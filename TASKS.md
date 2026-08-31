@@ -3053,7 +3053,7 @@ and disclosure so that local privacy cannot become remote processing through con
 - [ ] **Story AC 16.1.AC1:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then each call receives exactly one consumed operation grant, one bounded input scope, one isolated worker, one typed result, and one schema-valid receipt.
 - [ ] **Story AC 16.1.AC2:** Given the story dependencies and approved fixtures, when the implementation and verification tasks are completed, then the complete tool pack remains demonstrably read-only: fixture trees, metadata, Git state, external canaries, network state, and durable operational data are invariant except authorized receipts.
 
-#### [ ] Story 16.2 - Native Source-Artifact Tool Protocol and Registry
+#### [x] Story 16.2 - Native Source-Artifact Tool Protocol and Registry
 
 **User-facing value:** As a user, I need the model to inspect admitted files through bounded native
 tools so large evidence stays outside prompts until an exact section is needed.
@@ -3063,43 +3063,56 @@ to the later native source-artifact implementation story after the source-artifa
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 16.2.1 - Register the closed artifact tool catalog**
-  - [ ] **Sub-task 16.2.1.1:** Define exact-version schemas for `artifact.list`,
+- [x] **Task 16.2.1 - Register the closed artifact tool catalog**
+  - [x] **Sub-task 16.2.1.1:** Define exact-version schemas for `artifact.list`,
     `artifact.metadata`, `artifact.read`, `artifact.range`, `artifact.sections`, and
     `artifact.search`, including source, section, range, limit, freshness, and output identities.
-  - [ ] **Sub-task 16.2.1.2:** Register all six through the common native tool registry and
+  - [x] **Sub-task 16.2.1.2:** Register all six through the common native tool registry and
     dispatcher with `workspace_read` authority only; prohibit direct parser, path, store, model, or
     MCP channels.
-  - [ ] **Sub-task 16.2.1.3:** Enforce per-call item, byte, range, result, time, memory, task,
+  - [x] **Sub-task 16.2.1.3:** Enforce per-call item, byte, range, result, time, memory, task,
     recursion, and cancellation ceilings plus one terminal receipt for each launched attempt.
-- [ ] **Task 16.2.2 - Define dispatcher ports and fake-backend behavior**
-  - [ ] **Sub-task 16.2.2.1:** Define source-manifest, classification, extraction-state, section,
+- [x] **Task 16.2.2 - Define dispatcher ports and fake-backend behavior**
+  - [x] **Sub-task 16.2.2.1:** Define source-manifest, classification, extraction-state, section,
     provenance, truncation, freshness, unsupported-state, redaction, and large-result reference
     projections without implementing a source store or parser.
-  - [ ] **Sub-task 16.2.2.2:** Add a deterministic in-memory fake backend for byte/line/page/sheet/
+  - [x] **Sub-task 16.2.2.2:** Add a deterministic in-memory fake backend for byte/line/page/sheet/
     cell/section reads and lexical search so registry, schema, grant, receipt, limit, and client
     behavior can be reviewed before production operations exist.
-  - [ ] **Sub-task 16.2.2.3:** Define extension points for later `artifact.get_page`,
+  - [x] **Sub-task 16.2.2.3:** Define extension points for later `artifact.get_page`,
     `artifact.get_sheet`, and `artifact.get_log_errors` operations; keep them unregistered until
     their owning extractors and native implementations pass.
-- [ ] **Task 16.2.3 - Verify protocol safety and fake parity**
-  - [ ] **Sub-task 16.2.3.1:** Run valid, missing, extra, malformed, oversized, duplicate, stale,
+- [x] **Task 16.2.3 - Verify protocol safety and fake parity**
+  - [x] **Sub-task 16.2.3.1:** Run valid, missing, extra, malformed, oversized, duplicate, stale,
     unsupported-version, out-of-range, restricted, cancelled, timeout, crash, and repeated-call cases
     for every tool.
-  - [ ] **Sub-task 16.2.3.2:** Prove exact deterministic fake results across Chat, CLI, and headless
+  - [x] **Sub-task 16.2.3.2:** Prove exact deterministic fake results across Chat, CLI, and headless
     callers, workspace/store invariance, no network or parser launch, and complete cleanup.
-  - [ ] **Sub-task 16.2.3.3:** Retain schemas, catalog closure, golden results, sandbox traces,
+  - [x] **Sub-task 16.2.3.3:** Retain schemas, catalog closure, golden results, sandbox traces,
     canary scans, receipts, cancellation results, and `RV-03`, `RV-04`, `RV-08`, and `RV-16` maps.
+
+Implementation evidence: `capabilities/read-only/src/artifact.rs` contains the closed six-identity
+catalog, schema-bound validator, exact source/range/freshness/output contracts, deterministic fake
+backend, all six coordinate projections, bounded lexical search, explicit terminal outcomes,
+large-result references, one-receipt attempt ledger, and unregistered typed future extractor ports.
+The common host registry and coding schema projection expose the same inert definitions to shared
+clients without adding a parser, path, store, model, MCP, process, or network adapter. The retained
+[`artifact-protocol-report.json`](artifacts/sprints/sprint-16/story-16.2/artifact-protocol-report.json)
+and its complete command log map `RV-03`, `RV-04`, `RV-08`, and `RV-16`; focused capability,
+registry, Chat/CLI/headless parity, strict Clippy, evidence-mutation, and documentation gates pass.
+The report explicitly marks production extraction, installed-worker execution, and cross-platform
+sandbox execution false because those operations remain assigned to later native implementation and
+release stories.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 16.2.AC1:** Given a synthetic source manifest and exact current grant, when any
+- [x] **Story AC 16.2.AC1:** Given a synthetic source manifest and exact current grant, when any
   artifact protocol operation runs against the fake backend, then one bounded typed result and one
   terminal receipt identify exact source, provenance, freshness, limits, and truncation.
-- [ ] **Story AC 16.2.AC2:** Given malformed, stale, restricted, unsupported, or unauthorized input,
+- [x] **Story AC 16.2.AC2:** Given malformed, stale, restricted, unsupported, or unauthorized input,
   when dispatch is requested, then execution fails closed with no parser launch, data disclosure,
   workspace mutation, network access, or hidden omission.
-- [ ] **Story AC 16.2.AC3:** Given the same synthetic authorized input through multiple clients,
+- [x] **Story AC 16.2.AC3:** Given the same synthetic authorized input through multiple clients,
   when fake results are compared, then correctness data and evidence are identical and no result is
   represented as production source-artifact execution.
 

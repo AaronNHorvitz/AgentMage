@@ -1,8 +1,9 @@
 //! Native capability registration for the shared runtime tool dispatcher.
 
 use agentmage_capability_read_only::{
-    GitInspectionError, ReadOnlyToolKind, git_inspection_tool_definition,
-    read_only_tool_definition, validate_git_inspection_request, validate_read_only_request,
+    ArtifactDispatchError, ArtifactToolKind, GitInspectionError, ReadOnlyToolKind,
+    artifact_tool_definition, git_inspection_tool_definition, read_only_tool_definition,
+    validate_artifact_request, validate_git_inspection_request, validate_read_only_request,
 };
 use agentmage_kernel_contracts::{ToolDefinition, ValidationIssue, ValidationSeverity};
 use agentmage_kernel_engine::tooling::{Tool, ToolRegistry};
@@ -27,6 +28,11 @@ impl NativeToolCatalogError {
 struct RegisteredReadOnlyTool {
     definition: ToolDefinition,
     kind: ReadOnlyToolKind,
+}
+
+struct RegisteredArtifactTool {
+    definition: ToolDefinition,
+    kind: ArtifactToolKind,
 }
 
 struct RegisteredGitInspectionTool {
@@ -64,6 +70,19 @@ impl Tool for RegisteredReadOnlyTool {
     }
 }
 
+impl Tool for RegisteredArtifactTool {
+    fn definition(&self) -> &ToolDefinition {
+        &self.definition
+    }
+
+    fn validate_arguments(&self, arguments: &[u8]) -> Vec<ValidationIssue> {
+        validate_artifact_request(self.kind, arguments).map_or_else(
+            |error| vec![artifact_validation_issue(error)],
+            |_| Vec::new(),
+        )
+    }
+}
+
 /// Registers every exact built-in read-only capability with one common registry.
 ///
 /// Registration exposes definitions and validation only. It does not supply a workspace,
@@ -79,12 +98,29 @@ pub fn register_read_only_runtime_tools(
             }))
             .map_err(|_| NativeToolCatalogError::RegistrationDenied)?;
     }
+    for kind in ArtifactToolKind::ALL {
+        registry
+            .register_tool(Box::new(RegisteredArtifactTool {
+                definition: artifact_tool_definition(kind),
+                kind,
+            }))
+            .map_err(|_| NativeToolCatalogError::RegistrationDenied)?;
+    }
     registry
         .register_tool(Box::new(RegisteredGitInspectionTool {
             definition: git_inspection_tool_definition(),
         }))
         .map_err(|_| NativeToolCatalogError::RegistrationDenied)?;
     Ok(())
+}
+
+fn artifact_validation_issue(error: ArtifactDispatchError) -> ValidationIssue {
+    ValidationIssue {
+        code: error.code().to_owned(),
+        severity: ValidationSeverity::Error,
+        field_path: vec!["arguments".to_owned()],
+        message: "Source-artifact runtime arguments failed closed validation".to_owned(),
+    }
 }
 
 fn git_validation_issue(error: GitInspectionError) -> ValidationIssue {
@@ -106,10 +142,11 @@ pub fn read_only_runtime_registry() -> Result<ToolRegistry, NativeToolCatalogErr
 #[cfg(test)]
 mod tests {
     use agentmage_capability_read_only::{
-        GIT_INSPECTION_INPUT_SCHEMA_ID, GIT_INSPECTION_TOOL_ID, GIT_INSPECTION_TOOL_VERSION,
-        GitInspectionOperation, GitInspectionRequest, READ_ONLY_INPUT_SCHEMA_ID,
-        READ_ONLY_TOOL_VERSION, ReadOnlyEncoding, ReadOnlyLimits, ReadOnlyRequest,
-        ReadOnlyToolKind,
+        ARTIFACT_INPUT_SCHEMA_ID, ARTIFACT_TOOL_VERSION, ArtifactLimits, ArtifactRange,
+        ArtifactRequest, ArtifactToolKind, GIT_INSPECTION_INPUT_SCHEMA_ID, GIT_INSPECTION_TOOL_ID,
+        GIT_INSPECTION_TOOL_VERSION, GitInspectionOperation, GitInspectionRequest,
+        READ_ONLY_INPUT_SCHEMA_ID, READ_ONLY_TOOL_VERSION, ReadOnlyEncoding, ReadOnlyLimits,
+        ReadOnlyRequest, ReadOnlyToolKind,
     };
     use agentmage_kernel_contracts::{
         ActionId, ContractPayload, CorrelationId, GrantOperation, ToolCall, ToolCallId, ToolId,
@@ -123,10 +160,16 @@ mod tests {
     fn story_23_4_all_existing_read_only_tools_share_the_common_registry() {
         let registry = read_only_runtime_registry().expect("read-only catalog");
         let definitions = registry.list_tools();
-        assert_eq!(definitions.len(), ReadOnlyToolKind::ALL.len() + 1);
-        assert_eq!(definitions.len(), 11);
+        assert_eq!(
+            definitions.len(),
+            ReadOnlyToolKind::ALL.len() + ArtifactToolKind::ALL.len() + 1
+        );
+        assert_eq!(definitions.len(), 17);
         for definition in &definitions {
-            assert_eq!(definition.tool_version, READ_ONLY_TOOL_VERSION);
+            assert!(
+                definition.tool_version == READ_ONLY_TOOL_VERSION
+                    || definition.tool_version == ARTIFACT_TOOL_VERSION
+            );
             assert_eq!(definition.declared_effects.len(), 1);
             assert_eq!(
                 definition.declared_effects[0].operation(),
@@ -145,6 +188,63 @@ mod tests {
                 .windows(2)
                 .all(|pair| pair[0].tool_id < pair[1].tool_id)
         );
+    }
+
+    #[test]
+    fn story_16_2_artifact_catalog_uses_common_registry_and_closed_validator() {
+        let registry = read_only_runtime_registry().expect("native catalog");
+        for kind in ArtifactToolKind::ALL {
+            let definition = registry
+                .get_tool(&ToolId::from_raw(kind.id()), ARTIFACT_TOOL_VERSION)
+                .expect("artifact definition")
+                .clone();
+            let request = ArtifactRequest {
+                schema_version: 1,
+                call_id: format!("call-{}", kind.id()),
+                source_id: (kind != ArtifactToolKind::List).then(|| "source-1".to_owned()),
+                section_id: None,
+                range: (kind == ArtifactToolKind::Range).then_some(ArtifactRange::Byte {
+                    start: 0,
+                    end_exclusive: 32,
+                }),
+                query: (kind == ArtifactToolKind::Search).then(|| "query".to_owned()),
+                freshness_sha256: (kind != ArtifactToolKind::List).then(|| "a".repeat(64)),
+                output_identity: format!("output-{}", kind.id()),
+                limits: ArtifactLimits::default(),
+                call_depth: 0,
+            };
+            let bytes = serde_json::to_vec(&request).expect("artifact request");
+            let call = ToolCall {
+                schema_version: agentmage_kernel_contracts::CONTRACT_SCHEMA_VERSION,
+                tool_call_id: ToolCallId::from_raw(format!("tool-call-{}", kind.id())),
+                correlation_id: CorrelationId::from_raw(format!("correlation-{}", kind.id())),
+                action_id: ActionId::from_raw(format!("action-{}", kind.id())),
+                tool_id: definition.tool_id,
+                tool_version: definition.tool_version,
+                arguments: ContractPayload {
+                    schema: definition.input_schema,
+                    media_type: "application/json".to_owned(),
+                    sha256: sha256(&bytes),
+                    bytes,
+                },
+            };
+            assert!(registry.validate_arguments(&call).is_ok());
+            assert_eq!(
+                call.arguments.schema.schema_id.as_str(),
+                ARTIFACT_INPUT_SCHEMA_ID
+            );
+        }
+        for future in [
+            "artifact.get_page",
+            "artifact.get_sheet",
+            "artifact.get_log_errors",
+        ] {
+            assert!(
+                registry
+                    .get_tool(&ToolId::from_raw(future), ARTIFACT_TOOL_VERSION)
+                    .is_none()
+            );
+        }
     }
 
     #[test]

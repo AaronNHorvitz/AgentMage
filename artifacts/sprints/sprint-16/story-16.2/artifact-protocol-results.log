@@ -1,0 +1,87 @@
+$ cargo test -p agentmage-capability-read-only artifact::tests --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_capability_read_only-ca88058010f1bd3a)
+
+running 9 tests
+test artifact::tests::cancellation_timeout_and_crash_each_get_one_terminal_receipt ... ok
+test artifact::tests::malformed_extra_oversized_unauthorized_and_repeat_fail_before_launch ... ok
+test artifact::tests::result_limits_truncate_or_return_large_reference_without_hidden_omission ... ok
+test artifact::tests::byte_line_page_sheet_cell_section_and_search_projections_are_exact ... ok
+test artifact::tests::stale_restricted_unsupported_redacted_missing_and_range_fail_closed ... ok
+test artifact::tests::catalog_is_exact_closed_read_only_and_extensions_are_unregistered ... ok
+test artifact::tests::every_tool_rejects_the_closed_schema_and_repeat_matrix_before_a_second_launch ... ok
+test artifact::tests::cancellation_timeout_and_crash_are_receipted_for_every_tool ... ok
+test artifact::tests::all_six_fake_operations_are_deterministic_typed_and_receipted ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agentmage-read-only-worker.rs (target/debug/deps/agentmage_read_only_worker-2b5266eb00ffc4c4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+$ cargo test -p agentmage-host runtime_tools --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+
+running 5 tests
+test runtime_tools::tests::story_23_4_git_inspection_uses_its_existing_fixed_planner ... ok
+test runtime_tools::tests::story_23_4_registry_runs_the_existing_closed_argument_validator ... ok
+test runtime_tools::tests::story_16_2_artifact_catalog_uses_common_registry_and_closed_validator ... ok
+test runtime_tools::tests::story_23_4_all_existing_read_only_tools_share_the_common_registry ... ok
+test runtime_tools::tests::story_23_4_duplicate_pack_registration_fails_without_replacing_tools ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 155 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+
+
+$ cargo test -p agentmage-host runtime_parity_tests --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+
+running 2 tests
+test runtime_parity_tests::story_50_2_narrow_workflow_authority_rejects_every_broadening_without_execution ... ok
+test runtime_parity_tests::story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out; finished in 0.28s
+
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+
+
+$ cargo clippy -p agentmage-capability-read-only -p agentmage-host --all-targets --all-features --locked -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s

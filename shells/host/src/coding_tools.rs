@@ -3,8 +3,8 @@
 use std::fmt::Write;
 
 use agentmage_capability_read_only::{
-    GIT_INSPECTION_INPUT_SCHEMA_ID, GIT_INSPECTION_INPUT_SCHEMA_JSON, READ_ONLY_INPUT_SCHEMA_ID,
-    READ_ONLY_INPUT_SCHEMA_JSON,
+    ARTIFACT_INPUT_SCHEMA_ID, ARTIFACT_INPUT_SCHEMA_JSON, GIT_INSPECTION_INPUT_SCHEMA_ID,
+    GIT_INSPECTION_INPUT_SCHEMA_JSON, READ_ONLY_INPUT_SCHEMA_ID, READ_ONLY_INPUT_SCHEMA_JSON,
 };
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, GrantOperation, OperationBinding, RequiredGrantTemplate, SchemaId,
@@ -323,6 +323,7 @@ pub fn model_visible_coding_tools(
 
 fn coding_input_schema_json(schema_id: &str) -> Option<&'static str> {
     match schema_id {
+        ARTIFACT_INPUT_SCHEMA_ID => Some(ARTIFACT_INPUT_SCHEMA_JSON),
         READ_ONLY_INPUT_SCHEMA_ID => Some(READ_ONLY_INPUT_SCHEMA_JSON),
         GIT_INSPECTION_INPUT_SCHEMA_ID => Some(GIT_INSPECTION_INPUT_SCHEMA_JSON),
         STRUCTURED_PATCH_INPUT_SCHEMA_ID => Some(STRUCTURED_PATCH_INPUT_SCHEMA_JSON),
@@ -362,7 +363,9 @@ fn sha256_hex(bytes: &[u8]) -> String {
 mod tests {
     use std::collections::BTreeMap;
 
-    use agentmage_capability_read_only::{GIT_INSPECTION_TOOL_ID, ReadOnlyToolKind};
+    use agentmage_capability_read_only::{
+        ArtifactToolKind, GIT_INSPECTION_TOOL_ID, ReadOnlyToolKind,
+    };
     use agentmage_kernel_contracts::{
         ActionId, ContractPayload, CorrelationId, GrantOperation, ToolCall, ToolCallId, ToolId,
         ToolRiskLevel, WorkspaceId, WorkspacePath,
@@ -598,7 +601,10 @@ mod tests {
             native_coding_runtime_registry(write_scope(), commands, validations(command))
                 .expect("native coding registry");
         let definitions = registry.list_tools();
-        assert_eq!(definitions.len(), ReadOnlyToolKind::ALL.len() + 5);
+        assert_eq!(
+            definitions.len(),
+            ReadOnlyToolKind::ALL.len() + ArtifactToolKind::ALL.len() + 5
+        );
 
         let ids = definitions
             .iter()
@@ -614,6 +620,9 @@ mod tests {
             assert!(ids.contains(required), "missing {required}");
         }
         for kind in ReadOnlyToolKind::ALL {
+            assert!(ids.contains(kind.id()), "missing {}", kind.id());
+        }
+        for kind in ArtifactToolKind::ALL {
             assert!(ids.contains(kind.id()), "missing {}", kind.id());
         }
         assert!(ids.iter().all(|id| !id.contains("mcp")));

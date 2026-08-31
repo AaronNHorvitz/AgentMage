@@ -1,0 +1,108 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 65028,
+      "path": "capabilities/read-only/src/artifact.rs",
+      "sha256": "70642ffce68c984c6fc97062a02426bda5f8c81320b1c23885f180c104664cee"
+    },
+    {
+      "byte_length": 4358,
+      "path": "capabilities/read-only/src/lib.rs",
+      "sha256": "2855396cc998a32021a69fcf74969278fbfc8f086834674fb1e3c5f067aa3543"
+    },
+    {
+      "byte_length": 14062,
+      "path": "shells/host/src/runtime_tools.rs",
+      "sha256": "e4892ee48ab396eaa75ddb583d33bdb79d6734b5855805577b2ede14c0b2ad76"
+    },
+    {
+      "byte_length": 26804,
+      "path": "shells/host/src/coding_tools.rs",
+      "sha256": "25f597f70c762b4c66fd69f7c864215a792880533fe6e4a13fd55bdc60f0a6ca"
+    },
+    {
+      "byte_length": 3803,
+      "path": "docs/architecture/native-source-artifact-tool-protocol.md",
+      "sha256": "97f72d3ac7c1d8244a3bd690c04d680f1fbf6aca9c608c2e33c4d40414c9aa04"
+    },
+    {
+      "byte_length": 5053,
+      "path": "scripts/story_16_2_artifact_protocol_evidence.py",
+      "sha256": "fb15dbb7be119acc7b4b375c269d501bb7c549122c79cdf7d7f67227fe16abee"
+    },
+    {
+      "byte_length": 1630,
+      "path": "tests/test_story_16_2_artifact_protocol_evidence.py",
+      "sha256": "09feac2e16f9ae0aff5331619644e7989d699759656a1ae9251cae3e0b17056f"
+    },
+    {
+      "byte_length": 4244,
+      "path": "artifacts/sprints/sprint-16/story-16.2/artifact-protocol-results.log",
+      "sha256": "4821aa2876041eb3d91110098cc0cd4830c2d04be6d07fdbb1892b5a1835ff32"
+    }
+  ],
+  "catalog": [
+    "artifact.list",
+    "artifact.metadata",
+    "artifact.read",
+    "artifact.range",
+    "artifact.sections",
+    "artifact.search"
+  ],
+  "commands": [
+    "cargo test -p agentmage-capability-read-only artifact::tests --locked",
+    "cargo test -p agentmage-host runtime_tools --locked",
+    "cargo test -p agentmage-host runtime_parity_tests --locked",
+    "cargo clippy -p agentmage-capability-read-only -p agentmage-host --all-targets --all-features --locked -- -D warnings"
+  ],
+  "coordinate_kinds": [
+    "byte",
+    "line",
+    "page",
+    "sheet",
+    "cell",
+    "section"
+  ],
+  "generated_on": "2026-08-31",
+  "limitations": [
+    "the backend is explicitly synthetic and does not implement a source store or parser",
+    "installed native worker and cross-platform sandbox execution belong to later stories",
+    "the evidence makes no production extraction or release claim"
+  ],
+  "product_truth": {
+    "closed_catalog_complete": true,
+    "common_registry_complete": true,
+    "cross_platform_sandbox_campaign_complete": false,
+    "deterministic_chat_cli_headless_correctness_complete": true,
+    "fake_backend_complete": true,
+    "future_extension_registered_count": 0,
+    "installed_worker_execution": false,
+    "network_access_count": 0,
+    "parser_launch_count": 0,
+    "production_source_artifact_execution": false,
+    "release_claim": "none",
+    "terminal_receipt_per_launched_fake_attempt": true,
+    "workspace_mutation_count": 0
+  },
+  "protocols": [
+    "RV-03",
+    "RV-04",
+    "RV-08",
+    "RV-16"
+  ],
+  "record_type": "agentmage-story-16-2-artifact-protocol-evidence",
+  "required_markers": [
+    "catalog_is_exact_closed_read_only_and_extensions_are_unregistered ... ok",
+    "all_six_fake_operations_are_deterministic_typed_and_receipted ... ok",
+    "byte_line_page_sheet_cell_section_and_search_projections_are_exact ... ok",
+    "every_tool_rejects_the_closed_schema_and_repeat_matrix_before_a_second_launch ... ok",
+    "cancellation_timeout_and_crash_are_receipted_for_every_tool ... ok",
+    "stale_restricted_unsupported_redacted_missing_and_range_fail_closed ... ok",
+    "result_limits_truncate_or_return_large_reference_without_hidden_omission ... ok",
+    "story_16_2_artifact_catalog_uses_common_registry_and_closed_validator ... ok",
+    "story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers ... ok"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_PROTOCOL_AND_FAKE_BACKEND",
+  "story_id": "16.2"
+}
