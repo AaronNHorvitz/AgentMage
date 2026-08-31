@@ -1,0 +1,83 @@
+{
+  "claims": {
+    "macos_support": false,
+    "notarized_package_exists": false,
+    "physical_m5_qualified": false,
+    "release_candidate_exists": false,
+    "signed_package_exists": false,
+    "task_complete": false
+  },
+  "contract": {
+    "arbitrary_commands_allowed": false,
+    "artifact_upload_defined": false,
+    "automatic_trigger_defined": false,
+    "component_count": 4,
+    "install_domain": "CurrentUserHomeDirectory",
+    "installed_application": "$HOME/Applications/AgentMage.app",
+    "notarization_submissions": 1,
+    "notary_profile_selector": "agentmage-release-notary-v1",
+    "policy_field_count": 22,
+    "prior_package_digest_required": true,
+    "prior_package_required": true,
+    "prior_valid_state_restored": true,
+    "raw_credentials_accepted": false,
+    "refusal_count": 76,
+    "root_execution_allowed": false
+  },
+  "execution": {
+    "apple_silicon_runner_attested": false,
+    "developer_id_signing_performed": false,
+    "gatekeeper_assessment_performed": false,
+    "notarization_performed": false,
+    "notary_log_reviewed": false,
+    "packaged_launch_performed": false,
+    "release_build_performed": false,
+    "residue_scan_performed": false,
+    "rollback_performed": false,
+    "standard_user_install_performed": false,
+    "stapling_performed": false,
+    "uninstall_performed": false
+  },
+  "record_type": "macos-release-runner-source-contract",
+  "remaining_blockers": [
+    "The fixed AgentMageRelease Xcode app project, scheme, and embedded signed targets do not exist.",
+    "No release-approved production policy or release-derived identities exist.",
+    "No Developer ID Application or Installer identity is available in this environment.",
+    "No fixed notarization Keychain profile or Apple notarization credential is available.",
+    "No previously shipped signed, notarized, stapled package is available for rollback.",
+    "No disposable isolated physical Apple Silicon release runner has executed the ceremony.",
+    "No native build, signature, entitlement, notarization, stapling, Gatekeeper, install, launch, uninstall, rollback, or residue evidence exists.",
+    "No independent critical-boundary review or physical MacBook Pro M5 qualification has been retained."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "packaging/macos/README.md",
+      "sha256": "902f4b5afe788d64ca376904d589b871b4ebb0543f02ca4786c438646fbc781d"
+    },
+    {
+      "path": "packaging/macos/release-runner-policy.contract-fixture.json",
+      "sha256": "90103da0630e2e290dd0d5dbc17946ad39646f1c3f7f5ba4096fd487a6c0dab6"
+    },
+    {
+      "path": "packaging/macos/release-runner.sh",
+      "sha256": "498c24735c1490be6987f86d572f360bd56d58aa519774b2fd30c884a159d2f5"
+    },
+    {
+      "path": "release/platform-manifests/macos/v1/contract-fixture.json",
+      "sha256": "f2465bac1d58004264275f517730c44984168017624bedac47e82e32756ae4f7"
+    },
+    {
+      "path": "scripts/macos_release_runner_source_contract.py",
+      "sha256": "d548896c2fd66bf3f92e36112205f2655f3a8fae9b8695895d5972d4056bf4ff"
+    },
+    {
+      "path": "tests/test_macos_release_runner_source_contract.py",
+      "sha256": "4d064a24a14f06a550bdc58f1752105778bad3d6febc4ad3b6283b7923bea80d"
+    }
+  ],
+  "source_revision": "d75301d478a91f382b7d4dd2f61bde3beb24851c",
+  "source_tree": "f0799589bfbcb87ca4a9addbd625b96caca0a823",
+  "status": "prepared-source-only-blocked-macos",
+  "task_id": "8.1.1.7"
+}
