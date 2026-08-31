@@ -1,0 +1,86 @@
+{
+  "claims": {
+    "audit_token_verified_on_macos": false,
+    "designated_requirement_verified_on_macos": false,
+    "macos_support": false,
+    "package_or_release": false,
+    "task_complete": false
+  },
+  "contract": {
+    "audit_token_socket_option": "LOCAL_PEERTOKEN",
+    "designated_requirement_exactly_release_bound": true,
+    "effective_peer_credentials": [
+      "uid",
+      "gid"
+    ],
+    "fresh_challenge_and_replay_checks_composed": true,
+    "live_code_lookup_attribute": "kSecGuestAttributeAudit",
+    "observation_refusal_count": 7,
+    "peer_pid_socket_option": "LOCAL_PEERPID",
+    "peer_refusal_count": 14,
+    "verified_peer_required_before_challenge_consumption": true
+  },
+  "execution": {
+    "apple_silicon_execution_performed": false,
+    "native_handshake_performed": false,
+    "native_socket_observed": false,
+    "signed_peer_verified": false,
+    "swift_build_performed": false,
+    "swift_tests_performed": false
+  },
+  "record_type": "macos-peer-verification-source-contract",
+  "remaining_blockers": [
+    "Apple Silicon Swift 6 build and tests have not run.",
+    "No accepted native App Group socket has supplied a LOCAL_PEERTOKEN observation.",
+    "No signed bridge has satisfied the release-designated requirement at runtime.",
+    "The bridge and host executables are not integrated or signed.",
+    "Physical MacBook Pro M5 qualification has not run."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "platforms/macos/README.md",
+      "sha256": "337c86b7f9008c94de2c1c37f81fb428bb1f234297520f6db6b0cbf1cc6b31a1"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSBridgeProtocol.swift",
+      "sha256": "ff6d131118fcc43b7b2f93e9c546ff76e3d5057d0bfb20071eacc565c634ee5f"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSPeerVerification.swift",
+      "sha256": "6410684cc08c7962686239d225f7f6182b2f9689d7fce4659dd045291328c601"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",
+      "sha256": "53210a2b27c0562fdb3e6d4a29807bc168d9b49f3054ae23e3a10938e33b2a7a"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSBridgeProtocolTests.swift",
+      "sha256": "665cb630a36ed544ecff567f89f7b9668dfb87e86c718e2c34b12f840611e49b"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSPeerVerificationTests.swift",
+      "sha256": "b04e6e95f2959a4dbf700f8c7fde2f5ed58bb74cebbc0ede1627f808fbe86621"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/PlatformBoundaryTests.swift",
+      "sha256": "2058645e1eef3c36ac6b15ac83a16f0d502b4f3c18bbeec5af7ce2c0827e7131"
+    },
+    {
+      "path": "release/platform-manifests/macos/v1/contract-fixture.json",
+      "sha256": "2dfc2a4da82511a530dce48653704e5fd5f73bd7ee94efd3763ca64c981a9408"
+    },
+    {
+      "path": "scripts/macos_peer_verification_source_contract.py",
+      "sha256": "8d2fe8d95f22baec84ff3c3c9d29801e00c75472064235b707e82543c820cc8b"
+    },
+    {
+      "path": "tests/test_macos_peer_verification_source_contract.py",
+      "sha256": "5866b556691b5861bd65b54db92eab098c1c4ecb9242958abb4ba8dbeed03f8a"
+    }
+  ],
+  "source_revision": "da03cba0d1112a6b5fd7b7f2e5f733e50af9b4b2",
+  "source_tree": "19d96ea4344a36e23c307281544b47b1c97a3684",
+  "status": "partial-source-only-blocked-macos",
+  "task_id": "8.1.1.3"
+}

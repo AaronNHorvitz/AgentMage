@@ -51,7 +51,7 @@
     },
     {
       "path": "platforms/macos/README.md",
-      "sha256": "28a4f1e1b157f36c77934d405309b29a35af80a24a4c47c64be6b7c42d277ca2"
+      "sha256": "337c86b7f9008c94de2c1c37f81fb428bb1f234297520f6db6b0cbf1cc6b31a1"
     },
     {
       "path": "platforms/macos/Sources/AgentMageMacOSPlatform/KernelHostAdmission.swift",
@@ -59,7 +59,7 @@
     },
     {
       "path": "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",
-      "sha256": "4d20fbc37534838e2f2e683ca63f98563ea60c77dd0ce064938ed146dc4b753a"
+      "sha256": "53210a2b27c0562fdb3e6d4a29807bc168d9b49f3054ae23e3a10938e33b2a7a"
     },
     {
       "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/KernelHostAdmissionTests.swift",
@@ -67,7 +67,7 @@
     },
     {
       "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/PlatformBoundaryTests.swift",
-      "sha256": "eb440514f81a17de4156ef527f384dd9a664d950615f240dffde22a85ca861e3"
+      "sha256": "2058645e1eef3c36ac6b15ac83a16f0d502b4f3c18bbeec5af7ce2c0827e7131"
     },
     {
       "path": "scripts/macos_kernel_host_source_contract.py",
@@ -78,8 +78,8 @@
       "sha256": "59f747ef169ef60d8ca700152cccb4232b4b07a5ca1ffe86972fe791a3bacf86"
     }
   ],
-  "source_revision": "4c7f3231824894162de133d62e6b229780da6dd9",
-  "source_tree": "36a156a84044bb94695cf576d6b3893eceeb09b3",
+  "source_revision": "da03cba0d1112a6b5fd7b7f2e5f733e50af9b4b2",
+  "source_tree": "19d96ea4344a36e23c307281544b47b1c97a3684",
   "status": "partial-source-only-blocked-macos",
   "task_id": "8.1.1.1"
 }

@@ -31,7 +31,7 @@
     "Apple Silicon Swift build and tests have not run.",
     "A signed native bridge executable is not yet integrated with the Visual Studio Code shell.",
     "A native App Group Unix socket has not been bound or inspected.",
-    "Audit-token and designated-requirement verification remain task 8.1.1.3.",
+    "Audit-token and designated-requirement source is present under task 8.1.1.3, but native verification has not run.",
     "Physical MacBook Pro M5 qualification has not run."
   ],
   "schema_version": 1,
@@ -42,23 +42,27 @@
     },
     {
       "path": "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSBridgeProtocol.swift",
-      "sha256": "6b79602be3f413fc70ff0c54df2ea859cfc46520e4fb6062bd575255e3338999"
+      "sha256": "ff6d131118fcc43b7b2f93e9c546ff76e3d5057d0bfb20071eacc565c634ee5f"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSPeerVerification.swift",
+      "sha256": "6410684cc08c7962686239d225f7f6182b2f9689d7fce4659dd045291328c601"
     },
     {
       "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSBridgeProtocolTests.swift",
-      "sha256": "f440515ea04cb258652d1546d7f8c20bd1b2d760c7bc8e0b343baaed357dc28b"
+      "sha256": "665cb630a36ed544ecff567f89f7b9668dfb87e86c718e2c34b12f840611e49b"
     },
     {
       "path": "scripts/macos_bridge_source_contract.py",
-      "sha256": "acf491d4f7e63937f53abff0cef6bfb1163dd40208472506d6698dd0e638b491"
+      "sha256": "b12d4fc2a83a74b618c70eba2f3a4fde6856c44f33806854e57cc81f66a0ad2c"
     },
     {
       "path": "tests/test_macos_bridge_source_contract.py",
       "sha256": "9c404b78b65c77273c59c0682bff9d2ef9f1542a020fd1097819f82f11f9f671"
     }
   ],
-  "source_revision": "4c7f3231824894162de133d62e6b229780da6dd9",
-  "source_tree": "36a156a84044bb94695cf576d6b3893eceeb09b3",
+  "source_revision": "da03cba0d1112a6b5fd7b7f2e5f733e50af9b4b2",
+  "source_tree": "19d96ea4344a36e23c307281544b47b1c97a3684",
   "status": "partial-source-only-blocked-macos",
   "task_id": "8.1.1.2"
 }
