@@ -141,6 +141,8 @@ pub mod runtime_coordinator;
 pub mod runtime_event;
 /// Request-bound runtime resource ceilings and content-free accounting.
 pub mod runtime_hardening;
+/// Read-only execution inspection and identity-bound performance qualification.
+pub mod runtime_inspector;
 /// Bounded durable runtime-event batching over the canonical encrypted store.
 pub mod runtime_journal;
 /// Cross-domain runtime lifecycle planning without aggregated authority.

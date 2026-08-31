@@ -81,7 +81,7 @@ impl RuntimeEventError {
     }
 }
 
-/// Returns an explicit compatibility result for clients predating Story 21.3 event kinds.
+/// Returns an explicit compatibility result for clients lacking extended lineage event support.
 pub fn verify_runtime_event_client_compatibility(
     event: &RuntimeEvent,
     supports_artifact_workflow_projection: bool,
@@ -97,6 +97,8 @@ const fn is_artifact_workflow_event(kind: &RuntimeEventKind) -> bool {
     matches!(
         kind,
         RuntimeEventKind::SourceAdmitted { .. }
+            | RuntimeEventKind::RouteSelected { .. }
+            | RuntimeEventKind::ProposalObserved { .. }
             | RuntimeEventKind::ExtractionStarted { .. }
             | RuntimeEventKind::ExtractionCompleted { .. }
             | RuntimeEventKind::ExtractionBlocked { .. }
@@ -105,6 +107,7 @@ const fn is_artifact_workflow_event(kind: &RuntimeEventKind) -> bool {
             | RuntimeEventKind::PreflightObserved { .. }
             | RuntimeEventKind::AttemptStarted { .. }
             | RuntimeEventKind::AttemptEnded { .. }
+            | RuntimeEventKind::EffectObserved { .. }
             | RuntimeEventKind::VerificationObserved { .. }
             | RuntimeEventKind::RetryDecided { .. }
             | RuntimeEventKind::RecoveryDecided { .. }
@@ -301,6 +304,7 @@ struct ToolState {
     operation_id: String,
     attempt_id: Option<String>,
     observation_id: Option<String>,
+    effect_observed: bool,
     verification_observed: bool,
     retry_decided: bool,
 }
@@ -322,6 +326,9 @@ pub struct RuntimeEventSequence {
     event_ids: BTreeSet<String>,
     active_turn_id: Option<String>,
     active_model_run_id: Option<String>,
+    active_route_id: Option<String>,
+    model_completed_in_turn: bool,
+    proposal_ids: BTreeSet<String>,
     tools: BTreeMap<String, ToolState>,
     permissions: BTreeMap<String, String>,
     sources: BTreeMap<String, SourcePhase>,
@@ -446,12 +453,14 @@ impl RuntimeEventSequence {
             RuntimeEventKind::TurnStarted => {
                 if self.active_turn_id.is_some()
                     || self.active_model_run_id.is_some()
+                    || self.active_route_id.is_some()
                     || !self.tools.is_empty()
                     || !self.permissions.is_empty()
                 {
                     return Err(RuntimeEventError::IllegalTransition);
                 }
                 self.active_turn_id = Some(required_turn(event)?.to_owned());
+                self.model_completed_in_turn = false;
                 Ok(())
             }
             RuntimeEventKind::TurnCompleted { .. } => {
@@ -471,6 +480,8 @@ impl RuntimeEventSequence {
                 }
                 self.tools.clear();
                 self.active_turn_id = None;
+                self.active_route_id = None;
+                self.model_completed_in_turn = false;
                 Ok(())
             }
             RuntimeEventKind::ModelRequested { model_run_id, .. } => {
@@ -481,13 +492,39 @@ impl RuntimeEventSequence {
                 self.active_model_run_id = Some(model_run_id.as_str().to_owned());
                 Ok(())
             }
-            RuntimeEventKind::ModelCompleted { model_run_id, .. }
-            | RuntimeEventKind::ModelFailed { model_run_id, .. } => {
+            RuntimeEventKind::ModelCompleted { model_run_id, .. } => {
                 self.require_active_turn(event)?;
                 if self.active_model_run_id.as_deref() != Some(model_run_id.as_str()) {
                     return Err(RuntimeEventError::IllegalTransition);
                 }
                 self.active_model_run_id = None;
+                self.model_completed_in_turn = true;
+                Ok(())
+            }
+            RuntimeEventKind::ModelFailed { model_run_id, .. } => {
+                self.require_active_turn(event)?;
+                if self.active_model_run_id.as_deref() != Some(model_run_id.as_str()) {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                self.active_model_run_id = None;
+                self.model_completed_in_turn = false;
+                Ok(())
+            }
+            RuntimeEventKind::RouteSelected {
+                route_decision_id, ..
+            } => {
+                self.require_active_turn(event)?;
+                if self.active_model_run_id.is_some() || self.active_route_id.is_some() {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                self.active_route_id = Some(route_decision_id.clone());
+                Ok(())
+            }
+            RuntimeEventKind::ProposalObserved { proposal_id, .. } => {
+                self.require_active_turn(event)?;
+                if !self.model_completed_in_turn || !self.proposal_ids.insert(proposal_id.clone()) {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
                 Ok(())
             }
             RuntimeEventKind::ToolRequested { tool_call_id, .. } => {
@@ -503,6 +540,7 @@ impl RuntimeEventSequence {
                         operation_id,
                         attempt_id: None,
                         observation_id: None,
+                        effect_observed: false,
                         verification_observed: false,
                         retry_decided: false,
                     },
@@ -613,6 +651,7 @@ impl RuntimeEventSequence {
                 } else if event.operation_id.is_some()
                     || self.active_turn_id.is_some()
                     || self.active_model_run_id.is_some()
+                    || self.active_route_id.is_some()
                     || !self.tools.is_empty()
                     || !self.permissions.is_empty()
                 {
@@ -773,6 +812,24 @@ impl RuntimeEventSequence {
                 self.observation_ids.insert(observation_id.clone());
                 Ok(())
             }
+            RuntimeEventKind::EffectObserved { attempt_id, .. } => {
+                self.require_active_turn(event)?;
+                let operation_id = required_operation(event)?;
+                let Some(tool) = self.tools.values_mut().find(|tool| {
+                    tool.operation_id == operation_id
+                        && tool.attempt_id.as_deref() == Some(attempt_id)
+                }) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if tool.observation_id.is_none()
+                    || tool.effect_observed
+                    || tool.verification_observed
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                tool.effect_observed = true;
+                Ok(())
+            }
             RuntimeEventKind::VerificationObserved {
                 attempt_id,
                 verification_id,
@@ -836,6 +893,7 @@ impl RuntimeEventSequence {
             RuntimeEventKind::CheckpointCommitted { .. } => {
                 if self.active_turn_id.is_some()
                     || self.active_model_run_id.is_some()
+                    || self.active_route_id.is_some()
                     || !self.tools.is_empty()
                     || !self.permissions.is_empty()
                 {
@@ -855,6 +913,8 @@ impl RuntimeEventSequence {
                     return Err(RuntimeEventError::IllegalTransition);
                 }
                 self.active_model_run_id = None;
+                self.active_route_id = None;
+                self.model_completed_in_turn = false;
                 self.tools.clear();
                 self.permissions.clear();
                 self.active_turn_id = None;
@@ -866,6 +926,7 @@ impl RuntimeEventSequence {
                 if !state.is_terminal()
                     || self.active_turn_id.is_some()
                     || self.active_model_run_id.is_some()
+                    || self.active_route_id.is_some()
                     || !self.tools.is_empty()
                     || !self.permissions.is_empty()
                     || (*state == AgentStateKind::Cancelled && !self.cancellation_observed)
@@ -931,6 +992,7 @@ impl RuntimeEventSequence {
             || event.operation_id.is_some()
             || self.active_turn_id.is_some()
             || self.active_model_run_id.is_some()
+            || self.active_route_id.is_some()
             || !self.tools.is_empty()
             || !self.permissions.is_empty()
         {
@@ -1139,10 +1201,21 @@ pub struct RuntimeAttemptProjection {
     pub preflight_ids: Vec<String>,
     /// Exact terminal observation identity.
     pub observation_id: Option<String>,
+    /// Verified state-change result when effect reconciliation was emitted.
+    pub effect_changed: Option<bool>,
     /// Exact deterministic verification identity.
     pub verification_id: Option<String>,
     /// Current retry eligibility when decided.
     pub retry_eligible: Option<bool>,
+}
+
+/// Content-free selected route reconstructed from the journal.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct RuntimeRouteProjection {
+    /// Exact route-decision identity.
+    pub route_decision_id: String,
+    /// Exact selected endpoint placement class.
+    pub endpoint_class: agentmage_kernel_contracts::EndpointClass,
 }
 
 /// Deterministic content-free artifact/workflow projection from one exact event chain.
@@ -1154,6 +1227,10 @@ pub struct RuntimeWorkflowProjection {
     pub sources: Vec<RuntimeSourceProjection>,
     /// Ordered attempt lifecycle projections.
     pub attempts: Vec<RuntimeAttemptProjection>,
+    /// Ordered selected routes.
+    pub routes: Vec<RuntimeRouteProjection>,
+    /// Ordered unique typed proposal identities.
+    pub proposal_ids: Vec<String>,
     /// Ordered unique recovery decision identities.
     pub recovery_ids: Vec<String>,
     /// Exact terminal diagnostic identity when present.
@@ -1181,10 +1258,23 @@ pub fn replay_runtime_workflow_projection(
     let mut sources = BTreeMap::<String, RuntimeSourceProjection>::new();
     let mut preflights = BTreeMap::<String, BTreeSet<String>>::new();
     let mut attempts = BTreeMap::<String, RuntimeAttemptProjection>::new();
+    let mut routes = Vec::new();
+    let mut proposal_ids = Vec::new();
     let mut recovery_ids = Vec::new();
     let mut terminal_diagnostic_id = None;
     for event in events {
         match &event.kind {
+            RuntimeEventKind::RouteSelected {
+                route_decision_id,
+                endpoint_class,
+                ..
+            } => routes.push(RuntimeRouteProjection {
+                route_decision_id: route_decision_id.clone(),
+                endpoint_class: *endpoint_class,
+            }),
+            RuntimeEventKind::ProposalObserved { proposal_id, .. } => {
+                proposal_ids.push(proposal_id.clone());
+            }
             RuntimeEventKind::SourceAdmitted {
                 source_artifact_id, ..
             } => {
@@ -1270,6 +1360,7 @@ pub fn replay_runtime_workflow_projection(
                             .into_iter()
                             .collect(),
                         observation_id: None,
+                        effect_changed: None,
                         verification_id: None,
                         retry_eligible: None,
                     },
@@ -1295,6 +1386,16 @@ pub fn replay_runtime_workflow_projection(
                     .ok_or(RuntimeEventError::IllegalTransition)?
                     .verification_id = Some(verification_id.clone());
             }
+            RuntimeEventKind::EffectObserved {
+                attempt_id,
+                changed,
+                ..
+            } => {
+                attempts
+                    .get_mut(attempt_id)
+                    .ok_or(RuntimeEventError::IllegalTransition)?
+                    .effect_changed = Some(*changed);
+            }
             RuntimeEventKind::RetryDecided {
                 attempt_id,
                 eligible,
@@ -1318,6 +1419,8 @@ pub fn replay_runtime_workflow_projection(
         run_id,
         sources: sources.into_values().collect(),
         attempts: attempts.into_values().collect(),
+        routes,
+        proposal_ids,
         recovery_ids,
         terminal_diagnostic_id,
         event_count: sequence.event_count(),
@@ -1518,6 +1621,8 @@ pub const fn runtime_event_persistence(kind: &RuntimeEventKind) -> RuntimeEventP
         | RuntimeEventKind::ToolStarted { .. }
         | RuntimeEventKind::ToolCompleted { .. }
         | RuntimeEventKind::ToolFailed { .. }
+        | RuntimeEventKind::RouteSelected { .. }
+        | RuntimeEventKind::ProposalObserved { .. }
         | RuntimeEventKind::PermissionRequested { .. }
         | RuntimeEventKind::PermissionDecided { .. }
         | RuntimeEventKind::FileModified { .. }
@@ -1531,6 +1636,7 @@ pub const fn runtime_event_persistence(kind: &RuntimeEventKind) -> RuntimeEventP
         | RuntimeEventKind::PreflightObserved { .. }
         | RuntimeEventKind::AttemptStarted { .. }
         | RuntimeEventKind::AttemptEnded { .. }
+        | RuntimeEventKind::EffectObserved { .. }
         | RuntimeEventKind::VerificationObserved { .. }
         | RuntimeEventKind::RetryDecided { .. }
         | RuntimeEventKind::RecoveryDecided { .. }
@@ -1568,6 +1674,15 @@ fn valid_kind(kind: &RuntimeEventKind) -> bool {
             valid_identifier(model_run_id.as_str())
                 && is_approved_runtime_model_failure(failure_code)
         }
+        RuntimeEventKind::RouteSelected {
+            route_decision_id,
+            decision_sha256,
+            ..
+        } => valid_identifier(route_decision_id) && valid_sha256(decision_sha256),
+        RuntimeEventKind::ProposalObserved {
+            proposal_id,
+            proposal_sha256,
+        } => valid_identifier(proposal_id) && valid_sha256(proposal_sha256),
         RuntimeEventKind::ToolRequested {
             tool_call_id,
             arguments_sha256,
@@ -1720,6 +1835,11 @@ fn valid_kind(kind: &RuntimeEventKind) -> bool {
                 && valid_identifier(observation_id)
                 && valid_sha256(observation_sha256)
         }
+        RuntimeEventKind::EffectObserved {
+            attempt_id,
+            effect_sha256,
+            ..
+        } => valid_identifier(attempt_id) && valid_sha256(effect_sha256),
         RuntimeEventKind::VerificationObserved {
             attempt_id,
             verification_id,
@@ -1741,6 +1861,7 @@ fn valid_kind(kind: &RuntimeEventKind) -> bool {
         RuntimeEventKind::TerminalDiagnostic {
             diagnostic_id,
             diagnostic_sha256,
+            ..
         } => valid_identifier(diagnostic_id) && valid_sha256(diagnostic_sha256),
         RuntimeEventKind::CheckpointCommitted {
             checkpoint_id,
@@ -1790,10 +1911,12 @@ fn valid_payload_placement(event: &RuntimeEvent) -> bool {
             RuntimeEventKind::ModelCompleted { .. }
             | RuntimeEventKind::ToolCompleted { .. }
             | RuntimeEventKind::ToolFailed { .. }
+            | RuntimeEventKind::ProposalObserved { .. }
             | RuntimeEventKind::ExtractionCompleted { .. }
             | RuntimeEventKind::ContextDisposition { .. }
             | RuntimeEventKind::PreflightObserved { .. }
             | RuntimeEventKind::AttemptEnded { .. }
+            | RuntimeEventKind::EffectObserved { .. }
             | RuntimeEventKind::VerificationObserved { .. }
             | RuntimeEventKind::RecoveryDecided { .. }
             | RuntimeEventKind::TerminalDiagnostic { .. },
@@ -2253,6 +2376,8 @@ mod tests {
                 RuntimeEventKind::TerminalDiagnostic {
                     diagnostic_id: "diagnostic-21-3".to_owned(),
                     diagnostic_sha256: hash('2'),
+                    safe_next_action:
+                        agentmage_kernel_contracts::RuntimeSafeNextAction::InspectEvidence,
                 },
                 None,
                 None,
@@ -2513,6 +2638,8 @@ mod tests {
             RuntimeEventKind::ModelRequested { .. } => "model_requested",
             RuntimeEventKind::ModelCompleted { .. } => "model_completed",
             RuntimeEventKind::ModelFailed { .. } => "model_failed",
+            RuntimeEventKind::RouteSelected { .. } => "route_selected",
+            RuntimeEventKind::ProposalObserved { .. } => "proposal_observed",
             RuntimeEventKind::ToolRequested { .. } => "tool_requested",
             RuntimeEventKind::ToolStarted { .. } => "tool_started",
             RuntimeEventKind::ToolCompleted { .. } => "tool_completed",
@@ -2531,6 +2658,7 @@ mod tests {
             RuntimeEventKind::PreflightObserved { .. } => "preflight_observed",
             RuntimeEventKind::AttemptStarted { .. } => "attempt_started",
             RuntimeEventKind::AttemptEnded { .. } => "attempt_ended",
+            RuntimeEventKind::EffectObserved { .. } => "effect_observed",
             RuntimeEventKind::VerificationObserved { .. } => "verification_observed",
             RuntimeEventKind::RetryDecided { .. } => "retry_decided",
             RuntimeEventKind::RecoveryDecided { .. } => "recovery_decided",

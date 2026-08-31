@@ -1047,6 +1047,8 @@ test("artifact and workflow projection event families remain closed", () => {
   );
   const sha = "a".repeat(64);
   const kinds = [
+    { event: "route_selected", route_decision_id: "route-1", endpoint_class: "strict_local", decision_sha256: sha },
+    { event: "proposal_observed", proposal_id: "proposal-1", proposal_sha256: sha },
     { event: "source_admitted", source_artifact_id: "source-1", manifest_sha256: sha },
     { event: "extraction_started", source_artifact_id: "source-1", extraction_id: "extract-1", input_sha256: sha },
     { event: "extraction_completed", source_artifact_id: "source-1", extraction_id: "extract-1", result_sha256: sha },
@@ -1056,10 +1058,11 @@ test("artifact and workflow projection event families remain closed", () => {
     { event: "preflight_observed", attempt_id: "attempt-1", preflight_id: "preflight-1", observation_sha256: sha },
     { event: "attempt_started", attempt_id: "attempt-1", tool_call_id: "tool-call-1", prepared_sha256: sha },
     { event: "attempt_ended", attempt_id: "attempt-1", tool_call_id: "tool-call-1", observation_id: "observation-1", observation_sha256: sha },
+    { event: "effect_observed", attempt_id: "attempt-1", changed: false, effect_sha256: sha },
     { event: "verification_observed", attempt_id: "attempt-1", verification_id: "verification-1", result_sha256: sha },
     { event: "retry_decided", attempt_id: "attempt-1", eligible: false, decision_sha256: sha },
     { event: "recovery_decided", recovery_id: "recovery-1", decision_sha256: sha },
-    { event: "terminal_diagnostic", diagnostic_id: "diagnostic-1", diagnostic_sha256: sha },
+    { event: "terminal_diagnostic", diagnostic_id: "diagnostic-1", diagnostic_sha256: sha, safe_next_action: "inspect_evidence" },
   ];
   for (const kind of kinds) {
     const event = structuredClone(source);

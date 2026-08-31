@@ -1,8 +1,8 @@
 //! Closed interface-independent runtime event contracts.
 
 use crate::{
-    AgentStateKind, ApprovalId, CancellationId, ContextSensitivity, CorrelationId, GrantId,
-    GrantOperation, ModelRunId, PolicyId, ReceiptId, RuntimeArtifactId, RuntimeEventId,
+    AgentStateKind, ApprovalId, CancellationId, ContextSensitivity, CorrelationId, EndpointClass,
+    GrantId, GrantOperation, ModelRunId, PolicyId, ReceiptId, RuntimeArtifactId, RuntimeEventId,
     RuntimeOperationId, RuntimeRunId, RuntimeTurnId, SessionCheckpointId, SessionId, TaskId,
     ToolCallId,
 };
@@ -70,6 +70,28 @@ pub enum RuntimePermissionDisposition {
     Deny,
 }
 
+/// Closed user-visible next action carried by a terminal diagnostic.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RuntimeSafeNextAction {
+    /// Start a fresh eligible attempt with new authority.
+    RetryFreshAttempt,
+    /// Reconcile an uncertain effect before any successor action.
+    ReconcileEffect,
+    /// Produce a new bounded plan from current evidence.
+    Replan,
+    /// Wait for an exact protected user approval.
+    AwaitApproval,
+    /// Wait for an unavailable dependency.
+    AwaitDependency,
+    /// Resume from the exact current checkpoint.
+    ResumeFromCheckpoint,
+    /// Inspect cited evidence and diagnosis without taking an effect.
+    InspectEvidence,
+    /// No safe automatic or user action remains.
+    None,
+}
+
 /// Closed content-minimized runtime event family.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "event", rename_all = "snake_case", deny_unknown_fields)]
@@ -106,6 +128,22 @@ pub enum RuntimeEventKind {
         model_run_id: ModelRunId,
         /// Stable content-free failure code.
         failure_code: String,
+    },
+    /// The deterministic gateway selected one exact admitted route.
+    RouteSelected {
+        /// Exact route-decision identity.
+        route_decision_id: String,
+        /// Privacy and placement class of the selected endpoint.
+        endpoint_class: EndpointClass,
+        /// Digest of the complete route decision and considered candidates.
+        decision_sha256: String,
+    },
+    /// One typed non-authoritative model proposal became available.
+    ProposalObserved {
+        /// Exact proposal identity.
+        proposal_id: String,
+        /// Digest of the complete typed proposal.
+        proposal_sha256: String,
     },
     /// A typed tool call was proposed and validated structurally.
     ToolRequested {
@@ -269,6 +307,15 @@ pub enum RuntimeEventKind {
         /// Digest of the closed terminal observation.
         observation_sha256: String,
     },
+    /// One attempt's actual state effect was reconciled.
+    EffectObserved {
+        /// Exact attempt identity.
+        attempt_id: String,
+        /// Whether verified state changed.
+        changed: bool,
+        /// Digest of the complete effect-reconciliation record.
+        effect_sha256: String,
+    },
     /// One deterministic verifier result was observed for an ended attempt.
     VerificationObserved {
         /// Exact attempt identity.
@@ -300,6 +347,8 @@ pub enum RuntimeEventKind {
         diagnostic_id: String,
         /// Digest of the complete diagnostic record.
         diagnostic_sha256: String,
+        /// Exact safe next action, never free-form model advice.
+        safe_next_action: RuntimeSafeNextAction,
     },
     /// One safe-boundary checkpoint was committed.
     CheckpointCommitted {

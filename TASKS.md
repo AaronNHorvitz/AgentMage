@@ -3599,22 +3599,31 @@ why, with measurable responsiveness and bounded resource use rather than hidden 
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 21.4.1 - Implement ordered privacy-aware lineage**
-  - [ ] **Sub-task 21.4.1.1:** Emit ordered capture, parse, context, route, model-event, proposal, policy, approval, tool, effect, verification, recovery, and terminal records with sequence and correlation identities.
-  - [ ] **Sub-task 21.4.1.2:** Redact raw secrets, credentials, private endpoint values, and hidden reasoning while retaining attributable actions, summarized rationale, evidence links, and uncertainty.
-  - [ ] **Sub-task 21.4.1.3:** Implement backpressure, bounded buffers, resumable event cursors, slow-client isolation, and cancellation without event reordering or state loss.
-- [ ] **Task 21.4.2 - Build the execution inspector contract**
-  - [ ] **Sub-task 21.4.2.1:** Expose current step, route class, proposals, approvals, tools, effects, verification, blockers, artifacts, diagnostics, and safe next actions through read-only projections.
-  - [ ] **Sub-task 21.4.2.2:** Reconstruct inspector views from journal and artifacts after reload without making the view a state authority.
+- [x] **Task 21.4.1 - Implement ordered privacy-aware lineage**
+  - [x] **Sub-task 21.4.1.1:** Emit ordered capture, parse, context, route, model-event, proposal, policy, approval, tool, effect, verification, recovery, and terminal records with sequence and correlation identities.
+  - [x] **Sub-task 21.4.1.2:** Redact raw secrets, credentials, private endpoint values, and hidden reasoning while retaining attributable actions, summarized rationale, evidence links, and uncertainty.
+  - [x] **Sub-task 21.4.1.3:** Implement backpressure, bounded buffers, resumable event cursors, slow-client isolation, and cancellation without event reordering or state loss.
+- [x] **Task 21.4.2 - Build the execution inspector contract**
+  - [x] **Sub-task 21.4.2.1:** Expose current step, route class, proposals, approvals, tools, effects, verification, blockers, artifacts, diagnostics, and safe next actions through read-only projections.
+  - [x] **Sub-task 21.4.2.2:** Reconstruct inspector views from journal and artifacts after reload without making the view a state authority.
 - [ ] **Task 21.4.3 - Measure and gate performance**
-  - [ ] **Sub-task 21.4.3.1:** Measure capture, parsing, retrieval, queue, first event/token, generation, tool, verification, total latency, throughput, memory, accelerator, disk, process, artifact, and backlog behavior.
+  - [x] **Sub-task 21.4.3.1:** Measure capture, parsing, retrieval, queue, first event/token, generation, tool, verification, total latency, throughput, memory, accelerator, disk, process, artifact, and backlog behavior.
   - [ ] **Sub-task 21.4.3.2:** Run `RV-56`; retain fixture identities, distributions, ceilings, overflow/backpressure behavior, redaction scans, and replay-equivalent inspector results.
+
+**Local implementation evidence:** [`ordered-runtime-lineage-inspector.md`](docs/architecture/ordered-runtime-lineage-inspector.md)
+defines the canonical content-free lineage, three gap-closing correctness events, deterministic
+read-only inspector, materialized-view verification, and identity-bound seventeen-metric budget.
+The source-bound [`lineage-inspector-report.json`](artifacts/sprints/sprint-21/story-21.4/lineage-inspector-report.json)
+retains the 100-iteration local distribution, all-threshold failure coverage, schema and redaction
+checks, strict Clippy, and the shared pressure, disconnect, cursor, cancellation, and replay gates.
+The reusable-gate ownership table assigns full `RV-56` (Engineering Capability Registry) to Story
+95.3, so Sub-task 21.4.3.2 remains open rather than claiming unrelated future evidence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 21.4.AC1:** Given an execution, when its lineage is inspected live or after restart, then ordered attributable facts and evidence reconstruct without exposing secrets or hidden reasoning.
-- [ ] **Story AC 21.4.AC2:** Given a slow or disconnected client, when work continues, then bounded backpressure protects the runtime and no accepted event or cancellation is silently lost.
-- [ ] **Story AC 21.4.AC3:** Given an identity-bound performance fixture, when it executes, then each declared latency/resource metric is measured and threshold failure blocks qualification without changing authority.
+- [x] **Story AC 21.4.AC1:** Given an execution, when its lineage is inspected live or after restart, then ordered attributable facts and evidence reconstruct without exposing secrets or hidden reasoning.
+- [x] **Story AC 21.4.AC2:** Given a slow or disconnected client, when work continues, then bounded backpressure protects the runtime and no accepted event or cancellation is silently lost.
+- [x] **Story AC 21.4.AC3:** Given an identity-bound performance fixture, when it executes, then each declared latency/resource metric is measured and threshold failure blocks qualification without changing authority.
 
 ### [ ] Sprint 22 - Context Management and Crash-Safe Resume
 

@@ -1,34 +1,34 @@
 {
   "artifacts": [
     {
-      "byte_length": 15625,
+      "byte_length": 17534,
       "path": "kernel/contracts/src/runtime_event.rs",
-      "sha256": "4b6ca09e1126ad654d9adc6f09ad4f46ce1cdf7aa1e67785f9aef4b691cb99c5"
+      "sha256": "51d66d7ca4be6aeda45a10e25ae1dd60c0c6a7ec54dc4cbca59c39091c919938"
     },
     {
-      "byte_length": 142813,
+      "byte_length": 148475,
       "path": "kernel/engine/src/runtime_event.rs",
-      "sha256": "3d328f408d53cc2b8ed04cbd0641d75c3ab1ee93336f30663b4818994a3ac8af"
+      "sha256": "9918d6194634c793162c09c4ea39bcdedb5df0f2e20e879c2f856c7d6468ca26"
     },
     {
-      "byte_length": 116376,
+      "byte_length": 116652,
       "path": "kernel/engine/src/runtime_journal.rs",
-      "sha256": "30a641e2c98ef277f47a9fe43b48a6080d464d459934b0640879233fe20e64cd"
+      "sha256": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464"
     },
     {
-      "byte_length": 31041,
+      "byte_length": 31253,
       "path": "shells/host/src/cli.rs",
-      "sha256": "c843826d925f557c6431e8efe62546f551688420d4a995f01c1ac80cde553aae"
+      "sha256": "9622d6ec7403497315245044fd803fbebf466dc9d1ba49dfd8f85d2c4b29c47d"
     },
     {
-      "byte_length": 18628,
+      "byte_length": 20345,
       "path": "schemas/runtime/runtime-event.schema.json",
-      "sha256": "12cf2d22c7ef7154439dc2a3704b2c17e19bb591475e3d9c7bbfa095fc3e6afc"
+      "sha256": "436592c7035920e1fb622ee83b3770c2c16838809e1327a9b7a5da110b93470e"
     },
     {
-      "byte_length": 69778,
+      "byte_length": 70113,
       "path": "tests/test_planning_schemas.mjs",
-      "sha256": "a9a27812006efb827909a2d117babc8d1ef5c08566155b401982f9e2ca39ec5b"
+      "sha256": "7e91d19b6eed4e802db3f1577a514a9298c70d6becb1706ce9b2861d0565f42b"
     },
     {
       "byte_length": 3817,
@@ -46,9 +46,9 @@
       "sha256": "916c55f1eb99e2d1e018c806b4d3ce2761253973ca9a2b03427a2deb9fff0271"
     },
     {
-      "byte_length": 20600,
+      "byte_length": 19787,
       "path": "artifacts/sprints/sprint-21/story-21.3/event-projection-results.log",
-      "sha256": "f75a05c4ce788d0a85920d04ff0ae52ed50375b516b14353c9ab74b0251050f6"
+      "sha256": "20e942b7512ea1a65f0045058fe20b6f8bb87c4fb93b06dd8eaa9ad6ce14fb6a"
     }
   ],
   "commands": [

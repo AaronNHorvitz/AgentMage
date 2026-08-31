@@ -1585,6 +1585,8 @@ mod tests {
                     RuntimeEventKind::TerminalDiagnostic {
                         diagnostic_id: "journal-diagnostic-21-3".to_owned(),
                         diagnostic_sha256: "7".repeat(64),
+                        safe_next_action:
+                            agentmage_kernel_contracts::RuntimeSafeNextAction::InspectEvidence,
                     },
                     None,
                 ),
@@ -1761,6 +1763,8 @@ mod tests {
                     RuntimeEventKind::TerminalDiagnostic {
                         diagnostic_id: "journal-diagnostic-full-21-3".to_owned(),
                         diagnostic_sha256: "2".repeat(64),
+                        safe_next_action:
+                            agentmage_kernel_contracts::RuntimeSafeNextAction::InspectEvidence,
                     },
                     None,
                 ),

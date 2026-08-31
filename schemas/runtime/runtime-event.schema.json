@@ -207,6 +207,29 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": ["event", "route_decision_id", "endpoint_class", "decision_sha256"],
+          "properties": {
+            "event": { "const": "route_selected" },
+            "route_decision_id": { "$ref": "#/$defs/identifier" },
+            "endpoint_class": {
+              "enum": ["strict_local", "local_network_private", "remote_private", "remote_managed"]
+            },
+            "decision_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "proposal_id", "proposal_sha256"],
+          "properties": {
+            "event": { "const": "proposal_observed" },
+            "proposal_id": { "$ref": "#/$defs/identifier" },
+            "proposal_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "required": ["event", "tool_call_id", "arguments_sha256"],
           "properties": {
             "event": { "const": "tool_requested" },
@@ -433,6 +456,17 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": ["event", "attempt_id", "changed", "effect_sha256"],
+          "properties": {
+            "event": { "const": "effect_observed" },
+            "attempt_id": { "$ref": "#/$defs/identifier" },
+            "changed": { "type": "boolean" },
+            "effect_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "required": ["event", "attempt_id", "verification_id", "result_sha256"],
           "properties": {
             "event": { "const": "verification_observed" },
@@ -465,11 +499,23 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["event", "diagnostic_id", "diagnostic_sha256"],
+          "required": ["event", "diagnostic_id", "diagnostic_sha256", "safe_next_action"],
           "properties": {
             "event": { "const": "terminal_diagnostic" },
             "diagnostic_id": { "$ref": "#/$defs/identifier" },
-            "diagnostic_sha256": { "$ref": "#/$defs/sha256" }
+            "diagnostic_sha256": { "$ref": "#/$defs/sha256" },
+            "safe_next_action": {
+              "enum": [
+                "retry_fresh_attempt",
+                "reconcile_effect",
+                "replan",
+                "await_approval",
+                "await_dependency",
+                "resume_from_checkpoint",
+                "inspect_evidence",
+                "none"
+              ]
+            }
           }
         },
         {

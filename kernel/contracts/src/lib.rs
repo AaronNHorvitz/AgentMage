@@ -231,6 +231,7 @@ pub use runtime_artifact::{
 pub use runtime_event::{
     RuntimeEvent, RuntimeEventKind, RuntimeEventPersistenceClass, RuntimeEventRetention,
     RuntimeEventRetentionKind, RuntimePayloadReference, RuntimePermissionDisposition,
+    RuntimeSafeNextAction,
 };
 pub use runtime_run::{
     RuntimeAnswerEvidence, RuntimeApprovalChallenge, RuntimeApprovalDisposition,
