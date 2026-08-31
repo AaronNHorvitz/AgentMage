@@ -17,16 +17,16 @@ EVIDENCE_DIR: Final = ROOT / "artifacts/sprints/sprint-11/story-11.2"
 RAW_PATH: Final = EVIDENCE_DIR / "storage-migration-compatibility-results.log"
 REPORT_PATH: Final = EVIDENCE_DIR / "storage-migration-compatibility-report.json"
 SOURCE_PATH: Final = ROOT / "kernel/engine/src/operational_store.rs"
-FIXTURE_PATH: Final = ROOT / "kernel/engine/fixtures/operational-store/schema-16.json"
+FIXTURE_PATH: Final = ROOT / "kernel/engine/fixtures/operational-store/schema-17.json"
 COMMANDS: Final = (
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_sixteen_schema_matches_fixture_snapshot_and_is_relational",
+        "operational_store::tests::version_seventeen_schema_matches_fixture_snapshot_and_is_relational",
         "--locked",
     ),
     (
         "cargo", "test", "-p", "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_seventeen_with_exact_history",
         "--locked",
     ),
     (
@@ -57,8 +57,8 @@ COMMANDS: Final = (
     ),
 )
 MARKERS: Final = (
-    "version_sixteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
-    "version_one_upgrades_through_sixteen_with_exact_history ... ok",
+    "version_seventeen_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_one_upgrades_through_seventeen_with_exact_history ... ok",
     "failed_version_two_migration_rolls_back_without_partial_schema ... ok",
     "failed_version_three_migration_rolls_back_all_alterations ... ok",
     "future_schema_and_page_corruption_are_refused ... ok",
@@ -67,8 +67,8 @@ MARKERS: Final = (
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 SOURCE_MARKERS: Final = (
-    "const SCHEMA_VERSION: i64 = 16;",
-    "../fixtures/operational-store/schema-16.json",
+    "const SCHEMA_VERSION: i64 = 17;",
+    "../fixtures/operational-store/schema-17.json",
     "fn verify_schema_history(connection: &Connection)",
     "fn failed_version_three_migration_rolls_back_all_alterations()",
     "fn failed_version_two_migration_rolls_back_without_partial_schema()",
@@ -94,6 +94,7 @@ MIGRATION_SHA256: Final = (
     "78146e92fda7e4f463cab1c751455d99ce7ff95de2bce5829fe768092f671fe7",
     "4caabc1a09d7cdedc69ffb231d03a467d9c5dd1aa0f706d917682c17f8aaf223",
     "3f2730d0f49d60ce70bf8bb9f8980e32bae74f31ece544e3d99a839918d20c0d",
+    "24a591be13fd7fd97531ca99a494979f66ffd6bdf2d12536eb9619177395797d",
 )
 TRUTH: Final = {
     "synthetic_data_only": True,
@@ -136,7 +137,7 @@ def expected_report() -> dict[str, Any]:
         "required_markers": list(MARKERS),
         "artifacts": [
             artifact("kernel/engine/src/operational_store.rs"),
-            artifact("kernel/engine/fixtures/operational-store/schema-16.json"),
+            artifact("kernel/engine/fixtures/operational-store/schema-17.json"),
             artifact("docs/verification/story-11-2-storage-migration-compatibility-evidence.md"),
             artifact("scripts/storage_migration_compatibility_evidence.py"),
             artifact("tests/test_storage_migration_compatibility_evidence.py"),
@@ -159,8 +160,8 @@ def validate_fixture(value: Any) -> list[str]:
     if not isinstance(value, dict) or value.get("record_type") != "agentmage-operational-store-schema-fixture":
         failures.append("fixture record type is not exact")
         return failures
-    if value.get("schema_version") != 16:
-        failures.append("fixture schema version is not 16")
+    if value.get("schema_version") != 17:
+        failures.append("fixture schema version is not 17")
     migrations = value.get("migrations")
     expected = [
         {"version": index, "sha256": digest}

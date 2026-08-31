@@ -13,10 +13,10 @@ use std::time::Duration;
 
 use agentmage_kernel_contracts::{
     ActionState, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
-    CONTRACT_SCHEMA_VERSION, CapabilityGrant, GrantId, GrantNonce, GrantStatus, OperationOutcome,
-    Receipt, RuntimeEvent, RuntimeEventCursor, RuntimeEventPersistenceClass, RuntimeResumeBinding,
-    RuntimeRunId, SessionCheckpoint, SessionId, StrictLocalStorageObservation, from_json,
-    to_canonical_json,
+    CONTRACT_SCHEMA_VERSION, CanonicalWorkflowCheckpoint, CapabilityGrant, GrantId, GrantNonce,
+    GrantStatus, OperationOutcome, Receipt, RuntimeEvent, RuntimeEventCursor,
+    RuntimeEventPersistenceClass, RuntimeResumeBinding, RuntimeRunId, SessionCheckpoint, SessionId,
+    StrictLocalStorageObservation, from_json, to_canonical_json,
 };
 use rusqlite::{
     Connection, OpenFlags, OptionalExtension, Transaction, TransactionBehavior, params,
@@ -30,6 +30,7 @@ use crate::authority_transaction::{
     EffectDriver,
 };
 use crate::context_management::{CheckpointError, verify_checkpoint};
+use crate::engineering_records::{ValidateCanonicalRecord, canonical_record_sha256};
 use crate::evidence_reconciliation::{
     AnswerClaimLedger, ReceiptIntegrityKey, TamperEvidentReceiptLedger,
 };
@@ -77,7 +78,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 16;
+const SCHEMA_VERSION: i64 = 17;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -174,6 +175,8 @@ const MIGRATION_15_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0015-workflow-materializations.sql");
 const MIGRATION_16_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0016-workflow-attempt-invariants.sql");
+const MIGRATION_17_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0017-workflow-checkpoints.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1033,6 +1036,7 @@ impl OperationalStore {
         verify_runtime_artifacts(self).map_err(|_| OperationalStoreError::IntegrityFailure)?;
         crate::engineering_persistence::verify_all(self)
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        verify_workflow_checkpoints(self)?;
         verify_repository_cache(self)?;
         verify_evidence_store(self)?;
         let generation: i64 = self
@@ -1339,22 +1343,25 @@ impl OperationalStore {
         &mut self,
         issuer: &GrantIssuer,
         coordinator: &AuthorityTransactionCoordinator,
-        checkpoint: &SessionCheckpoint,
-        binding: &RuntimeResumeBinding,
-        runtime_event: &RuntimeEvent,
-        workflow_state: &[WorkflowStateMaterialization],
+        publication: WorkflowCheckpointPublication<'_>,
     ) -> Result<(), OperationalStoreError> {
-        if self.poisoned || workflow_state.is_empty() {
+        if self.poisoned || publication.workflow_state.is_empty() {
             return Err(if self.poisoned {
                 OperationalStoreError::Poisoned
             } else {
                 OperationalStoreError::WorkflowProjectionRejected
             });
         }
-        validate_checkpoint_authority_binding(issuer, coordinator, checkpoint, &[])?;
-        verify_runtime_resume_binding(binding)
+        validate_checkpoint_authority_binding(issuer, coordinator, publication.checkpoint, &[])?;
+        verify_runtime_resume_binding(publication.binding)
             .map_err(|_| OperationalStoreError::CheckpointRejected)?;
-        validate_workflow_state_batch(runtime_event, binding, workflow_state)?;
+        validate_workflow_checkpoint_batch(
+            publication.checkpoint,
+            publication.binding,
+            publication.runtime_event,
+            publication.workflow_state,
+            publication.workflow_checkpoint,
+        )?;
         let next_generation = self
             .generation
             .checked_add(1)
@@ -1368,10 +1375,11 @@ impl OperationalStore {
             issuer,
             coordinator,
             SnapshotContinuity {
-                session_checkpoint: Some(checkpoint),
-                runtime_resume_binding: Some(binding),
-                runtime_events: std::slice::from_ref(runtime_event),
-                workflow_state,
+                session_checkpoint: Some(publication.checkpoint),
+                runtime_resume_binding: Some(publication.binding),
+                runtime_events: std::slice::from_ref(publication.runtime_event),
+                workflow_state: publication.workflow_state,
+                workflow_checkpoint: Some(publication.workflow_checkpoint),
                 runtime_resume_binding_after_events: true,
                 ..SnapshotContinuity::default()
             },
@@ -1939,12 +1947,19 @@ impl DurableAuthorityRuntime {
         binding: &RuntimeResumeBinding,
         event: RuntimeEvent,
         workflow_state: &[WorkflowStateMaterialization],
+        workflow_checkpoint: &CanonicalWorkflowCheckpoint,
     ) -> Result<(), DurableAuthorityError> {
         self.ensure_usable()?;
         verify_runtime_resume_binding(binding)
             .map_err(|error| DurableAuthorityError::RuntimeArtifact(error.into()))?;
-        validate_workflow_state_batch(&event, binding, workflow_state)
-            .map_err(DurableAuthorityError::Store)?;
+        validate_workflow_checkpoint_batch(
+            checkpoint,
+            binding,
+            &event,
+            workflow_state,
+            workflow_checkpoint,
+        )
+        .map_err(DurableAuthorityError::Store)?;
         self.flush_runtime_events()?;
         let cursor = {
             let store = self.lock_store()?;
@@ -1967,10 +1982,13 @@ impl DurableAuthorityRuntime {
             .persist_authority_with_workflow_checkpoint(
                 &self.issuer,
                 &self.coordinator,
-                checkpoint,
-                binding,
-                &event,
-                workflow_state,
+                WorkflowCheckpointPublication {
+                    checkpoint,
+                    binding,
+                    runtime_event: &event,
+                    workflow_state,
+                    workflow_checkpoint,
+                },
             );
         result.map_err(|error| self.poison(error))?;
         self.reconcile_runtime_journal()?;
@@ -3476,6 +3494,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 16_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 16;
+    }
+    if version == 16 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_17_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (17, ?1)",
+                [sha256_hex(MIGRATION_17_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -3512,6 +3551,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (14, sha256_hex(MIGRATION_14_SCHEMA_SQL.as_bytes())),
             (15, sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())),
             (16, sha256_hex(MIGRATION_16_SCHEMA_SQL.as_bytes())),
+            (17, sha256_hex(MIGRATION_17_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -3526,7 +3566,17 @@ struct SnapshotContinuity<'a> {
     runtime_events: &'a [RuntimeEvent],
     write_checkpoints: &'a [WriteAwareCheckpoint],
     workflow_state: &'a [WorkflowStateMaterialization],
+    workflow_checkpoint: Option<&'a CanonicalWorkflowCheckpoint>,
     runtime_resume_binding_after_events: bool,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct WorkflowCheckpointPublication<'a> {
+    checkpoint: &'a SessionCheckpoint,
+    binding: &'a RuntimeResumeBinding,
+    runtime_event: &'a RuntimeEvent,
+    workflow_state: &'a [WorkflowStateMaterialization],
+    workflow_checkpoint: &'a CanonicalWorkflowCheckpoint,
 }
 
 fn persist_snapshot(
@@ -3632,6 +3682,20 @@ fn persist_snapshot(
         }
     })?;
     persist_workflow_state_materializations(&transaction, continuity.workflow_state)?;
+    if let (Some(session_checkpoint), Some(binding), Some(workflow_checkpoint)) = (
+        continuity.session_checkpoint,
+        continuity.runtime_resume_binding,
+        continuity.workflow_checkpoint,
+    ) {
+        persist_workflow_checkpoint(
+            &transaction,
+            session_checkpoint,
+            binding,
+            workflow_checkpoint,
+        )?;
+    } else if continuity.workflow_checkpoint.is_some() {
+        return Err(OperationalStoreError::WorkflowProjectionRejected);
+    }
     if let (Some(checkpoint), Some(binding)) = (
         continuity.session_checkpoint,
         continuity
@@ -3697,6 +3761,30 @@ fn validate_workflow_state_batch(
     Ok(())
 }
 
+fn validate_workflow_checkpoint_batch(
+    session_checkpoint: &SessionCheckpoint,
+    binding: &RuntimeResumeBinding,
+    event: &RuntimeEvent,
+    workflow_state: &[WorkflowStateMaterialization],
+    workflow_checkpoint: &CanonicalWorkflowCheckpoint,
+) -> Result<(), OperationalStoreError> {
+    validate_workflow_state_batch(event, binding, workflow_state)?;
+    workflow_checkpoint
+        .validate_canonical()
+        .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?;
+    if workflow_checkpoint.journal_sequence != event.sequence
+        || binding.checkpoint_id != session_checkpoint.checkpoint_id
+        || binding.checkpoint_sha256 != session_checkpoint.checkpoint_sha256
+        || binding.event_cursor.sequence != workflow_checkpoint.journal_sequence
+        || !workflow_state
+            .iter()
+            .any(|state| state.fingerprint_sha256 == workflow_checkpoint.state_sha256)
+    {
+        return Err(OperationalStoreError::WorkflowProjectionRejected);
+    }
+    Ok(())
+}
+
 fn persist_workflow_state_materializations(
     transaction: &Transaction<'_>,
     workflow_state: &[WorkflowStateMaterialization],
@@ -3730,6 +3818,154 @@ fn persist_workflow_state_materializations(
                 ],
             )
             .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+    }
+    Ok(())
+}
+
+fn persist_workflow_checkpoint(
+    transaction: &Transaction<'_>,
+    session_checkpoint: &SessionCheckpoint,
+    binding: &RuntimeResumeBinding,
+    checkpoint: &CanonicalWorkflowCheckpoint,
+) -> Result<(), OperationalStoreError> {
+    let record_json = to_canonical_json(checkpoint)
+        .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?;
+    let record_sha256 = sha256_hex(&record_json);
+    transaction
+        .execute(
+            "INSERT INTO workflow_checkpoints(
+                 checkpoint_id, workflow_id, state_sha256, journal_sequence,
+                 source_manifest_sha256, policy_sha256, environment_sha256, route_sha256,
+                 tool_catalog_sha256, session_checkpoint_id, run_id, session_id,
+                 event_sequence, event_id, record_sha256, record_json
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
+            params![
+                &checkpoint.checkpoint_id,
+                &checkpoint.workflow_id,
+                &checkpoint.state_sha256,
+                i64::try_from(checkpoint.journal_sequence)
+                    .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?,
+                &checkpoint.source_manifest_sha256,
+                &checkpoint.policy_sha256,
+                &checkpoint.environment_sha256,
+                &checkpoint.route_sha256,
+                &checkpoint.tool_catalog_sha256,
+                session_checkpoint.checkpoint_id.as_str(),
+                binding.run_id.as_str(),
+                binding.session_id.as_str(),
+                i64::try_from(binding.event_cursor.sequence)
+                    .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?,
+                binding.event_cursor.event_id.as_str(),
+                record_sha256,
+                record_json,
+            ],
+        )
+        .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+    Ok(())
+}
+
+fn verify_workflow_checkpoints(store: &OperationalStore) -> Result<(), OperationalStoreError> {
+    let mut statement = store
+        .connection
+        .prepare(
+            "SELECT checkpoint_id, workflow_id, state_sha256, journal_sequence,
+                    source_manifest_sha256, policy_sha256, environment_sha256, route_sha256,
+                    tool_catalog_sha256, session_checkpoint_id, run_id, session_id,
+                    event_sequence, event_id, record_sha256, record_json
+             FROM workflow_checkpoints ORDER BY checkpoint_id",
+        )
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    let rows = statement
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, i64>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, String>(5)?,
+                row.get::<_, String>(6)?,
+                row.get::<_, String>(7)?,
+                row.get::<_, String>(8)?,
+                row.get::<_, String>(9)?,
+                row.get::<_, String>(10)?,
+                row.get::<_, String>(11)?,
+                row.get::<_, i64>(12)?,
+                row.get::<_, String>(13)?,
+                row.get::<_, String>(14)?,
+                row.get::<_, Vec<u8>>(15)?,
+            ))
+        })
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    for row in rows {
+        let (
+            checkpoint_id,
+            workflow_id,
+            state_sha256,
+            journal_sequence,
+            source_manifest_sha256,
+            policy_sha256,
+            environment_sha256,
+            route_sha256,
+            tool_catalog_sha256,
+            session_checkpoint_id,
+            run_id,
+            session_id,
+            event_sequence,
+            event_id,
+            record_sha256,
+            record_json,
+        ) = row.map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        let checkpoint: CanonicalWorkflowCheckpoint =
+            from_json(&record_json).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        checkpoint
+            .validate_canonical()
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        if checkpoint.checkpoint_id != checkpoint_id
+            || checkpoint.workflow_id != workflow_id
+            || checkpoint.state_sha256 != state_sha256
+            || i64::try_from(checkpoint.journal_sequence).ok() != Some(journal_sequence)
+            || checkpoint.source_manifest_sha256 != source_manifest_sha256
+            || checkpoint.policy_sha256 != policy_sha256
+            || checkpoint.environment_sha256 != environment_sha256
+            || checkpoint.route_sha256 != route_sha256
+            || checkpoint.tool_catalog_sha256 != tool_catalog_sha256
+            || journal_sequence != event_sequence
+            || canonical_record_sha256(&checkpoint).ok().as_deref() != Some(record_sha256.as_str())
+        {
+            return Err(OperationalStoreError::IntegrityFailure);
+        }
+        let authority_matches: bool =
+            store
+                .connection
+                .query_row(
+                    "SELECT
+                    EXISTS(SELECT 1 FROM session_checkpoints
+                           WHERE checkpoint_id = ?1),
+                    EXISTS(SELECT 1 FROM runtime_resume_bindings
+                           WHERE checkpoint_id = ?1 AND run_id = ?2 AND session_id = ?3
+                             AND event_sequence = ?4 AND event_id = ?5),
+                    EXISTS(SELECT 1 FROM workflow_state_fingerprints
+                           WHERE run_id = ?2 AND session_id = ?3 AND event_sequence = ?4
+                             AND event_id = ?5 AND fingerprint_sha256 = ?6)",
+                    params![
+                        &session_checkpoint_id,
+                        &run_id,
+                        &session_id,
+                        event_sequence,
+                        &event_id,
+                        &state_sha256,
+                    ],
+                    |row| {
+                        Ok(row.get::<_, bool>(0)?
+                            && row.get::<_, bool>(1)?
+                            && row.get::<_, bool>(2)?)
+                    },
+                )
+                .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        if !authority_matches {
+            return Err(OperationalStoreError::IntegrityFailure);
+        }
     }
     Ok(())
 }
@@ -5241,6 +5477,10 @@ const DERIVED_EXPORT_QUERIES: &[DerivedExportQuery] = &[
         sql: "SELECT fingerprint_record_id, occurrence, record_sha256 FROM workflow_state_fingerprints",
     },
     DerivedExportQuery {
+        family: "workflow_checkpoints",
+        sql: "SELECT checkpoint_id, journal_sequence, record_sha256 FROM workflow_checkpoints",
+    },
+    DerivedExportQuery {
         family: "workflow_terminal_diagnostics",
         sql: "SELECT diagnostic_id, 0, diagnostic_sha256 FROM workflow_terminal_diagnostics",
     },
@@ -5541,15 +5781,16 @@ mod tests {
 
     use agentmage_kernel_contracts::{
         ActorId, AdapterInstanceId, ApprovalId, AuthorizedWorkspaceHandle, CONTRACT_SCHEMA_VERSION,
-        CheckpointFileIdentity, CloudSynchronizationMarker, ContextSensitivity, CorrelationId,
-        DataSensitivity, EvidenceId, GrantId, GrantNonce, GrantOperation, GrantTarget,
-        HeldWorkspaceRoot, ModelProfileId, PathPlatform, PlanId, PlanStepId, PolicyId,
-        RepositorySnapshotId, RuntimeArtifactId, RuntimeArtifactRef, RuntimeEvent,
-        RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass,
-        RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeOperationId, RuntimeResumeBinding,
-        RuntimeRunId, RuntimeTurnId, SessionCheckpoint, SessionCheckpointId, SessionId,
-        StorageFilesystemClass, StrictLocalStorageObservation, TaskId, ToolCallId,
-        WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectIdentity, WorkspaceScopePath,
+        CanonicalWorkflowCheckpoint, CheckpointFileIdentity, CloudSynchronizationMarker,
+        ContextSensitivity, CorrelationId, DataSensitivity, EvidenceId, GrantId, GrantNonce,
+        GrantOperation, GrantTarget, HeldWorkspaceRoot, ModelProfileId, PathPlatform, PlanId,
+        PlanStepId, PolicyId, RepositorySnapshotId, RuntimeArtifactId, RuntimeArtifactRef,
+        RuntimeEvent, RuntimeEventCursor, RuntimeEventId, RuntimeEventKind,
+        RuntimeEventPersistenceClass, RuntimeEventRetention, RuntimeEventRetentionKind,
+        RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId, RuntimeTurnId, SessionCheckpoint,
+        SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
+        TaskId, ToolCallId, WorkspaceAuthorizationId, WorkspaceId, WorkspaceObjectIdentity,
+        WorkspaceScopePath,
     };
     use rusqlite::params;
     use serde_json::Value;
@@ -5578,6 +5819,28 @@ mod tests {
 
     fn hash(byte: char) -> String {
         byte.to_string().repeat(64)
+    }
+
+    fn workflow_checkpoint(
+        checkpoint_id: &str,
+        state_sha256: String,
+        journal_sequence: u64,
+    ) -> CanonicalWorkflowCheckpoint {
+        CanonicalWorkflowCheckpoint {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint_id.to_owned(),
+            workflow_id: "workflow-store-1".to_owned(),
+            state_sha256,
+            journal_sequence,
+            source_manifest_sha256: hash('1'),
+            policy_sha256: hash('2'),
+            environment_sha256: hash('3'),
+            route_sha256: hash('4'),
+            tool_catalog_sha256: hash('5'),
+            receipt_sha256s: vec![hash('6')],
+            consumed_grant_sha256s: vec![hash('7')],
+            created_at: "2026-08-31T00:00:00Z".to_owned(),
+        }
     }
 
     fn write_checkpoint(
@@ -6461,7 +6724,7 @@ mod tests {
 
         assert_eq!(exported_families, persisted_families);
         assert_eq!(export_queries.len(), persisted_families.len());
-        assert_eq!(persisted_families.len(), 31);
+        assert_eq!(persisted_families.len(), 32);
         for query in export_queries {
             let normalized = query.sql.to_ascii_lowercase();
             for prohibited in [
@@ -7074,6 +7337,7 @@ mod tests {
     fn workflow_state_event_checkpoint_cursor_and_artifact_reference_commit_atomically() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
+        let key = [65; 32];
         let (checkpoint, _, start_event, checkpoint_event) = atomic_checkpoint_publication();
         let event_cursor = RuntimeEventCursor {
             run_id: checkpoint_event.run_id.clone(),
@@ -7112,8 +7376,13 @@ mod tests {
             session_id: checkpoint.session_id.clone(),
             event_cursor,
         };
+        let workflow_checkpoint = workflow_checkpoint(
+            "workflow-atomic-checkpoint-1",
+            projection.fingerprint_sha256.clone(),
+            binding.event_cursor.sequence,
+        );
         let mut runtime =
-            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey([65; 32]), 500)
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey(key), 500)
                 .expect("durable runtime");
         runtime
             .record_runtime_event(start_event)
@@ -7163,6 +7432,7 @@ mod tests {
                 &binding,
                 checkpoint_event,
                 std::slice::from_ref(&projection),
+                &workflow_checkpoint,
             )
             .expect("atomic workflow publication");
 
@@ -7172,6 +7442,7 @@ mod tests {
             ("runtime_resume_bindings", 1),
             ("runtime_resume_artifacts", 1),
             ("workflow_state_fingerprints", 1),
+            ("workflow_checkpoints", 1),
         ] {
             let sql = format!("SELECT COUNT(*) FROM {table}");
             assert_eq!(
@@ -7200,6 +7471,91 @@ mod tests {
         );
         drop(store);
         drop(runtime);
+
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
+    fn workflow_checkpoint_reopens_exactly_and_tamper_blocks_restart() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let key = [67; 32];
+        let (checkpoint, _, start_event, checkpoint_event) = atomic_checkpoint_publication();
+        let event_cursor = RuntimeEventCursor {
+            run_id: checkpoint_event.run_id.clone(),
+            event_id: checkpoint_event.event_id.clone(),
+            sequence: checkpoint_event.sequence,
+            event_sha256: checkpoint_event.event_sha256.clone(),
+        };
+        let binding = crate::runtime_artifact::seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: checkpoint.checkpoint_sha256.clone(),
+            session_id: checkpoint.session_id.clone(),
+            task_id: checkpoint.task_id.clone(),
+            run_id: checkpoint_event.run_id.clone(),
+            event_cursor: event_cursor.clone(),
+            artifacts: Vec::new(),
+            binding_sha256: ZERO_SHA256.to_owned(),
+        })
+        .expect("event-bound checkpoint binding");
+        let projection = WorkflowStateMaterialization {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            fingerprint_record_id: "workflow-reopen-fingerprint-1".to_owned(),
+            step_execution_id: Some("workflow-reopen-step-1".to_owned()),
+            fingerprint_sha256: hash('b'),
+            occurrence: 1,
+            repeat_count: 0,
+            run_id: checkpoint_event.run_id.clone(),
+            session_id: checkpoint.session_id.clone(),
+            event_cursor,
+        };
+        let workflow_checkpoint = workflow_checkpoint(
+            "workflow-reopen-checkpoint-1",
+            projection.fingerprint_sha256.clone(),
+            binding.event_cursor.sequence,
+        );
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey(key), 500)
+                .expect("durable runtime");
+        runtime
+            .record_runtime_event(start_event)
+            .expect("run start");
+        runtime
+            .checkpoint_runtime_session_with_workflow_state(
+                &checkpoint,
+                &binding,
+                checkpoint_event,
+                std::slice::from_ref(&projection),
+                &workflow_checkpoint,
+            )
+            .expect("workflow checkpoint publication");
+        drop(runtime);
+
+        let reopened = OperationalStore::open(&path, &observation(), &mut TestKey(key))
+            .expect("verified workflow checkpoint restart");
+        assert_eq!(
+            reopened
+                .connection
+                .query_row("SELECT COUNT(*) FROM workflow_checkpoints", [], |row| {
+                    row.get::<_, i64>(0)
+                })
+                .expect("reopened workflow checkpoint count"),
+            1
+        );
+        reopened
+            .connection
+            .execute(
+                "UPDATE workflow_checkpoints SET state_sha256 = ?1",
+                [hash('e')],
+            )
+            .expect("inject workflow checkpoint tamper");
+        drop(reopened);
+        assert_eq!(
+            OperationalStore::open(&path, &observation(), &mut TestKey(key))
+                .expect_err("workflow checkpoint tamper must block restart"),
+            OperationalStoreError::IntegrityFailure
+        );
         fs::remove_dir_all(directory).expect("cleanup");
     }
 
@@ -7237,6 +7593,11 @@ mod tests {
             session_id: checkpoint.session_id.clone(),
             event_cursor,
         };
+        let workflow_checkpoint = workflow_checkpoint(
+            "workflow-atomic-rollback-checkpoint-1",
+            projection.fingerprint_sha256.clone(),
+            binding.event_cursor.sequence,
+        );
         let mut runtime =
             DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey([66; 32]), 500)
                 .expect("durable runtime");
@@ -7265,6 +7626,7 @@ mod tests {
                     &binding,
                     checkpoint_event,
                     std::slice::from_ref(&projection),
+                    &workflow_checkpoint,
                 )
                 .expect_err("projection failure must roll back every publication"),
             DurableAuthorityError::Store(OperationalStoreError::PersistenceFailure)
@@ -7276,6 +7638,7 @@ mod tests {
             "runtime_resume_bindings",
             "runtime_resume_artifacts",
             "workflow_state_fingerprints",
+            "workflow_checkpoints",
         ] {
             let sql = format!("SELECT COUNT(*) FROM {table}");
             assert_eq!(
@@ -7382,13 +7745,13 @@ mod tests {
     }
 
     #[test]
-    fn version_sixteen_schema_matches_fixture_snapshot_and_is_relational() {
+    fn version_seventeen_schema_matches_fixture_snapshot_and_is_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
-            .expect("version sixteen store");
+            .expect("version seventeen store");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-16.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-17.json"))
                 .expect("schema fixture parses");
         assert_eq!(fixture["schema_version"].as_i64(), Some(SCHEMA_VERSION));
         let tables: Vec<String> = store
@@ -7919,7 +8282,7 @@ mod tests {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([16; 32]))
-            .expect("version sixteen store");
+            .expect("version seventeen store");
         let record = b"{}".as_slice();
         let digest = |label: &str| sha256_hex(label.as_bytes());
 
@@ -9117,7 +9480,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_sixteen_with_exact_history() {
+    fn version_one_upgrades_through_seventeen_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -9138,7 +9501,7 @@ mod tests {
             })
             .expect("migration history");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-16.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-17.json"))
                 .expect("schema fixture parses");
         let fixture_history = fixture["migrations"]
             .as_array()
@@ -10348,7 +10711,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 16));
+                assert_eq!((version, history), (SCHEMA_VERSION, 17));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))

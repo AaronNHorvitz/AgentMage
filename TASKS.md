@@ -2269,7 +2269,7 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
   - [x] **Sub-task 11.2.3.1:** Add forward migrations, fixture snapshots, schema hashes, rollback
     tests, interrupted-migration recovery, future-schema refusal, and occupied-destination handling.
     Completed locally on Linux on 2026-08-30. The canonical SQLCipher store now has a retained,
-    machine-validated schema-16 fixture that pins the sorted table inventory and every ordered
+    machine-validated schema-17 fixture that pins the sorted table inventory and every ordered
     migration digest independently of the embedded migration implementation. Fresh creation and a
     version-one fixture upgrade both match it exactly. Existing transaction fault fixtures prove
     version-two and version-three migration rollback; the seeded subprocess matrix interrupts the
@@ -2344,7 +2344,7 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
   - [x] **Sub-task 11.2.4.3:** Retain migration matrices, transaction traces, canary scans,
     encrypted-page scans, cleanup evidence, and `RV-08` through `RV-10` plus `RV-17` mappings.
     Completed locally on Linux on 2026-08-30. A machine-validated Story 11.2 index hash-binds the
-    schema-16 migration and downgrade reports, new-family lifecycle evidence, 224-case subprocess
+    schema-17 migration and downgrade reports, new-family lifecycle evidence, 224-case subprocess
     crash traces, exact old/new recovery results, Story 11.1 main/WAL/SHM/backup/export canary scans,
     and retention/deletion/erasure/cleanup records. The map records `RV-08` and `RV-10` as
     demonstrated for the current storage scope, `RV-09` as partial pending live provider, rotation,
@@ -2433,22 +2433,27 @@ crashes, and restarts without losing truth, repeating effects, or asking artific
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 11.3.1 - Persist authoritative workflow state**
-  - [ ] **Sub-task 11.3.1.1:** Store workflow/step state, budgets, attempts, idempotency keys, approvals, consumed grants, observations, artifacts, verifications, recovery decisions, and terminal diagnostics transactionally.
-  - [ ] **Sub-task 11.3.1.2:** Extend the existing ordered hash-chained journal and encrypted materializations without creating client, model, or extension-owned state.
-- [ ] **Task 11.3.2 - Implement checkpoint and recovery reconciliation**
-  - [ ] **Sub-task 11.3.2.1:** Bind checkpoints to source, workflow, plan, step, tool, model route, policy, environment, effect, receipt, artifact, verifier, and schema identities.
-  - [ ] **Sub-task 11.3.2.2:** On restart, reconcile current identities and observed effects before resuming; invalidate stale checkpoints transitively and preserve unresolved uncertainty.
-  - [ ] **Sub-task 11.3.2.3:** Decouple task lifetime from chat turns, views, extension processes, provider streams, and client connections while retaining cancellation ownership.
-- [ ] **Task 11.3.3 - Execute crash and replay campaigns**
-  - [ ] **Sub-task 11.3.3.1:** Crash before/after each journal, dispatch, effect, receipt, verification, checkpoint, and terminal boundary and assert deterministic recovery.
-  - [ ] **Sub-task 11.3.3.2:** Run `RV-53`; retain restart schedules, pre/post state, replay counters, invalidation decisions, and one actionable terminal diagnosis per non-cancelled failure.
+- [x] **Task 11.3.1 - Persist authoritative workflow state** Evidence: migration 0017 adds canonical workflow checkpoints to the encrypted operational store and the runtime publishes them in the same transaction as the session checkpoint, exact journal event/cursor, resume binding, immutable artifact references, and normalized workflow-state families. Focused commit/rollback, verified-reopen, and tamper-refusal tests pass.
+  - [x] **Sub-task 11.3.1.1:** Store workflow/step state, budgets, attempts, idempotency keys, approvals, consumed grants, observations, artifacts, verifications, recovery decisions, and terminal diagnostics transactionally. Evidence: schema versions 15 through 17 retain the complete normalized workflow family; `checkpoint_runtime_session_with_workflow_state` makes the canonical checkpoint and state fingerprint part of the existing atomic authority snapshot.
+  - [x] **Sub-task 11.3.1.2:** Extend the existing ordered hash-chained journal and encrypted materializations without creating client, model, or extension-owned state. Evidence: the checkpoint is foreign-key bound to the host-owned session checkpoint, runtime run, and exact hash-chained event; verified store opening rejects canonical-record, column, authority, event, or state-fingerprint drift.
+- [x] **Task 11.3.2 - Implement checkpoint and recovery reconciliation** Evidence: [`workflow_resume.rs`](kernel/engine/src/workflow_resume.rs) implements one fail-closed, non-authoritative reconciliation boundary with six explicit safe outcomes and five focused test groups.
+  - [x] **Sub-task 11.3.2.1:** Bind checkpoints to source, workflow, plan, step, tool, model route, policy, environment, effect, receipt, artifact, verifier, and schema identities. Evidence: the canonical session/workflow checkpoint and runtime resume binding jointly cover every named identity, exact ordered artifacts and evidence, consumed grants, receipt set, workflow-state hash, journal cursor, and schema version.
+  - [x] **Sub-task 11.3.2.2:** On restart, reconcile current identities and observed effects before resuming; invalidate stale checkpoints transitively and preserve unresolved uncertainty. Evidence: all twelve drift families force replan/recheckpoint, exhausted and terminal states are absorbing, verified applied effects finalize without replay, and uncertain effects remain blocked with a stable reason and safe reconciliation action.
+  - [x] **Sub-task 11.3.2.3:** Decouple task lifetime from chat turns, views, extension processes, provider streams, and client connections while retaining cancellation ownership. Evidence: the host-owned persistent supervisor reconstructs after the original supervisor/view disappears and only the reconstructed host owner can apply the existing typed cancellation transition.
+- [x] **Task 11.3.3 - Execute crash and replay campaigns** Evidence: [`durable-resume-report.json`](artifacts/sprints/sprint-11/story-11.3/durable-resume-report.json) binds the process-stop journal matrix, authority crash matrix, atomic checkpoint faults, reconciliation decisions, and strict Clippy result.
+  - [x] **Sub-task 11.3.3.1:** Crash before/after each journal, dispatch, effect, receipt, verification, checkpoint, and terminal boundary and assert deterministic recovery. Evidence: four journal boundaries at both positions, six authority transaction fault points, checkpoint commit/rollback/reopen/tamper cases, and terminal/uncertainty reconciliation retain one truthful history with no repeated completed effect.
+  - [x] **Sub-task 11.3.3.2:** Run `RV-52`; retain restart schedules, pre/post state, replay counters, invalidation decisions, and one actionable terminal diagnosis per non-cancelled failure. Evidence: the retained Story 11.3 local `RV-52` slice uses the protocol assigned by `SECURITY-REVIEW.md`, the reviewer-protocol ownership table, and the engineering-runtime traceability manifest; the prior `RV-53` label here was a planning typo because that protocol exclusively qualifies model gateways. Other stories' installed-product, large-output, inspector, and live-call `RV-52` slices remain explicitly open.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 11.3.AC1:** Given a crash or client loss at any workflow boundary, when recovery begins, then accepted state is reconstructed from authoritative records and no completed effect repeats.
-- [ ] **Story AC 11.3.AC2:** Given stale identity, uncertain effect, or exhausted budget, when resume is requested, then work remains blocked with exact evidence and a safe next action.
-- [ ] **Story AC 11.3.AC3:** Given a healthy resumable task with no client attached, when execution continues, then its truth and lifecycle remain host-owned and bounded.
+- [x] **Story AC 11.3.AC1:** Given a crash or client loss at any workflow boundary, when recovery begins, then accepted state is reconstructed from authoritative records and no completed effect repeats. Evidence: the retained crash matrices, verified checkpoint reopen, supervisor reconstruction, and applied/uncertain-effect tests all pass without automatic replay.
+- [x] **Story AC 11.3.AC2:** Given stale identity, uncertain effect, or exhausted budget, when resume is requested, then work remains blocked with exact evidence and a safe next action. Evidence: every current decision includes a closed reason code and action; all drift, uncertainty, malformed durable state, exhausted budget, and terminal cases deny dispatch.
+- [x] **Story AC 11.3.AC3:** Given a healthy resumable task with no client attached, when execution continues, then its truth and lifecycle remain host-owned and bounded. Evidence: supervisor/view disappearance leaves the persistent task reconstructible with monotonic journal state and typed host-owned cancellation.
+
+**Current gate status:** BLOCKED only for the Universal Story Definition of Done's installed-product,
+native supported-platform, and independent-review evidence. All numbered Story 11.3 tasks and local
+acceptance criteria are complete; the retained report truthfully isolates the remaining external and
+later-story `RV-52` scopes.
 
 ### [x] Sprint 12 - Agent Runtime, Planning, and Session Behavior
 

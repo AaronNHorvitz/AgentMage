@@ -340,6 +340,8 @@
     "story-11.2-ac3:evidence:check": "python3 scripts/story_11_2_ac3_evidence.py && python3 -m unittest tests.test_story_11_2_ac3_evidence",
     "story-11.2:gate:build": "python3 scripts/story_11_2_gate.py --write && python3 -m unittest tests.test_story_11_2_gate",
     "story-11.2:gate:check": "python3 scripts/story_11_2_gate.py && python3 -m unittest tests.test_story_11_2_gate",
+    "story-11.3:resume:evidence:build": "python3 scripts/story_11_3_resume_evidence.py --write && python3 -m unittest tests.test_story_11_3_resume_evidence",
+    "story-11.3:resume:evidence:check": "python3 scripts/story_11_3_resume_evidence.py && python3 -m unittest tests.test_story_11_3_resume_evidence",
     "engineering-runtime:rv50:evidence:build": "python3 scripts/engineering_runtime_rv50_evidence.py --write && python3 -m unittest tests.test_engineering_runtime_rv50_evidence",
     "engineering-runtime:rv50:evidence:check": "python3 scripts/engineering_runtime_rv50_evidence.py && python3 -m unittest tests.test_engineering_runtime_rv50_evidence",
     "engineering-runtime:rv51:evidence:build": "python3 scripts/engineering_artifact_rv51_evidence.py --write && python3 -m unittest tests.test_engineering_artifact_rv51_evidence",

@@ -36,7 +36,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_sixteen_schema_matches_fixture_snapshot_and_is_relational",
+        "operational_store::tests::version_seventeen_schema_matches_fixture_snapshot_and_is_relational",
         "--locked",
     ),
     (
@@ -52,7 +52,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_sixteen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_seventeen_with_exact_history",
         "--locked",
     ),
     (
@@ -77,9 +77,9 @@ COMMANDS: Final = (
     ),
 )
 MARKERS: Final = (
-    "version_sixteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_seventeen_schema_matches_fixture_snapshot_and_is_relational ... ok",
     "source_materializations_bind_one_existing_encrypted_payload_without_new_byte_store ... ok",
-    "version_one_upgrades_through_sixteen_with_exact_history ... ok",
+    "version_one_upgrades_through_seventeen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 TRUTH: Final = {
@@ -113,7 +113,7 @@ def expected_report() -> dict[str, Any]:
         "generated_on": "2026-08-30",
         "status": "pass-local-structural-schema",
         "materialization_migration_version": 12,
-        "current_operational_store_schema_version": 16,
+        "current_operational_store_schema_version": 17,
         "normalized_tables": list(TABLES),
         "payload_authority": {
             "migration": "0007-runtime-artifacts.sql",

@@ -34,7 +34,7 @@ class StorageMigrationCompatibilityEvidenceTests(unittest.TestCase):
         fixture = json.loads(FIXTURE_PATH.read_text())
         mutations = []
         changed = copy.deepcopy(fixture)
-        changed["schema_version"] = 17
+        changed["schema_version"] = 16
         mutations.append(changed)
         changed = copy.deepcopy(fixture)
         changed["migrations"][0]["sha256"] = "f" * 64
@@ -47,7 +47,7 @@ class StorageMigrationCompatibilityEvidenceTests(unittest.TestCase):
         mutations.append(changed)
         for mutation in mutations:
             self.assertTrue(validate_fixture(mutation))
-        self.assertEqual(len(MIGRATION_SHA256), 16)
+        self.assertEqual(len(MIGRATION_SHA256), 17)
 
     def test_follow_on_or_product_completion_overclaim_is_rejected(self) -> None:
         for field in (

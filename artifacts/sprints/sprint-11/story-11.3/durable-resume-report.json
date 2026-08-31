@@ -1,0 +1,144 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 26359,
+      "path": "kernel/engine/src/workflow_resume.rs",
+      "sha256": "a6404b5ab64ce63297f92eaa608e9182f7c522d20a0a745233ca61f13ecaeda0"
+    },
+    {
+      "byte_length": 437644,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "64ac3a2ab768f47f03f5fdb4343aae9df0d429eff727b74a875f909ab6e17a9a"
+    },
+    {
+      "byte_length": 1417,
+      "path": "kernel/engine/migrations/operational-store/0017-workflow-checkpoints.sql",
+      "sha256": "24a591be13fd7fd97531ca99a494979f66ffd6bdf2d12536eb9619177395797d"
+    },
+    {
+      "byte_length": 24657,
+      "path": "kernel/engine/src/persistent_supervisor.rs",
+      "sha256": "2422bd86db4e9e6bd7d75c6bb8924235e93de8a4eced094df2f2cf3276cf3749"
+    },
+    {
+      "byte_length": 96409,
+      "path": "kernel/engine/src/runtime_journal.rs",
+      "sha256": "6d961665fc0163026e57ef38ad312c28a720347af178833f8d79679f7d81409e"
+    },
+    {
+      "byte_length": 102469,
+      "path": "kernel/engine/src/authority_transaction.rs",
+      "sha256": "cf12332a555bf9a5849857aba6c7273226bb3056c012211299ca81cb436b92a2"
+    },
+    {
+      "byte_length": 3993,
+      "path": "kernel/engine/fixtures/operational-store/schema-17.json",
+      "sha256": "6d21d737c1092797c47d37a0772193b8def75ec1c76bf38fd96b3ef96665597e"
+    },
+    {
+      "byte_length": 2047,
+      "path": "docs/verification/story-11-3-durable-resume.md",
+      "sha256": "7415c156e7aefc61c5a2a782f5cd0e9cc8195d05b0b4ffc368ca36c9ce8d69c1"
+    },
+    {
+      "byte_length": 9444,
+      "path": "scripts/story_11_3_resume_evidence.py",
+      "sha256": "f327c20ba1e71868ce97627a63c94c48e8c92a785dc47595f6f6b0941bfb1796"
+    },
+    {
+      "byte_length": 1827,
+      "path": "tests/test_story_11_3_resume_evidence.py",
+      "sha256": "6a7c898ef2ffb7fa40b14aeea93d7c748642f90caaf369999f4130f95a3770d4"
+    },
+    {
+      "byte_length": 25913,
+      "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
+      "sha256": "39c73303a90ab69d6906f48b5e60215da9574e7672b1b4de9e7b333c9494b814"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine story_11_3 --locked",
+    "cargo test -p agentmage-kernel-engine workflow_checkpoint_ --locked",
+    "cargo test -p agentmage-kernel-engine workflow_projection_failure_retains_no_event_checkpoint_cursor_or_state --locked",
+    "cargo test -p agentmage-kernel-engine d027_s12_restart_grant_worker_receipt_and_terminal_boundaries_reconcile --locked",
+    "cargo test -p agentmage-kernel-engine session_reconstructs_after_supervisor_and_view_disappear --locked",
+    "cargo test -p agentmage-kernel-engine story_21_2_process_stop_matrix_preserves_one_truthful_replay --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "crash_boundary_coverage": {
+    "authority": [
+      "prepared-stored",
+      "grant-consumed",
+      "attempt-recorded",
+      "launch-boundary-committed",
+      "worker-returned",
+      "result-reconciled"
+    ],
+    "durable_checkpoint": [
+      "atomic-commit",
+      "atomic-rollback",
+      "verified-reopen",
+      "tamper-refusal"
+    ],
+    "journal": [
+      "queue-admission",
+      "batch-flush",
+      "correctness-transaction",
+      "subscriber-publication"
+    ],
+    "positions": [
+      "before",
+      "after"
+    ]
+  },
+  "generated_on": "2026-08-31",
+  "limitations": [
+    "evidence uses deterministic local fixtures and does not claim native installed-product execution",
+    "RV-52 scenarios owned by Stories 16.4, 21.4, and 22.5 remain outside this Story 11.3 slice",
+    "cross-platform packaging, independent review, and release completion are not claimed"
+  ],
+  "product_truth": {
+    "authoritative_workflow_checkpoint_persisted_atomically": true,
+    "authority_crash_reconciliation_complete": true,
+    "checkpoint_tamper_blocks_restart": true,
+    "client_presence_owns_task_lifetime": false,
+    "exhausted_budget_dispatch_permitted": false,
+    "full_rv52_protocol_complete": false,
+    "identity_drift_invalidates_transitively": true,
+    "installed_product_complete": false,
+    "journal_process_stop_matrix_complete": true,
+    "native_cross_platform_complete": false,
+    "release_claim": "none",
+    "rv52_story_11_3_local_slice_complete": true,
+    "synthetic_data_only": true,
+    "terminal_workflow_dispatch_permitted": false,
+    "uncertain_or_completed_effect_replayed": false,
+    "verified_restart_reconstructs_checkpoint": true
+  },
+  "protocol_id": "RV-52",
+  "record_type": "agentmage-story-11-3-durable-resume-evidence",
+  "required_markers": [
+    "story_11_3_current_checkpoint_is_the_only_dispatch_permitting_result ... ok",
+    "story_11_3_every_identity_family_invalidates_resume_transitively ... ok",
+    "story_11_3_uncertain_or_completed_effect_never_replays ... ok",
+    "story_11_3_budget_and_terminal_state_are_absorbing ... ok",
+    "story_11_3_malformed_or_mismatched_durable_records_fail_closed ... ok",
+    "workflow_checkpoint_reopens_exactly_and_tamper_blocks_restart ... ok",
+    "workflow_projection_failure_retains_no_event_checkpoint_cursor_or_state ... ok",
+    "d027_s12_restart_grant_worker_receipt_and_terminal_boundaries_reconcile ... ok",
+    "session_reconstructs_after_supervisor_and_view_disappear ... ok",
+    "story_21_2_process_stop_matrix_preserves_one_truthful_replay ... ok",
+    "Finished `dev` profile"
+  ],
+  "safe_resume_actions": [
+    "resume-verified-checkpoint",
+    "finalize-verified-effect-without-replay",
+    "reconcile-uncertain-effect",
+    "replan-and-recheckpoint",
+    "stop-budget-exhausted",
+    "preserve-terminal-result"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_DURABLE_RESUME_SCOPE",
+  "story_id": "11.3"
+}
