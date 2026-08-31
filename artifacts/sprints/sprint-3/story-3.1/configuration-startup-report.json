@@ -48,11 +48,11 @@
       "activation_status": "inactive-no-product-registration",
       "configuration_sha256": "1af74fc3d7494ee0d4907807909f7f9b7ced325a030388df8a7b846b926c8886",
       "declared_capabilities": [],
-      "dependency_sha256": "73d885a19c08992e118a83732d2fcc6731a2786218de882510395cdec22ff625",
+      "dependency_sha256": "0a5d2da5f5f0433b1e2589631a134965a054acaa8d919d1731d3051076c9e675",
       "executable_sha256": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693",
       "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
       "profile_id": "development",
-      "record_sha256": "ac827cb3f5d70fbf7d1f27e33c8b5ed699e7617a4124df12cfd28d615ce6eb89",
+      "record_sha256": "d8d40e6f33a19f2b6c9f0ac140c1dc6a2f11070fd8037b5b88c0e6a51bfa3fd8",
       "record_type": "profile-startup-verification-result",
       "registered_capabilities": [],
       "schema_version": 1,
@@ -64,11 +64,11 @@
       "declared_capabilities": [
         "workspace.read"
       ],
-      "dependency_sha256": "73d885a19c08992e118a83732d2fcc6731a2786218de882510395cdec22ff625",
+      "dependency_sha256": "0a5d2da5f5f0433b1e2589631a134965a054acaa8d919d1731d3051076c9e675",
       "executable_sha256": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693",
       "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
       "profile_id": "synthetic-test",
-      "record_sha256": "8dfb0db82f4ec425e17e75b3bd94e70f164d8eab561664dcab6a612640983b63",
+      "record_sha256": "5f143de40fde2e23b8ab9401e3892ea9d72bfefe3e9b0cb8c72fa42c85f7eb12",
       "record_type": "profile-startup-verification-result",
       "registered_capabilities": [],
       "schema_version": 1,
@@ -80,11 +80,11 @@
       "declared_capabilities": [
         "workspace.read"
       ],
-      "dependency_sha256": "73d885a19c08992e118a83732d2fcc6731a2786218de882510395cdec22ff625",
+      "dependency_sha256": "0a5d2da5f5f0433b1e2589631a134965a054acaa8d919d1731d3051076c9e675",
       "executable_sha256": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693",
       "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
       "profile_id": "strict-local-read-only",
-      "record_sha256": "9d98bca00b0bf42811247049540b2f13c7de1a3b724b34ca2cf62c562dfff7b0",
+      "record_sha256": "ec58733ce74dd661f0eba96db80b450b39dc70523eb24603fb98fcb4b6459669",
       "record_type": "profile-startup-verification-result",
       "registered_capabilities": [],
       "schema_version": 1,
@@ -96,11 +96,11 @@
       "declared_capabilities": [
         "workspace.read"
       ],
-      "dependency_sha256": "73d885a19c08992e118a83732d2fcc6731a2786218de882510395cdec22ff625",
+      "dependency_sha256": "0a5d2da5f5f0433b1e2589631a134965a054acaa8d919d1731d3051076c9e675",
       "executable_sha256": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693",
       "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
       "profile_id": "knowledge",
-      "record_sha256": "e792d79cf21cebfb7fb631fbc702882e5b5142d7a32a77ec6e1d762448c0e747",
+      "record_sha256": "e5a6ab4ad2b09f7521ea22c88da091604664433f85196749f5987ee6b3ffd8b2",
       "record_type": "profile-startup-verification-result",
       "registered_capabilities": [],
       "schema_version": 1,
@@ -112,11 +112,11 @@
       "declared_capabilities": [
         "workspace.read"
       ],
-      "dependency_sha256": "73d885a19c08992e118a83732d2fcc6731a2786218de882510395cdec22ff625",
+      "dependency_sha256": "0a5d2da5f5f0433b1e2589631a134965a054acaa8d919d1731d3051076c9e675",
       "executable_sha256": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693",
       "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
       "profile_id": "write",
-      "record_sha256": "2bc7b85195b3d0cd03277ce2ad0159b0a15f3c4114e58b929f7b42708b41386c",
+      "record_sha256": "174f8dee9b3a16368c7552d3e2abafaf7a9e83b656d5bd9e82a376cf88cb51ef",
       "record_type": "profile-startup-verification-result",
       "registered_capabilities": [],
       "schema_version": 1,
@@ -128,11 +128,11 @@
       "declared_capabilities": [
         "workspace.read"
       ],
-      "dependency_sha256": "73d885a19c08992e118a83732d2fcc6731a2786218de882510395cdec22ff625",
+      "dependency_sha256": "0a5d2da5f5f0433b1e2589631a134965a054acaa8d919d1731d3051076c9e675",
       "executable_sha256": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693",
       "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
       "profile_id": "coding",
-      "record_sha256": "a1080c843ae4ea0bed35ca3f2ceb2a64c913944be5f178760953736e712e7ba2",
+      "record_sha256": "3080d6997fdf0b63142ee6c0e379df99de26e119f1ddcccd09889287f2470ace",
       "record_type": "profile-startup-verification-result",
       "registered_capabilities": [],
       "schema_version": 1,
@@ -144,11 +144,11 @@
       "declared_capabilities": [
         "workspace.read"
       ],
-      "dependency_sha256": "73d885a19c08992e118a83732d2fcc6731a2786218de882510395cdec22ff625",
+      "dependency_sha256": "0a5d2da5f5f0433b1e2589631a134965a054acaa8d919d1731d3051076c9e675",
       "executable_sha256": "b42c7f997ccc69e9e9eceea327fff405a40c3ac618becedd21b1fa3c2a5d3693",
       "policy_sha256": "e80b2bbcd1543b5327a00a719d8bc42e13030285849d17d5431908fe6c862774",
       "profile_id": "later-network",
-      "record_sha256": "7aaf59996f7d6f9774d07fcd4ff160a77fd1f089e2228fe9e059cb15f9f0f679",
+      "record_sha256": "44528c729c893bcb96821303bf3bd7d4db89b73bd0a593a53fde1a0cc6fecdda",
       "record_type": "profile-startup-verification-result",
       "registered_capabilities": [],
       "schema_version": 1,
@@ -211,7 +211,7 @@
     },
     {
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "73d885a19c08992e118a83732d2fcc6731a2786218de882510395cdec22ff625"
+      "sha256": "0a5d2da5f5f0433b1e2589631a134965a054acaa8d919d1731d3051076c9e675"
     },
     {
       "path": "artifacts/sprints/sprint-1/story-1.1/clean-build-report.json",
