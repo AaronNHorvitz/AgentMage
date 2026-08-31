@@ -130,6 +130,12 @@
     "trigger": "workflow_dispatch",
     "runner": "macos-15",
     "budget_confirmation_input": "confirm_budget",
+    "result_record": {
+      "artifact_name": "agentmage-macos-compatibility-<run-id>-<run-attempt>",
+      "retention_days": 30,
+      "schema_version": 1,
+      "disposition": "preliminary-apple-silicon-source-compatibility-only"
+    },
     "disposition": "manual-source-compatibility-only-post-ga-support-blocked",
     "commands": [
       ["swift", "build", "--package-path", "platforms/macos"],

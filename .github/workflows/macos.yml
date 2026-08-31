@@ -22,13 +22,34 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Check out the selected revision
+        id: checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Verify Apple Silicon execution
         shell: bash
         run: test "$(uname -m)" = "arm64"
       - name: Build the macOS source package
+        id: build
         shell: bash
         run: swift build --package-path platforms/macos
       - name: Test the macOS source package
+        id: test
         shell: bash
         run: swift test --package-path platforms/macos
+      - name: Retain the preliminary compatibility record
+        id: record
+        if: ${{ always() && steps.checkout.outcome == 'success' }}
+        shell: bash
+        env:
+          AGENTMAGE_BUILD_OUTCOME: ${{ steps.build.outcome }}
+          AGENTMAGE_TEST_OUTCOME: ${{ steps.test.outcome }}
+        run: >-
+          python3 scripts/macos_hosted_compatibility.py emit-result
+          "$RUNNER_TEMP/agentmage-macos-compatibility.json"
+      - name: Upload the preliminary compatibility record
+        if: ${{ always() && steps.record.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: agentmage-macos-compatibility-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/agentmage-macos-compatibility.json
+          if-no-files-found: error
+          retention-days: 30

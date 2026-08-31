@@ -201,6 +201,12 @@ def validate_contract(
         "trigger": "workflow_dispatch",
         "runner": "macos-15",
         "budget_confirmation_input": "confirm_budget",
+        "result_record": {
+            "artifact_name": "agentmage-macos-compatibility-<run-id>-<run-attempt>",
+            "retention_days": 30,
+            "schema_version": 1,
+            "disposition": "preliminary-apple-silicon-source-compatibility-only",
+        },
         "disposition": "manual-source-compatibility-only-post-ga-support-blocked",
         "commands": EXPECTED_MACOS_COMMANDS,
     }:
@@ -258,6 +264,10 @@ def validate_contract(
         'run: test "$(uname -m)" = "arm64"',
         "run: swift build --package-path platforms/macos",
         "run: swift test --package-path platforms/macos",
+        "python3 scripts/macos_hosted_compatibility.py emit-result",
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+        "if-no-files-found: error",
+        "retention-days: 30",
         "permissions:\n  contents: read",
     )
     if any(fragment not in macos_workflow for fragment in required_macos_fragments):
@@ -266,6 +276,8 @@ def validate_contract(
         failures.append("macOS workflow weakens a required failure")
     if "secrets." in macos_workflow:
         failures.append("macOS compatibility workflow may not receive a secret")
+    if macos_workflow.count("if: ${{ always()") != 2:
+        failures.append("macOS compatibility result retention is not fail-closed")
     action_values = re.findall(
         r"^\s*(?:-\s*)?uses:\s*(\S+)\s*$", macos_workflow, re.MULTILINE
     )

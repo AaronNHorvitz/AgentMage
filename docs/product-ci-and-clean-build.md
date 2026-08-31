@@ -53,8 +53,27 @@ allocate a GitHub-hosted runner. It:
 - has read-only repository permissions;
 - receives no signing, notarization, or other secret;
 - builds and tests only `platforms/macos`; and
+- uploads one 30-day, content-free result record containing the exact source
+  commit and tree, hosted image identity, arm64 observation, tool versions,
+  declared commands, and step outcomes; and
 - cannot establish MacBook Pro M5, signing, packaging, lifecycle, or support
   evidence.
+
+After an authorized run, download the uniquely named
+`agentmage-macos-compatibility-<run-id>-<run-attempt>` artifact and verify it
+without executing native tools:
+
+```bash
+python3 scripts/macos_hosted_compatibility.py verify-result \
+  /path/to/agentmage-macos-compatibility.json
+```
+
+The verifier requires the recorded commit and workflow bytes to exist in the
+local Git object database and rejects missing image identity, non-arm64
+execution, altered commands, contradictory outcomes, unknown fields, and every
+M5, signing, release, or support overclaim. The workflow has not been dispatched
+and no hosted result is checked in; a maintainer must first confirm available
+Actions budget.
 
 No disabled sentinel status should be configured as a required branch check.
 The absence of a hosted check is not a pass. Local result bundles and later

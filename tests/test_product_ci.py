@@ -133,6 +133,24 @@ class ProductCiTests(unittest.TestCase):
         self.assertTrue(self.validate(macos=secret))
         self.assertTrue(self.validate(macos=unpinned))
 
+    def test_macos_result_retention_guards_are_required(self) -> None:
+        no_record = self.macos.replace(
+            "          if-no-files-found: error\n", "", 1
+        )
+        no_always = self.macos.replace(
+            "        if: ${{ always() && steps.record.outcome == 'success' }}\n",
+            "",
+            1,
+        )
+        unpinned_upload = self.macos.replace(
+            "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            "actions/upload-artifact@v7",
+            1,
+        )
+        self.assertTrue(self.validate(macos=no_record))
+        self.assertTrue(self.validate(macos=no_always))
+        self.assertTrue(self.validate(macos=unpinned_upload))
+
     def test_failure_output_removes_private_host_paths(self) -> None:
         private = f"failure at {ROOT}/src and {Path.home()}/secret"
         sanitized = sanitize_output(private)
