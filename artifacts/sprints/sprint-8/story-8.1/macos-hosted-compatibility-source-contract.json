@@ -1,0 +1,85 @@
+{
+  "artifact_id": "hosted-apple-silicon-compatibility-source-contract",
+  "authority": {
+    "actions_budget_confirmed": false,
+    "hosted_result_retained": false,
+    "macbook_pro_m5_qualified": false,
+    "macos_support_or_release": false,
+    "preliminary_compatibility_proven": false,
+    "workflow_dispatched": false
+  },
+  "remaining_blockers": [
+    "maintainer-actions-budget-confirmation-absent",
+    "manual-workflow-dispatch-not-performed",
+    "hosted-result-artifact-not-retained-and-verified",
+    "physical-macbook-pro-m5-qualification-remains-separate"
+  ],
+  "schema_version": 1,
+  "source_revision": "75b79fa11cdc74e47b1b0f40b9d2d177279f637d",
+  "source_tree": "8b01e265559c704b800232f5a9b343f4f1f3d4f3",
+  "sources": [
+    {
+      "bytes": 1889,
+      "path": ".github/workflows/macos.yml",
+      "sha256": "bd62a09d7c5673646073e570633ffab6618675f30a16ac305df21597487eb74b"
+    },
+    {
+      "bytes": 5157,
+      "path": "architecture/product-ci-policy.json",
+      "sha256": "e3cf5745b8b7e2360ee22d087e16d8d83fc1bf56404f9ed138b73ae14894dcf4"
+    },
+    {
+      "bytes": 6039,
+      "path": "docs/product-ci-and-clean-build.md",
+      "sha256": "b1d0b8124b49606b2dbdf06fad753d1a490d4911339ca2b375e85e3fa8c9dbf4"
+    },
+    {
+      "bytes": 16311,
+      "path": "scripts/macos_hosted_compatibility.py",
+      "sha256": "a9be23246ed740e76fc33e3a1050762065925be91b2c059409b44ce80cf4b417"
+    },
+    {
+      "bytes": 18228,
+      "path": "scripts/product_ci.py",
+      "sha256": "9f6107ae4c3d888dbc0790f0e64625845e27966d556384c99eaf1ab8f2777d98"
+    },
+    {
+      "bytes": 4530,
+      "path": "tests/test_macos_hosted_compatibility.py",
+      "sha256": "68c48eb481795d76e426f3e2fc2dc4f41ce59c2b3990982b8bc1732536a3b3cf"
+    },
+    {
+      "bytes": 7027,
+      "path": "tests/test_product_ci.py",
+      "sha256": "f72831fca8de2aabcda6f4c8ba02820f5034d3b9bca1f98821d08fdcbcaaad3a"
+    }
+  ],
+  "status": "ready-blocked-external",
+  "task_id": "8.1.4.2",
+  "workflow_contract": {
+    "architecture": "arm64",
+    "artifact_retention_days": 30,
+    "automatic_trigger_count": 0,
+    "budget_confirmation_required": true,
+    "checkout_action_sha": "11d5960a326750d5838078e36cf38b85af677262",
+    "commands": [
+      [
+        "swift",
+        "build",
+        "--package-path",
+        "platforms/macos"
+      ],
+      [
+        "swift",
+        "test",
+        "--package-path",
+        "platforms/macos"
+      ]
+    ],
+    "result_schema_version": 1,
+    "runner": "macos-15",
+    "secret_reference_count": 0,
+    "trigger": "workflow_dispatch",
+    "upload_action_sha": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+  }
+}
