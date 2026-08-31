@@ -8,10 +8,14 @@
     "task_complete": false
   },
   "contract": {
+    "acceptance_phase_count": 9,
+    "administrator_group_allowed": false,
     "arbitrary_commands_allowed": false,
     "artifact_upload_defined": false,
     "automatic_trigger_defined": false,
     "component_count": 4,
+    "elevated_identity_allowed": false,
+    "home_owner_match_required": true,
     "install_domain": "CurrentUserHomeDirectory",
     "installed_application": "$HOME/Applications/AgentMage.app",
     "notarization_submissions": 1,
@@ -21,7 +25,7 @@
     "prior_package_required": true,
     "prior_valid_state_restored": true,
     "raw_credentials_accepted": false,
-    "refusal_count": 76,
+    "refusal_count": 79,
     "root_execution_allowed": false
   },
   "execution": {
@@ -53,7 +57,7 @@
   "source_files": [
     {
       "path": "packaging/macos/README.md",
-      "sha256": "902f4b5afe788d64ca376904d589b871b4ebb0543f02ca4786c438646fbc781d"
+      "sha256": "247c35223a0fa802ce57f7e436832ce30dd80897644df510cb98f576332037c3"
     },
     {
       "path": "packaging/macos/release-runner-policy.contract-fixture.json",
@@ -61,7 +65,7 @@
     },
     {
       "path": "packaging/macos/release-runner.sh",
-      "sha256": "498c24735c1490be6987f86d572f360bd56d58aa519774b2fd30c884a159d2f5"
+      "sha256": "24fdc4bc5cccce91aa776bf4dd6d8ad5e554a6ae63351d83370c4eb6c58cffc7"
     },
     {
       "path": "release/platform-manifests/macos/v1/contract-fixture.json",
@@ -69,15 +73,15 @@
     },
     {
       "path": "scripts/macos_release_runner_source_contract.py",
-      "sha256": "d548896c2fd66bf3f92e36112205f2655f3a8fae9b8695895d5972d4056bf4ff"
+      "sha256": "34aee918e47847665c4d4fd7cde6034ac3345b4589d0e17582115a617341405c"
     },
     {
       "path": "tests/test_macos_release_runner_source_contract.py",
-      "sha256": "4d064a24a14f06a550bdc58f1752105778bad3d6febc4ad3b6283b7923bea80d"
+      "sha256": "648bd6bf25793923945b0fc686788b3259ad33b0e12e72cbb16d08adf6424ebd"
     }
   ],
-  "source_revision": "d75301d478a91f382b7d4dd2f61bde3beb24851c",
-  "source_tree": "f0799589bfbcb87ca4a9addbd625b96caca0a823",
+  "source_revision": "f6ab51632dd6645f7a037469c92d97f466e3053c",
+  "source_tree": "36326fc802cc7e95e1e00795a3b66fa048a35bf2",
   "status": "prepared-source-only-blocked-macos",
   "task_id": "8.1.1.7"
 }
