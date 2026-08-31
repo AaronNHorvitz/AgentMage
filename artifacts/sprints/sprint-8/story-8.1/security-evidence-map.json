@@ -1,0 +1,277 @@
+{
+  "artifacts": [
+    {
+      "bytes": 160606,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
+    },
+    {
+      "bytes": 845,
+      "path": "docs/security/story-8.1-product-security-evidence.md",
+      "sha256": "d4b7b2131d8a4da6a08f2ee9c22ecc501c334103264d3b8a42864f4145e67eed"
+    },
+    {
+      "bytes": 9373,
+      "path": "scripts/story_8_1_security_evidence.py",
+      "sha256": "16c7ab3712013faf365a647a53b893bf98ab57d8fd81a5fb76d6df26bb3e7588"
+    },
+    {
+      "bytes": 3265,
+      "path": "tests/test_story_8_1_security_evidence.py",
+      "sha256": "c637ca4e1892576bc07464c427ac273d81a813e06c2d1489ca91541b7dee2fd3"
+    },
+    {
+      "bytes": 3328,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-kernel-host-source-contract.json",
+      "sha256": "e9ae470bb0f6553492a68fb5be8274df00daae7d234e398f7d09ae7754b6521b"
+    },
+    {
+      "bytes": 2638,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-bridge-source-contract.json",
+      "sha256": "cb0bc7543230fe7c915fd5813ec8d2d8dc2d3cb05ffd93d86c9874ae2f66149d"
+    },
+    {
+      "bytes": 3429,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-peer-verification-source-contract.json",
+      "sha256": "b4a8b05c97e7cfb4f79af3b05f570d13b91cf662276d4a9099a031db2e4bc681"
+    },
+    {
+      "bytes": 3350,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-workspace-bookmark-source-contract.json",
+      "sha256": "8cd049c84305970e11d825ab20cb42f73e0da63ce69e95ecca4b4846dae21a65"
+    },
+    {
+      "bytes": 4246,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-tool-helper-source-contract.json",
+      "sha256": "bdb0feb43de556653ed806cd81a37daeb42a46df41108e8e6bd9838eab2eeafb"
+    },
+    {
+      "bytes": 4474,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-metal-inference-source-contract.json",
+      "sha256": "6b1e328d694f2055cf7074439bff0ab8b73173bf5afb90be3966ace172ef3f6b"
+    },
+    {
+      "bytes": 3597,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-release-runner-source-contract.json",
+      "sha256": "01507ee63e13fed9139fbc0836ff7d0a147ce90924cf27e126b7ae4bc1f4756f"
+    },
+    {
+      "bytes": 2286,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-signed-reference-package-source-contract.json",
+      "sha256": "5508dcd5521a966728ce6e46c9ca996c060d8d838ac8a8b0ccd2bea97d30c63f"
+    },
+    {
+      "bytes": 2434,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-release-reports-source-contract.json",
+      "sha256": "b3cb9cd1e583d7e9cb212177ea41c6d079cca837fcf9fec4b02f759c7326db45"
+    },
+    {
+      "bytes": 2464,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-ipc-bookmark-receipts-source-contract.json",
+      "sha256": "71f1d39d2c0dc2dbd7ef38cf6b0a373897544ede0a26eece9efbef4de9658d1e"
+    },
+    {
+      "bytes": 2590,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-sandbox-attack-results-source-contract.json",
+      "sha256": "d430776b93603fa8b58ae77d6d20cfc2c407d85e6ae33d294f1a983f912d95e1"
+    },
+    {
+      "bytes": 3368,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-ipc-handshake-refusal-results-source-contract.json",
+      "sha256": "648d79abeea3113775221001e68d54a49894ba24d00078863ae019720ac02027"
+    },
+    {
+      "bytes": 3433,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-sandbox-attack-matrix-source-contract.json",
+      "sha256": "063f5399e5599cb5c8a09d00ae0856d39f8514432aaccf26b1525644ec8e4c1a"
+    },
+    {
+      "bytes": 2829,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-lifecycle-recovery-results-source-contract.json",
+      "sha256": "d7af6c3b4dc1bd85f5bb73abf39c6e6eecb8ca391bddbf901c7b291469973997"
+    },
+    {
+      "bytes": 2382,
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-standard-user-acceptance-source-contract.json",
+      "sha256": "d3698e69221faa44af6defea7471793000f86b9b7913b529ab5857ee3c652b41"
+    }
+  ],
+  "independent_review_performed": false,
+  "macos_evidence_substituted": false,
+  "macos_execution_performed": false,
+  "macos_support_claim": false,
+  "native_evidence_inventory": [
+    {
+      "evidence_class": "signature-notarization-output",
+      "retained": false,
+      "status": "missing-external"
+    },
+    {
+      "evidence_class": "entitlement-output",
+      "retained": false,
+      "status": "missing-external"
+    },
+    {
+      "evidence_class": "ipc-traces",
+      "retained": false,
+      "status": "missing-external"
+    },
+    {
+      "evidence_class": "sandbox-results",
+      "retained": false,
+      "status": "missing-external"
+    },
+    {
+      "evidence_class": "install-log-video",
+      "retained": false,
+      "status": "missing-external"
+    },
+    {
+      "evidence_class": "independent-reviewer-record",
+      "retained": false,
+      "status": "missing-external"
+    }
+  ],
+  "network_used": false,
+  "private_user_data_used": false,
+  "release_claim": "none",
+  "requirements": [
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-standard-user-acceptance-source-contract.json"
+      ],
+      "requirement_id": "SR-PLT-001",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-release-reports-source-contract.json"
+      ],
+      "requirement_id": "SR-PLT-002",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-sandbox-attack-results-source-contract.json"
+      ],
+      "requirement_id": "SR-PLT-003",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-workspace-bookmark-source-contract.json"
+      ],
+      "requirement_id": "SR-PLT-004",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-bridge-source-contract.json"
+      ],
+      "requirement_id": "SR-PLT-005",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-ipc-handshake-refusal-results-source-contract.json"
+      ],
+      "requirement_id": "SR-PLT-006",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-metal-inference-source-contract.json"
+      ],
+      "requirement_id": "SR-PLT-007",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-release-runner-source-contract.json"
+      ],
+      "requirement_id": "SR-PLT-008",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-release-runner-source-contract.json"
+      ],
+      "requirement_id": "SR-SUP-002",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-lifecycle-recovery-results-source-contract.json",
+        "artifacts/sprints/sprint-8/story-8.1/macos-standard-user-acceptance-source-contract.json"
+      ],
+      "requirement_id": "SR-TST-007",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-sandbox-attack-matrix-source-contract.json"
+      ],
+      "requirement_id": "SR-TST-008",
+      "status": "partial-source-prepared-native-evidence-missing"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-signed-reference-package-source-contract.json",
+        "artifacts/sprints/sprint-8/story-8.1/macos-release-reports-source-contract.json"
+      ],
+      "requirement_id": "SR-TST-009",
+      "status": "partial-source-prepared-native-evidence-missing"
+    }
+  ],
+  "reviewer_protocols": [
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-release-reports-source-contract.json"
+      ],
+      "protocol_id": "RV-01",
+      "status": "prepared-not-executed"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-standard-user-acceptance-source-contract.json"
+      ],
+      "protocol_id": "RV-02",
+      "status": "prepared-not-executed"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-sandbox-attack-matrix-source-contract.json"
+      ],
+      "protocol_id": "RV-03",
+      "status": "prepared-not-executed"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-workspace-bookmark-source-contract.json"
+      ],
+      "protocol_id": "RV-04",
+      "status": "prepared-not-executed"
+    },
+    {
+      "evidence": [
+        "artifacts/sprints/sprint-8/story-8.1/macos-ipc-handshake-refusal-results-source-contract.json"
+      ],
+      "protocol_id": "RV-05",
+      "status": "prepared-not-executed"
+    }
+  ],
+  "schema_version": 1,
+  "source_revision": "529ddd1df76244a1dd87ec4a3d9e3046364c648d",
+  "status": "pass-source-map-blocked-external",
+  "story_id": "8.1",
+  "summary": {
+    "mapped_requirement_count": 12,
+    "mapped_reviewer_protocol_count": 5,
+    "product_requirements_complete": 0,
+    "required_native_evidence_class_count": 6,
+    "retained_native_evidence_class_count": 0,
+    "source_contract_count": 15,
+    "story_gate_complete": false
+  },
+  "task_id": "8.1.3.5"
+}
