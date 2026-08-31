@@ -12,7 +12,7 @@
     "component_count": 4,
     "component_hash_count": 4,
     "designated_requirement_count": 4,
-    "entitlement_assignment_count": 12,
+    "entitlement_assignment_count": 10,
     "top_level_field_count": 16
   },
   "installation_performed": false,
@@ -30,7 +30,7 @@
   "release_claim": "none",
   "schema_version": 1,
   "signing_performed": false,
-  "source_revision": "e704e42074fb1eef34a9da243ba0053b99f58c78",
+  "source_revision": "32422fab922b543be6a4812ca3e24029cc1e898e",
   "sources": [
     {
       "bytes": 1576,
@@ -43,19 +43,19 @@
       "sha256": "f2260141c8a8f17b8b5c787df162ecc152e9de07c6ec1c6ffd3b2f627131548f"
     },
     {
-      "bytes": 3484,
+      "bytes": 3401,
       "path": "release/platform-manifests/macos/v1/contract-fixture.json",
-      "sha256": "2dfc2a4da82511a530dce48653704e5fd5f73bd7ee94efd3763ca64c981a9408"
+      "sha256": "f2465bac1d58004264275f517730c44984168017624bedac47e82e32756ae4f7"
     },
     {
-      "bytes": 11489,
+      "bytes": 11669,
       "path": "scripts/macos_release_manifest_contract.mjs",
-      "sha256": "a77d4d17d7bbbc794fb902f4f10e9382c4093e3739fa29bec05d07c8162128d3"
+      "sha256": "f763e9edae3747fa8b7dd18f0835a59d42b0069b1532c1fdc0b7b898f0bc4fe8"
     },
     {
-      "bytes": 3610,
+      "bytes": 3799,
       "path": "tests/test_macos_release_manifest_contract.mjs",
-      "sha256": "bf9a99067106e9f55424f09f0a4c5745719bf09303e41f6c0ee7c7238d5dde39"
+      "sha256": "52a2d8eb1152c4c238ca6142511e070caa820773d5a12d11cfd76a6ede028e1a"
     }
   ],
   "status": "pass-frozen-contract-only",

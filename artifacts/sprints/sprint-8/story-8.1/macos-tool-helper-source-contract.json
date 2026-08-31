@@ -1,0 +1,110 @@
+{
+  "claims": {
+    "cross_story_tool_task_complete": false,
+    "macos_support": false,
+    "network_authority": false,
+    "package_or_release": false,
+    "task_complete": false,
+    "workspace_write_authority": false
+  },
+  "contract": {
+    "app_group_entitlement": false,
+    "bookmark_authority": "read-only-app-scoped",
+    "bookmarks_per_invocation": 1,
+    "failure_count": 29,
+    "grant_operation": "workspace_read",
+    "grant_state": "consumed",
+    "helper_entitlements": [
+      "com.apple.security.app-sandbox",
+      "com.apple.security.files.bookmarks.app-scope"
+    ],
+    "invocations_per_connection": 1,
+    "keychain_entitlement": false,
+    "network_entitlement": false,
+    "request_maximum_bytes": 65536,
+    "resource_limits": [
+      "address-space",
+      "core-file",
+      "cpu-time",
+      "file-size",
+      "open-files",
+      "process-count"
+    ],
+    "result_maximum_bytes": 4194304,
+    "sandbox_inheritance_entitlement": false,
+    "scratch_maximum_bytes": 16777216,
+    "scratch_maximum_entries": 256,
+    "wall_deadline_milliseconds": 15000,
+    "workspace_write_entitlement": false,
+    "xpc_connections_per_process": 1
+  },
+  "execution": {
+    "app_sandbox_observed": false,
+    "apple_silicon_execution_performed": false,
+    "native_attack_campaign_executed": false,
+    "native_bookmark_resolved": false,
+    "native_lifecycle_campaign_executed": false,
+    "native_resource_limits_observed": false,
+    "signed_xpc_service_executed": false,
+    "swift_build_performed": false,
+    "swift_tests_performed": false
+  },
+  "record_type": "macos-tool-helper-source-contract",
+  "related_open_task_id": "16.1.1.5",
+  "remaining_blockers": [
+    "Apple Silicon Swift 6 build and tests have not run.",
+    "No signed embedded XPC service target or release-derived identity exists.",
+    "No native XPC host connection has exercised the designated-requirement admission.",
+    "The shared Rust read-only executor is not composed with the XPC descriptor boundary.",
+    "Native App Sandbox, bookmark, resource, attack, timeout, crash, and cleanup campaigns have not run.",
+    "Independent critical-boundary review has not been retained.",
+    "Physical MacBook Pro M5 qualification has not run."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "platforms/macos/Configuration/XPCToolHelper.contract-fixture.entitlements",
+      "sha256": "2f5522377bdb125a31ff721e8114a401d91115c8d5ff40e8879119ee59faf36d"
+    },
+    {
+      "path": "platforms/macos/README.md",
+      "sha256": "20957afb05ddbbdca31f8a10b85f9315a1a7052812c498bd5fcdd1cb08211375"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSToolHelperProtocol.swift",
+      "sha256": "faaa580e81572bf50e0bc94837bddd0ebb5311325ad1edc112951a42546a36a3"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/MacOSToolHelperService.swift",
+      "sha256": "2b9a9d3882e67d0332c8dc89b345204e64182dd19b4af970b78768df67ee4d00"
+    },
+    {
+      "path": "platforms/macos/Sources/AgentMageMacOSPlatform/PlatformBoundary.swift",
+      "sha256": "1cf235fe7acbbdf124f602602ea89dde4313fb4b2057b30f65d115ca38523c71"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSToolHelperTests.swift",
+      "sha256": "55df8beeac768cf2d54f67de7545b23b1cf92c63a4c35b45705a59d8f508ed74"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/PlatformBoundaryTests.swift",
+      "sha256": "15a5a9da2db5e8e98721529f1942fed347004b9649ffec40398cc34e9d5a68d9"
+    },
+    {
+      "path": "release/platform-manifests/macos/v1/contract-fixture.json",
+      "sha256": "f2465bac1d58004264275f517730c44984168017624bedac47e82e32756ae4f7"
+    },
+    {
+      "path": "scripts/macos_tool_helper_source_contract.py",
+      "sha256": "374d32b44f574a0b5857dd5389df396ff24407739e62d0091948bfb810392539"
+    },
+    {
+      "path": "tests/test_macos_tool_helper_source_contract.py",
+      "sha256": "cbe089292b73012b29bfce9b43df7bdf8b6a210bdca734a5d48ab3133175f8c9"
+    }
+  ],
+  "source_revision": "32422fab922b543be6a4812ca3e24029cc1e898e",
+  "source_tree": "9079640919c33f69860f9b9b5ffaaa317ed3be42",
+  "status": "partial-source-only-blocked-macos",
+  "task_id": "8.1.1.5"
+}
