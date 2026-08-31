@@ -180,6 +180,8 @@
     "evidence:story8.1-bridge-source:check": "python3 scripts/macos_bridge_source_contract.py && python3 -m unittest tests.test_macos_bridge_source_contract",
     "evidence:story8.1-peer-verification-source:build": "python3 scripts/macos_peer_verification_source_contract.py --write && python3 -m unittest tests.test_macos_peer_verification_source_contract",
     "evidence:story8.1-peer-verification-source:check": "python3 scripts/macos_peer_verification_source_contract.py && python3 -m unittest tests.test_macos_peer_verification_source_contract",
+    "evidence:story8.1-workspace-bookmark-source:build": "python3 scripts/macos_workspace_bookmark_source_contract.py --write && python3 -m unittest tests.test_macos_workspace_bookmark_source_contract",
+    "evidence:story8.1-workspace-bookmark-source:check": "python3 scripts/macos_workspace_bookmark_source_contract.py && python3 -m unittest tests.test_macos_workspace_bookmark_source_contract",
     "evidence:story9.1-linux-controls:build": "python3 scripts/linux_sandbox_evidence.py --write --source-revision HEAD",
     "evidence:story9.1-linux-controls:check": "python3 scripts/linux_sandbox_evidence.py",
     "evidence:story9.1-linux-attacks:bootstrap": "python3 scripts/linux_cross_distribution_sandbox_evidence.py --write --source-revision HEAD --bootstrap-ubuntu-image",
@@ -428,7 +430,7 @@
     "traceability:build": "python3 scripts/traceability_report.py",
     "traceability:check": "python3 scripts/traceability_report.py --check",
     "traceability:clean": "python3 scripts/verify_clean_traceability.py",
-    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate && npm run task-graph:check && npm run requirements:current-check && npm run schemas:check && npm run dependency-dispositions:check && npm run schema-evolution:check && npm run parser-ocr-placement:check && npm run contract-evidence:check && npm run evidence:story6.1-gate:check && npm run evidence:sprint6-gate:check && npm run evidence:story7.1-macos-manifest:check && npm run evidence:story7.1-gate:check && npm run evidence:sprint7-gate:check && npm run evidence:story8.1-kernel-host-source:check && npm run evidence:story8.1-bridge-source:check && npm run evidence:story8.1-peer-verification-source:check"
+    "docs:check": "npm run docs:lint && npm run docs:mermaid && npm run docs:validate && npm run task-graph:check && npm run requirements:current-check && npm run schemas:check && npm run dependency-dispositions:check && npm run schema-evolution:check && npm run parser-ocr-placement:check && npm run contract-evidence:check && npm run evidence:story6.1-gate:check && npm run evidence:sprint6-gate:check && npm run evidence:story7.1-macos-manifest:check && npm run evidence:story7.1-gate:check && npm run evidence:sprint7-gate:check && npm run evidence:story8.1-kernel-host-source:check && npm run evidence:story8.1-bridge-source:check && npm run evidence:story8.1-peer-verification-source:check && npm run evidence:story8.1-workspace-bookmark-source:check"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "11.16.0",

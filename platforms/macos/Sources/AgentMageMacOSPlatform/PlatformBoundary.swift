@@ -11,4 +11,7 @@ public enum AgentMageMacOSPlatformBoundary {
 
     /// Audit-token and peer code-identity verification source is not native evidence.
     public static let peerVerificationSourceStatus = "implemented-source-unverified"
+
+    /// Picker and read-only app-scoped bookmark lifecycle source is not native evidence.
+    public static let workspaceBookmarkSourceStatus = "implemented-source-unverified"
 }

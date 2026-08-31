@@ -25,5 +25,15 @@ UID, and GID, and only then permits the one-use fresh challenge to be consumed.
 The pure mutation suite is synthetic: no native socket observation, signed peer,
 or security decision has executed on this Linux host.
 
+The workspace source configures one directory-only, non-alias `NSOpenPanel`,
+creates only app-scoped read-only security-scoped bookmarks, stores their bounded
+bytes in the host Keychain access group, resolves without UI or volume mounting,
+refreshes stale data only after exact revalidation, and balances every successful
+scope start with an explicit or deinitializing stop. Root aliases, symbolic links,
+resource/volume races, noncanonical names, case collisions, oversized roots, and
+malformed or missing records fail with content-free classes. This is source and
+synthetic mutation coverage only; no native picker, Keychain, bookmark, move,
+reboot, alias, mount, or revocation lifecycle has executed here.
+
 Native compilation, signing, execution, and support remain `BLOCKED-MACOS` until
 the manual Apple Silicon source check and the required physical-M5 evidence exist.
