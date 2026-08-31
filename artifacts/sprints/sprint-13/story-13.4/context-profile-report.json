@@ -1,0 +1,104 @@
+{
+  "allocation_order": [
+    "fixed-system-tool-user-recovery-output-safety",
+    "authoritative-source-complete-or-visible-truncation",
+    "retrieval-complete-visible-summary-or-visible-omission",
+    "record-unallocated-remainder"
+  ],
+  "artifacts": [
+    {
+      "byte_length": 33870,
+      "path": "kernel/engine/src/model_orchestration_profile.rs",
+      "sha256": "cc8ef989a2adac659b132abd60bd55ac1c184643a1c6216c0adaabff2b0ba87c"
+    },
+    {
+      "byte_length": 6122,
+      "path": "schemas/model/orchestration-profile.schema.json",
+      "sha256": "14065ad8cd9627547d52f3bcc582f4c296f912e06cba64f1bb1eb1fa346531d7"
+    },
+    {
+      "byte_length": 2187,
+      "path": "docs/architecture/model-context-orchestration-profiles.md",
+      "sha256": "f7d6ea1cdd925ed3be6882ba4f6bf6987d78357b0486a931e589781e86fe4ae3"
+    },
+    {
+      "byte_length": 7322,
+      "path": "scripts/story_13_4_context_profile_evidence.py",
+      "sha256": "7aa2e72a584c158dc8b5fd69967df708bf629cfbc02f96ec215e9105590ffde6"
+    },
+    {
+      "byte_length": 2019,
+      "path": "tests/test_story_13_4_context_profile_evidence.py",
+      "sha256": "d7e9c9a89cd33849089257cbb92ffd73e5c5ff668545b67fb729042e8ba63b36"
+    },
+    {
+      "byte_length": 3069,
+      "path": "tests/test_model_orchestration_profile_schema.mjs",
+      "sha256": "eb39b73b83644de6b8a0d31a00eb3b53160bcd92fef01d96a29215d3916d7be4"
+    },
+    {
+      "byte_length": 8180,
+      "path": "artifacts/sprints/sprint-13/local-evidence-report.json",
+      "sha256": "b6bd298963cd7d7245bfd6abfd7fb05a659a4540ae66cc97ae5747785584dc9d"
+    },
+    {
+      "byte_length": 5238,
+      "path": "artifacts/sprints/sprint-13/story-13.4/context-profile-results.log",
+      "sha256": "61e52a5526ab8efb6446dc58be7009559fdabeed4ca885f3a878d920624680f3"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine story_13_4 --locked",
+    "node --test tests/test_model_orchestration_profile_schema.mjs",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-31",
+  "model_invariant_controls": [
+    "policy",
+    "grant",
+    "approval",
+    "side-effect",
+    "retry",
+    "verifier",
+    "budget",
+    "completion"
+  ],
+  "product_truth": {
+    "automatic_fallback_enabled": false,
+    "checked_context_allocation_contract_complete": true,
+    "cross_platform_profile_campaign_complete": false,
+    "currently_admitted_profile_count": 0,
+    "deterministic_visible_degradation_complete": true,
+    "exact_tokenizer_and_counter_required": true,
+    "fake_profile_contract_campaign_complete": true,
+    "gemma_profile_disposition": "REJECTED",
+    "live_admitted_profile_corpus_complete": false,
+    "model_invariant_safety_controls_complete": true,
+    "muse_profile_disposition": "REJECTED",
+    "orchestration_shape_contract_complete": true,
+    "qualification_gate_complete": true,
+    "release_claim": "none",
+    "sprint_completion_claim": false,
+    "story_completion_claim": false
+  },
+  "record_type": "agentmage-story-13-4-context-profile-evidence",
+  "remaining_work": [
+    "run the artifact/workflow corpus and full metric ledger for the first independently admitted profile",
+    "retain matched native cross-platform profile evidence without borrowing rejected Muse or Gemma results",
+    "complete applicable RV-13, RV-14, RV-16, and RV-41 installed-profile slices"
+  ],
+  "required_markers": [
+    "story_13_4_exact_window_reconciles_without_overcommit ... ok",
+    "story_13_4_degradation_is_deterministic_visible_and_source_first ... ok",
+    "story_13_4_missing_counter_or_authoritative_minimum_fails_closed ... ok",
+    "story_13_4_orchestration_changes_shape_but_not_safety_controls ... ok",
+    "story_13_4_quality_evidence_and_model_admission_are_both_required ... ok",
+    "story_13_4_every_profile_and_allocation_mutation_changes_identity_or_refuses ... ok",
+    "compiled orchestration profile schema accepts the closed record",
+    "schema rejects authority widening and stale qualification shapes",
+    "Finished `dev` profile"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_CONTRACT_BLOCKED_PROFILE_CAMPAIGNS",
+  "story_id": "13.4"
+}

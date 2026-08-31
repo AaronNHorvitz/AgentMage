@@ -2685,46 +2685,46 @@ it can handle while all safety, authority, evidence, and completion rules stay m
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 13.4.1 - Define explicit context-window allocation**
-  - [ ] **Sub-task 13.4.1.1:** Separate total window, system/tool definitions, user input,
+- [x] **Task 13.4.1 - Define explicit context-window allocation** Evidence: [`model_orchestration_profile.rs`](kernel/engine/src/model_orchestration_profile.rs) compiles a digest-bound exact-profile window with checked arithmetic, fixed reserves, source-first deterministic degradation, visible reason codes, and an explicit unallocated remainder.
+  - [x] **Sub-task 13.4.1.1:** Separate total window, system/tool definitions, user input,
     source-artifact sections, retrieved context, workflow/recovery reserve, output reserve, and
-    safety margin with checked arithmetic and no overcommit.
-  - [ ] **Sub-task 13.4.1.2:** Bind authoritative tokenizer and counting strategy to the exact model
-    profile; label byte or heuristic estimates as non-authoritative and prohibit them at admission.
-  - [ ] **Sub-task 13.4.1.3:** Define deterministic allocation, truncation, summarization, omission,
-    and reallocation order that feeds the existing Story 22.1 context manager.
-- [ ] **Task 13.4.2 - Define orchestration adaptation**
-  - [ ] **Sub-task 13.4.2.1:** Add a separate profile for plan horizon, visible tool subset,
-    observation size, parser-repair allowance, recovery scaffolding, and diagnostic verbosity.
-  - [ ] **Sub-task 13.4.2.2:** Keep policy, grants, approvals, side-effect class, retry eligibility,
-    verifier, budgets, and completion outside the model profile and immutable across candidates.
-  - [ ] **Sub-task 13.4.2.3:** Require independent role- and workflow-specific quality evidence
-    before enabling a profile; prohibit family-wide inference and automatic fallback.
+    safety margin with checked arithmetic and no overcommit. Evidence: the compiler accounts for all seven named partitions plus the remaining window; fixed overcommit and an authoritative source below its useful minimum return `ContextOvercommit` without a plan.
+  - [x] **Sub-task 13.4.1.2:** Bind authoritative tokenizer and counting strategy to the exact model
+    profile; label byte or heuristic estimates as non-authoritative and prohibit them at admission. Evidence: admission requires the exact profile token-counter identity/digest and tokenizer digest; any mismatch is a typed pre-allocation refusal, while architecture documentation explicitly keeps heuristic estimates non-authoritative.
+  - [x] **Sub-task 13.4.1.3:** Define deterministic allocation, truncation, summarization, omission,
+    and reallocation order that feeds the existing Story 22.1 context manager. Evidence: fixed reserves precede authoritative source allocation, then retrieval; source truncation, retrieval summarization/omission, minimums, and stable reason codes are retained in the compiled plan consumed before Story 22.1 item composition.
+- [x] **Task 13.4.2 - Define orchestration adaptation** Evidence: the compiled orchestration profile separates six model-varying presentation controls from eight exact invariant safety-control digests and independently qualified role/workflow tuples.
+  - [x] **Sub-task 13.4.2.1:** Add a separate profile for plan horizon, visible tool subset,
+    observation size, parser-repair allowance, recovery scaffolding, and diagnostic verbosity. Evidence: `OrchestrationShape` is closed over exactly these six bounded fields; duplicate, malformed, or oversized tool subsets and invalid bounds fail before a profile exists.
+  - [x] **Sub-task 13.4.2.2:** Keep policy, grants, approvals, side-effect class, retry eligibility,
+    verifier, budgets, and completion outside the model profile and immutable across candidates. Evidence: `ModelInvariantControls` binds all eight digests separately; presentation changes alter profile identity while `verify_model_invariant_controls` rejects any safety-control drift.
+  - [x] **Sub-task 13.4.2.3:** Require independent role- and workflow-specific quality evidence
+    before enabling a profile; prohibit family-wide inference and automatic fallback. Evidence: every declared exact role/workflow qualification must carry a unique current passing evidence digest; failed evidence refuses compilation, underlying model admission remains independently required, and fallback is hard-coded false in both Rust and schema.
 - [ ] **Task 13.4.3 - Evaluate profiles and failure behavior**
   - [ ] **Sub-task 13.4.3.1:** Run the artifact and workflow corpus across fake, Muse-candidate,
     eligible Gemma, and future admitted profiles with exact tokenizer/runtime/decoding identity.
   - [ ] **Sub-task 13.4.3.2:** Measure extraction usage, context coverage, omission, malformed calls,
     repair success, tool-call validity, verified completion, false completion, attempts, diagnosis,
     latency, memory, and cancellation without merging incomparable tuples.
-  - [ ] **Sub-task 13.4.3.3:** Mutate every allocation and orchestration field; require stale-profile
-    invalidation, separate evidence, and no borrowed support claim.
+  - [x] **Sub-task 13.4.3.3:** Mutate every allocation and orchestration field; require stale-profile
+    invalidation, separate evidence, and no borrowed support claim. Evidence: focused mutation tests cover every allocation partition, reserve, counter/output refusal, all six orchestration fields, qualification evidence, and invariant-control drift; accepted changes produce a different digest and unsafe or unsupported changes refuse.
 - [ ] **Task 13.4.4 - Document and evidence support**
-  - [ ] **Sub-task 13.4.4.1:** Publish machine-readable context/orchestration profile schemas,
-    capability matrices, limitations, migration behavior, and manual selection behavior.
+  - [x] **Sub-task 13.4.4.1:** Publish machine-readable context/orchestration profile schemas,
+    capability matrices, limitations, migration behavior, and manual selection behavior. Evidence: [`orchestration-profile.schema.json`](schemas/model/orchestration-profile.schema.json), [`model-context-orchestration-profiles.md`](docs/architecture/model-context-orchestration-profiles.md), and the retained evidence report define the closed record, allocation/control matrices, exact-identity migration rule, manual-selection boundary, and zero-admitted-profile limitations; hostile schema mutations pass.
   - [ ] **Sub-task 13.4.4.2:** Retain raw token ledgers, quality trials, model/runtime manifests,
     resource traces, negative tests, and `RV-13`, `RV-14`, `RV-16`, and `RV-41` mappings.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 13.4.AC1:** Given any admitted profile and input set, when the token plan is
+- [x] **Story AC 13.4.AC1:** Given any admitted profile and input set, when the token plan is
   compiled, then all partitions reconcile within the exact total window and every omission has a
-  deterministic visible reason.
-- [ ] **Story AC 13.4.AC2:** Given a different model or orchestration profile, when the same workflow
+  deterministic visible reason. Evidence: exact-fit, deterministic degradation, and overcommit tests reconcile all accepted tokens to the exact total and require stable source/retrieval disposition codes.
+- [x] **Story AC 13.4.AC2:** Given a different model or orchestration profile, when the same workflow
   runs, then adaptation may change presentation and planning shape but cannot change authority,
-  effect eligibility, verification, or completion truth.
-- [ ] **Story AC 13.4.AC3:** Given missing tokenizer, runtime, quality, hardware, or workflow
+  effect eligibility, verification, or completion truth. Evidence: changed shape produces a distinct profile while the exact invariant-control tuple remains equal; any changed policy, grant, approval, effect, retry, verifier, budget, or completion digest fails the cross-profile check.
+- [x] **Story AC 13.4.AC3:** Given missing tokenizer, runtime, quality, hardware, or workflow
   evidence, when activation is requested, then the exact profile remains disabled without fallback
-  or a family-wide conclusion.
+  or a family-wide conclusion. Evidence: tokenizer/counter mismatch and failed exact qualification refuse; a valid orchestration contract over a disabled model remains disabled with fallback false. The retained report imports the current rejected Muse and Gemma dispositions without borrowing them for another tuple.
 
 #### Sprint Acceptance Criteria
 

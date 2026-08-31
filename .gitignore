@@ -97,6 +97,10 @@ artifacts/sprints/sprint-9/*
 artifacts/sprints/sprint-11/*
 !artifacts/sprints/sprint-11/story-11.3/
 !artifacts/sprints/sprint-11/story-11.3/**
+!artifacts/sprints/sprint-13/
+artifacts/sprints/sprint-13/*
+!artifacts/sprints/sprint-13/story-13.4/
+!artifacts/sprints/sprint-13/story-13.4/**
 !artifacts/sprints/sprint-16/
 artifacts/sprints/sprint-16/*
 !artifacts/sprints/sprint-16/local-evidence-report.json
