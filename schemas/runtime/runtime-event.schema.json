@@ -62,6 +62,19 @@
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9_.-]{0,127}$"
     },
+    "extractionBlockReason": {
+      "enum": [
+        "source.unsupported",
+        "source.encrypted",
+        "source.restricted",
+        "source.malformed",
+        "source.cancelled",
+        "source.timed_out",
+        "source.resource_exhausted",
+        "source.unavailable",
+        "source.stale"
+      ]
+    },
     "sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
@@ -315,6 +328,148 @@
             "event": { "const": "artifact_created" },
             "artifact_id": { "$ref": "#/$defs/identifier" },
             "manifest_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "source_artifact_id", "manifest_sha256"],
+          "properties": {
+            "event": { "const": "source_admitted" },
+            "source_artifact_id": { "$ref": "#/$defs/identifier" },
+            "manifest_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "source_artifact_id", "extraction_id", "input_sha256"],
+          "properties": {
+            "event": { "const": "extraction_started" },
+            "source_artifact_id": { "$ref": "#/$defs/identifier" },
+            "extraction_id": { "$ref": "#/$defs/identifier" },
+            "input_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "source_artifact_id", "extraction_id", "result_sha256"],
+          "properties": {
+            "event": { "const": "extraction_completed" },
+            "source_artifact_id": { "$ref": "#/$defs/identifier" },
+            "extraction_id": { "$ref": "#/$defs/identifier" },
+            "result_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "source_artifact_id", "extraction_id", "reason_code"],
+          "properties": {
+            "event": { "const": "extraction_blocked" },
+            "source_artifact_id": { "$ref": "#/$defs/identifier" },
+            "extraction_id": { "$ref": "#/$defs/identifier" },
+            "reason_code": { "$ref": "#/$defs/extractionBlockReason" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "source_artifact_id", "extraction_id", "section_id", "locator_sha256"],
+          "properties": {
+            "event": { "const": "section_indexed" },
+            "source_artifact_id": { "$ref": "#/$defs/identifier" },
+            "extraction_id": { "$ref": "#/$defs/identifier" },
+            "section_id": { "$ref": "#/$defs/identifier" },
+            "locator_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "context_manifest_id", "source_artifact_id", "disposition_sha256"],
+          "properties": {
+            "event": { "const": "context_disposition" },
+            "context_manifest_id": { "$ref": "#/$defs/identifier" },
+            "source_artifact_id": { "$ref": "#/$defs/identifier" },
+            "disposition_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "attempt_id", "preflight_id", "observation_sha256"],
+          "properties": {
+            "event": { "const": "preflight_observed" },
+            "attempt_id": { "$ref": "#/$defs/identifier" },
+            "preflight_id": { "$ref": "#/$defs/identifier" },
+            "observation_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "attempt_id", "tool_call_id", "prepared_sha256"],
+          "properties": {
+            "event": { "const": "attempt_started" },
+            "attempt_id": { "$ref": "#/$defs/identifier" },
+            "tool_call_id": { "$ref": "#/$defs/identifier" },
+            "prepared_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "attempt_id", "tool_call_id", "observation_id", "observation_sha256"],
+          "properties": {
+            "event": { "const": "attempt_ended" },
+            "attempt_id": { "$ref": "#/$defs/identifier" },
+            "tool_call_id": { "$ref": "#/$defs/identifier" },
+            "observation_id": { "$ref": "#/$defs/identifier" },
+            "observation_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "attempt_id", "verification_id", "result_sha256"],
+          "properties": {
+            "event": { "const": "verification_observed" },
+            "attempt_id": { "$ref": "#/$defs/identifier" },
+            "verification_id": { "$ref": "#/$defs/identifier" },
+            "result_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "attempt_id", "eligible", "decision_sha256"],
+          "properties": {
+            "event": { "const": "retry_decided" },
+            "attempt_id": { "$ref": "#/$defs/identifier" },
+            "eligible": { "type": "boolean" },
+            "decision_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "recovery_id", "decision_sha256"],
+          "properties": {
+            "event": { "const": "recovery_decided" },
+            "recovery_id": { "$ref": "#/$defs/identifier" },
+            "decision_sha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["event", "diagnostic_id", "diagnostic_sha256"],
+          "properties": {
+            "event": { "const": "terminal_diagnostic" },
+            "diagnostic_id": { "$ref": "#/$defs/identifier" },
+            "diagnostic_sha256": { "$ref": "#/$defs/sha256" }
           }
         },
         {

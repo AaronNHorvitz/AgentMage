@@ -3527,40 +3527,49 @@ transcript prose.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 21.3.1 - Extend the closed event family**
-  - [ ] **Sub-task 21.3.1.1:** Add source admitted, extraction started/completed/blocked, section
+- [x] **Task 21.3.1 - Extend the closed event family**
+  - [x] **Sub-task 21.3.1.1:** Add source admitted, extraction started/completed/blocked, section
     indexed, context disposition, preflight observed, attempt started/ended, verification observed,
     retry decided, recovery decided, and terminal diagnostic event payload references.
-  - [ ] **Sub-task 21.3.1.2:** Define legal ordering, causation, correlation, terminality, sensitivity,
+  - [x] **Sub-task 21.3.1.2:** Define legal ordering, causation, correlation, terminality, sensitivity,
     retention, redaction, and content-reference rules for every new event.
-  - [ ] **Sub-task 21.3.1.3:** Keep large source, parser, model, tool, and diagnostic payloads out of
+  - [x] **Sub-task 21.3.1.3:** Keep large source, parser, model, tool, and diagnostic payloads out of
     event rows; persist content-free correctness identities transactionally and progress through the
     existing bounded asynchronous path.
-- [ ] **Task 21.3.2 - Build projections and replay**
-  - [ ] **Sub-task 21.3.2.1:** Project source-artifact lifecycle, context manifests, step attempts,
+- [x] **Task 21.3.2 - Build projections and replay**
+  - [x] **Sub-task 21.3.2.1:** Project source-artifact lifecycle, context manifests, step attempts,
     consumed budgets, verification, recovery, and diagnosis from canonical events and materialized
     records with exact reconciliation.
-  - [ ] **Sub-task 21.3.2.2:** Reject missing, duplicate, reordered, stale, hash-invalid,
+  - [x] **Sub-task 21.3.2.2:** Reject missing, duplicate, reordered, stale, hash-invalid,
     cross-session, cross-artifact, cross-attempt, and post-terminal events.
-  - [ ] **Sub-task 21.3.2.3:** Preserve compatibility for existing journals and emit explicit
+  - [x] **Sub-task 21.3.2.3:** Preserve compatibility for existing journals and emit explicit
     unsupported-version results for clients unable to render new event kinds.
-- [ ] **Task 21.3.3 - Verify durability and pressure behavior**
-  - [ ] **Sub-task 21.3.3.1:** Saturate progress queues, fail optional sinks, disconnect clients,
+- [x] **Task 21.3.3 - Verify durability and pressure behavior**
+  - [x] **Sub-task 21.3.3.1:** Saturate progress queues, fail optional sinks, disconnect clients,
     cancel, and restart while requiring complete correctness history and bounded shutdown.
-  - [ ] **Sub-task 21.3.3.2:** Crash before and after each new correctness event transaction and
+  - [x] **Sub-task 21.3.3.2:** Crash before and after each new correctness event transaction and
     require exact replay, no invented event, no duplicate effect, and one terminal truth.
-  - [ ] **Sub-task 21.3.3.3:** Retain schema vectors, ordering tables, replay digests, pressure
+  - [x] **Sub-task 21.3.3.3:** Retain schema vectors, ordering tables, replay digests, pressure
     traces, secret scans, compatibility results, and `RV-08`, `RV-17`, and `RV-18` mappings.
+
+**Local implementation evidence:** [`artifact-workflow-event-projection.md`](docs/architecture/artifact-workflow-event-projection.md)
+defines the thirteen new correctness families, exact ordering, reference-only payload boundary,
+deterministic replay projection, and legacy-client compatibility result. The source-bound
+[`event-projection-report.json`](artifacts/sprints/sprint-21/story-21.3/event-projection-report.json)
+retains schema, hostile replay, encrypted reopen, shared pressure/slow-client, secret-scan, strict
+Clippy, and thirty-case before/after process-stop results. It maps the applicable local `RV-08`,
+`RV-17`, and `RV-18` slices while preserving physical-fault, installed-runtime, supported-platform,
+and independent-review campaigns as non-passes.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 21.3.AC1:** Given a complete artifact-backed workflow, when its journal is replayed,
+- [x] **Story AC 21.3.AC1:** Given a complete artifact-backed workflow, when its journal is replayed,
   then every supplied artifact, context decision, preflight, attempt, receipt, verification,
   recovery decision, and terminal diagnosis resolves exactly in one legal order.
-- [ ] **Story AC 21.3.AC2:** Given corruption, reordering, queue pressure, sink failure, or restart,
+- [x] **Story AC 21.3.AC2:** Given corruption, reordering, queue pressure, sink failure, or restart,
   when replay or recovery runs, then correctness truth remains durable and progress loss cannot
   become false success or hidden omission.
-- [ ] **Story AC 21.3.AC3:** Given sensitive or large payloads, when events are inspected, then only
+- [x] **Story AC 21.3.AC3:** Given sensitive or large payloads, when events are inspected, then only
   classified bounded identities and verified references appear and no raw secret or giant inline
   content is retained.
 

@@ -1038,6 +1038,47 @@ test("runtime events reject inline sensitive content and invented token events",
   }
 });
 
+test("artifact and workflow projection event families remain closed", () => {
+  const source = JSON.parse(
+    fs.readFileSync(
+      path.join(ROOT, "schemas/runtime/examples/runtime-event.valid.json"),
+      "utf8",
+    ),
+  );
+  const sha = "a".repeat(64);
+  const kinds = [
+    { event: "source_admitted", source_artifact_id: "source-1", manifest_sha256: sha },
+    { event: "extraction_started", source_artifact_id: "source-1", extraction_id: "extract-1", input_sha256: sha },
+    { event: "extraction_completed", source_artifact_id: "source-1", extraction_id: "extract-1", result_sha256: sha },
+    { event: "extraction_blocked", source_artifact_id: "source-1", extraction_id: "extract-1", reason_code: "source.encrypted" },
+    { event: "section_indexed", source_artifact_id: "source-1", extraction_id: "extract-1", section_id: "section-1", locator_sha256: sha },
+    { event: "context_disposition", context_manifest_id: "context-1", source_artifact_id: "source-1", disposition_sha256: sha },
+    { event: "preflight_observed", attempt_id: "attempt-1", preflight_id: "preflight-1", observation_sha256: sha },
+    { event: "attempt_started", attempt_id: "attempt-1", tool_call_id: "tool-call-1", prepared_sha256: sha },
+    { event: "attempt_ended", attempt_id: "attempt-1", tool_call_id: "tool-call-1", observation_id: "observation-1", observation_sha256: sha },
+    { event: "verification_observed", attempt_id: "attempt-1", verification_id: "verification-1", result_sha256: sha },
+    { event: "retry_decided", attempt_id: "attempt-1", eligible: false, decision_sha256: sha },
+    { event: "recovery_decided", recovery_id: "recovery-1", decision_sha256: sha },
+    { event: "terminal_diagnostic", diagnostic_id: "diagnostic-1", diagnostic_sha256: sha },
+  ];
+  for (const kind of kinds) {
+    const event = structuredClone(source);
+    event.persistence = "correctness";
+    event.kind = kind;
+    assert.equal(
+      validateRuntimeRecord("runtime-event", event, runtimeValidators).valid,
+      true,
+      kind.event,
+    );
+    event.kind.hidden_payload = "secret-canary";
+    assert.equal(
+      validateRuntimeRecord("runtime-event", event, runtimeValidators).valid,
+      false,
+      `${kind.event} must reject unknown fields`,
+    );
+  }
+});
+
 test("thin client requests reject hidden authority and binding drift", () => {
   const source = JSON.parse(
     fs.readFileSync(

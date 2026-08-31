@@ -1,0 +1,105 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 15625,
+      "path": "kernel/contracts/src/runtime_event.rs",
+      "sha256": "4b6ca09e1126ad654d9adc6f09ad4f46ce1cdf7aa1e67785f9aef4b691cb99c5"
+    },
+    {
+      "byte_length": 142813,
+      "path": "kernel/engine/src/runtime_event.rs",
+      "sha256": "3d328f408d53cc2b8ed04cbd0641d75c3ab1ee93336f30663b4818994a3ac8af"
+    },
+    {
+      "byte_length": 116376,
+      "path": "kernel/engine/src/runtime_journal.rs",
+      "sha256": "30a641e2c98ef277f47a9fe43b48a6080d464d459934b0640879233fe20e64cd"
+    },
+    {
+      "byte_length": 31041,
+      "path": "shells/host/src/cli.rs",
+      "sha256": "c843826d925f557c6431e8efe62546f551688420d4a995f01c1ac80cde553aae"
+    },
+    {
+      "byte_length": 18628,
+      "path": "schemas/runtime/runtime-event.schema.json",
+      "sha256": "12cf2d22c7ef7154439dc2a3704b2c17e19bb591475e3d9c7bbfa095fc3e6afc"
+    },
+    {
+      "byte_length": 69778,
+      "path": "tests/test_planning_schemas.mjs",
+      "sha256": "a9a27812006efb827909a2d117babc8d1ef5c08566155b401982f9e2ca39ec5b"
+    },
+    {
+      "byte_length": 3817,
+      "path": "docs/architecture/artifact-workflow-event-projection.md",
+      "sha256": "226cb8f98d083b83e313948e44759c85a5cf6a65df40d77bb014a49a2ff1f4dc"
+    },
+    {
+      "byte_length": 5394,
+      "path": "scripts/story_21_3_event_projection_evidence.py",
+      "sha256": "1f8d86f9f23ace554147be031e6b0817b1545a19130acfa99e2729f2f1a9050f"
+    },
+    {
+      "byte_length": 1538,
+      "path": "tests/test_story_21_3_event_projection_evidence.py",
+      "sha256": "916c55f1eb99e2d1e018c806b4d3ce2761253973ca9a2b03427a2deb9fff0271"
+    },
+    {
+      "byte_length": 20600,
+      "path": "artifacts/sprints/sprint-21/story-21.3/event-projection-results.log",
+      "sha256": "f75a05c4ce788d0a85920d04ff0ae52ed50375b516b14353c9ab74b0251050f6"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine story_21_3 --locked",
+    "cargo test -p agentmage-kernel-engine story_21_2_lagging_subscriber_is_removed_without_blocking_runtime --locked",
+    "cargo test -p agentmage-kernel-engine story_21_2_dedicated_writer_keeps_progress_and_clients_off_slow_store --locked",
+    "node --test tests/test_planning_schemas.mjs",
+    "cargo clippy -p agentmage-kernel-engine -p agentmage-host --all-targets --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-31",
+  "limitations": [
+    "physical storage fault injection and installed-runtime pressure remain broader gates",
+    "supported-platform campaigns and independent review remain external"
+  ],
+  "new_correctness_event_families": 13,
+  "process_stop_cases": 30,
+  "product_truth": {
+    "closed_schema_complete": true,
+    "deterministic_projection_complete": true,
+    "duplicate_or_invented_event_count": 0,
+    "encrypted_restart_replay_complete": true,
+    "external_platform_campaign_executed": false,
+    "independent_review_executed": false,
+    "large_or_sensitive_inline_payload_count": 0,
+    "legacy_journal_compatibility_complete": true,
+    "legal_ordering_complete": true,
+    "release_claim": "none",
+    "shared_pressure_and_slow_client_gates_pass": true,
+    "unsupported_client_result_explicit": true
+  },
+  "record_type": "agentmage-story-21-3-event-projection-evidence",
+  "required_markers": [
+    "story_21_3_complete_artifact_workflow_replays_to_one_exact_projection ... ok",
+    "story_21_3_missing_duplicate_reordered_cross_bound_and_tampered_events_fail_closed ... ok",
+    "story_21_3_blocked_extraction_is_terminal_for_indexing_and_remains_visible ... ok",
+    "story_21_3_large_and_sensitive_payloads_remain_reference_only ... ok",
+    "story_21_3_legacy_clients_get_explicit_unsupported_kind_without_breaking_old_journals ... ok",
+    "story_21_3_materialized_projection_drift_never_overrides_canonical_replay ... ok",
+    "story_21_3_rejected_duplicate_identity_events_do_not_mutate_replay_state ... ok",
+    "story_21_3_new_correctness_events_commit_reopen_and_replay_exactly ... ok",
+    "story_21_3_every_new_correctness_event_survives_before_and_after_process_stop ... ok",
+    "story_21_2_lagging_subscriber_is_removed_without_blocking_runtime ... ok",
+    "story_21_2_dedicated_writer_keeps_progress_and_clients_off_slow_store ... ok",
+    "artifact and workflow projection event families remain closed"
+  ],
+  "reviewer_protocol_mapping": {
+    "RV-08": "local secret/reference-only and closed-code slice",
+    "RV-17": "local thirty-case process-stop and exact replay slice",
+    "RV-18": "local journal pressure, slow-client, ordering, and privacy slice"
+  },
+  "schema_version": 1,
+  "status": "PASS_LOCAL_EVENT_PROJECTION",
+  "story_id": "21.3"
+}

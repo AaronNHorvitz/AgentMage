@@ -53,6 +53,8 @@ pub enum RuntimeEventError {
     ReplayCursorMismatch,
     /// Canonical serialization failed.
     Serialization,
+    /// The client is valid but does not support this newer closed event family.
+    UnsupportedEventKind,
 }
 
 impl RuntimeEventError {
@@ -74,8 +76,40 @@ impl RuntimeEventError {
             Self::BatchLimit => "runtime.event.batch_limit",
             Self::ReplayCursorMismatch => "runtime.event.replay_cursor_mismatch",
             Self::Serialization => "runtime.event.serialization_failed",
+            Self::UnsupportedEventKind => "runtime.event.kind_unsupported",
         }
     }
+}
+
+/// Returns an explicit compatibility result for clients predating Story 21.3 event kinds.
+pub fn verify_runtime_event_client_compatibility(
+    event: &RuntimeEvent,
+    supports_artifact_workflow_projection: bool,
+) -> Result<(), RuntimeEventError> {
+    verify_runtime_event(event)?;
+    if !supports_artifact_workflow_projection && is_artifact_workflow_event(&event.kind) {
+        return Err(RuntimeEventError::UnsupportedEventKind);
+    }
+    Ok(())
+}
+
+const fn is_artifact_workflow_event(kind: &RuntimeEventKind) -> bool {
+    matches!(
+        kind,
+        RuntimeEventKind::SourceAdmitted { .. }
+            | RuntimeEventKind::ExtractionStarted { .. }
+            | RuntimeEventKind::ExtractionCompleted { .. }
+            | RuntimeEventKind::ExtractionBlocked { .. }
+            | RuntimeEventKind::SectionIndexed { .. }
+            | RuntimeEventKind::ContextDisposition { .. }
+            | RuntimeEventKind::PreflightObserved { .. }
+            | RuntimeEventKind::AttemptStarted { .. }
+            | RuntimeEventKind::AttemptEnded { .. }
+            | RuntimeEventKind::VerificationObserved { .. }
+            | RuntimeEventKind::RetryDecided { .. }
+            | RuntimeEventKind::RecoveryDecided { .. }
+            | RuntimeEventKind::TerminalDiagnostic { .. }
+    )
 }
 
 /// Closed count and byte ceilings for one client event batch.
@@ -265,6 +299,18 @@ enum ToolPhase {
 struct ToolState {
     phase: ToolPhase,
     operation_id: String,
+    attempt_id: Option<String>,
+    observation_id: Option<String>,
+    verification_observed: bool,
+    retry_decided: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum SourcePhase {
+    Admitted,
+    Extracting(String),
+    Extracted(String),
+    Blocked(String),
 }
 
 /// Incremental verifier for one immutable runtime-event chain.
@@ -278,6 +324,15 @@ pub struct RuntimeEventSequence {
     active_model_run_id: Option<String>,
     tools: BTreeMap<String, ToolState>,
     permissions: BTreeMap<String, String>,
+    sources: BTreeMap<String, SourcePhase>,
+    sections: BTreeSet<(String, String)>,
+    context_dispositions: BTreeSet<(String, String)>,
+    preflights: BTreeSet<(String, String)>,
+    attempt_ids: BTreeSet<String>,
+    observation_ids: BTreeSet<String>,
+    verification_ids: BTreeSet<String>,
+    recovery_ids: BTreeSet<String>,
+    terminal_diagnostic_id: Option<String>,
     cancellation_id: Option<String>,
     cancellation_observed: bool,
     last_occurred_at_epoch_ms: u64,
@@ -406,6 +461,10 @@ impl RuntimeEventSequence {
                         .tools
                         .values()
                         .any(|tool| !matches!(tool.phase, ToolPhase::Completed | ToolPhase::Failed))
+                    || self.tools.values().any(|tool| {
+                        tool.attempt_id.is_some()
+                            && (tool.observation_id.is_none() || !tool.verification_observed)
+                    })
                     || !self.permissions.is_empty()
                 {
                     return Err(RuntimeEventError::IllegalTransition);
@@ -442,6 +501,10 @@ impl RuntimeEventSequence {
                     ToolState {
                         phase: ToolPhase::Requested,
                         operation_id,
+                        attempt_id: None,
+                        observation_id: None,
+                        verification_observed: false,
+                        retry_decided: false,
                     },
                 );
                 Ok(())
@@ -557,6 +620,219 @@ impl RuntimeEventSequence {
                 }
                 Ok(())
             }
+            RuntimeEventKind::SourceAdmitted {
+                source_artifact_id, ..
+            } => {
+                self.require_outside_turn(event)?;
+                if self.sources.contains_key(source_artifact_id.as_str()) {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                self.sources.insert(
+                    source_artifact_id.as_str().to_owned(),
+                    SourcePhase::Admitted,
+                );
+                Ok(())
+            }
+            RuntimeEventKind::ExtractionStarted {
+                source_artifact_id,
+                extraction_id,
+                ..
+            } => {
+                self.require_outside_turn(event)?;
+                let Some(phase) = self.sources.get_mut(source_artifact_id.as_str()) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if *phase != SourcePhase::Admitted {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                *phase = SourcePhase::Extracting(extraction_id.clone());
+                Ok(())
+            }
+            RuntimeEventKind::ExtractionCompleted {
+                source_artifact_id,
+                extraction_id,
+                ..
+            } => {
+                self.require_outside_turn(event)?;
+                let Some(phase) = self.sources.get_mut(source_artifact_id.as_str()) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if phase != &SourcePhase::Extracting(extraction_id.clone()) {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                *phase = SourcePhase::Extracted(extraction_id.clone());
+                Ok(())
+            }
+            RuntimeEventKind::ExtractionBlocked {
+                source_artifact_id,
+                extraction_id,
+                ..
+            } => {
+                self.require_outside_turn(event)?;
+                let Some(phase) = self.sources.get_mut(source_artifact_id.as_str()) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if phase != &SourcePhase::Extracting(extraction_id.clone()) {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                *phase = SourcePhase::Blocked(extraction_id.clone());
+                Ok(())
+            }
+            RuntimeEventKind::SectionIndexed {
+                source_artifact_id,
+                extraction_id,
+                section_id,
+                ..
+            } => {
+                self.require_outside_turn(event)?;
+                if self.sources.get(source_artifact_id.as_str())
+                    != Some(&SourcePhase::Extracted(extraction_id.clone()))
+                    || !self
+                        .sections
+                        .insert((source_artifact_id.as_str().to_owned(), section_id.clone()))
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                Ok(())
+            }
+            RuntimeEventKind::ContextDisposition {
+                context_manifest_id,
+                source_artifact_id,
+                ..
+            } => {
+                self.require_outside_turn(event)?;
+                if !self.sources.contains_key(source_artifact_id.as_str())
+                    || !self.context_dispositions.insert((
+                        context_manifest_id.clone(),
+                        source_artifact_id.as_str().to_owned(),
+                    ))
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                Ok(())
+            }
+            RuntimeEventKind::PreflightObserved {
+                attempt_id,
+                preflight_id,
+                ..
+            } => {
+                self.require_requested_operation(event)?;
+                if !self
+                    .preflights
+                    .insert((attempt_id.clone(), preflight_id.clone()))
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                Ok(())
+            }
+            RuntimeEventKind::AttemptStarted {
+                attempt_id,
+                tool_call_id,
+                ..
+            } => {
+                self.require_active_turn(event)?;
+                let operation_id = required_operation(event)?;
+                let Some(tool) = self.tools.get_mut(tool_call_id.as_str()) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if tool.phase != ToolPhase::Requested
+                    || tool.operation_id != operation_id
+                    || tool.attempt_id.is_some()
+                    || self.attempt_ids.contains(attempt_id)
+                    || !self
+                        .preflights
+                        .iter()
+                        .any(|(candidate, _)| candidate == attempt_id)
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                tool.attempt_id = Some(attempt_id.clone());
+                self.attempt_ids.insert(attempt_id.clone());
+                Ok(())
+            }
+            RuntimeEventKind::AttemptEnded {
+                attempt_id,
+                tool_call_id,
+                observation_id,
+                ..
+            } => {
+                self.require_active_turn(event)?;
+                let operation_id = required_operation(event)?;
+                let Some(tool) = self.tools.get_mut(tool_call_id.as_str()) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if !matches!(tool.phase, ToolPhase::Completed | ToolPhase::Failed)
+                    || tool.operation_id != operation_id
+                    || tool.attempt_id.as_deref() != Some(attempt_id)
+                    || tool.observation_id.is_some()
+                    || self.observation_ids.contains(observation_id)
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                tool.observation_id = Some(observation_id.clone());
+                self.observation_ids.insert(observation_id.clone());
+                Ok(())
+            }
+            RuntimeEventKind::VerificationObserved {
+                attempt_id,
+                verification_id,
+                ..
+            } => {
+                self.require_active_turn(event)?;
+                let operation_id = required_operation(event)?;
+                let Some(tool) = self.tools.values_mut().find(|tool| {
+                    tool.operation_id == operation_id
+                        && tool.attempt_id.as_deref() == Some(attempt_id)
+                }) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if tool.observation_id.is_none()
+                    || tool.verification_observed
+                    || self.verification_ids.contains(verification_id)
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                tool.verification_observed = true;
+                self.verification_ids.insert(verification_id.clone());
+                Ok(())
+            }
+            RuntimeEventKind::RetryDecided {
+                attempt_id,
+                eligible,
+                ..
+            } => {
+                self.require_active_turn(event)?;
+                let operation_id = required_operation(event)?;
+                let Some(tool) = self.tools.values_mut().find(|tool| {
+                    tool.operation_id == operation_id
+                        && tool.attempt_id.as_deref() == Some(attempt_id)
+                }) else {
+                    return Err(RuntimeEventError::IllegalTransition);
+                };
+                if !tool.verification_observed
+                    || tool.retry_decided
+                    || (*eligible && tool.phase != ToolPhase::Failed)
+                {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                tool.retry_decided = true;
+                Ok(())
+            }
+            RuntimeEventKind::RecoveryDecided { recovery_id, .. } => {
+                self.require_outside_turn(event)?;
+                if !self.recovery_ids.insert(recovery_id.clone()) {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                Ok(())
+            }
+            RuntimeEventKind::TerminalDiagnostic { diagnostic_id, .. } => {
+                self.require_outside_turn(event)?;
+                if self.terminal_diagnostic_id.is_some() {
+                    return Err(RuntimeEventError::IllegalTransition);
+                }
+                self.terminal_diagnostic_id = Some(diagnostic_id.clone());
+                Ok(())
+            }
             RuntimeEventKind::CheckpointCommitted { .. } => {
                 if self.active_turn_id.is_some()
                     || self.active_model_run_id.is_some()
@@ -593,6 +869,11 @@ impl RuntimeEventSequence {
                     || !self.tools.is_empty()
                     || !self.permissions.is_empty()
                     || (*state == AgentStateKind::Cancelled && !self.cancellation_observed)
+                    || (matches!(state, AgentStateKind::Success | AgentStateKind::NoOp)
+                        && (self.terminal_diagnostic_id.is_some()
+                            || self.sources.values().any(|phase| {
+                                matches!(phase, SourcePhase::Admitted | SourcePhase::Extracting(_))
+                            })))
                 {
                     return Err(RuntimeEventError::IllegalTransition);
                 }
@@ -629,6 +910,30 @@ impl RuntimeEventSequence {
                 ToolPhase::Started | ToolPhase::Completed | ToolPhase::Failed
             ) && tool.operation_id.as_str() == operation_id
         }) {
+            return Err(RuntimeEventError::IllegalTransition);
+        }
+        Ok(())
+    }
+
+    fn require_requested_operation(&self, event: &RuntimeEvent) -> Result<(), RuntimeEventError> {
+        self.require_active_turn(event)?;
+        let operation_id = required_operation(event)?;
+        if !self.tools.values().any(|tool| {
+            tool.phase == ToolPhase::Requested && tool.operation_id.as_str() == operation_id
+        }) {
+            return Err(RuntimeEventError::IllegalTransition);
+        }
+        Ok(())
+    }
+
+    fn require_outside_turn(&self, event: &RuntimeEvent) -> Result<(), RuntimeEventError> {
+        if event.turn_id.is_some()
+            || event.operation_id.is_some()
+            || self.active_turn_id.is_some()
+            || self.active_model_run_id.is_some()
+            || !self.tools.is_empty()
+            || !self.permissions.is_empty()
+        {
             return Err(RuntimeEventError::IllegalTransition);
         }
         Ok(())
@@ -792,6 +1097,246 @@ pub fn replay_runtime_events(
         terminal,
         false,
     ))
+}
+
+/// Closed extraction state reconstructed solely from canonical events.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RuntimeExtractionProjection {
+    /// The source is admitted but extraction has not started.
+    NotStarted,
+    /// The exact extraction began but has no terminal event.
+    Started,
+    /// The exact extraction completed.
+    Completed,
+    /// The exact extraction was blocked.
+    Blocked,
+}
+
+/// Content-free source lifecycle reconstructed from the journal.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct RuntimeSourceProjection {
+    /// Exact source artifact identity.
+    pub source_artifact_id: String,
+    /// Exact extraction identity when started.
+    pub extraction_id: Option<String>,
+    /// Current extraction state.
+    pub extraction: RuntimeExtractionProjection,
+    /// Sorted exact section identities.
+    pub section_ids: Vec<String>,
+    /// Ordered exact context-manifest identities governing this source.
+    pub context_manifest_ids: Vec<String>,
+}
+
+/// Content-free attempt lifecycle reconstructed from the journal.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct RuntimeAttemptProjection {
+    /// Exact attempt identity.
+    pub attempt_id: String,
+    /// Exact tool-call identity.
+    pub tool_call_id: String,
+    /// Sorted registered preflight identities observed before start.
+    pub preflight_ids: Vec<String>,
+    /// Exact terminal observation identity.
+    pub observation_id: Option<String>,
+    /// Exact deterministic verification identity.
+    pub verification_id: Option<String>,
+    /// Current retry eligibility when decided.
+    pub retry_eligible: Option<bool>,
+}
+
+/// Deterministic content-free artifact/workflow projection from one exact event chain.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct RuntimeWorkflowProjection {
+    /// Exact owning run identity.
+    pub run_id: String,
+    /// Ordered source lifecycle projections.
+    pub sources: Vec<RuntimeSourceProjection>,
+    /// Ordered attempt lifecycle projections.
+    pub attempts: Vec<RuntimeAttemptProjection>,
+    /// Ordered unique recovery decision identities.
+    pub recovery_ids: Vec<String>,
+    /// Exact terminal diagnostic identity when present.
+    pub terminal_diagnostic_id: Option<String>,
+    /// Number of canonical events reconciled.
+    pub event_count: u64,
+    /// Digest of the last reconciled canonical event.
+    pub last_event_sha256: String,
+    /// Digest of this projection with this field zeroed.
+    pub projection_sha256: String,
+}
+
+/// Replays and reconciles one complete source/workflow projection from canonical events.
+pub fn replay_runtime_workflow_projection(
+    events: &[RuntimeEvent],
+) -> Result<RuntimeWorkflowProjection, RuntimeEventError> {
+    let mut sequence = RuntimeEventSequence::new();
+    for event in events {
+        sequence.push(event)?;
+    }
+    let run_id = events
+        .first()
+        .map(|event| event.run_id.as_str().to_owned())
+        .ok_or(RuntimeEventError::IllegalTransition)?;
+    let mut sources = BTreeMap::<String, RuntimeSourceProjection>::new();
+    let mut preflights = BTreeMap::<String, BTreeSet<String>>::new();
+    let mut attempts = BTreeMap::<String, RuntimeAttemptProjection>::new();
+    let mut recovery_ids = Vec::new();
+    let mut terminal_diagnostic_id = None;
+    for event in events {
+        match &event.kind {
+            RuntimeEventKind::SourceAdmitted {
+                source_artifact_id, ..
+            } => {
+                sources.insert(
+                    source_artifact_id.as_str().to_owned(),
+                    RuntimeSourceProjection {
+                        source_artifact_id: source_artifact_id.as_str().to_owned(),
+                        extraction_id: None,
+                        extraction: RuntimeExtractionProjection::NotStarted,
+                        section_ids: Vec::new(),
+                        context_manifest_ids: Vec::new(),
+                    },
+                );
+            }
+            RuntimeEventKind::ExtractionStarted {
+                source_artifact_id,
+                extraction_id,
+                ..
+            } => {
+                let source = sources
+                    .get_mut(source_artifact_id.as_str())
+                    .ok_or(RuntimeEventError::IllegalTransition)?;
+                source.extraction_id = Some(extraction_id.clone());
+                source.extraction = RuntimeExtractionProjection::Started;
+            }
+            RuntimeEventKind::ExtractionCompleted {
+                source_artifact_id, ..
+            } => {
+                sources
+                    .get_mut(source_artifact_id.as_str())
+                    .ok_or(RuntimeEventError::IllegalTransition)?
+                    .extraction = RuntimeExtractionProjection::Completed;
+            }
+            RuntimeEventKind::ExtractionBlocked {
+                source_artifact_id, ..
+            } => {
+                sources
+                    .get_mut(source_artifact_id.as_str())
+                    .ok_or(RuntimeEventError::IllegalTransition)?
+                    .extraction = RuntimeExtractionProjection::Blocked;
+            }
+            RuntimeEventKind::SectionIndexed {
+                source_artifact_id,
+                section_id,
+                ..
+            } => sources
+                .get_mut(source_artifact_id.as_str())
+                .ok_or(RuntimeEventError::IllegalTransition)?
+                .section_ids
+                .push(section_id.clone()),
+            RuntimeEventKind::ContextDisposition {
+                context_manifest_id,
+                source_artifact_id,
+                ..
+            } => sources
+                .get_mut(source_artifact_id.as_str())
+                .ok_or(RuntimeEventError::IllegalTransition)?
+                .context_manifest_ids
+                .push(context_manifest_id.clone()),
+            RuntimeEventKind::PreflightObserved {
+                attempt_id,
+                preflight_id,
+                ..
+            } => {
+                preflights
+                    .entry(attempt_id.clone())
+                    .or_default()
+                    .insert(preflight_id.clone());
+            }
+            RuntimeEventKind::AttemptStarted {
+                attempt_id,
+                tool_call_id,
+                ..
+            } => {
+                attempts.insert(
+                    attempt_id.clone(),
+                    RuntimeAttemptProjection {
+                        attempt_id: attempt_id.clone(),
+                        tool_call_id: tool_call_id.as_str().to_owned(),
+                        preflight_ids: preflights
+                            .remove(attempt_id)
+                            .unwrap_or_default()
+                            .into_iter()
+                            .collect(),
+                        observation_id: None,
+                        verification_id: None,
+                        retry_eligible: None,
+                    },
+                );
+            }
+            RuntimeEventKind::AttemptEnded {
+                attempt_id,
+                observation_id,
+                ..
+            } => {
+                attempts
+                    .get_mut(attempt_id)
+                    .ok_or(RuntimeEventError::IllegalTransition)?
+                    .observation_id = Some(observation_id.clone());
+            }
+            RuntimeEventKind::VerificationObserved {
+                attempt_id,
+                verification_id,
+                ..
+            } => {
+                attempts
+                    .get_mut(attempt_id)
+                    .ok_or(RuntimeEventError::IllegalTransition)?
+                    .verification_id = Some(verification_id.clone());
+            }
+            RuntimeEventKind::RetryDecided {
+                attempt_id,
+                eligible,
+                ..
+            } => {
+                attempts
+                    .get_mut(attempt_id)
+                    .ok_or(RuntimeEventError::IllegalTransition)?
+                    .retry_eligible = Some(*eligible);
+            }
+            RuntimeEventKind::RecoveryDecided { recovery_id, .. } => {
+                recovery_ids.push(recovery_id.clone());
+            }
+            RuntimeEventKind::TerminalDiagnostic { diagnostic_id, .. } => {
+                terminal_diagnostic_id = Some(diagnostic_id.clone());
+            }
+            _ => {}
+        }
+    }
+    let mut projection = RuntimeWorkflowProjection {
+        run_id,
+        sources: sources.into_values().collect(),
+        attempts: attempts.into_values().collect(),
+        recovery_ids,
+        terminal_diagnostic_id,
+        event_count: sequence.event_count(),
+        last_event_sha256: sequence.last_event_sha256().to_owned(),
+        projection_sha256: ZERO_SHA256.to_owned(),
+    };
+    projection.projection_sha256 = canonical_sha256(&projection)?;
+    Ok(projection)
+}
+
+/// Verifies that a materialized projection still matches the canonical event chain.
+pub fn verify_runtime_workflow_projection(
+    events: &[RuntimeEvent],
+    expected: &RuntimeWorkflowProjection,
+) -> Result<(), RuntimeEventError> {
+    if &replay_runtime_workflow_projection(events)? != expected {
+        return Err(RuntimeEventError::DigestMismatch);
+    }
+    Ok(())
 }
 
 fn event_batch(
@@ -977,6 +1522,19 @@ pub const fn runtime_event_persistence(kind: &RuntimeEventKind) -> RuntimeEventP
         | RuntimeEventKind::PermissionDecided { .. }
         | RuntimeEventKind::FileModified { .. }
         | RuntimeEventKind::ArtifactCreated { .. }
+        | RuntimeEventKind::SourceAdmitted { .. }
+        | RuntimeEventKind::ExtractionStarted { .. }
+        | RuntimeEventKind::ExtractionCompleted { .. }
+        | RuntimeEventKind::ExtractionBlocked { .. }
+        | RuntimeEventKind::SectionIndexed { .. }
+        | RuntimeEventKind::ContextDisposition { .. }
+        | RuntimeEventKind::PreflightObserved { .. }
+        | RuntimeEventKind::AttemptStarted { .. }
+        | RuntimeEventKind::AttemptEnded { .. }
+        | RuntimeEventKind::VerificationObserved { .. }
+        | RuntimeEventKind::RetryDecided { .. }
+        | RuntimeEventKind::RecoveryDecided { .. }
+        | RuntimeEventKind::TerminalDiagnostic { .. }
         | RuntimeEventKind::CheckpointCommitted { .. }
         | RuntimeEventKind::CancellationRequested { .. }
         | RuntimeEventKind::CancellationObserved { .. }
@@ -1082,6 +1640,108 @@ fn valid_kind(kind: &RuntimeEventKind) -> bool {
             artifact_id,
             manifest_sha256,
         } => valid_identifier(artifact_id.as_str()) && valid_sha256(manifest_sha256),
+        RuntimeEventKind::SourceAdmitted {
+            source_artifact_id,
+            manifest_sha256,
+        } => valid_identifier(source_artifact_id.as_str()) && valid_sha256(manifest_sha256),
+        RuntimeEventKind::ExtractionStarted {
+            source_artifact_id,
+            extraction_id,
+            input_sha256,
+        } => {
+            valid_identifier(source_artifact_id.as_str())
+                && valid_identifier(extraction_id)
+                && valid_sha256(input_sha256)
+        }
+        RuntimeEventKind::ExtractionCompleted {
+            source_artifact_id,
+            extraction_id,
+            result_sha256,
+        } => {
+            valid_identifier(source_artifact_id.as_str())
+                && valid_identifier(extraction_id)
+                && valid_sha256(result_sha256)
+        }
+        RuntimeEventKind::ExtractionBlocked {
+            source_artifact_id,
+            extraction_id,
+            reason_code,
+        } => {
+            valid_identifier(source_artifact_id.as_str())
+                && valid_identifier(extraction_id)
+                && is_approved_extraction_block_reason(reason_code)
+        }
+        RuntimeEventKind::SectionIndexed {
+            source_artifact_id,
+            extraction_id,
+            section_id,
+            locator_sha256,
+        } => {
+            valid_identifier(source_artifact_id.as_str())
+                && valid_identifier(extraction_id)
+                && valid_identifier(section_id)
+                && valid_sha256(locator_sha256)
+        }
+        RuntimeEventKind::ContextDisposition {
+            context_manifest_id,
+            source_artifact_id,
+            disposition_sha256,
+        } => {
+            valid_identifier(context_manifest_id)
+                && valid_identifier(source_artifact_id.as_str())
+                && valid_sha256(disposition_sha256)
+        }
+        RuntimeEventKind::PreflightObserved {
+            attempt_id,
+            preflight_id,
+            observation_sha256,
+        } => {
+            valid_identifier(attempt_id)
+                && valid_identifier(preflight_id)
+                && valid_sha256(observation_sha256)
+        }
+        RuntimeEventKind::AttemptStarted {
+            attempt_id,
+            tool_call_id,
+            prepared_sha256,
+        } => {
+            valid_identifier(attempt_id)
+                && valid_identifier(tool_call_id.as_str())
+                && valid_sha256(prepared_sha256)
+        }
+        RuntimeEventKind::AttemptEnded {
+            attempt_id,
+            tool_call_id,
+            observation_id,
+            observation_sha256,
+        } => {
+            valid_identifier(attempt_id)
+                && valid_identifier(tool_call_id.as_str())
+                && valid_identifier(observation_id)
+                && valid_sha256(observation_sha256)
+        }
+        RuntimeEventKind::VerificationObserved {
+            attempt_id,
+            verification_id,
+            result_sha256,
+        } => {
+            valid_identifier(attempt_id)
+                && valid_identifier(verification_id)
+                && valid_sha256(result_sha256)
+        }
+        RuntimeEventKind::RetryDecided {
+            attempt_id,
+            decision_sha256,
+            ..
+        } => valid_identifier(attempt_id) && valid_sha256(decision_sha256),
+        RuntimeEventKind::RecoveryDecided {
+            recovery_id,
+            decision_sha256,
+        } => valid_identifier(recovery_id) && valid_sha256(decision_sha256),
+        RuntimeEventKind::TerminalDiagnostic {
+            diagnostic_id,
+            diagnostic_sha256,
+        } => valid_identifier(diagnostic_id) && valid_sha256(diagnostic_sha256),
         RuntimeEventKind::CheckpointCommitted {
             checkpoint_id,
             checkpoint_sha256,
@@ -1113,11 +1773,30 @@ fn valid_payload_placement(event: &RuntimeEvent) -> bool {
         (RuntimeEventKind::ArtifactCreated { artifact_id, .. }, Some(reference)) => {
             artifact_id == &reference.artifact_id
         }
-        (RuntimeEventKind::ArtifactCreated { .. }, None) => false,
+        (
+            RuntimeEventKind::SourceAdmitted {
+                source_artifact_id, ..
+            },
+            Some(reference),
+        ) => source_artifact_id == &reference.artifact_id,
+        (
+            RuntimeEventKind::ArtifactCreated { .. }
+            | RuntimeEventKind::SourceAdmitted { .. }
+            | RuntimeEventKind::ExtractionCompleted { .. }
+            | RuntimeEventKind::TerminalDiagnostic { .. },
+            None,
+        ) => false,
         (
             RuntimeEventKind::ModelCompleted { .. }
             | RuntimeEventKind::ToolCompleted { .. }
-            | RuntimeEventKind::ToolFailed { .. },
+            | RuntimeEventKind::ToolFailed { .. }
+            | RuntimeEventKind::ExtractionCompleted { .. }
+            | RuntimeEventKind::ContextDisposition { .. }
+            | RuntimeEventKind::PreflightObserved { .. }
+            | RuntimeEventKind::AttemptEnded { .. }
+            | RuntimeEventKind::VerificationObserved { .. }
+            | RuntimeEventKind::RecoveryDecided { .. }
+            | RuntimeEventKind::TerminalDiagnostic { .. },
             _,
         ) => true,
         (_, None) => true,
@@ -1186,6 +1865,21 @@ pub(crate) fn is_approved_runtime_metric_name(value: &str) -> bool {
     value == "runtime.queue.depth"
 }
 
+fn is_approved_extraction_block_reason(value: &str) -> bool {
+    matches!(
+        value,
+        "source.unsupported"
+            | "source.encrypted"
+            | "source.restricted"
+            | "source.malformed"
+            | "source.cancelled"
+            | "source.timed_out"
+            | "source.resource_exhausted"
+            | "source.unavailable"
+            | "source.stale"
+    )
+}
+
 fn valid_sha256(value: &str) -> bool {
     value.len() == 64
         && value
@@ -1208,8 +1902,10 @@ mod tests {
     use super::{
         MAX_RUNTIME_EVENT_BATCH_BYTES, MAX_RUNTIME_EVENT_BATCH_EVENTS, RuntimeEventBatchLimits,
         RuntimeEventDelivery, RuntimeEventError, RuntimeEventPublisher, RuntimeEventSequence,
-        RuntimeStatusSummary, ZERO_SHA256, replay_runtime_events, runtime_event_persistence,
-        seal_runtime_event, verify_runtime_event,
+        RuntimeStatusSummary, ZERO_SHA256, replay_runtime_events,
+        replay_runtime_workflow_projection, runtime_event_persistence, seal_runtime_event,
+        verify_runtime_event, verify_runtime_event_client_compatibility,
+        verify_runtime_workflow_projection,
     };
     use agentmage_kernel_contracts::{
         AgentStateKind, ApprovalId, CONTRACT_SCHEMA_VERSION, CancellationId, ContextSensitivity,
@@ -1243,18 +1939,7 @@ mod tests {
             turn_id: Option<&str>,
             operation_id: Option<&str>,
         ) -> RuntimeEvent {
-            let persistence = match kind {
-                RuntimeEventKind::TurnStarted
-                | RuntimeEventKind::TurnCompleted { .. }
-                | RuntimeEventKind::ModelRequested { .. }
-                | RuntimeEventKind::ModelCompleted { .. }
-                | RuntimeEventKind::ModelFailed { .. }
-                | RuntimeEventKind::ToolRequested { .. }
-                | RuntimeEventKind::FileObserved { .. }
-                | RuntimeEventKind::Progress { .. } => RuntimeEventPersistenceClass::Progress,
-                RuntimeEventKind::Metric { .. } => RuntimeEventPersistenceClass::Metric,
-                _ => RuntimeEventPersistenceClass::Correctness,
-            };
+            let persistence = runtime_event_persistence(&kind);
             let event_id = RuntimeEventId::from_raw(format!("event-{}", self.next_sequence));
             let payload_reference = match &kind {
                 RuntimeEventKind::ArtifactCreated { artifact_id, .. } => {
@@ -1265,6 +1950,24 @@ mod tests {
                         media_type: "application/json".to_owned(),
                     })
                 }
+                RuntimeEventKind::SourceAdmitted {
+                    source_artifact_id, ..
+                } => Some(RuntimePayloadReference {
+                    artifact_id: source_artifact_id.clone(),
+                    sha256: hash('d'),
+                    byte_size: 16,
+                    media_type: "application/octet-stream".to_owned(),
+                }),
+                RuntimeEventKind::ExtractionCompleted { .. }
+                | RuntimeEventKind::TerminalDiagnostic { .. } => Some(RuntimePayloadReference {
+                    artifact_id: RuntimeArtifactId::from_raw(format!(
+                        "event-payload-{}",
+                        self.next_sequence
+                    )),
+                    sha256: hash('d'),
+                    byte_size: 16,
+                    media_type: "application/json".to_owned(),
+                }),
                 _ => None,
             };
             let event = seal_runtime_event(RuntimeEvent {
@@ -1395,6 +2098,169 @@ mod tests {
                 RuntimeEventKind::RunTerminal {
                     state: AgentStateKind::Success,
                     outcome_sha256: hash('c'),
+                },
+                None,
+                None,
+            ),
+        ]
+    }
+
+    fn story_21_3_sequence() -> Vec<RuntimeEvent> {
+        let mut fixtures = FixtureStream::new();
+        let source = RuntimeArtifactId::from_raw("source-artifact-0001");
+        let tool_call = ToolCallId::from_raw("tool-call-21-3");
+        vec![
+            fixtures.event(
+                RuntimeEventKind::RunStarted {
+                    request_sha256: hash('1'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::SourceAdmitted {
+                    source_artifact_id: source.clone(),
+                    manifest_sha256: hash('2'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::ExtractionStarted {
+                    source_artifact_id: source.clone(),
+                    extraction_id: "extraction-0001".to_owned(),
+                    input_sha256: hash('3'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::ExtractionCompleted {
+                    source_artifact_id: source.clone(),
+                    extraction_id: "extraction-0001".to_owned(),
+                    result_sha256: hash('4'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::SectionIndexed {
+                    source_artifact_id: source.clone(),
+                    extraction_id: "extraction-0001".to_owned(),
+                    section_id: "section-0001".to_owned(),
+                    locator_sha256: hash('5'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::ContextDisposition {
+                    context_manifest_id: "context-manifest-0001".to_owned(),
+                    source_artifact_id: source,
+                    disposition_sha256: hash('6'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(RuntimeEventKind::TurnStarted, Some("turn-21-3"), None),
+            fixtures.event(
+                RuntimeEventKind::ToolRequested {
+                    tool_call_id: tool_call.clone(),
+                    arguments_sha256: hash('7'),
+                },
+                Some("turn-21-3"),
+                Some("operation-21-3"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::PreflightObserved {
+                    attempt_id: "attempt-21-3".to_owned(),
+                    preflight_id: "preflight-workspace".to_owned(),
+                    observation_sha256: hash('8'),
+                },
+                Some("turn-21-3"),
+                Some("operation-21-3"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::AttemptStarted {
+                    attempt_id: "attempt-21-3".to_owned(),
+                    tool_call_id: tool_call.clone(),
+                    prepared_sha256: hash('9'),
+                },
+                Some("turn-21-3"),
+                Some("operation-21-3"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::ToolStarted {
+                    tool_call_id: tool_call.clone(),
+                    authority_sha256: hash('a'),
+                },
+                Some("turn-21-3"),
+                Some("operation-21-3"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::ToolCompleted {
+                    tool_call_id: tool_call.clone(),
+                    receipt_id: ReceiptId::from_raw("receipt-21-3"),
+                    result_sha256: hash('b'),
+                },
+                Some("turn-21-3"),
+                Some("operation-21-3"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::AttemptEnded {
+                    attempt_id: "attempt-21-3".to_owned(),
+                    tool_call_id: tool_call,
+                    observation_id: "observation-21-3".to_owned(),
+                    observation_sha256: hash('c'),
+                },
+                Some("turn-21-3"),
+                Some("operation-21-3"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::VerificationObserved {
+                    attempt_id: "attempt-21-3".to_owned(),
+                    verification_id: "verification-21-3".to_owned(),
+                    result_sha256: hash('d'),
+                },
+                Some("turn-21-3"),
+                Some("operation-21-3"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::RetryDecided {
+                    attempt_id: "attempt-21-3".to_owned(),
+                    eligible: false,
+                    decision_sha256: hash('e'),
+                },
+                Some("turn-21-3"),
+                Some("operation-21-3"),
+            ),
+            fixtures.event(
+                RuntimeEventKind::TurnCompleted {
+                    outcome_sha256: hash('f'),
+                },
+                Some("turn-21-3"),
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::RecoveryDecided {
+                    recovery_id: "recovery-21-3".to_owned(),
+                    decision_sha256: hash('1'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::TerminalDiagnostic {
+                    diagnostic_id: "diagnostic-21-3".to_owned(),
+                    diagnostic_sha256: hash('2'),
+                },
+                None,
+                None,
+            ),
+            fixtures.event(
+                RuntimeEventKind::RunTerminal {
+                    state: AgentStateKind::Failed,
+                    outcome_sha256: hash('3'),
                 },
                 None,
                 None,
@@ -1656,6 +2522,19 @@ mod tests {
             RuntimeEventKind::FileObserved { .. } => "file_observed",
             RuntimeEventKind::FileModified { .. } => "file_modified",
             RuntimeEventKind::ArtifactCreated { .. } => "artifact_created",
+            RuntimeEventKind::SourceAdmitted { .. } => "source_admitted",
+            RuntimeEventKind::ExtractionStarted { .. } => "extraction_started",
+            RuntimeEventKind::ExtractionCompleted { .. } => "extraction_completed",
+            RuntimeEventKind::ExtractionBlocked { .. } => "extraction_blocked",
+            RuntimeEventKind::SectionIndexed { .. } => "section_indexed",
+            RuntimeEventKind::ContextDisposition { .. } => "context_disposition",
+            RuntimeEventKind::PreflightObserved { .. } => "preflight_observed",
+            RuntimeEventKind::AttemptStarted { .. } => "attempt_started",
+            RuntimeEventKind::AttemptEnded { .. } => "attempt_ended",
+            RuntimeEventKind::VerificationObserved { .. } => "verification_observed",
+            RuntimeEventKind::RetryDecided { .. } => "retry_decided",
+            RuntimeEventKind::RecoveryDecided { .. } => "recovery_decided",
+            RuntimeEventKind::TerminalDiagnostic { .. } => "terminal_diagnostic",
             RuntimeEventKind::CheckpointCommitted { .. } => "checkpoint_committed",
             RuntimeEventKind::CancellationRequested { .. } => "cancellation_requested",
             RuntimeEventKind::CancellationObserved { .. } => "cancellation_observed",
@@ -2552,5 +3431,271 @@ mod tests {
             .expect("stashed event leads the next batch");
         assert_eq!(remaining.events, events[1..]);
         assert!(remaining.terminal);
+    }
+
+    #[test]
+    fn story_21_3_complete_artifact_workflow_replays_to_one_exact_projection() {
+        let events = story_21_3_sequence();
+        let projection =
+            replay_runtime_workflow_projection(&events).expect("complete workflow replays");
+        assert_eq!(projection.event_count, events.len() as u64);
+        assert_eq!(projection.sources.len(), 1);
+        assert_eq!(projection.sources[0].section_ids, ["section-0001"]);
+        assert_eq!(projection.attempts.len(), 1);
+        assert_eq!(
+            projection.attempts[0].preflight_ids,
+            ["preflight-workspace"]
+        );
+        assert_eq!(
+            projection.attempts[0].observation_id.as_deref(),
+            Some("observation-21-3")
+        );
+        assert_eq!(
+            projection.attempts[0].verification_id.as_deref(),
+            Some("verification-21-3")
+        );
+        assert_eq!(projection.attempts[0].retry_eligible, Some(false));
+        assert_eq!(projection.recovery_ids, ["recovery-21-3"]);
+        assert_eq!(
+            projection.terminal_diagnostic_id.as_deref(),
+            Some("diagnostic-21-3")
+        );
+        assert_eq!(
+            projection.last_event_sha256,
+            events.last().expect("terminal event").event_sha256
+        );
+        assert_eq!(
+            replay_runtime_workflow_projection(&events).expect("deterministic replay"),
+            projection
+        );
+        verify_runtime_workflow_projection(&events, &projection).expect("projection reconciles");
+    }
+
+    #[test]
+    fn story_21_3_missing_duplicate_reordered_cross_bound_and_tampered_events_fail_closed() {
+        let events = story_21_3_sequence();
+        let mut cases = Vec::new();
+        let mut missing = events.clone();
+        missing.remove(3);
+        cases.push(missing);
+        let mut duplicate = events.clone();
+        duplicate.insert(9, duplicate[8].clone());
+        cases.push(duplicate);
+        let mut reordered = events.clone();
+        reordered.swap(8, 9);
+        cases.push(reordered);
+        let mut tampered = events;
+        tampered[12].event_sha256 = hash('f');
+        cases.push(tampered);
+        assert!(cases.into_iter().all(|case| {
+            replay_runtime_workflow_projection(&case) == Err(RuntimeEventError::OrderingMismatch)
+                || replay_runtime_workflow_projection(&case)
+                    == Err(RuntimeEventError::DigestMismatch)
+                || replay_runtime_workflow_projection(&case)
+                    == Err(RuntimeEventError::IllegalTransition)
+        }));
+
+        let mut fixture = FixtureStream::new();
+        let admitted = fixture.event(
+            RuntimeEventKind::RunStarted {
+                request_sha256: hash('1'),
+            },
+            None,
+            None,
+        );
+        let cross_source = fixture.event(
+            RuntimeEventKind::ExtractionStarted {
+                source_artifact_id: RuntimeArtifactId::from_raw("source-never-admitted"),
+                extraction_id: "extraction-cross".to_owned(),
+                input_sha256: hash('2'),
+            },
+            None,
+            None,
+        );
+        let mut sequence = RuntimeEventSequence::new();
+        sequence.push(&admitted).expect("run begins");
+        assert_eq!(
+            sequence.push(&cross_source),
+            Err(RuntimeEventError::IllegalTransition)
+        );
+    }
+
+    #[test]
+    fn story_21_3_blocked_extraction_is_terminal_for_indexing_and_remains_visible() {
+        let mut fixture = FixtureStream::new();
+        let source = RuntimeArtifactId::from_raw("source-blocked");
+        let events = [
+            fixture.event(
+                RuntimeEventKind::RunStarted {
+                    request_sha256: hash('1'),
+                },
+                None,
+                None,
+            ),
+            fixture.event(
+                RuntimeEventKind::SourceAdmitted {
+                    source_artifact_id: source.clone(),
+                    manifest_sha256: hash('2'),
+                },
+                None,
+                None,
+            ),
+            fixture.event(
+                RuntimeEventKind::ExtractionStarted {
+                    source_artifact_id: source.clone(),
+                    extraction_id: "extraction-blocked".to_owned(),
+                    input_sha256: hash('3'),
+                },
+                None,
+                None,
+            ),
+            fixture.event(
+                RuntimeEventKind::ExtractionBlocked {
+                    source_artifact_id: source.clone(),
+                    extraction_id: "extraction-blocked".to_owned(),
+                    reason_code: "source.encrypted".to_owned(),
+                },
+                None,
+                None,
+            ),
+        ];
+        let projection = replay_runtime_workflow_projection(&events).expect("blocked is truthful");
+        assert_eq!(
+            projection.sources[0].extraction,
+            super::RuntimeExtractionProjection::Blocked
+        );
+        let indexed = fixture.event(
+            RuntimeEventKind::SectionIndexed {
+                source_artifact_id: source,
+                extraction_id: "extraction-blocked".to_owned(),
+                section_id: "forged-section".to_owned(),
+                locator_sha256: hash('4'),
+            },
+            None,
+            None,
+        );
+        let mut sequence = RuntimeEventSequence::new();
+        for event in &events {
+            sequence.push(event).expect("blocked prefix");
+        }
+        assert_eq!(
+            sequence.push(&indexed),
+            Err(RuntimeEventError::IllegalTransition)
+        );
+    }
+
+    #[test]
+    fn story_21_3_large_and_sensitive_payloads_remain_reference_only() {
+        let events = story_21_3_sequence();
+        for event in &events {
+            let bytes = serde_json::to_vec(event).expect("event serializes");
+            assert!(bytes.len() < 4_096);
+            assert!(
+                !bytes
+                    .windows(b"secret-canary".len())
+                    .any(|window| window == b"secret-canary")
+            );
+        }
+        let mut missing = events
+            .iter()
+            .find(|event| matches!(event.kind, RuntimeEventKind::ExtractionCompleted { .. }))
+            .expect("extraction completion")
+            .clone();
+        missing.payload_reference = None;
+        assert_eq!(
+            seal_runtime_event(missing),
+            Err(RuntimeEventError::InvalidValue)
+        );
+        let mut secret = events
+            .iter()
+            .find(|event| matches!(event.kind, RuntimeEventKind::ExtractionStarted { .. }))
+            .expect("extraction start")
+            .clone();
+        secret.kind = RuntimeEventKind::ExtractionBlocked {
+            source_artifact_id: RuntimeArtifactId::from_raw("source-artifact-0001"),
+            extraction_id: "extraction-0001".to_owned(),
+            reason_code: "secret-canary".to_owned(),
+        };
+        assert_eq!(
+            seal_runtime_event(secret),
+            Err(RuntimeEventError::InvalidValue)
+        );
+    }
+
+    #[test]
+    fn story_21_3_legacy_clients_get_explicit_unsupported_kind_without_breaking_old_journals() {
+        let old_events = valid_sequence();
+        assert!(
+            old_events
+                .iter()
+                .all(|event| { verify_runtime_event_client_compatibility(event, false).is_ok() })
+        );
+        let new_event = &story_21_3_sequence()[1];
+        assert_eq!(
+            verify_runtime_event_client_compatibility(new_event, false),
+            Err(RuntimeEventError::UnsupportedEventKind)
+        );
+        assert_eq!(
+            verify_runtime_event_client_compatibility(new_event, true),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn story_21_3_materialized_projection_drift_never_overrides_canonical_replay() {
+        let events = story_21_3_sequence();
+        let original = replay_runtime_workflow_projection(&events).expect("projection");
+        for mutation in 0..5 {
+            let mut changed = original.clone();
+            match mutation {
+                0 => changed.sources[0].section_ids.clear(),
+                1 => changed.attempts[0].observation_id = None,
+                2 => changed.recovery_ids.push("forged-recovery".to_owned()),
+                3 => changed.terminal_diagnostic_id = None,
+                _ => changed.projection_sha256 = hash('f'),
+            }
+            assert_eq!(
+                verify_runtime_workflow_projection(&events, &changed),
+                Err(RuntimeEventError::DigestMismatch)
+            );
+        }
+    }
+
+    #[test]
+    fn story_21_3_rejected_duplicate_identity_events_do_not_mutate_replay_state() {
+        let mut fixture = FixtureStream::new();
+        let source = RuntimeArtifactId::from_raw("source-duplicate");
+        let start = fixture.event(
+            RuntimeEventKind::RunStarted {
+                request_sha256: hash('1'),
+            },
+            None,
+            None,
+        );
+        let admitted = fixture.event(
+            RuntimeEventKind::SourceAdmitted {
+                source_artifact_id: source.clone(),
+                manifest_sha256: hash('2'),
+            },
+            None,
+            None,
+        );
+        let duplicate = fixture.event(
+            RuntimeEventKind::SourceAdmitted {
+                source_artifact_id: source,
+                manifest_sha256: hash('3'),
+            },
+            None,
+            None,
+        );
+        let mut sequence = RuntimeEventSequence::new();
+        sequence.push(&start).expect("start");
+        sequence.push(&admitted).expect("source");
+        let before = sequence.clone();
+        assert_eq!(
+            sequence.push(&duplicate),
+            Err(RuntimeEventError::IllegalTransition)
+        );
+        assert_eq!(sequence, before);
     }
 }

@@ -186,6 +186,121 @@ pub enum RuntimeEventKind {
         /// Digest of the immutable artifact manifest.
         manifest_sha256: String,
     },
+    /// A supplied source artifact crossed admission with an immutable manifest.
+    SourceAdmitted {
+        /// Exact admitted source artifact identity.
+        source_artifact_id: RuntimeArtifactId,
+        /// Digest of the immutable source manifest.
+        manifest_sha256: String,
+    },
+    /// One deterministic extraction attempt began for an admitted source.
+    ExtractionStarted {
+        /// Exact admitted source artifact identity.
+        source_artifact_id: RuntimeArtifactId,
+        /// Exact extraction identity.
+        extraction_id: String,
+        /// Digest of the extractor, source revision, and limits.
+        input_sha256: String,
+    },
+    /// One extraction completed with a referenced result.
+    ExtractionCompleted {
+        /// Exact admitted source artifact identity.
+        source_artifact_id: RuntimeArtifactId,
+        /// Exact extraction identity.
+        extraction_id: String,
+        /// Digest of the complete extraction result manifest.
+        result_sha256: String,
+    },
+    /// One extraction stopped with a stable content-free reason.
+    ExtractionBlocked {
+        /// Exact admitted source artifact identity.
+        source_artifact_id: RuntimeArtifactId,
+        /// Exact extraction identity.
+        extraction_id: String,
+        /// Stable content-free blocked reason.
+        reason_code: String,
+    },
+    /// One exact extracted section became index-addressable.
+    SectionIndexed {
+        /// Exact admitted source artifact identity.
+        source_artifact_id: RuntimeArtifactId,
+        /// Exact successful extraction identity.
+        extraction_id: String,
+        /// Stable section identity.
+        section_id: String,
+        /// Digest of the exact source locator and index record.
+        locator_sha256: String,
+    },
+    /// One source/context inclusion decision became current.
+    ContextDisposition {
+        /// Exact context-manifest identity.
+        context_manifest_id: String,
+        /// Exact source artifact governed by the decision.
+        source_artifact_id: RuntimeArtifactId,
+        /// Digest of the complete disposition and accounting record.
+        disposition_sha256: String,
+    },
+    /// One exact current preflight observation was admitted for an attempt.
+    PreflightObserved {
+        /// Exact attempt identity.
+        attempt_id: String,
+        /// Exact registered preflight identity.
+        preflight_id: String,
+        /// Digest of the bounded preflight observation.
+        observation_sha256: String,
+    },
+    /// One admitted tool attempt crossed its unique start commitment.
+    AttemptStarted {
+        /// Exact attempt identity.
+        attempt_id: String,
+        /// Exact tool-call identity.
+        tool_call_id: ToolCallId,
+        /// Digest of the complete prepared attempt.
+        prepared_sha256: String,
+    },
+    /// One admitted attempt acquired a reconciled terminal observation.
+    AttemptEnded {
+        /// Exact attempt identity.
+        attempt_id: String,
+        /// Exact tool-call identity.
+        tool_call_id: ToolCallId,
+        /// Exact closed observation identity.
+        observation_id: String,
+        /// Digest of the closed terminal observation.
+        observation_sha256: String,
+    },
+    /// One deterministic verifier result was observed for an ended attempt.
+    VerificationObserved {
+        /// Exact attempt identity.
+        attempt_id: String,
+        /// Exact verification-result identity.
+        verification_id: String,
+        /// Digest of the complete verification result.
+        result_sha256: String,
+    },
+    /// One retry eligibility decision was recorded for an ended attempt.
+    RetryDecided {
+        /// Exact attempt identity.
+        attempt_id: String,
+        /// Whether a fresh successor attempt is eligible.
+        eligible: bool,
+        /// Digest of the complete retry decision.
+        decision_sha256: String,
+    },
+    /// One deterministic recovery decision was recorded.
+    RecoveryDecided {
+        /// Exact recovery decision identity.
+        recovery_id: String,
+        /// Digest of the complete recovery decision.
+        decision_sha256: String,
+    },
+    /// One terminal non-success diagnosis became available by verified reference.
+    TerminalDiagnostic {
+        /// Exact terminal diagnosis identity.
+        diagnostic_id: String,
+        /// Digest of the complete diagnostic record.
+        diagnostic_sha256: String,
+    },
     /// One safe-boundary checkpoint was committed.
     CheckpointCommitted {
         /// Exact checkpoint identity.

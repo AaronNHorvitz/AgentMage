@@ -113,7 +113,8 @@ impl From<RuntimeEventError> for RuntimeJournalError {
             | RuntimeEventError::PublisherUnavailable
             | RuntimeEventError::SubscriberDisconnected
             | RuntimeEventError::BatchLimit
-            | RuntimeEventError::ReplayCursorMismatch => Self::InvalidEvent,
+            | RuntimeEventError::ReplayCursorMismatch
+            | RuntimeEventError::UnsupportedEventKind => Self::InvalidEvent,
         }
     }
 }
@@ -1329,10 +1330,11 @@ mod tests {
 
     use agentmage_kernel_contracts::{
         AgentStateKind, CONTRACT_SCHEMA_VERSION, ContextSensitivity, CorrelationId, PolicyId,
-        RuntimeEvent, RuntimeEventId, RuntimeEventKind, RuntimeEventPersistenceClass,
-        RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeRunId, RuntimeTurnId,
+        ReceiptId, RuntimeArtifactId, RuntimeEvent, RuntimeEventId, RuntimeEventKind,
+        RuntimeEventPersistenceClass, RuntimeEventRetention, RuntimeEventRetentionKind,
+        RuntimeOperationId, RuntimePayloadReference, RuntimeRunId, RuntimeTurnId,
         SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
-        TaskId, to_canonical_json,
+        TaskId, ToolCallId, to_canonical_json,
     };
 
     use super::{
@@ -1436,7 +1438,37 @@ mod tests {
         }
 
         fn event(&mut self, kind: RuntimeEventKind, turn_id: Option<&str>) -> RuntimeEvent {
+            self.event_scoped(kind, turn_id, None)
+        }
+
+        fn event_scoped(
+            &mut self,
+            kind: RuntimeEventKind,
+            turn_id: Option<&str>,
+            operation_id: Option<&str>,
+        ) -> RuntimeEvent {
             let event_id = RuntimeEventId::from_raw(format!("journal-event-{}", self.sequence));
+            let payload_reference = match &kind {
+                RuntimeEventKind::SourceAdmitted {
+                    source_artifact_id, ..
+                } => Some(RuntimePayloadReference {
+                    artifact_id: source_artifact_id.clone(),
+                    sha256: "9".repeat(64),
+                    byte_size: 32,
+                    media_type: "application/octet-stream".to_owned(),
+                }),
+                RuntimeEventKind::ExtractionCompleted { .. }
+                | RuntimeEventKind::TerminalDiagnostic { .. } => Some(RuntimePayloadReference {
+                    artifact_id: RuntimeArtifactId::from_raw(format!(
+                        "journal-payload-{}",
+                        self.sequence
+                    )),
+                    sha256: "8".repeat(64),
+                    byte_size: 32,
+                    media_type: "application/json".to_owned(),
+                }),
+                _ => None,
+            };
             let event = seal_runtime_event(RuntimeEvent {
                 schema_version: CONTRACT_SCHEMA_VERSION,
                 event_id: event_id.clone(),
@@ -1444,7 +1476,7 @@ mod tests {
                 session_id: SessionId::from_raw("journal-session-1"),
                 task_id: TaskId::from_raw("journal-task-1"),
                 turn_id: turn_id.map(RuntimeTurnId::from_raw),
-                operation_id: None,
+                operation_id: operation_id.map(RuntimeOperationId::from_raw),
                 correlation_id: CorrelationId::from_raw("journal-correlation-1"),
                 causation_event_id: self.causation.clone(),
                 sequence: self.sequence,
@@ -1456,7 +1488,7 @@ mod tests {
                 },
                 persistence: runtime_event_persistence(&kind),
                 policy_id: PolicyId::from_raw("journal-policy-1"),
-                payload_reference: None,
+                payload_reference,
                 kind,
                 previous_event_sha256: self.previous_sha256.clone(),
                 event_sha256: ZERO_SHA256.to_owned(),
@@ -1494,6 +1526,248 @@ mod tests {
                     RuntimeEventKind::RunTerminal {
                         state: AgentStateKind::Success,
                         outcome_sha256: "c".repeat(64),
+                    },
+                    None,
+                ),
+            ]
+        }
+
+        fn story_21_3_source_run(&mut self) -> Vec<RuntimeEvent> {
+            let source = RuntimeArtifactId::from_raw("journal-source-21-3");
+            vec![
+                self.event(
+                    RuntimeEventKind::RunStarted {
+                        request_sha256: "1".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::SourceAdmitted {
+                        source_artifact_id: source.clone(),
+                        manifest_sha256: "2".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::ExtractionStarted {
+                        source_artifact_id: source.clone(),
+                        extraction_id: "journal-extraction-21-3".to_owned(),
+                        input_sha256: "3".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::ExtractionCompleted {
+                        source_artifact_id: source.clone(),
+                        extraction_id: "journal-extraction-21-3".to_owned(),
+                        result_sha256: "4".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::SectionIndexed {
+                        source_artifact_id: source.clone(),
+                        extraction_id: "journal-extraction-21-3".to_owned(),
+                        section_id: "journal-section-21-3".to_owned(),
+                        locator_sha256: "5".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::ContextDisposition {
+                        context_manifest_id: "journal-context-21-3".to_owned(),
+                        source_artifact_id: source,
+                        disposition_sha256: "6".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::TerminalDiagnostic {
+                        diagnostic_id: "journal-diagnostic-21-3".to_owned(),
+                        diagnostic_sha256: "7".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::RunTerminal {
+                        state: AgentStateKind::Failed,
+                        outcome_sha256: "8".repeat(64),
+                    },
+                    None,
+                ),
+            ]
+        }
+
+        fn story_21_3_full_run(&mut self) -> Vec<RuntimeEvent> {
+            let source = RuntimeArtifactId::from_raw("journal-source-full-21-3");
+            let blocked_source = RuntimeArtifactId::from_raw("journal-source-blocked-21-3");
+            let call = ToolCallId::from_raw("journal-call-21-3");
+            vec![
+                self.event(
+                    RuntimeEventKind::RunStarted {
+                        request_sha256: "1".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::SourceAdmitted {
+                        source_artifact_id: source.clone(),
+                        manifest_sha256: "2".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::ExtractionStarted {
+                        source_artifact_id: source.clone(),
+                        extraction_id: "journal-extraction-full-21-3".to_owned(),
+                        input_sha256: "3".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::ExtractionCompleted {
+                        source_artifact_id: source.clone(),
+                        extraction_id: "journal-extraction-full-21-3".to_owned(),
+                        result_sha256: "4".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::SectionIndexed {
+                        source_artifact_id: source.clone(),
+                        extraction_id: "journal-extraction-full-21-3".to_owned(),
+                        section_id: "journal-section-full-21-3".to_owned(),
+                        locator_sha256: "5".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::ContextDisposition {
+                        context_manifest_id: "journal-context-full-21-3".to_owned(),
+                        source_artifact_id: source,
+                        disposition_sha256: "6".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::SourceAdmitted {
+                        source_artifact_id: blocked_source.clone(),
+                        manifest_sha256: "6".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::ExtractionStarted {
+                        source_artifact_id: blocked_source.clone(),
+                        extraction_id: "journal-extraction-blocked-21-3".to_owned(),
+                        input_sha256: "6".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::ExtractionBlocked {
+                        source_artifact_id: blocked_source,
+                        extraction_id: "journal-extraction-blocked-21-3".to_owned(),
+                        reason_code: "source.encrypted".to_owned(),
+                    },
+                    None,
+                ),
+                self.event(RuntimeEventKind::TurnStarted, Some("journal-turn-21-3")),
+                self.event_scoped(
+                    RuntimeEventKind::ToolRequested {
+                        tool_call_id: call.clone(),
+                        arguments_sha256: "7".repeat(64),
+                    },
+                    Some("journal-turn-21-3"),
+                    Some("journal-operation-21-3"),
+                ),
+                self.event_scoped(
+                    RuntimeEventKind::PreflightObserved {
+                        attempt_id: "journal-attempt-21-3".to_owned(),
+                        preflight_id: "journal-preflight-21-3".to_owned(),
+                        observation_sha256: "8".repeat(64),
+                    },
+                    Some("journal-turn-21-3"),
+                    Some("journal-operation-21-3"),
+                ),
+                self.event_scoped(
+                    RuntimeEventKind::AttemptStarted {
+                        attempt_id: "journal-attempt-21-3".to_owned(),
+                        tool_call_id: call.clone(),
+                        prepared_sha256: "9".repeat(64),
+                    },
+                    Some("journal-turn-21-3"),
+                    Some("journal-operation-21-3"),
+                ),
+                self.event_scoped(
+                    RuntimeEventKind::ToolStarted {
+                        tool_call_id: call.clone(),
+                        authority_sha256: "a".repeat(64),
+                    },
+                    Some("journal-turn-21-3"),
+                    Some("journal-operation-21-3"),
+                ),
+                self.event_scoped(
+                    RuntimeEventKind::ToolCompleted {
+                        tool_call_id: call.clone(),
+                        receipt_id: ReceiptId::from_raw("journal-receipt-21-3"),
+                        result_sha256: "b".repeat(64),
+                    },
+                    Some("journal-turn-21-3"),
+                    Some("journal-operation-21-3"),
+                ),
+                self.event_scoped(
+                    RuntimeEventKind::AttemptEnded {
+                        attempt_id: "journal-attempt-21-3".to_owned(),
+                        tool_call_id: call,
+                        observation_id: "journal-observation-21-3".to_owned(),
+                        observation_sha256: "c".repeat(64),
+                    },
+                    Some("journal-turn-21-3"),
+                    Some("journal-operation-21-3"),
+                ),
+                self.event_scoped(
+                    RuntimeEventKind::VerificationObserved {
+                        attempt_id: "journal-attempt-21-3".to_owned(),
+                        verification_id: "journal-verification-21-3".to_owned(),
+                        result_sha256: "d".repeat(64),
+                    },
+                    Some("journal-turn-21-3"),
+                    Some("journal-operation-21-3"),
+                ),
+                self.event_scoped(
+                    RuntimeEventKind::RetryDecided {
+                        attempt_id: "journal-attempt-21-3".to_owned(),
+                        eligible: false,
+                        decision_sha256: "e".repeat(64),
+                    },
+                    Some("journal-turn-21-3"),
+                    Some("journal-operation-21-3"),
+                ),
+                self.event(
+                    RuntimeEventKind::TurnCompleted {
+                        outcome_sha256: "f".repeat(64),
+                    },
+                    Some("journal-turn-21-3"),
+                ),
+                self.event(
+                    RuntimeEventKind::RecoveryDecided {
+                        recovery_id: "journal-recovery-21-3".to_owned(),
+                        decision_sha256: "1".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::TerminalDiagnostic {
+                        diagnostic_id: "journal-diagnostic-full-21-3".to_owned(),
+                        diagnostic_sha256: "2".repeat(64),
+                    },
+                    None,
+                ),
+                self.event(
+                    RuntimeEventKind::RunTerminal {
+                        state: AgentStateKind::Failed,
+                        outcome_sha256: "3".repeat(64),
                     },
                     None,
                 ),
@@ -1542,6 +1816,74 @@ mod tests {
 
     fn journal_crash_stop() -> ! {
         std::process::exit(JOURNAL_CRASH_CHILD_EXIT)
+    }
+
+    fn story_21_3_event_indexes(events: &[RuntimeEvent]) -> Vec<usize> {
+        events
+            .iter()
+            .enumerate()
+            .filter_map(|(index, event)| {
+                matches!(
+                    event.kind,
+                    RuntimeEventKind::SourceAdmitted { .. }
+                        | RuntimeEventKind::ExtractionStarted { .. }
+                        | RuntimeEventKind::ExtractionCompleted { .. }
+                        | RuntimeEventKind::ExtractionBlocked { .. }
+                        | RuntimeEventKind::SectionIndexed { .. }
+                        | RuntimeEventKind::ContextDisposition { .. }
+                        | RuntimeEventKind::PreflightObserved { .. }
+                        | RuntimeEventKind::AttemptStarted { .. }
+                        | RuntimeEventKind::AttemptEnded { .. }
+                        | RuntimeEventKind::VerificationObserved { .. }
+                        | RuntimeEventKind::RetryDecided { .. }
+                        | RuntimeEventKind::RecoveryDecided { .. }
+                        | RuntimeEventKind::TerminalDiagnostic { .. }
+                )
+                .then_some(index)
+            })
+            .collect()
+    }
+
+    fn prepare_story_21_3_crash_fixture(directory: &Path, target_index: usize) {
+        let events = EventFixture::new().story_21_3_full_run();
+        let mut store = OperationalStore::open(
+            &directory.join("authority.db"),
+            &observation(),
+            &mut TestKey,
+        )
+        .expect("Story 21.3 crash store");
+        let mut writer = RuntimeJournalWriter::default();
+        for event in &events[..target_index] {
+            writer
+                .append(&mut store, event.clone())
+                .expect("durable crash prefix");
+        }
+        writer.flush_all(&mut store).expect("flush crash prefix");
+    }
+
+    fn run_story_21_3_crash_child(
+        directory: &Path,
+        target_index: usize,
+        position: JournalCrashPosition,
+    ) -> ! {
+        if position == JournalCrashPosition::Before {
+            journal_crash_stop();
+        }
+        let events = EventFixture::new().story_21_3_full_run();
+        let mut store = OperationalStore::open(
+            &directory.join("authority.db"),
+            &observation(),
+            &mut TestKey,
+        )
+        .expect("Story 21.3 child store");
+        let mut writer = RuntimeJournalWriter::default();
+        assert!(
+            writer
+                .append(&mut store, events[target_index].clone())
+                .expect("target correctness transaction")
+                .durable
+        );
+        journal_crash_stop()
     }
 
     fn prepare_journal_crash_fixture(directory: &Path, boundary: JournalCrashBoundary) {
@@ -2044,6 +2386,39 @@ mod tests {
     }
 
     #[test]
+    fn story_21_3_new_correctness_events_commit_reopen_and_replay_exactly() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let mut store =
+            OperationalStore::open(&path, &observation(), &mut TestKey).expect("encrypted store");
+        let events = EventFixture::new().story_21_3_source_run();
+        let mut writer = RuntimeJournalWriter::default();
+        for event in &events {
+            let append = writer
+                .append(&mut store, event.clone())
+                .expect("new correctness event commits");
+            assert!(append.durable);
+            assert_eq!(append.queued_events, 0);
+        }
+        assert_eq!(load_run_events(&store, &events[0].run_id).unwrap(), events);
+        drop(store);
+
+        let reopened =
+            OperationalStore::open(&path, &observation(), &mut TestKey).expect("verified reopen");
+        let replayed = load_run_events(&reopened, &events[0].run_id).expect("exact replay");
+        assert_eq!(replayed, events);
+        assert_eq!(
+            current_cursor(&reopened, &events[0].run_id)
+                .expect("cursor verifies")
+                .expect("cursor exists")
+                .event_sha256,
+            events.last().expect("terminal").event_sha256
+        );
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
     fn queue_pressure_flushes_in_declared_batches_without_growth() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
@@ -2222,6 +2597,25 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "subprocess stop target; invoked only by the Story 21.3 crash matrix"]
+    fn story_21_3_correctness_event_crash_child() {
+        if env::var_os("AGENTMAGE_STORY_21_3_CRASH_CHILD").is_none() {
+            return;
+        }
+        let directory = PathBuf::from(
+            env::var_os("AGENTMAGE_STORY_21_3_CRASH_DIRECTORY").expect("child directory"),
+        );
+        let target_index = env::var("AGENTMAGE_STORY_21_3_EVENT_INDEX")
+            .expect("target index")
+            .parse::<usize>()
+            .expect("numeric target index");
+        let position = JournalCrashPosition::from_code(
+            &env::var("AGENTMAGE_STORY_21_3_CRASH_POSITION").expect("child position"),
+        );
+        run_story_21_3_crash_child(&directory, target_index, position);
+    }
+
+    #[test]
     fn story_21_2_process_stop_matrix_preserves_one_truthful_replay() {
         let mut covered = 0_usize;
         let mut matrix = Vec::new();
@@ -2353,6 +2747,77 @@ mod tests {
                 "manual_fuzzing_executed": false,
             })
         );
+    }
+
+    #[test]
+    fn story_21_3_every_new_correctness_event_survives_before_and_after_process_stop() {
+        let events = EventFixture::new().story_21_3_full_run();
+        let target_indexes = story_21_3_event_indexes(&events);
+        assert_eq!(target_indexes.len(), 15);
+        let mut cases = 0_usize;
+        for target_index in target_indexes {
+            for position in JournalCrashPosition::ALL {
+                let directory = temporary_directory();
+                prepare_story_21_3_crash_fixture(&directory, target_index);
+                let output = Command::new(env::current_exe().expect("current test executable"))
+                    .args([
+                        "--exact",
+                        "runtime_journal::tests::story_21_3_correctness_event_crash_child",
+                        "--ignored",
+                        "--nocapture",
+                    ])
+                    .env("AGENTMAGE_STORY_21_3_CRASH_CHILD", "1")
+                    .env("AGENTMAGE_STORY_21_3_CRASH_DIRECTORY", &directory)
+                    .env("AGENTMAGE_STORY_21_3_EVENT_INDEX", target_index.to_string())
+                    .env("AGENTMAGE_STORY_21_3_CRASH_POSITION", position.code())
+                    .output()
+                    .expect("Story 21.3 crash child launches");
+                assert_eq!(
+                    output.status.code(),
+                    Some(JOURNAL_CRASH_CHILD_EXIT),
+                    "index {target_index} {position:?}: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+
+                let mut store = OperationalStore::open(
+                    &directory.join("authority.db"),
+                    &observation(),
+                    &mut TestKey,
+                )
+                .expect("Story 21.3 recovery store");
+                let retained =
+                    load_run_events(&store, &events[0].run_id).expect("verified retained prefix");
+                let expected_count =
+                    target_index + usize::from(position == JournalCrashPosition::After);
+                assert_eq!(retained, events[..expected_count]);
+                let mut writer = RuntimeJournalWriter::default();
+                for event in &events[expected_count..] {
+                    writer
+                        .append(&mut store, event.clone())
+                        .expect("continue exact missing suffix");
+                }
+                writer.flush_all(&mut store).expect("flush exact suffix");
+                assert_eq!(
+                    load_run_events(&store, &events[0].run_id).expect("complete replay"),
+                    events
+                );
+                drop(store);
+                let reopened = OperationalStore::open(
+                    &directory.join("authority.db"),
+                    &observation(),
+                    &mut TestKey,
+                )
+                .expect("second verified reopen");
+                assert_eq!(
+                    load_run_events(&reopened, &events[0].run_id).expect("second replay"),
+                    events
+                );
+                drop(reopened);
+                fs::remove_dir_all(directory).expect("Story 21.3 crash cleanup");
+                cases += 1;
+            }
+        }
+        assert_eq!(cases, 30);
     }
 
     #[test]
