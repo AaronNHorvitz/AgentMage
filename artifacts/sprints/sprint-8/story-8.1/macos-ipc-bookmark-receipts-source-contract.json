@@ -1,0 +1,62 @@
+{
+  "claims": {
+    "macos_support": false,
+    "native_receipts_exist": false,
+    "release_candidate_exists": false,
+    "task_complete": false
+  },
+  "contract": {
+    "bookmark_required_disposition_count": 17,
+    "credential_authority": false,
+    "ipc_required_disposition_count": 15,
+    "native_operation_authority": false,
+    "network_authority": false,
+    "package_copy_authority": false,
+    "raw_audit_token_retained": false,
+    "raw_bookmark_bytes_retained": false,
+    "receipt_family_count": 2,
+    "support_promotion_authority": false,
+    "workspace_authority": false
+  },
+  "execution": {
+    "bookmark_lifecycle_observed": false,
+    "independent_review_performed": false,
+    "keychain_lifecycle_observed": false,
+    "native_bookmark_receipt_observed": false,
+    "native_ipc_receipt_observed": false,
+    "powerbox_selection_observed": false,
+    "signed_peer_authenticated": false
+  },
+  "record_type": "macos-ipc-bookmark-receipts-source-contract",
+  "remaining_blockers": [
+    "No external signed host and bridge IPC authentication receipt exists.",
+    "No live audit-token, designated-requirement, App Group, challenge, socket, or replay-refusal observation exists.",
+    "No external Powerbox, Keychain, or security-scoped bookmark receipt exists.",
+    "No native move, reboot reopen, stale refresh, revocation, or post-revocation denial receipt exists.",
+    "No release-approved policy, signed package, release-derived manifest, or successful terminal record exists.",
+    "No independent reviewer has reconciled and retained the two native receipt families."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "packaging/macos/IPC-BOOKMARK-RECEIPTS.md",
+      "sha256": "dcaac60eaf37e9b7c37ef0f813bb7a0815bd9d9b410e7408a836a757321efa93"
+    },
+    {
+      "path": "scripts/macos_ipc_bookmark_receipts.py",
+      "sha256": "ad392d375ed362ef9d0b49c182336703713998b44c27f387962c7fda3cc07257"
+    },
+    {
+      "path": "scripts/macos_signed_reference_package.py",
+      "sha256": "0332e0096a32675ca089159996867b740adf536585fc5db295ab36fa3d349446"
+    },
+    {
+      "path": "tests/test_macos_ipc_bookmark_receipts.py",
+      "sha256": "31157e5b4e2601fcf7e1eaaa7296d40d63cbe4af97f405a4dcd56f5cb407fd4c"
+    }
+  ],
+  "source_revision": "787e53f7727502cb75fa8651420a358c911c0106",
+  "source_tree": "f7057e1b094d323a6ae57e27e639fd1eb610e55f",
+  "status": "prepared-source-only-blocked-macos",
+  "task_id": "8.1.2.3"
+}
