@@ -1,0 +1,358 @@
+$ cargo test -p agentmage-kernel-engine story_13_5 --locked
+   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.74s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+running 4 tests
+test gateway_candidate_identity::tests::story_13_5_unknown_operator_and_partial_remote_tuple_fail_before_route ... ok
+test gateway_candidate_identity::tests::story_13_5_cross_class_credential_and_nested_identity_substitution_fail ... ok
+test gateway_candidate_identity::tests::story_13_5_every_independent_identity_changes_whole_tuple_digest ... ok
+test gateway_candidate_identity::tests::story_13_5_all_endpoint_classes_remain_disabled_without_fallback ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 719 filtered out; finished in 0.00s
+
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+
+$ cargo test -p agentmage-kernel-engine model_gateway::tests --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+running 4 tests
+test model_gateway::tests::every_json_protocol_uses_a_closed_shape_and_extracts_text ... ok
+test model_gateway::tests::remote_profile_rejects_http_embedded_credentials_and_redirects ... ok
+test model_gateway::tests::strict_local_can_never_fall_back_remotely ... ok
+test model_gateway::tests::exact_profiles_and_explicit_routes_are_digest_bound ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 719 filtered out; finished in 0.00s
+
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+
+$ cargo test -p agentmage-kernel-engine every_descriptive_family_is_sealed_as_non_authoritative --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+running 1 test
+test authority::tests::every_descriptive_family_is_sealed_as_non_authoritative ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 722 filtered out; finished in 0.00s
+
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+
+$ node --test tests/test_disabled_gateway_candidate_schema.mjs
+✔ disabled gateway schema accepts all four complete candidate classes (1.406282ms)
+✔ disabled gateway schema rejects activation, fallback, missing identity, and widening (0.314809ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 74.172951
+
+$ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
+    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 6.39s

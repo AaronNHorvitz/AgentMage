@@ -2758,22 +2758,22 @@ identities so that a familiar model name or compatible API cannot silently subst
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 13.5.1 - Define canonical gateway and profile records**
-  - [ ] **Sub-task 13.5.1.1:** Implement model request, ordered event, proposal, usage, error, cancellation, and route-receipt contracts that return untrusted proposals only.
-  - [ ] **Sub-task 13.5.1.2:** Separate model, runtime adapter, protocol codec, endpoint, route, operator, credential-reference, and qualification identities with content hashes and versions.
-  - [ ] **Sub-task 13.5.1.3:** Represent `strict_local`, `local_network_private`, `remote_private`, and `remote_managed` classes without enabling any endpoint or fallback.
-- [ ] **Task 13.5.2 - Enforce authority and identity boundaries**
-  - [ ] **Sub-task 13.5.2.1:** Prove the gateway cannot dispatch tools, mint grants, select credentials, alter policy, approve disclosure, or establish completion.
-  - [ ] **Sub-task 13.5.2.2:** Reject missing, mutable, ambiguous, cross-class, unknown-operator, or partially specified profile tuples before inference.
-- [ ] **Task 13.5.3 - Verify and retain evidence**
-  - [ ] **Sub-task 13.5.3.1:** Mutate every identity and profile-class field independently and assert visible pre-inference refusal.
-  - [ ] **Sub-task 13.5.3.2:** Run the identity portions of `RV-54`; retain schema, fixture, substitution, authority, and disabled-baseline evidence.
+- [x] **Task 13.5.1 - Define canonical gateway and profile records** Evidence: existing closed model runtime/gateway contracts compose with [`gateway_candidate_identity.rs`](kernel/engine/src/gateway_candidate_identity.rs) to bind one complete disabled candidate without conflating a model name, compatibility label, endpoint, or route.
+  - [x] **Sub-task 13.5.1.1:** Implement model request, ordered event, proposal, usage, error, cancellation, and route-receipt contracts that return untrusted proposals only. Evidence: the existing versioned contracts and codec/runtime gates cover the named request lifecycle, while `ClosedModelProposal` is now sealed into the kernel's always-denied `ModelProposal` descriptive-authority family.
+  - [x] **Sub-task 13.5.1.2:** Separate model, runtime adapter, protocol codec, endpoint, route, operator, credential-reference, and qualification identities with content hashes and versions. Evidence: `DisabledGatewayCandidate` carries all eight independent records and their whole-tuple digest; verifier admission recomputes the canonical endpoint digest and checks nested operator, codec, credential, qualification, class, and trusted-registry bindings.
+  - [x] **Sub-task 13.5.1.3:** Represent `strict_local`, `local_network_private`, `remote_private`, and `remote_managed` classes without enabling any endpoint or fallback. Evidence: one four-class test admits complete disabled tuples with zero selected route and fallback false; local classes reject credential references and remote classes require the exact matching broker reference.
+- [x] **Task 13.5.2 - Enforce authority and identity boundaries** Evidence: identity admission returns only a content-free blocked reason, no selected route, false activation/fallback flags, and false proposal authority.
+  - [x] **Sub-task 13.5.2.1:** Prove the gateway cannot dispatch tools, mint grants, select credentials, alter policy, approve disclosure, or establish completion. Evidence: codec and candidate types expose no executor, grant issuer, credential broker, policy mutator, disclosure approval, or completion constructor; the sealed model-proposal authority check has only the existing denial path.
+  - [x] **Sub-task 13.5.2.2:** Reject missing, mutable, ambiguous, cross-class, unknown-operator, or partially specified profile tuples before inference. Evidence: focused tests reject an unknown operator digest, missing remote credential identity, local credential injection, nested codec substitution, canonical endpoint mismatch, mutation under an old tuple digest, and forbidden endpoint activation/fallback.
+- [x] **Task 13.5.3 - Verify and retain evidence** Evidence: [`gateway-identity-report.json`](artifacts/sprints/sprint-13/story-13.5/gateway-identity-report.json) binds the source, schema, exact test markers, strict Clippy result, disabled baseline, and explicit later routing limitations.
+  - [x] **Sub-task 13.5.3.1:** Mutate every identity and profile-class field independently and assert visible pre-inference refusal. Evidence: model, runtime, codec, endpoint, route, operator, credential, qualification, class, activation, fallback, and schema mutations either change the whole candidate identity or fail admission/verification before any route; hostile schema tests reject missing, unknown, ambiguous, and widened records.
+  - [x] **Sub-task 13.5.3.2:** Run the identity portions of `RV-54`; retain schema, fixture, substitution, authority, and disabled-baseline evidence. Evidence: the retained Story 13.5 RV-54 slice records all eight identity families, four classes, substitutions, authority sealing, schema closure, zero enabled candidates, zero selected routes, and false fallback without claiming Story 13.6 routing qualification.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 13.5.AC1:** Given any inference candidate, when admission runs, then model, runtime, codec, endpoint, route, operator, and qualification identities are independently exact.
-- [ ] **Story AC 13.5.AC2:** Given no enabled profile, when a request is made, then the gateway returns a truthful blocked result and neither chooses a route nor enables fallback.
-- [ ] **Story AC 13.5.AC3:** Given a model proposal, when it returns to the runtime, then it remains untrusted data with no tool, policy, credential, or completion authority.
+- [x] **Story AC 13.5.AC1:** Given any inference candidate, when admission runs, then model, runtime, codec, endpoint, route, operator, and qualification identities are independently exact. Evidence: the aggregate tuple validation and mutation campaign pass with separate credential-reference identity as the eighth family.
+- [x] **Story AC 13.5.AC2:** Given no enabled profile, when a request is made, then the gateway returns a truthful blocked result and neither chooses a route nor enables fallback. Evidence: every successfully verified identity tuple returns `model-gateway.candidate.identity-verified-activation-required`, no selected route, and false activation/fallback.
+- [x] **Story AC 13.5.AC3:** Given a model proposal, when it returns to the runtime, then it remains untrusted data with no tool, policy, credential, or completion authority. Evidence: `ClosedModelProposal` is compile-time sealed as `NonAuthoritativeArtifact`; offering it at an authority boundary can produce only the content-free denial record.
 
 #### [ ] Story 13.6 - Gateway Codec, Routing, and Fallback Contracts
 

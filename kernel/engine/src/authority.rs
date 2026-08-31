@@ -2,10 +2,10 @@
 
 use agentmage_kernel_contracts::{
     Action, ActorId, ApprovalRequest, AssumptionRecord, ClaimAssertion, ClaimBoundFinalResponse,
-    ClarificationQuestion, ContractError, ContradictionRecord, ErrorCategory, ErrorId,
-    HypothesisRecord, IndependentVerificationRequest, IndependentVerificationResult, MaterialClaim,
-    Plan, ProblemFact, ProblemFrame, Prompt, RequiredGrantTemplate, RetryDisposition, SessionId,
-    Task, TaskId, ToolDefinition, VerifiedMaterialClaim, WorkPacket,
+    ClarificationQuestion, ClosedModelProposal, ContractError, ContradictionRecord, ErrorCategory,
+    ErrorId, HypothesisRecord, IndependentVerificationRequest, IndependentVerificationResult,
+    MaterialClaim, Plan, ProblemFact, ProblemFrame, Prompt, RequiredGrantTemplate,
+    RetryDisposition, SessionId, Task, TaskId, ToolDefinition, VerifiedMaterialClaim, WorkPacket,
 };
 
 use crate::task_classification::TaskClassification;
@@ -28,6 +28,8 @@ pub enum DescriptiveArtifactKind {
     ApprovalRequest,
     /// Ordered local-model prompt.
     Prompt,
+    /// Untrusted proposal returned by a model gateway.
+    ModelProposal,
     /// Registered tool metadata.
     ToolDefinition,
     /// Non-authoritative future-grant requirement template.
@@ -92,6 +94,7 @@ mod sealed {
     impl Sealed for agentmage_kernel_contracts::Action {}
     impl Sealed for agentmage_kernel_contracts::ApprovalRequest {}
     impl Sealed for agentmage_kernel_contracts::Prompt {}
+    impl Sealed for agentmage_kernel_contracts::ClosedModelProposal {}
     impl Sealed for agentmage_kernel_contracts::ToolDefinition {}
     impl Sealed for agentmage_kernel_contracts::RequiredGrantTemplate {}
     impl Sealed for agentmage_kernel_contracts::ProblemFrame {}
@@ -146,6 +149,7 @@ impl_non_authoritative!(Plan => Plan);
 impl_non_authoritative!(Action => Action);
 impl_non_authoritative!(ApprovalRequest => ApprovalRequest);
 impl_non_authoritative!(Prompt => Prompt);
+impl_non_authoritative!(ModelProposal => ClosedModelProposal);
 impl_non_authoritative!(ToolDefinition => ToolDefinition);
 impl_non_authoritative!(RequiredGrantTemplate => RequiredGrantTemplate);
 impl_non_authoritative!(TaskClassification => TaskClassification);
@@ -350,6 +354,7 @@ mod tests {
         assert_sealed::<agentmage_kernel_contracts::Action>();
         assert_sealed::<agentmage_kernel_contracts::ApprovalRequest>();
         assert_sealed::<agentmage_kernel_contracts::Prompt>();
+        assert_sealed::<agentmage_kernel_contracts::ClosedModelProposal>();
         assert_sealed::<agentmage_kernel_contracts::ToolDefinition>();
         assert_sealed::<agentmage_kernel_contracts::RequiredGrantTemplate>();
         assert_sealed::<agentmage_kernel_contracts::ProblemFrame>();

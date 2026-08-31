@@ -1,0 +1,124 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 33731,
+      "path": "kernel/contracts/src/model.rs",
+      "sha256": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3"
+    },
+    {
+      "byte_length": 128088,
+      "path": "kernel/contracts/src/engineering_records.rs",
+      "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+    },
+    {
+      "byte_length": 25018,
+      "path": "kernel/engine/src/gateway_candidate_identity.rs",
+      "sha256": "1361215d221414258be8358156806d5fce0acf0ee43c20fa3994a13529a502b4"
+    },
+    {
+      "byte_length": 25099,
+      "path": "kernel/engine/src/model_gateway.rs",
+      "sha256": "0519b1e616b4c46598941a301da04082691c015e5c10d74109ff2840a2b22542"
+    },
+    {
+      "byte_length": 18823,
+      "path": "kernel/engine/src/authority.rs",
+      "sha256": "c8d75e190006004d76da34a0835a99e3b9074265bea9eba5d5cc388ff22ceb09"
+    },
+    {
+      "byte_length": 4282,
+      "path": "schemas/model/disabled-gateway-candidate.schema.json",
+      "sha256": "61a581311f17c15483338fd7b2346d3adb541497874864eb8fb527e11c331e9c"
+    },
+    {
+      "byte_length": 1681,
+      "path": "docs/architecture/candidate-neutral-model-gateway-identity.md",
+      "sha256": "79edcc9f90c6fb162070a8d76d8c35f4a6f1505bacf7de182d01b19ba1a42ca3"
+    },
+    {
+      "byte_length": 6588,
+      "path": "scripts/story_13_5_gateway_identity_evidence.py",
+      "sha256": "11deed31a7eec54a8c74d5a9e786697904914a1f3b722e8287adace8b3be644d"
+    },
+    {
+      "byte_length": 1673,
+      "path": "tests/test_story_13_5_gateway_identity_evidence.py",
+      "sha256": "712d2401acfc7d1cb7adb873ce9ca97770802a142eb4bd1d2f6f6e5b31c026ce"
+    },
+    {
+      "byte_length": 2478,
+      "path": "tests/test_disabled_gateway_candidate_schema.mjs",
+      "sha256": "85d0c9162e8d77ee85965c84a762ba7b57ce74d773fb1e1e6e7f396d712b8ea1"
+    },
+    {
+      "byte_length": 13851,
+      "path": "artifacts/sprints/sprint-13/story-13.5/gateway-identity-results.log",
+      "sha256": "db2a027e63a5d46bd1301967a172a2061976b5bc68f8747736ded6a304252b3f"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine story_13_5 --locked",
+    "cargo test -p agentmage-kernel-engine model_gateway::tests --locked",
+    "cargo test -p agentmage-kernel-engine every_descriptive_family_is_sealed_as_non_authoritative --locked",
+    "node --test tests/test_disabled_gateway_candidate_schema.mjs",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "endpoint_classes": [
+    "strict_local",
+    "local_network_private",
+    "remote_private",
+    "remote_managed"
+  ],
+  "generated_on": "2026-08-31",
+  "independent_identities": [
+    "model",
+    "runtime-adapter",
+    "protocol-codec",
+    "endpoint",
+    "route",
+    "operator",
+    "credential-reference",
+    "qualification"
+  ],
+  "limitations": [
+    "identity admission deliberately activates no endpoint and executes no inference",
+    "live endpoint qualification and routing/fallback RV-54 scenarios remain later-story gates",
+    "cross-platform installed-product and release completion are not claimed"
+  ],
+  "product_truth": {
+    "all_four_endpoint_classes_represented": true,
+    "automatic_fallback_enabled": false,
+    "candidate_tuple_identity_complete": true,
+    "enabled_candidate_count": 0,
+    "live_endpoint_qualification_complete": false,
+    "model_proposal_has_authority": false,
+    "model_request_event_proposal_usage_error_cancellation_contracts_present": true,
+    "partial_or_cross_class_tuple_refused": true,
+    "release_claim": "none",
+    "routing_rv54_slice_complete": false,
+    "rv54_identity_slice_complete": true,
+    "selected_route_count": 0,
+    "sprint_completion_claim": false,
+    "story_completion_claim": true,
+    "unknown_operator_refused": true
+  },
+  "protocol_id": "RV-54",
+  "record_type": "agentmage-story-13-5-gateway-identity-evidence",
+  "required_markers": [
+    "story_13_5_all_endpoint_classes_remain_disabled_without_fallback ... ok",
+    "story_13_5_unknown_operator_and_partial_remote_tuple_fail_before_route ... ok",
+    "story_13_5_cross_class_credential_and_nested_identity_substitution_fail ... ok",
+    "story_13_5_every_independent_identity_changes_whole_tuple_digest ... ok",
+    "exact_profiles_and_explicit_routes_are_digest_bound ... ok",
+    "strict_local_can_never_fall_back_remotely ... ok",
+    "every_json_protocol_uses_a_closed_shape_and_extracts_text ... ok",
+    "remote_profile_rejects_http_embedded_credentials_and_redirects ... ok",
+    "every_descriptive_family_is_sealed_as_non_authoritative ... ok",
+    "disabled gateway schema accepts all four complete candidate classes",
+    "disabled gateway schema rejects activation, fallback, missing identity, and widening",
+    "Finished `dev` profile"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_IDENTITY_DISABLED_BASELINE",
+  "story_id": "13.5"
+}

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.local/schemas/model/disabled-gateway-candidate.schema.json",
+  "title": "AgentMage disabled gateway candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "candidate_id", "model", "runtime_adapter", "protocol_codec", "endpoint_profile_id", "endpoint_profile_sha256", "endpoint_class", "route", "operator", "credential", "qualification", "enabled", "automatic_fallback", "candidate_sha256"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "candidate_id": { "$ref": "#/$defs/id" },
+    "model": { "$ref": "#/$defs/model" },
+    "runtime_adapter": { "$ref": "#/$defs/runtime" },
+    "protocol_codec": { "$ref": "#/$defs/codec" },
+    "endpoint_profile_id": { "$ref": "#/$defs/id" },
+    "endpoint_profile_sha256": { "$ref": "#/$defs/sha" },
+    "endpoint_class": { "enum": ["strict_local", "local_network_private", "remote_private", "remote_managed"] },
+    "route": { "$ref": "#/$defs/route" },
+    "operator": { "$ref": "#/$defs/operator" },
+    "credential": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/credential" }] },
+    "qualification": { "$ref": "#/$defs/qualification" },
+    "enabled": { "const": false },
+    "automatic_fallback": { "const": false },
+    "candidate_sha256": { "$ref": "#/$defs/sha" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9._:/-]+$" },
+    "sha": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "model": {
+      "type": "object", "additionalProperties": false,
+      "required": ["model_profile_id", "manifest_id", "manifest_sha256", "model_revision_id", "artifact_sha256"],
+      "properties": {
+        "model_profile_id": { "$ref": "#/$defs/id" }, "manifest_id": { "$ref": "#/$defs/id" },
+        "manifest_sha256": { "$ref": "#/$defs/sha" }, "model_revision_id": { "$ref": "#/$defs/id" },
+        "artifact_sha256": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "runtime": {
+      "type": "object", "additionalProperties": false,
+      "required": ["adapter_id", "contract_version", "runtime_build_id", "runtime_sha256"],
+      "properties": {
+        "adapter_id": { "$ref": "#/$defs/id" }, "contract_version": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "runtime_build_id": { "$ref": "#/$defs/id" }, "runtime_sha256": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "codec": {
+      "type": "object", "additionalProperties": false,
+      "required": ["protocol_codec_id", "protocol_codec_version", "protocol_codec_sha256"],
+      "properties": {
+        "protocol_codec_id": { "$ref": "#/$defs/id" }, "protocol_codec_version": { "$ref": "#/$defs/id" },
+        "protocol_codec_sha256": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "route": {
+      "type": "object", "additionalProperties": false,
+      "required": ["route_id", "route_version", "route_policy_sha256"],
+      "properties": {
+        "route_id": { "$ref": "#/$defs/id" }, "route_version": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "route_policy_sha256": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "operator": {
+      "type": "object", "additionalProperties": false,
+      "required": ["operator_id", "registry_version", "operator_sha256"],
+      "properties": {
+        "operator_id": { "$ref": "#/$defs/id" }, "registry_version": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "operator_sha256": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "credential": {
+      "type": "object", "additionalProperties": false,
+      "required": ["credential_reference", "broker_version", "reference_sha256"],
+      "properties": {
+        "credential_reference": { "$ref": "#/$defs/id" }, "broker_version": { "$ref": "#/$defs/id" },
+        "reference_sha256": { "$ref": "#/$defs/sha" }
+      }
+    },
+    "qualification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["qualification_id", "qualification_version", "qualification_sha256"],
+      "properties": {
+        "qualification_id": { "$ref": "#/$defs/id" }, "qualification_version": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+        "qualification_sha256": { "$ref": "#/$defs/sha" }
+      }
+    }
+  }
+}

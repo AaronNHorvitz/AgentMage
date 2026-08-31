@@ -65,6 +65,8 @@ pub mod frontier_import;
 pub mod frontier_recommendation;
 /// v0.5 manual-frontier release compositions and controlled local export.
 pub mod frontier_release;
+/// Candidate-neutral disabled gateway tuple identity and admission.
+pub mod gateway_candidate_identity;
 /// Kernel-only session and operation grant issuance.
 pub mod grants;
 /// Deterministic local-only manual handoff construction and denial.
