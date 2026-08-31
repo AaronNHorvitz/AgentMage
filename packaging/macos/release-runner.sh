@@ -97,7 +97,15 @@ validate_policy_entitlements metal_inference_service 1 com.apple.security.app-sa
 
 [[ "$(/usr/bin/uname -s)" = "Darwin" ]] || fail "not-macos"
 [[ "$(/usr/bin/uname -m)" = "arm64" && "$ARCHITECTURE" = "arm64" ]] || fail "not-arm64"
-[[ "$(/usr/bin/id -u)" != "0" ]] || fail "root-forbidden"
+readonly INVOKING_REAL_UID="$(/usr/bin/id -ru)"
+readonly INVOKING_EFFECTIVE_UID="$(/usr/bin/id -u)"
+readonly INVOKING_PRIMARY_GID="$(/usr/bin/id -g)"
+[[ "$INVOKING_EFFECTIVE_UID" != "0" ]] || fail "root-forbidden"
+[[ "$INVOKING_REAL_UID" = "$INVOKING_EFFECTIVE_UID" ]] || fail "elevated-identity-forbidden"
+if /usr/bin/id -Gn | /usr/bin/tr ' ' '\n' | /usr/bin/grep -Fx admin >/dev/null; then
+  fail "administrator-group-forbidden"
+fi
+[[ "$(/usr/bin/stat -f '%u' "$HOME")" = "$INVOKING_EFFECTIVE_UID" ]] || fail "home-owner-mismatch"
 [[ "$(/usr/bin/sw_vers -buildVersion)" = "$EXPECTED_MACOS_BUILD" ]] || fail "macos-build"
 readonly OBSERVED_XCODE_BUILD="$(/usr/bin/xcodebuild -version | /usr/bin/awk '/Build version/{print $3}')"
 [[ "$OBSERVED_XCODE_BUILD" = "$EXPECTED_XCODE_BUILD" ]] || fail "xcode-build"
@@ -280,4 +288,8 @@ readonly TERMINAL_TMP="$WORK_ROOT/terminal.json"
 /usr/bin/printf '{"schema_version":1,"record_type":"macos-release-runner-terminal","source_revision":"%s","version":"%s","macos_build":"%s","xcode_build":"%s","architecture":"arm64","package_sha256":"%s","notary_status":"Accepted","staple_valid":true,"gatekeeper_install_accepted":true,"candidate_install":true,"candidate_launch":true,"candidate_uninstall":true,"rollback_install":true,"rollback_launch":true,"credential_values_present":false,"release_claim":"signed-package-candidate"}\n' \
   "$SOURCE_REVISION" "$VERSION" "$EXPECTED_MACOS_BUILD" "$EXPECTED_XCODE_BUILD" "$FINAL_PACKAGE_SHA256" >"$TERMINAL_TMP"
 /bin/mv "$TERMINAL_TMP" "$EVIDENCE_ROOT/terminal.json"
+readonly ACCEPTANCE_TMP="$WORK_ROOT/standard-user-acceptance.json"
+/usr/bin/printf '{"schema_version":1,"record_type":"macos-standard-user-acceptance","source_revision":"%s","version":"%s","macos_build":"%s","xcode_build":"%s","architecture":"arm64","package_sha256":"%s","identity_class":"non-admin-standard-user","real_effective_uid_match":true,"home_owner_match":true,"primary_gid_observed":true,"phase_order":["build","sign","notarize","staple","gatekeeper-check","install","launch","use","remove"],"build_passed":true,"sign_passed":true,"notarization_passed":true,"stapling_passed":true,"gatekeeper_passed":true,"install_passed":true,"launch_passed":true,"use_passed":true,"removal_passed":true,"zero_residue":true,"network_closed_before_installed_execution":true,"credential_values_present":false,"private_environment_values_present":false,"release_claim":"signed-package-candidate"}\n' \
+  "$SOURCE_REVISION" "$VERSION" "$EXPECTED_MACOS_BUILD" "$EXPECTED_XCODE_BUILD" "$FINAL_PACKAGE_SHA256" >"$ACCEPTANCE_TMP"
+/bin/mv "$ACCEPTANCE_TMP" "$EVIDENCE_ROOT/standard-user-acceptance.json"
 /bin/echo "macos.release-runner.signed-package-candidate"

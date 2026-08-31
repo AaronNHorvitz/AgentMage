@@ -107,6 +107,12 @@ class MacOSReleaseRunnerSourceContractTests(unittest.TestCase):
             'run_step "rollback-install" /bin/true',
         )
         self.assertTrue(any("rollback" in item for item in failures))
+        failures = self.mutate(
+            RUNNER_PATH,
+            "/usr/bin/grep -Fx admin",
+            "/usr/bin/grep -Fx wheel",
+        )
+        self.assertTrue(any("required term" in item for item in failures))
 
     def test_fixture_live_invocation_fails_before_any_release_action(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

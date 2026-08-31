@@ -38,8 +38,10 @@ repository:
 
 The checked-in `release-runner-policy.contract-fixture.json` is deliberately
 synthetic and is always rejected by live execution. It documents field closure
-only. The ceremony also refuses a branch checkout, dirty source, root execution,
-wrong architecture, wrong runner/toolchain build, ambiguous certificate set,
+only. The ceremony also refuses a branch checkout, dirty source, root or
+elevated execution, membership in the macOS `admin` group, a home directory not
+owned by the invoking identity, wrong architecture, wrong runner/toolchain
+build, ambiguous certificate set,
 missing previous package, wrong previous-package digest, existing install, or
 an evidence path inside the repository.
 
@@ -64,8 +66,9 @@ build step, upload destination, alternate install root, or credential argument:
 7. reinstall the candidate, exercise rollback to the exact prior package, run
    the prior package's content-free smoke check, and leave that prior valid state
    installed; and
-8. scan retained command output for credential-shaped material, write a
-   content-free terminal report atomically, and destroy private staging.
+8. scan retained command output for credential-shaped material, write the
+   content-free terminal and nine-phase standard-user acceptance reports
+   atomically, and destroy private staging.
 
 No step uses `sudo`, logs an environment, invokes `security` with a secret,
 passes raw notary credentials, changes Gatekeeper policy, uploads evidence, or

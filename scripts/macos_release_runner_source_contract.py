@@ -11,7 +11,6 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / (
     "artifacts/sprints/sprint-8/story-8.1/"
@@ -104,6 +103,9 @@ EXPECTED_FAILURES = {
     "not-macos",
     "not-arm64",
     "root-forbidden",
+    "elevated-identity-forbidden",
+    "administrator-group-forbidden",
+    "home-owner-mismatch",
     "macos-build",
     "xcode-build",
     "wrong-source-revision",
@@ -249,7 +251,10 @@ def validate_sources(root: Path = ROOT) -> list[str]:
         '[[ "$NOTARY_PROFILE" = "$FIXED_NOTARY_PROFILE" ]]',
         '[[ "$(/usr/bin/uname -s)" = "Darwin" ]]',
         '[[ "$(/usr/bin/uname -m)" = "arm64"',
-        '[[ "$(/usr/bin/id -u)" != "0" ]]',
+        '[[ "$INVOKING_EFFECTIVE_UID" != "0" ]]',
+        '[[ "$INVOKING_REAL_UID" = "$INVOKING_EFFECTIVE_UID" ]]',
+        "/usr/bin/grep -Fx admin",
+        "home-owner-mismatch",
         "git symbolic-ref -q HEAD",
         "git status --porcelain=v1 --untracked-files=all",
         'env -i HOME="$HOME"',
@@ -282,6 +287,9 @@ def validate_sources(root: Path = ROOT) -> list[str]:
         "installer -pkg \"$PREVIOUS_PACKAGE\" -target CurrentUserHomeDirectory",
         "credential-shaped-evidence",
         '"release_claim":"signed-package-candidate"',
+        '"record_type":"macos-standard-user-acceptance"',
+        '"identity_class":"non-admin-standard-user"',
+        '"phase_order":["build","sign","notarize","staple","gatekeeper-check","install","launch","use","remove"]',
     )
     for term in required_terms:
         if term not in runner:
@@ -382,6 +390,10 @@ def build_report(
             "install_domain": "CurrentUserHomeDirectory",
             "installed_application": "$HOME/Applications/AgentMage.app",
             "root_execution_allowed": False,
+            "administrator_group_allowed": False,
+            "elevated_identity_allowed": False,
+            "home_owner_match_required": True,
+            "acceptance_phase_count": 9,
             "arbitrary_commands_allowed": False,
             "raw_credentials_accepted": False,
             "automatic_trigger_defined": False,
