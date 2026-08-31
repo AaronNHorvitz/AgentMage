@@ -1,0 +1,87 @@
+{
+  "claims": {
+    "macos_support": false,
+    "native_sandbox_results_exist": false,
+    "release_candidate_exists": false,
+    "task_complete": false
+  },
+  "contract": {
+    "accepted_unauthorized_case_count": 0,
+    "attack_authority": false,
+    "attack_case_count": 36,
+    "attack_class_count": 9,
+    "component_count": 4,
+    "credential_authority": false,
+    "cross_user_authority": false,
+    "device_authority": false,
+    "filesystem_authority": false,
+    "grant_authority": false,
+    "native_operation_authority": false,
+    "network_authority": false,
+    "process_authority": false,
+    "support_promotion_authority": false,
+    "unsafe_result_mutation_count": 11,
+    "workspace_authority": false,
+    "zero_result_guard_count": 9
+  },
+  "execution": {
+    "active_sandbox_profiles_observed": false,
+    "independent_review_performed": false,
+    "native_attack_campaign_observed": false,
+    "protected_logs_observed": false,
+    "signed_components_executed": false,
+    "swift_tests_performed": false
+  },
+  "record_type": "macos-sandbox-attack-matrix-source-contract",
+  "remaining_blockers": [
+    "No external Apple Silicon Swift 6 execution of the exact 36-case matrix exists.",
+    "No installed signed host, bridge, tool helper, or inference service has been attacked.",
+    "No native zero-access, zero-byte, zero-authority, and zero-residue results or protected logs exist.",
+    "No production release bundle and active four-component sandbox profile set exists.",
+    "No independent reviewer has reconciled the native hostile-access evidence."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "packaging/macos/SANDBOX-ATTACK-MATRIX.md",
+      "sha256": "6462fd96326fe8fc4bf299a9bbbb3af561bdb260dcd31773b07ff0cccae49906"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSSandboxAttackMatrixTests.swift",
+      "sha256": "ee9a1a7ae020ba0f66f3d2440b8cc0f02680eb61b623276632710ac47794c494"
+    },
+    {
+      "path": "packaging/macos/SANDBOX-ATTACK-RESULTS.md",
+      "sha256": "59f8a6a027f722e85ed63bc4c558e7d16090dcecf308428d9b88359bcd325dc5"
+    },
+    {
+      "path": "scripts/macos_sandbox_attack_results.py",
+      "sha256": "2ca669b06e6a9bd9482feedb5cf2725ee797b2b10e2cda9749d61b7f60ec16ec"
+    },
+    {
+      "path": "tests/test_macos_sandbox_attack_results.py",
+      "sha256": "ec5a160b21c14d3d8ea5cf5e2eac2f54dc070eca441072597e6343d91d2e74e8"
+    },
+    {
+      "path": "artifacts/sprints/sprint-8/story-8.1/macos-sandbox-attack-results-source-contract.json",
+      "sha256": "d430776b93603fa8b58ae77d6d20cfc2c407d85e6ae33d294f1a983f912d95e1"
+    },
+    {
+      "path": "scripts/macos_sandbox_attack_matrix_source_contract.py",
+      "sha256": "dde3923f24c53fadb27d05b1dfbadcf45a77097e7eac6c411c9d8fbffb7d03e0"
+    },
+    {
+      "path": "tests/test_macos_sandbox_attack_matrix_source_contract.py",
+      "sha256": "9cbfe3266adb5d5c0396c9a2bb14c1d7da869097592402adc92bb4caa9f8fc28"
+    }
+  ],
+  "source_revision": "7b0873baa368fdb0b64a681160aeac133aaefec3",
+  "source_tree": "e96b126de0c426d398605d31d78e4a21f1db2ee2",
+  "status": "prepared-source-only-blocked-macos",
+  "task_id": "8.1.3.2",
+  "upstream_source_contract": {
+    "path": "artifacts/sprints/sprint-8/story-8.1/macos-sandbox-attack-results-source-contract.json",
+    "sha256": "d430776b93603fa8b58ae77d6d20cfc2c407d85e6ae33d294f1a983f912d95e1",
+    "task_id": "8.1.2.4"
+  }
+}
