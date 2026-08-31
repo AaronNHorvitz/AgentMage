@@ -61,14 +61,14 @@
       "sha256": "f2260141c8a8f17b8b5c787df162ecc152e9de07c6ec1c6ffd3b2f627131548f"
     },
     {
-      "bytes": 3484,
+      "bytes": 3401,
       "path": "release/platform-manifests/macos/v1/contract-fixture.json",
-      "sha256": "2dfc2a4da82511a530dce48653704e5fd5f73bd7ee94efd3763ca64c981a9408"
+      "sha256": "f2465bac1d58004264275f517730c44984168017624bedac47e82e32756ae4f7"
     },
     {
       "bytes": 2369,
       "path": "artifacts/sprints/sprint-7/story-7.1/macos-release-manifest-contract.json",
-      "sha256": "497a6a0d16cab19547811f676f469f3808672939fbe6da0f397fb4a60dabeb72"
+      "sha256": "5a02165abb291c9a96c4c8226b233e4a9bfeb377223f75447004e817faa35acd"
     },
     {
       "bytes": 446026,
@@ -260,7 +260,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "458a4b2f7937201fc9fbb04530885b4a98fddf2f",
+  "source_revision": "8d1703fab758d09cd38095cdb01c5dae82c345ee",
   "status": "pass-non-macos-security-mapping",
   "story_id": "7.1",
   "summary": {
