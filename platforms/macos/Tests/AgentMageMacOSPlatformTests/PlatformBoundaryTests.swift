@@ -24,4 +24,8 @@ func macOSScaffoldRemainsBlocked() {
         AgentMageMacOSPlatformBoundary.toolHelperSourceStatus
             == "implemented-source-unverified"
     )
+    #expect(
+        AgentMageMacOSPlatformBoundary.metalInferenceSourceStatus
+            == "implemented-source-unverified"
+    )
 }

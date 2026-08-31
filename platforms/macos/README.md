@@ -49,5 +49,26 @@ This is source and synthetic mutation coverage only; no signed XPC target,
 native connection, sandbox enforcement, forced lifecycle, or Rust executor
 composition has executed here.
 
+The Metal-inference source defines a separate private `NSXPCListener` service
+that validates its exact signed identity, Hardened Runtime metadata, and
+one-key App Sandbox entitlement closure before admitting the exact signed host.
+Its closed request carries one profile identity, manifest/artifact/runtime and
+codec hashes, bounded inert input bytes, deterministic sampling values, and a
+wall deadline. It deliberately has no workspace path or bookmark, tool, grant,
+credential, environment, listener, App Group, installer, or network field. The
+host passes a model as an already-open file handle; the service duplicates it,
+requires an owner-matching read-only regular single-link descriptor, verifies
+its exact byte count and SHA-256, and latches one profile for the process. Work
+is serialized, request identities cannot replay, cancellation and timeout are
+bounded, output is digest bound, and CPU, address-space, file, process, and
+descriptor ceilings are applied. The executor receives only the read-only model
+descriptor, exact profile, inert request bytes, decoding limits, and a
+cancellation probe. The service has only `com.apple.security.app-sandbox`; it
+has no network, file-selection, bookmark, App Group, Keychain, device,
+temporary-exception, JIT, or library-validation exception entitlement. This is
+source and synthetic mutation coverage only: no signed inference target, native
+XPC file-handle transfer, Metal device, `llama.cpp` load, GGUF inference,
+sandbox attack, forced lifecycle, or shared Rust runtime composition has run.
+
 Native compilation, signing, execution, and support remain `BLOCKED-MACOS` until
 the manual Apple Silicon source check and the required physical-M5 evidence exist.

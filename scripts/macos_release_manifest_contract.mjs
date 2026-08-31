@@ -137,7 +137,9 @@ export function validateManifest(value) {
       "com.apple.security.app-sandbox",
       "com.apple.security.files.bookmarks.app-scope",
     ]) ||
-    value.entitlements.metal_inference_service.length !== 1
+    JSON.stringify(value.entitlements.metal_inference_service) !== JSON.stringify([
+      "com.apple.security.app-sandbox",
+    ])
   ) {
     failures.push("minimal entitlement or no-network contract changed");
   }

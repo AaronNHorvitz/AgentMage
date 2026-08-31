@@ -17,4 +17,7 @@ public enum AgentMageMacOSPlatformBoundary {
 
     /// Signed stateless XPC tool-helper source is present but not native evidence.
     public static let toolHelperSourceStatus = "implemented-source-unverified"
+
+    /// Sandboxed Metal inference-service source is present but not native evidence.
+    public static let metalInferenceSourceStatus = "implemented-source-unverified"
 }
