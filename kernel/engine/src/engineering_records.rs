@@ -6,9 +6,9 @@ use agentmage_kernel_contracts::{
     CanonicalContextDeliveryReceipt, CanonicalContextDisposition, CanonicalContextManifest,
     CanonicalDeliveryOutcome, CanonicalModelEndpointProfile, CanonicalModelRouteDecision,
     CanonicalTerminalOutcome, CanonicalTerminalResult, CanonicalToolObservation,
-    CanonicalVerificationOutcome, CanonicalVerificationResult, CanonicalWorkflowCheckpoint,
-    CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle, CanonicalWorkflowState,
-    VersionedContract, to_canonical_json,
+    CanonicalToolOutcome, CanonicalVerificationOutcome, CanonicalVerificationResult,
+    CanonicalWorkflowCheckpoint, CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle,
+    CanonicalWorkflowState, VersionedContract, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -658,7 +658,7 @@ impl ValidateCanonicalRecord for CanonicalToolObservation {
         if !self.terminal {
             return Err(error("engineering.tool.not_terminal", "terminal"));
         }
-        if !self.descendants_cleaned {
+        if !self.descendants_cleaned && self.outcome == CanonicalToolOutcome::Succeeded {
             return Err(error(
                 "engineering.tool.descendants_unclean",
                 "descendants_cleaned",
@@ -1657,6 +1657,18 @@ mod tests {
             result.validate_canonical().unwrap_err().code,
             "engineering.terminal.false_success"
         );
+    }
+
+    #[test]
+    fn tool_failure_may_report_incomplete_cleanup_but_success_may_not() {
+        let mut value = observation();
+        value.descendants_cleaned = false;
+        assert_eq!(
+            value.validate_canonical().unwrap_err().code,
+            "engineering.tool.descendants_unclean"
+        );
+        value.outcome = CanonicalToolOutcome::Failed;
+        assert_eq!(value.validate_canonical(), Ok(()));
     }
 
     #[test]

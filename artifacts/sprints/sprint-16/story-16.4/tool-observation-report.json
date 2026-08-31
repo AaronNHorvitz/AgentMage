@@ -1,0 +1,89 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 44965,
+      "path": "kernel/engine/src/tool_observation.rs",
+      "sha256": "2044834d0af95c9062694f18280baa7e6a8078471aaa470b1ca49fec930b56da"
+    },
+    {
+      "byte_length": 58103,
+      "path": "kernel/engine/src/tool_composition.rs",
+      "sha256": "94d2dd8c8cd9f8d3571232d117d69da8b731e365f2633f3df87ce91d8970ba20"
+    },
+    {
+      "byte_length": 74228,
+      "path": "kernel/engine/src/engineering_records.rs",
+      "sha256": "1a3488bcda2086306cade04c06404436f93b419067833b9f4c358a969fca706c"
+    },
+    {
+      "byte_length": 10934,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "d0cb2d20b6c799f82802585e10976bc8e209c9048e2ba1b64f33193e0560ee5b"
+    },
+    {
+      "byte_length": 3223,
+      "path": "docs/architecture/closed-tool-observation-contract.md",
+      "sha256": "b386f9d000990faf1e534335edacd328cf3261eff44730680e312c80ed8b35be"
+    },
+    {
+      "byte_length": 4678,
+      "path": "scripts/story_16_4_tool_observation_evidence.py",
+      "sha256": "07d11cef526489c974911a04cf534292cc3fe248dd56e5afa2a54dae4fa2cf89"
+    },
+    {
+      "byte_length": 1580,
+      "path": "tests/test_story_16_4_tool_observation_evidence.py",
+      "sha256": "6b11d65e390791c5332040f6315cf42b19080cc96845af3ed7270829f5d72ea0"
+    },
+    {
+      "byte_length": 9415,
+      "path": "artifacts/sprints/sprint-16/story-16.4/tool-observation-results.log",
+      "sha256": "7f5da538bea1e77a02326620e480dcb50a9e5883f0d58ee2b63fae91802ccd17"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine tool_observation::tests --locked",
+    "cargo test -p agentmage-kernel-engine engineering_records::tests::tool_failure_may_report_incomplete_cleanup_but_success_may_not --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-31",
+  "limitations": [
+    "the live fixture is a bounded local process feeding the same observation assembler",
+    "installed native worker, macOS XPC, and independent release evidence remain separate gates"
+  ],
+  "output_artifact_families": [
+    "stdout",
+    "stderr",
+    "binary",
+    "structured"
+  ],
+  "product_truth": {
+    "atomic_content_addressed_output_contract_complete": true,
+    "bounded_redacted_excerpt_contract_complete": true,
+    "exactly_once_terminal_contract_complete": true,
+    "false_completion_count": 0,
+    "hostile_terminal_matrix_complete": true,
+    "installed_worker_campaign_executed": false,
+    "live_local_process_executed": true,
+    "release_claim": "none",
+    "resource_ceiling_matrix_complete": true,
+    "restart_restore_matrix_complete": true
+  },
+  "record_type": "agentmage-story-16-4-tool-observation-evidence",
+  "required_markers": [
+    "story_16_4_all_ten_terminal_states_emit_one_closed_observation ... ok",
+    "story_16_4_complete_outputs_are_separate_content_addressed_and_excerpts_are_bounded_redacted ... ok",
+    "story_16_4_duplicate_mismatch_forgery_and_missing_artifacts_fail_closed ... ok",
+    "story_16_4_output_and_excerpt_boundaries_fail_before_publication ... ok",
+    "story_16_4_every_measured_resource_ceiling_fails_closed_before_publication ... ok",
+    "story_16_4_crash_race_pipe_and_uncertainty_never_infer_success ... ok",
+    "story_16_4_tampered_observation_cannot_claim_more_than_measured ... ok",
+    "story_16_4_restart_restore_rejects_duplicate_corruption_and_replay ... ok",
+    "story_16_4_live_local_process_output_closes_through_the_same_assembler ... ok",
+    "tool_failure_may_report_incomplete_cleanup_but_success_may_not ... ok"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_CLOSED_OBSERVATION",
+  "story_id": "16.4",
+  "terminal_disposition_count": 10
+}

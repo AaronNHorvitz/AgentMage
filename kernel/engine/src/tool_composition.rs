@@ -589,6 +589,64 @@ pub struct ToolTerminalAttemptRecord {
 }
 
 impl ToolTerminalAttemptRecord {
+    /// Seals trusted adapter measurements into the same terminal contract used by composition.
+    #[allow(clippy::too_many_arguments)]
+    pub fn seal_observed(
+        attempt_id: impl Into<String>,
+        prepared_sha256: impl Into<String>,
+        consumed_grant_sha256: impl Into<String>,
+        disposition: ToolWorkerDisposition,
+        worker_receipt_id: Option<String>,
+        result_sha256: impl Into<String>,
+        artifact_ids: Vec<String>,
+        changed_state_ids: Vec<String>,
+        verification: ToolVerificationState,
+        cleanup: ToolCleanupState,
+    ) -> Result<Self, ToolCompositionError> {
+        let attempt_id = attempt_id.into();
+        let prepared_sha256 = prepared_sha256.into();
+        let consumed_grant_sha256 = consumed_grant_sha256.into();
+        let result_sha256 = result_sha256.into();
+        if !valid_id(&attempt_id)
+            || !valid_sha256(&prepared_sha256)
+            || !valid_sha256(&consumed_grant_sha256)
+            || !valid_sha256(&result_sha256)
+            || worker_receipt_id
+                .as_deref()
+                .is_some_and(|value| !valid_id(value))
+            || !valid_sorted_ids(&artifact_ids, true)
+            || !valid_sorted_ids(&changed_state_ids, true)
+        {
+            return Err(ToolCompositionError::InvalidCall);
+        }
+        let completion_verified = matches!(
+            disposition,
+            ToolWorkerDisposition::Succeeded | ToolWorkerDisposition::NoOp
+        ) && worker_receipt_id.is_some()
+            && verification == ToolVerificationState::Passed
+            && cleanup == ToolCleanupState::Complete;
+        let mut terminal = Self {
+            receipt_id: format!(
+                "terminal-receipt:{}",
+                &sha256_hex(attempt_id.as_bytes())[..16]
+            ),
+            attempt_id,
+            prepared_sha256,
+            consumed_grant_sha256,
+            disposition,
+            worker_receipt_id,
+            result_sha256,
+            artifact_ids,
+            changed_state_ids,
+            verification,
+            cleanup,
+            completion_verified,
+            terminal_sha256: "0".repeat(64),
+        };
+        terminal.terminal_sha256 = terminal_digest(&terminal);
+        Ok(terminal)
+    }
+
     /// Verifies digest and no-false-completion invariants.
     #[must_use]
     pub fn verify(&self) -> bool {

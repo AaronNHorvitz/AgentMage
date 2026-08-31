@@ -164,6 +164,8 @@ pub mod task_classification;
 pub mod tool_call_repair;
 /// Deterministic native-tool preflight, attempt, launch, and verification composition.
 pub mod tool_composition;
+/// Closed terminal tool-observation assembly and output-artifact binding.
+pub mod tool_observation;
 /// Exact tool registration, call validation, and pre-grant dispatch denial.
 pub mod tooling;
 pub mod validation_result;

@@ -3200,22 +3200,31 @@ bounded observation so that truncation, crashes, denials, and uncertainty cannot
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 16.4.1 - Implement terminal observation assembly**
-  - [ ] **Sub-task 16.4.1.1:** Produce exactly one terminal observation for success, verified no-op, denial, cancellation, timeout, resource exhaustion, crash, malformed output, partial effect, and uncertainty.
-  - [ ] **Sub-task 16.4.1.2:** Store complete stdout, stderr, binary output, and structured results as separate content-addressed artifacts while exposing bounded redacted excerpts and full-stream digests.
-  - [ ] **Sub-task 16.4.1.3:** Bind command/tool identity, call, attempt, process, policy, grant, approval, timing, resources, truncation, effect, cleanup, and artifact references.
-- [ ] **Task 16.4.2 - Preserve observation truth under failure**
-  - [ ] **Sub-task 16.4.2.1:** Reconcile worker crash, supervisor crash, output-pipe failure, cancellation race, timeout race, and post-effect uncertainty into typed terminal results.
-  - [ ] **Sub-task 16.4.2.2:** Reject duplicate terminal events, mismatched identities, forged lengths/digests, missing artifacts, and observations that claim more than measured facts.
+- [x] **Task 16.4.1 - Implement terminal observation assembly**
+  - [x] **Sub-task 16.4.1.1:** Produce exactly one terminal observation for success, verified no-op, denial, cancellation, timeout, resource exhaustion, crash, malformed output, partial effect, and uncertainty.
+  - [x] **Sub-task 16.4.1.2:** Store complete stdout, stderr, binary output, and structured results as separate content-addressed artifacts while exposing bounded redacted excerpts and full-stream digests.
+  - [x] **Sub-task 16.4.1.3:** Bind command/tool identity, call, attempt, process, policy, grant, approval, timing, resources, truncation, effect, cleanup, and artifact references.
+- [x] **Task 16.4.2 - Preserve observation truth under failure**
+  - [x] **Sub-task 16.4.2.1:** Reconcile worker crash, supervisor crash, output-pipe failure, cancellation race, timeout race, and post-effect uncertainty into typed terminal results.
+  - [x] **Sub-task 16.4.2.2:** Reject duplicate terminal events, mismatched identities, forged lengths/digests, missing artifacts, and observations that claim more than measured facts.
 - [ ] **Task 16.4.3 - Verify terminal behavior**
-  - [ ] **Sub-task 16.4.3.1:** Run boundary and overflow fixtures for every output/resource ceiling and every terminal state through fake and live local tools.
-  - [ ] **Sub-task 16.4.3.2:** Run `RV-55`; retain complete artifacts, disclosed excerpts, digests, process/resource observations, cleanup results, and verifier decisions.
+  - [x] **Sub-task 16.4.3.1:** Run boundary and overflow fixtures for every output/resource ceiling and every terminal state through fake and live local tools.
+  - [ ] **Sub-task 16.4.3.2:** Run `RV-55`; retain complete artifacts, disclosed excerpts, digests, process/resource observations, cleanup results, and verifier decisions. The complete Story 16.4-applicable local observation evidence is retained in [`tool-observation-report.json`](artifacts/sprints/sprint-16/story-16.4/tool-observation-report.json). Full `RV-55` remains open because the authoritative reusable-gate registry assigns it to Stories 23.7 and 23.8 and requires supported VS Code versions and remote placements; Story 16.4 changes neither boundary and does not fabricate that later evidence.
+
+**Local implementation evidence:** [`closed-tool-observation-contract.md`](docs/architecture/closed-tool-observation-contract.md)
+defines the exactly-once terminal boundary, four-family atomic output publication, bounded redaction,
+lineage/resource-limit binding, and truthful incomplete-cleanup behavior. The source-bound
+[`tool-observation-report.json`](artifacts/sprints/sprint-16/story-16.4/tool-observation-report.json)
+retains nine assembler cases covering all ten terminal dispositions, every measured ceiling,
+forged/missing/tampered artifacts, duplicate/replayed restart state, a live local process, and zero
+false completion. Installed native worker, macOS XPC, VS Code compatibility, and independent release
+campaigns remain separate gates.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 16.4.AC1:** Given any admitted tool call, when it terminates or is interrupted, then exactly one closed terminal observation with complete identity and measured disposition exists.
-- [ ] **Story AC 16.4.AC2:** Given output larger than a client limit, when it is returned, then the excerpt is bounded while the full content, length, digest, and retrieval reference remain exact.
-- [ ] **Story AC 16.4.AC3:** Given crash, cancellation, timeout, or uncertain effect, when verification runs, then no successful result is inferred and owned resources are reconciled.
+- [x] **Story AC 16.4.AC1:** Given any admitted tool call, when it terminates or is interrupted, then exactly one closed terminal observation with complete identity and measured disposition exists.
+- [x] **Story AC 16.4.AC2:** Given output larger than a client limit, when it is returned, then the excerpt is bounded while the full content, length, digest, and retrieval reference remain exact.
+- [x] **Story AC 16.4.AC3:** Given crash, cancellation, timeout, or uncertain effect, when verification runs, then no successful result is inferred and owned resources are reconciled.
 
 ### [ ] Sprint 17 - Read-Only Git and Untrusted Instructions
 
