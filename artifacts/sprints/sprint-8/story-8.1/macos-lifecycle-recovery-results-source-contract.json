@@ -1,0 +1,72 @@
+{
+  "claims": {
+    "macos_support": false,
+    "native_recovery_results_exist": false,
+    "release_candidate_exists": false,
+    "task_complete": false
+  },
+  "contract": {
+    "bookmark_authority": false,
+    "credential_authority": false,
+    "failed_cleanup_count": 0,
+    "failed_prior_state_recovery_count": 0,
+    "fault_injection_authority": false,
+    "filesystem_authority": false,
+    "installer_authority": false,
+    "native_operation_authority": false,
+    "package_copy_authority": false,
+    "process_authority": false,
+    "raw_private_values_retained": false,
+    "scenario_count": 8,
+    "support_promotion_authority": false,
+    "unsafe_result_mutation_count": 9,
+    "workspace_authority": false
+  },
+  "execution": {
+    "faults_injected": false,
+    "independent_review_performed": false,
+    "native_recovery_campaign_observed": false,
+    "protected_logs_observed": false,
+    "signed_components_executed": false,
+    "swift_tests_performed": false
+  },
+  "record_type": "macos-lifecycle-recovery-results-source-contract",
+  "remaining_blockers": [
+    "No external Apple Silicon Swift 6 execution of the exact eight-scenario recovery matrix exists.",
+    "No signed installed components have undergone bookmark, crash, install, launch, uninstall, or rollback faults.",
+    "No native cleanup, prior-valid-state recovery, descendant, residue, or workspace-invariance results exist.",
+    "No production release bundle, prior shipped package, or protected recovery logs exist.",
+    "No independent reviewer has reconciled the native lifecycle recovery bundle."
+  ],
+  "schema_version": 1,
+  "source_files": [
+    {
+      "path": "packaging/macos/LIFECYCLE-RECOVERY-RESULTS.md",
+      "sha256": "aa931a5446e0859fe4211bc7c41ef5d412d6937d688b3707260b211882353d8a"
+    },
+    {
+      "path": "platforms/macos/Tests/AgentMageMacOSPlatformTests/MacOSLifecycleRecoveryMatrixTests.swift",
+      "sha256": "b54762b7d3ba87636294a4972907fab987ad61124e31bc15c158acedeb80fc03"
+    },
+    {
+      "path": "scripts/macos_lifecycle_recovery_results.py",
+      "sha256": "9a2a8fba9c27fc17baaa9c1ea8e6233c952164ef796c403db79fe8cfa2417cd5"
+    },
+    {
+      "path": "scripts/macos_signed_reference_package.py",
+      "sha256": "0332e0096a32675ca089159996867b740adf536585fc5db295ab36fa3d349446"
+    },
+    {
+      "path": "tests/test_macos_ipc_bookmark_receipts.py",
+      "sha256": "31157e5b4e2601fcf7e1eaaa7296d40d63cbe4af97f405a4dcd56f5cb407fd4c"
+    },
+    {
+      "path": "tests/test_macos_lifecycle_recovery_results.py",
+      "sha256": "91c380888c084aa0bea74500d6359c36a5052375c72f0b18a0b30e71d2d36521"
+    }
+  ],
+  "source_revision": "eef9dd410487113cbc9e0ff2b8a0d182a1b6a711",
+  "source_tree": "d589798dd4aef7c80be67bcfaf0f9b746b85229b",
+  "status": "prepared-source-only-blocked-macos",
+  "task_id": "8.1.3.3"
+}
