@@ -256,6 +256,27 @@ pub enum KnowledgeClientCommand {
     },
 }
 
+/// Closed Markdown artifact command carrying identities only, never document bytes.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
+pub enum MarkdownClientCommand {
+    /// Review, generate, optionally preview an edit, and verify one local round trip.
+    Coordinate {
+        /// Exact already-parsed Markdown source digest.
+        source_sha256: String,
+        /// Exact deterministic quality-profile identity.
+        quality_profile_id: String,
+        /// Stable generated-artifact identity.
+        artifact_id: String,
+        /// Canonical workspace-relative generated output components.
+        artifact_output_path: Vec<String>,
+        /// Digest of exact bytes reopened by the trusted host.
+        reopened_sha256: String,
+        /// Whether an exact host-owned structural edit request is included.
+        update_requested: bool,
+    },
+}
+
 /// Closed Word artifact command family carrying identities only, never document bytes or paths.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
@@ -346,6 +367,11 @@ pub enum ClientCommand {
         /// Exact read-only workflow action.
         action: KnowledgeClientCommand,
     },
+    /// Coordinate Markdown quality, generation, editing, and local round-trip verification.
+    Markdown {
+        /// Exact identity-only Markdown operation.
+        action: MarkdownClientCommand,
+    },
     /// Inspect or generate Word artifacts through the common host-owned coordinator.
     Word {
         /// Exact identity-only Word operation.
@@ -374,6 +400,7 @@ impl ClientCommand {
             },
             Self::Vault { .. } => GrantOperation::WorkspaceRead,
             Self::Knowledge { .. } => GrantOperation::WorkspaceRead,
+            Self::Markdown { .. } => GrantOperation::DraftCreate,
             Self::Word { action } => match action {
                 WordClientCommand::Inspect { .. } => GrantOperation::WorkspaceRead,
                 WordClientCommand::Generate { .. } => GrantOperation::DraftCreate,
@@ -433,6 +460,30 @@ impl ClientCommand {
             Self::Knowledge {
                 action: KnowledgeClientCommand::Run { .. },
             } => true,
+            Self::Markdown {
+                action:
+                    MarkdownClientCommand::Coordinate {
+                        source_sha256,
+                        quality_profile_id,
+                        artifact_id,
+                        artifact_output_path,
+                        reopened_sha256,
+                        ..
+                    },
+            } => {
+                valid_sha256(source_sha256)
+                    && valid_identifier(quality_profile_id)
+                    && valid_identifier(artifact_id)
+                    && valid_sha256(reopened_sha256)
+                    && WorkspacePath::new(
+                        WorkspaceId::from_raw("markdown-client-validation"),
+                        artifact_output_path.iter().cloned(),
+                    )
+                    .is_ok()
+                    && artifact_output_path
+                        .last()
+                        .is_some_and(|component| component.ends_with(".md"))
+            }
             Self::Word { action } => match action {
                 WordClientCommand::Inspect {
                     source_id,
@@ -1519,6 +1570,16 @@ mod tests {
                 action: KnowledgeClientCommand::Run {
                     workflow: KnowledgeWorkflowClient::DailySetup,
                     retrieval_mode: KnowledgeRetrievalClientMode::Lexical,
+                },
+            },
+            ClientCommand::Markdown {
+                action: MarkdownClientCommand::Coordinate {
+                    source_sha256: "a".repeat(64),
+                    quality_profile_id: "markdown-profile-0001".to_owned(),
+                    artifact_id: "artifact-0001".to_owned(),
+                    artifact_output_path: vec!["documents".to_owned(), "report.md".to_owned()],
+                    reopened_sha256: "b".repeat(64),
+                    update_requested: true,
                 },
             },
             ClientCommand::Word {

@@ -93,8 +93,8 @@ pub use markdown_artifacts::{
     MarkdownArtifactKind, MarkdownArtifactRequest, MarkdownArtifactSection,
     MarkdownArtifactStatement, MarkdownQualityFinding, MarkdownQualityFindingKind,
     MarkdownQualityProfile, MarkdownQualityReport, MarkdownRenderedBlock, MarkdownRoundTripResult,
-    generate_markdown_artifact, map_markdown_parse_error, review_markdown_quality,
-    verify_markdown_round_trip,
+    generate_markdown_artifact, map_markdown_parse_error, render_markdown_structure,
+    review_markdown_quality, verify_markdown_round_trip,
 };
 pub use markdown_write::{
     MarkdownDocument, MarkdownEdit, MarkdownElement, MarkdownElementKind, MarkdownFidelityWarning,

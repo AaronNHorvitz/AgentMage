@@ -31,6 +31,10 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/examples/markdown_artifact_skill_pack.rs",
     "shells/host/src/markdown_artifact_coordinator.rs",
     "shells/host/src/lib.rs",
+    "shells/host/src/knowledge_write.rs",
+    "shells/host/src/headless.rs",
+    "shells/host/src/cli.rs",
+    "kernel/engine/src/filesystem_control.rs",
     "schemas/runtime/markdown-quality-report.schema.json",
     "schemas/runtime/examples/markdown-quality-report.valid.json",
     "schemas/runtime/generated-markdown-artifact.schema.json",
@@ -88,6 +92,14 @@ COMMANDS: Final = (
             "markdown_artifact_coordinator", "--lib", "--locked",
         ),
     ),
+    (
+        "markdown-native-protocol",
+        ("cargo", "test", "-p", "agentmage-host", "headless::tests", "--lib", "--locked"),
+    ),
+    (
+        "markdown-native-cli",
+        ("cargo", "test", "-p", "agentmage-host", "cli::tests", "--lib", "--locked"),
+    ),
     ("markdown-runtime-schemas", ("node", "--test", "tests/test_planning_schemas.mjs")),
     (
         "markdown-acceptance-corpus",
@@ -107,13 +119,15 @@ COMMANDS: Final = (
     ("supply-chain", ("python3", "scripts/supply_chain.py")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_57_evidence")),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:8])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:10])
 RUST_FOCUSED_COMMANDS: Final = {
     "markdown-writer-unit",
     "markdown-artifact-unit",
     "markdown-skill-unit",
     "display-link-unit",
     "markdown-host-coordinator",
+    "markdown-native-protocol",
+    "markdown-native-cli",
 }
 SECURITY_REQUIREMENTS: Final = [
     "SR-DAT-002",
@@ -147,11 +161,11 @@ IMPLEMENTED: Final = {
     "network_access_capability": False,
     "execution_capability": False,
     "filesystem_mutation_capability": False,
-    "renderer_capability": False,
+    "renderer_capability": True,
     "citation_invention_capability": False,
     "product_coordinator": True,
-    "controlled_writer_integration": False,
-    "native_interface_integration": False,
+    "controlled_writer_integration": True,
+    "native_interface_integration": True,
     "accessibility_acceptance": False,
     "installed_cross_platform_acceptance": False,
     "trusted_package_execution": False,
@@ -160,9 +174,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-56-BLOCKED", "owner": "57.1"},
-    {"code": "CONTROLLED-WRITER-INTEGRATION-ABSENT", "owner": "57.1.3.4"},
-    {"code": "LOCAL-RENDERER-INTEGRATION-ABSENT", "owner": "57.1.3.4"},
-    {"code": "NATIVE-INTERFACE-INTEGRATION-ABSENT", "owner": "57.1.3.4"},
     {"code": "ACCESSIBILITY-ACCEPTANCE-ABSENT", "owner": "57.1.3.5"},
     {"code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "57.1.3.5"},
     {"code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT", "owner": "57.1.3.5"},
@@ -261,8 +272,8 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "invented_citation_count": 0 if local_pass else None,
         "invented_acronym_expansion_count": 0 if local_pass else None,
         "product_coordinator": True,
-        "controlled_writer_integration": False,
-        "native_interface_integration": False,
+        "controlled_writer_integration": True,
+        "native_interface_integration": True,
         "accessibility_acceptance": False,
         "installed_cross_platform_acceptance": False,
         "trusted_package_execution": False,
@@ -278,6 +289,9 @@ def expected_summary(local_pass: bool = True) -> dict[str, Any]:
         "sprint_status": "BLOCKED",
         "upstream_sprint_56_closed": False,
         "Markdown_workflow_integrated": True,
+        "controlled_writer_path_integrated": True,
+        "local_renderer_integrated": True,
+        "native_interface_integrated": True,
         "external_effects_enabled": False,
         "cross_platform_acceptance_passed": False,
         "trusted_package_execution_complete": False,

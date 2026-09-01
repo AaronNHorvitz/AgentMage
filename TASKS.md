@@ -6853,10 +6853,12 @@ corpus to source revision `c68f377562657d79e4fd5b6eefc348837a74b597` (report SHA
 `54c7a4e5613288f96bcb9cb5c579bcbbabd65cb717b54d9afb698fd53f87081c`). The byte-preserving
 parser and scoped previews, quality and acronym review, seven cited artifact and skill types,
 display-only links, runtime schemas, inert hostile-content checks, byte/semantic/rendered local
-round-trip receipts, and registered authority-free product coordinator are complete. Story 57.1
-and Sprint 57 remain **BLOCKED** by Sprint 56, controlled writer and local renderer integration,
-the native interface and accessibility evidence, installed cross-platform acceptance,
-trusted-package execution, independent content review, and deferred manual fuzzing.
+round-trip receipts, and registered authority-free product coordinator are complete. Subsequent
+source progress adds host-computed content-free structure rendering, exact controlled create/patch
+drafts, and one identity-only Markdown command shared by Native Chat, CLI, JSON, SDK, and ACP;
+current source-bound report identity is pending renewal. Story 57.1 and Sprint 57 remain **BLOCKED**
+by Sprint 56, accessibility evidence, installed cross-platform acceptance, trusted-package
+execution, independent content review, and deferred manual fuzzing.
 ### [ ] Sprint 58 - Word Extraction and Structural Preservation
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

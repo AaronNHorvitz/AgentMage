@@ -728,6 +728,53 @@ fn rendered_valid(blocks: &[MarkdownRenderedBlock]) -> bool {
     })
 }
 
+/// Produces content-free deterministic block signatures from the bounded Markdown parser.
+///
+/// This is a source-native local renderer: it launches no process, interprets no HTML, resolves no
+/// asset, and returns no source text. The signature binds the parser's ordered structural kind,
+/// heading level, and bounded label so reopened content can be compared without trusting
+/// caller-supplied render claims.
+#[must_use]
+pub fn render_markdown_structure(document: &MarkdownDocument) -> Vec<MarkdownRenderedBlock> {
+    document
+        .elements()
+        .iter()
+        .enumerate()
+        .map(|(index, element)| {
+            let kind = markdown_element_kind_name(element.kind);
+            let level = element
+                .heading_level
+                .map_or_else(|| "none".to_owned(), |value| value.to_string());
+            let binding = format!(
+                "agentmage.markdown-structure-render.v1\0{kind}\0{level}\0{}",
+                element.label
+            );
+            MarkdownRenderedBlock {
+                ordinal: (index + 1) as u32,
+                kind: kind.to_owned(),
+                heading_level: element.heading_level,
+                text_sha256: sha256(binding.as_bytes()),
+            }
+        })
+        .collect()
+}
+
+const fn markdown_element_kind_name(kind: MarkdownElementKind) -> &'static str {
+    match kind {
+        MarkdownElementKind::Frontmatter => "frontmatter",
+        MarkdownElementKind::Heading => "heading",
+        MarkdownElementKind::ListItem => "list-item",
+        MarkdownElementKind::Task => "task",
+        MarkdownElementKind::TableRow => "table-row",
+        MarkdownElementKind::CodeFence => "code-fence",
+        MarkdownElementKind::CodeFenceContent => "code-fence-content",
+        MarkdownElementKind::MarkdownLink => "markdown-link",
+        MarkdownElementKind::WikiLink => "wiki-link",
+        MarkdownElementKind::TextBlock => "text-block",
+        MarkdownElementKind::Blank => "blank",
+    }
+}
+
 /// Compares exact bytes, supported semantic structure, and deterministic rendered signatures.
 pub fn verify_markdown_round_trip(
     original: &MarkdownDocument,
@@ -945,6 +992,19 @@ mod tests {
         assert!(result.locally_complete);
         assert!(!result.network_access_performed);
         assert!(!result.execution_performed);
+    }
+
+    #[test]
+    fn local_structure_renderer_is_deterministic_content_free_and_change_sensitive() {
+        let original = document("# Report\n\n- first\n");
+        let exact = render_markdown_structure(&original);
+        assert_eq!(exact, render_markdown_structure(&original));
+        assert_eq!(exact.len(), original.elements().len());
+        assert!(exact.iter().all(|block| valid_sha256(&block.text_sha256)));
+        assert!(!format!("{exact:?}").contains("first"));
+
+        let changed = render_markdown_structure(&document("# Report\n\n- second\n"));
+        assert_ne!(exact, changed);
     }
 
     #[test]
