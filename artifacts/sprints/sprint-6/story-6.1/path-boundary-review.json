@@ -22,7 +22,7 @@
     "coverage-guided path fuzzing and sanitizer evidence"
   ],
   "product_requirement_completion_claim": "none",
-  "reference_revision": "ae3f8e5cfa7ef8c5dd1f36d351f5d14952f91eb8",
+  "reference_revision": "c99ac14aa0d47d49c9bcfb75c85a4336032989ef",
   "release_claim": "none",
   "review_protocol": "RV-04",
   "review_protocol_status": "partial-blocked-platform-and-privileged-tests",
@@ -55,7 +55,7 @@
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "sha256": "e3b0e459a6517fc96445beb97fa84fb5bbb76e2ad118e62bc04ef4bb4845a6a9"
+      "sha256": "e467229bd5009af652cd136a4283cf0bd5f0f31407fb5837e404fbd753e66dc8"
     },
     {
       "path": "scripts/path_boundary_review.py",
@@ -90,8 +90,8 @@
     },
     {
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "reference_revision": "9a421e0af4c88286154bb8df1cc7b8f79691c88a",
-      "sha256": "e3b0e459a6517fc96445beb97fa84fb5bbb76e2ad118e62bc04ef4bb4845a6a9"
+      "reference_revision": "894ba8e723d3da5395a6ca0f6dc96fa1442bd1fc",
+      "sha256": "e467229bd5009af652cd136a4283cf0bd5f0f31407fb5837e404fbd753e66dc8"
     }
   ],
   "task_id": "6.1.3.5",
