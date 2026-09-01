@@ -954,7 +954,7 @@
     },
     {
       "path": "Cargo.toml",
-      "sha256": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b"
+      "sha256": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219"
     },
     {
       "path": "architecture/dependency-rules.json",
@@ -986,7 +986,7 @@
     },
     {
       "path": "kernel/engine/Cargo.toml",
-      "sha256": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e"
+      "sha256": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8"
     },
     {
       "path": "package-lock.json",
@@ -994,7 +994,7 @@
     },
     {
       "path": "platforms/linux/Cargo.toml",
-      "sha256": "00426eed21bba2bd58421ef75b6d661b7bfe8dc91c0fa931e01fe58d502ccead"
+      "sha256": "a6ed075a2e40f2120402cb2db636e3029b4e2f2f4070b3e2d64be93c9c0c796a"
     },
     {
       "path": "platforms/linux-inference/Cargo.toml",
@@ -1018,11 +1018,11 @@
     },
     {
       "path": "shells/host/Cargo.toml",
-      "sha256": "022c2254e404a7c54d790a894e98f6925a9f2b794f0ff37d7022bb4e19c9f923"
+      "sha256": "bd0cbb419186130d3d3219ef015ae647b6e8cad1b8660dfc27330d81aa3ab68c"
     },
     {
       "path": "shells/vscode/package.json",
-      "sha256": "c2d7612804f9bcb2e0a3c5f4615a2d7d3ef2181f93e32b5e83fa854ec1bc1ecb"
+      "sha256": "62533387ddcdd384963564af25c7675dc2991fd47e1b7c0a068252e67251112e"
     },
     {
       "path": "tests/test_kernel_architecture_report.py",
@@ -1033,7 +1033,7 @@
       "sha256": "7546d14d8ec5b014cd0c8ce541f603e0208ac6cb237b6b29a6d56d7f1a45b490"
     }
   ],
-  "source_revision": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
+  "source_revision": "c9d67411a6c14926f3a5e18769e9c12e48325426",
   "status": "pass-linux-architecture",
   "task_id": "4.1.2.4"
 }
