@@ -95,7 +95,7 @@ impl From<GrantIssueError> for FilesystemPlanError {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FilesystemOperationKind {
-    /// Create one exact absent UTF-8 file.
+    /// Create one exact absent bounded file.
     Create,
     /// Apply one parsed exact-preimage structured patch.
     ExactPatch,
@@ -170,13 +170,13 @@ pub struct ExistingSourceDraft {
 /// Authority-free request for one controlled filesystem operation.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FilesystemOperationDraft {
-    /// Propose creation of one exact absent file.
+    /// Propose creation of one exact absent text or binary file.
     Create {
         /// Stable operation identity.
         operation_id: String,
         /// Exact absent destination observation.
         destination: NewDestinationDraft,
-        /// Complete proposed UTF-8 bytes.
+        /// Complete proposed bytes.
         content: Vec<u8>,
         /// Exact permission bits for the new file.
         mode: u32,
@@ -1077,7 +1077,9 @@ pub fn render_filesystem_preview(
                 operation.kind,
                 FilesystemOperationKind::Create | FilesystemOperationKind::ExactPatch
             )
-            .then(|| format!("{:?}", String::from_utf8_lossy(&operation.postimage_bytes))),
+            .then(|| std::str::from_utf8(&operation.postimage_bytes).ok())
+            .flatten()
+            .map(|content| format!("{content:?}")),
             overwrite_allowed: false,
             implicit_parent_creation: false,
             permanent_delete: false,
@@ -2062,7 +2064,7 @@ fn validate_operation(
         } => {
             validate_destination(parent, &destination, true)?;
             validate_mode(mode)?;
-            if content.len() > MAX_FILE_BYTES || std::str::from_utf8(&content).is_err() {
+            if content.len() > MAX_FILE_BYTES {
                 return Err(FilesystemPlanError::InvalidInput);
             }
             account_bytes(total_bytes, content.len())?;
@@ -3405,6 +3407,31 @@ mod tests {
         assert_eq!(
             preview.operations[0].complete_content_preview.as_deref(),
             Some("\"\"")
+        );
+    }
+
+    #[test]
+    fn binary_creation_is_digest_bound_without_lossy_content_preview() {
+        let content = vec![0x50, 0x4b, 0x03, 0x04, 0xff, 0x00, 0x80];
+        let operation = FilesystemOperationDraft::Create {
+            operation_id: "operation-binary-create".to_owned(),
+            destination: destination(&["generated"], "report.docx", &[]),
+            content: content.clone(),
+            mode: 0o600,
+            classification: FileClassification::Generated,
+        };
+        let plan = build_filesystem_plan(&parent(), request(vec![operation])).expect("binary plan");
+        let preview = render_filesystem_preview(&plan).expect("binary preview");
+        let expected_sha256 = hex_sha256(&content);
+        assert_eq!(plan.operations()[0].postimage_bytes(), content);
+        assert_eq!(
+            plan.operations()[0].postimage_sha256(),
+            Some(expected_sha256.as_str())
+        );
+        assert!(preview.operations[0].complete_content_preview.is_none());
+        assert_eq!(
+            preview.operations[0].postimage_sha256,
+            Some(expected_sha256)
         );
     }
 

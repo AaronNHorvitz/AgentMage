@@ -8,6 +8,10 @@ use agentmage_capability_read_only::ArtifactClassification;
 use agentmage_kernel_contracts::{
     StructuredSourceExtractionError, StructuredSourceExtractionRequest, WorkspacePath,
 };
+use agentmage_kernel_engine::filesystem_control::{
+    FileClassification, FilesystemOperationDraft, NewDestinationDraft,
+};
+use sha2::{Digest, Sha256};
 
 use crate::word_source_artifact::{WordSourceAdmissionOutcome, WordSourceArtifactService};
 
@@ -20,6 +24,17 @@ pub struct WordGenerationCoordinatorRequest {
     pub document: MarkdownDocument,
     /// Validated workspace-relative output identity distinct from the Markdown source.
     pub output_path: WorkspacePath,
+}
+
+/// Caller-held absent destination for a separately approved controlled write.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct WordControlledWriteRequest {
+    /// Stable operation identity shown in the controlled-filesystem preview.
+    pub operation_id: String,
+    /// Exact held parent, output path, and sibling observation.
+    pub destination: NewDestinationDraft,
+    /// Exact POSIX-compatible destination mode.
+    pub mode: u32,
 }
 
 /// Exact caller-owned inputs for one bounded Word product operation.
@@ -43,6 +58,8 @@ pub struct WordArtifactCoordinatorRequest {
     pub protected_origin_sha256: String,
     /// Optional deterministic Markdown-to-DOCX proposal.
     pub generation: Option<WordGenerationCoordinatorRequest>,
+    /// Optional conversion of the generated proposal into a controlled-filesystem draft.
+    pub controlled_write: Option<WordControlledWriteRequest>,
 }
 
 /// Stable content-free failure from Word artifact product composition.
@@ -92,6 +109,8 @@ pub struct WordArtifactCoordinatorOutcome {
     pub source_admission: WordSourceAdmissionOutcome,
     /// Optional deterministic unpersisted DOCX proposal.
     pub generated: Option<GeneratedWordPackage>,
+    /// Optional exact binary create draft; it carries no approval or effect authority.
+    pub controlled_write_draft: Option<FilesystemOperationDraft>,
     /// Fixed false: this coordinator cannot write, fetch, render, or execute content.
     pub external_effect_allowed: bool,
 }
@@ -163,6 +182,16 @@ impl WordArtifactCoordinator {
                 .map_err(|_| WordArtifactCoordinatorError::InvalidInput)
             })
             .transpose()?;
+        let controlled_write_draft = match (&generated, request.controlled_write) {
+            (Some(proposal), Some(write)) => Some(prepare_generated_word_write(
+                proposal,
+                write.operation_id,
+                write.destination,
+                write.mode,
+            )?),
+            (None, Some(_)) => return Err(WordArtifactCoordinatorError::InvalidInput),
+            (_, None) => None,
+        };
 
         if inspection.filesystem_effect_performed
             || inspection.network_access_performed
@@ -186,9 +215,62 @@ impl WordArtifactCoordinator {
             sidecar_cache_hit: sidecar.cache_hit,
             source_admission,
             generated,
+            controlled_write_draft,
             external_effect_allowed: false,
         })
     }
+}
+
+/// Converts one exact verified DOCX proposal into the existing controlled-filesystem draft type.
+///
+/// The returned draft is still authority-free. A separate current session grant, exact plan and
+/// preview, explicit decision, single-use write grant, native driver, and post-write verification
+/// remain mandatory before bytes can be persisted.
+pub fn prepare_generated_word_write(
+    proposal: &GeneratedWordPackage,
+    operation_id: String,
+    destination: NewDestinationDraft,
+    mode: u32,
+) -> Result<FilesystemOperationDraft, WordArtifactCoordinatorError> {
+    if !valid_identifier(&operation_id)
+        || !matches!(mode, 0o600 | 0o640 | 0o644 | 0o700 | 0o740 | 0o755)
+        || destination.path != proposal.output_path
+        || proposal.package.is_empty()
+        || hex_sha256(&proposal.package) != proposal.package_sha256
+        || proposal.inspection.source_sha256 != proposal.package_sha256
+        || proposal.inspection.source_path != proposal.output_path
+        || proposal.inspection.quarantined
+        || !proposal.inspection.inspection_complete
+        || !proposal.accessibility_structure_complete
+        || !proposal.proposal_only
+        || proposal.filesystem_effect_performed
+        || proposal.network_access_performed
+        || proposal.execution_performed
+    {
+        return Err(WordArtifactCoordinatorError::InvalidInput);
+    }
+    Ok(FilesystemOperationDraft::Create {
+        operation_id,
+        destination,
+        content: proposal.package.clone(),
+        mode,
+        classification: FileClassification::Generated,
+    })
+}
+
+fn valid_identifier(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value.bytes().enumerate().all(|(index, byte)| {
+            byte.is_ascii_alphanumeric() || (index > 0 && matches!(byte, b'.' | b'_' | b':' | b'-'))
+        })
+}
+
+fn hex_sha256(value: &[u8]) -> String {
+    Sha256::digest(value)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
 }
 
 const fn map_source_error(error: StructuredSourceExtractionError) -> WordArtifactCoordinatorError {
@@ -204,10 +286,52 @@ const fn map_source_error(error: StructuredSourceExtractionError) -> WordArtifac
 
 #[cfg(test)]
 mod tests {
-    use agentmage_kernel_contracts::{CONTRACT_SCHEMA_VERSION, WorkspaceId};
+    use agentmage_kernel_contracts::{
+        AdapterInstanceId, CONTRACT_SCHEMA_VERSION, FilePreimage, GrantTarget, HeldWorkspaceObject,
+        PathPlatform, PathResolutionIntent, WorkspaceAuthorizationId, WorkspaceId,
+        WorkspaceObjectIdentity, WorkspaceObjectKind,
+    };
     use sha2::{Digest, Sha256};
 
     use super::*;
+
+    #[derive(Debug)]
+    struct HeldDirectory {
+        path: WorkspacePath,
+        authorization_id: WorkspaceAuthorizationId,
+        adapter_instance_id: AdapterInstanceId,
+        identity: WorkspaceObjectIdentity,
+    }
+
+    impl HeldWorkspaceObject for HeldDirectory {
+        fn workspace_path(&self) -> &WorkspacePath {
+            &self.path
+        }
+
+        fn authorization_id(&self) -> &WorkspaceAuthorizationId {
+            &self.authorization_id
+        }
+
+        fn adapter_instance_id(&self) -> &AdapterInstanceId {
+            &self.adapter_instance_id
+        }
+
+        fn intent(&self) -> PathResolutionIntent {
+            PathResolutionIntent::Metadata
+        }
+
+        fn object_kind(&self) -> WorkspaceObjectKind {
+            WorkspaceObjectKind::Directory
+        }
+
+        fn object_identity(&self) -> &WorkspaceObjectIdentity {
+            &self.identity
+        }
+
+        fn preimage(&self) -> Option<&FilePreimage> {
+            None
+        }
+    }
 
     fn path(name: &str) -> WorkspacePath {
         WorkspacePath::new(
@@ -263,6 +387,25 @@ mod tests {
                 document: markdown(),
                 output_path: path("generated.docx"),
             }),
+            controlled_write: None,
+        }
+    }
+
+    fn generated_destination() -> NewDestinationDraft {
+        let held = HeldDirectory {
+            path: WorkspacePath::new(
+                WorkspaceId::from_raw("workspace-word-coordinator"),
+                ["documents"],
+            )
+            .expect("parent path"),
+            authorization_id: WorkspaceAuthorizationId::from_raw("authorization-word-write"),
+            adapter_instance_id: AdapterInstanceId::from_raw("adapter-word-write"),
+            identity: WorkspaceObjectIdentity::new(PathPlatform::Linux, [1; 32], [2; 32]),
+        };
+        NewDestinationDraft {
+            parent: GrantTarget::held_object(&held).expect("held destination parent"),
+            path: path("generated.docx"),
+            observed_sibling_names: vec!["source.docx".to_owned()],
         }
     }
 
@@ -280,6 +423,7 @@ mod tests {
         let generated = outcome.generated.expect("generated package");
         assert!(generated.accessibility_structure_complete);
         assert!(generated.proposal_only);
+        assert!(outcome.controlled_write_draft.is_none());
         assert!(!outcome.external_effect_allowed);
     }
 
@@ -338,5 +482,35 @@ mod tests {
             coordinator.coordinate(overwrite),
             Err(WordArtifactCoordinatorError::InvalidInput)
         );
+    }
+
+    #[test]
+    fn generated_binary_enters_controlled_writer_only_as_an_unapproved_exact_draft() {
+        let mut coordinator = WordArtifactCoordinator::new(4).expect("coordinator");
+        let mut request = request();
+        request.controlled_write = Some(WordControlledWriteRequest {
+            operation_id: "write-generated-docx".to_owned(),
+            destination: generated_destination(),
+            mode: 0o600,
+        });
+        let outcome = coordinator.coordinate(request).expect("controlled draft");
+        let generated = outcome.generated.expect("generated package");
+        match outcome.controlled_write_draft.expect("write draft") {
+            FilesystemOperationDraft::Create {
+                operation_id,
+                destination,
+                content,
+                mode,
+                classification,
+            } => {
+                assert_eq!(operation_id, "write-generated-docx");
+                assert_eq!(destination.path, generated.output_path);
+                assert_eq!(content, generated.package);
+                assert_eq!(mode, 0o600);
+                assert_eq!(classification, FileClassification::Generated);
+            }
+            _ => panic!("unexpected controlled writer draft"),
+        }
+        assert!(!outcome.external_effect_allowed);
     }
 }

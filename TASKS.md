@@ -6987,9 +6987,10 @@ source adapter, runtime-owned prepared projections, common native artifact-tool 
 digest-sealed restart/retention with existing content-addressed payload references, multi-profile
 context accounting, hostile lifecycle coverage, golden projection/client parity, and zero-effect
 checks are complete. The authority-free Word product coordinator binds inspection, sidecar/cache,
-canonical source preparation, and optional generation into one exact fail-closed request. Story
-58.1 and Sprint 58 remain **BLOCKED** by Sprint 57, the unadmitted Word renderer, absent controlled
-writer, missing native-interface integration,
+canonical source preparation, and optional generation into one exact fail-closed request; verified
+binary output enters the existing controlled-filesystem approval pipeline only as an unapproved,
+digest-bound create draft. Story 58.1 and Sprint 58 remain **BLOCKED** by Sprint 57, the unadmitted
+Word renderer, missing native-interface integration,
 accessibility and installed cross-platform evidence, trusted-package execution, independent
 native-boundary review, and deferred manual fuzzing.
 ### [ ] Sprint 59 - Word Generation and Visual Verification

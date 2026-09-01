@@ -21,6 +21,9 @@ renderer authority.
    and duplicate headings.
 4. Require the reopened inspection to be complete and non-quarantined.
 5. Treat returned DOCX bytes as a proposal until a controlled writer authorizes persistence.
+6. For persistence, bind the proposal to one held absent destination and review its exact digest,
+   mode, generated classification, verification plan, and rollback narrative before issuing any
+   single-use write grant.
 
 ## Refusal Expectations
 
@@ -28,6 +31,6 @@ Reject or quarantine encrypted packages, duplicate or unsafe paths, unsupported 
 macros and active content, external relationships, malformed relationship XML, resource-limit
 violations, source overwrite requests, and any request to execute or resolve document content.
 
-Do not claim visual fidelity, accessibility acceptance, controlled persistence, native-interface
-integration, installed product acceptance, or supported-platform execution from the local Sprint 58
-evidence. Those remain later verification work.
+Do not claim visual fidelity, accessibility acceptance, an approved or executed persistence effect,
+native-interface integration, installed product acceptance, or supported-platform execution from
+the local Sprint 58 evidence. Those remain later verification work.

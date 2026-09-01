@@ -93,8 +93,12 @@ closed.
 
 The coordinator retains only bounded in-memory sidecar and canonical projection caches. A generated
 package remains an unpersisted proposal, and the coordinator has no filesystem-write, network,
-renderer, or execution authority. Controlled persistence and native-interface invocation remain
-separate boundaries.
+renderer, or execution authority. When supplied an exact held absent destination, it can convert the
+verified binary package into the existing controlled-filesystem create draft. Binary previews expose
+the exact output digest, destination, mode, classification, and review narrative without a lossy
+content rendering. A current parent grant, exact plan and preview, explicit decision, single-use
+write grant, native driver, and post-write verification remain mandatory before persistence.
+Native-interface invocation remains a separate boundary.
 
 ## Generation
 

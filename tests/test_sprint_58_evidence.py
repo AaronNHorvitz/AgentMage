@@ -48,6 +48,7 @@ class Sprint58EvidenceTests(unittest.TestCase):
         self.assertTrue(value["verification_evidence"]["hostile_lifecycle_campaign"])
         self.assertTrue(value["verification_evidence"]["golden_projection_client_parity"])
         self.assertTrue(value["verification_evidence"]["product_coordinator"])
+        self.assertTrue(value["verification_evidence"]["controlled_writer_integration"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
 
     def test_every_product_platform_manual_and_release_overclaim_fails(self) -> None:

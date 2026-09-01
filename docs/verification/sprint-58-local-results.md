@@ -40,6 +40,10 @@ review corpus.
   optional generation to one exact request, gives cancellation and dependency failure precedence,
   rejects stale identities and overwrite targets, and exposes no write, network, render, or
   execution authority.
+- Verified DOCX bytes can enter the existing controlled-filesystem pipeline as one exact binary
+  create draft. The approval preview binds the digest, destination, mode, generated classification,
+  verification, and rollback narrative without displaying lossy binary content; no approval, grant,
+  native write, or persistence result is fabricated by this local draft evidence.
 
 ## Security Mapping
 
@@ -55,8 +59,8 @@ No product-wide requirement is marked complete by this local contribution.
 
 A green local report proves only the committed source and named commands on the recorded Fedora
 environment. Sprint 57 is blocked. The Word renderer, rich edit and visual comparison path,
-controlled writer, native-interface integration, accessibility evidence,
+native-interface integration, accessibility evidence,
 installed Fedora/Ubuntu/macOS acceptance, trusted-package execution, independent review, and manual
 fuzz campaign are absent. Sprint 58 therefore remains **BLOCKED** despite passing local extraction,
 restart/retention, structured-adapter, common-dispatch, inspection, generation, schema, dependency,
-product-coordination, and review-corpus contracts.
+product-coordination, controlled-writer draft, and review-corpus contracts.
