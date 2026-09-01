@@ -61,9 +61,9 @@
       "sha256": "be34991fb3dff4e6fdd7a74489e2cec8158e63c88cfea71c17f1eff4c3ef66d1"
     },
     {
-      "bytes": 18517,
+      "bytes": 18823,
       "path": "kernel/engine/src/authority.rs",
-      "sha256": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8"
+      "sha256": "c8d75e190006004d76da34a0835a99e3b9074265bea9eba5d5cc388ff22ceb09"
     },
     {
       "bytes": 64919,
@@ -123,7 +123,7 @@
     {
       "bytes": 20004,
       "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
-      "sha256": "81df656a49e90be382159dada0922e50a15c1b017097136d5dd9f4b3b7e9e6e7"
+      "sha256": "c45ad97c3ca000a77fdcd3e0a8778469c54516495eb0e04459d90f3853baca97"
     },
     {
       "bytes": 4453,
@@ -133,7 +133,7 @@
     {
       "bytes": 8136,
       "path": "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
-      "sha256": "fa4c9037d7227756d4cae895ac57ea183dd50d2d083fd77cb60c0872c94e6032"
+      "sha256": "87bbdb78934be7be7226834eb0f0a3cdfb5c3dd80a1a828a009ca1a2139ca75f"
     },
     {
       "bytes": 17138,
@@ -273,7 +273,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "0eef34fadb0e14ccfc8c23b1ef6b95dd3b85e716",
+  "source_revision": "22e4dcd7533c78b8f6a6a35c7b2754745c825f97",
   "status": "pass-shared-linux-security-mapping",
   "story_id": "5.1",
   "summary": {
