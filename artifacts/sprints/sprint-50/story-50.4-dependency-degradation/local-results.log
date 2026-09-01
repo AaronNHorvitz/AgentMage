@@ -1,0 +1,32 @@
+$ cargo test -p agentmage-kernel-engine --test dependency_degradation --all-features --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 6 tests
+test every_dependency_family_is_classified_and_available ... ok
+test inventory_and_exact_identity_drift_never_silently_omit ... ok
+test fresh_narrower_stronger_same_kind_substitute_is_explicitly_selected ... ok
+test optional_loss_remains_permitted_but_never_silent ... ok
+test required_optional_disabled_and_quarantined_loss_are_visible ... ok
+test missing_stale_hidden_cross_kind_or_weaker_substitution_is_denied ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+COMMAND_0_EXIT=0
+
+$ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+
+COMMAND_1_EXIT=0
+
+$ python3 -m pytest -q tests/test_story_50_4_dependency_degradation_evidence.py tests/test_task_graph.py
+.....                                                                    [100%]
+5 passed in 0.13s
+
+COMMAND_2_EXIT=0
+
+$ python3 scripts/validate_docs.py
+Validated 408 Markdown file(s) and all policy invariants.
+
+COMMAND_3_EXIT=0

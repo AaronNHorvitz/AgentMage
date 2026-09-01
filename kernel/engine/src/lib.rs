@@ -2,6 +2,9 @@
 #![forbid(unsafe_code)]
 //! Security-authoritative AgentMage kernel scaffold.
 
+/// Closed dependency degradation and explicit substitution policy.
+pub mod dependency_degradation;
+
 /// Authority-reducing application of advisory classifier output.
 pub mod advisory_policy;
 pub mod agent_ceiling;

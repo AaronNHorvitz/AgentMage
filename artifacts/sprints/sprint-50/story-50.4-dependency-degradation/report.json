@@ -1,0 +1,85 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 19339,
+      "path": "ENGINEERING-RUNTIME.md",
+      "sha256": "3dff78bc2a21f15a189c1c0c7f723c709d9db820a039aa1053eb3b5bfeb9e9fc"
+    },
+    {
+      "byte_length": 221522,
+      "path": "requirements/registry.json",
+      "sha256": "dec57536330999a897a50a79992dcc1f5f0fcb2eb4a07f8aad34d2736397ba67"
+    },
+    {
+      "byte_length": 18891,
+      "path": "kernel/engine/src/dependency_degradation.rs",
+      "sha256": "6825bc76c245d3431c10d3bfae067f39e91690a916c8b9413748fdc6c1f60947"
+    },
+    {
+      "byte_length": 9730,
+      "path": "kernel/engine/tests/dependency_degradation.rs",
+      "sha256": "4417c78cb6ead4b01bef1c59f3ca48ab97695d5f7934c9ce16a2013735aede60"
+    },
+    {
+      "byte_length": 2328,
+      "path": "docs/architecture/runtime-dependency-degradation.md",
+      "sha256": "4a06a784c0113c5de612bdcdb275c4f09ccf98810bab04ea92a46e9ddbb4b207"
+    },
+    {
+      "byte_length": 7516,
+      "path": "scripts/story_50_4_dependency_degradation_evidence.py",
+      "sha256": "fa8f6169c5c255bd4d1f63eae1eb57795ef5ef8d9b2de87c36697c18404c8f5f"
+    },
+    {
+      "byte_length": 1740,
+      "path": "tests/test_story_50_4_dependency_degradation_evidence.py",
+      "sha256": "878057d57294f51df438dc0c95c5a52e93e8c193116e9d5e7d0f5cb989ea4fdd"
+    },
+    {
+      "byte_length": 1344,
+      "path": "artifacts/sprints/sprint-50/story-50.4-dependency-degradation/local-results.log",
+      "sha256": "7ca5cb6393050b18d45dacb781684701e4e7e9507b983e2d1cf1089a72ceaa2c"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine --test dependency_degradation --all-features --locked",
+    "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings",
+    "python3 -m pytest -q tests/test_story_50_4_dependency_degradation_evidence.py tests/test_task_graph.py",
+    "python3 scripts/validate_docs.py"
+  ],
+  "generated_on": "2026-08-31",
+  "product_truth": {
+    "all_dependency_families_classified": true,
+    "authority_broadening_permitted": false,
+    "disabled_and_quarantined_visible": true,
+    "false_success_authority": false,
+    "fresh_qualified_substitution_only": true,
+    "independent_review_complete": false,
+    "installed_client_campaign_complete": false,
+    "live_dependency_removal_campaign_complete": false,
+    "macos_validation_complete": false,
+    "optional_loss_visible_and_bounded": true,
+    "qualified_model_or_endpoint_campaign_complete": false,
+    "release_claim": "none",
+    "required_loss_blocks": true,
+    "security_or_verification_weakening_permitted": false,
+    "silent_omission_or_route_change": false,
+    "unavailable_substitute_visible": true,
+    "windows_validation_complete": false
+  },
+  "record_type": "agentmage-story-50-4-dependency-degradation-evidence",
+  "remaining_external_work": [
+    "repeat lifecycle removal against admitted live model and endpoint tuples",
+    "repeat against installed Chat, Verified Chat, CLI, and headless clients",
+    "run final local Windows validation against the exact final candidate commit",
+    "run deferred macOS validation against the exact final candidate commit",
+    "obtain independent runtime, security, and release review"
+  ],
+  "requirement_ids": [
+    "AM-DEG-001",
+    "AT-DEG-001"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_DEPENDENCY_DEGRADATION",
+  "story_id": "50.4"
+}

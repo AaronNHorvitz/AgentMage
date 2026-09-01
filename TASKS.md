@@ -6290,10 +6290,10 @@ dependencies, load, malformed inputs, failures, and recovery before later capabi
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 50.4.1 - Enforce dependency degradation classes**
-  - [ ] **Sub-task 50.4.1.1:** Classify every runtime, parser, model, codec, endpoint, tool, verifier, client feature, and optional capability as required, optional, or explicitly substitutable.
-  - [ ] **Sub-task 50.4.1.2:** Implement visible blocked, degraded, unavailable, disabled, and quarantined states with no silent omission, authority reduction, route change, or false success.
-  - [ ] **Sub-task 50.4.1.3:** Verify substitutable dependencies require a fresh qualified selection and equivalent or stricter security and completion policy.
+- [x] **Task 50.4.1 - Enforce dependency degradation classes**
+  - [x] **Sub-task 50.4.1.1:** Classify every runtime, parser, model, codec, endpoint, tool, verifier, client feature, and optional capability as required, optional, or explicitly substitutable. Evidence: `RuntimeDependencyKind` closes all named families plus durable stores, while `RuntimeDependency` binds each exact version, identity, requirement class, policy envelope, and optional substitution-policy digest.
+  - [x] **Sub-task 50.4.1.2:** Implement visible blocked, degraded, unavailable, disabled, and quarantined states with no silent omission, authority reduction, route change, or false success. Evidence: `evaluate_workflow_dependencies` requires exactly one current observation for every registered identity, produces one ordered visible result and reason per dependency, permits only explicit optional reduction, and rejects missing, extra, duplicate, unknown, or unaccounted inventory.
+  - [x] **Sub-task 50.4.1.3:** Verify substitutable dependencies require a fresh qualified selection and equivalent or stricter security and completion policy. Evidence: the exact bound policy hash, current nonzero qualification generation, same dependency family, visible reason, identical data/completion policies, narrowed authority set, and equal-or-stronger security/verification strengths are all mandatory; six focused tests reject absent, stale, hidden, unqualified, cross-kind, identity-drifted, and weaker replacements.
 - [ ] **Task 50.4.2 - Execute reliability campaigns**
   - [ ] **Sub-task 50.4.2.1:** Test parser/model/tool/verifier/client loss, malformed data, cancellation, process crash, restart, resource exhaustion, backpressure, event duplication/reordering, stale state, and uncertain effects.
   - [ ] **Sub-task 50.4.2.2:** Run long-context, large-artifact, concurrency, queue, latency, memory, disk, descriptor, and process-ceiling campaigns with deterministic termination.
@@ -6304,7 +6304,7 @@ dependencies, load, malformed inputs, failures, and recovery before later capabi
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 50.4.AC1:** Given loss or failure of any dependency, when the runtime responds, then behavior matches the declared degradation class without hidden omission, route change, or false completion.
+- [x] **Story AC 50.4.AC1:** Given loss or failure of any dependency, when the runtime responds, then behavior matches the declared degradation class without hidden omission, route change, or false completion. Evidence: [`runtime-dependency-degradation.md`](docs/architecture/runtime-dependency-degradation.md) documents the closed decision boundary and the retained [`report.json`](artifacts/sprints/sprint-50/story-50.4-dependency-degradation/report.json) plus mutation tests require all families, visible states, and fresh substitution to remain true while authority widening, weakening, silent routing, and false-success authority remain false.
 - [ ] **Story AC 50.4.AC2:** Given adversarial load or interruption, when execution terminates or resumes, then authority, evidence, artifacts, and completed effects remain exact and bounded.
 - [ ] **Story AC 50.4.AC3:** Given the foundational runtime-core gate, when status is computed, then it closes only from current raw evidence and leaves every unavailable qualification explicitly open.
 
