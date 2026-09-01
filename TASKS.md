@@ -4120,7 +4120,7 @@ capture, and label/proxy/MCP omissions with zero silent drop. Packaged VSIX keyb
 headless byte-parity, supported-platform placement, qualified-production-model, and independent
 review evidence remain open under Tasks 23.5.3 and 23.5.4; no installed or release pass is claimed.
 
-#### [ ] Story 23.6 - Verified Workflow Supervisor Vertical Slice
+#### [x] Story 23.6 - Verified Workflow Supervisor Vertical Slice
 
 **User-facing value:** As a user, I need AgentMage to finish a bounded multi-step task only after
 its actual postconditions are verified, or tell me exactly why it could not continue safely.
@@ -4129,43 +4129,53 @@ its actual postconditions are verified, or tell me exactly why it could not cont
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 23.6.1 - Compose the supervisor through the existing coordinator**
-  - [ ] **Sub-task 23.6.1.1:** Bind existing `PlanStepId` values to execution policies and select
+- [x] **Task 23.6.1 - Compose the supervisor through the existing coordinator**
+  - [x] **Sub-task 23.6.1.1:** Bind existing `PlanStepId` values to execution policies and select
     only dependency-ready steps with current context, preflights, policy, tools, and budgets.
-  - [ ] **Sub-task 23.6.1.2:** Compose proposal decoding, deterministic repair, call validation,
+  - [x] **Sub-task 23.6.1.2:** Compose proposal decoding, deterministic repair, call validation,
     approval disposition, fresh grant, native dispatch, receipt, artifact, verifier, checkpoint,
     recovery decision, and event emission without a second loop.
-  - [ ] **Sub-task 23.6.1.3:** Detect empty, reasoning-only, false-complete, open-plan, post-error,
+  - [x] **Sub-task 23.6.1.3:** Detect empty, reasoning-only, false-complete, open-plan, post-error,
     and repeated-state stopping and route each to bounded recovery or terminal diagnosis.
-- [ ] **Task 23.6.2 - Deliver deterministic fake-model slices**
-  - [ ] **Sub-task 23.6.2.1:** Complete one multi-artifact read-only plan with at least three
+- [x] **Task 23.6.2 - Deliver deterministic fake-model slices**
+  - [x] **Sub-task 23.6.2.1:** Complete one multi-artifact read-only plan with at least three
     dependent steps, exact context accounting, native artifact tools, and verifier-backed success.
-  - [ ] **Sub-task 23.6.2.2:** Complete one safely recoverable transient read failure using one
+  - [x] **Sub-task 23.6.2.2:** Complete one safely recoverable transient read failure using one
     fresh attempt and prove old call/grant/receipt identities are not reused.
-  - [ ] **Sub-task 23.6.2.3:** Diagnose one uncertain effect, one false completion, one exhausted
+  - [x] **Sub-task 23.6.2.3:** Diagnose one uncertain effect, one false completion, one exhausted
     budget, one stale preflight, one cancellation, and one restart without false success or replay.
-- [ ] **Task 23.6.3 - Verify interface independence and authority**
-  - [ ] **Sub-task 23.6.3.1:** Run identical slices through Chat, test CLI, and headless adapters;
+- [x] **Task 23.6.3 - Verify interface independence and authority**
+  - [x] **Sub-task 23.6.3.1:** Run identical slices through Chat, test CLI, and headless adapters;
     require equivalent correctness events, source/context manifests, attempts, receipts,
     verification, terminal state, and diagnosis.
-  - [ ] **Sub-task 23.6.3.2:** Mutate client output, model prose, classifier score, event projection,
+  - [x] **Sub-task 23.6.3.2:** Mutate client output, model prose, classifier score, event projection,
     and transcript; require no authority, retry, effect, or completion change.
-  - [ ] **Sub-task 23.6.3.3:** Retain raw traces, state transitions, budget ledgers, attempt and
+  - [x] **Sub-task 23.6.3.3:** Retain raw traces, state transitions, budget ledgers, attempt and
     receipt maps, no-replay counters, diagnostics, cleanup, and mapped reviewer evidence.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 23.6.AC1:** Given a dependency-valid fake-model plan, when the supervisor runs,
+- [x] **Story AC 23.6.AC1:** Given a dependency-valid fake-model plan, when the supervisor runs,
   then each step executes at most one admitted attempt at a time and success occurs only from
   current deterministic postcondition evidence.
-- [ ] **Story AC 23.6.AC2:** Given a safely eligible failure, when recovery chooses a new attempt,
+- [x] **Story AC 23.6.AC2:** Given a safely eligible failure, when recovery chooses a new attempt,
   then every authority-bearing identity is fresh, prior evidence remains immutable, and no effect is
   duplicated.
-- [ ] **Story AC 23.6.AC3:** Given unsafe, uncertain, exhausted, stale, or premature-stop state, when
+- [x] **Story AC 23.6.AC3:** Given unsafe, uncertain, exhausted, stale, or premature-stop state, when
   the run terminates, then one actionable diagnosis is emitted and no client or model can convert it
   into success.
-- [ ] **Story AC 23.6.AC4:** Given equivalent clients, when the same run is replayed, then only
+- [x] **Story AC 23.6.AC4:** Given equivalent clients, when the same run is replayed, then only
   presentation differs; policy, attempts, receipts, artifacts, verification, and outcome are equal.
+
+Local evidence: [`verified-workflow-supervisor.md`](docs/architecture/verified-workflow-supervisor.md)
+defines the one-loop composition and authority boundary. The retained
+[`workflow-supervisor-report.json`](artifacts/sprints/sprint-23/story-23.6/workflow-supervisor-report.json)
+hashes the engine, host adapter, common coordinator/client foundations, fake-model/native-artifact
+fixtures, architecture, generator, mutation tests, and raw focused gates. Deterministic fixtures
+cover three dependent artifact steps, verifier-only success, fresh retry identities, every required
+unsafe terminal class, no-progress exhaustion, checkpoint restart/no-replay, tamper refusal, and
+presentation-only client differences. Qualified-production-model, final Windows/macOS, installed
+package, and independent review evidence remain explicitly outside this local story pass.
 
 #### Sprint Acceptance Criteria
 

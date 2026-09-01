@@ -1,0 +1,108 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 71692,
+      "path": "kernel/engine/src/verified_workflow_supervisor.rs",
+      "sha256": "73e88b618c2c52e32e75a968c760c2ff5af521879de7c050f95b7c0132b1b74c"
+    },
+    {
+      "byte_length": 11490,
+      "path": "kernel/engine/src/lib.rs",
+      "sha256": "60763ad89bcc35002a0dc265d8bbc02f2e38cf4e53c3cd8018fb6051728adc74"
+    },
+    {
+      "byte_length": 16256,
+      "path": "shells/host/src/workflow_supervisor.rs",
+      "sha256": "4ef55171f8318b96b18ec8a82f3d0d5d449f98120ca3ac6f3134f40b21ad7c29"
+    },
+    {
+      "byte_length": 7481,
+      "path": "shells/host/src/coding_client.rs",
+      "sha256": "5794af19e7fb3d7cc8ef7c7bf446621ab01f0683a628b165383232ceb03761b3"
+    },
+    {
+      "byte_length": 3416,
+      "path": "shells/host/src/coding_harness.rs",
+      "sha256": "5091dec8b12c1152b707c5a604ae9b5ef9cb649809c59272139a11c0b4c891cb"
+    },
+    {
+      "byte_length": 47262,
+      "path": "shells/host/src/runtime_read_tests.rs",
+      "sha256": "c46a0c2c277fb422a902537fc2aa0bc612b8757b77fd960e69a004fe8623e645"
+    },
+    {
+      "byte_length": 4068,
+      "path": "shells/host/src/lib.rs",
+      "sha256": "28f3ad8f7fac8184f0b97ca453b29c26a3711810a96daaa69bdd82112c52f8bb"
+    },
+    {
+      "byte_length": 5228,
+      "path": "docs/architecture/verified-workflow-supervisor.md",
+      "sha256": "85b170496c26d2db5b48e260410f39f5077f2e7090012698b53b040951b02374"
+    },
+    {
+      "byte_length": 40604,
+      "path": "docs/architecture/foundational-artifact-and-workflow-runtime.md",
+      "sha256": "d0fcebf4dabf213defc0962e677559560f87caeefba2e7c08be46dc33d89e1e4"
+    },
+    {
+      "byte_length": 8268,
+      "path": "scripts/story_23_6_workflow_supervisor_evidence.py",
+      "sha256": "34d389c9f51cc5eb3f5495a4f76a033e84908e0dbde798bd1ebc170be7067c38"
+    },
+    {
+      "byte_length": 1092,
+      "path": "tests/test_story_23_6_workflow_supervisor_evidence.py",
+      "sha256": "ab51ee8b07624a2f70ef611bc905be817b831d3ed783c5191fa39e1183d2f519"
+    },
+    {
+      "byte_length": 23185,
+      "path": "artifacts/sprints/sprint-23/story-23.6/workflow-supervisor-results.log",
+      "sha256": "55ca0388626801a5dab762c9e304e208fd88ed158cb91df52948d99978e8bb44"
+    }
+  ],
+  "commands": [
+    "cargo test -p agentmage-kernel-engine verified_workflow_supervisor --all-features --locked -- --nocapture",
+    "cargo test -p agentmage-host workflow_supervisor --all-features --locked",
+    "cargo test -p agentmage-host runtime_parity_tests --all-features --locked",
+    "cargo test -p agentmage-kernel-engine story_23_4_ --all-features --locked",
+    "cargo test -p agentmage-host story_22_5_prepared_source_flows --all-features --locked",
+    "cargo test -p agentmage-host story_23_4_fake_model_composes_multiple_reads --all-features --locked",
+    "python3 scripts/validate_docs.py"
+  ],
+  "generated_on": "2026-08-31",
+  "product_truth": {
+    "client_or_model_completion_authority": false,
+    "closed_workflow_and_policy_admission": true,
+    "common_coordinator_driver_only": true,
+    "dependency_ready_selection_only": true,
+    "fresh_retry_identity_enforcement": true,
+    "independent_review_complete": false,
+    "macos_validation_complete": false,
+    "presentation_changes_canonical_result": false,
+    "qualified_production_model_complete": false,
+    "release_claim": "none",
+    "safe_checkpoint_no_replay": true,
+    "second_model_or_tool_loop": false,
+    "three_dependent_artifact_steps": true,
+    "uncertain_effect_replay": false,
+    "verifier_owned_success_only": true,
+    "windows_validation_complete": false
+  },
+  "record_type": "agentmage-story-23-6-workflow-supervisor-evidence",
+  "remaining_external_work": [
+    "repeat the final candidate with an independently qualified production model",
+    "run final local Windows validation against the exact final candidate commit",
+    "run deferred macOS validation against the exact final candidate commit",
+    "obtain independent security and release review"
+  ],
+  "retained_fixture_markers": [
+    "STORY_23_6_SUCCESS=",
+    "STORY_23_6_RETRY=",
+    "STORY_23_6_TERMINALS=",
+    "STORY_23_6_RESTART="
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_VERIFIED_WORKFLOW_SUPERVISOR",
+  "story_id": "23.6"
+}

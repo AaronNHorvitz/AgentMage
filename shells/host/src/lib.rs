@@ -66,6 +66,9 @@ pub mod workflow_assignment;
 /// Caller-neutral, narrowing-only workflow attachment to the shared coding runtime.
 pub mod workflow_caller;
 
+/// Host composition from the verified workflow supervisor into the existing coding coordinator.
+pub mod workflow_supervisor;
+
 /// Versioned thin-client contracts shared by terminal and headless interfaces.
 pub mod headless;
 

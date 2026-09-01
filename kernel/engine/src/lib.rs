@@ -183,6 +183,8 @@ pub mod validation_template;
 pub mod verified_artifact;
 /// Deterministic context admission and model-delivery coverage receipts.
 pub mod verified_context;
+/// Dependency-ready orchestration over exact reusable-runtime step attempts.
+pub mod verified_workflow_supervisor;
 /// Bounded work-packet validation, revision history, and plan adaptation.
 pub mod work_packet;
 /// Narrowing-only authority intersection for future workflow callers.
