@@ -44,7 +44,7 @@ class Sprint58EvidenceTests(unittest.TestCase):
         self.assertTrue(value["verification_evidence"]["docx_source_adapter"])
         self.assertTrue(value["verification_evidence"]["common_native_artifact_dispatch"])
         self.assertTrue(value["verification_evidence"]["prepared_source_restart_retention"])
-        self.assertFalse(value["verification_evidence"]["multi_profile_context_accounting"])
+        self.assertTrue(value["verification_evidence"]["multi_profile_context_accounting"])
         self.assertEqual(value["summary"]["sprint_status"], "BLOCKED")
 
     def test_every_product_platform_manual_and_release_overclaim_fails(self) -> None:

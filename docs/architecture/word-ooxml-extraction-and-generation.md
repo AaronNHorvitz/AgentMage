@@ -71,9 +71,11 @@ the service never owns a second byte store or path namespace.
 Prepared sections and visible warning sections flow through the existing common `artifact.list`,
 `artifact.metadata`, `artifact.read`, `artifact.sections`, and `artifact.search` dispatcher with
 production receipts and no parser, network, workspace-write, or client-specific bypass at
-tool-dispatch time. Multi-profile context accounting, installed-client parity, and the full hostile
-lifecycle campaign remain open under Story 58.2; this local adapter does not promote those
-requirements.
+tool-dispatch time. The same minimized sections enter the existing `compose_context` path under the
+checked model plan's source-artifact partition. Complete records cover source containers, canonical
+sections, warnings, global duplicates, budget omissions, truncation, and sensitivity refusal;
+counter/tokenizer drift fails closed. Installed-client parity and the full hostile lifecycle
+campaign remain open under Story 58.2; this local adapter does not promote those requirements.
 
 ## Generation
 

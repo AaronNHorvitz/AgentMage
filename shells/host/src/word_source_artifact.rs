@@ -1,6 +1,6 @@
 //! Runtime-owned DOCX preparation and common native artifact-tool projection.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use agentmage_capability_knowledge::WordStructuredSourceExtractor;
 use agentmage_capability_read_only::{
@@ -10,14 +10,24 @@ use agentmage_capability_read_only::{
     ArtifactToolKind, FakeArtifactSource, dispatch_artifact,
 };
 use agentmage_kernel_contracts::{
-    CONTRACT_SCHEMA_VERSION, RuntimeArtifactRef, StructuredSourceExtraction,
-    StructuredSourceExtractionError, StructuredSourceExtractionRequest, StructuredSourceExtractor,
-    StructuredSourceSectionKind, StructuredSourceWarning,
+    CONTRACT_SCHEMA_VERSION, ContextAdmission, ContextItemCandidate, ContextItemKind,
+    ContextOmissionReason, ContextPacketId, ContextSensitivity, RuntimeArtifactRef,
+    StructuredSourceExtraction, StructuredSourceExtractionError, StructuredSourceExtractionRequest,
+    StructuredSourceExtractor, StructuredSourceSectionKind, StructuredSourceWarning,
+};
+use agentmage_kernel_engine::context_management::{ContextCompositionBudget, compose_context};
+use agentmage_kernel_engine::model_orchestration_profile::{
+    ModelContextWindowPlan, verify_model_context_window_plan,
+};
+use agentmage_kernel_engine::source_preparation::{
+    ExactSourceTokenCounter, PreparedSourceContextManifest, SourceContextDisposition,
+    SourceContextRecord, SourcePreparationError, verify_prepared_source_context_manifest,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 const MAX_PREPARED_WORD_SOURCES: usize = 1_024;
+const MAX_WORD_CONTEXT_RECORDS: usize = 4_096;
 
 /// One content-free terminal result for a DOCX preparation attempt.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -341,6 +351,200 @@ impl WordSourceArtifactService {
             .map(|source| source.prepared_manifest.clone())
     }
 
+    /// Composes minimized DOCX sections through the existing context manager with full accounting.
+    pub fn compile_context(
+        &self,
+        context_manifest_id: String,
+        packet_id: ContextPacketId,
+        plan: &ModelContextWindowPlan,
+        maximum_bytes: u64,
+        counter: &mut impl ExactSourceTokenCounter,
+        disclose_private: bool,
+    ) -> Result<PreparedSourceContextManifest, SourcePreparationError> {
+        let binding = counter.binding();
+        if self.sources.is_empty()
+            || !valid_id(&context_manifest_id)
+            || verify_model_context_window_plan(plan).is_err()
+            || plan.token_counter_sha256 != binding.token_counter_sha256
+            || plan.tokenizer_sha256 != binding.tokenizer_sha256
+            || !valid_id(&binding.token_counter_id)
+            || maximum_bytes == 0
+        {
+            return Err(SourcePreparationError::TokenizerMismatch);
+        }
+        let mut records = Vec::new();
+        let mut candidates = Vec::new();
+        let mut candidate_records = BTreeMap::new();
+        let mut content_owners = BTreeSet::new();
+        for source in self.sources.values() {
+            let prepared = &source.prepared_manifest;
+            let sensitivity = context_sensitivity(prepared.classification);
+            let restricted = sensitivity == ContextSensitivity::Restricted
+                || (sensitivity == ContextSensitivity::Private && !disclose_private);
+            records.push(SourceContextRecord {
+                source_id: prepared.source_id.clone(),
+                source_revision_sha256: prepared.manifest_sha256.clone(),
+                section_id: None,
+                section_sha256: None,
+                disposition: if restricted {
+                    SourceContextDisposition::Restricted
+                } else if prepared.extraction_complete {
+                    SourceContextDisposition::Included
+                } else {
+                    SourceContextDisposition::Truncated
+                },
+                reason_code: if restricted {
+                    Some("context.source.restricted".to_owned())
+                } else if prepared.extraction_complete {
+                    None
+                } else {
+                    Some("context.source.extraction_truncated".to_owned())
+                },
+                token_count: 0,
+            });
+            for section in &source.extraction.sections {
+                let digest = sha256(section.content.as_bytes());
+                let record_index = records.len();
+                let empty = section.content.is_empty();
+                records.push(SourceContextRecord {
+                    source_id: prepared.source_id.clone(),
+                    source_revision_sha256: prepared.manifest_sha256.clone(),
+                    section_id: Some(section.section_id.clone()),
+                    section_sha256: Some(digest.clone()),
+                    disposition: if restricted {
+                        SourceContextDisposition::Restricted
+                    } else if empty {
+                        SourceContextDisposition::Omitted
+                    } else {
+                        SourceContextDisposition::Included
+                    },
+                    reason_code: if restricted {
+                        Some("context.source.restricted".to_owned())
+                    } else if empty {
+                        Some("context.section.container".to_owned())
+                    } else {
+                        None
+                    },
+                    token_count: 0,
+                });
+                if !restricted && !empty {
+                    add_context_candidate(
+                        &mut candidates,
+                        &mut candidate_records,
+                        &mut content_owners,
+                        &mut records,
+                        prepared,
+                        sensitivity,
+                        &section.section_id,
+                        &section.content,
+                        digest,
+                        record_index,
+                        counter,
+                    )?;
+                }
+            }
+            for warning in &source.extraction.warnings {
+                let section_id = format!("warning:{}", warning.warning_id);
+                let content = warning_content(warning);
+                let digest = sha256(content.as_bytes());
+                let record_index = records.len();
+                records.push(SourceContextRecord {
+                    source_id: prepared.source_id.clone(),
+                    source_revision_sha256: prepared.manifest_sha256.clone(),
+                    section_id: Some(section_id.clone()),
+                    section_sha256: Some(digest.clone()),
+                    disposition: if restricted {
+                        SourceContextDisposition::Restricted
+                    } else {
+                        SourceContextDisposition::Included
+                    },
+                    reason_code: restricted.then(|| "context.source.restricted".to_owned()),
+                    token_count: 0,
+                });
+                if !restricted {
+                    add_context_candidate(
+                        &mut candidates,
+                        &mut candidate_records,
+                        &mut content_owners,
+                        &mut records,
+                        prepared,
+                        sensitivity,
+                        &section_id,
+                        &content,
+                        digest,
+                        record_index,
+                        counter,
+                    )?;
+                }
+            }
+            if records.len() > MAX_WORD_CONTEXT_RECORDS {
+                return Err(SourcePreparationError::ResourceLimit);
+            }
+        }
+        let packet = compose_context(
+            packet_id,
+            &ContextCompositionBudget {
+                max_bytes: maximum_bytes,
+                max_tokens: plan.source_artifacts.allocated_tokens,
+                max_items: MAX_WORD_CONTEXT_RECORDS as u32,
+                token_counter_id: binding.token_counter_id.clone(),
+            },
+            candidates,
+        )?;
+        for accounting in &packet.accounting {
+            let Some(record) = candidate_records
+                .get(&accounting.item_id)
+                .and_then(|index| records.get_mut(*index))
+            else {
+                return Err(SourcePreparationError::InvalidInput);
+            };
+            record.token_count = accounting.token_count;
+            if !accounting.included {
+                let (disposition, reason) = match accounting.omission {
+                    Some(ContextOmissionReason::Duplicate) => (
+                        SourceContextDisposition::Duplicate,
+                        "context.section.duplicate",
+                    ),
+                    Some(ContextOmissionReason::Budget) => {
+                        (SourceContextDisposition::Omitted, "context.section.budget")
+                    }
+                    Some(ContextOmissionReason::Denied) => (
+                        SourceContextDisposition::Restricted,
+                        "context.section.restricted",
+                    ),
+                    Some(ContextOmissionReason::Stale) => {
+                        (SourceContextDisposition::Stale, "context.section.stale")
+                    }
+                    None => return Err(SourcePreparationError::InvalidInput),
+                };
+                record.disposition = disposition;
+                record.reason_code = Some(reason.to_owned());
+            }
+        }
+        records.sort_by(|left, right| {
+            (left.source_id.as_str(), left.section_id.as_deref())
+                .cmp(&(right.source_id.as_str(), right.section_id.as_deref()))
+        });
+        let mut manifest = PreparedSourceContextManifest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            context_manifest_id,
+            context_window_plan_sha256: plan.plan_sha256.clone(),
+            token_counter_id: binding.token_counter_id,
+            token_counter_sha256: binding.token_counter_sha256,
+            tokenizer_sha256: binding.tokenizer_sha256,
+            allocated_tokens: plan.source_artifacts.allocated_tokens,
+            used_tokens: packet.used_tokens,
+            records,
+            packet,
+            manifest_sha256: "0".repeat(64),
+        };
+        manifest.manifest_sha256 = sha256(
+            &serde_json::to_vec(&manifest).map_err(|_| SourcePreparationError::InvalidInput)?,
+        );
+        verify_prepared_source_context_manifest(&manifest)?;
+        Ok(manifest)
+    }
+
     /// Deletes one prepared projection and its cache identity without touching original bytes.
     pub fn delete(&mut self, source_id: &str) -> bool {
         self.sources.remove(source_id).is_some()
@@ -357,6 +561,71 @@ impl WordSourceArtifactService {
     pub fn is_empty(&self) -> bool {
         self.sources.is_empty()
     }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn add_context_candidate(
+    candidates: &mut Vec<ContextItemCandidate>,
+    candidate_records: &mut BTreeMap<String, usize>,
+    content_owners: &mut BTreeSet<String>,
+    records: &mut [SourceContextRecord],
+    prepared: &PreparedWordSourceManifest,
+    sensitivity: ContextSensitivity,
+    section_id: &str,
+    content: &str,
+    digest: String,
+    record_index: usize,
+    counter: &mut impl ExactSourceTokenCounter,
+) -> Result<(), SourcePreparationError> {
+    let item_id = format!(
+        "word-context-{}",
+        &sha256(format!("{}:{section_id}", prepared.source_id).as_bytes())[..24]
+    );
+    let token_count = counter.count_tokens(content)?;
+    if !content_owners.insert(digest.clone()) {
+        let record = records
+            .get_mut(record_index)
+            .ok_or(SourcePreparationError::InvalidInput)?;
+        record.disposition = SourceContextDisposition::Duplicate;
+        record.reason_code = Some("context.section.duplicate".to_owned());
+        record.token_count = token_count;
+        return Ok(());
+    }
+    candidates.push(ContextItemCandidate {
+        item_id: item_id.clone(),
+        kind: ContextItemKind::Evidence,
+        sensitivity,
+        admission: ContextAdmission::Eligible,
+        authoritative_evidence: true,
+        essential: false,
+        source_id: prepared.source_id.clone(),
+        source_revision: prepared.manifest_sha256.clone(),
+        content_sha256: digest,
+        bounded_excerpt: content.to_owned(),
+        token_count,
+    });
+    if candidate_records.insert(item_id, record_index).is_some() {
+        return Err(SourcePreparationError::Conflict);
+    }
+    Ok(())
+}
+
+const fn context_sensitivity(classification: ArtifactClassification) -> ContextSensitivity {
+    match classification {
+        ArtifactClassification::Public => ContextSensitivity::Public,
+        ArtifactClassification::Internal => ContextSensitivity::Internal,
+        ArtifactClassification::Confidential => ContextSensitivity::Private,
+        ArtifactClassification::Restricted => ContextSensitivity::Restricted,
+    }
+}
+
+fn warning_content(warning: &StructuredSourceWarning) -> String {
+    format!(
+        "reason_code={}; source_part={}; original_remains_authoritative={}",
+        warning.reason_code,
+        warning.source_part.as_deref().unwrap_or("none"),
+        warning.original_remains_authoritative,
+    )
 }
 
 fn artifact_manifest(prepared: &PreparedWordSourceManifest) -> ArtifactManifest {
@@ -431,12 +700,7 @@ fn project_source(source: &PreparedWordSource) -> FakeArtifactSource {
         .collect::<Vec<_>>();
     for (index, warning) in source.extraction.warnings.iter().enumerate() {
         let section_id = format!("warning: {}", warning.warning_id);
-        let content = format!(
-            "reason_code={}; source_part={}; original_remains_authoritative={}",
-            warning.reason_code,
-            warning.source_part.as_deref().unwrap_or("none"),
-            warning.original_remains_authoritative,
-        );
+        let content = warning_content(warning);
         sections.push(ArtifactSection {
             section_id: section_id.clone(),
             title: "Extraction warning".to_owned(),
@@ -497,7 +761,12 @@ mod tests {
     use super::*;
     use agentmage_capability_read_only::{ArtifactLimits, ArtifactOutcome, ArtifactRequest};
     use agentmage_kernel_contracts::{
-        CONTRACT_SCHEMA_VERSION, DOCX_MEDIA_TYPE, RuntimeArtifactId, WorkspaceId, WorkspacePath,
+        CONTRACT_SCHEMA_VERSION, ContextPacketId, DOCX_MEDIA_TYPE, RuntimeArtifactId, WorkspaceId,
+        WorkspacePath,
+    };
+    use agentmage_kernel_engine::model_orchestration_profile::{
+        AllocatedContextPartition, ContextPartitionDisposition, ExactTokenCounterBinding,
+        ModelContextWindowPlan,
     };
 
     fn push_u16(output: &mut Vec<u8>, value: u16) {
@@ -621,6 +890,55 @@ mod tests {
             call_depth: 0,
         })
         .expect("request")
+    }
+
+    struct WordCounter {
+        binding: ExactTokenCounterBinding,
+    }
+
+    impl ExactSourceTokenCounter for WordCounter {
+        fn binding(&self) -> ExactTokenCounterBinding {
+            self.binding.clone()
+        }
+
+        fn count_tokens(&mut self, content: &str) -> Result<u32, SourcePreparationError> {
+            u32::try_from(content.split_whitespace().count())
+                .map_err(|_| SourcePreparationError::ResourceLimit)
+        }
+    }
+
+    fn context_plan(
+        profile_id: &str,
+        binding: &ExactTokenCounterBinding,
+        source_tokens: u32,
+    ) -> ModelContextWindowPlan {
+        let included = |tokens: u32| AllocatedContextPartition {
+            requested_tokens: tokens,
+            minimum_tokens: u32::from(tokens > 0),
+            allocated_tokens: tokens,
+            disposition: ContextPartitionDisposition::Included,
+            reason_code: None,
+        };
+        let mut plan = ModelContextWindowPlan {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            model_profile_id: profile_id.to_owned(),
+            model_manifest_sha256: "1".repeat(64),
+            model_runtime_sha256: "2".repeat(64),
+            tokenizer_sha256: binding.tokenizer_sha256.clone(),
+            token_counter_sha256: binding.token_counter_sha256.clone(),
+            total_window_tokens: source_tokens + 5,
+            system_and_tool_tokens: 1,
+            user_input_tokens: 1,
+            source_artifacts: included(source_tokens),
+            retrieved_context: included(0),
+            workflow_recovery_reserve_tokens: 1,
+            output_reserve_tokens: 1,
+            safety_margin_tokens: 1,
+            unallocated_tokens: 0,
+            plan_sha256: "0".repeat(64),
+        };
+        plan.plan_sha256 = sha256(&serde_json::to_vec(&plan).expect("plan"));
+        plan
     }
 
     fn payload_reference(source: &[u8]) -> RuntimeArtifactRef {
@@ -862,5 +1180,123 @@ mod tests {
             Err(StructuredSourceExtractionError::InvalidInput)
         );
         assert!(refused.is_empty());
+    }
+
+    #[test]
+    fn word_sections_have_complete_multi_profile_and_combined_budget_accounting() {
+        let first = package("Alpha evidence has several tokens", false);
+        let second = package("Beta evidence also has several tokens", false);
+        let mut first_request = extraction_request(&first);
+        first_request.source_id = "prepared-word-a".to_owned();
+        let mut second_request = extraction_request(&second);
+        second_request.source_id = "prepared-word-b".to_owned();
+        let mut service = WordSourceArtifactService::default();
+        for (request, source) in [
+            (&first_request, first.as_slice()),
+            (&second_request, second.as_slice()),
+        ] {
+            service
+                .admit(
+                    request,
+                    source,
+                    ArtifactClassification::Internal,
+                    "attachment",
+                    &"a".repeat(64),
+                    &mut || false,
+                )
+                .expect("admit combined source");
+        }
+
+        for (index, profile) in ["small-profile", "large-profile"].into_iter().enumerate() {
+            let binding = ExactTokenCounterBinding {
+                token_counter_id: format!("word-counter-{index}"),
+                token_counter_sha256: format!("{:064x}", index + 3),
+                tokenizer_sha256: format!("{:064x}", index + 5),
+            };
+            let plan = context_plan(profile, &binding, if index == 0 { 4 } else { 64 });
+            let manifest = service
+                .compile_context(
+                    format!("word-context-manifest-{index}"),
+                    ContextPacketId::from_raw(format!("word-context-packet-{index}")),
+                    &plan,
+                    4_096,
+                    &mut WordCounter {
+                        binding: binding.clone(),
+                    },
+                    false,
+                )
+                .unwrap_or_else(|error| panic!("{profile} context accounting: {error:?}"));
+            assert_eq!(manifest.context_window_plan_sha256, plan.plan_sha256);
+            assert_eq!(
+                manifest
+                    .records
+                    .iter()
+                    .filter(|record| record.section_id.is_none())
+                    .count(),
+                2
+            );
+            assert!(manifest.records.iter().any(|record| {
+                record.disposition == SourceContextDisposition::Included
+                    && record.section_id.is_some()
+            }));
+            assert!(manifest.records.iter().any(|record| {
+                matches!(
+                    record.disposition,
+                    SourceContextDisposition::Duplicate | SourceContextDisposition::Omitted
+                )
+            }));
+            assert_eq!(manifest.used_tokens, manifest.packet.used_tokens);
+            let expected_records = service
+                .sources
+                .values()
+                .map(|source| {
+                    1 + source.extraction.sections.len() + source.extraction.warnings.len()
+                })
+                .sum::<usize>();
+            let expected_candidate_digests = service
+                .sources
+                .values()
+                .flat_map(|source| {
+                    source
+                        .extraction
+                        .sections
+                        .iter()
+                        .filter(|section| !section.content.is_empty())
+                        .map(|section| sha256(section.content.as_bytes()))
+                        .chain(
+                            source
+                                .extraction
+                                .warnings
+                                .iter()
+                                .map(|warning| sha256(warning_content(warning).as_bytes())),
+                        )
+                })
+                .collect::<BTreeSet<_>>();
+            assert_eq!(manifest.records.len(), expected_records);
+            assert_eq!(
+                manifest.packet.accounting.len(),
+                expected_candidate_digests.len()
+            );
+        }
+
+        let binding = ExactTokenCounterBinding {
+            token_counter_id: "word-counter-drift".to_owned(),
+            token_counter_sha256: "7".repeat(64),
+            tokenizer_sha256: "8".repeat(64),
+        };
+        let plan = context_plan("drift-profile", &binding, 32);
+        let mut drifted = binding.clone();
+        drifted.tokenizer_sha256 = "9".repeat(64);
+        assert!(matches!(
+            service.compile_context(
+                "word-context-drift".to_owned(),
+                ContextPacketId::from_raw("word-context-drift-packet"),
+                &plan,
+                4_096,
+                &mut WordCounter { binding: drifted },
+                false,
+            ),
+            Err(SourcePreparationError::TokenizerMismatch)
+        ));
     }
 }

@@ -6921,7 +6921,7 @@ page-aware evidence for the same context and workflow runtime rather than a sepa
     formulas, active content, and network retrieval; label omitted or unsupported structures.
     Evidence: admission reuses the quarantining Word parser, never resolves relationships or
     executes content, and emits explicit unsupported-structure and fidelity warnings.
-- [ ] **Task 58.2.2 - Integrate lifecycle and context**
+- [x] **Task 58.2.2 - Integrate lifecycle and context**
   - [x] **Sub-task 58.2.2.1:** Emit source manifest, sections, extraction metrics, warnings, and
     content-addressed payload references through the shared service and native tools. Evidence: the
     digest-sealed `PreparedWordSourceManifest` retains exact section/output/warning metrics and the
@@ -6933,8 +6933,12 @@ page-aware evidence for the same context and workflow runtime rather than a sepa
     publishes only after exact extractor/projection/manifest recomputation; corrupt payload,
     extractor drift, and mismatched retention fail before publication, while the service retains no
     original DOCX bytes or path authority.
-  - [ ] **Sub-task 58.2.2.3:** Feed minimized sections into Story 22.1 and require complete context
-    accounting under multiple model profiles and combined-artifact budgets.
+  - [x] **Sub-task 58.2.2.3:** Feed minimized sections into Story 22.1 and require complete context
+    accounting under multiple model profiles and combined-artifact budgets. Evidence: canonical
+    DOCX text and warning sections enter the existing `compose_context` path under only the checked
+    source-artifact partition; source/container/section records cover every included, duplicate,
+    omitted, truncated, or restricted item, and exact counter/tokenizer drift fails closed across
+    small and large model-profile fixtures with two combined documents.
 - [ ] **Task 58.2.3 - Verify hostile and fidelity cases**
   - [ ] **Sub-task 58.2.3.1:** Test malformed ZIP/XML, traversal, external relationships, macros,
     embedded files, recursion, decompression, oversized parts, duplicate names, Unicode, low memory,
@@ -6976,7 +6980,7 @@ source adapter, runtime-owned prepared projections, common native artifact-tool 
 digest-sealed restart/retention with existing content-addressed payload references, and zero-effect
 checks are complete. Story 58.1 and Sprint 58 remain **BLOCKED** by Sprint 57, the
 unadmitted Word renderer, absent product coordinator and controlled writer, incomplete prepared-source
-context/client integration and hostile lifecycle/client-parity campaigns, missing
+client integration and hostile lifecycle/client-parity campaigns, missing
 accessibility and installed cross-platform evidence, trusted-package execution, independent
 native-boundary review, and deferred manual fuzzing.
 ### [ ] Sprint 59 - Word Generation and Visual Verification
