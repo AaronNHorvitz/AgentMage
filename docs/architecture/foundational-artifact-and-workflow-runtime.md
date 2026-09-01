@@ -774,8 +774,10 @@ boundaries. `source-artifacts` is the only host path that activates the engine's
 `source-preparation` modules, and `workflow-supervisor` is the only host path that activates the
 engine's `verified-workflow-supervisor` module. Clean targets may omit either or both while keeping
 the caller-neutral coding runtime, native read baseline, configured clients, and strict lint gates.
-The later structured parser adapters remain absent rather than being compiled behind an invented
-placeholder feature.
+The DOCX structured parser adapter is now compiled only with the existing `source-artifacts` host
+feature and uses the common artifact dispatcher. PDF/OCR and spreadsheet adapters remain absent
+rather than being compiled behind invented placeholder features. The DOCX adapter does not close
+its still-open restart/retention, context-accounting, installed-client, or hostile lifecycle gates.
 
 ## 17. Roadmap Ownership
 

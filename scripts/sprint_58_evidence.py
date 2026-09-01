@@ -25,9 +25,15 @@ SOURCE_PATHS: Final = (
     "Cargo.toml",
     "Cargo.lock",
     "capabilities/knowledge/Cargo.toml",
+    "kernel/contracts/src/structured_source.rs",
+    "kernel/contracts/src/lib.rs",
     "capabilities/knowledge/src/word_ooxml.rs",
+    "capabilities/knowledge/src/word_source.rs",
     "capabilities/knowledge/src/word_generation.rs",
     "capabilities/knowledge/src/lib.rs",
+    "shells/host/Cargo.toml",
+    "shells/host/src/word_source_artifact.rs",
+    "shells/host/src/lib.rs",
     "schemas/runtime/word-inspection-report.schema.json",
     "schemas/runtime/examples/word-inspection-report.valid.json",
     "schemas/runtime/word-extraction-result.schema.json",
@@ -41,6 +47,7 @@ SOURCE_PATHS: Final = (
     "scripts/word_artifact_contract.py",
     "tests/test_word_artifact_contract.py",
     "docs/architecture/word-ooxml-extraction-and-generation.md",
+    "docs/architecture/foundational-artifact-and-workflow-runtime.md",
     "docs/guides/word-artifact-local-workflows.md",
     "docs/verification/sprint-58-local-results.md",
     "scripts/sprint_58_evidence.py",
@@ -61,6 +68,20 @@ COMMANDS: Final = (
             "word_generation::tests", "--lib", "--locked",
         ),
     ),
+    (
+        "word-structured-source-unit",
+        (
+            "cargo", "test", "-p", "agentmage-capability-knowledge",
+            "word_source::tests", "--lib", "--locked",
+        ),
+    ),
+    (
+        "word-structured-native-unit",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "word_source_artifact::tests", "--lib", "--locked",
+        ),
+    ),
     ("word-runtime-schemas", ("node", "--test", "tests/test_planning_schemas.mjs")),
     (
         "word-acceptance-corpus",
@@ -69,7 +90,8 @@ COMMANDS: Final = (
     (
         "word-strict-clippy",
         (
-            "cargo", "clippy", "-p", "agentmage-capability-knowledge",
+            "cargo", "clippy", "-p", "agentmage-kernel-contracts",
+            "-p", "agentmage-capability-knowledge", "-p", "agentmage-host",
             "--all-targets", "--locked", "--", "-D", "warnings",
         ),
     ),
@@ -78,10 +100,12 @@ COMMANDS: Final = (
     ("supply-chain", ("python3", "scripts/supply_chain.py")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_58_evidence")),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:4])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:6])
 RUST_FOCUSED_COMMANDS: Final = {
     "word-inspection-extraction-unit",
     "word-generation-unit",
+    "word-structured-source-unit",
+    "word-structured-native-unit",
 }
 SECURITY_REQUIREMENTS: Final = [
     "SR-SUP-003", "SR-SUP-006", "SR-SUP-008", "SR-SUP-009",
@@ -105,6 +129,13 @@ IMPLEMENTED: Final = {
     "explicit_structural_fidelity_warnings": True,
     "structured_markdown_to_docx": True,
     "reopened_generated_package_inspection": True,
+    "shared_structured_extractor": True,
+    "structured_section_kind_count": 17,
+    "docx_source_adapter": True,
+    "common_native_artifact_dispatch": True,
+    "prepared_source_cache_invalidation_delete_reattach": True,
+    "prepared_source_restart_retention": False,
+    "multi_profile_context_accounting": False,
     "network_access_capability": False,
     "execution_capability": False,
     "filesystem_mutation_capability": False,
@@ -129,6 +160,10 @@ BLOCKERS: Final = [
     {"code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT", "owner": "58.1.3.4"},
     {"code": "INDEPENDENT-NATIVE-BOUNDARY-REVIEW-ABSENT", "owner": "58.1.3.4"},
     {"code": "MANUAL-FUZZING-DEFERRED", "owner": "SR-TST-004"},
+    {"code": "DOCX-PREPARED-SOURCE-RESTART-RETENTION-ABSENT", "owner": "58.2.2.2"},
+    {"code": "DOCX-CONTEXT-ACCOUNTING-CLIENT-PARITY-ABSENT", "owner": "58.2.2.3"},
+    {"code": "DOCX-HOSTILE-LIFECYCLE-CAMPAIGN-INCOMPLETE", "owner": "58.2.3.1"},
+    {"code": "DOCX-GOLDEN-CLIENT-PARITY-INCOMPLETE", "owner": "58.2.3.2"},
 ]
 
 
@@ -215,6 +250,11 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "accepted_execution_effect_count": 0 if local_pass else None,
         "accepted_filesystem_effect_count": 0 if local_pass else None,
         "renderer_admitted": False,
+        "shared_structured_extractor": True,
+        "docx_source_adapter": True,
+        "common_native_artifact_dispatch": True,
+        "prepared_source_restart_retention": False,
+        "multi_profile_context_accounting": False,
         "product_coordinator": False,
         "controlled_writer_integration": False,
         "native_interface_integration": False,

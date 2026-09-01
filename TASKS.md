@@ -6906,14 +6906,21 @@ page-aware evidence for the same context and workflow runtime rather than a sepa
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 58.2.1 - Adapt the existing Word extractor**
-  - [ ] **Sub-task 58.2.1.1:** Implement the shared extractor trait over the existing DOCX parser
+- [x] **Task 58.2.1 - Adapt the existing Word extractor**
+  - [x] **Sub-task 58.2.1.1:** Implement the shared extractor trait over the existing DOCX parser
     and map paragraphs, headings, lists, tables, headers, footers, notes, comments, tracked changes,
-    links, images, relationships, and unsupported structures into canonical sections.
-  - [ ] **Sub-task 58.2.1.2:** Preserve package-part, XML-path, paragraph, run, table, row, cell,
-    relationship, and rendered-page provenance where deterministically available.
-  - [ ] **Sub-task 58.2.1.3:** Disable macros, external relationships, embedded executables,
+    links, images, relationships, and unsupported structures into canonical sections. Evidence:
+    `StructuredSourceExtractor` is interface-neutral and `WordStructuredSourceExtractor` maps the
+    admitted in-memory OOXML parts into the closed 17-kind section vocabulary.
+  - [x] **Sub-task 58.2.1.2:** Preserve package-part, XML-path, paragraph, run, table, row, cell,
+    relationship, and rendered-page provenance where deterministically available. Evidence: every
+    canonical section carries its exact part and structural path, available byte and structural
+    coordinates, relationship identity, and an explicitly absent rendered page until native
+    evidence exists.
+  - [x] **Sub-task 58.2.1.3:** Disable macros, external relationships, embedded executables,
     formulas, active content, and network retrieval; label omitted or unsupported structures.
+    Evidence: admission reuses the quarantining Word parser, never resolves relationships or
+    executes content, and emits explicit unsupported-structure and fidelity warnings.
 - [ ] **Task 58.2.2 - Integrate lifecycle and context**
   - [ ] **Sub-task 58.2.2.1:** Emit source manifest, sections, extraction metrics, warnings, and
     content-addressed payload references through the shared service and native tools.
@@ -6959,9 +6966,9 @@ admission, bounded package inspection, raw duplicate-name detection, determinist
 identity, part/range provenance, structural fidelity warnings, structured Markdown-to-DOCX
 generation, reopened inspection, runtime schemas, and zero-effect checks are complete. Story 58.1
 and Sprint 58 remain **BLOCKED** by Sprint 57, the unadmitted Word renderer, absent product
-coordinator, controlled writer and native interface, missing accessibility and installed
-cross-platform evidence, trusted-package execution, independent native-boundary review, and
-deferred manual fuzzing.
+coordinator and controlled writer, incomplete prepared-source restart/retention/context/client
+integration, missing accessibility and installed cross-platform evidence, trusted-package
+execution, independent native-boundary review, and deferred manual fuzzing.
 ### [ ] Sprint 59 - Word Generation and Visual Verification
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.

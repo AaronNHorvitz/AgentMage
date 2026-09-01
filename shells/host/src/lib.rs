@@ -91,6 +91,10 @@ pub mod workflow_caller;
 #[cfg(feature = "workflow-supervisor")]
 pub mod workflow_supervisor;
 
+/// Runtime-owned DOCX preparation and common native artifact-tool projection.
+#[cfg(feature = "source-artifacts")]
+pub mod word_source_artifact;
+
 /// Versioned thin-client contracts shared by terminal and headless interfaces.
 pub mod headless;
 

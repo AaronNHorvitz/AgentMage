@@ -47,6 +47,7 @@ mod word_generation;
 mod word_ooxml;
 mod word_receipt;
 mod word_rich_generation;
+mod word_source;
 mod word_visual;
 mod workflows;
 
@@ -279,6 +280,7 @@ pub use word_rich_generation::{
     WordRichDocumentBuilder, WordRichGenerationError, WordStyleConfiguration, WordStyleKind,
     WordTableLayout,
 };
+pub use word_source::WordStructuredSourceExtractor;
 pub use word_visual::{
     WordPageComparison, WordPageDifferenceBounds, WordPageImage, WordRenderEvidenceKind,
     WordRenderOutput, WordRenderPlatform, WordRenderProfile, WordVisualComparisonError,

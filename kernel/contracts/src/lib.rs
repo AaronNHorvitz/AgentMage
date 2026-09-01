@@ -41,6 +41,7 @@ mod runtime_artifact;
 mod runtime_event;
 mod runtime_run;
 mod serialization;
+mod structured_source;
 mod task;
 mod tool;
 mod transaction;
@@ -240,6 +241,12 @@ pub use runtime_run::{
 };
 pub use serialization::{
     ContractResult, MAX_CONTRACT_JSON_BYTES, VersionedContract, from_json, to_canonical_json,
+};
+pub use structured_source::{
+    DOCX_MEDIA_TYPE, StructuredSourceExtraction, StructuredSourceExtractionError,
+    StructuredSourceExtractionRequest, StructuredSourceExtractor, StructuredSourceFormat,
+    StructuredSourceProvenance, StructuredSourceSection, StructuredSourceSectionKind,
+    StructuredSourceWarning,
 };
 pub use task::{
     Action, ActionKind, ActionState, BudgetLimit, BudgetResource, CompletionEvidence,

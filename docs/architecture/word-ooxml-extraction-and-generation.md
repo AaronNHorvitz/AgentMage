@@ -48,6 +48,27 @@ Feature counts and warnings cover tables, comments, tracked insertions and delet
 footers, numbering, section layout, hyperlinks, images, fields, styles, and unsupported constructs.
 Plain-text success never implies those structures were preserved in the sidecar.
 
+## Structured Source Adapter
+
+Story 58.2 adds the interface-neutral `StructuredSourceExtractor` contract and the authority-free
+`WordStructuredSourceExtractor`. The Word adapter reuses the admitted package boundary and maps
+document roots, paragraphs, headings, list items, tables, rows, cells, headers, footers, notes,
+comments, tracked changes, links, images, internal relationships, and unsupported structures into a
+closed canonical section vocabulary. Each section retains its exact package part and structural
+path plus available XML byte, paragraph, run, table, row, cell, and relationship coordinates.
+Rendered page remains explicitly absent until admitted native renderer evidence supplies it.
+
+`WordSourceArtifactService` retains only the canonical projection and content-free manifest; the
+runtime artifact store remains the owner of original DOCX bytes. Exact source/extractor cache hits,
+source invalidation, cancellation, deletion, and reattachment are deterministic. Prepared sections
+flow through the existing common `artifact.list`, `artifact.metadata`, `artifact.read`,
+`artifact.sections`, and `artifact.search` dispatcher with production receipts and no parser,
+network, workspace-write, or client-specific bypass at tool-dispatch time.
+
+Restart/retention persistence, payload-reference reconciliation, multi-profile context accounting,
+installed-client parity, and the full hostile lifecycle campaign remain open under Story 58.2; this
+local adapter does not promote those requirements.
+
 ## Generation
 
 The initial generator maps headings, paragraphs, ordered and unordered list items, task items, code
