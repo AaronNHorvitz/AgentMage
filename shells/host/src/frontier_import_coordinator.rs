@@ -10,11 +10,11 @@ use agentmage_kernel_engine::{
     frontier_import::{
         FrontierCurrentState, FrontierImportReport, FrontierImportedArtifact,
         build_frontier_round_trip_receipt, parse_frontier_return_manifest,
+        recovery::{
+            DirectoryFrontierImportCheckpointStore, FrontierImportCheckpoint, FrontierImportPhase,
+            seal_frontier_import_checkpoint, verify_frontier_import_checkpoint,
+        },
         revalidate_frontier_import, verify_frontier_round_trip_receipt,
-    },
-    frontier_import_recovery::{
-        DirectoryFrontierImportCheckpointStore, FrontierImportCheckpoint, FrontierImportPhase,
-        seal_frontier_import_checkpoint, verify_frontier_import_checkpoint,
     },
     task_classification::{TaskIntent, classify_task},
     tooling::{PreGrantDispatchDisposition, ProposalOrigin, ToolDispatcher, ToolRegistry},

@@ -66,8 +66,6 @@ pub mod executive_assistant;
 pub mod filesystem_control;
 /// Non-executing frontier-result import, quarantine, and local revalidation.
 pub mod frontier_import;
-/// Durable append-only recovery for authority-free frontier import transactions.
-pub mod frontier_import_recovery;
 /// Measured frontier recommendation and local-only disclosure packet composition.
 pub mod frontier_recommendation;
 /// v0.5 manual-frontier release compositions and controlled local export.

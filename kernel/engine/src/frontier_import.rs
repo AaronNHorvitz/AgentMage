@@ -1,5 +1,9 @@
 //! Non-executing frontier-result import, quarantine, and local revalidation.
 
+/// Durable append-only recovery for authority-free frontier import transactions.
+#[path = "frontier_import_recovery.rs"]
+pub mod recovery;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use agentmage_kernel_contracts::{
