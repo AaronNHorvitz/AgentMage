@@ -31,14 +31,14 @@
       "sha256": "f3f049344725e93a489deeae2af0f073b53f6b0798e4b7350b0cd44516b9b34b"
     },
     {
-      "byte_length": 60108,
+      "byte_length": 64018,
       "path": "shells/host/src/runtime_read_tests.rs",
-      "sha256": "79d0c170c1546ed3d028a68d59032c13b77fd87cc386bc7f38d519d7fd6b19b4"
+      "sha256": "308892cd00c60add332bca89bf71231292d8672a076444b44db77584348feaad"
     },
     {
-      "byte_length": 6535,
+      "byte_length": 6538,
       "path": "artifacts/sprints/sprint-50/story-50.3-foundational-runtime/report.json",
-      "sha256": "b6c7868990befc6360527718b33b32fae264f0d712db8f7937cfe28f4edef437"
+      "sha256": "1e980d44c8358d2604365fcceb24d875526818261cb1b3b9081be404749a3da6"
     },
     {
       "byte_length": 5641,
@@ -56,9 +56,9 @@
       "sha256": "7ee867cb3555fc11e82a104b801ba472adcfa28ceba56fe6b9720fea468deca1"
     },
     {
-      "byte_length": 16235,
+      "byte_length": 16234,
       "path": "artifacts/sprints/sprint-50/story-50.4-core-milestone/local-results.log",
-      "sha256": "989ef3f794b51b3e59179df165aa92c8e7d0ffa770c1d2f346b6a674ec3e9d03"
+      "sha256": "8d0afe06a9611aa4249279918f05fadb0b6cb1cbc6625f883b5425966fbd6e66"
     }
   ],
   "commands": [

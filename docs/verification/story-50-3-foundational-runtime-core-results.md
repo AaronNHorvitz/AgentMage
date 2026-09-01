@@ -14,8 +14,10 @@ Its mutation tests reject any attempt to turn an unavailable qualification into 
 
 ## Integrated result
 
-The Story 50.3 host fixture admits a dependency-ordered repository review, long-log diagnosis, and
-mixed-artifact planning workflow through one `VerifiedWorkflowSupervisor`. Each dependency-ready
+The Story 50.3 host fixture admits a dependency-ordered multi-file repository review, long-log
+diagnosis, normalized structured-document comparison, and mixed-artifact planning workflow through
+one `VerifiedWorkflowSupervisor`. The steps account for 2, 1, 2, and 3 exact prepared-source
+manifests respectively. Each dependency-ready
 step receives a fresh instance of the existing `ReusableRuntimeCoordinator`, consumes a current
 prepared-source context, calls the production native artifact dispatcher, and returns a unique
 tool call, grant, receipt, event chain, verifier result, and terminal outcome. The supervisor owns

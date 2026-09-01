@@ -26,9 +26,9 @@
       "sha256": "5091dec8b12c1152b707c5a604ae9b5ef9cb649809c59272139a11c0b4c891cb"
     },
     {
-      "byte_length": 60108,
+      "byte_length": 64018,
       "path": "shells/host/src/runtime_read_tests.rs",
-      "sha256": "79d0c170c1546ed3d028a68d59032c13b77fd87cc386bc7f38d519d7fd6b19b4"
+      "sha256": "308892cd00c60add332bca89bf71231292d8672a076444b44db77584348feaad"
     },
     {
       "byte_length": 4180,
@@ -58,7 +58,7 @@
     {
       "byte_length": 23621,
       "path": "artifacts/sprints/sprint-23/story-23.6/workflow-supervisor-results.log",
-      "sha256": "3e4518d1671f5c555e5e6201ac7d64ea15c24b4401757cdb4815a4580eb71153"
+      "sha256": "18cfb57237ca03681b9735004937b39be8714012db0256d6853c465bfd5c6fd4"
     }
   ],
   "commands": [

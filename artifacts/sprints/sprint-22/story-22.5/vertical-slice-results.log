@@ -1,5 +1,5 @@
 $ cargo test -p agentmage-host story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lineage --locked -- --nocapture
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
      Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
 
 running 1 test
@@ -35,7 +35,7 @@ running 2 tests
 test runtime_read_tests::story_22_5_stale_required_source_and_tokenizer_drift_stop_before_model ... ok
 test runtime_read_tests::story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lineage ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 169 filtered out; finished in 0.01s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 169 filtered out; finished in 0.02s
 
      Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
 
@@ -180,17 +180,17 @@ $ cargo test -p agentmage-kernel-engine runtime_loop::tests::story_23_4_ --locke
 
 running 13 tests
 test runtime_loop::tests::story_23_4_expired_allow_is_rejected_before_worker_launch ... ok
-test runtime_loop::tests::story_23_4_read_only_mode_rejects_stateful_or_command_catalogs ... ok
-test runtime_loop::tests::story_23_4_malformed_model_result_fails_closed_with_terminal_evidence ... ok
-test runtime_loop::tests::story_23_4_deny_closes_without_launching_the_tool ... ok
-test runtime_loop::tests::story_23_4_model_or_classifier_claims_cannot_mint_success ... ok
-test runtime_loop::tests::story_23_4_ask_pauses_before_effect_and_exact_allow_resumes_once ... ok
 test runtime_loop::tests::story_23_4_cancellation_wins_over_a_pending_allow_response ... ok
+test runtime_loop::tests::story_23_4_malformed_model_result_fails_closed_with_terminal_evidence ... ok
+test runtime_loop::tests::story_23_4_read_only_mode_rejects_stateful_or_command_catalogs ... ok
+test runtime_loop::tests::story_23_4_model_or_classifier_claims_cannot_mint_success ... ok
+test runtime_loop::tests::story_23_4_deny_closes_without_launching_the_tool ... ok
 test runtime_loop::tests::story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order ... ok
+test runtime_loop::tests::story_23_4_ask_pauses_before_effect_and_exact_allow_resumes_once ... ok
 test runtime_loop::tests::story_23_4_runtime_events_exclude_raw_model_and_tool_canaries ... ok
 test runtime_loop::tests::story_23_4_terminal_tool_failures_have_one_receipt_and_no_hidden_retry ... ok
-test runtime_loop::tests::story_23_4_repeat_no_progress_and_turn_budgets_stop_truthfully ... ok
 test runtime_loop::tests::story_23_4_model_dependency_failures_close_without_effect_or_retry ... ok
+test runtime_loop::tests::story_23_4_repeat_no_progress_and_turn_budgets_stop_truthfully ... ok
 test runtime_loop::tests::story_23_4_ephemeral_runtime_profile_is_bounded ... ok
 
 test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 771 filtered out; finished in 0.03s
@@ -336,4 +336,5 @@ $ python3 scripts/story_22_4_attempt_recovery_evidence.py
 Story 22.4 local durable attempt recovery evidence validated
 
 $ cargo clippy -p agentmage-kernel-engine -p agentmage-host --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Checking agentmage-host v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/shells/host)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.89s

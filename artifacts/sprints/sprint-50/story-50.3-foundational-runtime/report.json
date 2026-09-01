@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "byte_length": 60108,
+      "byte_length": 64018,
       "path": "shells/host/src/runtime_read_tests.rs",
-      "sha256": "79d0c170c1546ed3d028a68d59032c13b77fd87cc386bc7f38d519d7fd6b19b4"
+      "sha256": "308892cd00c60add332bca89bf71231292d8672a076444b44db77584348feaad"
     },
     {
       "byte_length": 16256,
@@ -36,9 +36,9 @@
       "sha256": "9619fa82f894ff13c3914766c28ccb287fc8dc36ba00b6bc57c6f0b6d7409eb3"
     },
     {
-      "byte_length": 10040,
+      "byte_length": 10046,
       "path": "scripts/story_50_3_foundational_runtime_evidence.py",
-      "sha256": "6b1f8f870c811ace3607f3dad336bd5342ddc717ed009bb8c1adcb89a7e5c4b9"
+      "sha256": "5358f8e4dd5cc7fad12daab9d913324a35c0b0e677ee76508a9fbe8622426c25"
     },
     {
       "byte_length": 2261,
@@ -93,7 +93,7 @@
     {
       "byte_length": 22659,
       "path": "artifacts/sprints/sprint-50/story-50.3-foundational-runtime/local-results.log",
-      "sha256": "5f44afb94054e91607d308778e25e5140e28534ec60ac69879dc9bb9de591067"
+      "sha256": "1c51a57f26444688cbe23644f446e66537f30d5211240e3fed854a16bcc60ac1"
     }
   ],
   "commands": [
@@ -117,6 +117,7 @@
     "current_source_context_and_native_artifact_receipts": true,
     "false_completion_or_unsafe_retry": false,
     "fault_restart_and_no_replay_campaign_retained": true,
+    "four_dependency_ready_artifact_workflows": true,
     "fresh_attempt_run_tool_grant_and_receipt_identities": true,
     "independent_feature_activation_complete": true,
     "independent_review_complete": false,
@@ -128,7 +129,6 @@
     "qualified_production_model_evaluation": false,
     "release_claim": "none",
     "structured_document_parser_qualification": false,
-    "three_dependency_ready_artifact_steps": true,
     "verifier_owned_completion": true,
     "windows_validation_complete": false
   },

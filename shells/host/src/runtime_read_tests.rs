@@ -779,12 +779,14 @@ fn story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator() {
         [
             "repository-review",
             "long-log-diagnosis",
+            "structured-document-comparison",
             "mixed-artifact-plan"
         ]
     );
-    assert_eq!(result.attempts.len(), 3);
-    assert_eq!(result.budgets.attempts, 3);
-    assert_eq!(result.budgets.tool_calls, 3);
+    assert_eq!(result.attempts.len(), 4);
+    assert_eq!(result.budgets.attempts, 4);
+    assert_eq!(result.budgets.tool_calls, 4);
+    assert_eq!(factory.source_counts, [2, 1, 2, 3]);
     assert!(
         factory
             .saw_prepared_source
@@ -798,13 +800,14 @@ fn story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator() {
             .flat_map(|attempt| attempt.receipt_ids.iter())
             .collect::<std::collections::BTreeSet<_>>()
             .len(),
-        3
+        4
     );
 }
 
 #[derive(Default)]
 struct FoundationalAttemptFactory {
     saw_prepared_source: Vec<Arc<AtomicBool>>,
+    source_counts: Vec<usize>,
 }
 
 impl WorkflowCoordinatorAttemptFactory for &mut FoundationalAttemptFactory {
@@ -829,13 +832,22 @@ impl WorkflowCoordinatorAttemptFactory for &mut FoundationalAttemptFactory {
         let registry =
             read_only_runtime_registry().map_err(|_| WorkflowSupervisorError::RuntimeFailed)?;
         let profile = deterministic_profile();
-        let (sources, source, binding) = prepared_service(&profile);
+        let (sources, source_manifests, binding) =
+            foundational_prepared_sources(&profile, attempt.step_id);
+        self.source_counts.push(source_manifests.len());
+        let source = source_manifests
+            .first()
+            .ok_or(WorkflowSupervisorError::RuntimeFailed)?;
+        let source_ids = source_manifests
+            .iter()
+            .map(|manifest| manifest.source_id.clone())
+            .collect::<Vec<_>>();
         let sources = Arc::new(sources);
         let context = PreparedSourceRuntimeContext::new(
             Arc::clone(&sources),
             source_window_plan(&profile),
             SourceCounter { binding },
-            [source.source_id.clone()],
+            source_ids,
             false,
         )
         .map_err(|_| WorkflowSupervisorError::RuntimeFailed)?;
@@ -849,7 +861,7 @@ impl WorkflowCoordinatorAttemptFactory for &mut FoundationalAttemptFactory {
             section_id: None,
             range: None,
             query: Some("prepared_fixture".to_owned()),
-            freshness_sha256: Some(source.manifest_sha256),
+            freshness_sha256: Some(source.manifest_sha256.clone()),
             output_identity: format!("{prefix}-output"),
             limits: ArtifactLimits::default(),
             call_depth: 0,
@@ -971,6 +983,7 @@ fn foundational_workflow() -> (
     let step_ids = [
         "repository-review",
         "long-log-diagnosis",
+        "structured-document-comparison",
         "mixed-artifact-plan",
     ];
     let mut policies = step_ids
@@ -1350,6 +1363,90 @@ fn source_window_plan(profile: &ExactModelProfile) -> ModelContextWindowPlan {
     };
     plan.plan_sha256 = sha256(&serde_json::to_vec(&plan).expect("plan serializes"));
     plan
+}
+
+fn foundational_prepared_sources(
+    profile: &ExactModelProfile,
+    step_id: &str,
+) -> (
+    SourcePreparationService,
+    Vec<agentmage_kernel_engine::source_preparation::PreparedSourceManifest>,
+    ExactTokenCounterBinding,
+) {
+    let binding = ExactTokenCounterBinding {
+        token_counter_id: profile.context.token_counter.clone(),
+        token_counter_sha256: profile.context.token_counter_sha256.clone(),
+        tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+    };
+    let inputs: Vec<(&str, &str)> = match step_id {
+        "repository-review" => vec![
+            (
+                "repository-src-lib",
+                "src/lib.rs\npub fn prepared_fixture() -> u64 { 42 }\n",
+            ),
+            (
+                "repository-tests-lib",
+                "tests/lib.rs\nassert_eq!(prepared_fixture(), 42);\n",
+            ),
+        ],
+        "long-log-diagnosis" => vec![(
+            "bounded-build-log",
+            "prepared_fixture build start\nwarning: bounded fixture\nerror: deterministic failure\nstack: src/lib.rs:1\n",
+        )],
+        "structured-document-comparison" => vec![
+            (
+                "normalized-document-a",
+                "# prepared_fixture specification\n| limit | 42 |\n",
+            ),
+            (
+                "normalized-document-b",
+                "# prepared_fixture implementation\n| observed | 42 |\n",
+            ),
+        ],
+        "mixed-artifact-plan" => vec![
+            (
+                "mixed-source-code",
+                "pub fn prepared_fixture() -> u64 { 42 }\n",
+            ),
+            ("mixed-source-log", "prepared_fixture verification passed\n"),
+            (
+                "mixed-source-requirement",
+                "prepared_fixture must remain read only and evidence backed\n",
+            ),
+        ],
+        _ => Vec::new(),
+    };
+    let mut sources = SourcePreparationService::new();
+    let mut manifests = Vec::new();
+    for (index, (source_id, content)) in inputs.into_iter().enumerate() {
+        let manifest = sources
+            .admit(
+                SourceAdmissionRequest {
+                    source_id: source_id.to_owned(),
+                    request_id: format!("foundational-{step_id}-source-{index}"),
+                    source_kind: "prepared_text_fixture".to_owned(),
+                    protected_origin_sha256: sha256(
+                        format!("protected:{step_id}:{source_id}").as_bytes(),
+                    ),
+                    media_type: "text/plain".to_owned(),
+                    media_family: SourceMediaFamily::PlainText,
+                    encoding: SourceEncoding::Utf8,
+                    sensitivity: agentmage_kernel_contracts::ContextSensitivity::Internal,
+                    retention: PreparedSourceRetention::Ephemeral,
+                    collected_at_epoch_ms: 1_788_134_400_000
+                        + u64::try_from(index).expect("bounded source index"),
+                    limits: SourcePreparationLimits::default(),
+                    bytes: content.as_bytes().to_vec(),
+                },
+                &mut SourceCounter {
+                    binding: binding.clone(),
+                },
+                &mut || false,
+            )
+            .expect("foundational source admits");
+        manifests.push(manifest);
+    }
+    (sources, manifests, binding)
 }
 
 fn prepared_service(

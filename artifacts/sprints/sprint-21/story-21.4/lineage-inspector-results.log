@@ -1,5 +1,5 @@
 $ cargo test -p agentmage-kernel-engine story_21_4 --locked -- --nocapture
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
 running 5 tests
@@ -7,10 +7,10 @@ test runtime_inspector::tests::story_21_4_performance_qualification_is_complete_
 test runtime_inspector::tests::story_21_4_lineage_gap_events_enforce_exact_ordering ... ok
 test runtime_inspector::tests::story_21_4_inspector_reconstructs_complete_content_free_lineage ... ok
 test runtime_inspector::tests::story_21_4_inspector_supports_prefix_resume_and_refuses_tampering ... ok
-AGENTMAGE_STORY_21_4_PERFORMANCE=total_ms:109,events_per_second:23834,p50_us:1087,p95_us:1118,p99_us:1281,artifact_bytes:7935
+AGENTMAGE_STORY_21_4_PERFORMANCE=total_ms:113,events_per_second:22807,p50_us:1083,p95_us:1931,p99_us:2066,artifact_bytes:7935
 test runtime_inspector::tests::story_21_4_measures_the_bounded_local_inspector_fixture ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 779 filtered out; finished in 0.11s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 779 filtered out; finished in 0.12s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -482,7 +482,7 @@ $ cargo test -p agentmage-kernel-engine story_21_2_durable_model_progress_and_ca
 running 1 test
 test runtime_loop::tests::story_21_2_durable_model_progress_and_cancellation_survive_delayed_sqlcipher ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 783 filtered out; finished in 0.10s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 783 filtered out; finished in 0.11s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -594,74 +594,74 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ node --test tests/test_planning_schemas.mjs
-✔ all canonical examples satisfy their schema and semantic contract (3.917901ms)
-✔ decision and supersession templates are valid unapproved drafts (23.359442ms)
-✔ templates cannot be represented as accepted without approval evidence (0.1464ms)
-✔ validation does not mutate its input (0.471987ms)
-✔ every record rejects missing required fields and unknown properties (0.389716ms)
-✔ shared identities, paths, hashes, dates, and commits are strict (0.165221ms)
-✔ accepted decisions require approval evidence and cannot supersede themselves (0.148702ms)
-✔ risk registers reject duplicate identities and incorrect calculated scores (0.157296ms)
-✔ accepted risks require a decision and evidence (0.113863ms)
-✔ change logs reject duplicate identities and decreasing timestamps (0.178803ms)
-✔ release manifests bind release IDs and require unique component and profile identities (0.153596ms)
-✔ released manifests require a signer and release evidence (0.106223ms)
-✔ release manifests require one exact configuration identity (0.121099ms)
-✔ accepted supersessions require approval and disjoint requirement sets (0.113443ms)
-✔ unknown planning record types fail explicitly (0.191699ms)
-✔ platform, provenance, and fuzz results satisfy their testing schemas (29.779824ms)
-✔ testing schemas reject weakened platform and provenance controls (3.942209ms)
-✔ unknown testing record types fail explicitly (0.075149ms)
-✔ runtime state event and environment fixtures satisfy closed schemas (256.952753ms)
-✔ runtime artifact schemas reject path authority and lifecycle drift (1.692953ms)
-✔ validation receipts reject false pass, partial ambiguity, secrets, and unsorted evidence (2.021619ms)
-✔ logical commit plans reject authority, duplicate operations, and noncanonical groups (0.695108ms)
-✔ local review packets reject false review, validation, and change accounting (1.897574ms)
-✔ local commit records reject signer, approval, index, publication, and signature drift (1.970159ms)
-✔ change intent runtime schema rejects ambiguity and authority forgery (0.850271ms)
-✔ reproduction runtime schema rejects false outcomes and inherited authority (0.684261ms)
-✔ repository runtime schemas reject preservation and authority ambiguity (2.082781ms)
-✔ command runtime schemas reject authority and outcome ambiguity (1.422453ms)
-✔ write-aware checkpoint schema rejects ambiguous completion (0.88015ms)
-✔ runtime schemas reject missing and unknown fields (33.711091ms)
-✔ runtime events reject inline sensitive content and invented token events (1.824302ms)
-✔ artifact and workflow projection event families remain closed (1.340966ms)
-✔ thin client requests reject hidden authority and binding drift (0.631145ms)
-✔ thin client request commands remain closed and semantically bounded (0.232396ms)
-✔ thin client events reject malformed payloads and output drift (0.322825ms)
-✔ frontier decisions reject trigger, authority, clarification, and evidence drift (0.223075ms)
-✔ executive rankings reject hidden effects score drift and unstable ordering (0.27215ms)
-✔ executive views reject authority truth-state and evidence-order drift (0.156208ms)
-✔ executive correspondence reviews reject send completion and issue drift (0.268693ms)
-✔ meeting runtime records reject inferred states guessed fields and hidden effects (0.539838ms)
-✔ document-control records reject truth approval preview and effect drift (0.527284ms)
-✔ Markdown artifact records reject evidence ordering effect and round-trip drift (0.336124ms)
-✔ Word artifact records reject identity ordering fidelity and authority drift (1.068446ms)
-✔ PDF records reject page citation OCR and effect drift (1.010768ms)
-✔ tabular and spreadsheet records reject semantic and effect drift (192.888153ms)
-✔ JSON reconciliation and spreadsheet verification records reject semantic drift (0.914489ms)
-✔ presentation records reject unsafe inspection, stale previews, and edit drift (1.059954ms)
-✔ frontier receipts reject delivery and implicit or sensitive destinations (0.186716ms)
-✔ frontier return manifests reject authority stale references and operation drift (0.703457ms)
-✔ frontier round-trip receipts reject trust effects and recursive authority (0.491337ms)
-✔ state-machine schema rejects phase edge and authority drift (0.186982ms)
-✔ progress events enforce sequence revision step identity and content-free shape (0.135688ms)
-✔ session environment schema rejects syntax bounds variants and authority drift (0.429495ms)
-✔ unknown runtime record types fail explicitly (0.069811ms)
-✔ all configuration sections and the bundle satisfy closed versioned schemas (28.352851ms)
-✔ session and release result examples bind an exact configuration identity (22.750499ms)
-✔ configuration-bound results reject incomplete or broadened records (0.391359ms)
-✔ configuration diff and rollback review examples satisfy closed schemas (24.8219ms)
-✔ configuration review schemas reject raw values and unsafe rollback claims (0.67472ms)
-✔ configuration schemas reject missing versions and unknown fields (2.826299ms)
-✔ configuration validation does not coerce values or apply defaults (0.243095ms)
-✔ configuration bundle enforces authority, network, and logging controls (0.524224ms)
-✔ configuration bundle rejects authority and resource relationships that broaden scope (0.221291ms)
-✔ current configuration schemas retain complete fail-closed mutation coverage (20.293837ms)
-✔ retained configuration report currentness remains an explicit legacy check (23.943455ms)
-✔ unknown configuration record types fail explicitly (0.111561ms)
-✔ configuration profile catalog and all seven profiles satisfy formal schemas (23.394284ms)
-✔ future profile catalog entries cannot claim registration, network, or macOS support (0.8924ms)
+✔ all canonical examples satisfy their schema and semantic contract (4.422927ms)
+✔ decision and supersession templates are valid unapproved drafts (21.172539ms)
+✔ templates cannot be represented as accepted without approval evidence (0.13884ms)
+✔ validation does not mutate its input (0.459155ms)
+✔ every record rejects missing required fields and unknown properties (0.335505ms)
+✔ shared identities, paths, hashes, dates, and commits are strict (0.16704ms)
+✔ accepted decisions require approval evidence and cannot supersede themselves (0.151833ms)
+✔ risk registers reject duplicate identities and incorrect calculated scores (0.144289ms)
+✔ accepted risks require a decision and evidence (0.112103ms)
+✔ change logs reject duplicate identities and decreasing timestamps (0.178598ms)
+✔ release manifests bind release IDs and require unique component and profile identities (0.163149ms)
+✔ released manifests require a signer and release evidence (0.099405ms)
+✔ release manifests require one exact configuration identity (0.120279ms)
+✔ accepted supersessions require approval and disjoint requirement sets (0.111757ms)
+✔ unknown planning record types fail explicitly (0.206764ms)
+✔ platform, provenance, and fuzz results satisfy their testing schemas (29.070831ms)
+✔ testing schemas reject weakened platform and provenance controls (3.954519ms)
+✔ unknown testing record types fail explicitly (0.070512ms)
+✔ runtime state event and environment fixtures satisfy closed schemas (255.191986ms)
+✔ runtime artifact schemas reject path authority and lifecycle drift (1.702324ms)
+✔ validation receipts reject false pass, partial ambiguity, secrets, and unsorted evidence (1.99051ms)
+✔ logical commit plans reject authority, duplicate operations, and noncanonical groups (0.691753ms)
+✔ local review packets reject false review, validation, and change accounting (1.871542ms)
+✔ local commit records reject signer, approval, index, publication, and signature drift (2.018509ms)
+✔ change intent runtime schema rejects ambiguity and authority forgery (0.786294ms)
+✔ reproduction runtime schema rejects false outcomes and inherited authority (0.667515ms)
+✔ repository runtime schemas reject preservation and authority ambiguity (1.995713ms)
+✔ command runtime schemas reject authority and outcome ambiguity (1.458873ms)
+✔ write-aware checkpoint schema rejects ambiguous completion (0.901535ms)
+✔ runtime schemas reject missing and unknown fields (34.320315ms)
+✔ runtime events reject inline sensitive content and invented token events (0.856405ms)
+✔ artifact and workflow projection event families remain closed (2.922206ms)
+✔ thin client requests reject hidden authority and binding drift (0.688902ms)
+✔ thin client request commands remain closed and semantically bounded (0.244327ms)
+✔ thin client events reject malformed payloads and output drift (0.349714ms)
+✔ frontier decisions reject trigger, authority, clarification, and evidence drift (0.234107ms)
+✔ executive rankings reject hidden effects score drift and unstable ordering (0.285747ms)
+✔ executive views reject authority truth-state and evidence-order drift (0.165169ms)
+✔ executive correspondence reviews reject send completion and issue drift (0.284306ms)
+✔ meeting runtime records reject inferred states guessed fields and hidden effects (0.549375ms)
+✔ document-control records reject truth approval preview and effect drift (0.533189ms)
+✔ Markdown artifact records reject evidence ordering effect and round-trip drift (0.331083ms)
+✔ Word artifact records reject identity ordering fidelity and authority drift (1.048679ms)
+✔ PDF records reject page citation OCR and effect drift (1.113357ms)
+✔ tabular and spreadsheet records reject semantic and effect drift (191.647667ms)
+✔ JSON reconciliation and spreadsheet verification records reject semantic drift (0.909107ms)
+✔ presentation records reject unsafe inspection, stale previews, and edit drift (1.052402ms)
+✔ frontier receipts reject delivery and implicit or sensitive destinations (0.164403ms)
+✔ frontier return manifests reject authority stale references and operation drift (0.694642ms)
+✔ frontier round-trip receipts reject trust effects and recursive authority (0.461576ms)
+✔ state-machine schema rejects phase edge and authority drift (0.183623ms)
+✔ progress events enforce sequence revision step identity and content-free shape (0.132819ms)
+✔ session environment schema rejects syntax bounds variants and authority drift (0.422089ms)
+✔ unknown runtime record types fail explicitly (0.064777ms)
+✔ all configuration sections and the bundle satisfy closed versioned schemas (27.689856ms)
+✔ session and release result examples bind an exact configuration identity (22.744ms)
+✔ configuration-bound results reject incomplete or broadened records (0.37501ms)
+✔ configuration diff and rollback review examples satisfy closed schemas (25.322098ms)
+✔ configuration review schemas reject raw values and unsafe rollback claims (0.665917ms)
+✔ configuration schemas reject missing versions and unknown fields (2.940582ms)
+✔ configuration validation does not coerce values or apply defaults (0.232509ms)
+✔ configuration bundle enforces authority, network, and logging controls (0.581872ms)
+✔ configuration bundle rejects authority and resource relationships that broaden scope (0.263131ms)
+✔ current configuration schemas retain complete fail-closed mutation coverage (20.044606ms)
+✔ retained configuration report currentness remains an explicit legacy check (23.583014ms)
+✔ unknown configuration record types fail explicitly (0.097074ms)
+✔ configuration profile catalog and all seven profiles satisfy formal schemas (23.048708ms)
+✔ future profile catalog entries cannot claim registration, network, or macOS support (0.869184ms)
 ℹ tests 68
 ℹ suites 0
 ℹ pass 68
@@ -669,7 +669,7 @@ $ node --test tests/test_planning_schemas.mjs
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 1127.379835
+ℹ duration_ms 1127.100032
 
 $ cargo clippy -p agentmage-kernel-engine -p agentmage-host --all-targets --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s

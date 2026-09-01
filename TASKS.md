@@ -6200,25 +6200,25 @@ adapters may be exercised as they become available without claiming their later 
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 50.3.1 - Build integrated workflow fixtures**
-  - [ ] **Sub-task 50.3.1.1:** Run a multi-file repository review, long-log diagnosis, structured
+- [x] **Task 50.3.1 - Build integrated workflow fixtures**
+  - [x] **Sub-task 50.3.1.1:** Run a multi-file repository review, long-log diagnosis, structured
     document comparison, and mixed-artifact planning workflow through one coordinator with exact
-    sources, context manifests, native tools, attempts, receipts, and verifier outcomes.
-  - [ ] **Sub-task 50.3.1.2:** Run transient recovery, malformed-call repair, stale preflight,
+    sources, context manifests, native tools, attempts, receipts, and verifier outcomes. Evidence: the Story 50.3 host fixture runs all four dependency-ordered workflows with 2/1/2/3 exact current prepared sources through the common coordinator, production native artifact search, fresh attempt/tool/grant/receipt identities, and verifier-owned outcomes.
+  - [x] **Sub-task 50.3.1.2:** Run transient recovery, malformed-call repair, stale preflight,
     conditional conflict, uncertain effect, false completion, premature stop, cancellation,
-    disconnect, restart, and removal workflows.
-  - [ ] **Sub-task 50.3.1.3:** Compare Chat, interactive CLI, headless, and future-caller projections;
-    permit presentation differences only.
+    disconnect, restart, and removal workflows. Evidence: the source-bound supervisor and runtime reliability campaigns cover fresh transient repair, malformed/stale/conditional/uncertain/false/premature/cancelled terminals, disconnect/replay, safe checkpoint resume, and independently removed callers without replay or false success.
+  - [x] **Sub-task 50.3.1.3:** Compare Chat, interactive CLI, headless, and future-caller projections;
+    permit presentation differences only. Evidence: the byte-exact three-caller parity fixture and three presentation-sink supervisor variants preserve the same canonical request, event, artifact, receipt, checkpoint, evidence, budget, diagnosis, and outcome projections; Verified Chat consumes the same digest-verified host stream without execution authority.
 
   Local integration contribution: `story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator`
-  now composes three dependency-ready artifact workflows through one verified supervisor and a
+  now composes four dependency-ready artifact workflows through one verified supervisor and a
   fresh existing common coordinator per attempt. Current prepared-source context, native artifact
   calls, grants, receipts, verifier evidence, terminal outcomes, and fresh attempt/run identities
   reconcile exactly. The retained
   [`report.json`](artifacts/sprints/sprint-50/story-50.3-foundational-runtime/report.json) binds this
-  seam to the current supervisor, text/log corpus, pressure, restart/no-replay, and component-removal
-  evidence. The numbered sub-tasks remain open for their complete four-workflow and installed-client
-  campaign rather than treating the deterministic fake-model composition as external evidence.
+  seam to the current supervisor, text/log corpus, pressure, restart/no-replay, parity, and
+  component-removal evidence. Installed-client and qualified-model campaigns remain external and
+  are not substituted by the deterministic integration result.
 - [ ] **Task 50.3.2 - Execute pressure and performance campaigns**
   - [ ] **Sub-task 50.3.2.1:** Exercise maximum artifact count/bytes, 25 MiB logs, combined token
     overflow, maximum sections, event queue saturation, large tool output, checkpoint depth,

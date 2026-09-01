@@ -87,7 +87,7 @@ def expected_report() -> dict[str, Any]:
         + [artifact(RAW_PATH.relative_to(ROOT).as_posix())],
         "product_truth": {
             "prepared_text_log_ingress": True,
-            "three_dependency_ready_artifact_steps": True,
+            "four_dependency_ready_artifact_workflows": True,
             "one_verified_workflow_supervisor": True,
             "one_common_runtime_coordinator_per_attempt": True,
             "current_source_context_and_native_artifact_receipts": True,
@@ -124,7 +124,7 @@ def validate_report(value: Any) -> list[str]:
     truth = value.get("product_truth", {})
     required_true = (
         "prepared_text_log_ingress",
-        "three_dependency_ready_artifact_steps",
+        "four_dependency_ready_artifact_workflows",
         "one_verified_workflow_supervisor",
         "one_common_runtime_coordinator_per_attempt",
         "current_source_context_and_native_artifact_receipts",

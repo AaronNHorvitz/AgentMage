@@ -51,9 +51,9 @@
       "sha256": "ae71a873184c8367ddfa8851d39bc67b34b3e02d01ba86d8a26e4d312287cbed"
     },
     {
-      "byte_length": 28797,
+      "byte_length": 28799,
       "path": "artifacts/sprints/sprint-21/story-21.4/lineage-inspector-results.log",
-      "sha256": "8b5256652aad0213d1b2f24c48e0e7c25e65e26ebc84a0c347821f805be29bfa"
+      "sha256": "002ed1a8001ec0a14a226ec0d2555085c359ab7c5657ad236ab35475e1f6e212"
     }
   ],
   "commands": [
@@ -79,14 +79,14 @@
   "performance_fixture": {
     "accelerator_applicable": false,
     "artifact_bytes": 7935,
-    "events_per_second": 23834,
+    "events_per_second": 22807,
     "fixture_id": "story-21-4-local-inspector-100x",
     "iterations": 100,
     "lineage_events_per_iteration": 26,
-    "p50_us": 1087,
-    "p95_us": 1118,
-    "p99_us": 1281,
-    "total_ms": 109
+    "p50_us": 1083,
+    "p95_us": 1931,
+    "p99_us": 2066,
+    "total_ms": 113
   },
   "performance_metrics_qualified": 17,
   "product_truth": {
