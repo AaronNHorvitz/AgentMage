@@ -159,6 +159,213 @@
       ]
     },
     {
+      "id": "source-artifacts-removed",
+      "component": "source-artifact preparation, persistence, and built-in text/log extraction",
+      "package": "agentmage-host",
+      "crate_root": "shells/host/src/lib.rs",
+      "features": [
+        "interactive-cli",
+        "native-chat",
+        "workflow-caller",
+        "workflow-supervisor"
+      ],
+      "removed_sources": [
+        "shells/host/src/runtime_read_tests.rs",
+        "shells/host/src/source_artifact_runtime.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/runtime_transport.rs",
+        "shells/host/src/workflow_supervisor.rs"
+      ],
+      "minimum_passed_tests": 140,
+      "expected_ignored_tests": 8,
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,workflow-caller,workflow-supervisor"
+      ],
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,workflow-caller,workflow-supervisor",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "id": "workflow-supervisor-removed",
+      "component": "verified workflow supervision",
+      "package": "agentmage-host",
+      "crate_root": "shells/host/src/lib.rs",
+      "features": [
+        "interactive-cli",
+        "native-chat",
+        "source-artifacts",
+        "workflow-caller"
+      ],
+      "removed_sources": [
+        "shells/host/src/runtime_read_tests.rs",
+        "shells/host/src/workflow_supervisor.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/runtime_transport.rs",
+        "shells/host/src/source_artifact_runtime.rs"
+      ],
+      "minimum_passed_tests": 140,
+      "expected_ignored_tests": 8,
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,source-artifacts,workflow-caller"
+      ],
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,source-artifacts,workflow-caller",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "id": "source-workflow-removed",
+      "component": "source-artifact and verified-workflow runtime",
+      "package": "agentmage-host",
+      "crate_root": "shells/host/src/lib.rs",
+      "features": [
+        "interactive-cli",
+        "native-chat",
+        "workflow-caller"
+      ],
+      "removed_sources": [
+        "shells/host/src/runtime_read_tests.rs",
+        "shells/host/src/source_artifact_runtime.rs",
+        "shells/host/src/workflow_supervisor.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/runtime_transport.rs"
+      ],
+      "minimum_passed_tests": 140,
+      "expected_ignored_tests": 8,
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,workflow-caller"
+      ],
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,workflow-caller",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
+      "id": "foundational-and-clients-removed",
+      "component": "foundational runtime and all optional clients",
+      "package": "agentmage-host",
+      "crate_root": "shells/host/src/lib.rs",
+      "features": [],
+      "removed_sources": [
+        "shells/host/src/cli.rs",
+        "shells/host/src/cli_runtime.rs",
+        "shells/host/src/native_chat_runtime.rs",
+        "shells/host/src/runtime_read_tests.rs",
+        "shells/host/src/source_artifact_runtime.rs",
+        "shells/host/src/workflow_assignment.rs",
+        "shells/host/src/workflow_caller.rs",
+        "shells/host/src/workflow_supervisor.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/runtime_transport.rs"
+      ],
+      "minimum_passed_tests": 120,
+      "expected_ignored_tests": 8,
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features"
+      ],
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--",
+        "-D",
+        "warnings"
+      ]
+    },
+    {
       "id": "runtime-projections-removed",
       "component": "optional local metrics and transcript projections",
       "package": "agentmage-kernel-engine",
@@ -217,6 +424,9 @@
     "kernel/engine/src/runtime_loop.rs",
     "kernel/engine/src/runtime_projection.rs",
     "kernel/engine/src/runtime_recovery.rs",
+    "kernel/engine/src/source_preparation.rs",
+    "kernel/engine/src/source_runtime_context.rs",
+    "kernel/engine/src/verified_workflow_supervisor.rs",
     "scripts/runtime_component_removal.py",
     "shells/host/Cargo.toml",
     "shells/host/src/cli.rs",
@@ -226,9 +436,12 @@
     "shells/host/src/linux_coding_runtime.rs",
     "shells/host/src/linux_read.rs",
     "shells/host/src/native_chat_runtime.rs",
+    "shells/host/src/runtime_read_tests.rs",
     "shells/host/src/runtime_transport.rs",
+    "shells/host/src/source_artifact_runtime.rs",
     "shells/host/src/workflow_assignment.rs",
-    "shells/host/src/workflow_caller.rs"
+    "shells/host/src/workflow_caller.rs",
+    "shells/host/src/workflow_supervisor.rs"
   ],
   "declared_limitations": [
     "This campaign proves local source feature removal, surviving Rust unit behavior, strict linting, and compiled-source absence on one recorded host.",

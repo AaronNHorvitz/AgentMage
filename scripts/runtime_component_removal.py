@@ -110,6 +110,10 @@ def validate_profile(profile: dict[str, Any]) -> None:
         "cli-removed",
         "native-chat-removed",
         "workflow-caller-removed",
+        "source-artifacts-removed",
+        "workflow-supervisor-removed",
+        "source-workflow-removed",
+        "foundational-and-clients-removed",
         "runtime-projections-removed",
     ]
     if not isinstance(scenarios, list) or [item.get("id") for item in scenarios] != expected_ids:
