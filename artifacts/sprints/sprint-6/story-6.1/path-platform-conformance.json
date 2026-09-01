@@ -25,7 +25,7 @@
     "macos": "blocked-macos",
     "ubuntu_26_04": "verified-no-network-container"
   },
-  "reference_revision": "9a421e0af4c88286154bb8df1cc7b8f79691c88a",
+  "reference_revision": "894ba8e723d3da5395a6ca0f6dc96fa1442bd1fc",
   "release_claim": "none",
   "results": [
     {
@@ -50,7 +50,7 @@
       "identity_evidence": "linux-mount-object-digests-and-exact-preimage",
       "platform": "ubuntu-26.04-x86_64",
       "policy_decision": "admit-canonical-read",
-      "source_revision": "9a421e0af4c88286154bb8df1cc7b8f79691c88a",
+      "source_revision": "894ba8e723d3da5395a6ca0f6dc96fa1442bd1fc",
       "status": "pass"
     }
   ],
@@ -74,7 +74,7 @@
     },
     {
       "path": "scripts/path_platform_conformance.py",
-      "sha256": "7d4a98fd5b3a3ae4f1f99ac16846d4a1e3e0cdb7c55a97cf70b15daa55885fec"
+      "sha256": "d7cd197f836e8f5cd0240ecd56c1874fe532cfa9f646107ddcc3830de98befce"
     },
     {
       "path": "tests/test_path_platform_conformance.py",
