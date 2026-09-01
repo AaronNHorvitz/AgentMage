@@ -30,21 +30,22 @@ service remain outside AgentMage's authority, telemetry, credential, and release
 
 | Threat | Current deterministic control | Remaining release evidence |
 |---|---|---|
-| Automatic or scheduled delivery | No client, endpoint, routing, schedule, or delivery capability | Whole-product installed-process probe |
+| Automatic or scheduled delivery | The registered coordinator maps Chat, CLI, model-tool, skill, schedule, injection, clipboard, editor, and network attempts to local denial receipts | Whole-product installed-process probe |
 | Credential, browser, editor, or clipboard capture | Contracts contain no such fields or adapters | Native interface and operating-system campaign |
 | Hidden telemetry or fallback network | Release corpus requires local denial on every named surface | Packaged binary and runtime network observation |
 | Incomplete disclosure or failed redaction | Exact preview and receipt validation fail closed | Native accessible review workflow |
 | Packet mutation or destination escape | Exact byte/hash verification and controlled create planning | Integrated write and collision recovery campaign |
 | Prompt injection in returned content | Suspicious artifacts are quarantined and cannot grant authority | Live-model and adversarial corpus campaign |
 | Secret or oversized return content | Secret scan and bounded per-file/aggregate limits reject import | Privacy review and packaged retention evidence |
-| Stale citations or repository state | Fresh local workspace, model, policy, permission, and citation facts | Coordinator-level interruption and recovery evidence |
-| Imported approval, completion, or tool authority | Closed grammar and authority-free receipt reject those claims | Whole-product prohibited-capability scan |
-| Recursive or duplicate application | Imported work is proposal-only; application is absent here | Durable idempotency and normal-flow integration |
+| Stale citations or repository state | Fresh local workspace, model, policy, permission, and citation facts plus hash-chained phase recovery | Installed cross-platform interruption evidence |
+| Imported approval, completion, or tool authority | Closed grammar, authority-free receipt, and native pre-grant routing reject those claims | Whole-product prohibited-capability scan |
+| Recursive or duplicate application | Imported work remains proposal-only; exact replay is idempotent and native-flow tickets retain all application requirements | Installed optional-application campaign |
 | Misleading release claim | Machine-readable gate fixes release, signing, and platform fields false | Independent gate decision and signed packages |
 
 ## Residual Risk
 
-The contracts have not yet been composed into a native product workflow. There is no live-model
-campaign, supported-platform installed evidence, durable round-trip recovery, lifecycle or
-accessibility campaign, independent review, signed package, or completed manual fuzzing. Those
-gaps block `G-V0.5`; they are not accepted risks for a release.
+The contracts are composed into the registered local host workflow with durable content-free
+recovery, but there is no live-model campaign, installed whole-product capability scan,
+supported-platform installed evidence, lifecycle or accessibility campaign, independent review,
+signed package, or completed manual fuzzing. Those gaps block `G-V0.5`; they are not accepted risks
+for a release.

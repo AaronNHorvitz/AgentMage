@@ -1,5 +1,9 @@
 //! v0.5 manual-frontier release compositions and controlled local export.
 
+/// Durable content-free recovery for the manual frontier release round trip.
+#[path = "frontier_release_recovery.rs"]
+pub mod recovery;
+
 use agentmage_kernel_contracts::{CapabilityGrant, RenderedHandoff};
 
 use crate::{

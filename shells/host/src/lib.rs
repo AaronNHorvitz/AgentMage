@@ -50,6 +50,9 @@ pub mod frontier_coordinator;
 /// Durable, authority-free routing of imported frontier proposals into native local flows.
 pub mod frontier_import_coordinator;
 
+/// Durable manual-frontier composition across recommendation, export, and local import.
+pub mod frontier_release_coordinator;
+
 /// Verified read-only knowledge workflows over the shared thin-client contract.
 pub mod knowledge_workflow_runtime;
 /// Authority-free knowledge-preview composition into kernel filesystem drafts.

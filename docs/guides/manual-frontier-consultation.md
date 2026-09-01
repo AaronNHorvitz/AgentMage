@@ -2,9 +2,9 @@
 
 ## Current Availability
 
-The recommendation and packet contracts are not registered as a supported product workflow. The
-steps below describe the intended local review and stop conditions, not an available external
-integration.
+The recommendation, packet, controlled-export-plan, and authority-free import contracts are
+registered through the local host coordinator. An installed interface has not completed
+supported-platform acceptance, and AgentMage intentionally provides no external integration.
 
 ## Review the Recommendation
 
@@ -41,3 +41,8 @@ upload a file, submit on a schedule, route through another agent, or reuse prior
 Recording a user-entered destination label does not prove or perform delivery. Keep the local
 recommendation receipt with the decision, packet, and disclosure hashes for later result import and
 revalidation.
+
+The release coordinator records only content-free packet, recommendation, export-plan, and import
+receipt hashes in its append-only recovery chain. Reopen the same caller-owned local checkpoint
+directory after interruption and resubmit the exact current inputs. A mismatch, gap, fork, symlink,
+or tampered record stops the round trip; it never triggers delivery or application.

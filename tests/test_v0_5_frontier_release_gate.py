@@ -56,6 +56,9 @@ class V05FrontierReleaseGateTests(unittest.TestCase):
             self.assertEqual(gate.validate_manifest(manifest), [])
         self.assertTrue(manifest["strict_local_mode_required"])
         self.assertTrue(manifest["manual_transfer_required"])
+        self.assertTrue(manifest["frontier_coordinator_integrated"])
+        self.assertTrue(manifest["native_round_trip_complete"])
+        self.assertTrue(manifest["durable_recovery_complete"])
         self.assertFalse(manifest["outbound_network"])
         self.assertFalse(manifest["external_client"])
         self.assertFalse(manifest["import_authority"])
@@ -64,9 +67,6 @@ class V05FrontierReleaseGateTests(unittest.TestCase):
     def test_every_release_authority_and_delivery_overclaim_fails(self) -> None:
         fields = (
             "gate_closed",
-            "product_registration",
-            "frontier_coordinator_integrated",
-            "native_round_trip_complete",
             "package_artifacts_published",
             "signed_release",
             "outbound_network",
@@ -87,14 +87,11 @@ class V05FrontierReleaseGateTests(unittest.TestCase):
         with patch.object(gate, "build_report", return_value=expected):
             self.assertEqual(gate.validate_report(expected), [])
         for field in (
-            "frontier_coordinator_integrated",
-            "native_round_trip_complete",
             "live_model_campaign_complete",
             "fedora_acceptance",
             "ubuntu_acceptance",
             "windows_acceptance",
             "lifecycle_accessibility_privacy_complete",
-            "durable_recovery_complete",
             "independent_review_complete",
             "manual_fuzzing_complete",
             "package_signing_allowed",

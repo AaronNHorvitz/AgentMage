@@ -2,11 +2,8 @@
   "automatic_delivery": false,
   "blockers": [
     "upstream-sprints-50-through-52-blocked",
-    "frontier-product-coordinator-absent",
-    "native-end-to-end-round-trip-absent",
-    "normal-local-flow-integration-absent",
     "live-model-campaign-absent",
-    "durable-round-trip-recovery-absent",
+    "installed-prohibited-capability-scan-absent",
     "native-cross-platform-acceptance-absent",
     "lifecycle-accessibility-privacy-campaign-absent",
     "signed-v0.5-packages-absent",
@@ -14,6 +11,7 @@
     "manual-fuzzing-deferred"
   ],
   "credential_access": false,
+  "durable_recovery_complete": true,
   "excluded_capabilities": [
     "automatic-frontier-invocation",
     "browser-automation",
@@ -29,7 +27,7 @@
     "unattended-upload"
   ],
   "external_client": false,
-  "frontier_coordinator_integrated": false,
+  "frontier_coordinator_integrated": true,
   "gate_closed": false,
   "gate_id": "G-V0.5",
   "import_authority": false,
@@ -44,10 +42,11 @@
     "zero-effect-round-trip-receipt"
   ],
   "manual_transfer_required": true,
-  "native_round_trip_complete": false,
+  "native_round_trip_complete": true,
+  "normal_local_flow_integration": true,
   "outbound_network": false,
   "package_artifacts_published": false,
-  "product_registration": false,
+  "product_registration": true,
   "record_type": "agentmage-v0.5-frontier-pack-manifest",
   "release_claim": "none",
   "schema_version": 1,
@@ -55,43 +54,43 @@
   "source_files": [
     {
       "path": "artifacts/sprints/sprint-51/local-evidence-report.json",
-      "sha256": "d2fd7d7682e0e4be297dd230f3c6bdab297e1a1cfe3afc2fc7d97b8dacb45d9d"
+      "sha256": "6d5625d50665688cb0306e565503f1d551d1e501e5620797eca90ea8a3876611"
     },
     {
       "path": "artifacts/sprints/sprint-52/local-evidence-report.json",
-      "sha256": "520110972320d47e47c985281b95588e9db5513852b4d3fe4a85c20926cd4788"
+      "sha256": "857beeb4e57b5ba722689bd50687594705c745dc91d22652f50b167ca0723e94"
     },
     {
       "path": "docs/architecture/manual-frontier-recommendation.md",
-      "sha256": "56862570b2f4632a665f5b670dfdd06af95aaae29bc5d034024f04694942e7ae"
+      "sha256": "f29608a096cd53e746dd83b26ec5b08fe8491bb60c7950a78bbbf482b7d517ba"
     },
     {
       "path": "docs/architecture/untrusted-frontier-result-import.md",
-      "sha256": "de58173134c9e7fc450c5731d2dd940f99b9642dd6d43403d7e88c2fec9b156e"
+      "sha256": "2c4ed09a972120b696c4ac19f8b51bafd4a6a60ac0ecf88fda9232d22cc34c15"
     },
     {
       "path": "docs/guides/frontier-result-import-and-revalidation.md",
-      "sha256": "0252db8174fb77ae4449f731b753195e7f61069b868e125dba2a8de11d6658ce"
+      "sha256": "fd26f1d52585e90be6b9af660b2664600c5aa8fe2613bffff35411ad510c0106"
     },
     {
       "path": "docs/guides/manual-frontier-consultation.md",
-      "sha256": "584361271946d4eabd1309fa73a590670e3adacb8c39bfb2011ba5c4e6cb9a90"
+      "sha256": "65b25fc5a0e6911aa06f1c90d353b4ac918c469022b1c7fff0f6d6c8c76ef2c4"
     },
     {
       "path": "docs/release/release-notes-v0.5.0-draft.md",
-      "sha256": "ddc53f690f9cf08b7c8ad6a3b0c98b08d11682bade628ebbe900dbb22c47f3c0"
+      "sha256": "298d13d287a24f1676492ae8a88aec872653acf65758f5633901cf347e98fcc8"
     },
     {
       "path": "docs/release/v0.5-capability-matrix.md",
-      "sha256": "6914c3601f00470a9f459f74412c8d46b8e7a30b66470aaac34182f772acd622"
+      "sha256": "ef95ca2cba887e80ee2409b98752e3dea7cd3a69449c2ae4f8bac30c91287afa"
     },
     {
       "path": "docs/release/v0.5-frontier-acceptance-bundle.md",
-      "sha256": "fa6e40acbc6ed521ec4211775805a0afc1749d2a10c56c930c08371b0a38ec60"
+      "sha256": "a9239f3f4078b6d73c156f2f5bd777d1dd50ae1dbcb5cc55a7213f2d9b583457"
     },
     {
       "path": "docs/security/frontier-threat-model-and-boundary-report.md",
-      "sha256": "4eb4f2eb98ecae7438fb7cdd46d8fb02c1bad48f026cffceab77fffe55ed1729"
+      "sha256": "22861ede9ef87a4033b36b35469494d86555b0189002df55123d3ede8b58117a"
     },
     {
       "path": "docs/verification/sprint-51-frontier-corpus.json",
@@ -115,23 +114,31 @@
     },
     {
       "path": "kernel/contracts/src/handoff.rs",
-      "sha256": "ef1cb45bd60fd2a3ac42dc42386ef133d8b28e0ead6fb0ac285abcebd2c1a8a0"
+      "sha256": "230eea68dfbe59158221b006f1483591999a464e529b0e25ecac8c6213759a00"
     },
     {
       "path": "kernel/engine/src/frontier_import.rs",
-      "sha256": "6926aa8fadbbf28ed3f3463252692e845f78572376988618270b56cd00a73348"
+      "sha256": "a323ca43c0c590ebd317113cf3f39c03346e5063a27ba4bbabb79e9d91595173"
+    },
+    {
+      "path": "kernel/engine/src/frontier_import_recovery.rs",
+      "sha256": "c69e57f7cc6b1545f02489440eff6594fd71a5249e739f82993522e9b4846204"
     },
     {
       "path": "kernel/engine/src/frontier_recommendation.rs",
-      "sha256": "6aa93fe83d7039ae19f075314765674527d7d439dedd2a973a3c1f5c8047e65c"
+      "sha256": "412921486226969d6f5ad7a190f4ba5c000615a209a8016c47fbc150e8eca9e6"
     },
     {
       "path": "kernel/engine/src/frontier_release.rs",
-      "sha256": "0bc38294d7140baea4588b0b437632e40b2bced75a7f62bdf41b170a4b2bd3a7"
+      "sha256": "5c592dce3617edd4ff748b64a2c7b0f79a24a9ade09084bb991cabd07e70caca"
+    },
+    {
+      "path": "kernel/engine/src/frontier_release_recovery.rs",
+      "sha256": "092769a04e73e2c382e995d51e8685a873c35e34a0c6268cbd4c90d93857931f"
     },
     {
       "path": "kernel/engine/src/handoff.rs",
-      "sha256": "2fd2f84d99cb3874d5de6c19d143f8aa83525d3df7fdf0263ab76d5a6358928c"
+      "sha256": "84b4ad4ae0381e0a0cf22735082c302deadca9df52c38cd78ebb926f097cf0f2"
     },
     {
       "path": "schemas/runtime/frontier-recommendation-receipt.schema.json",
@@ -148,6 +155,22 @@
     {
       "path": "schemas/runtime/frontier-tier-decision.schema.json",
       "sha256": "7ea0fd64b24448d505f7add9b7f4649983365eaf93327e5b36c99150170d0002"
+    },
+    {
+      "path": "shells/host/src/frontier_coordinator.rs",
+      "sha256": "5064d2eed5ca01b4705dd73af2854bbfadea0ea6b72089ffa4321b8bea0e0943"
+    },
+    {
+      "path": "shells/host/src/frontier_import_coordinator.rs",
+      "sha256": "e897567a83864c5014c6a2a2e2813961c679e093184781783bda7b861c2d94fd"
+    },
+    {
+      "path": "shells/host/src/frontier_release_coordinator.rs",
+      "sha256": "1fe93e1241101d5b6d129a90fc3d217ed07854731ef7a60e7224e7d7cb1e88aa"
+    },
+    {
+      "path": "shells/host/src/lib.rs",
+      "sha256": "faa560fdbe8299eb3b798a7f1b196598d3eb0cbc60bba2bd984efb292cc70dfc"
     }
   ],
   "status": "blocked-local-candidate",
