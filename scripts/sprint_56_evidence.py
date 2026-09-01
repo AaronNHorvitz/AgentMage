@@ -27,6 +27,8 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/document_control_skills.rs",
     "capabilities/knowledge/src/lib.rs",
     "capabilities/knowledge/examples/document_control_skill_pack.rs",
+    "shells/host/src/document_control_coordinator.rs",
+    "shells/host/src/lib.rs",
     "schemas/runtime/document-register.schema.json",
     "schemas/runtime/examples/document-register.valid.json",
     "schemas/runtime/document-action-preview.schema.json",
@@ -56,6 +58,13 @@ COMMANDS: Final = (
         "document-control-skill-unit",
         ("cargo", "test", "-p", "agentmage-capability-knowledge", "document_control_skills::tests", "--lib", "--locked"),
     ),
+    (
+        "document-control-host-coordinator",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "document_control_coordinator", "--lib", "--locked",
+        ),
+    ),
     ("document-control-runtime-schemas", ("node", "--test", "tests/test_planning_schemas.mjs")),
     (
         "document-control-acceptance-corpus",
@@ -74,8 +83,12 @@ COMMANDS: Final = (
     ("supply-chain", ("python3", "scripts/supply_chain.py")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_56_evidence")),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:5])
-RUST_FOCUSED_COMMANDS: Final = {"document-control-kernel-unit", "document-control-skill-unit"}
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:6])
+RUST_FOCUSED_COMMANDS: Final = {
+    "document-control-kernel-unit",
+    "document-control-skill-unit",
+    "document-control-host-coordinator",
+}
 SECURITY_REQUIREMENTS: Final = [
     "SR-DAT-001", "SR-DAT-002", "SR-DAT-003", "SR-AI-003", "SR-AI-007", "SR-AI-010",
     "SR-CIV-003", "SR-CIV-004", "SR-CIV-005", "SR-CIV-006", "SR-CIV-007", "SR-CIV-008",
@@ -104,7 +117,7 @@ IMPLEMENTED: Final = {
     "filesystem_mutation_capability": False,
     "records_disposition_capability": False,
     "network_access_capability": False,
-    "product_coordinator": False,
+    "product_coordinator": True,
     "native_interface_integration": False,
     "accessibility_acceptance": False,
     "installed_cross_platform_acceptance": False,
@@ -114,7 +127,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-55-BLOCKED", "owner": "56.1"},
-    {"code": "DOCUMENT-CONTROL-PRODUCT-COORDINATOR-ABSENT", "owner": "56.1.3.4"},
     {"code": "NATIVE-INTERFACE-INTEGRATION-ABSENT", "owner": "56.1.3.4"},
     {"code": "ACCESSIBILITY-ACCEPTANCE-ABSENT", "owner": "56.1.3.5"},
     {"code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "56.1.3.5"},
@@ -190,7 +202,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "invented_attribution_count": 0 if local_pass else None,
         "unapproved_action_count": 0 if local_pass else None,
         "records_disposition_count": 0 if local_pass else None,
-        "product_coordinator": False,
+        "product_coordinator": True,
         "native_interface_integration": False,
         "accessibility_acceptance": False,
         "installed_cross_platform_acceptance": False,
@@ -206,7 +218,7 @@ def expected_summary(local_pass: bool = True) -> dict[str, Any]:
         "local_sprint_56_contract_passed": local_pass,
         "sprint_status": "BLOCKED",
         "upstream_sprint_55_closed": False,
-        "document_control_workflow_integrated": False,
+        "document_control_workflow_integrated": True,
         "external_effects_enabled": False,
         "cross_platform_acceptance_passed": False,
         "trusted_package_execution_complete": False,

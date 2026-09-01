@@ -21,6 +21,8 @@ skills, required templates, and the closed 68-case acceptance corpus.
 - Approval review binds the exact preview digest and confirmations but creates no execution grant.
 - Unsupported identities, hidden recipients, malicious attachments, embedded instructions,
   sensitive content, and disposition requests create no authority.
+- The registered host coordinator admits all eight bounded skills and binds the sealed register,
+  exact previews, present or absent approvals, reviews, findings, and workflow report together.
 
 ## Security Mapping
 
@@ -36,7 +38,7 @@ No product-wide requirement is marked complete by this local contribution.
 ## Truthful Disposition
 
 A green local report proves only the committed source and named commands on the recorded Linux
-environment. Sprint 55 remains blocked. No document-control product coordinator, native interface,
-accessibility result, installed cross-platform acceptance, trusted package execution, independent
-records-owner review, or manual fuzzing exists. Sprint 56 therefore remains **BLOCKED** despite the
-passing local contracts and artifacts.
+environment. Sprint 55 remains blocked. The local product coordinator is integrated, but no native
+interface, accessibility result, installed cross-platform acceptance, trusted package execution,
+independent records-owner review, or manual fuzzing exists. Sprint 56 therefore remains **BLOCKED**
+despite the passing local contracts and artifacts.

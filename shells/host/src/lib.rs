@@ -33,6 +33,8 @@ pub mod coding_verifier;
 
 /// One-use reviewed local diagnostic export workflow.
 pub mod diagnostic_export;
+/// Authority-free product composition for local document-control workflows.
+pub mod document_control_coordinator;
 /// Qualified local/private/managed Engineering model gateway composition.
 pub mod engineering_gateway;
 /// Product-qualified exact-profile model bridge for Verified Chat.

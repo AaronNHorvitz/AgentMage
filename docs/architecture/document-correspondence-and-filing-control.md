@@ -20,9 +20,13 @@ flowchart LR
     A -. creates no execution grant .-> D
 ```
 
-The separate executor is intentionally absent from this module. A complete approval review proves
-only that the user confirmed the exact preview fields; the kernel must still perform fresh policy,
-workspace, preimage, grant, transaction, and postcondition checks before any future write.
+The registered host coordinator admits all eight hash-bound document-control skills, verifies the
+sealed register and every exact preview, derives findings, pairs each preview with exactly one
+present or absent approval record, and builds the local workflow report. Sticky cancellation and
+missing dependencies fail before record evaluation. The separate executor is intentionally absent
+from this composition. A complete approval review proves only that the user confirmed the exact
+preview fields; the kernel must still perform fresh policy, workspace, preimage, grant, transaction,
+and postcondition checks before any future write.
 
 ## Registers
 
