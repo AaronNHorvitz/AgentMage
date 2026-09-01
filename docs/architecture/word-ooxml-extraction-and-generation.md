@@ -60,14 +60,20 @@ Rendered page remains explicitly absent until admitted native renderer evidence 
 
 `WordSourceArtifactService` retains only the canonical projection and content-free manifest; the
 runtime artifact store remains the owner of original DOCX bytes. Exact source/extractor cache hits,
-source invalidation, cancellation, deletion, and reattachment are deterministic. Prepared sections
-flow through the existing common `artifact.list`, `artifact.metadata`, `artifact.read`,
-`artifact.sections`, and `artifact.search` dispatcher with production receipts and no parser,
-network, workspace-write, or client-specific bypass at tool-dispatch time.
+source invalidation, cancellation, deletion, and reattachment are deterministic. Its digest-sealed
+prepared manifest binds the exact source content address, extractor identity, extraction digest,
+section and output metrics, ordered warnings, sensitivity, retention, and revision. Policy-persisted
+restart accepts only an existing path-free `RuntimeArtifactRef`, re-extracts bytes supplied by that
+artifact authority, and publishes nothing unless the complete retained manifest is reproduced.
+Parser drift, corrupt payloads, mismatched references, and cancellation fail before publication;
+the service never owns a second byte store or path namespace.
 
-Restart/retention persistence, payload-reference reconciliation, multi-profile context accounting,
-installed-client parity, and the full hostile lifecycle campaign remain open under Story 58.2; this
-local adapter does not promote those requirements.
+Prepared sections and visible warning sections flow through the existing common `artifact.list`,
+`artifact.metadata`, `artifact.read`, `artifact.sections`, and `artifact.search` dispatcher with
+production receipts and no parser, network, workspace-write, or client-specific bypass at
+tool-dispatch time. Multi-profile context accounting, installed-client parity, and the full hostile
+lifecycle campaign remain open under Story 58.2; this local adapter does not promote those
+requirements.
 
 ## Generation
 

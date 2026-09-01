@@ -6922,10 +6922,17 @@ page-aware evidence for the same context and workflow runtime rather than a sepa
     Evidence: admission reuses the quarantining Word parser, never resolves relationships or
     executes content, and emits explicit unsupported-structure and fidelity warnings.
 - [ ] **Task 58.2.2 - Integrate lifecycle and context**
-  - [ ] **Sub-task 58.2.2.1:** Emit source manifest, sections, extraction metrics, warnings, and
-    content-addressed payload references through the shared service and native tools.
-  - [ ] **Sub-task 58.2.2.2:** Support cancellation, restart, cache reuse, parser-version and source
+  - [x] **Sub-task 58.2.2.1:** Emit source manifest, sections, extraction metrics, warnings, and
+    content-addressed payload references through the shared service and native tools. Evidence: the
+    digest-sealed `PreparedWordSourceManifest` retains exact section/output/warning metrics and the
+    existing path-free runtime payload reference; the common native projection exposes the source
+    content address, canonical sections, and visible warning sections.
+  - [x] **Sub-task 58.2.2.2:** Support cancellation, restart, cache reuse, parser-version and source
     invalidation, retention, deletion, and reattachment without duplicate storage authority.
+    Evidence: persisted restart re-reads bytes only through an existing `RuntimeArtifactRef` and
+    publishes only after exact extractor/projection/manifest recomputation; corrupt payload,
+    extractor drift, and mismatched retention fail before publication, while the service retains no
+    original DOCX bytes or path authority.
   - [ ] **Sub-task 58.2.2.3:** Feed minimized sections into Story 22.1 and require complete context
     accounting under multiple model profiles and combined-artifact budgets.
 - [ ] **Task 58.2.3 - Verify hostile and fidelity cases**
@@ -6968,7 +6975,7 @@ generation, reopened inspection, runtime schemas, the shared structured-source e
 source adapter, runtime-owned prepared projections, common native artifact-tool dispatch, and
 zero-effect checks are complete. Story 58.1 and Sprint 58 remain **BLOCKED** by Sprint 57, the
 unadmitted Word renderer, absent product coordinator and controlled writer, incomplete prepared-source
-restart/retention/context/client integration and hostile lifecycle/client-parity campaigns, missing
+context/client integration and hostile lifecycle/client-parity campaigns, missing
 accessibility and installed cross-platform evidence, trusted-package execution, independent
 native-boundary review, and deferred manual fuzzing.
 ### [ ] Sprint 59 - Word Generation and Visual Verification

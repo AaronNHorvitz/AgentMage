@@ -26,6 +26,9 @@ artifact-tool dispatch, and the frozen 73-case review corpus.
 - Prepared Word projections prove exact-cache reuse, source invalidation, cancellation, deletion,
   reattachment, active-content quarantine, and common dispatcher receipts without retaining source
   package bytes or adding parser, network, execution, or workspace-write authority.
+- A digest-sealed prepared manifest binds extraction metrics, warnings, revision, and the existing
+  path-free runtime payload reference. Restart from policy-persisted bytes succeeds only after exact
+  extractor and projection recomputation; corrupt bytes and extractor drift publish no projection.
 
 ## Security Mapping
 
@@ -41,8 +44,8 @@ No product-wide requirement is marked complete by this local contribution.
 
 A green local report proves only the committed source and named commands on the recorded Fedora
 environment. Sprint 57 is blocked. The Word renderer, rich edit and visual comparison path, product
-coordinator, controlled writer, prepared-source restart/retention and context/client integration,
-accessibility evidence, installed Fedora/Ubuntu/macOS acceptance, trusted-package execution,
-independent review, and manual fuzz campaign are absent. Sprint 58 therefore remains **BLOCKED**
-despite passing local extraction, structured-adapter, common-dispatch, inspection, generation,
-schema, dependency, and review-corpus contracts.
+coordinator, controlled writer, prepared-source context/client integration, accessibility evidence,
+installed Fedora/Ubuntu/macOS acceptance, trusted-package execution, independent review, and manual
+fuzz campaign are absent. Sprint 58 therefore remains **BLOCKED** despite passing local extraction,
+restart/retention, structured-adapter, common-dispatch, inspection, generation, schema, dependency,
+and review-corpus contracts.

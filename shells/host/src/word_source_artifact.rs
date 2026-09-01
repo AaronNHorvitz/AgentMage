@@ -10,9 +10,11 @@ use agentmage_capability_read_only::{
     ArtifactToolKind, FakeArtifactSource, dispatch_artifact,
 };
 use agentmage_kernel_contracts::{
-    StructuredSourceExtraction, StructuredSourceExtractionError, StructuredSourceExtractionRequest,
-    StructuredSourceExtractor, StructuredSourceSectionKind,
+    CONTRACT_SCHEMA_VERSION, RuntimeArtifactRef, StructuredSourceExtraction,
+    StructuredSourceExtractionError, StructuredSourceExtractionRequest, StructuredSourceExtractor,
+    StructuredSourceSectionKind, StructuredSourceWarning,
 };
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 const MAX_PREPARED_WORD_SOURCES: usize = 1_024;
@@ -22,14 +24,76 @@ const MAX_PREPARED_WORD_SOURCES: usize = 1_024;
 pub struct WordSourceAdmissionOutcome {
     /// Exact current artifact manifest.
     pub manifest: ArtifactManifest,
+    /// Complete content-free prepared-source manifest for retention and restart.
+    pub prepared_manifest: PreparedWordSourceManifest,
     /// True only when the exact source/extractor projection was already prepared.
     pub cache_hit: bool,
+}
+
+/// Closed DOCX projection retention binding.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum PreparedWordSourceRetention {
+    /// The projection exists only in this bounded service instance.
+    Ephemeral,
+    /// Original DOCX bytes already exist in the encrypted runtime-artifact authority.
+    PolicyPersisted {
+        /// Exact path-free content-addressed payload reference.
+        artifact: RuntimeArtifactRef,
+        /// Exact policy revision authorizing persistence.
+        policy_sha256: String,
+    },
+}
+
+/// Content-free, digest-sealed DOCX preparation record used for exact restart.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PreparedWordSourceManifest {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable logical source identity.
+    pub source_id: String,
+    /// Exact declared media type.
+    pub media_type: String,
+    /// Complete original DOCX byte count.
+    pub source_bytes: u64,
+    /// Content address of the complete original DOCX.
+    pub source_sha256: String,
+    /// Exact extractor implementation identity.
+    pub extractor_sha256: String,
+    /// Hard canonical-section ceiling used for extraction.
+    pub maximum_sections: u32,
+    /// Hard emitted-content byte ceiling used for extraction.
+    pub maximum_output_bytes: u64,
+    /// Digest of the complete canonical extraction projection.
+    pub extraction_sha256: String,
+    /// Number of canonical sections.
+    pub section_count: u32,
+    /// Number of emitted canonical text bytes.
+    pub output_bytes: u64,
+    /// Whether no section or content was omitted by extraction bounds.
+    pub extraction_complete: bool,
+    /// Complete ordered fidelity and policy warnings.
+    pub warnings: Vec<StructuredSourceWarning>,
+    /// Sensitivity classification applied before native projection.
+    pub classification: ArtifactClassification,
+    /// Content-free source kind such as attachment or generated.
+    pub source_kind: String,
+    /// Digest of protected origin metadata; never a raw path or URI.
+    pub protected_origin_sha256: String,
+    /// Existing artifact-authority binding, or bounded process-memory retention.
+    pub retention: PreparedWordSourceRetention,
+    /// Monotonic logical source revision.
+    pub revision: u64,
+    /// Digest of this complete record with this field zeroed.
+    pub manifest_sha256: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct PreparedWordSource {
     extraction: StructuredSourceExtraction,
     manifest: ArtifactManifest,
+    prepared_manifest: PreparedWordSourceManifest,
 }
 
 /// Bounded runtime-owned prepared DOCX service; source package bytes are never retained here.
@@ -61,18 +125,36 @@ fn sha256(value: &[u8]) -> String {
         .collect()
 }
 
-fn manifest_sha256(
+fn prepared_manifest_sha256(
+    manifest: &PreparedWordSourceManifest,
+) -> Result<String, StructuredSourceExtractionError> {
+    let mut candidate = manifest.clone();
+    candidate.manifest_sha256 = "0".repeat(64);
+    serde_json::to_vec(&candidate)
+        .map(|bytes| sha256(&bytes))
+        .map_err(|_| StructuredSourceExtractionError::InvalidInput)
+}
+
+fn valid_retention(
+    retention: &PreparedWordSourceRetention,
     request: &StructuredSourceExtractionRequest,
-    extractor_sha256: &str,
-    revision: u64,
-) -> String {
-    sha256(
-        format!(
-            "{}\n{}\n{}\n{}\n{revision}",
-            request.source_id, request.media_type, request.source_sha256, extractor_sha256,
-        )
-        .as_bytes(),
-    )
+    source_len: u64,
+) -> bool {
+    match retention {
+        PreparedWordSourceRetention::Ephemeral => true,
+        PreparedWordSourceRetention::PolicyPersisted {
+            artifact,
+            policy_sha256,
+        } => {
+            artifact.schema_version == CONTRACT_SCHEMA_VERSION
+                && valid_id(artifact.artifact_id.as_str())
+                && valid_sha256(&artifact.manifest_sha256)
+                && artifact.payload_sha256 == request.source_sha256
+                && artifact.byte_size == source_len
+                && artifact.media_type == request.media_type
+                && valid_sha256(policy_sha256)
+        }
+    }
 }
 
 impl WordSourceArtifactService {
@@ -89,7 +171,33 @@ impl WordSourceArtifactService {
         protected_origin_sha256: &str,
         cancelled: &mut dyn FnMut() -> bool,
     ) -> Result<WordSourceAdmissionOutcome, StructuredSourceExtractionError> {
+        self.admit_with_retention(
+            request,
+            source,
+            classification,
+            source_kind,
+            protected_origin_sha256,
+            PreparedWordSourceRetention::Ephemeral,
+            cancelled,
+        )
+    }
+
+    /// Prepares one exact captured DOCX with an existing runtime-artifact retention binding.
+    #[allow(clippy::too_many_arguments)]
+    pub fn admit_with_retention(
+        &mut self,
+        request: &StructuredSourceExtractionRequest,
+        source: &[u8],
+        classification: ArtifactClassification,
+        source_kind: &str,
+        protected_origin_sha256: &str,
+        retention: PreparedWordSourceRetention,
+        cancelled: &mut dyn FnMut() -> bool,
+    ) -> Result<WordSourceAdmissionOutcome, StructuredSourceExtractionError> {
         if !valid_id(source_kind) || !valid_sha256(protected_origin_sha256) {
+            return Err(StructuredSourceExtractionError::InvalidInput);
+        }
+        if !valid_retention(&retention, request, source.len() as u64) {
             return Err(StructuredSourceExtractionError::InvalidInput);
         }
         let extractor = WordStructuredSourceExtractor;
@@ -97,12 +205,17 @@ impl WordSourceArtifactService {
         if let Some(current) = self.sources.get(&request.source_id)
             && current.extraction.source_sha256 == request.source_sha256
             && current.extraction.extractor_sha256 == extractor_sha256
+            && current.prepared_manifest.classification == classification
+            && current.prepared_manifest.source_kind == source_kind
+            && current.prepared_manifest.protected_origin_sha256 == protected_origin_sha256
+            && current.prepared_manifest.retention == retention
         {
             if cancelled() {
                 return Err(StructuredSourceExtractionError::Cancelled);
             }
             return Ok(WordSourceAdmissionOutcome {
                 manifest: current.manifest.clone(),
+                prepared_manifest: current.prepared_manifest.clone(),
                 cache_hit: true,
             });
         }
@@ -115,35 +228,117 @@ impl WordSourceArtifactService {
         let revision = self.sources.get(&request.source_id).map_or(1, |current| {
             current.manifest.freshness.observed_sequence + 1
         });
-        let manifest = ArtifactManifest {
+        let extraction_sha256 = serde_json::to_vec(&extraction)
+            .map(|bytes| sha256(&bytes))
+            .map_err(|_| StructuredSourceExtractionError::InvalidInput)?;
+        let mut prepared_manifest = PreparedWordSourceManifest {
+            schema_version: CONTRACT_SCHEMA_VERSION,
             source_id: request.source_id.clone(),
             media_type: request.media_type.clone(),
-            byte_len: source.len() as u64,
-            payload_sha256: request.source_sha256.clone(),
+            source_bytes: source.len() as u64,
+            source_sha256: request.source_sha256.clone(),
+            extractor_sha256,
+            maximum_sections: request.maximum_sections,
+            maximum_output_bytes: request.maximum_output_bytes,
+            extraction_sha256,
+            section_count: extraction.sections.len() as u32,
+            output_bytes: extraction.output_bytes,
+            extraction_complete: extraction.extraction_complete,
+            warnings: extraction.warnings.clone(),
             classification,
-            extraction_state: ArtifactExtractionState::Complete,
-            provenance: ArtifactProvenance {
-                provenance_id: format!("structured-word-{}", request.source_id),
-                source_kind: source_kind.to_owned(),
-                protected_origin_sha256: protected_origin_sha256.to_owned(),
-            },
-            freshness: ArtifactFreshness {
-                manifest_sha256: manifest_sha256(request, &extractor_sha256, revision),
-                observed_sequence: revision,
-            },
-            reason_code: None,
+            source_kind: source_kind.to_owned(),
+            protected_origin_sha256: protected_origin_sha256.to_owned(),
+            retention,
+            revision,
+            manifest_sha256: "0".repeat(64),
         };
+        prepared_manifest.manifest_sha256 = prepared_manifest_sha256(&prepared_manifest)?;
+        let manifest = artifact_manifest(&prepared_manifest);
         self.sources.insert(
             request.source_id.clone(),
             PreparedWordSource {
                 extraction,
                 manifest: manifest.clone(),
+                prepared_manifest: prepared_manifest.clone(),
             },
         );
         Ok(WordSourceAdmissionOutcome {
             manifest,
+            prepared_manifest,
             cache_hit: false,
         })
+    }
+
+    /// Reconstructs one exact persisted projection from bytes supplied by the existing artifact store.
+    ///
+    /// No path or storage authority is accepted. Publication occurs only when fresh extraction
+    /// reproduces the complete digest-sealed prepared manifest byte-for-byte.
+    pub fn restore_persisted(
+        &mut self,
+        expected: &PreparedWordSourceManifest,
+        request: &StructuredSourceExtractionRequest,
+        source: &[u8],
+        cancelled: &mut dyn FnMut() -> bool,
+    ) -> Result<(), StructuredSourceExtractionError> {
+        if expected.schema_version != CONTRACT_SCHEMA_VERSION
+            || expected.manifest_sha256 != prepared_manifest_sha256(expected)?
+            || !valid_id(&expected.source_id)
+            || !valid_id(&expected.source_kind)
+            || !valid_sha256(&expected.source_sha256)
+            || !valid_sha256(&expected.extractor_sha256)
+            || !valid_sha256(&expected.extraction_sha256)
+            || !valid_sha256(&expected.protected_origin_sha256)
+            || expected.revision == 0
+            || !matches!(
+                expected.retention,
+                PreparedWordSourceRetention::PolicyPersisted { .. }
+            )
+            || expected.source_id != request.source_id
+            || expected.media_type != request.media_type
+            || expected.source_sha256 != request.source_sha256
+            || expected.source_bytes != source.len() as u64
+            || expected.maximum_sections != request.maximum_sections
+            || expected.maximum_output_bytes != request.maximum_output_bytes
+            || self.sources.contains_key(&expected.source_id)
+        {
+            return Err(StructuredSourceExtractionError::InvalidInput);
+        }
+        let extractor = WordStructuredSourceExtractor;
+        if expected.extractor_sha256 != extractor.extractor_sha256()
+            || !valid_retention(&expected.retention, request, source.len() as u64)
+        {
+            return Err(StructuredSourceExtractionError::InvalidInput);
+        }
+        let extraction = extractor.extract(request, source, cancelled)?;
+        let extraction_sha256 = serde_json::to_vec(&extraction)
+            .map(|bytes| sha256(&bytes))
+            .map_err(|_| StructuredSourceExtractionError::InvalidInput)?;
+        if extraction_sha256 != expected.extraction_sha256
+            || extraction.sections.len() as u32 != expected.section_count
+            || extraction.output_bytes != expected.output_bytes
+            || extraction.extraction_complete != expected.extraction_complete
+            || extraction.warnings != expected.warnings
+        {
+            return Err(StructuredSourceExtractionError::InvalidInput);
+        }
+        let manifest = artifact_manifest(expected);
+        self.sources.insert(
+            expected.source_id.clone(),
+            PreparedWordSource {
+                extraction,
+                manifest,
+                prepared_manifest: expected.clone(),
+            },
+        );
+        Ok(())
+    }
+
+    /// Returns one complete content-free manifest for checkpoint persistence.
+    #[must_use]
+    pub fn prepared_manifest(&self, source_id: &str) -> Option<PreparedWordSourceManifest> {
+        self.sources
+            .get(source_id)
+            .map(|source| source.prepared_manifest.clone())
     }
 
     /// Deletes one prepared projection and its cache identity without touching original bytes.
@@ -161,6 +356,32 @@ impl WordSourceArtifactService {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.sources.is_empty()
+    }
+}
+
+fn artifact_manifest(prepared: &PreparedWordSourceManifest) -> ArtifactManifest {
+    ArtifactManifest {
+        source_id: prepared.source_id.clone(),
+        media_type: prepared.media_type.clone(),
+        byte_len: prepared.source_bytes,
+        payload_sha256: prepared.source_sha256.clone(),
+        classification: prepared.classification,
+        extraction_state: if prepared.extraction_complete {
+            ArtifactExtractionState::Complete
+        } else {
+            ArtifactExtractionState::Partial
+        },
+        provenance: ArtifactProvenance {
+            provenance_id: format!("structured-word-{}", prepared.source_id),
+            source_kind: prepared.source_kind.clone(),
+            protected_origin_sha256: prepared.protected_origin_sha256.clone(),
+        },
+        freshness: ArtifactFreshness {
+            manifest_sha256: prepared.manifest_sha256.clone(),
+            observed_sequence: prepared.revision,
+        },
+        reason_code: (!prepared.extraction_complete)
+            .then(|| "structured-source.extraction.partial".to_owned()),
     }
 }
 
@@ -187,29 +408,50 @@ fn section_title(kind: StructuredSourceSectionKind) -> &'static str {
 }
 
 fn project_source(source: &PreparedWordSource) -> FakeArtifactSource {
+    let mut sections = source
+        .extraction
+        .sections
+        .iter()
+        .map(|section| ArtifactSection {
+            section_id: section.section_id.clone(),
+            title: section_title(section.kind).to_owned(),
+            ordinal: section.ordinal,
+            byte_len: section.content.len() as u64,
+        })
+        .collect::<Vec<_>>();
+    let mut fragments = source
+        .extraction
+        .sections
+        .iter()
+        .filter(|section| !section.content.is_empty())
+        .map(|section| ArtifactFragment::Section {
+            section_id: section.section_id.clone(),
+            content: section.content.clone(),
+        })
+        .collect::<Vec<_>>();
+    for (index, warning) in source.extraction.warnings.iter().enumerate() {
+        let section_id = format!("warning: {}", warning.warning_id);
+        let content = format!(
+            "reason_code={}; source_part={}; original_remains_authoritative={}",
+            warning.reason_code,
+            warning.source_part.as_deref().unwrap_or("none"),
+            warning.original_remains_authoritative,
+        );
+        sections.push(ArtifactSection {
+            section_id: section_id.clone(),
+            title: "Extraction warning".to_owned(),
+            ordinal: source.extraction.sections.len() as u32 + index as u32,
+            byte_len: content.len() as u64,
+        });
+        fragments.push(ArtifactFragment::Section {
+            section_id,
+            content,
+        });
+    }
     FakeArtifactSource {
         manifest: source.manifest.clone(),
-        sections: source
-            .extraction
-            .sections
-            .iter()
-            .map(|section| ArtifactSection {
-                section_id: section.section_id.clone(),
-                title: section_title(section.kind).to_owned(),
-                ordinal: section.ordinal,
-                byte_len: section.content.len() as u64,
-            })
-            .collect(),
-        fragments: source
-            .extraction
-            .sections
-            .iter()
-            .filter(|section| !section.content.is_empty())
-            .map(|section| ArtifactFragment::Section {
-                section_id: section.section_id.clone(),
-                content: section.content.clone(),
-            })
-            .collect(),
+        sections,
+        fragments,
         redacted: source.manifest.classification == ArtifactClassification::Restricted,
     }
 }
@@ -255,7 +497,7 @@ mod tests {
     use super::*;
     use agentmage_capability_read_only::{ArtifactLimits, ArtifactOutcome, ArtifactRequest};
     use agentmage_kernel_contracts::{
-        CONTRACT_SCHEMA_VERSION, DOCX_MEDIA_TYPE, WorkspaceId, WorkspacePath,
+        CONTRACT_SCHEMA_VERSION, DOCX_MEDIA_TYPE, RuntimeArtifactId, WorkspaceId, WorkspacePath,
     };
 
     fn push_u16(output: &mut Vec<u8>, value: u16) {
@@ -381,6 +623,17 @@ mod tests {
         .expect("request")
     }
 
+    fn payload_reference(source: &[u8]) -> RuntimeArtifactRef {
+        RuntimeArtifactRef {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            artifact_id: RuntimeArtifactId::from_raw("persisted-word-payload"),
+            manifest_sha256: "b".repeat(64),
+            payload_sha256: sha256(source),
+            byte_size: source.len() as u64,
+            media_type: DOCX_MEDIA_TYPE.to_owned(),
+        }
+    }
+
     #[test]
     fn prepared_word_uses_common_dispatcher_without_parser_or_effect_bypass() {
         let source = package("Evidence", false);
@@ -499,5 +752,115 @@ mod tests {
             ),
             Err(StructuredSourceExtractionError::Quarantined)
         );
+    }
+
+    #[test]
+    fn persisted_manifest_restarts_only_from_exact_existing_payload_reference() {
+        let source = package("Restart evidence", false);
+        let request = extraction_request(&source);
+        let retention = PreparedWordSourceRetention::PolicyPersisted {
+            artifact: payload_reference(&source),
+            policy_sha256: "c".repeat(64),
+        };
+        let mut before_restart = WordSourceArtifactService::default();
+        let admitted = before_restart
+            .admit_with_retention(
+                &request,
+                &source,
+                ArtifactClassification::Internal,
+                "attachment",
+                &"a".repeat(64),
+                retention,
+                &mut || false,
+            )
+            .expect("persisted admission");
+        let serialized = serde_json::to_vec(&admitted.prepared_manifest).expect("serialize");
+        assert!(
+            !serialized
+                .windows(b"Restart evidence".len())
+                .any(|window| window == b"Restart evidence")
+        );
+        assert_eq!(
+            serde_json::from_slice::<PreparedWordSourceManifest>(&serialized).expect("deserialize"),
+            admitted.prepared_manifest
+        );
+        assert_eq!(
+            before_restart.prepared_manifest("prepared-word"),
+            Some(admitted.prepared_manifest.clone())
+        );
+        assert_eq!(
+            admitted.prepared_manifest.section_count as usize
+                + admitted.prepared_manifest.warnings.len(),
+            before_restart
+                .source("prepared-word")
+                .expect("native projection")
+                .sections
+                .len()
+        );
+        assert!(!admitted.prepared_manifest.warnings.is_empty());
+
+        let mut cancelled_restart = WordSourceArtifactService::default();
+        assert_eq!(
+            cancelled_restart.restore_persisted(
+                &admitted.prepared_manifest,
+                &request,
+                &source,
+                &mut || true,
+            ),
+            Err(StructuredSourceExtractionError::Cancelled)
+        );
+        assert!(cancelled_restart.is_empty());
+
+        let mut after_restart = WordSourceArtifactService::default();
+        after_restart
+            .restore_persisted(&admitted.prepared_manifest, &request, &source, &mut || {
+                false
+            })
+            .expect("exact restart");
+        assert_eq!(
+            after_restart.prepared_manifest("prepared-word"),
+            Some(admitted.prepared_manifest.clone())
+        );
+        assert_eq!(
+            after_restart
+                .source("prepared-word")
+                .expect("restored source")
+                .manifest,
+            admitted.manifest
+        );
+
+        let mut corrupt = source.clone();
+        corrupt[0] ^= 1;
+        let mut refused = WordSourceArtifactService::default();
+        assert_eq!(
+            refused.restore_persisted(&admitted.prepared_manifest, &request, &corrupt, &mut || {
+                false
+            },),
+            Err(StructuredSourceExtractionError::InvalidInput)
+        );
+        assert!(refused.is_empty());
+
+        let mut mismatched_retention = admitted.prepared_manifest.clone();
+        if let PreparedWordSourceRetention::PolicyPersisted { artifact, .. } =
+            &mut mismatched_retention.retention
+        {
+            artifact.payload_sha256 = "e".repeat(64);
+        }
+        mismatched_retention.manifest_sha256 =
+            prepared_manifest_sha256(&mismatched_retention).unwrap();
+        assert_eq!(
+            refused.restore_persisted(&mismatched_retention, &request, &source, &mut || false),
+            Err(StructuredSourceExtractionError::InvalidInput)
+        );
+        assert!(refused.is_empty());
+
+        let mut stale_extractor = admitted.prepared_manifest.clone();
+        stale_extractor.extractor_sha256 = "d".repeat(64);
+        stale_extractor.manifest_sha256 = prepared_manifest_sha256(&stale_extractor).unwrap();
+        assert_eq!(
+            refused.restore_persisted(&stale_extractor, &request, &source, &mut || false),
+            Err(StructuredSourceExtractionError::InvalidInput)
+        );
+        assert!(refused.is_empty());
     }
 }
