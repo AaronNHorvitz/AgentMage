@@ -93,12 +93,12 @@
     {
       "bytes": 2891,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-      "sha256": "e3b0e459a6517fc96445beb97fa84fb5bbb76e2ad118e62bc04ef4bb4845a6a9"
+      "sha256": "e467229bd5009af652cd136a4283cf0bd5f0f31407fb5837e404fbd753e66dc8"
     },
     {
       "bytes": 4405,
       "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-      "sha256": "58378a6e3ecad6600b2c35596d802c94b6c0b2ef1f6630bc6821caddf1bb327d"
+      "sha256": "994793b608db2d413f53ecc3617cc8c4ddd694b1e7076b7c740c61317911e515"
     },
     {
       "bytes": 13204,
@@ -106,9 +106,9 @@
       "sha256": "18cba5c2c780c17dc76385dc4bda764f2ca7108bfee0146ab31c892effe39e0b"
     },
     {
-      "bytes": 12559,
+      "bytes": 12639,
       "path": "scripts/path_platform_conformance.py",
-      "sha256": "7d4a98fd5b3a3ae4f1f99ac16846d4a1e3e0cdb7c55a97cf70b15daa55885fec"
+      "sha256": "d7cd197f836e8f5cd0240ecd56c1874fe532cfa9f646107ddcc3830de98befce"
     },
     {
       "bytes": 14949,
@@ -230,7 +230,7 @@
     "status": "partial-blocked-platform-and-privileged-tests"
   },
   "schema_version": 1,
-  "source_revision": "ae3f8e5cfa7ef8c5dd1f36d351f5d14952f91eb8",
+  "source_revision": "56e57e396177914ceb206082c289fd80887a7c91",
   "status": "pass-shared-fedora-security-mapping",
   "story_id": "6.1",
   "summary": {
