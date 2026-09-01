@@ -37,19 +37,19 @@
   "independent_review": {
     "artifacts": [
       {
-        "byte_length": 128088,
+        "byte_length": 132612,
         "path": "kernel/contracts/src/engineering_records.rs",
-        "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+        "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
       },
       {
-        "byte_length": 13146,
+        "byte_length": 13185,
         "path": "kernel/contracts/src/serialization.rs",
-        "sha256": "e014eb02997caf6a0cb1a40d48d4bc7180b7b6ed443d010bd3f93877dff52197"
+        "sha256": "0172e822ffd4297d769d752f75a6e06e27dbf36ca239ecc80167cd4358c9b4be"
       },
       {
-        "byte_length": 73730,
+        "byte_length": 77208,
         "path": "kernel/engine/src/engineering_records.rs",
-        "sha256": "51338875c4b81e0f04a402c3236b6718e8d273b0e2d5e8745fe07a88a8215c57"
+        "sha256": "0edd44976cdc3fc7f65de9e65f5b5d5ae4f845e4f598bf4411bf8acd75a1f398"
       },
       {
         "byte_length": 12823,
@@ -74,7 +74,7 @@
       {
         "byte_length": 7164,
         "path": "scripts/engineering_runtime_record_evidence.py",
-        "sha256": "70efcdc3a239eb6a5c22a3d6453709857d455e5564e8f75c8f404a908da35e7e"
+        "sha256": "7f175308017574e70fd8a42f9fb109a745540021aeb62f9f351a9d118cd5e103"
       },
       {
         "byte_length": 11971,
@@ -109,37 +109,37 @@
       {
         "byte_length": 17110,
         "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-evidence-index.json",
-        "sha256": "73be00ba2aea79e50b0df38e5e14df248d86439232381a7f48c1438b88f8ecd1"
+        "sha256": "834a422ab383527037c5d74c3648484fbf28c0bc973b64784abc9a6911be4f15"
       },
       {
-        "byte_length": 12859,
+        "byte_length": 13072,
         "path": "artifacts/sprints/sprint-1/story-1.3/canonical-record-gate-results.log",
-        "sha256": "6f085ea88da72382e2b9b2572f9842f6b541f32744656211413fd8db90979eff"
+        "sha256": "8a664e2bf65f03e8ac5d744a7744cf6f930e44d440b356dcd03e9051ba41c44d"
       },
       {
         "byte_length": 7982,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicability.json",
-        "sha256": "1470298df964f41c7eb15d16e3387d69e7545a11b02a6e48f25d3bb4899add61"
+        "sha256": "c74c5ae274482d83205689ba599dd68a245308368ed1a1bc90161d382a892571"
       },
       {
-        "byte_length": 9101,
+        "byte_length": 9518,
         "path": "artifacts/sprints/sprint-1/story-1.3/rv50-applicable-results.log",
-        "sha256": "e52bfc3f1c2fe0d77b5753e0f4ccd67109da78a0650724b42dee556bca83cca4"
+        "sha256": "e79b9b4b18f97ca2ef3877221057cff716aad72dbea9e84b933320ebee4b9079"
       },
       {
         "byte_length": 4491,
         "path": "artifacts/sprints/sprint-1/story-1.3/story-ac1-rust-owned-boundary-report.json",
-        "sha256": "cdbe82feee9ea965b9d73173939a60abcdc25d6ef9305b7a12f64f3ad318f777"
+        "sha256": "900ade0789c23ab112ab60793fce6461f0f97a09c60fdead83c4513d17c8d930"
       },
       {
         "byte_length": 4363,
         "path": "artifacts/sprints/sprint-1/story-1.3/story-ac2-cross-client-parity-report.json",
-        "sha256": "3213bef710429871063824f61c5c6c0d6b6bea8e78ca402005085b99c3e17480"
+        "sha256": "5d7d5fff5df5fda307282714582658d035b7ead7d8a25e382375e3bcfb66ae2f"
       },
       {
         "byte_length": 5099,
         "path": "artifacts/sprints/sprint-1/story-1.3/story-ac3-predispatch-rejection-report.json",
-        "sha256": "924d794316f0ada133f808f4004802f5ff4ca68a96a73c5c1faa392d7612f6f3"
+        "sha256": "8f195a31aa09b9b0f654b7660924c6de4601404e267e63fa443da8b30937fe30"
       },
       {
         "byte_length": 973,
@@ -206,8 +206,8 @@
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "752d2b02f1e71b118057701b711a56b63e82b998",
-    "reviewed_tree": "edc15f5b80fefdccc911465a16c73f68d308019d",
+    "reviewed_commit": "f4a038ab3fdf9c9ff205b8317d0c6c94956e83b4",
+    "reviewed_tree": "6db47807e9556db120a77a741529a3cf0b2f1fb5",
     "reviewer_id": "agentmage-story-1.3-independent-gate-v1"
   },
   "installed_product_claim": "none",
@@ -232,15 +232,15 @@
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "752d2b02f1e71b118057701b711a56b63e82b998",
-  "reviewed_tree": "edc15f5b80fefdccc911465a16c73f68d308019d",
+  "reviewed_commit": "f4a038ab3fdf9c9ff205b8317d0c6c94956e83b4",
+  "reviewed_tree": "6db47807e9556db120a77a741529a3cf0b2f1fb5",
   "rv50": {
     "blocked_external_tuple_count": 5,
     "evidence_substitution_permitted": false,
     "later_runtime_scenario_count": 5,
     "protocol_complete": false,
     "protocol_id": "RV-50",
-    "report_sha256": "372441d0986f34f1369b9187dfabc01ba0a3bee811af33726131e596be1493dd",
+    "report_sha256": "6ab0d0241307c335fcdf25e800651d24d1f826fb9478f47ea7179f0d5b06ffcc",
     "status": "partial-local-contract-evidence"
   },
   "schema_version": 1,

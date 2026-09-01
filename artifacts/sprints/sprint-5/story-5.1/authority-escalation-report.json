@@ -582,12 +582,12 @@
       "task_id": "task-0001"
     }
   ],
-  "reference_revision": "21d2a33b594fa67ec981de8ff300eaf2b01acdfc",
+  "reference_revision": "f4a038ab3fdf9c9ff205b8317d0c6c94956e83b4",
   "schema_version": 1,
   "sources": [
     {
       "path": "kernel/engine/src/authority.rs",
-      "sha256": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8"
+      "sha256": "c8d75e190006004d76da34a0835a99e3b9074265bea9eba5d5cc388ff22ceb09"
     },
     {
       "path": "kernel/engine/tests/authority_escalation_matrix.rs",
