@@ -6848,15 +6848,15 @@ records-owner review, and deferred manual fuzzing.
 **Gate decision:** Sprint 57 is PASS only when Story 57.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-57/local-evidence-report.json`
-binds 12 passing commands and the 68-case acceptance corpus to source revision
-`f996c122b26cfb66156d11a3810a3bc260037351` (report SHA-256
-`7060b447413562c096de9c9407ebf573374428717a009d64a064eeea466fcc2c`). The byte-preserving
+binds 13 passing commands, eight focused suites with zero blocking skips, and the 68-case acceptance
+corpus to source revision `c68f377562657d79e4fd5b6eefc348837a74b597` (report SHA-256
+`54c7a4e5613288f96bcb9cb5c579bcbbabd65cb717b54d9afb698fd53f87081c`). The byte-preserving
 parser and scoped previews, quality and acronym review, seven cited artifact and skill types,
-display-only links, runtime schemas, inert hostile-content checks, and byte/semantic/rendered local
-round-trip receipts are complete. Story 57.1 and Sprint 57 remain **BLOCKED** by Sprint 56, the
-absent product coordinator, controlled writer and local renderer integration, native interface and
-accessibility evidence, installed cross-platform acceptance, trusted-package execution,
-independent content review, and deferred manual fuzzing.
+display-only links, runtime schemas, inert hostile-content checks, byte/semantic/rendered local
+round-trip receipts, and registered authority-free product coordinator are complete. Story 57.1
+and Sprint 57 remain **BLOCKED** by Sprint 56, controlled writer and local renderer integration,
+the native interface and accessibility evidence, installed cross-platform acceptance,
+trusted-package execution, independent content review, and deferred manual fuzzing.
 ### [ ] Sprint 58 - Word Extraction and Structural Preservation
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
