@@ -7,9 +7,9 @@
   ],
   "artifacts": [
     {
-      "byte_length": 33870,
+      "byte_length": 36732,
       "path": "kernel/engine/src/model_orchestration_profile.rs",
-      "sha256": "cc8ef989a2adac659b132abd60bd55ac1c184643a1c6216c0adaabff2b0ba87c"
+      "sha256": "07b35ccf495e4cb2cf3ceefca449e009d5ed9d1314c3eb31a7e68dd2b38ef528"
     },
     {
       "byte_length": 6122,
@@ -42,9 +42,9 @@
       "sha256": "b6bd298963cd7d7245bfd6abfd7fb05a659a4540ae66cc97ae5747785584dc9d"
     },
     {
-      "byte_length": 5238,
+      "byte_length": 5345,
       "path": "artifacts/sprints/sprint-13/story-13.4/context-profile-results.log",
-      "sha256": "61e52a5526ab8efb6446dc58be7009559fdabeed4ca885f3a878d920624680f3"
+      "sha256": "f70f093f3cc9aa04772ee16ad134d174339109799632ccdb0e6a8c44c3d0be9a"
     }
   ],
   "commands": [

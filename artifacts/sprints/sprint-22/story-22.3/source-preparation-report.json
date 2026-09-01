@@ -1,0 +1,129 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 111393,
+      "path": "kernel/engine/src/source_preparation.rs",
+      "sha256": "9facf973fb5a8e10e8c8c09c3edc1f900ad5a86fc90a55229d987d97aa5ce5c1"
+    },
+    {
+      "byte_length": 36732,
+      "path": "kernel/engine/src/model_orchestration_profile.rs",
+      "sha256": "07b35ccf495e4cb2cf3ceefca449e009d5ed9d1314c3eb31a7e68dd2b38ef528"
+    },
+    {
+      "byte_length": 70590,
+      "path": "capabilities/read-only/src/artifact.rs",
+      "sha256": "fb2f0212db74a6d795a3b82a1f5a78c81533fadd03c12b198a1aa0e1a02810ad"
+    },
+    {
+      "byte_length": 17703,
+      "path": "shells/host/src/source_artifact_runtime.rs",
+      "sha256": "4b327e66e82d4a3c01a3e92c086d6168023ff0623fa77c4d9efd799d248099fc"
+    },
+    {
+      "byte_length": 8576,
+      "path": "shells/host/examples/story_22_3_evidence.rs",
+      "sha256": "988bdb2956d439d6f44a25a738c2037d3730220de5f6009c22a74b222481b9a3"
+    },
+    {
+      "byte_length": 4068,
+      "path": "schemas/runtime/prepared-source-manifest.schema.json",
+      "sha256": "5abdcaa97d18ad21cc81f6851d654b9e2fa477d1cab498c54a20b2a47fc3fe29"
+    },
+    {
+      "byte_length": 4974,
+      "path": "schemas/runtime/prepared-source-context-manifest.schema.json",
+      "sha256": "a845665b279ea3326570657c89b888d23040fb4786da7e907df32be2c7e653ed"
+    },
+    {
+      "byte_length": 3779,
+      "path": "tests/test_source_preparation_schemas.mjs",
+      "sha256": "5b57f5be50498661533c929655982205f5c0d8f3bce0a0339bc676e52b2053a0"
+    },
+    {
+      "byte_length": 5498,
+      "path": "docs/architecture/source-artifact-preparation-and-context.md",
+      "sha256": "61e97a55e7f25b7c1d5a9c4397b7eb4ccba1aacdfe5bd8d40694e7ec57f26eab"
+    },
+    {
+      "byte_length": 8879,
+      "path": "scripts/story_22_3_source_preparation_evidence.py",
+      "sha256": "aa246e88ca8fca8a7470630f1e716fa604685d640f8dd94bf7be546cce5709b8"
+    },
+    {
+      "byte_length": 853,
+      "path": "tests/test_story_22_3_source_preparation_evidence.py",
+      "sha256": "048104119aa04d0704552120632c79e1954bec177498b804b4c698467c85b1db"
+    },
+    {
+      "byte_length": 4858,
+      "path": "artifacts/sprints/sprint-22/story-22.3/source-preparation-results.log",
+      "sha256": "504b893d769d1bee2cbfefb287d32b4924b09aaadfbfaece8aef1af4b1294198"
+    },
+    {
+      "byte_length": 26891,
+      "path": "artifacts/sprints/sprint-22/story-22.3/source-preparation-goldens.json",
+      "sha256": "29136c57b442ccdd32bc628263244d83ebf45b5d35a72dc1e2f5b0eba6e127d3"
+    }
+  ],
+  "commands": [
+    "cargo run -p agentmage-host --example story_22_3_evidence --locked",
+    "cargo test -p agentmage-kernel-engine source_preparation --lib --locked",
+    "cargo test -p agentmage-capability-read-only artifact::tests --locked",
+    "cargo test -p agentmage-host source_artifact_runtime --locked",
+    "node --test tests/test_source_preparation_schemas.mjs",
+    "cargo clippy -p agentmage-kernel-engine -p agentmage-capability-read-only -p agentmage-host --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-31",
+  "performance": {
+    "elapsed_ceiling_ms": 60000,
+    "elapsed_ms": 5154,
+    "input_bytes": 26214400,
+    "omitted_lines": 69632,
+    "output_byte_ceiling": 8388608,
+    "retained_lines": 32768
+  },
+  "product_truth": {
+    "bounded_text_log_admission_complete": true,
+    "complete_source_section_accounting_complete": true,
+    "currently_admitted_profile_count": 0,
+    "exact_tokenizer_and_window_reconciliation_complete": true,
+    "independent_review_complete": false,
+    "installed_package_campaign_complete": false,
+    "native_artifact_operations_complete": true,
+    "network_access_count": 0,
+    "page_sheet_operation_count": 0,
+    "physical_fault_campaign_complete": false,
+    "policy_persisted_restart_complete": true,
+    "registered_operation_count": 7,
+    "release_claim": "none",
+    "windows_campaign_complete": false,
+    "workspace_mutation_count": 0
+  },
+  "protocols": [
+    "RV-08",
+    "RV-16",
+    "RV-17",
+    "RV-18"
+  ],
+  "record_type": "agentmage-story-22-3-source-preparation-evidence",
+  "remaining_external_work": [
+    "repeat the corpus for the first independently admitted real model profile",
+    "run installed-package and Windows source-artifact campaigns",
+    "retain physical storage-fault and independent human security review evidence"
+  ],
+  "required_markers": [
+    "story_22_3_twenty_five_mib_log_is_bounded_and_visibly_truncated ... ok",
+    "story_22_3_persisted_restart_release_and_delete_are_exact_and_fail_closed ... ok",
+    "story_22_3_process_stop_publishes_no_partial_source_and_exact_restart_recovers ... ok",
+    "story_22_3_context_accounts_every_source_section_duplicate_restriction_and_budget ... ok",
+    "all_seven_fake_operations_are_deterministic_typed_and_receipted ... ok",
+    "story_22_3_all_native_text_log_tools_use_one_production_dispatcher ... ok",
+    "prepared source and context schemas accept closed canonical records",
+    "prepared source schemas reject paths, unknown fields, widening, and missing accounting",
+    "Finished `dev` profile"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_PRODUCTION_TEXT_LOG",
+  "story_id": "22.3"
+}

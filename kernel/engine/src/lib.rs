@@ -158,6 +158,8 @@ pub mod runtime_recovery;
 pub mod session_environment;
 /// Atomic source refresh, invalidation, retention, hold, deletion, and collection.
 pub mod source_lifecycle;
+/// Production text/log source admission, extraction, retrieval, and context accounting.
+pub mod source_preparation;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.
 pub mod strict_local;
 /// Deterministic descriptive task intent, complexity, and risk classification.

@@ -58,7 +58,7 @@
     {
       "bytes": 24782,
       "path": "docs/architecture/runtime-artifact-lifecycle.md",
-      "sha256": "a87ac47b7b1068b99617fe7fcae88b4764dad43a4e8b354b082283125e9cf7f9"
+      "sha256": "020901e108b2f238bf9917eeabc268857c8bcbaf0ebcb65d68f4837f3c5a2d2b"
     },
     {
       "bytes": 6786,
@@ -71,29 +71,29 @@
       "sha256": "8fdb490ec397bb2e7975876e03d196e78c2e3abad2ee3ea27983184be8b3ebb4"
     },
     {
-      "bytes": 274619,
+      "bytes": 437644,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "8776d872261d59d39eccd79c70756bd8ced7edd32a384863a80b2d47500125c7"
+      "sha256": "64ac3a2ab768f47f03f5fdb4343aae9df0d429eff727b74a875f909ab6e17a9a"
     },
     {
-      "bytes": 167619,
+      "bytes": 167641,
       "path": "kernel/engine/src/runtime_artifact.rs",
-      "sha256": "ada53b5465df220357397e5951ed940bfee38c53d373fcce40fdc82ca6202efc"
+      "sha256": "a45dd60b5882cff330cb711bec7b1ecc5bac3413eb17f35d5dc530fbb0938ad4"
     },
     {
-      "bytes": 141074,
+      "bytes": 141945,
       "path": "kernel/engine/src/runtime_loop.rs",
-      "sha256": "f590c54030d8a0447ed8588b7bdec6d47a20fdb2af86ff97e3a0d428bc2ddff6"
+      "sha256": "72f2dd4c039788b19677e5977d0b81d92f3dade9c2a35cd6fc55f24b01aa4ffa"
     },
     {
-      "bytes": 118065,
+      "bytes": 125847,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "aff2deb18697d9f8dcaa8d83d314bd38e15a8820aee082a74d07e46603b99f71"
+      "sha256": "dbd39f6852ff6d3a80723849b486a66241f0ebc9d2992d5cbf3eb382ba0d120e"
     },
     {
-      "bytes": 36697,
+      "bytes": 39200,
       "path": "platforms/linux/src/platform.rs",
-      "sha256": "ddaa5ab31f1c0ca55fe48b3d816c612b268fc1e47cd6a9a37e41151bdcac5be3"
+      "sha256": "46207d962ef407b64ca1d0408fa76919a07e94e937fb25270580667d42df3105"
     },
     {
       "bytes": 97078,
@@ -176,19 +176,19 @@
       "sha256": "564ca63bdbf83dde5a025f4494f7f27122760de8245b0324244b8c60467ee655"
     },
     {
-      "bytes": 38371,
+      "bytes": 38472,
       "path": "shells/host/src/coding_session.rs",
-      "sha256": "a389772db7020828a96e5def5aa3fe90163c55d923b8042873f89c7e2af6228f"
+      "sha256": "5421484292e39db39ed469b06d588378eb2956bda77dd892b28e8be3c7c824a8"
     },
     {
-      "bytes": 274927,
+      "bytes": 316474,
       "path": "shells/host/src/linux_coding_runtime.rs",
-      "sha256": "521e59810567fa2077576c82c4d0c736e7d5a9e0b4e01986f723532231298a4e"
+      "sha256": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af"
     },
     {
-      "bytes": 67296,
+      "bytes": 70113,
       "path": "tests/test_planning_schemas.mjs",
-      "sha256": "af74d590af0eb8eb3cda538133f879dcb13eea0b8e3250c9b4e46f850c58b919"
+      "sha256": "7e91d19b6eed4e802db3f1577a514a9298c70d6becb1706ce9b2861d0565f42b"
     },
     {
       "bytes": 2391,
@@ -227,7 +227,7 @@
     }
   ],
   "disposition": "partial-local-evidence",
-  "index_sha256": "977282dce8151217c072a323bbdc77367336cb4e3bf16164afb2e62946623f41",
+  "index_sha256": "ae6b75e4eb1f67a9a9a5af1d1291cbf2d79573668824cb9060f996298588748a",
   "limitations": [
     "Stops inside filesystem or SQLite syscalls and physical storage-fault campaigns remain open.",
     "Long mixed-artifact sessions and concurrent collection campaigns remain open.",
@@ -554,7 +554,7 @@
   ],
   "record_type": "story_22_2_requirement_code_test_evidence_index",
   "schema_version": 1,
-  "source_revision": "886f7a76421e531bcdbacce515473be4ef686ed5",
+  "source_revision": "4f81d58d9acca8169ab55b28a482174b361df757",
   "story_id": "22.2",
   "summary": {
     "complete_count": 17,

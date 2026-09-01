@@ -178,7 +178,7 @@ mod tests {
             definitions.len(),
             ReadOnlyToolKind::ALL.len() + ArtifactToolKind::ALL.len() + 1
         );
-        assert_eq!(definitions.len(), 17);
+        assert_eq!(definitions.len(), 18);
         for definition in &definitions {
             assert!(
                 definition.tool_version == READ_ONLY_TOOL_VERSION
@@ -248,11 +248,7 @@ mod tests {
                 ARTIFACT_INPUT_SCHEMA_ID
             );
         }
-        for future in [
-            "artifact.get_page",
-            "artifact.get_sheet",
-            "artifact.get_log_errors",
-        ] {
+        for future in ["artifact.get_page", "artifact.get_sheet"] {
             assert!(
                 registry
                     .get_tool(&ToolId::from_raw(future), ARTIFACT_TOOL_VERSION)

@@ -13,12 +13,13 @@ mod worker;
 pub use artifact::{
     ARTIFACT_INPUT_SCHEMA_ID, ARTIFACT_INPUT_SCHEMA_JSON, ARTIFACT_OUTPUT_SCHEMA_ID,
     ARTIFACT_OUTPUT_SCHEMA_JSON, ARTIFACT_TOOL_VERSION, ArtifactAttemptLedger, ArtifactBackend,
-    ArtifactClassification, ArtifactDispatchError, ArtifactExecutionSignal, ArtifactExtensionError,
-    ArtifactExtractionState, ArtifactExtractorExtensions, ArtifactFragment, ArtifactFreshness,
-    ArtifactItem, ArtifactLimits, ArtifactManifest, ArtifactOutcome, ArtifactProvenance,
-    ArtifactRange, ArtifactRequest, ArtifactResult, ArtifactSection, ArtifactToolKind,
-    FakeArtifactBackend, FakeArtifactSource, artifact_tool_definition, artifact_tool_definitions,
-    artifact_tool_kind, dispatch_artifact, validate_artifact_request,
+    ArtifactBackendClass, ArtifactClassification, ArtifactDispatchError, ArtifactExecutionSignal,
+    ArtifactExtensionError, ArtifactExtractionState, ArtifactExtractorExtensions, ArtifactFragment,
+    ArtifactFreshness, ArtifactItem, ArtifactLimits, ArtifactManifest, ArtifactOutcome,
+    ArtifactProvenance, ArtifactRange, ArtifactRequest, ArtifactResult, ArtifactSearchHit,
+    ArtifactSection, ArtifactToolKind, FakeArtifactBackend, FakeArtifactSource,
+    artifact_tool_definition, artifact_tool_definitions, artifact_tool_kind, dispatch_artifact,
+    validate_artifact_request,
 };
 pub use catalog::{
     READ_ONLY_INPUT_SCHEMA_ID, READ_ONLY_INPUT_SCHEMA_JSON, READ_ONLY_OUTPUT_SCHEMA_ID,

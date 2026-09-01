@@ -1,12 +1,12 @@
 # Native Source-Artifact Tool Protocol
 
-Status: Story 16.2 local protocol and fake-backend contract
+Status: Story 16.2 protocol, extended by the Story 22.3 production text/log adapter
 
 ## Boundary
 
-The source-artifact tool family exposes six exact `1.0.0` identities: `artifact.list`,
+The source-artifact tool family exposes seven exact `1.0.0` identities: `artifact.list`,
 `artifact.metadata`, `artifact.read`, `artifact.range`, `artifact.sections`, and
-`artifact.search`. Each definition is registered in the common native `ToolRegistry`, declares only
+`artifact.search`, plus `artifact.get_log_errors`. Each definition is registered in the common native `ToolRegistry`, declares only
 `WorkspaceRead`, requires one single-use exact projection grant, and binds the same closed input and
 output schema bytes. Registration supplies validation and discovery, not an executor or authority.
 
@@ -42,19 +42,21 @@ The common registry feeds the same inert definitions to native Chat, CLI, headle
 profiles. Protocol tests normalize caller-selected call/output identities and require identical
 correctness data across reruns. Client wrappers cannot add an alternate source or parser channel.
 
-## Reserved extensions
+## Production text/log adapter and reserved extensions
 
-`ArtifactExtractorExtensions` reserves typed ports for page, sheet, and extraction-error retrieval,
-including exact source, freshness, coordinate, and limits. The associated identities
-`artifact.get_page`, `artifact.get_sheet`, and `artifact.get_log_errors` are intentionally absent
-from `ArtifactToolKind::ALL` and the native registry. A later owning story must supply an admitted
-extractor and native implementation before registering any of them.
+Story 22.3 supplies `NativeSourceArtifactBackend`, a read-only projection from the runtime-owned
+prepared-source service into this same dispatcher. Production receipts set
+`production_execution: true`; parsing still occurs before tool dispatch, and parser, network, and
+workspace-effect flags remain false. `artifact.get_log_errors` is now registered because its
+deterministic text/log cluster goldens pass. `ArtifactExtractorExtensions` continues to reserve only
+the structured-document page and sheet ports. `artifact.get_page` and `artifact.get_sheet` remain
+absent pending their owning format stories.
 
 ## Current evidence boundary
 
 Local evidence covers the closed catalog, schema-bound common registration, deterministic fake
 results, all coordinate types, freshness and classification refusals, redaction, output bounds,
 large-result references, replay, cancellation, timeout, crash, and parser/network/workspace canaries.
-This does not claim a production artifact store or parser, installed native worker execution, or
-cross-platform sandbox evidence. Those remain with the later native source-artifact implementation
-and release campaigns.
+The original Story 16.2 retained evidence remains a protocol/fake-backend claim. Story 22.3 evidence
+separately binds production text/log preparation and dispatch. Neither evidence set claims an
+installed native worker, structured-document extraction, or cross-platform sandbox campaign.

@@ -37,12 +37,12 @@ pub const MAX_ARTIFACT_TIME_MS: u64 = 15_000;
 /// Hard nested dispatcher depth.
 pub const MAX_ARTIFACT_CALL_DEPTH: u8 = 8;
 
-/// Canonical Draft 2020-12 schema bytes bound into all six definitions.
+/// Canonical Draft 2020-12 schema bytes bound into all seven definitions.
 pub const ARTIFACT_INPUT_SCHEMA_JSON: &str = r#"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.artifact.input","type":"object","additionalProperties":false,"required":["schema_version","call_id","source_id","section_id","range","query","freshness_sha256","output_identity","limits","call_depth"],"properties":{"schema_version":{"const":1},"call_id":{"type":"string","minLength":1,"maxLength":255},"source_id":{"type":["string","null"],"maxLength":255},"section_id":{"type":["string","null"],"maxLength":255},"range":{"type":["object","null"]},"query":{"type":["string","null"],"maxLength":4096},"freshness_sha256":{"type":["string","null"],"pattern":"^[0-9a-f]{64}$"},"output_identity":{"type":"string","minLength":1,"maxLength":255},"limits":{"type":"object","additionalProperties":false,"required":["items","input_bytes","range_units","output_bytes","time_ms","memory_bytes","tasks"],"properties":{"items":{"type":"integer","minimum":1,"maximum":1000},"input_bytes":{"type":"integer","minimum":1,"maximum":16777216},"range_units":{"type":"integer","minimum":1,"maximum":1000000},"output_bytes":{"type":"integer","minimum":1,"maximum":2097152},"time_ms":{"type":"integer","minimum":1,"maximum":15000},"memory_bytes":{"type":"integer","minimum":1,"maximum":33554432},"tasks":{"type":"integer","minimum":1,"maximum":1000}}},"call_depth":{"type":"integer","minimum":0,"maximum":8}}}"#;
-/// Canonical output schema bytes bound into all six definitions.
-pub const ARTIFACT_OUTPUT_SCHEMA_JSON: &str = r#"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.artifact.output","type":"object","additionalProperties":false,"required":["schema_version","tool","call_id","output_identity","outcome","source_id","provenance_id","freshness_sha256","items","observed_items","observed_bytes","output_bytes","truncated","production_execution","receipt"],"properties":{"schema_version":{"const":1},"tool":{"type":"string"},"call_id":{"type":"string"},"output_identity":{"type":"string"},"outcome":{"enum":["succeeded","no_result","denied","stale","restricted","unsupported","out_of_range","cancelled","timed_out","failed","truncated"]},"source_id":{"type":["string","null"]},"provenance_id":{"type":["string","null"]},"freshness_sha256":{"type":["string","null"]},"items":{"type":"array","maxItems":1000},"observed_items":{"type":"integer","minimum":0},"observed_bytes":{"type":"integer","minimum":0},"output_bytes":{"type":"integer","minimum":0,"maximum":2097152},"truncated":{"type":"boolean"},"production_execution":{"const":false},"receipt":{"type":"object"}}}"#;
+/// Canonical output schema bytes bound into all seven definitions.
+pub const ARTIFACT_OUTPUT_SCHEMA_JSON: &str = r#"{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"agentmage.artifact.output","type":"object","additionalProperties":false,"required":["schema_version","tool","call_id","output_identity","outcome","source_id","provenance_id","freshness_sha256","items","observed_items","observed_bytes","output_bytes","truncated","production_execution","receipt"],"properties":{"schema_version":{"const":1},"tool":{"type":"string"},"call_id":{"type":"string"},"output_identity":{"type":"string"},"outcome":{"enum":["succeeded","no_result","denied","stale","restricted","unsupported","out_of_range","cancelled","timed_out","failed","truncated"]},"source_id":{"type":["string","null"]},"provenance_id":{"type":["string","null"]},"freshness_sha256":{"type":["string","null"]},"items":{"type":"array","maxItems":1000},"observed_items":{"type":"integer","minimum":0},"observed_bytes":{"type":"integer","minimum":0},"output_bytes":{"type":"integer","minimum":0,"maximum":2097152},"truncated":{"type":"boolean"},"production_execution":{"type":"boolean"},"receipt":{"type":"object"}}}"#;
 
-/// Closed six-operation catalog. Later page, sheet, and log-error extensions are absent.
+/// Closed text/log operation catalog. Later page and sheet extensions remain absent.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ArtifactToolKind {
     /// List admitted source manifests.
@@ -57,17 +57,20 @@ pub enum ArtifactToolKind {
     Sections,
     /// Search extracted text lexically.
     Search,
+    /// Read bounded error, warning, stack, and test-failure clusters from prepared logs.
+    LogErrors,
 }
 
 impl ArtifactToolKind {
     /// Stable registry order.
-    pub const ALL: [Self; 6] = [
+    pub const ALL: [Self; 7] = [
         Self::List,
         Self::Metadata,
         Self::Read,
         Self::Range,
         Self::Sections,
         Self::Search,
+        Self::LogErrors,
     ];
 
     /// Exact public tool identity.
@@ -80,6 +83,7 @@ impl ArtifactToolKind {
             Self::Range => "artifact.range",
             Self::Sections => "artifact.sections",
             Self::Search => "artifact.search",
+            Self::LogErrors => "artifact.get_log_errors",
         }
     }
 
@@ -91,6 +95,7 @@ impl ArtifactToolKind {
             Self::Range => "Read source-artifact range",
             Self::Sections => "List source-artifact sections",
             Self::Search => "Search source artifact",
+            Self::LogErrors => "Read prepared log diagnostics",
         }
     }
 }
@@ -129,7 +134,7 @@ impl Default for ArtifactLimits {
     }
 }
 
-/// Exact coordinate range supported by the fake protocol backend.
+/// Exact coordinate range supported by the artifact protocol.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ArtifactRange {
@@ -179,7 +184,7 @@ pub enum ArtifactRange {
     },
 }
 
-/// Closed request shared by the six exact identities.
+/// Closed request shared by the seven exact identities.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ArtifactRequest {
@@ -215,7 +220,7 @@ pub enum ArtifactClassification {
     Internal,
     /// Confidential content requiring an exact restricted grant not supplied here.
     Confidential,
-    /// Restricted content never disclosed by the fake workspace-read protocol.
+    /// Restricted content never disclosed by the workspace-read protocol.
     Restricted,
 }
 
@@ -349,6 +354,17 @@ pub enum ArtifactFragment {
     },
 }
 
+/// One exact backend search match before protocol result shaping.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ArtifactSearchHit {
+    /// Exact typed fragment containing the match.
+    pub fragment: ArtifactFragment,
+    /// Zero-based normalized fragment byte offset.
+    pub match_start: u64,
+    /// First normalized fragment byte after the match.
+    pub match_end_exclusive: u64,
+}
+
 /// Synthetic source record used only by the in-memory review backend.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FakeArtifactSource {
@@ -362,17 +378,95 @@ pub struct FakeArtifactSource {
     pub redacted: bool,
 }
 
-/// Read-only backend port; production stores and parsers are intentionally not represented.
+/// Closed backend class recorded in every terminal receipt.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ArtifactBackendClass {
+    /// Deterministic in-memory review projection.
+    ReviewProjection,
+    /// Runtime-owned already-prepared production source service.
+    ProductionPreparedSource,
+}
+
+/// Read-only backend port over already-admitted, already-prepared source projections.
 pub trait ArtifactBackend {
     /// Returns stable manifest order.
     fn manifests(&self) -> Vec<ArtifactManifest>;
     /// Returns one source projection.
     fn source(&self, source_id: &str) -> Option<FakeArtifactSource>;
-    /// Proves this backend cannot launch parsers or networks.
-    fn is_non_production_projection(&self) -> bool;
+    /// Returns the closed backend class; neither class grants authority or launches a parser.
+    fn backend_class(&self) -> ArtifactBackendClass;
+    /// Returns deterministic prepared lexical matches.
+    fn search(
+        &self,
+        source_id: &str,
+        query: &str,
+        _maximum_items: usize,
+    ) -> Option<Vec<ArtifactSearchHit>> {
+        self.source(source_id).map(|source| {
+            source
+                .fragments
+                .into_iter()
+                .filter_map(|fragment| {
+                    let start = fragment_content(&fragment).find(query)?;
+                    Some(ArtifactSearchHit {
+                        match_start: start as u64,
+                        match_end_exclusive: (start + query.len()) as u64,
+                        fragment,
+                    })
+                })
+                .collect()
+        })
+    }
+    /// Returns deterministic exact coordinate fragments.
+    fn range(
+        &self,
+        source_id: &str,
+        range: &ArtifactRange,
+        _maximum_units: u64,
+    ) -> Option<Vec<ArtifactFragment>> {
+        self.source(source_id).map(|source| {
+            source
+                .fragments
+                .into_iter()
+                .filter(|fragment| range_matches(range, fragment))
+                .collect()
+        })
+    }
+    /// Returns the default prepared reading or one exact named section.
+    fn read(
+        &self,
+        source_id: &str,
+        section_id: Option<&str>,
+        _maximum_items: usize,
+    ) -> Option<Vec<ArtifactFragment>> {
+        self.source(source_id).map(|source| {
+            source
+                .fragments
+                .into_iter()
+                .filter(|fragment| match (section_id, fragment) {
+                    (Some(expected), ArtifactFragment::Section { section_id, .. }) => {
+                        expected == section_id
+                    }
+                    (None, _) => true,
+                    _ => false,
+                })
+                .collect()
+        })
+    }
+    /// Returns bounded prepared diagnostic fragments for the admitted log source.
+    fn log_errors(&self, source_id: &str, maximum_items: usize) -> Option<Vec<ArtifactFragment>> {
+        self.source(source_id).map(|source| {
+            source
+                .fragments
+                .into_iter()
+                .filter(diagnostic_fragment)
+                .take(maximum_items.saturating_add(1))
+                .collect()
+        })
+    }
 }
 
-/// Reserved extractor ports for later native stories.
+/// Reserved structured-document extractor ports for later native stories.
 ///
 /// These methods are deliberately not part of [`ArtifactToolKind`] and have no implementation in
 /// this crate. Defining their typed boundary now prevents later extractors from bypassing source,
@@ -395,14 +489,6 @@ pub trait ArtifactExtractorExtensions {
         sheet_name: &str,
         limits: ArtifactLimits,
     ) -> Result<Vec<ArtifactFragment>, ArtifactExtensionError>;
-
-    /// Reads bounded content-free extraction errors through a future native operation.
-    fn get_log_errors(
-        &self,
-        source_id: &str,
-        freshness_sha256: &str,
-        limits: ArtifactLimits,
-    ) -> Result<Vec<String>, ArtifactExtensionError>;
 }
 
 /// Stable refusal family reserved for future extractor extension ports.
@@ -456,8 +542,8 @@ impl ArtifactBackend for FakeArtifactBackend {
             .map(|index| self.sources[index].clone())
     }
 
-    fn is_non_production_projection(&self) -> bool {
-        true
+    fn backend_class(&self) -> ArtifactBackendClass {
+        ArtifactBackendClass::ReviewProjection
     }
 }
 
@@ -562,7 +648,9 @@ pub struct ArtifactReceipt {
     pub outcome: ArtifactOutcome,
     /// Exact limits used.
     pub limits: ArtifactLimits,
-    /// Always false for the fake protocol backend.
+    /// Whether the attempt read the runtime-owned production prepared-source service.
+    pub production_execution: bool,
+    /// Always false: source parsing occurs before tool dispatch.
     pub parser_launched: bool,
     /// Always false.
     pub network_accessed: bool,
@@ -572,7 +660,7 @@ pub struct ArtifactReceipt {
     pub receipt_sha256: String,
 }
 
-/// Hash-bound fake execution result.
+/// Hash-bound artifact execution result.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ArtifactResult {
@@ -602,19 +690,18 @@ pub struct ArtifactResult {
     pub output_bytes: u64,
     /// Whether a declared limit stopped output.
     pub truncated: bool,
-    /// Always false: this executor is explicitly a fake projection.
+    /// Whether this result used the runtime-owned production prepared-source service.
     pub production_execution: bool,
     /// One terminal receipt.
     pub receipt: ArtifactReceipt,
 }
 
 impl ArtifactResult {
-    /// Verifies result and receipt digests and fake-only safety invariants.
+    /// Verifies result, receipt, backend identity, and read-only safety invariants.
     #[must_use]
     pub fn verify(&self, kind: ArtifactToolKind) -> bool {
         self.schema_version == 1
             && self.tool == kind.id()
-            && !self.production_execution
             && self.truncated == (self.outcome == ArtifactOutcome::Truncated)
             && self.output_bytes
                 == serde_json::to_vec(&self.items).map_or(u64::MAX, |bytes| bytes.len() as u64)
@@ -626,6 +713,7 @@ impl ArtifactResult {
             && self.receipt.freshness_sha256 == self.freshness_sha256
             && self.receipt.output_identity == self.output_identity
             && self.receipt.outcome == self.outcome
+            && self.receipt.production_execution == self.production_execution
             && !self.receipt.parser_launched
             && !self.receipt.network_accessed
             && !self.receipt.workspace_mutated
@@ -662,7 +750,7 @@ impl ArtifactDispatchError {
     }
 }
 
-/// Process-local exact call ledger used to prove single launch semantics in fake review.
+/// Process-local exact call ledger used to prove single launch semantics.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ArtifactAttemptLedger {
     launched: BTreeSet<String>,
@@ -682,7 +770,7 @@ impl ArtifactAttemptLedger {
     }
 }
 
-/// Returns all six declarative definitions in stable order.
+/// Returns all seven declarative definitions in stable order.
 #[must_use]
 pub fn artifact_tool_definitions() -> Vec<ToolDefinition> {
     ArtifactToolKind::ALL
@@ -742,7 +830,7 @@ pub fn validate_artifact_request(
         .ok_or(ArtifactDispatchError::Denied)
 }
 
-/// Dispatches one authorized fake attempt and emits exactly one terminal receipt.
+/// Dispatches one authorized prepared-source attempt and emits exactly one terminal receipt.
 ///
 /// Invalid, unauthorized, and repeated calls fail before launch and therefore produce no receipt.
 pub fn dispatch_artifact(
@@ -757,9 +845,11 @@ pub fn dispatch_artifact(
     if !workspace_read_authorized {
         return Err(ArtifactDispatchError::Unauthorized);
     }
-    if !backend.is_non_production_projection() {
+    if !valid_backend(backend) {
         return Err(ArtifactDispatchError::InvalidProjection);
     }
+    let production_execution =
+        backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource;
     if !ledger.launched.insert(request.call_id.clone()) {
         return Err(ArtifactDispatchError::RepeatedCall);
     }
@@ -776,8 +866,8 @@ pub fn dispatch_artifact(
             outcome,
             None,
             Vec::new(),
-            0,
-            0,
+            (0, 0),
+            production_execution,
         ));
     }
     execute(kind, &request, backend)
@@ -794,7 +884,14 @@ fn execute(
             .into_iter()
             .map(|manifest| ArtifactItem::Manifest { manifest })
             .collect();
-        return Ok(bounded_result(kind, request, None, items, 0));
+        return Ok(bounded_result(
+            kind,
+            request,
+            None,
+            items,
+            0,
+            backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource,
+        ));
     }
     let source_id = request.source_id.as_deref().expect("validated source");
     let Some(source) = backend.source(source_id) else {
@@ -804,8 +901,8 @@ fn execute(
             ArtifactOutcome::NoResult,
             None,
             Vec::new(),
-            0,
-            0,
+            (0, 0),
+            backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource,
         ));
     };
     if source.manifest.classification == ArtifactClassification::Restricted
@@ -817,8 +914,8 @@ fn execute(
             ArtifactOutcome::Restricted,
             Some(&source),
             Vec::new(),
-            0,
-            0,
+            (0, 0),
+            backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource,
         ));
     }
     if request.freshness_sha256.as_deref()
@@ -830,8 +927,8 @@ fn execute(
             ArtifactOutcome::Stale,
             Some(&source),
             Vec::new(),
-            0,
-            0,
+            (0, 0),
+            backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource,
         ));
     }
     if source.redacted {
@@ -841,8 +938,8 @@ fn execute(
             ArtifactOutcome::Denied,
             Some(&source),
             Vec::new(),
-            0,
-            0,
+            (0, 0),
+            backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource,
         ));
     }
     if matches!(
@@ -855,8 +952,8 @@ fn execute(
             ArtifactOutcome::Unsupported,
             Some(&source),
             Vec::new(),
-            0,
-            0,
+            (0, 0),
+            backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource,
         ));
     }
     if matches!(
@@ -869,8 +966,8 @@ fn execute(
             ArtifactOutcome::Failed,
             Some(&source),
             Vec::new(),
-            0,
-            0,
+            (0, 0),
+            backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource,
         ));
     }
     let observed = source.manifest.byte_len.min(request.limits.input_bytes);
@@ -886,44 +983,43 @@ fn execute(
             .collect(),
         ArtifactToolKind::Read => {
             let section = request.section_id.as_deref();
-            source
-                .fragments
-                .iter()
-                .filter(|fragment| match (section, fragment) {
-                    (Some(expected), ArtifactFragment::Section { section_id, .. }) => {
-                        expected == section_id
-                    }
-                    (None, _) => true,
-                    _ => false,
-                })
-                .cloned()
+            backend
+                .read(source_id, section, request.limits.items as usize)
+                .ok_or(ArtifactDispatchError::InvalidProjection)?
+                .into_iter()
                 .map(|fragment| ArtifactItem::Content { fragment })
                 .collect()
         }
-        ArtifactToolKind::Range => source
-            .fragments
-            .iter()
-            .filter(|fragment| {
-                range_matches(request.range.as_ref().expect("validated range"), fragment)
-            })
-            .cloned()
+        ArtifactToolKind::Range => backend
+            .range(
+                source_id,
+                request.range.as_ref().expect("validated range"),
+                request.limits.range_units,
+            )
+            .ok_or(ArtifactDispatchError::InvalidProjection)?
+            .into_iter()
             .map(|fragment| ArtifactItem::Content { fragment })
             .collect(),
-        ArtifactToolKind::Search => {
-            let query = request.query.as_deref().expect("validated query");
-            source
-                .fragments
-                .iter()
-                .filter_map(|fragment| {
-                    let content = fragment_content(fragment);
-                    content.find(query).map(|start| ArtifactItem::SearchHit {
-                        fragment: fragment.clone(),
-                        match_start: start as u64,
-                        match_end_exclusive: (start + query.len()) as u64,
-                    })
-                })
-                .collect()
-        }
+        ArtifactToolKind::Search => backend
+            .search(
+                source_id,
+                request.query.as_deref().expect("validated query"),
+                request.limits.items as usize,
+            )
+            .ok_or(ArtifactDispatchError::InvalidProjection)?
+            .into_iter()
+            .map(|hit| ArtifactItem::SearchHit {
+                fragment: hit.fragment,
+                match_start: hit.match_start,
+                match_end_exclusive: hit.match_end_exclusive,
+            })
+            .collect(),
+        ArtifactToolKind::LogErrors => backend
+            .log_errors(source_id, request.limits.items as usize)
+            .ok_or(ArtifactDispatchError::InvalidProjection)?
+            .into_iter()
+            .map(|fragment| ArtifactItem::Content { fragment })
+            .collect(),
         ArtifactToolKind::List => unreachable!(),
     };
     if kind == ArtifactToolKind::Range && items.is_empty() {
@@ -933,8 +1029,11 @@ fn execute(
             ArtifactOutcome::OutOfRange,
             Some(&source),
             Vec::new(),
-            u32::try_from(source.fragments.len()).unwrap_or(u32::MAX),
-            observed,
+            (
+                u32::try_from(source.fragments.len()).unwrap_or(u32::MAX),
+                observed,
+            ),
+            backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource,
         ));
     }
     Ok(bounded_result(
@@ -943,6 +1042,7 @@ fn execute(
         Some(&source),
         items,
         observed,
+        backend.backend_class() == ArtifactBackendClass::ProductionPreparedSource,
     ))
 }
 
@@ -952,6 +1052,7 @@ fn bounded_result(
     source: Option<&FakeArtifactSource>,
     mut items: Vec<ArtifactItem>,
     observed_bytes: u64,
+    production_execution: bool,
 ) -> ArtifactResult {
     let original_count = items.len();
     items.truncate(request.limits.items as usize);
@@ -992,8 +1093,8 @@ fn bounded_result(
         outcome,
         source,
         items,
-        original_count as u32,
-        observed_bytes,
+        (original_count as u32, observed_bytes),
+        production_execution,
     )
 }
 
@@ -1003,9 +1104,10 @@ fn build_result(
     outcome: ArtifactOutcome,
     source: Option<&FakeArtifactSource>,
     items: Vec<ArtifactItem>,
-    observed_items: u32,
-    observed_bytes: u64,
+    observed: (u32, u64),
+    production_execution: bool,
 ) -> ArtifactResult {
+    let (observed_items, observed_bytes) = observed;
     let source_id = source
         .map(|value| value.manifest.source_id.clone())
         .or_else(|| request.source_id.clone());
@@ -1020,6 +1122,7 @@ fn build_result(
         output_identity: request.output_identity.clone(),
         outcome,
         limits: request.limits,
+        production_execution,
         parser_launched: false,
         network_accessed: false,
         workspace_mutated: false,
@@ -1040,7 +1143,7 @@ fn build_result(
         observed_items,
         observed_bytes,
         truncated: outcome == ArtifactOutcome::Truncated,
-        production_execution: false,
+        production_execution,
         receipt,
     }
 }
@@ -1084,7 +1187,7 @@ fn valid_request(kind: ArtifactToolKind, request: &ArtifactRequest) -> bool {
                 && request.query.is_none()
                 && request.freshness_sha256.is_none()
         }
-        ArtifactToolKind::Metadata | ArtifactToolKind::Sections => {
+        ArtifactToolKind::Metadata | ArtifactToolKind::Sections | ArtifactToolKind::LogErrors => {
             request.source_id.is_some()
                 && request.freshness_sha256.is_some()
                 && request.section_id.is_none()
@@ -1115,6 +1218,34 @@ fn valid_request(kind: ArtifactToolKind, request: &ArtifactRequest) -> bool {
                     .is_some_and(|query| !query.is_empty() && query.len() <= 4096)
         }
     }
+}
+
+fn valid_backend(backend: &impl ArtifactBackend) -> bool {
+    let manifests = backend.manifests();
+    if manifests
+        .windows(2)
+        .any(|pair| pair[0].source_id >= pair[1].source_id)
+    {
+        return false;
+    }
+    manifests.iter().all(|manifest| {
+        backend
+            .source(&manifest.source_id)
+            .is_some_and(|source| source.manifest == *manifest && valid_source(&source))
+    })
+}
+
+fn diagnostic_fragment(fragment: &ArtifactFragment) -> bool {
+    let content = fragment_content(fragment).trim().to_lowercase();
+    content.contains("error")
+        || content.contains("warning")
+        || content.contains("failed")
+        || content.contains("failure")
+        || content.contains("exception")
+        || content.contains("panic")
+        || content.starts_with("at ")
+        || content.starts_with("file ")
+        || (content.starts_with("test ") && (content.contains(" ok") || content.contains("fail")))
 }
 
 fn valid_range(range: &ArtifactRange, maximum: u64) -> bool {
@@ -1338,6 +1469,11 @@ mod tests {
                     end_exclusive: 2,
                     content: "hello world".to_owned(),
                 },
+                ArtifactFragment::Line {
+                    start: 2,
+                    end_exclusive: 3,
+                    content: "ERROR: deterministic fixture failure".to_owned(),
+                },
                 ArtifactFragment::Page {
                     number: 1,
                     content: "hello page".to_owned(),
@@ -1398,7 +1534,7 @@ mod tests {
     #[test]
     fn catalog_is_exact_closed_read_only_and_extensions_are_unregistered() {
         let definitions = artifact_tool_definitions();
-        assert_eq!(definitions.len(), 6);
+        assert_eq!(definitions.len(), 7);
         for (kind, definition) in ArtifactToolKind::ALL.into_iter().zip(definitions) {
             assert_eq!(definition.tool_id.as_str(), kind.id());
             assert_eq!(definition.tool_version, ARTIFACT_TOOL_VERSION);
@@ -1432,18 +1568,14 @@ mod tests {
             );
             assert_eq!(schema["additionalProperties"], false);
         }
-        for future in [
-            "artifact.get_page",
-            "artifact.get_sheet",
-            "artifact.get_log_errors",
-        ] {
+        for future in ["artifact.get_page", "artifact.get_sheet"] {
             assert!(artifact_tool_kind(&ToolId::from_raw(future), ARTIFACT_TOOL_VERSION).is_none());
         }
         assert!(artifact_tool_kind(&ToolId::from_raw("artifact.list"), "2.0.0").is_none());
     }
 
     #[test]
-    fn all_six_fake_operations_are_deterministic_typed_and_receipted() {
+    fn all_seven_fake_operations_are_deterministic_typed_and_receipted() {
         let backend = FakeArtifactBackend::new(vec![source(
             "source-1",
             ArtifactClassification::Internal,
@@ -1475,7 +1607,7 @@ mod tests {
                 normalized.receipt.receipt_sha256.clear();
                 target.push(normalized);
             }
-            assert_eq!(ledger.len(), 6);
+            assert_eq!(ledger.len(), 7);
         }
         assert_eq!(first, second);
     }

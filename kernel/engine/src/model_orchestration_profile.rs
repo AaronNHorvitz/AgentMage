@@ -307,7 +307,47 @@ pub fn compile_context_window(
         plan_sha256: ZERO_SHA256.to_owned(),
     };
     plan.plan_sha256 = digest(&plan)?;
+    verify_model_context_window_plan(&plan)?;
     Ok(plan)
+}
+
+/// Verifies a materialized context-window plan without trusting its stored digest.
+pub fn verify_model_context_window_plan(
+    plan: &ModelContextWindowPlan,
+) -> Result<(), ModelOrchestrationError> {
+    let total = [
+        plan.system_and_tool_tokens,
+        plan.user_input_tokens,
+        plan.source_artifacts.allocated_tokens,
+        plan.retrieved_context.allocated_tokens,
+        plan.workflow_recovery_reserve_tokens,
+        plan.output_reserve_tokens,
+        plan.safety_margin_tokens,
+        plan.unallocated_tokens,
+    ]
+    .into_iter()
+    .try_fold(0_u32, u32::checked_add)
+    .ok_or(ModelOrchestrationError::ContextOvercommit)?;
+    if plan.schema_version != CONTRACT_SCHEMA_VERSION
+        || !valid_id(&plan.model_profile_id)
+        || !valid_sha256(&plan.model_manifest_sha256)
+        || !valid_sha256(&plan.model_runtime_sha256)
+        || !valid_sha256(&plan.tokenizer_sha256)
+        || !valid_sha256(&plan.token_counter_sha256)
+        || !valid_sha256(&plan.plan_sha256)
+        || plan.system_and_tool_tokens == 0
+        || plan.user_input_tokens == 0
+        || plan.workflow_recovery_reserve_tokens == 0
+        || plan.output_reserve_tokens == 0
+        || plan.safety_margin_tokens == 0
+        || total != plan.total_window_tokens
+        || !valid_partition(&plan.source_artifacts, true)
+        || !valid_partition(&plan.retrieved_context, false)
+        || plan_digest(plan)? != plan.plan_sha256
+    {
+        return Err(ModelOrchestrationError::InvalidInput);
+    }
+    Ok(())
 }
 
 /// Compiles a model-specific presentation profile while preserving exact safety controls.
@@ -324,8 +364,7 @@ pub fn compile_orchestration_profile(
         || context.model_profile_id != profile.profile_id.as_str()
         || context.model_manifest_sha256 != profile.manifest_sha256
         || context.tokenizer_sha256 != profile.codec.tokenizer_sha256
-        || !valid_sha256(&context.plan_sha256)
-        || plan_digest(&context)? != context.plan_sha256
+        || verify_model_context_window_plan(&context).is_err()
         || shape.plan_horizon == 0
         || shape.plan_horizon > 64
         || shape.visible_tool_ids.len() > MAX_VISIBLE_TOOLS
@@ -460,6 +499,37 @@ fn partition(
         allocated_tokens,
         disposition,
         reason_code,
+    }
+}
+
+fn valid_partition(partition: &AllocatedContextPartition, source: bool) -> bool {
+    if partition.minimum_tokens > partition.requested_tokens
+        || partition.allocated_tokens > partition.requested_tokens
+    {
+        return false;
+    }
+    match partition.disposition {
+        ContextPartitionDisposition::Included => {
+            partition.allocated_tokens == partition.requested_tokens
+                && partition.reason_code.is_none()
+        }
+        ContextPartitionDisposition::Truncated => {
+            source
+                && partition.allocated_tokens >= partition.minimum_tokens
+                && partition.allocated_tokens < partition.requested_tokens
+                && partition.reason_code == Some("context.source.truncated_to_window")
+        }
+        ContextPartitionDisposition::Summarized => {
+            !source
+                && partition.allocated_tokens >= partition.minimum_tokens
+                && partition.allocated_tokens < partition.requested_tokens
+                && partition.reason_code == Some("context.retrieval.summarized_to_window")
+        }
+        ContextPartitionDisposition::Omitted => {
+            !source
+                && partition.allocated_tokens == 0
+                && partition.reason_code == Some("context.retrieval.omitted_for_window")
+        }
     }
 }
 

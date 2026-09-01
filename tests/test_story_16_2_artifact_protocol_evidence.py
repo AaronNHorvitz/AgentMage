@@ -21,7 +21,7 @@ def test_report_is_source_bound_and_truthful():
     assert report["status"] == "PASS_LOCAL_PROTOCOL_AND_FAKE_BACKEND"
     assert report["catalog"] == [
         "artifact.list", "artifact.metadata", "artifact.read", "artifact.range",
-        "artifact.sections", "artifact.search",
+        "artifact.sections", "artifact.search", "artifact.get_log_errors",
     ]
     truth = report["product_truth"]
     assert truth["workspace_mutation_count"] == 0

@@ -542,7 +542,7 @@ mod tests {
             .expect("system contract utf8");
         assert!(!system.contains(hostile));
         let system: serde_json::Value = serde_json::from_str(&system).expect("system json");
-        assert_eq!(system["tools"].as_array().map(Vec::len), Some(21));
+        assert_eq!(system["tools"].as_array().map(Vec::len), Some(22));
         assert_eq!(system["effective_guidance"]["grants_authority"], false);
         assert_eq!(system["effective_guidance"]["adds_tools"], false);
         assert_eq!(system["effective_guidance"]["declares_completion"], false);

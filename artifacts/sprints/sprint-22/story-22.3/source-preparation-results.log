@@ -1,0 +1,91 @@
+$ cargo run -p agentmage-host --example story_22_3_evidence --locked
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running `target/debug/examples/story_22_3_evidence`
+
+$ cargo test -p agentmage-kernel-engine source_preparation --lib --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
+running 9 tests
+test source_preparation::tests::story_22_3_source_preparation_crash_child ... ignored, subprocess stop target; invoked only by the Story 22.3 crash/restart test
+test source_preparation::tests::story_22_3_text_and_log_preparation_preserves_provenance_and_clusters ... ok
+test source_preparation::tests::story_22_3_declared_encodings_are_exact_and_binary_or_lossy_input_fails ... ok
+test source_preparation::tests::story_22_3_cancellation_limits_and_persistence_binding_fail_before_publication ... ok
+
+running 1 test
+test source_preparation::tests::story_22_3_growing_log_refresh_preserves_append_line_identity_and_detects_rotation ... ok
+test source_preparation::tests::story_22_3_persisted_restart_release_and_delete_are_exact_and_fail_closed ... ok
+test source_preparation::tests::story_22_3_process_stop_publishes_no_partial_source_and_exact_restart_recovers ... ok
+test source_preparation::tests::story_22_3_context_accounts_every_source_section_duplicate_restriction_and_budget ... ok
+test source_preparation::tests::story_22_3_twenty_five_mib_log_is_bounded_and_visibly_truncated ... ok
+
+test result: ok. 8 passed; 0 failed; 1 ignored; 0 measured; 761 filtered out; finished in 5.17s
+
+
+$ cargo test -p agentmage-capability-read-only artifact::tests --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_capability_read_only-ca88058010f1bd3a)
+
+running 9 tests
+test artifact::tests::malformed_extra_oversized_unauthorized_and_repeat_fail_before_launch ... ok
+test artifact::tests::cancellation_timeout_and_crash_each_get_one_terminal_receipt ... ok
+test artifact::tests::result_limits_truncate_or_return_large_reference_without_hidden_omission ... ok
+test artifact::tests::stale_restricted_unsupported_redacted_missing_and_range_fail_closed ... ok
+test artifact::tests::catalog_is_exact_closed_read_only_and_extensions_are_unregistered ... ok
+test artifact::tests::byte_line_page_sheet_cell_section_and_search_projections_are_exact ... ok
+test artifact::tests::every_tool_rejects_the_closed_schema_and_repeat_matrix_before_a_second_launch ... ok
+test artifact::tests::cancellation_timeout_and_crash_are_receipted_for_every_tool ... ok
+test artifact::tests::all_seven_fake_operations_are_deterministic_typed_and_receipted ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agentmage-read-only-worker.rs (target/debug/deps/agentmage_read_only_worker-2b5266eb00ffc4c4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+$ cargo test -p agentmage-host source_artifact_runtime --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+
+running 2 tests
+test source_artifact_runtime::tests::story_22_3_native_log_diagnostics_are_bounded_fresh_and_cancellable ... ok
+test source_artifact_runtime::tests::story_22_3_all_native_text_log_tools_use_one_production_dispatcher ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 161 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+
+
+$ node --test tests/test_source_preparation_schemas.mjs
+✔ prepared source and context schemas accept closed canonical records (2.112292ms)
+✔ prepared source schemas reject paths, unknown fields, widening, and missing accounting (0.286415ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 83.649669
+
+$ cargo clippy -p agentmage-kernel-engine -p agentmage-capability-read-only -p agentmage-host --all-targets --all-features --locked -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s

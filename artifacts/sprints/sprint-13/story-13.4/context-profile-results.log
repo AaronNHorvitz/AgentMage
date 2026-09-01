@@ -4,13 +4,13 @@ $ cargo test -p agentmage-kernel-engine story_13_4 --locked
 
 running 6 tests
 test model_orchestration_profile::tests::story_13_4_missing_counter_or_authoritative_minimum_fails_closed ... ok
-test model_orchestration_profile::tests::story_13_4_degradation_is_deterministic_visible_and_source_first ... ok
 test model_orchestration_profile::tests::story_13_4_exact_window_reconciles_without_overcommit ... ok
+test model_orchestration_profile::tests::story_13_4_degradation_is_deterministic_visible_and_source_first ... ok
 test model_orchestration_profile::tests::story_13_4_quality_evidence_and_model_admission_are_both_required ... ok
 test model_orchestration_profile::tests::story_13_4_orchestration_changes_shape_but_not_safety_controls ... ok
 test model_orchestration_profile::tests::story_13_4_every_profile_and_allocation_mutation_changes_identity_or_refuses ... ok
 
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 713 filtered out; finished in 0.00s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 762 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -116,8 +116,8 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ node --test tests/test_model_orchestration_profile_schema.mjs
-✔ compiled orchestration profile schema accepts the closed record (1.689506ms)
-✔ schema rejects authority widening and stale qualification shapes (0.418208ms)
+✔ compiled orchestration profile schema accepts the closed record (1.659527ms)
+✔ schema rejects authority widening and stale qualification shapes (0.485281ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -125,7 +125,8 @@ $ node --test tests/test_model_orchestration_profile_schema.mjs
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 85.374351
+ℹ duration_ms 81.472618
 
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.24s

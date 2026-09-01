@@ -35,7 +35,7 @@ SOURCES = (
 
 MARKERS = (
     "catalog_is_exact_closed_read_only_and_extensions_are_unregistered ... ok",
-    "all_six_fake_operations_are_deterministic_typed_and_receipted ... ok",
+    "all_seven_fake_operations_are_deterministic_typed_and_receipted ... ok",
     "byte_line_page_sheet_cell_section_and_search_projections_are_exact ... ok",
     "every_tool_rejects_the_closed_schema_and_repeat_matrix_before_a_second_launch ... ok",
     "cancellation_timeout_and_crash_are_receipted_for_every_tool ... ok",
@@ -89,7 +89,7 @@ def run() -> dict[str, object]:
         + [artifact(LOG_PATH.relative_to(ROOT).as_posix())],
         "catalog": [
             "artifact.list", "artifact.metadata", "artifact.read", "artifact.range",
-            "artifact.sections", "artifact.search",
+            "artifact.sections", "artifact.search", "artifact.get_log_errors",
         ],
         "coordinate_kinds": ["byte", "line", "page", "sheet", "cell", "section"],
         "product_truth": {

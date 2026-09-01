@@ -1,44 +1,44 @@
 {
   "artifacts": [
     {
-      "byte_length": 65028,
+      "byte_length": 70590,
       "path": "capabilities/read-only/src/artifact.rs",
-      "sha256": "70642ffce68c984c6fc97062a02426bda5f8c81320b1c23885f180c104664cee"
+      "sha256": "fb2f0212db74a6d795a3b82a1f5a78c81533fadd03c12b198a1aa0e1a02810ad"
     },
     {
-      "byte_length": 4358,
+      "byte_length": 4403,
       "path": "capabilities/read-only/src/lib.rs",
-      "sha256": "2855396cc998a32021a69fcf74969278fbfc8f086834674fb1e3c5f067aa3543"
+      "sha256": "b9ffc176490a9910ca7d420a2b8af105fcce8b27b749e6b7a916a0092eb16206"
     },
     {
-      "byte_length": 14062,
+      "byte_length": 15284,
       "path": "shells/host/src/runtime_tools.rs",
-      "sha256": "e4892ee48ab396eaa75ddb583d33bdb79d6734b5855805577b2ede14c0b2ad76"
+      "sha256": "9897014390cb4a8b6a68470c4ede16150eab5015af466ca8156c539b7850da5f"
     },
     {
-      "byte_length": 26804,
+      "byte_length": 27089,
       "path": "shells/host/src/coding_tools.rs",
-      "sha256": "25f597f70c762b4c66fd69f7c864215a792880533fe6e4a13fd55bdc60f0a6ca"
+      "sha256": "1402e0d4f5f0622e69d74333c3c4e1d74aaddff7b52151a412b019dd3ce2ccf9"
     },
     {
-      "byte_length": 3803,
+      "byte_length": 4118,
       "path": "docs/architecture/native-source-artifact-tool-protocol.md",
-      "sha256": "97f72d3ac7c1d8244a3bd690c04d680f1fbf6aca9c608c2e33c4d40414c9aa04"
+      "sha256": "6c5b9a1d21ac79088fc7eea30b8af6fbe05aadbf8ea0f66ac5dc7cbda7badb91"
     },
     {
-      "byte_length": 5053,
+      "byte_length": 5082,
       "path": "scripts/story_16_2_artifact_protocol_evidence.py",
-      "sha256": "fb15dbb7be119acc7b4b375c269d501bb7c549122c79cdf7d7f67227fe16abee"
+      "sha256": "1a15d369824288d9ab473e189f5cdb07ee17de38406795144dffd15e544b3a1c"
     },
     {
-      "byte_length": 1630,
+      "byte_length": 1657,
       "path": "tests/test_story_16_2_artifact_protocol_evidence.py",
-      "sha256": "09feac2e16f9ae0aff5331619644e7989d699759656a1ae9251cae3e0b17056f"
+      "sha256": "dc8c3d27b3b1793f1f5529451faf1531adaf162391f0bb8cdb36c8455853f3f3"
     },
     {
-      "byte_length": 4244,
+      "byte_length": 4345,
       "path": "artifacts/sprints/sprint-16/story-16.2/artifact-protocol-results.log",
-      "sha256": "4821aa2876041eb3d91110098cc0cd4830c2d04be6d07fdbb1892b5a1835ff32"
+      "sha256": "d29ece2997d78a0aea73c0b5f31d759c32ef3e4d4222cc7df7b6e9ab6c156a8e"
     }
   ],
   "catalog": [
@@ -47,7 +47,8 @@
     "artifact.read",
     "artifact.range",
     "artifact.sections",
-    "artifact.search"
+    "artifact.search",
+    "artifact.get_log_errors"
   ],
   "commands": [
     "cargo test -p agentmage-capability-read-only artifact::tests --locked",
@@ -93,7 +94,7 @@
   "record_type": "agentmage-story-16-2-artifact-protocol-evidence",
   "required_markers": [
     "catalog_is_exact_closed_read_only_and_extensions_are_unregistered ... ok",
-    "all_six_fake_operations_are_deterministic_typed_and_receipted ... ok",
+    "all_seven_fake_operations_are_deterministic_typed_and_receipted ... ok",
     "byte_line_page_sheet_cell_section_and_search_projections_are_exact ... ok",
     "every_tool_rejects_the_closed_schema_and_repeat_matrix_before_a_second_launch ... ok",
     "cancellation_timeout_and_crash_are_receipted_for_every_tool ... ok",

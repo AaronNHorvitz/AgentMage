@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/prepared-source-context-manifest.schema.json",
+  "title": "AgentMage Prepared Source Context Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "context_manifest_id", "context_window_plan_sha256", "token_counter_id", "token_counter_sha256", "tokenizer_sha256", "allocated_tokens", "used_tokens", "records", "packet", "manifest_sha256"],
+  "properties": {
+    "schema_version": { "const": 2 }, "context_manifest_id": { "$ref": "#/$defs/id" },
+    "context_window_plan_sha256": { "$ref": "#/$defs/sha256" }, "token_counter_id": { "$ref": "#/$defs/id" },
+    "token_counter_sha256": { "$ref": "#/$defs/sha256" }, "tokenizer_sha256": { "$ref": "#/$defs/sha256" },
+    "allocated_tokens": { "type": "integer", "minimum": 0 }, "used_tokens": { "type": "integer", "minimum": 0 },
+    "records": { "type": "array", "minItems": 1, "maxItems": 4096, "items": { "$ref": "#/$defs/record" } },
+    "packet": { "$ref": "#/$defs/packet" }, "manifest_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 255, "pattern": "^[^\\u0000-\\u001f\\u007f]+$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nullableId": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/id" }] },
+    "nullableSha": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }] },
+    "kind": { "enum": ["instruction", "newest_request", "active_objective", "plan_step", "correction", "approval", "blocker", "evidence", "memory", "expected_output", "supporting"] },
+    "sensitivity": { "enum": ["public", "internal", "private", "restricted"] },
+    "record": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "source_revision_sha256", "section_id", "section_sha256", "disposition", "reason_code", "token_count"],
+      "properties": {
+        "source_id": { "$ref": "#/$defs/id" }, "source_revision_sha256": { "$ref": "#/$defs/sha256" },
+        "section_id": { "$ref": "#/$defs/nullableId" }, "section_sha256": { "$ref": "#/$defs/nullableSha" },
+        "disposition": { "enum": ["included", "summarized", "truncated", "duplicate", "stale", "unsupported", "unavailable", "restricted", "omitted"] },
+        "reason_code": { "$ref": "#/$defs/nullableId" }, "token_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["item_id", "kind", "sensitivity", "admission", "authoritative_evidence", "essential", "source_id", "source_revision", "content_sha256", "bounded_excerpt", "token_count"],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/id" }, "kind": { "$ref": "#/$defs/kind" }, "sensitivity": { "$ref": "#/$defs/sensitivity" },
+        "admission": { "enum": ["eligible", "stale", "denied"] }, "authoritative_evidence": { "type": "boolean" }, "essential": { "type": "boolean" },
+        "source_id": { "$ref": "#/$defs/id" }, "source_revision": { "$ref": "#/$defs/sha256" }, "content_sha256": { "$ref": "#/$defs/sha256" },
+        "bounded_excerpt": { "type": "string" }, "token_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "accounting": {
+      "type": "object", "additionalProperties": false,
+      "required": ["item_id", "kind", "sensitivity", "source_id", "source_revision", "content_sha256", "byte_count", "token_count", "included", "omission"],
+      "properties": {
+        "item_id": { "$ref": "#/$defs/id" }, "kind": { "$ref": "#/$defs/kind" }, "sensitivity": { "$ref": "#/$defs/sensitivity" },
+        "source_id": { "$ref": "#/$defs/id" }, "source_revision": { "$ref": "#/$defs/sha256" }, "content_sha256": { "$ref": "#/$defs/sha256" },
+        "byte_count": { "type": "integer", "minimum": 0 }, "token_count": { "type": "integer", "minimum": 0 }, "included": { "type": "boolean" },
+        "omission": { "oneOf": [{ "type": "null" }, { "enum": ["duplicate", "budget", "stale", "denied"] }] }
+      }
+    },
+    "packet": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "context_packet_id", "max_bytes", "max_tokens", "token_counter_id", "items", "accounting", "used_bytes", "used_tokens", "packet_sha256"],
+      "properties": {
+        "schema_version": { "const": 2 }, "context_packet_id": { "$ref": "#/$defs/id" }, "max_bytes": { "type": "integer", "minimum": 1 },
+        "max_tokens": { "type": "integer", "minimum": 0 }, "token_counter_id": { "$ref": "#/$defs/id" },
+        "items": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/item" } },
+        "accounting": { "type": "array", "maxItems": 4096, "items": { "$ref": "#/$defs/accounting" } },
+        "used_bytes": { "type": "integer", "minimum": 0 }, "used_tokens": { "type": "integer", "minimum": 0 }, "packet_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

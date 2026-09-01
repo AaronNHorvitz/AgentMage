@@ -57,6 +57,8 @@ pub mod protocol;
 
 /// Native capability registration for the shared runtime tool dispatcher.
 pub mod runtime_tools;
+/// Production prepared-source adapter for the common artifact dispatcher.
+pub mod source_artifact_runtime;
 #[cfg(feature = "workflow-caller")]
 /// Narrow child-assignment adapter over the shared workflow caller runtime.
 pub mod workflow_assignment;

@@ -525,7 +525,7 @@ pub(crate) mod tests {
         ]))
         .expect("narrowed profile");
 
-        assert_eq!(profile.visible_tools().len(), 20);
+        assert_eq!(profile.visible_tools().len(), 21);
         assert!(
             profile
                 .registry()

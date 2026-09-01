@@ -3717,63 +3717,71 @@ model context or visibly excluded, with exact provenance and bounded resource us
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 22.3.1 - Implement source admission and text vertical slice**
-  - [ ] **Sub-task 22.3.1.1:** Stream bounded request bytes, compute immutable source identity,
+- [x] **Task 22.3.1 - Implement source admission and text vertical slice**
+  - [x] **Sub-task 22.3.1.1:** Stream bounded request bytes, compute immutable source identity,
     classify before persistence or model use, detect text versus binary, and record one extraction
     state for every supplied source.
-  - [ ] **Sub-task 22.3.1.2:** Implement UTF-8/UTF-16 and declared fallback decoding, line and byte
+  - [x] **Sub-task 22.3.1.2:** Implement UTF-8/UTF-16 and declared fallback decoding, line and byte
     provenance, ANSI removal with meaningful error preservation, repeated-line collapse, head/tail,
     deterministic error/warning/stack-trace/test-failure/timestamp clusters, truncation,
     cancellation, and binary or unsupported refusal for plain text and logs.
-  - [ ] **Sub-task 22.3.1.3:** Persist only policy-admitted source bytes and manifests; default to
+  - [x] **Sub-task 22.3.1.3:** Persist only policy-admitted source bytes and manifests; default to
     ephemeral source handling and expose retention, refresh, deletion, and reattachment state.
-  - [ ] **Sub-task 22.3.1.4:** Support bounded incremental ingestion of a growing log with stable
+  - [x] **Sub-task 22.3.1.4:** Support bounded incremental ingestion of a growing log with stable
     prior line identities, append-only refresh when valid, rotation/truncation detection, and no
     blind reuse after replacement.
-- [ ] **Task 22.3.2 - Build sections, lexical retrieval, and context manifests**
-  - [ ] **Sub-task 22.3.2.1:** Produce canonical structural sections and provenance-preserving
+- [x] **Task 22.3.2 - Build sections, lexical retrieval, and context manifests**
+  - [x] **Sub-task 22.3.2.1:** Produce canonical structural sections and provenance-preserving
     chunks with stable identities, source hashes, parent relationships, classification, and limits.
-  - [ ] **Sub-task 22.3.2.2:** Build deterministic artifact-local lexical indexes and exact range
+  - [x] **Sub-task 22.3.2.2:** Build deterministic artifact-local lexical indexes and exact range
     retrieval before optional semantic retrieval; embeddings cannot define identity or coverage.
-  - [ ] **Sub-task 22.3.2.3:** Compile a context manifest that accounts for every artifact and
+  - [x] **Sub-task 22.3.2.3:** Compile a context manifest that accounts for every artifact and
     section as included, summarized, truncated, duplicate, stale, unsupported, unavailable,
     restricted, or omitted with exact reason and token allocation.
-- [ ] **Task 22.3.3 - Integrate the existing context manager**
-  - [ ] **Sub-task 22.3.3.1:** Convert minimized sections into existing `ContextItemCandidate`
+- [x] **Task 22.3.3 - Integrate the existing context manager**
+  - [x] **Sub-task 22.3.3.1:** Convert minimized sections into existing `ContextItemCandidate`
     records and invoke Story 22.1 prioritization, deduplication, budgeting, and omission logic.
-  - [ ] **Sub-task 22.3.3.2:** Reconcile authoritative tokenizer counts, model profile reserves,
+  - [x] **Sub-task 22.3.3.2:** Reconcile authoritative tokenizer counts, model profile reserves,
     actual request tokens, and output reserve; fail before inference on overcommit or count drift.
-  - [ ] **Sub-task 22.3.3.3:** Expose bounded user and diagnostics views without raw restricted
+  - [x] **Sub-task 22.3.3.3:** Expose bounded user and diagnostics views without raw restricted
     content, private paths, hidden source bytes, or a second prompt-assembly path.
-- [ ] **Task 22.3.4 - Implement production native artifact operations**
-  - [ ] **Sub-task 22.3.4.1:** Implement the Story 16.2 catalog against admitted manifests,
+- [x] **Task 22.3.4 - Implement production native artifact operations**
+  - [x] **Sub-task 22.3.4.1:** Implement the Story 16.2 catalog against admitted manifests,
     sections, indexes, and payload references through the common dispatcher with no direct path,
     parser, database, model, or MCP bypass.
-  - [ ] **Sub-task 22.3.4.2:** Implement bounded byte/line/section reads, deterministic lexical
+  - [x] **Sub-task 22.3.4.2:** Implement bounded byte/line/section reads, deterministic lexical
     search, source metadata, redaction/withholding, large-result artifactization, cancellation,
     receipts, and exact freshness checks.
-  - [ ] **Sub-task 22.3.4.3:** Register `artifact.get_log_errors` only after its text/log extractor
+  - [x] **Sub-task 22.3.4.3:** Register `artifact.get_log_errors` only after its text/log extractor
     goldens pass; keep page and sheet operations unregistered until Stories 60.2 and 62.2.
-- [ ] **Task 22.3.5 - Verify ingestion, lifecycle, tools, and budgets**
-  - [ ] **Sub-task 22.3.5.1:** Run paste boundaries, encodings, 25 MiB logs, mixed artifacts,
+- [x] **Task 22.3.5 - Verify ingestion, lifecycle, tools, and budgets**
+  - [x] **Sub-task 22.3.5.1:** Run paste boundaries, encodings, 25 MiB logs, mixed artifacts,
     duplicates, stale sources, overflow, cancellation, crash, restart, refresh, expiry, and deletion.
-  - [ ] **Sub-task 22.3.5.2:** Prove complete manifest accounting, exact provenance, deterministic
+  - [x] **Sub-task 22.3.5.2:** Prove complete manifest accounting, exact provenance, deterministic
     context and native results, no silent drop, no budget violation, bounded memory/time, and
     complete cleanup.
-  - [ ] **Sub-task 22.3.5.3:** Retain source manifests, extraction and native-tool goldens, context
+  - [x] **Sub-task 22.3.5.3:** Retain source manifests, extraction and native-tool goldens, context
     ledgers, token
     counts, lifecycle traces, performance results, canary scans, and `RV-08`, `RV-16`, `RV-17`, and
     `RV-18` mappings.
 
+Local evidence: [`source-artifact-preparation-and-context.md`](docs/architecture/source-artifact-preparation-and-context.md)
+defines the single service/store/dispatcher boundary and complete lifecycle. The source-bound
+[`source-preparation-report.json`](artifacts/sprints/sprint-22/story-22.3/source-preparation-report.json)
+and generated goldens retain strict text/log extraction, exact context accounting, production tool
+receipts, a 25 MiB bounded campaign, restart and lifecycle traces, schema mutations, canary scans,
+and local RV-08/RV-16/RV-17/RV-18 mappings. The campaign explicitly excludes installed-package,
+Windows, physical-fault, independently admitted real-model, independent-review, and release claims.
+
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 22.3.AC1:** Given any supplied source set, when context is prepared, then every
+- [x] **Story AC 22.3.AC1:** Given any supplied source set, when context is prepared, then every
   source and section has exactly one visible disposition with immutable provenance and no input is
   silently dropped.
-- [ ] **Story AC 22.3.AC2:** Given any admitted model profile, when the context ledger is compiled,
+- [x] **Story AC 22.3.AC2:** Given any admitted model profile, when the context ledger is compiled,
   then all token partitions reconcile within the exact input window and output/recovery reserves
   remain untouched.
-- [ ] **Story AC 22.3.AC3:** Given source mutation, restart, expiry, or deletion, when context is
+- [x] **Story AC 22.3.AC3:** Given source mutation, restart, expiry, or deletion, when context is
   reused, then stale dependencies invalidate transitively and unavailable evidence cannot be
   represented as current.
 

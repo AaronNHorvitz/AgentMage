@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/prepared-source-manifest.schema.json",
+  "title": "AgentMage Prepared Source Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_id", "request_id", "source_kind", "protected_origin_sha256", "media_type", "media_family", "encoding", "sensitivity", "lifecycle", "retention", "limits", "source_bytes", "source_sha256", "extraction_sha256", "extraction_state", "total_lines", "retained_lines", "omitted_lines", "token_counter_id", "token_counter_sha256", "tokenizer_sha256", "revision", "collected_at_epoch_ms", "manifest_sha256"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "source_id": { "$ref": "#/$defs/id" },
+    "request_id": { "$ref": "#/$defs/id" },
+    "source_kind": { "$ref": "#/$defs/id" },
+    "protected_origin_sha256": { "$ref": "#/$defs/sha256" },
+    "media_type": { "enum": ["text/plain", "text/x-log", "application/log"] },
+    "media_family": { "enum": ["plain_text", "log"] },
+    "encoding": { "enum": ["auto", "utf8", "utf16_le", "utf16_be", "latin1"] },
+    "sensitivity": { "enum": ["public", "internal", "private", "restricted"] },
+    "lifecycle": { "enum": ["current", "stale", "expired", "released", "deleted"] },
+    "retention": { "$ref": "#/$defs/retention" },
+    "limits": { "$ref": "#/$defs/limits" },
+    "source_bytes": { "type": "integer", "minimum": 0, "maximum": 26214400 },
+    "source_sha256": { "$ref": "#/$defs/sha256" },
+    "extraction_sha256": { "$ref": "#/$defs/sha256" },
+    "extraction_state": { "enum": ["complete", "truncated"] },
+    "total_lines": { "type": "integer", "minimum": 0, "maximum": 500000 },
+    "retained_lines": { "type": "integer", "minimum": 0, "maximum": 500000 },
+    "omitted_lines": { "type": "integer", "minimum": 0, "maximum": 500000 },
+    "token_counter_id": { "$ref": "#/$defs/id" },
+    "token_counter_sha256": { "$ref": "#/$defs/sha256" },
+    "tokenizer_sha256": { "$ref": "#/$defs/sha256" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "collected_at_epoch_ms": { "type": "integer", "minimum": 1 },
+    "manifest_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[^\\u0000-\\u001f\\u007f]+$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["max_input_bytes", "max_output_bytes", "max_lines", "max_sections", "max_index_terms"],
+      "properties": {
+        "max_input_bytes": { "type": "integer", "minimum": 1, "maximum": 26214400 },
+        "max_output_bytes": { "type": "integer", "minimum": 1, "maximum": 26214400 },
+        "max_lines": { "type": "integer", "minimum": 1, "maximum": 500000 },
+        "max_sections": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "max_index_terms": { "type": "integer", "minimum": 1, "maximum": 500000 }
+      }
+    },
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "artifact_id", "manifest_sha256", "payload_sha256", "byte_size", "media_type"],
+      "properties": {
+        "schema_version": { "const": 2 }, "artifact_id": { "$ref": "#/$defs/id" },
+        "manifest_sha256": { "$ref": "#/$defs/sha256" }, "payload_sha256": { "$ref": "#/$defs/sha256" },
+        "byte_size": { "type": "integer", "minimum": 0, "maximum": 26214400 },
+        "media_type": { "enum": ["text/plain", "text/x-log", "application/log"] }
+      }
+    },
+    "retention": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "ephemeral" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "artifact", "policy_sha256"], "properties": { "kind": { "const": "policy_persisted" }, "artifact": { "$ref": "#/$defs/artifact" }, "policy_sha256": { "$ref": "#/$defs/sha256" } } }
+      ]
+    }
+  }
+}
