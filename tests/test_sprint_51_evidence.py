@@ -77,6 +77,18 @@ class Sprint51EvidenceTests(unittest.TestCase):
             mutate(changed)
             self.assertTrue(self.validate(changed))
 
+    def test_failed_command_summaries_are_content_free_and_identify_failures(self) -> None:
+        records = commands()
+        records[2]["exit_code"] = 9
+        records[5]["exit_code"] = 1
+        self.assertEqual(
+            evidence.failed_command_summaries(records),
+            [
+                "command failed: frontier-host-coordinator (exit 9)",
+                "command failed: vscode-local-handoff (exit 1)",
+            ],
+        )
+
     def test_report_contains_no_sensitive_raw_or_prompt_material(self) -> None:
         encoded = str(report()).lower()
         for prohibited in (

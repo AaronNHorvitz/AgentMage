@@ -272,6 +272,15 @@ def build_report(revision: str, commands: list[dict[str, Any]]) -> dict[str, Any
     }
 
 
+def failed_command_summaries(commands: list[dict[str, Any]]) -> list[str]:
+    """Return content-free identities for commands that did not pass."""
+    return [
+        f"command failed: {item.get('id', 'unknown')} (exit {item.get('exit_code', 'unknown')})"
+        for item in commands
+        if item.get("exit_code") != 0
+    ]
+
+
 def revision_is_ancestor(revision: str) -> bool:
     result = subprocess.run(
         ["git", "merge-base", "--is-ancestor", revision, "HEAD"],
@@ -352,6 +361,8 @@ def main() -> int:
         report = build_report(revision, run_commands())
         failures = validate_report(report, verify_ancestry=False)
         if failures:
+            for failure in failed_command_summaries(report["commands"]):
+                print(f"error: {failure}")
             for failure in failures:
                 print(f"error: {failure}")
             return 1
