@@ -93,7 +93,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "30cbffb6ac5c45e0253f586026db4ffd9e6c3569ae12316063de53d22bd531e8"
+          "content": "60113b9ce2dae5a9d2a5da65e33d8d9dccc10de0f315036f04ce92e40b99f59d"
         }
       ],
       "licenses": [
@@ -186,7 +186,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "e37c7260ec48490f1680ff5a893d207cbcc7661a083ceb65b8c9ddd4098c2737"
+          "content": "840367e287a3fb063a9be7571697e85c6a65e5cdaa03258285eb40c0b8566cd1"
         }
       ],
       "licenses": [
@@ -217,7 +217,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "f02d408c7f2a36a260c61bb9a8ef64f20536cd899d93a6a687bf3efe703da59a"
+          "content": "e3be18d3291d63651a219a86967b3f1e978567fa0c5fb1507906c96cc07e9a25"
         }
       ],
       "licenses": [
@@ -15320,7 +15320,8 @@
         "cargo:rustix@1.1.4",
         "cargo:serde@1.0.229",
         "cargo:serde_json@1.0.151",
-        "cargo:sha2@0.11.0"
+        "cargo:sha2@0.11.0",
+        "cargo:zip@8.6.0"
       ],
       "ref": "cargo:agentmage-host@0.0.0"
     },
@@ -18415,7 +18416,7 @@
       }
     ]
   },
-  "serialNumber": "urn:uuid:d39df386-e39f-5310-be66-f1b865d9e277",
+  "serialNumber": "urn:uuid:d6a65543-b890-5331-b214-b73cf3375a7c",
   "specVersion": "1.6",
   "version": 1
 }
