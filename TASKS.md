@@ -6553,9 +6553,9 @@ installed-package execution, independent review, and deferred manual fuzzing rem
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 53.1.1 - Implement the bounded story**
+- [x] **Task 53.1.1 - Implement the bounded story**
   - [x] **Sub-task 53.1.1.1** (legacy `S-046-I01`): Run recommendation, packet, disclosure, redaction, import, revalidation, and round-trip fixtures.
-  - [ ] **Sub-task 53.1.1.2** (legacy `S-046-I02`): Re-run Codex delivery attacks through Chat, CLI, model tools, skills, schedules, injected content, clipboard APIs, Visual Studio Code commands, and network paths.
+  - [x] **Sub-task 53.1.1.2** (legacy `S-046-I02`): Re-run Codex delivery attacks through Chat, CLI, model tools, skills, schedules, injected content, clipboard APIs, Visual Studio Code commands, and network paths. Evidence: [`frontier_release_coordinator.rs`](shells/host/src/frontier_release_coordinator.rs) closes all nine named product surfaces and maps each attempt to the existing local handoff-denial boundary. Focused tests receive one denied, zero-delivery receipt for every surface; the coordinator has no external client, credential, endpoint, browser, clipboard, scheduler, editor-command, or network adapter.
   - [x] **Sub-task 53.1.1.3** (legacy `S-046-I03`): Verify packet export is a user-initiated local file operation under the controlled write contract.
   - [x] **Sub-task 53.1.1.4** (legacy `S-046-I04`): Publish frontier recommendation, disclosure review, manual transfer, import, validation, privacy, and limitation guides.
   - [x] **Sub-task 53.1.1.5** (legacy `S-046-I05`): Publish capability-matrix rules for local task tiers and frontier recommendations.
@@ -6569,7 +6569,7 @@ installed-package execution, independent review, and deferred manual fuzzing rem
 - [ ] **Task 53.1.3 - Verify and close the story**
   - [ ] **Sub-task 53.1.3.1:** `S-046-IT01` performs measured recommendation, packet preview/export, user-mediated external consultation simulation, import, local revalidation, and optional controlled application; assert complete round-trip receipts.
   - [ ] **Sub-task 53.1.3.2:** `S-046-ST01` probes every interface/process for autonomous cloud client, credential access, delivery, browser automation, direct Codex handoff, hidden telemetry, and imported-authority paths; assert zero capability.
-  - [ ] **Sub-task 53.1.3.3:** `S-046-RT01` cancels or corrupts every round-trip phase and repeats import/export; assert idempotent local artifacts, no duplicate application, bounded retention, and safe cleanup.
+  - [x] **Sub-task 53.1.3.3:** `S-046-RT01` cancels or corrupts every round-trip phase and repeats import/export; assert idempotent local artifacts, no duplicate application, bounded retention, and safe cleanup. Evidence: packet-rendered, export-planned, and import-completed checkpoints form a bounded content-free hash chain below the host effect boundary. Focused tests interrupt every phase, resume exact export/import, repeat terminal import with zero duplicate effects, reopen a real directory store, and reject record tampering. Existing cancellation tests cover pending recommendation and disclosure review; no cancelled or resumed path delivers, grants, writes, or applies an imported proposal.
   - [x] **Sub-task 53.1.3.4:** `S-046-AT01` forces redaction, disclosure, freshness, local validation, network-exclusion, and privacy thresholds to fail; assert no release or gate closure.
   - [ ] **Sub-task 53.1.3.5 - Product security evidence:** Map `SR-ACC-007`/`SR-ACC-008`, `SR-DAT-002`/`SR-DAT-003`, `SR-AI-003` through `SR-AI-005`, `SR-AI-008` through `SR-AI-011`, `SR-TST-004`; retain threat model, end-to-end bundle, prohibited-capability scan, failure injection, guides, and signed gate decision.
 
@@ -6586,19 +6586,19 @@ installed-package execution, independent review, and deferred manual fuzzing rem
 - [ ] **Sprint AC 53.AC4:** Strict-local mode remains fully usable with no external account or service.
 - [x] **Sprint AC 53.AC5:** `G-V0.5` closes only after boundary, privacy, evidence, import, and documentation gates pass.
 
-**Local evidence (2026-08-15):** The immutable source revision
-`20d67004af424c8a0593ca5d9b791b0840a6cf37` is covered by
+**Local evidence (2026-09-01):** The immutable source revision
+`1b8a86474618c0672e73df1e669ed55103e8acf5` is covered by
 [`local-evidence-report.json`](artifacts/sprints/sprint-53/local-evidence-report.json), SHA-256
-`702d35e67e73a951f1fb03858dae74098ce3f3bd2ac467fa74066839570442b6`. All fourteen recorded
-commands exit zero and all eight focused suites report zero blocking skips. The release gate binds
+`ed3fb638439c3f1c1309006e9abcdf52bd9e9193ee7bf580a3a4667221787c6d`. All fifteen recorded
+commands exit zero and all nine focused suites report zero blocking skips. The release gate binds
 nine prohibited delivery surfaces, twelve forced gate failures, and eight recovery specifications;
 it records zero accepted autonomous deliveries, imported authorities, or outbound network attempts.
 The generated v0.5 manifest and readiness report remain explicitly blocked. Sprint 53 remains
-**BLOCKED** because Sprints 50 through 52 are blocked and the product coordinator, native end-to-end
-round trip, normal-flow integration, live-model campaign, durable recovery, installed
-cross-platform acceptance, trusted signed packages, independent release decision, and deferred
-manual fuzzing remain absent. Sub-tasks 53.1.1.2, 53.1.3.1 through 53.1.3.3, and 53.1.3.5; both
-story criteria; Sprint AC 53.AC1 and 53.AC4; Story 53.1; and the sprint therefore remain open.
+**BLOCKED** because Sprints 50 through 52 are blocked and the live-model campaign, installed
+whole-product prohibited-capability scan, cross-platform acceptance, trusted signed packages,
+independent release decision, and deferred manual fuzzing remain absent. Sub-tasks 53.1.3.1,
+53.1.3.2, and 53.1.3.5; Task 53.1.3; both story criteria; Sprint AC 53.AC1 and 53.AC4; Story 53.1;
+and the sprint therefore remain open.
 
 **Gate decision:** Sprint 53 is PASS only when Story 53.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 

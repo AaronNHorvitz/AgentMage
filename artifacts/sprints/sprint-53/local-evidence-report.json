@@ -1,15 +1,21 @@
 {
   "schema_version": 1,
   "record_type": "sprint_53_local_evidence",
-  "source_revision": "20d67004af424c8a0593ca5d9b791b0840a6cf37",
+  "source_revision": "1b8a86474618c0672e73df1e669ed55103e8acf5",
   "source_sha256": {
     "kernel/contracts/src/frontier.rs": "323fe72b93799e56ccb768e7d65022f7e72cb0a90b89dc1782023a1a0adbb060",
     "kernel/contracts/src/frontier_import.rs": "22a0fa7ed303e2030753c962108af9e5a8a8c809588724fa6893c2ad31079bfd",
-    "kernel/contracts/src/handoff.rs": "ef1cb45bd60fd2a3ac42dc42386ef133d8b28e0ead6fb0ac285abcebd2c1a8a0",
-    "kernel/engine/src/frontier_recommendation.rs": "6aa93fe83d7039ae19f075314765674527d7d439dedd2a973a3c1f5c8047e65c",
-    "kernel/engine/src/frontier_import.rs": "6926aa8fadbbf28ed3f3463252692e845f78572376988618270b56cd00a73348",
-    "kernel/engine/src/frontier_release.rs": "0bc38294d7140baea4588b0b437632e40b2bced75a7f62bdf41b170a4b2bd3a7",
-    "kernel/engine/src/handoff.rs": "2fd2f84d99cb3874d5de6c19d143f8aa83525d3df7fdf0263ab76d5a6358928c",
+    "kernel/contracts/src/handoff.rs": "230eea68dfbe59158221b006f1483591999a464e529b0e25ecac8c6213759a00",
+    "kernel/engine/src/frontier_recommendation.rs": "412921486226969d6f5ad7a190f4ba5c000615a209a8016c47fbc150e8eca9e6",
+    "kernel/engine/src/frontier_import.rs": "a323ca43c0c590ebd317113cf3f39c03346e5063a27ba4bbabb79e9d91595173",
+    "kernel/engine/src/frontier_import_recovery.rs": "c69e57f7cc6b1545f02489440eff6594fd71a5249e739f82993522e9b4846204",
+    "kernel/engine/src/frontier_release.rs": "5c592dce3617edd4ff748b64a2c7b0f79a24a9ade09084bb991cabd07e70caca",
+    "kernel/engine/src/frontier_release_recovery.rs": "092769a04e73e2c382e995d51e8685a873c35e34a0c6268cbd4c90d93857931f",
+    "kernel/engine/src/handoff.rs": "84b4ad4ae0381e0a0cf22735082c302deadca9df52c38cd78ebb926f097cf0f2",
+    "shells/host/src/frontier_coordinator.rs": "5064d2eed5ca01b4705dd73af2854bbfadea0ea6b72089ffa4321b8bea0e0943",
+    "shells/host/src/frontier_import_coordinator.rs": "e897567a83864c5014c6a2a2e2813961c679e093184781783bda7b861c2d94fd",
+    "shells/host/src/frontier_release_coordinator.rs": "1fe93e1241101d5b6d129a90fc3d217ed07854731ef7a60e7224e7d7cb1e88aa",
+    "shells/host/src/lib.rs": "faa560fdbe8299eb3b798a7f1b196598d3eb0cbc60bba2bd984efb292cc70dfc",
     "schemas/runtime/frontier-tier-decision.schema.json": "7ea0fd64b24448d505f7add9b7f4649983365eaf93327e5b36c99150170d0002",
     "schemas/runtime/frontier-recommendation-receipt.schema.json": "6744e3f1c5242542a6346fe6f832f89be838f098fe19dd8f5265441cd46a560f",
     "schemas/runtime/frontier-return-manifest.schema.json": "48c08e7c3e4a4051e6c431379ae3ecc8a2e8593c13e0b7869b24e37e977eb03b",
@@ -17,26 +23,26 @@
     "docs/verification/sprint-51-frontier-corpus.json": "b031aea0204c44d2b777c4608eca3b97b3118da89847b7d2eae851db6bd1db8f",
     "docs/verification/sprint-52-frontier-import-corpus.json": "bf5fd5d77371f1389e2ff544686401869c7d93820b32337e6d736c6269389622",
     "docs/verification/sprint-53-frontier-release-corpus.json": "deb74da29fbb7d47208090396db5cbd9f3e5d73eb3532207d7f81dd27bf8d56a",
-    "docs/architecture/manual-frontier-recommendation.md": "56862570b2f4632a665f5b670dfdd06af95aaae29bc5d034024f04694942e7ae",
-    "docs/architecture/untrusted-frontier-result-import.md": "de58173134c9e7fc450c5731d2dd940f99b9642dd6d43403d7e88c2fec9b156e",
-    "docs/guides/manual-frontier-consultation.md": "584361271946d4eabd1309fa73a590670e3adacb8c39bfb2011ba5c4e6cb9a90",
-    "docs/guides/frontier-result-import-and-revalidation.md": "0252db8174fb77ae4449f731b753195e7f61069b868e125dba2a8de11d6658ce",
-    "docs/release/v0.5-frontier-acceptance-bundle.md": "fa6e40acbc6ed521ec4211775805a0afc1749d2a10c56c930c08371b0a38ec60",
-    "docs/release/v0.5-capability-matrix.md": "6914c3601f00470a9f459f74412c8d46b8e7a30b66470aaac34182f772acd622",
-    "docs/release/release-notes-v0.5.0-draft.md": "ddc53f690f9cf08b7c8ad6a3b0c98b08d11682bade628ebbe900dbb22c47f3c0",
-    "docs/security/frontier-threat-model-and-boundary-report.md": "4eb4f2eb98ecae7438fb7cdd46d8fb02c1bad48f026cffceab77fffe55ed1729",
-    "docs/verification/sprint-53-local-results.md": "6cc262d14cd6919a2a11d0a8d6c8537e3d43265d7fc299572ff02a57c0d965a3",
-    "release/v0.5-frontier-pack-manifest.json": "8a91c3b2c4cc2a1f46830eae3142381de916662a704d86f689b371f66c1a4f63",
-    "scripts/v0_5_frontier_release_gate.py": "9e7052711faf7a34173c6aa281faa43cc8cec536bf6de4604ef8c40f280e2d05",
-    "tests/test_v0_5_frontier_release_gate.py": "dfd0ef7ba5878cc17bdc82ce63e0317ec0db5e6ac68e58709b5dacf6acdf43df",
-    "scripts/sprint_53_evidence.py": "148676c51bea484f8d34796f0900bda22f052fe206b85b43d3807aa0258e9145",
-    "tests/test_sprint_53_evidence.py": "3ded0d949aefb723f34b5e72c7ff835226c3b14ce1eb573159fa9d08ac994af3"
+    "docs/architecture/manual-frontier-recommendation.md": "f29608a096cd53e746dd83b26ec5b08fe8491bb60c7950a78bbbf482b7d517ba",
+    "docs/architecture/untrusted-frontier-result-import.md": "2c4ed09a972120b696c4ac19f8b51bafd4a6a60ac0ecf88fda9232d22cc34c15",
+    "docs/guides/manual-frontier-consultation.md": "65b25fc5a0e6911aa06f1c90d353b4ac918c469022b1c7fff0f6d6c8c76ef2c4",
+    "docs/guides/frontier-result-import-and-revalidation.md": "fd26f1d52585e90be6b9af660b2664600c5aa8fe2613bffff35411ad510c0106",
+    "docs/release/v0.5-frontier-acceptance-bundle.md": "a9239f3f4078b6d73c156f2f5bd777d1dd50ae1dbcb5cc55a7213f2d9b583457",
+    "docs/release/v0.5-capability-matrix.md": "ef95ca2cba887e80ee2409b98752e3dea7cd3a69449c2ae4f8bac30c91287afa",
+    "docs/release/release-notes-v0.5.0-draft.md": "298d13d287a24f1676492ae8a88aec872653acf65758f5633901cf347e98fcc8",
+    "docs/security/frontier-threat-model-and-boundary-report.md": "22861ede9ef87a4033b36b35469494d86555b0189002df55123d3ede8b58117a",
+    "docs/verification/sprint-53-local-results.md": "7407b8737bc5d99196d996fcecddd3efd0f2955ddf432f83a2ba736df1e71f55",
+    "release/v0.5-frontier-pack-manifest.json": "eb51a6da531071a0be811fdb60eded8e6652240105dea462f5bfd0adfbd8186e",
+    "scripts/v0_5_frontier_release_gate.py": "dc9e95778d71521abaf6b1777e48d98803f8d78333eb829008bf6dc81b57579f",
+    "tests/test_v0_5_frontier_release_gate.py": "5b4c398fd6787232f9b238f1fc2724d3536bf88a8f67464776bf2172964e7438",
+    "scripts/sprint_53_evidence.py": "9d63d8efb130750042b0c10470440121c9e8dbd2030dc818030bde886c398caf",
+    "tests/test_sprint_53_evidence.py": "7690aba60a0403cf06c2a5c5c87f1d999f9092d20460b266b546669674c1ed36"
   },
   "environment": {
     "system": "Linux",
-    "release": "7.1.6-201.fc44.x86_64",
+    "release": "7.1.10-200.fc44.x86_64",
     "machine": "x86_64",
-    "python": "3.14.6",
+    "python": "3.14.7",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
     "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
     "node": "v24.15.0",
@@ -55,7 +61,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "cc29a255fbc1faa73dbf24d3ece739de4947ef3b078c585cd06b671ef09b4593",
+      "output_sha256": "57b54dbbe7fe68db9386e7c234b395b0f94c93ed50e8e2c73c97a7ab47b04f05",
       "blocking_skip_count": 0
     },
     {
@@ -70,7 +76,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "a7cf839a629f0e0ed1e7cdcb890a41b29d7c4d3def0b5215251bab6c71da3346",
+      "output_sha256": "b5e595111e9b93fab6f4ad041a95d638850398da8eccc0a7fb626eed762dedd1",
       "blocking_skip_count": 0
     },
     {
@@ -85,7 +91,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "3a9e87bb5cb1436eb664f367fa3d946b165c76938614a6540fd676b6ea46754b",
+      "output_sha256": "6d030bce9d2191d56a1678e625915ae4f143bbd65bb0955c087fe5a44799fe75",
       "blocking_skip_count": 0
     },
     {
@@ -100,7 +106,22 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "89db01826bec583a35d174d405a10429a74d8188f606f8aedd370c5925b4076a",
+      "output_sha256": "fe0d1c622d235c0f3d22008604e896799e72080cea3aeea6ef64e51da749ee4f",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-release-host-coordinator",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "frontier_release_coordinator",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "592a59f98cafd232f74a207a3f29ec6ab1d9b61133477131440e9cfe43c50240",
       "blocking_skip_count": 0
     },
     {
@@ -111,7 +132,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "dd76524d236c46c2a913c0caa25f64f814ede796193897610875c75690015892",
+      "output_sha256": "d6a8ebe6047e8bb4595cef97793ebd4d3f88d7cce550736dd56369172ce026ca",
       "blocking_skip_count": 0
     },
     {
@@ -166,7 +187,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157",
+      "output_sha256": "02db5a66fa0c60ca8618bd08aac556eac4f3ec863e8630a0d353dba6a0f6e126",
       "blocking_skip_count": null
     },
     {
@@ -177,7 +198,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "33b657874203fc6cbde3b92561be5178fef931b3351effdce58e340f5e1c3f75",
+      "output_sha256": "9786b618b82679c5aa12e57022860ac4812aaf0676f508ffe79b69ec8c4771f8",
       "blocking_skip_count": null
     },
     {
@@ -220,7 +241,7 @@
         "tests.test_sprint_53_evidence"
       ],
       "exit_code": 0,
-      "output_sha256": "4a160235c0add54f7a5997815d0e01a072210439de4899c702c94dd3cd814662",
+      "output_sha256": "d52cbb1058abf83e3acb402d1c2b8ee089749613d6075f5d973dd66c8ef09200",
       "blocking_skip_count": null
     }
   ],
@@ -256,10 +277,10 @@
     "credential_access_capability": false,
     "automatic_delivery_capability": false,
     "imported_authority_capability": false,
-    "frontier_product_coordinator": false,
-    "native_end_to_end_round_trip": false,
-    "normal_local_flow_integration": false,
-    "durable_round_trip_recovery": false,
+    "frontier_product_coordinator": true,
+    "native_end_to_end_round_trip": true,
+    "normal_local_flow_integration": true,
+    "durable_round_trip_recovery": true,
     "live_model_campaign": false,
     "native_cross_platform_acceptance": false,
     "trusted_signed_packages": false,
@@ -273,10 +294,10 @@
     "accepted_autonomous_delivery_count": 0,
     "accepted_import_authority_count": 0,
     "outbound_network_attempt_count": 0,
-    "frontier_product_coordinator": false,
-    "native_end_to_end_round_trip": false,
-    "normal_local_flow_integration": false,
-    "durable_round_trip_recovery": false,
+    "frontier_product_coordinator": true,
+    "native_end_to_end_round_trip": true,
+    "normal_local_flow_integration": true,
+    "durable_round_trip_recovery": true,
     "live_model_campaign": false,
     "native_cross_platform_acceptance": false,
     "trusted_signed_packages": false,
@@ -291,24 +312,12 @@
       "owner": "53.1"
     },
     {
-      "code": "FRONTIER-PRODUCT-COORDINATOR-ABSENT",
-      "owner": "53.1.3.1"
-    },
-    {
-      "code": "NATIVE-END-TO-END-ROUND-TRIP-ABSENT",
-      "owner": "53.1.3.1"
-    },
-    {
-      "code": "NORMAL-LOCAL-FLOW-INTEGRATION-ABSENT",
-      "owner": "53.1.3.1"
-    },
-    {
       "code": "LIVE-MODEL-CAMPAIGN-ABSENT",
       "owner": "53.1.3.1"
     },
     {
-      "code": "DURABLE-ROUND-TRIP-RECOVERY-ABSENT",
-      "owner": "53.1.3.3"
+      "code": "INSTALLED-PROHIBITED-CAPABILITY-SCAN-ABSENT",
+      "owner": "53.1.3.2"
     },
     {
       "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
@@ -331,7 +340,7 @@
     "local_sprint_53_contract_passed": true,
     "sprint_status": "BLOCKED",
     "upstream_sprints_50_through_52_closed": false,
-    "frontier_workflow_integrated": false,
+    "frontier_workflow_integrated": true,
     "automatic_frontier_delivery_enabled": false,
     "import_authority_enabled": false,
     "cross_platform_acceptance_passed": false,
