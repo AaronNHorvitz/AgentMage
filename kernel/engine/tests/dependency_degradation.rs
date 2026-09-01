@@ -11,18 +11,7 @@ const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 #[test]
 fn every_dependency_family_is_classified_and_available() {
-    let kinds = [
-        RuntimeDependencyKind::Runtime,
-        RuntimeDependencyKind::Parser,
-        RuntimeDependencyKind::Model,
-        RuntimeDependencyKind::Codec,
-        RuntimeDependencyKind::Endpoint,
-        RuntimeDependencyKind::Tool,
-        RuntimeDependencyKind::Verifier,
-        RuntimeDependencyKind::Store,
-        RuntimeDependencyKind::ClientFeature,
-        RuntimeDependencyKind::OptionalCapability,
-    ];
+    let kinds = dependency_kinds();
     let dependencies = kinds
         .into_iter()
         .enumerate()
@@ -40,6 +29,57 @@ fn every_dependency_family_is_classified_and_available() {
     assert_eq!(disposition.state, DependencyDegradationState::Ready);
     assert!(disposition.execution_permitted);
     assert_eq!(disposition.dependencies.len(), kinds.len());
+}
+
+#[test]
+fn every_dependency_health_and_requirement_class_has_one_deterministic_disposition() {
+    let losses = [
+        DependencyHealth::Missing,
+        DependencyHealth::Failed,
+        DependencyHealth::Malformed,
+        DependencyHealth::Stale,
+        DependencyHealth::Disabled,
+        DependencyHealth::Quarantined,
+    ];
+    for kind in dependency_kinds() {
+        for requirement in [
+            DependencyRequirement::Required,
+            DependencyRequirement::Optional,
+            DependencyRequirement::Substitutable,
+        ] {
+            for health in losses {
+                let dependency = dependency("subject", kind, requirement);
+                let mut observation = available(&dependency);
+                observation.health = health;
+                let disposition = evaluate_workflow_dependencies(
+                    std::slice::from_ref(&dependency),
+                    &[observation],
+                    &[],
+                )
+                .expect("every classified loss has one visible result");
+                let item = &disposition.dependencies[0];
+                let expected = match health {
+                    DependencyHealth::Disabled => DependencyDegradationState::Disabled,
+                    DependencyHealth::Quarantined => DependencyDegradationState::Quarantined,
+                    _ => match requirement {
+                        DependencyRequirement::Required => DependencyDegradationState::Blocked,
+                        DependencyRequirement::Optional => DependencyDegradationState::Degraded,
+                        DependencyRequirement::Substitutable => {
+                            DependencyDegradationState::Unavailable
+                        }
+                    },
+                };
+                assert_eq!(item.state, expected, "{kind:?}/{requirement:?}/{health:?}");
+                assert_eq!(
+                    item.execution_permitted,
+                    requirement == DependencyRequirement::Optional,
+                    "{kind:?}/{requirement:?}/{health:?}"
+                );
+                assert!(item.selected_dependency_id.is_none());
+                assert!(!item.reason_code.is_empty());
+            }
+        }
+    }
 }
 
 #[test]
@@ -263,4 +303,19 @@ fn substitution() -> QualifiedDependencySubstitution {
         user_visible: true,
         reason_code: "runtime.dependency.explicit-substitute".to_owned(),
     }
+}
+
+fn dependency_kinds() -> [RuntimeDependencyKind; 10] {
+    [
+        RuntimeDependencyKind::Runtime,
+        RuntimeDependencyKind::Parser,
+        RuntimeDependencyKind::Model,
+        RuntimeDependencyKind::Codec,
+        RuntimeDependencyKind::Endpoint,
+        RuntimeDependencyKind::Tool,
+        RuntimeDependencyKind::Verifier,
+        RuntimeDependencyKind::Store,
+        RuntimeDependencyKind::ClientFeature,
+        RuntimeDependencyKind::OptionalCapability,
+    ]
 }

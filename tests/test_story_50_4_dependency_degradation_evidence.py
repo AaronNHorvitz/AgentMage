@@ -11,6 +11,7 @@ class Story504DependencyDegradationEvidenceTests(unittest.TestCase):
         report = expected_report()
         self.assertEqual(validate_report(report), [])
         self.assertEqual(report["requirement_ids"], ["AM-DEG-001", "AT-DEG-001"])
+        self.assertTrue(report["product_truth"]["bounded_runtime_reliability_campaign_complete"])
 
     def test_safety_or_completion_widening_fails_closed(self) -> None:
         for field in (

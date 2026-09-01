@@ -20,6 +20,16 @@ COMMANDS: Final = (
     ("cargo", "clippy", "-p", "agentmage-kernel-engine", "--all-targets", "--all-features", "--locked", "--", "-D", "warnings"),
     ("python3", "-m", "pytest", "-q", "tests/test_story_50_4_dependency_degradation_evidence.py", "tests/test_task_graph.py"),
     ("python3", "scripts/validate_docs.py"),
+    ("cargo", "test", "-p", "agentmage-kernel-engine", "story_50_2_", "--all-features", "--locked"),
+    ("cargo", "test", "-p", "agentmage-host", "story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay", "--all-features", "--locked"),
+    (
+        "python3", "-c",
+        "import json; from pathlib import Path; from scripts import runtime_hardening_load as c; "
+        "a=c.ROOT/Path('artifacts/sprints/sprint-50/story-50.2-runtime-load-worker'); "
+        "p=json.loads((c.ROOT/c.PROFILE).read_text()); r=json.loads((a/'report.json').read_text()); "
+        "f=c.report_failures(r,p,a); assert not f,f; print('Retained runtime hardening load evidence validated')",
+    ),
+    ("python3", "scripts/runtime_component_removal.py", "--verify"),
 )
 SOURCES: Final = (
     "ENGINEERING-RUNTIME.md",
@@ -29,6 +39,13 @@ SOURCES: Final = (
     "docs/architecture/runtime-dependency-degradation.md",
     "scripts/story_50_4_dependency_degradation_evidence.py",
     "tests/test_story_50_4_dependency_degradation_evidence.py",
+    "kernel/engine/src/runtime_loop_tests.rs",
+    "kernel/engine/src/runtime_event.rs",
+    "kernel/engine/src/runtime_recovery.rs",
+    "shells/host/src/linux_coding_runtime.rs",
+    "shells/host/src/runtime_parity_tests.rs",
+    "artifacts/sprints/sprint-50/story-50.2-runtime-load-worker/report.json",
+    "artifacts/sprints/sprint-50/story-50.2-component-removal/report.json",
 )
 
 
@@ -58,6 +75,11 @@ def expected_report() -> dict[str, Any]:
             "disabled_and_quarantined_visible": True,
             "unavailable_substitute_visible": True,
             "fresh_qualified_substitution_only": True,
+            "every_health_requirement_family_matrix_complete": True,
+            "bounded_runtime_reliability_campaign_complete": True,
+            "large_artifact_restart_no_replay_complete": True,
+            "reference_load_evidence_retained": True,
+            "source_component_removal_evidence_retained": True,
             "authority_broadening_permitted": False,
             "security_or_verification_weakening_permitted": False,
             "silent_omission_or_route_change": False,
@@ -88,6 +110,10 @@ def validate_report(value: Any) -> list[str]:
         "all_dependency_families_classified", "required_loss_blocks",
         "optional_loss_visible_and_bounded", "disabled_and_quarantined_visible",
         "unavailable_substitute_visible", "fresh_qualified_substitution_only",
+        "every_health_requirement_family_matrix_complete",
+        "bounded_runtime_reliability_campaign_complete",
+        "large_artifact_restart_no_replay_complete", "reference_load_evidence_retained",
+        "source_component_removal_evidence_retained",
     )
     required_false = (
         "authority_broadening_permitted", "security_or_verification_weakening_permitted",
@@ -119,6 +145,12 @@ def validate() -> list[str]:
         "optional_loss_remains_permitted_but_never_silent ... ok",
         "fresh_narrower_stronger_same_kind_substitute_is_explicitly_selected ... ok",
         "missing_stale_hidden_cross_kind_or_weaker_substitution_is_denied ... ok",
+        "every_dependency_health_and_requirement_class_has_one_deterministic_disposition ... ok",
+        "story_50_2_consumed_or_uncertain_effect_is_never_replayed ... ok",
+        "story_50_2_slow_client_drains_then_reconnects_without_event_loss ... ok",
+        "story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay ... ok",
+        "Retained runtime hardening load evidence validated",
+        '"campaign_id": "story-50.2-component-removal-v1"',
     ):
         if marker not in raw:
             failures.append(f"raw evidence lacks fixture marker: {marker}")
