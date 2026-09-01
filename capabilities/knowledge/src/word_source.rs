@@ -679,6 +679,10 @@ mod tests {
         assert!(!result.filesystem_effect_performed);
         assert!(!result.network_access_performed);
         assert!(!result.execution_performed);
+        assert_eq!(
+            word_sha256(&serde_json::to_vec(&result).expect("golden projection")),
+            "7d26751511195387cc28873e9a1955e6cd02bd9ea322aaf675487112d41fc3c2"
+        );
     }
 
     #[test]

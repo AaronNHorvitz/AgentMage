@@ -777,7 +777,7 @@ the caller-neutral coding runtime, native read baseline, configured clients, and
 The DOCX structured parser adapter is now compiled only with the existing `source-artifacts` host
 feature and uses the common artifact dispatcher. PDF/OCR and spreadsheet adapters remain absent
 rather than being compiled behind invented placeholder features. The DOCX adapter does not close
-its still-open installed-client or hostile lifecycle gates. DOCX restart and retention reuse the
+its still-open installed-client gate. DOCX restart and retention reuse the
 existing path-free runtime-artifact reference and publish only an exactly recomputed digest-sealed
 projection, without adding another storage authority. Canonical DOCX sections use the same checked
 model-window plan, context composer, source-artifact budget, and complete accounting verifier as

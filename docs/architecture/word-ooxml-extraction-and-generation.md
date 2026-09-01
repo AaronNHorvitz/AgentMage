@@ -74,8 +74,12 @@ production receipts and no parser, network, workspace-write, or client-specific 
 tool-dispatch time. The same minimized sections enter the existing `compose_context` path under the
 checked model plan's source-artifact partition. Complete records cover source containers, canonical
 sections, warnings, global duplicates, budget omissions, truncation, and sensitivity refusal;
-counter/tokenizer drift fails closed. Installed-client parity and the full hostile lifecycle
-campaign remain open under Story 58.2; this local adapter does not promote those requirements.
+counter/tokenizer drift fails closed. Client parity and the full hostile lifecycle campaign are
+tested through the shared local service: terminal, headless, and native-chat consumers
+receive identical prepared manifests, canonical sections, and context records, while malformed,
+unsafe, active, external, encrypted, unsupported-compression, expansion, cancellation, crash-byte,
+corrupt-restart, and cleanup cases fail closed. This does not substitute for installed-platform or
+independent review evidence.
 
 ## Generation
 

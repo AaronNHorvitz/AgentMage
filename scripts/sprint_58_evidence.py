@@ -136,6 +136,8 @@ IMPLEMENTED: Final = {
     "prepared_source_cache_invalidation_delete_reattach": True,
     "prepared_source_restart_retention": True,
     "multi_profile_context_accounting": True,
+    "hostile_lifecycle_campaign": True,
+    "golden_projection_client_parity": True,
     "network_access_capability": False,
     "execution_capability": False,
     "filesystem_mutation_capability": False,
@@ -160,9 +162,6 @@ BLOCKERS: Final = [
     {"code": "TRUSTED-INSTALLED-PACKAGE-EXECUTION-ABSENT", "owner": "58.1.3.4"},
     {"code": "INDEPENDENT-NATIVE-BOUNDARY-REVIEW-ABSENT", "owner": "58.1.3.4"},
     {"code": "MANUAL-FUZZING-DEFERRED", "owner": "SR-TST-004"},
-    {"code": "DOCX-CLIENT-PARITY-ABSENT", "owner": "58.2.3.2"},
-    {"code": "DOCX-HOSTILE-LIFECYCLE-CAMPAIGN-INCOMPLETE", "owner": "58.2.3.1"},
-    {"code": "DOCX-GOLDEN-CLIENT-PARITY-INCOMPLETE", "owner": "58.2.3.2"},
 ]
 
 
@@ -254,6 +253,8 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "common_native_artifact_dispatch": True,
         "prepared_source_restart_retention": True,
         "multi_profile_context_accounting": True,
+        "hostile_lifecycle_campaign": True,
+        "golden_projection_client_parity": True,
         "product_coordinator": False,
         "controlled_writer_integration": False,
         "native_interface_integration": False,

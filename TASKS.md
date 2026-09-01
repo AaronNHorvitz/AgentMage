@@ -6939,20 +6939,27 @@ page-aware evidence for the same context and workflow runtime rather than a sepa
     source-artifact partition; source/container/section records cover every included, duplicate,
     omitted, truncated, or restricted item, and exact counter/tokenizer drift fails closed across
     small and large model-profile fixtures with two combined documents.
-- [ ] **Task 58.2.3 - Verify hostile and fidelity cases**
-  - [ ] **Sub-task 58.2.3.1:** Test malformed ZIP/XML, traversal, external relationships, macros,
+- [x] **Task 58.2.3 - Verify hostile and fidelity cases**
+  - [x] **Sub-task 58.2.3.1:** Test malformed ZIP/XML, traversal, external relationships, macros,
     embedded files, recursion, decompression, oversized parts, duplicate names, Unicode, low memory,
-    cancellation, crash, and cleanup.
-  - [ ] **Sub-task 58.2.3.2:** Compare canonical sections and provenance against golden DOCX
+    cancellation, crash, and cleanup. Evidence: the 73-case corpus plus 8 OOXML, 2 structured-source,
+    and 5 host suites cover malformed/duplicate/unsafe/encrypted/compression/expansion/active/external
+    packages, hard source/output/section limits, cancellation, parser-crash bytes, failed-publication
+    cleanup, deletion, and corrupt restart without network, execution, or residual source storage.
+  - [x] **Sub-task 58.2.3.2:** Compare canonical sections and provenance against golden DOCX
     fixtures; record structural loss, unsupported content, and rendered-page limitations visibly.
+    Evidence: the complete canonical extraction has a fixed golden digest, exact structural
+    coordinates and warnings are asserted, rendered pages remain explicitly absent, and terminal,
+    headless, and native-chat consumers receive byte-identical shared-service manifests, sections,
+    and context dispositions.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 58.2.AC1:** Given an admitted DOCX, when extraction runs, then canonical sections
+- [x] **Story AC 58.2.AC1:** Given an admitted DOCX, when extraction runs, then canonical sections
   retain exact available provenance and every omitted, unsupported, or active structure is visible.
-- [ ] **Story AC 58.2.AC2:** Given hostile or oversized Office content, when the parser runs, then
+- [x] **Story AC 58.2.AC2:** Given hostile or oversized Office content, when the parser runs, then
   limits and cancellation hold, no active content or network executes, and cleanup leaves no residue.
-- [ ] **Story AC 58.2.AC3:** Given the same DOCX through any supported client, when context is built,
+- [x] **Story AC 58.2.AC3:** Given the same DOCX through any supported client, when context is built,
   then source manifests and section dispositions are equal and no shell owns document logic.
 
 #### Sprint Acceptance Criteria

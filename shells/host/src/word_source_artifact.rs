@@ -1299,4 +1299,55 @@ mod tests {
             Err(SourcePreparationError::TokenizerMismatch)
         ));
     }
+
+    #[test]
+    fn common_word_projection_is_identical_for_every_supported_client() {
+        let source = package("Client-neutral evidence", false);
+        let request = extraction_request(&source);
+        let mut service = WordSourceArtifactService::default();
+        service
+            .admit(
+                &request,
+                &source,
+                ArtifactClassification::Internal,
+                "attachment",
+                &"a".repeat(64),
+                &mut || false,
+            )
+            .expect("admit client-neutral source");
+        let binding = ExactTokenCounterBinding {
+            token_counter_id: "word-client-counter".to_owned(),
+            token_counter_sha256: "a".repeat(64),
+            tokenizer_sha256: "b".repeat(64),
+        };
+        let plan = context_plan("word-client-profile", &binding, 32);
+        let mut expected = None;
+        for client in ["terminal", "headless", "native-chat"] {
+            let prepared = service
+                .prepared_manifest("prepared-word")
+                .expect("prepared manifest");
+            let native = service.source("prepared-word").expect("native projection");
+            let context = service
+                .compile_context(
+                    "word-client-context".to_owned(),
+                    ContextPacketId::from_raw("word-client-packet"),
+                    &plan,
+                    4_096,
+                    &mut WordCounter {
+                        binding: binding.clone(),
+                    },
+                    false,
+                )
+                .unwrap_or_else(|error| panic!("{client}: {error:?}"));
+            let snapshot = sha256(
+                &serde_json::to_vec(&(prepared, native.manifest, native.sections, context))
+                    .expect("client snapshot"),
+            );
+            if let Some(expected) = &expected {
+                assert_eq!(&snapshot, expected, "{client}");
+            } else {
+                expected = Some(snapshot);
+            }
+        }
+    }
 }

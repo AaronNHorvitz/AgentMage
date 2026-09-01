@@ -32,6 +32,9 @@ artifact-tool dispatch, and the frozen 73-case review corpus.
 - Multiple model profiles and combined DOCX sources use the existing context composer with exact
   counter/tokenizer bindings and only the source-artifact partition. Every source, container,
   section, warning, duplicate, and budget omission has a verified accounting record.
+- The structured projection is fixed by a golden digest, and terminal, headless, and native-chat
+  consumers receive identical shared-service manifests, sections, and context dispositions. The
+  hostile package/parser/lifecycle set fails closed and leaves no residual source storage.
 
 ## Security Mapping
 
@@ -47,7 +50,7 @@ No product-wide requirement is marked complete by this local contribution.
 
 A green local report proves only the committed source and named commands on the recorded Fedora
 environment. Sprint 57 is blocked. The Word renderer, rich edit and visual comparison path, product
-coordinator, controlled writer, prepared-source client integration, accessibility evidence,
+coordinator, controlled writer, installed-client integration, accessibility evidence,
 installed Fedora/Ubuntu/macOS acceptance, trusted-package execution, independent review, and manual
 fuzz campaign are absent. Sprint 58 therefore remains **BLOCKED** despite passing local extraction,
 restart/retention, structured-adapter, common-dispatch, inspection, generation, schema, dependency,
