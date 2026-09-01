@@ -23,9 +23,12 @@ flowchart LR
   V --> X[Byte semantic and rendered receipt]
 ```
 
-The controlled writer and local renderer are dependencies, not powers held by these contracts.
-Generation returns bytes as a proposal. Display links are non-authoritative references built from
-validated workspace identities and relative components.
+The registered host coordinator admits all seven hash-bound artifact skills and binds source
+quality review, citation-aware generation, an optional exact edit preview, reopened bytes, and
+caller-supplied local render signatures. Sticky cancellation and missing dependencies fail before
+content evaluation. The controlled writer and local renderer remain dependencies, not powers held
+by the coordinator. Generation returns bytes as a proposal. Display links are non-authoritative
+references built from validated workspace identities and relative components.
 
 ## Supported Structure
 

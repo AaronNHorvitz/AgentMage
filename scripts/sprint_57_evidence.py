@@ -29,6 +29,8 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/markdown_artifact_skills.rs",
     "capabilities/knowledge/src/lib.rs",
     "capabilities/knowledge/examples/markdown_artifact_skill_pack.rs",
+    "shells/host/src/markdown_artifact_coordinator.rs",
+    "shells/host/src/lib.rs",
     "schemas/runtime/markdown-quality-report.schema.json",
     "schemas/runtime/examples/markdown-quality-report.valid.json",
     "schemas/runtime/generated-markdown-artifact.schema.json",
@@ -79,6 +81,13 @@ COMMANDS: Final = (
             "display_link::tests", "--lib", "--locked",
         ),
     ),
+    (
+        "markdown-host-coordinator",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "markdown_artifact_coordinator", "--lib", "--locked",
+        ),
+    ),
     ("markdown-runtime-schemas", ("node", "--test", "tests/test_planning_schemas.mjs")),
     (
         "markdown-acceptance-corpus",
@@ -98,12 +107,13 @@ COMMANDS: Final = (
     ("supply-chain", ("python3", "scripts/supply_chain.py")),
     ("evidence-tests", ("python3", "-m", "unittest", "tests.test_sprint_57_evidence")),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:7])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:8])
 RUST_FOCUSED_COMMANDS: Final = {
     "markdown-writer-unit",
     "markdown-artifact-unit",
     "markdown-skill-unit",
     "display-link-unit",
+    "markdown-host-coordinator",
 }
 SECURITY_REQUIREMENTS: Final = [
     "SR-DAT-002",
@@ -139,7 +149,7 @@ IMPLEMENTED: Final = {
     "filesystem_mutation_capability": False,
     "renderer_capability": False,
     "citation_invention_capability": False,
-    "product_coordinator": False,
+    "product_coordinator": True,
     "controlled_writer_integration": False,
     "native_interface_integration": False,
     "accessibility_acceptance": False,
@@ -150,7 +160,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-56-BLOCKED", "owner": "57.1"},
-    {"code": "MARKDOWN-PRODUCT-COORDINATOR-ABSENT", "owner": "57.1.3.4"},
     {"code": "CONTROLLED-WRITER-INTEGRATION-ABSENT", "owner": "57.1.3.4"},
     {"code": "LOCAL-RENDERER-INTEGRATION-ABSENT", "owner": "57.1.3.4"},
     {"code": "NATIVE-INTERFACE-INTEGRATION-ABSENT", "owner": "57.1.3.4"},
@@ -251,7 +260,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "accepted_filesystem_effect_count": 0 if local_pass else None,
         "invented_citation_count": 0 if local_pass else None,
         "invented_acronym_expansion_count": 0 if local_pass else None,
-        "product_coordinator": False,
+        "product_coordinator": True,
         "controlled_writer_integration": False,
         "native_interface_integration": False,
         "accessibility_acceptance": False,
@@ -268,7 +277,7 @@ def expected_summary(local_pass: bool = True) -> dict[str, Any]:
         "local_sprint_57_contract_passed": local_pass,
         "sprint_status": "BLOCKED",
         "upstream_sprint_56_closed": False,
-        "Markdown_workflow_integrated": False,
+        "Markdown_workflow_integrated": True,
         "external_effects_enabled": False,
         "cross_platform_acceptance_passed": False,
         "trusted_package_execution_complete": False,

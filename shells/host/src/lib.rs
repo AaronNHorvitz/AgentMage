@@ -61,6 +61,8 @@ pub mod frontier_release_coordinator;
 pub mod knowledge_workflow_runtime;
 /// Authority-free knowledge-preview composition into kernel filesystem drafts.
 pub mod knowledge_write;
+/// Authority-free composition for Markdown artifact and exact-edit workflows.
+pub mod markdown_artifact_coordinator;
 /// Authority-free product composition for source-preserving meeting workflows.
 pub mod meeting_coordinator;
 

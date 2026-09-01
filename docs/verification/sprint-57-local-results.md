@@ -22,6 +22,8 @@ acceptance corpus.
   instructions remain inert and create no network, execution, rendering, or file authority.
 - Reopen receipts compare exact bytes, supported semantic structure, and approved local rendered
   block signatures; any mismatch remains a named limitation.
+- The registered host coordinator admits all seven bounded skills and binds quality review,
+  citation-aware generation, an optional exact edit preview, and round-trip evidence together.
 
 ## Security Mapping
 
@@ -37,7 +39,8 @@ No product-wide requirement is marked complete by this local contribution.
 ## Truthful Disposition
 
 A green local report proves only the committed source and named commands on the recorded Linux
-environment. Sprint 56 remains blocked. No Markdown product coordinator, controlled writer and
-local renderer integration, native interface accessibility result, installed cross-platform
-acceptance, trusted package execution, independent content review, or manual fuzz campaign exists.
-Sprint 57 therefore remains **BLOCKED** despite the passing local contracts and artifacts.
+environment. Sprint 56 remains blocked. The local product coordinator is integrated, but controlled
+writer and local renderer integration, native interface accessibility results, installed
+cross-platform acceptance, trusted package execution, independent content review, and the manual
+fuzz campaign remain absent. Sprint 57 therefore remains **BLOCKED** despite the passing local
+contracts and artifacts.
