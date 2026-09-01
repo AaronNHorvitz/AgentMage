@@ -1,35 +1,38 @@
 {
   "schema_version": 1,
   "record_type": "sprint_52_local_evidence",
-  "source_revision": "53b5f9350dffb7f7fc93abbca874634b6773e7c0",
+  "source_revision": "26c1ee85e0f4c035921e2a8502868b35df9d21a8",
   "source_sha256": {
     "kernel/contracts/src/frontier_import.rs": "22a0fa7ed303e2030753c962108af9e5a8a8c809588724fa6893c2ad31079bfd",
     "kernel/contracts/src/frontier.rs": "323fe72b93799e56ccb768e7d65022f7e72cb0a90b89dc1782023a1a0adbb060",
-    "kernel/contracts/src/lib.rs": "e2a6db89af570ceb7a8df0ecc2a5fdc56943acfe3f6f0208c7b20c4a3c441e5e",
-    "kernel/engine/src/frontier_import.rs": "6926aa8fadbbf28ed3f3463252692e845f78572376988618270b56cd00a73348",
-    "kernel/engine/src/frontier_recommendation.rs": "6aa93fe83d7039ae19f075314765674527d7d439dedd2a973a3c1f5c8047e65c",
-    "kernel/engine/src/lib.rs": "8f6a7c3fd38292661e451cc169612e13c7986ee9bb9e9f29ab9176560a3002ce",
+    "kernel/contracts/src/lib.rs": "bbd5268f75d9f88d4056da62bbd8f33fe4e5f87ae50aefaba9432bd06f656da1",
+    "kernel/engine/src/frontier_import.rs": "a323ca43c0c590ebd317113cf3f39c03346e5063a27ba4bbabb79e9d91595173",
+    "kernel/engine/src/frontier_import_recovery.rs": "c69e57f7cc6b1545f02489440eff6594fd71a5249e739f82993522e9b4846204",
+    "kernel/engine/src/frontier_recommendation.rs": "412921486226969d6f5ad7a190f4ba5c000615a209a8016c47fbc150e8eca9e6",
+    "kernel/engine/src/lib.rs": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26",
+    "shells/host/src/frontier_import_coordinator.rs": "e897567a83864c5014c6a2a2e2813961c679e093184781783bda7b861c2d94fd",
+    "shells/host/src/lib.rs": "b3aec58981a0e59999b2025c0099a60e2cba768b45a115493e3f12f1a7716320",
     "schemas/runtime/frontier-return-manifest.schema.json": "48c08e7c3e4a4051e6c431379ae3ecc8a2e8593c13e0b7869b24e37e977eb03b",
     "schemas/runtime/examples/frontier-return-manifest.valid.json": "14c8b3693885a5e209f1b240ed8fbd2a35c5f03133ff129e5eeab7ae7ea1fcf9",
     "schemas/runtime/frontier-round-trip-receipt.schema.json": "2db8c23dab37599a2807edd1b8a40809b6816ab699a3e76466ce940e9075a937",
     "schemas/runtime/examples/frontier-round-trip-receipt.valid.json": "5a26fb7534af47c7dbff913d0661c47cb476a8cc18092fa162af79ac996810dc",
-    "scripts/validate_planning_schemas.mjs": "7b858fa7d087afad63a3d8dba3bd2636962a7ad9ee28dd953053b28f5bf44836",
-    "tests/test_planning_schemas.mjs": "c8c3b41c942a6d8c030b79c2c42451b82ba752ab0b7f74e9b476cba23bb17f17",
+    "scripts/validate_planning_schemas.mjs": "9eb1e5277bc2ffe6953e2d2ecc6504f832825285beefecfb35c27aac4997ac20",
+    "tests/test_planning_schemas.mjs": "7e91d19b6eed4e802db3f1577a514a9298c70d6becb1706ce9b2861d0565f42b",
     "docs/verification/sprint-52-frontier-import-corpus.json": "bf5fd5d77371f1389e2ff544686401869c7d93820b32337e6d736c6269389622",
-    "scripts/frontier_import_contract.py": "2128f5a227ec634c13e1767f6016d1b5c8119f135fd8cfc401d59095f25359b1",
+    "scripts/frontier_import_contract.py": "4453c270b1d3c6d04e5ce4467f45b715b2d3b6d567533b304fc71a46b81bd734",
     "tests/test_frontier_import_contract.py": "1e99d34da4f0f49287807f62cd35a30fb1b42c33c058a381a19d3955f6c82a7d",
-    "docs/architecture/untrusted-frontier-result-import.md": "de58173134c9e7fc450c5731d2dd940f99b9642dd6d43403d7e88c2fec9b156e",
-    "docs/guides/frontier-result-import-and-revalidation.md": "0252db8174fb77ae4449f731b753195e7f61069b868e125dba2a8de11d6658ce",
-    "docs/verification/sprint-52-local-results.md": "3dc3c1080d91e23747afd95198d1703db77c26ea80a931a95da4a0d185c7b5f2",
-    "README.md": "87451139a02088e2accdcfba292f47e7199785e63a7e8ee8df9219d34a6a226f",
-    "scripts/sprint_52_evidence.py": "56f1a188e60446a4b3162c7fa2507f934caf1e4e23e05b26815e456b51e487ce",
-    "tests/test_sprint_52_evidence.py": "e0aab1dc07dabb040596dbae625fcd09beab91c84194a7cfd3f6e77a9ec90681"
+    "docs/architecture/untrusted-frontier-result-import.md": "2c4ed09a972120b696c4ac19f8b51bafd4a6a60ac0ecf88fda9232d22cc34c15",
+    "docs/guides/frontier-result-import-and-revalidation.md": "fd26f1d52585e90be6b9af660b2664600c5aa8fe2613bffff35411ad510c0106",
+    "docs/verification/sprint-52-local-results.md": "e47b11b86dcb25cdbda5fcf1f4fcc728ff490a60a3e765378a63911baaf10b44",
+    "README.md": "67cec127caf09c59810ffffcc3398930fe45f52c3244479802db273a054249ed",
+    "scripts/sprint_52_evidence.py": "e66e21d4100fbf17fef90e274b805ba6bd3e61b9c3412783cf5ed629b3bc6258",
+    "tests/test_sprint_52_evidence.py": "e986b2fb91a9f0790440c116370a1adada451ad8723cafef487fd75a5109b666"
   },
   "environment": {
     "system": "Linux",
-    "release": "7.1.6-201.fc44.x86_64",
+    "release": "7.1.10-200.fc44.x86_64",
     "machine": "x86_64",
-    "python": "3.14.6",
+    "python": "3.14.7",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
     "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
     "node": "v24.15.0",
@@ -48,7 +51,22 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "19cd20edd3bbc5d7b1a4ad5f9fd0efef3d7de1df812459f6efa6ff4e5821793b",
+      "output_sha256": "92c05e7fc0961ecfd17de933afb48e2dc2034bffd7dae10369422063d1b7e5ae",
+      "blocking_skip_count": 0
+    },
+    {
+      "id": "frontier-import-host-coordinator",
+      "argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "frontier_import_coordinator",
+        "--lib",
+        "--locked"
+      ],
+      "exit_code": 0,
+      "output_sha256": "79657b5a9bec91bf13c19f398a9f42a8a0a67694d94206ce435e5385e6c65fb0",
       "blocking_skip_count": 0
     },
     {
@@ -63,7 +81,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "0564c4a504029d71ff71ee4fff6ecf895b8bf5db6f0cb997ebe312704c7a2e5b",
+      "output_sha256": "38e4f15b89c867f4efcf2cee652417aae3247a59eed24511c4af259bc5f53be4",
       "blocking_skip_count": 0
     },
     {
@@ -74,7 +92,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "92dc2b5170b0ae4b0592b93deb530fc0cc40f186cf85cb549f8036f37a8f6ad2",
+      "output_sha256": "1ee59f202f44f6b6171fe825afe5305911771aadbdb62f68fd6790845f3dd38b",
       "blocking_skip_count": 0
     },
     {
@@ -98,6 +116,8 @@
         "agentmage-kernel-contracts",
         "-p",
         "agentmage-kernel-engine",
+        "-p",
+        "agentmage-host",
         "--all-targets",
         "--locked",
         "--",
@@ -105,7 +125,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "a1571b69a57a72ef910bd24e727f4accbaf4a0ea17908f38b8e580e15028e212",
+      "output_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6",
       "blocking_skip_count": null
     },
     {
@@ -116,7 +136,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "b107ad7e8d71c74b8cf635711d6dbb7ce1595370fe20b51b567470b8efcecc27",
+      "output_sha256": "6405d245c63953f44c373a3628fcb1c79a71e7acbb34ccead0da93f1b10bec10",
       "blocking_skip_count": null
     },
     {
@@ -181,9 +201,9 @@
     "normal_local_flow_requirements": true,
     "deterministic_zero_effect_receipt": true,
     "outbound_network_capability": false,
-    "native_import_product_coordinator": false,
-    "normal_local_flow_integration": false,
-    "durable_interruption_recovery": false,
+    "native_import_product_coordinator": true,
+    "normal_local_flow_integration": true,
+    "durable_interruption_recovery": true,
     "native_cross_platform_acceptance": false,
     "trusted_package_execution": false,
     "independent_review": false,
@@ -196,9 +216,9 @@
     "accepted_import_effect_count": 0,
     "imported_authority_count": 0,
     "outbound_network_attempt_count": 0,
-    "native_import_product_coordinator": false,
-    "normal_local_flow_integration": false,
-    "durable_interruption_recovery": false,
+    "native_import_product_coordinator": true,
+    "normal_local_flow_integration": true,
+    "durable_interruption_recovery": true,
     "native_cross_platform_acceptance": false,
     "trusted_package_execution": false,
     "independent_review": false,
@@ -209,18 +229,6 @@
     {
       "code": "UPSTREAM-SPRINT-51-BLOCKED",
       "owner": "52.1"
-    },
-    {
-      "code": "NATIVE-IMPORT-PRODUCT-COORDINATOR-ABSENT",
-      "owner": "52.1.1.2"
-    },
-    {
-      "code": "NORMAL-LOCAL-FLOW-INTEGRATION-ABSENT",
-      "owner": "52.1.1.5"
-    },
-    {
-      "code": "DURABLE-INTERRUPTION-RECOVERY-ABSENT",
-      "owner": "52.1.3.4"
     },
     {
       "code": "NATIVE-CROSS-PLATFORM-ACCEPTANCE-ABSENT",
@@ -243,7 +251,7 @@
     "local_sprint_52_contract_passed": true,
     "sprint_status": "BLOCKED",
     "upstream_sprint_51_closed": false,
-    "native_import_workflow_integrated": false,
+    "native_import_workflow_integrated": true,
     "import_authority_enabled": false,
     "cross_platform_acceptance_passed": false,
     "trusted_package_execution_complete": false,
