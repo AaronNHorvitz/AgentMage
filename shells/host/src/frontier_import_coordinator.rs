@@ -1,11 +1,6 @@
 //! Durable, authority-free host coordination for imported frontier proposals.
 
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    fs::{self, File, OpenOptions},
-    io::Write,
-    path::{Path, PathBuf},
-};
+use std::collections::{BTreeMap, BTreeSet};
 
 use agentmage_kernel_contracts::{
     FrontierImportDisposition, FrontierLocalFlowRequirements, FrontierReturnManifest,
@@ -17,6 +12,10 @@ use agentmage_kernel_engine::{
         build_frontier_round_trip_receipt, parse_frontier_return_manifest,
         revalidate_frontier_import, verify_frontier_round_trip_receipt,
     },
+    frontier_import_recovery::{
+        DirectoryFrontierImportCheckpointStore, FrontierImportCheckpoint, FrontierImportPhase,
+        seal_frontier_import_checkpoint, verify_frontier_import_checkpoint,
+    },
     task_classification::{TaskIntent, classify_task},
     tooling::{PreGrantDispatchDisposition, ProposalOrigin, ToolDispatcher, ToolRegistry},
 };
@@ -24,8 +23,6 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
 const MAX_ROUTED_STEPS: usize = 64;
-const MAX_CHECKPOINT_BYTES: usize = 64 * 1024;
-const MAX_CHECKPOINT_GENERATIONS: usize = 4;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
 /// Stable failure from the frontier-import product transaction.
@@ -129,52 +126,6 @@ pub struct FrontierLocalFlowTicket {
     pub ticket_sha256: String,
 }
 
-/// Monotonic durable phase of one import transaction.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum FrontierImportPhase {
-    /// The exact manifest passed its closed parser.
-    Parsed,
-    /// Imported artifacts and citations were revalidated against current state.
-    Revalidated,
-    /// Every eligible step entered one normal local proposal flow.
-    Routed,
-    /// The no-effect round-trip receipt was sealed.
-    Completed,
-}
-
-/// Content-free, hash-chained durable checkpoint for one import transaction.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct FrontierImportCheckpoint {
-    /// Stable host transaction identity.
-    pub transaction_id: String,
-    /// Monotonic checkpoint generation, beginning at one.
-    pub generation: u32,
-    /// Last fully committed phase.
-    pub phase: FrontierImportPhase,
-    /// Exact request packet digest.
-    pub request_packet_sha256: String,
-    /// Exact return-manifest digest.
-    pub manifest_sha256: String,
-    /// Current-state digest once local revalidation completed.
-    pub current_state_sha256: Option<String>,
-    /// Local revalidation report digest once available.
-    pub report_sha256: Option<String>,
-    /// Deterministic digest of all local-flow tickets once routed.
-    pub tickets_sha256: Option<String>,
-    /// Terminal round-trip receipt digest once completed.
-    pub receipt_sha256: Option<String>,
-    /// Previous checkpoint digest, absent only for generation one.
-    pub previous_checkpoint_sha256: Option<String>,
-    /// Fixed false: checkpoints carry no execution authority.
-    pub execution_authority: bool,
-    /// Fixed zero: checkpoint publication applies no product effect.
-    pub applied_effect_count: u32,
-    /// Canonical digest with this field zeroed.
-    pub checkpoint_sha256: String,
-}
-
 /// Atomic persistence boundary implemented by the product's durable local store.
 pub trait FrontierImportCheckpointPort {
     /// Loads the latest fully committed checkpoint for one transaction.
@@ -190,176 +141,21 @@ pub trait FrontierImportCheckpointPort {
     ) -> Result<(), FrontierImportCoordinatorError>;
 }
 
-/// Append-only atomic checkpoint store beneath one caller-owned local directory.
-///
-/// Every generation is a separate content-addressed file. Reopen verifies the complete chain and
-/// refuses symlinks, gaps, forks, malformed names, tampering, or a phase/generation mismatch.
-#[derive(Clone, Debug)]
-pub struct DirectoryFrontierImportCheckpointStore {
-    root: PathBuf,
-}
-
-impl DirectoryFrontierImportCheckpointStore {
-    /// Opens or creates one exact checkpoint directory without following a pre-existing symlink.
-    pub fn open(root: impl AsRef<Path>) -> Result<Self, FrontierImportCoordinatorError> {
-        let root = root.as_ref();
-        match fs::symlink_metadata(root) {
-            Ok(metadata) if metadata.file_type().is_symlink() || !metadata.is_dir() => {
-                return Err(FrontierImportCoordinatorError::CheckpointFailure);
-            }
-            Ok(_) => {}
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                fs::create_dir(root)
-                    .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?;
-            }
-            Err(_) => return Err(FrontierImportCoordinatorError::CheckpointFailure),
-        }
-        Ok(Self {
-            root: root.to_path_buf(),
-        })
-    }
-
-    fn checkpoints(
-        &self,
-        transaction_id: &str,
-    ) -> Result<Vec<FrontierImportCheckpoint>, FrontierImportCoordinatorError> {
-        if !valid_identifier(transaction_id) {
-            return Err(FrontierImportCoordinatorError::CheckpointFailure);
-        }
-        let prefix = format!("{}.", raw_sha256(transaction_id.as_bytes()));
-        let mut checkpoints = Vec::new();
-        for entry in fs::read_dir(&self.root)
-            .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?
-        {
-            let entry = entry.map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?;
-            let name = entry
-                .file_name()
-                .into_string()
-                .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?;
-            if !name.starts_with(&prefix) {
-                continue;
-            }
-            if entry
-                .file_type()
-                .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?
-                .is_symlink()
-                || !entry
-                    .file_type()
-                    .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?
-                    .is_file()
-                || !name.ends_with(".json")
-            {
-                return Err(FrontierImportCoordinatorError::CheckpointFailure);
-            }
-            if checkpoints.len() >= MAX_CHECKPOINT_GENERATIONS {
-                return Err(FrontierImportCoordinatorError::CheckpointFailure);
-            }
-            let bytes = fs::read(entry.path())
-                .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?;
-            if bytes.is_empty() || bytes.len() > MAX_CHECKPOINT_BYTES {
-                return Err(FrontierImportCoordinatorError::CheckpointFailure);
-            }
-            let checkpoint: FrontierImportCheckpoint = serde_json::from_slice(&bytes)
-                .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?;
-            verify_checkpoint(&checkpoint)?;
-            if checkpoint.transaction_id != transaction_id
-                || name != checkpoint_filename(&checkpoint)
-            {
-                return Err(FrontierImportCoordinatorError::CheckpointFailure);
-            }
-            checkpoints.push(checkpoint);
-        }
-        checkpoints.sort_by_key(|checkpoint| checkpoint.generation);
-        for (index, checkpoint) in checkpoints.iter().enumerate() {
-            let expected_generation = u32::try_from(index + 1)
-                .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?;
-            let expected_phase = match expected_generation {
-                1 => FrontierImportPhase::Parsed,
-                2 => FrontierImportPhase::Revalidated,
-                3 => FrontierImportPhase::Routed,
-                4 => FrontierImportPhase::Completed,
-                _ => return Err(FrontierImportCoordinatorError::CheckpointFailure),
-            };
-            let expected_previous = index
-                .checked_sub(1)
-                .map(|previous| checkpoints[previous].checkpoint_sha256.as_str());
-            if checkpoint.generation != expected_generation
-                || checkpoint.phase != expected_phase
-                || checkpoint.previous_checkpoint_sha256.as_deref() != expected_previous
-            {
-                return Err(FrontierImportCoordinatorError::CheckpointFailure);
-            }
-        }
-        Ok(checkpoints)
-    }
-}
-
 impl FrontierImportCheckpointPort for DirectoryFrontierImportCheckpointStore {
     fn load_latest(
         &mut self,
         transaction_id: &str,
     ) -> Result<Option<FrontierImportCheckpoint>, FrontierImportCoordinatorError> {
-        Ok(self.checkpoints(transaction_id)?.pop())
+        DirectoryFrontierImportCheckpointStore::load_latest(self, transaction_id)
+            .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)
     }
 
     fn commit(
         &mut self,
         checkpoint: &FrontierImportCheckpoint,
     ) -> Result<(), FrontierImportCoordinatorError> {
-        verify_checkpoint(checkpoint)?;
-        let current = self.load_latest(&checkpoint.transaction_id)?;
-        let expected_generation = current
-            .as_ref()
-            .map_or(1, |value| value.generation.saturating_add(1));
-        let expected_previous = current
-            .as_ref()
-            .map(|value| value.checkpoint_sha256.as_str());
-        if checkpoint.generation != expected_generation
-            || checkpoint.previous_checkpoint_sha256.as_deref() != expected_previous
-            || checkpoint.generation as usize > MAX_CHECKPOINT_GENERATIONS
-        {
-            return Err(FrontierImportCoordinatorError::CheckpointFailure);
-        }
-        let bytes = serde_json::to_vec(checkpoint)
-            .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?;
-        if bytes.len() > MAX_CHECKPOINT_BYTES {
-            return Err(FrontierImportCoordinatorError::CheckpointFailure);
-        }
-        let final_path = self.root.join(checkpoint_filename(checkpoint));
-        let pending_path = self.root.join(format!(
-            ".{}.{}.pending",
-            raw_sha256(checkpoint.transaction_id.as_bytes()),
-            checkpoint.checkpoint_sha256
-        ));
-        let result = (|| {
-            match OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(&pending_path)
-            {
-                Ok(mut pending) => {
-                    pending.write_all(&bytes)?;
-                    pending.sync_all()?;
-                }
-                Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-                    if fs::read(&pending_path)? != bytes {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidData,
-                            "frontier checkpoint pending file mismatch",
-                        ));
-                    }
-                }
-                Err(error) => return Err(error),
-            }
-            fs::rename(&pending_path, &final_path)?;
-            File::open(&self.root)?.sync_all()?;
-            Ok::<(), std::io::Error>(())
-        })();
-        if result.is_err() {
-            let _ = fs::remove_file(&pending_path);
-            return Err(FrontierImportCoordinatorError::CheckpointFailure);
-        }
-        Ok(())
+        DirectoryFrontierImportCheckpointStore::commit(self, checkpoint)
+            .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)
     }
 }
 
@@ -667,7 +463,7 @@ fn advance_checkpoint(
     let previous_checkpoint_sha256 = latest
         .as_ref()
         .map(|checkpoint| checkpoint.checkpoint_sha256.clone());
-    let mut checkpoint = FrontierImportCheckpoint {
+    let checkpoint = seal_frontier_import_checkpoint(FrontierImportCheckpoint {
         transaction_id: transaction_id.to_owned(),
         generation,
         phase,
@@ -681,9 +477,8 @@ fn advance_checkpoint(
         execution_authority: false,
         applied_effect_count: 0,
         checkpoint_sha256: ZERO_SHA256.to_owned(),
-    };
-    checkpoint.checkpoint_sha256 = checkpoint_digest(&checkpoint)?;
-    verify_checkpoint(&checkpoint)?;
+    })
+    .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)?;
     port.commit(&checkpoint)?;
     *latest = Some(checkpoint);
     Ok(())
@@ -727,51 +522,8 @@ fn require_resume_binding(
 fn verify_checkpoint(
     checkpoint: &FrontierImportCheckpoint,
 ) -> Result<(), FrontierImportCoordinatorError> {
-    let phase_fields_valid = match checkpoint.phase {
-        FrontierImportPhase::Parsed => {
-            checkpoint.current_state_sha256.is_none()
-                && checkpoint.report_sha256.is_none()
-                && checkpoint.tickets_sha256.is_none()
-                && checkpoint.receipt_sha256.is_none()
-        }
-        FrontierImportPhase::Revalidated => {
-            checkpoint.current_state_sha256.is_some()
-                && checkpoint.report_sha256.is_some()
-                && checkpoint.tickets_sha256.is_none()
-                && checkpoint.receipt_sha256.is_none()
-        }
-        FrontierImportPhase::Routed => {
-            checkpoint.current_state_sha256.is_some()
-                && checkpoint.report_sha256.is_some()
-                && checkpoint.tickets_sha256.is_some()
-                && checkpoint.receipt_sha256.is_none()
-        }
-        FrontierImportPhase::Completed => {
-            checkpoint.current_state_sha256.is_some()
-                && checkpoint.report_sha256.is_some()
-                && checkpoint.tickets_sha256.is_some()
-                && checkpoint.receipt_sha256.is_some()
-        }
-    };
-    if !valid_identifier(&checkpoint.transaction_id)
-        || checkpoint.generation == 0
-        || !valid_sha256(&checkpoint.request_packet_sha256)
-        || !valid_sha256(&checkpoint.manifest_sha256)
-        || checkpoint
-            .previous_checkpoint_sha256
-            .as_deref()
-            .is_some_and(|value| !valid_sha256(value))
-        || checkpoint.generation == 1 && checkpoint.previous_checkpoint_sha256.is_some()
-        || checkpoint.generation > 1 && checkpoint.previous_checkpoint_sha256.is_none()
-        || !phase_fields_valid
-        || checkpoint.execution_authority
-        || checkpoint.applied_effect_count != 0
-        || !valid_sha256(&checkpoint.checkpoint_sha256)
-        || checkpoint.checkpoint_sha256 != checkpoint_digest(checkpoint)?
-    {
-        return Err(FrontierImportCoordinatorError::CheckpointFailure);
-    }
-    Ok(())
+    verify_frontier_import_checkpoint(checkpoint)
+        .map_err(|_| FrontierImportCoordinatorError::CheckpointFailure)
 }
 
 fn ticket_digest(
@@ -782,36 +534,15 @@ fn ticket_digest(
     digest(&("agentmage-frontier-local-flow-ticket-v1", unsigned))
 }
 
-fn checkpoint_digest(
-    checkpoint: &FrontierImportCheckpoint,
-) -> Result<String, FrontierImportCoordinatorError> {
-    let mut unsigned = checkpoint.clone();
-    unsigned.checkpoint_sha256 = ZERO_SHA256.to_owned();
-    digest(&("agentmage-frontier-import-checkpoint-v1", unsigned))
-}
-
-fn checkpoint_filename(checkpoint: &FrontierImportCheckpoint) -> String {
-    format!(
-        "{}.{:08}.{}.json",
-        raw_sha256(checkpoint.transaction_id.as_bytes()),
-        checkpoint.generation,
-        checkpoint.checkpoint_sha256
-    )
-}
-
 fn digest<T: Serialize>(value: &T) -> Result<String, FrontierImportCoordinatorError> {
     let bytes =
         serde_json::to_vec(value).map_err(|_| FrontierImportCoordinatorError::InvalidInput)?;
-    Ok(raw_sha256(&bytes))
-}
-
-fn raw_sha256(bytes: &[u8]) -> String {
     let mut output = String::with_capacity(64);
-    for byte in Sha256::digest(bytes) {
+    for byte in Sha256::digest(&bytes) {
         use std::fmt::Write as _;
         write!(&mut output, "{byte:02x}").expect("writing to a string cannot fail");
     }
-    output
+    Ok(output)
 }
 
 fn valid_identifier(value: &str) -> bool {
@@ -844,7 +575,10 @@ mod tests {
         frontier_import::seal_frontier_return_manifest,
         tooling::{Tool, ToolRegistry},
     };
-    use std::time::{SystemTime, UNIX_EPOCH};
+    use std::{
+        fs,
+        time::{SystemTime, UNIX_EPOCH},
+    };
 
     use super::*;
 
@@ -1305,13 +1039,22 @@ mod tests {
             outcome.checkpoint
         );
 
-        let terminal = root.join(checkpoint_filename(&outcome.checkpoint));
+        let terminal = fs::read_dir(&root)
+            .expect("read checkpoint directory")
+            .map(|entry| entry.expect("checkpoint entry").path())
+            .find(|path| {
+                path.file_name().is_some_and(|name| {
+                    name.to_string_lossy()
+                        .contains(&outcome.checkpoint.checkpoint_sha256)
+                })
+            })
+            .expect("terminal checkpoint file");
         let mut bytes = fs::read(&terminal).expect("read terminal checkpoint");
         let index = bytes.len() / 2;
         bytes[index] ^= 1;
         fs::write(&terminal, bytes).expect("tamper test checkpoint");
         assert_eq!(
-            reopened.load_latest("frontier-transaction-0001"),
+            FrontierImportCheckpointPort::load_latest(&mut reopened, "frontier-transaction-0001",),
             Err(FrontierImportCoordinatorError::CheckpointFailure)
         );
         fs::remove_dir_all(&root).expect("remove exact test directory");

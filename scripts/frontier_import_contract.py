@@ -13,6 +13,7 @@ CORPUS_PATH: Final = ROOT / "docs/verification/sprint-52-frontier-import-corpus.
 ENGINE_PATH: Final = ROOT / "kernel/engine/src/frontier_import.rs"
 CONTRACT_PATH: Final = ROOT / "kernel/contracts/src/frontier_import.rs"
 HOST_PATH: Final = ROOT / "shells/host/src/frontier_import_coordinator.rs"
+RECOVERY_PATH: Final = ROOT / "kernel/engine/src/frontier_import_recovery.rs"
 REQUIRED_MANIFEST_FAILURES: Final = {
     "missing-required-field",
     "unknown-field",
@@ -154,6 +155,7 @@ def validate(value: Any) -> list[str]:
     engine = ENGINE_PATH.read_text(encoding="utf-8")
     contract = CONTRACT_PATH.read_text(encoding="utf-8")
     host = HOST_PATH.read_text(encoding="utf-8")
+    recovery = RECOVERY_PATH.read_text(encoding="utf-8")
     required_source = {
         "external_content_untrusted": contract,
         "authority_granted": contract,
@@ -172,8 +174,9 @@ def validate(value: Any) -> list[str]:
         "trusted_validation_pending": host,
         "evidence_assignment_pending": host,
         "user_approval_pending": host,
-        "DirectoryFrontierImportCheckpointStore": host,
         "applied_effect_count: 0": host,
+        "DirectoryFrontierImportCheckpointStore": recovery,
+        "verify_frontier_import_checkpoint": recovery,
     }
     for marker, source in required_source.items():
         if marker not in source:

@@ -26,6 +26,7 @@ SOURCE_PATHS: Final = (
     "kernel/contracts/src/frontier.rs",
     "kernel/contracts/src/lib.rs",
     "kernel/engine/src/frontier_import.rs",
+    "kernel/engine/src/frontier_import_recovery.rs",
     "kernel/engine/src/frontier_recommendation.rs",
     "kernel/engine/src/lib.rs",
     "shells/host/src/frontier_import_coordinator.rs",
