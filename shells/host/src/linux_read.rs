@@ -2032,9 +2032,8 @@ mod tests {
         ContextPacketId, ContextSensitivity, ContextSummaryId, EvidenceId, HandoffDestinationClass,
         HandoffDisclosureEntry, HandoffDraft, HandoffEntryDisposition, HandoffEntryKind,
         HandoffProhibitedAction, HandoffSensitivity, LocalHandoffOutcome, ModelProfileId, PlanId,
-        PlanStepId, PolicyId, RepositorySnapshotId, RuntimeApprovalResponse, RuntimeEventCursor,
-        RuntimeRunId, RuntimeRunRequest, SessionCheckpoint, SessionCheckpointId, SessionId, Task,
-        TaskId, TaskStatus, WorkspaceId,
+        PlanStepId, PolicyId, RepositorySnapshotId, SessionCheckpoint, SessionCheckpointId,
+        SessionId, Task, TaskId, TaskStatus, WorkspaceId,
     };
     use agentmage_kernel_engine::context_management::{
         ContextCompositionBudget, compose_context, finalize_checkpoint,
@@ -2057,8 +2056,13 @@ mod tests {
         LinuxReadError, LinuxReadWorkflow, ReadClock, ReadIdentitySource, ReadInstant, digest,
         format_utc, preview_suffix, read_only_registry,
     };
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     use crate::runtime_transport::{
         RuntimePrepareInput, RuntimeTransportError, RuntimeTransportPort, RuntimeTransportStep,
+    };
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    use agentmage_kernel_contracts::{
+        RuntimeApprovalResponse, RuntimeEventCursor, RuntimeRunId, RuntimeRunRequest,
     };
 
     static TEMP_ID: AtomicU64 = AtomicU64::new(1);
@@ -2085,11 +2089,13 @@ mod tests {
 
     struct TestClock(VecDeque<ReadInstant>);
 
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     struct RecordingRuntimeTransport {
         request: RuntimeRunRequest,
         step: RuntimeTransportStep,
     }
 
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     impl RuntimeTransportPort for RecordingRuntimeTransport {
         fn prepare(
             &mut self,
@@ -2702,6 +2708,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn shared_runtime_is_unavailable_until_explicitly_composed_and_then_host_framed() {
         let state = temp_root("native-chat-runtime");
         fs::set_permissions(&state, fs::Permissions::from_mode(0o700)).expect("private state");

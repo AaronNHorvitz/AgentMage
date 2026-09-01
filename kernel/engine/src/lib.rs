@@ -164,8 +164,10 @@ pub mod session_environment;
 /// Atomic source refresh, invalidation, retention, hold, deletion, and collection.
 pub mod source_lifecycle;
 /// Production text/log source admission, extraction, retrieval, and context accounting.
+#[cfg(feature = "source-preparation")]
 pub mod source_preparation;
 /// Prepared-source delivery through the reusable model-context port.
+#[cfg(feature = "source-preparation")]
 pub mod source_runtime_context;
 /// Strict-local endpoint policy, storage admission, and content-free attempt ledger.
 pub mod strict_local;
@@ -187,6 +189,7 @@ pub mod verified_artifact;
 /// Deterministic context admission and model-delivery coverage receipts.
 pub mod verified_context;
 /// Dependency-ready orchestration over exact reusable-runtime step attempts.
+#[cfg(feature = "verified-workflow-supervisor")]
 pub mod verified_workflow_supervisor;
 /// Bounded work-packet validation, revision history, and plan adaptation.
 pub mod work_packet;

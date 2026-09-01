@@ -60,6 +60,7 @@ pub mod protocol;
 /// Native capability registration for the shared runtime tool dispatcher.
 pub mod runtime_tools;
 /// Production prepared-source adapter for the common artifact dispatcher.
+#[cfg(feature = "source-artifacts")]
 pub mod source_artifact_runtime;
 #[cfg(feature = "workflow-caller")]
 /// Narrow child-assignment adapter over the shared workflow caller runtime.
@@ -69,6 +70,7 @@ pub mod workflow_assignment;
 pub mod workflow_caller;
 
 /// Host composition from the verified workflow supervisor into the existing coding coordinator.
+#[cfg(feature = "workflow-supervisor")]
 pub mod workflow_supervisor;
 
 /// Versioned thin-client contracts shared by terminal and headless interfaces.
@@ -107,8 +109,10 @@ pub const COMPONENT_ID: &str = "shell-host";
     test,
     feature = "interactive-cli",
     feature = "native-chat",
-    feature = "workflow-caller"
+    feature = "workflow-caller",
+    feature = "source-artifacts",
+    feature = "workflow-supervisor"
 ))]
 mod runtime_parity_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "source-artifacts", feature = "workflow-supervisor"))]
 mod runtime_read_tests;

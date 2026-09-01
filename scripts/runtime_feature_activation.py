@@ -57,6 +57,10 @@ def validate_manifest(value: Any) -> list[str]:
 def validate_sources() -> list[str]:
     rust = (ROOT / "shells/host/src/feature_activation.rs").read_text(encoding="utf-8")
     tools = (ROOT / "shells/host/src/runtime_tools.rs").read_text(encoding="utf-8")
+    host_manifest = (ROOT / "shells/host/Cargo.toml").read_text(encoding="utf-8")
+    host_root = (ROOT / "shells/host/src/lib.rs").read_text(encoding="utf-8")
+    engine_manifest = (ROOT / "kernel/engine/Cargo.toml").read_text(encoding="utf-8")
+    engine_root = (ROOT / "kernel/engine/src/lib.rs").read_text(encoding="utf-8")
     extension = (ROOT / "shells/vscode/src/extension.ts").read_text(encoding="utf-8")
     package = json.loads((ROOT / "shells/vscode/package.json").read_text(encoding="utf-8"))
     failures: list[str] = []
@@ -66,6 +70,27 @@ def validate_sources() -> list[str]:
     for marker in ("features.artifact_ingress", "features.retrieval", "ArtifactToolKind::Search"):
         if marker not in tools:
             failures.append(f"native registry lacks feature guard: {marker}")
+    for marker in (
+        'source-artifacts = ["agentmage-kernel-engine/source-preparation"]',
+        'workflow-supervisor = ["agentmage-kernel-engine/verified-workflow-supervisor"]',
+    ):
+        if marker not in host_manifest:
+            failures.append(f"host compile-time feature boundary is absent: {marker}")
+    for marker in (
+        '#[cfg(feature = "source-artifacts")]',
+        '#[cfg(feature = "workflow-supervisor")]',
+    ):
+        if marker not in host_root:
+            failures.append(f"host module feature gate is absent: {marker}")
+    for marker in ('source-preparation = []', 'verified-workflow-supervisor = []'):
+        if marker not in engine_manifest:
+            failures.append(f"engine compile-time feature boundary is absent: {marker}")
+    for marker in (
+        '#[cfg(feature = "source-preparation")]',
+        '#[cfg(feature = "verified-workflow-supervisor")]',
+    ):
+        if marker not in engine_root:
+            failures.append(f"engine module feature gate is absent: {marker}")
     for marker in ("if (features.nativeParticipant)", "if (features.nativeProviderCompatibility)"):
         if marker not in extension:
             failures.append(f"VS Code registration lacks guard: {marker}")

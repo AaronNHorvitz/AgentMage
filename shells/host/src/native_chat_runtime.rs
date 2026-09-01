@@ -392,30 +392,33 @@ const fn map_client_error(error: CodingClientError) -> NativeChatRuntimeError {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "source-artifacts", feature = "workflow-supervisor"))]
 mod tests {
     use agentmage_kernel_contracts::{
         AgentStateKind, ApprovalId, CancellationSignal, ContextSensitivity, CorrelationId, GrantId,
         GrantOperation, ModelCancellationProbe, ModelRunId, RuntimeApprovalDisposition,
-        RuntimeApprovalResponse, RuntimeArtifactId, RuntimeArtifactRef, RuntimeEvent,
-        RuntimeEventCursor, RuntimeEventId, RuntimeEventKind, RuntimeEventRetention,
-        RuntimeEventRetentionKind, RuntimeOperationId, RuntimeOutcome,
-        RuntimePermissionDisposition, RuntimeRunRequest, RuntimeSessionMode, RuntimeTurnId,
-        ToolCallId,
+        RuntimeApprovalResponse, RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor,
+        RuntimeEventId, RuntimeEventKind, RuntimeEventRetention, RuntimeEventRetentionKind,
+        RuntimeOperationId, RuntimeOutcome, RuntimePermissionDisposition, RuntimeRunRequest,
+        RuntimeTurnId, ToolCallId,
     };
     use agentmage_kernel_engine::{
-        runtime_coordinator::{
-            seal_runtime_approval_challenge, seal_runtime_outcome, seal_runtime_run_request,
-        },
+        runtime_coordinator::{seal_runtime_approval_challenge, seal_runtime_outcome},
         runtime_event::{runtime_event_persistence, seal_runtime_event},
         runtime_loop::RuntimeCoordinatorStep,
     };
 
     use super::{
-        CodingClientError, CodingCoordinatorPort, CoordinatorNativeChatSession,
-        NativeChatPrepareInput, NativeChatRuntimeError, NativeChatRuntimeFactory,
-        NativeChatRuntimePort, NativeChatRuntimeService,
+        CodingClientError, CodingCoordinatorPort, NativeChatPrepareInput, NativeChatRuntimeError,
+        NativeChatRuntimeFactory,
     };
+
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    use super::{CoordinatorNativeChatSession, NativeChatRuntimePort, NativeChatRuntimeService};
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    use agentmage_kernel_contracts::{RuntimeArtifactId, RuntimeSessionMode};
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    use agentmage_kernel_engine::runtime_coordinator::seal_runtime_run_request;
 
     const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -482,6 +485,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn completed_shared_runtime_is_prepared_started_and_replayed_by_exact_cursor() {
         let (request, events, outcome, observed_result) =
             crate::runtime_read_tests::completed_native_read_fixture();
@@ -566,6 +570,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn controlled_write_mode_is_admitted_only_from_the_exact_trusted_factory_request() {
         let (_, events, outcome, _) = crate::runtime_read_tests::completed_native_read_fixture();
         let (_, controlled_request) = crate::coding_run::tests::fixture_profile_and_request();
@@ -623,6 +628,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn protected_approval_and_cancellation_preserve_exact_runtime_identity() {
         let (request, _, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
 

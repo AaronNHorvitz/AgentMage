@@ -26,7 +26,7 @@ agentmage-capability-knowledge = { path = "capabilities/knowledge" }
 agentmage-capability-repository-map = { path = "capabilities/repository-map" }
 agentmage-capability-read-only = { path = "capabilities/read-only" }
 agentmage-kernel-contracts = { path = "kernel/contracts" }
-agentmage-kernel-engine = { path = "kernel/engine" }
+agentmage-kernel-engine = { path = "kernel/engine", default-features = false }
 agentmage-platform-linux-inference = { path = "platforms/linux-inference" }
 agentmage-platform-linux = { path = "platforms/linux" }
 agentmage-platform-windows = { path = "platforms/windows" }

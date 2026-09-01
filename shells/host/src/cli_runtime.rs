@@ -509,13 +509,13 @@ fn valid_media_type(value: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'/' | b'+' | b'-' | b'.'))
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "source-artifacts", feature = "workflow-supervisor"))]
 mod tests {
     use agentmage_kernel_contracts::{
         AgentStateKind, ApprovalId, ContextSensitivity, CorrelationId, GrantId, GrantOperation,
-        ModelRunId, RuntimeApprovalDisposition, RuntimeArtifactId, RuntimeEventId,
-        RuntimeEventRetention, RuntimeEventRetentionKind, RuntimeOperationId,
-        RuntimePermissionDisposition, RuntimeTurnId, ToolCallId,
+        ModelRunId, RuntimeApprovalDisposition, RuntimeEventId, RuntimeEventRetention,
+        RuntimeEventRetentionKind, RuntimeOperationId, RuntimePermissionDisposition, RuntimeTurnId,
+        ToolCallId,
     };
     use agentmage_kernel_engine::{
         runtime_coordinator::{seal_runtime_approval_challenge, seal_runtime_outcome},
@@ -523,6 +523,9 @@ mod tests {
     };
 
     use super::*;
+
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
+    use agentmage_kernel_contracts::RuntimeArtifactId;
 
     struct ScriptedPort {
         input: NativeChatPrepareInput,
@@ -664,6 +667,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn completed_shared_runtime_uses_exact_request_stream_outcome_and_release() {
         let (request, events, outcome, _) =
             crate::runtime_read_tests::completed_native_read_fixture();
@@ -694,6 +698,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn protected_denial_and_cancellation_return_through_exact_runtime_cursor() {
         let (request, _, _, _) = crate::runtime_read_tests::completed_native_read_fixture();
         let fixture = approval_fixture(&request);
@@ -740,6 +745,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn request_event_artifact_and_outcome_substitution_fail_before_success() {
         let (request, events, outcome, _) =
             crate::runtime_read_tests::completed_native_read_fixture();
@@ -800,6 +806,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn story_50_2_confusion_and_interface_bypasses_never_present_or_complete() {
         let (request, events, outcome, _) =
             crate::runtime_read_tests::completed_native_read_fixture();
@@ -849,6 +856,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(feature = "source-artifacts", feature = "workflow-supervisor"))]
     fn terminal_presentation_failure_releases_without_claiming_completion() {
         let (request, events, outcome, _) =
             crate::runtime_read_tests::completed_native_read_fixture();

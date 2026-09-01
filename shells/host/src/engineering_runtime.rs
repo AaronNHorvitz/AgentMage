@@ -1660,15 +1660,19 @@ mod tests {
 
     fn store() -> (std::path::PathBuf, SqlCipherEngineeringStore) {
         let sequence = NEXT_STORE_ID.fetch_add(1, Ordering::Relaxed);
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("test clock is after the Unix epoch")
+            .as_nanos();
         let directory = std::env::temp_dir().join(format!(
-            "agentmage-verified-turn-{}-{sequence}",
+            "agentmage-verified-turn-{}-{sequence}-{nonce}",
             std::process::id(),
         ));
         fs::create_dir(&directory).unwrap();
         let observation = StrictLocalStorageObservation {
             filesystem: StorageFilesystemClass::Local,
             synchronization_marker: None::<CloudSynchronizationMarker>,
-            root_identity_sha256: [29; 32],
+            root_identity_sha256: [29_u8.wrapping_add(sequence as u8); 32],
             symlink_free: true,
         };
         let authority =

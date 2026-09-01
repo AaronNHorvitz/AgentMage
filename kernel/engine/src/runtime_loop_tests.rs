@@ -41,6 +41,7 @@ use crate::evidence_reconciliation::{
     CitationFileIdentity, CitationSelector, SourceCitation, resolve_citation,
 };
 use crate::model_codec::{proposal_digest, tests_support::profile};
+#[cfg(feature = "source-preparation")]
 use crate::model_orchestration_profile::{
     AllocatedContextPartition, ContextPartitionDisposition, ExactTokenCounterBinding,
     ModelContextWindowPlan,
@@ -61,31 +62,18 @@ use crate::runtime_hardening::{
     RuntimeHardeningLimits, RuntimeResourceLedger,
 };
 use crate::runtime_journal::{RuntimeJournalError, RuntimeJournalWorker};
+#[cfg(feature = "source-preparation")]
 use crate::source_preparation::{
     ExactSourceTokenCounter, PreparedSourceRetention, SourceAdmissionRequest, SourceEncoding,
     SourceMediaFamily, SourcePreparationError, SourcePreparationLimits, SourcePreparationService,
 };
+#[cfg(feature = "source-preparation")]
 use crate::source_runtime_context::PreparedSourceRuntimeContext;
 use crate::tooling::{Tool, ToolRegistry};
 
 const SHA: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const SNAPSHOT: &str = "snapshot-0001";
 static PRESSURE_TEMP_ID: AtomicU64 = AtomicU64::new(1);
-
-struct PreparedFixtureCounter {
-    binding: ExactTokenCounterBinding,
-}
-
-impl ExactSourceTokenCounter for PreparedFixtureCounter {
-    fn binding(&self) -> ExactTokenCounterBinding {
-        self.binding.clone()
-    }
-
-    fn count_tokens(&mut self, content: &str) -> Result<u32, SourcePreparationError> {
-        u32::try_from(content.split_whitespace().count())
-            .map_err(|_| SourcePreparationError::ResourceLimit)
-    }
-}
 
 #[test]
 fn story_48_2_runtime_action_ids_are_precomputable_stable_and_sequence_bound() {
@@ -1183,76 +1171,6 @@ fn request(profile: ExactModelProfile, registry: &ToolRegistry) -> RuntimeRunReq
     seal_runtime_run_request(request).expect("request seals")
 }
 
-fn prepared_fixture_context(
-    profile: &ExactModelProfile,
-) -> PreparedSourceRuntimeContext<PreparedFixtureCounter> {
-    let binding = ExactTokenCounterBinding {
-        token_counter_id: profile.context.token_counter.clone(),
-        token_counter_sha256: profile.context.token_counter_sha256.clone(),
-        tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
-    };
-    let mut sources = SourcePreparationService::new();
-    let manifest = sources
-        .admit(
-            SourceAdmissionRequest {
-                source_id: "durable-prepared-source".to_owned(),
-                request_id: "durable-prepared-request".to_owned(),
-                source_kind: "repository_snapshot".to_owned(),
-                protected_origin_sha256: sha256(b"protected durable source"),
-                media_type: "text/plain".to_owned(),
-                media_family: SourceMediaFamily::PlainText,
-                encoding: SourceEncoding::Utf8,
-                sensitivity: agentmage_kernel_contracts::ContextSensitivity::Internal,
-                retention: PreparedSourceRetention::Ephemeral,
-                collected_at_epoch_ms: 1_788_134_400_000,
-                limits: SourcePreparationLimits::default(),
-                bytes: b"durable prepared source fixture\n".to_vec(),
-            },
-            &mut PreparedFixtureCounter {
-                binding: binding.clone(),
-            },
-            &mut || false,
-        )
-        .expect("durable prepared source admits");
-    let source_tokens = profile.context.max_context_tokens.saturating_sub(5);
-    let included = |tokens: u32| AllocatedContextPartition {
-        requested_tokens: tokens,
-        minimum_tokens: u32::from(tokens > 0),
-        allocated_tokens: tokens,
-        disposition: ContextPartitionDisposition::Included,
-        reason_code: None,
-    };
-    let mut plan = ModelContextWindowPlan {
-        schema_version: CONTRACT_SCHEMA_VERSION,
-        model_profile_id: profile.profile_id.as_str().to_owned(),
-        model_manifest_sha256: profile.manifest_sha256.clone(),
-        model_runtime_sha256: sha256(
-            &serde_json::to_vec(&profile.runtime).expect("runtime identity serializes"),
-        ),
-        tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
-        token_counter_sha256: binding.token_counter_sha256.clone(),
-        total_window_tokens: profile.context.max_context_tokens,
-        system_and_tool_tokens: 1,
-        user_input_tokens: 1,
-        source_artifacts: included(source_tokens),
-        retrieved_context: included(0),
-        workflow_recovery_reserve_tokens: 1,
-        output_reserve_tokens: 1,
-        safety_margin_tokens: 1,
-        unallocated_tokens: 0,
-        plan_sha256: "0".repeat(64),
-    };
-    plan.plan_sha256 = sha256(&serde_json::to_vec(&plan).expect("window plan serializes"));
-    PreparedSourceRuntimeContext::new(
-        Arc::new(sources),
-        plan,
-        PreparedFixtureCounter { binding },
-        [manifest.source_id],
-        false,
-    )
-    .expect("durable prepared context composes")
-}
-
 fn packet() -> WorkPacket {
     WorkPacket {
         schema_version: CONTRACT_SCHEMA_VERSION,
@@ -2268,6 +2186,7 @@ fn tool_output_kind_must_match_payload_and_cannot_claim_model_output() {
 }
 
 #[test]
+#[cfg(feature = "source-preparation")]
 fn story_22_5_durable_prepared_source_checkpoint_resumes_without_replaying_effect() {
     let profile = profile("runtime-loop-resume");
     let registry = registry_for_operation(GrantOperation::WorkspaceRead);
@@ -3397,4 +3316,91 @@ fn story_50_2_durable_restore_rejects_usage_drift() {
         RuntimeResourceLedger::restore(&request, &retry_drift),
         Err(RuntimeHardeningError::InvalidLimits)
     );
+}
+#[cfg(feature = "source-preparation")]
+struct PreparedFixtureCounter {
+    binding: ExactTokenCounterBinding,
+}
+
+#[cfg(feature = "source-preparation")]
+impl ExactSourceTokenCounter for PreparedFixtureCounter {
+    fn binding(&self) -> ExactTokenCounterBinding {
+        self.binding.clone()
+    }
+
+    fn count_tokens(&mut self, content: &str) -> Result<u32, SourcePreparationError> {
+        u32::try_from(content.split_whitespace().count())
+            .map_err(|_| SourcePreparationError::ResourceLimit)
+    }
+}
+
+#[cfg(feature = "source-preparation")]
+fn prepared_fixture_context(
+    profile: &ExactModelProfile,
+) -> PreparedSourceRuntimeContext<PreparedFixtureCounter> {
+    let binding = ExactTokenCounterBinding {
+        token_counter_id: profile.context.token_counter.clone(),
+        token_counter_sha256: profile.context.token_counter_sha256.clone(),
+        tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+    };
+    let mut sources = SourcePreparationService::new();
+    let manifest = sources
+        .admit(
+            SourceAdmissionRequest {
+                source_id: "durable-prepared-source".to_owned(),
+                request_id: "durable-prepared-request".to_owned(),
+                source_kind: "repository_snapshot".to_owned(),
+                protected_origin_sha256: sha256(b"protected durable source"),
+                media_type: "text/plain".to_owned(),
+                media_family: SourceMediaFamily::PlainText,
+                encoding: SourceEncoding::Utf8,
+                sensitivity: agentmage_kernel_contracts::ContextSensitivity::Internal,
+                retention: PreparedSourceRetention::Ephemeral,
+                collected_at_epoch_ms: 1_788_134_400_000,
+                limits: SourcePreparationLimits::default(),
+                bytes: b"durable prepared source fixture\n".to_vec(),
+            },
+            &mut PreparedFixtureCounter {
+                binding: binding.clone(),
+            },
+            &mut || false,
+        )
+        .expect("durable prepared source admits");
+    let source_tokens = profile.context.max_context_tokens.saturating_sub(5);
+    let included = |tokens: u32| AllocatedContextPartition {
+        requested_tokens: tokens,
+        minimum_tokens: u32::from(tokens > 0),
+        allocated_tokens: tokens,
+        disposition: ContextPartitionDisposition::Included,
+        reason_code: None,
+    };
+    let mut plan = ModelContextWindowPlan {
+        schema_version: CONTRACT_SCHEMA_VERSION,
+        model_profile_id: profile.profile_id.as_str().to_owned(),
+        model_manifest_sha256: profile.manifest_sha256.clone(),
+        model_runtime_sha256: sha256(
+            &serde_json::to_vec(&profile.runtime).expect("runtime identity serializes"),
+        ),
+        tokenizer_sha256: profile.codec.tokenizer_sha256.clone(),
+        token_counter_sha256: binding.token_counter_sha256.clone(),
+        total_window_tokens: profile.context.max_context_tokens,
+        system_and_tool_tokens: 1,
+        user_input_tokens: 1,
+        source_artifacts: included(source_tokens),
+        retrieved_context: included(0),
+        workflow_recovery_reserve_tokens: 1,
+        output_reserve_tokens: 1,
+        safety_margin_tokens: 1,
+        unallocated_tokens: 0,
+        plan_sha256: "0".repeat(64),
+    };
+    plan.plan_sha256 = sha256(&serde_json::to_vec(&plan).expect("window plan serializes"));
+    PreparedSourceRuntimeContext::new(
+        Arc::new(sources),
+        plan,
+        PreparedFixtureCounter { binding },
+        [manifest.source_id],
+        false,
+    )
+    .expect("durable prepared context composes")
 }

@@ -750,6 +750,14 @@ compatibility, and MCP exposure. Disabled features leave no registration,
 process, socket, cache, schema authority, or support claim beyond retained
 migration compatibility.
 
+The implemented source-artifact and verified-supervisor owners also have independent Cargo feature
+boundaries. `source-artifacts` is the only host path that activates the engine's
+`source-preparation` modules, and `workflow-supervisor` is the only host path that activates the
+engine's `verified-workflow-supervisor` module. Clean targets may omit either or both while keeping
+the caller-neutral coding runtime, native read baseline, configured clients, and strict lint gates.
+The later structured parser adapters remain absent rather than being compiled behind an invented
+placeholder feature.
+
 ## 17. Roadmap Ownership
 
 | Work | Owning roadmap location |
