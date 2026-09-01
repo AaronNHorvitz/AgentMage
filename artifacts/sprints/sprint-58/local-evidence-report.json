@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_58_local_evidence",
-  "source_revision": "f067e42c606df63e569f018a2be356bd6b5e58f2",
+  "source_revision": "481315b433ffcfec3cc347b069a58fb2405e99dc",
   "source_sha256": {
     "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
     "Cargo.lock": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e",
@@ -9,11 +9,11 @@
     "kernel/contracts/src/structured_source.rs": "651e8caedcc978dcfdd0c35e73b5fe2a6b59649d7e023bb1dab2e43412f7b8ae",
     "kernel/contracts/src/lib.rs": "458420bd48a3b676fd9427c95170b9c22502732215fc5bd1e76a2a576b94db3a",
     "capabilities/knowledge/src/word_ooxml.rs": "e52cbbf10b0b3fe1ed88ba31550dc6a962968537dda311c88ad37254cc8bebb8",
-    "capabilities/knowledge/src/word_source.rs": "54268d85c5601ca2fe30c128acca040b225e18bf985445b2a5f23873854f122c",
+    "capabilities/knowledge/src/word_source.rs": "63f76ee08b4034005f0878f9f509f333beff0c20751f7a02fa82942f8c2d92c6",
     "capabilities/knowledge/src/word_generation.rs": "9e17a4c5b86e4e470e7f2de4cfc6e5f9c8e9defd437d0df5ca3a3a5f40d5d32b",
     "capabilities/knowledge/src/lib.rs": "4afeb6a99f04d026aed5c26241acb8402a5917e9c2e227bb7ff7a22f09703384",
     "shells/host/Cargo.toml": "bd0cbb419186130d3d3219ef015ae647b6e8cad1b8660dfc27330d81aa3ab68c",
-    "shells/host/src/word_source_artifact.rs": "3fdc4af613ab249a3ca119716656281d2b566aa03b4c008e57bac775be849fee",
+    "shells/host/src/word_source_artifact.rs": "7943f7b53e7a4493be3484ef205e42a406adab53b530cc3bb7785e7a27c3981d",
     "shells/host/src/lib.rs": "185739c3655af4fab4a7d28978a993f7caaee627a3167baecc1a0cfa4bc74200",
     "schemas/runtime/word-inspection-report.schema.json": "59bbdeec1a1af9ec3c9e7b5737d6bc7b767bd4f55ec972338f72ef79d6d33c99",
     "schemas/runtime/examples/word-inspection-report.valid.json": "164b890d2868d98305d99ac7891d1a0b577babaf62b72b70cb3e491553870958",
@@ -27,12 +27,12 @@
     "docs/verification/sprint-58-word-dependency-manifest.json": "c397c8980829fe882b6024c5ab64fde6f22ea80bf5d564ba9f6b91b545975ace",
     "scripts/word_artifact_contract.py": "63e8217eb106753205130d7cab89caf141c2ccf4e2d9c36ca2e33d6317e1e0ac",
     "tests/test_word_artifact_contract.py": "e4427e3b7de33f54fbeb218bd62e972a6186ca063b558823910ab7ee5d8be5d5",
-    "docs/architecture/word-ooxml-extraction-and-generation.md": "bd2b477356cd7dc2ce03364f9fd4e7369f054239298f997a7825a961435d250e",
-    "docs/architecture/foundational-artifact-and-workflow-runtime.md": "f6aaea2938550614282c3abf57b88b6005364387a8a32bd4f6ac6b62785a0da9",
+    "docs/architecture/word-ooxml-extraction-and-generation.md": "93461abb5c356924ba6ba4af5fc557f1b3245e36e0242922b9db7046697f9955",
+    "docs/architecture/foundational-artifact-and-workflow-runtime.md": "086023fd3cf7b57ea6c238df6dece6811a18b1e6051685842086dd1190966b96",
     "docs/guides/word-artifact-local-workflows.md": "6f30ec012f774278e1eb6a7745ad212b8138dfca54295ccd55009d89cbf43aa0",
-    "docs/verification/sprint-58-local-results.md": "9cf6c1169efde07a9abdf92b97519b618537232b4666ec17432abda9201a0882",
-    "scripts/sprint_58_evidence.py": "8a2a2cf136119d4eb1741ebb85318bb64270ad1127c502ec2ef1befc29c20552",
-    "tests/test_sprint_58_evidence.py": "8a5bd1d3719c599c1b9fccbc9aeaf972ffb479f518be8b834bbd12add7b275e6"
+    "docs/verification/sprint-58-local-results.md": "e68840863569b745ef7308d28e7e245f704b4e049f497bb36756ef2f43b7b465",
+    "scripts/sprint_58_evidence.py": "597fdc951107d58e2ccebaca3116a1a1b435df1060b3481baeb9421ef1669c21",
+    "tests/test_sprint_58_evidence.py": "b7e9eab7eefaa1ce9333374f1115ab7264516423ca0c34aa8ea4a9c46382544a"
   },
   "environment": {
     "system": "Linux",
@@ -57,7 +57,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "6767fa85ef14517ae50d666b57aa6e1b92260c71dce9a097143f6fb9b21a7254",
+      "output_sha256": "272fc50ab3e42a33cbcde0f66116d05d9903004db346b47bcad8b41d23e7f7e4",
       "blocking_skip_count": 0
     },
     {
@@ -72,7 +72,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "b8610a9179c8eb291c39cf06f379fb1fc48ee0ba290e768d596b0184b6587b77",
+      "output_sha256": "29630730e1c2cb3f2638c1c534ea08c979367053079cdd4bd5927fa622e8dafc",
       "blocking_skip_count": 0
     },
     {
@@ -87,7 +87,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "d601f07bffd6e4abc20499bfe23195fc2f1e952746a58e79c100b8a8fa6991e2",
+      "output_sha256": "ac826a495d58c3fceb39174c64fd1db676f51e3fcca9c1146fe83063449fa843",
       "blocking_skip_count": 0
     },
     {
@@ -102,7 +102,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "9fdcab14e889ab63c0e1c01c1af8490fe106169c83d44352720ad69feb8482a1",
+      "output_sha256": "3d4836f1fc0dc9758bbc9406190cd0d406317f0e04e782dedf130dbb1639f96c",
       "blocking_skip_count": 0
     },
     {
@@ -113,7 +113,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "dede408f614f26617c5ff8fa053653a43929cf7bb496d0b8789e772ff570c2ff",
+      "output_sha256": "115c82c75d50563449e9e18d04e94cdf5d328bdd18bc9008f27fd2296915cf3b",
       "blocking_skip_count": 0
     },
     {
@@ -146,7 +146,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "ee1d3fffa2022e962e63e0dbe4d35c9c198450a20c29fc09030f635dbb38bfcd",
+      "output_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6",
       "blocking_skip_count": null
     },
     {
@@ -157,7 +157,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "b983ea68828061d19d151c5d8a009011398b8051475ba0cfc72d495a6a9bec8f",
+      "output_sha256": "91909451e2a97004a298f9306d8a0ee941a1e2eb716dbe562e080b7386ac3295",
       "blocking_skip_count": null
     },
     {
@@ -229,7 +229,9 @@
     "common_native_artifact_dispatch": true,
     "prepared_source_cache_invalidation_delete_reattach": true,
     "prepared_source_restart_retention": true,
-    "multi_profile_context_accounting": false,
+    "multi_profile_context_accounting": true,
+    "hostile_lifecycle_campaign": true,
+    "golden_projection_client_parity": true,
     "network_access_capability": false,
     "execution_capability": false,
     "filesystem_mutation_capability": false,
@@ -255,7 +257,9 @@
     "docx_source_adapter": true,
     "common_native_artifact_dispatch": true,
     "prepared_source_restart_retention": true,
-    "multi_profile_context_accounting": false,
+    "multi_profile_context_accounting": true,
+    "hostile_lifecycle_campaign": true,
+    "golden_projection_client_parity": true,
     "product_coordinator": false,
     "controlled_writer_integration": false,
     "native_interface_integration": false,
@@ -306,18 +310,6 @@
     {
       "code": "MANUAL-FUZZING-DEFERRED",
       "owner": "SR-TST-004"
-    },
-    {
-      "code": "DOCX-CONTEXT-ACCOUNTING-CLIENT-PARITY-ABSENT",
-      "owner": "58.2.2.3"
-    },
-    {
-      "code": "DOCX-HOSTILE-LIFECYCLE-CAMPAIGN-INCOMPLETE",
-      "owner": "58.2.3.1"
-    },
-    {
-      "code": "DOCX-GOLDEN-CLIENT-PARITY-INCOMPLETE",
-      "owner": "58.2.3.2"
     }
   ],
   "summary": {
