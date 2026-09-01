@@ -37,11 +37,11 @@
     "reviewed_artifacts": [
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/story-gate-report.json",
-        "sha256": "3261c0f770d3ffae2fb7f672870831b0cfd5f5c4fa08b8e03089f4855b628938"
+        "sha256": "55e056455f26486f199dfbd8062e07b66feb18985b74d93a9bc006a11ef9c532"
       },
       {
         "path": "scripts/story_6_1_gate.py",
-        "sha256": "ba525cf772ba7253ad7e69d298dc018fdfc991561c785d5a429cc25c59b36165"
+        "sha256": "9994a54a5f01f3cc31f9001dcda685a327f18b5b1b620d9cb2bf9d64247c9cc8"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/path-contract-report.json",
@@ -61,27 +61,27 @@
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/path-platform-conformance.json",
-        "sha256": "e3b0e459a6517fc96445beb97fa84fb5bbb76e2ad118e62bc04ef4bb4845a6a9"
+        "sha256": "e467229bd5009af652cd136a4283cf0bd5f0f31407fb5837e404fbd753e66dc8"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/path-boundary-review.json",
-        "sha256": "58378a6e3ecad6600b2c35596d802c94b6c0b2ef1f6630bc6821caddf1bb327d"
+        "sha256": "994793b608db2d413f53ecc3617cc8c4ddd694b1e7076b7c740c61317911e515"
       },
       {
         "path": "artifacts/sprints/sprint-6/story-6.1/security-evidence-map.json",
-        "sha256": "5ceba1175886e750d0e3182e93c1cb2783a04190264dd61534566667c32462ca"
+        "sha256": "55e8ec18389bc324187aac9364ba7db136f9b7cabff8c9a60257bab6707feb11"
       }
     ],
-    "reviewed_commit": "5e792e806e1a61bc6dabbfb9db10cc9d6c127991",
-    "reviewed_tree": "25a113afa2ca0a9a2b9a7f6260f3f2526a3f8bdc",
+    "reviewed_commit": "96172b22798c3d100462131a40434dc5c3af43b6",
+    "reviewed_tree": "de09759b690225c9e7aded7829310876817c5429",
     "reviewer_id": "agentmage-sprint-6-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "macos_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "5e792e806e1a61bc6dabbfb9db10cc9d6c127991",
-  "reviewed_tree": "25a113afa2ca0a9a2b9a7f6260f3f2526a3f8bdc",
+  "reviewed_commit": "96172b22798c3d100462131a40434dc5c3af43b6",
+  "reviewed_tree": "de09759b690225c9e7aded7829310876817c5429",
   "schema_version": 1,
   "sprint_id": 6,
   "status": "blocked-macos",
