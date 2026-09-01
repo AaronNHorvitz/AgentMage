@@ -51,7 +51,7 @@
     }
   ],
   "private_environment_values_recorded": false,
-  "reference_revision": "a24779d5c2a0bc80dc1b27089aa63fa69b54d18e",
+  "reference_revision": "cdcd468571e8a29908b0b1444dc5b922171521a8",
   "release_claim": "none",
   "schema_version": 1,
   "sources": [
@@ -61,7 +61,7 @@
     },
     {
       "path": "kernel/contracts/src/lib.rs",
-      "sha256": "54656796b4d57c0e9b98aef5f588c619a3ff56c04d0a96feb8926682a5a06c9f"
+      "sha256": "bbd5268f75d9f88d4056da62bbd8f33fe4e5f87ae50aefaba9432bd06f656da1"
     },
     {
       "path": "kernel/contracts/src/platform.rs",
@@ -69,7 +69,7 @@
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "e8ebda0b8f212c2f996cbcb7e47c50474ffc75b53b7c08ec8d4376c75500c521"
+      "sha256": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26"
     },
     {
       "path": "kernel/engine/src/platform_startup.rs",
@@ -93,7 +93,7 @@
     },
     {
       "path": "scripts/platform_manifest_artifact.py",
-      "sha256": "0129e11b46cba745b2e093c9b7b5244129bde7c249bfac4ea82a130d1d6b00c3"
+      "sha256": "62084df764356c08bfe953905d84ab53d0047f9575a8204eeb05461f0b89a2b7"
     },
     {
       "path": "tests/test_platform_manifest_artifact.py",
