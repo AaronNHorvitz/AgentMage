@@ -6661,13 +6661,15 @@ and the sprint therefore remain open.
 **Gate decision:** Sprint 54 is PASS only when Story 54.1, every numbered task/sub-task, every story criterion, every sprint criterion, and the Universal Story Definition of Done are complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-54/local-evidence-report.json`
-binds 10 passing commands and the 77-case acceptance corpus to source revision
-`3128661a7e7670c8dd47520cfdfec90445498ea5` (report SHA-256
-`940d4a38fb299de3408318fd3e1c080515c53a2588ca9260f3b6a165f2348a58`). The bounded
+binds 11 passing commands, six focused suites with zero blocking skips, and the 77-case acceptance
+corpus to source revision `668f1d79b41215c67e95aea72c686d09aabb9688` (report SHA-256
+`1d5075fcb0444acd6610baf73a3357b615eaac85bea8f32d217d62dc3582a9db`). The bounded
 source contracts, artifacts, focused tests, privacy rules, source-store parity, and local sprint
-criteria are complete. Story 54.1 and Sprint 54 remain **BLOCKED** by Sprint 53, the absent
-product coordinator and native interface integration, durable reminder lifecycle, installed
-cross-platform and trusted-package evidence, independent review, and deferred manual fuzzing.
+criteria are complete. The registered host coordinator binds every projection to one canonical
+snapshot and all eight authority-free skills with zero accepted effects or cross-privacy leaks.
+Story 54.1 and Sprint 54 remain **BLOCKED** by Sprint 53, absent native interface integration,
+durable reminder lifecycle, installed cross-platform and trusted-package evidence, independent
+review, and deferred manual fuzzing.
 ### [ ] Sprint 55 - Meeting Records and Continuity
 
 **Planning unit:** Dependency-bounded sprint; no calendar estimate.
