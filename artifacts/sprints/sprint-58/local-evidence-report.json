@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "record_type": "sprint_58_local_evidence",
-  "source_revision": "481315b433ffcfec3cc347b069a58fb2405e99dc",
+  "source_revision": "9df332f2d647912075f285039a9cfa9bd03678ae",
   "source_sha256": {
     "Cargo.toml": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219",
     "Cargo.lock": "60eca43376919ca47740e494d7e44a2812aa77e06a0c188013e285a7dea1a19e",
@@ -12,9 +12,11 @@
     "capabilities/knowledge/src/word_source.rs": "63f76ee08b4034005f0878f9f509f333beff0c20751f7a02fa82942f8c2d92c6",
     "capabilities/knowledge/src/word_generation.rs": "9e17a4c5b86e4e470e7f2de4cfc6e5f9c8e9defd437d0df5ca3a3a5f40d5d32b",
     "capabilities/knowledge/src/lib.rs": "4afeb6a99f04d026aed5c26241acb8402a5917e9c2e227bb7ff7a22f09703384",
+    "kernel/engine/src/filesystem_control.rs": "e1a862bf6994e777aefe5008d61fd8f18c1fd61c68ab07d8ba4178b6e3073673",
     "shells/host/Cargo.toml": "bd0cbb419186130d3d3219ef015ae647b6e8cad1b8660dfc27330d81aa3ab68c",
+    "shells/host/src/word_artifact_coordinator.rs": "c7638be24aff12099702e6cc1443e4b81d401cf9d5e7eac1fdf60967ad0038c5",
     "shells/host/src/word_source_artifact.rs": "7943f7b53e7a4493be3484ef205e42a406adab53b530cc3bb7785e7a27c3981d",
-    "shells/host/src/lib.rs": "185739c3655af4fab4a7d28978a993f7caaee627a3167baecc1a0cfa4bc74200",
+    "shells/host/src/lib.rs": "b7d6698d8e08ec56f0df647216254c194fed7559083b27a37d61169bb6e0392b",
     "schemas/runtime/word-inspection-report.schema.json": "59bbdeec1a1af9ec3c9e7b5737d6bc7b767bd4f55ec972338f72ef79d6d33c99",
     "schemas/runtime/examples/word-inspection-report.valid.json": "164b890d2868d98305d99ac7891d1a0b577babaf62b72b70cb3e491553870958",
     "schemas/runtime/word-extraction-result.schema.json": "179cc2545b0e7cbed8965ddcd7e331c352e7b5306c8158892e9aa8ebbe974ffc",
@@ -27,12 +29,12 @@
     "docs/verification/sprint-58-word-dependency-manifest.json": "c397c8980829fe882b6024c5ab64fde6f22ea80bf5d564ba9f6b91b545975ace",
     "scripts/word_artifact_contract.py": "63e8217eb106753205130d7cab89caf141c2ccf4e2d9c36ca2e33d6317e1e0ac",
     "tests/test_word_artifact_contract.py": "e4427e3b7de33f54fbeb218bd62e972a6186ca063b558823910ab7ee5d8be5d5",
-    "docs/architecture/word-ooxml-extraction-and-generation.md": "93461abb5c356924ba6ba4af5fc557f1b3245e36e0242922b9db7046697f9955",
+    "docs/architecture/word-ooxml-extraction-and-generation.md": "1c0172bd635d5755ee13411d5d6641aaf2505204c4fe3691760048db18e02d02",
     "docs/architecture/foundational-artifact-and-workflow-runtime.md": "086023fd3cf7b57ea6c238df6dece6811a18b1e6051685842086dd1190966b96",
-    "docs/guides/word-artifact-local-workflows.md": "6f30ec012f774278e1eb6a7745ad212b8138dfca54295ccd55009d89cbf43aa0",
-    "docs/verification/sprint-58-local-results.md": "e68840863569b745ef7308d28e7e245f704b4e049f497bb36756ef2f43b7b465",
-    "scripts/sprint_58_evidence.py": "597fdc951107d58e2ccebaca3116a1a1b435df1060b3481baeb9421ef1669c21",
-    "tests/test_sprint_58_evidence.py": "b7e9eab7eefaa1ce9333374f1115ab7264516423ca0c34aa8ea4a9c46382544a"
+    "docs/guides/word-artifact-local-workflows.md": "b42a866e7276109d7bcc10fee03669146db2b17f1484b595c4178bca8d06cee1",
+    "docs/verification/sprint-58-local-results.md": "2558b8a3d7a5a1fcb9c8552f59389d587a5140f68f9c5bed47e8cee506094800",
+    "scripts/sprint_58_evidence.py": "6ca265a33dde15bf5cb4e7c1b78d30ddc33d7108177ff2e81cb5340562329b71",
+    "tests/test_sprint_58_evidence.py": "9ec839b627de5585e78d39af63ebf37a80aec170be06b18927b06ee1a71c16f7"
   },
   "environment": {
     "system": "Linux",
@@ -57,7 +59,7 @@
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "272fc50ab3e42a33cbcde0f66116d05d9903004db346b47bcad8b41d23e7f7e4",
+      "output_sha256": "b39ffacd84fc8c1223024654c65ac19e9c63fd6d79da453c51b60793f5712d9c",
       "blocking_skip_count": 0
     },
     {
@@ -91,18 +93,18 @@
       "blocking_skip_count": 0
     },
     {
-      "id": "word-structured-native-unit",
+      "id": "word-product-host-unit",
       "argv": [
         "cargo",
         "test",
         "-p",
         "agentmage-host",
-        "word_source_artifact::tests",
+        "word_",
         "--lib",
         "--locked"
       ],
       "exit_code": 0,
-      "output_sha256": "3d4836f1fc0dc9758bbc9406190cd0d406317f0e04e782dedf130dbb1639f96c",
+      "output_sha256": "f7b0311b0819c3e7d62dce4278b45f86e942132f55c4f0f0a4d7d520877af742",
       "blocking_skip_count": 0
     },
     {
@@ -113,7 +115,7 @@
         "tests/test_planning_schemas.mjs"
       ],
       "exit_code": 0,
-      "output_sha256": "115c82c75d50563449e9e18d04e94cdf5d328bdd18bc9008f27fd2296915cf3b",
+      "output_sha256": "a42a9dafef480236de1f77d995fa2447c5559adb94362c6b3f957694d7a7b5c9",
       "blocking_skip_count": 0
     },
     {
@@ -146,7 +148,7 @@
         "warnings"
       ],
       "exit_code": 0,
-      "output_sha256": "99f71393b9903dca098310bb446022a4bdee195ea9996f351a787195555210a6",
+      "output_sha256": "73e088662e1fbbea360e01876961aea9d1bab569be6f6bc9a212b683a00f5816",
       "blocking_skip_count": null
     },
     {
@@ -157,7 +159,7 @@
         "docs:check"
       ],
       "exit_code": 0,
-      "output_sha256": "91909451e2a97004a298f9306d8a0ee941a1e2eb716dbe562e080b7386ac3295",
+      "output_sha256": "420836dc8f4821e866b4dfdf7c53f70c9a7e72cd4b5b32c4bf631aa434306a1e",
       "blocking_skip_count": null
     },
     {
@@ -236,8 +238,8 @@
     "execution_capability": false,
     "filesystem_mutation_capability": false,
     "renderer_capability": false,
-    "product_coordinator": false,
-    "controlled_writer_integration": false,
+    "product_coordinator": true,
+    "controlled_writer_integration": true,
     "native_interface_integration": false,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
@@ -260,8 +262,8 @@
     "multi_profile_context_accounting": true,
     "hostile_lifecycle_campaign": true,
     "golden_projection_client_parity": true,
-    "product_coordinator": false,
-    "controlled_writer_integration": false,
+    "product_coordinator": true,
+    "controlled_writer_integration": true,
     "native_interface_integration": false,
     "accessibility_acceptance": false,
     "installed_cross_platform_acceptance": false,
@@ -278,14 +280,6 @@
     {
       "code": "WORD-RENDERER-NOT-ADMITTED",
       "owner": "58.1.1.1"
-    },
-    {
-      "code": "WORD-PRODUCT-COORDINATOR-ABSENT",
-      "owner": "58.1.3.4"
-    },
-    {
-      "code": "CONTROLLED-WRITER-INTEGRATION-ABSENT",
-      "owner": "58.1.3.4"
     },
     {
       "code": "NATIVE-INTERFACE-INTEGRATION-ABSENT",

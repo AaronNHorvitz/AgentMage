@@ -6978,8 +6978,8 @@ complete with current evidence. Otherwise it is BLOCKED.
 
 **Local evidence note:** The retained report at `artifacts/sprints/sprint-58/local-evidence-report.json`
 binds 11 passing commands, 6 focused commands with zero blocking skips, and the 73-case acceptance
-corpus to source revision `481315b433ffcfec3cc347b069a58fb2405e99dc` (report SHA-256
-`582be3782c3d846b569f5576b6b687ea2a53025900fcec7458e1471c2a4331fb`). Exact dependency
+corpus to source revision `9df332f2d647912075f285039a9cfa9bd03678ae` (report SHA-256
+`29f392fe08fb99016beb37281755bd63050c95e1213f5b4ecce19870143eb733`). Exact dependency
 admission, bounded package inspection, raw duplicate-name detection, deterministic sidecar and cache
 identity, part/range provenance, structural fidelity warnings, structured Markdown-to-DOCX
 generation, reopened inspection, runtime schemas, the shared structured-source extractor, the DOCX
