@@ -73,12 +73,12 @@
     {
       "bytes": 446026,
       "path": "supply-chain/dependency-provenance.json",
-      "sha256": "2b23b48833f7ca6661142659391829e70340c852e1f303b316be2b76110ae3fe"
+      "sha256": "897fa9cfca7d50f6e51c32da373991e355f0019b0aab76fcda002883014100a6"
     },
     {
       "bytes": 465835,
       "path": "supply-chain/sbom.cdx.json",
-      "sha256": "11fccb25a21bff7ede6135be3ab1eee6f78839f36e4c4ba57b92023fbb455b6b"
+      "sha256": "7fc848b4d613f5bac49f165b1603faa30de2a0c318c5542330c9c566b2d1ba65"
     },
     {
       "bytes": 23467,
@@ -260,7 +260,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "e355f0a3f6aecae91da4e6e797eef7cfde1af034",
+  "source_revision": "18d01462532868930485afcec0773292e53c44ab",
   "status": "pass-non-macos-security-mapping",
   "story_id": "7.1",
   "summary": {
