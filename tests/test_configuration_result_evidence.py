@@ -11,6 +11,7 @@ from scripts.configuration_result_evidence import (
     REPORT_PATH,
     RESULT_KINDS,
     SCHEMA_COMMAND,
+    SCHEMA_TEST_COMMAND,
     build_report,
     check_artifact,
     execute_gate,
@@ -30,7 +31,7 @@ class ConfigurationResultEvidenceTests(unittest.TestCase):
 
         def runner(command: tuple[str, ...], _root: Path) -> str:
             calls.append(command)
-            if command in (CLIPPY_COMMAND, SCHEMA_COMMAND):
+            if command in (CLIPPY_COMMAND, SCHEMA_COMMAND, SCHEMA_TEST_COMMAND):
                 return "gate passed"
             name = command[-3].rsplit("::", 1)[-1]
             return f"test configuration::tests::{name} ... ok"
@@ -42,6 +43,7 @@ class ConfigurationResultEvidenceTests(unittest.TestCase):
                 *[test_command(name) for name in EXPECTED_TESTS],
                 CLIPPY_COMMAND,
                 SCHEMA_COMMAND,
+                SCHEMA_TEST_COMMAND,
             ],
         )
 

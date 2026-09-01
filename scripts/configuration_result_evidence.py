@@ -45,7 +45,8 @@ CLIPPY_COMMAND = (
     "-D",
     "warnings",
 )
-SCHEMA_COMMAND = ("npm", "run", "schemas:check")
+SCHEMA_COMMAND = ("npm", "run", "schemas:validate")
+SCHEMA_TEST_COMMAND = ("npm", "run", "schemas:test")
 SOURCE_PATHS = (
     "Cargo.toml",
     "Cargo.lock",
@@ -130,6 +131,7 @@ def execute_gate(root: Path = ROOT, runner: Runner = subprocess_runner) -> tuple
         observed.append(name)
     runner(CLIPPY_COMMAND, root)
     runner(SCHEMA_COMMAND, root)
+    runner(SCHEMA_TEST_COMMAND, root)
     return tuple(observed)
 
 
@@ -150,6 +152,7 @@ def build_report(executed_tests: Sequence[str], root: Path = ROOT) -> dict[str, 
             ],
             {"argv": list(CLIPPY_COMMAND), "status": "pass"},
             {"argv": list(SCHEMA_COMMAND), "status": "pass"},
+            {"argv": list(SCHEMA_TEST_COMMAND), "status": "pass"},
         ],
         "tests": list(executed_tests),
         "result_kinds": list(RESULT_KINDS),

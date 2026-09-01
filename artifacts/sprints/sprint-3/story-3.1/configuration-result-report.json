@@ -75,7 +75,15 @@
       "argv": [
         "npm",
         "run",
-        "schemas:check"
+        "schemas:validate"
+      ],
+      "status": "pass"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "schemas:test"
       ],
       "status": "pass"
     }
@@ -101,7 +109,7 @@
   "source_artifacts": [
     {
       "path": "Cargo.toml",
-      "sha256": "0104b55b6a0c57eb869812ad7a6c4ea648f3d256258bf261ebcf0d39e980ba4b"
+      "sha256": "f48a944e11aeb04d848a6ceb6ecd25045f41358a7a691ca73f280194aa2e7219"
     },
     {
       "path": "Cargo.lock",
@@ -109,11 +117,11 @@
     },
     {
       "path": "kernel/engine/Cargo.toml",
-      "sha256": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e"
+      "sha256": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8"
     },
     {
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "e8ebda0b8f212c2f996cbcb7e47c50474ffc75b53b7c08ec8d4376c75500c521"
+      "sha256": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26"
     },
     {
       "path": "kernel/engine/src/configuration.rs",
@@ -153,15 +161,15 @@
     },
     {
       "path": "tests/test_planning_schemas.mjs",
-      "sha256": "2449f8676f5fb226e35910b5e00652228aa06dfd613c31324881609081aaaa1f"
+      "sha256": "7e91d19b6eed4e802db3f1577a514a9298c70d6becb1706ce9b2861d0565f42b"
     },
     {
       "path": "scripts/configuration_result_evidence.py",
-      "sha256": "fb29ec920b3f7808bf67fd2f01d6fae0b74b1f5b8b7de9f6b34b524a22f08c59"
+      "sha256": "67df8af0b3c3b3c91d0402a870fe9fd94007d72795bf366215e376aafb49579d"
     },
     {
       "path": "tests/test_configuration_result_evidence.py",
-      "sha256": "b93663719a818f385107944ba8d641f0b6bdc7619f0da8b77610db3334251208"
+      "sha256": "6859d6ef33f0b24fec3984b421ad653dc7d7bad36624880f1a8fa8e5d94a7f0f"
     }
   ],
   "status": "pass-shared-linux-configuration-result-binding",
