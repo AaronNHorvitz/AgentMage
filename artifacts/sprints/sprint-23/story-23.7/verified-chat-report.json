@@ -1,0 +1,135 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 2758,
+      "path": "shells/vscode/package.json",
+      "sha256": "08c4ac252fc7321f049a821a5a2da64695cc14792270b33c04f06a332179bb68"
+    },
+    {
+      "byte_length": 45282,
+      "path": "shells/vscode/src/verified_chat.ts",
+      "sha256": "9adcf3e022b285f1898755c19fb2f4ca826696f436bebd2bbad5696304989167"
+    },
+    {
+      "byte_length": 5210,
+      "path": "shells/vscode/src/verified_chat_channel.ts",
+      "sha256": "ee083d10ff421ab8b2e6c195ccb0fb7c17c7d52f0ddee18e3c5a8fcbccdb8f76"
+    },
+    {
+      "byte_length": 20145,
+      "path": "shells/vscode/src/verified_chat_projection.ts",
+      "sha256": "ac1f4e566a067040242048e0dda41ec234c89384a802a6007fc9d4b7ea23742e"
+    },
+    {
+      "byte_length": 7755,
+      "path": "shells/vscode/src/verified_chat_protocol.ts",
+      "sha256": "52096bbff82fdd4401a45942a13f9088f5132727f78e03cbdd277bb744abad6a"
+    },
+    {
+      "byte_length": 60309,
+      "path": "shells/vscode/src/provider.ts",
+      "sha256": "9c0824496c1e8e62e2fc7e98506c8568af927af75719331c5bdbe0b33f89a14e"
+    },
+    {
+      "byte_length": 3141,
+      "path": "shells/vscode/test/verified_chat_channel.test.ts",
+      "sha256": "7a73732f3bc5cf80be02faa08175c143fd62f2bde5ddf1a660fa08ba1144c88e"
+    },
+    {
+      "byte_length": 9187,
+      "path": "shells/vscode/test/verified_chat_projection.test.ts",
+      "sha256": "4ea986599ce321a44d83ebe55454777a755ea7895bd7c5dbec67765daa98b791"
+    },
+    {
+      "byte_length": 4611,
+      "path": "shells/vscode/test/verified_chat_protocol.test.ts",
+      "sha256": "656dedb589265ee99dc4fa93f666a14f45a019cf21959b6474c4c5767ca70620"
+    },
+    {
+      "byte_length": 46456,
+      "path": "kernel/contracts/src/engineering.rs",
+      "sha256": "705696d7bca5b7b88f0922183ce7ed141b37ced5be2e0821bf0de514a49e7aa7"
+    },
+    {
+      "byte_length": 24657,
+      "path": "kernel/engine/src/persistent_supervisor.rs",
+      "sha256": "2422bd86db4e9e6bd7d75c6bb8924235e93de8a4eced094df2f2cf3276cf3749"
+    },
+    {
+      "byte_length": 38172,
+      "path": "kernel/engine/src/engineering_persistence.rs",
+      "sha256": "9a0d4b361cef36fd19ced65950ea4f5c1d24ff9bc90d6aa44daaebbd61303ffa"
+    },
+    {
+      "byte_length": 96188,
+      "path": "shells/host/src/engineering_runtime.rs",
+      "sha256": "01b321068c6482eba84d82615f8028ee643c7cbcc9a3a43981731ac51b01f3a2"
+    },
+    {
+      "byte_length": 5499,
+      "path": "docs/architecture/verified-chat-surface.md",
+      "sha256": "90c0bab26ae53ace698c3426dd9eee23bf54e4ee347440360ebdcf107705a690"
+    },
+    {
+      "byte_length": 1863,
+      "path": "architecture/vscode-api-surfaces.json",
+      "sha256": "e8ead87ad4d071dc5e459881a435fcf0f7d321785da6bd812ade3d5c85ff94d2"
+    },
+    {
+      "byte_length": 8311,
+      "path": "scripts/story_23_7_verified_chat_evidence.py",
+      "sha256": "3dc770ebd50ecdfa4b0b92b8d2ecfc98f8d69f767632c32f92a41bc9c41372ef"
+    },
+    {
+      "byte_length": 1122,
+      "path": "tests/test_story_23_7_verified_chat_evidence.py",
+      "sha256": "cdc150c2ea496da98b20cb65d813267cd8c2de5c93cfb0c0c7f3a3445aec4af6"
+    },
+    {
+      "byte_length": 10849,
+      "path": "artifacts/sprints/sprint-23/story-23.7/verified-chat-results.log",
+      "sha256": "d192f81eb68a24a1297d3c1c2d6e669457d5260990d3f1dc7243a566c3a5c429"
+    }
+  ],
+  "commands": [
+    "npm --prefix shells/vscode test",
+    "npm --prefix shells/vscode run lint",
+    "npm --prefix shells/vscode run format:check",
+    "cargo test -p agentmage-host engineering_runtime::tests --all-features --locked",
+    "cargo test -p agentmage-host protocol::tests --all-features --locked",
+    "python3 -m pytest -q tests/test_architecture_decision.py tests/test_vscode_api_surfaces.py",
+    "python3 scripts/validate_docs.py"
+  ],
+  "generated_on": "2026-08-31",
+  "product_truth": {
+    "accessible_source_controls": true,
+    "assistive_technology_audit_complete": false,
+    "authenticated_ordered_command_channel": true,
+    "bounded_ordered_view_delivery": true,
+    "cancellable_single_agent_presentation": true,
+    "csp_restricted_disposable_webview": true,
+    "digest_verified_atomic_event_replay": true,
+    "draft_and_approved_plan_reconstruction": true,
+    "hidden_reasoning_persisted_or_rendered": false,
+    "independent_review_complete": false,
+    "installed_vsix_campaign_complete": false,
+    "macos_validation_complete": false,
+    "private_vscode_api": false,
+    "qualified_production_model_complete": false,
+    "release_claim": "none",
+    "rust_owned_durable_state_and_authority": true,
+    "webview_policy_tool_or_completion_authority": false,
+    "windows_validation_complete": false
+  },
+  "record_type": "agentmage-story-23-7-verified-chat-evidence",
+  "remaining_external_work": [
+    "run the packaged VSIX keyboard and assistive-technology campaign",
+    "repeat with an independently qualified production model profile",
+    "run final local Windows validation against the exact final candidate commit",
+    "run deferred macOS validation against the exact final candidate commit",
+    "obtain independent security, accessibility, and release review"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_DURABLE_VERIFIED_CHAT",
+  "story_id": "23.7"
+}

@@ -4206,22 +4206,22 @@ Plan, and Agent modes show exact evidence and cannot grant themselves authority.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 23.7.1 - Implement the secured interface shell**
-  - [ ] **Sub-task 23.7.1.1:** Build a disposable CSP-restricted webview, thin TypeScript bridge, authenticated versioned IPC, and Rust host session binding with no direct filesystem, network, credential, model, or tool authority. Partial local evidence: commits `38131aa0`, `a4ad5869`, and `f7ab019f` add the dedicated Activity Bar entry and editor-area tab, nonce/CSP webview, thin bridge, Rust session/artifact authority, exact paste/file bytes, and reload reconstruction. Installed VS Code and full adversarial IPC evidence remain open.
-  - [ ] **Sub-task 23.7.1.2:** Render ordered streaming events, artifacts, citations, approvals, tool observations, verification, blockers, terminal diagnostics, and resumable task state accessibly. Partial local evidence: the tab renders durable messages, artifact receipts, model-visible context metadata, mode controls, approvals, and terminal status projections. Full token streaming, tool/verification cards, backpressure, accessibility audit, and installed-host reconstruction remain open.
-  - [ ] **Sub-task 23.7.1.3:** Implement Ask, Plan, and Agent mode requests as policy inputs only; mode selection cannot mint grants, bypass approval, or establish completion. Partial local evidence: commits `8e330407` through `3548cf35` persist Plan artifacts, journal explicit approval, create hash-bound handoffs, and admit Agent execution only through an installed controlled runtime. Ask/Plan/Agent production-model integration remains open.
-- [ ] **Task 23.7.2 - Prove lifecycle and IPC security**
-  - [ ] **Sub-task 23.7.2.1:** Test reload, duplicate view, stale/replayed/spoofed message, wrong session, extension-host restart, Rust-host restart, cancellation race, and slow-view backpressure.
-  - [ ] **Sub-task 23.7.2.2:** Scan webview state, logs, storage, IPC payloads, and diagnostics for secrets, hidden reasoning, private endpoint values, or undeclared durable truth.
+- [x] **Task 23.7.1 - Implement the secured interface shell**
+  - [x] **Sub-task 23.7.1.1:** Build a disposable CSP-restricted webview, thin TypeScript bridge, authenticated versioned IPC, and Rust host session binding with no direct filesystem, network, credential, model, or tool authority. Local completion adds an instance-random exact-sequence command channel, closed message shapes, strict CSP/DOM rendering, Rust-compatible snapshot and event-digest verification, and no view authority path. Installed VS Code evidence remains in Task 23.7.3.
+  - [x] **Sub-task 23.7.1.2:** Render ordered streaming events, artifacts, citations, approvals, tool observations, verification, blockers, terminal diagnostics, and resumable task state accessibly. Local completion adds bounded ordered delivery, ARIA runtime cards and transcript, output-part framing, durable event replay, and exact draft/approved-Plan reconstruction through verified range receipts. Packaged assistive-technology evidence remains open.
+  - [x] **Sub-task 23.7.1.3:** Implement Ask, Plan, and Agent mode requests as policy inputs only; mode selection cannot mint grants, bypass approval, or establish completion. Ask/Plan use the existing verified-turn path, Agent requires the exact durable Plan approval and handoff before the existing controlled runtime, and Team remains visibly unavailable until its later runtime story. Production-model qualification remains external.
+- [x] **Task 23.7.2 - Prove lifecycle and IPC security**
+  - [x] **Sub-task 23.7.2.1:** Test reload, duplicate view, stale/replayed/spoofed message, wrong session, extension-host restart, Rust-host restart, cancellation race, and slow-view backpressure. Source-bound fixtures cover exact replay/digest refusal, atomic reconstruction, single-view reuse, background cancellation arbitration, active-run exclusion, and count/byte backpressure; the Rust store suite covers reopen and restart.
+  - [x] **Sub-task 23.7.2.2:** Scan webview state, logs, storage, IPC payloads, and diagnostics for secrets, hidden reasoning, private endpoint values, or undeclared durable truth. Stable-API, architecture, hostile-shape, CSP, and source-bound evidence gates pass; only session identity is held in VS Code workspace state and all durable truth is reread from Rust.
 - [ ] **Task 23.7.3 - Verify the canonical experience**
-  - [ ] **Sub-task 23.7.3.1:** Run `RV-57` Verified Chat cases on locally available platforms and retain accessibility, state-reconstruction, IPC-authentication, parity, and limitation evidence.
-  - [ ] **Sub-task 23.7.3.2:** Leave macOS and Windows native execution rows open until their physical evidence exists; do not infer support from Linux or unit fixtures.
+  - [ ] **Sub-task 23.7.3.1:** Run `RV-55` Verified Chat cases on locally available platforms and retain accessibility, state-reconstruction, IPC-authentication, parity, and limitation evidence. Repository-level Linux fixtures and source-bound evidence pass; packaged VSIX interaction, keyboard/assistive-technology, and physical platform execution remain open and are not inferred from unit fixtures. (`RV-55` is the authoritative Verified Chat protocol; `RV-57` is multi-agent.)
+  - [x] **Sub-task 23.7.3.2:** Leave macOS and Windows native execution rows open until their physical evidence exists; do not infer support from Linux or unit fixtures. Both rows remain explicitly open; macOS is deferred by current run direction and Windows awaits the final same-candidate local campaign.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 23.7.AC1:** Given a Verified Chat request, when it executes, then the Rust runtime owns state and authority while the view renders only authenticated projections and user decisions.
-- [ ] **Story AC 23.7.AC2:** Given reload, restart, replay, spoofing, or slow consumption, when the interface recovers, then no accepted state is lost, duplicated, widened, or falsely completed.
-- [ ] **Story AC 23.7.AC3:** Given Ask, Plan, or Agent mode, when an effect is proposed, then the same deterministic policy, grant, approval, tool, and verifier boundaries apply.
+- [x] **Story AC 23.7.AC1:** Given a Verified Chat request, when it executes, then the Rust runtime owns state and authority while the view renders only authenticated projections and user decisions.
+- [x] **Story AC 23.7.AC2:** Given reload, restart, replay, spoofing, or slow consumption, when the interface recovers, then no accepted state is lost, duplicated, widened, or falsely completed.
+- [x] **Story AC 23.7.AC3:** Given Ask, Plan, or Agent mode, when an effect is proposed, then the same deterministic policy, grant, approval, tool, and verifier boundaries apply.
 
 #### [ ] Story 23.8 - Native VS Code Chat Compatibility and Disclosure
 
