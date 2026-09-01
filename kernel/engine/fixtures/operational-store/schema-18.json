@@ -1,6 +1,6 @@
 {
   "record_type": "agentmage-operational-store-schema-fixture",
-  "schema_version": 17,
+  "schema_version": 18,
   "migrations": [
     {"version": 1, "sha256": "da2acbccbe4e37e1920ce3941b68716de1a095c45bdbcfe37b39ef239cf45a7d"},
     {"version": 2, "sha256": "ac79d84633a58a69204edcf06bd6e9a0f67a0308509a3f9449a1e8599805a3a2"},
@@ -18,7 +18,8 @@
     {"version": 14, "sha256": "78146e92fda7e4f463cab1c751455d99ce7ff95de2bce5829fe768092f671fe7"},
     {"version": 15, "sha256": "4caabc1a09d7cdedc69ffb231d03a467d9c5dd1aa0f706d917682c17f8aaf223"},
     {"version": 16, "sha256": "3f2730d0f49d60ce70bf8bb9f8980e32bae74f31ece544e3d99a839918d20c0d"},
-    {"version": 17, "sha256": "24a591be13fd7fd97531ca99a494979f66ffd6bdf2d12536eb9619177395797d"}
+    {"version": 17, "sha256": "24a591be13fd7fd97531ca99a494979f66ffd6bdf2d12536eb9619177395797d"},
+    {"version": 18, "sha256": "563d3643a23b63bee80a40aee12c8cf5fb7f017b52d4f9f95d6ac65bacf26630"}
   ],
   "tables": [
     "actions",
@@ -88,6 +89,8 @@
     "transaction_identities",
     "transaction_revisions",
     "workflow_approvals",
+    "workflow_attempt_checkpoints",
+    "workflow_attempt_resume_claims",
     "workflow_attempts",
     "workflow_checkpoints",
     "workflow_consumed_budgets",

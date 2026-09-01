@@ -47,7 +47,7 @@ SOURCE_MARKERS: Final = {
         '"workflow.resume.effect_uncertain"',
     ),
     "kernel/engine/src/operational_store.rs": (
-        "const SCHEMA_VERSION: i64 = 17;",
+        "const SCHEMA_VERSION: i64 = 18;",
         "fn persist_workflow_checkpoint(",
         "fn verify_workflow_checkpoints(",
         "fn workflow_checkpoint_reopens_exactly_and_tamper_blocks_restart()",
@@ -70,7 +70,7 @@ SOURCE_MARKERS: Final = {
     ),
 }
 RETAINED_PATHS: Final = tuple(SOURCE_MARKERS) + (
-    "kernel/engine/fixtures/operational-store/schema-17.json",
+    "kernel/engine/fixtures/operational-store/schema-18.json",
     "docs/verification/story-11-3-durable-resume.md",
     "scripts/story_11_3_resume_evidence.py",
     "tests/test_story_11_3_resume_evidence.py",

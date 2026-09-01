@@ -66,7 +66,7 @@ SOURCE_MARKERS: Final = (
     "const DERIVED_EXPORT_QUERIES: &[DerivedExportQuery]",
     'family: "source_released_payloads"',
     'family: "workflow_terminal_diagnostics"',
-    "assert_eq!(persisted_families.len(), 31);",
+    "assert_eq!(persisted_families.len(), 34);",
     '"record_json"',
     '"payload_sha256"',
     "assert_artifacts_exclude_canary(&path, &backup, &export, canary);",
@@ -77,7 +77,7 @@ LIFECYCLE_MARKERS: Final = (
 )
 TRUTH: Final = {
     "synthetic_data_only": True,
-    "new_family_count": 31,
+    "new_family_count": 34,
     "new_family_export_coverage_complete": True,
     "content_free_evidence_complete": True,
     "encrypted_backup_restore_complete": True,
@@ -152,8 +152,8 @@ def validate_source(source: str, lifecycle: str) -> list[str]:
     end = source.find("fn derived_export_rows(", start)
     block = source[start:end]
     families = re.findall(r'family: "((?:source|workflow)_[^"]+)"', block)
-    if len(families) != 31 or len(set(families)) != 31:
-        failures.append("derived export does not cover exactly 31 unique new families")
+    if len(families) != 34 or len(set(families)) != 34:
+        failures.append("derived export does not cover exactly 34 unique new families")
     for prohibited in ("record_json FROM", "payload_sha256 FROM", "source_sha256 FROM"):
         if prohibited in block:
             failures.append(f"derived export selects prohibited content field: {prohibited}")

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/attempt-recovery-decision.schema.json",
+  "title": "AgentMage Attempt Recovery Decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["action", "reason_code", "drift", "exhausted_budgets", "diagnosis", "prior_effect_replay_allowed", "fresh_identity_and_authority_required"],
+  "properties": {
+    "action": { "$ref": "#/$defs/action" },
+    "reason_code": { "$ref": "#/$defs/code" },
+    "drift": { "type": "array", "uniqueItems": true, "maxItems": 18, "items": { "enum": ["source", "plan", "model", "context", "tool_catalog", "policy", "grants", "approvals", "preflights", "attempts", "receipts", "artifacts", "verifier", "budgets", "repeated_state", "event_cursor", "environment", "postcondition"] } },
+    "exhausted_budgets": { "type": "array", "maxItems": 21, "items": { "$ref": "#/$defs/budget_dimension" } },
+    "diagnosis": { "oneOf": [{ "$ref": "#/$defs/diagnosis" }, { "type": "null" }] },
+    "prior_effect_replay_allowed": { "const": false },
+    "fresh_identity_and_authority_required": { "type": "boolean" }
+  },
+  "allOf": [
+    { "if": { "properties": { "action": { "const": "terminate_diagnosed" } } }, "then": { "properties": { "diagnosis": { "$ref": "#/$defs/diagnosis" } } }, "else": { "properties": { "diagnosis": { "type": "null" } } } },
+    { "if": { "properties": { "action": { "const": "fresh_attempt" } } }, "then": { "properties": { "fresh_identity_and_authority_required": { "const": true } } } }
+  ],
+  "$defs": {
+    "action": { "enum": ["continue", "fresh_attempt", "deterministic_repair", "replan", "await_approval", "await_dependency", "reconcile_effect", "cancel", "terminate_diagnosed"] },
+    "code": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "budget_dimension": {
+      "oneOf": [
+        { "enum": ["parser_repair", "model_repair", "step_attempt", "workflow_work", "replan", "repeated_state"] },
+        { "type": "object", "additionalProperties": false, "required": ["error_class"], "properties": { "error_class": { "enum": ["malformed_input", "preflight", "policy", "approval", "dependency", "transient", "conflict", "timeout", "cancellation", "crash", "uncertain_effect", "verification", "resource", "internal"] } } }
+      ]
+    },
+    "diagnosis": {
+      "type": "object", "additionalProperties": false,
+      "required": ["step_execution_id", "attempt_checkpoint_id", "attempts_sha256", "verifier_sha256", "exhausted_budgets", "blocked_reason_code", "uncertain_effect", "approval_needed", "safe_resume_action", "diagnosis_sha256"],
+      "properties": {
+        "step_execution_id": { "$ref": "#/$defs/code" },
+        "attempt_checkpoint_id": { "$ref": "#/$defs/code" },
+        "attempts_sha256": { "$ref": "#/$defs/sha256" },
+        "verifier_sha256": { "$ref": "#/$defs/sha256" },
+        "exhausted_budgets": { "type": "array", "maxItems": 21, "items": { "$ref": "#/$defs/budget_dimension" } },
+        "blocked_reason_code": { "$ref": "#/$defs/code" },
+        "uncertain_effect": { "type": "boolean" },
+        "approval_needed": { "type": "boolean" },
+        "safe_resume_action": { "$ref": "#/$defs/action" },
+        "diagnosis_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

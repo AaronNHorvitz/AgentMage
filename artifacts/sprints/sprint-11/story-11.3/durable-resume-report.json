@@ -6,9 +6,9 @@
       "sha256": "a6404b5ab64ce63297f92eaa608e9182f7c522d20a0a745233ca61f13ecaeda0"
     },
     {
-      "byte_length": 437644,
+      "byte_length": 461249,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "64ac3a2ab768f47f03f5fdb4343aae9df0d429eff727b74a875f909ab6e17a9a"
+      "sha256": "f814b7b99ad58eb5de3512ae95f4301a1bf2cc22b03c532b0a2ca920ab8f37aa"
     },
     {
       "byte_length": 1417,
@@ -21,9 +21,9 @@
       "sha256": "2422bd86db4e9e6bd7d75c6bb8924235e93de8a4eced094df2f2cf3276cf3749"
     },
     {
-      "byte_length": 96409,
+      "byte_length": 116652,
       "path": "kernel/engine/src/runtime_journal.rs",
-      "sha256": "6d961665fc0163026e57ef38ad312c28a720347af178833f8d79679f7d81409e"
+      "sha256": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464"
     },
     {
       "byte_length": 102469,
@@ -31,9 +31,9 @@
       "sha256": "cf12332a555bf9a5849857aba6c7273226bb3056c012211299ca81cb436b92a2"
     },
     {
-      "byte_length": 3993,
-      "path": "kernel/engine/fixtures/operational-store/schema-17.json",
-      "sha256": "6d21d737c1092797c47d37a0772193b8def75ec1c76bf38fd96b3ef96665597e"
+      "byte_length": 4166,
+      "path": "kernel/engine/fixtures/operational-store/schema-18.json",
+      "sha256": "2dbc40858820316bb0bb6e08ae61bddaf25287c2cdd820a33f7624f9b16d4ea6"
     },
     {
       "byte_length": 2047,
@@ -43,7 +43,7 @@
     {
       "byte_length": 9444,
       "path": "scripts/story_11_3_resume_evidence.py",
-      "sha256": "f327c20ba1e71868ce97627a63c94c48e8c92a785dc47595f6f6b0941bfb1796"
+      "sha256": "6f6175b31a38cfa0b0ef3566e087061828a9306b4e804aeee26304cf06479086"
     },
     {
       "byte_length": 1827,
@@ -51,9 +51,9 @@
       "sha256": "6a7c898ef2ffb7fa40b14aeea93d7c748642f90caaf369999f4130f95a3770d4"
     },
     {
-      "byte_length": 25913,
+      "byte_length": 25699,
       "path": "artifacts/sprints/sprint-11/story-11.3/durable-resume-results.log",
-      "sha256": "39c73303a90ab69d6906f48b5e60215da9574e7672b1b4de9e7b333c9494b814"
+      "sha256": "d99f7b918f32b43915b177e8ac9ee745193bfa5e4c58b7617772114064a1aaa0"
     }
   ],
   "commands": [

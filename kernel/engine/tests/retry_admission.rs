@@ -9,6 +9,10 @@ use agentmage_kernel_contracts::{
     OperationBinding, PlanId, PlanStepId, SchemaId, SchemaReference, SessionId, TaskId, ToolCall,
     ToolCallId, ToolId,
 };
+use agentmage_kernel_engine::durable_attempt_recovery::{
+    AttemptRecoveryAction, AttemptRecoveryDecision, RecoveredFreshAttemptError,
+    compile_recovered_fresh_attempt,
+};
 use agentmage_kernel_engine::retry_admission::{
     AttemptEffectOutcome, AttemptExecutionGateError, CurrentAttemptApproval,
     CurrentEffectReconciliation, CurrentPreflightEvidence, EffectReconciliationDisposition,
@@ -399,6 +403,72 @@ fn fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_gran
         ),
         Err(FreshAttemptAdmissionError::GrantNotFreshSingleUse),
     );
+}
+
+#[test]
+fn story_22_4_recovery_fresh_attempt_composes_only_through_existing_admission() {
+    let policy = policy(CanonicalRetryClass::RecoverableRead);
+    let canonical_decision = decision();
+    let current_preflight = preflight(&policy);
+    let current_grant = grant(CanonicalApprovalRequirement::NotRequired, &policy);
+    let prior_identities = prior_ledger();
+    let recovery = AttemptRecoveryDecision {
+        action: AttemptRecoveryAction::FreshAttempt,
+        reason_code: "attempt_recovery.fresh_attempt",
+        drift: Vec::new(),
+        exhausted_budgets: Vec::new(),
+        diagnosis: None,
+        prior_effect_replay_allowed: false,
+        fresh_identity_and_authority_required: true,
+    };
+    let input = FreshAttemptAdmissionInput {
+        candidate: admission(CanonicalApprovalRequirement::NotRequired),
+        policy: &policy,
+        decision: &canonical_decision,
+        preflight: &current_preflight,
+        reconciliation: None,
+        successor_grant: FreshSingleUseGrant::new(&current_grant),
+        successor_approval: None,
+        prior_approval_id: None,
+        prior_identities: &prior_identities,
+        successor_idempotency_key_sha256: None,
+        presented_successor_receipt_id: None,
+        now_epoch_ms: 1_500,
+    };
+    let admitted = compile_recovered_fresh_attempt(&recovery, input)
+        .expect("fresh recovery uses ordinary exact admission");
+    assert_eq!(admitted.admission().successor_attempt_id, "attempt-2");
+    assert_ne!(
+        admitted.admission().successor_attempt_id,
+        admitted.admission().prior_attempt_id
+    );
+    assert_ne!(
+        admitted.admission().successor_grant_id,
+        admitted.admission().prior_grant_id
+    );
+
+    let not_fresh = AttemptRecoveryDecision {
+        action: AttemptRecoveryAction::Continue,
+        ..recovery
+    };
+    let input = FreshAttemptAdmissionInput {
+        candidate: admission(CanonicalApprovalRequirement::NotRequired),
+        policy: &policy,
+        decision: &canonical_decision,
+        preflight: &current_preflight,
+        reconciliation: None,
+        successor_grant: FreshSingleUseGrant::new(&current_grant),
+        successor_approval: None,
+        prior_approval_id: None,
+        prior_identities: &prior_identities,
+        successor_idempotency_key_sha256: None,
+        presented_successor_receipt_id: None,
+        now_epoch_ms: 1_500,
+    };
+    assert!(matches!(
+        compile_recovered_fresh_attempt(&not_fresh, input),
+        Err(RecoveredFreshAttemptError::DecisionNotFreshAttempt)
+    ));
 }
 
 #[test]

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentmage.dev/schemas/runtime/attempt-recovery-checkpoint.schema.json",
+  "title": "AgentMage Attempt Recovery Checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "attempt_checkpoint_id", "workflow_checkpoint_id", "workflow_id", "execution_id", "step_execution_id", "attempt_id", "source_sha256", "plan_sha256", "model_sha256", "context_sha256", "tool_catalog_sha256", "policy_sha256", "grants_sha256", "approvals_sha256", "preflights_sha256", "attempts_sha256", "receipts_sha256", "artifacts_sha256", "verifier_sha256", "budget_policy_sha256", "budget_state", "repeated_state_sha256", "repeated_state_count", "event_cursor", "environment_sha256", "effect_state", "authority_consumed", "created_at", "checkpoint_sha256"],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "attempt_checkpoint_id": { "$ref": "#/$defs/id" },
+    "workflow_checkpoint_id": { "$ref": "#/$defs/id" },
+    "workflow_id": { "$ref": "#/$defs/id" },
+    "execution_id": { "$ref": "#/$defs/id" },
+    "step_execution_id": { "$ref": "#/$defs/id" },
+    "attempt_id": { "oneOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+    "source_sha256": { "$ref": "#/$defs/sha256" },
+    "plan_sha256": { "$ref": "#/$defs/sha256" },
+    "model_sha256": { "$ref": "#/$defs/sha256" },
+    "context_sha256": { "$ref": "#/$defs/sha256" },
+    "tool_catalog_sha256": { "$ref": "#/$defs/sha256" },
+    "policy_sha256": { "$ref": "#/$defs/sha256" },
+    "grants_sha256": { "$ref": "#/$defs/sha256" },
+    "approvals_sha256": { "$ref": "#/$defs/sha256" },
+    "preflights_sha256": { "$ref": "#/$defs/sha256" },
+    "attempts_sha256": { "$ref": "#/$defs/sha256" },
+    "receipts_sha256": { "$ref": "#/$defs/sha256" },
+    "artifacts_sha256": { "$ref": "#/$defs/sha256" },
+    "verifier_sha256": { "$ref": "#/$defs/sha256" },
+    "budget_policy_sha256": { "$ref": "#/$defs/sha256" },
+    "budget_state": { "$ref": "#/$defs/budget_state" },
+    "repeated_state_sha256": { "$ref": "#/$defs/sha256" },
+    "repeated_state_count": { "type": "integer", "minimum": 0 },
+    "event_cursor": { "$ref": "#/$defs/event_cursor" },
+    "environment_sha256": { "$ref": "#/$defs/sha256" },
+    "effect_state": { "enum": ["no_effect", "verified_not_applied", "verified_applied", "uncertain"] },
+    "authority_consumed": { "type": "boolean" },
+    "created_at": { "type": "string", "format": "date-time", "maxLength": 64 },
+    "checkpoint_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "budget_state": {
+      "type": "object", "additionalProperties": false,
+      "required": ["parser_repairs", "model_repairs", "step_attempts", "error_class_counts", "workflow_work", "replans"],
+      "properties": {
+        "parser_repairs": { "type": "integer", "minimum": 0 },
+        "model_repairs": { "type": "integer", "minimum": 0 },
+        "step_attempts": { "type": "integer", "minimum": 0 },
+        "error_class_counts": { "type": "array", "minItems": 14, "maxItems": 14, "items": { "type": "integer", "minimum": 0 } },
+        "workflow_work": { "type": "integer", "minimum": 0 },
+        "replans": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "event_cursor": {
+      "type": "object", "additionalProperties": false,
+      "required": ["run_id", "event_id", "sequence", "event_sha256"],
+      "properties": {
+        "run_id": { "$ref": "#/$defs/id" },
+        "event_id": { "$ref": "#/$defs/id" },
+        "sequence": { "type": "integer", "minimum": 0 },
+        "event_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

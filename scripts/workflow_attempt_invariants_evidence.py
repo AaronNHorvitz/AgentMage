@@ -33,7 +33,7 @@ COMMANDS: Final = (
         "test",
         "-p",
         "agentmage-kernel-engine",
-        "operational_store::tests::version_one_upgrades_through_seventeen_with_exact_history",
+        "operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history",
         "--locked",
     ),
     (
@@ -59,7 +59,7 @@ COMMANDS: Final = (
 )
 MARKERS: Final = (
     "workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed ... ok",
-    "version_one_upgrades_through_seventeen_with_exact_history ... ok",
+    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok",
 )
 UNIQUE_INDEXES: Final = (

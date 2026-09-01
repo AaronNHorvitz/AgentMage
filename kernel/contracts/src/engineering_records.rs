@@ -1105,6 +1105,111 @@ pub struct CanonicalWorkflowCheckpoint {
     pub created_at: String,
 }
 
+/// Exact consumed supervision counters retained by an attempt checkpoint.
+///
+/// The closed tuple prevents a restart from resetting one retry family while retaining another.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalAttemptBudgetState {
+    /// Deterministic parser repairs already consumed.
+    pub parser_repairs: u64,
+    /// Targeted model repairs already consumed.
+    pub model_repairs: u64,
+    /// Step attempts already opened.
+    pub step_attempts: u64,
+    /// Counts for all closed workflow failure classes in canonical enum order.
+    pub error_class_counts: Vec<u64>,
+    /// Total supervised workflow work already consumed.
+    pub workflow_work: u64,
+    /// Replans already consumed.
+    pub replans: u64,
+}
+
+/// Effect knowledge that must survive an attempt-level restart.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalCheckpointEffectState {
+    /// No effect reached dispatch.
+    NoEffect,
+    /// Current evidence proves the attempted effect did not occur.
+    VerifiedNotApplied,
+    /// A current receipt and postcondition prove the effect occurred.
+    VerifiedApplied,
+    /// The effect may have occurred and must be reconciled before any successor.
+    Uncertain,
+}
+
+/// Durable attempt-level recovery checkpoint.
+///
+/// This record contains identities and digests only. In particular, it cannot carry model output,
+/// tool arguments, an executable call, or capability contents from which a prior effect could be
+/// reconstructed. A restart must revalidate each named family against its authoritative store.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalAttemptCheckpoint {
+    /// Contract schema version.
+    pub schema_version: u16,
+    /// Stable immutable attempt-checkpoint identity.
+    pub attempt_checkpoint_id: String,
+    /// Exact workflow checkpoint this record refines.
+    pub workflow_checkpoint_id: String,
+    /// Owning workflow identity.
+    pub workflow_id: String,
+    /// Owning bounded workflow execution.
+    pub execution_id: String,
+    /// Exact active step execution.
+    pub step_execution_id: String,
+    /// Exact current attempt, when one has been opened.
+    #[serde(deserialize_with = "crate::serialization::deserialize_required_option")]
+    pub attempt_id: Option<String>,
+    /// Authoritative source-set identity.
+    pub source_sha256: String,
+    /// Exact plan and revision identity.
+    pub plan_sha256: String,
+    /// Exact selected model profile and runtime identity.
+    pub model_sha256: String,
+    /// Exact model-visible context identity.
+    pub context_sha256: String,
+    /// Exact admitted tool catalog identity.
+    pub tool_catalog_sha256: String,
+    /// Exact effective policy identity.
+    pub policy_sha256: String,
+    /// Ordered grant-ledger identity, including consumed grants.
+    pub grants_sha256: String,
+    /// Ordered approval-ledger identity.
+    pub approvals_sha256: String,
+    /// Ordered current-preflight identity.
+    pub preflights_sha256: String,
+    /// Ordered attempt-history identity.
+    pub attempts_sha256: String,
+    /// Ordered terminal-receipt identity.
+    pub receipts_sha256: String,
+    /// Ordered immutable runtime-artifact identity.
+    pub artifacts_sha256: String,
+    /// Current verifier and evidence identity.
+    pub verifier_sha256: String,
+    /// Exact immutable budget-policy identity.
+    pub budget_policy_sha256: String,
+    /// Consumed supervision counters that cannot reset on restart.
+    pub budget_state: CanonicalAttemptBudgetState,
+    /// Complete repeated-state detector history identity.
+    pub repeated_state_sha256: String,
+    /// Current repeat count for the active complete-state fingerprint.
+    pub repeated_state_count: u64,
+    /// Exact correctness event establishing this checkpoint.
+    pub event_cursor: crate::RuntimeEventCursor,
+    /// Exact trusted runtime-environment identity.
+    pub environment_sha256: String,
+    /// Effect knowledge retained across restart.
+    pub effect_state: CanonicalCheckpointEffectState,
+    /// Whether authority associated with the current attempt was consumed.
+    pub authority_consumed: bool,
+    /// Trusted RFC 3339 publication time.
+    pub created_at: String,
+    /// Digest of this record with this field zeroed.
+    pub checkpoint_sha256: String,
+}
+
 /// Endpoint deployment class.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]

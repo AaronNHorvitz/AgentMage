@@ -1,0 +1,127 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 132612,
+      "path": "kernel/contracts/src/engineering_records.rs",
+      "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
+    },
+    {
+      "byte_length": 13185,
+      "path": "kernel/contracts/src/serialization.rs",
+      "sha256": "0172e822ffd4297d769d752f75a6e06e27dbf36ca239ecc80167cd4358c9b4be"
+    },
+    {
+      "byte_length": 43816,
+      "path": "kernel/engine/src/durable_attempt_recovery.rs",
+      "sha256": "192f61b23f43ced10ae128387fbb65bf66093046a588ce1b4e198239dd2557e9"
+    },
+    {
+      "byte_length": 461249,
+      "path": "kernel/engine/src/operational_store.rs",
+      "sha256": "f814b7b99ad58eb5de3512ae95f4301a1bf2cc22b03c532b0a2ca920ab8f37aa"
+    },
+    {
+      "byte_length": 2440,
+      "path": "kernel/engine/migrations/operational-store/0018-attempt-recovery.sql",
+      "sha256": "563d3643a23b63bee80a40aee12c8cf5fb7f017b52d4f9f95d6ac65bacf26630"
+    },
+    {
+      "byte_length": 12090,
+      "path": "kernel/engine/examples/story_22_4_evidence.rs",
+      "sha256": "86d805918eab5a34b9e35f1110628dc3b0033f8adde4c76f1c02bedbc46e7f39"
+    },
+    {
+      "byte_length": 3798,
+      "path": "schemas/runtime/attempt-recovery-checkpoint.schema.json",
+      "sha256": "d65b10cbeac13198bf7352a2f0be08e4ebd592451a47191a2ca0cd6ff3420520"
+    },
+    {
+      "byte_length": 3396,
+      "path": "schemas/runtime/attempt-recovery-decision.schema.json",
+      "sha256": "5731c1bdfcfe467b4592594072a462115a9ba9ce80fcf9edba1e072deb2e5311"
+    },
+    {
+      "byte_length": 2980,
+      "path": "tests/test_attempt_recovery_schemas.mjs",
+      "sha256": "83d846413e5552f1e679f67931777f08d6f6272095702178681e769b1dd8306b"
+    },
+    {
+      "byte_length": 4516,
+      "path": "docs/architecture/durable-attempt-recovery-and-resume.md",
+      "sha256": "20340aed7bd3f60a2c191b71a7a57d8c49b318982c227fab483b899090a4c87a"
+    },
+    {
+      "byte_length": 10126,
+      "path": "scripts/story_22_4_attempt_recovery_evidence.py",
+      "sha256": "0ed1b45238a40b0580b8faedc39aadfbb379e3bc96857e9d8f0d3416409166db"
+    },
+    {
+      "byte_length": 849,
+      "path": "tests/test_story_22_4_attempt_recovery_evidence.py",
+      "sha256": "87e7e6246eae5a90146293f20362d2ef6d31b22daa5940d065c0be14cf14929c"
+    },
+    {
+      "byte_length": 15768,
+      "path": "artifacts/sprints/sprint-22/story-22.4/attempt-recovery-results.log",
+      "sha256": "a64fae721846cc2b7c9c49292a65f5bf48f71c27dd933ae9fb814b9dc12764c1"
+    },
+    {
+      "byte_length": 26380,
+      "path": "artifacts/sprints/sprint-22/story-22.4/attempt-recovery-goldens.json",
+      "sha256": "e1939b085e4619b4dbd99fa5827e0e29bb76005e6e01891b249057ae8d27b175"
+    }
+  ],
+  "commands": [
+    "cargo run -p agentmage-kernel-engine --example story_22_4_evidence --locked",
+    "cargo test -p agentmage-kernel-engine durable_attempt_recovery --locked",
+    "cargo test -p agentmage-kernel-engine attempt_checkpoint_and_single_resume_owner_survive_verified_restart --locked",
+    "cargo test -p agentmage-kernel-engine story_22_4_recovery_fresh_attempt_composes_only_through_existing_admission --locked",
+    "node --test tests/test_attempt_recovery_schemas.mjs",
+    "cargo clippy -p agentmage-kernel-contracts -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
+  ],
+  "generated_on": "2026-08-31",
+  "product_truth": {
+    "attempt_checkpoint_identity_families": 18,
+    "budget_and_repeat_state_retained": true,
+    "closed_recovery_actions": 9,
+    "concurrent_clients": 32,
+    "consumed_authority_and_uncertainty_retained": true,
+    "deterministic_interruption_seeds": 100,
+    "duplicate_effects": 0,
+    "durable_resume_owners": 1,
+    "encrypted_store_restart_complete": true,
+    "independent_review_complete": false,
+    "installed_package_campaign_complete": false,
+    "interruption_boundaries": 11,
+    "physical_fault_campaign_complete": false,
+    "release_claim": "none",
+    "replayed_effects": 0,
+    "windows_campaign_complete": false
+  },
+  "protocols": [
+    "RV-12",
+    "RV-16",
+    "RV-17",
+    "RV-18",
+    "RV-25"
+  ],
+  "record_type": "agentmage-story-22-4-attempt-recovery-evidence",
+  "remaining_external_work": [
+    "run the attempt-recovery campaign from an installed package on Linux and Windows",
+    "retain physical power-loss and storage-fault evidence",
+    "obtain independent human security review of the recovery boundary"
+  ],
+  "required_markers": [
+    "story_22_4_one_hundred_seed_no_unwind_boundary_campaign_has_zero_replay ... ok",
+    "story_22_4_concurrent_clients_have_one_owner ... ok",
+    "story_22_4_checkpoint_binds_every_required_identity_and_rejects_mutation ... ok",
+    "attempt_checkpoint_and_single_resume_owner_survive_verified_restart ... ok",
+    "story_22_4_recovery_fresh_attempt_composes_only_through_existing_admission ... ok",
+    "attempt recovery schemas accept closed content-free records",
+    "attempt recovery schemas reject replay, hidden content, missing budgets, and widening",
+    "Finished `dev` profile"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_DURABLE_RECOVERY",
+  "story_id": "22.4"
+}

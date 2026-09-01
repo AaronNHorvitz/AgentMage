@@ -13,9 +13,10 @@ use std::time::Duration;
 
 use agentmage_kernel_contracts::{
     ActionState, AuthorityTransactionId, AuthorityTransactionRecord, AuthorityTransactionState,
-    CONTRACT_SCHEMA_VERSION, CanonicalWorkflowCheckpoint, CapabilityGrant, GrantId, GrantNonce,
-    GrantStatus, OperationOutcome, Receipt, RuntimeEvent, RuntimeEventCursor,
-    RuntimeEventPersistenceClass, RuntimeResumeBinding, RuntimeRunId, SessionCheckpoint, SessionId,
+    CONTRACT_SCHEMA_VERSION, CanonicalAttemptCheckpoint, CanonicalCheckpointEffectState,
+    CanonicalWorkflowCheckpoint, CapabilityGrant, GrantId, GrantNonce, GrantStatus,
+    OperationOutcome, Receipt, RuntimeEvent, RuntimeEventCursor, RuntimeEventPersistenceClass,
+    RuntimeResumeBinding, RuntimeRunId, SessionCheckpoint, SessionId,
     StrictLocalStorageObservation, from_json, to_canonical_json,
 };
 use rusqlite::{
@@ -78,7 +79,7 @@ use crate::write_transaction::{
     execute_write_transaction_with_checkpoint,
 };
 
-const SCHEMA_VERSION: i64 = 17;
+const SCHEMA_VERSION: i64 = 18;
 const ZERO_SHA256: &str = "0000000000000000000000000000000000000000000000000000000000000000";
 const KEY_BYTES: usize = 32;
 const MAX_DERIVED_EXPORT_RECORDS: usize = 100_000;
@@ -177,6 +178,8 @@ const MIGRATION_16_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0016-workflow-attempt-invariants.sql");
 const MIGRATION_17_SCHEMA_SQL: &str =
     include_str!("../migrations/operational-store/0017-workflow-checkpoints.sql");
+const MIGRATION_18_SCHEMA_SQL: &str =
+    include_str!("../migrations/operational-store/0018-attempt-recovery.sql");
 
 /// Closed record families governed by the canonical retention engine.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -436,6 +439,19 @@ pub struct WorkflowStateMaterialization {
     pub session_id: SessionId,
     /// Exact correctness event that establishes this projection.
     pub event_cursor: RuntimeEventCursor,
+}
+
+/// Persisted winner of one attempt-checkpoint recovery claim.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DurableAttemptResumeOwner {
+    /// Exact immutable attempt checkpoint.
+    pub attempt_checkpoint_id: String,
+    /// Client identity that won the claim.
+    pub owner_id: String,
+    /// Digest of the one current recovery decision.
+    pub decision_sha256: String,
+    /// Trusted claim time.
+    pub claimed_at_epoch_ms: u64,
 }
 
 #[derive(Serialize)]
@@ -1037,6 +1053,7 @@ impl OperationalStore {
         crate::engineering_persistence::verify_all(self)
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         verify_workflow_checkpoints(self)?;
+        verify_attempt_checkpoints(self)?;
         verify_repository_cache(self)?;
         verify_evidence_store(self)?;
         let generation: i64 = self
@@ -1118,6 +1135,185 @@ impl OperationalStore {
             )
             .map_err(|_| OperationalStoreError::IntegrityFailure)?;
         load_session_checkpoint(&self.connection, &retained)
+    }
+
+    /// Publishes one immutable attempt-level checkpoint after verifying its workflow checkpoint,
+    /// correctness cursor, attempt identity, and canonical digest bindings.
+    pub fn publish_attempt_checkpoint(
+        &mut self,
+        checkpoint: &CanonicalAttemptCheckpoint,
+    ) -> Result<(), OperationalStoreError> {
+        crate::durable_attempt_recovery::verify_attempt_checkpoint(checkpoint)
+            .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?;
+        let bytes = to_canonical_json(checkpoint)
+            .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?;
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+        let binding: Option<(String, String)> = transaction
+            .query_row(
+                "SELECT run_id, session_id FROM workflow_checkpoints
+                 WHERE checkpoint_id = ?1 AND workflow_id = ?2
+                   AND event_sequence = ?3 AND event_id = ?4",
+                params![
+                    &checkpoint.workflow_checkpoint_id,
+                    &checkpoint.workflow_id,
+                    i64::try_from(checkpoint.event_cursor.sequence)
+                        .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?,
+                    checkpoint.event_cursor.event_id.as_str(),
+                ],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        if binding.as_ref().map(|(run_id, _)| run_id.as_str())
+            != Some(checkpoint.event_cursor.run_id.as_str())
+        {
+            return Err(OperationalStoreError::WorkflowProjectionRejected);
+        }
+        let effect_state = checkpoint_effect_state_code(checkpoint.effect_state);
+        transaction
+            .execute(
+                "INSERT INTO workflow_attempt_checkpoints(
+                     attempt_checkpoint_id, workflow_checkpoint_id, workflow_id, execution_id,
+                     step_execution_id, attempt_id, run_id, session_id, event_sequence, event_id,
+                     effect_state, authority_consumed, checkpoint_sha256, record_json
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                params![
+                    &checkpoint.attempt_checkpoint_id,
+                    &checkpoint.workflow_checkpoint_id,
+                    &checkpoint.workflow_id,
+                    &checkpoint.execution_id,
+                    &checkpoint.step_execution_id,
+                    checkpoint.attempt_id.as_deref(),
+                    checkpoint.event_cursor.run_id.as_str(),
+                    binding.as_ref().map(|(_, session_id)| session_id.as_str()),
+                    i64::try_from(checkpoint.event_cursor.sequence)
+                        .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?,
+                    checkpoint.event_cursor.event_id.as_str(),
+                    effect_state,
+                    checkpoint.authority_consumed,
+                    &checkpoint.checkpoint_sha256,
+                    bytes,
+                ],
+            )
+            .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::PersistenceFailure)
+    }
+
+    /// Returns the latest verified attempt checkpoint for one workflow.
+    pub fn current_attempt_checkpoint(
+        &self,
+        workflow_id: &str,
+    ) -> Result<Option<CanonicalAttemptCheckpoint>, OperationalStoreError> {
+        if !valid_lifecycle_identifier(workflow_id) {
+            return Err(OperationalStoreError::WorkflowProjectionRejected);
+        }
+        let row = self
+            .connection
+            .query_row(
+                "SELECT checkpoint_sha256, record_json FROM workflow_attempt_checkpoints
+             WHERE workflow_id = ?1
+             ORDER BY event_sequence DESC, attempt_checkpoint_id DESC LIMIT 1",
+                [workflow_id],
+                |row| Ok((row.get::<_, String>(0)?, row.get::<_, Vec<u8>>(1)?)),
+            )
+            .optional()
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        row.map(|(digest, bytes)| {
+            let checkpoint: CanonicalAttemptCheckpoint =
+                from_json(&bytes).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+            crate::durable_attempt_recovery::verify_attempt_checkpoint(&checkpoint)
+                .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+            if checkpoint.checkpoint_sha256 != digest {
+                return Err(OperationalStoreError::IntegrityFailure);
+            }
+            Ok(checkpoint)
+        })
+        .transpose()
+    }
+
+    /// Atomically records the sole owner and exact decision for one checkpoint recovery.
+    pub fn claim_attempt_resume(
+        &mut self,
+        attempt_checkpoint_id: &str,
+        owner_id: &str,
+        decision_sha256: &str,
+        claimed_at_epoch_ms: u64,
+    ) -> Result<DurableAttemptResumeOwner, OperationalStoreError> {
+        if !valid_lifecycle_identifier(attempt_checkpoint_id)
+            || !valid_lifecycle_identifier(owner_id)
+            || !valid_sha256_text(decision_sha256)
+            || claimed_at_epoch_ms == 0
+        {
+            return Err(OperationalStoreError::WorkflowProjectionRejected);
+        }
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+        let inserted = transaction
+            .execute(
+                "INSERT OR IGNORE INTO workflow_attempt_resume_claims(
+                 attempt_checkpoint_id, owner_id, decision_sha256, claimed_at_epoch_ms
+             ) VALUES (?1, ?2, ?3, ?4)",
+                params![
+                    attempt_checkpoint_id,
+                    owner_id,
+                    decision_sha256,
+                    i64::try_from(claimed_at_epoch_ms)
+                        .map_err(|_| OperationalStoreError::WorkflowProjectionRejected)?
+                ],
+            )
+            .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+        if inserted != 1 {
+            return Err(OperationalStoreError::ConcurrentWriter);
+        }
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::PersistenceFailure)?;
+        Ok(DurableAttemptResumeOwner {
+            attempt_checkpoint_id: attempt_checkpoint_id.to_owned(),
+            owner_id: owner_id.to_owned(),
+            decision_sha256: decision_sha256.to_owned(),
+            claimed_at_epoch_ms,
+        })
+    }
+
+    /// Loads the immutable winning recovery owner, if one was recorded.
+    pub fn attempt_resume_owner(
+        &self,
+        attempt_checkpoint_id: &str,
+    ) -> Result<Option<DurableAttemptResumeOwner>, OperationalStoreError> {
+        let row = self
+            .connection
+            .query_row(
+                "SELECT owner_id, decision_sha256, claimed_at_epoch_ms
+             FROM workflow_attempt_resume_claims WHERE attempt_checkpoint_id = ?1",
+                [attempt_checkpoint_id],
+                |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, i64>(2)?,
+                    ))
+                },
+            )
+            .optional()
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        row.map(|(owner_id, decision_sha256, claimed)| {
+            Ok(DurableAttemptResumeOwner {
+                attempt_checkpoint_id: attempt_checkpoint_id.to_owned(),
+                owner_id,
+                decision_sha256,
+                claimed_at_epoch_ms: u64::try_from(claimed)
+                    .map_err(|_| OperationalStoreError::IntegrityFailure)?,
+            })
+        })
+        .transpose()
     }
 
     /// Loads and verifies the complete retained checkpoint chain for one write transaction.
@@ -1537,6 +1733,47 @@ impl DurableAuthorityRuntime {
     ) -> Result<Option<SessionCheckpoint>, DurableAuthorityError> {
         self.lock_store()?
             .current_session_checkpoint()
+            .map_err(DurableAuthorityError::Store)
+    }
+
+    /// Publishes one immutable attempt-level recovery checkpoint into the shared encrypted store.
+    pub fn publish_attempt_checkpoint(
+        &mut self,
+        checkpoint: &CanonicalAttemptCheckpoint,
+    ) -> Result<(), DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .publish_attempt_checkpoint(checkpoint)
+            .map_err(DurableAuthorityError::Store)
+    }
+
+    /// Loads the latest verified attempt-level recovery checkpoint for one workflow.
+    pub fn current_attempt_checkpoint(
+        &self,
+        workflow_id: &str,
+    ) -> Result<Option<CanonicalAttemptCheckpoint>, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .current_attempt_checkpoint(workflow_id)
+            .map_err(DurableAuthorityError::Store)
+    }
+
+    /// Atomically records the sole client owning recovery for one checkpoint and decision.
+    pub fn claim_attempt_resume(
+        &mut self,
+        attempt_checkpoint_id: &str,
+        owner_id: &str,
+        decision_sha256: &str,
+        claimed_at_epoch_ms: u64,
+    ) -> Result<DurableAttemptResumeOwner, DurableAuthorityError> {
+        self.ensure_usable()?;
+        self.lock_store()?
+            .claim_attempt_resume(
+                attempt_checkpoint_id,
+                owner_id,
+                decision_sha256,
+                claimed_at_epoch_ms,
+            )
             .map_err(DurableAuthorityError::Store)
     }
 
@@ -3515,6 +3752,27 @@ fn migrate(connection: &Connection) -> Result<(), OperationalStoreError> {
             )
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
+            .pragma_update(None, "user_version", 17_i64)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .commit()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        version = 17;
+    }
+    if version == 17 {
+        let transaction = connection
+            .unchecked_transaction()
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute_batch(MIGRATION_18_SCHEMA_SQL)
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
+            .execute(
+                "INSERT INTO schema_history(version, migration_sha256) VALUES (18, ?1)",
+                [sha256_hex(MIGRATION_18_SCHEMA_SQL.as_bytes())],
+            )
+            .map_err(|_| OperationalStoreError::MigrationFailed)?;
+        transaction
             .pragma_update(None, "user_version", SCHEMA_VERSION)
             .map_err(|_| OperationalStoreError::MigrationFailed)?;
         transaction
@@ -3552,6 +3810,7 @@ fn verify_schema_history(connection: &Connection) -> Result<(), OperationalStore
             (15, sha256_hex(MIGRATION_15_SCHEMA_SQL.as_bytes())),
             (16, sha256_hex(MIGRATION_16_SCHEMA_SQL.as_bytes())),
             (17, sha256_hex(MIGRATION_17_SCHEMA_SQL.as_bytes())),
+            (18, sha256_hex(MIGRATION_18_SCHEMA_SQL.as_bytes())),
         ]
     {
         return Err(OperationalStoreError::MigrationFailed);
@@ -3968,6 +4227,127 @@ fn verify_workflow_checkpoints(store: &OperationalStore) -> Result<(), Operation
         }
     }
     Ok(())
+}
+
+fn verify_attempt_checkpoints(store: &OperationalStore) -> Result<(), OperationalStoreError> {
+    let mut statement = store
+        .connection
+        .prepare(
+            "SELECT attempt_checkpoint_id, workflow_checkpoint_id, workflow_id, execution_id,
+                step_execution_id, attempt_id, run_id, session_id, event_sequence, event_id,
+                effect_state, authority_consumed, checkpoint_sha256, record_json
+         FROM workflow_attempt_checkpoints ORDER BY attempt_checkpoint_id",
+        )
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    let rows = statement
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, String>(6)?,
+                row.get::<_, String>(7)?,
+                row.get::<_, i64>(8)?,
+                row.get::<_, String>(9)?,
+                row.get::<_, String>(10)?,
+                row.get::<_, bool>(11)?,
+                row.get::<_, String>(12)?,
+                row.get::<_, Vec<u8>>(13)?,
+            ))
+        })
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    for row in rows {
+        let (
+            checkpoint_id,
+            workflow_checkpoint_id,
+            workflow_id,
+            execution_id,
+            step_execution_id,
+            attempt_id,
+            run_id,
+            session_id,
+            event_sequence,
+            event_id,
+            effect_state,
+            authority_consumed,
+            digest,
+            bytes,
+        ) = row.map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        let checkpoint: CanonicalAttemptCheckpoint =
+            from_json(&bytes).map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        crate::durable_attempt_recovery::verify_attempt_checkpoint(&checkpoint)
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        if checkpoint.attempt_checkpoint_id != checkpoint_id
+            || checkpoint.workflow_checkpoint_id != workflow_checkpoint_id
+            || checkpoint.workflow_id != workflow_id
+            || checkpoint.execution_id != execution_id
+            || checkpoint.step_execution_id != step_execution_id
+            || checkpoint.attempt_id != attempt_id
+            || checkpoint.event_cursor.run_id.as_str() != run_id
+            || i64::try_from(checkpoint.event_cursor.sequence).ok() != Some(event_sequence)
+            || checkpoint.event_cursor.event_id.as_str() != event_id
+            || checkpoint_effect_state_code(checkpoint.effect_state) != effect_state
+            || checkpoint.authority_consumed != authority_consumed
+            || checkpoint.checkpoint_sha256 != digest
+        {
+            return Err(OperationalStoreError::IntegrityFailure);
+        }
+        let authority_matches: bool = store
+            .connection
+            .query_row(
+                "SELECT EXISTS(
+                 SELECT 1 FROM workflow_checkpoints
+                 WHERE checkpoint_id = ?1 AND workflow_id = ?2 AND run_id = ?3
+                   AND session_id = ?4 AND event_sequence = ?5 AND event_id = ?6
+             )",
+                params![
+                    workflow_checkpoint_id,
+                    workflow_id,
+                    run_id,
+                    session_id,
+                    event_sequence,
+                    event_id
+                ],
+                |row| row.get(0),
+            )
+            .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+        if !authority_matches {
+            return Err(OperationalStoreError::IntegrityFailure);
+        }
+    }
+
+    let invalid_claims: bool = store
+        .connection
+        .query_row(
+            "SELECT EXISTS(
+             SELECT 1 FROM workflow_attempt_resume_claims claim
+             LEFT JOIN workflow_attempt_checkpoints checkpoint
+               ON checkpoint.attempt_checkpoint_id = claim.attempt_checkpoint_id
+             WHERE checkpoint.attempt_checkpoint_id IS NULL
+                OR length(claim.owner_id) = 0 OR length(claim.owner_id) > 128
+                OR length(claim.decision_sha256) <> 64
+                OR claim.claimed_at_epoch_ms <= 0
+         )",
+            [],
+            |row| row.get(0),
+        )
+        .map_err(|_| OperationalStoreError::IntegrityFailure)?;
+    if invalid_claims {
+        return Err(OperationalStoreError::IntegrityFailure);
+    }
+    Ok(())
+}
+
+const fn checkpoint_effect_state_code(state: CanonicalCheckpointEffectState) -> &'static str {
+    match state {
+        CanonicalCheckpointEffectState::NoEffect => "no_effect",
+        CanonicalCheckpointEffectState::VerifiedNotApplied => "verified_not_applied",
+        CanonicalCheckpointEffectState::VerifiedApplied => "verified_applied",
+        CanonicalCheckpointEffectState::Uncertain => "uncertain",
+    }
 }
 
 fn persist_write_checkpoints(
@@ -5481,6 +5861,14 @@ const DERIVED_EXPORT_QUERIES: &[DerivedExportQuery] = &[
         sql: "SELECT checkpoint_id, journal_sequence, record_sha256 FROM workflow_checkpoints",
     },
     DerivedExportQuery {
+        family: "workflow_attempt_checkpoints",
+        sql: "SELECT attempt_checkpoint_id, event_sequence, checkpoint_sha256 FROM workflow_attempt_checkpoints",
+    },
+    DerivedExportQuery {
+        family: "workflow_attempt_resume_claims",
+        sql: "SELECT attempt_checkpoint_id || char(0) || owner_id, claimed_at_epoch_ms, decision_sha256 FROM workflow_attempt_resume_claims",
+    },
+    DerivedExportQuery {
         family: "workflow_terminal_diagnostics",
         sql: "SELECT diagnostic_id, 0, diagnostic_sha256 FROM workflow_terminal_diagnostics",
     },
@@ -5781,11 +6169,12 @@ mod tests {
 
     use agentmage_kernel_contracts::{
         ActorId, AdapterInstanceId, ApprovalId, AuthorizedWorkspaceHandle, CONTRACT_SCHEMA_VERSION,
-        CanonicalWorkflowCheckpoint, CheckpointFileIdentity, CloudSynchronizationMarker,
-        ContextSensitivity, CorrelationId, DataSensitivity, EvidenceId, GrantId, GrantNonce,
-        GrantOperation, GrantTarget, HeldWorkspaceRoot, ModelProfileId, PathPlatform, PlanId,
-        PlanStepId, PolicyId, RepositorySnapshotId, RuntimeArtifactId, RuntimeArtifactRef,
-        RuntimeEvent, RuntimeEventCursor, RuntimeEventId, RuntimeEventKind,
+        CanonicalAttemptBudgetState, CanonicalAttemptCheckpoint, CanonicalCheckpointEffectState,
+        CanonicalWorkflowCheckpoint, CanonicalWorkflowFailureClass, CheckpointFileIdentity,
+        CloudSynchronizationMarker, ContextSensitivity, CorrelationId, DataSensitivity, EvidenceId,
+        GrantId, GrantNonce, GrantOperation, GrantTarget, HeldWorkspaceRoot, ModelProfileId,
+        PathPlatform, PlanId, PlanStepId, PolicyId, RepositorySnapshotId, RuntimeArtifactId,
+        RuntimeArtifactRef, RuntimeEvent, RuntimeEventCursor, RuntimeEventId, RuntimeEventKind,
         RuntimeEventPersistenceClass, RuntimeEventRetention, RuntimeEventRetentionKind,
         RuntimeOperationId, RuntimeResumeBinding, RuntimeRunId, RuntimeTurnId, SessionCheckpoint,
         SessionCheckpointId, SessionId, StorageFilesystemClass, StrictLocalStorageObservation,
@@ -5807,6 +6196,7 @@ mod tests {
     };
     use crate::authority_transaction::AuthorityTransactionCoordinator;
     use crate::context_management::finalize_checkpoint;
+    use crate::durable_attempt_recovery::seal_attempt_checkpoint;
     use crate::grants::{GrantIssuer, SessionReadGrantRequest};
     use crate::repository_cache::RepositoryCacheRecord;
     use crate::runtime_event::seal_runtime_event;
@@ -5841,6 +6231,52 @@ mod tests {
             consumed_grant_sha256s: vec![hash('7')],
             created_at: "2026-08-31T00:00:00Z".to_owned(),
         }
+    }
+
+    fn attempt_checkpoint(
+        workflow_checkpoint: &CanonicalWorkflowCheckpoint,
+        event_cursor: RuntimeEventCursor,
+    ) -> CanonicalAttemptCheckpoint {
+        seal_attempt_checkpoint(CanonicalAttemptCheckpoint {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            attempt_checkpoint_id: "attempt-store-checkpoint-1".to_owned(),
+            workflow_checkpoint_id: workflow_checkpoint.checkpoint_id.clone(),
+            workflow_id: workflow_checkpoint.workflow_id.clone(),
+            execution_id: "execution-store-1".to_owned(),
+            step_execution_id: "step-execution-store-1".to_owned(),
+            attempt_id: None,
+            source_sha256: workflow_checkpoint.source_manifest_sha256.clone(),
+            plan_sha256: hash('8'),
+            model_sha256: workflow_checkpoint.route_sha256.clone(),
+            context_sha256: hash('9'),
+            tool_catalog_sha256: workflow_checkpoint.tool_catalog_sha256.clone(),
+            policy_sha256: workflow_checkpoint.policy_sha256.clone(),
+            grants_sha256: hash('a'),
+            approvals_sha256: hash('b'),
+            preflights_sha256: hash('c'),
+            attempts_sha256: hash('d'),
+            receipts_sha256: hash('e'),
+            artifacts_sha256: hash('f'),
+            verifier_sha256: hash('0'),
+            budget_policy_sha256: hash('1'),
+            budget_state: CanonicalAttemptBudgetState {
+                parser_repairs: 0,
+                model_repairs: 0,
+                step_attempts: 0,
+                error_class_counts: vec![0; CanonicalWorkflowFailureClass::ALL.len()],
+                workflow_work: 0,
+                replans: 0,
+            },
+            repeated_state_sha256: hash('2'),
+            repeated_state_count: 1,
+            event_cursor,
+            environment_sha256: workflow_checkpoint.environment_sha256.clone(),
+            effect_state: CanonicalCheckpointEffectState::NoEffect,
+            authority_consumed: false,
+            created_at: "2026-08-31T12:00:00Z".to_owned(),
+            checkpoint_sha256: ZERO_SHA256.to_owned(),
+        })
+        .expect("attempt checkpoint")
     }
 
     fn write_checkpoint(
@@ -6724,7 +7160,7 @@ mod tests {
 
         assert_eq!(exported_families, persisted_families);
         assert_eq!(export_queries.len(), persisted_families.len());
-        assert_eq!(persisted_families.len(), 32);
+        assert_eq!(persisted_families.len(), 34);
         for query in export_queries {
             let normalized = query.sql.to_ascii_lowercase();
             for prohibited in [
@@ -7476,6 +7912,124 @@ mod tests {
     }
 
     #[test]
+    fn attempt_checkpoint_and_single_resume_owner_survive_verified_restart() {
+        let directory = temporary_directory();
+        let path = directory.join("authority.db");
+        let key = [72; 32];
+        let (session_checkpoint, _, start_event, checkpoint_event) =
+            atomic_checkpoint_publication();
+        let event_cursor = RuntimeEventCursor {
+            run_id: checkpoint_event.run_id.clone(),
+            event_id: checkpoint_event.event_id.clone(),
+            sequence: checkpoint_event.sequence,
+            event_sha256: checkpoint_event.event_sha256.clone(),
+        };
+        let binding = crate::runtime_artifact::seal_runtime_resume_binding(RuntimeResumeBinding {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            checkpoint_id: session_checkpoint.checkpoint_id.clone(),
+            checkpoint_sha256: session_checkpoint.checkpoint_sha256.clone(),
+            session_id: session_checkpoint.session_id.clone(),
+            task_id: session_checkpoint.task_id.clone(),
+            run_id: checkpoint_event.run_id.clone(),
+            event_cursor: event_cursor.clone(),
+            artifacts: Vec::new(),
+            binding_sha256: ZERO_SHA256.to_owned(),
+        })
+        .expect("binding");
+        let projection = WorkflowStateMaterialization {
+            schema_version: CONTRACT_SCHEMA_VERSION,
+            fingerprint_record_id: "attempt-store-fingerprint-1".to_owned(),
+            step_execution_id: Some("step-execution-store-1".to_owned()),
+            fingerprint_sha256: hash('7'),
+            occurrence: 1,
+            repeat_count: 0,
+            run_id: checkpoint_event.run_id.clone(),
+            session_id: session_checkpoint.session_id.clone(),
+            event_cursor: event_cursor.clone(),
+        };
+        let workflow_checkpoint = workflow_checkpoint(
+            "attempt-store-workflow-checkpoint-1",
+            projection.fingerprint_sha256.clone(),
+            binding.event_cursor.sequence,
+        );
+        let attempt_checkpoint = attempt_checkpoint(&workflow_checkpoint, event_cursor);
+        let mut runtime =
+            DurableAuthorityRuntime::open(&path, &observation(), &mut TestKey(key), 500)
+                .expect("runtime");
+        runtime
+            .record_runtime_event(start_event)
+            .expect("start event");
+        runtime
+            .checkpoint_runtime_session_with_workflow_state(
+                &session_checkpoint,
+                &binding,
+                checkpoint_event,
+                std::slice::from_ref(&projection),
+                &workflow_checkpoint,
+            )
+            .expect("workflow checkpoint");
+        runtime
+            .publish_attempt_checkpoint(&attempt_checkpoint)
+            .expect("attempt checkpoint");
+        assert_eq!(
+            runtime
+                .current_attempt_checkpoint(&workflow_checkpoint.workflow_id)
+                .expect("current"),
+            Some(attempt_checkpoint.clone()),
+        );
+        let owner = runtime
+            .claim_attempt_resume(
+                &attempt_checkpoint.attempt_checkpoint_id,
+                "desktop-client-1",
+                &hash('3'),
+                8_000,
+            )
+            .expect("first owner");
+        assert_eq!(owner.owner_id, "desktop-client-1");
+        assert_eq!(
+            runtime.claim_attempt_resume(
+                &attempt_checkpoint.attempt_checkpoint_id,
+                "cli-client-2",
+                &hash('4'),
+                8_001,
+            ),
+            Err(DurableAuthorityError::Store(
+                OperationalStoreError::ConcurrentWriter
+            )),
+        );
+        drop(runtime);
+
+        let reopened = OperationalStore::open(&path, &observation(), &mut TestKey(key))
+            .expect("verified restart");
+        assert_eq!(
+            reopened
+                .current_attempt_checkpoint(&workflow_checkpoint.workflow_id)
+                .expect("reloaded"),
+            Some(attempt_checkpoint.clone()),
+        );
+        assert_eq!(
+            reopened
+                .attempt_resume_owner(&attempt_checkpoint.attempt_checkpoint_id)
+                .expect("owner")
+                .expect("present")
+                .owner_id,
+            "desktop-client-1",
+        );
+        assert!(
+            reopened
+                .connection
+                .execute(
+                    "UPDATE workflow_attempt_checkpoints SET authority_consumed = 1",
+                    [],
+                )
+                .is_err(),
+            "attempt checkpoints are append-only"
+        );
+        drop(reopened);
+        fs::remove_dir_all(directory).expect("cleanup");
+    }
+
+    #[test]
     fn workflow_checkpoint_reopens_exactly_and_tamper_blocks_restart() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
@@ -7745,13 +8299,13 @@ mod tests {
     }
 
     #[test]
-    fn version_seventeen_schema_matches_fixture_snapshot_and_is_relational() {
+    fn version_eighteen_schema_matches_fixture_snapshot_and_is_relational() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         let store = OperationalStore::open(&path, &observation(), &mut TestKey([14; 32]))
-            .expect("version seventeen store");
+            .expect("version eighteen store");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-17.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-18.json"))
                 .expect("schema fixture parses");
         assert_eq!(fixture["schema_version"].as_i64(), Some(SCHEMA_VERSION));
         let tables: Vec<String> = store
@@ -9480,7 +10034,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_upgrades_through_seventeen_with_exact_history() {
+    fn version_one_upgrades_through_eighteen_with_exact_history() {
         let directory = temporary_directory();
         let path = directory.join("authority.db");
         create_version_one_store(&path, &[15; 32]);
@@ -9501,7 +10055,7 @@ mod tests {
             })
             .expect("migration history");
         let fixture: serde_json::Value =
-            serde_json::from_str(include_str!("../fixtures/operational-store/schema-17.json"))
+            serde_json::from_str(include_str!("../fixtures/operational-store/schema-18.json"))
                 .expect("schema fixture parses");
         let fixture_history = fixture["migrations"]
             .as_array()
@@ -10711,7 +11265,7 @@ mod tests {
                     .connection
                     .query_row("SELECT COUNT(*) FROM schema_history", [], |row| row.get(0))
                     .expect("migration history count");
-                assert_eq!((version, history), (SCHEMA_VERSION, 17));
+                assert_eq!((version, history), (SCHEMA_VERSION, SCHEMA_VERSION));
             }
             SeededCrashBoundary::KeyRetrieval => {
                 let store = OperationalStore::open(&store_path, &observation(), &mut TestKey(key))

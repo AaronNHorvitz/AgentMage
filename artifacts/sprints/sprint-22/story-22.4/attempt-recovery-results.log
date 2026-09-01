@@ -1,11 +1,221 @@
-$ cargo test -p agentmage-kernel-engine operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+$ cargo run -p agentmage-kernel-engine --example story_22_4_evidence --locked
+   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.24s
+     Running `target/debug/examples/story_22_4_evidence`
+
+$ cargo test -p agentmage-kernel-engine durable_attempt_recovery --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
-running 1 test
-test operational_store::tests::workflow_materializations_bind_existing_run_session_event_and_receipt_authorities ... ok
+running 6 tests
+test durable_attempt_recovery::tests::story_22_4_attempt_recovery_crash_child ... ignored, subprocess helper for deterministic no-unwind attempt-recovery interruption
+test durable_attempt_recovery::tests::story_22_4_drift_budgets_and_repeated_state_stop_or_reconcile_visibly ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 776 filtered out; finished in 0.08s
+running 1 test
+test durable_attempt_recovery::tests::story_22_4_concurrent_clients_have_one_owner ... ok
+test durable_attempt_recovery::tests::story_22_4_selects_exactly_one_action_and_never_replays_prior_effect ... ok
+test durable_attempt_recovery::tests::story_22_4_checkpoint_binds_every_required_identity_and_rejects_mutation ... ok
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+
+running 1 test
+test durable_attempt_recovery::tests::story_22_4_one_hundred_seed_no_unwind_boundary_campaign_has_zero_replay ... ok
+
+test result: ok. 5 passed; 0 failed; 1 ignored; 0 measured; 771 filtered out; finished in 0.25s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -108,14 +318,16 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-$ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history --locked
+
+
+$ cargo test -p agentmage-kernel-engine attempt_checkpoint_and_single_resume_owner_survive_verified_restart --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
 running 1 test
-test operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history ... ok
+test operational_store::tests::attempt_checkpoint_and_single_resume_owner_survive_verified_restart ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 776 filtered out; finished in 0.08s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 776 filtered out; finished in 0.12s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -218,14 +430,15 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-$ cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked
+
+
+$ cargo test -p agentmage-kernel-engine story_22_4_recovery_fresh_attempt_composes_only_through_existing_admission --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
-running 1 test
-test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
+running 0 tests
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 776 filtered out; finished in 28.49s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 777 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -295,9 +508,10 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
      Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
 
-running 0 tests
+running 1 test
+test story_22_4_recovery_fresh_attempt_composes_only_through_existing_admission ... ok
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -328,5 +542,20 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-$ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+
+
+$ node --test tests/test_attempt_recovery_schemas.mjs
+✔ attempt recovery schemas accept closed content-free records (1.757441ms)
+✔ attempt recovery schemas reject replay, hidden content, missing budgets, and widening (0.229225ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 94.240162
+
+$ cargo clippy -p agentmage-kernel-contracts -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
+    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.03s

@@ -92,6 +92,7 @@ impl_versioned_contract!(
     crate::CanonicalToolObservation,
     crate::CanonicalVerificationResult,
     crate::CanonicalWorkflowCheckpoint,
+    crate::CanonicalAttemptCheckpoint,
     crate::CanonicalWorkflowDefinition,
     crate::CanonicalWorkflowState,
     crate::HandoffDraft,

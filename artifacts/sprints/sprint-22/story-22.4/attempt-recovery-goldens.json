@@ -1,0 +1,994 @@
+{
+  "checkpoint": {
+    "approvals_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
+    "artifacts_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "attempt_checkpoint_id": "story-22-4-checkpoint",
+    "attempt_id": "story-22-4-attempt",
+    "attempts_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authority_consumed": false,
+    "budget_policy_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "budget_state": {
+      "error_class_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "model_repairs": 0,
+      "parser_repairs": 1,
+      "replans": 0,
+      "step_attempts": 1,
+      "workflow_work": 2
+    },
+    "checkpoint_sha256": "ec7a85bb00eaab24a47c1469c60024cc54d78346b5a97bfea34a8dbec8db57d5",
+    "context_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "created_at": "2026-08-31T12:00:00Z",
+    "effect_state": "no_effect",
+    "environment_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "event_cursor": {
+      "event_id": "story-22-4-event",
+      "event_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "run_id": "story-22-4-run",
+      "sequence": 11
+    },
+    "execution_id": "story-22-4-execution",
+    "grants_sha256": "7777777777777777777777777777777777777777777777777777777777777777",
+    "model_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "plan_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "policy_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "preflights_sha256": "9999999999999999999999999999999999999999999999999999999999999999",
+    "receipts_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "repeated_state_count": 1,
+    "repeated_state_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "schema_version": 2,
+    "source_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "step_execution_id": "story-22-4-step",
+    "tool_catalog_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "verifier_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "workflow_checkpoint_id": "story-22-4-workflow-checkpoint",
+    "workflow_id": "story-22-4-workflow"
+  },
+  "checkpoint_graph": {
+    "current_node": "attempt_checkpoint",
+    "edges": [
+      [
+        "session_checkpoint",
+        "workflow_checkpoint"
+      ],
+      [
+        "workflow_checkpoint",
+        "attempt_checkpoint"
+      ]
+    ],
+    "nodes": [
+      "session_checkpoint",
+      "workflow_checkpoint",
+      "attempt_checkpoint"
+    ]
+  },
+  "cleanup": {
+    "orphan_resume_owners": 0,
+    "temporary_campaign_directories_remaining": 0,
+    "unbound_checkpoint_count": 0
+  },
+  "concurrent_client_count": 32,
+  "crash_traces": [
+    {
+      "boundary": "preflight",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 0
+    },
+    {
+      "boundary": "preflight",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 1
+    },
+    {
+      "boundary": "approval",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 2
+    },
+    {
+      "boundary": "approval",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 3
+    },
+    {
+      "boundary": "dispatch",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 4
+    },
+    {
+      "boundary": "dispatch",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 5
+    },
+    {
+      "boundary": "effect",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 6
+    },
+    {
+      "boundary": "effect",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "uncertain",
+      "seed": 7
+    },
+    {
+      "boundary": "receipt",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 8
+    },
+    {
+      "boundary": "receipt",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 9
+    },
+    {
+      "boundary": "artifact",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 10
+    },
+    {
+      "boundary": "artifact",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 11
+    },
+    {
+      "boundary": "verification",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 12
+    },
+    {
+      "boundary": "verification",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 13
+    },
+    {
+      "boundary": "retry_decision",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 14
+    },
+    {
+      "boundary": "retry_decision",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 15
+    },
+    {
+      "boundary": "recovery_decision",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 16
+    },
+    {
+      "boundary": "recovery_decision",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 17
+    },
+    {
+      "boundary": "checkpoint",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 18
+    },
+    {
+      "boundary": "checkpoint",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 19
+    },
+    {
+      "boundary": "terminal",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 20
+    },
+    {
+      "boundary": "terminal",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 21
+    },
+    {
+      "boundary": "preflight",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 22
+    },
+    {
+      "boundary": "preflight",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 23
+    },
+    {
+      "boundary": "approval",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 24
+    },
+    {
+      "boundary": "approval",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 25
+    },
+    {
+      "boundary": "dispatch",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 26
+    },
+    {
+      "boundary": "dispatch",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 27
+    },
+    {
+      "boundary": "effect",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 28
+    },
+    {
+      "boundary": "effect",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "uncertain",
+      "seed": 29
+    },
+    {
+      "boundary": "receipt",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 30
+    },
+    {
+      "boundary": "receipt",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 31
+    },
+    {
+      "boundary": "artifact",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 32
+    },
+    {
+      "boundary": "artifact",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 33
+    },
+    {
+      "boundary": "verification",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 34
+    },
+    {
+      "boundary": "verification",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 35
+    },
+    {
+      "boundary": "retry_decision",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 36
+    },
+    {
+      "boundary": "retry_decision",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 37
+    },
+    {
+      "boundary": "recovery_decision",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 38
+    },
+    {
+      "boundary": "recovery_decision",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 39
+    },
+    {
+      "boundary": "checkpoint",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 40
+    },
+    {
+      "boundary": "checkpoint",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 41
+    },
+    {
+      "boundary": "terminal",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 42
+    },
+    {
+      "boundary": "terminal",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 43
+    },
+    {
+      "boundary": "preflight",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 44
+    },
+    {
+      "boundary": "preflight",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 45
+    },
+    {
+      "boundary": "approval",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 46
+    },
+    {
+      "boundary": "approval",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 47
+    },
+    {
+      "boundary": "dispatch",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 48
+    },
+    {
+      "boundary": "dispatch",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 49
+    },
+    {
+      "boundary": "effect",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 50
+    },
+    {
+      "boundary": "effect",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "uncertain",
+      "seed": 51
+    },
+    {
+      "boundary": "receipt",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 52
+    },
+    {
+      "boundary": "receipt",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 53
+    },
+    {
+      "boundary": "artifact",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 54
+    },
+    {
+      "boundary": "artifact",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 55
+    },
+    {
+      "boundary": "verification",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 56
+    },
+    {
+      "boundary": "verification",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 57
+    },
+    {
+      "boundary": "retry_decision",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 58
+    },
+    {
+      "boundary": "retry_decision",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 59
+    },
+    {
+      "boundary": "recovery_decision",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 60
+    },
+    {
+      "boundary": "recovery_decision",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 61
+    },
+    {
+      "boundary": "checkpoint",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 62
+    },
+    {
+      "boundary": "checkpoint",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 63
+    },
+    {
+      "boundary": "terminal",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 64
+    },
+    {
+      "boundary": "terminal",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 65
+    },
+    {
+      "boundary": "preflight",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 66
+    },
+    {
+      "boundary": "preflight",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 67
+    },
+    {
+      "boundary": "approval",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 68
+    },
+    {
+      "boundary": "approval",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 69
+    },
+    {
+      "boundary": "dispatch",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 70
+    },
+    {
+      "boundary": "dispatch",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 71
+    },
+    {
+      "boundary": "effect",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 72
+    },
+    {
+      "boundary": "effect",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "uncertain",
+      "seed": 73
+    },
+    {
+      "boundary": "receipt",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 74
+    },
+    {
+      "boundary": "receipt",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 75
+    },
+    {
+      "boundary": "artifact",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 76
+    },
+    {
+      "boundary": "artifact",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 77
+    },
+    {
+      "boundary": "verification",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 78
+    },
+    {
+      "boundary": "verification",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 79
+    },
+    {
+      "boundary": "retry_decision",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 80
+    },
+    {
+      "boundary": "retry_decision",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 81
+    },
+    {
+      "boundary": "recovery_decision",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 82
+    },
+    {
+      "boundary": "recovery_decision",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 83
+    },
+    {
+      "boundary": "checkpoint",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 84
+    },
+    {
+      "boundary": "checkpoint",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 85
+    },
+    {
+      "boundary": "terminal",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 86
+    },
+    {
+      "boundary": "terminal",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 87
+    },
+    {
+      "boundary": "preflight",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 88
+    },
+    {
+      "boundary": "preflight",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 89
+    },
+    {
+      "boundary": "approval",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 90
+    },
+    {
+      "boundary": "approval",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 91
+    },
+    {
+      "boundary": "dispatch",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 92
+    },
+    {
+      "boundary": "dispatch",
+      "position": "after",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 93
+    },
+    {
+      "boundary": "effect",
+      "position": "before",
+      "recovery_action": "continue",
+      "replay_count": 0,
+      "retained_effect": "no_effect",
+      "seed": 94
+    },
+    {
+      "boundary": "effect",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "uncertain",
+      "seed": 95
+    },
+    {
+      "boundary": "receipt",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 96
+    },
+    {
+      "boundary": "receipt",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 97
+    },
+    {
+      "boundary": "artifact",
+      "position": "before",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 98
+    },
+    {
+      "boundary": "artifact",
+      "position": "after",
+      "recovery_action": "reconcile_effect",
+      "replay_count": 0,
+      "retained_effect": "verified_applied",
+      "seed": 99
+    }
+  ],
+  "decisions": [
+    {
+      "action": "continue",
+      "case": "continue",
+      "decision_sha256": "670bc191b66262b88b4932873414285fb12d19a0be6409c8f89e0443322a1aea",
+      "fresh_authority_required": false,
+      "replay_allowed": false
+    },
+    {
+      "action": "fresh_attempt",
+      "case": "fresh_attempt",
+      "decision_sha256": "70aaf61960caf58df6218914a9919ae8941909fe299d14b0af49b3c492b4091a",
+      "fresh_authority_required": true,
+      "replay_allowed": false
+    },
+    {
+      "action": "deterministic_repair",
+      "case": "deterministic_repair",
+      "decision_sha256": "8a0b33084aefc9efafb410c3087fca6421d996f06e62f19d5195eb6ecca65441",
+      "fresh_authority_required": false,
+      "replay_allowed": false
+    },
+    {
+      "action": "replan",
+      "case": "replan",
+      "decision_sha256": "9188989bd3c7470838066d69f5a48698cca1b68ac96d0f032b644b8d63bb2442",
+      "fresh_authority_required": false,
+      "replay_allowed": false
+    },
+    {
+      "action": "await_approval",
+      "case": "await_approval",
+      "decision_sha256": "b42ecd4e6e9e0c3a2647a504018e6cd55c7f267d84be56ca95ddca2c7a1f7238",
+      "fresh_authority_required": false,
+      "replay_allowed": false
+    },
+    {
+      "action": "await_dependency",
+      "case": "await_dependency",
+      "decision_sha256": "3fda5adcd19d5f9638bef099a9a2a1ce303327012e61254b1f44cb519b64a7c9",
+      "fresh_authority_required": false,
+      "replay_allowed": false
+    },
+    {
+      "action": "reconcile_effect",
+      "case": "reconcile_effect",
+      "decision_sha256": "22af9e21de59866e61db1e51f8c925b26f5372754579c04ceec33fc9b766ea17",
+      "fresh_authority_required": false,
+      "replay_allowed": false
+    },
+    {
+      "action": "cancel",
+      "case": "cancel",
+      "decision_sha256": "ceca333795031025316c53043725ad2cadf75b3dd9a2677af5989061bd178edf",
+      "fresh_authority_required": false,
+      "replay_allowed": false
+    },
+    {
+      "action": "terminate_diagnosed",
+      "case": "terminate_diagnosed",
+      "decision_sha256": "76b2fefadaea2b04ec588f389b49355bb32b2b98cfadd50efddaa7722e6d54fa",
+      "fresh_authority_required": false,
+      "replay_allowed": false
+    }
+  ],
+  "deterministic_seed_count": 100,
+  "duplicate_effect_count": 0,
+  "durable_owner_count": 1,
+  "external_values_retained": 0,
+  "interruption_boundary_count": 11,
+  "invalidation_dimensions": [
+    "source",
+    "plan",
+    "model",
+    "context",
+    "tool_catalog",
+    "policy",
+    "grants",
+    "approvals",
+    "preflights",
+    "attempts",
+    "receipts",
+    "artifacts",
+    "verifier",
+    "budgets",
+    "repeated_state",
+    "event_cursor",
+    "environment",
+    "postcondition"
+  ],
+  "record_type": "agentmage-story-22-4-attempt-recovery-goldens",
+  "replay_count": 0,
+  "schema_version": 2,
+  "terminal_diagnosis": {
+    "approval_needed": false,
+    "attempt_checkpoint_id": "story-22-4-checkpoint",
+    "attempts_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "blocked_reason_code": "attempt_recovery.budget_exhausted",
+    "diagnosis_sha256": "e30b10457af77b94ab67a120591f24e9e794c8ff389b91fc84e8fd5e1d2a8d65",
+    "exhausted_budgets": [
+      "step_attempt"
+    ],
+    "safe_resume_action": "replan",
+    "step_execution_id": "story-22-4-step",
+    "uncertain_effect": false,
+    "verifier_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  }
+}

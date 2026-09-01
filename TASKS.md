@@ -2269,7 +2269,7 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
   - [x] **Sub-task 11.2.3.1:** Add forward migrations, fixture snapshots, schema hashes, rollback
     tests, interrupted-migration recovery, future-schema refusal, and occupied-destination handling.
     Completed locally on Linux on 2026-08-30. The canonical SQLCipher store now has a retained,
-    machine-validated schema-17 fixture that pins the sorted table inventory and every ordered
+    machine-validated schema-18 fixture that pins the sorted table inventory and every ordered
     migration digest independently of the embedded migration implementation. Fresh creation and a
     version-one fixture upgrade both match it exactly. Existing transaction fault fixtures prove
     version-two and version-three migration rollback; the seeded subprocess matrix interrupts the
@@ -2344,7 +2344,7 @@ restart without stale context, guessed effects, duplicate attempts, or a second 
   - [x] **Sub-task 11.2.4.3:** Retain migration matrices, transaction traces, canary scans,
     encrypted-page scans, cleanup evidence, and `RV-08` through `RV-10` plus `RV-17` mappings.
     Completed locally on Linux on 2026-08-30. A machine-validated Story 11.2 index hash-binds the
-    schema-17 migration and downgrade reports, new-family lifecycle evidence, 224-case subprocess
+    schema-18 migration and downgrade reports, new-family lifecycle evidence, 224-case subprocess
     crash traces, exact old/new recovery results, Story 11.1 main/WAL/SHM/backup/export canary scans,
     and retention/deletion/erasure/cleanup records. The map records `RV-08` and `RV-10` as
     demonstrated for the current storage scope, `RV-09` as partial pending live provider, rotation,
@@ -3794,48 +3794,58 @@ state without repeating an effect or hiding why progress stopped.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 22.4.1 - Persist and validate attempt checkpoints**
-  - [ ] **Sub-task 22.4.1.1:** Bind checkpoints to source, plan, step, model, context, tool catalog,
+- [x] **Task 22.4.1 - Persist and validate attempt checkpoints**
+  - [x] **Sub-task 22.4.1.1:** Bind checkpoints to source, plan, step, model, context, tool catalog,
     policy, grants, approvals, preflights, attempts, receipts, artifacts, verifier, budgets, event
     cursor, and environment identities.
-  - [ ] **Sub-task 22.4.1.2:** Revalidate every identity and current postcondition on resume;
+  - [x] **Sub-task 22.4.1.2:** Revalidate every identity and current postcondition on resume;
     continue only unchanged work, otherwise invalidate, reconcile, request approval, or block.
-  - [ ] **Sub-task 22.4.1.3:** Retain uncertainty and consumed authority across restart; never
+  - [x] **Sub-task 22.4.1.3:** Retain uncertainty and consumed authority across restart; never
     reconstruct or replay an old effect call from transcript, model output, or incomplete state.
-- [ ] **Task 22.4.2 - Implement deterministic recovery decisions**
-  - [ ] **Sub-task 22.4.2.1:** Select exactly one safe action from continue, fresh eligible attempt,
+- [x] **Task 22.4.2 - Implement deterministic recovery decisions**
+  - [x] **Sub-task 22.4.2.1:** Select exactly one safe action from continue, fresh eligible attempt,
     deterministic repair, replan, await approval, await dependency, reconcile effect, cancel, or
     terminate diagnosed.
-  - [ ] **Sub-task 22.4.2.2:** Enforce parser, attempt, error, workflow, and replan budgets plus
+  - [x] **Sub-task 22.4.2.2:** Enforce parser, attempt, error, workflow, and replan budgets plus
     repeated-state detection across restart and concurrent clients.
-  - [ ] **Sub-task 22.4.2.3:** Produce one terminal diagnostic for each non-cancelled failure with
+  - [x] **Sub-task 22.4.2.3:** Produce one terminal diagnostic for each non-cancelled failure with
     failed step, last verified state, attempts, evidence, exhausted budgets, blocked reason,
     uncertainty, approval need, and safe resume action.
-- [ ] **Task 22.4.3 - Verify interruption and no-replay**
-  - [ ] **Sub-task 22.4.3.1:** Interrupt before and after each preflight, approval, dispatch, effect,
+- [x] **Task 22.4.3 - Verify interruption and no-replay**
+  - [x] **Sub-task 22.4.3.1:** Interrupt before and after each preflight, approval, dispatch, effect,
     receipt, artifact, verification, retry decision, recovery decision, checkpoint, and terminal
     commit across at least 100 deterministic seeds.
-  - [ ] **Sub-task 22.4.3.2:** Resume concurrently and under changed source, policy, model, tool,
+  - [x] **Sub-task 22.4.3.2:** Resume concurrently and under changed source, policy, model, tool,
     environment, and postcondition state; require one owner, one current decision, no duplicate
     effect, and explicit block on ambiguity.
-  - [ ] **Sub-task 22.4.3.3:** Retain crash traces, replay counters, checkpoint graphs, invalidation
+  - [x] **Sub-task 22.4.3.3:** Retain crash traces, replay counters, checkpoint graphs, invalidation
     results, diagnostics, cleanup, and `RV-12`, `RV-16`, `RV-17`, `RV-18`, and `RV-25` mappings.
+
+Local production evidence: [`durable-attempt-recovery-and-resume.md`](docs/architecture/durable-attempt-recovery-and-resume.md)
+and [`attempt-recovery-report.json`](artifacts/sprints/sprint-22/story-22.4/attempt-recovery-report.json)
+retain the sealed checkpoint contract, migration 18 reopen and one-owner claim, all nine decisions,
+fresh-attempt admission composition, 100 no-unwind interruption traces, 32-client arbitration,
+18 drift dimensions, terminal diagnosis, cleanup, schemas, and local RV mappings. Installed-package,
+Windows, physical-fault, and independent-review qualification remain explicitly external.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 22.4.AC1:** Given interruption at any workflow boundary, when recovery runs, then
+- [x] **Story AC 22.4.AC1:** Given interruption at any workflow boundary, when recovery runs, then
   it restores one exact current state or blocks visibly and never repeats a completed or uncertain
   effect.
-- [ ] **Story AC 22.4.AC2:** Given unchanged safe work and remaining budget, when a fresh attempt is
+- [x] **Story AC 22.4.AC2:** Given unchanged safe work and remaining budget, when a fresh attempt is
   eligible, then it receives new identities and authority while preserving prior evidence and
   attempt history.
-- [ ] **Story AC 22.4.AC3:** Given exhausted, repeated, stale, unauthorized, or ambiguous state,
+- [x] **Story AC 22.4.AC3:** Given exhausted, repeated, stale, unauthorized, or ambiguous state,
   when execution stops, then one actionable terminal diagnosis exists and no model or client can
   convert it into success.
 
 #### Sprint Acceptance Criteria
 
-- [ ] **Sprint AC 22.AC1:** `AT-CRASH-001` and `AT-RESUME-001` pass.
+- [x] **Sprint AC 22.AC1:** `AT-CRASH-001` and `AT-RESUME-001` pass. Evidence: the existing 126
+  store-boundary and 100 native checkpoint campaigns are supplemented by 100 attempt-level
+  before/after traces across all eleven recovery boundaries with exact reload or visible block and
+  zero replay.
 - [x] **Sprint AC 22.AC2:** Forced termination never repeats a completed operation. Evidence: 126 deterministic platform-neutral before/after store-boundary exits and 100 native Linux no-unwind exits around tool-terminal and checkpoint commits retain exactly one worker execution, no invented terminal or checkpoint state, and no repeated completed operation.
 - [x] **Sprint AC 22.AC3:** Material drift is detected before another action.
 - [x] **Sprint AC 22.AC4:** Context condensation preserves the active request, correction, evidence references, and next safe action.

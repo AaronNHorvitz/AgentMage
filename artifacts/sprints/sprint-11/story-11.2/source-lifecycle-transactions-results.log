@@ -6,7 +6,7 @@ running 2 tests
 test source_lifecycle::tests::stale_revision_and_active_hold_roll_back_without_runtime_reference_drift ... ok
 test source_lifecycle::tests::refresh_hold_expiry_delete_and_collection_are_atomic_and_reference_safe ... ok
 
-test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 711 filtered out; finished in 0.17s
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 775 filtered out; finished in 0.18s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -78,7 +78,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -116,7 +116,7 @@ $ cargo test -p agentmage-kernel-engine runtime_artifact::tests::publication_ded
 running 1 test
 test runtime_artifact::tests::publication_deduplicates_without_broadening_owner_or_reference_state ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 712 filtered out; finished in 0.09s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 776 filtered out; finished in 0.09s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -188,7 +188,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -219,14 +219,14 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-$ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_seventeen_with_exact_history --locked
+$ cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
 running 1 test
-test operational_store::tests::version_one_upgrades_through_seventeen_with_exact_history ... ok
+test operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 712 filtered out; finished in 0.08s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 776 filtered out; finished in 0.07s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -298,7 +298,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -336,7 +336,7 @@ $ cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_r
 running 1 test
 test operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 712 filtered out; finished in 27.51s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 776 filtered out; finished in 28.27s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -408,7 +408,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -440,4 +440,4 @@ running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s

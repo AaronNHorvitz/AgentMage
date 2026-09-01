@@ -47,7 +47,7 @@ class StorageMigrationCompatibilityEvidenceTests(unittest.TestCase):
         mutations.append(changed)
         for mutation in mutations:
             self.assertTrue(validate_fixture(mutation))
-        self.assertEqual(len(MIGRATION_SHA256), 17)
+        self.assertEqual(len(MIGRATION_SHA256), 18)
 
     def test_follow_on_or_product_completion_overclaim_is_rejected(self) -> None:
         for field in (

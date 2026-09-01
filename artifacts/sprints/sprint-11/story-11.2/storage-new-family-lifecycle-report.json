@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "byte_length": 422400,
+      "byte_length": 461249,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "22bc943e41474e766ff02043064102b4185557582f0be67160315c896e4fd5f2"
+      "sha256": "f814b7b99ad58eb5de3512ae95f4301a1bf2cc22b03c532b0a2ca920ab8f37aa"
     },
     {
       "byte_length": 69345,
@@ -18,7 +18,7 @@
     {
       "byte_length": 9211,
       "path": "scripts/storage_new_family_lifecycle_evidence.py",
-      "sha256": "4c83115bc377f052ee9e7f02b050d25f0ba838c5a3132e2b6d1195f4ce016a10"
+      "sha256": "efdfd1c9391345a03a90e73179664fc6d82a5cfd4ec956c5492eb05fda668cd5"
     },
     {
       "byte_length": 2549,
@@ -28,7 +28,7 @@
     {
       "byte_length": 29701,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-new-family-lifecycle-results.log",
-      "sha256": "ba96a41dc219d5764184109fe2215556bb1e9ba9edfd1b634139e01ab133007e"
+      "sha256": "14945b22fccbec278798d397456c156c891d10fd7b7018dfdbe7d715b051753f"
     }
   ],
   "canonical_store": "operational-store",
@@ -56,7 +56,7 @@
     "content_free_evidence_complete": true,
     "encrypted_backup_restore_complete": true,
     "exhaustive_crash_campaign_complete": false,
-    "new_family_count": 31,
+    "new_family_count": 34,
     "new_family_export_coverage_complete": true,
     "release_claim": "none",
     "source_retention_erasure_complete": true,

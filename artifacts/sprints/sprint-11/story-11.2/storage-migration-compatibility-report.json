@@ -1,14 +1,14 @@
 {
   "artifacts": [
     {
-      "byte_length": 437644,
+      "byte_length": 461249,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "64ac3a2ab768f47f03f5fdb4343aae9df0d429eff727b74a875f909ab6e17a9a"
+      "sha256": "f814b7b99ad58eb5de3512ae95f4301a1bf2cc22b03c532b0a2ca920ab8f37aa"
     },
     {
-      "byte_length": 3993,
-      "path": "kernel/engine/fixtures/operational-store/schema-17.json",
-      "sha256": "6d21d737c1092797c47d37a0772193b8def75ec1c76bf38fd96b3ef96665597e"
+      "byte_length": 4166,
+      "path": "kernel/engine/fixtures/operational-store/schema-18.json",
+      "sha256": "2dbc40858820316bb0bb6e08ae61bddaf25287c2cdd820a33f7624f9b16d4ea6"
     },
     {
       "byte_length": 1363,
@@ -16,25 +16,25 @@
       "sha256": "33f8b22f47f8daa31b4dcbf1d95ca0252851cb88d1f1b9d894f5792d96e50441"
     },
     {
-      "byte_length": 10701,
+      "byte_length": 10769,
       "path": "scripts/storage_migration_compatibility_evidence.py",
-      "sha256": "1d064dfb69d9cd2d3fdccb8c34cdb7c435acada93ba070bd9c6ce73deaa2d7aa"
+      "sha256": "fdf088719ec94bf6130cfe536aa5a04840133e2162fc32b9fdd2e7a8e24ec5f2"
     },
     {
       "byte_length": 2533,
       "path": "tests/test_storage_migration_compatibility_evidence.py",
-      "sha256": "6996c084f76c217aad41ed04fe36d5f2d59604b7088bef60de569dcf6002548f"
+      "sha256": "6da73e8e17e56cfabeebb629422585a0348f3a7a4c60cf6fd672fe9941016315"
     },
     {
-      "byte_length": 29755,
+      "byte_length": 29858,
       "path": "artifacts/sprints/sprint-11/story-11.2/storage-migration-compatibility-results.log",
-      "sha256": "4a2c19549579f3b6a829fa7213e3515fde48c47bb36e3df765beabdf6b4dac6b"
+      "sha256": "2321df26bcf8f0e21453104486abd5ef152d99a848a02474493eaf2f34fb3977"
     }
   ],
   "canonical_store": "operational-store",
   "commands": [
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_seventeen_schema_matches_fixture_snapshot_and_is_relational --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_seventeen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_eighteen_schema_matches_fixture_snapshot_and_is_relational --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::failed_version_ --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::future_schema_and_page_corruption_are_refused --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::exclusive_writer_and_encrypted_backup_are_verified --locked",
@@ -43,8 +43,8 @@
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
   "generated_on": "2026-08-30",
-  "migration_count": 16,
-  "operational_schema_version": 16,
+  "migration_count": 18,
+  "operational_schema_version": 18,
   "product_truth": {
     "downgrade_record_behavior_complete": false,
     "fixture_snapshot_complete": true,
@@ -62,8 +62,8 @@
   },
   "record_type": "agentmage-storage-migration-compatibility-evidence",
   "required_markers": [
-    "version_seventeen_schema_matches_fixture_snapshot_and_is_relational ... ok",
-    "version_one_upgrades_through_seventeen_with_exact_history ... ok",
+    "version_eighteen_schema_matches_fixture_snapshot_and_is_relational ... ok",
+    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
     "failed_version_two_migration_rolls_back_without_partial_schema ... ok",
     "failed_version_three_migration_rolls_back_all_alterations ... ok",
     "future_schema_and_page_corruption_are_refused ... ok",

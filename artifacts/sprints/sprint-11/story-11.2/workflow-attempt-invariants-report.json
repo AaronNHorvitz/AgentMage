@@ -15,9 +15,9 @@
       "sha256": "3f2730d0f49d60ce70bf8bb9f8980e32bae74f31ece544e3d99a839918d20c0d"
     },
     {
-      "byte_length": 437644,
+      "byte_length": 461249,
       "path": "kernel/engine/src/operational_store.rs",
-      "sha256": "64ac3a2ab768f47f03f5fdb4343aae9df0d429eff727b74a875f909ab6e17a9a"
+      "sha256": "f814b7b99ad58eb5de3512ae95f4301a1bf2cc22b03c532b0a2ca920ab8f37aa"
     },
     {
       "byte_length": 1993,
@@ -25,9 +25,9 @@
       "sha256": "adedcb573bfeceebc5cba6456341dd93cd5fcc6f6ec33ef919f0db4a0d169c6c"
     },
     {
-      "byte_length": 8559,
+      "byte_length": 8557,
       "path": "scripts/workflow_attempt_invariants_evidence.py",
-      "sha256": "d1d56603043fbafae4dea2bb28e6445b439fba33f96236cd9c4298a32289c8b3"
+      "sha256": "cfe13343556b12442eadf457230cbd5b2166fa9c78e35ca4a68a52fbf48096cc"
     },
     {
       "byte_length": 2091,
@@ -35,14 +35,14 @@
       "sha256": "2f966a72cfcba38380280a8da8ea8c533d4ead99e136a3eeaae5d09dba5360a9"
     },
     {
-      "byte_length": 12863,
+      "byte_length": 12861,
       "path": "artifacts/sprints/sprint-11/story-11.2/workflow-attempt-invariants-results.log",
-      "sha256": "b14dfa896f6fbbc47a5d1e9355cbe33244c35d6e8592c8ae671bc30c6a4057ce"
+      "sha256": "8ae57c36c0bbd025e29a59b43535e78f7f1108cba31a3978e249bab0e5ee2433"
     }
   ],
   "commands": [
     "cargo test -p agentmage-kernel-engine operational_store::tests::workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed --locked",
-    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_seventeen_with_exact_history --locked",
+    "cargo test -p agentmage-kernel-engine operational_store::tests::version_one_upgrades_through_eighteen_with_exact_history --locked",
     "cargo test -p agentmage-kernel-engine operational_store::tests::seeded_crash_recovery_campaign_never_repeats_a_completed_transition --locked",
     "cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings"
   ],
@@ -72,7 +72,7 @@
   "record_type": "agentmage-workflow-attempt-invariants-evidence",
   "required_markers": [
     "workflow_attempt_chain_receipt_and_uncertainty_invariants_fail_closed ... ok",
-    "version_one_upgrades_through_seventeen_with_exact_history ... ok",
+    "version_one_upgrades_through_eighteen_with_exact_history ... ok",
     "seeded_crash_recovery_campaign_never_repeats_a_completed_transition ... ok"
   ],
   "schema_version": 1,

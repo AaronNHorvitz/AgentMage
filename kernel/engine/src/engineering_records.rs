@@ -2,13 +2,14 @@
 
 use agentmage_kernel_contracts::{
     CONTRACT_SCHEMA_VERSION, CanonicalArtifactEnvelope, CanonicalArtifactIngestionResult,
-    CanonicalArtifactTransformation, CanonicalCapabilityManifest, CanonicalCaptureState,
-    CanonicalContextDeliveryReceipt, CanonicalContextDisposition, CanonicalContextManifest,
-    CanonicalDeliveryOutcome, CanonicalModelEndpointProfile, CanonicalModelRouteDecision,
-    CanonicalTerminalOutcome, CanonicalTerminalResult, CanonicalToolObservation,
-    CanonicalToolOutcome, CanonicalVerificationOutcome, CanonicalVerificationResult,
-    CanonicalWorkflowCheckpoint, CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle,
-    CanonicalWorkflowState, VersionedContract, to_canonical_json,
+    CanonicalArtifactTransformation, CanonicalAttemptCheckpoint, CanonicalCapabilityManifest,
+    CanonicalCaptureState, CanonicalCheckpointEffectState, CanonicalContextDeliveryReceipt,
+    CanonicalContextDisposition, CanonicalContextManifest, CanonicalDeliveryOutcome,
+    CanonicalModelEndpointProfile, CanonicalModelRouteDecision, CanonicalTerminalOutcome,
+    CanonicalTerminalResult, CanonicalToolObservation, CanonicalToolOutcome,
+    CanonicalVerificationOutcome, CanonicalVerificationResult, CanonicalWorkflowCheckpoint,
+    CanonicalWorkflowDefinition, CanonicalWorkflowLifecycle, CanonicalWorkflowState,
+    VersionedContract, to_canonical_json,
 };
 use sha2::{Digest, Sha256};
 
@@ -563,6 +564,78 @@ impl ValidateCanonicalRecord for CanonicalWorkflowCheckpoint {
         }
         sha_list(&self.receipt_sha256s, "receipt_sha256s")?;
         sha_list(&self.consumed_grant_sha256s, "consumed_grant_sha256s")?;
+        timestamp(&self.created_at, "created_at")
+    }
+}
+
+impl ValidateCanonicalRecord for CanonicalAttemptCheckpoint {
+    fn validate_canonical(&self) -> Result<(), CanonicalRecordError> {
+        record_version(self)?;
+        identifiers(&[
+            &self.attempt_checkpoint_id,
+            &self.workflow_checkpoint_id,
+            &self.workflow_id,
+            &self.execution_id,
+            &self.step_execution_id,
+        ])?;
+        if let Some(attempt_id) = &self.attempt_id {
+            identifier(attempt_id, "attempt_id")?;
+        }
+        for (value, field) in [
+            (&self.source_sha256, "source_sha256"),
+            (&self.plan_sha256, "plan_sha256"),
+            (&self.model_sha256, "model_sha256"),
+            (&self.context_sha256, "context_sha256"),
+            (&self.tool_catalog_sha256, "tool_catalog_sha256"),
+            (&self.policy_sha256, "policy_sha256"),
+            (&self.grants_sha256, "grants_sha256"),
+            (&self.approvals_sha256, "approvals_sha256"),
+            (&self.preflights_sha256, "preflights_sha256"),
+            (&self.attempts_sha256, "attempts_sha256"),
+            (&self.receipts_sha256, "receipts_sha256"),
+            (&self.artifacts_sha256, "artifacts_sha256"),
+            (&self.verifier_sha256, "verifier_sha256"),
+            (&self.budget_policy_sha256, "budget_policy_sha256"),
+            (&self.repeated_state_sha256, "repeated_state_sha256"),
+            (&self.environment_sha256, "environment_sha256"),
+            (&self.checkpoint_sha256, "checkpoint_sha256"),
+        ] {
+            sha(value, field)?;
+        }
+        if self.budget_state.error_class_counts.len()
+            != agentmage_kernel_contracts::CanonicalWorkflowFailureClass::ALL.len()
+        {
+            return Err(error(
+                "engineering.attempt_checkpoint.error_budget_coverage",
+                "budget_state",
+            ));
+        }
+        if self.event_cursor.run_id.as_str().is_empty()
+            || self.event_cursor.event_id.as_str().is_empty()
+        {
+            return Err(error(
+                "engineering.attempt_checkpoint.cursor_invalid",
+                "event_cursor",
+            ));
+        }
+        sha(&self.event_cursor.event_sha256, "event_cursor")?;
+        if self.authority_consumed && self.attempt_id.is_none() {
+            return Err(error(
+                "engineering.attempt_checkpoint.authority_without_attempt",
+                "authority_consumed",
+            ));
+        }
+        if matches!(
+            self.effect_state,
+            CanonicalCheckpointEffectState::VerifiedApplied
+                | CanonicalCheckpointEffectState::Uncertain
+        ) && (!self.authority_consumed || self.attempt_id.is_none())
+        {
+            return Err(error(
+                "engineering.attempt_checkpoint.effect_without_authority",
+                "effect_state",
+            ));
+        }
         timestamp(&self.created_at, "created_at")
     }
 }
