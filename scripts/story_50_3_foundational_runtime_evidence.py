@@ -164,6 +164,7 @@ def expected_report() -> dict[str, Any]:
             "fault_restart_and_no_replay_campaign_retained": True,
             "local_security_fault_campaign_complete": True,
             "component_removal_campaign_retained": True,
+            "complete_clean_target_removal_campaign": True,
             "independent_feature_activation_complete": True,
             "false_completion_or_unsafe_retry": False,
             "structured_document_parser_qualification": False,
@@ -203,6 +204,7 @@ def validate_report(value: Any) -> list[str]:
         "fault_restart_and_no_replay_campaign_retained",
         "local_security_fault_campaign_complete",
         "component_removal_campaign_retained",
+        "complete_clean_target_removal_campaign",
         "independent_feature_activation_complete",
     )
     required_false = (

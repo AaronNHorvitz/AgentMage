@@ -12,11 +12,11 @@
     "cargo": "cargo 1.95.0 (f2d3ce0bd 2026-03-21)",
     "machine": "x86_64",
     "network_mode": "Cargo offline; campaign commands use no shell",
-    "release": "7.1.6-201.fc44.x86_64",
+    "release": "7.1.10-200.fc44.x86_64",
     "rustc": "rustc 1.95.0 (59807616e 2026-04-14)",
     "system": "Linux"
   },
-  "generated_at_utc": "2026-08-17T20:52:06.577283+00:00",
+  "generated_at_utc": "2026-09-01T05:37:41.159200+00:00",
   "scenarios": [
     {
       "clippy_argv": [
@@ -30,22 +30,24 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "native-chat,workflow-caller",
+        "native-chat,source-artifacts,workflow-caller,workflow-supervisor",
         "--",
         "-D",
         "warnings"
       ],
       "clippy_exit_code": 0,
       "clippy_log": "cli-removed.clippy.log",
-      "clippy_log_sha256": "9d3f2fba02596b07513f8e2282d626fb9d8bb01e94d4483f83afbc04796e325c",
-      "compiled_source_count": 29,
+      "clippy_log_sha256": "017efc24e44229fa19125ed804d1d1c0bfbc725f431da7ba22cc1959bed5de95",
+      "compiled_source_count": 40,
       "compiled_sources": "cli-removed.compiled-sources.txt",
-      "compiled_sources_sha256": "5d2785e70b6ec96d376348140324a8f7ae338af424e94f75d76b6431e5f23e8c",
+      "compiled_sources_sha256": "52a2f8262a56f10a5894151f6b5f49d08fa737a9321fe63cda2f8088daa696dc",
       "component": "interactive CLI",
-      "dep_info_file": "agentmage_host-d04aa5ee23540dfc.d",
+      "dep_info_file": "agentmage_host-da4136d469dd4536.d",
       "features": [
         "native-chat",
-        "workflow-caller"
+        "source-artifacts",
+        "workflow-caller",
+        "workflow-supervisor"
       ],
       "id": "cli-removed",
       "removal_verified": true,
@@ -71,17 +73,17 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "native-chat,workflow-caller"
+        "native-chat,source-artifacts,workflow-caller,workflow-supervisor"
       ],
       "test_exit_code": 0,
       "test_log": "cli-removed.test.log",
-      "test_log_sha256": "1257d4bf129845e4ed4271b55ef8537173c8d7df2bfd9dd423baa7ff8358ace0",
+      "test_log_sha256": "ff4c573dc1189db78357b4725d41c0bb33fd05e4bf8352c158de5ac6f52825c7",
       "tests": {
         "failed": 0,
         "filtered_out": 0,
-        "ignored": 3,
+        "ignored": 8,
         "measured": 0,
-        "passed": 110
+        "passed": 152
       }
     },
     {
@@ -96,22 +98,24 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "interactive-cli,workflow-caller",
+        "interactive-cli,source-artifacts,workflow-caller,workflow-supervisor",
         "--",
         "-D",
         "warnings"
       ],
       "clippy_exit_code": 0,
       "clippy_log": "native-chat-removed.clippy.log",
-      "clippy_log_sha256": "16a656e65c0805f08ec7421ed72794a73a5b20b63e60b2289bf8a181769fa9da",
-      "compiled_source_count": 30,
+      "clippy_log_sha256": "01fd009b2b03b899c0a713674207bb64ad7774961c370917922483020b9eea58",
+      "compiled_source_count": 41,
       "compiled_sources": "native-chat-removed.compiled-sources.txt",
-      "compiled_sources_sha256": "04960ce5607071d93f5800c5d108631c809cf9fd5f2916f8a5e5820b1afc8f39",
+      "compiled_sources_sha256": "5a38cdf845a2191d8a44e3330f78e0f0f1a7fa94d1b0385eea7ca7eeac841195",
       "component": "native Chat adapter",
-      "dep_info_file": "agentmage_host-7f74db05ff2e2648.d",
+      "dep_info_file": "agentmage_host-cd2fb21d3e5fd7c1.d",
       "features": [
         "interactive-cli",
-        "workflow-caller"
+        "source-artifacts",
+        "workflow-caller",
+        "workflow-supervisor"
       ],
       "id": "native-chat-removed",
       "removal_verified": true,
@@ -136,17 +140,17 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "interactive-cli,workflow-caller"
+        "interactive-cli,source-artifacts,workflow-caller,workflow-supervisor"
       ],
       "test_exit_code": 0,
       "test_log": "native-chat-removed.test.log",
-      "test_log_sha256": "d8aa14c1f5b24fdee6eebc20547291e0c7d82c59e1d2485d78edf0db044a0454",
+      "test_log_sha256": "e36cacfd4f7f4ee7f8350f651296714a9d43d3790795ae8439742b3fd46eb209",
       "tests": {
         "failed": 0,
         "filtered_out": 0,
-        "ignored": 3,
+        "ignored": 8,
         "measured": 0,
-        "passed": 116
+        "passed": 158
       }
     },
     {
@@ -161,22 +165,24 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "interactive-cli,native-chat",
+        "interactive-cli,native-chat,source-artifacts,workflow-supervisor",
         "--",
         "-D",
         "warnings"
       ],
       "clippy_exit_code": 0,
       "clippy_log": "workflow-caller-removed.clippy.log",
-      "clippy_log_sha256": "8213cc8389d757994b28f8669a1fed66da3c6f9de912a8cf15ee305ba318bc47",
-      "compiled_source_count": 29,
+      "clippy_log_sha256": "78356069f5c3f5a7e6ae50bb3062a539bdb98998f2259b5e262d08f92f9a0aa0",
+      "compiled_source_count": 40,
       "compiled_sources": "workflow-caller-removed.compiled-sources.txt",
-      "compiled_sources_sha256": "ad8991e79cdf095f7b254cc0c3ddfd59314091063a3073ce263310c84c4971f7",
+      "compiled_sources_sha256": "35e563a973721f80db135362874f29306747dd2f0cd41808b400540c45c2b139",
       "component": "future workflow caller test adapter",
-      "dep_info_file": "agentmage_host-add6ce6028955484.d",
+      "dep_info_file": "agentmage_host-7eb56eb6cd3f3b26.d",
       "features": [
         "interactive-cli",
-        "native-chat"
+        "native-chat",
+        "source-artifacts",
+        "workflow-supervisor"
       ],
       "id": "workflow-caller-removed",
       "removal_verified": true,
@@ -202,17 +208,280 @@
         "--offline",
         "--no-default-features",
         "--features",
-        "interactive-cli,native-chat"
+        "interactive-cli,native-chat,source-artifacts,workflow-supervisor"
       ],
       "test_exit_code": 0,
       "test_log": "workflow-caller-removed.test.log",
-      "test_log_sha256": "745dc1d61f7240c7730de391f748985113e74a35cd0705a808482f14a7f6cc51",
+      "test_log_sha256": "6393871f8ce17c355e2a0acc023ed0da57b86e933186b8873f989c0b99bc28c9",
       "tests": {
         "failed": 0,
         "filtered_out": 0,
-        "ignored": 3,
+        "ignored": 8,
         "measured": 0,
-        "passed": 113
+        "passed": 155
+      }
+    },
+    {
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,workflow-caller,workflow-supervisor",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "clippy_exit_code": 0,
+      "clippy_log": "source-artifacts-removed.clippy.log",
+      "clippy_log_sha256": "438cf6792449f3bd52228fc0901087d6e0bb3e13074d5d6b749675b20f241699",
+      "compiled_source_count": 40,
+      "compiled_sources": "source-artifacts-removed.compiled-sources.txt",
+      "compiled_sources_sha256": "697963901dee6f4cbb53700f4e5bc6f35e8c943f3d89c28bdd1140845404d2d8",
+      "component": "source-artifact preparation, persistence, and built-in text/log extraction",
+      "dep_info_file": "agentmage_host-59baf9ccf8eddaa6.d",
+      "features": [
+        "interactive-cli",
+        "native-chat",
+        "workflow-caller",
+        "workflow-supervisor"
+      ],
+      "id": "source-artifacts-removed",
+      "removal_verified": true,
+      "removed_sources": [
+        "shells/host/src/runtime_read_tests.rs",
+        "shells/host/src/source_artifact_runtime.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/runtime_transport.rs",
+        "shells/host/src/workflow_supervisor.rs"
+      ],
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,workflow-caller,workflow-supervisor"
+      ],
+      "test_exit_code": 0,
+      "test_log": "source-artifacts-removed.test.log",
+      "test_log_sha256": "4b5dde7b41be89a854e10cf3cf59426fc695cbda130adbca43845bf3caa1367e",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 0,
+        "ignored": 8,
+        "measured": 0,
+        "passed": 145
+      }
+    },
+    {
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,source-artifacts,workflow-caller",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "clippy_exit_code": 0,
+      "clippy_log": "workflow-supervisor-removed.clippy.log",
+      "clippy_log_sha256": "b597288b7d96c7ebbb86c38763f989483f9bdb6832f9cf6032dfbb57268cbc89",
+      "compiled_source_count": 40,
+      "compiled_sources": "workflow-supervisor-removed.compiled-sources.txt",
+      "compiled_sources_sha256": "9da898dd92d38285c3b2c86e333250704ba00174db42c42f414e883f5bafa5c8",
+      "component": "verified workflow supervision",
+      "dep_info_file": "agentmage_host-56611160d5a0a271.d",
+      "features": [
+        "interactive-cli",
+        "native-chat",
+        "source-artifacts",
+        "workflow-caller"
+      ],
+      "id": "workflow-supervisor-removed",
+      "removal_verified": true,
+      "removed_sources": [
+        "shells/host/src/runtime_read_tests.rs",
+        "shells/host/src/workflow_supervisor.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/runtime_transport.rs",
+        "shells/host/src/source_artifact_runtime.rs"
+      ],
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,source-artifacts,workflow-caller"
+      ],
+      "test_exit_code": 0,
+      "test_log": "workflow-supervisor-removed.test.log",
+      "test_log_sha256": "16bdc5a919889cea5cdfe0ecf3225a747ac19c0b840cb1523c4b65285e9aee96",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 0,
+        "ignored": 8,
+        "measured": 0,
+        "passed": 146
+      }
+    },
+    {
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,workflow-caller",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "clippy_exit_code": 0,
+      "clippy_log": "source-workflow-removed.clippy.log",
+      "clippy_log_sha256": "b0db28bc30333347b2b999aba65c877b9afa2599e8134a5e910610a385da0ac3",
+      "compiled_source_count": 39,
+      "compiled_sources": "source-workflow-removed.compiled-sources.txt",
+      "compiled_sources_sha256": "5c017e93ed9f4ce041b0b86a0be41abb9396fb544eb3d27e2535083ced043217",
+      "component": "source-artifact and verified-workflow runtime",
+      "dep_info_file": "agentmage_host-5967eaaa3a2ef85a.d",
+      "features": [
+        "interactive-cli",
+        "native-chat",
+        "workflow-caller"
+      ],
+      "id": "source-workflow-removed",
+      "removal_verified": true,
+      "removed_sources": [
+        "shells/host/src/runtime_read_tests.rs",
+        "shells/host/src/source_artifact_runtime.rs",
+        "shells/host/src/workflow_supervisor.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/runtime_transport.rs"
+      ],
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--features",
+        "interactive-cli,native-chat,workflow-caller"
+      ],
+      "test_exit_code": 0,
+      "test_log": "source-workflow-removed.test.log",
+      "test_log_sha256": "7016e2e49603079940a089b11b398c60246274002aa037bf695f70668e0790e5",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 0,
+        "ignored": 8,
+        "measured": 0,
+        "passed": 144
+      }
+    },
+    {
+      "clippy_argv": [
+        "cargo",
+        "clippy",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--tests",
+        "--locked",
+        "--offline",
+        "--no-default-features",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "clippy_exit_code": 0,
+      "clippy_log": "foundational-and-clients-removed.clippy.log",
+      "clippy_log_sha256": "75c0c65ced0f1549a92004fcc946af0267988f23efb91521d6cbf8ff31a176e5",
+      "compiled_source_count": 34,
+      "compiled_sources": "foundational-and-clients-removed.compiled-sources.txt",
+      "compiled_sources_sha256": "2716456db953744ff0aa2e73692b60fe18383f67dcb3939c3221f042c6928872",
+      "component": "foundational runtime and all optional clients",
+      "dep_info_file": "agentmage_host-f7be425bae5a1662.d",
+      "features": [],
+      "id": "foundational-and-clients-removed",
+      "removal_verified": true,
+      "removed_sources": [
+        "shells/host/src/cli.rs",
+        "shells/host/src/cli_runtime.rs",
+        "shells/host/src/native_chat_runtime.rs",
+        "shells/host/src/runtime_read_tests.rs",
+        "shells/host/src/source_artifact_runtime.rs",
+        "shells/host/src/workflow_assignment.rs",
+        "shells/host/src/workflow_caller.rs",
+        "shells/host/src/workflow_supervisor.rs"
+      ],
+      "required_sources": [
+        "shells/host/src/coding_harness.rs",
+        "shells/host/src/linux_coding_runtime.rs",
+        "shells/host/src/linux_read.rs",
+        "shells/host/src/runtime_transport.rs"
+      ],
+      "test_argv": [
+        "cargo",
+        "test",
+        "-p",
+        "agentmage-host",
+        "--lib",
+        "--locked",
+        "--offline",
+        "--no-default-features"
+      ],
+      "test_exit_code": 0,
+      "test_log": "foundational-and-clients-removed.test.log",
+      "test_log_sha256": "0c61373e41034540a5399684f6b2f643d6bf1eec276f9aa655360758c2ca767e",
+      "tests": {
+        "failed": 0,
+        "filtered_out": 0,
+        "ignored": 8,
+        "measured": 0,
+        "passed": 134
       }
     },
     {
@@ -232,10 +501,10 @@
       ],
       "clippy_exit_code": 0,
       "clippy_log": "runtime-projections-removed.clippy.log",
-      "clippy_log_sha256": "6b227102890d1585659a521d4b4821c62b186b86070cae58b30d328f519b34d0",
-      "compiled_source_count": 79,
+      "clippy_log_sha256": "4b7b5c562731c111be784064f9775a986ada5f3aa5a3f618d51cb975d01d74e4",
+      "compiled_source_count": 112,
       "compiled_sources": "runtime-projections-removed.compiled-sources.txt",
-      "compiled_sources_sha256": "bf20fac4405c630c80aabeacd48984fb5404ace3dc47525a2e5d5f66dc38920d",
+      "compiled_sources_sha256": "c1c10af9a21598eb467c603b15ebea365d1a40d546d826b36d9063a17b7777d2",
       "component": "optional local metrics and transcript projections",
       "dep_info_file": "agentmage_kernel_engine-976e5806ff55a5c7.d",
       "features": [],
@@ -265,43 +534,49 @@
       ],
       "test_exit_code": 0,
       "test_log": "runtime-projections-removed.test.log",
-      "test_log_sha256": "c7b04e6b4cc0da14593ffbe8846eab5c4bff27d5244f984135e7702896b944e8",
+      "test_log_sha256": "37565b1eef37fcf1b7434988a814e0705d7f62475307ed08130c180656741949",
       "tests": {
         "failed": 0,
         "filtered_out": 0,
-        "ignored": 2,
+        "ignored": 6,
         "measured": 0,
-        "passed": 584
+        "passed": 754
       }
     }
   ],
   "schema_version": 1,
-  "source_branch": "agent/expand-delivery-windows-ga",
-  "source_commit": "33c619402260d0fc735b36134979ac1541c414fc",
+  "source_branch": "build/agentmage-ga",
+  "source_commit": "372b7759c91ffff77b4c597d39f527b8455a3c2b",
   "source_sha256": {
-    "fixtures/runtime-hardening/v1/component-removal-profile.json": "6580f41c73eec22e9f5f5238f92fa9857ac972e5f14a2dec6a2b821ec23b32b2",
-    "kernel/engine/Cargo.toml": "66bcf914dd0f4fbf0bbc6971916d98f1f6a8b9380453515ddca344fe179ea68e",
-    "kernel/engine/src/conversation_library.rs": "8ab3e0de0a2457eade0fd04928c78943e3796599a0d0d058da7d0055b2dab3ee",
-    "kernel/engine/src/lib.rs": "d77041e72a175c6dfae3c0b9c54ad4eccda23e0e6c452bcb60bacefa9692ca5e",
-    "kernel/engine/src/runtime_artifact.rs": "cbca508696296ea2948eb8fcce31e6abfbb72a7573d1b536f4816a27b7d05308",
-    "kernel/engine/src/runtime_coordinator.rs": "fb4a0cc5247911df5c86c6b555777ee5823623f442b408f2e48c7d5424803282",
-    "kernel/engine/src/runtime_event.rs": "1b42a09d68da0da30bd0ca9facaff5c63b4c406021fa9d5a9daed828b736d740",
-    "kernel/engine/src/runtime_journal.rs": "419c142cc52806c2ecb2bcb5bc46ce89af357ed1a5e52de9c8fd81cf56975a49",
+    "fixtures/runtime-hardening/v1/component-removal-profile.json": "d526c0889343db12f8ff8c1f4e3a003680d23839339fdc54590734c039807b2a",
+    "kernel/engine/Cargo.toml": "838e423114e269a484bd588edb46bc756f1fe14501f65039336bc58fc0cd43d8",
+    "kernel/engine/src/conversation_library.rs": "8f1b2446128a73b97efde001e41a879f19d8c6efbb23220a6b3bc27fe4726d33",
+    "kernel/engine/src/lib.rs": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26",
+    "kernel/engine/src/runtime_artifact.rs": "a45dd60b5882cff330cb711bec7b1ecc5bac3413eb17f35d5dc530fbb0938ad4",
+    "kernel/engine/src/runtime_coordinator.rs": "f295e43900f91d48fc2ba29ba7a2c44fd4759915970571ea2a8164d7f954db62",
+    "kernel/engine/src/runtime_event.rs": "9918d6194634c793162c09c4ea39bcdedb5df0f2e20e879c2f856c7d6468ca26",
+    "kernel/engine/src/runtime_journal.rs": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464",
     "kernel/engine/src/runtime_lifecycle.rs": "56823d70a711ba278d8918d3cf288061b5addcfd97c6ed228c2ed184b03eb2d2",
-    "kernel/engine/src/runtime_loop.rs": "be2ddb7692bd291f3b243502245d3cfffe00d95bdaf4aeea62994a3c07802d23",
-    "kernel/engine/src/runtime_projection.rs": "995a292e5afabf195b19b765b4122a1b46c6fa8e0272a20df4ff7bf8d82e961d",
+    "kernel/engine/src/runtime_loop.rs": "91ec216eaa831293a6330134f33b7e9c5590408adfda0275392bd0ce8c78b227",
+    "kernel/engine/src/runtime_projection.rs": "9b2a2274f3328ac8e33d1e8a493b4e374fb8a4dc7c28582b186002647b6de25d",
     "kernel/engine/src/runtime_recovery.rs": "7997cf0ccae000d132eee6b92b990a0891884887441b06ba69cf28dd8494dcb6",
-    "scripts/runtime_component_removal.py": "4ed917a40bbcb7be3a5a8d7e7ae4a0fc20e250b0bf17464d598d6b4b19b5a859",
-    "shells/host/Cargo.toml": "022c2254e404a7c54d790a894e98f6925a9f2b794f0ff37d7022bb4e19c9f923",
-    "shells/host/src/cli.rs": "24cda2d09745dcdb857dba9193f50c26d3e86651be228e13b051148b964531ad",
-    "shells/host/src/cli_runtime.rs": "fb78655d3ce8c8adf655966f86aa69d38a0e368c1bd01d7d2e966e2d93a0593e",
-    "shells/host/src/coding_harness.rs": "e8d6eff7e8db9a49f06d20088128bca7eff0fd1e5da3dce2c8347153994406ce",
-    "shells/host/src/lib.rs": "7047aead40a27ac78c25197100ce8a0b12fcaf42b51ef03154c7ad2634d36a64",
-    "shells/host/src/linux_coding_runtime.rs": "517e66137663305513161113ab2012dae3c574074656874280fdc2692a0f0f81",
-    "shells/host/src/linux_read.rs": "94326304b6373465997c726189a8562abdce5844d6e0d62b89a19fab0cf20a49",
-    "shells/host/src/native_chat_runtime.rs": "e59a54ea04d1482bff2392cbf8e310332ea42de4a2029889a55792d8ddcc5b43",
-    "shells/host/src/runtime_transport.rs": "d3b55bfb7e78d92da10b0785b5c5e67e0f37d81ce5ad60330e8c9e19daf00204",
+    "kernel/engine/src/source_preparation.rs": "9facf973fb5a8e10e8c8c09c3edc1f900ad5a86fc90a55229d987d97aa5ce5c1",
+    "kernel/engine/src/source_runtime_context.rs": "9ef651c5747aa5e0d1805e17afadaa671e19e609451e3f4af3a26c3c59c280ae",
+    "kernel/engine/src/verified_workflow_supervisor.rs": "b2f2ebe42410c722fa16393f1dc77903cc2524d99a00cf5e6d03a6c4a3a0a208",
+    "scripts/runtime_component_removal.py": "a439dcf1b0eb7d78d0e522655e21a6623262d3a64daf7d817927a7053735107f",
+    "shells/host/Cargo.toml": "bd0cbb419186130d3d3219ef015ae647b6e8cad1b8660dfc27330d81aa3ab68c",
+    "shells/host/src/cli.rs": "9622d6ec7403497315245044fd803fbebf466dc9d1ba49dfd8f85d2c4b29c47d",
+    "shells/host/src/cli_runtime.rs": "929131ddeda90e7a32a018f692199a8f0c2310a3f7e1dcd1a26882669c77cb8f",
+    "shells/host/src/coding_harness.rs": "5091dec8b12c1152b707c5a604ae9b5ef9cb649809c59272139a11c0b4c891cb",
+    "shells/host/src/lib.rs": "d1277baafa1f78a0072cb36bef992987f232fb1c72bb5b59c48902dc32d3ad88",
+    "shells/host/src/linux_coding_runtime.rs": "468fa56f53a87fa6f390605d82ce6d03304dcd6946f1eea578f814185fdec4af",
+    "shells/host/src/linux_read.rs": "ebe4a5b9129f75d2e9245ce9d31f92f10807d54faa9b412263531e3a0cbf374c",
+    "shells/host/src/native_chat_runtime.rs": "4d950b3123a820902d82776e69b9f0c529f0377c01452c81e8bc36945c7ec0e0",
+    "shells/host/src/runtime_read_tests.rs": "308892cd00c60add332bca89bf71231292d8672a076444b44db77584348feaad",
+    "shells/host/src/runtime_transport.rs": "30e2e29f39f56f3d6a35f8a3af3a4b1b5d3e33eb8599f45909bd3d5662bf608c",
+    "shells/host/src/source_artifact_runtime.rs": "4b327e66e82d4a3c01a3e92c086d6168023ff0623fa77c4d9efd799d248099fc",
     "shells/host/src/workflow_assignment.rs": "9b062719d0cef5bf7ce93f00e1caf6d593028833743deaea0a20b2e6b49ac66d",
-    "shells/host/src/workflow_caller.rs": "33268019b3fbf26d2af8e6170849fac2538683346229c119a16cc73a5df1dc95"
+    "shells/host/src/workflow_caller.rs": "33268019b3fbf26d2af8e6170849fac2538683346229c119a16cc73a5df1dc95",
+    "shells/host/src/workflow_supervisor.rs": "4ef55171f8318b96b18ec8a82f3d0d5d449f98120ca3ac6f3134f40b21ad7c29"
   }
 }

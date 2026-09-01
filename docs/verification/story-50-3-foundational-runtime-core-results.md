@@ -40,8 +40,12 @@ The core decision reuses current raw evidence instead of copying or summarizing 
 - the verified supervisor campaign covers dependency ordering, fresh transient retry, stale
   preflight, false completion, uncertainty, cancellation, resource exhaustion, interruption,
   restart without replay, and checkpoint tampering;
-- the four clean-target component-removal builds independently exclude CLI, native Chat,
-  workflow-caller, and runtime-projection sources while retaining the applicable common runtime.
+- eight clean-target component-removal builds independently exclude CLI, native Chat,
+  workflow-caller, source-artifact, workflow-supervisor, combined source/workflow, combined
+  foundational/client, and runtime-projection sources while retaining every applicable baseline
+  and verifying the removed source units are absent from the compiler's emitted source set;
+- every removal target passes its applicable test suite and strict Clippy, and the closed removal
+  profile rejects undeclared features, packages, retained sources, or generated target residue.
 
 These results are linked by the Story 50.3 evidence generator and are independently recomputed by
 `tests/test_story_50_3_foundational_runtime_evidence.py`.

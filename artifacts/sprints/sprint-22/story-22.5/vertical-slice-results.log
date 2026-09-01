@@ -1,26 +1,26 @@
 $ cargo test -p agentmage-host story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lineage --locked -- --nocapture
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 1 test
 STORY_22_5_EVIDENCE={"context_manifests":[{"allocated_tokens":8187,"context_manifest_id":"source-context-native-read-run-0001-1","context_window_plan_sha256":"d83cf44d890475235e8d040ee0ef3467abea793ea7fb073c65d3d594ca953531","manifest_sha256":"2ac9b700e7d4cae89f9fe1c7d957af9338e266aeb5286d87cf32f51063180cf8","packet":{"accounting":[{"byte_count":40,"content_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","included":true,"item_id":"source-context-section-9072bec7","kind":"evidence","omission":null,"sensitivity":"internal","source_id":"prepared-repository-source","source_revision":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":8}],"context_packet_id":"context:0860e2f4ea8719d95b776295c19a3e5a","items":[{"admission":"eligible","authoritative_evidence":true,"bounded_excerpt":"pub fn prepared_fixture() -> u64 { 42 }\n","content_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","essential":false,"item_id":"source-context-section-9072bec7","kind":"evidence","sensitivity":"internal","source_id":"prepared-repository-source","source_revision":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":8}],"max_bytes":32768,"max_tokens":8187,"packet_sha256":"ca13dc1555bcf2a4ee9a0614b4a193758c0a453e095f493380c51c575ca3b9ca","schema_version":2,"token_counter_id":"deterministic-byte-counter-v1","used_bytes":40,"used_tokens":8},"records":[{"disposition":"included","reason_code":null,"section_id":null,"section_sha256":null,"source_id":"prepared-repository-source","source_revision_sha256":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":0},{"disposition":"included","reason_code":null,"section_id":"section-9072bec787a13debda1b8fc3","section_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","source_id":"prepared-repository-source","source_revision_sha256":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":8},{"disposition":"omitted","reason_code":"context.section.container","section_id":"section-ca6c5518fed37fdf354f08c5","section_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","source_id":"prepared-repository-source","source_revision_sha256":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":0}],"schema_version":2,"token_counter_id":"deterministic-byte-counter-v1","token_counter_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","tokenizer_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","used_tokens":8},{"allocated_tokens":8187,"context_manifest_id":"source-context-native-read-run-0001-2","context_window_plan_sha256":"d83cf44d890475235e8d040ee0ef3467abea793ea7fb073c65d3d594ca953531","manifest_sha256":"0de81d462ab0e77f6d5bb1ee9a6bd40ad31ad681401b9c6daaf53381f3bd5037","packet":{"accounting":[{"byte_count":40,"content_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","included":true,"item_id":"source-context-section-9072bec7","kind":"evidence","omission":null,"sensitivity":"internal","source_id":"prepared-repository-source","source_revision":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":8}],"context_packet_id":"context:ee01dbda5c017a5fd36059523251823e","items":[{"admission":"eligible","authoritative_evidence":true,"bounded_excerpt":"pub fn prepared_fixture() -> u64 { 42 }\n","content_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","essential":false,"item_id":"source-context-section-9072bec7","kind":"evidence","sensitivity":"internal","source_id":"prepared-repository-source","source_revision":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":8}],"max_bytes":32768,"max_tokens":8187,"packet_sha256":"ff41f2342987c736826b78d4c54555b4e0af1370a0f91d6f9055dfe5b76f5620","schema_version":2,"token_counter_id":"deterministic-byte-counter-v1","used_bytes":40,"used_tokens":8},"records":[{"disposition":"included","reason_code":null,"section_id":null,"section_sha256":null,"source_id":"prepared-repository-source","source_revision_sha256":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":0},{"disposition":"included","reason_code":null,"section_id":"section-9072bec787a13debda1b8fc3","section_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","source_id":"prepared-repository-source","source_revision_sha256":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":8},{"disposition":"omitted","reason_code":"context.section.container","section_id":"section-ca6c5518fed37fdf354f08c5","section_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","source_id":"prepared-repository-source","source_revision_sha256":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","token_count":0}],"schema_version":2,"token_counter_id":"deterministic-byte-counter-v1","token_counter_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","tokenizer_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","used_tokens":8}],"duplicate_effect_count":0,"events":[{"causation_event_id":null,"correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:c816af0cc89da49edca1397a0c6ba6f3","event_sha256":"c47123152e328d0ab444653eb05bfee3bb5ed145c92fc03586c277ac3984bfa0","kind":{"event":"run_started","request_sha256":"c8ec52cfd3f1361fc44055a448962e5a8d4257fa8282037055c65189fdfbefc0"},"occurred_at_epoch_ms":3001,"operation_id":null,"payload_reference":null,"persistence":"correctness","policy_id":"native-read-policy-0001","previous_event_sha256":"0000000000000000000000000000000000000000000000000000000000000000","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":0,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":null},{"causation_event_id":"event:c816af0cc89da49edca1397a0c6ba6f3","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:0860e2f4ea8719d95b776295c19a3e5a","event_sha256":"16c175128c677c4935916bef76ce05f6e9f4e8516a1c64ce0835a0d34e4d5431","kind":{"event":"turn_started"},"occurred_at_epoch_ms":3003,"operation_id":null,"payload_reference":null,"persistence":"progress","policy_id":"native-read-policy-0001","previous_event_sha256":"c47123152e328d0ab444653eb05bfee3bb5ed145c92fc03586c277ac3984bfa0","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":1,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:0860e2f4ea8719d95b776295c19a3e5a"},{"causation_event_id":"event:0860e2f4ea8719d95b776295c19a3e5a","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:ee01dbda5c017a5fd36059523251823e","event_sha256":"bee3bb5bb0aa8a76f7d3d59f34c8979a547461b2e8382b303eab8e636e4c99d6","kind":{"event":"model_requested","model_run_id":"model-run:0860e2f4ea8719d95b776295c19a3e5a","request_sha256":"e114eb0f02d8c86ef3339687ccc0df0f15742b0df520236a2fd03fcf92153808"},"occurred_at_epoch_ms":3004,"operation_id":null,"payload_reference":null,"persistence":"progress","policy_id":"native-read-policy-0001","previous_event_sha256":"16c175128c677c4935916bef76ce05f6e9f4e8516a1c64ce0835a0d34e4d5431","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":2,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:0860e2f4ea8719d95b776295c19a3e5a"},{"causation_event_id":"event:ee01dbda5c017a5fd36059523251823e","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:95f047e2e13d7bb0cbcfa968987698a8","event_sha256":"660ec1b1b0dc730bf2aefd0a2a9493c480c7eb44a15ac42a9732daf5698580a2","kind":{"event":"model_completed","model_run_id":"model-run:0860e2f4ea8719d95b776295c19a3e5a","result_sha256":"07173d7d2ac9bc5d771b720923fa50893c1907f0c6f0c9f8578f908e60ea7a09"},"occurred_at_epoch_ms":3005,"operation_id":null,"payload_reference":null,"persistence":"progress","policy_id":"native-read-policy-0001","previous_event_sha256":"bee3bb5bb0aa8a76f7d3d59f34c8979a547461b2e8382b303eab8e636e4c99d6","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":3,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:0860e2f4ea8719d95b776295c19a3e5a"},{"causation_event_id":"event:95f047e2e13d7bb0cbcfa968987698a8","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:72f7c1c2018a474cb7e01cb164f5b88d","event_sha256":"f0c7f4a3107dd8505405f6c7853bbfa1050b88537aab5bfc7bb141c776e04de6","kind":{"arguments_sha256":"799ef3a941500b84cfb2bf72705df0ac1345c6c43263956850d4295a748d3cbf","event":"tool_requested","tool_call_id":"prepared-source-call-1"},"occurred_at_epoch_ms":3006,"operation_id":"operation:0860e2f4ea8719d95b776295c19a3e5a","payload_reference":null,"persistence":"progress","policy_id":"native-read-policy-0001","previous_event_sha256":"660ec1b1b0dc730bf2aefd0a2a9493c480c7eb44a15ac42a9732daf5698580a2","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":4,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:0860e2f4ea8719d95b776295c19a3e5a"},{"causation_event_id":"event:72f7c1c2018a474cb7e01cb164f5b88d","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:59e913b52abbd033efbaf67fc2168fa4","event_sha256":"7441f1e7bd71d176351acb9978cace2c38677ecfd2d53f09aaf215e2fe27767f","kind":{"approval_id":"prepared-source-approval","event":"permission_requested","expires_at_epoch_ms":13007,"operation":"workspace_read","preview_sha256":"799ef3a941500b84cfb2bf72705df0ac1345c6c43263956850d4295a748d3cbf"},"occurred_at_epoch_ms":3008,"operation_id":"operation:0860e2f4ea8719d95b776295c19a3e5a","payload_reference":null,"persistence":"correctness","policy_id":"native-read-policy-0001","previous_event_sha256":"f0c7f4a3107dd8505405f6c7853bbfa1050b88537aab5bfc7bb141c776e04de6","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":5,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:0860e2f4ea8719d95b776295c19a3e5a"},{"causation_event_id":"event:59e913b52abbd033efbaf67fc2168fa4","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:0451bd28e4bb57929e1c652b4cc435d9","event_sha256":"854fab0a949baf2372249e5b2654c078cffe92631e98c9cea3da356e96b5c54a","kind":{"approval_id":"prepared-source-approval","decision_sha256":"70809d76326189fae4a61d74863586fd3a9b84f890392457c6fe133aa689aee6","disposition":"ALLOW","event":"permission_decided","grant_id":"prepared-source-grant-prepared-source-call-1"},"occurred_at_epoch_ms":3009,"operation_id":"operation:0860e2f4ea8719d95b776295c19a3e5a","payload_reference":null,"persistence":"correctness","policy_id":"native-read-policy-0001","previous_event_sha256":"7441f1e7bd71d176351acb9978cace2c38677ecfd2d53f09aaf215e2fe27767f","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":6,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:0860e2f4ea8719d95b776295c19a3e5a"},{"causation_event_id":"event:0451bd28e4bb57929e1c652b4cc435d9","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:1d1f8bf4085d1dc5821c5152274dba58","event_sha256":"c19860ece4c692716c7f10953653d1bc4b585372bc28330808a7dd3b620043c8","kind":{"authority_sha256":"f7bc103e51b9a9aeb6cf9042f77f49d0832407ea22d837c82913454328104a78","event":"tool_started","tool_call_id":"prepared-source-call-1"},"occurred_at_epoch_ms":3010,"operation_id":"operation:0860e2f4ea8719d95b776295c19a3e5a","payload_reference":null,"persistence":"correctness","policy_id":"native-read-policy-0001","previous_event_sha256":"854fab0a949baf2372249e5b2654c078cffe92631e98c9cea3da356e96b5c54a","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":7,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:0860e2f4ea8719d95b776295c19a3e5a"},{"causation_event_id":"event:1d1f8bf4085d1dc5821c5152274dba58","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:df65dc8e404b44e9093170769e059867","event_sha256":"a959f0af8683b107cd9e871fc222c330a13dd2a4dfe8b42b58d96aef87518463","kind":{"event":"tool_completed","receipt_id":"prepared-source-receipt-0001","result_sha256":"8019da0d4b2a18de3796e6a53e66a22f0da2a2415f153255fe4eaf8b6a3712c5","tool_call_id":"prepared-source-call-1"},"occurred_at_epoch_ms":3011,"operation_id":"operation:0860e2f4ea8719d95b776295c19a3e5a","payload_reference":null,"persistence":"correctness","policy_id":"native-read-policy-0001","previous_event_sha256":"c19860ece4c692716c7f10953653d1bc4b585372bc28330808a7dd3b620043c8","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":8,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:0860e2f4ea8719d95b776295c19a3e5a"},{"causation_event_id":"event:df65dc8e404b44e9093170769e059867","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:896a282d333f09273cae0795aa3be04c","event_sha256":"db2fc3d4cb3b1106b39d35cc1298e221ee35dc0e6d66cdd3120a9bc620468a17","kind":{"event":"turn_completed","outcome_sha256":"81f774673e822e9b2cceac9c4da4721f9c5037fb7c02392412b8635e936d5b66"},"occurred_at_epoch_ms":3012,"operation_id":null,"payload_reference":null,"persistence":"progress","policy_id":"native-read-policy-0001","previous_event_sha256":"a959f0af8683b107cd9e871fc222c330a13dd2a4dfe8b42b58d96aef87518463","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":9,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:0860e2f4ea8719d95b776295c19a3e5a"},{"causation_event_id":"event:896a282d333f09273cae0795aa3be04c","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:3fc15d772d19b561b2da9b6648f76e4c","event_sha256":"4e5738b477e3b58f979e6176630be98868d49c618c160c8680498afb5949b1df","kind":{"event":"turn_started"},"occurred_at_epoch_ms":3014,"operation_id":null,"payload_reference":null,"persistence":"progress","policy_id":"native-read-policy-0001","previous_event_sha256":"db2fc3d4cb3b1106b39d35cc1298e221ee35dc0e6d66cdd3120a9bc620468a17","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":10,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:ee01dbda5c017a5fd36059523251823e"},{"causation_event_id":"event:3fc15d772d19b561b2da9b6648f76e4c","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:33e7f5fe2340adbac67ec5fcad097521","event_sha256":"657a427d3c6129ed9523aa5eb1d46f018dcf19016981e764cb71eea9cc57cc48","kind":{"event":"model_requested","model_run_id":"model-run:ee01dbda5c017a5fd36059523251823e","request_sha256":"c1849214901cb89067060b4bd9b3f6c8e535337dc0a63d1ebeb422e675b1fc7b"},"occurred_at_epoch_ms":3015,"operation_id":null,"payload_reference":null,"persistence":"progress","policy_id":"native-read-policy-0001","previous_event_sha256":"4e5738b477e3b58f979e6176630be98868d49c618c160c8680498afb5949b1df","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":11,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:ee01dbda5c017a5fd36059523251823e"},{"causation_event_id":"event:33e7f5fe2340adbac67ec5fcad097521","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:01f95729bfa7e7be6f93beeb90745482","event_sha256":"88ee002b0e5d95a65f71d4fd4ec4bebe724c81d77ce98b6e291a14b3aeef5695","kind":{"event":"model_completed","model_run_id":"model-run:ee01dbda5c017a5fd36059523251823e","result_sha256":"bab5c755a75eb536c5df64311ce278f1d32dfb58de2fcf93912ed3ece4ba38a4"},"occurred_at_epoch_ms":3016,"operation_id":null,"payload_reference":null,"persistence":"progress","policy_id":"native-read-policy-0001","previous_event_sha256":"657a427d3c6129ed9523aa5eb1d46f018dcf19016981e764cb71eea9cc57cc48","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":12,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:ee01dbda5c017a5fd36059523251823e"},{"causation_event_id":"event:01f95729bfa7e7be6f93beeb90745482","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:fc41a89fa109e8f2ebbbed974c6696c7","event_sha256":"faed2d87bf3ba7856c92a33594306138dccbabf5b50ba179582c13bab9172cfc","kind":{"event":"turn_completed","outcome_sha256":"bde0a641bf9dd20ee6095fbca4038e3e23dca676da69bed342548403486fd44b"},"occurred_at_epoch_ms":3017,"operation_id":null,"payload_reference":null,"persistence":"progress","policy_id":"native-read-policy-0001","previous_event_sha256":"88ee002b0e5d95a65f71d4fd4ec4bebe724c81d77ce98b6e291a14b3aeef5695","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":13,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":"turn:ee01dbda5c017a5fd36059523251823e"},{"causation_event_id":"event:fc41a89fa109e8f2ebbbed974c6696c7","correlation_id":"correlation:c816af0cc89da49edca1397a0c6ba6f3","event_id":"event:5d85e4704fdde7057e44f326d551faad","event_sha256":"4afd0a3609e3940e4283027acefb50a76264bc801e322c3b53231b3709a05156","kind":{"event":"run_terminal","outcome_sha256":"c1264e2f952aa2ffd12102b085478c322d50fe847196e4600ae0116907f6625c","state":"SUCCESS"},"occurred_at_epoch_ms":3018,"operation_id":null,"payload_reference":null,"persistence":"correctness","policy_id":"native-read-policy-0001","previous_event_sha256":"faed2d87bf3ba7856c92a33594306138dccbabf5b50ba179582c13bab9172cfc","retention":{"expires_at_epoch_ms":null,"kind":"ephemeral"},"run_id":"native-read-run-0001","schema_version":2,"sensitivity":"private","sequence":14,"session_id":"native-read-session-0001","task_id":"native-read-task-0001","turn_id":null}],"model_completion_authority":false,"model_direct_tool_authority":false,"outcome":{"answer_evidence":{"answer_evidence_sha256":"09cc4e03b138a3f050c2af998c1c2f8fc5845bddcb8008e73d9cc2e309ee8a1f","assignments":[{"assignment_id":"runtime.answer.assignment","claim":{"claim_id":"runtime.answer.content","expected_revision":"f0cd6b7e99debc08d2b7139f0a8f0ceb7d2dfda6fa2cc3fa0f4bd7d08d9cc008","kind":"read","prerequisite_claim_ids":[],"schema_version":2,"statement":"Rendered model answer content","subject_id":"runtime.answer","task_id":"native-read-task-0001"},"evidence_state":{"provenance":{"citations":[{"content_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","evidence_id":"native-read-verifier-evidence-0001","fragment":null,"kind":"validation","object_id":"runtime outcome","observed_revision":"snapshot-native-read-0001","schema_version":2,"source_id":"native-read-verifier"},{"content_sha256":"ff7ae79cd88be13fbb9de1aa4d956fedcfa943648719c59a0cb4337be5687b1b","evidence_id":"prepared-source-evidence-0001","fragment":"artifact-result:prepared-source-search;freshness:6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","kind":"tool_output","object_id":"prepared-source-search-output","observed_revision":"snapshot-native-read-0001","schema_version":2,"source_id":"prepared-repository-source"}],"runtime":{"manifest":{"artifact_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","codec_sha256":"75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3","manifest_sha256":"7de667a8e37f6d436f26c5423ce5c5692ec65b5fc3148e7b56f2424c97bc704c","profile_id":"deterministic-fake-muse-v1","runtime":{"adapter_id":"deterministic-fake-muse-adapter-v1","architecture":"x86_64","contract_version":1,"kind":"deterministic_fake","platform":"deterministic_fake","runtime_build":"agentmage-kernel-engine-test-fixture","runtime_sha256":"7de667a8e37f6d436f26c5423ce5c5692ec65b5fc3148e7b56f2424c97bc704c"},"template_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","tokenizer_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"model_run_id":"model-run:ee01dbda5c017a5fd36059523251823e","response_sha256":"68c2a39799b051d682622dc608268dcb3da9027e150e9e7f8969a99ef2bdbe74"}},"state":"inferred"},"schema_version":2}],"model_run_id":"model-run:ee01dbda5c017a5fd36059523251823e","output_byte_size":36,"output_media_type":"text/plain","output_sha256":"f0cd6b7e99debc08d2b7139f0a8f0ceb7d2dfda6fa2cc3fa0f4bd7d08d9cc008","rendered_claim_ids":["runtime.answer.content"],"response_sha256":"68c2a39799b051d682622dc608268dcb3da9027e150e9e7f8969a99ef2bdbe74","schema_version":2,"task_id":"native-read-task-0001"},"evidence":[{"content_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","evidence_id":"native-read-verifier-evidence-0001","fragment":null,"kind":"validation","object_id":"runtime outcome","observed_revision":"snapshot-native-read-0001","schema_version":2,"source_id":"native-read-verifier"},{"content_sha256":"ff7ae79cd88be13fbb9de1aa4d956fedcfa943648719c59a0cb4337be5687b1b","evidence_id":"prepared-source-evidence-0001","fragment":"artifact-result:prepared-source-search;freshness:6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","kind":"tool_output","object_id":"prepared-source-search-output","observed_revision":"snapshot-native-read-0001","schema_version":2,"source_id":"prepared-repository-source"}],"model_call_count":2,"outcome_sha256":"c1264e2f952aa2ffd12102b085478c322d50fe847196e4600ae0116907f6625c","output":{"payload":{"bytes":[108,105,98,46,114,115,32,99,111,110,116,97,105,110,115,32,116,104,101,32,102,105,120,116,117,114,101,32,102,117,110,99,116,105,111,110],"media_type":"text/plain","schema":{"schema_id":"runtime.native-read.answer","schema_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","schema_version":1},"sha256":"f0cd6b7e99debc08d2b7139f0a8f0ceb7d2dfda6fa2cc3fa0f4bd7d08d9cc008"},"storage":"inline"},"prior_event_id":"event:fc41a89fa109e8f2ebbbed974c6696c7","prior_event_sha256":"faed2d87bf3ba7856c92a33594306138dccbabf5b50ba179582c13bab9172cfc","receipt_ids":["prepared-source-receipt-0001"],"request_sha256":"c8ec52cfd3f1361fc44055a448962e5a8d4257fa8282037055c65189fdfbefc0","run_id":"native-read-run-0001","schema_version":2,"session_id":"native-read-session-0001","state":"SUCCESS","task_id":"native-read-task-0001","tool_call_count":1,"turn_count":2,"unresolved_codes":[]},"production_artifact_dispatch":true,"record_type":"agentmage-story-22-5-vertical-slice-golden","replay_count":0,"schema_version":1,"source_manifest":{"collected_at_epoch_ms":1788134400000,"encoding":"utf8","extraction_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","extraction_state":"complete","lifecycle":"current","limits":{"max_index_terms":250000,"max_input_bytes":26214400,"max_lines":250000,"max_output_bytes":8388608,"max_sections":8192},"manifest_sha256":"6a71cf703c383f99b67251b3cd300ec0fd71a4590bb29a1cba485531a93d316e","media_family":"plain_text","media_type":"text/plain","omitted_lines":0,"protected_origin_sha256":"f5ad429ce117305f80162727765586250e14a6453556b4d5c8002e14f816ec6d","request_id":"prepared-repository-request","retained_lines":1,"retention":{"kind":"ephemeral"},"revision":1,"schema_version":2,"sensitivity":"internal","source_bytes":40,"source_id":"prepared-repository-source","source_kind":"repository_snapshot","source_sha256":"b7d8e1633c6e8d944dfa96d5e0a73a388cc27b159272e7c4875e63385820b31e","token_counter_id":"deterministic-byte-counter-v1","token_counter_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","tokenizer_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","total_lines":1}}
 test runtime_read_tests::story_22_5_prepared_source_flows_through_model_tool_verifier_and_terminal_lineage ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 170 filtered out; finished in 0.01s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 170 filtered out; finished in 0.02s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 
@@ -29,7 +29,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; fin
 
 $ cargo test -p agentmage-host story_22_5_ --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 2 tests
 test runtime_read_tests::story_22_5_stale_required_source_and_tokenizer_drift_stop_before_model ... ok
@@ -37,19 +37,19 @@ test runtime_read_tests::story_22_5_prepared_source_flows_through_model_tool_ver
 
 test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 169 filtered out; finished in 0.02s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 
@@ -57,117 +57,118 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; fin
 
 
 $ cargo test -p agentmage-kernel-engine story_22_5_durable_prepared_source_checkpoint_resumes_without_replaying_effect --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+   Compiling agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 20.36s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 1 test
 test runtime_loop::tests::story_22_5_durable_prepared_source_checkpoint_resumes_without_replaying_effect ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 783 filtered out; finished in 0.02s
 
-     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-1d35cecc8eac4a50)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-0763e8462d798883)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-96fb8646b8e88c01)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-0b41c11af9f7bcef)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-3183945eaf6ee601)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 
-     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c2bf19d0e955e0a1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-f39a9d9ea513dfc1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-6655190128ba9428)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-dfbfdc9850767ddd)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-977b1de1fa35ee44)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-e051a35e39b8b099)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-9289ebbbd5c8954a)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
 
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
 
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-890f5a0284eee806)
 
 running 0 tests
 
@@ -176,128 +177,128 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 $ cargo test -p agentmage-kernel-engine runtime_loop::tests::story_23_4_ --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 13 tests
+test runtime_loop::tests::story_23_4_model_or_classifier_claims_cannot_mint_success ... ok
 test runtime_loop::tests::story_23_4_expired_allow_is_rejected_before_worker_launch ... ok
-test runtime_loop::tests::story_23_4_cancellation_wins_over_a_pending_allow_response ... ok
+test runtime_loop::tests::story_23_4_deny_closes_without_launching_the_tool ... ok
 test runtime_loop::tests::story_23_4_malformed_model_result_fails_closed_with_terminal_evidence ... ok
 test runtime_loop::tests::story_23_4_read_only_mode_rejects_stateful_or_command_catalogs ... ok
-test runtime_loop::tests::story_23_4_model_or_classifier_claims_cannot_mint_success ... ok
-test runtime_loop::tests::story_23_4_deny_closes_without_launching_the_tool ... ok
+test runtime_loop::tests::story_23_4_cancellation_wins_over_a_pending_allow_response ... ok
 test runtime_loop::tests::story_23_4_direct_answer_is_verifier_backed_and_streamed_in_exact_order ... ok
 test runtime_loop::tests::story_23_4_ask_pauses_before_effect_and_exact_allow_resumes_once ... ok
 test runtime_loop::tests::story_23_4_runtime_events_exclude_raw_model_and_tool_canaries ... ok
 test runtime_loop::tests::story_23_4_terminal_tool_failures_have_one_receipt_and_no_hidden_retry ... ok
-test runtime_loop::tests::story_23_4_model_dependency_failures_close_without_effect_or_retry ... ok
 test runtime_loop::tests::story_23_4_repeat_no_progress_and_turn_budgets_stop_truthfully ... ok
+test runtime_loop::tests::story_23_4_model_dependency_failures_close_without_effect_or_retry ... ok
 test runtime_loop::tests::story_23_4_ephemeral_runtime_profile_is_bounded ... ok
 
 test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 771 filtered out; finished in 0.03s
 
-     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-1d35cecc8eac4a50)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-0763e8462d798883)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-96fb8646b8e88c01)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-0b41c11af9f7bcef)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-3183945eaf6ee601)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 
-     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c2bf19d0e955e0a1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-f39a9d9ea513dfc1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-6655190128ba9428)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-dfbfdc9850767ddd)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-977b1de1fa35ee44)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-e051a35e39b8b099)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-9289ebbbd5c8954a)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
 
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
 
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-890f5a0284eee806)
 
 running 0 tests
 
@@ -306,26 +307,26 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 $ cargo test -p agentmage-host story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 1 test
 test runtime_parity_tests::story_50_2_read_only_and_coding_packets_are_equal_across_all_three_callers ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 170 filtered out; finished in 0.28s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 170 filtered out; finished in 0.29s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 
@@ -336,5 +337,7 @@ $ python3 scripts/story_22_4_attempt_recovery_evidence.py
 Story 22.4 local durable attempt recovery evidence validated
 
 $ cargo clippy -p agentmage-kernel-engine -p agentmage-host --all-targets --all-features --locked -- -D warnings
+    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Checking agentmage-platform-linux v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/platforms/linux)
     Checking agentmage-host v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/shells/host)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.89s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 14.82s

@@ -36,9 +36,9 @@
       "sha256": "e78dc15adb69ea7d0b95fb126c5d0b4953597d50410c5cbe35f8c0d7a1e9da84"
     },
     {
-      "byte_length": 130132,
+      "byte_length": 130404,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "4672e0d2d7b8b91dc4fda165b064b1c0610678881a24397b546b2a46df076024"
+      "sha256": "5871d9c23024e36593fcfeac9741c92d0c97cada4e0adfbf06fc13fb2a37c448"
     },
     {
       "byte_length": 148475,
@@ -66,14 +66,14 @@
       "sha256": "d42c2bfc3e59824786333b3e6ef30e1aa08ebf84740f8739a40b0dd78e50ed95"
     },
     {
-      "byte_length": 11659,
+      "byte_length": 21109,
       "path": "artifacts/sprints/sprint-50/story-50.2-component-removal/report.json",
-      "sha256": "9619fa82f894ff13c3914766c28ccb287fc8dc36ba00b6bc57c6f0b6d7409eb3"
+      "sha256": "253997097386525db2ba21754cb1e91cf19fcf00bd70398c45f6fcfb28beec01"
     },
     {
-      "byte_length": 11099,
+      "byte_length": 11100,
       "path": "artifacts/sprints/sprint-50/story-50.4-dependency-degradation/local-results.log",
-      "sha256": "019f1539a8212289a8f99ef65f7763606d2d382af7f498865c30e2f2cc4507e9"
+      "sha256": "776cff8357cf7a62f539ff69ac78066067998abe15886430ddec52de9b9e8c07"
     }
   ],
   "commands": [

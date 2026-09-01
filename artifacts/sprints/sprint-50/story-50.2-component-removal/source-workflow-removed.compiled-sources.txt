@@ -33,8 +33,7 @@ shells/host/src/linux_read.rs
 shells/host/src/linux_repository_map.rs
 shells/host/src/native_chat_runtime.rs
 shells/host/src/protocol.rs
-shells/host/src/runtime_read_tests.rs
 shells/host/src/runtime_tools.rs
 shells/host/src/runtime_transport.rs
-shells/host/src/source_artifact_runtime.rs
-shells/host/src/workflow_supervisor.rs
+shells/host/src/workflow_assignment.rs
+shells/host/src/workflow_caller.rs

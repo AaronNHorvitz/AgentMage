@@ -1,25 +1,25 @@
 $ cargo test -p agentmage-host story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator --all-features --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 1 test
 test runtime_read_tests::story_50_3_artifact_heavy_steps_use_one_supervisor_and_common_coordinator ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 170 filtered out; finished in 0.06s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 
@@ -30,123 +30,123 @@ COMMAND_0_EXIT=0
 
 $ cargo test -p agentmage-kernel-engine verified_workflow_supervisor::tests --all-features --locked -- --nocapture
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 7 tests
-test verified_workflow_supervisor::tests::repeated_transient_state_exhausts_no_progress_budget ... ok
 test verified_workflow_supervisor::tests::retry_reusing_authority_bearing_identities_is_denied ... ok
+test verified_workflow_supervisor::tests::repeated_transient_state_exhausts_no_progress_budget ... ok
+test verified_workflow_supervisor::tests::safe_interruption_resumes_without_replaying_completed_steps_and_rejects_tampering ... ok
+test verified_workflow_supervisor::tests::transient_read_retries_with_fresh_lineage_and_prior_attempt_binding ... ok
 test verified_workflow_supervisor::tests::stale_preflight_oversize_evidence_and_false_success_fail_closed ... ok
 test verified_workflow_supervisor::tests::three_dependency_steps_complete_in_definition_order ... ok
-STORY_50_3_TERMINAL_DIAGNOSIS_LATENCY_US=6876;CEILING_US=1000000
+STORY_50_3_TERMINAL_DIAGNOSIS_LATENCY_US=10589;CEILING_US=1000000
 test verified_workflow_supervisor::tests::uncertainty_cancellation_and_resource_failure_never_false_complete ... ok
-test verified_workflow_supervisor::tests::transient_read_retries_with_fresh_lineage_and_prior_attempt_binding ... ok
-test verified_workflow_supervisor::tests::safe_interruption_resumes_without_replaying_completed_steps_and_rejects_tampering ... ok
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 777 filtered out; finished in 0.01s
 
-     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-1d35cecc8eac4a50)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-0763e8462d798883)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-96fb8646b8e88c01)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-0b41c11af9f7bcef)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-3183945eaf6ee601)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 
-     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c2bf19d0e955e0a1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-f39a9d9ea513dfc1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-6655190128ba9428)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-dfbfdc9850767ddd)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-977b1de1fa35ee44)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-e051a35e39b8b099)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-9289ebbbd5c8954a)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
 
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
 
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-890f5a0284eee806)
 
 running 0 tests
 
@@ -157,126 +157,126 @@ COMMAND_1_EXIT=0
 
 $ cargo test -p agentmage-kernel-engine source_preparation::tests --all-features --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 9 tests
 test source_preparation::tests::story_22_3_source_preparation_crash_child ... ignored, subprocess stop target; invoked only by the Story 22.3 crash/restart test
 test source_preparation::tests::story_22_3_text_and_log_preparation_preserves_provenance_and_clusters ... ok
 test source_preparation::tests::story_22_3_declared_encodings_are_exact_and_binary_or_lossy_input_fails ... ok
 test source_preparation::tests::story_22_3_cancellation_limits_and_persistence_binding_fail_before_publication ... ok
-test source_preparation::tests::story_22_3_persisted_restart_release_and_delete_are_exact_and_fail_closed ... ok
-test source_preparation::tests::story_22_3_growing_log_refresh_preserves_append_line_identity_and_detects_rotation ... ok
 
 running 1 test
+test source_preparation::tests::story_22_3_growing_log_refresh_preserves_append_line_identity_and_detects_rotation ... ok
+test source_preparation::tests::story_22_3_persisted_restart_release_and_delete_are_exact_and_fail_closed ... ok
 test source_preparation::tests::story_22_3_process_stop_publishes_no_partial_source_and_exact_restart_recovers ... ok
 test source_preparation::tests::story_22_3_context_accounts_every_source_section_duplicate_restriction_and_budget ... ok
 test source_preparation::tests::story_22_3_twenty_five_mib_log_is_bounded_and_visibly_truncated ... ok
 
 test result: ok. 8 passed; 0 failed; 1 ignored; 0 measured; 775 filtered out; finished in 5.15s
 
-     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-1d35cecc8eac4a50)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-0763e8462d798883)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-96fb8646b8e88c01)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-0b41c11af9f7bcef)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-3183945eaf6ee601)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 
-     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c2bf19d0e955e0a1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-f39a9d9ea513dfc1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-6655190128ba9428)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-dfbfdc9850767ddd)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-977b1de1fa35ee44)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-e051a35e39b8b099)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-9289ebbbd5c8954a)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
 
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
 
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-890f5a0284eee806)
 
 running 0 tests
 
@@ -291,7 +291,7 @@ Retained runtime hardening load evidence validated
 COMMAND_3_EXIT=0
 
 $ python3 scripts/runtime_component_removal.py --verify
-{"campaign_id": "story-50.2-component-removal-v1", "disposition": "LOCAL-SOURCE-PASS", "scenarios": 4, "source_commit": "33c619402260d0fc735b36134979ac1541c414fc"}
+{"campaign_id": "story-50.2-component-removal-v1", "disposition": "LOCAL-SOURCE-PASS", "scenarios": 8, "source_commit": "372b7759c91ffff77b4c597d39f527b8455a3c2b"}
 
 COMMAND_4_EXIT=0
 
@@ -307,28 +307,28 @@ COMMAND_6_EXIT=0
 
 $ cargo test -p agentmage-host feature_activation --all-features --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 3 tests
-test feature_activation::tests::current_activation_is_closed_and_unavailable_features_are_off ... ok
 test feature_activation::tests::every_unavailable_feature_and_dependency_broadening_fails_closed ... ok
+test feature_activation::tests::current_activation_is_closed_and_unavailable_features_are_off ... ok
 test feature_activation::tests::disabled_ingress_and_retrieval_leave_no_tool_registration ... ok
 
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 168 filtered out; finished in 0.00s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 
@@ -339,26 +339,26 @@ COMMAND_7_EXIT=0
 
 $ cargo test -p agentmage-host story_50_3_disabled_artifact_and_retrieval_features_register_no_tools --all-features --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 1 test
 test runtime_tools::tests::story_50_3_disabled_artifact_and_retrieval_features_register_no_tools ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 170 filtered out; finished in 0.00s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 
@@ -376,92 +376,92 @@ $ npm --prefix shells/vscode test
 > @agentmage/vscode-shell@0.0.0 build
 > tsc --project tsconfig.json
 
-✔ compatibility registrations require independent exact true flags (0.69446ms)
-✔ missing malformed or truthy values fail disabled (0.109699ms)
-✔ exact review, packet, manifest, and local receipt round trip (1.000622ms)
-✔ every review and manifest mutation fails before display (0.42095ms)
-✔ receipt cannot claim delivery, wrong action, or unreviewed packet (0.207971ms)
-✔ verified binary bootstrap names this process and remains supervised (1.15074ms)
-✔ wrong process and trailing bytes fail closed and kill the child (0.442375ms)
-✔ malformed, oversized, silent, and throwing launchers remain unavailable (4.863852ms)
-✔ authenticated bridge sends the exact handshake and bounded request frame (5.320145ms)
-✔ unknown host response fields fail closed without exposing parser detail (1.219514ms)
-✔ authenticated bridge validates the closed diagnostic export preview (0.920675ms)
-✔ authenticated doctor transport rejects every prohibited source field (5.036048ms)
-✔ authenticated bridge verifies model snapshot digests before display (0.893081ms)
-✔ tampered authenticated model snapshot fails closed (0.528999ms)
-✔ authenticated bridge transports one exact local handoff review (0.859469ms)
-✔ delivery claim in authenticated handoff fails closed (0.598666ms)
-✔ authenticated bridge transports one exact host-framed runtime request (0.962537ms)
-✔ authenticated bridge validates runtime events and protected approval (1.08398ms)
-✔ hidden runtime event authority fails closed at authenticated transport (0.638885ms)
-✔ out-of-range launch identity fails before socket access (0.187554ms)
-✔ shell scaffold exposes only declared interface authority (0.664377ms)
-✔ provider registration replacement and deactivation are exact (0.10253ms)
-✔ zero-profile discovery is valid and yields no native picker entry (1.153284ms)
-✔ acquisition review separates preflight and license without effects (9.228505ms)
-✔ Muse, Gemma, and additional admitted families map without prerequisites (0.723872ms)
-✔ every unavailable lifecycle remains visible only in management output (1.100703ms)
-✔ identity mutation and digest tampering fail before picker display (1.022548ms)
-✔ self-consistent blocked entry cannot claim selectable disposition (0.137716ms)
-✔ provider preserves every supported role text part and message boundary (1.154517ms)
-✔ tools options unknown parts invalid roles and oversize route visibly to Verified Chat (0.175921ms)
-✔ route and usage disclose exact available facts and unavailable token accounting (0.176897ms)
-✔ 999 and 1001 character prompts plus supplied references are completely accounted (10.816762ms)
-✔ stale reference remains visible and stops before a model turn (0.49227ms)
-✔ unsupported supplied reference stops instead of weakening context (0.222334ms)
-✔ cancellation and duplicate identities stop without a model turn (0.157125ms)
-✔ stale model revalidation immediately before submission starts no turn (0.206977ms)
-✔ provider compatibility reports every non-text part instead of filtering (0.11798ms)
-✔ label-only proxy and MCP-without-resource fixtures cannot claim source bytes (0.059674ms)
-✔ closed read grammar rejects ambient and traversal paths (1.020705ms)
-✔ model management reports an exact empty snapshot without inventing a profile (0.799574ms)
-✔ exact model review refuses an absent profile without substitution (0.229397ms)
-✔ selected model is revalidated exactly and refusal names no fallback (0.209324ms)
-✔ doctor renders every typed state without workspace approval (0.464185ms)
-✔ doctor rejects prohibited-source fields without canary disclosure (0.476073ms)
-✔ diagnostic export requires destination preview and one approval (0.316894ms)
-✔ cancelled and malformed diagnostic previews never approve (0.190036ms)
-✔ reviewed handoff renders the exact local packet without delivery (0.585764ms)
-✔ handoff cancellation and missing acknowledgement never render (0.293462ms)
-✔ handoff byte mutation fails closed before unreviewed display (0.215049ms)
-✔ one approved read renders bounded content citation and receipt (0.35098ms)
-✔ unsafe display links never become clickable native Chat output (0.311093ms)
-✔ workspace and operation denials start no approved worker (0.124041ms)
-✔ cancellation after preview cancels the exact pending operation (0.124195ms)
-✔ mutated preview identity is denied before approval (0.086159ms)
-✔ mismatched terminal request identity is never rendered (0.085251ms)
-✔ deactivation cancels an unconsumed preview and closes the controller (0.162154ms)
-✔ native Chat renders one complete shared-runtime stream and outcome (9.735435ms)
-✔ native Chat accepts an exact host-framed controlled-write run (0.545473ms)
-✔ Verified Agent binds the exact approved Plan before controlled execution (1.040353ms)
-✔ Verified Agent never starts when approved Plan binding is unavailable (0.171036ms)
-✔ native Chat rejects a substituted profile workspace or prompt before start (0.121998ms)
-✔ native Chat rejects every selected session identity mutation before start (0.308727ms)
-✔ native Chat relays one exact protected denial before terminal output (0.42987ms)
-✔ native Chat cancellation uses the exact accepted cursor and starts no approval (0.321083ms)
-✔ deactivation cancels and releases an active native Chat run before IPC closes (0.296292ms)
-✔ closed runtime request and host response reject unknown fields (1.049831ms)
-✔ ordered terminal stream renders only digest-checked canonical output (1.586903ms)
-✔ stream substitution reordering and payload mutation fail closed (1.070273ms)
-✔ successful answer evidence is mandatory, closed, and output bound (0.30423ms)
-✔ artifact references remain complete and event-bound across runtime steps (3.780629ms)
-✔ approval is bound to the exact last permission event and grant (0.606312ms)
-✔ one disposable channel admits each exact command once in order (0.840728ms)
-✔ replay spoof reorder extra fields unknown modes and oversized text fail closed (0.303195ms)
-✔ invalid input does not consume the next sequence (0.091659ms)
-✔ active run gate admits only cancellation and closes the cancellation race (0.126559ms)
-✔ durable events project in exact order to accessible content-free cards (1.329144ms)
-✔ terminal, tool, verification, artifact, and lifecycle cards preserve closed truth (0.537508ms)
-✔ wrong session replay reorder duplication drift unknown fields and false terminal fail closed (0.278092ms)
-✔ replay pages apply atomically when a later event is invalid (0.135349ms)
-✔ durable approved Plan binding is reconstructed without execution authority (0.219139ms)
-✔ bounded delivery preserves order and rejects slow-consumer pressure (0.890071ms)
-✔ bounded delivery rejects oversized messages, sender refusal, and post-disposal use (0.207627ms)
-✔ reload snapshot restores only closed session and artifact projections (0.345901ms)
-✔ 50,000-character paste reaches the host in exact ordered chunks (4.656006ms)
-✔ selected binary attachment reaches the host without text conversion (0.27153ms)
-✔ unknown Engineering response fields fail closed (0.191856ms)
+✔ compatibility registrations require independent exact true flags (0.690158ms)
+✔ missing malformed or truthy values fail disabled (0.122989ms)
+✔ exact review, packet, manifest, and local receipt round trip (1.7209ms)
+✔ every review and manifest mutation fails before display (0.860818ms)
+✔ receipt cannot claim delivery, wrong action, or unreviewed packet (0.405128ms)
+✔ verified binary bootstrap names this process and remains supervised (1.9564ms)
+✔ wrong process and trailing bytes fail closed and kill the child (0.775778ms)
+✔ malformed, oversized, silent, and throwing launchers remain unavailable (5.097524ms)
+✔ authenticated bridge sends the exact handshake and bounded request frame (7.692738ms)
+✔ unknown host response fields fail closed without exposing parser detail (0.885219ms)
+✔ authenticated bridge validates the closed diagnostic export preview (0.873532ms)
+✔ authenticated doctor transport rejects every prohibited source field (4.986638ms)
+✔ authenticated bridge verifies model snapshot digests before display (0.793418ms)
+✔ tampered authenticated model snapshot fails closed (0.541496ms)
+✔ authenticated bridge transports one exact local handoff review (1.013539ms)
+✔ delivery claim in authenticated handoff fails closed (0.62307ms)
+✔ authenticated bridge transports one exact host-framed runtime request (0.956735ms)
+✔ authenticated bridge validates runtime events and protected approval (4.168581ms)
+✔ hidden runtime event authority fails closed at authenticated transport (1.12782ms)
+✔ out-of-range launch identity fails before socket access (0.289173ms)
+✔ shell scaffold exposes only declared interface authority (0.708562ms)
+✔ provider registration replacement and deactivation are exact (0.110397ms)
+✔ zero-profile discovery is valid and yields no native picker entry (1.18558ms)
+✔ acquisition review separates preflight and license without effects (8.488392ms)
+✔ Muse, Gemma, and additional admitted families map without prerequisites (0.719873ms)
+✔ every unavailable lifecycle remains visible only in management output (1.132714ms)
+✔ identity mutation and digest tampering fail before picker display (1.057932ms)
+✔ self-consistent blocked entry cannot claim selectable disposition (0.149869ms)
+✔ provider preserves every supported role text part and message boundary (1.116925ms)
+✔ tools options unknown parts invalid roles and oversize route visibly to Verified Chat (0.165897ms)
+✔ route and usage disclose exact available facts and unavailable token accounting (0.176337ms)
+✔ 999 and 1001 character prompts plus supplied references are completely accounted (9.616315ms)
+✔ stale reference remains visible and stops before a model turn (0.482893ms)
+✔ unsupported supplied reference stops instead of weakening context (0.247897ms)
+✔ cancellation and duplicate identities stop without a model turn (0.150939ms)
+✔ stale model revalidation immediately before submission starts no turn (0.19677ms)
+✔ provider compatibility reports every non-text part instead of filtering (0.113481ms)
+✔ label-only proxy and MCP-without-resource fixtures cannot claim source bytes (0.055904ms)
+✔ closed read grammar rejects ambient and traversal paths (0.96612ms)
+✔ model management reports an exact empty snapshot without inventing a profile (0.744083ms)
+✔ exact model review refuses an absent profile without substitution (0.227946ms)
+✔ selected model is revalidated exactly and refusal names no fallback (0.210648ms)
+✔ doctor renders every typed state without workspace approval (0.353913ms)
+✔ doctor rejects prohibited-source fields without canary disclosure (0.341733ms)
+✔ diagnostic export requires destination preview and one approval (0.283589ms)
+✔ cancelled and malformed diagnostic previews never approve (0.20639ms)
+✔ reviewed handoff renders the exact local packet without delivery (0.604086ms)
+✔ handoff cancellation and missing acknowledgement never render (0.307664ms)
+✔ handoff byte mutation fails closed before unreviewed display (0.208471ms)
+✔ one approved read renders bounded content citation and receipt (0.357962ms)
+✔ unsafe display links never become clickable native Chat output (0.381366ms)
+✔ workspace and operation denials start no approved worker (0.12298ms)
+✔ cancellation after preview cancels the exact pending operation (0.103003ms)
+✔ mutated preview identity is denied before approval (0.079294ms)
+✔ mismatched terminal request identity is never rendered (0.088338ms)
+✔ deactivation cancels an unconsumed preview and closes the controller (0.166875ms)
+✔ native Chat renders one complete shared-runtime stream and outcome (9.734166ms)
+✔ native Chat accepts an exact host-framed controlled-write run (0.524422ms)
+✔ Verified Agent binds the exact approved Plan before controlled execution (1.153353ms)
+✔ Verified Agent never starts when approved Plan binding is unavailable (0.163479ms)
+✔ native Chat rejects a substituted profile workspace or prompt before start (0.121949ms)
+✔ native Chat rejects every selected session identity mutation before start (3.485365ms)
+✔ native Chat relays one exact protected denial before terminal output (0.426473ms)
+✔ native Chat cancellation uses the exact accepted cursor and starts no approval (0.31431ms)
+✔ deactivation cancels and releases an active native Chat run before IPC closes (0.325931ms)
+✔ closed runtime request and host response reject unknown fields (1.551908ms)
+✔ ordered terminal stream renders only digest-checked canonical output (1.886095ms)
+✔ stream substitution reordering and payload mutation fail closed (1.093519ms)
+✔ successful answer evidence is mandatory, closed, and output bound (0.284045ms)
+✔ artifact references remain complete and event-bound across runtime steps (0.536537ms)
+✔ approval is bound to the exact last permission event and grant (0.574541ms)
+✔ one disposable channel admits each exact command once in order (0.823823ms)
+✔ replay spoof reorder extra fields unknown modes and oversized text fail closed (0.287555ms)
+✔ invalid input does not consume the next sequence (0.093898ms)
+✔ active run gate admits only cancellation and closes the cancellation race (0.135125ms)
+✔ durable events project in exact order to accessible content-free cards (1.292099ms)
+✔ terminal, tool, verification, artifact, and lifecycle cards preserve closed truth (0.518977ms)
+✔ wrong session replay reorder duplication drift unknown fields and false terminal fail closed (0.232706ms)
+✔ replay pages apply atomically when a later event is invalid (0.121547ms)
+✔ durable approved Plan binding is reconstructed without execution authority (0.20655ms)
+✔ bounded delivery preserves order and rejects slow-consumer pressure (0.844898ms)
+✔ bounded delivery rejects oversized messages, sender refusal, and post-disposal use (0.226201ms)
+✔ reload snapshot restores only closed session and artifact projections (0.347453ms)
+✔ 50,000-character paste reaches the host in exact ordered chunks (4.255099ms)
+✔ selected binary attachment reaches the host without text conversion (0.257659ms)
+✔ unknown Engineering response fields fail closed (0.180832ms)
 ℹ tests 86
 ℹ suites 0
 ℹ pass 86
@@ -469,7 +469,7 @@ $ npm --prefix shells/vscode test
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 76.864547
+ℹ duration_ms 77.546148
 
 COMMAND_9_EXIT=0
 

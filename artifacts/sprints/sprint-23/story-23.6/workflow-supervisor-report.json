@@ -6,9 +6,9 @@
       "sha256": "b2f2ebe42410c722fa16393f1dc77903cc2524d99a00cf5e6d03a6c4a3a0a208"
     },
     {
-      "byte_length": 11591,
+      "byte_length": 11718,
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "f76b24c5cd76159391ce7b8b2b72773778295f32e77ad7f1c9228935e617c99f"
+      "sha256": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26"
     },
     {
       "byte_length": 16256,
@@ -31,9 +31,9 @@
       "sha256": "308892cd00c60add332bca89bf71231292d8672a076444b44db77584348feaad"
     },
     {
-      "byte_length": 4180,
+      "byte_length": 4396,
       "path": "shells/host/src/lib.rs",
-      "sha256": "ccddd625af4f2f17998a0c2c22d48964c616d6da924c05a01c92c7c955f63ebb"
+      "sha256": "d1277baafa1f78a0072cb36bef992987f232fb1c72bb5b59c48902dc32d3ad88"
     },
     {
       "byte_length": 5228,
@@ -41,9 +41,9 @@
       "sha256": "85b170496c26d2db5b48e260410f39f5077f2e7090012698b53b040951b02374"
     },
     {
-      "byte_length": 40604,
+      "byte_length": 41200,
       "path": "docs/architecture/foundational-artifact-and-workflow-runtime.md",
-      "sha256": "d0fcebf4dabf213defc0962e677559560f87caeefba2e7c08be46dc33d89e1e4"
+      "sha256": "61547a158b6a4b1d559b4d5999d287d7b790ce44a61e9160ab895ddeff8c485e"
     },
     {
       "byte_length": 8268,
@@ -56,9 +56,9 @@
       "sha256": "ab51ee8b07624a2f70ef611bc905be817b831d3ed783c5191fa39e1183d2f519"
     },
     {
-      "byte_length": 23687,
+      "byte_length": 23686,
       "path": "artifacts/sprints/sprint-23/story-23.6/workflow-supervisor-results.log",
-      "sha256": "c7aa39e5e085005eb39e99a2e56fb7036d30d56b0e4a438b5d4999bf293e061f"
+      "sha256": "264ddd887ba4881cd12bbf6831b442a1dbb26995dcfb3cbe575fea4c20f041a7"
     }
   ],
   "commands": [

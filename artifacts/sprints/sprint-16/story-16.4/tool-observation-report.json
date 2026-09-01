@@ -16,9 +16,9 @@
       "sha256": "0edd44976cdc3fc7f65de9e65f5b5d5ae4f845e4f598bf4411bf8acd75a1f398"
     },
     {
-      "byte_length": 11591,
+      "byte_length": 11718,
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "f76b24c5cd76159391ce7b8b2b72773778295f32e77ad7f1c9228935e617c99f"
+      "sha256": "74e16b7d5134da7214e979519b12116fa002034a5c7bf4b8a1e83646b93d8d26"
     },
     {
       "byte_length": 3223,
@@ -38,7 +38,7 @@
     {
       "byte_length": 9851,
       "path": "artifacts/sprints/sprint-16/story-16.4/tool-observation-results.log",
-      "sha256": "b027f58eb35f1648ae2632003b0e751b3507f015610ba3f4397f260ff60a67a4"
+      "sha256": "aeeeabf6a559c8f8ce3853afb5e258773073bdf7aa101ec59ea319133f0809df"
     }
   ],
   "commands": [

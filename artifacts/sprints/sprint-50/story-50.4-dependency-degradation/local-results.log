@@ -1,14 +1,14 @@
 $ cargo test -p agentmage-kernel-engine --test dependency_degradation --all-features --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-0b41c11af9f7bcef)
 
 running 7 tests
 test fresh_narrower_stronger_same_kind_substitute_is_explicitly_selected ... ok
 test every_dependency_family_is_classified_and_available ... ok
-test optional_loss_remains_permitted_but_never_silent ... ok
 test inventory_and_exact_identity_drift_never_silently_omit ... ok
-test missing_stale_hidden_cross_kind_or_weaker_substitution_is_denied ... ok
+test optional_loss_remains_permitted_but_never_silent ... ok
 test required_optional_disabled_and_quarantined_loss_are_visible ... ok
+test missing_stale_hidden_cross_kind_or_weaker_substitution_is_denied ... ok
 test every_dependency_health_and_requirement_class_has_one_deterministic_disposition ... ok
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -18,7 +18,7 @@ COMMAND_0_EXIT=0
 
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
     Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 13.12s
 
 COMMAND_1_EXIT=0
 
@@ -34,149 +34,149 @@ Validated 408 Markdown file(s) and all policy invariants.
 COMMAND_3_EXIT=0
 
 $ cargo test -p agentmage-kernel-engine story_50_2_ --all-features --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 33 tests
 test runtime_journal::tests::story_50_2_reference_hardware_load_is_bounded_recoverable_and_nonblocking ... ignored, explicit reference-hardware campaign; run through runtime_hardening_load.py
-test runtime_lifecycle::tests::story_50_2_deletion_requires_release_dependencies_and_worktree_cleanup ... ok
-test runtime_lifecycle::tests::story_50_2_optional_transcript_and_metric_collection_requires_current_opt_in ... ok
+test runtime_recovery::tests::story_50_2_terminal_result_requires_exact_proof_and_no_pending_authority ... ok
+test runtime_lifecycle::tests::story_50_2_plan_mutation_and_field_confusion_fail_closed ... ok
+test runtime_loop::tests::story_50_2_subscription_capacity_is_bounded_by_count_and_bytes ... ok
 test runtime_lifecycle::tests::story_50_2_targets_are_unique_canonical_and_never_share_aggregate_authority ... ok
+test runtime_recovery::tests::story_50_2_every_boundary_selects_one_closed_safe_action ... ok
 test runtime_lifecycle::tests::story_50_2_safe_mode_allows_only_diagnostics_export_and_preserving_hold ... ok
 test runtime_recovery::tests::story_50_2_consumed_or_uncertain_effect_is_never_replayed ... ok
-test runtime_recovery::tests::story_50_2_every_boundary_selects_one_closed_safe_action ... ok
-test runtime_recovery::tests::story_50_2_incoherent_observations_fail_closed_before_recovery ... ok
-test runtime_recovery::tests::story_50_2_missing_stale_or_invalid_durable_evidence_enters_safe_mode ... ok
-test runtime_recovery::tests::story_50_2_restart_failures_never_fall_through_to_resume ... ok
-test runtime_lifecycle::tests::story_50_2_plan_mutation_and_field_confusion_fail_closed ... ok
-test runtime_recovery::tests::story_50_2_restart_result_mapping_is_exhaustive ... ok
-test runtime_recovery::tests::story_50_2_terminal_result_requires_exact_proof_and_no_pending_authority ... ok
 test runtime_recovery::tests::story_50_2_write_recovery_plan_is_composed_without_gaining_authority ... ok
-test runtime_loop::tests::story_50_2_subscription_capacity_is_bounded_by_count_and_bytes ... ok
-test runtime_loop::tests::story_50_2_peak_memory_and_failure_ceilings_are_non_mutating ... ok
-test runtime_loop::tests::story_50_2_durable_restore_rejects_usage_drift ... ok
-test runtime_loop::tests::story_50_2_cumulative_budget_overage_is_non_mutating ... ok
-test runtime_loop::tests::story_50_2_controlled_write_requires_every_bound_resource_budget ... ok
 test runtime_event::tests::story_50_2_status_coalescing_never_removes_canonical_events ... ok
+test runtime_recovery::tests::story_50_2_missing_stale_or_invalid_durable_evidence_enters_safe_mode ... ok
+test runtime_recovery::tests::story_50_2_restart_result_mapping_is_exhaustive ... ok
+test runtime_recovery::tests::story_50_2_incoherent_observations_fail_closed_before_recovery ... ok
+test runtime_loop::tests::story_50_2_controlled_write_requires_every_bound_resource_budget ... ok
+test runtime_event::tests::story_50_2_slow_client_drains_then_reconnects_without_event_loss ... ok
+test runtime_loop::tests::story_50_2_durable_restore_rejects_usage_drift ... ok
+test runtime_lifecycle::tests::story_50_2_optional_transcript_and_metric_collection_requires_current_opt_in ... ok
+test runtime_recovery::tests::story_50_2_restart_failures_never_fall_through_to_resume ... ok
+test runtime_loop::tests::story_50_2_cumulative_budget_overage_is_non_mutating ... ok
+test runtime_loop::tests::story_50_2_event_and_artifact_overage_is_non_mutating ... ok
+test runtime_loop::tests::story_50_2_peak_memory_and_failure_ceilings_are_non_mutating ... ok
+test runtime_lifecycle::tests::story_50_2_deletion_requires_release_dependencies_and_worktree_cleanup ... ok
 test runtime_projection::tests::story_50_2_collection_overage_and_binding_drift_are_non_mutating ... ok
 test runtime_event::tests::story_50_2_live_batch_stashes_the_first_event_beyond_its_byte_ceiling ... ok
-test runtime_projection::tests::story_50_2_safe_mode_and_restricted_events_never_collect_optional_telemetry ... ok
+test runtime_lifecycle::tests::story_50_2_every_domain_and_action_retains_one_exact_owner ... ok
 test runtime_projection::tests::story_50_2_metrics_and_diagnostics_are_content_free_event_bound_and_bounded ... ok
-test runtime_loop::tests::story_50_2_event_and_artifact_overage_is_non_mutating ... ok
-test runtime_event::tests::story_50_2_slow_client_drains_then_reconnects_without_event_loss ... ok
+test runtime_event::tests::story_50_2_replay_pages_reconstruct_the_exact_terminal_chain ... ok
+test runtime_projection::tests::story_50_2_safe_mode_and_restricted_events_never_collect_optional_telemetry ... ok
 test runtime_event::tests::story_50_2_replay_rejects_cursor_drift_and_undersized_pages ... ok
 test runtime_projection::tests::story_50_2_verified_runtime_exchange_projects_valid_non_authoritative_turns ... ok
-test runtime_lifecycle::tests::story_50_2_every_domain_and_action_retains_one_exact_owner ... ok
 test runtime_projection::tests::story_50_2_transcript_projection_obeys_opt_in_safe_mode_sensitivity_and_budget ... ok
-test runtime_event::tests::story_50_2_replay_pages_reconstruct_the_exact_terminal_chain ... ok
 test runtime_journal::tests::story_50_2_dedicated_writer_saturation_is_bounded_and_recoverable ... ok
 test runtime_artifact::tests::story_50_2_artifact_pages_are_owner_bound_bounded_and_exact ... ok
 
-test result: ok. 32 passed; 0 failed; 1 ignored; 0 measured; 751 filtered out; finished in 0.17s
+test result: ok. 32 passed; 0 failed; 1 ignored; 0 measured; 751 filtered out; finished in 0.18s
 
-     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-1d35cecc8eac4a50)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-0763e8462d798883)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-96fb8646b8e88c01)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-0b41c11af9f7bcef)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-3183945eaf6ee601)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 
-     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c2bf19d0e955e0a1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-f39a9d9ea513dfc1)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-6655190128ba9428)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-dfbfdc9850767ddd)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-977b1de1fa35ee44)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
 
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-e051a35e39b8b099)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
 
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-9289ebbbd5c8954a)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
 
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
 
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-890f5a0284eee806)
 
 running 0 tests
 
@@ -186,27 +186,27 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 COMMAND_4_EXIT=0
 
 $ cargo test -p agentmage-host story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay --all-features --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_host-88aef749813e6ae2)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_host-f0a5c135596f652b)
 
 running 1 test
 test linux_coding_runtime::tests::story_22_2_linux_restart_restores_large_command_and_test_artifacts_without_replay ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 170 filtered out; finished in 1.26s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 170 filtered out; finished in 1.30s
 
-     Running unittests src/bin/agent.rs (target/debug/deps/agent-f0593d546fb7a4f5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-
-     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-a7389517de3bb1b6)
+     Running unittests src/bin/agent.rs (target/debug/deps/agent-96577979ca877677)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (target/debug/deps/agentmage_host-982222c4b5d14c70)
+     Running unittests src/bin/agentmage.rs (target/debug/deps/agentmage-ac39fe6d405c29b2)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/agentmage_host-8394ab74e8370b41)
 
 running 0 tests
 
@@ -221,6 +221,6 @@ Retained runtime hardening load evidence validated
 COMMAND_6_EXIT=0
 
 $ python3 scripts/runtime_component_removal.py --verify
-{"campaign_id": "story-50.2-component-removal-v1", "disposition": "LOCAL-SOURCE-PASS", "scenarios": 4, "source_commit": "33c619402260d0fc735b36134979ac1541c414fc"}
+{"campaign_id": "story-50.2-component-removal-v1", "disposition": "LOCAL-SOURCE-PASS", "scenarios": 8, "source_commit": "372b7759c91ffff77b4c597d39f527b8455a3c2b"}
 
 COMMAND_7_EXIT=0

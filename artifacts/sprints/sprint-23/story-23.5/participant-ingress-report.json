@@ -41,9 +41,9 @@
       "sha256": "182c090cb006b050e36b5cf99553948746d378d8d537277aaa510842bd9233a2"
     },
     {
-      "byte_length": 96188,
+      "byte_length": 96411,
       "path": "shells/host/src/engineering_runtime.rs",
-      "sha256": "01b321068c6482eba84d82615f8028ee643c7cbcc9a3a43981731ac51b01f3a2"
+      "sha256": "39dba04d6c953b0c3987a5c944260a4c4c6b2ebad703aa54f449dc0a40167e05"
     },
     {
       "byte_length": 4612,
@@ -71,9 +71,9 @@
       "sha256": "26b45c68dc468700ac2b84774f1cbe0011e2a35ee260a988a056f9b278426102"
     },
     {
-      "byte_length": 11363,
+      "byte_length": 11372,
       "path": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-results.log",
-      "sha256": "ee0cc2836a89d0d87e573d2a15b56da44f939290d01af305bedd4b32826e7dd0"
+      "sha256": "44d08a593779c2ee2032b59afad37804dd035512751b4c0e8983f4a37ccdd8a8"
     }
   ],
   "commands": [

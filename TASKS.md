@@ -6256,9 +6256,14 @@ adapters may be exercised as they become available without claiming their later 
   - [ ] **Sub-task 50.3.4.1:** Compare admitted model profiles without changing invariant safety
     controls; report coverage, quality, invalid calls, interventions, resource use, and limitations
     per exact tuple.
-  - [ ] **Sub-task 50.3.4.2:** Disable and remove source persistence, parser adapters, workflow
+  - [x] **Sub-task 50.3.4.2:** Disable and remove source persistence, parser adapters, workflow
     supervision, and clients separately and together; require native baseline operation and no
-    undeclared data, process, socket, cache, grant, or registration residue.
+    undeclared data, process, socket, cache, grant, or registration residue. Evidence: the closed
+    eight-scenario clean-target removal profile independently excludes CLI, native Chat,
+    workflow-caller, source artifacts, workflow supervision, source plus workflow, foundational
+    features plus clients, and runtime projections; every target passes its applicable tests and
+    strict Clippy, verifies removed sources are absent from compiler inputs, and uses a fresh target
+    tree whose cleanup is checked before the next scenario.
   - [x] **Sub-task 50.3.4.3:** Publish operator diagnostics, recovery guidance, architecture and
     data-flow diagrams, capability/format/model/interface matrices, migration notes, raw evidence
     index, and the `M-FOUNDATIONAL-RUNTIME-CORE` decision record. Evidence: the normative
