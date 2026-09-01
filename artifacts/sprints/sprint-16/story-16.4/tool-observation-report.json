@@ -11,14 +11,14 @@
       "sha256": "94d2dd8c8cd9f8d3571232d117d69da8b731e365f2633f3df87ce91d8970ba20"
     },
     {
-      "byte_length": 74228,
+      "byte_length": 77208,
       "path": "kernel/engine/src/engineering_records.rs",
-      "sha256": "1a3488bcda2086306cade04c06404436f93b419067833b9f4c358a969fca706c"
+      "sha256": "0edd44976cdc3fc7f65de9e65f5b5d5ae4f845e4f598bf4411bf8acd75a1f398"
     },
     {
-      "byte_length": 10934,
+      "byte_length": 11591,
       "path": "kernel/engine/src/lib.rs",
-      "sha256": "d0cb2d20b6c799f82802585e10976bc8e209c9048e2ba1b64f33193e0560ee5b"
+      "sha256": "f76b24c5cd76159391ce7b8b2b72773778295f32e77ad7f1c9228935e617c99f"
     },
     {
       "byte_length": 3223,
@@ -36,9 +36,9 @@
       "sha256": "6b11d65e390791c5332040f6315cf42b19080cc96845af3ed7270829f5d72ea0"
     },
     {
-      "byte_length": 9415,
+      "byte_length": 9851,
       "path": "artifacts/sprints/sprint-16/story-16.4/tool-observation-results.log",
-      "sha256": "7f5da538bea1e77a02326620e480dcb50a9e5883f0d58ee2b63fae91802ccd17"
+      "sha256": "2497b65708b03a3e0585e6ccda5f0291ab7b65554579c475622223a8521bf3e4"
     }
   ],
   "commands": [

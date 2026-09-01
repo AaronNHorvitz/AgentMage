@@ -1,0 +1,142 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 160606,
+      "path": "SECURITY-REVIEW.md",
+      "sha256": "106c07f40ee61eea2147067092fc9b774f6313ac5a58d6db55ac1d93bd7ab44c"
+    },
+    {
+      "byte_length": 19339,
+      "path": "ENGINEERING-RUNTIME.md",
+      "sha256": "3dff78bc2a21f15a189c1c0c7f723c709d9db820a039aa1053eb3b5bfeb9e9fc"
+    },
+    {
+      "byte_length": 13178,
+      "path": "MODEL-GATEWAY.md",
+      "sha256": "c84f6df2226f5771a4684516127c7ac9644e9d6220713748f3aae69d3b264d8a"
+    },
+    {
+      "byte_length": 18891,
+      "path": "kernel/engine/src/dependency_degradation.rs",
+      "sha256": "6825bc76c245d3431c10d3bfae067f39e91690a916c8b9413748fdc6c1f60947"
+    },
+    {
+      "byte_length": 14263,
+      "path": "kernel/engine/src/capability_registry.rs",
+      "sha256": "62551cb42342bc6b2032b5a352ae61aaf1be445fd6f69b579ebd3dff278817df"
+    },
+    {
+      "byte_length": 43441,
+      "path": "kernel/engine/src/multi_agent.rs",
+      "sha256": "f3f049344725e93a489deeae2af0f073b53f6b0798e4b7350b0cd44516b9b34b"
+    },
+    {
+      "byte_length": 60108,
+      "path": "shells/host/src/runtime_read_tests.rs",
+      "sha256": "79d0c170c1546ed3d028a68d59032c13b77fd87cc386bc7f38d519d7fd6b19b4"
+    },
+    {
+      "byte_length": 6535,
+      "path": "artifacts/sprints/sprint-50/story-50.3-foundational-runtime/report.json",
+      "sha256": "b6c7868990befc6360527718b33b32fae264f0d712db8f7937cfe28f4edef437"
+    },
+    {
+      "byte_length": 5641,
+      "path": "artifacts/sprints/sprint-50/story-50.4-dependency-degradation/report.json",
+      "sha256": "35590f0db327feebd1d07be2ab23f870046c6def7fa7c5eafceee53771e23f99"
+    },
+    {
+      "byte_length": 8764,
+      "path": "scripts/story_50_4_core_milestone_evidence.py",
+      "sha256": "e7f0a73dafae1d1ed3277837fe7792ebbff70c15827e1348c11383b9ad79282b"
+    },
+    {
+      "byte_length": 1787,
+      "path": "tests/test_story_50_4_core_milestone_evidence.py",
+      "sha256": "7ee867cb3555fc11e82a104b801ba472adcfa28ceba56fe6b9720fea468deca1"
+    },
+    {
+      "byte_length": 16235,
+      "path": "artifacts/sprints/sprint-50/story-50.4-core-milestone/local-results.log",
+      "sha256": "989ef3f794b51b3e59179df165aa92c8e7d0ffa770c1d2f346b6a674ec3e9d03"
+    }
+  ],
+  "commands": [
+    "python3 scripts/story_22_5_vertical_slice_evidence.py",
+    "python3 scripts/engineering_artifact_rv51_evidence.py",
+    "python3 scripts/story_16_4_tool_observation_evidence.py",
+    "python3 scripts/workflow_rv52_evidence.py",
+    "python3 scripts/story_13_5_gateway_identity_evidence.py",
+    "python3 scripts/story_13_6_gateway_routing_evidence.py",
+    "python3 scripts/story_23_7_verified_chat_evidence.py",
+    "python3 scripts/story_23_8_native_chat_compatibility_evidence.py",
+    "cargo test -p agentmage-kernel-engine capability_registry::tests --all-features --locked",
+    "cargo test -p agentmage-kernel-engine multi_agent::tests --all-features --locked",
+    "npm run engineering-runtime:schemas:check",
+    "python3 scripts/requirement_coverage.py",
+    "python3 scripts/task_graph.py"
+  ],
+  "exact_blockers": [
+    "Story 49.2 alternate live runtime/codec qualification is unavailable",
+    "DOCX, PDF/OCR, and XLSX parser gates belong to Stories 58.2, 60.2, and 62.2",
+    "RV-56 and RV-57 remain owned by later capability and multi-agent stories",
+    "installed-client, admitted-model, independent-review, Windows-final, and deferred macOS evidence is absent"
+  ],
+  "gate_closed": true,
+  "generated_on": "2026-08-31",
+  "milestone_id": "M-FOUNDATIONAL-RUNTIME-CORE",
+  "product_truth": {
+    "capability_registry_protocol_complete": false,
+    "complete_foundational_runtime_milestone": false,
+    "dependency_degradation_and_reliability_pass": true,
+    "independent_review_complete": false,
+    "installed_client_protocol_complete": false,
+    "macos_validation_complete": false,
+    "multi_agent_protocol_complete": false,
+    "qualified_model_endpoint_or_route": false,
+    "release_claim": "none",
+    "remote_endpoint_protocol_complete": false,
+    "schema_traceability_and_task_graph_pass": true,
+    "structured_parser_milestone_complete": false,
+    "text_log_ingestion_and_context_pass": true,
+    "verified_workflow_supervision_pass": true,
+    "windows_validation_complete": false
+  },
+  "protocols": [
+    {
+      "id": "RV-50",
+      "status": "PASS_LOCAL_FAKE_RUNTIME"
+    },
+    {
+      "id": "RV-51",
+      "status": "PASS_LOCAL_TEXT_LOG_ONLY"
+    },
+    {
+      "id": "RV-52",
+      "status": "PASS_LOCAL_TOOL_LINEAGE"
+    },
+    {
+      "id": "RV-53",
+      "status": "PASS_LOCAL_CONTRACT_NO_QUALIFIED_TUPLE"
+    },
+    {
+      "id": "RV-54",
+      "status": "PASS_STRICT_LOCAL_ONLY_REMOTE_BLOCKED"
+    },
+    {
+      "id": "RV-55",
+      "status": "PASS_LOCAL_SOURCE_INSTALLED_BLOCKED"
+    },
+    {
+      "id": "RV-56",
+      "status": "PARTIAL_LATER_CAPABILITY_STORY"
+    },
+    {
+      "id": "RV-57",
+      "status": "PARTIAL_LATER_MULTI_AGENT_STORY"
+    }
+  ],
+  "record_type": "agentmage-foundational-runtime-core-decision",
+  "schema_version": 1,
+  "status": "PASS_LOCAL_TEXT_LOG_WORKFLOW_CORE"
+}

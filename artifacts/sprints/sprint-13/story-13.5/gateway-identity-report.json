@@ -6,9 +6,9 @@
       "sha256": "75d295c6a2e16a16e55bfc85321f5bed8f9ea74f5adb47058e2ac786d15559d3"
     },
     {
-      "byte_length": 128088,
+      "byte_length": 132612,
       "path": "kernel/contracts/src/engineering_records.rs",
-      "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+      "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
     },
     {
       "byte_length": 25018,
@@ -51,9 +51,9 @@
       "sha256": "85d0c9162e8d77ee85965c84a762ba7b57ce74d773fb1e1e6e7f396d712b8ea1"
     },
     {
-      "byte_length": 13851,
+      "byte_length": 14291,
       "path": "artifacts/sprints/sprint-13/story-13.5/gateway-identity-results.log",
-      "sha256": "db2a027e63a5d46bd1301967a172a2061976b5bc68f8747736ded6a304252b3f"
+      "sha256": "59ad36f5d8bdcc6b9e3e0dfbd6bb864502532d0ed9e59ec2a1c606563613d54b"
     }
   ],
   "commands": [

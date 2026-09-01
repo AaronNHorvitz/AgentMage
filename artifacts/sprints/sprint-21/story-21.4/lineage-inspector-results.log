@@ -1,5 +1,5 @@
 $ cargo test -p agentmage-kernel-engine story_21_4 --locked -- --nocapture
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
 running 5 tests
@@ -7,10 +7,10 @@ test runtime_inspector::tests::story_21_4_performance_qualification_is_complete_
 test runtime_inspector::tests::story_21_4_lineage_gap_events_enforce_exact_ordering ... ok
 test runtime_inspector::tests::story_21_4_inspector_reconstructs_complete_content_free_lineage ... ok
 test runtime_inspector::tests::story_21_4_inspector_supports_prefix_resume_and_refuses_tampering ... ok
-AGENTMAGE_STORY_21_4_PERFORMANCE=total_ms:112,events_per_second:23176,p50_us:1102,p95_us:1268,p99_us:1991,artifact_bytes:7935
+AGENTMAGE_STORY_21_4_PERFORMANCE=total_ms:109,events_per_second:23834,p50_us:1087,p95_us:1118,p99_us:1281,artifact_bytes:7935
 test runtime_inspector::tests::story_21_4_measures_the_bounded_local_inspector_fixture ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 756 filtered out; finished in 0.11s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 779 filtered out; finished in 0.11s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -35,6 +35,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
 
@@ -82,7 +88,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -122,7 +128,7 @@ $ cargo test -p agentmage-kernel-engine story_21_2_lagging_subscriber_is_removed
 running 1 test
 test runtime_event::tests::story_21_2_lagging_subscriber_is_removed_without_blocking_runtime ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 760 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 783 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -147,6 +153,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
 
@@ -194,7 +206,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -234,7 +246,7 @@ $ cargo test -p agentmage-kernel-engine story_21_2_subscriber_bounds_and_disconn
 running 1 test
 test runtime_event::tests::story_21_2_subscriber_bounds_and_disconnect_are_non_authoritative ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 760 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 783 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -259,6 +271,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
 
@@ -306,7 +324,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -346,7 +364,7 @@ $ cargo test -p agentmage-kernel-engine story_50_2_replay_rejects_cursor_drift_a
 running 1 test
 test runtime_event::tests::story_50_2_replay_rejects_cursor_drift_and_undersized_pages ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 760 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 783 filtered out; finished in 0.00s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -371,6 +389,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
 
@@ -418,7 +442,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -458,7 +482,7 @@ $ cargo test -p agentmage-kernel-engine story_21_2_durable_model_progress_and_ca
 running 1 test
 test runtime_loop::tests::story_21_2_durable_model_progress_and_cancellation_survive_delayed_sqlcipher ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 760 filtered out; finished in 0.11s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 783 filtered out; finished in 0.10s
 
      Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
 
@@ -483,6 +507,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; fini
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
      Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
 
@@ -530,7 +560,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; fini
 
 running 0 tests
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
 
      Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
 
@@ -564,74 +594,74 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; fini
 
 
 $ node --test tests/test_planning_schemas.mjs
-✔ all canonical examples satisfy their schema and semantic contract (4.109065ms)
-✔ decision and supersession templates are valid unapproved drafts (22.384379ms)
-✔ templates cannot be represented as accepted without approval evidence (0.139823ms)
-✔ validation does not mutate its input (0.483671ms)
-✔ every record rejects missing required fields and unknown properties (0.334367ms)
-✔ shared identities, paths, hashes, dates, and commits are strict (0.16041ms)
-✔ accepted decisions require approval evidence and cannot supersede themselves (0.169995ms)
-✔ risk registers reject duplicate identities and incorrect calculated scores (0.160008ms)
-✔ accepted risks require a decision and evidence (0.11041ms)
-✔ change logs reject duplicate identities and decreasing timestamps (0.175517ms)
-✔ release manifests bind release IDs and require unique component and profile identities (0.153746ms)
-✔ released manifests require a signer and release evidence (0.101073ms)
-✔ release manifests require one exact configuration identity (0.151381ms)
-✔ accepted supersessions require approval and disjoint requirement sets (0.129281ms)
-✔ unknown planning record types fail explicitly (0.202384ms)
-✔ platform, provenance, and fuzz results satisfy their testing schemas (31.563402ms)
-✔ testing schemas reject weakened platform and provenance controls (3.805413ms)
-✔ unknown testing record types fail explicitly (0.074916ms)
-✔ runtime state event and environment fixtures satisfy closed schemas (265.423767ms)
-✔ runtime artifact schemas reject path authority and lifecycle drift (1.837229ms)
-✔ validation receipts reject false pass, partial ambiguity, secrets, and unsorted evidence (2.140668ms)
-✔ logical commit plans reject authority, duplicate operations, and noncanonical groups (0.742177ms)
-✔ local review packets reject false review, validation, and change accounting (1.904682ms)
-✔ local commit records reject signer, approval, index, publication, and signature drift (2.087839ms)
-✔ change intent runtime schema rejects ambiguity and authority forgery (0.855685ms)
-✔ reproduction runtime schema rejects false outcomes and inherited authority (0.719637ms)
-✔ repository runtime schemas reject preservation and authority ambiguity (2.087359ms)
-✔ command runtime schemas reject authority and outcome ambiguity (1.469163ms)
-✔ write-aware checkpoint schema rejects ambiguous completion (0.9199ms)
-✔ runtime schemas reject missing and unknown fields (35.704869ms)
-✔ runtime events reject inline sensitive content and invented token events (0.790982ms)
-✔ artifact and workflow projection event families remain closed (1.638273ms)
-✔ thin client requests reject hidden authority and binding drift (0.70275ms)
-✔ thin client request commands remain closed and semantically bounded (0.257009ms)
-✔ thin client events reject malformed payloads and output drift (0.426986ms)
-✔ frontier decisions reject trigger, authority, clarification, and evidence drift (0.242195ms)
-✔ executive rankings reject hidden effects score drift and unstable ordering (0.281116ms)
-✔ executive views reject authority truth-state and evidence-order drift (0.161133ms)
-✔ executive correspondence reviews reject send completion and issue drift (0.283135ms)
-✔ meeting runtime records reject inferred states guessed fields and hidden effects (0.591289ms)
-✔ document-control records reject truth approval preview and effect drift (0.562466ms)
-✔ Markdown artifact records reject evidence ordering effect and round-trip drift (0.350779ms)
-✔ Word artifact records reject identity ordering fidelity and authority drift (1.02212ms)
-✔ PDF records reject page citation OCR and effect drift (0.997048ms)
-✔ tabular and spreadsheet records reject semantic and effect drift (206.512264ms)
-✔ JSON reconciliation and spreadsheet verification records reject semantic drift (0.861068ms)
-✔ presentation records reject unsafe inspection, stale previews, and edit drift (0.941466ms)
-✔ frontier receipts reject delivery and implicit or sensitive destinations (0.233072ms)
-✔ frontier return manifests reject authority stale references and operation drift (0.704364ms)
-✔ frontier round-trip receipts reject trust effects and recursive authority (0.486953ms)
-✔ state-machine schema rejects phase edge and authority drift (0.194171ms)
-✔ progress events enforce sequence revision step identity and content-free shape (0.137761ms)
-✔ session environment schema rejects syntax bounds variants and authority drift (0.447098ms)
-✔ unknown runtime record types fail explicitly (0.082727ms)
-✔ all configuration sections and the bundle satisfy closed versioned schemas (26.747001ms)
-✔ session and release result examples bind an exact configuration identity (21.914469ms)
-✔ configuration-bound results reject incomplete or broadened records (0.369626ms)
-✔ configuration diff and rollback review examples satisfy closed schemas (21.429096ms)
-✔ configuration review schemas reject raw values and unsafe rollback claims (0.767223ms)
-✔ configuration schemas reject missing versions and unknown fields (2.929107ms)
-✔ configuration validation does not coerce values or apply defaults (0.246156ms)
-✔ configuration bundle enforces authority, network, and logging controls (0.55072ms)
-✔ configuration bundle rejects authority and resource relationships that broaden scope (0.236897ms)
-✔ current configuration schemas retain complete fail-closed mutation coverage (25.878867ms)
-✔ retained configuration report currentness remains an explicit legacy check (21.695936ms)
-✔ unknown configuration record types fail explicitly (0.106774ms)
-✔ configuration profile catalog and all seven profiles satisfy formal schemas (22.707539ms)
-✔ future profile catalog entries cannot claim registration, network, or macOS support (0.95646ms)
+✔ all canonical examples satisfy their schema and semantic contract (3.917901ms)
+✔ decision and supersession templates are valid unapproved drafts (23.359442ms)
+✔ templates cannot be represented as accepted without approval evidence (0.1464ms)
+✔ validation does not mutate its input (0.471987ms)
+✔ every record rejects missing required fields and unknown properties (0.389716ms)
+✔ shared identities, paths, hashes, dates, and commits are strict (0.165221ms)
+✔ accepted decisions require approval evidence and cannot supersede themselves (0.148702ms)
+✔ risk registers reject duplicate identities and incorrect calculated scores (0.157296ms)
+✔ accepted risks require a decision and evidence (0.113863ms)
+✔ change logs reject duplicate identities and decreasing timestamps (0.178803ms)
+✔ release manifests bind release IDs and require unique component and profile identities (0.153596ms)
+✔ released manifests require a signer and release evidence (0.106223ms)
+✔ release manifests require one exact configuration identity (0.121099ms)
+✔ accepted supersessions require approval and disjoint requirement sets (0.113443ms)
+✔ unknown planning record types fail explicitly (0.191699ms)
+✔ platform, provenance, and fuzz results satisfy their testing schemas (29.779824ms)
+✔ testing schemas reject weakened platform and provenance controls (3.942209ms)
+✔ unknown testing record types fail explicitly (0.075149ms)
+✔ runtime state event and environment fixtures satisfy closed schemas (256.952753ms)
+✔ runtime artifact schemas reject path authority and lifecycle drift (1.692953ms)
+✔ validation receipts reject false pass, partial ambiguity, secrets, and unsorted evidence (2.021619ms)
+✔ logical commit plans reject authority, duplicate operations, and noncanonical groups (0.695108ms)
+✔ local review packets reject false review, validation, and change accounting (1.897574ms)
+✔ local commit records reject signer, approval, index, publication, and signature drift (1.970159ms)
+✔ change intent runtime schema rejects ambiguity and authority forgery (0.850271ms)
+✔ reproduction runtime schema rejects false outcomes and inherited authority (0.684261ms)
+✔ repository runtime schemas reject preservation and authority ambiguity (2.082781ms)
+✔ command runtime schemas reject authority and outcome ambiguity (1.422453ms)
+✔ write-aware checkpoint schema rejects ambiguous completion (0.88015ms)
+✔ runtime schemas reject missing and unknown fields (33.711091ms)
+✔ runtime events reject inline sensitive content and invented token events (1.824302ms)
+✔ artifact and workflow projection event families remain closed (1.340966ms)
+✔ thin client requests reject hidden authority and binding drift (0.631145ms)
+✔ thin client request commands remain closed and semantically bounded (0.232396ms)
+✔ thin client events reject malformed payloads and output drift (0.322825ms)
+✔ frontier decisions reject trigger, authority, clarification, and evidence drift (0.223075ms)
+✔ executive rankings reject hidden effects score drift and unstable ordering (0.27215ms)
+✔ executive views reject authority truth-state and evidence-order drift (0.156208ms)
+✔ executive correspondence reviews reject send completion and issue drift (0.268693ms)
+✔ meeting runtime records reject inferred states guessed fields and hidden effects (0.539838ms)
+✔ document-control records reject truth approval preview and effect drift (0.527284ms)
+✔ Markdown artifact records reject evidence ordering effect and round-trip drift (0.336124ms)
+✔ Word artifact records reject identity ordering fidelity and authority drift (1.068446ms)
+✔ PDF records reject page citation OCR and effect drift (1.010768ms)
+✔ tabular and spreadsheet records reject semantic and effect drift (192.888153ms)
+✔ JSON reconciliation and spreadsheet verification records reject semantic drift (0.914489ms)
+✔ presentation records reject unsafe inspection, stale previews, and edit drift (1.059954ms)
+✔ frontier receipts reject delivery and implicit or sensitive destinations (0.186716ms)
+✔ frontier return manifests reject authority stale references and operation drift (0.703457ms)
+✔ frontier round-trip receipts reject trust effects and recursive authority (0.491337ms)
+✔ state-machine schema rejects phase edge and authority drift (0.186982ms)
+✔ progress events enforce sequence revision step identity and content-free shape (0.135688ms)
+✔ session environment schema rejects syntax bounds variants and authority drift (0.429495ms)
+✔ unknown runtime record types fail explicitly (0.069811ms)
+✔ all configuration sections and the bundle satisfy closed versioned schemas (28.352851ms)
+✔ session and release result examples bind an exact configuration identity (22.750499ms)
+✔ configuration-bound results reject incomplete or broadened records (0.391359ms)
+✔ configuration diff and rollback review examples satisfy closed schemas (24.8219ms)
+✔ configuration review schemas reject raw values and unsafe rollback claims (0.67472ms)
+✔ configuration schemas reject missing versions and unknown fields (2.826299ms)
+✔ configuration validation does not coerce values or apply defaults (0.243095ms)
+✔ configuration bundle enforces authority, network, and logging controls (0.524224ms)
+✔ configuration bundle rejects authority and resource relationships that broaden scope (0.221291ms)
+✔ current configuration schemas retain complete fail-closed mutation coverage (20.293837ms)
+✔ retained configuration report currentness remains an explicit legacy check (23.943455ms)
+✔ unknown configuration record types fail explicitly (0.111561ms)
+✔ configuration profile catalog and all seven profiles satisfy formal schemas (23.394284ms)
+✔ future profile catalog entries cannot claim registration, network, or macOS support (0.8924ms)
 ℹ tests 68
 ℹ suites 0
 ℹ pass 68
@@ -639,10 +669,7 @@ $ node --test tests/test_planning_schemas.mjs
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 1192.185357
+ℹ duration_ms 1127.379835
 
 $ cargo clippy -p agentmage-kernel-engine -p agentmage-host --all-targets --locked -- -D warnings
-    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
-    Checking agentmage-platform-linux v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/platforms/linux)
-    Checking agentmage-host v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/shells/host)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.95s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s

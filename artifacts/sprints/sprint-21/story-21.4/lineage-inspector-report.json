@@ -21,9 +21,9 @@
       "sha256": "3588470c9ed56647802638f766c16418b9f61a8d7ea82a422371c56063b3d464"
     },
     {
-      "byte_length": 125847,
+      "byte_length": 130132,
       "path": "kernel/engine/src/runtime_loop_tests.rs",
-      "sha256": "dbd39f6852ff6d3a80723849b486a66241f0ebc9d2992d5cbf3eb382ba0d120e"
+      "sha256": "4672e0d2d7b8b91dc4fda165b064b1c0610678881a24397b546b2a46df076024"
     },
     {
       "byte_length": 20345,
@@ -51,9 +51,9 @@
       "sha256": "ae71a873184c8367ddfa8851d39bc67b34b3e02d01ba86d8a26e4d312287cbed"
     },
     {
-      "byte_length": 28021,
+      "byte_length": 28797,
       "path": "artifacts/sprints/sprint-21/story-21.4/lineage-inspector-results.log",
-      "sha256": "3c258220a1cc326eddba26b662e308f05d216a521c00799295e5234702879fd2"
+      "sha256": "8b5256652aad0213d1b2f24c48e0e7c25e65e26ebc84a0c347821f805be29bfa"
     }
   ],
   "commands": [
@@ -79,14 +79,14 @@
   "performance_fixture": {
     "accelerator_applicable": false,
     "artifact_bytes": 7935,
-    "events_per_second": 23176,
+    "events_per_second": 23834,
     "fixture_id": "story-21-4-local-inspector-100x",
     "iterations": 100,
     "lineage_events_per_iteration": 26,
-    "p50_us": 1102,
-    "p95_us": 1268,
-    "p99_us": 1991,
-    "total_ms": 112
+    "p50_us": 1087,
+    "p95_us": 1118,
+    "p99_us": 1281,
+    "total_ms": 109
   },
   "performance_metrics_qualified": 17,
   "product_truth": {

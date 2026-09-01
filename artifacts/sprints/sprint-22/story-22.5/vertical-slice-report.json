@@ -26,9 +26,9 @@
       "sha256": "4b327e66e82d4a3c01a3e92c086d6168023ff0623fa77c4d9efd799d248099fc"
     },
     {
-      "byte_length": 47262,
+      "byte_length": 60108,
       "path": "shells/host/src/runtime_read_tests.rs",
-      "sha256": "c46a0c2c277fb422a902537fc2aa0bc612b8757b77fd960e69a004fe8623e645"
+      "sha256": "79d0c170c1546ed3d028a68d59032c13b77fd87cc386bc7f38d519d7fd6b19b4"
     },
     {
       "byte_length": 7481,
@@ -56,14 +56,14 @@
       "sha256": "633e9a1901d8c472e4392e1b610092553af1c4f4df16fbac545ec6e6d783a7e5"
     },
     {
-      "byte_length": 38754,
+      "byte_length": 38463,
       "path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-results.log",
-      "sha256": "ceadc9c2192d84172cfb34c8243dc185782a04d2a9cdf129043b7940f7a9cfa4"
+      "sha256": "4d875b68de85044f9ac81b6df451c116f1e3d2ffb914f0bd7772ca0ecf3edc75"
     },
     {
-      "byte_length": 32177,
+      "byte_length": 32183,
       "path": "artifacts/sprints/sprint-22/story-22.5/vertical-slice-golden.json",
-      "sha256": "068c1060f01125eac8ec3f20124127425f1be892544fd8fcc63c0ec63a39c48f"
+      "sha256": "31712db4843aa5810210514d29a8e5e1a295d57b6c78120e7cb543fd593a61f3"
     }
   ],
   "commands": [

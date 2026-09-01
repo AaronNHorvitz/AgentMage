@@ -1,12 +1,172 @@
-$ cargo test -p agentmage-kernel-engine story_13_5 --locked
+$ python3 scripts/story_22_5_vertical_slice_evidence.py
+Story 22.5 local Engineering Runtime vertical-slice evidence validated
+
+COMMAND_0_EXIT=0
+
+$ python3 scripts/engineering_artifact_rv51_evidence.py
+Task 2.4.3.2 applicable RV-51 evidence validated with full protocol blockers open
+
+COMMAND_1_EXIT=0
+
+$ python3 scripts/story_16_4_tool_observation_evidence.py
+
+COMMAND_2_EXIT=0
+
+$ python3 scripts/workflow_rv52_evidence.py
+Sub-task 5.3.3.2 applicable RV-52 lineage validated with later-story blockers open
+
+COMMAND_3_EXIT=0
+
+$ python3 scripts/story_13_5_gateway_identity_evidence.py
+Story 13.5 candidate-neutral gateway identity and RV-54 slice validated
+
+COMMAND_4_EXIT=0
+
+$ python3 scripts/story_13_6_gateway_routing_evidence.py
+Story 13.6 gateway codec, routing, fallback, and RV-54 slice validated
+
+COMMAND_5_EXIT=0
+
+$ python3 scripts/story_23_7_verified_chat_evidence.py
+Story 23.7 local durable Verified Chat evidence validated
+
+COMMAND_6_EXIT=0
+
+$ python3 scripts/story_23_8_native_chat_compatibility_evidence.py
+Story 23.8 local native Chat compatibility evidence validated
+
+COMMAND_7_EXIT=0
+
+$ cargo test -p agentmage-kernel-engine capability_registry::tests --all-features --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
      Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
 
+running 2 tests
+test capability_registry::tests::manifest_cannot_invent_an_authority_class_or_exceed_team_limit ... ok
+test capability_registry::tests::repository_review_executes_from_the_registered_manifest ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 782 filtered out; finished in 0.00s
+
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+
+COMMAND_8_EXIT=0
+
+$ cargo test -p agentmage-kernel-engine multi_agent::tests --all-features --locked
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+
 running 4 tests
-test gateway_candidate_identity::tests::story_13_5_cross_class_credential_and_nested_identity_substitution_fail ... ok
-test gateway_candidate_identity::tests::story_13_5_unknown_operator_and_partial_remote_tuple_fail_before_route ... ok
-test gateway_candidate_identity::tests::story_13_5_every_independent_identity_changes_whole_tuple_digest ... ok
-test gateway_candidate_identity::tests::story_13_5_all_endpoint_classes_remain_disabled_without_fallback ... ok
+test multi_agent::tests::dependency_cycle_and_overlapping_paths_fail_before_workers_start ... ok
+test multi_agent::tests::successful_campaign_projection_binds_every_lease_integration_and_plan ... ok
+test multi_agent::tests::integrated_wave_resumes_without_replaying_and_inflight_state_is_refused ... ok
+test multi_agent::tests::three_workers_run_concurrently_and_integrate_serially ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 780 filtered out; finished in 0.00s
 
@@ -119,256 +279,83 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
 
 
-$ cargo test -p agentmage-kernel-engine model_gateway::tests --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
-
-running 4 tests
-test model_gateway::tests::every_json_protocol_uses_a_closed_shape_and_extracts_text ... ok
-test model_gateway::tests::remote_profile_rejects_http_embedded_credentials_and_redirects ... ok
-test model_gateway::tests::strict_local_can_never_fall_back_remotely ... ok
-test model_gateway::tests::exact_profiles_and_explicit_routes_are_digest_bound ... ok
-
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 780 filtered out; finished in 0.00s
-
-     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
-
-     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-
-     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
-
-     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
-
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
-
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
-
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
-
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
-
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
-
-     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-
-
-$ cargo test -p agentmage-kernel-engine every_descriptive_family_is_sealed_as_non_authoritative --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
-
-running 1 test
-test authority::tests::every_descriptive_family_is_sealed_as_non_authoritative ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 783 filtered out; finished in 0.00s
-
-     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-64acbb6c0be49bec)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
-
-     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-
-     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
-
-     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
-
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
-
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
-
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
-
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
-
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
-
-     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-
-
-$ node --test tests/test_disabled_gateway_candidate_schema.mjs
-✔ disabled gateway schema accepts all four complete candidate classes (1.378246ms)
-✔ disabled gateway schema rejects activation, fallback, missing identity, and widening (0.293055ms)
-ℹ tests 2
+COMMAND_9_EXIT=0
+
+$ npm run engineering-runtime:schemas:check
+
+> agentmage-planning-docs@0.0.0 engineering-runtime:schemas:check
+> node scripts/engineering_runtime_schemas.mjs && node --test tests/test_engineering_runtime_schemas.mjs
+
+Validated 37 Engineering Runtime schemas and 6 reused contracts.
+✔ generated Engineering Runtime schemas are current, closed, and compile (107.916026ms)
+✔ canonical runtime record schemas reject every unsupported version (0.456455ms)
+✔ source-artifact family schemas reject missing, extra, malformed, stale, oversized, and unsupported-version envelopes (48.287402ms)
+✔ multi-agent schemas require bounded workers and verifier-owned completion evidence (18.214007ms)
+✔ artifact capture and context delivery fail closed (13.250895ms)
+✔ remote endpoint and route records cannot enable or silently fallback (14.172108ms)
+✔ tool observations and terminal results preserve runtime authority (13.64876ms)
+✔ context-manifest binds schema_version to the authoritative Rust contract version (7.03547ms)
+✔ structural sections and context dispositions reject reversed ranges through trusted semantic validation (11.462903ms)
+✔ extraction terminal states forbid payload contradicting the declared disposition (5.390181ms)
+✔ context-manifest semantic validation reconciles source_artifact_count, artifact_id uniqueness, and ordered ranges (6.701038ms)
+✔ context-manifest items reject non-admitting dispositions carrying ranges or tokens (6.102284ms)
+✔ context-manifest items require a deterministic reason_code for every non-complete disposition (5.977535ms)
+✔ createEngineeringRuntimeValidator is the mandatory public path that binds structural and semantic contracts (31.725527ms)
+✔ createEngineeringRuntimeValidator refuses to reuse a mismatched schema registered under the authoritative $id (11.046696ms)
+✔ source-reference records reject contradictory reference_class and support_state combinations (5.520153ms)
+✔ context-disposition terminal states forbid ranges and tokens outside admitting states (5.871806ms)
+✔ context-disposition and context-manifest impose matching reason_code rules for each disposition (11.760896ms)
+✔ source-retention binds schema_version to the authoritative Rust contract version (7.265142ms)
+✔ source-retention rejects missing, extra, malformed, and oversized fields (6.891029ms)
+✔ source-retention cannot widen RuntimeArtifactKind or name a second physical store (6.237959ms)
+✔ source-retention forbids persistence contradicting the declared retention class (6.186275ms)
+✔ source-retention requires a deterministic reason_code for every non-active lifecycle state (6.469397ms)
+✔ source-retention semantic validation reconciles retention_class with lifecycle_state (12.730363ms)
+✔ source-retention carries protected metadata only as a digest (6.194551ms)
+✔ source-locator binds schema_version and admits every authoritative coordinate space (24.078665ms)
+✔ source-locator carries exactly the payload of its declared kind (10.134235ms)
+✔ source-locator forbids naming a position it never resolved (10.472805ms)
+✔ source-locator requires a deterministic reason_code for every non-complete state (9.43969ms)
+✔ source-locator semantic validation rejects reversed ranges and degenerate coordinates (18.473644ms)
+✔ source-locator rejects missing, extra, malformed, and out-of-range fields (9.653529ms)
+✔ step-execution-policy binds schema_version and names eight identities keyed to the existing plan step (18.45841ms)
+✔ step-execution-policy is a companion record and restates no plan, tool, grant, receipt, or completion state (8.114572ms)
+✔ step-execution-policy admits exactly the retry classes its effect class permits (7.536289ms)
+✔ step-execution-policy never automatically retries a destructive, external, non-idempotent, or unclassified effect (7.911978ms)
+✔ step-execution-policy retries an idempotent write only against a verified key or desired state (7.609727ms)
+✔ step-execution-policy resolves completion to verifier evidence or exactly one recorded deferral (7.223889ms)
+✔ step-execution-policy gives an unretried step exactly one attempt (7.428788ms)
+✔ step-execution-policy rejects missing, malformed, oversized, and duplicated identities (15.079317ms)
+✔ execution envelopes are admitted, versioned, and established only by the runtime (75.600425ms)
+✔ execution envelopes reference the protected contracts by identity and never restate them (34.763577ms)
+✔ workflow and step executions bind the existing plan and step identities (4.958135ms)
+✔ call envelope carries only the digest of validated arguments and explains every rejection (5.390319ms)
+✔ operation attempts are new attempts that resolve to an executor receipt (5.7337ms)
+✔ recovery decisions reconcile an uncertain outcome and retry only a classified transient failure (5.302751ms)
+✔ terminal diagnostics stay content free (9.726125ms)
+✔ execution envelopes reject missing, malformed, and unknown fields (73.16737ms)
+✔ retry admission opens a new attempt and never replays a prior identity (5.870244ms)
+✔ retry admission keeps attempts an ordered chain rather than a repeated identity (11.916471ms)
+✔ retry admission requires a fresh approval per attempt and reconciliation before reattempt (5.506639ms)
+✔ retry admission carries no receipt and no replay surface (5.75336ms)
+✔ retry compatibility and migration rules are closed, complete, and enforced (0.131509ms)
+ℹ tests 52
 ℹ suites 0
-ℹ pass 2
+ℹ pass 52
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 73.731333
+ℹ duration_ms 841.145768
 
-$ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+COMMAND_10_EXIT=0
+
+$ python3 scripts/requirement_coverage.py
+Validated 294 requirement records and 31 normative statement mappings.
+
+COMMAND_11_EXIT=0
+
+$ python3 scripts/task_graph.py
+task graph validation passed: 17 Decision 0042 stories, 20 Decisions 0043-0045 stories, 4 foundational runtime epics
+
+COMMAND_12_EXIT=0
