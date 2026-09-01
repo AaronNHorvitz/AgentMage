@@ -21,9 +21,9 @@
       "sha256": "c78d1637958f28e997e0dafcc136c23514bf238242cd1cf98a566b6e413eb2df"
     },
     {
-      "bytes": 18517,
+      "bytes": 18823,
       "path": "kernel/engine/src/authority.rs",
-      "sha256": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8"
+      "sha256": "c8d75e190006004d76da34a0835a99e3b9074265bea9eba5d5cc388ff22ceb09"
     },
     {
       "bytes": 20481,
@@ -78,17 +78,17 @@
     {
       "bytes": 35336,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-architecture-dependency-report.json",
-      "sha256": "39ac83aaa90e4c15ad398928eb23604beee29bc02de7a0dbfcac706bd8bd6588"
+      "sha256": "15de4d6a4e71686741215e1184e48d2d5f3c38cd50917f0144cf132395abb051"
     },
     {
       "bytes": 4896,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-dispatch-security-report.json",
-      "sha256": "511b04dd5188dcd84ffc13ece3803811747a76aa71bf4b1bb28583ed4bc96294"
+      "sha256": "19f7d50efb15ebbcf93926a4caa5d6d16aebfd3731995d038f8bb0c1c3a60e2a"
     },
     {
       "bytes": 4406,
       "path": "artifacts/sprints/sprint-4/story-4.1/kernel-boundary-integration-report.json",
-      "sha256": "e42fe08d569549c7c390796926fb26aa068da2adba53787312cf6e82b3f76417"
+      "sha256": "a27a0528ba0082bb32a4094994561ac297844d050236c1a8ddeb41905bacb612"
     },
     {
       "bytes": 16032,
@@ -258,7 +258,7 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "838df0dfcfb38902755142c47f3542c75d0f0e2a",
+  "source_revision": "bc5f52ba722e2c65b2adbcda115ea61b90ca75f4",
   "status": "pass-linux-security-mapping",
   "story_id": "4.1",
   "summary": {
