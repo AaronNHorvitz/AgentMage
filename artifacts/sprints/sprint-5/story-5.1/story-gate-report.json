@@ -63,7 +63,7 @@
       },
       {
         "path": "kernel/engine/src/authority.rs",
-        "sha256": "027d95c04e9cc073ead8ca996631951c55d208ab1f0d7ee06534831cf14b66f8"
+        "sha256": "c8d75e190006004d76da34a0835a99e3b9074265bea9eba5d5cc388ff22ceb09"
       },
       {
         "path": "kernel/engine/src/grants.rs",
@@ -111,7 +111,7 @@
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/authority-escalation-report.json",
-        "sha256": "81df656a49e90be382159dada0922e50a15c1b017097136d5dd9f4b3b7e9e6e7"
+        "sha256": "c45ad97c3ca000a77fdcd3e0a8778469c54516495eb0e04459d90f3853baca97"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/grant-stale-dispatch-report.json",
@@ -119,19 +119,19 @@
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/grant-boundary-review.json",
-        "sha256": "fa4c9037d7227756d4cae895ac57ea183dd50d2d083fd77cb60c0872c94e6032"
+        "sha256": "87bbdb78934be7be7226834eb0f0a3cdfb5c3dd80a1a828a009ca1a2139ca75f"
       },
       {
         "path": "artifacts/sprints/sprint-5/story-5.1/security-evidence-map.json",
-        "sha256": "b81c496faf52ce33de9556a19405d5ec3ace9f8a145ecbe71ae5a67d705a68e9"
+        "sha256": "ce0316b7defa7404e3b91586b231bee976cf73512d8c2e24c6c4d232d4797917"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "b72b557e2f7a047829e6771c850a69c1777f3ad5",
-    "reviewed_tree": "cf9b72bfd0a63f8666edbb16f8d4cff765e6714a",
+    "reviewed_commit": "bf4ae1385475b8e8b0ae535b95a1176d8836bcc1",
+    "reviewed_tree": "c443266836a93bcbae2eaf299f34bf0cda843418",
     "reviewer_id": "agentmage-story-5.1-independent-gate-v1"
   },
   "macos_evidence_substituted": false,
@@ -141,8 +141,8 @@
   "product_acceptance_claim": "none",
   "product_requirement_completion_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "b72b557e2f7a047829e6771c850a69c1777f3ad5",
-  "reviewed_tree": "cf9b72bfd0a63f8666edbb16f8d4cff765e6714a",
+  "reviewed_commit": "bf4ae1385475b8e8b0ae535b95a1176d8836bcc1",
+  "reviewed_tree": "c443266836a93bcbae2eaf299f34bf0cda843418",
   "schema_version": 1,
   "security_mapping": {
     "mapped_requirement_count": 8,

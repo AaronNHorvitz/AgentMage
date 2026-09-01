@@ -3,17 +3,17 @@
     {
       "byte_length": 8029,
       "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json",
-      "sha256": "5d5bd3f2c9030f8f2cc2690a86490812fe00983075cdabb15440c8dc42fd2694"
+      "sha256": "2d3cf55a42b1c5cf05a3ef5f8dcda70b8b56155245b97731a6a867a396e03f2d"
     },
     {
-      "byte_length": 6904,
+      "byte_length": 6993,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json",
-      "sha256": "6adf60ec22f35483a20d3ebae6b525f4f0ccebfc785a77cc55dd7bcd0f38bb7e"
+      "sha256": "3f552e404326d7c22a9b7da386e9bea6b68230d9e3ee3b9b954e8baa72a68533"
     },
     {
       "byte_length": 4651,
       "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-report.json",
-      "sha256": "4fdc42d07d550964c57ed560f1977fb8b4c5dbc1653cbb3016e8aa262c56a4d7"
+      "sha256": "e1ca84760e6d695ac402f9f4004705ad67a7e23a7d405ddd8b26e37963f8c9d4"
     },
     {
       "byte_length": 4258,

@@ -40,7 +40,7 @@
     {
       "byte_length": 2213,
       "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-results.log",
-      "sha256": "c014736e0689e2b4e6f126f1ee3b0635696b013f0aa7630d6027de7dfd436ed3"
+      "sha256": "333a0ceff85cec6dba64073f0be4c6071e226cf6f108478a2e986332e5558e7c"
     }
   ],
   "commands": [
@@ -65,9 +65,9 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 128088,
+      "byte_length": 132612,
       "path": "kernel/contracts/src/engineering_records.rs",
-      "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+      "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
     },
     {
       "byte_length": 52216,
@@ -82,27 +82,27 @@
     {
       "byte_length": 8029,
       "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json",
-      "sha256": "5d5bd3f2c9030f8f2cc2690a86490812fe00983075cdabb15440c8dc42fd2694"
+      "sha256": "2d3cf55a42b1c5cf05a3ef5f8dcda70b8b56155245b97731a6a867a396e03f2d"
     },
     {
-      "byte_length": 11056,
+      "byte_length": 11274,
       "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-results.log",
-      "sha256": "ff4b8b0cc3d102bb1ee86117193f68c0dd11d84a99c2e34039b03507b17116f6"
+      "sha256": "dc9a408f9021a31b6b6f2e726476a827857015269663092848ebf5860a92c122"
     },
     {
-      "byte_length": 6904,
+      "byte_length": 6993,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json",
-      "sha256": "6adf60ec22f35483a20d3ebae6b525f4f0ccebfc785a77cc55dd7bcd0f38bb7e"
+      "sha256": "3f552e404326d7c22a9b7da386e9bea6b68230d9e3ee3b9b954e8baa72a68533"
     },
     {
-      "byte_length": 11149,
+      "byte_length": 11455,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-results.log",
-      "sha256": "253217f036c75925d5b60458a0f22ed889314bf804999229b8fe150f32d4d34b"
+      "sha256": "cf525fcf93a435007b7615c388d957b9babc45d94deb2bef9df7b0c8c8a6e3c0"
     },
     {
       "byte_length": 8937,
       "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-      "sha256": "00c55900ca368ae810eae661a4cf87cbeec961ed4b6606c1c97033ae81deaef7"
+      "sha256": "f548d200c5a3b8dbf4c9fb91033abad8a35c980ba5226d5755dbf7cae5c279a8"
     }
   ],
   "schema_version": 1,

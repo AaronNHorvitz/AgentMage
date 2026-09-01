@@ -42,7 +42,7 @@
     {
       "byte_length": 992,
       "path": "artifacts/sprints/sprint-5/story-5.2/story-ac3-bounded-termination-results.log",
-      "sha256": "47670093b0db9cf18e695ceee1f569856027fabbf2e4588a811a0ceea4f542ec"
+      "sha256": "7ad07b9fefbd1b8a7b754350e0e7bf4d1dbc56cd0fbf6930a2542cf1064d15ab"
     }
   ],
   "commands": [
@@ -83,17 +83,17 @@
     {
       "byte_length": 4651,
       "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-report.json",
-      "sha256": "4fdc42d07d550964c57ed560f1977fb8b4c5dbc1653cbb3016e8aa262c56a4d7"
+      "sha256": "e1ca84760e6d695ac402f9f4004705ad67a7e23a7d405ddd8b26e37963f8c9d4"
     },
     {
-      "byte_length": 13504,
+      "byte_length": 14158,
       "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-results.log",
-      "sha256": "e1304c51b84525e6de7794e3ac68ed2cb878b473b004cf1a9ad19d2403689578"
+      "sha256": "5bb55ad34e75090cd2cfcb0f9cc3d12405ad99be0e0401b10316fbc5cfd8687a"
     },
     {
       "byte_length": 8937,
       "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-      "sha256": "00c55900ca368ae810eae661a4cf87cbeec961ed4b6606c1c97033ae81deaef7"
+      "sha256": "f548d200c5a3b8dbf4c9fb91033abad8a35c980ba5226d5755dbf7cae5c279a8"
     }
   ],
   "schema_version": 1,

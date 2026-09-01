@@ -11,9 +11,9 @@
       "sha256": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e"
     },
     {
-      "byte_length": 56131,
+      "byte_length": 58866,
       "path": "kernel/engine/tests/retry_admission.rs",
-      "sha256": "e232630fff660d92da5980b00c543253af51e17c49a98d788c3792b57dfa582b"
+      "sha256": "3d650ecb889a92ec9969d36dfd64ffaf3223d865925e7fb254297a4fcf6dd87c"
     },
     {
       "byte_length": 68724,
@@ -31,9 +31,9 @@
       "sha256": "e6735a11fd369444635b9e4feba391c7116d947d0ed74841cb663f16c0e5adc7"
     },
     {
-      "byte_length": 10680,
+      "byte_length": 10769,
       "path": "scripts/retry_repair_policy_evidence.py",
-      "sha256": "f6641525c58230b30cc27af220e65c8819405ba1576b130efc419dbff7449267"
+      "sha256": "21fb5f27b0fe0726060b9b9312d49ca2110f74c969099880abc3e99c2106475e"
     },
     {
       "byte_length": 5529,
@@ -41,9 +41,9 @@
       "sha256": "5594d19048cc1dd325166eca89093de80f33e4b752a99a3d1408096e7558b6e9"
     },
     {
-      "byte_length": 11149,
+      "byte_length": 11455,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-results.log",
-      "sha256": "253217f036c75925d5b60458a0f22ed889314bf804999229b8fe150f32d4d34b"
+      "sha256": "cf525fcf93a435007b7615c388d957b9babc45d94deb2bef9df7b0c8c8a6e3c0"
     }
   ],
   "commands": [
@@ -175,9 +175,10 @@
     "every_approval_field_mutation_denies_before_dispatch ... ok",
     "every_preflight_and_reconciliation_field_mutation_denies_before_dispatch ... ok",
     "every_attempt_identity_field_mutation_denies_before_dispatch ... ok",
+    "story_22_4_recovery_fresh_attempt_composes_only_through_existing_admission ... ok",
     "story_5_2_prior_effect_recovery_never_replays_authority_or_unsafe_effect ... ok",
     "racing_eligible_attempts_execute_once_and_uncertainty_is_sticky ... ok",
-    "test result: ok. 12 passed; 0 failed",
+    "test result: ok. 13 passed; 0 failed",
     "call envelope carries only the digest of validated arguments and explains every rejection",
     "pass 52",
     "fail 0"

@@ -36,9 +36,9 @@
       "sha256": "daa4e30bf6d08d142043581489329009d24712969b47d53966638dd7436726df"
     },
     {
-      "byte_length": 13504,
+      "byte_length": 14158,
       "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-results.log",
-      "sha256": "e1304c51b84525e6de7794e3ac68ed2cb878b473b004cf1a9ad19d2403689578"
+      "sha256": "5bb55ad34e75090cd2cfcb0f9cc3d12405ad99be0e0401b10316fbc5cfd8687a"
     }
   ],
   "budget_dimensions": [

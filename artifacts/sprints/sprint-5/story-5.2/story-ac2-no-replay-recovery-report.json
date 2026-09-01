@@ -61,7 +61,7 @@
     {
       "byte_length": 1450,
       "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-results.log",
-      "sha256": "84228198b68b9d16c4ed9e006419d678396b719b52ec043921e6f6a82373ae1c"
+      "sha256": "0de244172b97c526b7ca461a6225d8f45ccded527281fbc8bcff0d0d597b1416"
     }
   ],
   "commands": [
@@ -87,9 +87,9 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 128088,
+      "byte_length": 132612,
       "path": "kernel/contracts/src/engineering_records.rs",
-      "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+      "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
     },
     {
       "byte_length": 26088,
@@ -97,24 +97,24 @@
       "sha256": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e"
     },
     {
-      "byte_length": 56131,
+      "byte_length": 58866,
       "path": "kernel/engine/tests/retry_admission.rs",
-      "sha256": "e232630fff660d92da5980b00c543253af51e17c49a98d788c3792b57dfa582b"
+      "sha256": "3d650ecb889a92ec9969d36dfd64ffaf3223d865925e7fb254297a4fcf6dd87c"
     },
     {
-      "byte_length": 6904,
+      "byte_length": 6993,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json",
-      "sha256": "6adf60ec22f35483a20d3ebae6b525f4f0ccebfc785a77cc55dd7bcd0f38bb7e"
+      "sha256": "3f552e404326d7c22a9b7da386e9bea6b68230d9e3ee3b9b954e8baa72a68533"
     },
     {
-      "byte_length": 11149,
+      "byte_length": 11455,
       "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-results.log",
-      "sha256": "253217f036c75925d5b60458a0f22ed889314bf804999229b8fe150f32d4d34b"
+      "sha256": "cf525fcf93a435007b7615c388d957b9babc45d94deb2bef9df7b0c8c8a6e3c0"
     },
     {
       "byte_length": 8937,
       "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-      "sha256": "00c55900ca368ae810eae661a4cf87cbeec961ed4b6606c1c97033ae81deaef7"
+      "sha256": "f548d200c5a3b8dbf4c9fb91033abad8a35c980ba5226d5755dbf7cae5c279a8"
     }
   ],
   "schema_version": 1,
