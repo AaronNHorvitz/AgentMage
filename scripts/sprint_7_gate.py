@@ -22,8 +22,8 @@ from scripts.story_7_1_gate import BLOCKERS, G_DOD_IDS, check_report as check_st
 
 
 REPORT_PATH = ROOT / "artifacts/sprints/sprint-7/sprint-gate-report.json"
-REVIEWED_COMMIT = "55bcf8f83b44f032416a44517be1d40ad28b995c"
-REVIEWED_TREE = "9293712fbefb3869e260ee6321b275cad49dd2c2"
+REVIEWED_COMMIT = "a1884e127249cfca2e4a4e2deb7813d6930bf141"
+REVIEWED_TREE = "4b99d08aa610b694bd7e7042f7042834e33a82ea"
 REVIEWED_PATHS = (
     "artifacts/sprints/sprint-7/story-7.1/story-gate-report.json",
     "scripts/story_7_1_gate.py",
