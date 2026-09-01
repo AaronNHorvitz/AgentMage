@@ -29,6 +29,8 @@ SOURCE_PATHS: Final = (
     "capabilities/knowledge/src/executive_skills.rs",
     "capabilities/knowledge/src/lib.rs",
     "capabilities/knowledge/examples/executive_skill_pack.rs",
+    "shells/host/src/executive_coordinator.rs",
+    "shells/host/src/lib.rs",
     "schemas/runtime/executive-priority-ranking.schema.json",
     "schemas/runtime/examples/executive-priority-ranking.valid.json",
     "schemas/runtime/executive-view.schema.json",
@@ -65,6 +67,13 @@ COMMANDS: Final = (
         ),
     ),
     (
+        "executive-host-coordinator",
+        (
+            "cargo", "test", "-p", "agentmage-host",
+            "executive_coordinator", "--lib", "--locked",
+        ),
+    ),
+    (
         "executive-runtime-schemas",
         ("node", "--test", "tests/test_planning_schemas.mjs"),
     ),
@@ -92,10 +101,11 @@ COMMANDS: Final = (
         ("python3", "-m", "unittest", "tests.test_sprint_54_evidence"),
     ),
 )
-FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:5])
+FOCUSED_COMMANDS: Final = tuple(item[0] for item in COMMANDS[:6])
 RUST_FOCUSED_COMMANDS: Final = {
     "executive-kernel-unit",
     "executive-skill-unit",
+    "executive-host-coordinator",
 }
 SECURITY_REQUIREMENTS: Final = [
     "SR-AI-003",
@@ -137,7 +147,7 @@ IMPLEMENTED: Final = {
     "send_effect_capability": False,
     "schedule_effect_capability": False,
     "source_mutation_capability": False,
-    "product_coordinator": False,
+    "product_coordinator": True,
     "native_interface_integration": False,
     "durable_reminder_lifecycle": False,
     "installed_cross_platform_acceptance": False,
@@ -147,7 +157,6 @@ IMPLEMENTED: Final = {
 }
 BLOCKERS: Final = [
     {"code": "UPSTREAM-SPRINT-53-BLOCKED", "owner": "54.1"},
-    {"code": "EXECUTIVE-PRODUCT-COORDINATOR-ABSENT", "owner": "54.1.3.2"},
     {"code": "NATIVE-INTERFACE-INTEGRATION-ABSENT", "owner": "54.1.3.2"},
     {"code": "DURABLE-REMINDER-LIFECYCLE-ABSENT", "owner": "54.1.1.2"},
     {"code": "INSTALLED-CROSS-PLATFORM-ACCEPTANCE-ABSENT", "owner": "54.1.3.5"},
@@ -232,7 +241,7 @@ def expected_verification(local_pass: bool = True) -> dict[str, Any]:
         "accepted_external_effect_count": 0 if local_pass else None,
         "invented_confirmed_fact_count": 0 if local_pass else None,
         "cross_privacy_leak_count": 0 if local_pass else None,
-        "product_coordinator": False,
+        "product_coordinator": True,
         "native_interface_integration": False,
         "durable_reminder_lifecycle": False,
         "installed_cross_platform_acceptance": False,
@@ -248,7 +257,7 @@ def expected_summary(local_pass: bool = True) -> dict[str, Any]:
         "local_sprint_54_contract_passed": local_pass,
         "sprint_status": "BLOCKED",
         "upstream_sprint_53_closed": False,
-        "executive_workflow_integrated": False,
+        "executive_workflow_integrated": True,
         "external_effects_enabled": False,
         "cross_platform_acceptance_passed": False,
         "trusted_package_execution_complete": False,

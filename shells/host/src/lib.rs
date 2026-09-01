@@ -40,6 +40,8 @@ pub mod engineering_model;
 /// Durable session, event, and exact artifact RPC composition.
 pub mod engineering_runtime;
 pub mod engineering_team;
+/// Authority-free product composition for local executive-assistant projections.
+pub mod executive_coordinator;
 /// Closed independent activation for implemented and unavailable runtime features.
 pub mod feature_activation;
 /// Fail-closed beta, rollback, and emergency-disable rollout for foundational features.

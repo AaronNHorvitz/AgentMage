@@ -24,6 +24,9 @@ projection parity, and eight authority-free declarative skills.
 - Sixteen privacy cases cover retrieval, indexing, retention, and export for ordinary, private,
   confidential, and highly restricted records. Highly restricted indexing and export are denied.
 - The same ranking and reminder projections pass for plain-folder and Obsidian source grammars.
+- Three host coordinator tests bind a single immutable source snapshot to ranking, reminders,
+  start-of-cycle view, privacy decisions, and all eight authority-free executive skills; duplicate
+  or incomplete privacy scope and a changes-since view without its prior snapshot fail closed.
 
 ## Security Mapping
 
@@ -39,7 +42,8 @@ No product-wide requirement is marked complete by this local contribution.
 ## Truthful Disposition
 
 A green local report proves only the committed source and named commands on the recorded Linux
-environment. Sprint 53 remains blocked. No executive product coordinator, native interface
-integration, durable reminder lifecycle, installed cross-platform acceptance, trusted package
-execution, independent review, or completed manual fuzzing exists. Sprint 54 therefore remains
-**BLOCKED** despite the passing local contracts and artifacts.
+environment. Sprint 53 remains blocked. The repository-controlled executive coordinator is
+integrated locally. Native interface integration, durable reminder lifecycle, installed
+cross-platform acceptance, trusted package execution, independent review, and completed manual
+fuzzing do not exist. Sprint 54 therefore remains **BLOCKED** despite the passing local contracts
+and artifacts.

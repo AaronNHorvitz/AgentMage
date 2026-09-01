@@ -39,9 +39,13 @@ review. Highly restricted records cannot enter a general or separate index and c
 exact approved retrieval and retention of no more than seven days are the only representable
 proposals. Policy decisions perform no operation.
 
-## Open Integration Boundary
+## Product Composition and Open Boundaries
 
-The source contracts and skill data are not a registered product coordinator. Native Chat views,
-durable storage, reminder delivery, live calendar or message connectors, installed-platform
-acceptance, accessibility, lifecycle, independent review, signing, and manual fuzzing remain
-separate later evidence.
+The registered host coordinator binds one immutable canonical snapshot to the ranking, tracker,
+view, privacy decisions, and all eight admitted authority-free skills. It rejects partial
+cross-privacy composition and verifies that every output remains proposal-only, source-preserving,
+and unable to notify, send, schedule, write, or mutate.
+
+Native Chat and CLI presentation, durable reminder lifecycle, live calendar or message connectors,
+installed-platform acceptance, accessibility, lifecycle, independent review, signing, and manual
+fuzzing remain separate later evidence.
