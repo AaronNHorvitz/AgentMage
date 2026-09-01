@@ -70,9 +70,9 @@
       "sha256": "cd8f1c03e6b02b42a73a7bda9d509e969548d41964c9d71b285f156dc11a7ae8"
     },
     {
-      "byte_length": 8804,
+      "byte_length": 9109,
       "path": "artifacts/sprints/sprint-5/story-5.3/rv52-applicable-results.log",
-      "sha256": "abf1dbccc0bf08f6ba5608a570ad433866965cea00a8dfa98a14a24723b9b884"
+      "sha256": "66b950afc9830e3b6e30234aca62b885666ce375066b11a3a3db322edf82c203"
     }
   ],
   "commands": [

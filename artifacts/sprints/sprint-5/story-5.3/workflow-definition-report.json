@@ -26,9 +26,9 @@
       "sha256": "62e04f6f80d6dc25796d1da1e4c986dd470efff86e5a31ef6a067a89ca5ffa74"
     },
     {
-      "byte_length": 1102,
+      "byte_length": 1209,
       "path": "artifacts/sprints/sprint-5/story-5.3/workflow-definition-results.log",
-      "sha256": "9cd0260faed3596192915358fd459fbf8b8d25035ac3b63f86935c1590ea11ab"
+      "sha256": "69071522fae1c1527ffd7f4d97073d24a316e3144147453867814e81994189cf"
     }
   ],
   "commands": [

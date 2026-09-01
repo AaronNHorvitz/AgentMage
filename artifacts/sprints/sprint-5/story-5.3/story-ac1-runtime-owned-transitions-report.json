@@ -44,9 +44,9 @@
       "sha256": "99ccdc1207f6b88d1fbcfdd9c298dfdf76b122038a1141127a11a03a9f84fb64"
     },
     {
-      "byte_length": 5772,
+      "byte_length": 5990,
       "path": "artifacts/sprints/sprint-5/story-5.3/story-ac1-runtime-owned-transitions-results.log",
-      "sha256": "3ed55a83a6c9e14dda7c46eedbd9df553051d69fcc602be839ad45fde7f3474e"
+      "sha256": "c4ab2771f71251aef860bbf35283567f47249dafa9ba732932632ab8989708c1"
     }
   ],
   "commands": [
@@ -78,9 +78,9 @@
   ],
   "retained_evidence": [
     {
-      "byte_length": 73730,
+      "byte_length": 77208,
       "path": "kernel/engine/src/engineering_records.rs",
-      "sha256": "51338875c4b81e0f04a402c3236b6718e8d273b0e2d5e8745fe07a88a8215c57"
+      "sha256": "0edd44976cdc3fc7f65de9e65f5b5d5ae4f845e4f598bf4411bf8acd75a1f398"
     },
     {
       "byte_length": 15851,
@@ -110,22 +110,22 @@
     {
       "byte_length": 3522,
       "path": "artifacts/sprints/sprint-5/story-5.3/workflow-definition-report.json",
-      "sha256": "ee69f810b6787f27602655d2061305f94c48adf681c5c3b874b4a5301e0b4ef8"
+      "sha256": "52c8a11f4cc4469b59f6112e65afdb34cfc7e28d80a3eb921bcca1ba918b7973"
     },
     {
       "byte_length": 3896,
       "path": "artifacts/sprints/sprint-5/story-5.3/workflow-identity-report.json",
-      "sha256": "5472040ce24cc5f2da42e323df5070bd73302c72edd80c62c9119001473984ac"
+      "sha256": "fac868a833841084cdab2f516e6d9ca3c5470d0e986daa65216ed54fd33ad13a"
     },
     {
       "byte_length": 3349,
       "path": "artifacts/sprints/sprint-5/story-5.3/workflow-budget-independence-report.json",
-      "sha256": "bdadbd49c8fd9d2eb8fda6f4d938fe74e8be0beb9d1889d99048f6c2be839d30"
+      "sha256": "62741f9549a4f16435709d6461941610d2150e014f794a3f0b323b545525ab9f"
     },
     {
       "byte_length": 6813,
       "path": "artifacts/sprints/sprint-5/story-5.3/workflow-adversarial-report.json",
-      "sha256": "6c531e971e39b77ed5d3322395feb6fd785ac1710f46855d17c4a27e35927af9"
+      "sha256": "d0c70e586706bc35c1196ff89b1e9be9242bf6d352a73bc617b59219950bc3af"
     }
   ],
   "schema_version": 1,

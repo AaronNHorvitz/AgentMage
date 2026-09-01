@@ -1,9 +1,9 @@
 {
   "artifacts": [
     {
-      "byte_length": 128088,
+      "byte_length": 132612,
       "path": "kernel/contracts/src/engineering_records.rs",
-      "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+      "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
     },
     {
       "byte_length": 7656,
@@ -46,9 +46,9 @@
       "sha256": "52291be355ca2f6729dacfa2cc43ad15e64fc3a4eae853609ea11c282635effb"
     },
     {
-      "byte_length": 6827,
+      "byte_length": 6722,
       "path": "artifacts/sprints/sprint-5/story-5.3/workflow-terminal-results.log",
-      "sha256": "1be3eba59149f8256544f53fd244dc821663a5bc8f563b4304cce3b33b7ed7c9"
+      "sha256": "b44cb0188b940c172b0b5a12be90e275bf18b8d328e48e7c832a87b8c08acd17"
     }
   ],
   "commands": [

@@ -1,18 +1,18 @@
 $ cargo test -p agentmage-kernel-engine --test workflow_identity --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
 
 running 9 tests
-test approvals_receipts_and_verifications_are_fresh_single_issue_identities ... ok
-test policy_tampering_cannot_enable_a_retry ... ok
-test every_pre_effect_identity_is_globally_fresh_and_failed_issue_is_atomic ... ok
-test ordinals_predecessors_and_terminal_order_are_exact ... ok
 test issues_the_complete_identity_chain_without_execution_authority ... ok
-test automatic_retry_is_forbidden_for_every_high_or_unknown_effect ... ok
+test policy_tampering_cannot_enable_a_retry ... ok
+test approvals_receipts_and_verifications_are_fresh_single_issue_identities ... ok
 test required_once_approval_is_fresh_initially_and_not_reissued_automatically ... ok
 test uncertain_effects_cannot_open_a_successor_until_safely_reconciled ... ok
+test ordinals_predecessors_and_terminal_order_are_exact ... ok
+test every_pre_effect_identity_is_globally_fresh_and_failed_issue_is_atomic ... ok
+test automatic_retry_is_forbidden_for_every_high_or_unknown_effect ... ok
 test concurrent_duplicate_issue_has_exactly_one_winner ... ok
 
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s

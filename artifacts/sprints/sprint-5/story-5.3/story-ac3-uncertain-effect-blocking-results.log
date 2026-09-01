@@ -1,6 +1,6 @@
 $ cargo test -p agentmage-kernel-engine --test workflow_identity uncertain_effects_cannot_open_a_successor_until_safely_reconciled -- --exact
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
 
 running 1 test
 test uncertain_effects_cannot_open_a_successor_until_safely_reconciled ... ok
@@ -8,20 +8,20 @@ test uncertain_effects_cannot_open_a_successor_until_safely_reconciled ... ok
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine --test retry_admission unsafe_and_uncertain_effects_never_receive_automatic_new_attempts -- --exact
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
 
 running 1 test
 test unsafe_and_uncertain_effects_never_receive_automatic_new_attempts ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine --test retry_admission racing_eligible_attempts_execute_once_and_uncertainty_is_sticky -- --exact
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
 
 running 1 test
 test racing_eligible_attempts_execute_once_and_uncertainty_is_sticky ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
 $ python3 scripts/workflow_identity_evidence.py
 Workflow identity evidence validated through Sub-task 5.3.1.2
 $ python3 scripts/retry_repair_policy_evidence.py

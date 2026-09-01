@@ -1,6 +1,6 @@
 $ cargo test -p agentmage-kernel-engine --test workflow_verifier exit_zero_persuasive_output_and_tampered_results_never_establish_completion -- --exact
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
 
 running 1 test
 test exit_zero_persuasive_output_and_tampered_results_never_establish_completion ... ok
@@ -8,7 +8,7 @@ test exit_zero_persuasive_output_and_tampered_results_never_establish_completion
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine --test workflow_verifier every_postcondition_invariant_and_prohibited_effect_is_fail_closed -- --exact
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
 
 running 1 test
 test every_postcondition_invariant_and_prohibited_effect_is_fail_closed ... ok
@@ -16,7 +16,7 @@ test every_postcondition_invariant_and_prohibited_effect_is_fail_closed ... ok
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine --test workflow_verifier changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states -- --exact
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
 
 running 1 test
 test changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states ... ok

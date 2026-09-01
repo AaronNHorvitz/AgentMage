@@ -1,13 +1,13 @@
 $ cargo test -p agentmage-kernel-engine --test workflow_definition --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-9289ebbbd5c8954a)
 
 running 8 tests
 test terminal_state_family_is_closed_and_nonterminal_states_do_not_leak_into_it ... ok
-test definition_digest_and_exact_entry_frontier_fail_closed ... ok
 test admits_an_exact_closed_graph_and_exposes_no_execution_authority ... ok
-test policy_set_must_be_exact_and_identity_unique ... ok
+test definition_digest_and_exact_entry_frontier_fail_closed ... ok
 test dependency_order_and_non_executable_steps_are_denied ... ok
+test policy_set_must_be_exact_and_identity_unique ... ok
 test preflight_postcondition_and_policy_integrity_mutations_are_denied ... ok
 test every_step_policy_surface_is_bound_to_the_definition ... ok
 test effect_classes_require_conservative_approval_and_idempotency_policy ... ok
@@ -15,42 +15,43 @@ test effect_classes_require_conservative_approval_and_idempotency_policy ... ok
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine --test workflow_identity --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
 
 running 9 tests
-test issues_the_complete_identity_chain_without_execution_authority ... ok
 test policy_tampering_cannot_enable_a_retry ... ok
 test approvals_receipts_and_verifications_are_fresh_single_issue_identities ... ok
-test ordinals_predecessors_and_terminal_order_are_exact ... ok
 test required_once_approval_is_fresh_initially_and_not_reissued_automatically ... ok
 test uncertain_effects_cannot_open_a_successor_until_safely_reconciled ... ok
 test every_pre_effect_identity_is_globally_fresh_and_failed_issue_is_atomic ... ok
-test concurrent_duplicate_issue_has_exactly_one_winner ... ok
+test issues_the_complete_identity_chain_without_execution_authority ... ok
+test ordinals_predecessors_and_terminal_order_are_exact ... ok
 test automatic_retry_is_forbidden_for_every_high_or_unknown_effect ... ok
+test concurrent_duplicate_issue_has_exactly_one_winner ... ok
 
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine --test retry_admission --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
 
-running 12 tests
+running 13 tests
 test conditional_retry_requires_current_safe_effect_reconciliation ... ok
-test required_idempotency_key_must_be_fresh_and_digest_bound ... ok
-test per_attempt_approval_must_be_current_exact_and_different_from_prior ... ok
+test story_22_4_recovery_fresh_attempt_composes_only_through_existing_admission ... ok
 test fresh_attempt_requires_current_preflight_remaining_budget_and_single_use_grant ... ok
-test complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok
-test unsafe_and_uncertain_effects_never_receive_automatic_new_attempts ... ok
 test every_preflight_and_reconciliation_field_mutation_denies_before_dispatch ... ok
-test story_5_2_prior_effect_recovery_never_replays_authority_or_unsafe_effect ... ok
+test per_attempt_approval_must_be_current_exact_and_different_from_prior ... ok
+test complete_prior_use_ledger_denies_every_replayed_identity_and_any_receipt ... ok
+test required_idempotency_key_must_be_fresh_and_digest_bound ... ok
 test every_attempt_identity_field_mutation_denies_before_dispatch ... ok
+test unsafe_and_uncertain_effects_never_receive_automatic_new_attempts ... ok
 test racing_eligible_attempts_execute_once_and_uncertainty_is_sticky ... ok
-test every_effect_failure_and_budget_mutation_denies_before_dispatch ... ok
+test story_5_2_prior_effect_recovery_never_replays_authority_or_unsafe_effect ... ok
 test every_approval_field_mutation_denies_before_dispatch ... ok
+test every_effect_failure_and_budget_mutation_denies_before_dispatch ... ok
 
-test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 $ cargo test -p agentmage-kernel-engine --test workflow_verifier --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
 
 running 7 tests
 test malformed_non_success_cannot_collapse_into_a_success_or_generic_failure ... ok
@@ -64,113 +65,119 @@ test changed_and_unchanged_verified_evidence_resolve_to_distinct_success_states 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 $ cargo test -p agentmage-kernel-engine workflow_progress::tests --locked
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-5d89fb1f2dd765fa)
+     Running unittests src/lib.rs (target/debug/deps/agentmage_kernel_engine-9b341475fdc661f2)
 
 running 4 tests
 test workflow_progress::tests::incomplete_malformed_or_oversized_state_fails_closed ... ok
+test workflow_progress::tests::policy_identity_is_immutable_and_substitution_changes_nothing ... ok
 test workflow_progress::tests::non_adjacent_repeated_state_stops_at_the_exact_policy_limit ... ok
 test workflow_progress::tests::fingerprint_is_deterministic_complete_and_boundary_preserving ... ok
-test workflow_progress::tests::policy_identity_is_immutable_and_substitution_changes_nothing ... ok
 
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 703 filtered out; finished in 0.00s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 781 filtered out; finished in 0.00s
 
-     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-1b4b97cbccbdf090)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-16ba4ae1b6e86b97)
+     Running tests/adversarial_grant_corpus.rs (target/debug/deps/adversarial_grant_corpus-56c2c291005c6bac)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-75929cc4c43529ef)
+     Running tests/authority_escalation_matrix.rs (target/debug/deps/authority_escalation_matrix-1d35cecc8eac4a50)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-80c0e8afb922bd47)
+     Running tests/boundary_workflow.rs (target/debug/deps/boundary_workflow-0763e8462d798883)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-83bf91da9259c180)
+     Running tests/command_injection_corpus.rs (target/debug/deps/command_injection_corpus-96fb8646b8e88c01)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
 
-     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-544729f4e1294d0c)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
-
-     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c9f8c18d6667567d)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-b45b2cee9ff8e56e)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-db55c8cb6b746f85)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
-
-     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-e4252934d8b1c603)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
-
-     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-65c90518a1bcd1e0)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
-
-     Running tests/retry_admission.rs (target/debug/deps/retry_admission-2c851f401bd01f79)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
-
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
-
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
-
-     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-f23e29536c391fc5)
-
-running 0 tests
-
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
-
-     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-ac3c31389397eb91)
+     Running tests/dependency_degradation.rs (target/debug/deps/dependency_degradation-0b41c11af9f7bcef)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
 
-     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-774f1a5d8f717985)
+     Running tests/display_link_authority.rs (target/debug/deps/display_link_authority-3183945eaf6ee601)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/engineering_runtime_record_corpus.rs (target/debug/deps/engineering_runtime_record_corpus-e1a8fee3763d0eff)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests/grant_race_replay.rs (target/debug/deps/grant_race_replay-c2bf19d0e955e0a1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_review_fixtures.rs (target/debug/deps/grant_review_fixtures-f39a9d9ea513dfc1)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/grant_stale_dispatch.rs (target/debug/deps/grant_stale_dispatch-6655190128ba9428)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests/platform_adapter_conformance.rs (target/debug/deps/platform_adapter_conformance-dfbfdc9850767ddd)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/repository_safety_matrix.rs (target/debug/deps/repository_safety_matrix-977b1de1fa35ee44)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests/retry_admission.rs (target/debug/deps/retry_admission-62d14a6aec0f9677)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.00s
+
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-e051a35e39b8b099)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-9289ebbbd5c8954a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests/workflow_identity.rs (target/debug/deps/workflow_identity-304ed0f5ab07c9f8)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+     Running tests/workflow_verifier.rs (target/debug/deps/workflow_verifier-204c979953d9da6b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests/write_recovery_matrix.rs (target/debug/deps/write_recovery_matrix-890f5a0284eee806)
 
 running 0 tests
 

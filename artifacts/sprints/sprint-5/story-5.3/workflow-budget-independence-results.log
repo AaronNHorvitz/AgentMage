@@ -1,6 +1,6 @@
 $ cargo test -p agentmage-kernel-engine --test workflow_budget_independence --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
-     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-2de93261c4dda06c)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running tests/workflow_budget_independence.rs (target/debug/deps/workflow_budget_independence-e051a35e39b8b099)
 
 running 3 tests
 test invalid_repairs_and_total_work_exhaustion_return_no_admission_and_no_partial_charge ... ok

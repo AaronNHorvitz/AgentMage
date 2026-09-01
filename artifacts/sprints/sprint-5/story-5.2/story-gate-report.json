@@ -43,9 +43,9 @@
   "independent_review": {
     "artifacts": [
       {
-        "byte_length": 128088,
+        "byte_length": 132612,
         "path": "kernel/contracts/src/engineering_records.rs",
-        "sha256": "3b58c72cf098dcd67978dc7402ec70df4873f8bca9c57d747a6d6b430f082200"
+        "sha256": "ac16659bab43ca0b0981d9f123d67d2d79abfdb43962a5602ef88bac286cf913"
       },
       {
         "byte_length": 52216,
@@ -63,9 +63,9 @@
         "sha256": "aaf8e8da33a89e8abc0c14a1a8fffe7c24e521cde7982e0aa77721488896300e"
       },
       {
-        "byte_length": 56131,
+        "byte_length": 58866,
         "path": "kernel/engine/tests/retry_admission.rs",
-        "sha256": "e232630fff660d92da5980b00c543253af51e17c49a98d788c3792b57dfa582b"
+        "sha256": "3d650ecb889a92ec9969d36dfd64ffaf3223d865925e7fb254297a4fcf6dd87c"
       },
       {
         "byte_length": 18790,
@@ -90,53 +90,53 @@
       {
         "byte_length": 8029,
         "path": "artifacts/sprints/sprint-5/story-5.2/effect-class-taxonomy-report.json",
-        "sha256": "5d5bd3f2c9030f8f2cc2690a86490812fe00983075cdabb15440c8dc42fd2694"
+        "sha256": "2d3cf55a42b1c5cf05a3ef5f8dcda70b8b56155245b97731a6a867a396e03f2d"
       },
       {
-        "byte_length": 6904,
+        "byte_length": 6993,
         "path": "artifacts/sprints/sprint-5/story-5.2/retry-repair-policy-report.json",
-        "sha256": "6adf60ec22f35483a20d3ebae6b525f4f0ccebfc785a77cc55dd7bcd0f38bb7e"
+        "sha256": "3f552e404326d7c22a9b7da386e9bea6b68230d9e3ee3b9b954e8baa72a68533"
       },
       {
         "byte_length": 4651,
         "path": "artifacts/sprints/sprint-5/story-5.2/workflow-supervision-report.json",
-        "sha256": "4fdc42d07d550964c57ed560f1977fb8b4c5dbc1653cbb3016e8aa262c56a4d7"
+        "sha256": "e1ca84760e6d695ac402f9f4004705ad67a7e23a7d405ddd8b26e37963f8c9d4"
       },
       {
         "byte_length": 8937,
         "path": "artifacts/sprints/sprint-5/story-5.2/policy-verification-report.json",
-        "sha256": "00c55900ca368ae810eae661a4cf87cbeec961ed4b6606c1c97033ae81deaef7"
+        "sha256": "f548d200c5a3b8dbf4c9fb91033abad8a35c980ba5226d5755dbf7cae5c279a8"
       },
       {
         "byte_length": 4542,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac1-deterministic-disposition-report.json",
-        "sha256": "81e304ae380459b997f47c551b6957c6116d556492b2d1828486acccaf9d69bd"
+        "sha256": "1085c336e70887aa4787b26278a1a77f850823ad6408af33082d2ff03dd1fbbd"
       },
       {
         "byte_length": 4771,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac2-no-replay-recovery-report.json",
-        "sha256": "a732dd2b833a845c6d8d5ed604477df35508d54a028d3da55561313b153704a9"
+        "sha256": "d64fbb07cf9c5d08cf5d19c3af7ffc7aee2bc36933c2220949b18dba31a24ead"
       },
       {
         "byte_length": 4086,
         "path": "artifacts/sprints/sprint-5/story-5.2/story-ac3-bounded-termination-report.json",
-        "sha256": "503e187ad3ad1ccdb637c2826fee40091c0932c9183745d718a9bdd92904e591"
+        "sha256": "29aedafaa1c3c78d14768da0bc41e77d353cbc7658bc09ac3ea3176cf8ce315f"
       }
     ],
     "external_human_review_status": "not-performed",
     "finding_count": 0,
     "findings": [],
     "review_type": "automated-independent-aggregate-review",
-    "reviewed_commit": "eee6b97c8d9cca728f8811c5435f81e1fd2c3ed0",
-    "reviewed_tree": "1da6266abced763075c831a24e540fff7c801f66",
+    "reviewed_commit": "e09049a734b2cb857b4c46773f7127e5f836e52c",
+    "reviewed_tree": "0983633c266eb47f6c922ddb47c6feb82fc6d9c1",
     "reviewer_id": "agentmage-story-5.2-independent-gate-v1"
   },
   "installed_product_claim": "none",
   "platform_evidence_substituted": false,
   "product_acceptance_claim": "none",
   "release_claim": "none",
-  "reviewed_commit": "eee6b97c8d9cca728f8811c5435f81e1fd2c3ed0",
-  "reviewed_tree": "1da6266abced763075c831a24e540fff7c801f66",
+  "reviewed_commit": "e09049a734b2cb857b4c46773f7127e5f836e52c",
+  "reviewed_tree": "0983633c266eb47f6c922ddb47c6feb82fc6d9c1",
   "schema_version": 1,
   "sprint_completion_claim": false,
   "status": "blocked-open-dependencies-and-platform",

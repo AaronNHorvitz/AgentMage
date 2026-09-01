@@ -1,12 +1,12 @@
 $ cargo test -p agentmage-kernel-engine --test workflow_definition --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
-     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-574427c2826e010a)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running tests/workflow_definition.rs (target/debug/deps/workflow_definition-9289ebbbd5c8954a)
 
 running 8 tests
 test terminal_state_family_is_closed_and_nonterminal_states_do_not_leak_into_it ... ok
-test definition_digest_and_exact_entry_frontier_fail_closed ... ok
-test admits_an_exact_closed_graph_and_exposes_no_execution_authority ... ok
 test dependency_order_and_non_executable_steps_are_denied ... ok
+test admits_an_exact_closed_graph_and_exposes_no_execution_authority ... ok
+test definition_digest_and_exact_entry_frontier_fail_closed ... ok
 test policy_set_must_be_exact_and_identity_unique ... ok
 test preflight_postcondition_and_policy_integrity_mutations_are_denied ... ok
 test every_step_policy_surface_is_bound_to_the_definition ... ok
@@ -14,4 +14,5 @@ test effect_classes_require_conservative_approval_and_idempotency_policy ... ok
 
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 $ cargo clippy -p agentmage-kernel-engine --all-targets --all-features --locked -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+    Checking agentmage-kernel-engine v0.0.0 (/var/home/aaronnhorvitz/dev/01_repos/AgentMage/kernel/engine)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.15s
