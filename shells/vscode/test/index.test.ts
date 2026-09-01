@@ -14,6 +14,7 @@ void test("shell scaffold exposes only declared interface authority", () => {
     "interaction",
     "provider-registration",
     "authenticated-ipc-client",
+    "request-bound-reference-resolution",
   ]);
 });
 

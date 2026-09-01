@@ -40,6 +40,7 @@ export async function captureExactText(
   mediaType: string,
   text: string,
   now: () => number = Date.now,
+  cancelled: () => boolean = () => false,
 ): Promise<CapturedSource> {
   const bytes = Buffer.from(text, "utf8");
   return captureExactBytes(
@@ -50,6 +51,7 @@ export async function captureExactText(
     mediaType,
     bytes,
     now,
+    cancelled,
   );
 }
 
@@ -62,6 +64,7 @@ export async function captureExactBytes(
   mediaType: string,
   bytes: Uint8Array,
   now: () => number = Date.now,
+  cancelled: () => boolean = () => false,
 ): Promise<CapturedSource> {
   if (bytes.length === 0 || bytes.length > MAX_VERIFIED_SOURCE_BYTES) {
     throw new VerifiedChatProtocolError("verified-chat.source.size-invalid");
@@ -84,6 +87,9 @@ export async function captureExactBytes(
   );
   try {
     for (let offset = 0, sequence = 0; offset < bytes.length; sequence += 1) {
+      if (cancelled()) {
+        throw new VerifiedChatProtocolError("verified-chat.source.cancelled");
+      }
       const end = Math.min(offset + ENGINEERING_CHUNK_BYTES, bytes.length);
       const chunk = bytes.subarray(offset, end);
       await requireResult(
@@ -105,6 +111,9 @@ export async function captureExactBytes(
         "artifact_chunk_accepted",
       );
       offset = end;
+    }
+    if (cancelled()) {
+      throw new VerifiedChatProtocolError("verified-chat.source.cancelled");
     }
     const completed = await requireResult(
       exchange(

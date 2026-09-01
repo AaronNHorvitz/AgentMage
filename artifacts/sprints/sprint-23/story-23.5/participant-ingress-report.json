@@ -1,0 +1,115 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 2758,
+      "path": "shells/vscode/package.json",
+      "sha256": "08c4ac252fc7321f049a821a5a2da64695cc14792270b33c04f06a332179bb68"
+    },
+    {
+      "byte_length": 15856,
+      "path": "shells/vscode/src/extension.ts",
+      "sha256": "08feeed7c859da481808554ea38ff812887c14b1ec02d88968f907d021259d85"
+    },
+    {
+      "byte_length": 862,
+      "path": "shells/vscode/src/index.ts",
+      "sha256": "da0fe8510dbab2c14ac59e61cdadee1fab05f67c4e6e65651bfb05b7881882bd"
+    },
+    {
+      "byte_length": 14719,
+      "path": "shells/vscode/src/participant_ingress.ts",
+      "sha256": "7f1a4ce3f9ec10fadd257d3cceb5e7dff9602922514844032dbea8aad6c43501"
+    },
+    {
+      "byte_length": 7755,
+      "path": "shells/vscode/src/verified_chat_protocol.ts",
+      "sha256": "52096bbff82fdd4401a45942a13f9088f5132727f78e03cbdd277bb744abad6a"
+    },
+    {
+      "byte_length": 9246,
+      "path": "shells/vscode/test/participant_ingress.test.ts",
+      "sha256": "feb07937a1ce4ac65b8f4d357d49952575ecd0a3d11a81a6892d963f0427eeb0"
+    },
+    {
+      "byte_length": 4611,
+      "path": "shells/vscode/test/verified_chat_protocol.test.ts",
+      "sha256": "656dedb589265ee99dc4fa93f666a14f45a019cf21959b6474c4c5767ca70620"
+    },
+    {
+      "byte_length": 64087,
+      "path": "shells/host/src/protocol.rs",
+      "sha256": "182c090cb006b050e36b5cf99553948746d378d8d537277aaa510842bd9233a2"
+    },
+    {
+      "byte_length": 96188,
+      "path": "shells/host/src/engineering_runtime.rs",
+      "sha256": "01b321068c6482eba84d82615f8028ee643c7cbcc9a3a43981731ac51b01f3a2"
+    },
+    {
+      "byte_length": 4040,
+      "path": "docs/architecture/stable-chat-participant-ingress.md",
+      "sha256": "bb7bd85e53f425f80439d06aab800c40f0c91475192f0199f93e34e1e5fd5224"
+    },
+    {
+      "byte_length": 6123,
+      "path": "architecture/language-build-matrix.json",
+      "sha256": "cd3e3d69ce9d4cbffeda9bfa5521edaad5be52a1a0bc6eba6d4d6b7ba713bac5"
+    },
+    {
+      "byte_length": 1863,
+      "path": "architecture/vscode-api-surfaces.json",
+      "sha256": "e8ead87ad4d071dc5e459881a435fcf0f7d321785da6bd812ade3d5c85ff94d2"
+    },
+    {
+      "byte_length": 7123,
+      "path": "scripts/story_23_5_participant_ingress_evidence.py",
+      "sha256": "91137ef64fc931023021db048ff2d9d359e2aa4bd557d952c90e6fc27bb26d8f"
+    },
+    {
+      "byte_length": 1054,
+      "path": "tests/test_story_23_5_participant_ingress_evidence.py",
+      "sha256": "26b45c68dc468700ac2b84774f1cbe0011e2a35ee260a988a056f9b278426102"
+    },
+    {
+      "byte_length": 9782,
+      "path": "artifacts/sprints/sprint-23/story-23.5/participant-ingress-results.log",
+      "sha256": "bb1dc55b0b1339544c27a34af879a418642f905f90ef86de9ababa5039222974"
+    }
+  ],
+  "commands": [
+    "npm --prefix shells/vscode test",
+    "npm --prefix shells/vscode run lint",
+    "npm --prefix shells/vscode run format:check",
+    "cargo test -p agentmage-host protocol::tests --all-features --locked",
+    "cargo test -p agentmage-host engineering_runtime::tests --all-features --locked",
+    "python3 -m pytest -q tests/test_architecture_decision.py tests/test_vscode_api_surfaces.py",
+    "python3 scripts/validate_docs.py"
+  ],
+  "generated_on": "2026-08-31",
+  "product_truth": {
+    "ambient_workspace_enumeration": false,
+    "assistive_technology_review_complete": false,
+    "authenticated_rust_artifact_rpc": true,
+    "complete_part_accounting": true,
+    "current_request_reference_resolution_only": true,
+    "exact_model_revalidation_before_capture": true,
+    "independent_review_complete": false,
+    "installed_vsix_campaign_complete": false,
+    "qualified_production_model_complete": false,
+    "release_claim": "none",
+    "silent_provider_part_drop": false,
+    "stable_chat_participant_registered": true,
+    "supported_platform_matrix_complete": false,
+    "typescript_parser_or_runtime_authority": false
+  },
+  "record_type": "agentmage-story-23-5-participant-ingress-evidence",
+  "remaining_external_work": [
+    "run packaged VSIX keyboard and supported screen-reader interaction",
+    "run local and remote placement matrices on every declared platform",
+    "repeat with an independently qualified production profile",
+    "obtain independent security, accessibility, and release review"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_STABLE_PARTICIPANT_INGRESS",
+  "story_id": "23.5"
+}

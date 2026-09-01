@@ -7,6 +7,7 @@ export const SHELL_AUTHORITY = Object.freeze([
   "interaction",
   "provider-registration",
   "authenticated-ipc-client",
+  "request-bound-reference-resolution",
 ] as const);
 
 /** Minimal registration contract used to test replacement and deactivation. */

@@ -31,6 +31,21 @@
         "icon": "$(add)"
       }
     ],
+    "chatParticipants": [
+      {
+        "id": "agentmage.participant",
+        "name": "agentmage",
+        "fullName": "AgentMage",
+        "description": "Run a verified local AgentMage request with completely accounted references",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "ask",
+            "description": "Ask over explicitly supplied sources"
+          }
+        ]
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {

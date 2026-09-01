@@ -4061,31 +4061,31 @@ select.
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 23.5.1 - Implement stable participant collection**
-  - [ ] **Sub-task 23.5.1.1:** Enumerate stable `ChatRequest.references`, prompt text, commands, and
+- [x] **Task 23.5.1 - Implement stable participant collection**
+  - [x] **Sub-task 23.5.1.1:** Enumerate stable `ChatRequest.references`, prompt text, commands, and
     request identity; normalize descriptors without parsing content or deriving authority.
-  - [ ] **Sub-task 23.5.1.2:** Resolve only current-request local references under the amended
+  - [x] **Sub-task 23.5.1.2:** Resolve only current-request local references under the amended
     shell contract and stream bounded chunks through authenticated IPC with sequence, digest,
     cancellation, timeout, and complete/partial state.
-  - [ ] **Sub-task 23.5.1.3:** Represent virtual, remote, inaccessible, unknown, oversized, changed,
+  - [x] **Sub-task 23.5.1.3:** Represent virtual, remote, inaccessible, unknown, oversized, changed,
     and unsupported references explicitly; never fall back to ambient workspace search.
-- [ ] **Task 23.5.2 - Make provider compatibility fail visible**
-  - [ ] **Sub-task 23.5.2.1:** Replace the current silent non-text filtering with complete part
+- [x] **Task 23.5.2 - Make provider compatibility fail visible**
+  - [x] **Sub-task 23.5.2.1:** Replace the current silent non-text filtering with complete part
     accounting and a visible unsupported-part result for every provider part that cannot be
     represented safely.
-  - [ ] **Sub-task 23.5.2.2:** Keep the provider as an optional local-model picker/compatibility path
+  - [x] **Sub-task 23.5.2.2:** Keep the provider as an optional local-model picker/compatibility path
     and prohibit provider internals, private Copilot classes, and undeclared proposed APIs from the
     guaranteed attachment path.
-  - [ ] **Sub-task 23.5.2.3:** Revalidate selected model profile, request references, transport
+  - [x] **Sub-task 23.5.2.3:** Revalidate selected model profile, request references, transport
     identity, and budget immediately before run submission; block stale substitutions.
-  - [ ] **Sub-task 23.5.2.4:** Add label-only provider, omitted-proxy-body, and MCP-without-resource
+  - [x] **Sub-task 23.5.2.4:** Add label-only provider, omitted-proxy-body, and MCP-without-resource
     fixtures proving that no compatibility adapter claims bytes or ingestion it did not receive.
 - [ ] **Task 23.5.3 - Implement presentation and accessibility**
-  - [ ] **Sub-task 23.5.3.1:** Render per-source queued, reading, extracting, partial, unsupported,
+  - [x] **Sub-task 23.5.3.1:** Render per-source queued, reading, extracting, partial, unsupported,
     omitted, stale, cancelled, failed, and included states plus total budget accounting.
   - [ ] **Sub-task 23.5.3.2:** Provide keyboard, screen-reader, focus, cancellation, and bounded
     error-detail behavior without exposing private paths or restricted content.
-  - [ ] **Sub-task 23.5.3.3:** Document the supported participant accounting path, provider limitations,
+  - [x] **Sub-task 23.5.3.3:** Document the supported participant accounting path, provider limitations,
     remote-workspace disclosure boundary, supported API matrix, and troubleshooting evidence.
 - [ ] **Task 23.5.4 - Verify real interface behavior**
   - [ ] **Sub-task 23.5.4.1:** Exercise 999/1,001-character prompts, multiple attachments, virtual
@@ -4100,15 +4100,25 @@ select.
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 23.5.AC1:** Given text and references supplied to the AgentMage participant, when a
+- [x] **Story AC 23.5.AC1:** Given text and references supplied to the AgentMage participant, when a
   run starts, then every item reaches Rust with verified identity or appears as one visible partial,
   unsupported, unavailable, cancelled, or failed source state.
-- [ ] **Story AC 23.5.AC2:** Given provider mode with a non-text or unknown part, when normalization
+- [x] **Story AC 23.5.AC2:** Given provider mode with a non-text or unknown part, when normalization
   runs, then the part is not silently discarded and the user is directed to the guaranteed
   participant path where possible.
-- [ ] **Story AC 23.5.AC3:** Given any extension request, when authority is inspected, then only
+- [x] **Story AC 23.5.AC3:** Given any extension request, when authority is inspected, then only
   current-request references are readable and TypeScript owns no parser, context, policy, tool,
   model-runtime, credential, or effect boundary.
+
+Local evidence: [`stable-chat-participant-ingress.md`](docs/architecture/stable-chat-participant-ingress.md)
+defines the stable public-API and authority boundary. The retained
+[`participant-ingress-report.json`](artifacts/sprints/sprint-23/story-23.5/participant-ingress-report.json)
+hashes the participant, provider, authenticated Engineering RPC, Rust host, architecture, fixture,
+and raw gate sources. Deterministic tests cover 999/1,001-character prompts, multiple text/file/
+virtual references, unknown and stale values, cancellation, duplicate identities, exact chunk
+capture, and label/proxy/MCP omissions with zero silent drop. Packaged VSIX keyboard/screen-reader,
+headless byte-parity, supported-platform placement, qualified-production-model, and independent
+review evidence remain open under Tasks 23.5.3 and 23.5.4; no installed or release pass is claimed.
 
 #### [ ] Story 23.6 - Verified Workflow Supervisor Vertical Slice
 
