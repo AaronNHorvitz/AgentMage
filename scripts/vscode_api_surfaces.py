@@ -29,6 +29,28 @@ EXPECTED_EXPERIMENT_CONTROLS: Final = [
     "separate-non-support-claim",
 ]
 SUPPORT_CLASSES: Final = {"guaranteed", "best-effort"}
+EXPECTED_NATIVE_COMPATIBILITY: Final = {
+    "minimum_vscode_version": "1.125.0",
+    "extension_engine": "^1.125.0",
+    "stable_input_roles": ["user", "assistant"],
+    "stable_input_parts": ["text"],
+    "explicitly_unsupported_parts": [
+        "data",
+        "image",
+        "tool_call",
+        "tool_result",
+        "unknown",
+    ],
+    "external_tool_proposals": "unsupported-transition-to-verified-chat",
+    "model_options": "unsupported-transition-to-verified-chat",
+    "route_disclosure": "requested-strict-local-profile-runtime-no-fallback",
+    "usage_disclosure": "exact-byte-and-part-counts-token-usage-unavailable",
+    "token_count": "conservative-utf8-byte-upper-bound",
+    "persistent_lifecycle": "verified-chat-only",
+    "complete_inspector": "verified-chat-only",
+    "transition_command": "agentmage.openVerifiedChat",
+    "provider_claim": "stable-text-only-compatibility-not-agent-host",
+}
 # The stable participant path AgentMage guarantees.
 GUARANTEED_SUPPORTED_PATH_SURFACES: Final = {
     "chat-participant",
@@ -171,8 +193,8 @@ def validate_surfaces(record: Any) -> list[str]:
     if not isinstance(record, dict):
         return ["vscode api surfaces must be an object"]
 
-    if record.get("schema_version") != 1:
-        failures.append("schema_version must equal 1")
+    if record.get("schema_version") != 2:
+        failures.append("schema_version must equal 2")
     if record.get("decision_id") != "ADR-0042":
         failures.append("decision_id must equal ADR-0042")
     if record.get("status") != "accepted":
@@ -183,6 +205,10 @@ def validate_surfaces(record: Any) -> list[str]:
         failures.append(
             "experiment_controls must record a feature flag, version guard, fallback, "
             "and separate non-support claim"
+        )
+    if record.get("native_compatibility") != EXPECTED_NATIVE_COMPATIBILITY:
+        failures.append(
+            "native_compatibility must retain the exact stable text-only capability and limitation matrix"
         )
 
     channels = _validate_channels(record, failures)

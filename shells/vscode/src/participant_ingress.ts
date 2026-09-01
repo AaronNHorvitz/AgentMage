@@ -254,6 +254,13 @@ export async function runParticipantIngress(
     await cancelSession(exchange, sessionId, now);
     throw new ParticipantIngressError("vscode.participant.cancelled", records);
   }
+  if (records.some((record) => record.state !== "included")) {
+    await cancelSession(exchange, sessionId, now);
+    throw new ParticipantIngressError(
+      "vscode.participant.references-unresolved",
+      records,
+    );
+  }
   const sourceManifestSha256 = manifestDigest(input, prompt, records);
   try {
     await beforeSubmit();

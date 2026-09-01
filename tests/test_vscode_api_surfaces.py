@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import unittest
+from pathlib import Path
 
 from scripts.vscode_api_surfaces import (
     EXPECTED_CHANNELS,
@@ -127,6 +128,39 @@ class VscodeApiSurfaceTests(unittest.TestCase):
                 mutated["experiment_controls"] = mutation
                 self.assertTrue(validate_surfaces(mutated))
 
+    def test_native_compatibility_limits_cannot_be_hidden_or_widened(self) -> None:
+        for key, value in (
+            ("stable_input_parts", ["text", "image"]),
+            ("external_tool_proposals", "supported"),
+            ("usage_disclosure", "exact-token-counts"),
+            ("persistent_lifecycle", "native-chat"),
+            ("transition_command", "missing"),
+            ("provider_claim", "agent-host"),
+        ):
+            with self.subTest(key=key):
+                mutated = copy.deepcopy(self.record)
+                mutated["native_compatibility"][key] = value
+                self.assertIn(
+                    "native_compatibility must retain the exact stable text-only capability and limitation matrix",
+                    validate_surfaces(mutated),
+                )
+
+    def test_production_provider_uses_the_closed_stable_compatibility_projection(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        source = (root / "shells/vscode/src/extension.ts").read_text(encoding="utf-8")
+        for marker in (
+            "vscode.chat.createChatParticipant",
+            "vscode.lm.registerLanguageModelChatProvider",
+            "projectNativeProviderRequest(",
+            "nativeProviderRouteDisclosure(",
+            "nativeProviderUsageDisclosure(",
+            "vscode.LanguageModelDataPart.json",
+            "capabilities: { imageInput: false, toolCalling: false }",
+            "agentmage.openVerifiedChat",
+        ):
+            self.assertIn(marker, source)
+        self.assertNotIn("lastUserParts", source)
+
     def test_surfaces_cannot_be_widened_by_unknown_keys(self) -> None:
         mutated = copy.deepcopy(self.record)
         self._surface(mutated, "chat-participant")["ambient_workspace_scan"] = True
@@ -137,7 +171,7 @@ class VscodeApiSurfaceTests(unittest.TestCase):
 
     def test_decision_and_supported_path_identities_are_pinned(self) -> None:
         for key, value in (
-            ("schema_version", 2),
+            ("schema_version", 1),
             ("decision_id", "ADR-0004"),
             ("status", "proposed"),
             ("supported_path", "language-model-chat-provider"),

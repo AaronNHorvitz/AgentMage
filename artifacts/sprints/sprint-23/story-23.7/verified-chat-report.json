@@ -71,9 +71,9 @@
       "sha256": "90c0bab26ae53ace698c3426dd9eee23bf54e4ee347440360ebdcf107705a690"
     },
     {
-      "byte_length": 1863,
+      "byte_length": 2793,
       "path": "architecture/vscode-api-surfaces.json",
-      "sha256": "e8ead87ad4d071dc5e459881a435fcf0f7d321785da6bd812ade3d5c85ff94d2"
+      "sha256": "fd3942fe10b79b296da44029f6ece41e7bcbbd424ac744d90146d730af01bd11"
     },
     {
       "byte_length": 8311,
@@ -86,9 +86,9 @@
       "sha256": "cdc150c2ea496da98b20cb65d813267cd8c2de5c93cfb0c0c7f3a3445aec4af6"
     },
     {
-      "byte_length": 10849,
+      "byte_length": 11221,
       "path": "artifacts/sprints/sprint-23/story-23.7/verified-chat-results.log",
-      "sha256": "d192f81eb68a24a1297d3c1c2d6e669457d5260990d3f1dc7243a566c3a5c429"
+      "sha256": "bf9837e1c37609db5080953b6a31503be5646407cd410b0f1d29292d5e70ae64"
     }
   ],
   "commands": [

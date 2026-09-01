@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "decision_id": "ADR-0042",
   "status": "accepted",
   "supported_path": "agentmage-chat-participant",
@@ -31,6 +31,33 @@
     "fallback",
     "separate-non-support-claim"
   ],
+  "native_compatibility": {
+    "minimum_vscode_version": "1.125.0",
+    "extension_engine": "^1.125.0",
+    "stable_input_roles": [
+      "user",
+      "assistant"
+    ],
+    "stable_input_parts": [
+      "text"
+    ],
+    "explicitly_unsupported_parts": [
+      "data",
+      "image",
+      "tool_call",
+      "tool_result",
+      "unknown"
+    ],
+    "external_tool_proposals": "unsupported-transition-to-verified-chat",
+    "model_options": "unsupported-transition-to-verified-chat",
+    "route_disclosure": "requested-strict-local-profile-runtime-no-fallback",
+    "usage_disclosure": "exact-byte-and-part-counts-token-usage-unavailable",
+    "token_count": "conservative-utf8-byte-upper-bound",
+    "persistent_lifecycle": "verified-chat-only",
+    "complete_inspector": "verified-chat-only",
+    "transition_command": "agentmage.openVerifiedChat",
+    "provider_claim": "stable-text-only-compatibility-not-agent-host"
+  },
   "surfaces": [
     {
       "id": "chat-participant",

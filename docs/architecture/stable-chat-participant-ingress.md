@@ -48,14 +48,21 @@ requests exact upload cancellation.
 
 The final content-free participant manifest binds request identity, command, prompt artifact,
 every supplied descriptor, terminal source state, exact included artifact identity, byte count, and
-digest. Only included artifact identities enter the verified turn's context set.
+digest. Because the stable API has no optional-reference marker, every supplied descriptor is
+required. Any terminal state other than `included` cancels the session and stops before the model
+turn; AgentMage never executes on a silently weakened subset. Only when all records are included do
+their artifact identities enter the verified turn's context set.
 
 ## Provider Compatibility
 
-The language-model provider remains an optional compatibility and picker surface. It now counts
-every delivered message part. If any part is not a stable text part, the provider reports the exact
-unsupported count, starts no runtime work, and directs the user to `@agentmage`. A provider label,
-proxy, or MCP adapter therefore cannot claim omitted bytes or a resource it did not receive.
+The language-model provider remains a limited compatibility and picker surface. It preserves every
+bounded user/assistant text message and part boundary, and visibly refuses unsupported parts,
+caller tools, model options, non-default tool modes, or oversized histories before execution. It
+directs those requests to Verified Chat, emits exact strict-local route and byte/part usage
+disclosures for supported requests, and explicitly reports exact token usage as unavailable. A
+provider label, proxy, or MCP adapter therefore cannot claim omitted bytes or a resource it did not
+receive. The complete matrix is documented in
+`docs/architecture/native-chat-compatibility-disclosure.md`.
 
 ## Local Verification and External Qualification
 

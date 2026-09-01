@@ -102,7 +102,6 @@ void test("999 and 1001 character prompts plus supplied references are completel
           reference("text-1", "text", { text: "explicit text" }),
           reference("file-1", "uri", { uri: "file:///fixture/a.txt" }),
           reference("virtual-1", "uri", { uri: "untitled:fixture" }),
-          reference("unknown-1", "unknown", {}),
         ],
       },
       { isCancellationRequested: false },
@@ -112,42 +111,71 @@ void test("999 and 1001 character prompts plus supplied references are completel
     assert.equal(result.prompt.byteLength, length + "/ask\n".length);
     assert.deepEqual(
       result.sources.map((item) => item.state),
-      ["included", "included", "included", "unsupported"],
+      ["included", "included", "included"],
     );
     assert.deepEqual(resolver.calls, ["file-1", "virtual-1"]);
     assert.match(result.sourceManifestSha256, /^[a-f0-9]{64}$/u);
     assert.ok(result.totalBytes > result.prompt.byteLength);
     assert.equal(result.outputText, "Verified fixture answer.");
-    assert.ok(statuses.includes("unknown-1:unsupported"));
+    assert.ok(statuses.includes("virtual-1:included"));
     assert.equal(fixture.operations.at(-1), "execute_verified_turn");
   }
 });
 
-void test("stale reference remains visible and is never submitted as context", async () => {
+void test("stale reference remains visible and stops before a model turn", async () => {
   const fixture = new ExchangeFixture();
   const resolver = new Resolver();
   resolver.stale.add("stale-1");
-  const result = await runParticipantIngress(
-    fixture.exchange,
-    resolver,
-    {
-      requestId: "participant-stale",
-      prompt: "inspect",
-      command: undefined,
-      references: [
-        reference("stale-1", "location", { uri: "file:///fixture/stale" }),
-      ],
-    },
-    { isCancellationRequested: false },
+  await assert.rejects(
+    runParticipantIngress(
+      fixture.exchange,
+      resolver,
+      {
+        requestId: "participant-stale",
+        prompt: "inspect",
+        command: undefined,
+        references: [
+          reference("stale-1", "location", {
+            uri: "file:///fixture/stale",
+          }),
+        ],
+      },
+      { isCancellationRequested: false },
+    ),
+    (error: unknown) =>
+      error instanceof ParticipantIngressError &&
+      error.code === "vscode.participant.references-unresolved" &&
+      error.records[0]?.state === "stale",
   );
-  assert.equal(result.sources[0]?.state, "stale");
-  assert.equal(result.sources[0]?.artifactId, null);
   assert.equal(
     fixture.operations.filter((operation) => operation === "commit_artifact")
       .length,
     1,
     "only the prompt is committed",
   );
+  assert.ok(!fixture.operations.includes("execute_verified_turn"));
+});
+
+void test("unsupported supplied reference stops instead of weakening context", async () => {
+  const fixture = new ExchangeFixture();
+  await assert.rejects(
+    runParticipantIngress(
+      fixture.exchange,
+      new Resolver(),
+      {
+        requestId: "participant-unsupported",
+        prompt: "inspect",
+        command: undefined,
+        references: [reference("unknown-1", "unknown", {})],
+      },
+      { isCancellationRequested: false },
+    ),
+    (error: unknown) =>
+      error instanceof ParticipantIngressError &&
+      error.code === "vscode.participant.references-unresolved" &&
+      error.records[0]?.state === "unsupported",
+  );
+  assert.ok(!fixture.operations.includes("execute_verified_turn"));
 });
 
 void test("cancellation and duplicate identities stop without a model turn", async () => {

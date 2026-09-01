@@ -1,0 +1,125 @@
+{
+  "artifacts": [
+    {
+      "byte_length": 2758,
+      "path": "shells/vscode/package.json",
+      "sha256": "08c4ac252fc7321f049a821a5a2da64695cc14792270b33c04f06a332179bb68"
+    },
+    {
+      "byte_length": 18995,
+      "path": "shells/vscode/src/extension.ts",
+      "sha256": "c7cba1669e82f3c45256b688786371b92d63c60eb3c256a3b5aebcfcfb3839d1"
+    },
+    {
+      "byte_length": 7688,
+      "path": "shells/vscode/src/native_chat_compatibility.ts",
+      "sha256": "f2e09200c7d4b1c03dc40e6386f43cd8aa87ab9743f155e8a9587a599dd059e7"
+    },
+    {
+      "byte_length": 14948,
+      "path": "shells/vscode/src/participant_ingress.ts",
+      "sha256": "33e026cafe6923e864292170e24957efd1fb24ead20fbcd8ed0f22ab601257c6"
+    },
+    {
+      "byte_length": 60309,
+      "path": "shells/vscode/src/provider.ts",
+      "sha256": "9c0824496c1e8e62e2fc7e98506c8568af927af75719331c5bdbe0b33f89a14e"
+    },
+    {
+      "byte_length": 44694,
+      "path": "shells/vscode/src/runtime_transport.ts",
+      "sha256": "2e88de28536f4bda0202a780e64074e67f69dc38a08c1d984bd3083b5e640b4a"
+    },
+    {
+      "byte_length": 4429,
+      "path": "shells/vscode/test/native_chat_compatibility.test.ts",
+      "sha256": "2828cf8fee1c669a118fceb7f1c9d5d9b9bd3cde2a16574ca385f129475cc483"
+    },
+    {
+      "byte_length": 10107,
+      "path": "shells/vscode/test/participant_ingress.test.ts",
+      "sha256": "28f883727a4d5a71b021a68394c6cbaea5d367487af4d84d8959d4060f618786"
+    },
+    {
+      "byte_length": 2793,
+      "path": "architecture/vscode-api-surfaces.json",
+      "sha256": "fd3942fe10b79b296da44029f6ece41e7bcbbd424ac744d90146d730af01bd11"
+    },
+    {
+      "byte_length": 9316,
+      "path": "scripts/vscode_api_surfaces.py",
+      "sha256": "07f4f6b79a8537a1fd3cb8fa985577b58ea2544763d9af59b562e25b7785cbfd"
+    },
+    {
+      "byte_length": 7845,
+      "path": "tests/test_vscode_api_surfaces.py",
+      "sha256": "cf5087d314a277c535608bb9c9ca3cc3a07d878e172bc3bd149abd932c3d564f"
+    },
+    {
+      "byte_length": 5429,
+      "path": "docs/architecture/native-chat-compatibility-disclosure.md",
+      "sha256": "e8edf9d238b741d861c4dc70d98110f07901fe7fe5db9fc53430282a1fe66d54"
+    },
+    {
+      "byte_length": 4612,
+      "path": "docs/architecture/stable-chat-participant-ingress.md",
+      "sha256": "c2d05a3cd321459fe9aa328fd2c0442c47cded7c681f700e85eaf7896e6d5263"
+    },
+    {
+      "byte_length": 8421,
+      "path": "scripts/story_23_8_native_chat_compatibility_evidence.py",
+      "sha256": "80d0dca63381e033a332199ec72d4abae0f416156770c2bed0e2dcd219a6db33"
+    },
+    {
+      "byte_length": 1178,
+      "path": "tests/test_story_23_8_native_chat_compatibility_evidence.py",
+      "sha256": "667177246e1f44edc1f79c1132a45a3718dc32397510a35db3bb8584dfe60baf"
+    },
+    {
+      "byte_length": 11130,
+      "path": "artifacts/sprints/sprint-23/story-23.8/native-chat-compatibility-results.log",
+      "sha256": "b57000195c117df012a9e7bb5e7a1a9d557a84544a56b1c5c2cefef2788e433a"
+    }
+  ],
+  "commands": [
+    "npm --prefix shells/vscode test",
+    "npm --prefix shells/vscode run lint",
+    "npm --prefix shells/vscode run format:check",
+    "cargo test -p agentmage-host runtime_parity_tests --all-features --locked",
+    "cargo test -p agentmage-host protocol::tests --all-features --locked",
+    "python3 -m pytest -q tests/test_vscode_api_surfaces.py tests/test_architecture_decision.py",
+    "python3 scripts/validate_docs.py"
+  ],
+  "generated_on": "2026-08-31",
+  "product_truth": {
+    "all_supplied_references_required_and_accounted": true,
+    "exact_token_usage_claimed": false,
+    "external_tools_advertised_as_supported": false,
+    "independent_review_complete": false,
+    "installed_vsix_version_campaign_complete": false,
+    "macos_validation_complete": false,
+    "native_agent_host_claim": false,
+    "private_or_proposed_production_api": false,
+    "qualified_production_model_complete": false,
+    "release_claim": "none",
+    "stable_participant_and_provider_registered": true,
+    "strict_local_route_and_usage_disclosed": true,
+    "supported_history_and_part_boundaries_preserved": true,
+    "unresolved_reference_model_execution": false,
+    "unsupported_semantics_visible_before_execution": true,
+    "verified_chat_transition_visible": true,
+    "windows_validation_complete": false
+  },
+  "record_type": "agentmage-story-23-8-native-chat-compatibility-evidence",
+  "remaining_external_work": [
+    "run the packaged VSIX across the declared stable VS Code version range",
+    "run keyboard and assistive-technology interaction for both native surfaces",
+    "repeat with an independently qualified production model profile",
+    "run final local Windows validation against the exact final candidate commit",
+    "run deferred macOS validation against the exact final candidate commit",
+    "obtain independent compatibility, security, accessibility, and release review"
+  ],
+  "schema_version": 1,
+  "status": "PASS_LOCAL_NATIVE_CHAT_COMPATIBILITY",
+  "story_id": "23.8"
+}

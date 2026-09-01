@@ -20,6 +20,12 @@ import type { HandoffReview } from "./handoff.js";
 import type { RuntimeApprovalChallengeEnvelope } from "./runtime_transport.js";
 import { VerifiedChatSurface } from "./verified_chat.js";
 import {
+  nativeProviderRouteDisclosure,
+  nativeProviderUsageDisclosure,
+  projectNativeProviderRequest,
+  renderNativeProviderBlock,
+} from "./native_chat_compatibility.js";
+import {
   PARTICIPANT_ID,
   MAX_PARTICIPANT_TOTAL_BYTES,
   ParticipantIngressError,
@@ -31,7 +37,10 @@ import {
 } from "./participant_ingress.js";
 
 type AgentMageModelInformation = vscode.LanguageModelChatInformation &
-  NativeModelInformation;
+  NativeModelInformation & {
+    readonly agentmageRuntimeToolCalling: boolean;
+    readonly agentmageRuntimeVisionInput: boolean;
+  };
 
 const registrationSlot = new RegistrationSlot();
 let activeController: SecureReadController | undefined;
@@ -256,7 +265,7 @@ export async function activate(
           },
         );
         response.markdown(
-          `${result.outputText}\n\n---\nSource manifest: \`${result.sourceManifestSha256}\`; ${result.sources.length.toString()} supplied reference(s) completely accounted for; ${result.totalBytes.toString()} / ${MAX_PARTICIPANT_TOTAL_BYTES.toString()} bytes used.`,
+          `${result.outputText}\n\n---\nSource manifest: \`${result.sourceManifestSha256}\`; ${result.sources.length.toString()} supplied reference(s) completely accounted for; ${result.totalBytes.toString()} / ${MAX_PARTICIPANT_TOTAL_BYTES.toString()} bytes used.\n\nNative Chat does not provide AgentMage's persistent lifecycle, complete inspector, or approval surface. Use **AgentMage: Open Verified Chat** (\`agentmage.openVerifiedChat\`) when those guarantees are required.`,
         );
       } catch (error) {
         const code =
@@ -264,7 +273,7 @@ export async function activate(
             ? error.code
             : "vscode.participant.failed";
         response.markdown(
-          `# Request stopped\n\nAgentMage could not safely account for this participant request. No unsupported source was treated as available.\n\n- Code: \`${code}\``,
+          `# Request stopped\n\nAgentMage could not safely account for this participant request. No unsupported source was treated as available. Open **AgentMage: Open Verified Chat** and retry there when complete source and lifecycle guarantees are required.\n\n- Transition command: \`agentmage.openVerifiedChat\`\n- Code: \`${code}\``,
         );
       }
     },
@@ -284,15 +293,63 @@ export async function activate(
         const snapshot = await controller.discoverModels(token);
         return snapshot === undefined
           ? []
-          : selectableModelInformation(snapshot).map((model) => ({ ...model }));
+          : selectableModelInformation(snapshot).map((model) => ({
+              ...model,
+              agentmageRuntimeToolCalling: model.capabilities.toolCalling,
+              agentmageRuntimeVisionInput: model.visionInput,
+              capabilities: { imageInput: false, toolCalling: false },
+            }));
       },
       provideLanguageModelChatResponse: async (
         model,
         messages,
-        _options,
+        options,
         progress,
         token,
       ) => {
+        const providerInput = projectNativeProviderRequest(
+          messages.map((message) => ({
+            role:
+              message.role === vscode.LanguageModelChatMessageRole.User
+                ? ("user" as const)
+                : message.role === vscode.LanguageModelChatMessageRole.Assistant
+                  ? ("assistant" as const)
+                  : ("unknown" as const),
+            name: message.name,
+            parts: message.content.map((part) =>
+              part instanceof vscode.LanguageModelTextPart
+                ? { kind: "text" as const, text: part.value }
+                : { kind: "unknown" as const },
+            ),
+          })),
+          {
+            toolCount: options.tools?.length ?? 0,
+            toolMode:
+              options.toolMode === vscode.LanguageModelChatToolMode.Auto
+                ? "auto"
+                : options.toolMode === vscode.LanguageModelChatToolMode.Required
+                  ? "required"
+                  : "unknown",
+            modelOptionKeys: Object.keys(options.modelOptions ?? {}).sort(),
+          },
+        );
+        if (providerInput.status === "blocked") {
+          progress.report(
+            new vscode.LanguageModelTextPart(
+              renderNativeProviderBlock(providerInput),
+            ),
+          );
+          progress.report(vscode.LanguageModelDataPart.json(providerInput));
+          return;
+        }
+        if (token.isCancellationRequested) {
+          progress.report(
+            new vscode.LanguageModelTextPart(
+              "# Request cancelled\n\n- Code: `vscode.provider.cancelled`",
+            ),
+          );
+          return;
+        }
         const stopped = await controller.revalidateSelectedModel(
           model.id,
           model.entrySha256,
@@ -304,37 +361,45 @@ export async function activate(
           }
           return;
         }
-        const providerInput = lastUserParts(messages);
-        if (providerInput.reasonCode !== null) {
+        const profile = {
+          profileId: model.id,
+          expectedEntrySha256: model.entrySha256,
+          manifestSha256: model.version,
+          artifactSha256: model.artifactSha256,
+          runtimeAdapterId: model.runtimeAdapterId,
+          runtimeSha256: model.runtimeSha256,
+          maxContextTokens: model.maxInputTokens,
+          maxOutputTokens: model.maxOutputTokens,
+          toolCalling: model.agentmageRuntimeToolCalling,
+          visionInput: model.agentmageRuntimeVisionInput,
+        };
+        const route = nativeProviderRouteDisclosure(profile, providerInput);
+        progress.report(
+          new vscode.LanguageModelTextPart(
+            `> Native Chat compatibility: requested strict-local profile \`${route.profile_id}\`; no fallback is permitted. Persistent lifecycle, complete inspector, external tools, images, and exact token usage are unavailable here. Use \`${route.verified_chat_command}\` for the canonical experience.\n\n`,
+          ),
+        );
+        progress.report(vscode.LanguageModelDataPart.json(route));
+        let reportedParts = 0;
+        let response;
+        try {
+          response = await controller.respond(
+            providerInput.prompt,
+            token,
+            profile,
+            (part) => {
+              reportedParts += 1;
+              progress.report(new vscode.LanguageModelTextPart(part));
+            },
+          );
+        } catch {
           progress.report(
             new vscode.LanguageModelTextPart(
-              `# Request stopped\n\nThe provider received ${providerInput.unsupportedParts.toString()} unsupported part(s) out of ${providerInput.totalParts.toString()}. AgentMage did not silently discard them. Retry through \`@agentmage\`, which accounts for every stable request reference.\n\n- Code: \`${providerInput.reasonCode}\``,
+              "# Request stopped\n\nThe native provider encountered an unavailable runtime boundary. No fallback route was used. Open AgentMage Verified Chat to inspect persistent state.\n\n- Transition command: `agentmage.openVerifiedChat`\n- Code: `vscode.provider.runtime-unavailable`",
             ),
           );
           return;
         }
-        const prompt = providerInput.text;
-        let reportedParts = 0;
-        const response = await controller.respond(
-          prompt,
-          token,
-          {
-            profileId: model.id,
-            expectedEntrySha256: model.entrySha256,
-            manifestSha256: model.version,
-            artifactSha256: model.artifactSha256,
-            runtimeAdapterId: model.runtimeAdapterId,
-            runtimeSha256: model.runtimeSha256,
-            maxContextTokens: model.maxInputTokens,
-            maxOutputTokens: model.maxOutputTokens,
-            toolCalling: model.capabilities.toolCalling,
-            visionInput: model.visionInput,
-          },
-          (part) => {
-            reportedParts += 1;
-            progress.report(new vscode.LanguageModelTextPart(part));
-          },
-        );
         for (
           let index = reportedParts;
           index < response.parts.length;
@@ -345,12 +410,20 @@ export async function activate(
             progress.report(new vscode.LanguageModelTextPart(part));
           }
         }
+        const usage = nativeProviderUsageDisclosure(
+          providerInput,
+          response.parts,
+        );
+        progress.report(vscode.LanguageModelDataPart.json(usage));
+        progress.report(
+          new vscode.LanguageModelTextPart(
+            `\n\n---\nNative usage: ${usage.input_utf8_bytes.toString()} input bytes in ${usage.input_messages.toString()} message(s); ${usage.output_utf8_bytes.toString()} output bytes in ${usage.output_parts.toString()} part(s). Exact token usage is unavailable on this compatibility surface (\`${usage.reason_code}\`).`,
+          ),
+        );
       },
       provideTokenCount: (_model, value) => {
         const text = typeof value === "string" ? value : requestText(value);
-        return Promise.resolve(
-          Math.max(1, Math.ceil(Buffer.byteLength(text, "utf8") / 4)),
-        );
+        return Promise.resolve(Math.max(1, Buffer.byteLength(text, "utf8")));
       },
     };
   const registration = vscode.lm.registerLanguageModelChatProvider(
@@ -371,24 +444,6 @@ export async function deactivate(): Promise<void> {
   await controller?.dispose();
 }
 
-function lastUserParts(
-  messages: readonly vscode.LanguageModelChatRequestMessage[],
-) {
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const message = messages[index];
-    if (message?.role === vscode.LanguageModelChatMessageRole.User) {
-      return accountProviderParts(
-        message.content.map((part) =>
-          part instanceof vscode.LanguageModelTextPart
-            ? { kind: "text" as const, text: part.value }
-            : { kind: "unknown" as const },
-        ),
-      );
-    }
-  }
-  return accountProviderParts([]);
-}
-
 function requestText(message: vscode.LanguageModelChatRequestMessage): string {
   const accounting = accountProviderParts(
     message.content.map((part) =>
@@ -397,6 +452,9 @@ function requestText(message: vscode.LanguageModelChatRequestMessage): string {
         : { kind: "unknown" as const },
     ),
   );
+  if (accounting.reasonCode !== null) {
+    throw vscode.LanguageModelError.Blocked(accounting.reasonCode);
+  }
   return accounting.text;
 }
 

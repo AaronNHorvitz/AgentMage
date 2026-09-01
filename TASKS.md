@@ -4234,22 +4234,22 @@ where stable APIs allow it, with visible disclosure where native Chat cannot mat
 
 ##### Tasks and Sub-tasks
 
-- [ ] **Task 23.8.1 - Implement stable compatibility adapters**
-  - [ ] **Sub-task 23.8.1.1:** Extend the stable `@agentmage` Chat Participant to account for every public request reference, cancellation, progress, result, and unsupported part through canonical runtime records.
-  - [ ] **Sub-task 23.8.1.2:** Implement a stable Language Model Chat Provider adapter that preserves supported normalized parts, tools-as-proposals, ordered streaming, usage, cancellation, errors, and route disclosure.
-  - [ ] **Sub-task 23.8.1.3:** Keep proposed/private APIs out of production and maintain a versioned compatibility matrix for stable, Preview, proposed, and unavailable surfaces.
-- [ ] **Task 23.8.2 - Make semantic gaps visible**
-  - [ ] **Sub-task 23.8.2.1:** Detect unresolved required references, missing approval UI, hidden artifact limits, unsupported message parts, and unavailable lifecycle/inspector features before execution or completion.
-  - [ ] **Sub-task 23.8.2.2:** Offer a visible transition to Verified Chat when native Chat cannot provide required guarantees; never silently weaken the request.
+- [x] **Task 23.8.1 - Implement stable compatibility adapters**
+  - [x] **Sub-task 23.8.1.1:** Extend the stable `@agentmage` Chat Participant to account for every public request reference, cancellation, progress, result, and unsupported part through canonical runtime records. Every supplied reference is required because the stable API has no optional marker; a non-included state is visible and stops before the model turn.
+  - [x] **Sub-task 23.8.1.2:** Implement a stable Language Model Chat Provider adapter that preserves supported normalized parts, tools-as-proposals, ordered streaming, usage, cancellation, errors, and route disclosure. The adapter preserves all bounded user/assistant text messages and part boundaries, retains internal AgentMage tool calls as shared-runtime proposals, advertises external caller tools and images as unsupported, streams ordered runtime output, and emits structured strict-local route and exact byte/part usage disclosures while explicitly leaving token usage unavailable.
+  - [x] **Sub-task 23.8.1.3:** Keep proposed/private APIs out of production and maintain a versioned compatibility matrix for stable, Preview, proposed, and unavailable surfaces. Schema-2 `architecture/vscode-api-surfaces.json` pins VS Code 1.125, every supported/unsupported semantic, conservative token counting, the non-Agent-Host claim, and experiment separation.
+- [x] **Task 23.8.2 - Make semantic gaps visible**
+  - [x] **Sub-task 23.8.2.1:** Detect unresolved required references, missing approval UI, hidden artifact limits, unsupported message parts, and unavailable lifecycle/inspector features before execution or completion. Closed projections refuse unknown/data/image/tool parts, external tools, model options, invalid roles/names, oversized history, and incomplete reference sets before model execution.
+  - [x] **Sub-task 23.8.2.2:** Offer a visible transition to Verified Chat when native Chat cannot provide required guarantees; never silently weaken the request. Both native adapters name `agentmage.openVerifiedChat` in visible terminal output, and provider refusals also return a structured stable data record.
 - [ ] **Task 23.8.3 - Verify compatibility behavior**
-  - [ ] **Sub-task 23.8.3.1:** Run request-reference, stream/event, cancellation, provider-selection, unsupported-part, reload, and disclosure fixtures across supported VS Code versions.
-  - [ ] **Sub-task 23.8.3.2:** Run the compatibility portions of `RV-57` and retain API-version, platform, parity, disclosure, and unsupported-state evidence.
+  - [ ] **Sub-task 23.8.3.1:** Run request-reference, stream/event, cancellation, provider-selection, unsupported-part, reload, and disclosure fixtures across supported VS Code versions. Repository-level fixtures pass; packaged VSIX execution across the pinned stable version range remains open.
+  - [ ] **Sub-task 23.8.3.2:** Run the compatibility portions of `RV-55` and retain API-version, platform, parity, disclosure, and unsupported-state evidence. Local source/API/runtime-parity evidence is retained; installed platform evidence remains open. (`RV-55` is the authoritative Verified Chat/native compatibility protocol; `RV-57` is multi-agent.)
 
 ##### Story Acceptance Criteria
 
-- [ ] **Story AC 23.8.AC1:** Given stable native Chat inputs, when an adapter runs, then supported semantics reach the canonical runtime intact and every unsupported requirement is visible.
-- [ ] **Story AC 23.8.AC2:** Given a native Chat surface that lacks a required guarantee, when the user requests affected work, then AgentMage discloses the gap and does not claim Verified Chat parity.
-- [ ] **Story AC 23.8.AC3:** Given a proposed or private VS Code API disappears, when compatibility checks run, then production behavior remains supported or fails closed without relying on that API.
+- [x] **Story AC 23.8.AC1:** Given stable native Chat inputs, when an adapter runs, then supported semantics reach the canonical runtime intact and every unsupported requirement is visible.
+- [x] **Story AC 23.8.AC2:** Given a native Chat surface that lacks a required guarantee, when the user requests affected work, then AgentMage discloses the gap and does not claim Verified Chat parity.
+- [x] **Story AC 23.8.AC3:** Given a proposed or private VS Code API disappears, when compatibility checks run, then production behavior remains supported or fails closed without relying on that API.
 
 ### [ ] Sprint 24 - Manual Codex Handoff Boundary
 
